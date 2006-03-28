@@ -1,0 +1,398 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH RXDEBUG 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+rxdebug \- Provides debugging trace of Rx activity
+.SH "SYNOPSIS"
+\fBrxdebug\fR <<\ \fB\-servers\fR\ <\fIserver\ machine\fR >>> <<\ [\fB\-port\fR\ <\fIIP\ port\fR] >>>
+    [\fB\-nodally\fR] [\fB\-allconnections\fR] [\fB\-rxstats\fR] [\fB\-onlyserver\fR]
+    [\fB\-onlyclient\fR] <<\ [\fB\-onlyport\fR\ <\fIshow\ only\ port\fR] >>>
+    <<\ [\fB\-onlyhost\fR\ <\fIshow\ only\ host\fR] >>>
+    <<\ [\fB\-onlyauth\fR\ <\fIshow\ only\ auth\ level\fR] >>> [\fB\-version\fR]
+    [\fB\-noconns\fR] [\fB\-peers\fR] [\fB\-help\fR]
+.PP
+\fBrxdebug\fR <<\ \fB\-s\fR\ <\fIserver\ machine\fR >>> <<\ [\fB\-po\fR\ <\fIIP\ port\fR] >>> [\fB\-nod\fR]
+    [\fB\-a\fR] [\fB\-r\fR] [\fB\-onlys\fR] [\fB\-onlyc\fR] <<\ [\fB\-onlyp\fR\ <\fIshow\ only\ port\fR] >>>
+    <<\ [\fB\-onlyh\fR\ <\fIshow\ only\ host\fR] >>> [\-onlya <\fIshow only auth level\fR>]
+    [\fB\-v\fR] [\fB\-noc\fR] [\fB\-pe\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBrxdebug\fR command provides a trace of Rx activity for the server or
+client machine named by the \fB\-servers\fR argument. Rx is AFS's proprietary
+remote procedure call (RPC) protocol, so this command enables the issuer
+to check the status of communication between the Cache Manager or an AFS
+server process (as specified with the \fB\-port\fR argument) on the machine
+and one or more processes on other machines.
+.SH "OPTIONS"
+.Ip "\fB\-servers\fR <\fIserver machine\fR>" 4
+Specifies the machine that is running the Cache Manager or server process
+for which to trace Rx activity. Provide the machine's \s-1IP\s0 address in dotted
+decimal format, its fully qualified host name (for example,
+\f(CWfs1.abc.com\fR), or the shortest abbreviated form of its host name that
+distinguishes it from other machines. Successful use of an abbreviated
+form depends on the availability of a name resolution service (such as the
+Domain Name Service or a local host table) at the time the command is
+issued.
+.Ip "\fB\-port\fR <\fI\s-1IP\s0 port\fR>" 4
+Specifies the process for which to trace Rx activity. Omit this argument
+to specify the File Server (\fBfileserver\fR process), or provide one of the
+following values:
+.Ip "\f(CW7000\fR for the File Server (\fBfileserver\fR process)" 8
+.Ip "\f(CW7001\fR for the Cache Manager (specifically, its callback interface)" 8
+.Ip "\f(CW7002\fR for the Protection Server (\fBptserver\fR process)" 8
+.Ip "\f(CW7003\fR for the Volume Location (\s-1VL\s0) Server (\fBvlserver\fR process)" 8
+.Ip "\f(CW7004\fR for the Authentication Server (\fBkaserver\fR process)" 8
+.Ip "\f(CW7005\fR for the Volume Server (\fBvolserver\fR process)" 8
+.Ip "\f(CW7007\fR for the \s-1BOS\s0 Server (\fBbosserver\fR process)" 8
+.Ip "\f(CW7008\fR for the Update Server (\fBupserver\fR process)" 8
+.Ip "\f(CW7009\fR for the \s-1NFS/AFS\s0 Translator's \fBrmtsysd\fR daemon" 8
+.Ip "\f(CW7021\fR for the Backup Server (\fBbuserver\fR process)" 8
+.Sp
+Finally, specify \f(CW7025\fR through \f(CW65535\fR for the Backup Tape Coordinator
+(\fBbutc\fR process) that has the port offset number derived by subtracting
+7025 from this value.
+.Ip "\fB\-nodally\fR" 4
+Produces output only for connections that are not in dally mode.
+.Ip "\fB\-allconnections\fR" 4
+Produces output for all connections, even inactive ones. By default, the
+output includes information only for connections that are active or in
+dally mode when the \fBrxdebug\fR command is issued.
+.Ip "\fB\-rxstats\fR" 4
+Produces detailed statistics about Rx history and performance (for
+example, counts of the number of packets of various types the process has
+read and sent, calculations of average and minimum roundtrip time, and so
+on).
+.Ip "\fB\-onlyserver\fR" 4
+Produces output only for connections in which the process designated by
+the \fB\-port\fR argument is acting as the server.
+.Ip "\fB\-onlyclient\fR" 4
+Produces output only for connections in which the process designated by
+the \fB\-port\fR argument is acting as the client.
+.Ip "\fB\-onlyport\fR <\fIport\fR>" 4
+Produces output only for connections between the process designated by the
+\fB\-port\fR argument and the specified port on any another machine. Use the
+same port identifiers as for the \fB\-port\fR argument.
+.Ip "\fB\-onlyhost\fR <\fIhost\fR>" 4
+Produces output only for connections between the process designated by the
+\fB\-port\fR argument and any process on the specified machine. To identify
+the machine, use the same notation as for the \fB\-servers\fR argument.
+.Ip "\fB\-onlyauth\fR" 4
+Produces output only for connections that are using the specified
+authentication level. Provide one of the following values:
+.Ip "auth" 8
+Cconnections at authentication level rxkad_auth
+.Ip "clear" 8
+Connections at authentication level rxkad_clear
+.Ip "crypt" 8
+Connections at authentication level rxkad_crypt
+.Ip "none" 8
+Unauthenticated connections (equivalents are \f(CWnull\fR, \f(CWnoauth\fR, and
+\f(CWunauth\fR)
+.Ip "\fB\-version\fR" 4
+Reports the \s-1AFS\s0 build level of the binary file for the process designated
+by the \fB\-port\fR argument (or of the kernel extensions file for port 7001,
+the Cache Manager's callback interface). Any other options combined with
+this one are ignored.
+.Ip "\fB\-noconns\fR" 4
+Produces only the standard statistics that begin the output produced by
+every option (other than \fB\-version\fR), without reporting on any
+connections. Any other options combined with this one are ignored.
+.Ip "\fB\-peers\fR" 4
+Outputs information from the \fIpeer structure\fR maintained for each port on
+another machine to which the process designated by the \fB\-port\fR argument
+has a connection. There is information about roundtrip time and numbers of
+packets sent and received, for example.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+If any options other than \fB\-version\fR or \fB\-help\fR are provided, the output
+written to the standard output stream begins with basic statistics about
+packet usage and availability, how many calls are waiting for a thread,
+how many threads are free, and so on (this is the only information
+provided by the \fB\-noconns\fR flag). Adding other options produces
+additional information as described in the \fIOPTIONS\fR manpage. The output is intended
+for debugging purposes and is meaningful to someone familiar with the
+implementation of Rx.
+.SH "PRIVILEGE REQUIRED"
+None.
+.SH "SEE ALSO"
+the \fIafsd(8)\fR manpage,
+the \fIbosserver(8)\fR manpage,
+the \fIbuserver(8)\fR manpage,
+the \fIbutc(8)\fR manpage,
+the \fIfileserver(8)\fR manpage,
+the \fIkaserver(8)\fR manpage,
+the \fIptserver(8)\fR manpage,
+the \fIupclient(8)\fR manpage,
+the \fIupserver(8)\fR manpage,
+the \fIvlserver(8)\fR manpage,
+the \fIvolserver(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "RXDEBUG 1"
+.IX Name "rxdebug - Provides debugging trace of Rx activity"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-servers\fR <\fIserver machine\fR>"
+
+.IX Item "\fB\-port\fR <\fI\s-1IP\s0 port\fR>"
+
+.IX Item "\f(CW7000\fR for the File Server (\fBfileserver\fR process)"
+
+.IX Item "\f(CW7001\fR for the Cache Manager (specifically, its callback interface)"
+
+.IX Item "\f(CW7002\fR for the Protection Server (\fBptserver\fR process)"
+
+.IX Item "\f(CW7003\fR for the Volume Location (\s-1VL\s0) Server (\fBvlserver\fR process)"
+
+.IX Item "\f(CW7004\fR for the Authentication Server (\fBkaserver\fR process)"
+
+.IX Item "\f(CW7005\fR for the Volume Server (\fBvolserver\fR process)"
+
+.IX Item "\f(CW7007\fR for the \s-1BOS\s0 Server (\fBbosserver\fR process)"
+
+.IX Item "\f(CW7008\fR for the Update Server (\fBupserver\fR process)"
+
+.IX Item "\f(CW7009\fR for the \s-1NFS/AFS\s0 Translator's \fBrmtsysd\fR daemon"
+
+.IX Item "\f(CW7021\fR for the Backup Server (\fBbuserver\fR process)"
+
+.IX Item "\fB\-nodally\fR"
+
+.IX Item "\fB\-allconnections\fR"
+
+.IX Item "\fB\-rxstats\fR"
+
+.IX Item "\fB\-onlyserver\fR"
+
+.IX Item "\fB\-onlyclient\fR"
+
+.IX Item "\fB\-onlyport\fR <\fIport\fR>"
+
+.IX Item "\fB\-onlyhost\fR <\fIhost\fR>"
+
+.IX Item "\fB\-onlyauth\fR"
+
+.IX Item "auth"
+
+.IX Item "clear"
+
+.IX Item "crypt"
+
+.IX Item "none"
+
+.IX Item "\fB\-version\fR"
+
+.IX Item "\fB\-noconns\fR"
+
+.IX Item "\fB\-peers\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

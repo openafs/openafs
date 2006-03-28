@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/afssyscalls.c,v 1.10 2004/07/08 05:35:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/afssyscalls.c,v 1.10.2.3 2006/02/21 04:47:10 shadow Exp $");
 
 #include <signal.h>
 #include <sys/errno.h>
@@ -59,7 +59,6 @@ static void check_iops(int index, char *fun, char *file, int line);
 #pragma weak xiinc = iinc
 #pragma weak xidec = idec
 #pragma weak xiopen = iopen
-#pragma weak xlsetpag = lsetpag
 #pragma weak xlpioctl = lpioctl
 #ifdef notdef
 #pragma weak xiread = iread
@@ -206,12 +205,6 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 #endif /* notdef */
 
 int
-lsetpag(void)
-{
-    return (syscall(AFS_SETPAG));
-}
-
-int
 lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
@@ -314,13 +307,12 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 
 #endif /* AFS_NAMEI_ENV */
 
-#ifdef AFS_LINUX20_ENV
-int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
-		     long param4, int *rval) {
-  struct afsprocdata syscall_data;
-  int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
-  if(fd < 0)
-      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
+#if defined(AFS_DARWIN80_ENV)
+int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
+		     long param4, long param5, long param6, int *rval) {
+  struct afssysargs syscall_data;
+  int code;
+  int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
   if(fd < 0)
     return -1;
 
@@ -329,42 +321,36 @@ int proc_afs_syscall(long syscall, long param1, long param2, long param3,
   syscall_data.param2 = param2;
   syscall_data.param3 = param3;
   syscall_data.param4 = param4;
+  syscall_data.param5 = param5;
+  syscall_data.param6 = param6;
 
-  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+  code = ioctl(fd, VIOC_SYSCALL, &syscall_data);
 
   close(fd);
-
+  if (code)
+     return code;
+  *rval=syscall_data.retval;
   return 0;
 }
 #endif
-
-int
-lsetpag(void)
-{
-    int errcode, rval;
-
-#ifdef AFS_LINUX20_ENV
-    rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
-    
-    if(rval)
-      errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
-#else
-    errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
-#endif
-    
-    return (errcode);
-}
 
 int
 lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     int errcode, rval;
 
-#ifdef AFS_LINUX20_ENV
-    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, follow, &errcode);
+#if defined(AFS_LINUX20_ENV)
+    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, 
+			    follow, &errcode);
 
     if(rval)
-    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, 
+			  follow);
+#elif defined(AFS_DARWIN80_ENV)
+    rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
+			     follow, 0, 0, &errcode);
+    if (rval)
+	errcode = rval;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
 #endif

@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 INCDIRS=-I. -I.. -I${TOP_INCDIR} ${FSINCLUDES}
 INSTALL = ${SRCDIR}/bin/install
-LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
+LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/util.a \
@@ -20,7 +20,7 @@ LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
 
 NAMEI_LIBS=../vlib.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/liblwp.a
 
-CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} -g
+CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS} -g
 
 PROGS = listVicepx
 

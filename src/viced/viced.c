@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.7 2005/07/11 19:08:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.11 2006/02/22 05:02:04 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -167,6 +167,7 @@ int SawPctSpare;
 int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
+int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						 * already implied */
 afs_int32 readonlyServer = 0;
@@ -336,8 +337,10 @@ get_key(char *arock, register afs_int32 akvno, char *akey)
 	return 1;
     }
     code = afsconf_GetKey(confDir, akvno, tkey.key);
-    if (code)
+    if (code) {
+	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
 	return code;
+    }
     memcpy(akey, tkey.key, sizeof(tkey.key));
     return 0;
 
@@ -734,6 +737,7 @@ FlagMsg()
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
+    strcat(buffer, "[-rxmaxmtu <bytes>] ");
 #if AFS_PTHREAD_ENV
     strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
 #endif
@@ -749,6 +753,7 @@ FlagMsg()
     strcat(buffer, "[-realm <Kerberos realm name>] ");
     strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
     strcat(buffer, "[-sendsize <size of send buffer in bytes>] ");
+    strcat(buffer, "[-abortthreshold <abort threshold>] ");
 /*   strcat(buffer, "[-enable_peer_stats] "); */
 /*   strcat(buffer, "[-enable_process_stats] "); */
     strcat(buffer, "[-help]\n");
@@ -1049,6 +1054,19 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-nojumbo")) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
+		return -1; 
+	    }
+	    rxMaxMTU = atoi(argv[++i]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       RX_MAX_PACKET_DATA_SIZE);
+		return -1;
+	    }
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realm[AFS_REALM_SZ];
 	    if ((i + 1) >= argc) {
@@ -1627,6 +1645,7 @@ main(int argc, char *argv[])
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -1788,6 +1807,9 @@ main(int argc, char *argv[])
     if (!rxJumbograms) {
 	/* Don't send and don't allow 3.4 clients to send jumbograms. */
 	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);

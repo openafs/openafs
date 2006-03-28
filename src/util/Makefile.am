@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.1 2001/06/05 20:17:53 shadow Exp $
+# $Id: Makefile.am,v 1.1.16.1 2006/03/09 06:42:17 shadow Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
@@ -27,5 +27,6 @@ libutil_a_SOURCES =  	\
 	flipbase64.c	\
 	afs_atomlist.c	\
 	afs_lhash.c	\
-	snprintf.c
+	snprintf.c	\
+	fstab.c
 

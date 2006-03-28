@@ -36,7 +36,7 @@ AC_ARG_ENABLE( bos-restricted-mode,
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
 AC_ARG_ENABLE( largefile-fileserver,
-[  --enable-largefile-fileserver        enable large file support in fileserver],, enable_largefile_fileserver="no")
+[  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
 AC_ARG_ENABLE( supergroups,
@@ -222,9 +222,13 @@ case $system in
 		fi
 		AC_SUBST([HEADER_RT])
                 ;;
-        *-darwin*)
+        powerpc-*-darwin*)
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(ppc_darwin)
+                ;;
+        i386-*-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(x86_darwin)
                 ;;
 	*-freebsd*)
 		MKAFS_OSTYPE=FBSD
@@ -248,62 +252,17 @@ if test "x$with_afs_sysname" != "x"; then
 else
 	AC_MSG_CHECKING(your AFS sysname)
 	case $host in
-		i?86-*-openbsd3.1)
-			AFS_SYSNAME="i386_obsd31"
+		i?86-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
-		i?86-*-openbsd3.2)
-			AFS_SYSNAME="i386_obsd32"
-			;;
-		i?86-*-openbsd3.3)
-			AFS_SYSNAME="i386_obsd33"
-			;;
-		i?86-*-openbsd3.4)
-			AFS_SYSNAME="i386_obsd34"
-			;;
-		i?86-*-openbsd3.5)
-			AFS_SYSNAME="i386_obsd35"
-			;;
-		i?86-*-openbsd3.6)
-			AFS_SYSNAME="i386_obsd36"
-			;;
-		i?86-*-openbsd3.7)
-			AFS_SYSNAME="i386_obsd37"
-			;;
-		i?86-*-freebsd4.2*)
-			AFS_SYSNAME="i386_fbsd_42"
-			;;
-		i?86-*-freebsd4.3*)
-			AFS_SYSNAME="i386_fbsd_43"
-			;;
-		i?86-*-freebsd4.4*)
-			AFS_SYSNAME="i386_fbsd_44"
-			;;
-		i?86-*-freebsd4.5*)
-			AFS_SYSNAME="i386_fbsd_45"
-			;;
-		i?86-*-freebsd4.6*)
-			AFS_SYSNAME="i386_fbsd_46"
-			;;
-		i?86-*-freebsd4.7*)
-			AFS_SYSNAME="i386_fbsd_47"
-			;;
-		i?86-*-freebsd5.0*)
-			AFS_SYSNAME="i386_fbsd_50"
-			;;
-		i?86-*-freebsd5.1*)
-			AFS_SYSNAME="i386_fbsd_51"
-			;;
-		i?86-*-freebsd5.2*)
-			AFS_SYSNAME="i386_fbsd_52"
-			;;
-		i?86-*-freebsd5.3*)
-			AFS_SYSNAME="i386_fbsd_53"
-			;;
-		i?86-*-freebsd5.4*)
-			AFS_SYSNAME="i386_fbsd_54"
-			;;
-		i?86-*-freebsd6.0*)
-			AFS_SYSNAME="i386_fbsd_60"
+		i?86-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -324,6 +283,10 @@ else
 		i?86-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
+			;;
+		amd64-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="amd64_nbsd20"
 			;;
 		powerpc-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
@@ -431,6 +394,21 @@ else
 			;;
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin8*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		powerpc-apple-darwin8.*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		i386-apple-darwin8.*)
+			AFS_SYSNAME="x86_darwin_80"
+			;;
+		powerpc-apple-darwin9.*)
+			AFS_SYSNAME="ppc_darwin_90"
+			;;
+		i386-apple-darwin9.*)
+			AFS_SYSNAME="x86_darwin_90"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -600,6 +578,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED
+		 LINUX_FS_STRUCT_INODE_HAS_I_MUTEX
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
@@ -723,6 +703,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
 		 fi
@@ -786,7 +769,7 @@ case $AFS_SYSNAME in
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
                 dnl the test below fails on darwin, even if the CPPFLAGS below
-                dnl are added. the headers from Kernel.Framework must be used
+                dnl are added. the headers from Kernel.framework must be used
                 dnl when KERNEL is defined.
 
                 dnl really, such a thing isn't guaranteed to work on any 
@@ -1036,7 +1019,7 @@ fi
 AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_MSG_CHECKING([for POSIX regex library])
@@ -1385,7 +1368,7 @@ CFLAGS="$save_CFLAGS"
 AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
 AC_MSG_CHECKING(for gfp_mask in struct address_space)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_address_space_has_gfp_mask, 
 [
 AC_TRY_COMPILE(
@@ -1400,7 +1383,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
 AC_MSG_CHECKING(for i_bytes in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_bytes, 
 [
 AC_TRY_COMPILE(
@@ -1415,7 +1398,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM], [
 AC_MSG_CHECKING(for i_alloc_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_alloc_sem,
 [
 AC_TRY_COMPILE(
@@ -1430,7 +1413,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM], [
 AC_MSG_CHECKING(for i_truncate_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_truncate_sem,
 [
 AC_TRY_COMPILE(
@@ -1445,7 +1428,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK], [
 AC_MSG_CHECKING(for page_lock in struct address_space)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_address_space_has_page_lock, 
 [
 AC_TRY_COMPILE(
@@ -1475,7 +1458,7 @@ cp  $tmpldir/osi_vfs.hin $outputdir/osi_vfs.h
 AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
 AC_MSG_CHECKING(for linux/completion.h existance)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_completion_h_exists,
 [
 AC_TRY_COMPILE(
@@ -1495,7 +1478,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
 AC_MSG_CHECKING(for defined for_each_process)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_defines_for_each_process,
 [
 AC_TRY_COMPILE(
@@ -1512,7 +1495,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_DEFINES_PREV_TASK], [
 AC_MSG_CHECKING(for defined prev_task)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_defines_prev_task,
 [
 AC_TRY_COMPILE(
@@ -1529,7 +1512,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
 AC_MSG_CHECKING(for exported init_mm)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_init_mm,
 [
 AC_TRY_COMPILE(
@@ -1546,7 +1529,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_KALLSYMS_ADDRESS], [
 AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_address,
 [
 AC_TRY_COMPILE(
@@ -1563,7 +1546,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_KALLSYMS_SYMBOL], [
 AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_symbol,
 [
 AC_TRY_COMPILE(
@@ -1580,7 +1563,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_SYS_CALL_TABLE], [
 AC_MSG_CHECKING(for exported sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_call_table,
 [
 AC_TRY_COMPILE(
@@ -1597,7 +1580,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_IA32_SYS_CALL_TABLE], [
 AC_MSG_CHECKING(for exported ia32_sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_ia32_sys_call_table,
 [
 AC_TRY_COMPILE(
@@ -1614,7 +1597,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_SYS_CHDIR], [
 AC_MSG_CHECKING(for exported sys_chdir)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_chdir,
 [
 AC_TRY_COMPILE(
@@ -1631,7 +1614,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_SYS_CLOSE], [
 AC_MSG_CHECKING(for exported sys_close)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_close,
 [
 AC_TRY_COMPILE(
@@ -1648,7 +1631,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_EXPORTS_SYS_WAIT4], [
 AC_MSG_CHECKING(for exported sys_wait4)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_wait4,
 [
 AC_TRY_COMPILE(
@@ -1665,7 +1648,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
 [
 AC_TRY_COMPILE(
@@ -1681,8 +1664,8 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DEVICES], [
 AC_MSG_CHECKING(for i_devices in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_devices, 
 [
 AC_TRY_COMPILE(
 [#include <linux/fs.h>],
@@ -1697,7 +1680,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS], [
 AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers, 
 [
 AC_TRY_COMPILE(
@@ -1713,7 +1696,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK], [
 AC_MSG_CHECKING(for inotify_lock in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_inotify_lock, 
 [
 AC_TRY_COMPILE(
@@ -1728,7 +1711,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM], [
 AC_MSG_CHECKING(for inotify_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_inotify_sem, 
 [
 AC_TRY_COMPILE(
@@ -1744,7 +1727,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
 AC_MSG_CHECKING(for i_mapping_overload in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mapping_overload, 
 [
 AC_TRY_COMPILE(
@@ -1760,7 +1743,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED], [
 AC_MSG_CHECKING(for i_mmap_shared in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mmap_shared,
 [
 AC_TRY_COMPILE(
@@ -1773,10 +1756,26 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MUTEX], [
+AC_MSG_CHECKING(for i_mutex in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mutex, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mutex);], 
+ac_cv_linux_fs_struct_inode_has_i_mutex=yes,
+ac_cv_linux_fs_struct_inode_has_i_mutex=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mutex)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SECURITY], [
 AC_MSG_CHECKING(for i_security in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_security, 
 [
 AC_TRY_COMPILE(
@@ -1792,7 +1791,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
 AC_MSG_CHECKING(for i_sb_list in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_sb_list, 
 [
 AC_TRY_COMPILE(
@@ -1808,7 +1807,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE],[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_recalc_sigpending_takes_void,
 [
 AC_TRY_COMPILE(
@@ -1823,7 +1822,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT], [
 AC_MSG_CHECKING(for parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_parent,
 [
 AC_TRY_COMPILE(
@@ -1839,7 +1838,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
 AC_MSG_CHECKING(for real_parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_real_parent,
 [
 AC_TRY_COMPILE(
@@ -1855,7 +1854,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG], [
 AC_MSG_CHECKING(for sig in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sig,
 [
 AC_TRY_COMPILE(
@@ -1870,7 +1869,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK], [
 AC_MSG_CHECKING(for sigmask_lock in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sigmask_lock,
 [
 AC_TRY_COMPILE(
@@ -1885,7 +1884,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND], [
 AC_MSG_CHECKING(for sighand in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sighand,
 [
 AC_TRY_COMPILE(
@@ -1900,7 +1899,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM], [
 AC_MSG_CHECKING(for rlim in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_rlim,
 [
 AC_TRY_COMPILE(
@@ -1915,7 +1914,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
 AC_MSG_CHECKING(for signal->rlim in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_signal_rlim,
 [
 AC_TRY_COMPILE(
@@ -1930,7 +1929,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE], [
 AC_MSG_CHECKING(for exit_state in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_exit_state,
 [
 AC_TRY_COMPILE(
@@ -1945,7 +1944,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
 AC_MSG_CHECKING(for alloc_inode in struct super_operations)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_super_has_alloc_inode, 
 [
 AC_TRY_COMPILE(
@@ -1960,7 +1959,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE],[
 AC_MSG_CHECKING(for inode_setattr return type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_inode_setattr_returns_int,
 [
 AC_TRY_COMPILE(
@@ -1977,7 +1976,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_WRITE_INODE_RETURN_TYPE],[
 AC_MSG_CHECKING(for write_inode return type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_write_inode_returns_int,
 [
 AC_TRY_COMPILE(
@@ -1993,7 +1992,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_IOP_NAMEIDATA],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether inode_operations.create takes a nameidata)
 AC_CACHE_VAL(ac_cv_linux_func_i_create_takes_nameidata,
 [
@@ -2061,7 +2060,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether address_space_operations.writepage takes a writeback_control)
 AC_CACHE_VAL(ac_cv_linux_func_a_writepage_takes_writeback_control,
 [
@@ -2083,7 +2082,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_REFRIGERATOR],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether refrigerator takes PF_FREEZE)
 AC_CACHE_VAL(ac_cv_linux_func_refrigerator_takes_pf_freeze,
 [
@@ -2187,7 +2186,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE],[
 AC_MSG_CHECKING(for 5th argument in sock_create found in some SELinux kernels)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ -DKBUILD_BASENAME=\\"libafs\\" $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_sock_create_v,
 [
 AC_TRY_COMPILE(
@@ -2203,7 +2202,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
 AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-default -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-default -Werror-implicit-function-declaration -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
 [
 AC_TRY_COMPILE(
@@ -2461,6 +2460,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-pthread"
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe"
 		YACC="byacc"
@@ -2472,6 +2472,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-lpthread" # XXX -pthread soon
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
 		YACC="yacc"
@@ -2483,6 +2484,7 @@ case $AFS_SYSNAME in
 		MT_LIBS=""
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
 		YACC="bison -y"
@@ -2623,6 +2625,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS="-O2"
 		YACC="yacc"
@@ -2646,6 +2649,8 @@ case $AFS_SYSNAME in
 		LEX="lex -l"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-traditional-cpp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_13)
@@ -2654,6 +2659,8 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_14)
@@ -2662,6 +2669,8 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_60)
@@ -2671,6 +2680,8 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_70)
@@ -2684,19 +2695,41 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
-	ppc_darwin_80)
+	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
-		LWP_OPTMZ="-O2"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
+		;;
+
+	*_darwin_90)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		LEX="lex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LD="cc"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
+		REGEX_OBJ="regex.o"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_linux*)
@@ -2809,7 +2842,7 @@ case $AFS_SYSNAME in
 
 	s390x_linux24|s390x_linux26)
 		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="gcc -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -2886,7 +2919,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	sparc64_linux22)
+	sparc64_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -2895,19 +2928,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	sparc64_linux24)
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
+		XLDFLAGS64="-m64"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -2954,6 +2976,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		LD="/usr/ccs/bin/ld"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_56)
@@ -2974,6 +2997,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_57)
@@ -2995,6 +3019,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_58)
@@ -3016,6 +3041,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_59)
@@ -3037,6 +3063,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_510)
@@ -3058,6 +3085,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sunx86_57)

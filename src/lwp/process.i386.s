@@ -59,10 +59,6 @@ ENTRY(savecontext)
 L1:
 	jmp	*f(%ebp)			/* ebx = &f */
 
-/* Shouldn't be here....*/
-
-	call	_C_LABEL(abort)
-
 /*
  * returnto(area2)
  *	struct savearea *area2;
@@ -83,6 +79,3 @@ ENTRY(returnto)
 	popl	%ebp
 	ret
 
-/* I see, said the blind man, as he picked up his hammer and saw! */
-	pushl	$1234
-	call	_C_LABEL(abort)

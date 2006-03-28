@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS = -I. -I.. -I${SRCDIR}/include ${XCFLAGS} ${DBG}
+CFLAGS = -I. -I.. -I${SRCDIR}/include ${XCFLAGS} ${ARCHFLAGS} ${DBG}
 
 tests: test_ktime ktest dirpath_test
 

@@ -112,7 +112,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.2 2005/07/11 19:08:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.4 2006/02/22 04:09:30 jaltman Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -166,6 +166,7 @@ int pr_realmNameLen;
 char *pr_realmName;
 
 int restricted = 0;
+int rxMaxMTU = -1;
 
 static struct afsconf_cell info;
 
@@ -243,6 +244,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
     osi_audit(PTS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
@@ -348,6 +350,20 @@ main(int argc, char **argv)
 	    } else
 		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	}
+	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
+	    if ((a + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		PT_EXIT(1);
+	    }
+	    rxMaxMTU = atoi(argv[++a]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
+		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+			rxMaxMTU, RX_MIN_PACKET_SIZE,
+			RX_MAX_PACKET_DATA_SIZE);
+		PT_EXIT(1);
+	    }
+	} 
 	else if (*arg == '-') {
 	    /* hack in help flag support */
 
@@ -358,7 +374,7 @@ main(int argc, char **argv)
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
-		   "[-restricted] "
+		   "[-restricted] [-rxmaxmtu <bytes>]"
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
@@ -367,7 +383,7 @@ main(int argc, char **argv)
 		   "[-auditlog <log path>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] "
+		   "[-restricted] [-rxmaxmtu <bytes>]"
 		   "[-groupdepth <depth>] " "[-help]\n");
 #endif
 #else
@@ -378,13 +394,13 @@ main(int argc, char **argv)
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] "
+		   "[-restricted] [-rxmaxmtu <bytes>]"
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] "
+		   "[-restricted] [-rxmaxmtu <bytes>]"
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
 #endif
 #endif
@@ -497,6 +513,10 @@ main(int argc, char **argv)
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
+    }
 
     tservice =
 	rx_NewService(0, PRSRV, "Protection Server", sc, 3,

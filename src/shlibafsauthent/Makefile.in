@@ -75,7 +75,9 @@ SYSOBJS = \
 	rmtsys.xdr.o \
 	rmtsys.cs.o \
 	afssyscalls.o \
-	rmtsysnet.o
+	rmtsysnet.o \
+	glue.o \
+	setpag.o
 
 PTSERVEROBJS = \
 	ptclient.o \
@@ -99,20 +101,21 @@ LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTH
 
 ${DEST}/lib/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${DEST}/lib/${LIBAFSAUTHENT}
-
-${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}: ${DEST}/lib/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
+all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 
-install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
+install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
 
 ${LIBAFSAUTHENT}: ${LIBOBJS}
 	case ${SYS_NAME} in \
 	rs_aix4*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS};; \
 	sun*_5*) \
-		${SHLIB_LINKER} -h ${LIBAFSAUTHENT} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+	*_linux*) \
+		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	esac
@@ -259,21 +262,23 @@ afssyscalls.o: ${SYS}/afssyscalls.c
 rmtsysnet.o: ${SYS}/rmtsysnet.c
 	${CCRULE}
 
+glue.o: ${SYS}/glue.c
+	${CCRULE}
+
+setpag.o: ${SYS}/setpag.c
+	${CCRULE}
+
 clean:
 	$(RM) -f *.o *.a libafsauthent*
 
 ${DESTDIR}${libdir}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
-
-${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}: ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}.${LIBFASAUTHENTMAJOR}
 
 ${TOP_LIBDIR}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
-
-${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-dest: ${DEST}/lib/${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
-
-
+dest: ${DEST}/lib/${LIBAFSAUTHENT}

@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.6 2005/07/11 18:59:55 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.7 2006/03/09 06:41:50 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -80,6 +80,8 @@ extern char PRE_Block;		/* from preempt.c */
 #ifdef __s390__
 #define MINFRAME    96
 #define STACK_ALIGN 8
+#elif defined(AFS_DARWIN_ENV)
+#define STACK_ALIGN 16
 #else
 #define STACK_ALIGN 4
 #endif
@@ -297,7 +299,11 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 	    return LWP_ENOMEM;
 	}
 	if (stacksize < MINSTACK)
+#ifdef AFS_DARWIN_ENV
+	    stacksize = 1008;
+#else /* !AFS_DARWIN_ENV */
 	    stacksize = 1000;
+#endif /* !AFS_DARWIN_ENV */
 	else
 	    stacksize =
 		STACK_ALIGN * ((stacksize + STACK_ALIGN - 1) / STACK_ALIGN);
@@ -342,12 +348,21 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 	stackptr -= stacksize;
 	stackmemory = stackptr;
 #else
-	if ((stackmemory = (char *)malloc(stacksize + 7)) == NULL) {
+#ifdef AFS_DARWIN_ENV
+	if ((stackmemory = (char *)malloc(stacksize + STACK_ALIGN - 1)) == NULL)
+#else /* !AFS_DARWIN_ENV */
+	if ((stackmemory = (char *)malloc(stacksize + 7)) == NULL)
+#endif /* !AFS_DARWIN_ENV */
+	{
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
 	/* Round stack pointer to byte boundary */
+#ifdef AFS_DARWIN_ENV
+	stackptr = (char *)(STACK_ALIGN * (((long)stackmemory + STACK_ALIGN - 1) / STACK_ALIGN));
+#else /* !AFS_DARWIN_ENV */
 	stackptr = (char *)(8 * (((long)stackmemory + 7) / 8));
+#endif /* !AFS_DARWIN_ENV */
 #endif
 	if (priority < 0 || priority >= MAX_PRIORITIES) {
 	    Set_LWP_RC();
@@ -372,8 +387,12 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 		    stackptr + MINFRAME);
 #else
 #if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#ifdef sys_x86_darwin_80
+	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 16 - sizeof(void *));	/* 16 = 2 * jmp_buf_type */
+#else /* !sys_x86_darwin_80 */
 	/* Need to have the sp on an 8-byte boundary for storing doubles. */
 	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 16);	/* 16 = 2 * jmp_buf_type */
+#endif /* !sys_x86_darwin_80 */
 #else
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
 	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 0x40);	/* lomgjmp does something

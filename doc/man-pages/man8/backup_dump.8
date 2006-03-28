@@ -1,0 +1,712 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_dump 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup dump \- Creates a dump (dumps a volume set at a particular dump level)
+.SH "SYNOPSIS"
+\fBbackup dump\fR <<\ [\fB\-volumeset\fR\ <\fIvolume\ set\ name\fR] >>>
+    <<\ [\fB\-dump\fR\ <\fIdump\ level\ name\fR] >>> 
+    <<\ [\fB\-portoffset\fR\ <\fITC\ port\ offset\fR] >>>
+    <<\ [\fB\-at\fR\ <\fIdate/time\ to\ start\ dump\fR+] >>> [\fB\-append\fR] [\fB\-n\fR]
+    <<\ [\fB\-file\fR\ <\fIload\ file\fR] >>> [\fB\-localauth\fR] 
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-help\fR]
+.PP
+\fBbackup dump\fR <<\ [\fB\-v\fR\ <\fIvolume\ set\ name\fR] >>>
+    <<\ [\fB\-d\fR\ <\fIdump\ level\ name\fR] >>>
+    <<\ [\fB\-p\fR\ <\fITC\ port\ offset\fR] >>>
+    <<\ [\fB\-at\fR\ <\fIDate/time\ to\ start\ dump\fR+] >>> [\fB\-ap\fR] [\fB\-n\fR]
+    <<\ [\fB\-f\fR\ <\fIload\ file\fR] >>> [\fB\-l\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup dump\fR command either dumps the volume set specified by the
+\fB\-volumeset\fR argument at the dump level specified by the \fB\-dump\fR
+argument and creates a Backup Database dump record about it, or executes
+the dump instructions listed in the file named by the \fB\-file\fR
+argument. The Tape Coordinator indicated by the \fB\-portoffset\fR argument
+(or on each command in the file) executes the operation.
+.PP
+(If the \f(CWFILE YES\fR instruction appears in the
+\fI/usr/afs/backup/CFG_\fIdevice_name\fR\fR file on the Tape Coordinator machine
+associated with the specified port offset, then the Backup System dumps
+data to the backup data file listed for that port offset in the Tape
+Coordinator's \fI/usr/afs/backup/tapeconfig\fR file, rather than to tape. For
+the sake of clarity, the following text refers to tapes only, but the
+Backup System handles backup data files in much the same way.)
+.PP
+The term \fIdumping\fR refers to copying a collection of data to tape or a
+backup data file, and the resulting collection is termed a \fIdump\fR. The
+set of tapes that contain one or more dumps is called a \fIdump set\fR. The
+first dump in a dump set is its \fIinitial dump\fR, and any dumps
+subsequently added to the dump set (by use of the \fB\-append\fR argument) are
+\fIappended dumps\fR.  Creating appended dumps is optional, and appended
+dumps can be of different volume sets, and at different dump levels, than
+the initial dump.
+.PP
+A \fIfull dump\fR, created at a full dump level in the dump hierarchy,
+contains all of the data that existed at the time of the dump in the
+volumes belonging to the volume set. An \fIincremental dump\fR, created at an
+incremental dump level, contains only data that has changed since the
+volume set was dumped at the incremental level's \fIparent dump level\fR (the
+dump level immediately above the incremental level in the hierarchy),
+which can be a full or incremental level. More specifically, an
+incremental dump includes only the files and directories that have
+modification timestamps later than the \fIclone date\fR of the volume
+included at the parent dump level. For backup and read-only volumes, the
+clone date is the time at which the volume was cloned from its read/write
+source before being included in the parent dump; for read/write volumes,
+it represents the time at which the volume was locked for inclusion in the
+parent dump. The clone date appears in the \fIclone date\fR field of the
+output from the \fBbackup volinfo\fR command. As an example, an incremental
+dump at the \f(CW/full/week1/thursday\fR level includes only files and
+directories that have changed since the volume set was dumped at the
+\f(CW/full/week1\fR level.
+.Sh "Initiating different types of dump operations"
+To initiate a dump operation that is to start as soon as the relevant Tape
+Coordinator is available, provide only the \fB\-volumeset\fR, \fB\-dump\fR,
+\fB\-portoffset\fR, and optionally \fB\-append\fR options. To schedule a single
+\fBbackup dump\fR command to execute in the future, also include the \fB\-at\fR
+argument to specify the start time.
+.PP
+To append a dump to an existing dump set, include the \fB\-append\fR flag. The
+Backup System imposes the following conditions on appended dumps:
+.Ip "\(bu" 4
+If writing to tape, the Tape Coordinator checks that it is the final one
+in a dump set for which there are complete and valid tape and dump records
+in the Backup Database. If not, it rejects the tape and requests an
+acceptable one. The operator can use the \fB\-dbadd\fR argument to the
+\fBbackup scantape\fR command to insert the necessary records into the
+database.
+.Ip "\(bu" 4
+The most recent dump on the tape or in the backup data file must have
+completed successfully.
+.Ip "\(bu" 4
+The dump set must begin with an initial dump that is recorded in the
+Backup Database. If there are no dumps on the tape, then the Backup System
+treats the dump operation as an initial dump and imposes the relevant
+requirements (for example, checks the \s-1AFS\s0 tape name if appropriate).
+.PP
+To schedule multiple dump operations, list the operations in the file
+named by the \fB\-file\fR argument. Optionally include the \fB\-at\fR argument to
+specify when the \fBbackup\fR command interpreter reads the file; otherwise
+it reads it immediately. Do not combine the \fB\-file\fR argument with the
+command's first three arguments or the \fB\-append\fR or \fB\-n\fR flags. The
+commands in the file can include any of the \fBbackup dump\fR command's
+arguments, including the \fB\-at\fR argument to schedule them to run even
+later in the future.
+.PP
+To generate a list of the volumes included in a dump, without actually
+dumping them, combine the \fB\-n\fR flag with the options to be used on the
+actual command.
+.Sh "How the Backup System executes a dump operation"
+Before beginning a dump operation, the Backup System verifies that there
+is a Backup Database entry for the volume set, dump level, and port
+offset. If the command is correctly formed and issued in interactive mode,
+it is assigned a job number and added to the jobs list. List jobs in
+interactive mode by using the \fBbackup jobs\fR command; terminate them with
+the \fBbackup kill\fR command.
+.PP
+After obtaining the list of volumes to dump from the Volume Location (\s-1VL\s0)
+Server, the Backup System sorts the list by site (server and
+partition). It groups volumes from the same site together in the dump to
+minimize the number of times the operator must change tapes during restore
+operations.
+.PP
+The dependence of an incremental dump on its parent means that a valid
+parent dump must already exist for the Backup System to create its child
+incremental dump. If the Backup System does not find a record of a dump
+created at the immediate parent dump level, it looks in the Backup
+Database for a dump created at one level higher in the hierarchy, and so
+on, up to the full dump level if necessary. It creates an incremental dump
+at the level one below the lowest valid parent dump set that it finds. If
+it fails to find even a full dump, it dumps the volume set at the full
+dump level.
+.PP
+If the Backup System is unable to access a volume during a dump operation,
+it skips the volume and dumps the remaining volumes from the volume
+set. Possible reasons a volume is inaccessible include server machine or
+process outages, or that the volume was moved between the time the Volume
+Location (\s-1VL\s0) Server generated the list of sites for the volume in the
+volume set and the time the Backup System actually attempts to dump the
+data in it. After the first dumping pass, the Backup System attempts to
+dump each volume it skipped. If it still cannot dump a volume and the
+\f(CWASK NO\fR instruction does not appear in the \fI\s-1CFG_\s0\fIdevice_name\fR\fR file,
+it queries the operator as to whether it needs to attempt to dump the
+volume again, omit the volume from the dump, or halt the dump operation
+altogether. When prompted, the operator can attempt to solve whatever
+problem prevented the Backup System from accessing the volumes. If the
+\f(CWASK NO\fR instruction appears in the \fI\s-1CFG_\s0\fIdevice_name\fR\fR file, the
+Backup System omits the volume from the dump.
+.PP
+Before scheduling a dump operation, the Backup System verifies that the
+date specified by the \fB\-at\fR argument is in the future, and checks the
+validity of the volume set, dump level and port offset as for a regular
+dump operation. It checks the validity of the parameters again just before
+actually running the scheduled operation.
+.PP
+Before writing an initial dump to a tape that does not have a permanent
+name on the label, the Backup System checks that the \s-1AFS\s0 tape name on the
+label is acceptable. If desired, disable name checking by including the
+\f(CWNAME_CHECK NO\fR instruction in the \fI\s-1CFG_\s0\fIdevice_name\fR\fR file.
+.PP
+If \s-1AFS\s0 tape name checking is enabled, the Backup System accepts the
+following three types of values for the \s-1AFS\s0 tape name. If the name on the
+label does not conform, the Backup System obtains a tape with an
+acceptable label by invoking the \f(CWMOUNT\fR instruction in the
+\fI\s-1CFG_\s0\fIdevice_name\fR\fR file or prompting the operator.
+.Ip "\(bu" 4
+A name of the form \fIvolume_set_name.dump_level_name.tape_index\fR, where
+\fIvolume_set_name\fR matches the value of the \fB\-volumeset\fR argument,
+\fIdump_level_name\fR matches the last element in the pathname value of the
+\fB\-dump\fR argument, and \fItape_index\fR reflects the tape's place in a
+multitape dump set. As an example, the first tape in a dump set for which
+the initial dump is of volume set \f(CWuser\fR at the dump level
+\f(CW/sunday2/monday\fR has \s-1AFS\s0 tape name \f(CWuser.monday.1\fR. If the label
+records this type of \s-1AFS\s0 tape name, the Backup System retains the \s-1AFS\s0 tape
+name and writes the dump to the tape.
+.Ip "\(bu" 4
+The string \f(CW< <NULL\fR >>, which usually indicates that a backup operator
+has used the \fBbackup labeltape\fR command to write a label on the tape, but
+did not include the \fB\-name\fR argument to assign an \s-1AFS\s0 tape
+name. Presumably, the operator did include the \fB\-pname\fR argument to
+assign a permanent name. If the label records a \f(CW< <NULL\fR >> value, the
+Backup System constructs and records on the label the appropriate \s-1AFS\s0 tape
+name, and writes the dump on the tape.
+.Ip "\(bu" 4
+No value at all, because the tape has never been labeled or used in the
+Backup System. As when the \s-1AFS\s0 tape name is \f(CW< <NULL\fR >>, the Backup
+System constructs and records on the label the appropriate \s-1AFS\s0 tape name,
+and writes the dump on the tape.
+.PP
+To determine how much data it can write to a tape, the Tape Coordinator
+reads the capacity recorded on the tape's label (placed there by including
+the \fB\-size\fR argument to the \fBbackup labeltape\fR command). If the label's
+capacity field is empty, the Tape Coordinator uses the capacity recorded
+for the specified port offset in the local \fItapeconfig\fR file. If the
+capacity field in the \fItapeconfig\fR file is also empty, the Tape
+Coordinator uses the maximum capacity of 2 \s-1TB\s0.
+.PP
+During a dump operation, the Tape Coordinator tracks how much data it has
+written and stops shortly before it reaches what it believes is the tape's
+capacity. If it is in the middle of writing the data for a volume when it
+reaches that point, it writes a special marker that indicates an
+interrupted volume and continues writing the volume on the next tape. It
+can split a volume this way during both an initial and an appended dump,
+and the fact that the volume resides on multiple tapes is automatically
+recorded in the Backup Database.
+.PP
+If the tape is actually larger than the expected capacity, then the Tape
+Coordinator simply does not use the excess tape. If the tape is smaller
+than the expected capacity, the Tape Coordinator can reach the end-of-tape
+(\s-1EOT\s0) unexpectedly while it is writing data. If the Tape Coordinator is in
+the middle of the writing data from a volume, it obtains a new tape and
+rewrites the entire contents of the interrupted volume to it. The data
+from the volume that was written to the previous tape remains there, but
+is never used.
+.PP
+The Backup System allows recycling of tapes (writing a new dump set over
+an old dump set that is no longer needed), but imposes the following
+conditions:
+.Ip "\(bu" 4
+All dumps in the old dump set must be expired. The Backup System always
+checks expiration dates, even when name checking is disabled.
+.Ip "\(bu" 4
+If the tape to be recycled does not have a permanent name and name
+checking is enabled, then the \s-1AFS\s0 tape name derived from the new initial
+dump's volume set name and dump level name must match the \s-1AFS\s0 tape name
+already recorded on the label.
+.Ip "\(bu" 4
+The tape cannot already have data on it that belongs to the dump currently
+being performed, because that implies that the operator or automated tape
+device has not removed the previous tape from the drive, or has mistakenly
+reinserted it. The Tape Coordinator generates the following message and
+attempts to obtain another tape:
+.Sp
+.Vb 1
+\&   Can't overwrite tape containing the dump in progress
+.Ve
+.Ip "\(bu" 4
+The tape cannot contain data from a parent dump of the current
+(incremental) dump, because overwriting a parent dump makes it impossible
+to restore data from the current dump. The Tape Coordinator generates the
+following message and attempts to obtain another tape:
+.Sp
+.Vb 1
+\&   Can't overwrite the parent dump I<parent_name> (I<parent_dump_ID>)
+.Ve
+.PP
+To recycle a tape before all dumps on it have expired or if the \s-1AFS\s0 tape
+name is wrong, use the \fBbackup labeltape\fR command to overwrite the tape's
+label and remove all associated tape and dump records from the Backup
+Database.
+.PP
+The Tape Coordinator's default response to this command is to access the
+first tape by invoking the \f(CWMOUNT\fR instruction in the
+\fI\s-1CFG_\s0\fIdevice_name\fR\fR file, or by prompting the backup operator to insert
+the tape if there is no \f(CWMOUNT\fR instruction.  However, if the \f(CWAUTOQUERY
+NO\fR instruction appears in the \fI\s-1CFG_\s0\fIdevice_name\fR\fR file, or if the
+issuer of the \fBbutc\fR command included the \fB\-noautoquery\fR flag, the Tape
+Coordinator instead expects the tape to be in the device already. If it is
+not, the Tape Coordinator invokes the \f(CWMOUNT\fR instruction or prompts the
+operator. It also invokes the \f(CWMOUNT\fR instruction or prompts for any
+additional tapes needed to complete the dump operation; the issuer must
+arrange to provide them.
+.SH "CAUTIONS"
+If a dump operation is interrupted or fails for any reason, data from all
+volumes written to tape before the interrupt are valid can be used in a
+restore operation. The Backup Database includes an entry for the failed
+dump and for each volume that was successfully dumped. See the \fIIBM AFS
+Administration Guide\fR for information on dealing with interrupted dumps.
+.PP
+If dumping to tape rather than a backup data file, it is best to use only
+compatible tape devices (ones that can read the same type of tape).  Using
+compatible devices greatly simplifies restore operations. The
+\fB\-portoffset\fR argument to the \fBbackup diskrestore\fR and \fBbackup
+volsetrestore\fR commands accepts multiple port offset numbers, but the
+Backup System uses the first listed port offset when restoring all full
+dumps, the second port offset when restoring all level 1 dumps, and so
+on. At the very least, use compatible tape devices to perform dumps at
+each level. If compatible tape devices are not used, the \fBbackup
+volrestore\fR command must be used to restore one volume at a time.
+.PP
+Valid (unexpired) administrative tokens must be available to the \fBbackup\fR
+command interpreter both when it reads the file named by the \fB\-file\fR
+argument and when it runs each operation listed in the file. Presumably,
+the issuer is scheduling dumps for times when no human operator is
+present, and so must arrange for valid tokens to be available on the local
+machine. One option is to issue all commands (or run all scripts) on file
+server machines and use the \fB\-localauth\fR flag on the \fBbackup\fR and \fBvos\fR
+commands. To protect against improper access to the machine or the tokens,
+the machine must be physically secure (perhaps even more protected than a
+Tape Coordinator machine monitored by a human operator during
+operation). Also, if an unattended dump requires multiple tapes, the
+operator must properly configure a tape stacker or jukebox and the device
+configuration file.
+.PP
+When the command is issued in regular (non-interactive) mode, the command
+shell prompt does not return until the dump operation completes. To avoid
+having to open additional connections, issue the command in interactive
+mode, especially when including the \fB\-at\fR argument to schedule dump
+operations.
+.SH "OPTIONS"
+.Ip "\fB\-volumeset\fR <\fIvolume set name\fR>" 4
+Names the volume set to dump. The \fB\-dump\fR argument must be provided along
+with this one; do not combine them with the \fB\-file\fR argument. If using a
+temporary volume set, the \fBvos dump\fR command must be issued within the
+interactive session in which the \fBbackup addvolset\fR command was issued
+with the \fB\-temporary\fR flag.
+.Ip "\fB\-dump\fR <\fIdump level name\fR>" 4
+Specifies the complete pathname of the dump level at which to dump the
+volume set. The \fB\-volumeset\fR argument must be provided along with this
+one; do not combine them with the \fB\-file\fR argument.
+.Ip "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>" 4
+Specifies the port offset number of the Tape Coordinator handling the
+tapes for this operation. It must be provided unless the default value of
+0 (zero) is appropriate; do not combine it with the \fB\-file\fR argument.
+.Ip "\fB\-at\fR <\fIdate/time to start dump\fR>" 4
+Specifies the date and time in the future at which to run the command, or
+to read the file named by the \fB\-file\fR argument. Provide a value in the
+format \fImm/dd/yyyy\fR [\fIhh:\s-1MM\s0\fR], where the month (\fImm\fR), day (\fIdd\fR), and
+year (\fIyyyy\fR) are required. Valid values for the year range from \f(CW1970\fR
+to \f(CW2037\fR; higher values are not valid because the latest possible date
+in the standard \s-1UNIX\s0 representation is in February 2038. The Backup System
+automatically reduces any later date to the maximum value.
+.Sp
+The hour and minutes (\fIhh:\s-1MM\s0\fR) are optional, but if provided must be in
+24-hour format (for example, the value \f(CW14:36\fR represents 2:36 p.m.). If
+omitted, the time defaults to midnight (00:00 hours).
+.Sp
+As an example, the value 04/23/1999 20:20 schedules the command for 8:20
+p.m. on 23 April 1999.
+.Ip "\fB\-append\fR" 4
+Appends the dump onto the end of a tape that already contains data from
+another dump. However, if the tape is not in fact part of an existing dump
+set, the Backup System creates a new dump set using the parameters of this
+dump. If the tape is not the last tape in the dump set, the Tape
+Coordinator prompts for insertion of the appropriate tape. Do not combine
+this argument with the \fB\-file\fR argument.
+.Ip "\fB\-n\fR" 4
+Displays the names of volumes to be included in the indicated dump,
+without actually performing the dump operation. Do not combine this
+argument with the \fB\-file\fR argument.
+.Ip "\fB\-file\fR <\fIload file\fR>" 4
+Specifies the local disk or \s-1AFS\s0 pathname of a file containing \fBbackup\fR
+commands. The Backup System reads the file immediately, or at the time
+specified by the \fB\-at\fR argument if it is provided. A partial pathname is
+interpreted relative to the current working directory.
+.Sp
+Place each \fBbackup dump\fR command on its own line in the indicated file,
+using the same syntax as for the command line, but without the word
+\fBbackup\fR at the start of the line. Each command must include a value for
+the \fB\-volumeset\fR and \fB\-dump\fR arguments, and for the \fB\-portoffset\fR
+argument unless the default value of 0 is appropriate. Commands in the
+file can also include any of the \fBbackup dump\fR command's optional
+options. In the following example file, the first command runs as soon as
+the Backup System reads the file, whereas the other commands are
+themselves scheduled; the specified date and time must be later than the
+date and time at which the Backup System reads the file.
+.Sp
+.Vb 3
+\&   dump user /sunday1/wednesday -port 1
+\&   dump sun4x_56 /sunday1/friday -port 2 -at 04/08/1999
+\&   dump sun4x_55 /sunday1/friday -port 2 -at 04/08/1999 02:00 -append
+.Ve
+Do not combine this argument with the \fB\-volumeset\fR, \fB\-dump\fR,
+\fB\-portoffset\fR, \fB\-append\fR, or \fB\-n\fR options.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbackup\fR command interpreter presents
+it to the Backup Server, Volume Server and \s-1VL\s0 Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument. For
+more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+The command interpreter first generates a list of the volumes to be
+included in the dump by matching the entries in the volume set against the
+volumes listed in the Volume Location Database (VLDB). It prints the list
+following the header:
+.PP
+.Vb 1
+\&   Preparing to dump the following volumes:
+.Ve
+The following message then indicates that the command interpreter has
+passed the dump request to the appropriate Tape Coordinator for
+processing:
+.PP
+.Vb 1
+\&   Starting dump.
+.Ve
+If the issuer includes the \fB\-n\fR flag, the output is of the following
+form:
+.PP
+.Vb 4
+\&   Starting dump of volume set '<volume set>' (dump set '<dump level>')
+\&   Total number of volumes : <number dumped>
+\&   Would have dumped the following volumes:
+\&   <list_of_volumes>
+.Ve
+where \fIlist_of_volumes\fR identifies each volume by name and volume ID
+number.
+.PP
+If the Tape Coordinator is unable to access a volume, it prints an error
+message in its window and records the error in its log and error files.
+.SH "EXAMPLES"
+The following command dumps the volumes in the volume set called \f(CWuser\fR
+at the dump level \f(CW/full/sunday2/monday\fR. The issuer places the necessary
+tapes in the device with port offset 5.
+.PP
+.Vb 8
+\&   % backup dump -volumeset user -dump /full/sunday2/monday -portoffset 5
+\&   Preparing to dump the following volumes:
+\&   user.jones.backup   387623900
+\&   user.pat.backup     486219245
+\&   user.smith.backup   597315841
+\&          .                .
+\&          .                .
+\&   Starting dump.
+.Ve
+The following command displays the list of volumes to be dumped when the
+user dumps the \f(CWsys_sun\fR volume set at the \f(CW/full\fR dump level.
+.PP
+.Vb 11
+\&   % backup dump -volumeset sys_sun -dump /full -n
+\&   Starting dump of volume set 'sys_sun' (dump set '/full')
+\&   Total number of volumes: 24
+\&   Would have dumped the following volumes:
+\&   sun4x_56      124857238
+\&   sun4x_56.bin  124857241
+\&       .            .
+\&       .            .
+\&   sun4x_55      124857997
+\&       .            .
+\&       .            .
+.Ve
+The following command schedules a dump of the volumes in the volume set
+\f(CWuser\fR at the dump level \f(CW/sunday2/monday1\fR for 11:00 p.m. on 14 June
+1999. The appropriate Tape Coordinator has port offset 0 (zero), so that
+argument is omitted.
+.PP
+.Vb 1
+\&   % backup dump -volumeset user -dump /sunday2/monday1 -at 06/14/1999 23:00
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server or Volume Location (VL) Server is running,
+and on every file server machine that houses an affected volume. If the
+\fB\-localauth\fR flag is included, the issuer must instead be logged on to a
+server machine as the local superuser \f(CWroot\fR.
+.SH "SEE ALSO"
+the \fIbutc(5)\fR manpage,
+the \fIbackup(8)\fR manpage,
+the \fIbackup_adddump(8)\fR manpage,
+the \fIbackup_addvolentry(8)\fR manpage,
+the \fIbackup_addvolset(8)\fR manpage,
+the \fIbackup_diskrestore(8)\fR manpage,
+the \fIbackup_labeltape(8)\fR manpage,
+the \fIbackup_volrestore(8)\fR manpage,
+the \fIbutc(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_dump 8"
+.IX Name "backup dump - Creates a dump (dumps a volume set at a particular dump level)"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Subsection "Initiating different types of dump operations"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Subsection "How the Backup System executes a dump operation"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-volumeset\fR <\fIvolume set name\fR>"
+
+.IX Item "\fB\-dump\fR <\fIdump level name\fR>"
+
+.IX Item "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>"
+
+.IX Item "\fB\-at\fR <\fIdate/time to start dump\fR>"
+
+.IX Item "\fB\-append\fR"
+
+.IX Item "\fB\-n\fR"
+
+.IX Item "\fB\-file\fR <\fIload file\fR>"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

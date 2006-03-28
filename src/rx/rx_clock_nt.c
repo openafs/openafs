@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock_nt.c,v 1.9.2.2 2005/09/16 02:28:50 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_clock_nt.c,v 1.9.2.3 2006/03/06 03:05:02 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -50,10 +50,8 @@ clock_Init(void)
 	OutputDebugString("No High Performance clock, exiting.\n");
 	exit(1);
     }
-
     clockInitialized = 1;
-    (void)QueryPerformanceCounter(&rxi_clock0);
-
+    
     clock_UpdateTime();
 }
 

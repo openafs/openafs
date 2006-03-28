@@ -1,0 +1,132 @@
+#!/usr/bin/perl -w
+package OpenAFS::HTML;
+
+use strict;
+use vars qw(@ISA);
+
+use Pod::Simple::Search;
+@ISA = qw(Pod::Simple::HTML);
+
+sub do_man_link {
+    my ($self, $token) = @_;
+    my $page = $token->attr ('to');
+    my ($name, $section) = ($page =~ /^([^\(]+)\((\d+)\)$/);
+    return unless $name;
+    my @url = ('..', $section, $name);
+    return join ('/', map { $self->pagepath_url_escape ($_) } @url)
+        . $Pod::Simple::HTML::HTML_EXTENSION;
+}
+
+# Underscore isn't allowed in man page names in Pod::Simple 3.04, so links
+# like L<fs_setacl(8)> show up as POD links.  Discover that case and dispatch
+# everything else to the standard do_pod_link implementation.
+sub do_pod_link {
+    my ($self, $token) = @_;
+    my $target = $token->attr ('to');
+    if ($target && $target =~ /^([^\s\(]+)\((\d+)\)$/) {
+        return $self->do_man_link ($token);
+    } else {
+        return $self->SUPER::do_pod_link ($token);
+    }
+}
+
+sub VERSION () { '1.1' }
+
+$Pod::Simple::HTML::Tagmap{'item-bullet'} = '<li><p>';
+$Pod::Simple::HTML::Tagmap{'/item-bullet'} = '</p></li>';
+$Pod::Simple::HTML::Tagmap{'item-number'} = '<li><p>';
+$Pod::Simple::HTML::Tagmap{'/item-number'} = '</p></li>';
+
+package main;
+
+use strict;
+
+use File::Copy;
+use Pod::Simple::HTMLBatch;
+
+our $HEADER = <<'EOH';
+<html>
+<head>
+  <title>OpenAFS Reference Manual</title>
+  <link rel="stylesheet" title="style" type="text/css" href="style.css" media="all">
+</head>
+<body class='contentspage'>
+<h1>OpenAFS Reference Manual</h1>
+EOH
+
+our %HEADINGS = (1 => 'User Commands',
+                 5 => 'Configuration and Data Files',
+                 8 => 'Administrator Commands');
+
+# Scan all of the POD files and build a list of section, name, and short
+# description, returning that as an array.
+sub scan_names {
+    my @index;
+    for my $dir (qw(pod1 pod5 pod8)) {
+        my $section = $dir;
+        $section =~ s/^pod//;
+        opendir (D, $dir) or die "Cannot open $dir: $!\n";
+        for my $file (sort grep { !/^\./ && !/CVS/ } readdir D) {
+            open (F, "$dir/$file") or die "Cannot open $dir/$file: $!\n";
+            my ($name, $desc);
+            local $_;
+            while (<F>) {
+                last if /^=head1/ && !/^=head1\s+NAME\b/;
+                next unless /\s+-\s+/;
+                ($name, $desc) = split (/\s+-\s+/, $_, 2);
+            }
+            unless ($name) {
+                warn "$dir/$file: cannot find NAME section, skipping\n";
+            }
+            my $page = $file;
+            $page =~ s/\.pod$//;
+            push (@index, [ $section, $name, $page, $desc ]);
+        }
+        closedir D;
+    }
+    return @index;
+}
+
+unless (-d 'html') {
+    mkdir ('html', 0755) or die "Cannot create html directory: $!\n";
+}
+for my $dir (qw(pod1 pod5 pod8)) {
+    my $section = $dir;
+    $section =~ s/^pod//;
+    mkdir ("html/$section", 0755) unless -d "html/$section";
+
+    my $conv = Pod::Simple::HTMLBatch->new;
+    $conv->verbose (0);
+    $conv->index (undef);
+    $conv->contents_file (undef);
+    $conv->add_css ('../style.css', 1);
+    $conv->css_flurry (0);
+    $conv->javascript_flurry (0);
+    $conv->html_render_class ('OpenAFS::HTML');
+    $conv->batch_convert ($dir, "html/$section");
+}
+copy ('style.css', 'html/style.css') or die "Cannot copy style.css: $!\n";
+
+open (INDEX, '> html/index.html')
+    or die "Cannot create html/index.html: $!\n";
+print INDEX $HEADER;
+print INDEX "<table>\n";
+my @index = scan_names;
+my $current;
+for my $entry (@index) {
+    my ($section, $name, $page, $desc) = @$entry;
+    for ($name, $desc) {
+        s/&/&gt;/g;
+        s/</&lt;/g;
+        s/>/&gt;/g;
+    }
+    if (!$current || $section != $current) {
+        print INDEX qq(<tr><td>&nbsp;</td></tr>\n);
+        print INDEX qq(<tr class="heading"><th colspan="2">);
+        print INDEX qq($HEADINGS{$section}</th></tr>\n);
+        $current = $section;
+    }
+    print INDEX qq(<tr><td><a href="$section/$page.html">$name</a></td>);
+    print INDEX qq(<td>$desc</td></tr>\n);
+}
+print INDEX "</table>\n</body>\n</html>\n";

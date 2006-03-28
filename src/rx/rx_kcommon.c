@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.7 2005/09/16 18:15:09 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.11 2006/03/08 05:05:51 jaltman Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -26,8 +26,8 @@ RCSID
 #include "afsint.h"
 
 #ifndef RXK_LISTENER_ENV
-int (*rxk_PacketArrivalProc) (register struct rx_packet * ahandle, register struct sockaddr_in * afrom, char *arock, afs_int32 asize);	/* set to packet allocation procedure */
-int (*rxk_GetPacketProc) (char **ahandle, int asize);
+int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle, struct sockaddr_in * afrom, struct socket *arock, afs_int32 asize);	/* set to packet allocation procedure */
+int (*rxk_GetPacketProc) (struct rx_packet **ahandle, int asize);
 #endif
 
 osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
@@ -43,6 +43,11 @@ int rxk_initDone = 0;
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
 static int numMyNetAddrs = 0;
+#endif
+
+#if defined(AFS_DARWIN80_ENV)
+#define sobind sock_bind
+#define soclose sock_close
 #endif
 
 /* add a port to the monitored list, port # is in network order */
@@ -126,9 +131,9 @@ osi_Panic(msg, a1, a2, a3)
     if (!msg)
 	msg = "Unknown AFS panic";
 
-    dpf((msg, a1, a2, a3));
+    printf(msg, a1, a2, a3);
 #ifdef AFS_LINUX24_ENV
-    BUG();
+    * ((char *) 0) = 0; 
 #else
     panic(msg);
 #endif
@@ -284,9 +289,9 @@ rx_ServerProc(void)
 #ifndef RXK_LISTENER_ENV
 /* asize includes the Rx header */
 static int
-MyPacketProc(char **ahandle, int asize)
+MyPacketProc(struct rx_packet **ahandle, int asize)
 {
-    register struct rx_packet *tp;
+    struct rx_packet *tp;
 
     /* If this is larger than we expected, increase rx_maxReceiveDataSize */
     /* If we can't scrounge enough cbufs, then we have to drop the packet,
@@ -323,20 +328,21 @@ MyPacketProc(char **ahandle, int asize)
     if (!tp)
 	return -1;
     /* otherwise we have a packet, set appropriate values */
-    *ahandle = (char *)tp;
+    *ahandle = tp;
     return 0;
 }
 
 static int
-MyArrivalProc(register struct rx_packet *ahandle,
-	      register struct sockaddr_in *afrom, char *arock,
+MyArrivalProc(struct rx_packet *ahandle,
+	      struct sockaddr_in *afrom,
+	      struct socket *arock,
 	      afs_int32 asize)
 {
     /* handle basic rx packet */
     ahandle->length = asize - RX_HEADER_SIZE;
     rxi_DecodePacketHeader(ahandle);
     ahandle =
-	rxi_ReceivePacket(ahandle, (struct socket *)arock,
+	rxi_ReceivePacket(ahandle, arock,
 			  afrom->sin_addr.s_addr, afrom->sin_port, NULL,
 			  NULL);
 
@@ -392,7 +398,11 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
+#ifdef AFS_DARWIN80_ENV
+    ifnet_t ifn;
+#else
     struct ifnet *ifn;
+#endif
 
 #if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
@@ -405,7 +415,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 #ifdef IFF_POINTOPOINT
-	if (ifn->if_flags & IFF_POINTOPOINT) {
+	if (ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
 	    pp->timeout.sec = 4;
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
@@ -413,8 +423,8 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 #endif /* IFF_POINTOPOINT */
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
-	if (ifn->if_mtu > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
-	    rxmtu = ifn->if_mtu - RX_IPUDP_SIZE;
+	if (ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
+	    rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
 	    if (rxmtu < pp->ifMTU)
 		pp->ifMTU = rxmtu;
 	}
@@ -615,16 +625,53 @@ rxi_GetIFInfo(void)
     int i = 0;
     int different = 0;
 
-    register struct ifnet *ifn;
     register int rxmtu, maxmtu;
     afs_uint32 addrs[ADDRSPERSITE];
     int mtus[ADDRSPERSITE];
-    struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
     afs_uint32 ifinaddr;
+#if defined(AFS_DARWIN80_ENV)
+    errno_t t;
+    int cnt=0;
+    ifaddr_t *ifads, ifad;
+    register ifnet_t ifn;
+    struct sockaddr sout;
+    struct sockaddr_in *sin;
+#else
+    struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
+    register struct ifnet *ifn;
+#endif
 
     memset(addrs, 0, sizeof(addrs));
     memset(mtus, 0, sizeof(mtus));
 
+#if defined(AFS_DARWIN80_ENV)
+    t = ifnet_get_address_list_family(NULL, &ifads, AF_INET);
+    if (t == 0) {
+	rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
+	while((ifads[cnt] != NULL) && cnt < ADDRSPERSITE) {
+	    t = ifaddr_address(ifads[cnt], &sout, sizeof(sout));
+	    sin = (struct sockaddr_in *)&sout;
+	    ifinaddr = ntohl(sin->sin_addr.s_addr);
+	    if (myNetAddrs[i] != ifinaddr) {
+		different++;
+	    }
+	    mtus[i] = rxmtu;
+	    rxmtu = rxi_AdjustIfMTU(rxmtu);
+	    maxmtu =
+		rxmtu * rxi_nRecvFrags +
+		((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
+	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+	    addrs[i++] = ifinaddr;
+	    if ((ifinaddr != 0x7f000001) && (maxmtu > rx_maxReceiveSize)) {
+		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize =
+		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+	    }
+	    cnt++;
+	}
+	ifnet_free_address_list(ifads);
+    }
+#else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
@@ -670,6 +717,7 @@ rxi_GetIFInfo(void)
 	    }
 	}
     }
+#endif
 
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
@@ -688,19 +736,39 @@ rxi_GetIFInfo(void)
 
 #if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
+#ifdef AFS_DARWIN80_ENV
+ifnet_t
+#else
 struct ifnet *
+#endif
 rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
-    struct sockaddr_in s;
+    struct sockaddr_in s, sr;
+#ifdef AFS_DARWIN80_ENV
+    ifaddr_t ifad;
+#else
     struct ifaddr *ifad;
+#endif
 
     s.sin_family = AF_INET;
     s.sin_addr.s_addr = addr;
+#ifdef AFS_DARWIN80_ENV
+    ifad = ifaddr_withnet((struct sockaddr *)&s);
+#else
     ifad = ifa_ifwithnet((struct sockaddr *)&s);
+#endif
 
+#ifdef AFS_DARWIN80_ENV
+    if (ifad && maskp) {
+	ifaddr_netmask(ifad, (struct sockaddr *)&sr, sizeof(sr));
+	*maskp = sr.sin_addr.s_addr;
+    }
+    return (ifad ? ifaddr_ifnet(ifad) : NULL);
+#else
     if (ifad && maskp)
 	*maskp = ((struct sockaddr_in *)ifad->ifa_netmask)->sin_addr.s_addr;
     return (ifad ? ifad->ifa_ifp : NULL);
+#endif
 }
 
 #else /* DARWIN60 || XBSD */
@@ -765,7 +833,11 @@ osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     register afs_int32 code;
+#ifdef AFS_DARWIN80_ENV
+    socket_t newSocket;
+#else
     struct socket *newSocket;
+#endif
 #if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
     struct mbuf *nam;
 #endif
@@ -814,6 +886,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 		    afs_osi_credp, curthread);
 #elif defined(AFS_FBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
+#elif defined(AFS_DARWIN80_ENV)
+    code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
 #endif /* AFS_HPUX102_ENV */
@@ -849,12 +923,30 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     freeb(bindnam);
 #else /* AFS_HPUX110_ENV */
+#if defined(AFS_DARWIN80_ENV)
+    { 
+       int buflen = 50000;
+       int i,code2;
+       for (i=0;i<2;i++) {
+           code = sock_setsockopt(newSocket, SOL_SOCKET, SO_SNDBUF,
+                                  &buflen, sizeof(buflen));
+           code2 = sock_setsockopt(newSocket, SOL_SOCKET, SO_RCVBUF,
+                                  &buflen, sizeof(buflen));
+           if (!code && !code2)
+               break;
+           if (i == 2)
+	      osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
+           buflen = 32766;
+       }
+    }
+#else
     code = soreserve(newSocket, 50000, 50000);
     if (code) {
 	code = soreserve(newSocket, 32766, 32766);
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD50_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curthread);
@@ -1133,13 +1225,14 @@ rxk_Listener(void)
 #ifdef AFS_XBSD_ENV
     rxk_ListenerPid = curproc->p_pid;
 #endif /* AFS_FBSD_ENV */
-#if defined(AFS_DARWIN_ENV)
+#ifdef AFS_DARWIN80_ENV
+    rxk_ListenerPid = proc_selfpid();
+#elif defined(AFS_DARWIN_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
-
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	if (rxp) {
 	    rxi_RestoreDataBufs(rxp);

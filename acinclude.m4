@@ -24,7 +24,7 @@ AC_ARG_ENABLE( bos-restricted-mode,
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
 AC_ARG_ENABLE( largefile-fileserver,
-[  --enable-largefile-fileserver        enable large file support in fileserver],, enable_largefile_fileserver="no")
+[  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
 AC_ARG_ENABLE( supergroups,
@@ -210,9 +210,13 @@ case $system in
 		fi
 		AC_SUBST([HEADER_RT])
                 ;;
-        *-darwin*)
+        powerpc-*-darwin*)
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(ppc_darwin)
+                ;;
+        i386-*-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(x86_darwin)
                 ;;
 	*-freebsd*)
 		MKAFS_OSTYPE=FBSD
@@ -236,62 +240,17 @@ if test "x$with_afs_sysname" != "x"; then
 else
 	AC_MSG_CHECKING(your AFS sysname)
 	case $host in
-		i?86-*-openbsd3.1)
-			AFS_SYSNAME="i386_obsd31"
+		i?86-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
-		i?86-*-openbsd3.2)
-			AFS_SYSNAME="i386_obsd32"
-			;;
-		i?86-*-openbsd3.3)
-			AFS_SYSNAME="i386_obsd33"
-			;;
-		i?86-*-openbsd3.4)
-			AFS_SYSNAME="i386_obsd34"
-			;;
-		i?86-*-openbsd3.5)
-			AFS_SYSNAME="i386_obsd35"
-			;;
-		i?86-*-openbsd3.6)
-			AFS_SYSNAME="i386_obsd36"
-			;;
-		i?86-*-openbsd3.7)
-			AFS_SYSNAME="i386_obsd37"
-			;;
-		i?86-*-freebsd4.2*)
-			AFS_SYSNAME="i386_fbsd_42"
-			;;
-		i?86-*-freebsd4.3*)
-			AFS_SYSNAME="i386_fbsd_43"
-			;;
-		i?86-*-freebsd4.4*)
-			AFS_SYSNAME="i386_fbsd_44"
-			;;
-		i?86-*-freebsd4.5*)
-			AFS_SYSNAME="i386_fbsd_45"
-			;;
-		i?86-*-freebsd4.6*)
-			AFS_SYSNAME="i386_fbsd_46"
-			;;
-		i?86-*-freebsd4.7*)
-			AFS_SYSNAME="i386_fbsd_47"
-			;;
-		i?86-*-freebsd5.0*)
-			AFS_SYSNAME="i386_fbsd_50"
-			;;
-		i?86-*-freebsd5.1*)
-			AFS_SYSNAME="i386_fbsd_51"
-			;;
-		i?86-*-freebsd5.2*)
-			AFS_SYSNAME="i386_fbsd_52"
-			;;
-		i?86-*-freebsd5.3*)
-			AFS_SYSNAME="i386_fbsd_53"
-			;;
-		i?86-*-freebsd5.4*)
-			AFS_SYSNAME="i386_fbsd_54"
-			;;
-		i?86-*-freebsd6.0*)
-			AFS_SYSNAME="i386_fbsd_60"
+		i?86-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -312,6 +271,10 @@ else
 		i?86-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
+			;;
+		amd64-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="amd64_nbsd20"
 			;;
 		powerpc-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
@@ -419,6 +382,21 @@ else
 			;;
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin8*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		powerpc-apple-darwin8.*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		i386-apple-darwin8.*)
+			AFS_SYSNAME="x86_darwin_80"
+			;;
+		powerpc-apple-darwin9.*)
+			AFS_SYSNAME="ppc_darwin_90"
+			;;
+		i386-apple-darwin9.*)
+			AFS_SYSNAME="x86_darwin_90"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -588,6 +566,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED
+		 LINUX_FS_STRUCT_INODE_HAS_I_MUTEX
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
@@ -711,6 +691,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
 		 fi
@@ -774,7 +757,7 @@ case $AFS_SYSNAME in
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
                 dnl the test below fails on darwin, even if the CPPFLAGS below
-                dnl are added. the headers from Kernel.Framework must be used
+                dnl are added. the headers from Kernel.framework must be used
                 dnl when KERNEL is defined.
 
                 dnl really, such a thing isn't guaranteed to work on any 
@@ -1024,7 +1007,7 @@ fi
 AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_MSG_CHECKING([for POSIX regex library])

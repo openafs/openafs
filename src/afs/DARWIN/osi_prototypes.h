@@ -20,6 +20,9 @@ extern afs_rwlock_t afs_xosi;
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 			  struct vnode **vpp);
+extern int afs_suser(void *credp);
+extern void get_vfs_context(void);
+extern void put_vfs_context(void);
 
 /* osi_sleep.c */
 extern void afs_osi_fullSigMask(void);
@@ -28,4 +31,9 @@ extern void afs_osi_fullSigRestore(void);
 /* osi_vm.c */
 extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
 extern int osi_VM_Setup(struct vcache *avc, int force);
+
+/* osi_vnodeops.c */
+extern int afs_darwin_getnewvnode(struct vcache *avc);
+extern int afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent, 
+                                     struct componentname *cnp, int isroot);
 #endif /* _OSI_PROTO_H_ */

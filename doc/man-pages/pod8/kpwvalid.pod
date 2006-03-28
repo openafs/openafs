@@ -1,0 +1,92 @@
+=head1 NAME
+
+kpwvalid - Checks quality of new password
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<kpwvalid>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<kpwvalid> command checks the quality of a new password passed to it
+from the B<kpasswd> or B<kas setpassword> command. It is optional. If it
+exists, it must reside in the same AFS directory as the binaries for the
+B<kpasswd> and B<kas> command suites (create a symbolic link from the
+client machine's local disk to this directory). The directory's ACL must
+extend the C<a> (administer) and C<w> (write) permissions to the
+system:administrators group only. These requirements prevent unauthorized
+users from substituting a spurious B<kpwvalid> binary.
+
+The AFS distribution includes an example B<kpwvalid> program that checks
+that the password is at least eight characters long; the code for it
+appears in L<EXAMPLES> below.
+
+The script or program must accept a sequence of password strings, one per
+line, on the standard input stream. The first is the current password and
+is ignored. Each subsequent string is a candidate password to be
+checked. The program must write the following to the standard output
+stream for each one:
+
+=over 4
+
+=item *
+
+C<0> (zero) and a newline character to indicate that the password is
+acceptable.
+
+=item *
+
+A non-zero decimal number and a newline character to indicate that the
+password is not acceptable.
+
+=back
+
+Further, it must write any error messages only to the standard error
+stream, not to the standard output stream.
+
+=head1 EXAMPLES
+
+The following example program, included in the AFS distribution, verifies
+that the requested password includes eight or more characters.
+
+   #include <stdio.h>
+   /* prints 0 if the password is long enough, otherwise non-zero */
+   main()
+   {
+   char oldpassword[512];
+   char password[512];
+
+   if (fgets(oldpassword, 512, stdin))
+      while (fgets(password, 512, stdin)) {
+         if (strlen(password) > 8) { /* password includes a newline */
+            fputs("0\n",stdout);
+            fflush(stdout);
+         }
+         else {
+            fputs("Passwords must contain at least 8 characters.\n",
+                  stderr);
+            fputs("1\n",stdout);
+            fflush(stdout);
+         }
+   return 0;
+   }
+
+
+=head1 SEE ALSO
+
+L<kas_setpassword(8)>,
+L<kpasswd(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

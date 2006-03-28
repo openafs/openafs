@@ -1,0 +1,862 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH butc 5 "OpenAFS" "5/Jan/2006" "AFS File Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+butc \- Defines Tape Coordinator instructions for automated tape devices
+.SH "DESCRIPTION"
+The \fICFG_\fIdevice_name\fR\fR file includes instructions that configure a Tape
+Coordinator (\fBbutc\fR) for use with automated backup devices such as tape
+stackers and jukeboxes, enable the Tape Coordinator to dump and restore
+data to a \fIbackup data file\fR on a local disk device, and enable greater
+automation of other aspects of the backup process.
+.PP
+There is a separate configuration file for each tape device or backup data
+file. Creating the file is optional, and unnecessary if none of the
+instructions it can include pertain to a given tape device. The
+ASCII\-format file must reside in the \fI/usr/afs/backup\fR directory on the
+Tape Coordinator machine if it exists.
+.PP
+The \fICFG_\fIdevice_name\fR\fR file does not replace the
+\fI/usr/afs/backup/tapeconfig\fR file, a single copy of which still must
+exist on every Tape Coordinator machine.
+.PP
+To enable the Tape Coordinator to locate the configuration file, construct
+the variable part of the filename, \fIdevice_name\fR, as follows:
+.Ip "\(bu" 4
+For a tape device, strip off the initial \f(CW/dev/\fR string from the device
+name, and replace any other slashes in the name with underscores. For
+example, \fICFG_rmt_4m\fR is the appropriate filename for a device called
+\fI/dev/rmt/4m\fR.
+.Ip "\(bu" 4
+For a backup data file, strip off the initial slash (\f(CW/\fR) and replace any
+other slashes in the name with underscores. For example,
+\fICFG_var_tmp_FILE\fR is the appropriate filename for a backup data file
+called \fI/var/tmp/\s-1FILE\s0\fR.
+.PP
+The \fI\s-1CFG_\s0\fIdevice_name\fR\fR file lists one or more of the following
+instructions, each on its own line. All are optional, and they can appear
+in any order. A more detailed description of each instruction follows the
+list:
+.Ip "\s-1ASK\s0" 4
+Controls whether the Tape Coordinator prompts for guidance when it
+encounters error conditions.
+.Ip "\s-1AUTOQUERY\s0" 4
+Controls whether the Tape Coordinator prompts for the first tape.
+.Ip "\s-1BUFFERSIZE\s0" 4
+Sets the size of the memory buffer the Tape Coordinator uses when
+transferring data.
+.Ip "\s-1FILE\s0" 4
+Controls whether the dump is written to a tape device or a file.
+.Ip "\s-1MOUNT\s0" 4
+Identifies the file that contains routines for inserting tapes into the
+device's drive.
+.Ip "\s-1NAME_CHECK\s0" 4
+Controls whether the Tape Coordinator verifies that a tape's \s-1AFS\s0 tape
+name matches the dump being written.
+.Ip "\s-1UNMOUNT\s0" 4
+Identifies the file that contains routines for removing tapes from the
+device's drive.
+.Sh "The \s-1ASK\s0 Instruction"
+The \f(CWASK\fR instruction takes a boolean value as its argument, in the
+following format:
+.PP
+.Vb 1
+\&   ASK (YES | NO)
+.Ve
+When the value is \f(CWYES\fR, the Tape Coordinator generates a prompt in its
+window, requesting a response to the error cases described in the
+following list. This is the default behavior if the \f(CWASK\fR instruction
+does not appear in the \fI\s-1CFG_\s0\fIdevice_name\fR\fR file.
+.PP
+When the value is \f(CWNO\fR, the Tape Coordinator does not prompt in error
+cases, but instead uses the automatic default responses described in the
+following list. The Tape Coordinator also logs the error in the
+\fI\s-1TE_\s0\fIdevice_name\fR\fR file. Suppressing the prompts enables the Tape
+Coordinator to run unattended, though it still prompts for insertion of
+tapes unless the \f(CWMOUNT\fR instruction is used.
+.PP
+The error cases controlled by this instruction are the following:
+.Ip "\(bu" 4
+The Backup System is unable to dump a volume while running the backup dump
+command. With a \f(CWYES\fR value, the Tape Coordinator prompts to offer three
+choices: try to dump the volume again immediately, omit the volume from
+the dump but continue the operation, or terminate the operation. With a
+\f(CWNO\fR value, the Tape Coordinator omits the volume from the dump and
+continues the operation.
+.Ip "\(bu" 4
+The Backup System is unable to restore a volume while running the \fBbackup
+diskrestore\fR, \fBbackup volrestore\fR, or \fBbackup volsetrestore\fR
+command. With a \f(CWYES\fR value, the Tape Coordinator prompts to offer two
+choices: omit the volume and continue restoring the other volumes, or
+terminate the operation. With a \f(CWNO\fR value, it continues the operation
+without prompting, omitting the problematic volume but restoring the
+remaining ones.
+.Ip "\(bu" 4
+The Backup System cannot determine if the dump set includes any more
+tapes, while running the \fBbackup scantape\fR command (the reference page
+for that command discusses possible reasons for this problem).  With a
+\f(CWYES\fR value, the Tape Coordinator prompts to ask if there are more tapes
+to scan. With a \f(CWNO\fR value, it proceeds as though there are more tapes
+and invokes the routine named by the \f(CWMOUNT\fR instruction in the
+configuration file, or prompts the operator to insert the next tape.
+.Ip "\(bu" 4
+The Backup System determines that the tape contains an unexpired dump
+while running the \fBbackup labeltape\fR command. With a \f(CWYES\fR value, the
+Tape Coordinator prompts to offer two choices: continue or terminate the
+labeling operation. With a \f(CWNO\fR value, it terminates the operation
+without relabeling the tape.
+.Sh "The \s-1AUTOQUERY\s0 Instruction"
+The \f(CWAUTOQUERY\fR instruction takes a boolean value as its argument,
+in the following format:
+.PP
+.Vb 1
+\&   AUTOQUERY (YES | NO)
+.Ve
+When the value is \f(CWYES\fR, the Tape Coordinator checks for the \f(CWMOUNT\fR
+instruction in the configuration file when it needs to read the first tape
+involved in an operation. As described for that instruction, it then
+either prompts for the tape or invokes the specified routine to mount the
+tape. This is the default behavior if the \f(CWAUTOQUERY\fR instruction does
+not appear in the configuration file.
+.PP
+When the value is \f(CWNO\fR, the Tape Coordinator assumes that the first tape
+required for an operation is already in the drive. It does not prompt the
+operator or invoke the \f(CWMOUNT\fR routine unless there is an error in
+accessing the first tape. This setting is equivalent in effect to
+including the \fB\-noautoquery\fR flag to the \fBbutc\fR command.
+.PP
+Note that the setting of the \f(CWAUTOQUERY\fR instruction controls the Tape
+Coordinator's behavior only with respect to the first tape required for an
+operation. For subsequent tapes, the Tape Coordinator always checks for
+the \f(CWMOUNT\fR instruction. It also refers to the \f(CWMOUNT\fR instruction if it
+encounters an error while attempting to access the first tape.
+.Sh "The \s-1BUFFERSIZE\s0 Instruction"
+The \f(CWBUFFERSIZE\fR instruction takes an integer value, and optionally
+units, in the following format:
+.PP
+.Vb 1
+\&   BUFFERSIZE <size>[(k | K | m | M | g | G)]
+.Ve
+where <size> specifies the amount of memory the Tape Coordinator allocates
+to use as a buffer during both dump and restore operations.  The default
+unit is bytes, but use \f(CWk\fR or \f(CWK\fR to specify kilobytes, \f(CWm\fR or \f(CWM\fR for
+megabytes, and \f(CWg\fR or \f(CWG\fR for gigabytes. There is no space between the
+<size> value and the units letter.
+.PP
+By default, the Tape Coordinator uses a 16 \s-1KB\s0 buffer during dump
+operations. As it receives volume data from the Volume Server, the Tape
+Coordinator gathers 16 \s-1KB\s0 of data in the buffer before transferring the
+entire 16 \s-1KB\s0 to the tape device or backup data file. Similarly, during a
+restore operation the Tape Coordinator by default buffers 32 \s-1KB\s0 of data
+from the tape device or backup data file before transferring the entire 32
+\s-1KB\s0 to the Volume Server for restoration into the file system. Buffering
+makes the volume of data flowing to and from a tape device more even and
+so promotes tape streaming, which is the most efficient way for a tape
+device to operate.
+.PP
+In a normal network configuration, the default buffer sizes are usually
+large enough to promote tape streaming. If the network between the Tape
+Coordinator machine and file server machines is slow, it can help to
+increase the buffer size.
+.Sh "The \s-1FILE\s0 Instruction"
+The \f(CWFILE\fR instruction takes a boolean value as its argument, in the
+following format:
+.PP
+.Vb 1
+\&   FILE (NO | YES)
+.Ve
+When the value is \f(CWNO\fR, the Tape Coordinator writes to a tape device
+during a dump operation and reads from one during a restore
+operation. This is the default behavior if the \f(CWFILE\fR instruction does
+not appear in the configuration file.
+.PP
+When the value is \f(CWYES\fR, the Tape Coordinator writes volume data to a
+backup data file on the local disk during a dump operation and reads
+volume data from a file during a restore operation. If the file does not
+exist when the Tape Coordinator attempts to access it to write a dump, the
+Tape Coordinator creates it. For a restore operation to succeed, the file
+must exist and contain volume data previously written to it by a \fBbackup
+dump\fR operation.
+.PP
+When the value is \f(CWYES\fR, the backup data file's complete pathname must
+appear (instead of a tape drive device name) in the third field of the
+corresponding port offset entry in the local \fI/usr/afs/backup/tapeconfig\fR
+file. If the field instead refers to a tape device, dump operations appear
+to succeed but are inoperative. It is not possible to restore data that
+was accidently dumped to a tape device while the \f(CWFILE\fR instruction was
+set to \f(CWYES\fR. (In the same way, if the \f(CWFILE\fR instruction is set to
+\f(CWNO\fR, the \fItapeconfig\fR entry must refer to an actual tape device.)
+.PP
+Rather than put an actual file pathname in the third field of the
+\fItapeconfig\fR file, however, the recommended configuration is to create a
+symbolic link in the \fI/dev\fR directory that points to the actual file
+pathname, and record the symbolic link in this field. This configuration
+has a couple of advantages:
+.Ip "\(bu" 4
+It makes the \fIdevice_name\fR portion of the \fI\s-1CFG_\s0\fIdevice_name\fR\fR,
+\fI\s-1TE_\s0\fIdevice_name\fR\fR, and \fI\s-1TL_\s0\fIdevice_name\fR\fR names as short as
+possible. Because the symbolic link is in the \fI/dev\fR directory as though
+it were a tape device, the device configuration file's name is constructed
+by stripping off the entire \fI/dev/\fR prefix, instead of just the initial
+slash. If, for example, the symbolic link is called \fI/dev/\s-1FILE\s0\fR, the
+device configuration file name is \fI\s-1CFG_FILE\s0\fR, whereas if the actual
+pathname \fI/var/tmp/\s-1FILE\s0\fR appears in the \fBtapeconfig\fR file, the file's
+name must be \fICFG_var_tmp_FILE\fR.
+.Ip "\(bu" 4
+It provides for a more graceful, and potentially automated, recovery if
+the Tape Coordinator cannot write a complete dump into the backup data
+file (because the partition housing the backup data file becomes full, for
+example). The Tape Coordinator's reaction to this problem is to invoke the
+\f(CWMOUNT\fR script, or to prompt the operator if the \f(CWMOUNT\fR instruction
+does not appear in the configuration file.
+.Ip "\(bu" 8
+If there is a \f(CWMOUNT\fR routine, the operator can prepare for this
+situation by adding a subroutine that changes the symbolic link to point
+to another backup data file on a partition where there is space available.
+.Ip "\(bu" 8
+If there is no \f(CWMOUNT\fR instruction, the prompt enables the operator
+manually to change the symbolic link to point to another backup data file,
+then press Return to signal that the Tape Coordinator can continue the
+operation.
+.PP
+If the third field in the \fItapeconfig\fR file names the actual file, there
+is no way to recover from exhausting the space on the partition that
+houses the backup data file. It is not possible to change the
+\fItapeconfig\fR file in the middle of an operation.
+.PP
+When writing to a backup data file, the Tape Coordinator writes data at 16
+\s-1KB\s0 offsets. If a given block of data (such as the marker that signals the
+beginning or end of a volume) does not fill the entire 16 \s-1KB\s0, the Tape
+Coordinator still skips to the next offset before writing the next
+block. In the output of a \fBbackup dumpinfo\fR command issued with the
+\fB\-id\fR option, the value in the \f(CWPos\fR column is the ordinal of the 16-\s-1KB\s0
+offset at which the volume data begins, and so is not generally only one
+higher than the position number on the previous line, as it is for dumps
+to tape.
+.Sh "The \s-1MOUNT\s0 Instruction"
+The \f(CWMOUNT\fR instruction takes a pathname as its argument, in the
+following format:
+.PP
+.Vb 1
+\&   MOUNT <filename>
+.Ve
+The referenced executable file must reside on the local disk and contain a
+shell script or program that directs an automated tape device, such as a
+jukebox or stacker, to mount a tape (insert it into the tape reader).  The
+operator must write the routine to invoke the mount command specified by
+the device's manufacturer; \s-1AFS\s0 does not include any scripts, although an
+example appears in the \fI\s-1EXAMPLES\s0\fR manpage.  The script or program inherits the Tape
+Coordinator's \s-1AFS\s0 authentication status.
+.PP
+When the Tape Coordinator needs to mount a tape, it checks the
+configuration file for a \f(CWMOUNT\fR instruction. If there is no \f(CWMOUNT\fR
+instruction, the Tape Coordinator prompts the operator to insert a tape
+before it attempts to open the tape device. If there is a \f(CWMOUNT\fR
+instruction, the Tape Coordinator executes the routine in the referenced
+file. The routine invoked by the \f(CWMOUNT\fR instruction inherits the local
+identity (\s-1UNIX\s0 \s-1UID\s0) and \s-1AFS\s0 tokens of the \fBbutc\fR command's issuer.
+.PP
+There is an exception to this sequence: if the \f(CWAUTOQUERY NO\fR instruction
+appears in the configuration file, or the \fB\-noautoquery\fR flag was
+included on the \fBbutc\fR command, then the Tape Coordinator assumes that
+the operator has already inserted the first tape needed for a given
+operation. It attempts to read the tape immediately, and only checks for
+the \f(CWMOUNT\fR instruction or prompts the operator if the tape is missing or
+is not the required one.
+.PP
+When the Tape Coordinator invokes the routine indicated by the \f(CWMOUNT\fR
+instruction, it passes the following parameters to the routine in the
+indicated order:
+.Ip "\(bu" 4
+The tape device or backup data file's pathname, as recorded in the
+\fI/usr/afs/backup/tapeconfig\fR file.
+.Ip "\(bu" 4
+The tape operation, which (except for the exceptions noted in the
+following list) matches the \fBbackup\fR command operation code used to
+initiate the operation:
+.Ip "\(bu" 8
+\f(CWappenddump\fR (when a backup dump command includes the \fB\-append\fR flag).
+.Ip "\(bu" 8
+\f(CWdump\fR (when a backup dump command does not include the \fB\-append\fR flag).
+.Ip "\(bu" 8
+\f(CWlabeltape\fR
+.Ip "\(bu" 8
+\f(CWreadlabel\fR
+.Ip "\(bu" 8
+\f(CWrestore\fR (for a \fBbackup diskrestore\fR, backup volrestore, or \fBbackup
+volsetrestore\fR command).
+.Ip "\(bu" 8
+\f(CWrestoredb\fR
+.Ip "\(bu" 8
+\f(CWsavedb\fR
+.Ip "\(bu" 8
+\f(CWscantape\fR
+.Ip "\(bu" 4
+The number of times the Tape Coordinator has attempted to open the tape
+device or backup data file. If the open attempt returns an error, the Tape
+Coordinator increments this value by one and again invokes the \f(CWMOUNT\fR
+instruction.
+.Ip "\(bu" 4
+The tape name. For some operations, the Tape Coordinator passes the string
+\f(CWnone\fR, because it does not know the tape name (when running the \fBbackup
+scantape\fR or \fBbackup readlabel\fR, for example), or because the tape does
+not necessarily have a name (when running the \fBbackup labeltape\fR command,
+for example).
+.Ip "\(bu" 4
+The tape \s-1ID\s0 recorded in the Backup Database. As with the tape name, the
+Backup System passes the string \f(CWnone\fR for operations where it does not
+know the tape \s-1ID\s0 or the tape does not necessarily have an \s-1ID\s0.
+.PP
+The routine invoked by the \f(CWMOUNT\fR instruction must return an exit code
+to the Tape Coordinator:
+.Ip "\(bu" 4
+Code 0 (zero) indicates that the routine successfully mounted the
+tape. The Tape Coordinator continues the backup operation.  If the routine
+invoked by the \f(CWMOUNT\fR instruction does not return this exit code, the
+Tape Coordinator never calls the \f(CWUNMOUNT\fR instruction.
+.Ip "\(bu" 4
+Code 1 (one) indicates that the routine failed to mount the tape. The Tape
+Coordinator terminates the operation.
+.Ip "\(bu" 4
+Any other code indicates that the routine was not able to access the
+correct tape. The Tape Coordinator prompts the operator to insert the
+correct tape.
+.PP
+If the backup command was issued in interactive mode and the operator
+issues the \fBbackup kill\fR command while the \f(CWMOUNT\fR routine is running,
+the Tape Coordinator passes the termination signal to the routine; the
+entire operation terminates.
+.Sh "The \s-1NAME_CHECK\s0 Instruction"
+The \f(CWNAME_CHECK\fR instruction takes a boolean value as its argument, in
+the following format:
+.PP
+.Vb 1
+\&   NAME_CHECK (YES | NO)
+.Ve
+When the value is \f(CWYES\fR and the tape does not have a permanent name, the
+Tape Coordinator checks the \s-1AFS\s0 tape name when dumping a volume in
+response to the \fBbackup dump\fR command. The \s-1AFS\s0 tape name must be \f(CW<
+<NULL\fR >> or match the tape name that the \fBbackup dump\fR operation assigns
+based on the volume set and dump level names. This is the default behavior
+if the \f(CWNAME_CHECK\fR instruction does not appear in the configuration
+file.
+.PP
+When the value is \f(CWNO\fR, the Tape Coordinator does not check the \s-1AFS\s0 tape
+name before writing to the tape.
+.PP
+The Tape Coordinator always checks that all dumps on the tape are expired,
+and refuses to write to a tape that contains unexpired dumps.
+.Sh "The \s-1UNMOUNT\s0 Instruction"
+The \f(CWUNMOUNT\fR instruction takes a pathname as its argument, in the
+following format:
+.PP
+.Vb 1
+\&   UNMOUNT <filename>
+.Ve
+The referenced executable file must reside on the local disk and contain a
+shell script or program that directs an automated tape device, such as a
+jukebox or stacker, to unmount a tape (remove it from the tape reader).
+The operator must write the routine to invoke the unmount command
+specified by the device's manufacturer; \s-1AFS\s0 does not include any scripts,
+although an example appears in the \fI\s-1EXAMPLES\s0\fR manpage.  The script or program
+inherits the Tape Coordinator's \s-1AFS\s0 authentication status.
+.PP
+After closing a tape device, the Tape Coordinator checks the configuration
+file for an \f(CWUNMOUNT\fR instruction, whether or not the \fBclose\fR operation
+succeeds. If there is no \f(CWUNMOUNT\fR instruction, the Tape Coordinator
+takes no action, in which case the operator must take the action necessary
+to remove the current tape from the drive before another can be
+inserted. If there is an \f(CWUNMOUNT\fR instruction, the Tape Coordinator
+executes the referenced file. It invokes the routine only once, passing in
+the following parameters:
+.Ip "\(bu" 4
+The tape device pathname (as specified in the
+\fI/usr/afs/backup/tapeconfig\fR file).
+.Ip "\(bu" 4
+The tape operation (always unmount).
+.SH "PRIVILEGE REQUIRED"
+The file is protected by UNIX mode bits. Creating the file requires the
+\f(CWw\fR (write) and \f(CWx\fR (execute) permissions on the \fI/usr/afs/backup\fR
+directory. Editing the file requires the \f(CWw\fR (write) permission on the
+file.
+.SH "EXAMPLES"
+The following example configuration files demonstrate one way to structure
+a configuration file for a stacker or backup dump file. The examples are
+not necessarily appropriate for a specific cell; if using them as models,
+be sure to adapt them to the cell's needs and equipment.
+.Sh "Example \fI\s-1CFG_\s0\fIdevice_name\fR\fR File for Stackers"
+In this example, the administrator creates the following entry for a tape
+stacker called \f(CWstacker0.1\fR in the \fI/usr/afs/backup/tapeconfig\fR file. It
+has port offset 0.
+.PP
+.Vb 1
+\&   2G   5K   /dev/stacker0.1   0
+.Ve
+The administrator includes the following five lines in the
+\fI/usr/afs/backup/CFG_stacker0.1\fR file. To review the meaning of each
+instruction, see the \fI\s-1DESCRIPTION\s0\fR manpage.
+.PP
+.Vb 5
+\&   MOUNT /usr/afs/backup/stacker0.1
+\&   UNMOUNT /usr/afs/backup/stacker0.1
+\&   AUTOQUERY NO
+\&   ASK NO
+\&   NAME_CHECK NO
+.Ve
+Finally, the administrator writes the following executable routine in the
+\fI/usr/afs/backup/stacker0.1\fR file referenced by the \f(CWMOUNT\fR and
+\f(CWUNMOUNT\fR instructions in the \fICFG_stacker0.1\fR file.
+.PP
+.Vb 1
+\&   #! /bin/csh -f
+.Ve
+.Vb 5
+\&   set devicefile = $1
+\&   set operation = $2
+\&   set tries = $3
+\&   set tapename = $4
+\&   set tapeid = $5
+.Ve
+.Vb 3
+\&   set exit_continue = 0
+\&   set exit_abort = 1
+\&   set exit_interactive = 2
+.Ve
+.Vb 1
+\&   #--------------------------------------------
+.Ve
+.Vb 4
+\&   if (${tries} > 1) then
+\&      echo "Too many tries"
+\&      exit ${exit_interactive}
+\&   endif
+.Ve
+.Vb 4
+\&   if (${operation} == "unmount") then
+\&      echo "UnMount: Will leave tape in drive"
+\&      exit ${exit_continue}
+\&   endif
+.Ve
+.Vb 3
+\&   if ((${operation} == "dump")     |\e
+\&       (${operation} == "appenddump")     |\e
+\&       (${operation} == "savedb"))  then
+.Ve
+.Vb 5
+\&       stackerCmd_NextTape ${devicefile}
+\&       if (${status} != 0)exit${exit_interactive}
+\&       echo "Will continue"
+\&       exit ${exit_continue}
+\&   endif
+.Ve
+.Vb 5
+\&   if ((${operation} == "labeltape")    |\e
+\&       (${operation} == "readlabel")) then
+\&      echo "Will continue"
+\&      exit ${exit_continue}
+\&   endif
+.Ve
+.Vb 2
+\&   echo "Prompt for tape"
+\&   exit ${exit_interactive}
+.Ve
+This routine uses two of the parameters passed to it by the Backup System:
+\f(CWtries\fR and \f(CWoperation\fR. It follows the recommended practice of
+prompting for a tape if the value of the \f(CWtries\fR parameter exceeds one,
+because that implies that the stacker is out of tapes.
+.PP
+For a \fBbackup dump\fR or backup savedb operation, the routine calls the
+example \f(CWstackerCmd_NextTape\fR function provided by the stacker's
+manufacturer. Note that the final lines in the file return the exit code
+that prompts the operator to insert a tape; these lines are invoked when
+either the stacker cannot load a tape or a the operation being performed
+is not one of those explicitly mentioned in the file (such as a restore
+operation).
+.Sh "Example \fI\s-1CFG_\s0\fIdevice_name\fR\fR File for Dumping to a Data File"
+In this example, the administrator creates the following entry for a
+backup data file called \fIHSM_device\fR in the \fI/usr/afs/backup/tapeconfig\fR
+file. It has port offset 20.
+.PP
+.Vb 1
+\&   1G   0K   /dev/HSM_device   20
+.Ve
+The administrator includes the following lines in the
+\fI/usr/afs/backup/CFG_HSM_device\fR file. To review the meaning of each
+instruction, see the \fI\s-1DESCRIPTION\s0\fR manpage.
+.PP
+.Vb 3
+\&   MOUNT /usr/afs/backup/file
+\&   FILE YES
+\&   ASK NO
+.Ve
+Finally, the administrator writes the following executable routine in the
+\fI/usr/afs/backup/file\fR file referenced by the \f(CWMOUNT\fR instruction in the
+\fICFG_HSM_device\fR file, to control how the Tape Coordinator handles the
+file.
+.PP
+.Vb 6
+\&   #! /bin/csh -f
+\&   set devicefile = $1
+\&   set operation = $2
+\&   set tries = $3
+\&   set tapename = $4
+\&   set tapeid = $5
+.Ve
+.Vb 3
+\&   set exit_continue = 0
+\&   set exit_abort = 1
+\&   set exit_interactive = 2
+.Ve
+.Vb 1
+\&   #--------------------------------------------
+.Ve
+.Vb 4
+\&   if (${tries} > 1) then
+\&      echo "Too many tries"
+\&      exit ${exit_interactive}
+\&   endif
+.Ve
+.Vb 4
+\&   if (${operation} == "labeltape") then
+\&      echo "Won't label a tape/file"
+\&      exit ${exit_abort}
+\&   endif
+.Ve
+.Vb 5
+\&   if ((${operation} == "dump")   |\e
+\&       (${operation} == "appenddump")   |\e
+\&       (${operation} == "restore")   |\e
+\&       (${operation} == "savedb")    |\e
+\&       (${operation} == "restoredb")) then
+.Ve
+.Vb 4
+\&      /bin/rm -f ${devicefile}
+\&      /bin/ln -s /hsm/${tapename}_${tapeid} ${devicefile}
+\&      if (${status} != 0) exit ${exit_abort}
+\&   endif
+.Ve
+.Vb 1
+\&   exit ${exit_continue}
+.Ve
+Like the example routine for a tape stacker, this routine uses the
+\f(CWtries\fR and \f(CWoperation\fR parameters passed to it by the Backup
+System. The \f(CWtries\fR parameter tracks how many times the Tape Coordinator
+has attempted to access the file. A value greater than one indicates that
+the Tape Coordinator cannot access it, and the routine returns exit code 2
+(\f(CWexit_interactive\fR), which results in a prompt for the operator to load
+a tape. The operator can use this opportunity to change the name of the
+backup data file specified in the \fBtapeconfig\fR file.
+.PP
+The primary function of this routine is to establish a link between the
+device file and the file to be dumped or restored. When the Tape
+Coordinator is executing a \fBbackup dump\fR, \fBbackup restore\fR, \fBbackup
+savedb\fR, or \fBbackup restoredb\fR operation, the routine invokes the \s-1UNIX\s0
+\f(CWln -s\fR command to create a symbolic link from the backup data file named
+in the \fItapeconfig\fR file to the actual file to use (this is the
+recommended method). It uses the value of the \f(CWtapename\fR and \f(CWtapeid\fR
+parameters to construct the file name.
+.SH "SEE ALSO"
+the \fItapeconfig(5)\fR manpage,
+the \fIbackup_diskrestore(8)\fR manpage,
+the \fIbackup_dump(8)\fR manpage,
+the \fIbackup_restoredb(8)\fR manpage,
+the \fIbackup_savedb(8)\fR manpage,
+the \fIbackup_volrestore(8)\fR manpage,
+the \fIbackup_volsetrestore(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "butc 5"
+.IX Name "butc - Defines Tape Coordinator instructions for automated tape devices"
+
+.IX Header "NAME"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\s-1ASK\s0"
+
+.IX Item "\s-1AUTOQUERY\s0"
+
+.IX Item "\s-1BUFFERSIZE\s0"
+
+.IX Item "\s-1FILE\s0"
+
+.IX Item "\s-1MOUNT\s0"
+
+.IX Item "\s-1NAME_CHECK\s0"
+
+.IX Item "\s-1UNMOUNT\s0"
+
+.IX Subsection "The \s-1ASK\s0 Instruction"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Subsection "The \s-1AUTOQUERY\s0 Instruction"
+
+.IX Subsection "The \s-1BUFFERSIZE\s0 Instruction"
+
+.IX Subsection "The \s-1FILE\s0 Instruction"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Subsection "The \s-1MOUNT\s0 Instruction"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Subsection "The \s-1NAME_CHECK\s0 Instruction"
+
+.IX Subsection "The \s-1UNMOUNT\s0 Instruction"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "EXAMPLES"
+
+.IX Subsection "Example \fI\s-1CFG_\s0\fIdevice_name\fR\fR File for Stackers"
+
+.IX Subsection "Example \fI\s-1CFG_\s0\fIdevice_name\fR\fR File for Dumping to a Data File"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

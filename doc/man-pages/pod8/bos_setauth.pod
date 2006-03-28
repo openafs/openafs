@@ -1,0 +1,112 @@
+=head1 NAME
+
+bos setauth - Sets authorization checking requirements for all server processes
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<bos setauth> S<<< B<-server> <I<machine name>> >>> S<<< B<-authrequired> (on | off) >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos seta> S<<< B<-s> <I<machine name>> >>> S<<< B<-a> (on | off) >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<bos setauth> command enables or disables authorization checking on
+the server machine named by the B<-server> argument. When authorization
+checking is enabled (the normal case), the AFS server processes running on
+the machine verify that the issuer of a command meets its privilege
+requirements. When authorization checking is disabled, server processes
+perform any action for anyone, including the unprivileged user
+C<anonymous>; this security exposure precludes disabling of authorization
+checking except during installation or emergencies.
+
+To indicate to the server processes that authorization checking is
+disabled, the BOS Server creates the zero-length file
+F</usr/afs/local/NoAuth> on its local disk. All AFS server processes
+constantly monitor for the F<NoAuth> file's presence and do not check for
+authorization when it is present. The BOS Server removes the file when
+this command is used to reenable authorization checking.
+
+=head1 CAUTIONS
+
+Do not create the F<NoAuth> file directly, except when directed by
+instructions for dealing with emergencies (doing so requires being logged
+in as the local superuser C<root>). Use this command instead.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Indicates the server machine on which to enable or disable authorization
+checking. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
+
+=item B<-authrequired> (on | off)
+
+Enables authorization checking if the value is C<on>, or disables it if
+the value is C<off>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example disables authorization checking on the machine
+C<fs7.abc.com>:
+
+   % bos setauth -server fs7.abc.com -authrequired off
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser C<root> if the B<-localauth> flag is
+included.
+
+=head1 SEE ALSO
+
+L<KeyFile(5)>,
+L<NoAuth(5)>,
+L<UserList(5)>,
+L<bos(8)>,
+L<bos_restart(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

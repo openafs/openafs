@@ -39,7 +39,9 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#ifndef AFS_OBSD38_ENV
 #include <ufs/ufs/extattr.h>
+#endif
 #include <ufs/ufs/ufsmount.h>
 #ifndef MLEN
 #include <sys/mbuf.h>
@@ -95,6 +97,9 @@ struct xfs_inode_info {
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <asm/semaphore.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#include <linux/mutex.h>
+#endif
 #include <linux/errno.h>
 #ifdef COMPLETION_H_EXISTS
 #include <linux/completion.h>
@@ -217,7 +222,7 @@ typedef unsigned short etap_event_t;
 #  include "h/dir.h"
 #endif /* SGI || SUN || HPUX */
 
-#if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN80_ENV)
 #include "h/user.h"
 #endif /* AFS_SGI64_ENV */
 #define	MACH_USER_API	1
@@ -254,6 +259,10 @@ struct vop_getwritemount_args;
 #  include <sys/uio.h>
 #  include <sys/mount.h>
 #  include <sys/namei.h>
+#ifdef AFS_DARWIN80_ENV
+#  include <sys/kauth.h>
+#include <string.h>
+#endif
 #  include <sys/vnode.h>
 #  include <sys/queue.h>
 #  include <sys/malloc.h>
@@ -274,9 +283,11 @@ MALLOC_DECLARE(M_AFS);
 #undef timeout_fcn_t
 #define _DIR_H_
 #define doff_t          int32_t
+#ifndef AFS_DARWIN80_ENV
 #  include <ufs/ufs/quota.h>
 #  include <ufs/ufs/inode.h>
 #  include <ufs/ffs/fs.h>
+#endif
 #else
 #  include "h/vfs.h"
 #  include "h/vnode.h"

@@ -1,0 +1,407 @@
+=head1 NAME
+
+backup volsetrestore - Restores all volumes in a volume set
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<backup volsetrestore> S<<< [B<-name> <I<volume set name>>] >>>
+    S<<< [B<-file> <I<file name>>] >>> S<<< [B<-portoffset> <I<TC port offset>>+] >>>
+    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-n>]
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup vols> S<<< [B<-na> <I<volume set name>>] >>> S<<< [B<-f> <I<file name>>] >>>
+    S<<< [B<-p> <I<TC port offset>>+] >>> S<<< [B<-e> <I<new volume name extension>>] >>>
+    [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<backup volsetrestore> command restores the complete contents of a
+group of read/write volumes to the file system, by restoring data from the
+last full dump and all subsequent incremental dumps of each volume.  It is
+most useful for recovering from loss of data on multiple partitions, since
+it can restore each of a defined set of volumes to a different site.
+
+(If the C<FILE YES> instruction appears in the
+F</usr/afs/backup/CFG_I<device_name>> file associated with the specified
+port offset, then the B<backup volsetrestore> command restores data from
+the backup data file listed for that port offset in the Tape Coordinator's
+F</usr/afs/backup/tapeconfig> file, instead of from tape. For the sake of
+clarity, the following text refers to tapes only, but the Backup System
+handles backup data files in much the same way.)
+
+If restoring one or more volumes to a single site only, it is usually more
+efficient to use the B<backup volrestore> command. If restoring all
+volumes that resided on a single partition, it is usually more efficient
+to use the B<backup diskrestore> command.
+
+Indicate the volumes to restore by providing either the B<-name> argument
+or the B<-file> argument:
+
+=over 4
+
+=item *
+
+The B<-name> argument names a volume set. The Backup System restores all
+volumes listed in the Volume Location Database (VLDB) that match the
+server, partition, and volume name criteria defined in the volume set's
+volume entries, and for which dumps are available. It restores the volumes
+to their current site (machine and partition), and by default overwrites
+the existing volume contents.
+
+It is not required that the volume set was previously used to back up
+volumes (was used as the B<-volumeset> option to the B<backup dump>
+command). It can be defined especially to match the volumes that need to
+be restored with this command, and that is usually the better
+choice. Indeed, a I<temporary> volume set, created by including the
+B<-temporary> flag to the B<backup addvolset> command, can be especially
+useful in this context. A temporary volume set is not added to the Backup
+Database and exists only during the current interactive backup session,
+which is suitable if the volume set is needed only to complete the single
+restore operation initialized by this command.
+
+The reason that a specially defined volume set is probably better is that
+volume sets previously defined for use in dump operations usually match
+the backup version of volumes, whereas for a restore operation it is best
+to define volume entries that match the base (read/write) name. In that
+case, the Backup System searches the Backup Database for the newest dump
+set that includes either the read/write or the backup version of the
+volume. If, in contrast, a volume entry explicitly matches the volume's
+backup or read-only version, the Backup System restores dumps of that
+volume version only.
+
+=item *
+
+The B<-file> argument names a file that lists specific volumes and the
+site to which to restore each. The volume name must match the name used in
+Backup Database dump records rather than in the VLDB, if they differ,
+because the Backup System does not look up volumes in the VLDB. The
+specified site can be different than the volume's current one; in that
+case, the Backup System removes the current version of the volume and
+updates the volume's location information in the VLDB.
+
+=back
+
+If all of the full and incremental dumps of all relevant volumes were not
+written to a type of tape that a single Tape Coordinator can read, use the
+B<-portoffset> argument to list multiple port offset numbers in the order
+in which the tapes are needed (first list the port offset for the full
+dump, second the port offset for the level 1 incremental dump, and so
+on). This implies that the full dumps of all relevant volumes must have
+been written to a type of tape that the first Tape Coordinator can read,
+the level 1 incremental dumps to a type of tape the second Tape
+Coordinator can read, and so on. If dumps are on multiple incompatible
+tape types, use the B<backup volrestore> command to restore individual
+volumes, or use this command after defining new volume sets that group
+together volumes that were dumped to compatible tape types. For further
+discussion, see the I<IBM AFS Administration Guide>.
+
+By default, the Backup System overwrites the contents of an existing
+volume with the restored data. To create a new volume to house the
+restored version instead, use the B<-extension> argument. The Backup
+System derives the new volume's name by adding the specified extension to
+the read/write base name, and creates a new VLDB entry. The command does
+not affect the existing volume in any way. However, if a volume with the
+specified extension also already exists, the command overwrites it.
+
+The B<-n> flag produces a list of the volumes to be restored if the B<-n>
+flag were not included, without actually restoring any volumes. See
+L<OUTPUT> for a detailed description of the output, and suggestions on how
+to combine it most effectively with the B<-file> and B<-name> arguments.
+
+The execution time for a B<backup volsetrestore> command depends on the
+number of volumes to be restored and the amount of data in them, but it
+can take hours to restore a large number of volumes. One way to reduce the
+time is to run multiple instances of the command simultaneously, either
+using the B<-name> argument to specify disjoint volume sets for each
+command, or the B<-file> argument to name files that list different
+volumes. This is possible if there are multiple available Tape
+Coordinators that can read the required tapes. Depending on how the
+volumes to be restored were dumped to tape, specifying disjoint volume
+sets can also reduce the number of tape changes required.
+
+The Tape Coordinator's default response to this command is to access the
+first tape it needs by invoking the C<MOUNT> instruction in the local
+F</usr/afs/backup/CFG_I<device_name>> file, or by prompting the backup
+operator to insert the tape if there is no C<MOUNT> instruction. However,
+if the C<AUTOQUERY NO> instruction appears in the F<CFG_I<device_name>>
+file, or if the issuer of the B<butc> command included the B<-noautoquery>
+flag, the Tape Coordinator instead expects the tape to be in the device
+already. If it is not, or is the wrong tape, the Tape Coordinator invokes
+the C<MOUNT> instruction or prompts the operator. It also invokes the
+C<MOUNT> instruction or prompts for any additional tapes needed to
+complete the restore operation; the backup operator must arrange to
+provide them.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-name> <I<volume set name>>
+
+Names a volume set to restore. The Backup System restores all of the
+volumes listed in the VLDB that match the volume set's volume
+entries. Provide this argument or the B<-file> argument, but not both.
+
+=item B<-file> <I<file name>>
+
+Specifies the full pathname of a file that lists one or more volumes and
+the site (file server machine and partition) to which to restore each.
+Use either this argument or the B<-name> argument, but not both.
+
+Each volume's entry must appear on its own (unbroken) line in the file,
+and have the following format:
+
+    <machine> <partition> <volume> [<comments> ...]
+
+where
+
+=over 4
+
+=item <machine>
+
+Names the file server machine to which to restore the volume.
+
+=item <partition>
+
+Names the partition to which to restore the volume.
+
+=item <volume>
+
+Names the volume to restore. It is generally best to specify the base
+(read/write) name of each volume. In this case, the Backup System searches
+the Backup Database for the newest dump set that includes a dump of either
+the read/write or the backup version of the volume. It restores the dumps
+of that version of the volume, starting with the most recent full
+dump. If, in contrast, the name explicitly includes the C<.backup> or
+C<.readonly> extension, the Backup System restores dumps of that volume
+version only.
+
+=item <comments> ...
+
+Is any other text. The Backup System ignores any text on each line that
+appears after the volume name, so this field can be used for notes helpful
+to the backup operator or other administrator.
+
+=back
+
+Do not use wildcards (for example, C<.*>) in the <machine>, <partition>,
+or <volume> fields. It is acceptable for multiple lines in the file to
+name the same volume, but the Backup System processes only the first of
+them.
+
+=item B<-extension> <I<new volume name extension>>
+
+Creates a new volume for each volume specified by the B<-name> or B<-file>
+argument, to house the restored data from that volume.  The Backup System
+derives the new volume's name by appending the specified string to the
+read/write base name, and creates a new VLDB volume entry. It preserves
+the contents of each existing volume. Any string other than C<.readonly>
+or C<.backup> is acceptable, but the combination of the base name and
+extension cannot exceed 22 characters in length. To use a period to
+separate the extension from the name, specify it as the first character of
+the string (as in C<.rst>, for example).
+
+=item B<-portoffset> <I<TC port offset>>+
+
+Specifies one or more port offset numbers (up to a maximum of 128), each
+corresponding to a Tape Coordinator to use in the operation. If there is
+more than one value, the Backup System uses the first one when restoring
+the full dump of each volume, the second one when restoring the level 1
+incremental dump of each volume, and so on. It uses the final value in the
+list when restoring dumps at the corresponding depth in the dump hierarchy
+and all dumps at lower levels.
+
+Provide this argument unless the default value of 0 (zero) is appropriate
+for all dumps. If C<0> is just one of the values in the list, provide it
+explicitly in the appropriate order.
+
+=item B<-n>
+
+Displays a list of the volumes to be restored if the flag were not
+included, without actually restoring them. L<OUTPUT> details the format of
+the output. When combined with the B<-name> argument, its output is easily
+edited for use as input to the B<-file> argument on a subsequent B<backup
+volsetrestore> command.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the B<-n> flag is not provided, the command displays a unique task ID
+number for the operation, in two places:
+
+=over 4
+
+=item *
+
+In the shell window, directly following the command line.
+
+=item *
+
+In the Tape Coordinator window, if the butc process was started at debug
+level 1.
+
+=back
+
+The task ID number is not the same as the job ID number displayed by the
+B<backup jobs> command when the B<backup volsetrestore> command is issued
+in interactive mode. The Backup System does not assign either type of ID
+number until the restoration process actually begins.
+
+When the B<-n> flag is included, no task ID or job ID numbers are reported
+because none are assigned. Instead, the output begins with a count of the
+number of volumes to be restored, followed by a line for each dump of a
+volume. For each volume, the line representing the most recent full dump
+appears first, and lines for any subsequent incremental dumps follow,
+ordered by dump level. The lines for a given volume do not necessarily
+appear all together, however.
+
+The format of each line is as follows (the output is shown here on two
+lines only for legibility reasons):
+
+   <machine> <partition> <volume_dumped> # as <volume_restored>; \
+       <tape_name> (<tape_ID>); pos <position_number>; <date>
+
+where
+
+=over 4
+
+=item <machine>
+
+Names the file server machine that currently houses the volume, as listed
+in the VLDB.
+
+=item <partition>
+
+Names the partition that currently houses the volume, as listed in the
+VLDB.
+
+=item <volume_dumped>
+
+Specifies the version (read/write or backup) of the volume that was
+dumped, as listed in the Backup Database.
+
+=item <volume_restored>
+
+Specifies the name under which to restore the volume. The Backup System
+only restores data to read/write volumes. If the B<-extension> argument is
+included, then the specified extension appears on the name in this field
+(for example, C<user.pat.rst>).
+
+=item <tape_name>
+
+Names the tape containing the dump of the volume, from the Backup
+Database. If the tape has a permanent name, it appears here; otherwise, it
+is the AFS tape name.
+
+=item <tape_ID>
+
+The tape ID of the tape containing the dump of the volume, from the Backup
+Database.
+
+=item <position_number>
+
+Specifies the dump's position on the tape (for example, C<31> indicates
+that 30 volume dumps precede the current one on the tape). If the dump was
+written to a backup data file, this number is the ordinal of the 16
+KB-offset at which the volume's data begins.
+
+=item <date>
+
+The date and time when the volume was dumped.
+
+=back
+
+One way to generate a file for use as input to the B<-file> argument is to
+combine the B<-name> and B<-n> options, directing the output to a
+file. The I<IBM AFS Administration Guide> section on using the Backup
+System to restore data explains how to edit the file as necessary before
+using it as input to the B<-file> argument.
+
+The output of this command includes only volumes for which the Backup
+Database includes at least one dump record. The command interpreter
+generates a message on the standard error stream about volumes that do not
+have dump records but either are listed in the file named by the B<-file>
+argument, or appear in the VLDB as a match to a volume entry in the volume
+set named by the B<-name> argument.
+
+=head1 EXAMPLES
+
+The following command restores all volumes included in entries in the
+volume set named C<data.restore>, which was created expressly to restore
+data to a pair of file server machines on which all data was corrupted due
+to a software error. All volumes are restored to the sites recorded in
+their entries in the VLDB.
+
+   % backup volsetrestore -name data.restore
+   Starting restore
+   backup: task ID of restore operation: 112
+   backup: Finished doing restore
+
+The following command restores all volumes that have entries in the file
+named F</tmp/restore>:
+
+   % backup volsetrestore -file /tmp/restore
+   Starting restore
+   backup: task ID of restore operation: 113
+   backup: Finished doing restore
+
+The F</tmp/restore> file has the following contents:
+
+   fs1.abc.com b user.pat
+   fs1.abc.com b user.terry
+   fs1.abc.com b user.smith
+   fs2.abc.com c user.jones
+          .         .     .
+          .         .     .
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+machine where the Backup Server or Volume Location (VL) Server is running,
+and on every file server machine that houses an affected volume. If the
+B<-localauth> flag is included, the issuer must instead be logged on to a
+server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<butc(5)>,
+L<backup(8)>,
+L<backup_addvolentry(8)>,
+L<backup_addvolset(8)>,
+L<backup_diskrestore(8)>,
+L<backup_dump(8)>,
+L<backup_volrestore(8)>,
+L<butc(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

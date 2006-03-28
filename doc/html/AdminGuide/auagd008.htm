@@ -1,0 +1,2713 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd007.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd009.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<A NAME="IDX5840"></A>
+<A NAME="IDX5841"></A>
+<HR><H1><A NAME="HDRWQ80" HREF="auagd002.htm#ToC_99">Administering Server Machines</A></H1>
+<P>This chapter describes how to administer an AFS server
+machine. It describes the following configuration information and
+administrative tasks:
+<UL>
+<P><LI>The binary and configuration files that must reside in the subdirectories
+of the <B>/usr/afs</B> directory on every server machine's local
+disk; see <A HREF="#HDRWQ83">Local Disk Files on a Server Machine</A>.
+<P><LI>The various <I>roles</I> or functions that an AFS server machine can
+perform, and how to determine which machines are taking a role; see <A HREF="#HDRWQ90">The Four Roles for File Server Machines</A>.
+<P><LI>How to maintain database server machines; see <A HREF="#HDRWQ101">Administering Database Server Machines</A>.
+<P><LI>How to maintain the list of database server machines in the
+<B>/usr/afs/etc/CellServDB</B> file; see <A HREF="#HDRWQ118">Maintaining the Server CellServDB File</A>.
+<P><LI>How to control authorization checking on a server machine; see <A HREF="#HDRWQ123">Managing Authentication and Authorization Requirements</A>.
+<P><LI>How to install new disks or partitions on a file server machine; see <A HREF="#HDRWQ130">Adding or Removing Disks and Partitions</A>.
+<P><LI>How to change a server machine's IP addresses and manager VLDB server
+entries; see <A HREF="#HDRWQ138">Managing Server IP Addresses and VLDB Server Entries</A>.
+<P><LI>How to reboot a file server machine; see <A HREF="#HDRWQ139">Rebooting a Server Machine</A>.
+</UL>
+<P>To learn how to install and configure a new server machine, see the
+<I>IBM AFS Quick Beginnings</I>.
+<P>To learn how to administer the server processes themselves, see <A HREF="auagd009.htm#HDRWQ142">Monitoring and Controlling Server Processes</A>.
+<P>To learn how to administer volumes, see <A HREF="auagd010.htm#HDRWQ174">Managing Volumes</A>.
+<HR><H2><A NAME="HDRWQ81" HREF="auagd002.htm#ToC_100">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands:
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Install new binaries
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos install</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Examine binary check-and-restart time
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos getrestart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set binary check-and-restart time
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos setrestart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Examine compilation dates on binary files
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos getdate</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Restart a process to use new binaries
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos restart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Revert to old version of binaries
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos uninstall</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove obsolete <B>.BAK</B> and <B>.OLD</B>
+versions
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos prune</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">List partitions on a file server machine
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>vos listpart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Shutdown AFS server processes
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos shutdown</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">List volumes on a partition
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>vos listvldb</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Move read/write volumes
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>vos move</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">List a cell's database server machines
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos listhosts</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Add a database server machine to server <B>CellServDB</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos addhost</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove a database server machine from server <B>CellServDB</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos removehost</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set authorization checking requirements
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos setauth</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Prevent authentication for <B>bos</B>, <B>pts</B>, and
+<B>vos</B> commands
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%">Include <B>-noauth</B> flag
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Prevent authentication for kas commands
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%">Include <B>-noauth</B> flag on some commands or issue
+<B>noauthentication</B> while in interactive mode
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display all VLDB server entries
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>vos listaddrs</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove a VLDB server entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>vos changeaddr</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Reboot a server machine remotely
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos exec</B> <I>reboot_command</I>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ83" HREF="auagd002.htm#ToC_101">Local Disk Files on a Server Machine</A></H2>
+<P>Several types of files must reside in the subdirectories of
+the <B>/usr/afs</B> directory on an AFS server machine's local
+disk. They include binaries, configuration files, the administrative
+database files (on database server machines), log files, and volume header
+files.
+<P><B>Note for Windows users:</B> Some files described in this
+document possibly do not exist on machines that run a Windows operating
+system. Also, Windows uses a backslash
+(&nbsp;<B>\</B>&nbsp;) rather than a forward slash
+(&nbsp;<B>/</B>&nbsp;) to separate the elements in a
+pathname.
+<A NAME="IDX5842"></A>
+<A NAME="IDX5843"></A>
+<A NAME="IDX5844"></A>
+<P><H3><A NAME="HDRWQ84" HREF="auagd002.htm#ToC_102">Binaries in the /usr/afs/bin Directory</A></H3>
+<P>The <B>/usr/afs/bin</B> directory stores the AFS server
+process and command suite binaries appropriate for the machine's system
+(CPU and operating system) type. If a process has both a server portion
+and a client portion (as with the Update Server) or if it has separate
+components (as with the <B>fs</B> process), each component resides in a
+separate file.
+<P>To ensure predictable system performance, all file server machines must run
+the same AFS build version of a given process. To maintain consistency
+easily, use the Update Server process to distribute binaries from a
+<I>binary distribution machine</I> of each system type, as described
+further in <A HREF="#HDRWQ93">Binary Distribution Machines</A>.
+<P>It is best to keep the binaries for all processes in the
+<B>/usr/afs/bin</B> directory, even if you do not run the process actively
+on the machine. It simplifies the process of reconfiguring machines
+(for example, adding database server functionality to an existing file server
+machine). Similarly, it is best to keep the command suite binaries in
+the directory, even if you do not often issue commands while working on the
+server machine. It enables you to issue commands during recovery from
+server and machine outages.
+<P>The following lists the binary files in the <B>/usr/afs/bin</B>
+directory that are directly related to the AFS server processes or command
+suites. Other binaries (for example, for the <B>klog</B> command)
+sometimes appear in this directory on a particular file server machine's
+disk or in an AFS distribution.
+<DL>
+<A NAME="IDX5845"></A>
+<A NAME="IDX5846"></A>
+<P><DT><B>backup
+</B><DD>The command suite for the AFS Backup System (the binary for the Backup
+Server is <B>buserver</B>).
+<A NAME="IDX5847"></A>
+<A NAME="IDX5848"></A>
+<P><DT><B>bos
+</B><DD>The command suite for communicating with the Basic OverSeer (BOS) Server
+(the binary for the BOS Server is <B>bosserver</B>).
+<A NAME="IDX5849"></A>
+<A NAME="IDX5850"></A>
+<A NAME="IDX5851"></A>
+<A NAME="IDX5852"></A>
+<A NAME="IDX5853"></A>
+<A NAME="IDX5854"></A>
+<P><DT><B>bosserver
+</B><DD>The binary for the Basic OverSeer (BOS) Server process.
+<A NAME="IDX5855"></A>
+<A NAME="IDX5856"></A>
+<A NAME="IDX5857"></A>
+<A NAME="IDX5858"></A>
+<A NAME="IDX5859"></A>
+<A NAME="IDX5860"></A>
+<P><DT><B>buserver
+</B><DD>The binary for the Backup Server process.
+<A NAME="IDX5861"></A>
+<A NAME="IDX5862"></A>
+<A NAME="IDX5863"></A>
+<A NAME="IDX5864"></A>
+<A NAME="IDX5865"></A>
+<A NAME="IDX5866"></A>
+<P><DT><B>fileserver
+</B><DD>The binary for the File Server component of the <B>fs</B>
+process.
+<A NAME="IDX5867"></A>
+<A NAME="IDX5868"></A>
+<P><DT><B>kas
+</B><DD>The command suite for communicating with the Authentication Server (the
+binary for the Authentication Server is <B>kaserver</B>).
+<A NAME="IDX5869"></A>
+<A NAME="IDX5870"></A>
+<A NAME="IDX5871"></A>
+<A NAME="IDX5872"></A>
+<A NAME="IDX5873"></A>
+<A NAME="IDX5874"></A>
+<P><DT><B>kaserver
+</B><DD>The binary for the Authentication Server process.
+<A NAME="IDX5875"></A>
+<A NAME="IDX5876"></A>
+<A NAME="IDX5877"></A>
+<A NAME="IDX5878"></A>
+<A NAME="IDX5879"></A>
+<A NAME="IDX5880"></A>
+<P><DT><B>ntpd
+</B><DD>The binary for the Network Time Protocol Daemon (NTPD). AFS
+redistributes this binary and uses the <B>runntp</B> program to configure
+and initialize the NTPD process.
+<A NAME="IDX5881"></A>
+<A NAME="IDX5882"></A>
+<A NAME="IDX5883"></A>
+<P><DT><B>ntpdc
+</B><DD>A debugging utility furnished with the <B>ntpd</B> program.
+<A NAME="IDX5884"></A>
+<A NAME="IDX5885"></A>
+<P><DT><B>pts
+</B><DD>The command suite for communicating with the Protection Server process
+(the binary for the Protection Server is <B>ptserver</B>).
+<A NAME="IDX5886"></A>
+<A NAME="IDX5887"></A>
+<A NAME="IDX5888"></A>
+<A NAME="IDX5889"></A>
+<A NAME="IDX5890"></A>
+<A NAME="IDX5891"></A>
+<P><DT><B>ptserver
+</B><DD>The binary for the Protection Server process.
+<A NAME="IDX5892"></A>
+<A NAME="IDX5893"></A>
+<A NAME="IDX5894"></A>
+<A NAME="IDX5895"></A>
+<P><DT><B>runntp
+</B><DD>The binary for the program used to configure NTPD most appropriately for
+use with AFS.
+<A NAME="IDX5896"></A>
+<A NAME="IDX5897"></A>
+<A NAME="IDX5898"></A>
+<A NAME="IDX5899"></A>
+<A NAME="IDX5900"></A>
+<A NAME="IDX5901"></A>
+<P><DT><B>salvager
+</B><DD>The binary for the Salvager component of the <B>fs</B> process.
+<A NAME="IDX5902"></A>
+<A NAME="IDX5903"></A>
+<A NAME="IDX5904"></A>
+<A NAME="IDX5905"></A>
+<P><DT><B>udebug
+</B><DD>The binary for a program that reports the status of AFS's distributed
+database technology, Ubik.
+<A NAME="IDX5906"></A>
+<A NAME="IDX5907"></A>
+<A NAME="IDX5908"></A>
+<A NAME="IDX5909"></A>
+<A NAME="IDX5910"></A>
+<A NAME="IDX5911"></A>
+<P><DT><B>upclient
+</B><DD>The binary for the client portion of the Update Server process.
+<A NAME="IDX5912"></A>
+<A NAME="IDX5913"></A>
+<A NAME="IDX5914"></A>
+<A NAME="IDX5915"></A>
+<P><DT><B>upserver
+</B><DD>The binary for the server portion of the Update Server process.
+<A NAME="IDX5916"></A>
+<A NAME="IDX5917"></A>
+<A NAME="IDX5918"></A>
+<A NAME="IDX5919"></A>
+<A NAME="IDX5920"></A>
+<A NAME="IDX5921"></A>
+<A NAME="IDX5922"></A>
+<P><DT><B>vlserver
+</B><DD>The binary for the Volume Location (VL) Server process.
+<A NAME="IDX5923"></A>
+<A NAME="IDX5924"></A>
+<A NAME="IDX5925"></A>
+<A NAME="IDX5926"></A>
+<A NAME="IDX5927"></A>
+<A NAME="IDX5928"></A>
+<P><DT><B>volserver
+</B><DD>The binary for the Volume Server component of the <B>fs</B>
+process.
+<A NAME="IDX5929"></A>
+<A NAME="IDX5930"></A>
+<P><DT><B>vos
+</B><DD>The command suite for communicating with the Volume and VL Server
+processes (the binaries for the servers are <B>volserver</B> and
+<B>vlserver</B>, respectively).
+</DL>
+<A NAME="IDX5931"></A>
+<A NAME="IDX5932"></A>
+<A NAME="IDX5933"></A>
+<A NAME="IDX5934"></A>
+<A NAME="IDX5935"></A>
+<P><H3><A NAME="HDRWQ85" HREF="auagd002.htm#ToC_103">Common Configuration Files in the /usr/afs/etc Directory</A></H3>
+<P>The directory <B>/usr/afs/etc</B> on every file server
+machine's local disk contains configuration files in ASCII and
+machine-independent binary format. For predictable AFS performance
+throughout a cell, all server machines must have the same version of each
+configuration file:
+<UL>
+<A NAME="IDX5936"></A>
+<P><LI>Cells that run the United States edition of AFS conventionally use the
+Update Server to distribute a common version of each file from the cell's
+system control machine to other server machines (for more on the system
+control machine, see <A HREF="#HDRWQ94">The System Control Machine</A>). Run the Update Server's server portion on the
+system control machine, and the client portion on all other server
+machines. Update the files on the system control machine only, except
+as directed by instructions for dealing with emergencies.
+<P><LI>Cells that run the international edition of AFS must not use the Update
+Server to distribute the contents of the <B>/usr/afs/etc</B>
+directory. Due to United States government regulations, the data
+encryption routines that AFS uses to protect the files in this directory as
+they cross the network are not available to the Update Server in the
+international edition of AFS. You must instead update the files on each
+server machine individually, taking extra care to issue exactly the same
+<B>bos</B> command for each machine. The necessary data encryption
+routines are available to the <B>bos</B> commands, so information is safe
+as it crosses the network from the machine where the <B>bos</B> command is
+issued to the server machines.
+</UL>
+<P>Never directly edit any of the files in the <B>/usr/afs/etc</B>
+directory, except as directed by instructions for dealing with
+emergencies. In normal circumstances, use the appropriate
+<B>bos</B> commands to change the files. The following list
+includes pointers to instructions.
+<P>The files in this directory include:
+<DL>
+<A NAME="IDX5937"></A>
+<A NAME="IDX5938"></A>
+<P><DT><B>CellServDB
+</B><DD>An ASCII file that names the cell's database server machines, which
+run the Authentication, Backup, Protection, and VL Server processes.
+You create the initial version of this file by issuing the <B>bos
+setcellname</B> command while installing your cell's first server
+machine. It is very important to update this file when you change the
+identity of your cell's database server machines. 
+<P>The server <B>CellServDB</B> file is not the same as the
+<B>CellServDB</B> file stored in the <B>/usr/vice/etc</B> directory on
+client machines. The client version lists the database server machines
+for every AFS cell that you choose to make accessible from the client
+machine. The server <B>CellServDB</B> file lists only the local
+cell's database server machines, because server processes never contact
+processes in other cells.
+<P>For instructions on maintaining this file, see <A HREF="#HDRWQ118">Maintaining the Server CellServDB File</A>.
+<A NAME="IDX5939"></A>
+<A NAME="IDX5940"></A>
+<A NAME="IDX5941"></A>
+<P><DT><B>KeyFile
+</B><DD>A machine-independent, binary-format file that lists the server encryption
+keys the AFS server processes use to encrypt and decrypt tickets. The
+information in this file is the basis for secure communication in the cell,
+and so is extremely sensitive. The file is specially protected so that
+only privileged users can read or change it. 
+<P>For instructions on maintaining this file, see <A HREF="auagd014.htm#HDRWQ355">Managing Server Encryption Keys</A>.
+<A NAME="IDX5942"></A>
+<A NAME="IDX5943"></A>
+<P><DT><B>ThisCell
+</B><DD>An ASCII file that consists of a single line defining the complete
+Internet domain-style name of the cell (such as
+<TT>abc.com</TT>). You create this file with the <B>bos
+setcellname</B> command during the installation of your cell's first
+file server machine, as instructed in the <I>IBM AFS Quick
+Beginnings</I>.
+<P>Note that changing this file is only one step in changing your cell's
+name. For discussion, see <A HREF="auagd007.htm#HDRWQ34">Choosing a Cell Name</A>.
+<A NAME="IDX5944"></A>
+<A NAME="IDX5945"></A>
+<P><DT><B>UserList
+</B><DD>An ASCII file that lists the usernames of the system administrators
+authorized to issue privileged <B>bos</B>, <B>vos</B>, and
+<B>backup</B> commands. For instructions on maintaining the file,
+see <A HREF="auagd021.htm#HDRWQ592">Administering the UserList File</A>.
+</DL>
+<A NAME="IDX5946"></A>
+<A NAME="IDX5947"></A>
+<A NAME="IDX5948"></A>
+<A NAME="IDX5949"></A>
+<P><H3><A NAME="HDRWQ86" HREF="auagd002.htm#ToC_104">Local Configuration Files in the /usr/afs/local Directory</A></H3>
+<P>The directory <B>/usr/afs/local</B> contains
+configuration files that are different for each file server machine in a
+cell. Thus, they are not updated automatically from a central source
+like the files in <B>/usr/afs/bin</B> and <B>/usr/afs/etc</B>
+directories. The most important file is the <B>BosConfig</B>
+file; it defines which server processes are to run on that
+machine.
+<P>As with the common configuration files in <B>/usr/afs/etc</B>, you must
+not edit these files directly. Use commands from the <B>bos</B>
+command suite where appropriate; some files never need to be
+altered.
+<P>The files in this directory include the following:
+<DL>
+<A NAME="IDX5950"></A>
+<A NAME="IDX5951"></A>
+<P><DT><B>BosConfig
+</B><DD>This file lists the server processes to run on the server machine, by
+defining which processes the BOS Server monitors and what it does if the
+process fails. It also defines the times at which the BOS Server
+automatically restarts processes for maintenance purposes.
+<P>As you create server processes during a file server machine's
+installation, their entries are defined in this file automatically. The
+<I>IBM AFS Quick Beginnings</I> outlines the <B>bos</B> commands to
+use. For a more complete description of the file, and instructions for
+controlling process status by editing the file with commands from the
+<B>bos</B> suite, see <A HREF="auagd009.htm#HDRWQ142">Monitoring and Controlling Server Processes</A>.
+<A NAME="IDX5952"></A>
+<A NAME="IDX5953"></A>
+<P><DT><B>NetInfo
+</B><DD>This optional ASCII file lists one or more of the network interface
+addresses on the server machine. If it exists when the File Server
+initializes, the File Server uses it as the basis for the list of interfaces
+that it registers in its Volume Location Database (VLDB) server entry.
+See <A HREF="#HDRWQ138">Managing Server IP Addresses and VLDB Server Entries</A>.
+<A NAME="IDX5954"></A>
+<A NAME="IDX5955"></A>
+<P><DT><B>NetRestrict
+</B><DD>This optional ASCII file lists one or more network interface
+addresses. If it exists when the File Server initializes, the File
+Server removes the specified addresses from the list of interfaces that it
+registers in its VLDB server entry. See <A HREF="#HDRWQ138">Managing Server IP Addresses and VLDB Server Entries</A>.
+<A NAME="IDX5956"></A>
+<A NAME="IDX5957"></A>
+<P><DT><B>NoAuth
+</B><DD>This zero-length file instructs all AFS server processes running on the
+machine not to perform authorization checking. Thus, they perform any
+action for any user, even <B>anonymous</B>. This very insecure
+state is useful only in rare instances, mainly during the installation of the
+machine.
+<P>The file is created automatically when you start the initial
+<B>bosserver</B> process with the <B>-noauth</B> flag, or issue the
+<B>bos setauth</B> command to turn off authentication requirements.
+When you use the <B>bos setauth</B> command to turn on authentication, the
+BOS Server removes this file. For more information, see <A HREF="#HDRWQ123">Managing Authentication and Authorization Requirements</A>.
+<A NAME="IDX5958"></A>
+<A NAME="IDX5959"></A>
+<P><DT><B>SALVAGE.fs
+</B><DD>This zero-length file controls how the BOS Server handles a crash of the
+File Server component of the <B>fs</B> process. The BOS Server
+creates this file each time it starts or restarts the <B>fs</B>
+process. If the file is present when the File Server crashes, then the
+BOS Server runs the Salvager before restarting the File Server and Volume
+Server again. When the File Server exits normally, the BOS Server
+removes the file so that the Salvager does not run.
+<P>Do not create or remove this file yourself; the BOS Server does so
+automatically. If necessary, you can salvage a volume or partition by
+using the <B>bos salvage</B> command; see <A HREF="auagd010.htm#HDRWQ232">Salvaging Volumes</A>.
+<A NAME="IDX5960"></A>
+<A NAME="IDX5961"></A>
+<P><DT><B>salvage.lock
+</B><DD>This file guarantees that only one Salvager process runs on a file server
+machine at a time (the single process can fork multiple subprocesses to
+salvage multiple partitions in parallel). As the Salvager initiates
+(when invoked by the BOS Server or by issue of the <B>bos salvage</B>
+command), it creates this zero-length file and issues the <B>flock</B>
+system call on it. It removes the file when it completes the salvage
+operation. Because the Salvager must lock the file in order to run,
+only one Salvager can run at a time.
+<A NAME="IDX5962"></A>
+<A NAME="IDX5963"></A>
+<A NAME="IDX5964"></A>
+<A NAME="IDX5965"></A>
+<P><DT><B>sysid
+</B><DD>This file records the network interface addresses that the File Server
+(<B>fileserver</B> process) registers in its VLDB server entry.
+When the Cache Manager requests volume location information, the Volume
+Location (VL) Server provides all of the interfaces registered for each server
+machine that houses the volume. This enables the Cache Manager to make
+use of multiple addresses when accessing AFS data stored on a multihomed file
+server machine. For further information, see <A HREF="#HDRWQ138">Managing Server IP Addresses and VLDB Server Entries</A>.
+</DL>
+<A NAME="IDX5966"></A>
+<A NAME="IDX5967"></A>
+<A NAME="IDX5968"></A>
+<A NAME="IDX5969"></A>
+<A NAME="IDX5970"></A>
+<A NAME="IDX5971"></A>
+<P><H3><A NAME="HDRWQ87" HREF="auagd002.htm#ToC_105">Replicated Database Files in the /usr/afs/db Directory</A></H3>
+<P>The directory <B>/usr/afs/db</B> contains two types of
+files pertaining to the four replicated databases in the cell--the
+Authentication Database, Backup Database, Protection Database, and Volume
+Location Database (VLDB):
+<UL>
+<P><LI>A file that contains each database, with a <B>.DB0</B>
+extension.
+<P><LI>A log file for each database, with a <B>.DBSYS1</B>
+extension. The database server process logs each database operation in
+this file before performing it. If the operation is interrupted, the
+process consults this file to learn how to finish it.
+</UL>
+<P>Each database server process (Authentication, Backup, Protection, or VL
+Server) maintains its own database and log files. The database files
+are in binary format, so you must always access or alter them using commands
+from the <B>kas</B> suite (for the Authentication Database),
+<B>backup</B> suite (for the Backup Database), <B>pts</B> suite (for
+the Protection Database), or <B>vos</B> suite (for the VLDB).
+<P>If a cell runs more than one database server machine, each database server
+process keeps its own copy of its database on its machine's hard
+disk. However, it is important that all the copies of a given database
+are the same. To synchronize them, the database server processes call
+on AFS's distributed database technology, Ubik, as described in <A HREF="#HDRWQ102">Replicating the AFS Administrative Databases</A>.
+<P>The files listed here appear in this directory only on database server
+machines. On non-database server machines, this directory is
+empty.
+<DL>
+<A NAME="IDX5972"></A>
+<A NAME="IDX5973"></A>
+<P><DT><B>bdb.DB0
+</B><DD>The Backup Database file.
+<A NAME="IDX5974"></A>
+<A NAME="IDX5975"></A>
+<P><DT><B>bdb.DBSYS1
+</B><DD>The Backup Database log file.
+<A NAME="IDX5976"></A>
+<A NAME="IDX5977"></A>
+<P><DT><B>kaserver.DB0
+</B><DD>The Authentication Database file.
+<A NAME="IDX5978"></A>
+<A NAME="IDX5979"></A>
+<P><DT><B>kaserver.DBSYS1
+</B><DD>The Authentication Database log file.
+<A NAME="IDX5980"></A>
+<A NAME="IDX5981"></A>
+<P><DT><B>prdb.DB0
+</B><DD>The Protection Database file.
+<A NAME="IDX5982"></A>
+<A NAME="IDX5983"></A>
+<P><DT><B>prdb.DBSYS1
+</B><DD>The Protection Database log file.
+<A NAME="IDX5984"></A>
+<A NAME="IDX5985"></A>
+<P><DT><B>vldb.DB0
+</B><DD>The Volume Location Database file.
+<A NAME="IDX5986"></A>
+<A NAME="IDX5987"></A>
+<P><DT><B>vldb.DBSYS1
+</B><DD>The Volume Location Database log file.
+</DL>
+<A NAME="IDX5988"></A>
+<A NAME="IDX5989"></A>
+<A NAME="IDX5990"></A>
+<A NAME="IDX5991"></A>
+<A NAME="IDX5992"></A>
+<A NAME="IDX5993"></A>
+<P><H3><A NAME="HDRWQ88" HREF="auagd002.htm#ToC_106">Log Files in the /usr/afs/logs Directory</A></H3>
+<P>The <B>/usr/afs/logs</B> directory contains log files
+from various server processes. The files detail interesting events that
+occur during normal operations. For instance, the Volume Server can
+record volume moves in the <B>VolserLog</B> file. Events are
+recorded at completion, so the server processes do not use these files to
+reconstruct failed operations unlike the ones in the <B>/usr/afs/db</B>
+directory.
+<P>The information in log files can be very useful as you evaluate process
+failures and other problems. For instance, if you receive a timeout
+message when you try to access a volume, checking the <B>FileLog</B> file
+possibly provides an explanation, showing that the File Server was unable to
+attach the volume. To examine a log file remotely, use the <B>bos
+getlog</B> command as described in <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A>.
+<P>This directory also contains the core image files generated if a process
+being monitored by the BOS Server crashes. The BOS Server attempts to
+add an extension to the standard <B>core</B> name to indicate which
+process generated the core file (for example, naming a core file generated by
+the Protection Server <B>core.ptserver</B>). The BOS Server
+cannot always assign the correct extension if two processes fail at about the
+same time, so it is not guaranteed to be correct.
+<P>The directory contains the following files:
+<DL>
+<A NAME="IDX5994"></A>
+<A NAME="IDX5995"></A>
+<P><DT><B>AuthLog
+</B><DD>The Authentication Server's log file.
+<A NAME="IDX5996"></A>
+<A NAME="IDX5997"></A>
+<P><DT><B><B>BackupLog</B>
+</B><DD>The Backup Server's log file.
+<A NAME="IDX5998"></A>
+<A NAME="IDX5999"></A>
+<P><DT><B><B>BosLog</B>
+</B><DD>The BOS Server's log file.
+<A NAME="IDX6000"></A>
+<A NAME="IDX6001"></A>
+<P><DT><B><B>FileLog</B>
+</B><DD>The File Server's log file.
+<A NAME="IDX6002"></A>
+<A NAME="IDX6003"></A>
+<P><DT><B><B>SalvageLog</B>
+</B><DD>The Salvager's log file.
+<A NAME="IDX6004"></A>
+<A NAME="IDX6005"></A>
+<P><DT><B><B>VLLog</B>
+</B><DD>The Volume Location (VL) Server's log file.
+<A NAME="IDX6006"></A>
+<A NAME="IDX6007"></A>
+<P><DT><B><B>VolserLog</B>
+</B><DD>The Volume Server's log file.
+<P><DT><B><B>core</B>.<VAR>process</VAR>
+</B><DD>If present, a core image file produced as an AFS server process on the
+machine crashed (probably the process named by <VAR>process</VAR>).
+</DL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">To prevent log files from growing unmanageably large, restart the server
+processes periodically, particularly the database server processes. To
+avoid restarting the processes, use the UNIX <B>rm</B> command to remove
+the file as the process runs; it re-creates it automatically.
+</TD></TR></TABLE>
+<A NAME="IDX6008"></A>
+<A NAME="IDX6009"></A>
+<A NAME="IDX6010"></A>
+<A NAME="IDX6011"></A>
+<A NAME="IDX6012"></A>
+<P><H3><A NAME="HDRWQ89" HREF="auagd002.htm#ToC_107">Volume Headers on Server Partitions</A></H3>
+<P>A partition that houses AFS volumes must be mounted at a
+subdirectory of the machine's root ( / ) directory (not, for instance
+under the <B>/usr</B> directory). The file server machine's
+file system registry file (<B>/etc/fstab</B> or equivalent) must correctly
+map the directory name and the partition's device name. The
+directory name is of the form <B>/vicep</B><VAR>index</VAR>, where each
+<VAR>index</VAR> is one or two lowercase letters. By convention, the
+first AFS partition on a machine is mounted at <B>/vicepa</B>, the second
+at <B>/vicepb</B>, and so on. If there are more than 26 partitions,
+continue with <B>/vicepaa</B>, <B>/vicepab</B> and so on. The
+<I>IBM AFS Release Notes</I> specifies the number of supported partitions
+per server machine.
+<P>Do not store non-AFS files on AFS partitions. The File Server and
+Volume Server expect to have available all of the space on the
+partition.
+<P>The <B>/vicep</B> directories contain two types of files:
+<DL>
+<A NAME="IDX6013"></A>
+<A NAME="IDX6014"></A>
+<P><DT><B>V<VAR>vol_ID</VAR>.vol
+</B><DD>Each such file is a volume header. The <VAR>vol_ID</VAR> corresponds
+to the volume ID number displayed in the output from the <B>vos
+examine</B>, <B>vos listvldb</B>, and <B>vos listvol</B>
+commands.
+<A NAME="IDX6015"></A>
+<A NAME="IDX6016"></A>
+<P><DT><B>FORCESALVAGE
+</B><DD>This zero-length file triggers the Salvager to salvage the entire
+partition. The AFS-modified version of the <B>fsck</B> program
+creates this file if it discovers corruption.
+</DL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">For most system types, it is important never to run the standard
+<B>fsck</B> program provided with the operating system on an AFS file
+server machine. It removes all AFS volume data from server partitions
+because it does not recognize their format.
+</TD></TR></TABLE>
+<A NAME="IDX6017"></A>
+<A NAME="IDX6018"></A>
+<HR><H2><A NAME="HDRWQ90" HREF="auagd002.htm#ToC_108">The Four Roles for File Server Machines</A></H2>
+<P>In cells that have more than one server machine, not all
+server machines have to perform exactly the same functions. The are
+four possible <I>roles</I> a machine can assume, determined by which
+server processes it is running. A machine can assume more than one role
+by running all of the relevant processes. The following list summarizes
+the four roles, which are described more completely in subsequent
+sections.
+<UL>
+<P><LI>A <I>simple file server machine</I> runs only the processes that store
+and deliver AFS files to client machines. You can run as many simple
+file server machines as you need to satisfy your cell's performance and
+disk space requirements.
+<P><LI>A <I>database server machine</I> runs the four database server
+processes that maintain AFS's replicated administrative databases:
+the Authentication, Backup, Protection, and Volume Location (VL) Server
+processes.
+<P><LI>A <I>binary distribution machine</I> distributes the AFS server
+binaries for its system type to all other server machines of that system
+type.
+<P><LI>The single <I>system control machine</I> distributes common server
+configuration files to all other server machines in the cell, in a cell that
+runs the United States edition of AFS (cells that use the international
+edition of AFS must not use the system control machine for this
+purpose). The machine conventionally also serves as the time
+synchronization source for the cell, adjusting its clock according to a time
+source outside the cell.
+</UL>
+<P>If a cell has a single server machine, it assumes the simple file server
+and database server roles. The instructions in the <I>IBM AFS Quick
+Beginnings</I> also have you configure it as the system control machine and
+binary distribution machine for its system type, but it does not actually
+perform those functions until you install another server machine.
+<P>It is best to keep the binaries for all of the AFS server processes in the
+<B>/usr/afs/bin</B> directory, even if not all processes are
+running. You can then change which roles a machine assumes simply by
+starting or stopping the processes that define the role.
+<A NAME="IDX6019"></A>
+<A NAME="IDX6020"></A>
+<P><H3><A NAME="HDRWQ91" HREF="auagd002.htm#ToC_109">Simple File Server Machines</A></H3>
+<P>A <I>simple file server machine</I> runs only the server
+processes that store and deliver AFS files to client machines, monitor process
+status, and pick up binaries and configuration files from the cell's
+binary distribution and system control machines.
+<P>In general, only cells with more than three server machines need to run
+simple file server machines. In cells with three or fewer machines, all
+of them are usually database server machines (to benefit from replicating the
+administrative databases); see <A HREF="#HDRWQ92">Database Server Machines</A>.
+<P>The following processes run on a simple file server machine:
+<UL>
+<P><LI>The BOS Server (<B>bosserver</B> process)
+<P><LI>The <B>fs</B> process, which combines the File Server, Volume Server,
+and Salvager processes so that they can coordinate their operations on the
+data in volumes and avoid the inconsistencies that can result from multiple
+simultaneous operations on the same data
+<P><LI>The NTP coordinator (<B>runntp</B> process), which helps keep the
+machine's clock synchronized with the clocks on the other server machines
+in the cell
+<P><LI>A client portion of the Update Server that picks up binary files from the
+binary distribution machine of its AFS system type (the <B>upclientbin</B>
+process)
+<P><LI>A client portion of the Update Server that picks up common configuration
+files from the system control machine, in cells running the United States
+edition of AFS (the <B>upclientetc</B> process)
+</UL>
+<A NAME="IDX6021"></A>
+<A NAME="IDX6022"></A>
+<A NAME="IDX6023"></A>
+<A NAME="IDX6024"></A>
+<A NAME="IDX6025"></A>
+<A NAME="IDX6026"></A>
+<P><H3><A NAME="HDRWQ92" HREF="auagd002.htm#ToC_110">Database Server Machines</A></H3>
+<P>A <I>database server machine</I> runs the four processes
+that maintain the AFS replicated administrative databases: the
+Authentication Server, Backup Server, Protection Server, and Volume Location
+(VL) Server, which maintain the Authentication Database, Backup Database,
+Protection Database, and Volume Location Database (VLDB), respectively.
+To review the functions of these server processes and their databases, see <A HREF="auagd006.htm#HDRWQ17">AFS Server Processes and the Cache Manager</A>.
+<P>If a cell has more than one server machine, it is best to run more than one
+database server machine, but more than three are rarely necessary.
+Replicating the databases in this way yields the same benefits as replicating
+volumes: increased availability and reliability of information.
+If one database server machine or process goes down, the information in the
+database is still available from others. The load of requests for
+database information is spread across multiple machines, preventing any one
+from becoming overloaded.
+<P>Unlike replicated volumes, however, replicated databases do change
+frequently. Consistent system performance demands that all copies of
+the database always be identical, so it is not possible to record changes in
+only some of them. To synchronize the copies of a database, the
+database server processes use AFS's distributed database technology,
+Ubik. See <A HREF="#HDRWQ102">Replicating the AFS Administrative Databases</A>.
+<P>It is critical that the AFS server processes on every server machine in a
+cell know which machines are the database server machines. The database
+server processes in particular must maintain constant contact with their peers
+in order to coordinate the copies of the database. The other server
+processes often need information from the databases. Every file server
+machine keeps a list of its cell's database server machines in its local
+<B>/usr/afs/etc/CellServDB</B> file. Cells that use the States
+edition of AFS can use the system control machine to distribute this file (see
+<A HREF="#HDRWQ94">The System Control Machine</A>).
+<P>The following processes define a database server machine:
+<UL>
+<P><LI>The Authentication Server (<B>kaserver</B> process)
+<P><LI>The Backup Server (<B>buserver</B> process)
+<P><LI>The Protection Server (<B>ptserver</B> process)
+<P><LI>The VL Server (<B>vlserver</B> process)
+</UL>
+<P>Database server machines can also run the processes that define a simple
+file server machine, as listed in <A HREF="#HDRWQ91">Simple File Server Machines</A>. One database server machine can act as the
+cell's system control machine, and any database server machine can serve
+as the binary distribution machine for its system type; see <A HREF="#HDRWQ94">The System Control Machine</A> and <A HREF="#HDRWQ93">Binary Distribution Machines</A>.
+<A NAME="IDX6027"></A>
+<A NAME="IDX6028"></A>
+<A NAME="IDX6029"></A>
+<A NAME="IDX6030"></A>
+<P><H3><A NAME="HDRWQ93" HREF="auagd002.htm#ToC_111">Binary Distribution Machines</A></H3>
+<P>A <I>binary distribution machine</I> stores and
+distributes the binary files for the AFS processes and command suites to all
+other server machines of its system type. Each file server machine
+keeps its own copy of AFS server process binaries on its local disk, by
+convention in the <B>/usr/afs/bin</B> directory. For consistent
+system performance, however, all server machines must run the same version
+(build level) of a process. For instructions for checking a
+binary's build level, see <A HREF="#HDRWQ117">Displaying A Binary File's Build Level</A>. The easiest way to keep the binaries
+consistent is to have a binary distribution machine of each system type
+distribute them to its system-type peers.
+<P>The process that defines a binary distribution machine is the server
+portion of the Update Server (<B>upserver</B> process). The client
+portion of the Update Server (<B>upclientbin</B> process) runs on the
+other server machines of that system type and references the binary
+distribution machine.
+<P>Binary distribution machines usually also run the processes that define a
+simple file server machine, as listed in <A HREF="#HDRWQ91">Simple File Server Machines</A>. One binary distribution machine can act as the
+cell's system control machine, and any binary distribution machine can
+serve as a database server machine; see <A HREF="#HDRWQ94">The System Control Machine</A> and <A HREF="#HDRWQ92">Database Server Machines</A>.
+<A NAME="IDX6031"></A>
+<A NAME="IDX6032"></A>
+<A NAME="IDX6033"></A>
+<P><H3><A NAME="HDRWQ94" HREF="auagd002.htm#ToC_112">The System Control Machine</A></H3>
+<P>In cells that run the United States edition of AFS, the
+<I>system control machine</I> stores and distributes system configuration
+files shared by all of the server machines in the cell. Each file
+server machine keeps its own copy of the configuration files on its local
+disk, by convention in the <B>/usr/afs/etc</B> directory. For
+consistent system performance, however, all server machines must use the same
+files. The easiest way to keep the files consistent is to have the
+system control machine distribute them. You make changes only to the
+copy stored on the system control machine, as directed by the instructions in
+this document. The United States edition of AFS is available to cells
+in the United States and Canada and to selected institutions in other
+countries, as determined by United States government regulations.
+<P>Cells that run the international version of AFS do not use the system
+control machine to distribute system configuration files. Some of the
+files contain information that is too sensitive to cross the network
+unencrypted, and United States government regulations forbid the export of the
+necessary encryption routines in the form that the Update Server uses.
+You must instead update the configuration files on each file server machine
+individually. The <B>bos</B> commands that you use to update the
+files encrypt the information using an exportable form of the encryption
+routines.
+<P>For a list of the configuration files stored in the <B>/usr/afs/etc</B>
+directory, see <A HREF="#HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</A>.
+<P>The <I>IBM AFS Quick Beginnings</I> configures a cell's first
+server machine as the system control machine. If you wish, you can
+reassign the role to a different machine that you install later, but you must
+then change the client portion of the Update Server (<B>upclientetc</B>)
+process running on all other server machines to refer to the new system
+control machine.
+<P>The following processes define the system control machine:
+<UL>
+<A NAME="IDX6034"></A>
+<A NAME="IDX6035"></A>
+<P><LI>The server portion of the Update Server (<B>upserver</B>) process, in
+cells using the United States edition of AFS. The client portion of the
+Update Server (<B>upclientetc</B> process) runs on the other server
+machines and references the system control machine.
+<P><LI>The NTP coordinator (<B>runntp</B> process) which points to a time
+source outside the cell, if the cell uses NTPD to synchronize its
+clocks. The <B>runntp</B> process on other machines reference the
+system control machine as their main time source.
+</UL>
+<P>The system control machine can also run the processes that define a simple
+file server machine, as listed in <A HREF="#HDRWQ91">Simple File Server Machines</A>. It can also server as a database server machine, and
+by convention acts as the binary distribution machine for its system
+type. A single <B>upserver</B> process can distribute both
+configuration files and binaries. See <A HREF="#HDRWQ92">Database Server Machines</A> and <A HREF="#HDRWQ93">Binary Distribution Machines</A>.
+<A NAME="IDX6036"></A>
+<A NAME="IDX6037"></A>
+<A NAME="IDX6038"></A>
+<A NAME="IDX6039"></A>
+<A NAME="IDX6040"></A>
+<A NAME="IDX6041"></A>
+<A NAME="IDX6042"></A>
+<P><H3><A NAME="HDRWQ95" HREF="auagd002.htm#ToC_113">To locate database server machines</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos listhosts</B> command. 
+<PRE>   % <B>bos listhosts</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE> 
+<P>The machines listed in the output are the cell's database server
+machines. For complete instructions and example output, see <A HREF="#HDRWQ120">To display a cell's database server machines</A>.
+<P><LI><B>(Optional)</B> Issue the <B>bos status</B> command to verify
+that a machine listed in the output of the <B>bos listhosts</B> command is
+actually running the processes that define it as a database server
+machine. For complete instructions, see <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>buserver kaserver ptserver vlserver</B>
+</PRE> 
+<P>If the specified machine is a database server machine, the output from the
+<B> bos status</B> command includes the following lines: 
+<PRE>   Instance buserver, currently running normally.
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, currently running normally.
+</PRE>
+</OL>
+<A NAME="IDX6043"></A>
+<A NAME="IDX6044"></A>
+<A NAME="IDX6045"></A>
+<P><H3><A NAME="HDRWQ96" HREF="auagd002.htm#ToC_114">To locate the system control machine</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos status</B> command for any server machine.
+Complete instructions appear in <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>upserver upclientbin upclientetc</B> <B>-long</B>
+</PRE> 
+<P>The output you see depends on the machine you have contacted: a
+simple file server machine, the system control machine, or a binary
+distribution machine. See <A HREF="#HDRWQ98">Interpreting the Output from the bos status Command</A>.
+</OL>
+<A NAME="IDX6046"></A>
+<A NAME="IDX6047"></A>
+<A NAME="IDX6048"></A>
+<P><H3><A NAME="HDRWQ97" HREF="auagd002.htm#ToC_115">To locate the binary distribution machine for a system type</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos status</B> command for a file server machine of the
+system type you are checking (to determine a machine's system type, issue
+the <B>fs sysname</B> or <B>sys</B> command as described in <A HREF="auagd015.htm#HDRWQ417">Displaying and Setting the System Type Name</A>. Complete instructions for the <B>bos status</B>
+command appear in <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>upserver upclientbin upclientetc -long</B>
+</PRE> 
+<P>The output you see depends on the machine you have contacted: a
+simple file server machine, the system control machine, or a binary
+distribution machine. See <A HREF="#HDRWQ98">Interpreting the Output from the bos status Command</A>.
+</OL>
+<A NAME="IDX6049"></A>
+<A NAME="IDX6050"></A>
+<A NAME="IDX6051"></A>
+<P><H3><A NAME="HDRWQ98" HREF="auagd002.htm#ToC_116">Interpreting the Output from the bos status Command</A></H3>
+<P>Interpreting the output of the <B>bos status</B> command
+is most straightforward for a simple file server machine. There is no
+<B>upserver</B> process, so the output includes the following
+message:
+<PRE>   bos: failed to get instance info for 'upserver' (no such entity)
+</PRE>
+<P>A simple file server machine runs the <B>upclientbin</B> process, so
+the output includes a message like the following. It indicates that
+<B>fs7.abc.com</B> is the binary distribution machine for
+this system type.
+<PRE>   Instance upclientbin, (type is simple) currently running normally.
+   Process last started at Wed Mar 10  23:37:09 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upclient fs7.abc.com -t 60 /usr/afs/bin'
+</PRE>
+<P>If you run the United States edition of AFS, a simple file server machine
+also runs the <B>upclientetc</B> process, so the output includes a message
+like the following. It indicates that
+<B>fs1.abc.com</B> is the system control machine.
+<PRE>   Instance upclientetc, (type is simple) currently running normally.
+   Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upclient fs1.abc.com -t 60 /usr/afs/etc'
+</PRE>
+<P><H4><A NAME="HDRWQ99">The Output on the System Control Machine</A></H4>
+<P>If you run the United States edition of AFS and have issued
+the <B>bos status</B> command for the system control machine, the output
+includes an entry for the <B>upserver</B> process similar to the
+following: 
+<PRE>   Instance upserver, (type is simple) currently running normally.
+   Process last started at Mon Mar 22 05:23:54 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upserver'
+</PRE>
+<P>If you are using the default configuration recommended in the <I>IBM AFS
+Quick Beginnings</I>, the system control machine is also the binary
+distribution machine for its system type, and a single <B>upserver</B>
+process distributes both kinds of updates. In that case, the output
+includes the following messages:
+<PRE>   bos: failed to get instance info for 'upclientbin' (no such entity)
+   bos: failed to get instance info for 'upclientetc' (no such entity)
+</PRE>
+<P>If the system control machine is not a binary distribution machine, the
+output includes an error message for the <B>upclientetc</B> process, but a
+complete a listing for the <B>upclientbin</B> process (in this case it
+refers to the machine <B>fs5.abc.com</B> as the binary
+distribution machine):
+<PRE>   Instance upclientbin, (type is simple) currently running normally.
+   Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upclient fs5.abc.com -t 60 /usr/afs/bin'
+   bos: failed to get instance info for 'upclientetc' (no such entity)
+</PRE>
+<P><H4><A NAME="HDRWQ100">The Output on a Binary Distribution Machine</A></H4>
+<P>If you have issued the <B>bos status</B> command for a
+binary distribution machine, the output includes an entry for the
+<B>upserver</B> process similar to the following and error message for the
+<B>upclientbin</B> process:
+<PRE>   Instance upserver, (type is simple) currently running normally.
+   Process last started at Mon Apr 5 05:23:54 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upserver'
+   bos: failed to get instance info for 'upclientbin' (no such entity)
+</PRE>
+<P>Unless this machine also happens to be the system control machine, a
+message like the following references the system control machine (in this
+case, <B>fs3.abc.com</B>):
+<PRE>   Instance upclientetc, (type is simple) currently running normally.
+   Process last started at Mon Apr 5 05:23:49 1999 (1 proc start)
+   Command 1 is '/usr/afs/bin/upclient fs3.abc.com -t 60 /usr/afs/etc'
+</PRE>
+<HR><H2><A NAME="HDRWQ101" HREF="auagd002.htm#ToC_119">Administering Database Server Machines</A></H2>
+<P>This section explains how to administer database server
+machines. For installation instructions, see the <I>IBM AFS Quick
+Beginnings</I>.
+<A NAME="IDX6052"></A>
+<A NAME="IDX6053"></A>
+<A NAME="IDX6054"></A>
+<A NAME="IDX6055"></A>
+<A NAME="IDX6056"></A>
+<A NAME="IDX6057"></A>
+<A NAME="IDX6058"></A>
+<A NAME="IDX6059"></A>
+<A NAME="IDX6060"></A>
+<A NAME="IDX6061"></A>
+<A NAME="IDX6062"></A>
+<P><H3><A NAME="HDRWQ102" HREF="auagd002.htm#ToC_120">Replicating the AFS Administrative Databases</A></H3>
+<P>There are several benefits to replicating the AFS
+administrative databases (the Authentication, Backup, Protection, and Volume
+Location Databases), as discussed in <A HREF="auagd007.htm#HDRWQ52">Replicating the AFS Administrative Databases</A>. For correct cell functioning, the copies of each
+database must be identical at all times. To keep the databases
+synchronized, AFS uses library of utilities called <I>Ubik</I>.
+Each database server process runs an associated lightweight Ubik process, and
+client-side programs call Ubik's client-side subroutines when they submit
+requests to read and change the databases.
+<P>Ubik is designed to work with minimal administrator intervention, but there
+are several configuration requirements, as detailed in <A HREF="#HDRWQ103">Configuring the Cell for Proper Ubik Operation</A>. The following brief overview of Ubik's
+operation is helpful for understanding the requirements. For more
+details, see <A HREF="#HDRWQ104">How Ubik Operates Automatically</A>.
+<P>Ubik is designed to distribute changes made in an AFS administrative
+database to all copies as quickly as possible. Only one copy of the
+database, the <I>synchronization site</I>, accepts change requests from
+clients; the lightweight Ubik process running there is the <I>Ubik
+coordinator</I>. To maintain maximum availability, there is a
+separate Ubik coordinator for each database, and the synchronization site for
+each of the four databases can be on a different machine. The
+synchronization site for a database can also move from machine to machine in
+response to process, machine, or network outages.
+<P>The other copies of a database, and the Ubik processes that maintain them,
+are termed <I>secondary</I>. The secondary sites do not accept
+database changes directly from client-side programs, but only from the
+synchronization site.
+<P>After the Ubik coordinator records a change in its copy of a database, it
+immediately sends the change to the secondary sites. During the brief
+distribution period, clients cannot access any of the copies of the database,
+even for reading. If the coordinator cannot reach a majority of the
+secondary sites, it halts the distribution and informs the client that the
+attempted change failed.
+<P>To avoid distribution failures, the Ubik processes maintain constant
+contact by exchanging time-stamped messages. As long as a majority of
+the secondary sites respond to the coordinator's messages, there is a
+<I>quorum</I> of sites that are synchronized with the coordinator.
+If a process, machine, or network outage breaks the quorum, the Ubik processes
+attempt to elect a new coordinator in order to establish a new quorum among
+the highest possible number of sites. See <A HREF="#HDRWQ106">A Flexible Coordinator Boosts Availability</A>.
+<A NAME="IDX6063"></A>
+<A NAME="IDX6064"></A>
+<A NAME="IDX6065"></A>
+<P><H4><A NAME="HDRWQ103">Configuring the Cell for Proper Ubik Operation</A></H4>
+<P>This section describes how to configure your cell to
+maintain proper Ubik operation.
+<UL>
+<P><LI>Run all four database server processes--Authentication Server, Backup
+Server, Protection Server, and VL Server--on all database server
+machines. 
+<P>Both the client and server portions of Ubik expect that all the database
+server machines listed in the <B>CellServDB</B> file are running all of
+the database server processes. There is no mechanism for indicating
+that only some database server processes are running on a machine.
+<P><LI>Maintain correct information in the <B>/usr/afs/etc/CellServDB</B>
+file at all times. 
+<P>Ubik consults the <B>/usr/afs/etc/CellServDB</B> file to determine the
+sites with which to establish and maintain a quorum. Incorrect
+information can result in unsynchronized databases or election of a
+coordinator in each of several subgroups of machines, because the Ubik
+processes on various machines do not agree on which machines need to
+participate in the quorum.
+<P>If you run the United States version of AFS and use the Update Server, it
+is simplest to maintain the <B>/usr/afs/etc/CellServDB</B> file on the
+system control machine, which distributes its copy to all other server
+machines. The <I>IBM AFS Quick Beginnings</I> explains how to
+configure the Update Server. If you run the international version of
+AFS, you must update the file on each machine individually.
+<P>The only reason to alter the file is when configuring or decommissioning a
+database server machine. Use the appropriate <B>bos</B> commands
+rather than editing the file by hand. For instructions, see <A HREF="#HDRWQ118">Maintaining the Server CellServDB File</A>. The instructions in <A HREF="auagd009.htm#HDRWQ142">Monitoring and Controlling Server Processes</A> for stopping and starting processes remind
+you to alter the <B>CellServDB</B> file when appropriate, as do the
+instructions in the <I>IBM AFS Quick Beginnings</I> for installing or
+decommissioning a database server machine.
+<P>(Client processes and the server processes that do not maintain databases
+also rely on correct information in the <B>CellServDB</B> file for proper
+operation, but their use of the information does not affect Ubik's
+operation. See <A HREF="#HDRWQ118">Maintaining the Server CellServDB File</A> and <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.)
+<A NAME="IDX6066"></A>
+<P><LI>Keep the clocks synchronized on all machines in the cell, especially the
+database server machines. 
+<P>In the conventional configuration specified in the <I>IBM AFS Quick
+Beginnings</I>, you run the <B>runntp</B> process to supervise the local
+Network Time Protocol Daemon (NTPD) on every AFS server machine. The
+NTPD on the system control machine synchronizes its clock with a reliable
+source outside the cell and broadcasts the time to the NTPDs on the other
+server machines. You can choose to run a different time synchronization
+protocol if you wish.
+<P>Keeping clocks synchronized is important because the Ubik processes at a
+database's sites timestamp the messages which they exchange to maintain
+constant contact. Timestamping the messages is necessary because in a
+networked environment it is not safe to assume that a message reaches its
+destination instantly. Ubik compares the timestamp on an incoming
+message with the current time. If the difference is too great, it is
+possible that an outage is preventing reliable communication between the Ubik
+sites, which can possibly result in unsynchronized databases. Ubik
+considers the message invalid, which can prompt it to attempt election of a
+different coordinator.
+<P>Electing a new coordinator is appropriate if a timestamped message is
+expired due to actual interruption of communication, but not if a message
+appears expired only because the sender and recipient do not share the same
+time. For detailed examples of how unsynchronized clocks can
+destabilize Ubik operation, see <A HREF="#HDRWQ105">How Ubik Uses Timestamped Messages</A>.
+</UL>
+<A NAME="IDX6067"></A>
+<A NAME="IDX6068"></A>
+<A NAME="IDX6069"></A>
+<P><H4><A NAME="HDRWQ104">How Ubik Operates Automatically</A></H4>
+<P>The following Ubik features help keep its maintenance
+requirements to a minimum:
+<UL>
+<P><LI>Ubik's server and client portions operate automatically. 
+<P>Each database server process runs a lightweight process to call on the
+server portion of the Ubik library. It is common to refer to this
+lightweight process itself as Ubik. Because it is lightweight, the Ubik
+process does not appear in process listings such as those generated by the
+UNIX <B>ps</B> command. Client-side programs that need to read and
+change the databases directly call the subroutines in the Ubik library's
+client portion, rather than running a separate lightweight process.
+Examples of such programs are the <B>klog</B> command and the commands in
+the <B>pts</B> suite.
+<P><LI>Ubik tracks database version numbers. 
+<P>As the coordinator records a change to a database, it increments the
+database's version number. The version number makes it easy for
+the coordinator to determine if a site has the most recent version or
+not. The version number speeds the return to normal functioning after
+election of a new coordinator or when communication is restored after an
+outage, because it makes it easy to determine which site has the most current
+database and which need to be updated.
+<P><LI>Ubik's use of timestamped messages guarantees that database copies
+are always synchronized during normal operation. 
+<P>Replicating a database to increase data availability is pointless if all
+copies of the database are not the same. Inconsistent performance can
+result if clients receive different information depending on which copy of the
+database they access. As previously noted, Ubik sites constantly track
+the status of their peers by exchanging timestamped messages. For a
+detailed description, see <A HREF="#HDRWQ105">How Ubik Uses Timestamped Messages</A>.
+<P><LI>The ability to move the coordinator maximizes database
+availability. 
+<P>Suppose, for example, that in a cell with three database server machines a
+network partition separates the two secondary sites from the
+coordinator. The coordinator retires because it is no longer in contact
+with a majority of the sites listed in the <B>CellServDB</B> file.
+The two sites on the other side of the partition can elect a new coordinator
+among themselves, and it can then accept database changes from clients.
+If the coordinator cannot move in this way, the database has to be read-only
+until the network partition is repaired. For a detailed description of
+Ubik's election procedure, see <A HREF="#HDRWQ106">A Flexible Coordinator Boosts Availability</A>.
+</UL>
+<A NAME="IDX6070"></A>
+<A NAME="IDX6071"></A>
+<P><H5><A NAME="HDRWQ105">How Ubik Uses Timestamped Messages</A></H5>
+<P>Ubik synchronizes the copies of a database by maintaining
+constant contact between the synchronization site and the secondary
+sites. The Ubik coordinator frequently sends a time-stamped
+<I>guarantee</I> message to each of the secondary sites. When the
+secondary site receives the message, it concludes that it is in contact with
+the coordinator. It considers its copy of the database to be valid
+until time <I>T</I>, which is usually 60 seconds from the time the
+coordinator sent the message. In response, the secondary site returns a
+<I>vote</I> message that acknowledges the coordinator as valid until a
+certain time X, which is usually 120 seconds in the future.
+<P>The coordinator sends guarantee messages more frequently than every
+<I>T</I> seconds, so that the expiration periods overlap. There is
+no danger of expiration unless a network partition or other outage actually
+interrupts communication. If the guarantee expires, the secondary
+site's copy of the database it not necessarily current.
+Nonetheless, the database server continues to service client requests.
+It is considered better for overall cell functioning that a secondary site
+remains accessible even if the information it is distributing is possibly out
+of date. Most of the AFS administrative databases do not change that
+frequently, in any case, and making a database inaccessible causes a timeout
+for clients that happen to access that copy.
+<P>As previously mentioned, Ubik's use of timestamped messages makes it
+vital to synchronize the clocks on database server machines. There are
+two ways that skewed clocks can interrupt normal Ubik functioning, depending
+on which clock is ahead of the others.
+<P>Suppose, for example, that the Ubik coordinator's clock is ahead of
+the secondary sites: the coordinator's clock says
+9:35:30, but the secondary clocks say 9:31:30.
+The secondary sites send votes messages that acknowledge the coordinator as
+valid until 9:33:30. This is two minutes in the future
+according to the secondary clocks, but is already in the past from the
+coordinator's perspective. The coordinator concludes that it no
+longer has enough support to remain coordinator and forces election of a new
+coordinator. Election takes about three minutes, during which time no
+copy of the database accepts changes.
+<P>The opposite possibility is that a secondary site's clock
+(14:50:00) is ahead of the coordinator's
+(14:46:30). When the coordinator sends a guarantee message
+good until 14:47:30), it has already expired according to the
+secondary clock. Believing that it is out of contact with the
+coordinator, the secondary site stops sending votes for the coordinator and
+tries get itself elected as coordinator. This is appropriate if the
+coordinator has actually failed, but is inappropriate when there is no actual
+outage.
+<P>The attempt of a single secondary site to get elected as the new
+coordinator usually does not affect the performance of the other sites.
+As long as their clocks agree with the coordinator's, they ignore the
+other secondary site's request for votes and continue voting for the
+current coordinator. However, if enough of the secondary sites's
+clocks get ahead of the coordinator's, they can force election of a new
+coordinator even though the current one is actually working fine.
+<A NAME="IDX6072"></A>
+<A NAME="IDX6073"></A>
+<A NAME="IDX6074"></A>
+<A NAME="IDX6075"></A>
+<A NAME="IDX6076"></A>
+<A NAME="IDX6077"></A>
+<A NAME="IDX6078"></A>
+<A NAME="IDX6079"></A>
+<A NAME="IDX6080"></A>
+<P><H5><A NAME="HDRWQ106">A Flexible Coordinator Boosts Availability</A></H5>
+<P>Ubik uses timestamped messages to determine when coordinator
+election is necessary, just as it does to keep the database copies
+synchronized. As long as the coordinator receives vote messages from a
+majority of the sites (it implicitly votes for itself), it is appropriate for
+it to continue as coordinator because it is successfully distributing database
+changes. A majority is defined as more than 50% of all database sites
+when there are an odd number of sites; with an even number of sites, the
+site with the lowest Internet address has an extra vote for breaking ties as
+necessary.If the coordinator is not receiving sufficient votes, it
+retires and the Ubik sites elect a new coordinator. This does not
+happen spontaneously, but only when the coordinator really fails or stops
+receiving a majority of the votes. The secondary sites have a built-in
+bias to continue voting for an existing coordinator, which prevents undue
+elections.
+<P>The election of the new coordinator is by majority vote. The Ubik
+subprocesses have a bias to vote for the site with the lowest Internet
+address, which helps it gather the necessary majority quicker than if all the
+sites were competing to receive votes themselves. During the election
+(which normally lasts less than three minutes), clients can read information
+from the database, but cannot make any changes.
+<P>Ubik's election procedure makes it possible for each database server
+process's coordinator to be on a different machine. For example,
+if the Ubik coordinators for all four processes start out on machine A and the
+Protection Server on machine A fails for some reason, then a different site
+(say machine B) must be elected as the new Protection Database Ubik
+coordinator. Machine B remains the coordinator for the Protection
+Database even after the Protection Server on machine A is working
+again. The failure of the Protection Server has no effect on the
+Authentication, Backup, or VL Servers, so their coordinators remain on machine
+A.
+<P><H3><A NAME="HDRWQ107" HREF="auagd002.htm#ToC_125">Backing Up and Restoring the Administrative Databases</A></H3>
+<P>The AFS administrative databases store information that is
+critical for AFS operation in your cell. If a database becomes
+corrupted due to a hardware failure or other problem on a database server
+machine, it likely to be difficult and time-consuming to recreate all of the
+information from scratch. To protect yourself against loss of data,
+back up the administrative databases to a permanent media, such as tape, on a
+regular basis. The recommended method is to use a standard local disk
+backup utility such as the UNIX <B>tar</B> command.
+<P>When deciding how often to back up a database, consider the amount of data
+that you are willing to recreate by hand if it becomes necessary to restore
+the database from a backup copy. In most cells, the databases differ
+quite a bit in how often and how much they change. Changes to the
+Authentication Database are probably the least frequent, and consist mostly of
+changed user passwords. Protection Database and VLDB changes are
+probably more frequent, as users add or delete groups and change group
+memberships, and as you and other administrators create or move
+volumes. The number and frequency of changes is probably greatest in
+the Backup Database, particularly if you perform backups every day.
+<P>The ease with which you can recapture lost changes also differs for the
+different databases:
+<UL>
+<P><LI>If regular users make a large proportion of the changes to the
+Authentication Database and Protection Database in your cell, then recovering
+them possibly requires a large amount of detective work and interviewing of
+users, assuming that they can even remember what changes they made at what
+time.
+<P><LI>Recovering lost changes to the VLDB is more straightforward, because you
+can use the <B>vos syncserv</B> and <B>vos syncvldb</B> commands to
+correct any discrepancies between the VLDB and the actual state of volumes on
+server machines. Running these commands can be time-consuming,
+however.
+<P><LI>The configuration information in the Backup Database (Tape Coordinator
+port offsets, volume sets and entries, the dump hierarchy, and so on) probably
+does not change that often, in which case it is not that hard to recover a few
+recent changes. In contrast, there are likely to be a large number of
+new dump records resulting from dump operations. You can recover these
+records by using the <B>-dbadd</B> argument to the <B>backup
+scantape</B> command, reading in information from the backup tapes
+themselves. This can take a long time and require numerous tape
+changes, however, depending on how much data you back up in your cell and how
+you append dumps. Furthermore, the <B>backup scantape</B> command
+is subject to several restrictions. The most basic is that it halts if
+it finds that an existing dump record in the database has the same dump ID
+number as a dump on the tape it is scanning. If you want to continue
+with the scanning operation, you must locate and remove the existing record
+from the database. For further discussion, see the <B>backup
+scantape</B> command's reference page in the <I>IBM AFS
+Administration Reference</I>.
+</UL>
+<P>These differences between the databases possibly suggest backing up the
+database at different frequencies, ranging from every few days or weekly for
+the Backup Database to every few weeks for the Authentication Database.
+On the other hand, it is probably simpler from a logistical standpoint to back
+them all up at the same time (and frequently), particularly if tape
+consumption is not a major concern. Also, it is not generally necessary
+to keep backup copies of the databases for a long time, so you can recycle the
+tapes fairly frequently.
+<A NAME="IDX6081"></A>
+<A NAME="IDX6082"></A>
+<P><H3><A NAME="HDRWQ108" HREF="auagd002.htm#ToC_126">To back up the administrative databases</A></H3>
+<OL TYPE=1>
+<P><LI>Log in as the local superuser <B>root</B> on a database server machine
+that is not the synchronization site. The machine with the highest IP
+address is normally the best choice, since it is least likely to become the
+synchronization site in an election.
+<P><LI><A NAME="LIDBBK_SHUTDOWN"></A>Issue the <B>bos shutdown</B> command to shut down
+the relevant server process on the local machine. For a complete
+description of the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<P>For the <B>-instance</B> argument, specify one or more database server
+process names (<B>buserver</B> for the Backup Server, <B>kaserver</B>
+for the Authentication Server, <B>ptserver</B> for the Protection Server,
+or <B>vlserver</B> for the Volume Location Server. Include the
+<B>-localauth</B> flag because you are logged in as the local superuser
+<B>root</B> but do not necessarily have administrative tokens.
+<PRE>   # <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-instance</B> &lt;<VAR>instances</VAR>><SUP>+</SUP> <B>-localauth</B> [<B>-wait</B>]
+</PRE>
+<P><LI>Use a local disk backup utility, such as the UNIX <B>tar</B> command,
+to transfer one or more database files to tape. If the local database
+server machine does not have a tape device attached, use a remote copy command
+to transfer the file to a machine with a tape device, then use the
+<B>tar</B> command there. 
+<P>The following command sequence backs up the complete contents of the
+<B>/usr/afs/db</B> directory 
+<PRE>   # <B>cd /usr/afs/db</B>
+   # <B>tar cvf</B>  <VAR>tape_device</VAR> <B> .</B>
+</PRE> 
+<P>To back up individual database files, substitute their names for the period
+in the preceding <B>tar</B> command:
+<UL>
+<P><LI><B>bdb.DB0</B> for the Backup Database
+<P><LI><B>kaserver.DB0</B> for the Authentication Database
+<P><LI><B>prdb.DB0</B> for the Protection Database
+<P><LI><B>vldb.DB0</B> for the VLDB
+</UL>
+<P><LI>Issue the <B>bos start</B> command to restart the server processes on
+the local machine. For a complete description of the command, see <A HREF="auagd009.htm#HDRWQ166">To start processes by changing their status flags to Run</A>. Provide the same values for the <B>-instance</B>
+argument as in Step <A HREF="#LIDBBK_SHUTDOWN">2</A>, and the <B>-localauth</B> flag for the same
+reason.
+<PRE>   # <B>bos start</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-instance</B> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP> <B>-localauth</B>
+</PRE>
+</OL>
+<A NAME="IDX6083"></A>
+<A NAME="IDX6084"></A>
+<P><H3><A NAME="HDRWQ109" HREF="auagd002.htm#ToC_127">To restore an administrative database</A></H3>
+<OL TYPE=1>
+<P><LI>Log in as the local superuser <B>root</B> on each database server
+machine in the cell.
+<P><LI><A NAME="LIDBREST_SHUTDOWN"></A>Working on one of the machines, issue the <B>bos
+shutdown</B> command once for each database server machine, to shut down the
+relevant server process on all of them. For a complete description of
+the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<P>For the <B>-instance</B> argument, specify one or more database server
+process names (<B>buserver</B> for the Backup Server, <B>kaserver</B>
+for the Authentication Server, <B>ptserver</B> for the Protection Server,
+or <B>vlserver</B> for the Volume Location Server. Include the
+<B>-localauth</B> flag because you are logged in as the local superuser
+<B>root</B> but do not necessarily have administrative tokens.
+<PRE>   # <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-instance</B> &lt;<VAR>instances</VAR>><SUP>+</SUP> <B>-localauth</B> [<B>-wait</B>]
+</PRE>
+<P><LI>Remove the database from each database server machine, by issuing the
+following commands on each one. 
+<PRE>   # <B>cd /usr/afs/db</B>
+</PRE> 
+<P>For the Backup Database: 
+<PRE>   # <B>rm bdb.DB0</B>
+   # <B>rm bdb.DBSYS1</B>
+</PRE> 
+<P>For the Authentication Database: 
+<PRE>   # <B>rm kaserver.DB0</B>
+   # <B>rm kaserver.DBSYS1</B>
+</PRE> 
+<P>For the Protection Database: 
+<PRE>   # <B>rm prdb.DB0</B>
+   # <B>rm prdb.DBSYS1</B>
+</PRE> 
+<P>For the VLDB: 
+<PRE>   # <B>rm vldb.DB0</B>
+   # <B>rm vldb.DBSYS1</B>
+</PRE>
+<P><LI>Using the local disk backup utility that you used to back up the database,
+copy the most recently backed-up version of it to the appropriate file on the
+database server machine with the lowest IP address. The following is an
+appropriate <B>tar</B> command if the synchronization site has a tape
+device attached: 
+<PRE>   # <B>cd /usr/afs/db</B>
+   # <B>tar xvf</B> <VAR>tape_device  database_file</VAR>
+</PRE> 
+<P>where <I>database_file</I> is one of the following:
+<UL>
+<P><LI><B>bdb.DB0</B> for the Backup Database
+<P><LI><B>kaserver.DB0</B> for the Authentication Database
+<P><LI><B>prdb.DB0</B> for the Protection Database
+<P><LI><B>vldb.DB0</B> for the VLDB
+</UL>
+<P><LI>Working on one of the machines, issue the <B>bos start</B> command to
+restart the server process on each of the database server machines in
+turn. Start with the machine with the lowest IP address, which becomes
+the synchronization site for the Backup Database. Wait for it to
+establish itself as the synchronization site before repeating the command to
+restart the process on the other database server machines. For a
+complete description of the command, see <A HREF="auagd009.htm#HDRWQ166">To start processes by changing their status flags to Run</A>. Provide the same values for the <B>-instance</B>
+argument as in Step <A HREF="#LIDBREST_SHUTDOWN">2</A>, and the <B>-localauth</B> flag for the same
+reason. 
+<PRE>   # <B>bos start</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-instance</B>  &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>  <B>-localauth</B>
+</PRE>
+<P><LI>If the database has changed since you last backed it up, issue the
+appropriate commands from the instructions in the indicated sections to
+recreate the information in the restored database. If issuing
+<B>pts</B> commands, you must first obtain administrative tokens.
+The <B>backup</B> and <B>vos</B> commands accept the
+<B>-localauth</B> flag if you are logged in as the local superuser
+<B>root</B>, so you do not need administrative tokens. The
+Authentication Server always performs a separate authentication anyway, so you
+only need to include the <B>-admin</B> argument if issuing <B>kas</B>
+commands.
+<UL>
+<P><LI>To define or remove volume sets and volume entries in the Backup Database,
+see <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>.
+<P><LI>To edit the dump hierarchy in the Backup Database, see <A HREF="auagd011.htm#HDRWQ267">Defining and Displaying the Dump Hierarchy</A>.
+<P><LI>To define or remove Tape Coordinator port offset entries in the Backup
+Database, see <A HREF="auagd011.htm#HDRWQ261">Configuring Tape Coordinator Machines and Tape Devices</A>.
+<P><LI>To restore dump records in the Backup Database, see <A HREF="auagd012.htm#HDRWQ305">To scan the contents of a tape</A>.
+<P><LI>To recreate Authentication Database entries or password changes for users,
+see the appropriate section of <A HREF="auagd018.htm#HDRWQ491">Administering User Accounts</A>.
+<P><LI>To recreate Protection Database entries or group membership information,
+see the appropriate section of <A HREF="auagd019.htm#HDRWQ531">Administering the Protection Database</A>.
+<P><LI>To synchronize the VLDB with volume headers, see <A HREF="auagd010.htm#HDRWQ227">Synchronizing the VLDB and Volume Headers</A>.
+</UL>
+</OL>
+<A NAME="IDX6085"></A>
+<A NAME="IDX6086"></A>
+<A NAME="IDX6087"></A>
+<A NAME="IDX6088"></A>
+<A NAME="IDX6089"></A>
+<A NAME="IDX6090"></A>
+<HR><H2><A NAME="HDRWQ110" HREF="auagd002.htm#ToC_128">Installing Server Process Software</A></H2>
+<P>This section explains how to install new server process
+binaries on file server machines, how to revert to a previous version if the
+current version is not working properly, and how to install new disks to house
+AFS volumes on a file server machine.
+<P>The most frequent reason to replace a server process's binaries is to
+upgrade AFS to a new version. In general, installation instructions
+accompany the updated software, but this chapter provides an additional
+reference.
+<P>Each AFS server machine must store the server process binaries in a local
+disk directory, called <B>/usr/afs/bin</B> by convention. For
+predictable system performance, it is best that all server machines run the
+same build level, or at least the same version, of the server software.
+For instructions on checking AFS build level, see <A HREF="#HDRWQ117">Displaying A Binary File's Build Level</A>.
+<P>The Update Server makes it easy to distribute a consistent version of
+software to all server machines. You designate one server machine of
+each system type as the <I>binary distribution machine</I> by running the
+server portion of the Update Server (<B>upserver</B> process) on
+it. All other server machines of that system type run the client
+portion of the Update Server (<B>upclientbin</B> process) to retrieve
+updated software from the binary distribution machine. The <I>IBM AFS
+Quick Beginnings</I> explains how to install the appropriate
+processes. For more on binary distribution machines, see <A HREF="#HDRWQ93">Binary Distribution Machines</A>.
+<P>When you use the Update Server, you install new binaries on binary
+distribution machines only. If you install binaries directly on a
+machine that is running the <B>upclientbin</B> process, they are
+overwritten the next time the process compares the contents of the local
+<B>/usr/afs/bin</B> directory to the contents on the system control
+machine, by default within five minutes.
+<P>The following instructions explain how to use the appropriate commands from
+the <B>bos</B> suite to install and uninstall server binaries.
+<A NAME="IDX6091"></A>
+<A NAME="IDX6092"></A>
+<A NAME="IDX6093"></A>
+<A NAME="IDX6094"></A>
+<A NAME="IDX6095"></A>
+<P><H3><A NAME="HDRWQ111" HREF="auagd002.htm#ToC_129">Installing New Binaries</A></H3>
+<P>An AFS server process does not automatically switch to a new
+process binary file as soon as it is installed in the <B>/usr/afs/bin</B>
+directory. The process continues to use the previous version of the
+binary file until it (the process) next restarts. By default, the BOS
+Server restarts processes for which there are new binary files every day at
+5:00 a.m., as specified in the
+<B>/usr/afs/local/BosConfig</B> file. To display or change this
+<I>binary restart time</I>, use the <B>bos getrestart</B> and <B>bos
+setrestart</B> commands, as described in <A HREF="auagd009.htm#HDRWQ171">Setting the BOS Server's Restart Times</A>.
+<P>You can force the server machine to start using new server process binaries
+immediately by issuing the <B>bos restart</B> command as described in the
+following instructions.
+<P>You do not need to restart processes when you install new command suite
+binaries. The new binary is invoked automatically the next time a
+command from the suite is issued.
+<A NAME="IDX6096"></A>
+<A NAME="IDX6097"></A>
+<A NAME="IDX6098"></A>
+<A NAME="IDX6099"></A>
+<A NAME="IDX6100"></A>
+<P>When you use the <B>bos install</B> command, the BOS Server
+automatically saves the current version of a binary file by adding a
+<B>.BAK</B> extension to its name. It renames the current
+<B>.BAK</B> version, if any, to the <B>.OLD</B> version,
+if there is no <B>.OLD</B> version already. If there is a
+current <B>.OLD</B> version, the current <B>.BAK</B>
+version must be at least seven days old to replace it.
+<P>It is best to store AFS binaries in the <B>/usr/afs/bin</B> directory,
+because that is the only directory the BOS Server automatically checks for new
+binaries. You can, however, use the <B>bos install</B>
+command's <B>-dir</B> argument to install non-AFS binaries into other
+directories on a server machine's local disk. See the
+command's reference page in the <I>IBM AFS Administration
+Reference</I> for further information.
+<A NAME="IDX6101"></A>
+<A NAME="IDX6102"></A>
+<P><H3><A NAME="Header_130" HREF="auagd002.htm#ToC_130">To install new server binaries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that the binaries are available in the source directory from which
+you are installing them. If the machine is also an AFS client, you can
+retrieve the binaries from a central directory in AFS. Otherwise, you
+can obtain them directly from the AFS distribution media, from a local disk
+directory where you previously installed them, or from a remote machine using
+a transfer utility such as the <B>ftp</B> command.
+<P><LI><A NAME="LIWQ112"></A>Issue the <B>bos install</B> command for the binary
+distribution machine. (If you have forgotten which machine is
+performing that role, see <A HREF="#HDRWQ97">To locate the binary distribution machine for a system type</A>.)
+<PRE>   % <B>bos install</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>files&nbsp;to&nbsp;install</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>i
+</B><DD>Is the shortest acceptable abbreviation of <B>install</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the binary distribution machine.
+<P><DT><B><VAR>files to install</VAR>
+</B><DD>Names each binary file to install into the local <B>/usr/afs/bin</B>
+directory. Partial pathnames are interpreted relative to the current
+working directory. The last element in each pathname (the filename
+itself) matches the name of the file it is replacing, such as
+<B>bosserver</B> or <B>volserver</B> for server processes,
+<B>bos</B> or <B>vos</B> for commands.
+<P>Each AFS server process other than the <B>fs</B> process uses a single
+binary file. The <B>fs</B> process uses three binary files:
+<B>fileserver</B>, <B>volserver</B>, and <B>salvager</B>.
+Installing a new version of one component does not necessarily mean that you
+need to replace all three.
+</DL>
+<P><LI>Repeat Step <A HREF="#LIWQ112">3</A> for each binary distribution machine.
+<P><LI><B>(Optional)</B> If you want to restart processes to use the new
+binaries immediately, wait until the <B>upclientbin</B> process retrieves
+them from the binary distribution machine. You can verify the
+timestamps on binary files by using the <B>bos getdate</B> command as
+described in <A HREF="#HDRWQ115">Displaying Binary Version Dates</A>. When the binary files are available on each server
+machine, issue the <B>bos restart</B> command, for which complete
+instructions appear in <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<P>If you are working on an AFS client machine, it is a wise precaution to
+have a copy of the <B>bos</B> command suite binaries on the local disk
+before restarting server processes. In the conventional configuration,
+the <B>/usr/afsws/bin</B> directory that houses the <B>bos</B> command
+binary on client machines is a symbolic link into AFS, which conserves local
+disk space. However, restarting certain processes (particularly the
+database server processes) can make the AFS filespace inaccessible,
+particularly if a problem arises during the restart. Having a local
+copy of the <B>bos</B> binary enables you to uninstall or reinstall
+process binaries or restart processes even in this case. Use the
+<B>cp</B> command to copy the <B>bos</B> command binary from the
+<B>/usr/afsws/bin</B> directory to a local directory such as
+<B>/tmp</B>.
+<P>Restarting a process causes a service outage. It is best to perform
+the restart at times of low system usage if possible. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>instances</VAR>><SUP>+</SUP>
+</PRE>
+</OL>
+<A NAME="IDX6103"></A>
+<A NAME="IDX6104"></A>
+<A NAME="IDX6105"></A>
+<A NAME="IDX6106"></A>
+<A NAME="IDX6107"></A>
+<A NAME="IDX6108"></A>
+<A NAME="IDX6109"></A>
+<A NAME="IDX6110"></A>
+<P><H3><A NAME="HDRWQ113" HREF="auagd002.htm#ToC_131">Reverting to the Previous Version of Binaries</A></H3>
+<P>In rare cases, installing a new binary can cause problems
+serious enough to require reverting to the previous version. Just as
+with installing binaries, consistent system performance requires reverting
+every server machine back to the same version. Issue the <B>bos
+uninstall</B> command described here on each binary distribution
+machine.
+<P>When you use the <B>bos uninstall</B> command, the BOS Server discards
+the current version of a binary file and promotes the <B>.BAK</B>
+version of the file by removing the extension. It renames the current
+<B>.OLD</B> version, if any, to <B>.BAK</B>.
+<P>If there is no current <B>.BAK</B> version, the <B>bos
+uninstall</B> command operation fails and generates an error message.
+If a <B>.OLD</B> version still exists, issue the <B>mv</B>
+command to rename it to <B>.BAK</B> before reissuing the <B>bos
+uninstall</B> command.
+<P>Just as when you install new binaries, the server processes do not start
+using a reverted version immediately. Presumably you are reverting
+because the current binaries do not work, so the following instructions have
+you restart the relevant processes.
+<A NAME="IDX6111"></A>
+<A NAME="IDX6112"></A>
+<P><H3><A NAME="Header_132" HREF="auagd002.htm#ToC_132">To revert to the previous version of binaries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that the <B>.BAK</B> version of each relevant binary is
+available in the <B>/usr/afs/bin</B> directory on each binary distribution
+machine. If necessary, you can use the <B>bos getdate</B> command
+as described in <A HREF="#HDRWQ115">Displaying Binary Version Dates</A>. If necessary, rename the <B>.OLD</B>
+version to <B>.BAK</B>
+<P><LI><A NAME="LIWQ114"></A>Issue the <B>bos uninstall</B> command for a binary
+distribution machine. (If you have forgotten which machine is
+performing that role, see <A HREF="#HDRWQ97">To locate the binary distribution machine for a system type</A>.) 
+<PRE>   % <B>bos uninstall</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>files&nbsp;to&nbsp;uninstall</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>u
+</B><DD>Is the shortest acceptable abbreviation of <B>uninstall</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the binary distribution machine.
+<P><DT><B><VAR>files to uninstall</VAR>
+</B><DD>Names each binary file in the <B>/usr/afs/bin</B> directory to replace
+with its <B>.BAK</B> version. The file name alone is
+sufficient, because the <B>/usr/afs/bin</B> directory is assumed.
+</DL>
+<P><LI>Repeat Step <A HREF="#LIWQ114">3</A> for each binary distribution machine.
+<P><LI>Wait until the <B>upclientbin</B> process on each server machine
+retrieves the reverted from the binary distribution machine. You can
+verify the timestamps on binary files by using the <B>bos getdate</B>
+command as described in <A HREF="#HDRWQ115">Displaying Binary Version Dates</A>. When the binary files are available on each server
+machine, issue the <B>bos restart</B> command, for which complete
+instructions appear in <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<P>If you are working on an AFS client machine, it is a wise precaution to
+have a copy of the <B>bos</B> command suite binaries on the local disk
+before restarting server processes. In the conventional configuration,
+the <B>/usr/afsws/bin</B> directory that houses the <B>bos</B> command
+binary on client machines is a symbolic link into AFS, which conserves local
+disk space. However, restarting certain processes (particularly the
+database server processes) can make the AFS filespace inaccessible,
+particularly if a problem arises during the restart. Having a local
+copy of the <B>bos</B> binary enables you to uninstall or reinstall
+process binaries or restart processes even in this case. Use the
+<B>cp</B> command to copy the <B>bos</B> command binary from the
+<B>/usr/afsws/bin</B> directory to a local directory such as
+<B>/tmp</B>. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>instances</VAR>><SUP>+</SUP>
+</PRE>
+</OL>
+<A NAME="IDX6113"></A>
+<A NAME="IDX6114"></A>
+<A NAME="IDX6115"></A>
+<A NAME="IDX6116"></A>
+<A NAME="IDX6117"></A>
+<A NAME="IDX6118"></A>
+<P><H3><A NAME="HDRWQ115" HREF="auagd002.htm#ToC_133">Displaying Binary Version Dates</A></H3>
+<P>You can check the compilation dates for all three versions
+of a binary file in the <B>/usr/afs/bin</B> directory--the current,
+<B>.BAK</B> and .<B>OLD</B> versions. This is
+useful for verifying that new binaries have been copied to a file server
+machine from its binary distribution machine before restarting a server
+process to use the new binaries.
+<P>To check dates on binaries in a directory other than <B>
+/usr/afs/bin</B>, add the <B>-dir</B> argument. See the <I>IBM
+AFS Administration Reference</I>.
+<A NAME="IDX6119"></A>
+<A NAME="IDX6120"></A>
+<P><H3><A NAME="Header_134" HREF="auagd002.htm#ToC_134">To display binary version dates</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos getdate</B> command. 
+<PRE>   % <B>bos getdate</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>files&nbsp;to&nbsp;check</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>getd
+</B><DD>Is the shortest acceptable abbreviation of <B>getdate</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Name the file server machine for which to display binary dates.
+<P><DT><B><VAR>files to check</VAR>
+</B><DD>Names each binary file to display.
+</DL>
+</OL>
+<A NAME="IDX6121"></A>
+<A NAME="IDX6122"></A>
+<A NAME="IDX6123"></A>
+<A NAME="IDX6124"></A>
+<A NAME="IDX6125"></A>
+<A NAME="IDX6126"></A>
+<A NAME="IDX6127"></A>
+<A NAME="IDX6128"></A>
+<P><H3><A NAME="HDRWQ116" HREF="auagd002.htm#ToC_135">Removing Obsolete Binary Files</A></H3>
+<P>When processes with new binaries have been running without
+problems for a number of days, it is generally safe to remove the
+<B>.BAK</B> and <B>.OLD</B> versions from the
+<B>/usr/afs/bin</B> directory, both to reduce clutter and to free space on
+the file server machine's local disk.
+<P>You can use the <B>bos prune</B> command's flags to remove the
+following types of files:
+<UL>
+<P><LI>To remove files in the <B>/usr/afs/bin</B> directory with a
+<B>.BAK</B> extension, use the <B>-bak</B> flag.
+<P><LI>To remove files in the <B>/usr/afs/bin</B> directory with a
+<B>.OLD</B> extension, use the <B>-old</B> flag.
+<P><LI>To remove files in the <B>/usr/afs/logs</B> directory called
+<B>core</B>, with any extension, use the <B>-core</B> flag.
+<P><LI>To remove all three types of files, use the <B>-all</B> flag.
+</UL>
+<A NAME="IDX6129"></A>
+<A NAME="IDX6130"></A>
+<P><H3><A NAME="Header_136" HREF="auagd002.htm#ToC_136">To remove obsolete binaries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos prune</B> command with one or more of its
+flags. 
+<PRE>   % <B>bos prune</B> &lt;<VAR>machine&nbsp;name</VAR>> [<B>-bak</B>] [<B>-old</B>] [<B>-core</B>] [<B>-all</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>p
+</B><DD>Is the shortest acceptable abbreviation of <B>prune</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine on which to remove obsolete files.
+<P><DT><B>-bak
+</B><DD>Removes all the files with a <B>.BAK</B> extension from the
+<B>/usr/afs/bin</B> directory. Do not combine this flag with the
+<B>-all</B> flag.
+<P><DT><B>-old
+</B><DD>Removes all the files a .<B>OLD</B> extension from the
+<B>/usr/afs/bin</B> directory. Do not combine this flag with the
+<B>-all</B> flag.
+<P><DT><B>-core
+</B><DD>Removes all core files from the <B>/usr/afs/logs</B> directory.
+Do not combine this flag with the <B>-all</B> flag
+<P><DT><B>-all
+</B><DD>Combines the effect of the other three flags. Do not combine it
+with the other three flags.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ117" HREF="auagd002.htm#ToC_137">Displaying A Binary File's Build Level</A></H3>
+<P>For the most consistent performance on a server machine, and
+cell-wide, it is best for all server processes to come from the same AFS
+distribution. Every AFS binary includes an ASCII string that specifies
+its version, or <I>build level</I>. To display it, use the
+<B>strings</B> and <B>grep</B> commands, which are included in most
+UNIX distributions.
+<A NAME="IDX6131"></A>
+<A NAME="IDX6132"></A>
+<A NAME="IDX6133"></A>
+<A NAME="IDX6134"></A>
+<P><H3><A NAME="Header_138" HREF="auagd002.htm#ToC_138">To display an AFS binary's build level</A></H3>
+<OL TYPE=1>
+<P><LI>Change to the directory that houses the binary file . If you are
+not sure where the binary resides, issue the <B>which</B> command. 
+<PRE>   % <B>which</B> <VAR>binary_file</VAR>
+   /<VAR>bin_dir_path</VAR>/<VAR>binary_file</VAR>
+   % <B>cd</B> <VAR>bin_dir_path</VAR>
+</PRE>
+<P><LI>Issue the <B>strings</B> command to extract all ASCII strings from the
+binary file. Pipe the output to the <B>grep</B> command to locate
+the relevant line. 
+<PRE>   % <B>strings ./</B><VAR>binary_file</VAR> <B>| grep Base</B>
+</PRE> 
+<P>The output reports the AFS build level in a format like the
+following: 
+<PRE>   @(#)Base configuration afs<VAR>version</VAR>  <VAR>build_level</VAR>
+</PRE> 
+<P>For example, the following string indicates the binary is from AFS
+3.6 build 3.0: 
+<PRE>   @(#)Base configuration afs3.6 3.0
+</PRE>
+</OL>
+<A NAME="IDX6135"></A>
+<A NAME="IDX6136"></A>
+<A NAME="IDX6137"></A>
+<A NAME="IDX6138"></A>
+<A NAME="IDX6139"></A>
+<HR><H2><A NAME="HDRWQ118" HREF="auagd002.htm#ToC_139">Maintaining the Server CellServDB File</A></H2>
+<P>Every file server machine maintains a list of its home
+cell's database server machines in the local disk file
+<B>/usr/afs/etc/CellServDB</B> on its local disk. Both database
+server processes and non-database server processes consult the file:
+<UL>
+<P><LI>The database server processes (the Authentication, Backup, Protection, and
+Volume Location Servers) maintain constant contact with their peers in order
+to keep their copies of the replicated administrative databases
+synchronized. 
+<P>As detailed in <A HREF="#HDRWQ102">Replicating the AFS Administrative Databases</A>, the database server processes use the Ubik utility to
+synchronize the information in the databases they maintain. The Ubik
+coordinator at the synchronization site for each database maintains the single
+read/write copy of the database and distributes changes to the secondary sites
+as necessary. It must maintain contact with a majority of the secondary
+sites to remain the coordinator, and consults the <B>CellServDB</B> file
+to learn how many peers it has and on which machines they are running.
+<P>If the coordinator loses contact with the majority of its peers, they all
+cooperate to elect a new coordinator by majority vote. During the
+election, all of the Ubik processes consult the <B>CellServDB</B> file to
+learn where to send their votes, and what number constitutes a
+majority.
+<P><LI>The non-database server processes must know which machines are running the
+database server processes in order to retrieve information from the
+databases. For example, the first time that a user accesses an AFS
+file, the File Server that houses it contacts the Protection Server to obtain
+a list of the user's group memberships (the list is called a current
+protection subgroup, or CPS). The File Server uses the CPS as it
+determines if the access control list (ACL) protecting the file grants the
+required permissions to the user (for more details, see <A HREF="auagd019.htm#HDRWQ534">About the Protection Database</A>).
+</UL>
+<A NAME="IDX6140"></A>
+<P>The consequences of missing or incorrect information in the
+<B>CellServDB</B> file are as follows: 
+<UL>
+<P><LI>If the file does not list a machine, then it is effectively not a database
+server machine even if the database server processes are running. The
+Ubik coordinator does not send it database updates or include it in the count
+that establishes a majority. It does not participate in Ubik elections,
+and so refuses to distribute database information to any client machines that
+happen to contact it (which they can do if their
+<B>/usr/vice/etc/CellServDB</B> file lists it). Users of the client
+machine must wait for a timeout before they can contact a correctly
+functioning database server machine.
+<P><LI>If the file lists a machine that is not running the database server
+processes, the consequences can be serious. The Ubik coordinator cannot
+send it database updates, but includes it in the count that establishes a
+majority. If valid secondary sites go down and stop sending their votes
+to the coordinator, it can wrongly appear that the coordinator no longer has
+the majority it needs. The resulting election of a new coordinator
+causes a service outage during which information from the database becomes
+unavailable. Furthermore, the lack of a vote from the incorrectly
+listed site can disturb the election, if it makes the other sites believe that
+a majority of sites are not voting for the new coordinator.
+<P>A more minor consequence is that non-database server processes attempt to
+contact the database server processes on the machine. They experience a
+timeout delay because the processes are not running.
+</UL>
+<P>Note that the <B>/usr/afs/etc/CellServDB</B> file on a server machine
+is not the same as the <B>/usr/vice/etc/CellServDB</B> file on client
+machine. The client version includes entries for foreign cells as well
+as the local cell. However, it is important to update both versions of
+the file whenever you change your cell's database server machines.
+A server machine that is also a client needs to have both files, and you need
+to update them both. For more information on maintaining the client
+version of the <B>CellServDB</B> file, see <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<A NAME="IDX6141"></A>
+<A NAME="IDX6142"></A>
+<A NAME="IDX6143"></A>
+<P><H3><A NAME="HDRWQ119" HREF="auagd002.htm#ToC_140">Distributing the Server CellServDB File</A></H3>
+<P>To avoid the negative consequences of incorrect information
+in the <B>/usr/afs/etc/CellServDB</B> file, you must update it on all of
+your cell's server machines every time you add or remove a database
+server machine. The <I>IBM AFS Quick Beginnings</I> provides
+complete instructions for installing or removing a database server machine and
+for updating the <B>CellServDB</B> file in that context. This
+section explains how to distribute the file to your server machines and how to
+make other cells aware of the changes if you participate in the AFS global
+name space.
+<P>If you use the United States edition of AFS, use the Update Server to
+distribute the central copy of the server <B>CellServDB</B> file stored on
+the cell's system control machine. If you use the international
+edition of AFS, instead change the file on each server machine
+individually. For further discussion of the system control machine and
+why international cells must not use it for files in the
+<B>/usr/afs/etc</B> directory, see <A HREF="#HDRWQ94">The System Control Machine</A>. For instructions on configuring
+the Update Server when using the United States version of AFS, see the
+<I>IBM AFS Quick Beginnings</I>.
+<P>To avoid formatting errors that can cause errors, always use the <B>bos
+addhost</B> and <B>bos removehost</B> commands, rather than editing the
+file directly. You must also restart the database server processes
+running on the machine, to initiate a coordinator election among the new set
+of database server machines. This step is included in the instructions
+that appear in <A HREF="#HDRWQ121">To add a database server machine to the CellServDB file</A> and <A HREF="#HDRWQ122">To remove a database server machine from the CellServDB file</A>. For instructions on displaying the
+contents of the file, see <A HREF="#HDRWQ120">To display a cell's database server machines</A>.
+<P>If you make your cell accessible to foreign users as part of the AFS global
+name space, you also need to inform other cells when you change your
+cell's database server machines. The AFS Support group maintains a
+<B>CellServDB</B> file that lists all cells that participate in the AFS
+global name space, and can change your cell's entry at your
+request. For further details, see <A HREF="auagd007.htm#HDRWQ38">Making Your Cell Visible to Others</A>.
+<P>Another way to advertise your cell's database server machines is to
+maintain a copy of the file at the conventional location in your AFS
+filespace,
+<B>/afs/</B><VAR>cell_name</VAR><B>/service/etc/CellServDB.local</B>.
+For further discussion, see <A HREF="auagd007.htm#HDRWQ43">The Third Level</A>.
+<A NAME="IDX6144"></A>
+<A NAME="IDX6145"></A>
+<A NAME="IDX6146"></A>
+<A NAME="IDX6147"></A>
+<A NAME="IDX6148"></A>
+<A NAME="IDX6149"></A>
+<P><H3><A NAME="HDRWQ120" HREF="auagd002.htm#ToC_141">To display a cell's database server machines</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos listhosts</B> command. If you have maintained
+the file properly, the output is the same on every server machine, but the
+<I>machine name</I> argument enables you to check various machines if you
+wish. 
+<PRE>   % <B>bos listhosts</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>cell&nbsp;name</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>listh
+</B><DD>Is the shortest acceptable abbreviation of <B>listhosts</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine from which to display the
+<B>/usr/afs/etc/CellServDB</B> file.
+<P><DT><B><VAR>cell name</VAR>
+</B><DD>Specifies the complete Internet domain name of a foreign cell. You
+must already know the name of at least one server machine in the cell, to
+provide as the <B>machine name</B> argument.
+</DL>
+</OL>
+<P>The output lists the machines in the order they appear in the
+<B>CellServDB</B> file on the specified server machine. It assigns
+each one a <TT>Host</TT> index number, as in the following example.
+There is no implied relationship between the index and a machine's IP
+address, name, or role as Ubik coordinator or secondary site.
+<PRE>   % <B>bos listhosts fs1.abc.com</B>
+   Cell name is abc.com
+       Host 1 is fs1.abc.com
+       Host 2 is fs7.abc.com
+       Host 3 is fs4.abc.com
+</PRE>
+<P>The output lists machines by name rather than IP address as long as the
+naming service (such as the Domain Name Service or local host table) is
+functioning properly. To display IP addresses, login to a server
+machine as the local superuser <B>root</B> and use a text editor or
+display command, such as the <B>cat</B> command, to view the
+<B>/usr/afs/etc/CellServDB</B> file.
+<A NAME="IDX6150"></A>
+<A NAME="IDX6151"></A>
+<A NAME="IDX6152"></A>
+<A NAME="IDX6153"></A>
+<A NAME="IDX6154"></A>
+<A NAME="IDX6155"></A>
+<A NAME="IDX6156"></A>
+<A NAME="IDX6157"></A>
+<A NAME="IDX6158"></A>
+<A NAME="IDX6159"></A>
+<A NAME="IDX6160"></A>
+<A NAME="IDX6161"></A>
+<P><H3><A NAME="HDRWQ121" HREF="auagd002.htm#ToC_142">To add a database server machine to the CellServDB file</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos addhost</B> command to add each new database server
+machine to the <B>CellServDB</B> file. If you use the United States
+edition of AFS, specify the system control machine as <I>machine
+name</I>. (If you have forgotten which machine is the system control
+machine, see <A HREF="#HDRWQ99">The Output on the System Control Machine</A>.) If you use the international edition of AFS, repeat
+the command on each or your cell's server machines in turn by
+substituting its name for <I>machine name</I>. 
+<PRE>   % <B>bos addhost </B> &lt;<VAR>machine&nbsp;name</VAR>>  &lt;<VAR>host&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>addh
+</B><DD>Is the shortest acceptable abbreviation of <B>addhost</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the system control machine, if you are using the United States
+edition of AFS. If you are using the international edition of AFS, it
+names each of your server machines in turn.
+<P><DT><B><VAR>host name</VAR>
+</B><DD>Specifies the fully qualified hostname of each database server machine to
+add to the <B>CellServDB</B> file (for example:
+<B>fs4.abc.com</B>). The BOS Server uses the
+<B>gethostbyname(&nbsp;)</B> routine to obtain each machine's IP
+address and records both the name and address automatically.
+</DL>
+<P><LI>Restart the Authentication Server, Backup Server, Protection Server, and
+VL Server on every database server machine, so that the new set of machines
+participate in the election of a new Ubik coordinator. The instruction
+uses the conventional names for the processes; make the appropriate
+substitution if you use different process names. For complete syntax,
+see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<P><B>Important:</B> Repeat the following command in quick
+succession on all of the database server machines. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine name</VAR>> <B>buserver kaserver ptserver vlserver</B>
+</PRE>
+<P><LI>Edit the <B>/usr/vice/etc/CellServDB</B> file on each of your
+cell's client machines. For instructions, see <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P><LI>If you participate in the AFS global name space, please have one of your
+cell's designated site contacts register the changes you have made with
+the AFS Product Support group. 
+<P>If you maintain a central copy of your cell's server
+<B>CellServDB</B> file in the conventional location
+(<B>/afs/</B><I>cell_name</I><B>/service/etc/CellServDB.local</B>),
+edit the file to reflect the change.
+</OL>
+<A NAME="IDX6162"></A>
+<A NAME="IDX6163"></A>
+<A NAME="IDX6164"></A>
+<A NAME="IDX6165"></A>
+<A NAME="IDX6166"></A>
+<A NAME="IDX6167"></A>
+<A NAME="IDX6168"></A>
+<A NAME="IDX6169"></A>
+<A NAME="IDX6170"></A>
+<A NAME="IDX6171"></A>
+<A NAME="IDX6172"></A>
+<P><H3><A NAME="HDRWQ122" HREF="auagd002.htm#ToC_143">To remove a database server machine from the CellServDB file</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos removehost</B> command to remove each database server
+machine from the <B>CellServDB</B> file. If you use the United
+States edition of AFS, specify the system control machine as <I>machine
+name</I>. (If you have forgotten which machine is the system control
+machine, see <A HREF="#HDRWQ99">The Output on the System Control Machine</A>.) If you use the international edition of AFS, repeat
+the command on each or your cell's server machines in turn by
+substituting its name for <I>machine name</I>. 
+<PRE>   % <B>bos removehost</B> &lt;<VAR>machine&nbsp;name</VAR>>  &lt;<VAR>host&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>removeh
+</B><DD>Is the shortest acceptable abbreviation of <B>removehost</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the system control machine, if you are using the United States
+edition of AFS. If you are using the international edition of AFS, it
+names each of your server machines in turn.
+<P><DT><B><VAR>host name</VAR>
+</B><DD>Specifies the fully qualified hostname of each database server machine to
+remove from the <B>CellServDB</B> file (for example:
+<B>fs4.abc.com</B>).
+</DL>
+<P><LI>Restart the Authentication Server, Backup Server, Protection Server, and
+VL Server on every database server machine, so that the new set of machines
+participate in the election of a new Ubik coordinator. The instruction
+uses the conventional names for the processes; make the appropriate
+substitution if you use different process names. For complete syntax,
+see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<P><B>Important:</B> Repeat the following command in quick
+succession on all of the database server machines. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine name</VAR>> <B>buserver kaserver ptserver vlserver</B>
+</PRE>
+<P><LI>Edit the <B>/usr/vice/etc/CellServDB</B> file on each of your
+cell's client machines. For instructions, see <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P><LI>If you participate in the AFS global name space, please have one of your
+cell's designated site contacts register the changes you have made with
+the AFS Product Support group. 
+<P>If you maintain a central copy of your cell's server
+<B>CellServDB</B> file in the conventional location
+(<B>/afs/</B><I>cell_name</I><B>/service/etc/CellServDB.local</B>),
+edit the file to reflect the change.
+</OL>
+<HR><H2><A NAME="HDRWQ123" HREF="auagd002.htm#ToC_144">Managing Authentication and Authorization Requirements</A></H2>
+<P>This section describes how the AFS server processes
+guarantee that only properly authorized users perform privileged commands, by
+checking authorization checking and mutually authenticating with their
+clients. It explains how you can control authorization checking
+requirements on a per-machine or per-cell basis, and how to bypass mutual
+authentication when issuing commands.
+<A NAME="IDX6173"></A>
+<A NAME="IDX6174"></A>
+<A NAME="IDX6175"></A>
+<A NAME="IDX6176"></A>
+<A NAME="IDX6177"></A>
+<A NAME="IDX6178"></A>
+<P><H3><A NAME="HDRWQ124" HREF="auagd002.htm#ToC_145">Authentication versus Authorization</A></H3>
+<P>Many AFS commands are <I>privileged</I> in that the AFS
+server process invoked by the command performs it only for a properly
+authorized user. The server process performs the following two tests to
+determine if someone is properly authorized:
+<UL>
+<P><LI>In the <I>authentication</I> test, the server process mutually
+authenticates with the command interpreter, Cache Manager, or other client
+process that is acting on behalf of a user or application. The goal of
+this test is to determine who is issuing the command. The server
+process verifies that the issuer really is who he or she claims to be, by
+examining the server ticket and other components of the issuer's
+token. (Secondarily, it allows the client process to verify that the
+server process is genuine.) If the issuer has no token or otherwise
+fails the test, the server process assigns him or her the identity
+<B>anonymous</B>, a completely unprivileged user. For a more
+complete description of mutual authentication, see <A HREF="auagd007.htm#HDRWQ75">A More Detailed Look at Mutual Authentication</A>. 
+<P>Many individual commands enable you to bypass the authentication test by
+assuming the <B>anonymous</B> identity without even attempting to mutually
+authenticate. Note, however, that this is futile if the command is
+privileged and the server process is still performing the authorization test,
+because in that case the process refuses to execute privileged commands for
+the <B>anonymous</B> user.
+<P><LI>In the <I>authorization</I> test, the server process determines if the
+issuer is authorized to use the command by consulting a list of privileged
+users. The goal of this test is to determine what the issuer is allowed
+to do. Different server processes consult different lists of users, as
+described in <A HREF="auagd021.htm#HDRWQ581">Managing Administrative Privilege</A>. The server process refuses to execute any privileged
+command for an unauthorized issuer. If a command has no privilege
+requirements, the server process skips this step and executes and
+immediately.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Never place the <B>anonymous</B> user or the
+<B>system:anyuser</B> group on a privilege list; it makes
+authorization checking meaningless.
+<P>You can use the <B>bos setauth</B> command to control whether the
+server processes on a server machine check for authorization. Other
+server machines are not affected. Keep in mind that turning off
+authorization checking is a grave security risk, because the server processes
+on that machine perform any action for any user.
+</TD></TR></TABLE>
+</UL>
+<A NAME="IDX6179"></A>
+<A NAME="IDX6180"></A>
+<A NAME="IDX6181"></A>
+<A NAME="IDX6182"></A>
+<P><H3><A NAME="HDRWQ125" HREF="auagd002.htm#ToC_146">Controlling Authorization Checking on a Server Machine</A></H3>
+<P>Disabling authorization checking is a serious breach of
+security because it means that the AFS server processes on a file server
+machine performs any action for any user, even the <B>anonymous</B>
+user.
+<P>The only time it is common to disable authorization checking is when
+installing a new file server machine (see the <I>IBM AFS Quick
+Beginnings</I>). It is necessary then because it is not possible to
+configure all of the necessary security mechanisms before performing other
+actions that normally make use of them. For greatest security, work at
+the console of the machine you are installing and enable authorization
+checking as soon as possible.
+<P>During normal operation, the only reason to disable authorization checking
+is if an error occurs with the server encryption keys, leaving the servers
+unable to authenticate users properly. For instructions on handling
+key-related emergencies, see <A HREF="auagd014.htm#HDRWQ370">Handling Server Encryption Key Emergencies</A>.
+<P>You control authorization checking on each file server machine
+separately; turning it on or off on one machine does not affect the
+others. Because client machines generally choose a server process at
+random, it is hard to predict what authorization checking conditions prevail
+for a given command unless you make the requirement the same on all
+machines. To turn authorization checking on or off for the entire cell,
+you must repeat the appropriate command on every file server machine.
+<P>The server processes constantly monitor the directory
+<B>/usr/afs/local</B> on their local disks to determine if they need to
+check for authorization. If the file called <B>NoAuth</B> appears
+in that directory, then the servers do not check for authorization.
+When it is not present (the usual case), they perform authorization
+checking.
+<P>Control the presence of the <B>NoAuth</B> file through the BOS
+Server. When you disable authorization checking with the <B>bos
+setauth</B> command (or, during installation, by putting the
+<B>-noauth</B> flag on the command that starts up the BOS Server), the BOS
+Server creates the zero-length <B>NoAuth</B> file. When you
+reenable authorization checking, the BOS Server removes the file.
+<A NAME="IDX6183"></A>
+<A NAME="IDX6184"></A>
+<A NAME="IDX6185"></A>
+<A NAME="IDX6186"></A>
+<A NAME="IDX6187"></A>
+<P><H3><A NAME="HDRWQ126" HREF="auagd002.htm#ToC_147">To disable authorization checking on a server machine</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos setauth</B> command to disable authorization
+checking. 
+<PRE>   % <B>bos setauth</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>off</B>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>seta
+</B><DD>Is the shortest acceptable abbreviation of <B>setauth</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the file server machine on which server processes do not check
+for authorization.
+</DL>
+</OL>
+<A NAME="IDX6188"></A>
+<A NAME="IDX6189"></A>
+<A NAME="IDX6190"></A>
+<P><H3><A NAME="HDRWQ127" HREF="auagd002.htm#ToC_148">To enable authorization checking on a server machine</A></H3>
+<OL TYPE=1>
+<P><LI>Reenable authorization checking. (No privilege is required because
+the machine is not currently checking for authorization.) For detailed
+syntax information, see the preceding section. 
+<PRE>   % <B>bos setauth</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>on</B>
+</PRE>
+</OL>
+<A NAME="IDX6191"></A>
+<A NAME="IDX6192"></A>
+<P><H3><A NAME="HDRWQ128" HREF="auagd002.htm#ToC_149">Bypassing Mutual Authentication for an Individual Command</A></H3>
+<P>Several of the server processes allow any user (not just
+system administrators) to disable mutual authentication when issuing a
+command. The server process treats the issuer as the unauthenticated
+user <B>anonymous</B>.
+<P>The facilities for preventing mutual authentication are provided for use in
+emergencies (such as the key emergency discussed in <A HREF="auagd014.htm#HDRWQ370">Handling Server Encryption Key Emergencies</A>). During normal circumstances, authorization checking
+is turned on, making it useless to prevent authentication: the server
+processes refuse to perform privileged commands for the user
+<B>anonymous</B>.
+<P>It can be useful to prevent authentication when authorization checking is
+turned off. The very act of trying to authenticate can cause problems
+if the server cannot understand a particular encryption key, as is likely to
+happen in a key emergency.
+<A NAME="IDX6193"></A>
+<A NAME="IDX6194"></A>
+<A NAME="IDX6195"></A>
+<A NAME="IDX6196"></A>
+<A NAME="IDX6197"></A>
+<A NAME="IDX6198"></A>
+<A NAME="IDX6199"></A>
+<A NAME="IDX6200"></A>
+<P><H3><A NAME="HDRWQ129" HREF="auagd002.htm#ToC_150">To bypass mutual authentication for bos, kas, pts, and vos commands</A></H3>
+<P>Provide the <B>-noauth</B> flag which is available on
+many of the commands in the suites. To verify that a command accepts
+the flag, issue the <B>help</B> command in its suite, or consult the
+command's reference page in the <I>IBM AFS Administration
+Reference</I> (the reference page also specifies the shortest acceptable
+abbreviation for the flag on each command). The suites'
+<B>apropos</B> and <B>help</B> commands do not themselves accept the
+flag.
+<P>You can bypass mutual authentication for all <B>kas</B> commands issued
+during an interactive session by including the <B>-noauth</B> flag on the
+<B>kas interactive</B> command. If you have already entered
+interactive mode with an authenticated identity, issue the <B>(kas)
+noauthentication</B> command to assume the <B>anonymous</B>
+identity.
+<A NAME="IDX6201"></A>
+<P><H3><A NAME="Header_151" HREF="auagd002.htm#ToC_151">To bypass mutual authentication for fs commands</A></H3>
+<P>This is not possible, except by issuing the <B>unlog</B> command to
+discard your tokens before issuing the <B>fs</B> command.
+<HR><H2><A NAME="HDRWQ130" HREF="auagd002.htm#ToC_152">Adding or Removing Disks and Partitions</A></H2>
+<P>AFS makes it very easy to add storage space to your cell,
+just by adding disks to existing file server machines. This section
+explains how to install or remove a disk used to store AFS volumes.
+(Another way to add storage space is to install additional server machines, as
+instructed in the <I>IBM AFS Quick Beginnings</I>.)
+<P>Both adding and removing a disk cause at least a brief file system outage,
+because you must restart the <B>fs</B> process to have it recognize the
+new set of server partitions. Some operating systems require that you
+shut the machine off before adding or removing a disk, in which case you must
+shut down all of the AFS server processes first. Otherwise, the
+AFS-related aspects of adding or removing a disk are not complicated, so the
+duration of the outage depends mostly on how long it takes to install or
+remove the disk itself.
+<P>The following instructions for installing a new disk completely prepare it
+to house AFS volumes. You can then use the <B>vos create</B>
+command to create new volumes, or the <B>vos move</B> command to move
+existing ones from other partitions. For instructions, see <A HREF="auagd010.htm#HDRWQ185">Creating Read/write Volumes</A> and <A HREF="auagd010.htm#HDRWQ226">Moving Volumes</A>. The instructions for removing a
+disk are basically the reverse of the installation instructions, but include
+extra steps that protect against data loss.
+<P>A server machines can house 256 AFS server partitions, each one mounted at
+a directory with a name of the form <B>/vicep</B><I>index</I>, where
+<I>index</I> is one or two lowercase letters. By convention, the
+first partition on a machine is mounted at <B>/vicepa</B>, the second at
+<B>/vicepb</B>, and so on to the twenty-sixth at
+<B>/vicepz</B>. Additional partitions are mounted at
+<B>/vicepaa</B> through <B>/vicepaz</B> and so on up to
+<B>/vicepiv</B>. Using the letters consecutively is not required,
+but is simpler.
+<P>Mount each <B>/vicep</B> directory directly under the local file
+system's root directory ( <B>/</B> ), not as a subdirectory of any
+other directory; for example, <B>/usr/vicepa</B> is not an acceptable
+location. You must also map the directory to the partition's
+device name in the file server machine's file systems registry file
+(<B>/etc/fstab</B> or equivalent).
+<P>These instructions assume that the machine's AFS initialization file
+includes the following command to restart the BOS Server after each
+reboot. The BOS Server starts the other AFS server processes listed in
+the local <B>/usr/afs/local/BosConfig</B> file. For information on
+the <B>bosserver</B> command's optional arguments, see its reference
+page in the <I>IBM AFS Administration Reference</I>.
+<PRE>   /usr/afs/bin/bosserver &amp;
+</PRE>
+<A NAME="IDX6202"></A>
+<A NAME="IDX6203"></A>
+<A NAME="IDX6204"></A>
+<A NAME="IDX6205"></A>
+<A NAME="IDX6206"></A>
+<A NAME="IDX6207"></A>
+<A NAME="IDX6208"></A>
+<P><H3><A NAME="HDRWQ131" HREF="auagd002.htm#ToC_153">To add and mount a new disk to house AFS volumes</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Decide how many AFS partitions to divide the new disk into and the names
+of the directories at which to mount them (the introduction to this section
+describes the naming conventions). To display the names of the existing
+server partitions on the machine, issue the <B>vos listpart</B>
+command. Include the <B>-localauth</B> flag because you are logged
+in as the local superuser <B>root</B> but do not necessarily have
+administrative tokens.
+<PRE>   # <B>vos listpart</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-localauth</B>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>listp
+</B><DD>Is the shortest acceptable abbreviation of <B>listpart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the local file server machine.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents it to the BOS Server during mutual authentication.
+</DL>
+<P><LI>Create each directory at which to mount a partition. 
+<PRE>   # <B>mkdir /vicep</B><VAR>x</VAR>[<VAR>x</VAR>]
+</PRE>
+<A NAME="IDX6209"></A>
+<A NAME="IDX6210"></A>
+<A NAME="IDX6211"></A>
+<A NAME="IDX6212"></A>
+<P><LI><A NAME="LIWQ132"></A>Using a text editor, create an entry in the machine's file
+systems registry file (<B>/etc/fstab</B> or equivalent) for each new disk
+partition, mapping its device name to the directory you created in the
+previous step. Refer to existing entries in the file to learn the
+proper format, which varies for different operating systems.
+<P><LI><A NAME="LIWQ133"></A>If the operating system requires that you shut off the machine
+to install a new disk, issue the <B>bos shutdown</B> command to shut down
+all AFS server processes other than the BOS Server (it terminates safely when
+you shut off the machine). Include the <B>-localauth</B> flag
+because you are logged in as the local superuser <B>root</B> but do not
+necessarily have administrative tokens. For a complete description of
+the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   # <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-localauth</B> [<B>-wait</B>]
+</PRE>
+<P><LI><A NAME="LIWQ134"></A>If necessary, shut off the machine. Install and format
+the new disk according to the instructions provided by the disk and operating
+system vendors. If necessary, edit the disk's partition table to
+reflect the changes you made to the files system registry file in step <A HREF="#LIWQ132">4</A>; consult the operating system documentation for
+instructions.
+<P><LI>If you shut off the machine down in step <A HREF="#LIWQ134">6</A>, turn it on. Otherwise, issue the <B>bos
+restart</B> command to restart the <B>fs</B> process, forcing it to
+recognize the new set of server partitions. Include the
+<B>-localauth</B> flag because you are logged in as the local superuser
+<B>root</B> but do not necessarily have administrative tokens. For
+complete instructions for the <B>bos restart</B> command, see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<PRE>   # <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>fs -localauth</B> 
+</PRE>
+<P><LI>Issue the <B>bos status</B> command to verify that all server
+processes are running correctly. For more detailed instructions, see <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   # <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE>
+</OL>
+<A NAME="IDX6213"></A>
+<A NAME="IDX6214"></A>
+<A NAME="IDX6215"></A>
+<A NAME="IDX6216"></A>
+<A NAME="IDX6217"></A>
+<P><H3><A NAME="HDRWQ135" HREF="auagd002.htm#ToC_154">To unmount and remove a disk housing AFS volumes</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos listvol</B> command to list the volumes housed on
+each partition of each disk you are about to remove, in preparation for
+removing them or moving them to other partitions. For detailed
+instructions, see <A HREF="auagd010.htm#HDRWQ219">Displaying Volume Headers</A>. 
+<PRE>   % <B>vos listvol</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>] 
+</PRE>
+<P><LI>Move any volume you wish to retain in the file system to another
+partition. You can move only read/write volumes. For more
+detailed instructions, and for instructions on moving read-only and backup
+volumes, see <A HREF="auagd010.htm#HDRWQ226">Moving Volumes</A>. 
+<PRE>   % <B>vos move</B>  &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  \
+        &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;source</VAR>> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;source</VAR>>  \
+        &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;destination</VAR>> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;destination</VAR>>
+</PRE>
+<P><LI><B>(Optional)</B> If there are any volumes you do not wish to retain,
+back them up using the <B>vos dump</B> command or the AFS Backup
+System. See <A HREF="auagd010.htm#HDRWQ240">Dumping and Restoring Volumes</A> or <A HREF="auagd012.htm#HDRWQ296">Backing Up Data</A>, respectively.
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<A NAME="IDX6218"></A>
+<A NAME="IDX6219"></A>
+<P><LI>Issue the <B>umount</B> command, repeating it for each partition on
+the disk to be removed. 
+<PRE>   # <B>cd /</B>
+   # <B>umount /dev/</B>&lt;<VAR>partition_block_device_name</VAR>>
+</PRE>
+<A NAME="IDX6220"></A>
+<P><LI><A NAME="LIWQ136"></A>Using a text editor, remove or comment out each
+partition's entry from the machine's file systems registry file
+(<B>/etc/fstab</B> or equivalent).
+<P><LI>Remove the <B>/vicep</B> directory associated with each
+partition. 
+<PRE>   # <B>rmdir /vicep</B><VAR>xx</VAR>
+</PRE>
+<P><LI>If the operating system requires that you shut off the machine to remove a
+disk, issue the <B>bos shutdown</B> command to shut down all AFS server
+processes other than the BOS Server (it terminates safely when you shut off
+the machine). Include the <B>-localauth</B> flag because you are
+logged in as the local superuser <B>root</B> but do not necessarily have
+administrative tokens. For a complete description of the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   # <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-localauth</B> [<B>-wait</B>]
+</PRE>
+<P><LI><A NAME="LIWQ137"></A>If necessary, shut off the machine. Remove the disk
+according to the instructions provided by the disk and operating system
+vendors. If necessary, edit the disk's partition table to reflect
+the changes you made to the files system registry file in step <A HREF="#LIWQ136">7</A>; consult the operating system documentation for
+instructions.
+<P><LI>If you shut off the machine down in step <A HREF="#LIWQ137">10</A>, turn it on. Otherwise, issue the <B>bos
+restart</B> command to restart the <B>fs</B> process, forcing it to
+recognize the new set of server partitions. Include the
+<B>-localauth</B> flag because you are logged in as the local superuser
+<B>root</B> but do not necessarily have administrative tokens. For
+complete instructions for the <B>bos restart</B> command, see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+<PRE>   # <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>fs -localauth</B> 
+</PRE>
+<P><LI>Issue the <B>bos status</B> command to verify that all server
+processes are running correctly. For more detailed instructions, see <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   # <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE>
+</OL>
+<A NAME="IDX6221"></A>
+<A NAME="IDX6222"></A>
+<A NAME="IDX6223"></A>
+<A NAME="IDX6224"></A>
+<A NAME="IDX6225"></A>
+<A NAME="IDX6226"></A>
+<A NAME="IDX6227"></A>
+<A NAME="IDX6228"></A>
+<A NAME="IDX6229"></A>
+<A NAME="IDX6230"></A>
+<A NAME="IDX6231"></A>
+<HR><H2><A NAME="HDRWQ138" HREF="auagd002.htm#ToC_155">Managing Server IP Addresses and VLDB Server Entries</A></H2>
+<P>The AFS support for multihomed file server machines is
+largely automatic. The File Server process records the IP addresses of
+its file server machine's network interfaces in the local
+<B>/usr/afs/local/sysid</B> file and also registers them in a <I>server
+entry</I> in the Volume Location Database (VLDB). The
+<B>sysid</B> file and server entry are identified by the same unique
+number, which creates an association between them.
+<P>When the Cache Manager requests volume location information, the Volume
+Location (VL) Server provides all of the interfaces registered for each server
+machine that houses the volume. This enables the Cache Manager to make
+use of multiple addresses when accessing AFS data stored on a multihomed file
+server machine.
+<P>If you wish, you can control which interfaces the File Server registers in
+its VLDB server entry by creating two files in the local
+<B>/usr/afs/local</B> directory: <B>NetInfo</B> and
+<B>NetRestrict</B>. Each time the File Server restarts, it builds a
+list of the local machine's interfaces by reading the <B>NetInfo</B>
+file, if it exists. If you do not create the file, the File Server uses
+the list of network interfaces configured with the operating system. It
+then removes from the list any addresses that appear in the
+<B>NetRestrict</B> file, if it exists. The File Server records the
+resulting list in the <B>sysid</B> file and registers the interfaces in
+the VLDB server entry that has the same unique identifier.
+<P>On database server machines, the <B>NetInfo</B> and
+<B>NetRestrict</B> files also determine which interfaces the Ubik database
+synchronization library uses when communicating with the database server
+processes running on other database server machines.
+<P>There is a maximum number of IP addresses in each server entry, as
+documented in the <I>IBM AFS Release Notes</I>. If a multihomed
+file server machine has more interfaces than the maximum, AFS simply ignores
+the excess ones. It is probably appropriate for such machines to use
+the <B>NetInfo</B> and <B>NetRestrict</B> files to control which
+interfaces are registered.
+<P>If for some reason the <B>sysid</B> file no longer exists, the File
+Server creates a new one with a new unique identifier. When the File
+Server registers the contents of the new file, the Volume Location (VL) Server
+normally recognizes automatically that the new file corresponds to an existing
+server entry, and overwrites the existing server entry with the new file
+contents and identifier. However, it is best not to remove the
+<B>sysid</B> file if that can be avoided.
+<P>Similarly, it is important not to copy the <B>sysid</B> file from one
+file server machine to another. If you commonly copy the contents of
+the <B>/usr/afs</B> directory from an existing machine as part of
+installing a new file server machine, be sure to remove the <B>sysid</B>
+file from the <B>/usr/afs/local</B> directory on the new machine before
+starting the File Server.
+<P>There are certain cases where the VL Server cannot determine whether it is
+appropriate to overwrite an existing server entry with a new <B>sysid</B>
+file's contents and identifier. It then refuses to allow the File
+Server to register the interfaces, which prevents the File Server from
+starting. This can happen if, for example, a new <B>sysid</B> file
+includes two interfaces that currently are registered by themselves in
+separate server entries. In such cases, error messages in the
+<B>/usr/afs/log/VLLog</B> file on the VL Server machine and in the
+<B>/usr/afs/log/FileLog</B> file on the file server machine indicate that
+you need to use the <B>vos changeaddr</B> command to resolve the
+problem. Contact the AFS Product Support group for instructions and
+assistance.
+<P>Except in this type of rare error case, the only appropriate use of the
+<B>vos changeaddr</B> command is to remove a VLDB server entry completely
+when you remove a file server machine from service. The VLDB can
+accommodate a maximum number of server entries, as specified in the <I>IBM
+AFS Release Notes</I>. Removing obsolete entries makes it possible to
+allocate server entries for new file server machines as required. See
+the instructions that follow.
+<P>Do not use the <B>vos changeaddr</B> command to change the list of
+interfaces registered in a VLDB server entry. To change a file server
+machine's IP addresses and server entry, see the instructions that
+follow.
+<A NAME="IDX6232"></A>
+<A NAME="IDX6233"></A>
+<A NAME="IDX6234"></A>
+<P><H3><A NAME="Header_156" HREF="auagd002.htm#ToC_156">To create or edit the server NetInfo file</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Using a text editor, open the <B>/usr/afs/local/NetInfo</B>
+file. Place one IP address in dotted decimal format (for example,
+<TT>192.12.107.33</TT>) on each line. The order
+of entries is not significant.
+<P><LI>If you want the File Server to start using the revised list immediately,
+use the <B>bos restart</B> command to restart the <B>fs</B>
+process. For instructions, see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+</OL>
+<A NAME="IDX6235"></A>
+<A NAME="IDX6236"></A>
+<A NAME="IDX6237"></A>
+<P><H3><A NAME="Header_157" HREF="auagd002.htm#ToC_157">To create or edit the server NetRestrict file</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Using a text editor, open the <B>/usr/afs/local/NetRestrict</B>
+file. Place one IP address in dotted decimal format on each
+line. The order of the addresses is not significant. Use the
+value <B>255</B> as a wildcard that represents all possible addresses in
+that field. For example, the entry
+<TT>192.12.105.255</TT> indicates that the Cache
+Manager does not register any of the addresses in the 192.12.105
+subnet.
+<P><LI>If you want the File Server to start using the revised list immediately,
+use the <B>bos restart</B> command to restart the <B>fs</B>
+process. For instructions, see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>.
+</OL>
+<A NAME="IDX6238"></A>
+<A NAME="IDX6239"></A>
+<P><H3><A NAME="Header_158" HREF="auagd002.htm#ToC_158">To display all server entries from the VLDB</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>vos listaddrs</B> command to display all server entries
+from the VLDB. 
+<PRE>   % <B>vos listaddrs</B>
+</PRE> 
+<P>where <B>lista</B> is the shortest acceptable abbreviation of
+<B>listaddrs</B>.
+<P>The output displays all server entries from the VLDB, each on its own
+line. If a file server machine is multihomed, all of its registered
+addresses appear on the line. The first one is the one reported as a
+volume's site in the output from the <B>vos examine</B> and <B>vos
+listvldb</B> commands.
+<P>VLDB server entries record IP addresses, and the command interpreter has
+the local name service (either a process like the Domain Name Service or a
+local host table) translate them to hostnames before displaying them.
+If an IP address appears in the output, it is not possible to translate
+it.
+<P>The existence of an entry does not necessarily indicate that the machine
+that is still an active file server machine. To remove obsolete server
+entries, see the following instructions.
+</OL>
+<A NAME="IDX6240"></A>
+<A NAME="IDX6241"></A>
+<P><H3><A NAME="Header_159" HREF="auagd002.htm#ToC_159">To remove obsolete server entries from the VLDB</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos changeaddr</B> command to remove a server entry from
+the VLDB. 
+<PRE>   % <B>vos changeaddr</B> &lt;<VAR>original&nbsp;IP&nbsp;address</VAR>> <B>-remove</B>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>ch
+</B><DD>Is the shortest acceptable abbreviation of <B>changeaddr</B>.
+<P><DT><B><VAR>original IP address</VAR>
+</B><DD>Specifies one of the IP addresses currently registered for the file server
+machine in the VLDB. Any of a multihomed file server machine's
+addresses are acceptable to identify it.
+<P><DT><B>-remove
+</B><DD>Removes the server entry.
+</DL>
+</OL>
+<P><H3><A NAME="Header_160" HREF="auagd002.htm#ToC_160">To change a server machine's IP addresses</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the machine is the system control machine or a binary distribution
+machine, and you are also changing its hostname, redefine all relevant
+<B>upclient</B> processes on other server machines to refer to the new
+hostname. Use the <B>bos delete</B> and <B>bos create</B>
+commands as instructed in <A HREF="auagd009.htm#HDRWQ161">Creating and Removing Processes</A>.
+<P><LI>If the machine is a database server machine, edit its entry in the
+<B>/usr/afs/etc/CellServDB</B> file on every server machine in the cell to
+list one of the new IP addresses. If you use the United States edition
+of AFS, you can edit the file on the system control machine and wait the
+required time (by default, five minutes) for the Update Server to distribute
+the changed file to all server machines.
+<P><LI>If the machine is a database server machine, issue the <B>bos
+shutdown</B> command to stop all server processes. If the machine is
+also a file server, the volumes on it are inaccessible during this
+time. For a complete description of the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   % <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE>
+<P><LI>Use the utilities provided with the operating system to change one or more
+of the machine's IP addresses.
+<P><LI>If appropriate, edit the <B>/usr/afs/local/NetInfo</B> file, the
+<B>/usr/afs/local/NetRestrict</B> file, or both, to reflect the changed
+addresses. Instructions appear earlier in this section.
+<P><LI>If the machine is a database server machine, issue the <B>bos
+restart</B> command to restart all server processes on the machine.
+For complete instructions for the <B>bos restart</B> command, see <A HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-all</B>
+</PRE> 
+<P>At the same time, issue the <B>bos restart</B> command on all other
+database server machines in the cell to restart the database server processes
+only (the Authentication, Backup, Protection, and Volume Location
+Servers). Issue the commands in quick succession so that all of the
+database server processes vote in the quorum election. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>kaserver buserver ptserver vlserver</B>
+</PRE> 
+<P>If you are changing IP addresses on every database server machine in the
+cell, you must also issue the <B>bos restart</B> command on every file
+server machine in the cell to restart the <B>fs</B> process.
+<P><LI>If the machine is not a database server machine, issue the <B>bos
+restart</B> command to restart the <B>fs</B> process (if the machine is
+a database server, you already restarted the process in the previous
+step). The File Server automatically compiles a new list of interfaces,
+records them in the <B>/usr/afs/local/sysid</B> file, and registers them
+in its VLDB server entry. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>fs</B>
+</PRE>
+<P><LI>If the machine is a database server machine, edit its entry in the
+<B>/usr/vice/etc/CellServDB</B> file on every client machine in the cell
+to list one of the new IP addresses. Instructions appear in <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P><LI>If there are machine entries in the Protection Database for the
+machine's previous IP addresses, use the <B>pts rename</B> command to
+change them to the new addresses. For instructions, see <A HREF="auagd019.htm#HDRWQ556">Changing a Protection Database Entry's Name</A>.
+</OL>
+<A NAME="IDX6242"></A>
+<A NAME="IDX6243"></A>
+<A NAME="IDX6244"></A>
+<HR><H2><A NAME="HDRWQ139" HREF="auagd002.htm#ToC_161">Rebooting a Server Machine</A></H2>
+<P>You can reboot a server machine either by typing the
+appropriate commands at its console or by issuing the <B>bos exec</B>
+command on a remote machine. Remote rebooting can be more convenient,
+because you do not need to leave your present location, but you cannot track
+the progress of the reboot as you can at the console. Remote rebooting
+is possible because the server machine's operating system recognizes the
+BOS Server, which executes the <B>bos exec</B> command, as the local
+superuser <B>root</B>.
+<P>Rebooting server machines is part of routine maintenance in some cells, and
+some instructions in the AFS documentation include it as a step. It is
+certainly not intended to be the standard method for recovering from
+AFS-related problems, however, but only a last resort when the machine is
+unresponsive and you have tried all other reasonable options.
+<P>Rebooting causes a service outage. If the machine stores volumes,
+they are all inaccessible until the reboot completes and the File Server
+reattaches them. If the machine is a database server machine,
+information from the databases can become unavailable during the reelection of
+the synchronization site for each database server process; the VL Server
+outage generally has the greatest impact, because the Cache Manager must be
+able to access the VLDB to fetch AFS data.
+<P>By convention, a server machine's AFS initialization file includes the
+following command to restart the BOS Server after each reboot. It
+starts the other AFS server processes listed in the local
+<B>/usr/afs/local/BosConfig</B> file. These instructions assume
+that the initialization file includes the command.
+<PRE>   /usr/afs/bin/bosserver &amp;
+</PRE>
+<P><H3><A NAME="HDRWQ140" HREF="auagd002.htm#ToC_162">To reboot a file server machine from its console</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Issue the <B>bos shutdown</B> command to shut down all AFS server
+processes other than the BOS Server, which terminates safely when you reboot
+the machine. Include the <B>-localauth</B> flag because you are
+logged in as the local superuser <B>root</B> but do not necessarily have
+administrative tokens. For a complete description of the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   # <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-localauth</B> [<B>-wait</B>]
+</PRE>
+<P><LI>Reboot the machine. On many system types, the appropriate command
+is <B>shutdown</B>, but the appropriate options vary; consult your
+UNIX administrator's guide. 
+<PRE>    # <B>shutdown</B>
+</PRE>
+</OL>
+<A NAME="IDX6245"></A>
+<A NAME="IDX6246"></A>
+<P><H3><A NAME="HDRWQ141" HREF="auagd002.htm#ToC_163">To reboot a file server machine remotely</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine you are rebooting. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos shutdown</B> to halt AFS server processes other than
+the BOS Server, which terminates safely when you turn off the machine.
+For a complete description of the command, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   % <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-wait</B>]
+</PRE>
+<P><LI>Issue the <B>bos exec</B> command to reboot the machine
+remotely. 
+<PRE>   % <B>bos exec</B> &lt;<VAR>machine&nbsp;name</VAR>> <VAR>reboot_command</VAR>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine to reboot.
+<P><DT><B><VAR>reboot_command</VAR>
+</B><DD>Is the rebooting command for the machine's operating system.
+The <B>shutdown</B> command is appropriate on many system types, but
+consult your operating system documentation.
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd007.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd009.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

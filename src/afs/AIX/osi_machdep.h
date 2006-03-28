@@ -69,6 +69,8 @@ extern simple_lock_data afs_global_lock;
 			    simple_unlock((void *)&afs_global_lock);	\
 			} while(0)
 #define ISAFS_GLOCK()	lock_mine((void *)&afs_global_lock)
+
+#define ifnet_flags(x) (x?(x)->if_flags:0)
 #endif
 
 #endif /* _OSI_MACHDEP_H_ */

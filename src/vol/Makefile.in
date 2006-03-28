@@ -16,14 +16,14 @@ LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a
 
-CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS}
+CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS}
 
 PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h\
 	fssync.h ihandle.h namei_ops.h
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
-	 namei_ops.o fstab.o
+	 namei_ops.o
 
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o
 
@@ -147,6 +147,9 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 		hp?00_ux101 | hp_ux10? )		\
 			${CC} ${CFLAGS} -D_FILE64 -c ${srcdir}/listinodes.c \
 				;;			\
+		hp_ux11* )		\
+			${CC} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -c ${srcdir}/listinodes.c \
+				;;			\
 		* )	${CC} ${CFLAGS} -c ${srcdir}/listinodes.c \
 				;;			\
 	esac
@@ -160,9 +163,9 @@ gi: ${TOP_LIBDIR}/libsys.a
 			${CC} ${LDFLAGS} -o gi gi.o ${TOP_LIBDIR}/libsys.a;; \
         esac
 
-volinfo: vol-info.o physio.o ihandle.o fstab.o ${LIBS}
+volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
-		ihandle.o fstab.o ${LIBS} ${XLIBS}
+		ihandle.o ${LIBS} ${XLIBS}
 
 vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}

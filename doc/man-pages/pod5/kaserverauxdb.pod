@@ -1,0 +1,39 @@
+=head1 NAME
+
+kaserverauxdb - Records failed authentication attempts
+
+=head1 DESCRIPTION
+
+The file F<kaserverauxdb> records failed authentication attempts for the
+local Authentication Server. The server creates it automatically in the
+F</usr/afs/local> directory by default; use the B<-localfiles> argument to
+the B<kaserver> command to specify an alternate directory.
+
+The F<kaserverauxdb> file is an internal database used by the
+Authentication Server to prevent access by users who have exceeded the
+limit on failed authentication attempts defined in their Authentication
+Database entry. The Authentication Server refuses further attempts to
+authenticate to an account listed in the database until either an AFS
+system administrator issues the B<kas unlock> command to unlock the
+account, or the timeout period defined in the user's Authentication
+Database entry passes.
+
+The F<kaserverauxdb> file is in binary format, so its contents are not
+directly accessible. However, the output from the B<kas examine> command
+reports an account's maximum number of failed attempts, the lockout time,
+and whether the account is currently locked.
+
+=head1 SEE ALSO
+
+L<kaserver.DB0(5)>,
+L<kas_examine(8)>,
+L<kas_unlock(8)>,
+L<kaserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

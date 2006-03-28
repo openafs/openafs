@@ -38,7 +38,7 @@ A. Creating the proper directory structure.
       i386_linux22, i386_linux24, i386_linux26
       i386_umlinux22, i386_umlinux24
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36
+         i386_obsd36, i386_obsd37, i386_obsd38
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)

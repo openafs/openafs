@@ -1,0 +1,596 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH fileserver 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+fileserver \- Initializes the File Server component of the fs process
+.SH "SYNOPSIS"
+\fBfileserver\fR <<\ [\fB\-d\fR\ <\fIdebug\ level\fR] >>> <<\ [\fB\-p\fR\ <\fInumber\ of\ processes\fR] >>>
+    <<\ [\fB\-spare\fR\ <\fInumber\ of\ spare\ blocks\fR] >>>
+    <<\ [\fB\-pctspare\fR\ <\fIpercentage\ spare\fR] >>> <<\ [\fB\-b\fR\ <\fIbuffers\fR] >>>
+    <<\ [\fB\-l\fR\ <\fIlarge\ vnodes\fR] >>> <<\ [\fB\-s\fR\ <\fIsmall\ nodes\fR] >>>
+    <<\ [\fB\-vc\fR\ <\fIvolume\ cachesize\fR] >>> <<\ [\fB\-w\fR\ <\fIcall\ back\ wait\ interval\fR] >>>
+    <<\ [\fB\-cb\fR\ <\fInumber\ of\ call\ backs\fR] >>> [\fB\-banner\fR] [\fB\-novbc\fR]
+    <<\ [\fB\-implicit\fR\ <\fIadmin\ mode\ bits:\ rlidwka\fR] >>>
+    <<\ [\fB\-hr\fR\ <\fInumber\ of\ hours\ between\ refreshing\ the\ host\ cps\fR] >>>
+    [\fB\-busyat\fR <\fI< redirect clients when queue \fR n >>>]
+    <<\ [\fB\-rxpck\fR\ <\fInumber\ of\ rx\ extra\ packets\fR] >>>
+    [\fB\-rxdbg\fR] [\fB\-rxdbge\fR] <<\ [\fB\-m\fR\ <\fImin\ percentage\ spare\ in\ partition\fR] >>>
+    [\fB\-lock\fR] [\fB\-L\fR] [\fB\-S\fR] <<\ [\fB\-k\fR\ <\fIstack\ size\fR] >>>
+    <<\ [\fB\-realm\fR\ <\fIKerberos\ realm\ name\fR] >>>
+    <<\ [\fB\-udpsize\fR\ <\fIsize\ of\ socket\ buffer\ in\ bytes\fR] >>>
+    [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR] [\fB\-help\fR]
+.SH "DESCRIPTION"
+The \fBfileserver\fR command initializes the File Server component of the
+\f(CWfs\fR process. In the conventional configuration, its binary file is
+located in the \fI/usr/afs/bin\fR directory on a file server machine.
+.PP
+The \fBfileserver\fR command is not normally issued at the command shell
+prompt, but rather placed into a database server machine's
+\fI/usr/afs/local/BosConfig\fR file with the \fBbos create\fR command. If it is
+ever issued at the command shell prompt, the issuer must be logged onto a
+file server machine as the local superuser \f(CWroot\fR.
+.PP
+The File Server creates the \fI/usr/afs/logs/FileLog\fR log file as it
+initializes, if the file does not already exist. It does not write a
+detailed trace by default, but use the \fB\-d\fR option to increase the amount
+of detail. Use the \fBbos getlog\fR command to display the contents of the
+log file.
+.PP
+The command's arguments enable the administrator to control many aspects
+of the File Server's performance, as detailed in the \fIOPTIONS\fR manpage.  By default
+the \fBfileserver\fR command sets values for many arguments that are suitable
+for a medium-sized file server machine. To set values suitable for a small
+or large file server machine, use the \fB\-S\fR or \fB\-L\fR flag
+respectively. The following list describes the parameters and
+corresponding argument for which the \fBfileserver\fR command sets default
+values, and the table below summarizes the setting for each of the three
+machine sizes.
+.Ip "\(bu" 4
+The maximum number of lightweight processes (LWPs) the File Server uses to
+handle requests for data; corresponds to the \fB\-p\fR argument. The File
+Server always uses a minimum of 32 \s-1KB\s0 for these processes.
+.Ip "\(bu" 4
+The maximum number of directory blocks the File Server caches in memory;
+corresponds to the \fB\-b\fR argument. Each cached directory block (buffer)
+consumes 2,092 bytes of memory.
+.Ip "\(bu" 4
+The maximum number of large vnodes the File Server caches in memory for
+tracking directory elements; corresponds to the \fB\-l\fR argument. Each large
+vnode consumes 292 bytes of memory.
+.Ip "\(bu" 4
+The maximum number of small vnodes the File Server caches in memory for
+tracking file elements; corresponds to the \fB\-s\fR argument.  Each small
+vnode consumes 100 bytes of memory.
+.Ip "\(bu" 4
+The maximum volume cache size, which determines how many volumes the File
+Server can cache in memory before having to retrieve data from disk;
+corresponds to the \fB\-vc\fR argument.
+.Ip "\(bu" 4
+The maximum number of callback structures the File Server caches in
+memory; corresponds to the \fB\-cb\fR argument. Each callback structure
+consumes 16 bytes of memory.
+.Ip "\(bu" 4
+The maximum number of Rx packets the File Server uses; corresponds to the
+\fB\-rxpck\fR argument. Each packet consumes 1544 bytes of memory.
+.PP
+The default values are:
+.PP
+.Vb 9
+\&  Parameter (Argument)               Small (-S)     Medium   Large (-L)
+\&  ---------------------------------------------------------------------
+\&  Number of LWPs (-p)                        6           9           12
+\&  Number of cached dir blocks (-b)          70          90          120
+\&  Number of cached large vnodes (-l)       200         400          600
+\&  Number of cached small vnodes (-s)       200         400          600
+\&  Maximum volume cache size (-vc)          200         400          600
+\&  Number of callbacks (-cb)             20,000      60,000       64,000
+\&  Number of Rx packets (-rxpck)            100         150          200
+.Ve
+To override any of the values, provide the indicated argument (which can
+be combined with the \fB\-S\fR or \fB\-L\fR flag).
+.PP
+The amount of memory required for the File Server varies. The approximate
+default memory usage is 751 \s-1KB\s0 when the \fB\-S\fR flag is used (small
+configuration), 1.1 \s-1MB\s0 when all defaults are used (medium configuration),
+and 1.4 \s-1MB\s0 when the \fB\-L\fR flag is used (large configuration). If
+additional memory is available, increasing the value of the \fB\-cb\fR and
+\fB\-vc\fR arguments can improve File Server performance most directly.
+.PP
+By default, the File Server allows a volume to exceed its quota by 1 \s-1MB\s0
+when an application is writing data to an existing file in a volume that
+is full. The File Server still does not allow users to create new files in
+a full volume. To change the default, use one of the following arguments:
+.Ip "\(bu" 4
+Set the \fB\-spare\fR argument to the number of extra kilobytes that the File
+Server allows as overage. A value of \f(CW0\fR allows no overage.
+.Ip "\(bu" 4
+Set the \fB\-pctspare\fR argument to the percentage of the volume's quota the
+File Server allows as overage.
+.PP
+By default, the File Server implicitly grants the \f(CWa\fR (administer) and
+\f(CWl\fR (lookup) permissions to system:administrators on the access control
+list (\s-1ACL\s0) of every directory in the volumes stored on its file server
+machine. In other words, the group's members can exercise those two
+permissions even when an entry for the group does not appear on an \s-1ACL\s0. To
+change the set of default permissions, use the \fB\-implicit\fR argument.
+.PP
+The File Server maintains a \fIhost current protection subgroup\fR (\fIhost
+\s-1CPS\s0\fR) for each client machine from which it has received a data access
+request. Like the \s-1CPS\s0 for a user, a host \s-1CPS\s0 lists all of the Protection
+Database groups to which the machine belongs, and the File Server compares
+the host \s-1CPS\s0 to a directory's \s-1ACL\s0 to determine in what manner users on the
+machine are authorized to access the directory's contents. When the \fBpts
+adduser\fR or \fBpts removeuser\fR command is used to change the groups to
+which a machine belongs, the File Server must recompute the machine's host
+\s-1CPS\s0 in order to notice the change. By default, the File Server contacts
+the Protection Server every two hours to recompute host CPSs, implying
+that it can take that long for changed group memberships to become
+effective. To change this frequency, use the \fB\-hr\fR argument.
+.PP
+The File Server generates the following message when a partition is nearly
+full:
+.PP
+.Vb 1
+\&   No space left on device
+.Ve
+This command does not use the syntax conventions of the \s-1AFS\s0 command
+suites. Provide the command name and all option names in full.
+.SH "CAUTIONS"
+Do not use the \fB\-k\fR and \-w arguments, which are intended for use by the
+AFS Development group only. Changing them from their default values can
+result in unpredictable File Server behavior.  In any case, on many
+operating systems the File Server uses native threads rather than the LWP
+threads, so using the \fB\-k\fR argument to set the number of LWP threads has
+no effect.
+.PP
+Do not specify both the \fB\-spare\fR and \fB\-pctspare\fR arguments. Doing so
+causes the File Server to exit, leaving an error message in the
+\fI/usr/afs/logs/FileLog\fR file.
+.PP
+Options that are available only on some system types, such as the \fB\-m\fR
+and \fB\-lock\fR options, appear in the output generated by the \fB\-help\fR
+option only on the relevant system type.
+.SH "OPTIONS"
+.Ip "\fB\-d\fR <\fIdebug level\fR>" 4
+Sets the detail level for the debugging trace written to the
+\fI/usr/afs/logs/FileLog\fR file. Provide one of the following values, each
+of which produces an increasingly detailed trace: \f(CW0\fR, \f(CW1\fR, \f(CW5\fR, \f(CW25\fR,
+and \f(CW125\fR. The default value of \f(CW0\fR produces only a few messages.
+.Ip "\fB\-p\fR <\fInumber of processes\fR>" 4
+Sets the number of threads to run. Provide a positive integer. The File
+Server creates and uses five threads for special purposes, in addition to
+the number specified (but if this argument specifies the maximum possible
+number, the File Server automatically uses five of the threads for its own
+purposes).
+.Sp
+The maximum number of threads can differ in each release of \s-1AFS\s0.  Consult
+the \fI\s-1IBM\s0 \s-1AFS\s0 Release Notes\fR for the current release.
+.Ip "\fB\-spare\fR <\fInumber of spare blocks\fR>" 4
+Specifies the number of additional kilobytes an application can store in a
+volume after the quota is exceeded. Provide a positive integer; a value of
+\f(CW0\fR prevents the volume from ever exceeding its quota. Do not combine
+this argument with the \fB\-pctspare\fR argument.
+.Ip "\fB\-pctspare\fR <\fIpercentage spare\fR>" 4
+Specifies the amount by which the File Server allows a volume to exceed
+its quota, as a percentage of the quota. Provide an integer between \f(CW0\fR
+and \f(CW99\fR. A value of \f(CW0\fR prevents the volume from ever exceeding its
+quota. Do not combine this argument with the \fB\-spare\fR argument.
+.Ip "\fB\-b\fR <\fIbuffers\fR>" 4
+Sets the number of directory buffers. Provide a positive integer.
+.Ip "\fB\-l\fR <\fIlarge vnodes\fR>" 4
+Sets the number of large vnodes available in memory for caching directory
+elements. Provide a positive integer.
+.Ip "\fB\-s\fR <\fIsmall nodes\fR>" 4
+Sets the number of small vnodes available in memory for caching file
+elements. Provide a positive integer.
+.Ip "\fB\-vc\fR <\fIvolume cachesize\fR>" 4
+Sets the number of volumes the File Server can cache in memory.  Provide a
+positive integer.
+.Ip "\fB\-w\fR <\fIcall back wait interval\fR>" 4
+Sets the interval at which the daemon spawned by the File Server performs
+its maintenance tasks. Do not use this argument; changing the default
+value can cause unpredictable behavior.
+.Ip "\fB\-cb\fR <\fInumber of callbacks\fR>" 4
+Sets the number of callbacks the File Server can track. Provide a positive
+integer.
+.Ip "\fB\-banner\fR" 4
+Prints the following banner to \fI/dev/console\fR about every 10 minutes.
+.Sp
+.Vb 1
+\&   File Server is running at I<time>.
+.Ve
+.Ip "\fB\-novbc\fR" 4
+Prevents the File Server from breaking the callbacks that Cache Managers
+hold on a volume that the File Server is reattaching after the volume was
+offline (as a result of the \fBvos restore\fR command, for example). Use of
+this flag is strongly discouraged.
+.Ip "\fB\-implicit\fR <\fIadmin mode bits\fR>" 4
+Defines the set of permissions granted by default to the
+system:administrators group on the \s-1ACL\s0 of every directory in a volume
+stored on the file server machine. Provide one or more of the standard
+permission letters (\f(CWrlidwka\fR) and auxiliary permission letters
+(\f(CWABCDEFGH\fR), or one of the shorthand notations for groups of permissions
+(\f(CWall\fR, \f(CWnone\fR, \f(CWread\fR, and \f(CWwrite\fR). To review the meaning of the
+permissions, see the \fBfs setacl\fR reference page.
+.Ip "\fB\-hr\fR <\fInumber of hours between refreshing the host cps\fR>" 4
+Specifies how often the File Server refreshes its knowledge of the
+machines that belong to protection groups (refreshes the host CPSs for
+machines). The File Server must update this information to enable users
+from machines recently added to protection groups to access data for which
+those machines now have the necessary \s-1ACL\s0 permissions.
+.Ip "\fB\-busyat\fR <\fI< redirect clients when queue \fR n >>>" 4
+Defines the number of incoming RPCs that can be waiting for a response
+from the File Server before the File Server returns the error code
+\f(CWVBUSY\fR to the Cache Manager that sent the latest \s-1RPC\s0. In response, the
+Cache Manager retransmits the \s-1RPC\s0 after a delay. This argument prevents
+the accumulation of so many waiting RPCs that the File Server can never
+process them all. Provide a positive integer.  The default value is
+\f(CW600\fR.
+.Ip "\fB\-rxpck\fR <\fInumber of rx extra packets\fR>" 4
+Controls the number of Rx packets the File Server uses to store data for
+incoming RPCs that it is currently handling, that are waiting for a
+response, and for replies that are not yet complete. Provide a positive
+integer.
+.Ip "\fB\-rxdbg\fR" 4
+Writes a trace of the File Server's operations on Rx packets to the file
+\fI/usr/afs/logs/rx_dbg\fR.
+.Ip "\fI\-rxdbge\fR" 4
+Writes a trace of the File Server's operations on Rx events (such as
+retransmissions) to the file \fI/usr/afs/logs/rx_dbg\fR.
+.Ip "\fI\-m\fR <\fImin percentage spare in partition\fR>" 4
+Specifies the percentage of each \s-1AFS\s0 server partition that the \s-1AIX\s0 version
+of the File Server creates as a reserve. Specify an integer value between
+\f(CW0\fR and \f(CW30\fR; the default is 8%. A value of \f(CW0\fR means that the
+partition can become completely full, which can have serious negative
+consequences.
+.Ip "\fB\-lock\fR" 4
+Prevents any portion of the fileserver binary from being paged (swapped)
+out of memory on a file server machine running the \s-1IRIX\s0 operating system.
+.Ip "\fB\-L\fR" 4
+Sets values for many arguments in a manner suitable for a large file
+server machine. Combine this flag with any option except the \fB\-S\fR flag;
+omit both flags to set values suitable for a medium-sized file server
+machine.
+.Ip "\fB\-S\fR" 4
+Sets values for many arguments in a manner suitable for a small file
+server machine. Combine this flag with any option except the \fB\-L\fR flag;
+omit both flags to set values suitable for a medium-sized file server
+machine.
+.Ip "\fB\-k\fR <\fIstack size\fR>" 4
+Sets the \s-1LWP\s0 stack size in units of 1 kilobyte. Do not use this argument,
+and in particular do not specify a value less than the default of \f(CW24\fR.
+.Ip "\fB\-realm\fR <\fIKerberos realm name\fR>" 4
+Defines the Kerberos realm name for the File Server to use. If this
+argument is not provided, it uses the realm name corresponding to the cell
+listed in the local \fI/usr/afs/etc/ThisCell\fR file.
+.Ip "\fB\-udpsize\fR <\fIsize of socket buffer in bytes\fR>" 4
+Sets the size of the \s-1UDP\s0 buffer, which is 64 \s-1KB\s0 by default. Provide a
+positive integer, preferably larger than the default.
+.Ip "\fB\-enable_peer_stats\fR" 4
+Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific \s-1UDP\s0 port on another machine,
+a separate record is kept for each type of \s-1RPC\s0 (FetchFile, GetStatus, and
+so on) sent or received. To display or otherwise access the records, use
+the Rx Monitoring \s-1API\s0.
+.Ip "\fB\-enable_process_stats\fR" 4
+Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of \s-1RPC\s0 (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring \s-1API\s0.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following \fBbos create\fR command creates an fs process on the file
+server machine \f(CWfs2.abc.com\fR that uses the large configuration size, and
+allows volumes to exceed their quota by 10%. Type the command on a single
+line:
+.PP
+.Vb 3
+\&   % bos create -server fs2.abc.com -instance fs -type fs \e
+\&                -cmd "/usr/afs/bin/fileserver -pctspare 10 \e
+\&                -L" /usr/afs/bin/volserver /usr/afs/bin/salvager
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be logged in as the superuser \f(CWroot\fR on a file server
+machine to issue the command at a command shell prompt. It is conventional
+instead to create and start the process by issuing the \fBbos create\fR
+command.
+.SH "SEE ALSO"
+the \fIBosConfig(5)\fR manpage,
+the \fIFileLog(5)\fR manpage,
+the \fIbos_create(8)\fR manpage,
+the \fIbos_getlog(8)\fR manpage,
+the \fIfs_setacl(1)\fR manpage,
+the \fIsalvager(8)\fR manpage,
+the \fIvolserver(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "fileserver 8"
+.IX Name "fileserver - Initializes the File Server component of the fs process"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-d\fR <\fIdebug level\fR>"
+
+.IX Item "\fB\-p\fR <\fInumber of processes\fR>"
+
+.IX Item "\fB\-spare\fR <\fInumber of spare blocks\fR>"
+
+.IX Item "\fB\-pctspare\fR <\fIpercentage spare\fR>"
+
+.IX Item "\fB\-b\fR <\fIbuffers\fR>"
+
+.IX Item "\fB\-l\fR <\fIlarge vnodes\fR>"
+
+.IX Item "\fB\-s\fR <\fIsmall nodes\fR>"
+
+.IX Item "\fB\-vc\fR <\fIvolume cachesize\fR>"
+
+.IX Item "\fB\-w\fR <\fIcall back wait interval\fR>"
+
+.IX Item "\fB\-cb\fR <\fInumber of callbacks\fR>"
+
+.IX Item "\fB\-banner\fR"
+
+.IX Item "\fB\-novbc\fR"
+
+.IX Item "\fB\-implicit\fR <\fIadmin mode bits\fR>"
+
+.IX Item "\fB\-hr\fR <\fInumber of hours between refreshing the host cps\fR>"
+
+.IX Item "\fB\-busyat\fR <\fI< redirect clients when queue \fR n >>>"
+
+.IX Item "\fB\-rxpck\fR <\fInumber of rx extra packets\fR>"
+
+.IX Item "\fB\-rxdbg\fR"
+
+.IX Item "\fI\-rxdbge\fR"
+
+.IX Item "\fI\-m\fR <\fImin percentage spare in partition\fR>"
+
+.IX Item "\fB\-lock\fR"
+
+.IX Item "\fB\-L\fR"
+
+.IX Item "\fB\-S\fR"
+
+.IX Item "\fB\-k\fR <\fIstack size\fR>"
+
+.IX Item "\fB\-realm\fR <\fIKerberos realm name\fR>"
+
+.IX Item "\fB\-udpsize\fR <\fIsize of socket buffer in bytes\fR>"
+
+.IX Item "\fB\-enable_peer_stats\fR"
+
+.IX Item "\fB\-enable_process_stats\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf023.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf025.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRCLI_NETINFO" HREF="auarf002.htm#ToC_22">NetInfo (client version)</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX3942"></A>
+<A NAME="IDX3943"></A>
+<A NAME="IDX3944"></A>
+<A NAME="IDX3945"></A>
+<A NAME="IDX3946"></A>
+<A NAME="IDX3947"></A>
+<P>Defines client machine interfaces to register with the File Server
+<P><STRONG>Description</STRONG>
+<P>The <B>NetInfo</B> file lists the IP addresses of one or more of the
+local machine's network interfaces. If it exists in the
+<B>/usr/vice/etc</B> directory when the Cache Manager initializes, the
+Cache Manager uses its contents as the basis for a list of local
+interfaces. Otherwise, the Cache Manager uses the list of interfaces
+configured with the operating system. It then removes from the list any
+addresses that appear in the <B>/usr/vice/etc/NetRestrict</B> file, if it
+exists. The Cache Manager records the resulting list in kernel
+memory. The first time it establishes a connection to a File Server, it
+registers the list with the File Server.
+<P>The File Server uses the addresses when it initiates a remote procedure
+call (RPC) to the Cache Manager (as opposed to responding to an RPC sent by
+the Cache Manager). There are two common circumstances in which the
+File Server initiates RPCs: when it breaks callbacks and when it pings
+the client machine to verify that the Cache Manager is still
+accessible.
+<P>The <B>NetInfo</B> file is in ASCII format. One of the
+machine's IP addresses appears on each line, in dotted decimal
+format. The File Server initially uses the address that appears first
+in the list. The order of the remaining addresses is not
+significant: if an RPC to the first interface fails, the File Server
+simultaneously sends RPCs to all of the other interfaces in the list.
+Whichever interface replies first is the one to which the File Server then
+sends pings and RPCs to break callbacks.
+<P>To prohibit the Cache Manager absolutely from using one or more addresses,
+list them in the <B>NetRestrict</B> file. To display the addresses
+the Cache Manager is currently registering with File Servers, use the <B>fs
+getclientaddrs</B> command. To replace the current list of interfaces
+with a new one between reboots of the client machine, use the <B>fs
+setclientaddrs</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf026.htm#HDRCLI_NETRESTRICT">NetRestrict (client version)</A>
+<P><A HREF="auarf145.htm#HDRFS_GETCLIENTADDRS">fs getclientaddrs</A>
+<P><A HREF="auarf160.htm#HDRFS_SETCLIENTADDRS">fs setclientaddrs</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf023.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf025.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

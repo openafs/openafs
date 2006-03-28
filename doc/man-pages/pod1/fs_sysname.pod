@@ -1,0 +1,98 @@
+=head1 NAME
+
+fs sysname - Reports or sets the CPU/operating system type
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs sysname> S<<< [B<-newsys> <I<new sysname>>] >>> [B<-help>]
+
+B<fs sy> S<<< [B<-n> <I<new sysname>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs sysname> command sets or displays the local machine's
+CPU/operating system type as recorded in kernel memory. The Cache Manager
+substitutes the string for the I<@sys> variable which can occur in AFS
+pathnames; the I<IBM AFS Quick Beginnings> and I<IBM AFS Administration
+Guide> explain how using I<@sys> can simplify cell configuration. It is
+best to use it sparingly, however, because it can make the effect of
+changing directories unpredictable.
+
+The command always applies to the local machine only. If issued on an NFS
+client machine accessing AFS via the NFS/AFS Translator, the string is set
+or reported for the NFS client machine. The Cache Manager on the AFS
+client machine serving as the NFS client's NFS/AFS translator machine
+stores the value in its kernel memory, and so can provide the NFS client
+with the proper version of program binaries when the user issues commands
+for which the pathname to the binaries includes I<@sys>. There is a
+separate record for each user logged into the NFS client, which implies
+that if a user adopts a new identity (UNIX UID) during a login session on
+the NFS client -- perhaps by using the UNIX B<su> command -- he or she
+must verify that the correct string is set for the new identity also.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-newsys> <I<new sysname>>
+
+Sets the CPU/operating system indicator string for the local machine. If
+this argument is omitted, the output displays the current setting
+instead. AFS uses a standardized set of strings; consult the I<IBM AFS
+Quick Beginnings> or I<AFS Release Notes>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+When the B<-newsys> argument is omitted, the output reports the machine's
+system type in the following format:
+
+   Current sysname is '<system_type>'
+
+=head1 EXAMPLES
+
+The following example shows the output produced on a Sun SPARCStation
+running Solaris 5.7:
+
+   % fs sysname
+   Current sysname is 'sun4x_57'
+
+The following command defines a machine to be a IBM RS/6000 running AIX
+4.2:
+
+   % fs sysname -newsys rs_aix42
+
+=head1 PRIVILEGE REQUIRED
+
+To display the current setting, no privilege is required. To include the
+B<-newsys> argument on an AFS client machine, the issuer must be logged in
+as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<fs_exportafs(1)>,
+L<sys(1)>
+
+I<IBM AFS Quick Beginnings>
+
+I<IBM AFS Administration Guide>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

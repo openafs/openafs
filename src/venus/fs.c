@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.3 2005/07/11 19:03:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.4 2006/01/23 21:07:42 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -69,7 +69,7 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd();
+static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd();
 
 extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
@@ -3437,6 +3437,11 @@ defect 3069
     ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, 0, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 
+    /* try to find volume location information */
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, 0,
+			  "get fid for file(s)");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
 	rx_Finalize();
@@ -3789,6 +3794,28 @@ RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
     if (code != 0) {
 	Die(errno, NULL);
 	return 1;
+    }
+
+    return 0;
+}
+
+static int
+GetFidCmd(struct cmd_syndesc *as, char *arock)
+{
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    for (ti = as->parms[0].items; ti; ti = ti->next) {
+      struct VenusFid vfid;
+      
+      blob.out_size = sizeof(struct VenusFid);
+      blob.out = (char *) &vfid;
+      blob.in_size = 0;
+      
+      if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+	printf("File %s (%u.%u.%u) contained in volume %u\n",
+	       ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
+	       vfid.Fid.Volume);
+      }
     }
 
     return 0;

@@ -47,7 +47,8 @@
   *                system problems, which can only be ameliorated by changing
   *                NINODE (or equivalent) and rebuilding the kernel.
   *		   This option is now disabled.
-  *	-logfile   Place where to put the logfile (default in <cache>/etc/AFSLog.
+  *	-logfile   [OBSOLETE] Place where to put the logfile (default in
+  *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
@@ -57,7 +58,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.10.4.1 2005/10/13 21:01:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.16 2005/12/01 04:03:30 shadow Exp $");
 
 #define VFS 1
 
@@ -155,6 +156,9 @@ void set_staticaddrs(void);
 #include <sys/resource.h>
 #endif
 #ifdef AFS_DARWIN_ENV
+#ifdef AFS_DARWIN80_ENV
+#include <sys/ioctl.h>
+#endif
 #include <mach/mach.h>
 /* Symbols from the DiskArbitration framework */
 kern_return_t DiskArbStart(mach_port_t *);
@@ -185,7 +189,6 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 
 
 #define CACHEINFOFILE   "cacheinfo"
-#define	AFSLOGFILE	"AFSLog"
 #define	DCACHEFILE	"CacheItems"
 #define	VOLINFOFILE	"VolumeItems"
 #define CELLINFOFILE	"CellItems"
@@ -230,14 +233,13 @@ struct in_addr_42 {
 afs_int32 enable_rxbind = 0;
 afs_int32 afs_shutdown = 0;
 afs_int32 cacheBlocks;		/*Num blocks in the cache */
-afs_int32 cacheFiles = 1000;	/*Optimal # of files in workstation cache */
-afs_int32 cacheStatEntries = 300;	/*Number of stat cache entries */
+afs_int32 cacheFiles;	/*Optimal # of files in workstation cache */
+afs_int32 cacheStatEntries;	/*Number of stat cache entries */
 char cacheBaseDir[1024];	/*Where the workstation AFS cache lives */
 char confDir[1024];		/*Where the workstation AFS configuration lives */
 char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
 char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
 char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
-char fullpn_AFSLogFile[1024];	/*Full pathname of AFSLOGFILE */
 char fullpn_CacheInfo[1024];	/*Full pathname of CACHEINFO */
 char fullpn_VFile[1024];	/*Full pathname of data cache files */
 char *vFilePtr;			/*Ptr to the number part of above pathname */
@@ -246,6 +248,7 @@ int sawCacheBaseDir = 0;
 int sawCacheBlocks = 0;
 int sawDCacheSize = 0;
 int sawBiod = 0;
+int sawCacheStatEntries = 0;
 char cacheMountDir[1024];	/*Mount directory for AFS */
 char rootVolume[64] = "root.afs";	/*AFS root volume name */
 afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
@@ -260,8 +263,8 @@ static int filesSet = 0;	/*True if number of files explicitly set */
 static int nFilesPerDir = 2048;	/* # files per cache dir */
 static int nDaemons = 2;	/* Number of background daemons */
 static int chunkSize = 0;	/* 2^chunkSize bytes per chunk */
-static int dCacheSize = 300;	/* # of dcache entries */
-static int vCacheSize = 50;	/* # of volume cache entries */
+static int dCacheSize;		/* # of dcache entries */
+static int vCacheSize = 200;	/* # of volume cache entries */
 static int rootVolSet = 0;	/*True if root volume name explicitly set */
 int addrNum;			/*Cell server address index being printed */
 static int cacheFlags = 0;	/*Flags to cache manager */
@@ -459,7 +462,7 @@ int PartSizeOverflow(char *path, int cs)
 	totalblks /= (1024 / bsize);
     }
 
-    mint = totalblks - ((totalblks * 5) / 100);
+    mint = totalblks / 100 * 95;
     if (cs > mint) {
 	printf
 	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",
@@ -587,7 +590,7 @@ CreateCacheSubDir(basename, dirNum)
     /* Build the new cache subdirectory */
     sprintf(dir, "%s/D%d", basename, dirNum);
 
-    if (afsd_verbose)
+    if (afsd_debug)
 	printf("%s: Creating cache subdir '%s'\n", rn, dir);
 
     if ((ret = mkdir(dir, 0700)) != 0) {
@@ -657,7 +660,7 @@ CreateCacheFile(fname, statp)
     int cfd;			/*File descriptor to AFS cache file */
     int closeResult;		/*Result of close() */
 
-    if (afsd_verbose)
+    if (afsd_debug)
 	printf("%s: Creating cache file '%s'\n", rn, fname);
     cfd = open(fname, createAndTrunc, ownerRWmode);
     if (cfd <= 0) {
@@ -689,10 +692,23 @@ static void
 CreateFileIfMissing(char *fullpn, int missing)
 {
     if (missing) {
-	if (afsd_verbose)
-	    printf("CreateFileIfMissing: Creating '%s'\n", fullpn);
 	if (CreateCacheFile(fullpn, NULL))
 	    printf("CreateFileIfMissing: Can't create '%s'\n", fullpn);
+    }
+}
+
+static void
+UnlinkUnwantedFile(char *rn, char *fullpn_FileToDelete, char *fileToDelete)
+{
+    if (unlink(fullpn_FileToDelete)) {
+	if ((errno == EISDIR || errno == EPERM) && *fileToDelete == 'D') {
+	    if (rmdir(fullpn_FileToDelete)) {
+		printf("%s: Can't rmdir '%s', errno is %d\n", rn,
+		       fullpn_FileToDelete, errno);
+	    }
+	} else
+	    printf("%s: Can't unlink '%s', errno is %d\n", rn,
+		   fullpn_FileToDelete, errno);
     }
 }
 
@@ -902,16 +918,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	    sprintf(fileToDelete, "%s", currp->d_name);
 	    if (afsd_verbose)
 		printf("%s: Deleting '%s'\n", rn, fullpn_FileToDelete);
-	    if (unlink(fullpn_FileToDelete)) {
-		if (errno == EISDIR && *fileToDelete == 'D') {
-		    if (rmdir(fullpn_FileToDelete)) {
-			printf("%s: Can't rmdir '%s', errno is %d\n", rn,
-			       fullpn_FileToDelete, errno);
-		    }
-		} else
-		    printf("%s: Can't unlink '%s', errno is %d\n", rn,
-			   fullpn_FileToDelete, errno);
-	    }
+	    UnlinkUnwantedFile(rn, fullpn_FileToDelete, fileToDelete);
 	}
     }
 
@@ -1021,16 +1028,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	/* Remove any directories >= maxDir -- they should be empty */
 	for (; highDir >= maxDir; highDir--) {
 	    sprintf(fileToDelete, "D%d", highDir);
-	    if (unlink(fullpn_FileToDelete)) {
-		if (errno == EISDIR && *fileToDelete == 'D') {
-		    if (rmdir(fullpn_FileToDelete)) {
-			printf("%s: Can't rmdir '%s', errno is %d\n", rn,
-			       fullpn_FileToDelete, errno);
-		    }
-		} else
-		    printf("%s: Can't unlink '%s', errno is %d\n", rn,
-			   fullpn_FileToDelete, errno);
-	    }
+	    UnlinkUnwantedFile(rn, fullpn_FileToDelete, fileToDelete);
 	}
     }
 
@@ -1192,13 +1190,10 @@ SweepAFSCache(vFilesFound)
 }
 
 static
-ConfigCell(aci, arock, adir)
-     register struct afsconf_cell *aci;
-     char *arock;
-     struct afsconf_dir *adir;
+ConfigCell(struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
 {
-    register int isHomeCell;
-    register int i, code;
+    int isHomeCell;
+    int i, code;
     afs_int32 cellFlags = 0;
     afs_int32 hosts[MAXHOSTSPERCELL];
 
@@ -1226,10 +1221,8 @@ ConfigCell(aci, arock, adir)
 }
 
 static
-ConfigCellAlias(aca, arock, adir)
-     register struct afsconf_cellalias *aca;
-     char *arock;
-     struct afsconf_dir *adir;
+ConfigCellAlias(struct afsconf_cellalias *aca,
+		char *arock, struct afsconf_dir *adir)
 {
     /* push the alias into the kernel */
     call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
@@ -1310,13 +1303,11 @@ AfsdbLookupHandler()
 #endif
 #endif
 
-mainproc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+mainproc(struct cmd_syndesc *as, char *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
-    register afs_int32 code;	/*Result of fork() */
-    register int i;
+    afs_int32 code;		/*Result of fork() */
+    int i;
     int currVFile;		/*Current AFS cache file number passed in */
     int mountFlags;		/*Flags passed to mount() */
     int lookupResult;		/*Result of GetLocalCellName() */
@@ -1359,14 +1350,13 @@ mainproc(as, arock)
     if (as->parms[3].items) {
 	/* -stat */
 	cacheStatEntries = atoi(as->parms[3].items->data);
+	sawCacheStatEntries = 1;
     }
     if (as->parms[4].items) {
 	/* -memcache */
 	cacheBaseDir[0] = '\0';
 	sawCacheBaseDir = 1;
 	cacheFlags |= AFSCALL_INIT_MEMCACHE;
-	if (chunkSize == 0)
-	    chunkSize = 13;
     }
     if (as->parms[5].items) {
 	/* -cachedir */
@@ -1442,10 +1432,9 @@ mainproc(as, arock)
 	strcpy(confDir, as->parms[17].items->data);
     }
     sprintf(fullpn_CacheInfo, "%s/%s", confDir, CACHEINFOFILE);
-    sprintf(fullpn_AFSLogFile, "%s/%s", confDir, AFSLOGFILE);
     if (as->parms[18].items) {
 	/* -logfile */
-	strcpy(fullpn_AFSLogFile, as->parms[18].items->data);
+        printf("afsd: Ignoring obsolete -logfile flag\n");
     }
     if (as->parms[19].items) {
 	/* -waitclose */
@@ -1488,7 +1477,7 @@ mainproc(as, arock)
     if (as->parms[25].items) {
 	/* -files_per_subdir */
 	int res = atoi(as->parms[25].items->data);
-	if (res < 10 || res > 2 ^ 30) {
+	if (res < 10 || res > (1 << 30)) {
 	    printf
 		("afsd:invalid number of files per subdir, \"%s\". Ignored\n",
 		 as->parms[25].items->data);
@@ -1562,18 +1551,6 @@ mainproc(as, arock)
 	exit(1);
     }
 
-    if ((logfd = fopen(fullpn_AFSLogFile, "r+")) == 0) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_AFSLogFile);
-	if (CreateCacheFile(fullpn_AFSLogFile, NULL)) {
-	    printf
-		("%s: Can't create '%s' (You may want to use the -logfile option)\n",
-		 rn, fullpn_AFSLogFile);
-	    exit(1);
-	}
-    } else
-	fclose(logfd);
-
     /* do some random computations in memcache case to get things to work
      * reasonably no matter which parameters you set.
      */
@@ -1581,7 +1558,13 @@ mainproc(as, arock)
 	/* memory cache: size described either as blocks or dcache entries, but
 	 * not both.
 	 */
+	if (filesSet) {
+	    fprintf(stderr, "%s: -files ignored with -memcache\n", rn);
+	}
 	if (sawDCacheSize) {
+	    if (chunkSize == 0) {
+		chunkSize = 13;	/* 8k default chunksize for memcache */
+	    }
 	    if (sawCacheBlocks) {
 		printf
 		    ("%s: can't set cache blocks and dcache size simultaneously when diskless.\n",
@@ -1589,18 +1572,26 @@ mainproc(as, arock)
 		exit(1);
 	    }
 	    /* compute the cache size based on # of chunks times the chunk size */
-	    i = (chunkSize == 0 ? 13 : chunkSize);
-	    i = (1 << i);	/* bytes per chunk */
+	    i = (1 << chunkSize);	/* bytes per chunk */
 	    cacheBlocks = i * dCacheSize;
 	    sawCacheBlocks = 1;	/* so that ParseCacheInfoFile doesn't overwrite */
 	} else {
+	    if (chunkSize == 0) {
+		/* Try to autotune the memcache chunksize based on size
+		 * of memcache. This is done on the assumption that approx
+		 * 1024 chunks is suitable, it's a balance between enough
+		 * chunks to be useful and ramping up nicely when using larger
+		 * memcache to improve bulk read/write performance
+		 */
+		for (i = 14;
+		     i <= 21 && (1 << i) / 1024 < (cacheBlocks / 1024); i++);
+		chunkSize = i - 1;
+	    }
 	    /* compute the dcache size from overall cache size and chunk size */
-	    i = (chunkSize == 0 ? 13 : chunkSize);
-	    /* dCacheSize = (cacheBlocks << 10) / (1<<i); */
-	    if (i > 10) {
-		dCacheSize = (cacheBlocks >> (i - 10));
-	    } else if (i < 10) {
-		dCacheSize = (cacheBlocks << (10 - i));
+	    if (chunkSize > 10) {
+		dCacheSize = (cacheBlocks >> (chunkSize - 10));
+	    } else if (chunkSize < 10) {
+		dCacheSize = (cacheBlocks << (10 - chunkSize));
 	    } else {
 		dCacheSize = cacheBlocks;
 	    }
@@ -1608,8 +1599,11 @@ mainproc(as, arock)
 	     * by ParseCacheInfoFile.
 	     */
 	}
-	/* kernel computes # of dcache entries as min of cacheFiles and dCacheSize,
-	 * so we now make them equal.
+	if (afsd_verbose)
+	    printf("%s: chunkSize autotuned to %d\n", rn, chunkSize);
+
+	/* kernel computes # of dcache entries as min of cacheFiles and
+	 * dCacheSize, so we now make them equal.
 	 */
 	cacheFiles = dCacheSize;
     } else {
@@ -1618,42 +1612,86 @@ mainproc(as, arock)
 	 * but only if -files isn't given on the command line.
 	 * Don't let # files be so small as to prevent full utilization 
 	 * of the cache unless user has explicitly asked for it.
-	 * average V-file is ~10K, according to tentative empirical studies.
 	 */
+	if (chunkSize == 0) {
+	    /* Set chunksize to 256kB - 1MB depending on cache size */
+	    if (cacheBlocks < 500000) {
+		chunkSize = 18;
+	    } else if (cacheBlocks < 1000000) {
+		chunkSize = 19;
+	    } else {
+		chunkSize = 20;
+	    }
+	}
 	if (!filesSet) {
-	    cacheFiles = cacheBlocks / 10;
-	    if (cacheFiles < 100)
-		cacheFiles = 100;
+	    cacheFiles = cacheBlocks / 32;	/* Assume 32k avg filesize */
+
+	    cacheFiles = max(cacheFiles, 1000);
+
 	    /* Always allow more files than chunks.  Presume average V-file 
 	     * is ~67% of a chunk...  (another guess, perhaps Honeyman will
 	     * have a grad student write a paper).  i is KILOBYTES.
 	     */
-	    i = 1 << (chunkSize ==
-		      0 ? 6 : (chunkSize < 10 ? 0 : chunkSize - 10));
+	    i = 1 << (chunkSize < 10 ? 0 : chunkSize - 10);
 	    cacheFiles = max(cacheFiles, 1.5 * (cacheBlocks / i));
+
 	    /* never permit more files than blocks, while leaving space for
 	     * VolumeInfo and CacheItems files.  VolumeInfo is usually 20K,
 	     * CacheItems is 50 Bytes / file (== 1K/20)
 	     */
-#define VOLINFOSZ 20
 #define CACHEITMSZ (cacheFiles / 20)
-#ifdef AFS_AIX_ENV
-	    cacheFiles =
-		min(cacheFiles, (cacheBlocks - VOLINFOSZ - CACHEITMSZ) / 4);
-#else
-	    cacheFiles =
-		min(cacheFiles, cacheBlocks - VOLINFOSZ - CACHEITMSZ);
-#endif
+#define VOLINFOSZ 50		/* 40kB has been seen, be conservative */
+#define CELLINFOSZ 4		/* Assuming disk block size is 4k ... */
+#define INFOSZ (VOLINFOSZ+CELLINFOSZ+CACHEITMSZ)
+
+	    /* Sanity check: If the obtained number of disk cache files
+	     * is larger than the number of available (4k) disk blocks, we're
+	     * doing something wrong. Fail hard so we can fix the bug instead
+	     * of silently hiding it like before */
+
+	    if (cacheFiles > (cacheBlocks - INFOSZ) / 4) {
+		fprintf(stderr,
+			"%s: ASSERT: cacheFiles %d  diskblocks %d\n",
+			rn, cacheFiles, (cacheBlocks - INFOSZ) / 4);
+		exit(1);
+	    }
 	    if (cacheFiles < 100)
 		fprintf(stderr, "%s: WARNING: cache probably too small!\n",
 			rn);
+
+	    if (afsd_verbose)
+		printf("%s: cacheFiles autotuned to %d\n", rn, cacheFiles);
 	}
+	/* Sanity check chunkSize */
+	i = max(cacheBlocks / 1000, cacheBlocks / cacheFiles);
+	chunkSize = min(chunkSize, i);
+	chunkSize = max(chunkSize, 2);
+	if (afsd_verbose)
+	    printf("%s: chunkSize autotuned to %d\n", rn, chunkSize);
+
 	if (!sawDCacheSize) {
-	    if ((cacheFiles / 2) > dCacheSize)
-		dCacheSize = cacheFiles / 2;
-	    if (dCacheSize > 2000)
+	    dCacheSize = cacheFiles / 2;
+	    if (dCacheSize > 10000) {
+		dCacheSize = 10000;
+	    }
+	    if (dCacheSize < 2000) {
 		dCacheSize = 2000;
+	    }
+	    if (afsd_verbose)
+		printf("%s: dCacheSize autotuned to %d\n", rn, dCacheSize);
 	}
+    }
+    if (!sawCacheStatEntries) {
+	if (chunkSize <= 13) {
+	    cacheStatEntries = dCacheSize / 4;
+	} else if (chunkSize >= 16) {
+	    cacheStatEntries = dCacheSize * 1.5;
+	} else {
+	    cacheStatEntries = dCacheSize;
+	}
+	if (afsd_verbose)
+	    printf("%s: cacheStatEntries autotuned to %d\n", rn,
+		   cacheStatEntries);
     }
 
     /*
@@ -1793,8 +1831,10 @@ mainproc(as, arock)
 #endif
 
     code = call_syscall(AFSOP_BASIC_INIT, 1);
-    if (code)
+    if (code) {
 	printf("%s: Error %d in basic initialization.\n", rn, code);
+        exit(1);
+    }
 
     /*
      * Tell the kernel some basic information about the workstation's cache.
@@ -1982,21 +2022,6 @@ mainproc(as, arock)
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
     /*
-     * Pass the kernel the name of the afs logging file holding the volume
-     * information.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_AFSLOG: volume info file is '%s'\n", rn,
-	       fullpn_AFSLogFile);
-#if defined(AFS_SGI_ENV)
-    /* permit explicit -logfile argument to enable logging on memcache systems */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE) || as->parms[18].items)
-#else
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... nor this ... */
-#endif
-	call_syscall(AFSOP_AFSLOG, fullpn_AFSLogFile);
-
-    /*
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
      */
@@ -2108,9 +2133,7 @@ mainproc(as, arock)
 
 
 
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 
@@ -2182,7 +2205,7 @@ main(argc, argv)
 		"Prefer backup volumes for mointpoints in backup volumes");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
     cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
-               "don't set the time");
+               "set the time");
     cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
     return (cmd_Dispatch(argc, argv));
 }
@@ -2307,9 +2330,29 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     }
     else
 #endif
+#ifdef AFS_DARWIN80_ENV
+    struct afssysargs syscall_data;
+    int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
+    syscall_data.syscall = AFSCALL_CALL;
+    syscall_data.param1 = param1;
+    syscall_data.param2 = param2;
+    syscall_data.param3 = param3;
+    syscall_data.param4 = param4;
+    syscall_data.param5 = param5;
+    syscall_data.param6 = param6;
+    if(fd >= 0) {
+       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+       close(fd);
+    } else {
+       error = -1;
+    }
+    if (!error)
+      error=syscall_data.retval;
+#else
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
 		param5, param6, param7);
+#endif
 
     if (afsd_verbose)
 	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
@@ -2378,15 +2421,14 @@ aix_vmount()
     return (error);
 }
 
-vmountdata(vmtp, obj, stub, host, hostsname, info, args)
-     struct vmount *vmtp;
-     char *obj, *stub, *host, *hostsname, *info, *args;
+vmountdata(struct vmount * vmtp, char *obj, char *stub, char *host,
+	   char *hostsname, char *info, char *args)
 {
-    register struct data {
+    struct data {
 	short vmt_off;
 	short vmt_size;
     } *vdp, *vdprev;
-    register int size;
+    int size;
 
     vdp = (struct data *)vmtp->vmt_data;
     vdp->vmt_off = sizeof(struct vmount);

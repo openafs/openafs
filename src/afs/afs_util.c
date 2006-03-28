@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17.2.1 2004/12/07 06:12:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17.2.3 2006/03/09 06:41:33 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -262,18 +262,23 @@ afs_CheckLocks(void)
     register int i;
 
     afs_warn("Looking for locked data structures.\n");
-    afs_warn("conn %x, volume %x, user %x, cell %x, server %x\n", afs_xconn,
-	     afs_xvolume, afs_xuser, afs_xcell, afs_xserver);
+    afs_warn("conn %lx, volume %lx, user %lx, cell %lx, server %lx\n", &afs_xconn,
+	     &afs_xvolume, &afs_xuser, &afs_xcell, &afs_xserver);
     {
 	register struct vcache *tvc;
 	AFS_STATCNT(afs_CheckLocks);
 
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+                if (tvc->states & CVInit) continue;
 #ifdef	AFS_OSF_ENV
 		if (VREFCOUNT(tvc) > 1)
 #else /* AFS_OSF_ENV */
+#ifdef AFS_DARWIN80_ENV
+		if (vnode_isinuse(AFSTOV(tvc), 0))
+#else
 		if (VREFCOUNT(tvc))
+#endif
 #endif
 		    afs_warn("Stat cache entry at %x is held\n", tvc);
 		if (CheckLock(&tvc->lock))

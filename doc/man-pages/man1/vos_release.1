@@ -1,0 +1,380 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH VOS_RELEASE 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+vos release \- Updates read-only volumes to match the read/write source volume
+.SH "SYNOPSIS"
+\fBvos release\fR <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>> [\fB\-f\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR]
+    [\fB\-help\fR]
+.PP
+\fBvos rel\fR <<\ \fB\-i\fR\ <\fIvolume\ name\ or\ ID\fR >>> [\fB\-f\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBvos release\fR command copies the contents of the indicated read/write
+source volume to each read-only site defined in the source volume's Volume
+Location Database (VLDB) entry. (Use the \fBvos addsite\fR command to define
+sites as necessary before issuing this command). Each read-only copy has
+the same name as read/write source with the addition of a \f(CW.readonly\fR
+extension.
+.PP
+For users to have a consistent view of the file system, the release of the
+new volume version must be atomic: either all read-only sites receive the
+new version, or all sites keep the version they currently have. The \fBvos
+release\fR command is designed to ensure that all copies of the volume's
+read-only version match both the read/write source and each other. In
+cases where problems such as machine or server process outages prevent
+successful completion of the release operation, AFS uses two mechanisms to
+alert the administrator.
+.PP
+First, the command interpreter generates an error message on the standard
+error stream naming each read-only site that did not receive the new
+volume version. Second, during the release operation the Volume Location
+(VL) Server marks site definitions in the VLDB entry with flags (\f(CWNew
+release\fR and \f(CWOld release\fR) that indicate whether or not the site has the
+new volume version. If any flags remain after the operation completes, it
+was not successful. The Cache Manager refuses to access a read-only site
+marked with the \f(CWOld release\fR flag, which potentially imposes a greater
+load on the sites marked with the \f(CWNew release\fR flag. It is important to
+investigate and eliminate the cause of the failure and then to issue the
+\fBvos release\fR command as many times as necessary to complete the release
+without errors.
+.PP
+The pattern of site flags remaining in the volume's VLDB entry after a
+failed release operation can help determine the point at which the
+operation failed. Use the \fBvos examine\fR or \fBvos listvldb\fR command to
+display the VLDB entry. The VL Server sets the flags in concert with the
+Volume Server's operations, as follows:
+.Ip "\(bu" 4
+Before the operation begins, the \s-1VL\s0 Server sets the \f(CWNew release\fR flag on
+the read/write site definition in the \s-1VLDB\s0 entry and the \f(CWOld release\fR
+flag on read-only site definitions (unless the read-only site has been
+defined since the last release operation and has no actual volume, in
+which case its site flag remains \f(CWNot released\fR).
+.Ip "\(bu" 4
+If necessary, the Volume Server creates a temporary copy (a \fIclone\fR) of
+the read/write source called the ReleaseClone (see the following
+discussion of when the Volume Server does or does not create a new
+ReleaseClone.) It assigns the ReleaseClone its own volume \s-1ID\s0 number, which
+the \s-1VL\s0 Server records in the \f(CWRClone\fR field of the source volume's \s-1VLDB\s0
+entry.
+.Ip "\(bu" 4
+The Volume Server distributes a copy of the ReleaseClone to each read-only
+site defined in the \s-1VLDB\s0 entry. As the site successfully receives the new
+clone, the \s-1VL\s0 Server sets the site's flag in the \s-1VLDB\s0 entry to \f(CWNew
+release\fR.
+.Ip "\(bu" 4
+When all the read-only copies are successfully released, the \s-1VL\s0 Server
+clears all the \f(CWNew release\fR site flags. The ReleaseClone is no longer
+needed, so the Volume Server deletes it and the \s-1VL\s0 Server erases its \s-1ID\s0
+from the \s-1VLDB\s0 entry.
+.PP
+By default, the Volume Server determines automatically whether or not it
+needs to create a new ReleaseClone:
+.Ip "\(bu" 4
+If there are no flags (\f(CWNew release\fR, \f(CWOld release\fR, or \f(CWNot released\fR)
+on site definitions in the \s-1VLDB\s0 entry, the previous \fBvos release\fR command
+completed successfully and all read-only sites currently have the same
+volume. The Volume Server infers that the current \fBvos release\fR command
+was issued because the read/write volume has changed. The Volume Server
+creates a new ReleaseClone and distributes it to all of the read-only
+sites.
+.Ip "\(bu" 4
+If any site definition in the \s-1VLDB\s0 entry is marked with a flag, either the
+previous release operation did not complete successfully or a new
+read-only site was defined since the last release. The Volume Server does
+not create a new ReleaseClone, instead distributing the existing
+ReleaseClone to sites marked with the \f(CWOld release\fR or \f(CWNot released\fR
+flag. As previously noted, the \s-1VL\s0 Server marks each \s-1VLDB\s0 site definition
+with the \f(CWNew release\fR flag as the site receives the ReleaseClone, and
+clears all flags after all sites successfully receive it.
+.PP
+To override the default behavior, forcing the Volume Server to create and
+release a new ReleaseClone to the read-only sites, include the \fB\-f\fR
+flag. This is appropriate if, for example, the data at the read/write site
+has changed since the existing ReleaseClone was created during the
+previous release operation.
+.SH "OPTIONS"
+.Ip "\fB\-id\fR <\fIvolume name or id\fR>" 4
+Specifies either the complete name or volume \s-1ID\s0 number of a read/write
+volume.
+.Ip "\fB\-f\fR" 4
+Creates a new ReleaseClone and distributes it all read-only sites
+regardless of whether or not any site definitions in the \s-1VLDB\s0 entry are
+marked with a flag.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
+combine this flag with the \fB\-localauth\fR flag. For more details, see
+the \fIvos(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBvos\fR command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument or
+\fB\-noauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-verbose\fR" 4
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following command clones the read/write volume usr and releases it to
+the read-only sites defined in its VLDB entry.
+.PP
+.Vb 1
+\&   % vos release usr
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on the
+machine specified with the \fB\-server\fR argument and on each database server
+machine. If the \fB\-localauth\fR flag is included, the issuer must instead be
+logged on to a server machine as the local superuser \f(CWroot\fR.
+.SH "SEE ALSO"
+the \fIvos(1)\fR manpage,
+the \fIvos_addsite(1)\fR manpage,
+the \fIvos_examine(1)\fR manpage,
+the \fIvos_listvldb(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "VOS_RELEASE 1"
+.IX Name "vos release - Updates read-only volumes to match the read/write source volume"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-id\fR <\fIvolume name or id\fR>"
+
+.IX Item "\fB\-f\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

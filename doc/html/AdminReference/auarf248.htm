@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf247.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf249.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVLDB_CHECK" HREF="auarf002.htm#ToC_262">vldb_check</A></H2>
+<A NAME="IDX5557"></A>
+<A NAME="IDX5558"></A>
+<A NAME="IDX5559"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Checks the integrity of the VLDB
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vldb_check -database</B> &lt;<VAR>vldb_file</VAR>>  [<B>-uheader</B>]  [<B>-vheader</B>]  [<B>-servers</B>]  
+           [<B>-entries</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+   
+<B>vldb_check -d</B> &lt;<VAR>vldb_file</VAR>>  [<B>-u</B>]  [<B>-vh</B>]  [<B>-s</B>]  [<B>-e</B>]  [<B>-ve</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vldb_check</B> command checks the integrity of the Volume
+Location Database (VLDB), reporting any errors or corruption it finds.
+If there are problems, do not issue any <B>vos</B> commands until the
+database is repaired.
+<P><STRONG>Cautions</STRONG>
+<P>The results can be unpredictable if the Volume Location (VL) Server makes
+changes to the VLDB while this command is running. Use the <B>bos
+shutdown</B> command to shutdown the local <B>vlserver</B> process
+before running this command, or before creating a second copy of the
+<B>vldb.DB0</B> file (with a different name) on which to run the
+command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-database
+</B><DD>Names the VLDB (copy of the <B>vldb.DB0</B> file) to
+check. If the current working directory is not the location of the
+file, provide a pathname, either full or relative to the current working
+directory.
+<P><DT><B>-uheader
+</B><DD>Displays information which Ubik maintains in the database's
+header.
+<P><DT><B>-pheader
+</B><DD>Displays information which the VL Server maintains in the database's
+header.
+<P><DT><B>-servers
+</B><DD>Outputs the server entries from the VLDB, which list the IP addresses
+registered for each file server machine in the cell.
+<P><DT><B>-entries
+</B><DD>Outputs every volume entry in the database. The information
+includes the volume's name and the volume ID number for each of its
+versions.
+<P><DT><B>-verbose
+</B><DD>Reports additional information about the database, including the number of
+entries for each type of volume.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>If there are errors in the database, the output always reports them on the
+standard error stream. If any options other than <B>-database</B>
+or <B>-help</B> are provided, the output written to the standard output
+stream includes additional information as described for each option in the
+preceding <B>Options</B> section of this reference page. The output
+is intended for debugging purposes and is meaningful to someone familiar with
+the internal structure of the VLDB.
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 and vldb.DBSYS1</A>
+<P><A HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf247.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf249.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

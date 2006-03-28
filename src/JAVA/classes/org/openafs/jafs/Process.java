@@ -128,7 +128,7 @@ public class Process implements Serializable, Comparable
 
   protected String name;
   protected Server server;
-  protected int serverHandle;
+  protected long serverHandle;
 
   protected int type;
   protected int state;
@@ -687,7 +687,7 @@ public class Process implements Serializable, Comparable
    *
    * @return a <code>String</code> representation of the <code>Process</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r;
     try {
@@ -853,7 +853,7 @@ public class Process implements Serializable, Comparable
    *                       in the information
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getProcessInfo( int cellHandle, 
+  protected static native void getProcessInfo( long cellHandle, 
 					       String processName, 
 					       Process theProcess ) 
 	throws AFSException;
@@ -884,7 +884,7 @@ public class Process implements Serializable, Comparable
    *                   <code>null</code>
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void create( int serverHandle, String processName, 
+  protected static native void create( long serverHandle, String processName, 
 				       int processType, String executionPath, 
 				       String cronTime, String notifier )
     throws AFSException;
@@ -898,7 +898,7 @@ public class Process implements Serializable, Comparable
    * @param processName   the name of the process to remove
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void delete( int serverHandle, String processName )
+  protected static native void delete( long serverHandle, String processName )
     throws AFSException;
 
   /**
@@ -910,7 +910,7 @@ public class Process implements Serializable, Comparable
    * @param processName   the name of the process to start
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void start( int serverHandle, String processName )
+  protected static native void start( long serverHandle, String processName )
     throws AFSException;
 
   /**
@@ -922,7 +922,7 @@ public class Process implements Serializable, Comparable
    * @param processName   the name of the process to restart
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void restart( int serverHandle, String processName )
+  protected static native void restart( long serverHandle, String processName )
     throws AFSException;
 
   /**
@@ -934,7 +934,7 @@ public class Process implements Serializable, Comparable
    * @param processName   the name of the process to stop
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void stop( int serverHandle, String processName )
+  protected static native void stop( long serverHandle, String processName )
     throws AFSException;
 
   /**

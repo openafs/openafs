@@ -1,0 +1,580 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH kas_setfields 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+kas setfields \- Sets fields in an Authentication Database entry
+.SH "SYNOPSIS"
+\fBkas setfields\fR <<\ \fB\-name\fR\ <\fIname\ of\ user\fR >>>
+    <<\ [\fB\-flags\fR\ <\fIhex\ flag\ value\ or\ flag\ name\ expression\fR] >>>
+    <<\ [\fB\-expiration\fR\ <\fIdate\ of\ account\ expiration\fR] >>>
+    <<\ [\fB\-lifetime\fR\ <\fImaximum\ ticket\ lifetime\fR] >>>
+    <<\ [\fB\-pwexpires\fR\ <\fInumber\ days\ password\ is\ valid\ ([0..254])\fR] >>>
+    <<\ [\fB\-reuse\fR\ <\fIpermit\ password\ reuse\ (yes/no)\fR] >>>
+    <<\ [\fB\-attempts\fR\ <\fImaximum\ successive\ failed\ login\ tries\ ([0..254])\fR] >>>
+    <<\ [\fB\-locktime\fR\ <\fIfailure\ penalty\ [hh:mm\ or\ minutes]\fR] >>>
+    <<\ [\fB\-admin_username\fR\ <\fIadmin\ principal\ to\ use\ for\ authentication\fR] >>>
+    <<\ [\fB\-password_for_admin\fR\ <\fIadmin\ password\fR] >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-servers\fR\ <\fIexplicit\ list\ of\ authentication\ servers\fR+] >>>
+    [\fB\-noauth\fR] [\fB\-help\fR]
+.PP
+\fBkas setf\fR <<\ \fB\-na\fR\ <\fIname\ of\ user\fR >>>
+    <<\ [\fB\-f\fR\ <\fIhex\ flag\ value\ or\ flag\ name\ expression\fR] >>>
+    <<\ [\fB\-e\fR\ <\fIdate\ of\ account\ expiration\fR] >>>
+    <<\ [\fB\-li\fR\ <\fImaximum\ ticket\ lifetime\fR] >>>
+    <<\ [\fB\-pw\fR\ <\fInumber\ days\ password\ is\ valid\ ([0..254])\fR] >>>
+    <<\ [\fB\-r\fR\ <\fIpermit\ password\ reuse\ (yes/no)\fR] >>>
+    <<\ [\fB\-at\fR\ <\fImaximum\ successive\ failed\ login\ tries\ ([0..254])\fR] >>>
+    <<\ [\fB\-lo\fR\ <\fIfailure\ penalty\ [hh:mm\ or\ minutes]\fR] >>>
+    <<\ [\fB\-ad\fR\ <\fIadmin\ principal\ to\ use\ for\ authentication\fR] >>>
+    <<\ [\fB\-pa\fR\ <\fIadmin\ password\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-s\fR\ <\fIexplicit\ list\ of\ authentication\ servers\fR+] >>> [\fB\-no\fR] [\fB\-h\fR]
+.PP
+\fBkas sf\fR <<\ \fB\-na\fR\ <\fIname\ of\ user\fR >>>
+    <<\ [\fB\-f\fR\ <\fIhex\ flag\ value\ or\ flag\ name\ expression\fR] >>>
+    <<\ [\fB\-e\fR\ <\fIdate\ of\ account\ expiration\fR] >>>
+    <<\ [\fB\-li\fR\ <\fImaximum\ ticket\ lifetime\fR] >>>
+    <<\ [\fB\-pw\fR\ <\fInumber\ days\ password\ is\ valid\ ([0..254])\fR] >>>
+    <<\ [\fB\-r\fR\ <\fIpermit\ password\ reuse\ (yes/no)\fR] >>>
+    <<\ [\fB\-at\fR\ <\fImaximum\ successive\ failed\ login\ tries\ ([0..254])\fR] >>>
+    <<\ [\fB\-lo\fR\ <\fIfailure\ penalty\ [hh:mm\ or\ minutes]\fR] >>>
+    <<\ [\fB\-ad\fR\ <\fIadmin\ principal\ to\ use\ for\ authentication\fR] >>>
+    <<\ [\fB\-pa\fR\ <\fIadmin\ password\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-s\fR\ <\fIexplicit\ list\ of\ authentication\ servers\fR+] >>> [\fB\-no\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBkas setfields\fR command changes the Authentication Database entry for
+the user named by the \fB\-name\fR argument in the manner specified by the
+various optional arguments, which can occur singly or in combination:
+.Ip "\(bu" 4
+To set the flags that determine whether the user has administrative
+privileges to the Authentication Server, can obtain a ticket, can change
+his or her password, and so on, include the \fB\-flags\fR argument.
+.Ip "\(bu" 4
+To set when the Authentication Database entry expires, include the
+\fB\-expiration\fR argument.
+.Ip "\(bu" 4
+To set the maximum ticket lifetime associated with the entry, include the
+\fB\-lifetime\fR argument. the \fIklog(1)\fR manpage explains how this value interacts with
+others to determine the actual lifetime of a token.
+.Ip "\(bu" 4
+To set when the user's password expires, include the \fB\-pwexpires\fR
+argument.
+.Ip "\(bu" 4
+To set whether the user can reuse any of the previous twenty passwords
+when creating a new one, include the \fB\-reuse\fR argument.
+.Ip "\(bu" 4
+To set the maximum number of times the user can provide an incorrect
+password before the Authentication Server refuses to accept any more
+attempts (locks the issuer out), include the \fB\-attempts\fR argument.  After
+the sixth failed authentication attempt, the Authentication Server logs a
+message in the \s-1UNIX\s0 system log file (the \fIsyslog\fR file or equivalent, for
+which the standard location varies depending on the operating system).
+.Ip "\(bu" 4
+To set how long the Authentication Server refuses to process
+authentication attempts for a locked-out user, set the \fB\-locktime\fR
+argument.
+.PP
+The \fBkas examine\fR command displays the settings made with this command.
+.SH "CAUTIONS"
+The password lifetime set with the \fB\-pwexpires\fR argument begins at the
+time the user's password was last changed, rather than when this command
+is issued. It can therefore be retroactive. If, for example, a user
+changed her password 100 days ago and the password lifetime is set to 100
+days or less, the password effectively expires immediately.  To avoid
+retroactive expiration, instruct the user to change the password just
+before setting a password lifetime.
+.PP
+Administrators whose authentication accounts have the \f(CWADMIN\fR flag enjoy
+complete access to the sensitive information in the Authentication
+Database. To prevent access by unauthorized users, use the \fB\-attempts\fR
+argument to impose a fairly strict limit on the number of times that a
+user obtaining administrative tokens can provide an incorrect
+password. Note, however, that there must be more than one account in the
+cell with the \f(CWADMIN\fR flag. The \fBkas unlock\fR command requires the
+\f(CWADMIN\fR privilege, so it is important that the locked-out administrator
+(or a colleague) can access another \f(CWADMIN\fR\-privileged account to unlock
+the current account.
+.PP
+In certain circumstances, the mechanism used to enforce the number of
+failed authentication attempts can cause a lockout even though the number
+of failed attempts is less than the limit set by the \fB\-attempts\fR
+argument. Client-side authentication programs such as \fBklog\fR and an
+AFS\-modified login utility normally choose an Authentication Server at
+random for each authentication attempt, and in case of a failure are
+likely to choose a different Authentication Server for the next
+attempt. The Authentication Servers running on the various database server
+machines do not communicate with each other about how many times a user
+has failed to provide the correct password to them. Instead, each
+Authentication Server maintains its own separate copy of the auxiliary
+database file \fIkaserverauxdb\fR (located in the \fI/usr/afs/local\fR directory
+by default), which records the number of consecutive authentication
+failures for each user account and the time of the most recent
+failure. This implementation means that on average each Authentication
+Server knows about only a fraction of the total number of failed
+attempts. The only way to avoid allowing more than the number of attempts
+set by the \fB\-attempts\fR argument is to have each Authentication Server
+allow only some fraction of the total. More specifically, if the limit on
+failed attempts is \fIf\fR, and the number of Authentication Servers is \fIS\fR,
+then each Authentication Server can only permit a number of attempts equal
+to \fIf\fR divided by \fIS\fR (the Ubik synchronization site for the
+Authentication Server tracks any remainder, \fIf\fR mod \fIS\fR).
+.PP
+Normally, this implementation does not reduce the number of allowed
+attempts to less than the configured limit (\fIf\fR). If one Authentication
+Server refuses an attempt, the client contacts another instance of the
+server, continuing until either it successfully authenticates or has
+contacted all of the servers. However, if one or more of the
+Authentication Server processes is unavailable, the limit is effectively
+reduced by a percentage equal to the quantity \fIU\fR divided by \fIS\fR, where
+\fIU\fR is the number of unavailable servers and \fIS\fR is the number normally
+available.
+.PP
+To avoid the undesirable consequences of setting a limit on failed
+authentication attempts, note the following recommendations:
+.Ip "\(bu" 4
+Do not set the \fB\-attempts\fR argument (the limit on failed authentication
+attempts) too low. A limit of nine failed attempts is recommended for
+regular user accounts, to allow three failed attempts per Authentication
+Server in a cell with three database server machines.
+.Ip "\(bu" 4
+Set fairly short lockout times when including the \fB\-locktime\fR
+argument. Although guessing passwords is a common method of attack, it is
+not a very sophisticated one. Setting a lockout time can help discourage
+attackers, but excessively long times are likely to be more of a burden to
+authorized users than to potential attackers. A lockout time of 25 minutes
+is recommended for regular user accounts.
+.Ip "\(bu" 4
+Do not assign an infinite lockout time on an account (by setting the
+\fB\-locktime\fR argument to \f(CW0\fR [zero]) unless there is a highly compelling
+reason. Such accounts almost inevitably become locked at some point,
+because each Authentication Server never resets the account's failure
+counter in its copy of the \fIkaauxdb\fR file (in contrast, when the lockout
+time is not infinite, the counter resets after the specified amount of
+time has passed since the last failed attempt to that Authentication
+Server). Furthermore, the only way to unlock an account with an infinite
+lockout time is for an administrator to issue the \fBkas unlock\fR
+command. It is especially dangerous to set an infinite lockout time on an
+administrative account; if all administrative accounts become locked, the
+only way to unlock them is to shut down all instances of the
+Authentication Server and remove the \fIkaauxdb\fR file on each.
+.SH "OPTIONS"
+.Ip "\fB\-name\fR <\fIname of user\fR>" 4
+Names the Authentication Database account for which to change settings.
+.Ip "\fB\-flags\fR <\fIhex flag or flag name expression\fR>" 4
+Sets one or more of four toggling flags, adding them to any flags
+currently set. Either specify one or more of the following strings, or
+specify a hexidecimal number that combines the indicated values. To return
+all four flags to their defaults, provide a value of \f(CW0\fR (zero). To set
+more than one flag at once using the strings, connect them with plus signs
+(example: \f(CWNOTGS+ADMIN+CPW\fR). To remove all the current flag settings
+before setting new ones, precede the list with an equal sign (example:
+\f(CW=NOTGS+ADMIN+CPW\fR).
+.Ip "\s-1ADMIN\s0" 8
+The user is allowed to issue privileged kas commands (hexadecimal
+equivalent is \f(CW0x004\fR, default is \f(CWNOADMIN\fR).
+.Ip "\s-1NOTGS\s0" 8
+The Authentication Server's Ticket Granting Service (\s-1TGS\s0) refuses to issue
+tickets to the user (hexadecimal equivalent is \f(CW0x008\fR, default is
+\f(CWTGS\fR).
+.Ip "\s-1NOSEAL\s0" 8
+The Ticket Granting Service cannot use the contents of this entry's key
+field as an encryption key (hexadecimal equivalent is \f(CW0x020\fR, default is
+\f(CWSEAL\fR).
+.Ip "\s-1NOCPW\s0" 8
+The user cannot change his or her own password or key (hexadecimal
+equivalent is \f(CW0x040\fR, default is \f(CWCPW\fR).
+.Ip "\fB\-expiration\fR <\fIdate of account expiration\fR>" 4
+Determines when the entry itself expires. When a user entry expires, the
+user becomes unable to log in; when a server entry such as \f(CWafs\fR expires,
+all server processes that use the associated key become inaccessible.
+Provide one of the three acceptable values:
+.Ip "never" 8
+The account never expires (the default).
+.Ip "\fImm/dd/yyyy\fR" 8
+Sets the expiration date to 12:00 a.m. on the indicated date
+(month/day/year). Examples: \f(CW01/23/1999\fR, \f(CW10/07/2000\fR.
+.Ip "\*(N"\fImm/dd/yyyy hh:\s-1MM\s0\fR\*(T"" 8
+Sets the expiration date to the indicated time (hours:minutes) on the
+indicated date (month/day/year). Specify the time in 24-hour format (for
+example, \f(CW20:30\fR is 8:30 p.m.) Date format is the same as for a date
+alone. Surround the entire instance with quotes because it contains a
+space. Examples: \f(CW"01/23/1999 22:30"\fR, \f(CW"10/07/2000 3:45"\fR.
+.Sp
+Acceptable values for the year range from \f(CW1970\fR (1 January 1970 is time
+0 in the standard \s-1UNIX\s0 date representation) through \f(CW2037\fR (2037 is the
+maximum because the \s-1UNIX\s0 representation cannot accommodate dates later
+than a value in February 2038).
+.Ip "\fB\-lifetime\fR <\fImaximum ticket lifetime\fR>" 4
+Specifies the maximum lifetime that the Authentication Server's Ticket
+Granting Service (\s-1TGS\s0) can assign to a ticket. If the account belongs to a
+user, this value is the maximum lifetime of a token issued to the user. If
+the account corresponds to a server such as \f(CWafs\fR, this value is the
+maximum lifetime of a ticket that the \s-1TGS\s0 issues to clients for
+presentation to the server during mutual authentication.
+.Sp
+Specify an integer that represents a number of seconds (3600 equals one
+hour), or include a colon in the number to indicate a number of hours and
+minutes (\f(CW10:00\fR equals 10 hours). If this argument is omitted, the
+default setting is 100:00 hours (360000 seconds).
+.Ip "\fB\-pwexpires\fR <\fInumber of days password is valid\fR>" 4
+Sets the number of days after the user's password was last changed that it
+remains valid. Provide an integer from the range \f(CW1\fR through \f(CW254\fR to
+specify the number of days until expiration, or the value \f(CW0\fR to indicate
+that the password never expires (the default).
+.Sp
+When the password expires, the user is unable to authenticate, but has 30
+days after the expiration date in which to use the \fBkpasswd\fR command to
+change the password (after that, only an administrator can change it by
+using the \fBkas setpassword\fR command). Note that the clock starts at the
+time the password was last changed, not when the \fBkas setfields\fR command
+is issued. To avoid retroactive expiration, have the user change the
+password just before issuing a command that includes this argument.
+.Ip "\fB\-reuse\fR (yes | no)" 4
+Specifies whether or not the user can reuse any of his or her last 20
+passwords. The acceptable values are \f(CWyes\fR to allow reuse of old
+passwords (the default) and \f(CWno\fR to prohibit reuse of a password that is
+similar to one of the previous 20 passwords.
+.Ip "\fB\-attempts\fR <\fImaximum successive failed login tries\fR>" 4
+Sets the number of consecutive times the user can provide an incorrect
+password during authentication (using the \fBklog\fR command or a login
+utility that grants \s-1AFS\s0 tokens). When the user exceeds the limit, the
+Authentication Server rejects further attempts (locks the user out) for
+the amount of time specified by the \fB\-locktime\fR argument. Provide an
+integer from the range \f(CW1\fR through \f(CW254\fR to specify the number of
+failures allowed, or \f(CW0\fR to indicate that there is no limit on
+authentication attempts (the default value).
+.Ip "\fB\-locktime\fR <\fIfailure penalty\fR>" 4
+Specifies how long the Authentication Server refuses authentication
+attempts from a user who has exceeded the failure limit set by the
+\fB\-attempts\fR argument.
+.Sp
+Specify a number of hours and minutes (\fIhh:mm\fR) or minutes only (\fImm\fR),
+from the range \f(CW01\fR (one minute) through \f(CW36:00\fR (36 hours). The \fBkas\fR
+command interpreter automatically reduces any larger value to \f(CW36:00\fR and
+also rounds up any non-zero value to the next higher multiple of 8.5
+minutes. A value of \f(CW0\fR (zero) sets an infinite lockout time; an
+administrator must issue the \fBkas unlock\fR command to unlock the account.
+.Ip "\fB\-admin_username\fR <\fIadmin principal\fR>" 4
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details, see
+the \fIkas(8)\fR manpage.
+.Ip "\fB\-password_for_admin\fR <\fIadmin password\fR>" 4
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the \fBkas\fR command interpreter prompts for it and does not
+echo it visibly. For more details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. For more details, see
+the \fIkas(8)\fR manpage.
+.Ip "\fB\-servers\fR <\fIauthentication servers\fR>+" 4
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. For more
+details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+In the following example, an administrator using the \f(CWadmin\fR account
+grants administrative privilege to the user \f(CWsmith\fR, and sets the
+Authentication Database entry to expire at midnight on 31 December 2000.
+.PP
+.Vb 2
+\&   % kas setfields -name smith -flags ADMIN -expiration 12/31/2000
+\&   Password for admin:
+.Ve
+In the following example, an administrator using the \f(CWadmin\fR account sets
+the user \f(CWpat\fR's password to expire in 60 days from when it last changed,
+and prohibits reuse of passwords.
+.PP
+.Vb 2
+\&   % kas setfields -name pat -pwexpires 60 -reuse no
+\&   Password for admin:
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must have the \f(CWADMIN\fR flag set on his or her Authentication
+Database entry.
+.SH "SEE ALSO"
+the \fIkaserverauxdb(5)\fR manpage,
+the \fIkas(8)\fR manpage,
+the \fIkas_examine(8)\fR manpage,
+the \fIkas_setpassword(8)\fR manpage,
+the \fIkas_unlock(8)\fR manpage,
+the \fIklog(1)\fR manpage,
+the \fIkpasswd(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "kas_setfields 8"
+.IX Name "kas setfields - Sets fields in an Authentication Database entry"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-name\fR <\fIname of user\fR>"
+
+.IX Item "\fB\-flags\fR <\fIhex flag or flag name expression\fR>"
+
+.IX Item "\s-1ADMIN\s0"
+
+.IX Item "\s-1NOTGS\s0"
+
+.IX Item "\s-1NOSEAL\s0"
+
+.IX Item "\s-1NOCPW\s0"
+
+.IX Item "\fB\-expiration\fR <\fIdate of account expiration\fR>"
+
+.IX Item "never"
+
+.IX Item "\fImm/dd/yyyy\fR"
+
+.IX Item "\*(N"\fImm/dd/yyyy hh:\s-1MM\s0\fR\*(T""
+
+.IX Item "\fB\-lifetime\fR <\fImaximum ticket lifetime\fR>"
+
+.IX Item "\fB\-pwexpires\fR <\fInumber of days password is valid\fR>"
+
+.IX Item "\fB\-reuse\fR (yes | no)"
+
+.IX Item "\fB\-attempts\fR <\fImaximum successive failed login tries\fR>"
+
+.IX Item "\fB\-locktime\fR <\fIfailure penalty\fR>"
+
+.IX Item "\fB\-admin_username\fR <\fIadmin principal\fR>"
+
+.IX Item "\fB\-password_for_admin\fR <\fIadmin password\fR>"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-servers\fR <\fIauthentication servers\fR>+"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

@@ -1,0 +1,333 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH bos_listkeys 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+bos listkeys \- Displays the server encryption keys from the KeyFile file
+.SH "SYNOPSIS"
+\fBbos listkeys\fR <<\ \fB\-server\fR\ <\fImachine\ name\fR >>> [\fB\-showkey\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-help\fR]
+.PP
+\fBbos listk\fR <<\ \fB\-se\fR\ <\fImachine\ name\fR >>> [\fB\-sh\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-n\fR] [\fB\-l\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbos listkeys\fR command formats and displays the list of server
+encryption keys from the \fI/usr/afs/etc/KeyFile\fR file on the server
+machine named by the \fB\-server\fR argument.
+.PP
+To edit the list of keys, use the \fBbos addkey\fR and \fBbos removekey\fR
+commands.
+.SH "CAUTIONS"
+Displaying actual keys on the standard output stream (by including the
+\fB\-showkey\fR flag) is a security exposure. Displaying a checksum is
+sufficient for most purposes.
+.SH "OPTIONS"
+.Ip "\fB\-server\fR <\fImachine name\fR>" 4
+Indicates the server machine from which to display the KeyFile
+file. Identify the machine by \s-1IP\s0 address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the \fIbos(8)\fR manpage.
+.Sp
+For consistent performance in the cell, the output must be the same on
+every server machine. The \fBbos addkey\fR reference page explains how to
+keep the machines synchronized.
+.Ip "\fB\-showkey\fR" 4
+Displays the octal digits that constitute each key.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbos(8)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
+combine this flag with the \fB\-localauth\fR flag. For more details, see
+the \fIbos(8)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbos\fR command interpreter presents the
+ticket to the \s-1BOS\s0 Server during mutual authentication. Do not combine this
+flag with the \fB\-cell\fR or \fB\-noauth\fR options. For more details, see
+the \fIbos(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+The output includes one line for each server encryption key listed in the
+\fIKeyFile\fR file, identified by its key version number.
+.PP
+If the \fB\-showkey\fR flag is included, the output displays the actual string
+of eight octal numbers that constitute the key. Each octal number is a
+backslash and three decimal digits.
+.PP
+If the \fB\-showkey\fR flag is not included, the output represents each key as
+a checksum, which is a decimal number derived by encrypting a constant
+with the key.
+.PP
+Following the list of keys or checksums, the string \f(CWKeys last changed\fR
+indicates when a key was last added to the \fIKeyFile\fR file. The words
+\f(CWAll done\fR indicate the end of the output.
+.PP
+For mutual authentication to work properly, the output from the command
+\f(CWkas examine afs\fR must match the key or checksum with the same key
+version number in the output from this command.
+.SH "EXAMPLES"
+The following example shows the checksums for the keys stored in the
+\fIKeyFile\fR file on the machine \f(CWfs3.abc.com\fR.
+.PP
+.Vb 7
+\&   % bos listkeys fs3.abc.com
+\&   key 1 has cksum 972037177
+\&   key 3 has cksum 2825175022
+\&   key 4 has cksum 260617746
+\&   key 6 has cksum 4178774593
+\&   Keys last changed on Mon Apr 12 11:24:46 1999.
+\&   All done.
+.Ve
+The following example shows the actual keys from the \fIKeyFile\fR file on
+the machine \f(CWfs6.abc.com\fR.
+.PP
+.Vb 6
+\&   % bos listkeys fs6.abc.com -showkey
+\&   key 0 is '\e040\e205\e211\e241\e345\e002\e023\e211'
+\&   key 1 is '\e343\e315\e307\e227\e255\e320\e135\e244'
+\&   key 2 is '\e310\e310\e255\e253\e326\e236\e261\e211'
+\&   Keys last changed on Wed Mar 31 11:24:46 1999.
+\&   All done.
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on the
+machine named by the \fB\-server\fR argument, or must be logged onto a server
+machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIKeyFile(5)\fR manpage,
+the \fIUserList(5)\fR manpage,
+the \fIbos_addkey(8)\fR manpage,
+the \fIbos_removekey(8)\fR manpage,
+the \fIbos_setauth(8)\fR manpage,
+the \fIkas_examine(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "bos_listkeys 8"
+.IX Name "bos listkeys - Displays the server encryption keys from the KeyFile file"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-server\fR <\fImachine name\fR>"
+
+.IX Item "\fB\-showkey\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

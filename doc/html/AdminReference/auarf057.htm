@@ -1,0 +1,451 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf056.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf058.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRAFSINTRO" HREF="auarf002.htm#ToC_55">afs_intro</A></H2>
+<P><STRONG>Purpose</STRONG>
+<P>Introduction to AFS commands
+<P><STRONG>Description</STRONG>
+<P>AFS provides many commands that enable users and system administrators to
+use and customize its features. Many of the commands belong to the
+following categories, called <I>command suites</I>.
+<DL>
+<P><DT><B>backup
+</B><DD>Interface for configuring and operating the AFS Backup System
+<P><DT><B>bos
+</B><DD>Interface to the Basic Overseer (BOS) Server for administering server
+processes and configuration files
+<P><DT><B>fs
+</B><DD>Interface for administering access control lists (ACLs), the Cache
+Manager, and other miscellaneous file system functions
+<P><DT><B>fstrace
+</B><DD>Interface for tracing Cache Manager operations when debugging problems
+<P><DT><B>kas
+</B><DD>Interface to the Authentication Server for administering security and
+authentication information
+<P><DT><B>pts
+</B><DD>Interface to the Protection Server for administering AFS ID and group
+membership information
+<P><DT><B>uss
+</B><DD>Interface for automated administration of user accounts
+<P><DT><B>vos
+</B><DD>Interface to the Volume Server and Volume Location (VL) Server for
+administering volumes
+</DL>
+<P>In addition, there are several commands that do not belong to
+suites.
+<P><H5><A NAME="HDRWQ10">AFS Command Syntax</A></H5>
+<P>AFS commands that belong to suites have the following
+structure:
+<PRE>   <B>command_suite operation_code</B> <B>-switch</B> &lt;<VAR>value</VAR>><SUP>[+]</SUP>  [<B>-flag</B>]
+   
+</PRE>
+<P><H6><A NAME="Header_57">Command Names</A></H6>
+<P>Together, the <B>command_suite</B> and <B>operation_code</B>
+make up the <I>command name</I>.
+<P>The <B>command_suite</B> specifies the group of related commands to
+which the command belongs, and indicates which command interpreter and server
+process perform the command. AFS has several command suites, including
+<B>bos</B>, <B>fs</B>, <B>kas</B>, <B>package</B>,
+<B>pts</B>, <B>scout</B>, <B>uss</B> and <B>vos</B>.
+Some of these suites have an interactive mode in which the issuer omits the
+<B>command_suite</B> portion of the command name.
+<P>The <B>operation_code</B> tells the command interpreter and server
+process which action to perform. Most command suites include several
+operation codes. The <I>IBM AFS Administration Reference</I>
+describes each operation code in detail, and the <I>IBM AFS Administration
+Guide</I> describes how to use them in the context of performing
+administrative tasks.
+<P>Several AFS commands do not belong to a suite and so their names do not
+have a <B>command_suite</B> portion. Their structure is otherwise
+similar to the commands in the suites.
+<P><H6><A NAME="Header_58">Options</A></H6>
+<P>The term <I>option</I> refers to both arguments and flags, which
+are described in the following sections.
+<P><H6><A NAME="Header_59">Arguments</A></H6>
+<P>One or more arguments can follow the command name. Arguments
+specify the entities on which to act while performing the command (for
+example, which server machine, server process, or file). To minimize
+the potential for error, provide a command's arguments in the order
+prescribed in its syntax definition.
+<P>Each argument has two parts, which appear in the indicated order:
+<UL>
+<P><LI>The <I>switch</I> specifies the argument's type and is preceded
+by a hyphen ( <B>-</B> ). For instance, the switch
+<B>-server</B> usually indicates that the argument names a server
+machine. Switches can often be omitted, subject to the rules outlined
+in <A HREF="#HDRNOSWITCH">Conditions for Omitting Switches</A>.
+<P><LI>The <I>value</I> names a particular entity of the type specified by
+the preceding switch. For example, the proper value for a
+<B>-server</B> switch is a server machine name like
+<B>fs3.abc.com</B>. Unlike switches (which have a
+required form), values vary depending on what the issuer wants to
+accomplish. Values appear surrounded by angle brackets (<B>&lt;
+></B>) in command descriptions and the online help to show that they are
+user-supplied variable information.
+</UL>
+<P>Some arguments accept multiple values, as indicated by trailing plus sign (
+<B>+</B> ) in the command descriptions and online help. How many of
+a command's arguments take multiple values, and their ordering with
+respect to other arguments, determine when it is acceptable to omit
+switches. See <A HREF="#HDRNOSWITCH">Conditions for Omitting Switches</A>.
+<P>Some commands have optional as well as required arguments; the command
+descriptions and online help show optional arguments in square brackets ([
+]).
+<P><H6><A NAME="Header_60">Flags</A></H6>
+<P>Some commands have one or more flags, which specify the manner in which
+the command interpreter and server process perform the command, or what kind
+of output it produces. Flags are preceded by hyphens like switches, but
+they take no values. Although the command descriptions and online help
+generally list a command's flags after its arguments, there is no
+prescribed order for flags. They can appear anywhere on the command
+line following the operation code, except in between the parts of an
+argument. Flags are always optional.
+<P><H6><A NAME="HDRCOMMAND-EX">An Example Command</A></H6>
+<P>The following example illustrates the different parts
+of a command that belongs to an AFS command suite.
+<PRE>   % <B>bos getdate -server fs1.abc.com -file ptserver kaserver </B>
+   
+</PRE>
+<P>where
+<UL>
+<P><LI><B>bos</B> is the command suite. The BOS Server executes most
+of the commands in this suite.
+<P><LI><B>getdate</B> is the operation code. It tells the BOS Server
+on the specified server machine (in this case
+<B>fs1.abc.com</B>) to report the modification dates of
+binary files in the local <B>/usr/afs/bin</B> directory.
+<P><LI><B>-server fs1.abc.com</B> is one argument, with
+<B>-server</B> as the switch and <B>fs1.abc.com</B> as
+the value. This argument specifies the server machine on which BOS
+Server is to collect and report binary dates.
+<P><LI><B>-file ptserver kaserver</B> is an argument that takes multiple
+values. The switch is <B>-file</B> and the values are
+<B>ptserver</B> and <B>kaserver</B>. This argument tells the
+BOS Server to report the modification dates on the files
+<B>/usr/afs/bin/kaserver</B> and <B>/usr/afs/bin/ptserver</B>.
+</UL>
+<P><H6><A NAME="HDRWQ11">Rules for Entering AFS Commands</A></H6>
+<P>Enter each AFS command on a single line (press
+<B>&lt;Return></B> only at the end of the command). Some commands
+in this document appear broken across multiple lines, but that is for
+legibility only.
+<P>Use a space to separate each element on a command line from its
+neighbors. Spaces rather than commas also separate multiple values of
+an argument.
+<P>In many cases, the issuer of a command can reduce the amount of typing
+necessary by using one or both of the following methods:
+<UL>
+<P><LI>Omitting switches
+<P><LI>Using accepted abbreviations for operation codes, switches (if they are
+included at all), and some types of values
+</UL>
+<P>The following sections explain the conditions for omitting or shortening
+parts of the command line. It is always acceptable to type a command in
+full, with all of its switches and no abbreviations.
+<P><I><B><A NAME="HDRNOSWITCH">Conditions for Omitting Switches</A>:&nbsp;</B></I>&nbsp;
+It is always acceptable to type the switch part of an
+argument, but in many cases it is not necessary. Specifically, switches
+can be omitted if the following conditions are met.
+<UL>
+<P><LI>All of the command's required arguments appear in the order
+prescribed by the syntax statement
+<P><LI>No switch is provided for any argument
+<P><LI>There is only one value for each argument (but note the important
+exception discussed in the following paragraph)
+</UL>
+<P>Omitting switches is possible only because there is a prescribed order for
+each command's arguments. When the issuer does not include
+switches, the command interpreter relies instead on the order of
+arguments; it assumes that the first element after the operation code is
+the command's first argument, the next element is the command's
+second argument, and so on. The important exception is when a
+command's final required argument accepts multiple values. In this
+case, the command interpreter assumes that the issuer has correctly provided
+one value for each argument up through the final one, so any additional values
+at the end belong to the final argument.
+<P>The following list describes the rules for omitting switches from the
+opposite perspective: an argument's switch must be provided when
+any of the following conditions apply.
+<UL>
+<P><LI>The command's arguments do not appear in the prescribed order
+<P><LI>An optional argument is omitted but a subsequent optional argument is
+provided
+<P><LI>A switch is provided for a preceding argument
+<P><LI>More than one value is supplied for a preceding argument (which must take
+multiple values, of course); without a switch on the current argument,
+the command interpreter assumes that the current argument is another value for
+the preceding argument
+</UL>
+<P><I><B><A NAME="Header_64">An Example of Omitting Switches</A>:&nbsp;</B></I>&nbsp;
+Consider again the example command from <A HREF="#HDRCOMMAND-EX">An Example Command</A>.
+<PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
+   
+</PRE>
+<P>This command has two required arguments: the server machine name
+(identified by the <B>-server</B> switch) and binary file name (identified
+by the <B>-file</B> switch). The second argument accepts multiple
+values. By complying with all three conditions, the issuer can omit the
+switches:
+<PRE>   % <B>bos getdate fs1.abc.com ptserver kaserver</B>
+   
+</PRE>
+<P>Because there are no switches, the <B>bos</B> command interpreter
+relies on the order of arguments. It assumes that the first element
+following the operation code, <B>fs1.abc.com</B>, is the
+server machine name, and that the next argument, <B>ptserver</B>, is a
+binary file name. Then, because the command's second (and last)
+argument accepts multiple values, the command interpreter correctly interprets
+<B>kaserver</B> as an additional value for it.
+<P>On the other hand, the following is not acceptable because it violates the
+first two conditions in <A HREF="#HDRNOSWITCH">Conditions for Omitting Switches</A>: even though there is only one value per argument, the
+arguments do not appear in the prescribed order, and a switch is provided for
+one argument but not the other.
+<PRE>   % <B>bos getdate ptserver -server fs1.abc.com</B>
+   
+</PRE>
+<P><H6><A NAME="HDRWQ12">Rules for Using Abbreviations and Aliases</A></H6>
+<P>This section explains how to abbreviate operation codes,
+option names, server machine names, partition names, and cell names. It
+is not possible to abbreviate other types of values.
+<P><I><B><A NAME="Header_66">Abbreviating Operation Codes</A>:&nbsp;</B></I>&nbsp;
+It is acceptable to abbreviate an operation code to the shortest form
+that still distinguishes it from the other operation codes in its
+suite.
+<P>For example, it is acceptable to shorten <B>bos install</B> to <B>bos
+i</B> because there are no other operation codes in the <B>bos</B>
+command suite that begin with the letter <B>i</B>. In contrast,
+there are several <B>bos</B> operation codes that start with the letter
+<B>s</B>, so the abbreviations must be longer to remain unambiguous:
+<DL>
+<DD><P><B>bos sa</B> for <B>bos salvage</B>
+<DD><P><B>bos seta</B> for <B>bos setauth</B>
+<DD><P><B>bos setc</B> for <B>bos setcellname</B>
+<DD><P><B>bos setr</B> for <B>bos setrestart</B>
+<DD><P><B>bos sh</B> for <B>bos shutdown</B>
+<DD><P><B>bos start</B> for <B>bos start</B>
+<DD><P><B>bos startu</B> for <B>bos startup</B>
+<DD><P><B>bos stat</B> for <B>bos status</B>
+<DD><P><B>bos sto</B> for <B>bos stop</B>
+</DL>
+<P>In addition to abbreviations, some operation codes have an
+<I>alias</I>, a short form that is not derived by abbreviating the
+operation code to its shortest unambiguous form. For example, the alias
+for the <B>fs setacl</B> command is <B>fs sa</B>, whereas the shortest
+unambiguous abbreviation is <B>fs seta</B>.
+<P>There are two usual reasons an operation code has an alias:
+<UL>
+<P><LI>Because the command is frequently issued, it is convenient to have a form
+shorter than the one derived by abbreviating. The <B>fs setacl</B>
+command is an example.
+<P><LI>Because the command's name has changed, but users of previous
+versions of AFS know the former name. For example, <B>bos
+listhosts</B> has the alias <B>bos getcell</B>, its former name.
+It is acceptable to abbreviate aliases to their shortest unambiguous form (for
+example, <B>bos getcell</B> to <B>bos getc</B>).
+</UL>
+<P>Even if an operation code has an alias, it is still acceptable to use the
+shortest unambiguous form. Thus, the <B>fs setacl</B> command has
+three acceptable forms: <B>fs setacl</B> (the full form), <B>fs
+seta</B> (the shortest abbreviation), and <B>fs sa</B> (the
+alias).
+<P><I><B><A NAME="Header_67">Abbreviating Switches and Flags</A>:&nbsp;</B></I>&nbsp;
+It is acceptable to shorten a switch or flag to the shortest form that
+distinguishes it from the other switches and flags for its operation
+code. It is often possible to omit switches entirely, subject to the
+conditions listed in <A HREF="#HDRNOSWITCH">Conditions for Omitting Switches</A>.
+<P><I><B><A NAME="HDRFMSABBREV">Abbreviating Server Machine Names</A>:&nbsp;</B></I>&nbsp;
+AFS server machines must have fully-qualified
+Internet-style host names (for example, <B>fs1.abc.com</B>),
+but it is not always necessary to type the full name on the command
+line. AFS commands accept unambiguous shortened forms, but depend on
+the cell's name service (such as the Domain Name Service) or a local host
+table to resolve a shortened name to the fully-qualified equivalent when the
+command is issued.
+<P>Most commands also accept the dotted decimal form of the machine's IP
+address as an identifier.
+<P><I><B><A NAME="HDRPARTABBREV">Abbreviating Partition Names</A>:&nbsp;</B></I>&nbsp;
+Partitions that house AFS volumes must have names of
+the form <B>/vicep</B><VAR>x</VAR> or <B>/vicep</B><VAR>xx</VAR>, where
+the variable final portion is one or two lowercase letters. By
+convention, the first server partition created on a file server machine is
+called <B>/vicepa</B>, the second <B>/vicepb</B>, and so on.
+The <I>IBM AFS Quick Beginnings</I> explains how to configure and name a
+file server machine's partitions in preparation for storing AFS volumes
+on them.
+<P>When issuing AFS commands, you can abbreviate a partition name using any of
+the following forms:
+<PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
+   <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
+   
+</PRE>
+<P>After <B>/vicepz</B> (for which the index is 25) comes
+<PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
+   <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
+   
+</PRE>
+<P>and so on through
+<PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
+    
+</PRE>
+<P><I><B><A NAME="HDRCELLABBREV">Abbreviating Cell Names</A>:&nbsp;</B></I>&nbsp;
+A cell's full name usually matches its Internet
+domain name (such as <B>stateu.edu</B> for the State University or
+<B>abc.com</B> for ABC Corporation). Some AFS commands
+accept unambiguous shortened forms, usually with respect to the local
+<B>/usr/vice/etc/CellServDB file</B> but sometimes depending on the
+ability of the local name service to resolve the corresponding domain
+name.
+<P><H6><A NAME="HDRWQ13">Displaying Online Help for AFS Commands</A></H6>
+<P>To display online help for AFS commands that belong to
+suites, use the <B>help</B> and <B>apropos</B> operation codes.
+A <B>-help</B> flag is also available on every almost every AFS
+command.
+<P>The online help entry for a command consists of two or three lines:
+<UL>
+<P><LI>The first line names the command and briefly describes what it does
+<P><LI>If the command has aliases, they appear on the next line
+<P><LI>The final line, which begins with the string <TT>Usage:</TT>,
+lists the command's options in the prescribed order; online help
+entries use the same typographical symbols (brackets and so on) as this
+documentation.
+</UL>
+<P>If no operation code is specified, the <B>help</B> operation code
+displays the first line (short description) for every operation code in the
+suite:
+<PRE>   
+   % <VAR>command_suite</VAR>  <B>help</B>
+   
+</PRE>
+<P>If the issuer specifies one or more operation codes, the <B>help</B>
+operation code displays each command's complete online entry (short
+description, alias if any, and syntax):
+<PRE>   
+   % <VAR>command_suite</VAR> <B>help</B> <VAR>operation_code</VAR><SUP>+</SUP>
+   
+</PRE>
+<P>The <B>-help</B> flag displays a command's syntax but not the
+short description or alias:
+<PRE>   % <VAR>command_name</VAR> <B>-help</B>  
+   
+</PRE>
+<P>The <B>apropos</B> operation code displays the short description of any
+command in a suite whose operation code or short description includes the
+specified keyword:
+<PRE>   % <VAR>command_suite</VAR> <B>apropos</B> <VAR>"&lt;help&nbsp;string>"</VAR>
+   
+</PRE>
+<P>The following example command displays the complete online help entry for
+the <B>fs setacl</B> command:
+<PRE>   
+   % <B>fs help setacl </B>  
+   fs setacl: set access control list
+   aliases: sa
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   [-clear] [-negative] [-id] [-if] [-help]
+   
+</PRE>
+<P>To see only the syntax statement, use the <B>-help</B> flag:
+<PRE>   % <B>fs setacl -help</B>
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   [-clear] [-negative] [-id] [-if] [-help]
+   
+</PRE>
+<P>In the following example, a user wants to display the quota for her home
+volume. She knows that the relevant command belongs to the
+<B>fs</B> suite, but cannot remember the operation code. She uses
+<B>quota</B> as the keyword:
+<PRE>   
+   % <B>fs apropos quota</B>
+   listquota: list volume quota
+   quota: show volume quota usage
+   setquota: set volume quota
+   
+</PRE>
+<P>The following illustrates the error message that results if no command name
+or short description contains the keyword:
+<PRE>   
+   % <B>fs apropos "list quota"</B>
+   Sorry, no commands found
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>Many AFS commands require one or more types of administrative
+privilege. See the reference page for each command.
+<P><STRONG>Related Information</STRONG>
+<DL>
+<DD><P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<DD><P><A HREF="auarf059.htm#HDRAFSMONITOR">afsmonitor</A>
+<DD><P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<DD><P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<DD><P><A HREF="auarf124.htm#HDRBOSSERVER">bosserver</A>
+<DD><P><A HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<DD><P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<DD><P><A HREF="auarf127.htm#HDRDLOG">dlog</A>
+<DD><P><A HREF="auarf128.htm#HDRDPASS">dpass</A>
+<DD><P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<DD><P><A HREF="auarf130.htm#HDRFMS">fms</A>
+<DD><P><A HREF="auarf131.htm#HDRFS_INTRO">fs</A>
+<DD><P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<DD><P><A HREF="auarf178.htm#HDRFTPD">ftpd (AFS version)</A>
+<DD><P><A HREF="auarf179.htm#HDRINETD">inetd (AFS version)</A>
+<DD><P><A HREF="auarf180.htm#HDRKADB_CHECK">kadb_check</A>
+<DD><P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<DD><P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<DD><P><A HREF="auarf199.htm#HDRKDB">kdb</A>
+<DD><P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<DD><P><A HREF="auarf201.htm#HDRKNFS">knfs</A>
+<DD><P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<DD><P><A HREF="auarf203.htm#HDRKPWVALID">kpwvalid</A>
+<DD><P><A HREF="auarf204.htm#HDRPACKAGE">package</A>
+<DD><P><A HREF="auarf204.htm#HDRPACKAGE">package</A>
+<DD><P><A HREF="auarf207.htm#HDRPACKAGE_TEST">package_test</A>
+<DD><P><A HREF="auarf208.htm#HDRPAGSH">pagsh</A>
+<DD><P><A HREF="auarf209.htm#HDRPRDB_CHECK">prdb_check</A>
+<DD><P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<DD><P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<DD><P><A HREF="auarf228.htm#HDRRCP">rcp (AFS version)</A>
+<DD><P><A HREF="auarf229.htm#HDRRSH">rsh (AFS version)</A>
+<DD><P><A HREF="auarf230.htm#HDRRUNNTP">runntp</A>
+<DD><P><A HREF="auarf231.htm#HDRRXDEBUG">rxdebug</A>
+<DD><P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<DD><P><A HREF="auarf233.htm#HDRSCOUT">scout</A>
+<DD><P><A HREF="auarf234.htm#HDRSYS">sys</A>
+<DD><P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<DD><P><A HREF="auarf236.htm#HDRTRANSLATE_ET">translate_et</A>
+<DD><P><A HREF="auarf238.htm#HDRUNLOG">unlog</A>
+<DD><P><A HREF="auarf239.htm#HDRUP">up</A>
+<DD><P><A HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<DD><P><A HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<DD><P><A HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
+<DD><P><A HREF="auarf248.htm#HDRVLDB_CHECK">vldb_check</A>
+<DD><P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<DD><P><A HREF="auarf250.htm#HDRVOLINFO">volinfo</A>
+<DD><P><A HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<DD><P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<DD><P><A HREF="auarf281.htm#HDRXFS_SIZE_CHECK">xfs_size_check</A>
+<DD><P><A HREF="auarf282.htm#HDRXSTAT_CM_TEST">xstat_cm_test</A>
+<DD><P><A HREF="auarf283.htm#HDRXSTAT_FS_TEST">xstat_fs_test</A>
+</DL>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf056.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf058.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

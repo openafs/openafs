@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.10.2.2 2005/10/12 06:13:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.18 2006/02/18 04:09:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -249,7 +249,7 @@ afs_InitFakeStat(struct afs_fakestat_state *state)
  *
  * Only issues RPCs if canblock is non-zero.
  */
-int
+static int
 afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 		     struct vrequest *areq, int canblock)
 {
@@ -291,7 +291,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, &retry, 0);
+		root_vp = afs_FindVCache(tvc->mvid, &retry, IS_WLOCK);
 		if (root_vp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(root_vp);
@@ -305,6 +305,14 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    code = canblock ? ENOENT : 0;
 	    goto done;
 	}
+#ifdef AFS_DARWIN80_ENV
+        root_vp->m.Type = VDIR;
+        AFS_GUNLOCK();
+        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0);
+        AFS_GLOCK();
+        if (code) goto done;
+        vnode_ref(AFSTOV(root_vp));
+#endif
 	if (tvolp) {
 	    /* Is this always kosher?  Perhaps we should instead use
 	     * NBObtainWriteLock to avoid potential deadlock.
@@ -563,6 +571,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
+#ifdef AFS_DARWIN80_ENV
+    panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
+#endif
     /* first compute some basic parameters.  We dont want to prefetch more
      * than a fraction of the cache in any given call, and we want to preserve
      * a portion of the LRU queue in any event, so as to avoid thrashing
@@ -690,7 +701,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, 0 /* no stats | LRU */ );
+		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK /* no stats | LRU */ );
 		if (tvcp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(tvcp);
@@ -698,16 +709,36 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    } while (tvcp && retry);
 	    if (!tvcp) {	/* otherwise, create manually */
 		tvcp = afs_NewVCache(&tfid, hostp);
-		ObtainWriteLock(&tvcp->lock, 505);
-		ReleaseWriteLock(&afs_xvcache);
-		afs_RemoveVCB(&tfid);
-		ReleaseWriteLock(&tvcp->lock);
+		if (tvcp)
+		{
+			ObtainWriteLock(&tvcp->lock, 505);
+			ReleaseWriteLock(&afs_xvcache);
+			afs_RemoveVCB(&tfid);
+			ReleaseWriteLock(&tvcp->lock);
+		} else {
+			ReleaseWriteLock(&afs_xvcache);
+		}
 	    } else {
 		ReleaseWriteLock(&afs_xvcache);
 	    }
 	    if (!tvcp)
-		goto done;	/* can't happen at present, more's the pity */
+	    {
+		DRelease((struct buffer *)dirEntryp, 0);
+		ReleaseReadLock(&dcp->lock);
+		ReleaseReadLock(&adp->lock);
+		afs_PutDCache(dcp);
+		goto done;	/* can happen if afs_NewVCache fails */
+	    }
 
+#ifdef AFS_DARWIN80_ENV
+            if (tvcp->states & CVInit) {
+                 /* XXX don't have status yet, so creating the vnode is
+                    not yet useful. we would get CDeadVnode set, and the
+                    upcoming PutVCache will cause the vcache to be flushed &
+                    freed, which in turn means the bulkstatus results won't 
+                    be used */
+            }
+#endif
 	    /* WARNING: afs_DoBulkStat uses the Length field to store a
 	     * sequence number for each bulk status request. Under no
 	     * circumstances should afs_DoBulkStat store a sequence number
@@ -1066,7 +1097,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
+#ifdef AFS_DARWIN80_ENV
+#define AFSDOBULK 0
+#else
 static int AFSDOBULK = 1;
+#endif
 
 int
 #ifdef AFS_OSF_ENV
@@ -1169,7 +1204,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
-	if (tvc && !VREFCOUNT(tvc)) {
+	if (tvc && !VREFCOUNT_GT(tvc, 0)) {
 	    osi_Panic("TT1");
 	}
 	if (code) {
@@ -1202,10 +1237,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	ObtainReadLock(&afs_xvcache);
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
+        vnode_get(AFSTOV(adp));
+#endif
 	code = 0;
 	*avcp = tvc = adp;
 	hit = 1;
-	if (adp && !VREFCOUNT(adp)) {
+	if (adp && !VREFCOUNT_GT(adp, 0)) {
 	    osi_Panic("TT2");
 	}
 	goto done;
@@ -1489,7 +1527,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		}
 	    }
 	*avcp = tvc;
-	if (tvc && !VREFCOUNT(tvc)) {
+	if (tvc && !VREFCOUNT_GT(tvc, 0)) {
 	    osi_Panic("TT3");
 	}
 	code = 0;
@@ -1560,8 +1598,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     }
     if (bulkcode)
 	code = bulkcode;
-    else
-	code = afs_CheckCode(code, &treq, 19);
+
+    code = afs_CheckCode(code, &treq, 19);
     if (code) {
 	/* If there is an error, make sure *avcp is null.
 	 * Alphas panic otherwise - defect 10719.

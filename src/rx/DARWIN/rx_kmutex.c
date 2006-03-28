@@ -17,8 +17,36 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_kmutex.c,v 1.3 2003/07/15 23:16:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_kmutex.c,v 1.3.2.1 2005/10/05 05:58:43 shadow Exp $");
 
+#ifndef AFS_DARWIN80_ENV
 /*
  * Currently everything is implemented in rx_kmutex.h
  */
+#else
+#include <afs/sysincludes.h>    /* Standard vendor system headers */
+#include <afsincludes.h>        /* Afs-based standard headers */
+#include <afs/afs_stats.h>      /* statistics */
+#include <sys/malloc.h>
+#include <sys/namei.h>
+#include <sys/ubc.h>
+#if defined(AFS_DARWIN70_ENV)
+#include <vfs/vfs_support.h>
+#endif /* defined(AFS_DARWIN70_ENV) */
+
+lck_grp_t * openafs_lck_grp;
+static lck_grp_attr_t * openafs_lck_grp_attr;
+void rx_kmutex_setup(void) {
+    openafs_lck_grp_attr= lck_grp_attr_alloc_init();
+    lck_grp_attr_setstat(openafs_lck_grp_attr);
+    
+    openafs_lck_grp = lck_grp_alloc_init("openafs",  openafs_lck_grp_attr);
+    lck_grp_attr_free(openafs_lck_grp_attr);
+    
+}
+ 
+void rx_kmutex_finish(void) {
+    lck_grp_free(openafs_lck_grp);
+}
+
+#endif

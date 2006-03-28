@@ -1,0 +1,1008 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd000.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd003.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<H2><A NAME="ToC">Table of Contents</A></H2>
+<P><B><A NAME="ToC_1" HREF="auagd003.htm#HDRFIGLIST_START">Figures</A></B><BR>
+<P><B><A NAME="ToC_2" HREF="auagd004.htm#HDRTLIST_START">Tables</A></B><BR>
+<P><B><A NAME="ToC_3" HREF="auagd005.htm#Header_3">About This Guide</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_4" HREF="auagd005.htm#HDRWQ1">Audience and Purpose</A>
+<LI><A NAME="ToC_5" HREF="auagd005.htm#HDRWQ2">Document Organization</A>
+<LI><A NAME="ToC_6" HREF="auagd005.htm#HDRWQ3">How to Use This Document</A>
+<LI><A NAME="ToC_7" HREF="auagd005.htm#HDRWQ4">Related Documents</A>
+<LI><A NAME="ToC_8" HREF="auagd005.htm#HDRTYPO_CONV">Typographical Conventions</A>
+</MENU>
+<P><B><A NAME="ToC_9" HREF="auagd006.htm#HDRWQ5">An Overview of AFS Administration</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_10" HREF="auagd006.htm#HDRWQ6">A Broad Overview of AFS</A>
+<LI><A NAME="ToC_11" HREF="auagd006.htm#HDRWQ7">More Detailed Discussions of Some Basic Concepts</A>
+<MENU>
+<LI><A NAME="ToC_12" HREF="auagd006.htm#HDRWQ8">Networks</A>
+<LI><A NAME="ToC_13" HREF="auagd006.htm#HDRWQ9">Distributed File Systems</A>
+<LI><A NAME="ToC_14" HREF="auagd006.htm#HDRWQ10">Servers and Clients</A>
+<LI><A NAME="ToC_15" HREF="auagd006.htm#HDRWQ11">Cells</A>
+<LI><A NAME="ToC_16" HREF="auagd006.htm#HDRWQ12">The Uniform Namespace and Transparent Access</A>
+<LI><A NAME="ToC_17" HREF="auagd006.htm#HDRWQ13">Volumes</A>
+<LI><A NAME="ToC_18" HREF="auagd006.htm#HDRWQ14">Mount Points</A>
+<LI><A NAME="ToC_19" HREF="auagd006.htm#HDRWQ15">Replication</A>
+<LI><A NAME="ToC_20" HREF="auagd006.htm#HDRWQ16">Caching and Callbacks</A>
+</MENU>
+<LI><A NAME="ToC_21" HREF="auagd006.htm#HDRWQ17">AFS Server Processes and the Cache Manager</A>
+<MENU>
+<LI><A NAME="ToC_22" HREF="auagd006.htm#HDRWQ18">The File Server</A>
+<LI><A NAME="ToC_23" HREF="auagd006.htm#HDRWQ19">The Basic OverSeer Server</A>
+<LI><A NAME="ToC_24" HREF="auagd006.htm#HDRWQ20">The Authentication Server</A>
+<LI><A NAME="ToC_25" HREF="auagd006.htm#HDRWQ21">The Protection Server</A>
+<LI><A NAME="ToC_26" HREF="auagd006.htm#HDRWQ22">The Volume Server</A>
+<LI><A NAME="ToC_27" HREF="auagd006.htm#HDRWQ23">The Volume Location (VL) Server</A>
+<LI><A NAME="ToC_28" HREF="auagd006.htm#HDRWQ24">The Update Server</A>
+<LI><A NAME="ToC_29" HREF="auagd006.htm#HDRWQ25">The Backup Server</A>
+<LI><A NAME="ToC_30" HREF="auagd006.htm#HDRWQ26">The Salvager</A>
+<LI><A NAME="ToC_31" HREF="auagd006.htm#HDRWQ27">The Network Time Protocol Daemon</A>
+<LI><A NAME="ToC_32" HREF="auagd006.htm#HDRWQ28">The Cache Manager</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_33" HREF="auagd007.htm#HDRWQ29">Issues in Cell Configuration and Administration</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_34" HREF="auagd007.htm#HDRWQ30">Differences between AFS and UNIX: A Summary</A>
+<MENU>
+<LI><A NAME="ToC_35" HREF="auagd007.htm#Header_35">Differences in File and Directory Protection</A>
+<LI><A NAME="ToC_36" HREF="auagd007.htm#HDRWQ31">Differences in Authentication</A>
+<LI><A NAME="ToC_37" HREF="auagd007.htm#Header_37">Differences in the Semantics of Standard UNIX Commands</A>
+<LI><A NAME="ToC_38" HREF="auagd007.htm#Header_38">The AFS version of the fsck Command</A>
+<LI><A NAME="ToC_39" HREF="auagd007.htm#HDRWQ32">Creating Hard Links</A>
+<LI><A NAME="ToC_40" HREF="auagd007.htm#HDRWQ33">AFS Implements Save on Close</A>
+<LI><A NAME="ToC_41" HREF="auagd007.htm#Header_41">Setuid Programs</A>
+</MENU>
+<LI><A NAME="ToC_42" HREF="auagd007.htm#HDRWQ34">Choosing a Cell Name</A>
+<MENU>
+<LI><A NAME="ToC_43" HREF="auagd007.htm#Header_43">How to Set the Cell Name</A>
+<LI><A NAME="ToC_44" HREF="auagd007.htm#HDRWQ35">Why Choosing the Appropriate Cell Name is Important</A>
+</MENU>
+<LI><A NAME="ToC_45" HREF="auagd007.htm#HDRWQ36">Participating in the AFS Global Namespace</A>
+<MENU>
+<LI><A NAME="ToC_46" HREF="auagd007.htm#HDRWQ37">What the Global Namespace Looks Like</A>
+<LI><A NAME="ToC_47" HREF="auagd007.htm#HDRWQ38">Making Your Cell Visible to Others</A>
+<LI><A NAME="ToC_48" HREF="auagd007.htm#HDRWQ39">Making Other Cells Visible in Your Cell</A>
+<LI><A NAME="ToC_49" HREF="auagd007.htm#HDRWQ40">Granting and Denying Foreign Users Access to Your Cell</A>
+</MENU>
+<LI><A NAME="ToC_50" HREF="auagd007.htm#HDRWQ41">Configuring Your AFS Filespace</A>
+<MENU>
+<LI><A NAME="ToC_51" HREF="auagd007.htm#Header_51">The Top /afs Level</A>
+<LI><A NAME="ToC_52" HREF="auagd007.htm#HDRWQ42">The Second (Cellname) Level</A>
+<LI><A NAME="ToC_53" HREF="auagd007.htm#HDRWQ43">The Third Level</A>
+</MENU>
+<LI><A NAME="ToC_54" HREF="auagd007.htm#HDRWQ44">Creating Volumes to Simplify Administration</A>
+<MENU>
+<LI><A NAME="ToC_55" HREF="auagd007.htm#Header_55">Assigning Volume Names</A>
+<LI><A NAME="ToC_56" HREF="auagd007.htm#HDRWQ49">Grouping Related Volumes on a Partition</A>
+<LI><A NAME="ToC_57" HREF="auagd007.htm#HDRWQ50">When to Replicate Volumes</A>
+<LI><A NAME="ToC_58" HREF="auagd007.htm#Header_58">The Default Quota and ACL on a New Volume</A>
+</MENU>
+<LI><A NAME="ToC_59" HREF="auagd007.htm#HDRWQ51">Configuring Server Machines</A>
+<MENU>
+<LI><A NAME="ToC_60" HREF="auagd007.htm#HDRWQ52">Replicating the AFS Administrative Databases</A>
+<LI><A NAME="ToC_61" HREF="auagd007.htm#HDRWQ53">AFS Files on the Local Disk</A>
+<LI><A NAME="ToC_62" HREF="auagd007.htm#Header_62">Configuring Partitions to Store AFS Data</A>
+<LI><A NAME="ToC_63" HREF="auagd007.htm#Header_63">Monitoring, Rebooting and Automatic Process Restarts</A>
+</MENU>
+<LI><A NAME="ToC_64" HREF="auagd007.htm#HDRWQ54">Configuring Client Machines</A>
+<MENU>
+<LI><A NAME="ToC_65" HREF="auagd007.htm#HDRWQ55">Configuring the Local Disk</A>
+<LI><A NAME="ToC_66" HREF="auagd007.htm#Header_66">Enabling Access to Foreign Cells</A>
+<LI><A NAME="ToC_67" HREF="auagd007.htm#HDRWQ56">Using the @sys Variable in Pathnames</A>
+<LI><A NAME="ToC_68" HREF="auagd007.htm#Header_68">Setting Server Preferences</A>
+</MENU>
+<LI><A NAME="ToC_69" HREF="auagd007.htm#HDRWQ57">Configuring AFS User Accounts</A>
+<MENU>
+<LI><A NAME="ToC_70" HREF="auagd007.htm#HDRWQ58">Choosing Usernames and Naming Other Account Components</A>
+<LI><A NAME="ToC_71" HREF="auagd007.htm#HDRWQ59">Grouping Home Directories</A>
+<LI><A NAME="ToC_72" HREF="auagd007.htm#Header_72">Making a Backup Version of User Volumes Available</A>
+<LI><A NAME="ToC_73" HREF="auagd007.htm#HDRWQ60">Creating Standard Files in New AFS Accounts</A>
+</MENU>
+<LI><A NAME="ToC_74" HREF="auagd007.htm#HDRWQ61">Using AFS Protection Groups</A>
+<MENU>
+<LI><A NAME="ToC_75" HREF="auagd007.htm#Header_75">The Three System Groups</A>
+<LI><A NAME="ToC_76" HREF="auagd007.htm#HDRWQ62">The Two Types of User-Defined Groups</A>
+</MENU>
+<LI><A NAME="ToC_77" HREF="auagd007.htm#HDRWQ63">Login and Authentication in AFS</A>
+<MENU>
+<LI><A NAME="ToC_78" HREF="auagd007.htm#HDRWQ64">Identifying AFS Tokens by PAG</A>
+<LI><A NAME="ToC_79" HREF="auagd007.htm#HDRWQ65">Using an AFS-modified login Utility</A>
+<LI><A NAME="ToC_80" HREF="auagd007.htm#HDRWQ69">Using Two-Step Login and Authentication</A>
+<LI><A NAME="ToC_81" HREF="auagd007.htm#Header_81">Obtaining, Displaying, and Discarding Tokens</A>
+<LI><A NAME="ToC_82" HREF="auagd007.htm#Header_82">Setting Default Token Lifetimes for Users</A>
+<LI><A NAME="ToC_83" HREF="auagd007.htm#Header_83">Changing Passwords</A>
+<LI><A NAME="ToC_84" HREF="auagd007.htm#Header_84">Imposing Restrictions on Passwords and Authentication Attempts</A>
+<LI><A NAME="ToC_85" HREF="auagd007.htm#HDRWQ70">Support for Kerberos Authentication</A>
+</MENU>
+<LI><A NAME="ToC_86" HREF="auagd007.htm#HDRWQ71">Security and Authorization in AFS</A>
+<MENU>
+<LI><A NAME="ToC_87" HREF="auagd007.htm#HDRWQ72">Some Important Security Features</A>
+<LI><A NAME="ToC_88" HREF="auagd007.htm#HDRWQ73">Three Types of Privilege</A>
+<LI><A NAME="ToC_89" HREF="auagd007.htm#Header_89">Authorization Checking versus Authentication</A>
+<LI><A NAME="ToC_90" HREF="auagd007.htm#HDRWQ74">Improving Security in Your Cell</A>
+<LI><A NAME="ToC_91" HREF="auagd007.htm#HDRWQ75">A More Detailed Look at Mutual Authentication</A>
+</MENU>
+<LI><A NAME="ToC_94" HREF="auagd007.htm#HDRWQ77">Backing Up AFS Data</A>
+<MENU>
+<LI><A NAME="ToC_95" HREF="auagd007.htm#Header_95">Backup Volumes</A>
+<LI><A NAME="ToC_96" HREF="auagd007.htm#Header_96">The AFS Backup System</A>
+</MENU>
+<LI><A NAME="ToC_97" HREF="auagd007.htm#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>
+<LI><A NAME="ToC_98" HREF="auagd007.htm#HDRWQ79">Accessing AFS through NFS</A>
+</MENU>
+<P><B><A NAME="ToC_99" HREF="auagd008.htm#HDRWQ80">Administering Server Machines</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_100" HREF="auagd008.htm#HDRWQ81">Summary of Instructions</A>
+<LI><A NAME="ToC_101" HREF="auagd008.htm#HDRWQ83">Local Disk Files on a Server Machine</A>
+<MENU>
+<LI><A NAME="ToC_102" HREF="auagd008.htm#HDRWQ84">Binaries in the /usr/afs/bin Directory</A>
+<LI><A NAME="ToC_103" HREF="auagd008.htm#HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</A>
+<LI><A NAME="ToC_104" HREF="auagd008.htm#HDRWQ86">Local Configuration Files in the /usr/afs/local Directory</A>
+<LI><A NAME="ToC_105" HREF="auagd008.htm#HDRWQ87">Replicated Database Files in the /usr/afs/db Directory</A>
+<LI><A NAME="ToC_106" HREF="auagd008.htm#HDRWQ88">Log Files in the /usr/afs/logs Directory</A>
+<LI><A NAME="ToC_107" HREF="auagd008.htm#HDRWQ89">Volume Headers on Server Partitions</A>
+</MENU>
+<LI><A NAME="ToC_108" HREF="auagd008.htm#HDRWQ90">The Four Roles for File Server Machines</A>
+<MENU>
+<LI><A NAME="ToC_109" HREF="auagd008.htm#HDRWQ91">Simple File Server Machines</A>
+<LI><A NAME="ToC_110" HREF="auagd008.htm#HDRWQ92">Database Server Machines</A>
+<LI><A NAME="ToC_111" HREF="auagd008.htm#HDRWQ93">Binary Distribution Machines</A>
+<LI><A NAME="ToC_112" HREF="auagd008.htm#HDRWQ94">The System Control Machine</A>
+<LI><A NAME="ToC_113" HREF="auagd008.htm#HDRWQ95">To locate database server machines</A>
+<LI><A NAME="ToC_114" HREF="auagd008.htm#HDRWQ96">To locate the system control machine</A>
+<LI><A NAME="ToC_115" HREF="auagd008.htm#HDRWQ97">To locate the binary distribution machine for a system type</A>
+<LI><A NAME="ToC_116" HREF="auagd008.htm#HDRWQ98">Interpreting the Output from the bos status Command</A>
+</MENU>
+<LI><A NAME="ToC_119" HREF="auagd008.htm#HDRWQ101">Administering Database Server Machines</A>
+<MENU>
+<LI><A NAME="ToC_120" HREF="auagd008.htm#HDRWQ102">Replicating the AFS Administrative Databases</A>
+<LI><A NAME="ToC_125" HREF="auagd008.htm#HDRWQ107">Backing Up and Restoring the Administrative Databases</A>
+<LI><A NAME="ToC_126" HREF="auagd008.htm#HDRWQ108">To back up the administrative databases</A>
+<LI><A NAME="ToC_127" HREF="auagd008.htm#HDRWQ109">To restore an administrative database</A>
+</MENU>
+<LI><A NAME="ToC_128" HREF="auagd008.htm#HDRWQ110">Installing Server Process Software</A>
+<MENU>
+<LI><A NAME="ToC_129" HREF="auagd008.htm#HDRWQ111">Installing New Binaries</A>
+<LI><A NAME="ToC_130" HREF="auagd008.htm#Header_130">To install new server binaries</A>
+<LI><A NAME="ToC_131" HREF="auagd008.htm#HDRWQ113">Reverting to the Previous Version of Binaries</A>
+<LI><A NAME="ToC_132" HREF="auagd008.htm#Header_132">To revert to the previous version of binaries</A>
+<LI><A NAME="ToC_133" HREF="auagd008.htm#HDRWQ115">Displaying Binary Version Dates</A>
+<LI><A NAME="ToC_134" HREF="auagd008.htm#Header_134">To display binary version dates</A>
+<LI><A NAME="ToC_135" HREF="auagd008.htm#HDRWQ116">Removing Obsolete Binary Files</A>
+<LI><A NAME="ToC_136" HREF="auagd008.htm#Header_136">To remove obsolete binaries</A>
+<LI><A NAME="ToC_137" HREF="auagd008.htm#HDRWQ117">Displaying A Binary File's Build Level</A>
+<LI><A NAME="ToC_138" HREF="auagd008.htm#Header_138">To display an AFS binary's build level</A>
+</MENU>
+<LI><A NAME="ToC_139" HREF="auagd008.htm#HDRWQ118">Maintaining the Server CellServDB File</A>
+<MENU>
+<LI><A NAME="ToC_140" HREF="auagd008.htm#HDRWQ119">Distributing the Server CellServDB File</A>
+<LI><A NAME="ToC_141" HREF="auagd008.htm#HDRWQ120">To display a cell's database server machines</A>
+<LI><A NAME="ToC_142" HREF="auagd008.htm#HDRWQ121">To add a database server machine to the CellServDB file</A>
+<LI><A NAME="ToC_143" HREF="auagd008.htm#HDRWQ122">To remove a database server machine from the CellServDB file</A>
+</MENU>
+<LI><A NAME="ToC_144" HREF="auagd008.htm#HDRWQ123">Managing Authentication and Authorization Requirements</A>
+<MENU>
+<LI><A NAME="ToC_145" HREF="auagd008.htm#HDRWQ124">Authentication versus Authorization</A>
+<LI><A NAME="ToC_146" HREF="auagd008.htm#HDRWQ125">Controlling Authorization Checking on a Server Machine</A>
+<LI><A NAME="ToC_147" HREF="auagd008.htm#HDRWQ126">To disable authorization checking on a server machine</A>
+<LI><A NAME="ToC_148" HREF="auagd008.htm#HDRWQ127">To enable authorization checking on a server machine</A>
+<LI><A NAME="ToC_149" HREF="auagd008.htm#HDRWQ128">Bypassing Mutual Authentication for an Individual Command</A>
+<LI><A NAME="ToC_150" HREF="auagd008.htm#HDRWQ129">To bypass mutual authentication for bos, kas, pts, and vos commands</A>
+<LI><A NAME="ToC_151" HREF="auagd008.htm#Header_151">To bypass mutual authentication for fs commands</A>
+</MENU>
+<LI><A NAME="ToC_152" HREF="auagd008.htm#HDRWQ130">Adding or Removing Disks and Partitions</A>
+<MENU>
+<LI><A NAME="ToC_153" HREF="auagd008.htm#HDRWQ131">To add and mount a new disk to house AFS volumes</A>
+<LI><A NAME="ToC_154" HREF="auagd008.htm#HDRWQ135">To unmount and remove a disk housing AFS volumes</A>
+</MENU>
+<LI><A NAME="ToC_155" HREF="auagd008.htm#HDRWQ138">Managing Server IP Addresses and VLDB Server Entries</A>
+<MENU>
+<LI><A NAME="ToC_156" HREF="auagd008.htm#Header_156">To create or edit the server NetInfo file</A>
+<LI><A NAME="ToC_157" HREF="auagd008.htm#Header_157">To create or edit the server NetRestrict file</A>
+<LI><A NAME="ToC_158" HREF="auagd008.htm#Header_158">To display all server entries from the VLDB</A>
+<LI><A NAME="ToC_159" HREF="auagd008.htm#Header_159">To remove obsolete server entries from the VLDB</A>
+<LI><A NAME="ToC_160" HREF="auagd008.htm#Header_160">To change a server machine's IP addresses</A>
+</MENU>
+<LI><A NAME="ToC_161" HREF="auagd008.htm#HDRWQ139">Rebooting a Server Machine</A>
+<MENU>
+<LI><A NAME="ToC_162" HREF="auagd008.htm#HDRWQ140">To reboot a file server machine from its console</A>
+<LI><A NAME="ToC_163" HREF="auagd008.htm#HDRWQ141">To reboot a file server machine remotely</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_164" HREF="auagd009.htm#HDRWQ142">Monitoring and Controlling Server Processes</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_165" HREF="auagd009.htm#HDRWQ143">Summary of Instructions</A>
+<LI><A NAME="ToC_166" HREF="auagd009.htm#HDRWQ145">Brief Descriptions of the AFS Server Processes</A>
+<MENU>
+<LI><A NAME="ToC_167" HREF="auagd009.htm#HDRWQ146">The bosserver Process: the Basic OverSeer Server</A>
+<LI><A NAME="ToC_168" HREF="auagd009.htm#HDRWQ147">The buserver Process: the Backup Server</A>
+<LI><A NAME="ToC_169" HREF="auagd009.htm#HDRWQ148">The fs Collection of Processes: the File Server, Volume Server and Salvager</A>
+<LI><A NAME="ToC_170" HREF="auagd009.htm#HDRWQ149">The kaserver Process: the Authentication Server</A>
+<LI><A NAME="ToC_171" HREF="auagd009.htm#HDRWQ150">The ptserver Process: the Protection Server</A>
+<LI><A NAME="ToC_172" HREF="auagd009.htm#HDRWQ151">The runntp Process</A>
+<LI><A NAME="ToC_173" HREF="auagd009.htm#HDRWQ152">The upserver and upclient Processes: the Update Server</A>
+<LI><A NAME="ToC_174" HREF="auagd009.htm#HDRWQ153">The vlserver Process: the Volume Location Server</A>
+</MENU>
+<LI><A NAME="ToC_175" HREF="auagd009.htm#HDRWQ154">Controlling and Checking Process Status</A>
+<MENU>
+<LI><A NAME="ToC_176" HREF="auagd009.htm#Header_176">The Information in the BosConfig File</A>
+<LI><A NAME="ToC_177" HREF="auagd009.htm#HDRWQ155">How the BOS Server Uses the Information in the BosConfig File</A>
+<LI><A NAME="ToC_178" HREF="auagd009.htm#HDRWQ156">About Starting and Stopping the Database Server Processes</A>
+<LI><A NAME="ToC_179" HREF="auagd009.htm#HDRWQ157">About Starting and Stopping the Update Server</A>
+</MENU>
+<LI><A NAME="ToC_180" HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>
+<MENU>
+<LI><A NAME="ToC_181" HREF="auagd009.htm#HDRWQ159">To display the status of server processes and their BosConfig entries</A>
+</MENU>
+<LI><A NAME="ToC_182" HREF="auagd009.htm#HDRWQ161">Creating and Removing Processes</A>
+<MENU>
+<LI><A NAME="ToC_183" HREF="auagd009.htm#HDRWQ162">To create and start a new process</A>
+<LI><A NAME="ToC_184" HREF="auagd009.htm#Header_184">To stop a process and remove it from the BosConfig file</A>
+</MENU>
+<LI><A NAME="ToC_185" HREF="auagd009.htm#HDRWQ164">Stopping and Starting Processes Permanently</A>
+<MENU>
+<LI><A NAME="ToC_186" HREF="auagd009.htm#HDRWQ165">To stop a process by changing its status to NotRun</A>
+<LI><A NAME="ToC_187" HREF="auagd009.htm#HDRWQ166">To start processes by changing their status flags to Run</A>
+</MENU>
+<LI><A NAME="ToC_188" HREF="auagd009.htm#HDRWQ167">Stopping and Starting Processes Temporarily</A>
+<MENU>
+<LI><A NAME="ToC_189" HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>
+<LI><A NAME="ToC_190" HREF="auagd009.htm#Header_190">To start all stopped processes that have status flag Run in the BosConfig file</A>
+<LI><A NAME="ToC_191" HREF="auagd009.htm#Header_191">To start specific  processes</A>
+</MENU>
+<LI><A NAME="ToC_192" HREF="auagd009.htm#HDRWQ170">Stopping and Immediately Restarting Processes</A>
+<MENU>
+<LI><A NAME="ToC_193" HREF="auagd009.htm#Header_193">To stop and restart all processes including the BOS Server</A>
+<LI><A NAME="ToC_194" HREF="auagd009.htm#Header_194">To stop and immediately restart all processes except the BOS Server</A>
+<LI><A NAME="ToC_195" HREF="auagd009.htm#Header_195">To stop and immediately restart specific processes</A>
+</MENU>
+<LI><A NAME="ToC_196" HREF="auagd009.htm#HDRWQ171">Setting the BOS Server's Restart Times</A>
+<MENU>
+<LI><A NAME="ToC_197" HREF="auagd009.htm#Header_197">To display the BOS Server restart times</A>
+<LI><A NAME="ToC_198" HREF="auagd009.htm#HDRWQ172">To set the general or binary restart time</A>
+</MENU>
+<LI><A NAME="ToC_199" HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A>
+<MENU>
+<LI><A NAME="ToC_200" HREF="auagd009.htm#Header_200">To examine a server process log file</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_201" HREF="auagd010.htm#HDRWQ174">Managing Volumes</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_202" HREF="auagd010.htm#HDRWQ175">Summary of Instructions</A>
+<LI><A NAME="ToC_203" HREF="auagd010.htm#HDRWQ177">About Volumes</A>
+<MENU>
+<LI><A NAME="ToC_204" HREF="auagd010.htm#HDRWQ178">The Three Types of Volumes</A>
+<LI><A NAME="ToC_205" HREF="auagd010.htm#HDRWQ179">How Volumes Improve AFS Efficiency</A>
+<LI><A NAME="ToC_206" HREF="auagd010.htm#HDRWQ180">Volume Information in the VLDB</A>
+<LI><A NAME="ToC_207" HREF="auagd010.htm#HDRWQ181">The Information in Volume Headers</A>
+<LI><A NAME="ToC_208" HREF="auagd010.htm#HDRWQ182">Keeping the VLDB and Volume Headers Synchronized</A>
+<LI><A NAME="ToC_209" HREF="auagd010.htm#HDRWQ183">About Mounting Volumes</A>
+<LI><A NAME="ToC_210" HREF="auagd010.htm#HDRWQ184">About Volume Names</A>
+</MENU>
+<LI><A NAME="ToC_211" HREF="auagd010.htm#HDRWQ185">Creating Read/write Volumes</A>
+<MENU>
+<LI><A NAME="ToC_212" HREF="auagd010.htm#Header_212">To create (and mount) a read/write volume</A>
+</MENU>
+<LI><A NAME="ToC_213" HREF="auagd010.htm#HDRWQ190">About Clones and Cloning</A>
+<LI><A NAME="ToC_214" HREF="auagd010.htm#HDRWQ192">Replicating Volumes (Creating Read-only Volumes)</A>
+<MENU>
+<LI><A NAME="ToC_215" HREF="auagd010.htm#HDRWQ193">Using Read-only Volumes Effectively</A>
+<LI><A NAME="ToC_216" HREF="auagd010.htm#Header_216">Replication Scenarios</A>
+<LI><A NAME="ToC_217" HREF="auagd010.htm#HDRWQ194">To replicate a read/write volume (create a read-only volume)</A>
+</MENU>
+<LI><A NAME="ToC_218" HREF="auagd010.htm#HDRWQ201">Creating Backup Volumes</A>
+<MENU>
+<LI><A NAME="ToC_219" HREF="auagd010.htm#HDRWQ202">Backing Up Multiple Volumes at Once</A>
+<LI><A NAME="ToC_220" HREF="auagd010.htm#HDRWQ203">Automating Creation of Backup Volumes</A>
+<LI><A NAME="ToC_221" HREF="auagd010.htm#HDRWQ204">Making the Contents of Backup Volumes Available to Users</A>
+<LI><A NAME="ToC_222" HREF="auagd010.htm#HDRWQ205">To create and mount a backup volume</A>
+<LI><A NAME="ToC_223" HREF="auagd010.htm#Header_223">To create multiple backup volumes at once</A>
+</MENU>
+<LI><A NAME="ToC_224" HREF="auagd010.htm#HDRWQ208">Mounting Volumes</A>
+<MENU>
+<LI><A NAME="ToC_225" HREF="auagd010.htm#HDRWQ209">The Rules of Mount Point Traversal</A>
+<LI><A NAME="ToC_226" HREF="auagd010.htm#HDRWQ210">The Three Types of Mount Points</A>
+<LI><A NAME="ToC_227" HREF="auagd010.htm#Header_227">Creating a mount point in a foreign cell</A>
+<LI><A NAME="ToC_228" HREF="auagd010.htm#HDRWQ211">To display a mount point</A>
+<LI><A NAME="ToC_229" HREF="auagd010.htm#HDRWQ212">To create a regular or read/write mount point</A>
+<LI><A NAME="ToC_230" HREF="auagd010.htm#HDRWQ213">To create a cellular mount point</A>
+<LI><A NAME="ToC_231" HREF="auagd010.htm#HDRWQ215">To remove a mount point</A>
+</MENU>
+<LI><A NAME="ToC_232" HREF="auagd010.htm#HDRWQ216">Displaying Information About Volumes</A>
+<MENU>
+<LI><A NAME="ToC_233" HREF="auagd010.htm#HDRWQ217">Displaying VLDB Entries</A>
+<LI><A NAME="ToC_234" HREF="auagd010.htm#HDRWQ218">To display VLDB entries</A>
+<LI><A NAME="ToC_235" HREF="auagd010.htm#HDRWQ219">Displaying Volume Headers</A>
+<LI><A NAME="ToC_236" HREF="auagd010.htm#HDRWQ220">To display volume headers</A>
+<LI><A NAME="ToC_237" HREF="auagd010.htm#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>
+<LI><A NAME="ToC_238" HREF="auagd010.htm#HDRWQ222">To display one volume's VLDB entry and volume header</A>
+<LI><A NAME="ToC_239" HREF="auagd010.htm#HDRWQ223">Displaying the Name or Location of the Volume that Contains a File</A>
+</MENU>
+<LI><A NAME="ToC_243" HREF="auagd010.htm#HDRWQ226">Moving Volumes</A>
+<MENU>
+<LI><A NAME="ToC_244" HREF="auagd010.htm#Header_244">To move a read/write volume</A>
+</MENU>
+<LI><A NAME="ToC_245" HREF="auagd010.htm#HDRWQ227">Synchronizing the VLDB and Volume Headers</A>
+<MENU>
+<LI><A NAME="ToC_246" HREF="auagd010.htm#Header_246">To synchronize the VLDB with volume headers</A>
+</MENU>
+<LI><A NAME="ToC_247" HREF="auagd010.htm#HDRWQ232">Salvaging Volumes</A>
+<MENU>
+<LI><A NAME="ToC_248" HREF="auagd010.htm#HDRWQ233">To salvage volumes</A>
+</MENU>
+<LI><A NAME="ToC_249" HREF="auagd010.htm#HDRWQ234">Setting and Displaying Volume Quota and Current Size</A>
+<MENU>
+<LI><A NAME="ToC_250" HREF="auagd010.htm#Header_250">To set quota for a single volume</A>
+<LI><A NAME="ToC_251" HREF="auagd010.htm#Header_251">To set maximum quota on one or more volumes</A>
+<LI><A NAME="ToC_252" HREF="auagd010.htm#Header_252">To display percent quota used</A>
+<LI><A NAME="ToC_253" HREF="auagd010.htm#Header_253">To display quota, current size, and other information</A>
+<LI><A NAME="ToC_254" HREF="auagd010.htm#Header_254">To display quota, current size, and more partition information</A>
+</MENU>
+<LI><A NAME="ToC_255" HREF="auagd010.htm#HDRWQ235">Removing Volumes and their Mount Points</A>
+<MENU>
+<LI><A NAME="ToC_256" HREF="auagd010.htm#Header_256">Other Removal Commands</A>
+<LI><A NAME="ToC_257" HREF="auagd010.htm#HDRWQ236">To remove a volume and unmount it</A>
+</MENU>
+<LI><A NAME="ToC_258" HREF="auagd010.htm#HDRWQ240">Dumping and Restoring Volumes</A>
+<MENU>
+<LI><A NAME="ToC_259" HREF="auagd010.htm#Header_259">About Dumping Volumes</A>
+<LI><A NAME="ToC_260" HREF="auagd010.htm#Header_260">To dump a volume</A>
+<LI><A NAME="ToC_261" HREF="auagd010.htm#Header_261">About Restoring Volumes</A>
+<LI><A NAME="ToC_262" HREF="auagd010.htm#HDRWQ242">To restore a dump into a new volume and mount it</A>
+<LI><A NAME="ToC_263" HREF="auagd010.htm#HDRWQ244">To restore a dump file, overwriting an existing volume</A>
+</MENU>
+<LI><A NAME="ToC_264" HREF="auagd010.htm#HDRWQ245">Renaming Volumes</A>
+<MENU>
+<LI><A NAME="ToC_265" HREF="auagd010.htm#HDRWQ246">To rename a volume</A>
+</MENU>
+<LI><A NAME="ToC_266" HREF="auagd010.htm#HDRWQ247">Unlocking and Locking VLDB Entries</A>
+<MENU>
+<LI><A NAME="ToC_267" HREF="auagd010.htm#Header_267">To lock a VLDB entry</A>
+<LI><A NAME="ToC_268" HREF="auagd010.htm#Header_268">To unlock a single VLDB entry</A>
+<LI><A NAME="ToC_269" HREF="auagd010.htm#Header_269">To unlock multiple VLDB entries</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_270" HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_271" HREF="auagd011.htm#HDRWQ249">Summary of Instructions</A>
+<LI><A NAME="ToC_272" HREF="auagd011.htm#HDRWQ251">Introduction to Backup System Features</A>
+<MENU>
+<LI><A NAME="ToC_273" HREF="auagd011.htm#HDRWQ252">Volume Sets and Volume Entries</A>
+<LI><A NAME="ToC_274" HREF="auagd011.htm#Header_274">Dumps and Dump Sets</A>
+<LI><A NAME="ToC_275" HREF="auagd011.htm#Header_275">Dump Hierarchies, Dump Levels and Expiration Dates</A>
+<LI><A NAME="ToC_276" HREF="auagd011.htm#HDRWQ253">Dump Names and Tape Names</A>
+<LI><A NAME="ToC_277" HREF="auagd011.htm#HDRWQ254">Tape Labels, Dump Labels, and EOF Markers</A>
+<LI><A NAME="ToC_278" HREF="auagd011.htm#HDRWQ255">Tape Coordinator Machines, Port Offsets, and Backup Data Files</A>
+<LI><A NAME="ToC_279" HREF="auagd011.htm#HDRWQ256">The Backup Database and Backup Server Process</A>
+<LI><A NAME="ToC_280" HREF="auagd011.htm#Header_280">Interfaces to the Backup System</A>
+</MENU>
+<LI><A NAME="ToC_281" HREF="auagd011.htm#HDRWQ257">Overview of Backup System Configuration</A>
+<LI><A NAME="ToC_282" HREF="auagd011.htm#HDRWQ258">Configuring the tapeconfig File</A>
+<MENU>
+<LI><A NAME="ToC_283" HREF="auagd011.htm#HDRWQ259">To run the fms command on a noncompressing tape device</A>
+</MENU>
+<LI><A NAME="ToC_284" HREF="auagd011.htm#HDRWQ260">Granting Administrative Privilege to Backup Operators</A>
+<LI><A NAME="ToC_285" HREF="auagd011.htm#HDRWQ261">Configuring Tape Coordinator Machines and Tape Devices</A>
+<MENU>
+<LI><A NAME="ToC_286" HREF="auagd011.htm#HDRWQ262">To configure a Tape Coordinator machine</A>
+<LI><A NAME="ToC_287" HREF="auagd011.htm#Header_287">To configure an additional Tape Coordinator on an existing Tape Coordinator machine</A>
+<LI><A NAME="ToC_288" HREF="auagd011.htm#Header_288">To unconfigure a Tape Coordinator</A>
+<LI><A NAME="ToC_289" HREF="auagd011.htm#HDRWQ264">To display the list of configured Tape Coordinators</A>
+</MENU>
+<LI><A NAME="ToC_290" HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>
+<MENU>
+<LI><A NAME="ToC_291" HREF="auagd011.htm#Header_291">To create a volume set</A>
+<LI><A NAME="ToC_292" HREF="auagd011.htm#Header_292">To add a volume entry to a volume set</A>
+<LI><A NAME="ToC_293" HREF="auagd011.htm#HDRWQ266">To display volume sets and volume entries</A>
+<LI><A NAME="ToC_294" HREF="auagd011.htm#Header_294">To delete a volume set</A>
+<LI><A NAME="ToC_295" HREF="auagd011.htm#Header_295">To delete a volume entry from a volume set</A>
+</MENU>
+<LI><A NAME="ToC_296" HREF="auagd011.htm#HDRWQ267">Defining and Displaying the Dump Hierarchy</A>
+<MENU>
+<LI><A NAME="ToC_297" HREF="auagd011.htm#HDRWQ268">Creating a Tape Recycling Schedule</A>
+<LI><A NAME="ToC_298" HREF="auagd011.htm#HDRWQ269">Archiving Tapes</A>
+<LI><A NAME="ToC_299" HREF="auagd011.htm#HDRWQ270">Defining Expiration Dates</A>
+<LI><A NAME="ToC_300" HREF="auagd011.htm#Header_300">To add a dump level to the dump hierarchy</A>
+<LI><A NAME="ToC_301" HREF="auagd011.htm#Header_301">To change a dump level's expiration date</A>
+<LI><A NAME="ToC_302" HREF="auagd011.htm#Header_302">To delete a dump level from the dump hierarchy</A>
+<LI><A NAME="ToC_303" HREF="auagd011.htm#HDRWQ271">To display the dump hierarchy</A>
+</MENU>
+<LI><A NAME="ToC_304" HREF="auagd011.htm#HDRWQ272">Writing and Reading Tape Labels</A>
+<MENU>
+<LI><A NAME="ToC_305" HREF="auagd011.htm#Header_305">Recording a Name on the Label</A>
+<LI><A NAME="ToC_306" HREF="auagd011.htm#Header_306">Recording a Capacity on the Label</A>
+<LI><A NAME="ToC_307" HREF="auagd011.htm#HDRWQ273">To label a tape</A>
+<LI><A NAME="ToC_308" HREF="auagd011.htm#HDRWQ274">To read the label on a tape</A>
+</MENU>
+<LI><A NAME="ToC_309" HREF="auagd011.htm#HDRWQ275">Automating and Increasing the Efficiency of the Backup Process</A>
+<MENU>
+<LI><A NAME="ToC_310" HREF="auagd011.htm#HDRWQ276">Creating a Device Configuration File</A>
+<LI><A NAME="ToC_311" HREF="auagd011.htm#HDRWQ277">Invoking a Device's Tape Mounting and Unmounting Routines</A>
+<LI><A NAME="ToC_314" HREF="auagd011.htm#HDRWQ278">Eliminating the Search or Prompt for the Initial Tape</A>
+<LI><A NAME="ToC_315" HREF="auagd011.htm#HDRWQ279">Enabling Default Responses to Error Conditions</A>
+<LI><A NAME="ToC_316" HREF="auagd011.htm#HDRWQ280">Eliminating the AFS Tape Name Check</A>
+<LI><A NAME="ToC_317" HREF="auagd011.htm#HDRWQ281">Setting the Memory Buffer Size to Promote Tape Streaming</A>
+<LI><A NAME="ToC_318" HREF="auagd011.htm#HDRWQ282">Dumping Data to a Backup Data File</A>
+<LI><A NAME="ToC_319" HREF="auagd011.htm#Header_319">To configure a backup data file</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_320" HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_321" HREF="auagd012.htm#HDRWQ284">Summary of Instructions</A>
+<LI><A NAME="ToC_322" HREF="auagd012.htm#HDRWQ286">Using the Backup System's Interfaces</A>
+<MENU>
+<LI><A NAME="ToC_323" HREF="auagd012.htm#HDRWQ287">Performing Backup Operations as the Local Superuser Root or in a Foreign Cell</A>
+<LI><A NAME="ToC_324" HREF="auagd012.htm#HDRWQ288">Using Interactive and Regular Command Mode</A>
+<LI><A NAME="ToC_325" HREF="auagd012.htm#Header_325">To enter interactive mode</A>
+<LI><A NAME="ToC_326" HREF="auagd012.htm#Header_326">To exit interactive mode</A>
+<LI><A NAME="ToC_327" HREF="auagd012.htm#HDRWQ289">To display pending or running jobs in interactive mode</A>
+<LI><A NAME="ToC_328" HREF="auagd012.htm#HDRWQ290">To cancel operations in interactive mode</A>
+<LI><A NAME="ToC_329" HREF="auagd012.htm#HDRWQ291">Starting and Stopping the Tape Coordinator Process</A>
+<LI><A NAME="ToC_330" HREF="auagd012.htm#HDRWQ292">To start a Tape Coordinator process</A>
+<LI><A NAME="ToC_331" HREF="auagd012.htm#Header_331">To stop a Tape Coordinator process</A>
+<LI><A NAME="ToC_332" HREF="auagd012.htm#HDRWQ295">To check the status of a Tape Coordinator process</A>
+</MENU>
+<LI><A NAME="ToC_333" HREF="auagd012.htm#HDRWQ296">Backing Up Data</A>
+<MENU>
+<LI><A NAME="ToC_334" HREF="auagd012.htm#HDRWQ297">Making Backup Operations More Efficient</A>
+<LI><A NAME="ToC_335" HREF="auagd012.htm#HDRWQ298">How Your Configuration Choices Influence the Dump Process</A>
+<LI><A NAME="ToC_336" HREF="auagd012.htm#HDRWQ299">Appending Dumps to an Existing Dump Set</A>
+<LI><A NAME="ToC_337" HREF="auagd012.htm#HDRWQ300">Scheduling Dumps</A>
+<LI><A NAME="ToC_338" HREF="auagd012.htm#HDRWQ301">To create a dump</A>
+</MENU>
+<LI><A NAME="ToC_339" HREF="auagd012.htm#HDRWQ302">Displaying Backup Dump Records</A>
+<MENU>
+<LI><A NAME="ToC_340" HREF="auagd012.htm#HDRWQ303">To display dump records</A>
+<LI><A NAME="ToC_341" HREF="auagd012.htm#HDRWQ304">To display a volume's dump history</A>
+<LI><A NAME="ToC_342" HREF="auagd012.htm#HDRWQ305">To scan the contents of a tape</A>
+</MENU>
+<LI><A NAME="ToC_343" HREF="auagd012.htm#HDRWQ306">Restoring and Recovering Data</A>
+<MENU>
+<LI><A NAME="ToC_344" HREF="auagd012.htm#HDRWQ307">Making Restore Operations More Efficient</A>
+<LI><A NAME="ToC_345" HREF="auagd012.htm#HDRWQ308">Using the backup volrestore Command</A>
+<LI><A NAME="ToC_346" HREF="auagd012.htm#HDRWQ309">To restore volumes with the backup volrestore command</A>
+<LI><A NAME="ToC_347" HREF="auagd012.htm#HDRWQ310">Using the backup diskrestore Command</A>
+<LI><A NAME="ToC_348" HREF="auagd012.htm#HDRWQ311">To restore a partition with the backup diskrestore command</A>
+<LI><A NAME="ToC_349" HREF="auagd012.htm#HDRWQ312">Using the backup volsetrestore Command</A>
+<LI><A NAME="ToC_352" HREF="auagd012.htm#HDRWQ315">To restore a group of volumes with the backup volsetrestore command</A>
+</MENU>
+<LI><A NAME="ToC_353" HREF="auagd012.htm#HDRWQ316">Maintaining the Backup Database</A>
+<MENU>
+<LI><A NAME="ToC_354" HREF="auagd012.htm#HDRWQ317">Backing Up and Restoring the Backup Database</A>
+<LI><A NAME="ToC_355" HREF="auagd012.htm#HDRWQ318">Checking for and Repairing Corruption in the Backup Database</A>
+<LI><A NAME="ToC_356" HREF="auagd012.htm#HDRWQ319">To verify the integrity of the Backup Database</A>
+<LI><A NAME="ToC_357" HREF="auagd012.htm#HDRWQ320">To repair corruption in the Backup Database</A>
+<LI><A NAME="ToC_358" HREF="auagd012.htm#HDRWQ321">Removing Obsolete Records from the Backup Database</A>
+<LI><A NAME="ToC_359" HREF="auagd012.htm#HDRWQ322">To delete dump records from the Backup Database</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_360" HREF="auagd013.htm#HDRWQ323">Monitoring and Auditing AFS Performance</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_361" HREF="auagd013.htm#HDRWQ324">Summary of Instructions</A>
+<LI><A NAME="ToC_362" HREF="auagd013.htm#HDRWQ326">Using the scout Program</A>
+<MENU>
+<LI><A NAME="ToC_363" HREF="auagd013.htm#HDRWQ327">System Requirements</A>
+<LI><A NAME="ToC_364" HREF="auagd013.htm#HDRWQ328">Using the -basename argument to Specify a Domain Name</A>
+<LI><A NAME="ToC_365" HREF="auagd013.htm#HDRWQ329">The Layout of the scout Display</A>
+<LI><A NAME="ToC_369" HREF="auagd013.htm#HDRWQ332">Highlighting Significant Statistics</A>
+<LI><A NAME="ToC_372" HREF="auagd013.htm#HDRWQ334">Resizing the scout Display</A>
+<LI><A NAME="ToC_373" HREF="auagd013.htm#HDRWQ335">To start the scout program</A>
+<LI><A NAME="ToC_374" HREF="auagd013.htm#Header_374">To stop the scout program</A>
+<LI><A NAME="ToC_375" HREF="auagd013.htm#HDRWQ336">Example Commands and Displays</A>
+</MENU>
+<LI><A NAME="ToC_376" HREF="auagd013.htm#HDRWQ341">Using the fstrace Command Suite</A>
+<MENU>
+<LI><A NAME="ToC_377" HREF="auagd013.htm#HDRWQ342">About the fstrace Command Suite</A>
+<LI><A NAME="ToC_378" HREF="auagd013.htm#HDRWQ343">Requirements for Using the fstrace Command Suite</A>
+<LI><A NAME="ToC_379" HREF="auagd013.htm#Header_379">Using fstrace Commands Effectively</A>
+<LI><A NAME="ToC_380" HREF="auagd013.htm#HDRWQ344">Activating the Trace Log</A>
+<LI><A NAME="ToC_381" HREF="auagd013.htm#Header_381">To configure the trace log</A>
+<LI><A NAME="ToC_382" HREF="auagd013.htm#HDRWQ345">To set the event set</A>
+<LI><A NAME="ToC_383" HREF="auagd013.htm#HDRWQ346">Displaying the State of a Trace Log or Event Set</A>
+<LI><A NAME="ToC_384" HREF="auagd013.htm#Header_384">To display the state of an event set</A>
+<LI><A NAME="ToC_385" HREF="auagd013.htm#Header_385">To display the log size</A>
+<LI><A NAME="ToC_386" HREF="auagd013.htm#HDRWQ347">Dumping and Clearing the Trace Log</A>
+<LI><A NAME="ToC_387" HREF="auagd013.htm#Header_387">To dump the contents of a trace log</A>
+<LI><A NAME="ToC_388" HREF="auagd013.htm#Header_388">To clear the contents of a trace log</A>
+<LI><A NAME="ToC_389" HREF="auagd013.htm#HDRWQ348">Examples of fstrace Commands</A>
+</MENU>
+<LI><A NAME="ToC_390" HREF="auagd013.htm#HDRWQ349">Using the afsmonitor Program</A>
+<MENU>
+<LI><A NAME="ToC_391" HREF="auagd013.htm#HDRWQ350">Requirements for running the afsmonitor program</A>
+<LI><A NAME="ToC_392" HREF="auagd013.htm#Header_392">The afsmonitor Output Screens</A>
+<LI><A NAME="ToC_393" HREF="auagd013.htm#Header_393">The System Overview Screen</A>
+<LI><A NAME="ToC_394" HREF="auagd013.htm#Header_394">The File Servers Screen</A>
+<LI><A NAME="ToC_395" HREF="auagd013.htm#Header_395">The Cache Managers Screen</A>
+</MENU>
+<LI><A NAME="ToC_396" HREF="auagd013.htm#HDRWQ351">Configuring the afsmonitor Program</A>
+<LI><A NAME="ToC_397" HREF="auagd013.htm#HDRWQ352">Writing afsmonitor Statistics to a File</A>
+<LI><A NAME="ToC_398" HREF="auagd013.htm#Header_398">To start the afsmonitor Program</A>
+<LI><A NAME="ToC_399" HREF="auagd013.htm#Header_399">To stop the afsmonitor program</A>
+<LI><A NAME="ToC_400" HREF="auagd013.htm#HDRWQ353">The xstat Data Collection Facility</A>
+<MENU>
+<LI><A NAME="ToC_401" HREF="auagd013.htm#Header_401">The libxstat Libraries</A>
+<LI><A NAME="ToC_402" HREF="auagd013.htm#Header_402">Example xstat Commands</A>
+</MENU>
+<LI><A NAME="ToC_405" HREF="auagd013.htm#HDRWQ354">Auditing AFS Events on AIX File Servers</A>
+<MENU>
+<LI><A NAME="ToC_406" HREF="auagd013.htm#Header_406">Configuring AFS Auditing on AIX File Servers</A>
+<LI><A NAME="ToC_407" HREF="auagd013.htm#Header_407">To enable AFS auditing</A>
+<LI><A NAME="ToC_408" HREF="auagd013.htm#Header_408">To disable AFS auditing</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_409" HREF="auagd014.htm#HDRWQ355">Managing Server Encryption Keys</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_410" HREF="auagd014.htm#HDRWQ356">Summary of Instructions</A>
+<LI><A NAME="ToC_411" HREF="auagd014.htm#HDRWQ358">About Server Encryption Keys</A>
+<MENU>
+<LI><A NAME="ToC_412" HREF="auagd014.htm#Header_412">Keys and Mutual Authentication: A Review</A>
+<LI><A NAME="ToC_413" HREF="auagd014.htm#Header_413">Maintaining AFS Server Encryption Keys</A>
+</MENU>
+<LI><A NAME="ToC_414" HREF="auagd014.htm#HDRWQ359">Displaying Server Encryption Keys</A>
+<MENU>
+<LI><A NAME="ToC_415" HREF="auagd014.htm#HDRWQ360">To display the KeyFile file</A>
+<LI><A NAME="ToC_416" HREF="auagd014.htm#HDRWQ361">To display the afs key from the Authentication Database</A>
+</MENU>
+<LI><A NAME="ToC_417" HREF="auagd014.htm#HDRWQ362">Adding Server Encryption Keys</A>
+<MENU>
+<LI><A NAME="ToC_418" HREF="auagd014.htm#HDRWQ363">To add a new server encryption key</A>
+</MENU>
+<LI><A NAME="ToC_419" HREF="auagd014.htm#HDRWQ368">Removing Server Encryption Keys</A>
+<MENU>
+<LI><A NAME="ToC_420" HREF="auagd014.htm#HDRWQ369">To remove a key from the KeyFile file</A>
+</MENU>
+<LI><A NAME="ToC_421" HREF="auagd014.htm#HDRWQ370">Handling Server Encryption Key Emergencies</A>
+<MENU>
+<LI><A NAME="ToC_422" HREF="auagd014.htm#HDRWQ371">Prevent Mutual Authentication</A>
+<LI><A NAME="ToC_423" HREF="auagd014.htm#Header_423">Disable Authorization Checking by Hand</A>
+<LI><A NAME="ToC_424" HREF="auagd014.htm#Header_424">Work Quickly on Each Machine</A>
+<LI><A NAME="ToC_425" HREF="auagd014.htm#Header_425">Work at the Console</A>
+<LI><A NAME="ToC_426" HREF="auagd014.htm#HDRWQ372">Change Individual KeyFile Files</A>
+<LI><A NAME="ToC_427" HREF="auagd014.htm#Header_427">Two Component Procedures</A>
+<LI><A NAME="ToC_430" HREF="auagd014.htm#Header_430">To create a new server encryption key in emergencies</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_431" HREF="auagd015.htm#HDRWQ387">Administering Client Machines and the Cache Manager</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_432" HREF="auagd015.htm#HDRWQ388">Summary of Instructions</A>
+<LI><A NAME="ToC_433" HREF="auagd015.htm#HDRWQ390">Overview of Cache Manager Customization</A>
+<LI><A NAME="ToC_434" HREF="auagd015.htm#HDRWQ391">Configuration and Cache-Related Files on the Local Disk</A>
+<MENU>
+<LI><A NAME="ToC_435" HREF="auagd015.htm#HDRWQ392">Configuration Files in the /usr/vice/etc Directory</A>
+<LI><A NAME="ToC_436" HREF="auagd015.htm#HDRWQ393">Cache-Related Files</A>
+</MENU>
+<LI><A NAME="ToC_437" HREF="auagd015.htm#HDRWQ394">Determining the Cache Type, Size, and Location</A>
+<MENU>
+<LI><A NAME="ToC_438" HREF="auagd015.htm#Header_438">Choosing the Cache Size</A>
+<LI><A NAME="ToC_439" HREF="auagd015.htm#HDRWQ395">Displaying and Setting the Cache Size and Location</A>
+<LI><A NAME="ToC_440" HREF="auagd015.htm#HDRWQ396">To display the cache size set at reboot</A>
+<LI><A NAME="ToC_441" HREF="auagd015.htm#HDRWQ397">To display the current cache size</A>
+<LI><A NAME="ToC_442" HREF="auagd015.htm#HDRWQ398">To edit the cacheinfo file</A>
+<LI><A NAME="ToC_443" HREF="auagd015.htm#HDRWQ399">To change the disk cache size without rebooting</A>
+<LI><A NAME="ToC_444" HREF="auagd015.htm#Header_444">To reset the disk cache size to the default without rebooting</A>
+<LI><A NAME="ToC_445" HREF="auagd015.htm#HDRWQ401">How the Cache Manager Chooses Data to Discard</A>
+</MENU>
+<LI><A NAME="ToC_446" HREF="auagd015.htm#HDRWQ402">Setting Other Cache Parameters with the afsd program</A>
+<MENU>
+<LI><A NAME="ToC_447" HREF="auagd015.htm#HDRWQ403">Setting Cache Configuration Parameters</A>
+<LI><A NAME="ToC_448" HREF="auagd015.htm#HDRWQ404">Configuring a Disk Cache</A>
+<LI><A NAME="ToC_449" HREF="auagd015.htm#HDRWQ405">Controlling Memory Cache Configuration</A>
+</MENU>
+<LI><A NAME="ToC_450" HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>
+<MENU>
+<LI><A NAME="ToC_451" HREF="auagd015.htm#Header_451">How Clients Use the List of Database Server Machines</A>
+<LI><A NAME="ToC_452" HREF="auagd015.htm#HDRWQ407">The Format of the CellServDB file</A>
+<LI><A NAME="ToC_453" HREF="auagd015.htm#HDRWQ408">Maintaining the Client CellServDB File</A>
+<LI><A NAME="ToC_454" HREF="auagd015.htm#Header_454">To display the /usr/vice/etc/CellServDB file</A>
+<LI><A NAME="ToC_455" HREF="auagd015.htm#Header_455">To display the list of database server machines in kernel memory</A>
+<LI><A NAME="ToC_456" HREF="auagd015.htm#Header_456">To change the list of a cell's database server machines in kernel memory</A>
+</MENU>
+<LI><A NAME="ToC_457" HREF="auagd015.htm#HDRWQ409">Determining if a Client Can Run Setuid Programs</A>
+<MENU>
+<LI><A NAME="ToC_458" HREF="auagd015.htm#Header_458">To determine a cell's setuid status</A>
+<LI><A NAME="ToC_459" HREF="auagd015.htm#Header_459">To change a cell's setuid status</A>
+</MENU>
+<LI><A NAME="ToC_460" HREF="auagd015.htm#HDRWQ410">Setting the File Server Probe Interval</A>
+<MENU>
+<LI><A NAME="ToC_461" HREF="auagd015.htm#Header_461">To set a client's file server probe interval</A>
+</MENU>
+<LI><A NAME="ToC_462" HREF="auagd015.htm#HDRWQ411">Setting a Client Machine's Cell Membership</A>
+<MENU>
+<LI><A NAME="ToC_463" HREF="auagd015.htm#Header_463">To display a client machine's cell membership</A>
+<LI><A NAME="ToC_464" HREF="auagd015.htm#Header_464">To set a client machine's cell membership</A>
+</MENU>
+<LI><A NAME="ToC_465" HREF="auagd015.htm#HDRWQ412">Forcing the Update of Cached Data</A>
+<MENU>
+<LI><A NAME="ToC_466" HREF="auagd015.htm#Header_466">To flush certain files or directories</A>
+<LI><A NAME="ToC_467" HREF="auagd015.htm#Header_467">To flush all data from a volume</A>
+<LI><A NAME="ToC_468" HREF="auagd015.htm#Header_468">To force the Cache Manager to notice other volume changes</A>
+<LI><A NAME="ToC_469" HREF="auagd015.htm#HDRWQ413">To flush one or more mount points</A>
+</MENU>
+<LI><A NAME="ToC_470" HREF="auagd015.htm#HDRWQ414">Maintaining Server Preference Ranks</A>
+<MENU>
+<LI><A NAME="ToC_471" HREF="auagd015.htm#Header_471">How the Cache Manager Sets Default Ranks</A>
+<LI><A NAME="ToC_472" HREF="auagd015.htm#Header_472">How the Cache Manager Uses Preference Ranks</A>
+<LI><A NAME="ToC_473" HREF="auagd015.htm#Header_473">Displaying and Setting Preference Ranks</A>
+<LI><A NAME="ToC_474" HREF="auagd015.htm#Header_474">To display server preference ranks</A>
+<LI><A NAME="ToC_475" HREF="auagd015.htm#Header_475">To set server preference ranks</A>
+</MENU>
+<LI><A NAME="ToC_476" HREF="auagd015.htm#HDRWQ415">Managing Multihomed Client Machines</A>
+<MENU>
+<LI><A NAME="ToC_477" HREF="auagd015.htm#Header_477">To create or edit the client NetInfo file</A>
+<LI><A NAME="ToC_478" HREF="auagd015.htm#Header_478">To create or edit the client NetRestrict file</A>
+<LI><A NAME="ToC_479" HREF="auagd015.htm#Header_479">To display the list of addresses from kernel memory</A>
+<LI><A NAME="ToC_480" HREF="auagd015.htm#Header_480">To set the list of addresses in kernel memory</A>
+</MENU>
+<LI><A NAME="ToC_481" HREF="auagd015.htm#HDRWQ416">Controlling the Display of Warning and Informational Messages</A>
+<MENU>
+<LI><A NAME="ToC_482" HREF="auagd015.htm#Header_482">To control the display of warning and status messages</A>
+</MENU>
+<LI><A NAME="ToC_483" HREF="auagd015.htm#HDRWQ417">Displaying and Setting the System Type Name</A>
+<MENU>
+<LI><A NAME="ToC_484" HREF="auagd015.htm#Header_484">To display the system type name</A>
+<LI><A NAME="ToC_485" HREF="auagd015.htm#Header_485">To change the system type name</A>
+</MENU>
+<LI><A NAME="ToC_486" HREF="auagd015.htm#HDRWQ418">Enabling Asynchronous Writes</A>
+<MENU>
+<LI><A NAME="ToC_487" HREF="auagd015.htm#Header_487">To set the default store asynchrony</A>
+<LI><A NAME="ToC_488" HREF="auagd015.htm#Header_488">To set the store asynchrony for one or more files</A>
+<LI><A NAME="ToC_489" HREF="auagd015.htm#Header_489">To display the default store asynchrony</A>
+<LI><A NAME="ToC_490" HREF="auagd015.htm#Header_490">To display the store asynchrony for one or more files</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_491" HREF="auagd016.htm#HDRWQ419">Configuring Client Machines with the package Program</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_492" HREF="auagd016.htm#HDRWQ420">Summary of Instructions</A>
+<LI><A NAME="ToC_493" HREF="auagd016.htm#HDRWQ422">Using the package Program</A>
+<MENU>
+<LI><A NAME="ToC_494" HREF="auagd016.htm#Header_494">Using Package on File Server Machines</A>
+</MENU>
+<LI><A NAME="ToC_495" HREF="auagd016.htm#HDRWQ423">Package Overview</A>
+<MENU>
+<LI><A NAME="ToC_496" HREF="auagd016.htm#Header_496">Preparing Prototype Files</A>
+<LI><A NAME="ToC_497" HREF="auagd016.htm#HDRWQ424">Compiling Prototype Files</A>
+<LI><A NAME="ToC_498" HREF="auagd016.htm#Header_498">Preparing Clients</A>
+</MENU>
+<LI><A NAME="ToC_499" HREF="auagd016.htm#HDRWQ425">The package Directory Structure</A>
+<MENU>
+<LI><A NAME="ToC_500" HREF="auagd016.htm#HDRWQ426">The src directory</A>
+<LI><A NAME="ToC_501" HREF="auagd016.htm#Header_501">The lib directory</A>
+<LI><A NAME="ToC_502" HREF="auagd016.htm#Header_502">The etc directory</A>
+</MENU>
+<LI><A NAME="ToC_503" HREF="auagd016.htm#HDRWQ427">Example Prototype and Library Files</A>
+<MENU>
+<LI><A NAME="ToC_504" HREF="auagd016.htm#HDRWQ428">An Example Prototype File</A>
+<LI><A NAME="ToC_505" HREF="auagd016.htm#Header_505">Example Library File</A>
+</MENU>
+<LI><A NAME="ToC_506" HREF="auagd016.htm#HDRWQ429">Package Configuration File Instruction Syntax</A>
+<MENU>
+<LI><A NAME="ToC_507" HREF="auagd016.htm#HDRWQ430">Local Files versus Symbolic Links</A>
+<LI><A NAME="ToC_508" HREF="auagd016.htm#HDRWQ431">Defining a Directory</A>
+<LI><A NAME="ToC_509" HREF="auagd016.htm#HDRWQ432">Defining a File</A>
+<LI><A NAME="ToC_510" HREF="auagd016.htm#HDRWQ433">Defining a Symbolic Link</A>
+<LI><A NAME="ToC_511" HREF="auagd016.htm#HDRWQ434">Defining a Block Special Device</A>
+<LI><A NAME="ToC_512" HREF="auagd016.htm#HDRWQ435">Defining a Character Special Device</A>
+<LI><A NAME="ToC_513" HREF="auagd016.htm#HDRWQ436">Defining a Socket</A>
+</MENU>
+<LI><A NAME="ToC_514" HREF="auagd016.htm#HDRWQ437">Constructing Prototype and Library Files</A>
+<MENU>
+<LI><A NAME="ToC_515" HREF="auagd016.htm#Header_515">To construct a prototype file and its component library files</A>
+</MENU>
+<LI><A NAME="ToC_516" HREF="auagd016.htm#HDRWQ438">The Package Makefile File</A>
+<MENU>
+<LI><A NAME="ToC_517" HREF="auagd016.htm#Header_517">Overview</A>
+<LI><A NAME="ToC_518" HREF="auagd016.htm#HDRWQ439">The CONFIG Section</A>
+<LI><A NAME="ToC_519" HREF="auagd016.htm#HDRWQ440">The BASE_LIBS Section</A>
+<LI><A NAME="ToC_520" HREF="auagd016.htm#HDRWQ441">The MACHINE_LIBS Section</A>
+<LI><A NAME="ToC_521" HREF="auagd016.htm#HDRWQ442">The LIBS Section</A>
+<LI><A NAME="ToC_522" HREF="auagd016.htm#HDRWQ443">The .SUFFIXES Section</A>
+<LI><A NAME="ToC_523" HREF="auagd016.htm#HDRWQ444">The Makefile Instructions Section</A>
+</MENU>
+<LI><A NAME="ToC_524" HREF="auagd016.htm#HDRWQ445">Modifying the Makefile</A>
+<MENU>
+<LI><A NAME="ToC_525" HREF="auagd016.htm#Header_525">Adding a New Prototype File</A>
+<LI><A NAME="ToC_526" HREF="auagd016.htm#Header_526">Adding a New System Type</A>
+<LI><A NAME="ToC_527" HREF="auagd016.htm#Header_527">Adding New Library Files</A>
+</MENU>
+<LI><A NAME="ToC_528" HREF="auagd016.htm#HDRWQ446">Compiling Prototype Files</A>
+<MENU>
+<LI><A NAME="ToC_529" HREF="auagd016.htm#Header_529">To compile prototype files</A>
+</MENU>
+<LI><A NAME="ToC_530" HREF="auagd016.htm#HDRWQ447">Modifying Client Machines</A>
+<MENU>
+<LI><A NAME="ToC_531" HREF="auagd016.htm#Header_531">To prepare a client machine to run the package program</A>
+</MENU>
+<LI><A NAME="ToC_532" HREF="auagd016.htm#HDRWQ448">Running the package program</A>
+<MENU>
+<LI><A NAME="ToC_533" HREF="auagd016.htm#Header_533">To invoke the package program by rebooting</A>
+<LI><A NAME="ToC_534" HREF="auagd016.htm#Header_534">To invoke the package program directly (without rebooting)</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_535" HREF="auagd017.htm#HDRWQ449">Creating and Deleting User Accounts with the uss Command Suite</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_536" HREF="auagd017.htm#HDRWQ450">Summary of Instructions</A>
+<LI><A NAME="ToC_537" HREF="auagd017.htm#HDRWQ452">Overview of the uss Command Suite</A>
+<MENU>
+<LI><A NAME="ToC_538" HREF="auagd017.htm#Header_538">The Components of an AFS User Account</A>
+<LI><A NAME="ToC_539" HREF="auagd017.htm#HDRWQ453">Privilege Requirements for the uss Commands</A>
+<LI><A NAME="ToC_540" HREF="auagd017.htm#HDRWQ454">Avoiding and Recovering from Errors and Interrupted Operations</A>
+</MENU>
+<LI><A NAME="ToC_541" HREF="auagd017.htm#HDRWQ455">Creating Local Password File Entries with uss</A>
+<MENU>
+<LI><A NAME="ToC_542" HREF="auagd017.htm#HDRWQ456">Assigning AFS and UNIX UIDs that Match</A>
+<LI><A NAME="ToC_543" HREF="auagd017.htm#HDRWQ457">Specifying Passwords in the Local Password File</A>
+<LI><A NAME="ToC_544" HREF="auagd017.htm#HDRWQ458">Creating a Common Source Password File</A>
+</MENU>
+<LI><A NAME="ToC_545" HREF="auagd017.htm#HDRWQ459">Converting Existing UNIX Accounts with uss</A>
+<MENU>
+<LI><A NAME="ToC_546" HREF="auagd017.htm#HDRWQ460">Making UNIX and AFS UIDs Match</A>
+<LI><A NAME="ToC_547" HREF="auagd017.htm#HDRWQ461">Setting the Password Field Appropriately</A>
+<LI><A NAME="ToC_548" HREF="auagd017.htm#HDRWQ462">Moving Local Files into AFS</A>
+</MENU>
+<LI><A NAME="ToC_549" HREF="auagd017.htm#HDRWQ463">Constructing a uss Template File</A>
+<MENU>
+<LI><A NAME="ToC_550" HREF="auagd017.htm#HDRWQ464">Creating the Three Types of User Accounts</A>
+<LI><A NAME="ToC_551" HREF="auagd017.htm#HDRWQ465">Using Constants and Variables in the Template File</A>
+<LI><A NAME="ToC_552" HREF="auagd017.htm#HDRWQ468">Where to Place Template Files</A>
+<LI><A NAME="ToC_553" HREF="auagd017.htm#HDRWQ469">Some General Rules for Constructing a Template</A>
+<LI><A NAME="ToC_554" HREF="auagd017.htm#HDRWQ470">About Creating Local Disk Directories and Files</A>
+<LI><A NAME="ToC_555" HREF="auagd017.htm#HDRWQ471">Example uss Templates</A>
+<LI><A NAME="ToC_556" HREF="auagd017.htm#HDRWQ472">Evenly Distributing User Home Directories with the G Instruction</A>
+<LI><A NAME="ToC_557" HREF="auagd017.htm#HDRWQ473">Creating a Volume with the V Instruction</A>
+<LI><A NAME="ToC_558" HREF="auagd017.htm#HDRWQ474">Creating a Directory with the D Instruction</A>
+<LI><A NAME="ToC_559" HREF="auagd017.htm#HDRWQ475">Creating a File from a Prototype with the F Instruction</A>
+<LI><A NAME="ToC_560" HREF="auagd017.htm#HDRWQ476">Creating One-Line Files with the E Instruction</A>
+<LI><A NAME="ToC_561" HREF="auagd017.htm#HDRWQ477">Creating Links with the L and S Instructions</A>
+<LI><A NAME="ToC_562" HREF="auagd017.htm#HDRWQ478">Increasing Account Security with the A Instruction</A>
+<LI><A NAME="ToC_563" HREF="auagd017.htm#HDRWQ479">Executing Commands with the X Instruction</A>
+</MENU>
+<LI><A NAME="ToC_564" HREF="auagd017.htm#HDRWQ480">Creating Individual Accounts with the uss add Command</A>
+<MENU>
+<LI><A NAME="ToC_565" HREF="auagd017.htm#HDRWQ483">To create an AFS account with the uss add command</A>
+</MENU>
+<LI><A NAME="ToC_566" HREF="auagd017.htm#HDRWQ486">Deleting Individual Accounts with the uss delete Command</A>
+<MENU>
+<LI><A NAME="ToC_567" HREF="auagd017.htm#HDRWQ487">To delete an AFS account</A>
+</MENU>
+<LI><A NAME="ToC_568" HREF="auagd017.htm#HDRWQ488">Creating and Deleting Multiple Accounts with the uss bulk Command</A>
+<MENU>
+<LI><A NAME="ToC_569" HREF="auagd017.htm#HDRWQ489">Constructing a Bulk Input File</A>
+<LI><A NAME="ToC_570" HREF="auagd017.htm#Header_570">Example Bulk Input File Instructions</A>
+<LI><A NAME="ToC_571" HREF="auagd017.htm#Header_571">To create and delete multiple AFS user accounts</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_572" HREF="auagd018.htm#HDRWQ491">Administering User Accounts</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_573" HREF="auagd018.htm#HDRWQ492">Summary of Instructions</A>
+<LI><A NAME="ToC_574" HREF="auagd018.htm#HDRWQ494">The Components of an AFS User Account</A>
+<LI><A NAME="ToC_575" HREF="auagd018.htm#HDRWQ495">Creating Local Password File Entries</A>
+<MENU>
+<LI><A NAME="ToC_576" HREF="auagd018.htm#HDRWQ496">Assigning AFS and UNIX UIDs that Match</A>
+<LI><A NAME="ToC_577" HREF="auagd018.htm#HDRWQ497">Specifying Passwords in the Local Password File</A>
+</MENU>
+<LI><A NAME="ToC_578" HREF="auagd018.htm#HDRWQ498">Converting Existing UNIX Accounts</A>
+<MENU>
+<LI><A NAME="ToC_579" HREF="auagd018.htm#HDRWQ499">Making UNIX and AFS UIDs Match</A>
+<LI><A NAME="ToC_580" HREF="auagd018.htm#HDRWQ500">Setting the Password Field Appropriately</A>
+<LI><A NAME="ToC_581" HREF="auagd018.htm#HDRWQ501">Moving Local Files into AFS</A>
+</MENU>
+<LI><A NAME="ToC_582" HREF="auagd018.htm#HDRWQ502">Creating AFS User Accounts</A>
+<MENU>
+<LI><A NAME="ToC_583" HREF="auagd018.htm#HDRWQ503">To create one user account with individual commands</A>
+</MENU>
+<LI><A NAME="ToC_584" HREF="auagd018.htm#HDRWQ515">Improving Password and Authentication Security</A>
+<MENU>
+<LI><A NAME="ToC_585" HREF="auagd018.htm#Header_585">To limit the number of consecutive failed authentication attempts</A>
+<LI><A NAME="ToC_586" HREF="auagd018.htm#Header_586">To unlock a locked user account</A>
+<LI><A NAME="ToC_587" HREF="auagd018.htm#Header_587">To set password lifetime</A>
+<LI><A NAME="ToC_588" HREF="auagd018.htm#Header_588">To prohibit reuse of passwords</A>
+</MENU>
+<LI><A NAME="ToC_589" HREF="auagd018.htm#HDRWQ516">Changing AFS Passwords</A>
+<MENU>
+<LI><A NAME="ToC_590" HREF="auagd018.htm#Header_590">To change an AFS password</A>
+</MENU>
+<LI><A NAME="ToC_591" HREF="auagd018.htm#HDRWQ517">Displaying and Setting the Quota on User Volumes</A>
+<LI><A NAME="ToC_592" HREF="auagd018.htm#HDRWQ518">Changing Usernames</A>
+<MENU>
+<LI><A NAME="ToC_593" HREF="auagd018.htm#Header_593">To change a username</A>
+</MENU>
+<LI><A NAME="ToC_594" HREF="auagd018.htm#HDRWQ524">Removing a User Account</A>
+<MENU>
+<LI><A NAME="ToC_595" HREF="auagd018.htm#Header_595">To remove a user account</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_596" HREF="auagd019.htm#HDRWQ531">Administering the Protection Database</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_597" HREF="auagd019.htm#HDRWQ532">Summary of Instructions</A>
+<LI><A NAME="ToC_598" HREF="auagd019.htm#HDRWQ534">About the Protection Database</A>
+<MENU>
+<LI><A NAME="ToC_599" HREF="auagd019.htm#HDRWQ535">The System Groups</A>
+</MENU>
+<LI><A NAME="ToC_600" HREF="auagd019.htm#HDRWQ536">Displaying Information from the Protection Database</A>
+<MENU>
+<LI><A NAME="ToC_601" HREF="auagd019.htm#HDRWQ537">To display a Protection Database entry</A>
+<LI><A NAME="ToC_602" HREF="auagd019.htm#HDRWQ538">To display group membership</A>
+<LI><A NAME="ToC_603" HREF="auagd019.htm#HDRWQ540">To list the groups that a user or group owns</A>
+<LI><A NAME="ToC_604" HREF="auagd019.htm#HDRWQ541">To display all Protection Database entries</A>
+</MENU>
+<LI><A NAME="ToC_605" HREF="auagd019.htm#HDRWQ542">Creating User and Machine Entries</A>
+<MENU>
+<LI><A NAME="ToC_606" HREF="auagd019.htm#HDRWQ543">To create machine entries in the Protection Database</A>
+</MENU>
+<LI><A NAME="ToC_607" HREF="auagd019.htm#HDRWQ544">Creating Groups</A>
+<MENU>
+<LI><A NAME="ToC_608" HREF="auagd019.htm#HDRWQ545">Using Groups Effectively</A>
+<LI><A NAME="ToC_609" HREF="auagd019.htm#HDRWQ546">To create groups</A>
+<LI><A NAME="ToC_610" HREF="auagd019.htm#HDRWQ547">To create a self-owned group</A>
+<LI><A NAME="ToC_611" HREF="auagd019.htm#HDRWQ548">Using Prefix-Less Groups</A>
+</MENU>
+<LI><A NAME="ToC_612" HREF="auagd019.htm#HDRWQ549">Adding and Removing Group Members</A>
+<MENU>
+<LI><A NAME="ToC_613" HREF="auagd019.htm#HDRWQ550">To add users and machines to groups</A>
+<LI><A NAME="ToC_614" HREF="auagd019.htm#HDRWQ551">To remove users and machines from groups</A>
+</MENU>
+<LI><A NAME="ToC_615" HREF="auagd019.htm#HDRWQ552">Deleting Protection Database Entries</A>
+<MENU>
+<LI><A NAME="ToC_616" HREF="auagd019.htm#HDRWQ553">To delete Protection Database entries</A>
+</MENU>
+<LI><A NAME="ToC_617" HREF="auagd019.htm#HDRWQ554">Changing a Group's Owner</A>
+<MENU>
+<LI><A NAME="ToC_618" HREF="auagd019.htm#HDRWQ555">To change a group's owner</A>
+</MENU>
+<LI><A NAME="ToC_619" HREF="auagd019.htm#HDRWQ556">Changing a Protection Database Entry's Name</A>
+<MENU>
+<LI><A NAME="ToC_620" HREF="auagd019.htm#HDRWQ557">To change the name of a machine or group entry</A>
+</MENU>
+<LI><A NAME="ToC_621" HREF="auagd019.htm#HDRWQ558">Setting Group-Creation Quota</A>
+<MENU>
+<LI><A NAME="ToC_622" HREF="auagd019.htm#Header_622">To set group-creation quota</A>
+</MENU>
+<LI><A NAME="ToC_623" HREF="auagd019.htm#HDRWQ559">Setting the Privacy Flags on Database Entries</A>
+<MENU>
+<LI><A NAME="ToC_624" HREF="auagd019.htm#Header_624">To set a Protection Database entry's privacy flags</A>
+</MENU>
+<LI><A NAME="ToC_625" HREF="auagd019.htm#HDRWQ560">Displaying and Setting the AFS UID and GID Counters</A>
+<MENU>
+<LI><A NAME="ToC_626" HREF="auagd019.htm#HDRWQ561">To display the AFS ID counters</A>
+<LI><A NAME="ToC_627" HREF="auagd019.htm#Header_627">To set the AFS ID counters</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_628" HREF="auagd020.htm#HDRWQ562">Managing Access Control Lists</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_629" HREF="auagd020.htm#HDRWQ563">Summary of Instructions</A>
+<LI><A NAME="ToC_630" HREF="auagd020.htm#HDRWQ565">Protecting Data in AFS</A>
+<MENU>
+<LI><A NAME="ToC_631" HREF="auagd020.htm#HDRWQ566">Differences Between UFS and AFS Data Protection</A>
+<LI><A NAME="ToC_632" HREF="auagd020.htm#HDRWQ567">The AFS ACL Permissions</A>
+<LI><A NAME="ToC_637" HREF="auagd020.htm#HDRWQ570">Using Normal and Negative Permissions</A>
+<LI><A NAME="ToC_638" HREF="auagd020.htm#HDRWQ571">Using Groups on ACLs</A>
+</MENU>
+<LI><A NAME="ToC_639" HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>
+<MENU>
+<LI><A NAME="ToC_640" HREF="auagd020.htm#Header_640">To display an ACL</A>
+</MENU>
+<LI><A NAME="ToC_641" HREF="auagd020.htm#HDRWQ573">Setting ACL Entries</A>
+<MENU>
+<LI><A NAME="ToC_642" HREF="auagd020.htm#HDRWQ574">To add, remove, or edit normal ACL permissions</A>
+<LI><A NAME="ToC_643" HREF="auagd020.htm#HDRWQ575">To add, remove, or edit negative ACL permissions</A>
+</MENU>
+<LI><A NAME="ToC_644" HREF="auagd020.htm#HDRWQ576">Completely Replacing an ACL</A>
+<MENU>
+<LI><A NAME="ToC_645" HREF="auagd020.htm#Header_645">To replace an ACL completely</A>
+</MENU>
+<LI><A NAME="ToC_646" HREF="auagd020.htm#HDRWQ577">Copying ACLs Between Directories</A>
+<MENU>
+<LI><A NAME="ToC_647" HREF="auagd020.htm#Header_647">To copy an ACL between directories</A>
+</MENU>
+<LI><A NAME="ToC_648" HREF="auagd020.htm#HDRWQ579">Removing Obsolete AFS IDs from ACLs</A>
+<MENU>
+<LI><A NAME="ToC_649" HREF="auagd020.htm#Header_649">To clean obsolete AFS IDs from an ACL</A>
+</MENU>
+<LI><A NAME="ToC_650" HREF="auagd020.htm#HDRWQ580">How AFS Interprets the UNIX Mode Bits</A>
+</MENU>
+<P><B><A NAME="ToC_651" HREF="auagd021.htm#HDRWQ581">Managing Administrative Privilege</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_652" HREF="auagd021.htm#HDRWQ582">Summary of Instructions</A>
+<LI><A NAME="ToC_653" HREF="auagd021.htm#HDRWQ584">An Overview of Administrative Privilege</A>
+<MENU>
+<LI><A NAME="ToC_654" HREF="auagd021.htm#HDRWQ585">The Reason for Separate Privileges</A>
+</MENU>
+<LI><A NAME="ToC_655" HREF="auagd021.htm#HDRWQ586">Administering the system:administrators Group</A>
+<MENU>
+<LI><A NAME="ToC_656" HREF="auagd021.htm#HDRWQ587">To display the members of the system:administrators group</A>
+<LI><A NAME="ToC_657" HREF="auagd021.htm#Header_657">To add users to the system:administrators group</A>
+<LI><A NAME="ToC_658" HREF="auagd021.htm#HDRWQ588">To remove users from the system:administrators group</A>
+</MENU>
+<LI><A NAME="ToC_659" HREF="auagd021.htm#HDRWQ589">Granting Privilege for kas Commands:  the ADMIN Flag</A>
+<MENU>
+<LI><A NAME="ToC_660" HREF="auagd021.htm#HDRWQ590">To check if the ADMIN flag is set</A>
+<LI><A NAME="ToC_661" HREF="auagd021.htm#Header_661">To set or remove the ADMIN flag</A>
+</MENU>
+<LI><A NAME="ToC_662" HREF="auagd021.htm#HDRWQ592">Administering the UserList File</A>
+<MENU>
+<LI><A NAME="ToC_663" HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>
+<LI><A NAME="ToC_664" HREF="auagd021.htm#HDRWQ594">To add users to the UserList file</A>
+<LI><A NAME="ToC_665" HREF="auagd021.htm#Header_665">To remove users from the UserList file</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_666" HREF="auagd022.htm#HDRWQ595">Appendix A. Managing the NFS/AFS Translator</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_667" HREF="auagd022.htm#HDRWQ596">Summary of Instructions</A>
+<LI><A NAME="ToC_668" HREF="auagd022.htm#HDRWQ598">Overview</A>
+<MENU>
+<LI><A NAME="ToC_669" HREF="auagd022.htm#HDRWQ599">Enabling Unauthenticated or Authenticated AFS Access</A>
+<LI><A NAME="ToC_670" HREF="auagd022.htm#HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</A>
+<LI><A NAME="ToC_674" HREF="auagd022.htm#HDRWQ602">Delayed Writes for Files Saved on NFS Client Machines</A>
+</MENU>
+<LI><A NAME="ToC_675" HREF="auagd022.htm#HDRWQ603">Configuring NFS/AFS Translator Machines</A>
+<MENU>
+<LI><A NAME="ToC_676" HREF="auagd022.htm#Header_676">Loading NFS and AFS Kernel Extensions</A>
+<LI><A NAME="ToC_677" HREF="auagd022.htm#HDRRMTSYS">Configuring the Translator Machine to Accept AFS Commands</A>
+<LI><A NAME="ToC_678" HREF="auagd022.htm#HDRWQ604">Controlling Optional Translator Features</A>
+<LI><A NAME="ToC_679" HREF="auagd022.htm#Header_679">To configure an NFS/AFS translator machine</A>
+<LI><A NAME="ToC_680" HREF="auagd022.htm#Header_680">To disable or enable Translator functionality, or set optional features</A>
+</MENU>
+<LI><A NAME="ToC_681" HREF="auagd022.htm#HDRWQ606">Configuring NFS Client Machines</A>
+<MENU>
+<LI><A NAME="ToC_682" HREF="auagd022.htm#Header_682">To configure an NFS client machine to access AFS</A>
+</MENU>
+<LI><A NAME="ToC_683" HREF="auagd022.htm#HDRWQ610">Configuring User Accounts</A>
+<MENU>
+<LI><A NAME="ToC_684" HREF="auagd022.htm#Header_684">To configure a user account for issuing AFS commands</A>
+</MENU>
+<LI><A NAME="ToC_685" HREF="auagd022.htm#HDRWQ612">Authenticating on Unsupported NFS Client Machines</A>
+<MENU>
+<LI><A NAME="ToC_686" HREF="auagd022.htm#Header_686">To authenticate using the knfs command</A>
+<LI><A NAME="ToC_687" HREF="auagd022.htm#Header_687">To display tokens using the knfs command</A>
+<LI><A NAME="ToC_688" HREF="auagd022.htm#Header_688">To discard tokens using the knfs command</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_689" HREF="auagd023.htm#HDRCOMMANDS">Appendix B. Using AFS Commands</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_690" HREF="auagd023.htm#HDRWQ613">AFS Command Syntax</A>
+<MENU>
+<LI><A NAME="ToC_691" HREF="auagd023.htm#Header_691">Command Names</A>
+<LI><A NAME="ToC_692" HREF="auagd023.htm#Header_692">Options</A>
+<LI><A NAME="ToC_693" HREF="auagd023.htm#Header_693">Arguments</A>
+<LI><A NAME="ToC_694" HREF="auagd023.htm#Header_694">Flags</A>
+<LI><A NAME="ToC_695" HREF="auagd023.htm#HDRCOMMAND-EX">An Example Command</A>
+<LI><A NAME="ToC_696" HREF="auagd023.htm#HDRWQ614">Rules for Entering AFS Commands</A>
+<LI><A NAME="ToC_699" HREF="auagd023.htm#HDRWQ615">Rules for Using Abbreviations and Aliases</A>
+<LI><A NAME="ToC_705" HREF="auagd023.htm#HDRWQ616">Displaying Online Help for AFS Commands</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_706" HREF="auagd024.htm#HDRWQ617">Appendix C. The afsmonitor Program Statistics</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_707" HREF="auagd024.htm#HDRWQ618">The Cache Manager Statistics</A>
+<MENU>
+<LI><A NAME="ToC_708" HREF="auagd024.htm#Header_708">Performance Statistics Section (PerfStats_section)</A>
+<LI><A NAME="ToC_709" HREF="auagd024.htm#Header_709">Server Up/Down Statistics Section (Server_UpDown_section)</A>
+<LI><A NAME="ToC_710" HREF="auagd024.htm#Header_710">RPC Operation Measurements Section (RPCop_section)</A>
+<LI><A NAME="ToC_711" HREF="auagd024.htm#Header_711">Authentication and Replicated File Access Section (Auth_Access_section)</A>
+</MENU>
+<LI><A NAME="ToC_712" HREF="auagd024.htm#HDRWQ619">The File Server Statistics</A>
+<MENU>
+<LI><A NAME="ToC_713" HREF="auagd024.htm#Header_713">Performance Statistics Section (PerfStats_section)</A>
+<LI><A NAME="ToC_714" HREF="auagd024.htm#Header_714">RPC Operations Section (RPCop_section)</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_715" HREF="auagd025.htm#HDRWQ620">Appendix D. AIX Audit Events</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_716" HREF="auagd025.htm#HDRWQ621">Introduction</A>
+<LI><A NAME="ToC_717" HREF="auagd025.htm#HDRWQ622">Audit-Specific Events</A>
+<LI><A NAME="ToC_718" HREF="auagd025.htm#HDRWQ627">Volume Server Events</A>
+<LI><A NAME="ToC_719" HREF="auagd025.htm#HDRWQ630">Backup Server Events</A>
+<LI><A NAME="ToC_720" HREF="auagd025.htm#HDRWQ633">Protection Server Events</A>
+<LI><A NAME="ToC_721" HREF="auagd025.htm#HDRWQ636">Authentication Events</A>
+<LI><A NAME="ToC_722" HREF="auagd025.htm#HDRWQ639">File Server and Cache Manager Interface Events</A>
+<LI><A NAME="ToC_723" HREF="auagd025.htm#HDRWQ642">BOS Server Events</A>
+<LI><A NAME="ToC_724" HREF="auagd025.htm#HDRWQ645">Volume Location Server Events</A>
+</MENU>
+<P><B><A NAME="ToC_725" HREF="auagd026.htm#HDRINDEX">Index</A></B><BR>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd000.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd003.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

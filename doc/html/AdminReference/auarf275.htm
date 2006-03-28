@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf274.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf276.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_STATUS" HREF="auarf002.htm#ToC_289">vos status</A></H2>
+<A NAME="IDX5833"></A>
+<A NAME="IDX5834"></A>
+<A NAME="IDX5835"></A>
+<A NAME="IDX5836"></A>
+<A NAME="IDX5837"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Reports a Volume Server's status
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos status -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]
+           [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos st -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos status</B> command reports on what the Volume Server on a
+certain file server machine is doing at the moment the command is
+issued. If there is no activity, the following message appears:
+<PRE>   No active transactions on <VAR>machine_name</VAR>
+   
+</PRE>
+<P>This command is useful mainly if there is concern that the Volume Server is
+not performing requested actions.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Identifies the file server machine running the Volume Server for which to
+display status information. Provide the machine's IP address or
+its host name (either fully qualified or using an unambiguous
+abbreviation). For details, see the introductory reference page for the
+<B>vos</B> command suite.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>There are two possible types of output.
+<P>The following message indicates that the Volume Server is not currently
+performing any actions.
+<PRE>   No active transactions on <VAR>machine&nbsp;name</VAR>
+   
+</PRE>
+<P>The other possible output is a set of information which is probably more
+useful to programmers than to system administrators. A full
+understanding of all the fields requires familiarity with the code for the
+Volume Server, as many of the fields report ID numbers and flag values that
+the Volume Server sets for internal use.
+<P>Among the fields of possible interest to an administrator are:
+<UL>
+<P><LI><TT>created</TT> on the first line, which indicates the time at which
+this transaction started
+<P><LI><TT>attachFlags</TT> on the second line, where a value of
+<TT>offline</TT> indicates that the volume is not available for other read
+or write operations during this transaction
+<P><LI><TT>volume</TT> on the third line, which specifies the affected
+volume's ID number
+<P><LI><TT>partition</TT> on the third line, which indicates where the affected
+volume resides (at the beginning of the transaction if this is a move)
+<P><LI><TT>procedure</TT> on the third line, which indicates the internal
+subprocedure being executed
+</UL>
+<P>A fourth line can appear during certain transactions, and includes the
+following fields:
+<UL>
+<P><LI><TT>packetRead</TT> tracks whether information is being read into the
+volume. Its absolute value is not informative, but the way it changes
+shows whether the <B>vos restore</B> command is executing properly.
+As the <B>vos status</B> command is issued repeatedly during a restore,
+<TT>readNext</TT> increases monotonically to indicate that information is
+being read into the volume.
+<P><LI><TT>packetSend</TT> tracks whether information is being sent out of the
+volume. Its absolute value is not informative, but the way it changes
+shows whether the <B>vos dump</B> command is executing properly. As
+the <B>vos status</B> command is issued repeatedly during a dump,
+<TT>transmitNext</TT> increases monotonically to indicate that information
+is being transferred from the volume into the dump file.
+</UL>
+<P>The <TT>lastReceiveTime</TT> and <TT>lastSendTime</TT> are for internal
+use.
+<P><STRONG>Examples</STRONG>
+<P>The following example illustrates the kind of output that sometimes appears
+when the Volume Server on <B>fs1.abc.com</B> is executing a
+dump at the time this command is issued.
+<PRE>   % <B>vos status fs1.abc.com</B>
+   --------------------------------------------
+   transaction: 575  created: Tue Jan 2 8:34:56 1990
+   attachFlags: offline
+   volume: 536871080 partition: /vicepb procedure: Dump
+   packetRead: 2 lastReceiveTime: 113313 packetSend: 24588
+       lastSendTime: 113317
+   --------------------------------------------
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf274.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf276.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

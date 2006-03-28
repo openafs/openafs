@@ -1,0 +1,329 @@
+=head1 NAME
+
+scout - Monitors the File Server process
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<scout> [B<initcmd>] S<<< B<-server> <I<servers to monitor>>+ >>>
+      S<<< [B<-basename> <I<base server name>>] >>>
+      S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>> [B<-host>]
+      S<<< [B<-attention> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-debug> <I<turn debugging output on to the named file>>] >>>
+      [B<-help>]
+
+B<scout> [B<i>] S<<< B<-s> <I<servers to monitor>>+ >>>
+      S<<< [B<-b> <I<base server name>>] >>> S<<< [B<-f> <I<poll frequency, in seconds>>] >>>
+      [B<-ho>] S<<< [B<-a> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-d> <I<turn debugging output on to the named file>>] >>> [B<-he>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The scout command displays statistics gathered from the File Server
+process running on each machine specified with the B<-server>
+argument. L<OUTPUT> explains the meaning of the statistics and describes
+how they appear in the command shell, which is preferably a window managed
+by a window manager program.
+
+=head1 CAUTIONS
+
+The B<scout> program must be able to access the curses graphics package,
+which it uses to display statistics. Most UNIX distributions include
+curses as a standard utility.
+
+Both dumb terminals and windowing systems that emulate terminals can
+display the B<scout> program's statistics. The display makes use of
+reverse video and cursor addressing, so the display environment must
+support those features for it to look its best (most windowing systems do,
+most dumb terminals do not). Also, set the TERM environment variable to
+the correct terminal type, or one with characteristics similar to the
+actual ones. For machines running the AIX operating system, the
+recommended setting for TERM is C<vt100>, as long as the terminal is
+similar to that. For other operating systems, the wider range of
+acceptable values includes C<xterm>, C<xterms>, C<vt100>, C<vt200>, and
+C<wyse85>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<initcmd>
+
+Accommodates the command's use of the AFS command parser, and is optional.
+
+=item B<-server> <I<servers to monitor>>+
+
+Specifies each file server machine running a File Server process to
+monitor. Provide each machine's fully qualified hostname unless the
+B<-basename> argument is used. In that case, specify only the unique
+initial part of each machine name, omitting the domain name suffix (the
+basename) common to all the names. It is also acceptable to use the
+shortest abbreviated form of a host name that distinguishes it from other
+machines, but successful resolution depends on the availability of a name
+resolution service (such as the Domain Name Service or a local host table)
+at the time the command is issued.
+
+=item B<-basename> <I<base server name>>
+
+Specifies the basename (domain name) suffix common to all of the file
+server machine names specified with the B<-server> argument, and is
+automatically appended to them. This argument is normally the name of the
+cell to which the machines belong. Do not include the period that
+separates this suffix from the distinguishing part of each file server
+machine name, but do include any periods that occur within the suffix
+itself.  For example, in the ABC Corporation cell, the proper value is
+C<abc.com> rather than C<.abc.com>.
+
+=item B<-frequency> <I<poll frequency>>
+
+Indicates how often to probe the File Server processes. Specify a number
+of seconds greater than C<0> (zero). The default is 60 seconds.
+
+=item B<-host>
+
+Displays the name of the machine that is running the scout program, in the
+banner line of the display screen.
+
+=item B<-attention> <I<attention level>>+
+
+Defines a list of entries, each of which pairs a statistic and a threshold
+value. When the value of the statistic exceeds the indicated threshold
+value, it is highlighted (in reverse video) in the display. List the pairs
+in any order. The acceptable values are the following:
+
+=over 4
+
+=item conn <I<connections>>
+
+Indicates the number of open connections to client processes at which to
+highlight the statistic.  The statistic returns to regular display when
+the value goes back below the threshold. There is no default threshold.
+
+An example of an acceptable value is conn 300.
+
+=item disk <I<blocks_free>>
+
+Indicates the number of remaining free kilobyte blocks at which to
+highlight the statistic. The statistic returns to regular display when the
+value again exceeds the threshold. There is no default threshold.
+
+An example of an acceptable value is disk 5000.
+
+=item disk <I<percent_full>>%
+
+Indicates the percentage of disk usage at which to highlight the
+statistic. The statistic returns to regular display when the value goes
+back below the threshold. The default threshold is 95%. Acceptable values
+are the integers in the range from C<0> to C<99>, followed by the percent
+sign (C<%>) to distinguish this type of value from the one described just
+previously.
+
+An example is disk 90%.
+
+=item fetch <I<fetch RPCs>>
+
+Indicates the cumulative number of fetch RPCs from client processes at
+which to highlight the statistic. The statistic does not return to regular
+display until the File Server process restarts, at which time the value
+returns to zero.  There is no default threshold.
+
+Example of a legal value: fetch 6000000
+
+=item store <I<store RPCs>>
+
+Indicates the cumulative number of store RPCs from client processes at
+which to highlight the statistic. The statistic does not return to regular
+display until the File Server process restarts, at which time the value
+returns to zero.  There is no default threshold.
+
+Example of an acceptable value: store 200000
+
+=item ws <I<active client machines>>
+
+Indicates the number of client machines with active open connections at
+which to highlight the statistic. An active connection is defined as one
+over which the File Server and client have communicated in the last 15
+minutes. The statistic returns to regular display when the value goes back
+below the threshold. There is no default threshold.
+
+Example of an acceptable value: ws 65
+
+=back
+
+=item B<-debug> <I<debugging trace file>>
+
+Specifies the pathname of the file into which to write a debugging
+trace. Partial pathnames are interpreted relative to the current working
+directory.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The B<scout> program can display statistics either in a dedicated window
+or on a plain screen if a windowing environment is not available. For best
+results, the window or screen needs the ability to print in reverse video.
+
+The B<scout> screen has three main parts: the banner line, the statistics
+display region and the message/probe line.
+
+=head2 The Banner Line
+
+By default, the string C<Scout> appears in the banner line at the top of
+the window or screen. Two optional arguments place additional information
+in the banner line:
+
+=over 4
+
+=item *
+
+The B<-host> flag displays the name of the machine where the B<scout>
+program is running. As mentioned previously, this is useful when running
+the B<scout> program on several machines but displaying the results on a
+single machine.
+
+For example, when the B<-host> flag is included and the B<scout> program
+is running on the machine C<client1.abc.com>, the banner line reads as
+follows:
+
+   [client1.abc.com] Scout
+
+=item *
+
+The B<-basename> argument displays the indicated basename on the banner
+line. For example, including the argument C<-basename abc.com> argument
+results in the following banner line:
+
+   Scout for abc.com
+
+=back
+
+=head2 The Statistics Display Region
+
+In this region, which occupies the majority of the window, the B<scout>
+process displays the statistics gathered for each File Server
+process. Each process appears on its own line.
+
+The region is divided into six columns, labeled as indicated and
+displaying the following information:
+
+=over 4
+
+=item Conn
+
+The first column displays the number of RPC connections open between the
+File Server process and client machines.  This number equals or exceeds
+the number in the C<Ws> column (see the fourth entry below), because each
+user on the machine can have several separate connections open at once,
+and one client machine can handle several users.
+
+=item Fetch
+
+The second column displays the number of fetch-type RPCs (fetch data,
+fetch access list, and fetch status) that client machines have made to the
+File Server process since the latter started.  This number is reset to
+zero each time the File Server process restarts.
+
+=item Store
+
+The third column displays the number of store-type RPCs (store data, store
+access list, and store status) that client machines have made to the File
+Server process since the latter started. This number is reset to zero each
+time the File Server process restarts.
+
+=item Ws
+
+The fourth column displays the number of client machines (C<Ws> stands for
+workstations) that have communicated with the File Server process within
+the last 15 minutes. Such machines are termed I<active>). This number is
+likely to be smaller than the number in the first (C<Conn>) column because
+a single client machine can have several connections open to one File
+Server.
+
+=item server name
+
+The fifth, unlabeled, column displays the name of the file server machine
+on which the File Server process is running. Names of 12 characters or
+less are displayed in full; longer names are truncated and an asterisk
+(C<*>) appears as the last character in the name. Using the B<-basename>
+argument is a good way to avoid truncation, but only if all machine names
+end in a common string.
+
+=item Disk attn
+
+The sixth column displays the number of available kilobyte blocks on each
+AFS disk partition on the file server machine.
+
+The display for each partition has the following form:
+
+   x:<free_blocks>
+
+where C<x> indicates the partition name. For example, C<a:8949> specifies
+that the F</vicepa> partition has 8,949 1-KB blocks free. Available space
+can be displayed for up to 26 partitions. If the window is not wide enough
+for all partition entries to appear on a single line, the B<scout> process
+automatically creates multiple lines, stacking the partition entries into
+sub-columns within the sixth column.
+
+The label on the C<Disk attn> column indicates the threshold value at
+which entries in the column become highlighted. By default, the label is
+
+   Disk attn: > 95% used
+
+because by default the scout program highlights the entry for any
+partition that is over 95% full.
+
+=back
+
+For all columns except the fifth (file server machine name), the optional
+B<-attention> argument sets the value at which entries in the column are
+highlighted to indicate that a certain value has been exceeded.  Only
+values in the fifth and C<Disk attn> columns ever become highlighted by
+default.
+
+If the scout program is unable to access or otherwise obtain information
+about a partition, it generates a message similar to the following
+example:
+
+   Could not get information on server fs1.abc.com partition /vicepa
+
+=head2 The Message/Probe Line
+
+The bottom line of the scout screen indicates how many times the B<scout>
+program has probed the File Server processes for statistics. The
+statistics gathered in the latest probe appear in the statistics display
+region. The B<-frequency> argument overrides the default probe frequency
+of 60 seconds.
+
+=head1 EXAMPLES
+
+See the chapter on monitoring tools in the I<IBM AFS Administration
+Guide>, which illustrates the displays that result from different
+combinations of options.
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<afsmonitor(1)>,
+L<fstrace(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

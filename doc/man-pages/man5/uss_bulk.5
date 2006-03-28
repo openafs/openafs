@@ -1,0 +1,558 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH uss_bulk 5 "OpenAFS" "5/Jan/2006" "AFS File Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+uss_bulk \- Provides instructions for the uss bulk command
+.SH "DESCRIPTION"
+The uss bulk input file lists instructions for the \fBuss\fR command
+interpreter to execute when running the \fBuss bulk\fR command. If the file
+includes \f(CWadd\fR instructions that reference a \fBuss\fR template file, then
+the template file must also exist.
+.Sh "Summary of Bulk Input File Instructions"
+The bulk input file can include the following instructions, each on its
+own line. A more detailed description of each instruction's syntax follows
+this list.
+.Ip "add" 4
+Creates a user account. Equivalent to the \fBuss add\fR command.
+.Ip "delete" 4
+Deletes a user account. Equivalent to the \fBuss delete\fR command.
+.Ip "delvolume" 4
+Removes the volume and \s-1VLDB\s0 entry for each account referenced by a
+\f(CWdelete\fR instruction that follows this instruction in the bulk input
+file.
+.Ip "exec" 4
+Executes a command.
+.Ip "savevolume" 4
+Preserves the volume and \s-1VLDB\s0 entry for each account referenced by a
+\f(CWdelete\fR instruction that follows this instruction in the bulk input
+file.
+.Sh "The add Instruction for Creating an Account"
+The \f(CWadd\fR instruction creates a user account. Each instance in the bulk
+input file is equivalent in effect to a \fBuss add\fR command issued on the
+command line. The order of the instruction's fields matches the order of
+arguments to the \fBuss add\fR command, although some arguments do not have a
+corresponding field. Like the \fBuss add\fR command's arguments, many of the
+fields correspond to (provide a value for) a variable in the \fBuss\fR
+template file, as indicated in the following description of each field.
+.PP
+The instruction's syntax is as follows. It appears on multiple lines here
+only for the sake of legibility -- each \f(CWadd\fR instruction must appear on
+a single line in the bulk input file.
+.PP
+.Vb 4
+\&   add <username>[:<full_name>][:<password>][:<expires>]
+\&       [:<file_server>][:<partition>][:<mount_point>][:<uid>]
+\&       [:<var1>][:<var2>][:<var3>][:<var4>][:<var5>][:<var6>][:<var7>]
+\&       [:<var8>][:<var9>][:]
+.Ve
+To omit a value for a field (presumably because it is optional or the
+template specifies a constant value for it), type nothing between the two
+colons that surround it. After the last argument provided, end the line
+with either a colon and carriage return, or a carriage return alone.
+.PP
+The meaning of, and acceptable values for, each field are as follows.
+.Ip "<username>" 4
+Names the user's Authentication Database and Protection Database
+entries. It can include up to eight alphanumeric characters, but not the
+\f(CW:\fR (colon), \f(CW.\fR (period), or \f(CW@\fR (at-sign) characters. Because it
+becomes the username (the name under which a user logs in), it is best not
+to include shell metacharacters and to obey the restrictions that many
+operating systems impose on usernames (usually, to contain no more than
+eight lowercase letters).
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-user\fR. Corresponding
+variable in the template file: \f(CW$USER\fR.
+.Ip "<full_name>" 4
+Specifies the user's full name. Do not surround it with double quotes
+(\f(CW""\fR), even if it contains spaces. If not provided, it defaults to the
+username in the <username> field.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-realname\fR.
+Corresponding variable in the template file: \f(CW$NAME\fR. Many operating systems
+include a field for the full name in a user's entry in the local password
+file (\fI/etc/passwd\fR or equivalent), and this variable can be used to pass
+a value to be used in that field.
+.Ip "<password>" 4
+Specifies the user's initial password. Although the \s-1AFS\s0 commands that
+handle passwords accept strings of virtually unlimited length, it is best
+to use a password of eight characters or less, which is the maximum length
+that many applications and utilities accept. If not provided, this
+argument defaults to the string \f(CWchangeme\fR.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-pass\fR. Corresponding
+variable in the template file: none.
+.Ip "<expires>" 4
+Sets the number of days after a user's password is changed that it remains
+valid. Provide an integer from the range \f(CW1\fR through \f(CW254\fR to specify
+the number of days until expiration, or the value \f(CW0\fR to indicate that
+the password never expires (the default).
+.Sp
+When the password becomes invalid (expires), the user is unable to
+authenticate, but has 30 more days in which to issue the \fBkpasswd\fR
+command to change the password (after that, only an administrator can
+change it).
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-pwexpires\fR.
+Corresponding variable in the template file: \f(CW$PWEXPIRES\fR.
+.Ip "<file_server>" 4
+Names the file server machine on which to create the new user's volume. It
+is best to provide a fully-qualified hostname (for example,
+\f(CWfs1.abc.com\fR), but an abbreviated form is acceptable provided that the
+cell's naming service is available to resolve it at the time the volume is
+created.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-server\fR.
+Corresponding variable in the template file: \f(CW$SERVER\fR.
+.Ip "<partition>" 4
+Specifies the partition on which to create the user's volume; it must
+reside on the file server machine named in the <file_server>
+field. Identify the partition by its complete name (for example,
+\fI/vicepa\fR, or use one of the following abbreviations:
+.Sp
+.Vb 2
+\&   /vicepa     =     vicepa      =      a      =      0
+\&   /vicepb     =     vicepb      =      b      =      1
+.Ve
+After \fI/vicepz\fR (for which the index is 25) comes
+.Sp
+.Vb 2
+\&   /vicepaa    =     vicepaa     =      aa     =      26
+\&   /vicepab    =     vicepab     =      ab     =      27
+.Ve
+and so on through
+.Sp
+.Vb 1
+\&   /vicepiv    =     vicepiv     =      iv     =      255
+.Ve
+Corresponding argument to the \fBuss add\fR command: \fB\-partition\fR.
+Corresponding variable in template: \f(CW$PART\fR.
+.Ip "<mount_point>" 4
+Specifies the complete pathname for the user's home directory.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-mount\fR.
+.Sp
+Corresponding variable in template: \f(CW$MTPT\fR, but in the template file's \f(CWV\fR
+instruction only. Occurrences of the \f(CW$MTPT\fR variable in template
+instructions that follow the \f(CWV\fR instruction take their value from the
+\f(CWV\fR instruction's <mount_point> field. Thus the value of this command
+line argument becomes the value for the \f(CW$MTPT\fR variable in instructions
+that follow the \f(CWV\fR instruction only if the string \f(CW$MTPT\fR appears alone in
+the \f(CWV\fR instruction's <mount_point> field.
+.Ip "<uid>" 4
+Specifies a positive integer other than \f(CW0\fR (zero) to assign as the
+user's \s-1AFS\s0 \s-1UID\s0. If this argument is omitted, the Protection Server assigns
+an \s-1AFS\s0 \s-1UID\s0 that is one greater than the current value of the \f(CWmax user
+id\fR counter (use the \fBpts listmax\fR command to display the counter). If
+including this argument, first use the \fBpts examine\fR command to verify
+that no existing account already has the desired \s-1AFS\s0 \s-1UID\s0; if one does, the
+account-creation process terminates with an error.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-uid\fR. Corresponding
+variable in template: \f(CW$UID\fR.
+.Ip "<var1> through <var9>" 4
+Specifies values for each of the number variables \f(CW$1\fR through \f(CW$9\fR that can
+appear in the template file. The number variables allow the administrator
+to provide values for variables other than the set defined by the \fBuss\fR
+command suite.
+.Sp
+Corresponding argument to the \fBuss add\fR command: \fB\-var\fR. Corresponding
+variables in template: \f(CW$1\fR through \f(CW$9\fR.
+.Sp
+If providing a value in any of the fields, then in every field that
+precedes it either provide an actual value or indicate an empty field by
+putting nothing between two colons. It is acceptable, but not necessary,
+to indicate empty fields by putting colons after the last field that
+contains an actual value.
+.Sh "The delete Instruction for Deleting an Account"
+The \f(CWdelete\fR instruction deletes a user account from the system. Each
+instance in the bulk input file is equivalent in effect to a \fBuss delete\fR
+command issued on the command line. The order of the instruction's fields
+matches the order of arguments to the \fBuss delete\fR command:
+.PP
+.Vb 1
+\&   delete <username>:<mount_point>[:( savevolume | delvolume )][:]
+.Ve
+where
+.Ip "<username>" 4
+Names the entry to delete from the Protection and Authentication
+Databases.
+.Ip "<mount_point>" 4
+Specifies the complete pathname to the user's home directory, which is
+deleted from the filespace. By default, the volume mounted there is also
+deleted from the file server machine where it resides, as is its record
+from the Volume Location Database (\s-1VLDB\s0). To prevent deletion, include the
+\f(CWsavevolume\fR string in the instruction's third field, or precede this
+\f(CWdelete\fR instruction with a \f(CWsavevolume\fR instruction. Partial pathnames
+are interpreted relative to the current working directory.
+.Ip "savevolume" 4
+Retains the volume on its file server machine, and the corresponding entry
+in the \s-1VLDB\s0. Provide this value or \f(CWdelvolume\fR in the third field, or
+omit both values to treat the volume according to the prevailing default,
+which is set by a preceding \f(CWsavevolume\fR or \f(CWdelvolume\fR instruction in
+the bulk input file.
+.Ip "delvolume" 4
+Removes the volume from its file server machine, and the corresponding
+entry from the \s-1VLDB\s0. Provide this value or \f(CWsavevolume\fR in the third
+field, or omit both values to treat the volume according to the prevailing
+default, which is set by a preceding \f(CWsavevolume\fR or \f(CWdelvolume\fR
+instruction in the bulk input file.
+.PP
+After the last argument provided, end the line with either a colon and
+carriage return or a carriage return alone.
+.Sh "The exec Instruction for Executing a Command"
+The \f(CWexec\fR instruction executes the specified command, which can be a
+\s-1UNIX\s0 shell script or command, a program, or an \s-1AFS\s0 command. The \fBuss\fR
+command interpreter must have the necessary privileges in \s-1AFS\s0 and the
+local file system; it assumes the \s-1AFS\s0 and local identities of the issuer
+of the \fBuss bulk\fR command.
+.PP
+The instruction's syntax is as follows:
+.PP
+.Vb 1
+\&   exec <command>
+.Ve
+.Sh "The delvolume and savevolume Instructions"
+The \f(CWsavevolume\fR and \f(CWdelvolume\fR instructions determine the default
+treatment of volumes referenced by the \f(CWdelete\fR instructions that follow
+them in the bulk input file. Their syntax is as follows:
+.PP
+.Vb 2
+\&   savevolume
+\&   delvolume
+.Ve
+The \f(CWsavevolume\fR instruction prevents the removal of the volume and \s-1VLDB\s0
+entry for all \f(CWdelete\fR instruction that follow it in the bulk input file,
+and the \f(CWdelvolume\fR instruction removes the volume and \s-1VLDB\s0 entry for all
+subsequent \f(CWdelete\fR instructions.  Either setting persists until its
+opposite appears in the file, or until the end of the bulk file.
+.PP
+If neither line appears in the bulk input file, the default is to remove
+the volume and the \s-1VLDB\s0 entry; \f(CWdelete\fR instructions that appear before
+the first \f(CWsavevolume\fR instruction are also subject to this default. If a
+\f(CWdelete\fR instruction's third field specifies either \f(CWsavevolume\fR or
+\f(CWdelvolume\fR, that setting overrides the default.
+.SH "EXAMPLES"
+The following example add instruction creates an authentication-only
+account. The user's initial password is \f(CWchangeme\fR (the default).
+.PP
+.Vb 1
+\&   add anderson
+.Ve
+The following example add instructions refer to the indicated \f(CWV\fR
+instruction in a template file (which must appear on a single line in the
+template file).
+.PP
+.Vb 4
+\&   add smith:John Smith:::fs1:a:::::marketing
+\&   add jones:Pat Jones:::fs3:c:::::finance
+\&   V user.$USER $SERVER.abc.com /vicep$PART 2000 \e
+\&       /afs/abc.com/usr/$3/$USER $UID $USER all
+.Ve
+The first add instruction creates an account called \f(CWsmith\fR in the
+Protection and Authentication Databases, with an initial password
+\f(CWchangeme\fR and a value for \f(CW$UID\fR provided by the Protection Server. The
+volume \f(CWuser.smith\fR resides on partition \fI/vicepa\fR of file server
+machine \f(CWfs1.abc.com\fR and is mounted at
+\fI/afs/abc.com/usr/marketing/smith\fR. He owns his home directory and has
+all access permissions on its root directory's access control list
+(ACL). The account for \f(CWjones\fR is similar, except that the volume resides
+on partition \fI/vicepc\fR of file server machine \f(CWfs3.abc.com\fR and is
+mounted at \fI/afs/abc.com/usr/finance/jones\fR.
+.PP
+Notice that the fields corresponding to the volume mount point, UID, \f(CW$1\fR
+variable, and \f(CW$2\fR variable are empty (between \f(CWa\fR and \f(CWmarketing\fR on the
+first example line), because their corresponding variables do not appear
+in the template file. The initial password field is also empty.
+.PP
+The following add instructions are equivalent in effect to the preceding
+example, but explicitly indicate empty fields for all of the number
+variables that don't have a value:
+.PP
+.Vb 2
+\&   add smith:John Smith:::fs1:a:::::marketing::::::
+\&   add jones:Pat Jones:::fs3:c:::::finance::::::
+.Ve
+The following example shows a complete bulk file containing a set of
+\f(CWdelete\fR instructions combined with a \f(CWsavevolume\fR instruction. Because
+the \f(CWdelete\fR instruction for users \f(CWsmith\fR, \f(CWpat\fR, and \f(CWrogers\fR appear
+before the \f(CWsavevolume\fR instruction and the third field is blank in each,
+the corresponding home volumes are removed. The volume for user \f(CWterry\fR
+is retained because the default established by the \f(CWsavevolume\fR
+instruction applies to it, but user \f(CWjohnson\fR's volume is removed because
+the third field of her \f(CWdelete\fR instruction overrides the current
+default.
+.PP
+.Vb 6
+\&   delete smith:/afs/abc.com/usr/smith
+\&   delete pat:/afs/abc.com/usr/pat
+\&   delete rogers:/afs/abc.com/usr/rogers
+\&   savevolume
+\&   delete terry:/afs/abc.com/usr/terry
+\&   delete johnson:/afs/abc.com/usr/johnson:delvolume
+.Ve
+The following example exec instruction appears between sets of \f(CWadd\fR and
+\f(CWdelete\fR instructions in a bulk input file.  A message appears in the
+command shell where the \fBuss bulk\fR command is issued, to indicate when
+the additions are finished and the deletions beginning.
+.PP
+.Vb 1
+\&   exec echo "Additions completed; beginning deletions..."
+.Ve
+.SH "SEE ALSO"
+the \fIuss(5)\fR manpage,
+the \fIuss_add(8)\fR manpage,
+the \fIuss_bulk(8)\fR manpage,
+the \fIuss_delete(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "uss_bulk 5"
+.IX Name "uss_bulk - Provides instructions for the uss bulk command"
+
+.IX Header "NAME"
+
+.IX Header "DESCRIPTION"
+
+.IX Subsection "Summary of Bulk Input File Instructions"
+
+.IX Item "add"
+
+.IX Item "delete"
+
+.IX Item "delvolume"
+
+.IX Item "exec"
+
+.IX Item "savevolume"
+
+.IX Subsection "The add Instruction for Creating an Account"
+
+.IX Item "<username>"
+
+.IX Item "<full_name>"
+
+.IX Item "<password>"
+
+.IX Item "<expires>"
+
+.IX Item "<file_server>"
+
+.IX Item "<partition>"
+
+.IX Item "<mount_point>"
+
+.IX Item "<uid>"
+
+.IX Item "<var1> through <var9>"
+
+.IX Subsection "The delete Instruction for Deleting an Account"
+
+.IX Item "<username>"
+
+.IX Item "<mount_point>"
+
+.IX Item "savevolume"
+
+.IX Item "delvolume"
+
+.IX Subsection "The exec Instruction for Executing a Command"
+
+.IX Subsection "The delvolume and savevolume Instructions"
+
+.IX Header "EXAMPLES"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

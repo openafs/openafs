@@ -1,0 +1,66 @@
+=head1 NAME
+
+backup quit - Leaves interactive mode
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<quit> [B<-help>]
+
+B<q> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<backup quit> command exits interactive mode, returning the issuer to
+the regular shell prompt at which the B<backup> or B<backup interactive>
+command was issued to enter interactive mode. The command has no effect
+when issued outside interactive mode. Issuing the Ctrl-D command also
+exits interactive mode.
+
+=head1 CAUTIONS
+
+To exit interactive mode, all jobs must be completed. Use the B<backup
+jobs> command to list any jobs currently pending or executing, and the
+B<backup kill> command to terminate them as necessary.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command exits interactive mode:
+
+   backup> quit
+   %
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<backup(8)>,
+L<backup_interactive(8)>,
+L<backup_jobs(8)>,
+L<backup_kill(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

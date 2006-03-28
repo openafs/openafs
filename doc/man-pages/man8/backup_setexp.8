@@ -1,0 +1,350 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_setexp 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup setexp \- Sets the expiration date for existing dump levels.
+.SH "SYNOPSIS"
+\fBbackup setexp\fR <<\ \fB\-dump\fR\ <\fIdump\ level\ name\fR+ >>>
+    <<\ [\fB\-expires\fR\ <\fIexpiration\ date\fR+] >>> [\fB\-localauth\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-help\fR]
+.PP
+\fBbackup se\fR <<\ \fB\-d\fR\ <\fIdump\ level\ name\fR+ >>> <<\ [\fB\-e\fR\ <\fIexpiration\ date\fR+] >>>
+    [\fB\-l\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup setexp\fR command sets or changes the expiration date
+associated with each specified dump level, which must already exist in the
+dump hierarchy.
+.PP
+Use the \fB\-expires\fR argument to associate an expiration date with each
+dump level. When the Backup System subsequently creates a dump at the dump
+level, it uses the specified value to derive the dump's expiration date,
+which it records on the label of the tape (or backup data file). The
+Backup System refuses to overwrite a tape until after the latest
+expiration date of any dump that the tape contains, unless the \fBbackup
+labeltape\fR command is used to relabel the tape. If a dump level does not
+have an expiration date, the Backup System treats dumps created at the
+level as expired as soon as it creates them.
+.PP
+(Note that the Backup System does not automatically remove a dump's record
+from the Backup Database when the dump reaches its expiration date, but
+only if the tape that contains the dump is recycled or relabeled. To
+remove expired and other obsolete dump records, use the \fBbackup
+deletedump\fR command.)
+.PP
+Define either an absolute or relative expiration date:
+.Ip "\(bu" 4
+An absolute expiration date defines the month/day/year (and, optionally,
+hour and minutes) at which a dump expires. If the expiration date predates
+the dump creation time, the Backup System immediately treats the dump as
+expired.
+.Ip "\(bu" 4
+A relative date defines the number of years, months, or days (or a
+combination of the three) after the dump's creation that it expires. When
+the Backup System creates a dump at the dump level, it calculates an
+actual expiration date by adding the relative date to the start time of
+the dump operation.
+.PP
+If the command is used to change an existing expiration date associated
+with a dump level, the new date applies only to dumps created after the
+change. Existing dumps retain the expiration date assigned at the time
+they were created.
+.SH "OPTIONS"
+.Ip "\fB\-dump\fR <\fIdump level name\fR>+" 4
+Specifies the full pathname of each dump level to assign the expiration
+date specified by the \fB\-expires\fR argument.
+.Ip "\fB\-expires\fR <\fIexpiration date\fR>+" 4
+Defines the absolute or relative expiration date to associate with each
+dump level named by the \fB\-dump\fR argument. Absolute expiration dates have
+the following format:
+.Sp
+.Vb 1
+\&   [at] {NEVER | <mm>/<dd>/<yyyy> [<hh>:<MM>] }
+.Ve
+where the optional word at is followed either by the string \f(CWNEVER\fR,
+which indicates that dumps created at the dump level never expire, or by a
+date value with a required portion (<mm> for month, <dd> for day, and
+<yyyy> for year) and an optional portion (<hh> for hours and <\s-1MM\s0> for
+minutes).
+.Sp
+Omit the <hh>:<\s-1MM\s0> portion to use the default of midnight (00:00 hours),
+or provide a value in 24-hour format (for example, \f(CW20:30\fR is 8:30 p.m.).
+Valid values for the year range from \f(CW1970\fR to \f(CW2037\fR; higher values are
+not valid because the latest possible date in the standard \s-1UNIX\s0
+representation is in February 2038. The command interpreter automatically
+reduces later dates to the maximum value.
+.Sp
+Relative expiration dates have the following format:
+.Sp
+.Vb 1
+\&   [in] [<years>y] [<months>m] [<days>d]
+.Ve
+where the optional word in is followed by at least one of a number of
+years (maximum \f(CW9999\fR) followed by the letter \f(CWy\fR, a number of months
+(maximum \f(CW12\fR) followed by the letter \f(CWm\fR, or a number of days (maximum
+\f(CW31\fR) followed by the letter \f(CWd\fR. If providing more than one of the
+three, list them in the indicated order. If the date that results from
+adding the relative expiration value to a dump's creation time is later
+than the latest possible date in the \s-1UNIX\s0 time representation, the Backup
+System automatically reduces it to that date.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbackup\fR command interpreter presents
+it to the Backup Server, Volume Server and \s-1VL\s0 Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument. For
+more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following example associates an absolute expiration date of 10:00
+p.m. on 31 December 1999 with the dump level \f(CW/1998/december\fR:
+.PP
+.Vb 1
+\&   % backup setexp -dump /1998/december -expires at 12/31/1999 22:00
+.Ve
+The following example associates a relative expiration date of 7 days with
+the two dump levels \f(CW/monthly/week1\fR and \f(CW/monthly/week2\fR:
+.PP
+.Vb 1
+\&   % backup setexp -dump /monthly/week1 /monthly/week -expires 7d
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIbackup(8)\fR manpage,
+the \fIbackup_adddump(8)\fR manpage,
+the \fIbackup_deldump(8)\fR manpage,
+the \fIbackup_listdumps(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_setexp 8"
+.IX Name "backup setexp - Sets the expiration date for existing dump levels."
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-dump\fR <\fIdump level name\fR>+"
+
+.IX Item "\fB\-expires\fR <\fIexpiration date\fR>+"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

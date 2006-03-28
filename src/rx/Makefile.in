@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).

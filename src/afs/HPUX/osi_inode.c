@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/HPUX/osi_inode.c,v 1.8 2004/07/29 03:13:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/HPUX/osi_inode.c,v 1.8.2.2 2006/02/17 17:35:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -128,6 +128,7 @@ afs_syscall_iopen(dev, inode, usrmod)
     int dummy;
     extern struct fileops vnodefops;
     register int code;
+    int fd;
 
     AFS_STATCNT(afs_syscall_iopen);
 
@@ -144,6 +145,7 @@ afs_syscall_iopen(dev, inode, usrmod)
 	iput(ip);
 	goto out;
     }
+    fd = u.u_r.r_val1;
     iunlock(ip);
 
     fp->f_ops = &vnodefops;
@@ -175,7 +177,6 @@ afs_syscall_iopen(dev, inode, usrmod)
      * called by falloc(), which is called above.
      */
     if (is_multithreaded(u.u_procp)) {
-	int fd = (int)u.u_r.r_val1;
 	putf(fd);
     }
 

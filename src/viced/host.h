@@ -41,17 +41,22 @@ extern pthread_mutex_t host_glock_mutex;
 #define h_threadsMask		31	/* for remainder */
 
 /* size of the hold array for each host */
-#define h_maxSlots	((MAX_FILESERVER_THREAD+h_threadsPerSlot-1)>>h_threadsShift)
+#define h_maxSlots	(((MAX_FILESERVER_THREAD+h_threadsPerSlot-1)>>h_threadsShift)+1)
 
 struct Identity {
     char valid;			/* zero if UUID is unknown */
     afsUUID uuid;
 };
 
+struct AddrPort  {
+    afs_uint32 addr;		/* in network byte order */
+    afs_uint16 port;		/* in network byte order */
+};
+
 struct Interface {
-    int numberOfInterfaces;
     afsUUID uuid;
-    afs_int32 addr[1];		/* there are actually more than one here */
+    int numberOfInterfaces;
+    struct AddrPort interface[1];/* there are actually more than one here */
     /* in network byte order */
 };
 struct host {
@@ -61,10 +66,10 @@ struct host {
     /* holds on this host; 1 bit per lwp.
      * A hold prevents this structure and
      * inferior structures from disappearing */
-    unsigned int host;		/* IP address of host interface that is
+    afs_uint32 host;		/* IP address of host interface that is
 				 * currently being used, in network
 				 * byte order */
-    unsigned short port;	/* port address of host */
+    afs_uint16 port;		/* port address of host */
     char Console;		/* XXXX This host is a console */
     unsigned short hostFlags;		/*  bit map */
 #if FS_STATS_DETAILED
@@ -75,7 +80,8 @@ struct host {
     char hcpsfailed;		/* Retry the cps call next time */
     prlist hcps;		/* cps for hostip acls */
     afs_uint32 LastCall;	/* time of last call from host */
-    afs_uint32 ActiveCall;	/* time of any call but gettime */
+    afs_uint32 ActiveCall;	/* time of any call but gettime, 
+                                   getstats and getcaps */
     struct client *FirstClient;	/* first connection from host */
     afs_uint32 cpsCall;		/* time of last cps call from this host */
     struct Interface *interface;	/* all alternate addr for client */
@@ -99,7 +105,8 @@ struct host {
 struct h_hashChain {
     struct host *hostPtr;
     struct h_hashChain *next;
-    afs_int32 addr;
+    afs_uint32 addr;
+    afs_uint16 port;
 };
 
 struct client {
@@ -190,10 +197,13 @@ extern int h_Lock_r(register struct host *host);
 				(h)->prev ? ((h)->prev->next = (h)->next):0;\
 				( h == hostList )? (hostList = h->next):0;
 
+extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
-extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
+extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 			       int *heldp);
+extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
+			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern int h_FreeConnection(struct rx_connection *tcon);
 extern void h_Enumerate(int (*proc) (), char *param);
@@ -202,16 +212,27 @@ extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
 extern struct client *h_ID2Client(afs_int32 vid);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);
+extern int PutClient(struct client **cp);
 extern void h_PrintStats();
 extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
-			   register afs_uint32 hport);
+			   register afs_uint16 hport);
 struct Interface *MultiVerifyInterface_r();
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */
 #define h_itoh(hostindex) (hosttableptrs[(hostindex)>>h_HTSHIFT]+((hostindex)&(h_HTSPERBLOCK-1)))
+
+#define rxr_GetEpoch(aconn) (((struct rx_connection *)(aconn))->epoch)
+
+#define rxr_CidOf(aconn) (((struct rx_connection *)(aconn))->cid)
+
+#define rxr_PortOf(aconn) \
+    rx_PortOf(rx_PeerOf(((struct rx_connection *)(aconn))))
+
+#define rxr_HostOf(aconn) \
+    rx_HostOf(rx_PeerOf((struct rx_connection *)(aconn)))
 
 #define HCPS_INPROGRESS			0x01	/*set when CPS is being updated */
 #define HCPS_WAITING			0x02	/*waiting for CPS to get updated */
@@ -222,3 +243,5 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define RESETDONE			0x40	/* callback reset done */
 #define HFE_LATER                       0x80	/* host has FE_LATER callbacks */
 #define HERRORTRANS                    0x100	/* do error translation */
+
+

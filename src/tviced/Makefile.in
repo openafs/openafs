@@ -145,8 +145,8 @@ nuke.o: ${VOL}/nuke.c
 devname.o: ${VOL}/devname.c
 	${CCRULE}
 
-# only for darwin
-fstab.o: ${VOL}/fstab.c
+# only for darwin?
+fstab.o: ${UTIL}/fstab.c
 	${CCRULE}
 
 common.o: ${VOL}/common.c

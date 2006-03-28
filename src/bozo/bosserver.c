@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.5 2005/07/11 19:08:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.7 2006/02/22 04:09:29 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -718,6 +718,7 @@ main(int argc, char **argv, char **envp)
     struct ktc_encryptionKey tkey;
     int i;
     char namebuf[AFSDIR_PATH_MAX];
+    int rxMaxMTU = -1;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
     struct stat sb;
@@ -743,6 +744,7 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+    osi_audit_init();
 #ifdef BOS_RESTRICTED_MODE
     signal(SIGFPE, bozo_insecureme);
 #endif
@@ -811,6 +813,20 @@ main(int argc, char **argv, char **envp)
 	    bozo_isrestricted = 1;
 	}
 #endif
+	else if (!strcmp(argv[i], "-rxmaxmtu")) {
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
+		exit(1); 
+	    }
+	    rxMaxMTU = atoi(argv[++i]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+			rxMaxMTU, RX_MIN_PACKET_SIZE, 
+			RX_MAX_PACKET_DATA_SIZE);
+		exit(1);
+	    }
+	}
 	else if (strcmp(argv[code], "-auditlog") == 0) {
 	    int tempfd, flags;
 	    FILE *auditout;
@@ -848,12 +864,14 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
+		   "[-rxmaxmtu <bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
+		   "[-rxmaxmtu <bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif
@@ -1004,6 +1022,10 @@ main(int argc, char **argv, char **envp)
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
+    }
 
     tservice = rx_NewService( /* port */ 0, /* service id */ 1,
 			     /*service name */ "bozo",

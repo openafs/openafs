@@ -3,8 +3,8 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 SHELL		= /bin/sh
 
-CFLAGS		= ${DBG} ${OPTMZ} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS=${XLDFLAGS}
+CFLAGS		= ${DBG} ${OPTMZ} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
+LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
 
 INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
 INCLIBS=-L${SRCDIR}/lib/afs -L${TOP_LIBDIR}

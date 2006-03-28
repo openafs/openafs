@@ -1,0 +1,290 @@
+New features for the Windows Clients
+------------------------------------
+
+NOTE: This file is very out of date.  It does not describe the DNS conversion
+to the use of the Windows DNSAPI nor does it describe the modifications to 
+Freelance to support r/w mount points, symlinks, and correct stability issues.
+INI files are no longer used and there are new registry keys.  See registry.txt.
+
+
+This file describes new features that have been added to the Windows AFS
+clients.
+
+DNS lookup
+----------
+
+DNS lookup of cell servers is now available for the Windows AFS clients.
+A type 1 AFSDB record is queried to determine the cell server host names.
+These names are then resolved to IP addresses.
+
+1. Usage
+
+This feature is enabled at compilation with the switch "AFS_AFSDB_ENV",
+as with the Unix clients.  It is activated by default, and can be disabled
+at runtime by running afsd.exe with the -noafsdb flag for the Win9x client,
+or by setting the following registry entry on the NT/2000 client:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\UseDNS=0
+
+The Windows AFS clients use a configuration file named afsdns.ini (stored in
+the same directory as the cell server database) to determine the address
+of the DNS server.  This file has the following format:
+
+[AFS Domain Name Servers]
+ns1=xx.xx.xx.xx
+
+Only one name server is actually used currently.  Support for multiple
+name servers should be easy to add.
+
+
+2. Design
+
+Because of the lack of standard resolver libraries on the Win32 and DJGPP
+platforms, it was decided to perform DNS queries by manually creating
+packets to send to the DNS server.  The DNS response is then decoded to
+determine the correct cell server addresses.
+
+New files:
+
+WINNT/afsd/cm_dns.c
+WINNT/afsd/cm_dns.h
+WINNT/afsd/cm_dns_private.h
+
+Changed files:
+
+WINNT/afsd/cm_config.c
+WINNT/afsd/cm_cell.c
+WINNT/afsd/cm_ioctl.c
+WINNT/afsd/afsd_init.c
+WINNT/afsd/afsd_init95.c
+auth/cellconfig.c
+kauth/user_nt.c
+
+
+3. Future work
+
+Support for multiple DNS servers
+Support for resolver libraries, if available for DJGPP and/or Win32
+
+
+Freelance AFS Client
+--------------------
+
+1	Introduction
+
+The current implementation of AFS requires that all AFS clients belong to
+a home cell. The home cell provides the client with a starting point to
+mount the entire AFS file system. The client's top most level view of AFS
+is determined by the home cell server's root.afs volume. Through root.afs,
+the home cell also controls which cells clients can access.
+
+To provide a more flexible and relevant view of the AFS file system to the
+user, this projects aims to remove the need for a home cell and to allow
+each client to customize its view of the AFS file system. To this end,
+the current Windows 2000 and 9x clients for AFS have been modified into
+a Freelance AFS Client that allows the user to mount and dismount AFS
+cells at will, without the need of a home cell.
+
+The new Freelance AFS Client also increases the scalability of the AFS file
+system since administrator intervention is no longer required for clients
+to access newly established cells. It also removes the client dependency on
+the availability of the home cell. Previously, if the home cell were not
+available, clients would not be able to access the AFS file system. This
+critical dependency is not present in the Freelance AFS Client.
+
+2    Usage
+
+The Freelance feature is available only for the Windows NT/2000 and 9x
+clients.  In 9x, it can be enabled by running afsd.exe manually with the
+"-freelance" flag.  It can be enabled in NT/2000 by setting the following
+registry key:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\FreelanceClient=1
+
+(GUI support to activate this feature will be available soon.)
+
+The Freelance client reads the available mount points from a file called
+afs_freelance.ini.  This file will be created if not found and the list
+of mount points will initially be empty.  New mount points can be added
+using "fs mkmount" or the Explorer shell extension.
+
+Specification of a home cell is unnecessary with the Freelance client
+itself, but is still needed by programs such as klog and pts to provide
+a default cell argument.
+
+3	Design
+
+This section describes the design approach and provides a high-level
+description of the project.
+
+3.1	Design Approach
+
+The main aim of the project was to shift the client's view of the AFS file
+system, root.afs, from the home cell onto the client, and thus eliminate the
+need for a home cell. This had to be done while maintaining compatibility
+with the existing system, so changes to the client were kept to a minimum.
+
+My primary approach has been to trick the current system into thinking
+that there is still a home cell by while feeding it fake information that
+is generated from a locally stored root.afs directory whenever root.afs of
+the home cell is requested. This is accomplished by intercepting function
+calls that fetch data from root.afs on the home cell.
+
+3.2	Afs_freelance.ini
+
+The local version of root.afs is represented by a file named
+afs_freelance.ini, typically stored in the same directory as the cell
+database. The first line of this file is an integer that specifies the
+number of mount points there are in this file. The rest of the file is a
+list of entries, one on each line, in the form xxx#yyy:zzz, where xxx is the
+name of the mount point, yyy is the cell name and zzz is the volume name.
+
+3.3	Directory File Structure
+
+Using the data in afs_freelance.ini, a fake directory is created in memory that
+is identical to what an AFS directory containing those mount points. This
+fake directory is then fed to the client when necessary. The structure
+of the directory is as follows:
+
+1. Each directory is made up of pages, each of a fixed size. 
+2. Each page is divided into 32 byte chunks, which are indivisible units.
+3. The first 13 chunks of the first page, called the directory header page,
+are used for header information.
+4. The first chunk of all other pages, are also used for header information.
+5. Chunks other than those reserved for header information can be used
+to store mount points. Mount points are stored in a struct defined as such:
+
+typedef struct cm_localMountPoint {
+	char* namep;
+	char* mountPointStringp;
+	struct cm_localMountPoint* next;
+} cm_localMountPoint_t;
+
+
+3.4	Adding/removing mounts
+
+The fs commands "mkmount" and "rmmount" can be used to add/remove mount
+points from the afs_freelance.ini file.  These functions can also be
+accessed from the Explorer shell extension.
+
+4	Implementation
+
+4.1 Files Changed/Added
+
+Most of the changes have been made in 5 files:
+
+afsd_init.c
+cm_callback.c
+cm_dcache.c
+cm_scache.c
+cm_vnodeops.c
+
+Afsd_init.c was changed to include initialization code for the fake
+directory and local mount points. Cm_callback.c was changed to handle
+callbacks to /afs differently, since it is now local. Cm_dcache was
+changed to feed fake information into buffers when the /afs directory is
+read. Cm_scache.c was changed to provide fake scp information for the
+mount points found under /afs. Finally, cm_vnodeops.c was modified to
+make the function trybulkproc skip the fake directory entries.
+
+In addition, the following files were added:
+
+	cm_freelance.h
+	cm_freelance.c
+
+Cm_freelance.h and cm_freelance.c were added to provide functions that
+create and handle the fake directory and fake mount points.
+
+
+4.2	Functions Modified
+
+Below is a list of the functions that have been modified. The list is
+not exhaustive but includes most of the major changes.
+
+4.2.1	afsd_InitCM
+
+Several lines of code were added to this function to call the initialization
+functions for the fake directory and fake mount points.
+
+4.2.2	cm_HaveCallback
+
+This function is called to check if files have changed. The /afs directory
+and mount points on /afs need to handled differently by this function. In
+particular, whenever this function is called on mount points on /afs,
+the function needs to always return true. This is because local mount
+points are only added or removed, never modified.
+
+4.2.3 cm_GetCallBack
+
+Because of the same reasons as in 4.2.2, this function needs to handle
+/afs differently. This function should never be called on the local mount
+points since the cm_HaveCallBack function always returns true on local
+mount points. When this function is called on /afs, we need to load the
+status information of /afs if it is the first time that /afs is accessed
+since initialization of the fake directory. Otherwise, we simply return.
+
+4.2.4 cm_GetBuffer
+
+This function is used to fetch actual data from a file into memory
+buffers. When this function is called on /afs, we need to fill the memory
+buffers with data from the fake directory created in memory, rather than
+by calling server functions.
+
+4.2.5 cm_GetSCache
+
+This function is used to fetch meta data about files. When it is called
+on /afs, we return a hardcoded scache structure. When it is called on
+the mount points on /afs, we return fake scache data based on the mount
+points in afs_freelance.ini
+
+4.2.6	cm_SyncOp
+
+This function was modified to skip cm_HaveCallback and cm_GetCallback
+calls on the mount points on /afs.
+
+4.2.6 cm_MergeStatus
+
+This function was modified to provide fake status data on /afs.
+
+4.2.7 cm_TryBulkProc
+
+This function was modified to skip operations on fake mount points.
+
+
+4.3	New Functions
+
+4.3.1	cm_InitFakeRootDir
+
+This function uses the array cm_localMountPoints and creates in memory
+an image of a fake directory. This directory is then used to fill buffers
+when read requests of /afs are made.
+
+4.3.2	cm_getNoLocalMountPoints
+
+This function returns the number of mount points on /afs, based on
+afs_freelance.ini.
+
+4.3.3	cm_InitLocalMountPoints
+
+This function reads afs_freelance.ini and creates an array of fake mount points
+based on its contents. The array is then used by cm_InitFakeRootDir to
+create a fake directory in memory.
+
+4.3.4 	reInitLocalMountPoints
+
+This function clears all the fake information in memory and reconstructs
+them from afs_freelance.ini.
+
+
+5 Current Status
+
+This feature is still experimental.  Please post problem reports to
+the openafs-devel mailing list.
+
+5.1	Future Work
+
+GUI support for activation of the Freelance feature will be available soon.
+An auto-mount function could be added. This would work by intercepting
+the cm_lookup call so that when a cell is not found in /afs, it would be
+automatically added.
+Support for Unix clients.

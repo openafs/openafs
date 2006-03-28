@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osidnlc.c,v 1.8 2003/07/15 23:14:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osidnlc.c,v 1.8.2.5 2006/02/18 04:09:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -197,6 +197,9 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
     char *ts = aname;
     struct nc *tnc, *tnc1 = 0;
     int safety;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
 
     if (!afs_usednlc)
 	return 0;
@@ -239,10 +242,35 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	ReleaseReadLock(&afs_xvcache);
 	dnlcstats.misses++;
     } else {
+	if (tvc->states & CVInit) {
+	    ReleaseReadLock(&afs_xvcache);
+	    dnlcstats.misses++;
+	    osi_dnlc_remove(adp, aname, tvc);
+	    return 0;
+	}
 #ifdef	AFS_OSF_ENV
 	VN_HOLD((vnode_t *) tvc);
 #else
+#ifdef AFS_DARWIN80_ENV
+	tvp = AFSTOV(tvc);
+	if (vnode_get(tvp)) {
+	    ReleaseReadLock(&afs_xvcache);
+	    dnlcstats.misses++;
+	    osi_dnlc_remove(adp, aname, tvc);
+	    return 0;
+	}
+	if (vnode_ref(tvp)) {
+	    ReleaseReadLock(&afs_xvcache);
+	    AFS_GUNLOCK();
+	    vnode_put(tvp);
+	    AFS_GLOCK();
+	    dnlcstats.misses++;
+	    osi_dnlc_remove(adp, aname, tvc);
+	    return 0;
+	}
+#else
 	osi_vnhold(tvc, 0);
+#endif
 #endif
 	ReleaseReadLock(&afs_xvcache);
 
@@ -364,6 +392,15 @@ osi_dnlc_purgedp(struct vcache *adp)
     int i;
     int writelocked;
 
+#ifdef AFS_DARWIN_ENV
+    if (!(adp->states & (CVInit | CVFlushed
+#ifdef AFS_DARWIN80_ENV
+                        | CDeadVnode
+#endif
+        )) && AFSTOV(adp))
+    cache_purge(AFSTOV(adp));
+#endif
+
     if (!afs_usednlc)
 	return 0;
 
@@ -393,6 +430,15 @@ osi_dnlc_purgevp(struct vcache *avc)
 {
     int i;
     int writelocked;
+
+#ifdef AFS_DARWIN_ENV
+    if (!(avc->states & (CVInit | CVFlushed
+#ifdef AFS_DARWIN80_ENV
+                        | CDeadVnode
+#endif
+        )) && AFSTOV(avc))
+    cache_purge(AFSTOV(avc));
+#endif
 
     if (!afs_usednlc)
 	return 0;

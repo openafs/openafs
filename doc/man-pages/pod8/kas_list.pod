@@ -1,0 +1,143 @@
+=head1 NAME
+
+kas list - Displays all entries in the Authentication Database
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<kas list> [B<-long>] [B<-showadmin>] [B<-showkey>]
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
+    [B<-noauth>] [B<-help>]
+
+B<kas ls> [B<-l>] [B<-showa>] [B<-showk>]
+    S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-se> <I<explicit list of authentication servers>>+] >>> [B<-n>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<kas list> command either displays all entries from the
+Authentication Database by name, or displays the full database entry for a
+defined set of entries, as determined by the flag provided:
+
+=over 4
+
+=item *
+
+To display every entry in the Authentication Database in full, include the
+B<-long> flag.
+
+=item *
+
+To display only those entries in full that have the C<ADMIN> flag set,
+include the B<-showadmin> flag.
+
+=item *
+
+To list only the name of each Authentication Database entry, omit both the
+B<-long> and B<-showadmin> flags.
+
+=back
+
+By default, full entries include a checksum for the encryption key, rather
+than the actual octal digits that constitute the key. To display the octal
+digits, include the B<-showkey> flag with the B<-long> or B<-showadmin>
+flag.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-long>
+
+Displays every Authentication Database entry in full. Provide this flag or
+the B<-showadmin> flag, or omit both to display just the name of every
+database entry.
+
+=item B<-showadmin>
+
+Displays in full only the Authentication Database entries that have the
+C<ADMIN> flag set. Provide this flag or the B<-long> flag, or omit both to
+display just the name of every database entry.
+
+=item B<-showkey>
+
+Displays the octal digits that constitute the key in each full
+entry. Provide either the B<-long> or B<-showadmin> flag along with this
+one.
+
+=item B<-admin_username> <I<admin principal>>
+
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details, see
+L<kas(8)>.
+
+=item B<-password_for_admin> <I<admin password>>
+
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the B<kas> command interpreter prompts for it and does not
+echo it visibly. For more details, see L<kas(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<kas(8)>.
+
+=item B<-servers> <I<authentication servers>>+
+
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see L<kas(8)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. For more
+details, see L<kas(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If neither the B<-long> or B<-showadmin> flag is provided, the output
+lists the name of each entry in the Authentication Database on its own
+line.
+
+If the B<-long> flag is included, the output includes every Authentication
+Database entry in full. If the B<-showadmin> flag is included, the output
+includes in full only the Authentication Database entries that have the
+C<ADMIN> flag set. If the B<-showkey> is provided along with either one,
+the output includes the octal digits that constitute the encryption key in
+each entry.
+
+A full Authentication Database entry includes the same information
+displayed by the B<kas examine> command; for details, see that command's
+reference page.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<ADMIN> flag set on his or her Authentication
+Database entry.
+
+=head1 SEE ALSO
+
+L<kas(8)>,
+L<kas_examine(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

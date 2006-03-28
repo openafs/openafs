@@ -107,6 +107,9 @@
 /* Define if you have the srandom function.  */
 #undef HAVE_SRANDOM
 
+/* Define if you have the strcasestr function.  */
+#undef HAVE_STRCASESTR
+
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
 
@@ -334,6 +337,9 @@
 
 /* define if you struct inode has i_security */
 #undef STRUCT_INODE_HAS_I_SECURITY
+
+/* define if you struct inode has i_mutex */
+#undef STRUCT_INODE_HAS_I_MUTEX
 
 /* define if you struct inode has i_sb_list */
 #undef STRUCT_INODE_HAS_I_SB_LIST

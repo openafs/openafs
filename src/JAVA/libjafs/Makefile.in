@@ -5,13 +5,15 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+include ../../config/Makefile.config
+#${SYS_NAME}
+
 DEST=@DEST@
 TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
-TOP_JLIBDIR=@TOP_JLIBDIR@
-JAVA_HOME=@JAVA_HOME@
-JNI_INC=@JNI_INC@
+TOP_JLIBDIR=@TOP_SRCDIR@/JAVA/libjafs
+JNI_INC=${JAVA_HOME}/include
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -27,36 +29,28 @@ COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 SYS_NAME=@AFS_SYSNAME@
 
-include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-SHARED_FLAGS = -shared
+SHARED_FLAGS = -shared -Xlinker -Bsymbolic
 OBJECT_FLAGS = -fPIC -c
 
 ifeq "$(BUILD_TYPE)" "admin"
-	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ ${JNI_INC}
+	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ -I${JAVA_HOME}/include -I ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 else
-	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${TOP_SRCDIR} ${JNI_INC}
+	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${JAVA_HOME}/include -I ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${MT_CFLAGS}
 endif
 
-ifeq "$(INCREMENT_BUILD)" "false"
-	INCREMENT_CMD :=
-else
-	INCREMENT_CMD := ${RM} -f ${LIBJAFSADMDIR}VersionInfo.o; perl buildinfo.pl ${LIBJAFSADMDIR}VersionInfo.h -i;
-endif
 
 LIBJAFSADMDIR = ./
 ROOTPACKAGEDIR = ../classes
 RELPACKAGEDIR = org/openafs/jafs/
 PACKAGEDIR = ${ROOTPACKAGEDIR}/${RELPACKAGEDIR}
-JAVADOCSDIR = ../javadocs/
-BUILD_VERSION = `perl buildinfo.pl ${LIBJAFSADMDIR}VersionInfo.h -version`
+JAVADOCSDIR = javadocs/
 
 JAVAH = ${JAVA_HOME}/bin/javah -classpath ${ROOTPACKAGEDIR} -jni -d ${LIBJAFSADMDIR}
 JAVAC = ${JAVA_HOME}/bin/javac -classpath ${ROOTPACKAGEDIR}
-JAVADOC = ${JAVA_HOME}/bin/javadoc
 
 J_NATIVE_PREFIX = org.openafs.jafs.
 C_NATIVE_PREFIX = org_openafs_jafs_
@@ -77,19 +71,47 @@ PACKAGE =\
 	${PACKAGEDIR}Server.class \
 	${PACKAGEDIR}Token.class \
 	${PACKAGEDIR}User.class \
-	${PACKAGEDIR}VersionInfo.class \
-	${PACKAGEDIR}Volume.class
+	${PACKAGEDIR}Volume.class \
+	${PACKAGEDIR}VersionInfo.class
 
+ifeq (${SYS_NAME}, ppc64_linux26)
+LIBJAFS_OBJS =
+else
+ifeq (${SYS_NAME}, s390x_linux26)
+LIBJAFS_OBJS =
+else
 LIBJAFS_OBJS =\
-	${LIBJAFSADMDIR}ACL.o \
+        ${LIBJAFSADMDIR}GetNativeString.o \
+        ${LIBJAFSADMDIR}ACL.o
+endif
+endif
+
+LIBJAFS_OBJS +=\
 	${LIBJAFSADMDIR}File.o \
 	${LIBJAFSADMDIR}FileInputStream.o \
 	${LIBJAFSADMDIR}FileOutputStream.o \
 	${LIBJAFSADMDIR}Internal.o \
 	${LIBJAFSADMDIR}UserToken.o \
-	${LIBJAFSADMDIR}VersionInfo.o
+	${LIBJAFSADMDIR}VersionInfo.o \
+	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
+	${TOP_SRCDIR}/libuafs/UAFS/xdr_int32.o \
+        ${TOP_SRCDIR}/util/rxkstats.o
 
+ifeq (${SYS_NAME}, ppc64_linux26)
 LIBJAFSADM_OBJS =\
+        ${LIBJAFSADMDIR}GetNativeString.o \
+        ${LIBJAFSADMDIR}ACL.o
+else
+ifeq (${SYS_NAME}, s390x_linux26)
+LIBJAFSADM_OBJS =\
+        ${LIBJAFSADMDIR}GetNativeString.o \
+        ${LIBJAFSADMDIR}ACL.o
+else
+LIBJAFSADM_OBJS =
+endif
+endif
+
+LIBJAFSADM_OBJS +=\
 	${LIBJAFSADMDIR}AdminToken.o \
 	${LIBJAFSADMDIR}Cell.o \
 	${LIBJAFSADMDIR}Group.o \
@@ -99,7 +121,8 @@ LIBJAFSADM_OBJS =\
 	${LIBJAFSADMDIR}Process.o \
 	${LIBJAFSADMDIR}Server.o \
 	${LIBJAFSADMDIR}User.o \
-	${LIBJAFSADMDIR}VersionInfo.o \
+	${LIBJAFSADMDIR}Version2.o \
+	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
 	${LIBJAFSADMDIR}Volume.o
 
 CORRELATING_SOURCE_FILES =\
@@ -114,8 +137,9 @@ CORRELATING_SOURCE_FILES =\
 	${LIBJAFSADMDIR}Process.c \
 	${LIBJAFSADMDIR}Server.c \
 	${LIBJAFSADMDIR}User.c \
-	${LIBJAFSADMDIR}VersionInfo.c \
-	${LIBJAFSADMDIR}Volume.c
+	${LIBJAFSADMDIR}Volume.c \
+	${LIBJAFSADMDIR}VersionInfo.c
+
 
 JAVA_HEADERS = ${PACKAGE:${PACKAGEDIR}%.class=${C_NATIVE_PREFIX}%.h}
 
@@ -151,7 +175,7 @@ LIBJAFSADM_LIBS =\
 
 JARFILE = jafs.jar
 
-all:  ${TOP_JLIBDIR} libjafs libjafsadm ${PACKAGE} jar
+all:  ${TOP_JLIBDIR} libjafs libjafsadm ${PACKAGE} all_jar
 
 install:  all ${DESTDIR}${libdir}/libjafs.so ${DESTDIR}${libdir}/libjafsadm.so ${PACKAGE} install_jar
 	if [ ! -e /usr/afswsp ]; then \
@@ -174,39 +198,27 @@ install:  all ${DESTDIR}${libdir}/libjafs.so ${DESTDIR}${libdir}/libjafsadm.so $
 	  ln -s /usr/vice/etc/ThisCell /usr/afswsp/etc/; \
 	fi
 
-### Clean "C" and Java objects
 clean:
-	${RM} -f ${PACKAGEDIR}*.class ${LIBJAFSADMDIR}*.o ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}*.h ${LIBJAFSADMDIR}acltest
-	${RM} -fR ${JAVADOCSDIR}
-
-### Clean just "C" objects
-cleanc:
-	${RM} -f ${LIBJAFSADMDIR}*.o ${LIBJAFSADMDIR}acltest
-
-increment-build:
-	${INCREMENT_CMD} \
-        export INCREMENT_BUILD=false;
+	${RM} -f ${PACKAGEDIR}*.class ${LIBJAFSADMDIR}*.o ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}*.h
 
 setup:	FORCE
+	if [ ! -e ./h ]; then \
+	  ln -s /usr/include/sys h; \
+	fi; \
 
 ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 FORCE: ;
 
-############# Test program   ###############################
-
-acltest: ${LIBJAFSADMDIR}/acltest.c
-	${CC} ${CFLAGS} -o $@ $^ ${LIBJAFS_LIBS}
-
 ############# Shared library ###############################
 
-libjafs: setup increment-build
+libjafs: setup
 	${RM} -f ${LIBJAFSADMDIR}Internal.o; \
 	export BUILD_TYPE=user; \
 	${MAKE} ${TOP_LIBDIR}/libjafs.so
 
-libjafsadm: increment-build
+libjafsadm:
 	${RM} -f ${LIBJAFSADMDIR}Internal.o; \
 	export BUILD_TYPE=admin; \
 	${MAKE} ${TOP_LIBDIR}/libjafsadm.so
@@ -214,7 +226,7 @@ libjafsadm: increment-build
 ${TOP_LIBDIR}/libjafs.so: ${LIBJAFS_OBJS}
 	${CC} ${CFLAGS} ${SHARED_FLAGS} -o $@ $^ ${LIBJAFS_LIBS}
 
-${DESTDIR}${libdir}/libjafs.so: ${LIBJAFS_OBJS}
+${DESTDIR}${libdir}/libjafs.so: ${LIBJAFS_OBJS}192.168.13.10
 	${CC} ${CFLAGS} ${SHARED_FLAGS} -o $@ $^ ${LIBJAFS_LIBS}
 
 ${TOP_LIBDIR}/libjafsadm.so: ${LIBJAFSADM_OBJS}
@@ -230,15 +242,15 @@ ${LIBJAFSADM_OBJS}: %.o: %.c
 
 ############## C files #####################################
 
-${CORRELATING_SOURCE_FILES}: ${LIBJAFSADMDIR}%.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}%.h ${LIBJAFSADMDIR}Internal.h ${LIBJAFSADMDIR}VersionInfo.h
+${CORRELATING_SOURCE_FILES}: ${LIBJAFSADMDIR}%.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}%.h ${LIBJAFSADMDIR}Internal.h
 
 ${LIBJAFSADMDIR}AdminToken.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Token.h ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Cell.h
 
 ${LIBJAFSADMDIR}Internal.c: ${LIBJAFSADMDIR}Internal.h
 
-${LIBJAFSADMDIR}UserToken.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Token.h
+${LIBJAFSADMDIR}Version2.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}VersionInfo.h ${LIBJAFSADMDIR}JAFS_Version.h
 
-${LIBJAFSADMDIR}VersionInfo.c: ${LIBJAFSADMDIR}VersionInfo.h ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}VersionInfo.h
+${LIBJAFSADMDIR}UserToken.c: ${LIBJAFSADMDIR}${C_NATIVE_PREFIX}Token.h
 
 ############## Package javac section #########################
 
@@ -250,22 +262,9 @@ ${PACKAGEDIR}%.class: ${PACKAGEDIR}%.java
 ${JAVA_HEADERS}: ${C_NATIVE_PREFIX}%.h: ${PACKAGEDIR}%.class
 	${JAVAH} ${J_NATIVE_PREFIX}$*
 
-############## Javadoc section ###############################
-
-javadocs:
-	echo "Preparing Javadoc API documentation..."
-	${JAVADOC} -version -breakiterator \
-	-link http://java.sun.com/j2se/1.4/docs/api/ \
-	-windowtitle "Java AFS API" -header "<B>JAFS API v${BUILD_VERSION}</B>" \
-	-doctitle "<B>JAFS</B> API v${BUILD_VERSION}" \
-	-use -d ${JAVADOCSDIR} \
-	-sourcepath ${ROOTPACKAGEDIR} \
-	-classpath ${ROOTPACKAGEDIR} \
-	-package org.openafs.jafs
-
 ############# JAR file #####################################
 
-jar: clean_jar
+all_jar: clean_jar
 	cd ${ROOTPACKAGEDIR}; ${JAVA_HOME}/bin/jar -cMf ${TOP_JLIBDIR}/${JARFILE} *.properties ${RELPACKAGEDIR}*.class
 
 install_jar: clean_jar
@@ -274,6 +273,5 @@ install_jar: clean_jar
 clean_jar:
 	${RM} -f ${TOP_JLIBDIR}/${JARFILE}
 
-clean_libs:
-	${RM} -f ${TOP_LIBDIR}/libjafs.so ${TOP_LIBDIR}/libjafsadm.so
+
 

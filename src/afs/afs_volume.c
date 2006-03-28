@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.1 2004/12/07 06:12:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.5 2006/02/18 04:09:34 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -238,6 +238,9 @@ afs_CheckVolumeNames(int flags)
     unsigned int now;
     struct vcache *tvc;
     afs_int32 *volumeID, *cellID, vsize, nvols;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
     AFS_STATCNT(afs_CheckVolumeNames);
 
     nvols = 0;
@@ -284,6 +287,7 @@ afs_CheckVolumeNames(int flags)
 
     /* next ensure all mt points are re-evaluated */
     if (nvols || (flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))) {
+loop:
 	ObtainReadLock(&afs_xvcache);
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -306,7 +310,30 @@ afs_CheckVolumeNames(int flags)
 		    && (inVolList(&tvc->fid, nvols, volumeID, cellID)
 			|| (flags & AFS_VOLCHECK_FORCE))) {
 
+                    if (tvc->states & CVInit) {
+                        ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+                        goto loop;
+                    }
+#ifdef AFS_DARWIN80_ENV
+                    if (tvc->states & CDeadVnode) {
+                        ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+                        goto loop;
+                    }
+		    tvp = AFSTOV(tvc);
+		    if (vnode_get(tvp))
+			continue;
+		    if (vnode_ref(tvp)) {
+			AFS_GUNLOCK();
+			/* AFSTOV(tvc) may be NULL */
+			vnode_put(tvp);
+			AFS_GLOCK();
+			continue;
+		    }
+#else
 		    AFS_FAST_HOLD(tvc);
+#endif
 		    ReleaseReadLock(&afs_xvcache);
 
 		    ObtainWriteLock(&afs_xcbhash, 485);
@@ -317,10 +344,17 @@ afs_CheckVolumeNames(int flags)
 		    if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 
+#ifdef AFS_DARWIN80_ENV
+		    vnode_put(AFSTOV(tvc));
+		    /* our tvc ptr is still good until now */
+		    AFS_FAST_RELE(tvc);
+		    ObtainReadLock(&afs_xvcache);
+#else
 		    ObtainReadLock(&afs_xvcache);
 
 		    /* our tvc ptr is still good until now */
 		    AFS_FAST_RELE(tvc);
+#endif
 		}
 	    }
 	}

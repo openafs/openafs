@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.6 2005/07/29 14:32:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.8 2006/02/13 17:57:26 jaltman Exp $");
 
 #include <fcntl.h>
 #include <stdarg.h>
@@ -257,6 +257,29 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	fprintf(out, "\n");
 }
 
+#ifdef AFS_PTHREAD_ENV
+static pthread_mutex_t audit_lock;
+static volatile afs_int32   audit_lock_initialized = 0;
+static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
+
+static void
+osi_audit_init_lock(void)
+{
+    pthread_mutex_init(&audit_lock, NULL);
+    audit_lock_initialized = 1;
+}
+#endif
+
+void
+osi_audit_init(void)
+{
+#ifdef AFS_PTHREAD_ENV
+    if (!audit_lock_initialized) {
+	pthread_once(&audit_lock_once, osi_audit_init_lock);
+    }
+#endif /* AFS_PTHREAD_ENV */
+}
+
 /* ************************************************************************** */
 /* The routine that acually does the audit call.
  * ************************************************************************** */
@@ -268,20 +291,17 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 #ifdef AFS_AIX32_ENV
     afs_int32 code;
     afs_int32 err;
-#endif
-    int result;
-
-    va_list vaList;
-#ifdef AFS_AIX32_ENV
-    static struct Lock audbuflock = { 0, 0, 0, 0,
-#ifdef AFS_PTHREAD_ENV
-	PTHREAD_MUTEX_INITIALIZER,
-	PTHREAD_COND_INITIALIZER,
-	PTHREAD_COND_INITIALIZER
-#endif /* AFS_PTHREAD_ENV */
-    };
     static char BUFFER[32768];
 #endif
+    int result;
+    va_list vaList;
+
+#ifdef AFS_PTHREAD_ENV
+    /* i'm pretty sure all the server apps now call osi_audit_init(),
+     * but to be extra careful we'll leave this assert in here for a 
+     * while to make sure */
+    assert(audit_lock_initialized);
+#endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
 	osi_audit_check();
@@ -312,8 +332,10 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     }
 
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_lock(&audit_lock);
+#endif
 #ifdef AFS_AIX32_ENV
-    ObtainWriteLock(&audbuflock);
     bufferPtr = BUFFER;
 
     /* Put the error code into the buffer list */
@@ -340,13 +362,15 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	    printf("Error while writing audit entry: %d.\n", errno);
     }
 #endif /* notdef */
-    ReleaseWriteLock(&audbuflock);
 #else
     if (auditout) {
 	va_start(vaList, errCode);
 	printbuf(auditout, 0, audEvent, errCode, vaList);
 	fflush(auditout);
     }
+#endif
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_unlock(&audit_lock);
 #endif
 
     return 0;

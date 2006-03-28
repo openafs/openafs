@@ -50,7 +50,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.16 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.16.2.1 2005/12/24 01:09:55 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -418,7 +418,7 @@ uuid_get_address(uuid_address_p_t addr)
 void
 uuid__get_os_time(uuid_time_t * os_time)
 {
-    struct timeval tp;
+    osi_timeval_t tp;
 
     osi_GetTime(&tp);
     os_time->hi = tp.tv_sec;

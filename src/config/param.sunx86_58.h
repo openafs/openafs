@@ -33,6 +33,7 @@
 #define AFS_X86_ENV		1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -81,7 +82,7 @@
 /*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
-#define	afsio_offset	uio_offset
+#define	afsio_offset	uio_loffset
 #define	afsio_seg		uio_segflg
 #define	afsio_fmode	uio_fmode
 #define	afsio_resid	uio_resid
@@ -89,7 +90,7 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	MCLBYTES
 #define	AFS_MINCHANGE	2
-#define	osi_GetTime(x)	uniqtime(x)
+#define	osi_GetTime(x)	uniqtime32(x)
 
 #define	AFS_KALLOC(n)	kmem_alloc(n, KM_SLEEP)
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
@@ -148,9 +149,9 @@
 #define AFS_MOUNT_AFS	 1
 
 /* Machine / Operating system information */
-#define sys_sun4x_55	1
-#define SYS_NAME	"sun4x_55"
-#define SYS_NAME_ID	SYS_NAME_ID_sun4x_55
+#define sys_sunx86_58	1
+#define SYS_NAME	"sunx86_58"
+#define SYS_NAME_ID	SYS_NAME_ID_sunx86_58
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS      0	/* System doesn't support statvfs */

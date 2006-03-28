@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.7 2005/06/10 21:11:49 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.11 2005/12/24 00:21:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */

@@ -221,7 +221,7 @@ viced: cmd comerr vlserver audit
 
 tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -234,9 +234,9 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-tvolser: project tviced usd libafsrpc libafsauthent
+tvolser: project tviced usd libafsrpc libafsauthent volser
 	case ${SYS_NAME} in                                             \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*)   \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fo]bsd*|*nbsd[234]*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
 	*_darwin_[1-6][0-9])                                            \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
@@ -277,7 +277,7 @@ scout: cmd comerr gtx fsprobe
 uss: des kauth cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: cmd comerr audit
+bozo: cmd comerr audit auth kauth volser
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
 vfsck:	vol
@@ -338,6 +338,11 @@ login: cmd comerr kauth rxkad pam sia tsm41 sgistuff aklog
 		${COMPILE_PART1} login ${COMPILE_PART2} ; \
 	else \
 		echo Skipping login for ${SYS_NAME} ; \
+	fi
+
+man-pages:
+	if test -d "doc/man-pages" ; then \
+		cd doc/man-pages ${COMPILE_PART2} ; \
 	fi
 
 #
@@ -482,7 +487,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -494,7 +499,7 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
@@ -566,13 +571,13 @@ jafsadm: libjafsadm
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -807,6 +812,9 @@ distclean: clean
 	src/wsadmin.src/Makefile \
 	src/xstat/Makefile  \
 	src/helper-splint.sh
+	if test -d doc/man-pages ; then \
+	    rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
+	fi
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4

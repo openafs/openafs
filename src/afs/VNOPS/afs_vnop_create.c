@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.5 2005/07/21 16:31:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.7 2005/10/15 14:24:27 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -179,7 +179,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    code = EACCES;
 		    goto done;
 		}
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		if ((amode & VWRITE) || VATTR_IS_ACTIVE(attrs, va_data_size))
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		if ((amode & VWRITE) || (attrs->va_mask & AT_SIZE))
 #else
 		if ((amode & VWRITE) || len != 0xffffffff)
@@ -196,7 +198,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			goto done;
 		    }
 		}
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		if (VATTR_IS_ACTIVE(attrs, va_data_size))
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		if (attrs->va_mask & AT_SIZE)
 #else
 		if (len != 0xffffffff)
@@ -208,7 +212,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			goto done;
 		    }
 		    /* do a truncate */
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		    VATTR_INIT(attrs);
+		    VATTR_SET_SUPPORTED(attrs, va_data_size);
+		    VATTR_SET_ACTIVE(attrs, va_data_size);
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    attrs->va_mask = AT_SIZE;
 #else
 		    VATTR_NULL(attrs);
@@ -492,9 +500,9 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
 	hset(avc->m.DataVersion, avers);
 #ifdef AFS_64BIT_CLIENT
 	FillInt64(avc->m.Length, astat->Length_hi, astat->Length);
-#else /* AFS_64BIT_ENV */
+#else /* AFS_64BIT_CLIENT */
 	avc->m.Length = astat->Length;
-#endif /* AFS_64BIT_ENV */
+#endif /* AFS_64BIT_CLIENT */
 	avc->m.Date = astat->ClientModTime;
     }
     if (ok) {

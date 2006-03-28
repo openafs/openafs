@@ -1,0 +1,479 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH kas_examine 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+kas examine \- Displays information from an Authentication Database entry
+.SH "SYNOPSIS"
+\fBkas examine\fR <<\ \fB\-name\fR\ <\fIname\ of\ user\fR >>> [\fB\-showkey\fR]
+    <<\ [\fB\-admin_username\fR\ <\fIadmin\ principal\ to\ use\ for\ authentication\fR] >>>
+    <<\ [\fB\-password_for_admin\fR\ <\fIadmin\ password\fR] >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-servers\fR\ <\fIexplicit\ list\ of\ authentication\ servers\fR+] >>>
+    [\fB\-noauth\fR] [\fB\-help\fR]
+.PP
+\fBkas e\fR <<\ \fB\-na\fR\ <\fIname\ of\ user\fR >>> [\fB\-sh\fR]
+    <<\ [\fB\-a\fR\ <\fIadmin\ principal\ to\ use\ for\ authentication\fR] >>>
+    <<\ [\fB\-p\fR\ <\fIadmin\ password\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-se\fR\ <\fIexplicit\ list\ of\ authentication\ servers\fR+] >>> [\fB\-no\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBkas examine\fR command formats and displays information from the
+Authentication Database entry of the user named by the \fB\-name\fR argument.
+.PP
+To alter the settings displayed with this command, issue the \fBkas
+setfields\fR command.
+.SH "CAUTIONS"
+Displaying actual keys on the standard output stream by including the
+\fB\-showkey\fR flag constitutes a security exposure. For most purposes, it is
+sufficient to display a checksum.
+.SH "OPTIONS"
+.Ip "\fB\-name\fR <\fIname of user\fR>" 4
+Names the Authentication Database entry from which to display information.
+.Ip "\fB\-showkey\fR" 4
+Displays the octal digits that constitute the key. The issuer must have
+the \f(CWADMIN\fR flag on his or her Authentication Database entry.
+.Ip "\fB\-admin_username\fR <\fIadmin principal\fR>" 4
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details, see
+the \fIkas(8)\fR manpage.
+.Ip "\fB\-password_for_admin\fR <\fIadmin password\fR>" 4
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the \fBkas\fR command interpreter prompts for it and does not
+echo it visibly. For more details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. For more details, see
+the \fIkas(8)\fR manpage.
+.Ip "\fB\-servers\fR <\fIauthentication servers\fR>+" 4
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. For more
+details, see the \fIkas(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+The output includes:
+.Ip "\(bu" 4
+The entry name, following the string \f(CWUser data for\fR.
+.Ip "\(bu" 4
+One or more status flags in parentheses; they appear only if an
+administrator has used the \fBkas setfields\fR command to change them from
+their default values. A plus sign (\f(CW+\fR) separates the flags if there is
+more than one. The nondefault values that can appear, and their meanings,
+are as follows:
+.Ip "\s-1ADMIN\s0" 8
+Enables the user to issue privileged \fBkas\fR commands (default is
+\f(CWNOADMIN\fR).
+.Ip "\s-1NOTGS\s0" 8
+Prevents the user from obtaining tickets from the Authentication Server's
+Ticket Granting Service (default is \f(CWTGS\fR).
+.Ip "\s-1NOSEAL\s0" 8
+Prevents the Ticket Granting Service from using the entry's key field as
+an encryption key (default is \f(CWSEAL\fR).
+.Ip "\s-1NOCPW\s0" 8
+Prevents the user from changing his or her password (default is \f(CWCPW\fR).
+.Ip "\(bu" 4
+The key version number, in parentheses, following the word \f(CWkey\fR, then
+one of the following.
+.Ip "\(bu" 8
+A checksum equivalent of the key, following the string \f(CWcksum is\fR, if the
+\fB\-showkey\fR flag is not included. The checksum is a decimal number derived
+by encrypting a constant with the key. In the case of the \f(CWafs\fR entry,
+this number must match the checksum with the corresponding key version
+number in the output of the \fBbos listkeys\fR command; if not, follow the
+instructions in the \fI\s-1IBM\s0 \s-1AFS\s0 Administration Guide\fR for creating a new
+server encryption key.
+.Ip "\(bu" 8
+The actual key, following a colon, if the \fB\-showkey\fR flag is
+included. The key consists of eight octal numbers, each represented as a
+backslash followed by three decimal digits.
+.Ip "\(bu" 4
+The date the user last changed his or her own password, following the
+string \f(CWlast cpw\fR (which stands for \*(L"last change of password").
+.Ip "\(bu" 4
+The string \f(CWpassword will never expire\fR indicates that the associated
+password never expires; the string \f(CWpassword will expire\fR is followed by
+the password's expiration date. After the indicated date, the user cannot
+authenticate, but has 30 days after it in which to use the \fBkpasswd\fR or
+\fBkas setpassword\fR command to set a new password. After 30 days, only an
+administrator (one whose account is marked with the \f(CWADMIN\fR flag) can
+change the password by using the \fBkas setpassword\fR command. To set the
+password expiration date, use the \fBkas setfields\fR command's \fB\-pwexpires\fR
+argument.
+.Ip "\(bu" 4
+The number of times the user can fail to provide the correct password
+before the account locks, followed by the string \f(CWconsecutive
+unsuccessful authentications are permitted\fR, or the string \f(CWAn unlimited
+number of unsuccessful authentications is permitted\fR to indicate that
+there is no limit. To set the limit, use the \fBkas setfields\fR command's
+\fB\-attempts\fR argument. To unlock a locked account, use the \fBkas unlock\fR
+command. The \fBkas setfields\fR reference page discusses how the
+implementation of the lockout feature interacts with this setting.
+.Ip "\(bu" 4
+The number of minutes for which the Authentication Server refuses the
+user's login attempts after the limit on consecutive unsuccessful
+authentication attempts is exceeded, following the string \f(CWThe lock time
+for this user is\fR. Use the \fBkas\fR command's \fB\-locktime\fR argument to set
+the lockout time. This line appears only if a limit on the number of
+unsuccessful authentication attempts has been set with the the \fBkas
+setfields\fR command's \fB\-attempts\fR argument.
+.Ip "\(bu" 4
+An indication of whether the Authentication Server is currently refusing
+the user's login attempts. The string \f(CWUser is not locked\fR indicates that
+authentication can succeed, whereas the string \f(CWUser is locked until\fR
+\fItime\fR indicates that the user cannot authenticate until the indicated
+time. Use the \fBkas unlock\fR command to enable a user to attempt
+authentication. This line appears only if a limit on the number of
+unsuccessful authentication attempts has been set with the \fBkas
+setfields\fR command's \fB\-attempts\fR argument.
+.Ip "\(bu" 4
+The date on which the Authentication Server entry expires, or the string
+\f(CWentry never expires\fR to indicate that the entry does not expire. A user
+becomes unable to authenticate when his or her entry expires. Use the
+\fBkas setfields\fR command's \fB\-expiration\fR argument to set the expiration
+date.
+.Ip "\(bu" 4
+The maximum possible lifetime of the tokens that the Authentication Server
+grants the user. This value interacts with several others to determine the
+actual lifetime of the token, as described in the \fIklog(1)\fR manpage.  Use the \fBkas
+setfields\fR command's \fB\-lifetime\fR argument to set this value.
+.Ip "\(bu" 4
+The date on which the entry was last modified, following the string \f(CWlast
+mod on\fR and the user name of the administrator who modified it. The date
+on which a user changed his or her own password is recorded on the second
+line of output as \f(CWlast cpw\fR instead.
+.Ip "\(bu" 4
+An indication of whether the user can reuse one of his or her last twenty
+passwords when issuing the \fBkpasswd\fR, \fBkas setpassword\fR, or \fBkas
+setkey\fR commands. Use the \fBkas setfields\fR command's \fB\-reuse\fR argument to
+set this restriction.
+.SH "EXAMPLES"
+The following example command shows the user smith displaying her own
+Authentication Database entry. Note the \f(CWADMIN\fR flag, which shows that
+\f(CWsmith\fR is privileged.
+.PP
+.Vb 11
+\&   % kas examine smith
+\&   Password for smith:
+\&   User data for smith (ADMIN)
+\&    key (0) cksum is 3414844392,  last cpw: Thu Mar 25 16:05:44 1999
+\&    password will expire:  Fri Apr 30 20:44:36 1999
+\&    5 consecutive unsuccessful authentications are permitted.
+\&    The lock time for this user is 25.5 minutes.
+\&    User is not locked.
+\&    entry never expires. Max ticket lifetime 100.00 hours.
+\&    last mod on Tue Jan 5 08:22:29 1999 by admin
+\&    permit password reuse
+.Ve
+In the following example, the user \f(CWpat\fR examines his Authentication
+Database entry to determine when the account lockout currently in effect
+will end.
+.PP
+.Vb 11
+\&   % kas examine pat
+\&   Password for pat:
+\&   User data for pat
+\&    key (0) cksum is 73829292912,  last cpw: Wed Apr 7 11:23:01 1999
+\&    password will expire:  Fri  Jun 11 11:23:01 1999
+\&    5 consecutive unsuccessful authentications are permitted.
+\&    The lock time for this user is 25.5 minutes.
+\&    User is locked until Tue Sep 21 12:25:07 1999
+\&    entry expires on never. Max ticket lifetime 100.00 hours.
+\&    last mod on Thu Feb 4 08:22:29 1999 by admin
+\&    permit password reuse
+.Ve
+In the following example, an administrator logged in as \f(CWadmin\fR uses the
+\fB\-showkey\fR flag to display the octal digits that constitute the key in
+the \f(CWafs\fR entry.
+.PP
+.Vb 7
+\&   % kas examine -name afs -showkey
+\&   Password for admin: I<admin_password>
+\&   User data for afs
+\&    key (12): \e357\e253\e304\e352\e234\e236\e253\e352, last cpw: no date
+\&    entry never expires. Max ticket lifetime 100.00 hours.
+\&    last mod on Thu Mar 25 14:53:29 1999 by admin
+\&    permit password reuse
+.Ve
+.SH "PRIVILEGE REQUIRED"
+A user can examine his or her own entry. To examine others\*(R' entries or to
+include the \fB\-showkey\fR flag, the issuer must have the \f(CWADMIN\fR flag set
+in his or her Authentication Database entry.
+.SH "SEE ALSO"
+the \fIbos_addkey(8)\fR manpage,
+the \fIbos_listkeys(8)\fR manpage,
+the \fIbos_setauth(8)\fR manpage,
+the \fIkas(8)\fR manpage,
+the \fIkas_setfields(8)\fR manpage,
+the \fIkas_setpassword(8)\fR manpage,
+the \fIkas_unlock(8)\fR manpage,
+the \fIklog(1)\fR manpage,
+the \fIkpasswd(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "kas_examine 8"
+.IX Name "kas examine - Displays information from an Authentication Database entry"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-name\fR <\fIname of user\fR>"
+
+.IX Item "\fB\-showkey\fR"
+
+.IX Item "\fB\-admin_username\fR <\fIadmin principal\fR>"
+
+.IX Item "\fB\-password_for_admin\fR <\fIadmin password\fR>"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-servers\fR <\fIauthentication servers\fR>+"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\s-1ADMIN\s0"
+
+.IX Item "\s-1NOTGS\s0"
+
+.IX Item "\s-1NOSEAL\s0"
+
+.IX Item "\s-1NOCPW\s0"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

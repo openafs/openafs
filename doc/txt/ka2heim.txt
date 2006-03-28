@@ -1,0 +1,132 @@
+-Build heimdal. Include --enable-kaserver and --enable-kaserver-db when you configure. You also need kth-krb installed and --with-krb4 turned on for maximum utility.
+
+-Install heimdal
+
+-Set up /var/heimdal. You need on the master: 
+ -A text file named slaves with e.g.:
+--Begin slaves file--
+iprop/full.name.of.slave1@YOUR.REALM
+iprop/full.name.of.slave2@YOUR.REALM
+--End slaves file--
+ if you had only these 2 slaves
+
+ -A text file named kadmind.acl with e.g.:
+--Begin kadmind.acl file-- 
+shadow/admin    all
+adm/admin    all
+--End kadmind.acl file-- 
+ The man page for kadmind explains the format and rights for this file.
+
+-Set up inetd.conf or equivalent. You want at least krb5 kadmind, which is:
+kerberos-adm    stream  tcp     nowait  root    /usr/local/libexec/kadmind kadmind
+You may also want krb4 kadmind (which also allows krb4 password clients to work):
+kerberos_master stream  tcp     nowait  root    /usr/local/libexec/kadmind v4kadmind
+
+Obviously these may vary for your particular inetd and installed paths.
+
+-Set up your rc scripts. Your master will run e.g.:
+/usr/local/libexec/kdc
+/usr/local/libexec/kpasswdd
+/usr/local/libexec/ipropd-master
+
+Your slaves will run:
+/usr/local/libexec/kdc
+/usr/local/libexec/ipropd-slave host.name.of.master
+
+Mine run out of the bosserver.
+
+-Set up krb5.conf
+Mine looks like:
+--Beginning of krb5.conf--
+[libdefaults]
+default_realm = YOUR.REALM
+default_tgs_enctypes = des-cbc-crc
+default_tkt_enctypes = des-cbc-crc
+default_etypes = des-cbc-crc
+default_etypes_des = des-cbc-crc
+clockskew = 300
+checksum_type = 1
+v4_instance_resolve = false
+v4_name_convert = {
+        host = {
+                rcmd = host
+                ftp = ftp
+                imap = imap
+                smtp = smtp
+                lmtp = lmtp
+                ldap = ldap
+                acap = acap
+        }
+}
+
+[realms]
+YOUR.REALM = {
+  kdc = host.name.of.master
+  kdc = host.name.of.slave1
+  kdc = host.name.of.slave2
+  admin_server = host.name.of.master
+  default_domain = my.domain
+  v4_domains = my.domain subdomain.my.domain other.domain.using.my.realm
+}
+
+[domain_realm]
+.my.domain = YOUR.REALM
+.subdomain.my.domain = YOUR.REALM
+.other.domain.using.my.realm = YOUR.REALM
+
+[logging]
+default      = SYSLOG:NOTICE:DAEMON
+kdc          = FILE:/var/heimdal/kdc.log
+admin_server = FILE:/var/heimdal/kadm5.log
+
+[kdc]
+enable-kerberos4 = true
+enable-kaserver = true
+enable-524 = true
+
+[kadmin]
+default_keys = v4 v5 
+--End of krb5.conf--
+Note that I make kadmin create v4 and v5 but no afs keys. This is deliberate. AFS can deal with v4 keys and that has been so since around AFS 3.1b. You don't need afs keys for anything other than kas and AFS kpasswd, and you're done with those now. the v4_domains and domain_realm section are to ease your burden if you support a realm which spans multiple dns domains, and may not apply to you.
+
+-Create a master key on your master and slaves:
+     # kstash
+     Master key:
+     Verifying password - Master key:
+
+-Create a krb5 database 
+     # kadmin -l
+     init YOUR.REALM
+     Realm max ticket life [unlimited]:
+     Realm max renewable ticket life [unlimited]:
+The questions are a matter of policy. You have to decide what's appropriate.
+
+-Copy the database
+     # hprop --source=kaserver -c your.cell -r YOUR.REALM -R YOUR.REALM -n|hpropd -n
+
+-Create the other keys you need on the master using kadmin -l:
+ On your master you will need in /etc/krb5.keytab all of the following:
+iprop/host.name.of.master@YOUR.REALM
+kadmin/hprop@YOUR.REALM
+kadmin/admin@YOUR.REALM
+kadmin/changepw@YOUR.REALM
+and if you use v4kadmind,
+changepw/kerberos@YOUR.REALM
+
+Create using ank -r, then use ext_keytab to get them in your keytab.
+
+-Start your kdc, and make sure kadmind is running, at least
+
+-On your slaves you will need only 
+iprop/host.name.of.this.slave@YOUR.REALM
+
+You can now run kadmin -p some/admin if that admin is in kadmind.acl on the master, and use ank -r and ext_keytab to do this step.
+
+-Now, you can enable the master and slave ipropds. Run a client against a slave kdc and/or read the logs. Hopefully you're in business.
+
+-Enable kpasswdd on the master. You should now be done.
+
+
+
+
+ 

@@ -1,0 +1,1862 @@
+Since 1.4.1 rc9:  1.4.1 rc10 released (10 March 2006)
+
+ * Fix the rx-lwp implementation to randomly generate rx call
+   identifiers which are supposed to be unique at a given point
+   in time.  This affects some of the command line tools used
+   for debugging but not the AFS Client Service itself which
+   uses the rx-pthreads implementation.
+
+ * xstats_fs_test.exe and xstats_cm_test.exe are now built for
+   Windows although they are not distributed
+
+ * don't generate an exception when logging unexpected SMB packets
+
+ * the data structures used by cm_IoctlGetVolumeStatus and 
+   cm_IoctlSetVolumeStatus are not compatible with the CIFS
+   Get/Set File Information calls so don't bother executing them.
+
+Since 1.4.1 rc8:
+
+ * Nothing
+
+Since 1.4.1 rc7: 
+
+ * Windows will return WSAECONNRESET to the next receive packet
+   operation on a socket if an ICMP packet is received in response
+   to a packet that was sent and could not be delivered because
+   the port was unreachable.  We have to treat this as 
+   WSAEWOULDBLOCK so that we can retry the select() check and
+   not mark the connection as bad.
+
+Since 1.4.1 rc6: 1.4.1 rc7 released (14 Feb 2006)
+
+ * The client manager maintains a least recently used list of
+   all the ACLs.  If an ACL is already the most recently used
+   do not bother to remove it from the list and place it on the
+   front.
+
+ * As part of the process of adding a new server, set the 
+   server is down flag and then perform a ping.  If the server
+   is up, the flag will be reset.  If the server is down, the
+   client will not timeout unnecessarily while attempting to
+   perform real work.
+
+ * If a Mountpoint String is the empty string, return PATH NOT 
+   FOUND.
+
+ * Modify behavior of the Network Provider to avoid querying the
+   profile location if integrated logon is known to be disabled.
+
+ * Correct behavior of 'LogoffPreserveTokens'.  When set, tokens
+   will always be preserved regardless of whether or not integrated
+   logon was used to obtain tokens.  When unset, tokens will be 
+   destroyed regardless of whether integrated logon was used to 
+   obtain the tokens unless the profile is stored in AFS.
+
+ * Disable LogoffTransferToken functionality.  The SMB V3 Logoff
+   message is being delivered even when the user is not logging
+   off of the computer.  
+
+ * Fix a deadlock condition introduced in rc6.
+
+ * Cell names are case-insensitive.  Since the founding of OpenAFS
+   there has been a bug that treated "cell", "Cell", and "CELL" as
+   different cells.  This would result in what appeared to be 
+   random disappearance of user tokens or a failure to authenticate
+   even when tokens were listed by the "tokens" command.
+
+Since 1.4.1 rc5: 1.4.1 rc6 released (2 Feb 2006)
+
+ * Additional auditing of the smb code revealed that smb ioctl
+   operations were failing to free smb_fid_t objects
+
+ * The File Identifiers assigned to smb_fid_t objects could be
+   given the value 65535 which is 0xFFFF which is also the 
+   INVALID_HANDLE value.  Both 0 and 65535 are now treated as
+   reserved values.
+
+ * Audited all assignments to fields and ensured that they are
+   protected by obtaining the relevant mutex object.
+
+ * Re-wrote the VNOVNODE handling to avoid a potential deadlock
+   if both the current cm_scache_t object and its parent are
+   both returning VNOVNODE.
+
+ * Removed all the logic associated with the 'dead_vcp' variable
+   which must have been added for debugging because its used 
+   was never thread safe and it truly served no purpose.
+
+Since 1.4.1 rc4: 1.4.1 rc5 released (25 Jan 2006)
+				    
+ * Re-enabled LogoffTokenTransfer and LogoffTokenTransferTimeout
+   registry settings.  Default is ON and 120 seconds.  If set to
+   OFF, tokens will not be destroyed.
+
+ * Fixed a number of race conditions and reference count 
+   problems associated with global queues.
+
+ * Added a method to detect abandonded smb virtual circuits
+   so their associated file handles, locks, user tokens,
+   and smb session resources can be released.
+
+ * Added a mechanism to allow user tokens to be preserved 
+   during integrated login and be freed after logoff.
+
+ * Check access permissions to the file before the file is 
+   truncated.
+
+ * More improvements to the handling of SMB Virtual Circuits
+   when SMB sessions are closed.
+
+ * Correct a race condition introduced in rc4 that could result
+   in a crash of afsd_service.exe.
+
+Since 1.4.1 rc3: 1.4.1 rc4 released (11 Jan 2006)
+
+ * Properly handle pre-mature SMB session closures.
+   File handles, tree connections, and user sessions are now
+   freed when the virtual circuit is closed.
+
+ * smb_username_t and smb_user_t objects are now properly reference
+   counted and freed as appropriate.
+
+ * disable the use of AFS file locks.  Byte range locking is still
+   implemented but all locks are managed locally.  This prevents
+   multiple processes from editing the same file on the same 
+   machine but it does not prevent multiple processes on separate 
+   machines from modifying the file.
+
+Since 1.4.1 rc2: 1.4.1 RC3 released (4 Jan 2006)
+
+ * A fix to "fs setserverprefs -vlserver".  Multiple calls with
+   the same server parameter would result in a panic condition
+   if the server had not already been contacted by the AFS 
+   client service.
+
+ * Better warnings are written to the afsd.log file when 
+   the Windows RPC Protocols are not properly configured as
+   is often the case on Windows 2000.
+
+ * fix the procmgmt library to restore C RTL signal handlers when 
+   it is being detached from the process prior to process termination.
+
+Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
+
+ * close a lock leak in the rx library that could be triggered while
+   processing aborts
+
+ * prevent removal of drive mappings in response to afscreds.exe -M
+
+ * add logic to process VNOVNODE in cm_Analyze.  Force re-evaluation of symlink
+   strings and flush the stat cache entry.
+
+ * prevent server objects from being freed if user preferences are set.
+
+ * Update WIX support to 2.0.2419.0
+
+ * Release all locks on the server at service shutdown.
+
+ * A down server should be marked up as long as it responds to the client.
+   It doesn't matter if the server returned an error as long as the error
+   is something other than VRESTARTING.	 If there is such an error, all
+   connections on that server should be marked for replacement.
+
+ * Change the check "up" servers period from once per hour to once every
+   ten minutes.  This matches the behavior of the Unix cache manager.
+
+Post 1.4.0 revisions: 1.4.1 RC1 released (21 Oct 2005)
+ * Byte Range Locking support has been added.  Architectural documentation
+   is located within src/WINNT/afsd/cm_vnodeops.c.   Best efforts are 
+   made to enforce Windows mandatory locking model using locally managed
+   byte range locks with full file locks obtained from the file server.
+   Read-only volumes provide the user with an implied locking privilege.
+   Read-write volumes require that a user be granted the locking privilege
+   in order for a lock to be obtained.   As most Windows applications use
+   Shared file access modes, they require the ability to obtain locks in
+   order to access files.
+
+ * Implement error translation functions to convert Universal Error Codes
+   output by modern servers to local errno and winsock error values.
+   This fixes the error message problems using pioctl() calls from fs.exe 
+   and the AFS Shell Extension.
+
+Since 1.4.0 rc8: 1.4.0 final tagged (20 Oct 2005); released (31 Oct 2005)
+ * Allow the AFS Client Service to set the firewall configuration by
+   retrying until after Windows determines the boot period is over.
+
+ * Do not attempt to configure the firewall on Windows 2000, XP pre-SP2,
+   or 2003 pre-SP1
+
+ * Detect IP address changes from within the AFS Client Service for the
+   purpose of checking down servers sooner
+
+ * If the file server or vldb server report RXKADUNKNOWNKEY, return
+   SEC_E_NO_KERB_KEY to Windows.   This provides an indication to the
+   user that there is a Kerberos key problem.  Previously the user would
+   receive no feedback when there was something wrong.
+
+ * Fix the large integer library support to properly handle values greater
+   than 32-bits
+
+Since 1.4.0 rc7: 1.4.0 rc8 released (15 Oct 2005)
+ * Updated CellServDB
+
+ * Fixed file name pattern matching.  Question marks can match nothing
+   if found at the end of a component.
+
+Since 1.4.0 rc6: 1.4.0 rc7 released (8 Oct 2005)
+ * Kerberos 5 ticket lifetimes should adhere to KFW Leash lifetimes
+
+ * The MSI installer now has a new Product ID for each build.  This
+   is to allow for automated upgrades.   The Upgrade ID is remaining
+   constant.
+
+ * Volumes that were cached and then subsequently were salvaged,
+   moved or otherwise taken temporarily offline (as opposed to being
+   busy) would become unreachable.  A distinction is now made between
+   a volume being offline and a server being down.
+
+Since 1.4.0 rc5: 1.4.0 rc6 released (2 Oct 2005)
+
+ * Fixed several AFS Shell Extension issues:
+   - Checking Server Status would only work if a specific cell was
+     specified.
+   - If servers were down, the Server Down dialog would write to 
+     invalid memory and cause explorer.exe to crash
+   - Default Push Buttons were not specified for many dialogs
+   - The extension would be unloaded by the Explorer Shell and
+     never be reloaded under some circumstances. 
+
+ * Fixed the AFS System Tray menu to disappear if another Window
+   was selected before a menu item was selected
+
+ * Added volume owner and group information to "fs examine" output
+
+ * Added fs and registry support for enabling/disabling/clearing 
+   rx statistics gathering.
+
+Since 1.4.0 rc4: 1.4.0 rc5 released (25 Sep 2005)
+
+ * New Product Code GUIDs issues for 1.4 and 1.5 branches.  Separate
+   GUIDs for each platform.
+
+ * Documentation directory structure and default installation rules
+   for MSI 
+
+ * New OpenAFS for Windows HTML Release Notes installed
+   as part of the documentation set.
+
+ * Add thread id to rx debugging messages
+
+ * When all servers are offline, return a bad network path error
+   immediately.  This is necessary to allow Explorer to do the 
+   right thing and not hang.   The background daemon thread will
+   check the down servers every 30 seconds to see if they are
+   back up.  
+
+Since 1.4.0 rc3: 1.4.0 rc4 released (14 Sep 2005)
+
+ * The AFSCache file has been modified to store both the
+   serial number of the volume on which the file resides
+   and the SID of the local machine.   If either change,
+   a new UUID is generated.
+
+ * add "fs flushall" command that forces all data buffers
+   to be flushed.
+
+Since 1.4.0 rc2: 1.4.0 rc3 released (4 Sep 2005)
+
+ * add support for '/' instead of '\' in pioctl() calls
+
+ * Apply AFS Client Admins group protect to AFS Shell Extension
+
+ * Add support for \\afs\<name> to most AFS Shell Extension 
+   commands except the symlink methods. 
+
+ * when installing the Microsoft Loopback Adapter, enable
+   MS Client for Networks and prevent an install failure 
+   by not calling CoInitialize twice in the same thread.
+
+ * reload cell vldb values from the CellServDB every two
+   hours in case it changes
+
+ * When updating cell information from DNS, be sure to set 
+   a new timeout.
+
+ * Add support to allow use of \\AFS\<foo> where <foo> is 
+   either a mount point or symlink.   As <foo> is normally 
+   treated as a share name, we transform it into \\AFS\all\<foo> 
+   for processing.
+
+ * Init 'code' to prevent false errors when integrated logon 
+   is disabled and the service is not running
+
+Since 1.4.0 rc1: 1.4.0 rc2 released (28 Aug 2005)
+
+ * Removed trace log messages that were hampering performance.
+
+ * Fixed a deadlock that was being triggered by editing Word 
+   documents stored within AFS with WinWord 2003.
+
+ * Bit 3 of the TraceOption registry value is now used to set the
+   default for "fs trace" in the non-Debug builds.  The new default
+   is off for release builds and on for debug builds.
+
+ * Bit 2 of the TraceOption registry value can be used to turn on
+   real-time output of debug log entries to the Windows Debug
+   Output monitor interface.  This data can be viewed with tools
+   such as Sysinternal's DbgView.
+
+Since 1.3.87: 1.4.0 rc1 released (17 Aug 2005)
+ * When the cache manager reports ALLBUSY or ALLOFFLINE for
+   a resource we should not be returning status codes such
+   as Network Busy or Remote Host Down because these errors
+   will imply that the AFS Client Service is Busy or Down
+   and that is simply not the case.   Instead we will return
+   Bad Network Path as the path is temporarily not available.
+
+   Instead of returning Sharing Paused when there is a
+   timeout error, return Timeout.  Once again, the AFS Client
+   Service is not paused.
+
+ * afscreds.exe would display an Obtain Creds dialog when
+   the expired credentials reminder was triggered even 
+   if there was no network path to the KDC.  This is prevented
+   by adding KDC probe logic to the reminder thread.  
+
+ * afscreds.exe would display expired tokens no differently
+   than unexpired ones.  This would make it difficult for the
+   user to distiguish when the tokens were expired.  For the 
+   English build added a new resource string "(expired) that
+   is displayed instead of the expiration time. 
+
+Since 1.3.86:
+ * "fs wscell" when executed in freelance mode will return the
+   name of the cell configured in the registry.  The root.afs
+   volume is not loaded from this cell, but it is used for the
+   default for aklog and integrated login.
+
+ * "fs mkmount, fs rmmount, symlink make, symlink remove" will
+   no longer work on \\AFS\all when freelance is being used 
+   unless the user is a member of the "AFS Client Admins" Windows
+   Security group.
+
+ * some more checks performed during persistent cache validation.
+
+Since 1.3.85:
+ * Optimize calls to cm_CheckServer from cm_Analyze.  Only check
+   down servers for the current cell not all cells.
+
+ * If the scache LRU list becomes corrupted, the AFS Client Service
+   might enter an infinite loop at startup.   Detect the corruption
+   and discard the cache contents in this case.
+
+ * Fixed the Explorer Shell's remove mountpoint functionality.
+
+ * Fixed a deadlock caused by the holder of cm_aclLock attempting to 
+   obtain a mutex lock on a cm_scache_t object whose lock is held by
+   a thread attempting to obtain the cm_aclLock.
+
+Since 1.3.84:
+ * Really fixed DNS AFSDB queries to ensure that "csail" cannot be
+   misinterpretted as "csail.mit.edu" when the resolver 
+   is configured to append ".mit.edu" to failed DNS queries.
+
+ * Added a new registry key, "LogoffPreserveTokens" (see registry.txt),
+   that can be used to force the preservation of user tokens upon logout.
+
+ * Update the NSIS install scripts to use NSIS 2.07.   This release adds 
+   recommended installation categories: AFS Client, AFS Administrator,
+   AFS Server, AFS Development Kit.  Each category includes a different 
+   default subset of the OpenAFS components.
+
+   The OpenAFS logo is now associated with the NSIS uninstall entry
+   in the Add/Remove Programs control panel.
+
+ * The user name associated with AFS tokens when obtained with
+   integrated login, the afs systray tool, or aklog will always
+   include the full Kerberos 5 user principal name regardless of 
+   whether or not the cell is local to the realm.
+
+ * Modify integrated login so that it does not enter an infinite
+   loop if the service is not set to auto start.
+
+ * Added asetkey.exe used to set a Kerberos 5 key for use by the
+   AFS server daemons
+
+ * Added uninstall.exe to Wix installation
+
+ * More modifications to algorithms used to wake sleeping threads.
+
+Since 1.3.83:
+
+ * Changes to the algorithms used to wake threads when they are
+   put to sleep because of conflicts over buffer operations.
+
+Since 1.3.82:
+ * The OpenAFS integrated logon obtains Kerberos 5 tickets as part of 
+   the process of producing AFS tokens.  The tokens are stored within
+   the AFS Client Service but the Kerberos 5 tickets have been discarded.
+   New functionality has been added to temporarily copy the tickets to
+   a file ccache during the short window between the NPLogonNotify and
+   WinLogon Logon Event.  The Logon Event handler starts a process as
+   user, afscpcc.exe, that copies the tickets into the default ccache.
+   The file ccache is then destroyed by the event handler.
+
+ * During synchronization operations on stat cache entries, if threads
+   are forced to sleep it was possible that the threads would not be
+   woken under heavy load.
+
+ * Enforce the delete on close flag specified by the NTCreateX()
+   operation.
+
+ * A race condition in the rx library was fixed that resulted in 
+   a deadlock in rx_NewCall when the RX_CONN_MAKECALL_WAITING flag
+   was cleared when threads were still waiting to use the 
+   connection.   Also, fixed a potential case in which the 
+   connection could be destroyed while threads were waiting to use it.
+
+ * The DNLC freelist has been seen to become corrupted with still 
+   active entries being stored on the freelist.  Changes were made
+   to perform a better job of cleaning entries before placing them
+   onto the freelist; marking them with the correct magic value when
+   purging the list; and allowing the list to be purged on startup
+   if the cache validation fails.
+
+ * Windows Crash Reporting does not get triggered for afsd_service.exe
+   because it provides its own top level exception handler.  This patch 
+   places an explicit call to ReportCrash() on platforms which support 
+   it.  (XP and above.)
+
+   If you configure Crash Reporting via AD Policy to capture crash
+   reports within the domain, then you will receive this output.
+
+ * Generate MiniDumps independent of the Windows Crash Reporting.
+ 
+   (a) If an exception occurs,a minidump will be generated at the path
+       %TEMP%\afsd.dmp. The type of minidump defaults to Normal but 
+       can be set to any other type via use of the
+       registry.      
+
+       [HKLM\SOFTWARE\OpenAFS\Client]  MiniDumpType (DWORD)
+
+   (b) MiniDumps can be generated at any time using the "fs minidump"
+       command.   This allows you to generate a minidump without 
+       stopping the process or even requiring the use of a debugger
+       on the system.
+
+  * an RX connection which reports bad ticket now treats it the same way
+    the expired ticket is treated.   The ticket is removed from the 
+    connection and a new anonymous connection is established.
+
+  * fs memdump now requires that the caller be in the AFS Client Admins
+    group
+
+  * additional debugging information is provided in cm_Analyze when the
+    error code is ignored.
+
+  * Fix a regression introduced into the pioctl() client code which
+    will cause a crash in winlogon.exe, explorer.exe and fs.exe if
+    MIT KFW is not installed. (1.3.82a)
+
+  * Remove AFS Gateway option from OpenAFS Control Panel (1.3.82a)
+
+Since 1.3.81:
+  * Fix a race condition in cm_EndCallbackGrantingCall() that 
+    could leave 'nrevp' pointing to freed memory.  In the process,
+    optimize the processing to ensure that the applications monitoring
+    the status of the stat cache entry are only notified at most 
+    once.
+
+  * Conditionalize access to the Explorer Shell AFS->Mount Point
+    ->Remove menu item.  Disable the item if the selected item(s)
+    are not mount points.
+
+  * Activate AFS RPC (RX) Free Packet Queues stored in Thread
+    Local Storage.  This eliminates thread contention on the
+    global RX free packet queue.  This should improve performance
+    on multi-CPU systems.
+
+  * Fix the IP address filtering code to properly load/unload
+    the IPHelper DLL so that Windows XP/2003 and beyond systems
+    do not have to manually probe the registry.
+
+  * CleanupACLEnt() was not being called consistently with 
+    the cm_scache_t object referred to by the back pointer
+    mutex locked. This could in very rare conditions lead to
+    an invalid memory access.
+
+  * Added a script command to the msi installer "afs_replace"
+    which can be used to replace one version of OpenAFS with
+    another without requiring an uninstall and reinstall if
+    the installed msi is no longer in its original location.
+
+  * Apparently the problem with multi-domain forests with cross-
+    realm trusts to non-Windows realms was not entirely solved.
+    The authentication to the AFS SMB service failed because 
+    the wrong name was being used.  Using ASU as an example,
+    the authentication was being performed with the name
+    "QAAD\user" (an account in the forest root) and not 
+    "user@ASU.EDU (the MIT Kerberos principal used to login with)
+
+    The solution was to add an additional dependency on KFW
+    in order or to be able to easily obtain the client principal 
+    name stored in the MSLSA ccache TGT.  This information is 
+    used in two locations:  
+
+    - the pioctl() function 
+
+    - a new WinLogon Event Handler for the "logon" event.  
+
+    The pioctl function will now be able to use the correct
+    name when calling WNetAddConnection2() and the "logon"
+    event handler will now be able to call WNetAddConnection2().
+    The hope is that the "logon" event handler will be called 
+    before the profile is loaded but I have not guarrantee
+    that will happen. 
+
+Since 1.3.80:
+  * Fixed a locking error in cm_TryBulkStat() which had the
+    potential of deadlocking the system for the length of time
+    it takes to perform a bulk status fetch operation.
+
+  * Replaced time conversion code (UnixTime <-> FILETIME) to 
+    be completely arithmetic instead of relying on a bizarre
+    algorithm involving a variety of C RTL time functions.
+    This has the side effect that UnixTime and FILETIME which
+    are both stored in UTC are interpretted as UTC throughout
+    the year.  Windows will apply the same localization to AFS
+    as it does to NTFS.  Applications which rely on the ability
+    to sync files between the two file systems will no longer
+    see the timestamps of files in AFS change an hour relative
+    to the files stored in NTFS or Windows based backup devices.
+
+  * Fixed a invalid memory access under a bizarre circumstance.
+    Windows will allow a physical mass media device to be 
+    installed via Plug N Play to the system and will assign it
+    the lowest available drive letter.  This is true even if the
+    drive letter is currently assigned in the user session to
+    a network device via NET USE (or its equivalent.)  When this
+    happens, queries sent to the CIFS server will contain invalid
+    data.  This invalid data was not being caught by the AFS 
+    Client Service and was resulting in a crash when Freelance
+    mode was in use.  
+
+  * Fixed a reference count error when registering callbacks
+    on a stat cache object if the callback was already registered
+
+  * Add a case to cm_Analyze() in order to handle the case where
+    cm_GetConnByMServers() returns CM_ERROR_NOSUCHVOLUME because
+    the server list for the volume is empty.  In this case, force
+    an update of the volume info and retry.
+
+  * Insert a missing cm_EndCallbackGrantingCall() which could
+    result in threads waiting for a callback to complete to never
+    be woken up.
+
+  * In the persistent cache, there is a maximum number of volume
+    entries.  Allow volume entries to be reused if the maximum
+    number have been allocated and their reference count is zero.
+
+  * If we already have a dead virtual connection object, don't 
+    ignore the fact that additional dead vc objects must be taken
+    care of.
+
+  * Removed a deadlock condition introduced in the summer of 2004.
+    Do not hold mx locks around calls to RX functions including
+    rx_NewCall().  That is what reference counts on the rx_connection
+    object are for.
+
+  * Fixed an initialization error in afslogon.dll which could
+    result in random behavior including a failure to terminate
+    the NPLogon function. (1.3.80b)
+
+  * Fixed an error preventing the use of SMB authentication
+    on Windows 2000.  (1.3.80a)
+
+Since 1.3.77:
+  * Updated CellServDB to Public CellServDB 16 Mar 2005
+
+  * Fixed DNS AFSDB queries to ensure that "csail" cannot be
+    misinterpretted as "csail.mit.edu" when the resolver 
+    is configured to append ".mit.edu" to failed DNS queries.
+
+  * Fixed another case in which the client would replace connections
+    to the host when it was not necessary.  In this case the 
+    situation would occur if cryptall was on and the connections
+    were unauthenticated due to lack of an appropriate token.
+
+  * OpenAFS for Windows has failed to work at sites which are 
+    utilizing a cross-realm trust between an MIT/Heimdal realm
+    and a multi-domain Windows forest when the workstation being
+    accessed is not located in the root domain.  This is caused 
+    by a bug in the workstation which was triggered after the 
+    introduction of Windows 2003 Server.  When the bug is triggered,
+    the workstation attempts to authenticate users to afsd_service.exe
+    by contacting the Domain Controller instead of using the 
+    LSA loopback authentication mechanism.
+
+    One of the reasons this bug occurs is because the workstation    
+    does not have a reliable way of knowing that the service whose
+    netbios name is "AFS" is located on the workstation.  This will
+    be fixed starting in Longhorn Beta 1 by Microsoft.  The 
+    "BackConnectionHostNames" registry value will be used to 
+    indicate that the authentications to that service name should
+    be performed using the loopback authentication mechanism.
+
+    In the meantime, when Logon Caching is enabled, we can force
+    afsd_service.exe to authenticate using the logon cache before
+    contacting the Domain Controller.  This will work with both
+    password and smart card based logons.  
+
+  * The allDown logic in cm_ConnByMServers() was wrong.  The allDown
+    flag should not be cleared if a volume's server reference is 
+    marked as "offline".  In the case where all of the volume's 
+    servers are either "down" or the volumes are "offline", we want
+    cm_Analyze() to process the condition as CM_ERROR_ALLOFFLINE
+    instead of as CM_ERROR_TIMEDOUT.  In fact, CM_ERROR_TIMEDOUT
+    should never occur in practice.
+
+    In the case of CM_ERROR_ALLOFFLINE, cm_Analyze() will sleep for
+    5 seconds, clear the server down and volume busy flags, and 
+    then force an update from the VLDB.  This allows the client to 
+    update the location of a volume if the reason for it being 
+    marked offline is because it is being moved.  Calls to 
+    cm_ConnByMServers() will be retried either until success or
+    the RDRtimeout period is reached.
+
+  * Correct the Power Management code behavior in response to 
+    Standby, Suspend, and Shutdown events.  Instead of flushing the
+    buffers associated with the mounted SMB submounts, simply write
+    all buffers which are marked dirty.
+
+  * Added support for "TheseCells" to afslogon.dll.  "TheseCells"
+    provides a list of cells other than the default cell for which
+    tokens should be obtained using the default Kerberos principal.
+    This functionality is logon domain specific and is only available
+    when using KFW for authentication.
+
+  * Fixed FindNext Invalid Handle error caused by over agressive 
+    attempts at garbage collecting dirSearch entries when the 
+    dirSearch ID wraps from the maximum value to 1.
+
+  * Add support for registry defined server preferences for VLDB and 
+    File servers.  See registry.txt for details.
+
+  * Increased default cache size to 96MB and default number of cache
+    entries to 10,000.
+
+  * Fixed refCount leaks related to directory lookups and pioctl calls.
+
+  * Callbacks revoked during a race condition with an attempt to 
+    obtain the same callback no longer result in an inaccessible
+    stat cache entry.
+
+  * New command line tool:
+
+        afsdacl : Set or reset the DACL to allow starting or stopping
+             the afsd service by any ordinary user.
+
+        Usage : afsdacl [-set | -reset] [-show]
+              -set   : Sets the DACL
+              -reset : Reset the DACL
+              -show  : Show current DACL (SDSF)
+
+  * IP addresses are no longer queried once at startup.  Instead IP
+    addresses are obtained as needed.   Loopback adapter addresses are
+    no longer published to the server.
+
+  * Pay attention to the MIT KFW registry configuration for automatic
+    importation of MSLSA credentials. (SOFTWARE\MIT\Leash32,MsLsaImport)
+
+  * Fix (once again) case-sensitive comparisons which was apparently 
+    broken in 1.3.72.
+
+  * Activate support for vos listvol -format
+
+  * Population of the "AFS Client Admins" group failed on non-English
+    versions of Windows because the name of the "Administrators" group
+    is localized.  Now we lookup the name of the group by using the
+    Administrators Group Alias Relative ID.
+
+  * Multiple cell token acquisition within afscreds.exe was broken in the 
+    case of Kerberos 5 cross realm authentication.  Instead of contacting
+    the KDC associated with the cell's realm, afscreds would obtain a 
+    token from the KDC of the user's realm.  This would result in
+    "invalid kvno errors" while authenticating to the AFS servers.  
+    Unauthenticated access would work.  The symptoms would vary based upon
+    whether or not the VLDB servers had been contacted using unauthenticated
+    connections prior to the user obtaining tokens.
+
+  * The list of ACL entries was becoming corrupted.  It appears as if 
+    an ACL when it expires was not being appropriately cleaned up.  In
+    fact, it was left in the list of ACLs associated with the scache 
+    entry.
+
+  * Changed the default @sys name list to "x86_win32 i386_w2k i386_nt40"
+    for 32-bit x86 systems.  The default for itanium will be "ia64_win64"
+    and "amd64_win64" for amd 64-bit processors.
+
+  * When executing executables, Windows provides a mechanisms by which
+    the normal search for DLLs can be bypassed.  If a file foo.exe is
+    being executed and there exists a file or directory "foo.exe.local" 
+    (the contents are ignored if a file), then Windows will search for
+    DLLs first in the "foo.exe.local" directory and second in the 
+    directory in which the "foo.exe" file is located.  
+
+    Previous releases of OAFW would improperly return 
+    STATUS_NOT_A_DIRECTORY instead of the expected 
+    STATUS_OBJECT_PATH_NOT_FOUND.  This would cause the Windows SMB client
+    to terminate the search for the DLL causing the execution of the 
+    application to fail.
+
+  * Rework the reference counting of smb_vc_t objects.  The references  
+    stored in the waiting locks were not counted.  This could result in
+    an assertion if the reference count drops to zero.
+
+  * "fs wscell" returns "Freelance.Local.Root" for the workstation cell
+    when running in freelance mode.
+
+  * Added support for persistent caching of file contents, stat entries,
+    volume data, cell data, and name lookup data.  When the registry 
+    value, "NonPersistentCaching", is not defined or set to 0 the file 
+    specified by "CachePath" becomes a persistent cache file.   The 
+    size of the cache file is computed at run time.  It has a maximum
+    size of approximately 1.2GB.  The contents of the file will be 
+    validated according to the rules specified by the "ValidateCache"
+    registry value.  
+
+  * Added support for UUIDs.  UUIDs are kept for as long as the 
+    cache file is intact.
+
+  * Added cmdebug.exe and support cache manager debugging callback 
+    interfaces in afsd_service.exe.
+
+    Usage: cmdebug -servers <server machine> [-port <IP port>] [-long] 
+                   [-addrs] [-cache] [-help]
+    Where: -long   print all info
+           -addrs  print only host interfaces
+           -cache  print only cache configuration
+
+  * Symlinks to \\AFS\[all\]... will now be treated the same as 
+    symlinks to /afs/....   However, please use /afs/... as otherwise
+    the symlinks won't work on Unix.
+  
+  * Correct a problem with local CellID allocation for cells whose 
+    server list is obtained via DNS instead of a CellServDB file.  If
+    the DNS information expires the CellID assigned to the entry will
+    be changed.  This causes all of the cm_scache_t objects which refer
+    to the old cellID number to become useless.  Attempts to access 
+    files or directories with cm_scache_t objects using the old cellID
+    will fail since the server list cannot be obtained.
+
+  * Correct deadlock condition in cm_EndCallbackGrantingCall which can
+    be triggered if the volume referenced by the cm_scache_t object is
+    offline.
+
+  * The AFS Service needs to respond to SERVICE_ACCEPT_SHUTDOWN messages
+    in addition to SERVICE_ACCEPT_STOP.
+
+  * Move RPC shutdown until after the SMB and RX shutdown procedures 
+    complete.  Block until RPC shutdown is complete.
+
+  * Modify afslogon.dll (integrated logon) to wait for service if its
+    state is START_PENDING.  If the timeout period occurs, reset to 
+    the retry interval and not the sleep interval.
+
+  * When renewing the server list for a cell obtained via DNS AFSDB
+    records, the cm_cell_t entry must be removed from the list of all 
+    cells.  Otherwise, the list of cells will be corrupted.
+ 
+  * In the dcache and scache modules, use the cm_scache_t dataVersion
+    instead of the cm_fakeDirVersion.  
+
+  * Synchronize fs.c with the unix version.
+
+  * The variable used to determine whether a file or virtual memory
+    mapped cache is used was not properly initialized to a default
+    value. If the registry setting "NonPersistentCaching" was not
+    set, the choice would be random.   Properly initialized to be
+    "file".
+
+  * The memory mapped view was never unmapped before closing the file
+    at service shutdown.  This is now properly cleaned up.
+
+  * Default location of Cache file is now %TEMP%\AFSCache
+
+Since 1.3.76:
+
+  * A bug affecting new installations of 1.3.75/76 would result in
+    the creating of incorrect mountpoints in the freelance root.afs 
+    volume for the default cell.
+
+    If "fs \\afs\all\<cellname>" lists a volume name of "root" instead
+    of "root.cell", you have been affected by the bug.  To correct the
+    problem, execute the following commands:
+
+          fs rmmount \\afs\all\<cellname>
+          fs rmmount \\afs\all\.<cellname>
+        
+          fs mkmount \\afs\all\<cellname> root.cell <cellname>
+          fs mkmount \\afs\all\.<cellname> root.cell <cellname> -rw
+
+Since 1.3.75:
+
+  * A bug has been fixed in the auto-generation of Freelance root.afs
+    symlinks which produced random entries in the \\AFS\all directory.
+
+  * Support has been added for multi-homed servers
+
+Since 1.3.74:
+  * Added a new registry value, "StoreAnsiFilenames", which can be used
+    to force the use of ANSI character sets instead of OEM Code Pages.
+    This feature is useful when users require the ability to create 
+    filenames with 8-bit characters and need to access the files from
+    both Latin-1 based Unix systems as well as from Windows.
+
+    Activation of this feature will prevent access to files stored with
+    8-bit OEM characters.
+
+  * Shutdown all SMB threads in a synchronized manner when stopping the 
+    service.
+ 
+  * There is currently a maximum cache size of 1.3GB.  The limit is imposed
+    by the largest contiguous block of unused memory within the 2GB process
+    space which can be assigned to the memory mapped file.  Unfortunately,
+    when the executable digital signature verification code is activated
+    Windows sees fit to further segment the process memory which in turn
+    reduces the size of the maximum cache file to less then 800MB.  If
+    larger cache sizes are desired, a new registry value should be set:
+
+      HKLM\SOFTWARE\OpenAFS\Client (DWORD) "VerifyServiceSignature" = 0x0
+
+    Setting this value will disable the runtime verification of digital
+    signatures on afsd_service.exe and the afs dlls which it loads.  It
+    will not disable the the version number check on those same files.
+    The signature verification is not a security messure and is only meant
+    to enhance the ability to afsd_service.exe to detect potential
+    destablizing mixtures of DLLs from incompatible distributions.
+
+    Added code to auto-disable the signature verification check if 
+    the desired cache size is greater then 700MB.
+
+  * Windows' WinTrustVerify(WIN_SPUB_ACTION_PUBLISHED_SOFTWARE) is 
+    used to verify the validity of the afsd_service.exe binary 
+    as well as each of the AFS DLLs loaded by the service.  Not only
+    must the digital signature be valid but the signatures of the 
+    DLL must be signed by the same entity as the service.
+
+  * Implement new functions: cm_freelanceMountPointExists and
+    cm_freelanceSymlinkExists.  Use them along with other validity
+    checks in cm_freelanceAddMount and cm_freelanceAddSymlink to
+    ensure that name collisions do not occur and that empty strings
+    are not valid file names.
+
+    A symlink may not have a name which would resolve to a valid 
+    cell name.  Doing so would prevent access to the cell.
+
+  * Add missing cm_HoldSCacheNoLock call to Freelance mount point
+    re-initialization code.  The reference counts of the fake root.afs
+    volume scache object(s) would become invalid when the mount point
+    or symlink lists were altered.
+
+  * Add registry entries to provide mappings from the afsdsbmt.ini
+    to the new locations for applications which count on the use
+    of the old Profile file APIs.  These apps are likely to fail
+    if the user does not have administrator privileges and the 
+    registry is locked down.
+
+  * The afs_config.exe submounts dialog had two errors.  
+    First, attempts to remove entries failed because the registry
+    key was being opened without KEY_WRITE privileges.  
+    Second, when editing a submount entry, changing the name
+    would add a new key and leave the original one in place. 
+    Now the original submount will be removed if its name is 
+    changed.
+
+  * In recent months there have been several incidents in which
+    users have experienced problems starting or accessing 
+    afsd_service.exe and after significant effort has been spent
+    it has turned out that they have two versions of AFS on the
+    machine or an inconsistent set of DLLs.  
+
+    Code has now been added to afsd_service.exe which will walk
+    the list of modules loaded by afsd_service.exe and validate
+    that the version of the AFS DLLs matches the version of the
+    afsd_service.exe executable.  If they do not match the service
+    will not start.  
+
+  * When Freelance mode is enabled and there is no registry
+    key HKLM\SOFTWARE\OpenAFS\Client\Freelance, afsd_service.exe
+    will attempt to import the afs_freelance.ini file contents.
+    If the file does not exist, it was creating a dummy file
+    with a r/o and r/w entry for the default cell and then
+    importing those values.
+
+    This process has been changed.  The temporary file is no
+    longer created.   Also, both the OpenAFS Client install
+    directory as well as %WINDIR% are checked for previous
+    afs_freelance.ini files.
+
+  * Added support for VL_GetEntryByNameN().  Still need to add
+    support for VL_GetEntryByNameU() for multi-homed support.
+
+  * Fix a deadlock situation in afscreds.exe when canceling an
+    auto-generated Obtain Tokens dialog
+
+Since 1.3.72/73:
+  * Fix the locking of objects during Directory Searches in the
+    SMB/CIFS server.  The failure to properly lock the reference 
+    counts was resulting in the premature freeing of smb_dirSearch_t 
+    objects while they were still in use by the SMB/CIFS client.
+    This does not solve the "Invalid Handle" problem.
+
+  * Fix Find Cell By Name pioctl call to return a valid cell
+    name for the Freelance fake root.afs volume.  
+    "Freelance.Local.Root".
+
+  * Fix the Explorer Shell Extension Symlinks->Add operation.
+    The dialog template was missing and the link destination
+    string was too short.
+
+  * Add support for symlinks to Freelance root.afs volume
+    Stored at HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks
+       <number>  =  "<linkname>:<relative-path>."
+    Use symlink.exe to create, list, or remove
+
+  * Remove the fallback to the use of KFW's KRB4 library when obtaining
+    tokens.  We never obtain KRB4 tickets.
+
+  * Fix AFS Client Configuration Control Panel to support new SysName
+    protocol.
+
+  * Fix a bug in afsd_service.exe which could result in the SysName
+    not being read from the registry.
+
+Since 1.3.71:
+  * Add code to block the issuance of AFS tokens by aklog.exe or
+    afscreds.exe when the Kerberos 5 principal name contains a dot.
+
+  * Modify the IsAdmin() function to always treat the local SYSTEM
+    account as an AFS client administrator.  Affects fs.exe and 
+    afs_config.exe.
+
+  * Modify the internal handling of Quota Exceeded errors
+
+  * Upgrade all reference count fields in the Windows cache manager
+    and the osi library to use unsigned long instead of signed short.
+    A similar fix has been applied to the afs rpc (rx) library.
+
+  * fix the Windows cache manager to prevent it from replacing the 
+    rx_connection object associated with the cm_conn_t object on each
+    and every operation if "fs crypt" was set.  This explains the 
+    dramatic performance difference when crypt is used vs clear.
+    The problem: 'cryptall', a boolean flag indicating whether or not 
+    "fs crypt" is set, was being compared to the rx_connection 
+    cryptlevel which is either rxkad_clear:0 or rxkad_crypt:2.
+    1 != 2 and therefore the rx_connection was always destroyed 
+    and replaced on each and every operation.
+
+    Lock the cm_conn_t object around every call to RXAFS_xxxx functions.
+    It is not safe for the cm_conn_t object to not be locked because
+    rx_DestroyConnection might be called from another thread if:
+        - the user's tokens have changed or expired
+        - the crypt mode has changed
+
+    This fix appears to have also taken care of the problems associated
+    with Overlapped Writes resulting in Delayed Write errors.
+
+  * fix NSIS installer's AdminGroup.exe to properly create and
+    remove groups when given -create or -remove.  The string comparison
+    test was wrong.
+
+  * fs sysname now accepts a list of sysname values 
+
+  * added a new registry value HKLM\SOFTWARE\OpenAFS\Client "IoctlDebug"
+    DWORD which when set to a non-zero value will cause error message
+    text to be output to stderr from the pioctl() routine.  Useful in 
+    debugging failures of fs.exe, tokens.exe, etc.
+
+  * added a test to the power management code to only perform a 
+    flush operation if there is at least one network adapter which
+    is not a loopback adapter.
+
+  * Fix bug in loading of registry value HKLM\SOFTWARE\OpenAFS\Client
+    "EnableKFW".  This value will not be read if the key
+    HKCU\SOFTWARE\OpenAFS\Client exists; even if the "EnableKFW" 
+    value under that key does not.
+
+  * provide mechanisms to force the use of krb524d for Kerberos 5
+    ticket to AFS token conversion.  For afslogon.dll and afscreds.exe
+    there is a new registry value "Use524" and for aklog.exe a new
+    command line parameter "-m".
+
+  * Fix the pattern matching algorithm to properly match patterns
+    ending with a '*'.
+
+  * smb_ReceiveCoreRename() was factored to produce smb_Rename()
+    which is used by both the original function and the new
+    smb_ReceiveNTRename().  smb_ReceiveNTRename() supports the
+    creation of HardLinks in addition to Renaming.  smb_Link() 
+    is a new function which creates HardLinks via cm_Link().
+    cm_Link() is a new vnodeops function which creates links
+    using RXAFS_Link().
+
+    smb_ReceiveNTRename() does not support the File Copy and 
+    Move Cluster Information operations described in its interface.
+    ReceiveNTRename is under documented in CIFS-TR-1p00_FINAL.pdf.
+
+  * When opening files via symlinks, we should follow the symlinks
+    until we reach the actual file stat cache entry.  The stat cache
+    entry of the file should then be stored in the FID instead of
+    stat scache entry of the symlink.
+
+  * return bad operation errors for all unimplemented functions
+    even if we do not know the functions exist.
+
+  * Log bad packets and unknown operation packets to the trace log
+
+  * Map CM_ERROR_BADOP to STATUS_NOT_SUPPORTED instead of 
+    0xC09820FF
+  
+  * Update list of known CIFS operations to include all those listed
+    in CIFS-TR-1p00_FINAL.pdf.
+
+  * Modify the handling of HKLM\SOFTWARE\OpenAFS\Client\Submounts
+    to support the REG_EXPAND_SZ type.
+
+Since 1.3.70:
+  * A new Windows authorization group "AFS Client Admins" is now 
+    created and populated with the members of the "Administrators"
+    group.  The group is used to determine which accounts on the
+    machine may be used to modify the AFS Client Configuration via
+    the UI and command line tools.  afs_config.exe, fs.exe, 
+
+  * Modify the WinLogon Logoff Event Handler to query NT4 domain
+    controllers for the remote profile path if Active Directory
+    services are not available.
+
+  * Fix aklog.exe to not add the AFS ID to the username
+
+  * PTS registration of new users to foreign cells has been added to 
+     afscreds.exe
+
+  * The cm_Daemon thread is used to perform checks for 
+    down servers, up servers, volumes, callback expirations, 
+    lock maintenance and token expiration.  Due to a gaff in
+    larger integer division the thread never performed any 
+    work.  Instead the current time computation would always
+    be less then the trigger times.  This had an adverse affect
+    on the client's ability to maintain communication with servers,
+    keep volumes up to date, and flush user tokens and acls
+    when they have expired. This was broken when the 1.3 branch
+    was modified to support VC7 which no longer included 
+    largeint.lib
+
+  * An initialization problem with the Freelance code was 
+    detected while fixing the callbackRequest.  The cm_rootSCachep
+    object is obtained during afsd_InitDaemons() but the callback 
+    information is incomplete.  The callback information will not
+    be obtained until cm_MergeStatus is called from within
+    cm_GetCallback.  Unfortunately, cm_SyncOp did not properly 
+    test for the conditions under which the callback information
+    must be obtained.  
+
+  * Reports have been filed indicating that callbacks were
+    being lost.  An examination of the code indicated that the
+    cm_server_t objects were not being properly reference
+    counted by the cm_scache_t and cm_callbackRequest_t objects.
+    In particular, the cm_server_t objects may have been freed
+    from beneath the cm_conn_t objects.
+
+    All of the reference counting is now done via the functions:
+        cm_GetServer
+        cm_GetServerNoLock
+        cm_PutServer
+        cm_PutServerNoLock
+    this improves the ability to track the referrals.  
+
+    Each cm_BeginCallbackGranting Call now allocates a reference
+    to the cm_server_t.  The cm_EndCallbackGrantingCall either
+    frees the reference or transfers it to the cm_scache_t
+    cbServerp field.  These are then appropriately tracked
+    through the cm_Analyze call.
+
+  * Ensure that the dnlc hash table is the same size as the
+    dir name hash table (as per original author's note).
+    Increase the dnlc CM_AFSNCNAMESIZE to a multiple of 8
+    for compatibility with 64-bit systems.
+
+  * fix smb_ApplyV3DirListPatches to properly apply the hidden
+     attribute to dotfiles when the infoLevel < 0x101 and 
+     cm_SyncOp has failed.
+
+  * Fix the Freelance registry initialization code.  There
+    was a possibility that some systems could end up with 
+    garbage in the registry during a clean install.
+
+Since 1.3.66:
+   * file and directory names beginning with "." will now be given the
+     hidden attribute when the volume access is anonymous.  this matches
+     the behavior when the volume access is via an authenticated user.
+
+   * Added a change monitor to the HKLM\SOFTWARE\OpenAFS\Client\Freelance
+     key.  When a change occurs mark the root.afs data as invalid and
+     for it to be reloaded on the next access.  This allows administrators
+     to modify the mount point list without restarting the service.
+     
+     The freelance client used to provide a fake modification time for
+     the root.afs volume data and its mount points of 7/09/2001 14:24 EDT.
+     Added code to extract the last modification time of the Freelance
+     registry key and use that instead.  The time now represents the 
+     most recent mount point change.
+
+   * PTS registration of new users to foreign cells has been added to 
+     aklog.exe
+
+   * Additional Cache Control and Credential Manager options have been
+     added to the WiX installer.  See deployment guide for details.
+
+   * The CachePath setting is now optionally a REG_EXPAND_SZ type
+  
+   * The WiX installer has been upgraded.  Version 2.0.1927.1 is now 
+     required.
+
+   * The loopback installation code may have had a problem updating the
+     %ETC%\HOSTS file which could have resulted in a premature failure.
+     Work around code has been added for the case where the file cannot
+     be deleted.
+
+   * The default max chunksize was increased from 15 (32K) to 17 (128K)
+     because Windows sends 64K blocks when using overlapped writes.
+
+   * The default number of server threads was increased from 4 to 25 to
+     better handle overlapped writes.  
+
+   * The "AfscredsShortcutParams" registry value was not being properly
+     loaded by afscreds.exe.  Therefore, the default value was always being
+     used instead of the value set by the installer.
+
+   * Windows XP provides downgrade attack detection to prevent an attacker
+     from being able to force the use of NTLM simply by disrupting 
+     communication with the KDC.  This attack cannot exist between the 
+     Windows CIFS client and the AFS Client Service.  Therefore, when a
+     downgrade has been detected the afs pioctl library will force the 
+     establishment of a new CIFS connection using NTLM.
+ 
+   * A locking error was discovered surrounding all references to volume
+     server lists within the cm_cell.c source file. 
+
+   * The logged into Windows username was incorrect on Terminal Server
+     machines.
+
+   * A new registry value "NonPersistentCaching" was added to the service
+     parameters key.  When set to a non-zero value, the afs cache is stored
+     in the Windows paging file.  There are two limitations to choosing
+     this option: 
+        1. when persistent caching is implemented it won't work with 
+           this flag set since there will be nothing to persist.
+        2. with this flag set the initial paging allocation cannot be
+           changed while the service is running
+
+   * An initialization bug was discovered in aklog.exe which affected users
+     who have a domain name for their afs servers which could not be mapped
+     to a realm
+
+Since 1.3.65:
+   * afs_config.exe now validates cell names against DNS in addition
+     to the CellServDB file.
+
+   * In order to allow the freelance client to connect to a volume with ID 
+     equal to 1 on the default cell we changed the fake root.afs volume ID
+     once again.  This time we choose 0xFFFFFFFF.  In addition, we change
+     the cell ID of the fake root.afs volume from 1 to 0xFFFFFFFF as well.
+     It will now be impossible for a volume ID to match that of another 
+     cell unless the client is connected to 0xFFFFFFFD cells.  That should
+     be enough room for growth.
+
+   * Fix "fs mkmount" command to work with UNC paths and when
+     started from non-AFS drives.  It is now possible to create a mount
+     point in the freelance fake root.afs volume with the command
+
+        fs mkmount \\AFS\all\<directory-name> <volume-name> <cellname>
+
+     For example,
+        
+        fs mkmount \\AFS\all\openafs.org root.cell openafs.org
+        fs mkmount \\AFS\all\.openafs.org root.cell openafs.org -rw
+
+   * The algorithm used to re-attempt access to the servers associated with
+     a volume has been altered to properly address the case in which all 
+     servers have been marked down.  The previous algorithm did not reset
+     the server's down flags so the servers were never actually retried.
+     This caused a problem with active volumes if the network connectivity
+     was lost as could be the case with a network cable removal, wireless
+     drop, or laptop hibernation.  With the fix volume access is restored
+     almost instantenously when network connectivity becomes available.
+
+   * Support for SMB/CIFS browsing has been added to the AFS Client Service
+     SMB server.  It is now possible to use "NET VIEW \\AFS" to obtain a
+     listing of AFS submounts and freelance mount points.  Support for
+     NETSHAREENUM, NETSHAREGETINFO, NETSERVERENUM2, NETSERVERGETINFO
+     significantly enhances the behavior of AFS volumes within the Explorer
+     Shell.  For instance, "AFS" now shows up as server in the Explorer
+     with each submount or freelance mount point visible as a share.
+     The right click menu in each folder now works with full functionality
+     on a consistent basis.
+
+   * The network provider can be configured to have different behavior
+     depending on the domain that the user logs into.  These settings are
+     only relevant when using integrated login.  A domain refers to an
+     Active Directory (AD) domain, a trusted Kerberos (non-AD) realm or the
+     local machine (i.e. local account logins).  The domain name that is
+     used for selecting the domain would be the domain that is passed into
+     the NPLogonNotify function of the network provider. (see registry.txt
+     for details)
+
+   * Added a new registry value [HKCU\SOFTWARE\OpenAFS\Client] 
+     "Authentication Cell" which may be used to specify a default 
+     authentication cell for afscreds.exe which is different from
+     the default cell for the AFS Client Service daemon.
+
+   * Added a Logoff WinLogon Event Notification function to afslogon.dll.
+     afslogon.dll moved to %WINDIR%\System32\.
+     New registry entries added to register the dll for Winlogon events.
+
+     The logoff event will now force a call to ktc_ForgetAllTokens()
+     using the context of the user being logged off as long as the 
+     user's profile is not loaded from within AFS.  If the profile 
+     was loaded from AFS we can't release the tokens since the Logoff
+     event is triggered prior to the profile being written back to 
+     the its source location.  This is now performed in an XP SP2 
+     safe manner.
+
+   * Windows XP SP2 Internet Connection Firewall interoperability
+     has been added.
+
+   * The %WINDIR%\afsdsbmt.ini contains four sections:
+        Submounts, Drive Mappings, Active Maps and CSC Policies.
+     The Submounts and CSC policies are now stored in the registry under
+        [HKLM\SOFTWARE\OpenAFS\Client\Submounts]
+        [HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]
+     The Drive Mappings and Active Maps are stored in the registry under
+        [HKCU\SOFTWARE\OpenAFS\Client\Mappings]
+        [HKCU\SOFTWARE\OpenAFS\Client\Active Maps]
+
+     There is no automatic migration of this data as it would be impossible
+     to consistently migrate data to user profiles which may not be active
+     when the machine is updated.
+
+   * The %WINDIR%\afs_freelance.ini contains lists of mountpoints for the
+     fake root.afs volume.  For the same reasons as for the cellservdb file,
+     this information should not be in %WINDIR%.  This information is now
+     kept under the registry key
+        [HKLM\SOFTWARE\OpenAFS\Client\Freelance]
+
+     The data from the afs_freelance.ini file will be automatically 
+     migrated to the registry on first execution of afsd_service.exe
+
+   * Keeping the CellServDB file in the location %WINDIR%\afsdcell.ini is 
+     troublesome for several reasons.  One, it is confusing for those who
+     expect the file to be named "CellServDB" instead of "afsdcell.ini".
+     Two, this file is not a Windows Profile formatted file.  Three, 
+     applications should not be reading or writing to %WINDIR%.  It causes
+     problems for Windows Terminal Server.
+
+     The new location of CellServDB will be the OpenAFS Client install 
+     directory which is by default C:\Program Files\OpenAFS\Client and can
+     be determined by querying the registry for 
+     [HKLM\SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion]PathName
+
+     The existing afsdcell.ini will be migrated by the NSIS installer. 
+     The Wix installer must still be updated to do the same.
+
+   * Change NSIS installer to use DNS by default; to remove Integrated Logon
+     High Security mode; and to add Terminal Services compatibility registry
+     entries to allow the OpenAFS tools to find the afsdcell.ini and other
+     configuration files in %WINDIR%.
+  
+   * Add support for authenticated SMB connections.   This will remove
+     the need for high security mode in most situations.  Both NTLM
+     and Extended Security (GSS SPNEGO) modes are supported.  Effectively,
+     only NTLM can be used even though Kerberos is now supported.  The
+     reason is that it is not possible to construct a service principal
+     which is unique to each individual machine.
+
+     SMB Extended Auth does not work on XP SP2 unless one of two registry
+     modifications are made:
+
+     (1) To disable the check for matching host names on loopback connections
+        set this key.  This does not require a reboot:
+
+        [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
+            "DisableLoopbackCheck"=dword:00000001
+
+     (2) To add the AFS SMB/CIFS service name to an approved list.  This
+        does require a reboot:
+
+        [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
+            "BackConnectionHostNames"=multi-sz "AFS" "MACHINE-AFS"
+
+     afsd_service.exe will automatically add the current Netbios Name
+     to the BackConnectionHostNames list and then temporarily disable
+     the loopback check for one cycle of startup/shutdown of the service.
+     We assume most folks do not start/stop without a reboot so this 
+     will be adequate in most cases.
+
+   * Fix security hole in afslogon.dll which allowed passwords to be
+     sent in clear text to the KDC in a misformed principal name.
+
+   * Fix cm_GetCell() to properly handle expired dns entries
+     without crashing
+
+   * If Freelance mode is active and the afs_freelance.ini
+     file does not exist, do not create an empty file.
+     Instead create a file containing ro and rw mountpoints
+     to the default cell using the standard conventions.
+
+   * Modify the Freelance support to handle the ability
+     to create rw mount points in the fake root.afs volume.
+
+   * Changed the RPC mechanism used for token setting from 
+     named pipes to local.  Use of named pipes can be restored
+     by setting the environment variable AFS_RPC_PROTSEQ to
+     "ncacn_np". 
+
+     Named pipes were required when a Windows 9x system was
+     using a NT system in gateway mode which is incompatible
+     with our use of local loopback adapters.
+
+   * In afscreds.exe, if a username of the form user@REALM is
+     specified and no password is specified, do not perform a 
+     kinit operation.  Only perform the aklog functionality.
+
+   * Add a new registry value which allows the number of processors
+     on which afsd_service.exe executes to be restricted.  Valid
+     values are 1..numOfProcessors
+
+       HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+          (DWORD) MaxCPUs 
+
+Since 1.3.64:
+   * A second MSI based installer option is now available.
+
+   * Fixed Kerberos 5 kinit functionality in afscreds.exe to properly
+     request tickets for user/instance@REALM instead of just user@REALM
+
+   * Modify the Power Management Notify routine to wait for the Hard Dead
+     timeout period instead of a fixed 19 seconds.  With the longer timeout
+     periods Hibernation and Standby could never succeed when network 
+     connectivity is not available.
+
+   * The following fs.exe commands are now restricted to Administrator:
+     - checkservers with a non-zero timer value
+     - setcachesize
+     - newcell
+     - sysname with a new sysname list
+     - exportafs 
+     - setcell
+     - setserverprefs
+     - storebehind
+     - setcrypt
+     - cscpolicy
+     - trace
+
+     setting the default sysname for a machine should be done via the
+     registry and not via "fs sysname".
+
+   * NSIS installer adds options to install Debugging Symbols
+     and the Microsoft Loopback Adapter; the user is now also
+     given the ability to select the afscreds.exe startup options.
+
+   * Build system modified to generate symbols for FREE (aka RELEASE)
+     builds as well as CHECKED (aka DEBUG) builds
+
+   * Sites which have a volume ID of 0x20000001 assigned to their
+     root.cell volumes have been experiencing problems with accessing
+     the root.cell volume of their cell when Freelance mode has been
+     active.  This was because 0x20000001 was assigned to the fake
+     root.afs volume created by freelance.  The fake volume id is
+     now set to 0x00000001 to prevent conflicts.
+
+   * The timeout logic in the AFS Client Service has been wrong
+     for sometime.  It is based on two different assumptions.
+     First, the SMB client timeout is a fix value as was the case
+     with OS/2 Lan Manager.  This assumption is incorrect.  The
+     SMB timeout in Windows is a dynamic value computed based upon
+     a fixed minimum timeout to which is added time based upon the
+     size of the request and the performance characteristics of
+     the connection.  Second, it is the responsibility of the 
+     SMB Server to enforce the timeout requirements of the client.
+     This is untrue.  The SMB Server cannot be expected to know
+     the requirements of the client.  More importantly, if the 
+     SMB server uses the SMB client timeout as a value to restrict
+     its behavior as an RX client, the performance characteristics
+     of the local SMB session would be used to prematurely terminate
+     WAN connections with significantly different performance 
+     characteristics.
+
+     The timeout logic has therefore been modified in the following
+     manner:
+      . the Lan Manager Workstation (SMB) Session Timeout is used only
+        as a basis for configuring the Connection Dead Timeout 
+        and Hard Dead Timeout values.  The Connection Dead Timeout
+        must be at least 15 seconds longer than the SMB Timeout
+        and the Hard Dead Timeout must be at least double the 
+        Connection Dead Timeout.
+      . New registry entries have been added to allow the Connection
+        Dead Timeout and Hard Dead Timeout values independent of the
+        Lan Manager Workstation Session Timeout
+      . The test to enforce the SMB Client Timeout has been removed.
+        
+     One of the side-effects of removing the enforcement of the SMB 
+     Client Timeout is that regardless of whether or not the SMB client
+     is available to receive the response (and how would the SMB server
+     know) the RX protocol response can be used to update the AFS 
+     Client Service state for ready access by future SMB client 
+     requests.
+
+     This should be the end of the "Server paused or restarting messages"
+   
+   * Add support for arbitrary UNC paths to the pioctl() support.
+     This enables the fs commands as well as the AFS Shell Extension
+     to work correctly when UNC paths are being used.
+
+   * Fix afscreds.exe (by updating afskfw.lib) to search for cells via
+     DNS if the cell configuration cannot be determined via CellServDB
+
+   * Add debug info to test whether CM_BUF_WAITING or CM_SCACHE_WAITING
+     are ever set more than once at a time
+ 
+   * Fix the management of lists of cm_cell_t structures when using 
+     DNS to lookup cell information.  The previous code would fail to
+     reuse the same cellID for a cell if DNS was used more than once
+     for a given cell name.  When the ttl expired, a single cm_cell_t
+     could be inserted into the cm_allCellsp list more than once 
+     producing a loop.  In addition, the vlServerp list belonging to
+     the cell was not freed resulting in improper refCounting of the
+     servers.
+
+   * Add DNS support to cm_IoctlNewCell() which previous only examined
+     the CellServDB file
+
+   * Add cm_FreeServer() function and call it from cm_FreeServerList()
+     to properly garbage collect cm_server_t objects 
+     
+   * Add numVCs variable to smb.c to track the number of smb_vc_t 
+     objects created and use it to initialize the vcID field which 
+     previously was set to 0 in all objects resulting in FindByID 
+     collisions.
+
+   * Fixed DNS lookups to work consistently throughout the OpenAFS
+     product instead of just from within the afsd_service.exe
+
+   * Added a runtime check to ensure that AFS Client Service SMB
+     Server is accepting connections before attempting to mount
+     global drives.
+
+   * Read IP addresses for volume servers out of the CellServDB
+     file if gethostbyname() on the hostname fails.
+
+   * Fix getcellconfig() to populate both the Hostnames as well
+     as IP addresses when loading cell data via DNS
+
+   * Increase the Connection Dead Time to 50 from 20 seconds
+     Increase the Hard Dead Time to 120 from 40 seconds
+     (matches the Unix values)
+
+   * Fixed an assertion validating the number of allocated NCBs
+
+   * Fixed the build environment to consistently build for 
+     Windows 2000 and above.  (APPVER = 5.0)
+
+   * Fixed rx_debug to properly validate the receipt in incoming
+     data with select() and recvfrom().  Do not copy data out of
+     the socket buffer unless success is indicated.
+
+Since 1.3.63:
+   * afsd_service.exe will now display a message box to the 
+     desktop when it terminates due to an IP Address Change.
+  
+   * installer no longer deletes AFS Server configuration data
+     on uninstall
+
+   * installer generates a warning dialog if the RPC service 
+     is not properly configured
+
+   * installer compressed with lzma instead of bzip2
+
+   * afsd_service.exe shutdown crash solved once and for all
+ 
+   * reference counting of smb_vc_t data structures improved
+ 
+   * name space collision of smb_fid_t event objects corrected
+
+   * the output of "fs memdump" is now written to 
+     %WINDIR%\TEMP\afsd_alloc.log
+
+   * the file TaAfsApp_1033.dll is now properly installed allowing
+     the User Manager to start
+  
+   * a new algorithm is used for computing filename pattern matches
+
+   * afscreds.exe now accepts user names containing instance
+     fields.
+
+   * Fix the Directory Name Lookup Cache to be case-sensitive.
+     This is crucial in environments in which a Windows client
+     is accessing a directory with more than one filename that
+     differs only by case.  If the directory contains "FOO" 
+     and "Foo".  You want "DEL Foo" to delete the correct one.
+     We still have a problem in that "DEL foo" will delete a
+     random filename.  This will be addressed in a future release.
+
+   * Fix afscreds.exe -M option (renewMaps) to work when High
+     Security mode is off.  Also, remember to disable the ActiveMap
+     flag in afsdsbmt.ini when a drive mapping is removed.
+
+   * Updates to NSIS installer script.  AFS Server configuration
+     data will not be destroyed on un-install or re-install.  
+     Use a better compression algorithm.
+   
+   * afslogon.dll now uses KFW to obtain tokens when available
+   
+   * afslogon.dll when given an all uppercase username will
+     attempt to authenticate with both the uppercase name
+     and an all lowercase variation
+
+   * DST modification removed.  The fix appears to make things
+     worse after a reboot of the machine.
+
+   * fs.exe:  added "cscpolicy" which is used to 
+     change client side caching policy for AFS shares
+
+     Usage: fs cscpolicy [-share <AFS share>] [-manual] [-programs] 
+                         [-documents] [-disable] [-help]
+
+   * Several uninitialized variables have been initialized
+
+   * It is now possible to obtain tokens using cross realm
+     Kerberos within afscreds.exe:
+        cell:      dementia.org
+        user:      jaltman@ATHENA.MIT.EDU
+        password:  xxxxxxxx
+     Will obtain a cross realm ticket for jaltman/DEMENTIA.ORG@ATHENA.MIT.EDU
+     will will in turn be used to obtain afs@DEMENTIA.ORG.
+     The resulting token will be stored with the display name 
+       jaltman@ATHENA.MIT.EDU@dementia.org
+
+   * aklog.exe has been added to the client
+
+     Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]] 
+                  [[-p | -path] pathname]
+                  [-noprdb] [-force]
+                  [-5 | -4]
+
+        -d gives debugging information.
+        krb_realm is the kerberos realm of a cell.
+        pathname is the name of a directory to which you wish to authenticate.
+        -noprdb means don't try to determine AFS ID.
+        -5 or -4 selects whether to use Kerberos V or Kerberos IV.
+           (default is Kerberos V)
+        No commandline arguments means authenticate to the local cell.
+
+Since 1.3.62:
+   * All of the resource files have been restructured to adhere to
+     a set of rules IBM implemented for loading string resources.
+     These rules had either been forgotten or were not discovered
+     by folks working on the OpenAFS sources.  The end result was
+     memory corruption.  This is primary item which was preventing
+     the AFS Server from working.
+
+   * Increased the size of the maximum ticket size stored in a token
+     from 344 bytes to 12,000.  Increased the buffers used to convey
+     messages between the pioctl() caller and the SMB Server from
+     1000 bytes to 12,512.  The code appeared to have been writing
+     above the top of the stack by quite a few number of bytes.
+     (The increased ticket size is necessary for the next item.)
+
+   * When obtaining AFS Tokens via KFW, krb524 is no longer required.
+     Instead the raw Kerberos 5 ticket is used in its entirety.  This
+     is extremely important as it allows us to use pure Kerberos 5 KDCs
+     as the source of the AFS authentication.  The use of up to 12,000 byte
+     tickets will allow tickets produced by all versions of Microsoft
+     Active Directory to be used.
+      - create a user account.       
+      - designate it DES only
+      - disable pre-auth
+      - specify its UPN to be  "afs@realm"
+      - assign a SPN of "afs/cellname" to the UPN with setspn.exe
+
+   * Do not enforce the funky 8dot3 pattern matching rule that the first "."
+     is special when using long file names.  (you must use "*.*" and not "*")
+     Instead only enforce it when performing 8dot3 searches. 
+
+   * Fixed the DST problem with creation times being set one hour ahead
+
+   * Fixed the problem when using \\afs\cell-alias.  For example, 
+     \\afs\uncc instead of \\afs\uncc.edu.  Do not a new cell struct
+     for the alias name; instead simply expand the name.  One of the
+     symptoms of this problem was a loss of acquired tokens.
+
+   * Fixed the AFS Shell Extension.  The Symbolic Link menu was empty 
+     of strings.  (Only English strings provided.)
+
+   * Fixed the installer to properly replace in use files.  
+
+   * Fixed the build system to cleanup generated component version files
+
+   * The release build compiled with MSVC 6.0 compiler to avoid the 
+     afsd_service.exe shutdown crash.  This does not solve the problem
+     but simply avoids it for the time being.
+
+Since 1.3.61:
+
+ * fix afslogon.dll to not corrupt memory when High Security mode
+   is not used.  
+
+ * fix afsd_service.exe to not attempt to restore the stack when
+   an exception occurs.  (not safe in multi-threaded programs)
+
+ * fix uninstaller to properly remove the CRT and MFC DLLs
+ 
+ * remove a Message Box from afscreds.exe when getcellconfig()
+   fails on a kerberos realm which is not a cell
+
+The following is a list of changes to the OpenAFS for Window client
+since 1.3.60.
+
+ * "fs setserverprefs" will leave afsd service deadlocked
+
+ * "vos listaddrs" will core dump
+
+ * installer sets the appropriate keys to support Integrated Logon
+
+ * installer disables the "Find Lana by Name" functionality as it
+   was causing headaches for many users
+
+ * fix the intermittent crash of the power management thread when
+   shutting down the AFS Client Service
+
+ * optimizes the obtain drive mount list functionality which is 
+   executed every time the mount tab in afscreds.exe and afs_config.exe
+   are refreshed.  (this happens a lot)
+
+ * fix the service shutdown logic.  add the STOP_PENDING state
+   and do not accept additional service events after we declare
+   ourselves STOPPED.
+
+The following is a list of changes to the OpenAFS for Window client
+since 1.2.10.
+
+* flexelint was run against the source tree and hundreds (perhaps 
+  thousands) of corrections were applied to ensure prototypes 
+  were in use; types were used consistently; variables were 
+  initialized; unused variables were removed; etc.
+
+* A wide variety of instrumentation was added including the 
+  ability to produce a stack trace from within afsd_service.exe
+  when it crashes.
+
+* Dynamic configuration of the RDRtimeout value based upon the
+  LanMan Workstation Session Timeout
+
+* The mount root no longer needs to be called "/afs".  This 
+  is now set by a registry value "MountRoot" within the key
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+* The cell list is now only read out of afsdcell.ini when the
+  file changes instead of each time a cell is resolved.
+
+* Thread synchronization was added to cm_server.c and ktc_nt.c
+
+* All calls to GlobalAlloc()/GlobalFree() were replaced with 
+  calloc()/free().  The Global functions were needed on Windows 3.x
+  but have caused a variety of problems on the Win32 platforms.
+  Avoiding them is highly recommended by several Microsoft 
+  Knowledgebase articles
+
+* Support for Symbolic Links added to the AFS Shell Extension
+
+* Added a registry value "OverlayEnabled" to determine if
+  Shell Extension Overlays should be enabled.  
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+* New Build system to support VC6, VC.NET, VC.NET2003 compilers and
+  separate trees for checked and free builds.  Build system supports
+  a custom directory src\WINNT\extra which can be used as a grafting
+  location of organization specific additions to the build tree.
+
+* New installer built using NSIS 2.0.  
+
+* Named all kernel objects in order to allow them to be monitored
+  with tools such as SysInternals' ProcExp.exe.
+  
+* Introduced new EventLog framework for AFSD
+
+* Introduced Power Management interface to AFSD for Standby and 
+  Hibernate modes to allow cache to be flushed prior to network
+  disconnect
+
+* Utilize Win32 DNSQuery API instead of internal routines.  This 
+  allows DNS SRV queries to be sent to all current domain name 
+  servers.  Not just one specified in an INI file.  DNS is now
+  always activated.
+
+* "NetbiosName" registry value may be used to specify a fixed
+  Netbios Name such as "AFS" to be used instead of "HOSTNAME-AFS"
+  when the loopback adapter is in use.  If you need to use the 
+  old notation with a loopback adapter installed specify a registry
+  entry of 
+
+     "NetbiosName" REG_EXPAND_SZ = "%COMPUTERNAME%-AFS"
+
+* Refactor all modules which depend on LAN Adapter and NetbiosName
+  determination in a new library: lanahelper.lib.  This allows for
+  consistent behavior throughout the product.
+
+* Move the afsd.log and afsd_init.log files to the directory specified
+  by the "TEMP" environment variable.  This is usually %WINDIR%\TEMP
+  for services.  Added the Date to the log entries.
+
+* New registry value "RxMaxMTU" used to limit the size of the RX 
+  packets sent by the AFS Client Service to the Server.  In order
+  to enable OpenAFS to work across the Cisco IPSec VPN the packet
+  size must be restricted to 1264 or smaller.  The latest NSIS
+  installer sets a value of 1260 by default.
+
+* New registry value "RxNoJumbo" to disable the use of Jumbo Rx
+  packets.  This is not needed in order to work across the Cisco
+  VPN but might be needed for other network environments.  This
+  value is not set by the NSIS installer.
+
+* New registry value "HideDotFiles" is used to apply the Hidden
+  attribute to files whose names begin with a '.'.   This value
+  is set by the NSIS installer.
+
+* New registry value "MaxMpxRequests" allows the maximum number
+  of multiplexed sessions to be configured at run time.  This
+  value is not set by the NSIS installer.  The default value is
+  50.
+
+* New registry value "MaxVCPerServer" allows the maxmimum number
+  of VCs per server to be configured at run time.  This value is
+  not set by the NSIS installer.  The default value is 100.
+
+* New registry value "AllSubmount" allows the "all" submount to
+  be disabled by setting its value to 0x00.
+
+* Allow cells names to be valid mount points 
+    \\<netbiosName>\<cellname>
+
+* Store the active state of drive mappings in order for afscreds.exe
+  to restore them upon startup
+
+* Add exception handling to generate a Stack Trace to the afsd_init.log
+  file if one happens to occur.
+
+* Add lots of logging to help detect the cause of invalid SMB packets
+
+* Enable Kerberos for Windows to be used to obtain AFS Tokens via
+  conversion of Kerberos 5 "afs" service tickets.  Supports auto-
+  renewal of expiring tokens as long as afscreds.exe is running.
+
+* New afscreds.exe command line options:
+    -A = autoinit
+    -M = renew drive maps
+    -N = ip address change detection
+    -Z = unmap drives
+
+* New registry value "EnableKFW" in {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  determines whether or not MIT Kerberos for Windows should be used
+  to obtain tokens via Kerberos 5 tickets.
+
+* New registry value "AfscredsShortcutParams" in 
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  determines the command line parameters to be specified when "fixing"
+  the AFS Shortcut in the user's startup folder.
+
+* The "ShowTrayIcon" registry value has been moved from 
+  HKLM\Software\TransarcCorporation\AFS Client\AfsCreds to
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  
+* The <cell name> registry values used to store the token expiration
+  reminders have been moved from 
+  HKLM\Software\TransarcCorporation\AFS Client\AfsCreds to
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client\Reminders
+ 
+* Obtain the Logon User Name from the Explorer key when available
+
+* new text document doc\txt\winnotes\registry.txt lists all registry
+  values used by OpenAFS (excluding the AFS Server)
+
+* BUG: rx_securityClass objects were not properly reference 
+  counted and were never freed.  
+
+* BUG: reduce the number of conditions under which CM_ERROR_TIMEOUT
+  would be generated.  The existence of a server does not imply
+  that it is not down.  If all of the servers for a cell are down
+  return CM_ERROR_NOSUCHVOLUME instead.  This prevents the Explorer
+  Shell from hanging.
+
+* BUG: the directory name lookup cache failed to free the entries
+  in the cache when the name cache entries cycled.  The entries
+  in the cache would become dereferenced without being freed.
+
+* BUG: fs setserverprefs could be executed without Administrator
+  privileges
+
+* BUG: the number of allocated NCB objects (100) exceeded the number
+  which could actually be waited upon by the kernel (64).  Any objects
+  which were utilized above the limit could never have event completions
+  detected.
+
+* BUG: smb_username_t objects were not being reference counted and 
+  were not properly freed.
+
+* BUG: smb_tid_t objects could under unusual circumstances be freed
+  before they were no longer referenced.
+
+* BUG: smb_fid_t object pointer were frequently used even when 
+  their value could be NULL.   They were not properly released and
+  therefore they were never freed.
+
+* BUG: smb_packet_t data structures were not completely initialized
+  upon creation
+
+* BUG: when Rx produces a CM_ERROR_NOIPC error do not return "Access
+  Denied" because that causes the Explorer Shell to try again until
+  access is obtained.  Instead return "Remote Resources" which allows 
+  the shell to move on and treat the error as transient.
+
+* BUG: when initializing the NCBreturns structure, separate Event objects
+  were created for each NCB although a single Event object was supposed
+  to be shared by all.
+
+* BUG: smb_dirSearch_t objects were not being properly referenced counted
+  or freed.
+
+* BUG: smb_tran2Packet_t objects were not being properly referenced 
+  counted or freed.
+
+* BUG: directory path creation did not handle the case of multiple
+  directories requiring creation in one attempt
+
+* BUG: SMB requests which required an Extended Response were ignored.
+  This prevented some files from being written to AFS volumes.
+
+* BUG: character strings were being freed even after they were 
+  inserted into in use data structures
+
+* BUG: inconsistent usernames were used when High Security mode was
+  enabled.  (there is still much to do in this area)
+
+* BUG: pioctl() calls which require out of band RPC operations were
+  susceptible to race conditions when performed by multiple processes
+
+* BUG: memory allocation and deallocation crossed instances of the
+  C Runtime Library producing memory leakage and corruption in 
+  afscreds and the client configurator.
+
+
+

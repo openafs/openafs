@@ -30,6 +30,7 @@
 #define AFS_BOZONLOCK_ENV       1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -73,7 +74,7 @@
 /*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
-#define	afsio_offset	uio_offset
+#define	afsio_offset	uio_loffset
 #define	afsio_seg		uio_segflg
 #define	afsio_fmode	uio_fmode
 #define	afsio_resid	uio_resid
@@ -81,7 +82,7 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	MCLBYTES
 #define	AFS_MINCHANGE	2
-#define	osi_GetTime(x)	uniqtime(x)
+#define	osi_GetTime(x)	uniqtime32(x)
 
 /**
   * These defines are for the 64 bit Solaris 7 port
@@ -92,17 +93,6 @@
 #define	AFS_SUN57_64BIT_ENV	1
 #define AFS_64BIT_INO   	1
 #endif
-
-/**
-  * Solaris 7 64 bit has two versions of uniqtime. Since we consistently
-  * use 32 bit quantities for time in afs, we now use uniqtime32
-  */
-#if defined(AFS_SUN57_64BIT_ENV)
-#undef osi_GetTime
-#define osi_GetTime(x)  uniqtime32(x)
-#endif
-
-
 
 #define	AFS_KALLOC(n)	kmem_alloc(n, KM_SLEEP)
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)

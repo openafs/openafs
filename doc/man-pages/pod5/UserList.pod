@@ -1,0 +1,54 @@
+=head1 NAME
+
+UserList - Defines privileged administrators
+
+=head1 DESCRIPTION
+
+The F<UserList> file lists the AFS usernames of the system administrators
+authorized to issue privileged B<bos>, B<vos>, and B<backup> commands that
+affect the local server machine or the volumes housed on it. It must
+reside in the F</usr/afs/etc> directory on every server machine.
+
+Although the F<UserList> file is in ASCII format, do not use a text editor
+to alter it. Instead always use the appropriate commands from the B<bos>
+command suite:
+
+=over 4
+
+=item *
+
+The B<bos adduser> command to add a user to the file.
+
+=item *
+
+The B<bos listusers> command to display the contents of the file.
+
+=item *
+
+The B<bos removeuser> command to remove a user from the file.
+
+=back
+
+Although it is theoretically possible to list different administrators in
+the F<UserList> files on different server machines, doing so can cause
+unanticipated authorization failures and is not recommended. In cells that
+use the Update Server to distribute the contents of the F</usr/afs/etc>
+directory, it is customary to edit only the copy of the file stored on the
+system control machine. Otherwise, edit the file on each server machine
+individually.
+
+=head1 SEE ALSO
+
+L<bos_adduser(8)>,
+L<bos_listusers(8)>,
+L<bos_removeuser(8)>,
+L<upclient(8)>,
+L<upserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

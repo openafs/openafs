@@ -58,6 +58,10 @@
 #define SYS_NAME_ID_ppc_darwin_14        505
 #define SYS_NAME_ID_ppc_darwin_60        506
 #define SYS_NAME_ID_ppc_darwin_70        507
+#define SYS_NAME_ID_ppc_darwin_80        508
+#define SYS_NAME_ID_x86_darwin_80        509
+#define SYS_NAME_ID_ppc_darwin_90        510
+#define SYS_NAME_ID_x86_darwin_90        511
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
@@ -155,6 +159,7 @@
 #define SYS_NAME_ID_s390_linux2         1900
 #define SYS_NAME_ID_s390_linux22        1901
 #define SYS_NAME_ID_s390_linux24        1902
+#define SYS_NAME_ID_s390_linux26        1907
 #define SYS_NAME_ID_s390x_linux2         1903
 #define SYS_NAME_ID_s390x_linux22        1904
 #define SYS_NAME_ID_s390x_linux24        1905
@@ -206,6 +211,7 @@
 #define SYS_NAME_ID_macppc_nbsd20	2524
 #define SYS_NAME_ID_i386_nbsd21		2525
 #define SYS_NAME_ID_i386_nbsd30		2526
+#define SYS_NAME_ID_amd64_nbsd20	2527
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
@@ -214,6 +220,7 @@
 #define SYS_NAME_ID_i386_obsd35		2604
 #define SYS_NAME_ID_i386_obsd36		2605
 #define SYS_NAME_ID_i386_obsd37		2606
+#define SYS_NAME_ID_i386_obsd38		2607
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
@@ -232,9 +239,9 @@
 
 #define SYS_NAME_ID_amd64_fbsd_53        3008
 
-#define SYS_NAME_ID_amd64_w2k           3100
+#define SYS_NAME_ID_amd64_w2k           3400
 
-#define SYS_NAME_ID_i64_w2k             3200
+#define SYS_NAME_ID_i64_w2k             3500
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

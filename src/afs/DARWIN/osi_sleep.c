@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_sleep.c,v 1.10 2004/07/29 03:33:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_sleep.c,v 1.10.2.3 2006/02/17 15:29:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -84,8 +84,38 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				 * by wakeup calls; wait will not return until
 				 * it changes */
+#ifdef AFS_DARWIN80_ENV
+   lck_mtx_t *lck;
+   thread_t owner;
+#endif
 } afs_event_t;
 
+#ifdef AFS_DARWIN80_ENV
+#define EVTLOCK_INIT(e) \
+    do { \
+	(e)->lck = lck_mtx_alloc_init(openafs_lck_grp, 0); \
+	(e)->owner = 0; \
+    } while (0)
+#define EVTLOCK_LOCK(e) \
+    do { \
+	osi_Assert((e)->owner != current_thread()); \
+	lck_mtx_lock((e)->lck); \
+	osi_Assert((e)->owner == 0); \
+	(e)->owner = current_thread(); \
+    } while (0)
+#define EVTLOCK_UNLOCK(e) \
+    do { \
+	osi_Assert((e)->owner == current_thread()); \
+	(e)->owner = 0; \
+	lck_mtx_unlock((e)->lck); \
+    } while (0)
+#define EVTLOCK_DESTROY(e) lck_mtx_free((e)->lck, openafs_lck_grp)
+#else
+#define EVTLOCK_INIT(e)
+#define EVTLOCK_LOCK(e)
+#define EVTLOCK_UNLOCK(e)
+#define EVTLOCK_DESTROY(e)
+#endif
 #define HASHSIZE 128
 afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
 #define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
@@ -96,19 +126,21 @@ int afs_evhashcnt = 0;
 static afs_event_t *
 afs_getevent(char *event)
 {
-    afs_event_t *evp, *newp = 0;
+    afs_event_t *evp, *oevp, *newp = 0;
     int hashcode;
 
     AFS_ASSERT_GLOCK();
     hashcode = afs_evhash(event);
     evp = afs_evhasht[hashcode];
     while (evp) {
+	EVTLOCK_LOCK(evp);
 	if (evp->event == event) {
 	    evp->refcount++;
 	    return evp;
 	}
 	if (evp->refcount == 0)
 	    newp = evp;
+	EVTLOCK_UNLOCK(evp);
 	evp = evp->next;
     }
     if (!newp) {
@@ -117,14 +149,26 @@ afs_getevent(char *event)
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;
 	newp->seq = 0;
+	EVTLOCK_INIT(newp);
     }
+    EVTLOCK_LOCK(newp);
     newp->event = event;
     newp->refcount = 1;
     return newp;
 }
 
 /* Release the specified event */
+#ifdef AFS_DARWIN80_ENV
+#define relevent(evp) \
+    do { \
+	osi_Assert((evp)->owner == current_thread()); \
+        (evp)->refcount--; \
+	(evp)->owner = 0; \
+	lck_mtx_unlock((evp)->lck); \
+    } while (0)
+#else
 #define relevent(evp) ((evp)->refcount--)
+#endif
 
 
 void
@@ -134,8 +178,17 @@ afs_osi_Sleep(void *event)
     int seq;
 
     evp = afs_getevent(event);
+#ifdef AFS_DARWIN80_ENV
+     AFS_ASSERT_GLOCK();
+     AFS_GUNLOCK();
+#endif
     seq = evp->seq;
     while (seq == evp->seq) {
+#ifdef AFS_DARWIN80_ENV
+	evp->owner = 0;
+	msleep(event, evp->lck, PVFS, "afs_osi_Sleep", NULL);
+	evp->owner = current_thread();
+#else
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
@@ -146,13 +199,18 @@ afs_osi_Sleep(void *event)
 	thread_block(0);
 #endif
 	AFS_GLOCK();
+#endif
     }
     relevent(evp);
+#ifdef AFS_DARWIN80_ENV
+    AFS_GLOCK();
+#endif
 }
 
 void 
 afs_osi_fullSigMask()
 {
+#ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
     /* Protect original sigmask */
@@ -162,11 +220,13 @@ afs_osi_fullSigMask()
 	/* Mask all signals */
 	user_thread->uu_sigmask = ~(sigset_t)0;
     }
+#endif
 }
 
 void 
 afs_osi_fullSigRestore()
 {
+#ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
     /* Protect original sigmask */
@@ -176,6 +236,7 @@ afs_osi_fullSigRestore()
 	/* Clear the oldmask */
 	user_thread->uu_oldmask = (sigset_t)0;
     }
+#endif
 }
 
 int
@@ -199,15 +260,31 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     struct afs_event *evp;
-    int ticks, seq;
+    int seq;
     int prio;
+#ifdef AFS_DARWIN80_ENV
+    struct timespec ts;
+#else
+    int ticks;
+#endif
 
-    ticks = (ams * afs_hz) / 1000;
 
 
     evp = afs_getevent(event);
     seq = evp->seq;
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+    if (aintok)
+        prio = PCATCH | PPAUSE;
+    else
+        prio = PVFS;
+    ts.tv_sec = ams / 1000;
+    ts.tv_nsec = (ams % 1000) * 1000000;
+    evp->owner = 0;
+    code = msleep(event, evp->lck, prio, "afs_osi_TimedSleep", &ts);
+    evp->owner = current_thread();
+#else
+    ticks = (ams * afs_hz) / 1000;
 #ifdef AFS_DARWIN14_ENV
     /* this is probably safe for all versions, but testing is hard. */
     /* using tsleep instead of assert_wait/thread_set_timer/thread_block
@@ -229,10 +306,14 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     code = 0;
 #endif
     AFS_GLOCK();
+#endif
     if (seq == evp->seq)
 	code = EINTR;
 
     relevent(evp);
+#ifdef AFS_DARWIN80_ENV
+    AFS_GLOCK();
+#endif
     return code;
 }
 
@@ -257,3 +338,28 @@ afs_osi_Wakeup(void *event)
     relevent(evp);
     return ret;
 }
+
+void
+shutdown_osisleep(void) {
+    struct afs_event *evp, *nevp, **pevpp;
+    int i;
+    for (i=0; i < HASHSIZE; i++) {
+	evp = afs_evhasht[i];
+	pevpp = &afs_evhasht[i];
+	while (evp) {
+	    EVTLOCK_LOCK(evp);
+	    nevp = evp->next;
+	    if (evp->refcount == 0) {
+		EVTLOCK_DESTROY(evp);
+		*pevpp = evp->next;
+		osi_FreeSmallSpace(evp);
+		afs_evhashcnt--;
+	    } else {
+		EVTLOCK_UNLOCK(evp);
+		pevpp = &evp->next;
+	    }
+	    evp = nevp;
+	}
+    }
+}
+

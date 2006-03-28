@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/make_p.c,v 1.5 2003/07/15 23:15:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/make_p.c,v 1.5.2.1 2006/03/09 06:41:43 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -39,6 +39,19 @@ gen(FILE * stream)
     fprintf(stream, "    P_temp = R1;\n");
     fprintf(stream, "    P_temp_p = (unsigned char *) &P_temp;\n");
 
+#ifdef AFS_DARWIN80_ENV
+    fprintf(stream, "#if defined(__i386__)\n");
+    fprintf(stream, "    R2 = P_prime[0][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[3][*P_temp_p];\n");
+    fprintf(stream, "#elif defined(__ppc__)\n");
+    fprintf(stream, "    R2 = P_prime[3][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[0][*P_temp_p];\n");
+    fprintf(stream, "#else\n#error Unsupported architecture\n#endif\n");
+#else /* !AFS_DARWIN80_ENV */
 #ifdef	LSBFIRST
     fprintf(stream, "    R2 = P_prime[0][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
@@ -50,5 +63,6 @@ gen(FILE * stream)
     fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[0][*P_temp_p];\n");
 #endif /* MSBFIRST */
+#endif /* !AFS_DARWIN80_ENV */
 #endif /* BIG */
 }

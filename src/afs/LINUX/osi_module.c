@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.19 2005/07/11 19:29:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.23 2006/03/09 21:41:54 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -24,7 +24,10 @@ RCSID
 #include "h/mm.h"
 
 #ifdef AFS_AMD64_LINUX20_ENV
-#include "../asm/ia32_unistd.h"
+#include <asm/ia32_unistd.h>
+#endif
+#ifdef AFS_SPARC64_LINUX20_ENV
+#include <linux/ioctl32.h>
 #endif
 
 #include <linux/proc_fs.h>
@@ -32,6 +35,7 @@ RCSID
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
 #include <linux/sched.h>
+#include <linux/kernel.h>
 #endif
 
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
@@ -44,7 +48,9 @@ extern struct file_system_type afs_fs_type;
 static long get_page_offset(void);
 #endif
 
-#if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+DEFINE_MUTEX(afs_global_lock);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 DECLARE_MUTEX(afs_global_lock);
 #else
 struct semaphore afs_global_lock = MUTEX;
@@ -283,29 +289,29 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #ifdef NEED_IOCTL32
+#ifdef AFS_LINUX26_ENV 
+#ifdef AFS_S390X_LINUX26_ENV
+    if (test_thread_flag(TIF_31BIT))
+#elif AFS_AMD64_LINUX20_ENV
+    if (test_thread_flag(TIF_IA32))
+#else
+    if (test_thread_flag(TIF_32BIT))
+#endif /* AFS_S390X_LINUX26_ENV */
+#else
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_AMD64_LINUX20_ENV)
-#ifdef AFS_LINUX26_ENV
-    if (test_thread_flag(TIF_IA32))
-#else
     if (current->thread.flags & THREAD_IA32)
-#endif
 #elif defined(AFS_PPC64_LINUX20_ENV)
-#ifdef AFS_PPC64_LINUX26_ENV
-    if (current->thread_info->flags & _TIF_32BIT)
-#else /*Linux 2.6 */
     if (current->thread.flags & PPC_FLAG_32BIT)
-#endif
-#elif defined(AFS_S390X_LINUX26_ENV)
-    if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
 #else
 #error Not done for this linux type
-#endif
+#endif /* AFS_LINUX26_ENV */
+#endif /* NEED_IOCTL32 */
     {
 	if (copy_from_user(&sysargs32, (void *)arg,
 			   sizeof(struct afsprocdata32)))

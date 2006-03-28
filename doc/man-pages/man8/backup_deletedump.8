@@ -1,0 +1,378 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_deletedump 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup deletedump \- Deletes one or more dump records from the Backup Database
+.SH "SYNOPSIS"
+\fBbackup deletedump\fR <<\ [\fB\-dumpid\fR\ <\fIdump\ id\fR+] >>> <<\ [\fB\-from\fR\ <\fIdate\ time\fR+] >>>
+    <<\ [\fB\-to\fR\ <\fIdate\ time\fR+] >>> [\fB\-localauth\fR] <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-help\fR]
+.PP
+\fBbackup dele\fR <<\ [\fB\-d\fR\ <\fIdump\ id\fR+] >>> <<\ [\fB\-f\fR\ <\fIdate\ time\fR+] >>>
+    [\-t <\fIdate time\fR>+] [\fB\-l\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup deletedump\fR command deletes one or more dump records from the
+Backup Database. Either use the \fB\-dumpid\fR argument to specify the dump ID
+number of one or more dumps, or use the \fB\-from\fR and \fB\-to\fR arguments to
+delete the records for all regular dumps created during the time period
+bracketed by the specified values.
+.PP
+Use this command to remove dump records that are incorrect (possibly
+because a dump operation was interrupted or failed), or that correspond to
+dumps that are expired or otherwise no longer needed.
+.SH "CAUTIONS"
+The only way to remove the dump record for an appended dump is to remove
+the record for its initial dump, and doing so removes the records for all
+of the initial dump's associated appended dumps.
+.PP
+The only way to remove the record for a Backup Database dump (created with
+the \fBbackup savedb\fR command) is to specify its dump ID number with the
+\fB\-dumpid\fR argument. Using the \fB\-from\fR and \fB\-to\fR arguments never removes
+database dump records.
+.PP
+Removing records of a dump makes it impossible to restore data from the
+corresponding tapes or from any dump that refers to the deleted dump as
+its parent, directly or indirectly. That is, restore operations must begin
+with the full dump and continue with each incremental dump in order. If
+the records for a specific dump are removed, it is not possible to restore
+data from later incremental dumps unless the deleted records are restored
+by running the \fBbackup scantape\fR command with the \fB\-dbadd\fR flag.
+.PP
+If a dump set contains any dumps that were created outside the time range
+specified by the \fB\-from\fR and \fB\-to\fR arguments, the command does not
+delete any of the records associated with the dump set, even if some of
+them represent dumps created during the time range.
+.SH "OPTIONS"
+.Ip "\fB\-dumpid\fR <\fIdump id\fR>+" 4
+Specifies the dump \s-1ID\s0 of each dump record to delete. The corresponding
+dumps must be initial dumps; it is not possible to delete appended dump
+records directly, but only by deleting the record of their associated
+initial dump. Using this argument is the only way to delete records of
+Backup Database dumps (created with the \fBbackup savedb\fR command).
+.Sp
+Provide either this argument or the \fB\-to\fR (and optionally \fB\-from\fR)
+argument.
+.Ip "\fB\-from\fR <\fIdate time\fR>+" 4
+Specifies the beginning of a range of dates; the record for any dump
+created during the indicated period of time is deleted.
+.Sp
+Omit this argument to indicate the default of midnight (00:00 hours) on 1
+January 1970 (\s-1UNIX\s0 time zero), or provide a date value in the format
+\fImm/dd/yyyy\fR [\fIhh:\s-1MM\s0\fR]. The month (\fImm\fR), day (\fIdd\fR), and year
+(\fIyyyy\fR) are required. The hour and minutes (\fIhh:\s-1MM\s0\fR) are optional, but
+if provided must be in 24-hour format (for example, the value \f(CW14:36\fR
+represents 2:36 p.m.). If omitted, the time defaults to midnight (00:00
+hours).
+.Sp
+The \fB\-to\fR argument must be provided along with this one.
+.Ip "\fB\-to\fR <\fIdate time\fR>+" 4
+Specifies the end of a range of dates; the record of any dump created
+during the range is deleted from the Backup Database.
+.Sp
+Provide either the value \f(CWNOW\fR to indicate the current date and time, or
+a date value in the same format as for the \fB\-from\fR argument. Valid values
+for the year (\fIyyyy\fR) range from \f(CW1970\fR to \f(CW2037\fR; higher values are
+not valid because the latest possible date in the standard \s-1UNIX\s0
+representation is in February 2038. The command interpreter automatically
+reduces any later date to the maximum value.
+.Sp
+If the time portion (\fIhh:\s-1MM\s0\fR) is omitted, it defaults to 59 seconds after
+midnight (00:00:59 hours). Similarly, the \fBbackup\fR command interpreter
+automatically adds 59 seconds to any time value provided. In both cases,
+adding 59 seconds compensates for how the Backup Database and \fBbackup
+dumpinfo\fR command represent dump creation times in hours and minutes
+only. For example, the Database records a creation timestamp of \f(CW20:55\fR
+for any dump operation that begins between 20:55:00 and 20:55:59.
+Automatically adding 59 seconds to a time thus includes the records for
+all dumps created during that minute.
+.Sp
+Provide either this argument, or the \fB\-dumpid\fR argument.  This argument
+is required if the \fB\-from\fR argument is provided.
+.Sp
+\fBCaution:\fR Specifying the value \f(CWNOW\fR for this argument when the
+\fB\-from\fR argument is omitted deletes all dump records from the Backup
+Database (except for Backup Database dump records created with the
+\fBbackup savedb\fR command).
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbackup\fR command interpreter presents
+it to the Backup Server, Volume Server and \s-1VL\s0 Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument. For
+more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+At the conclusion of processing, the output lists the dump IDs of all dump
+records deleted in the following format:
+.PP
+.Vb 4
+\&   The following dumps were deleted:
+\&        dump ID 1
+\&        dump ID 2
+\&        etc.
+.Ve
+.SH "EXAMPLES"
+The following command deletes the dump record with dump ID 653777462, and
+for any appended dumps associated with it:
+.PP
+.Vb 3
+\&   % backup deletedump -dumpid 653777462
+\&   The following dumps were deleted:
+\&        653777462
+.Ve
+The following command deletes the Backup Database record of all dumps
+created between midnight on 1 January 1997 and 23:59:59 hours on 31
+December 1997:
+.PP
+.Vb 8
+\&   % backup deletedump -from 01/01/1997 -to 12/31/1997
+\&   The following dumps were deleted:
+\&        598324045
+\&        598346873
+\&           ...
+\&           ...
+\&        653777523
+\&        653779648
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIbackup(8)\fR manpage,
+the \fIbackup_dumpinfo(8)\fR manpage,
+the \fIbackup_scantape(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_deletedump 8"
+.IX Name "backup deletedump - Deletes one or more dump records from the Backup Database"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-dumpid\fR <\fIdump id\fR>+"
+
+.IX Item "\fB\-from\fR <\fIdate time\fR>+"
+
+.IX Item "\fB\-to\fR <\fIdate time\fR>+"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

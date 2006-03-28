@@ -35,7 +35,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr.c,v 1.9.2.1 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr.c,v 1.9.2.2 2005/10/05 05:58:42 shadow Exp $");
 
 /*
  * xdr.c, Generic XDR routines implementation.
@@ -58,6 +58,7 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
+#include "rx.h"
 
 /*
  * constants specific to the xdr "protocol"

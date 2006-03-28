@@ -160,7 +160,7 @@ public class User implements PTSEntry, Serializable, Comparable
   public static final int NO_REUSE_PASSWORD = 1;
 
   protected Cell cell;
-  protected int cellHandle;
+  protected long cellHandle;
   protected String name;
 
   /**
@@ -542,7 +542,7 @@ public class User implements PTSEntry, Serializable, Comparable
   protected void refreshGroupNames() throws AFSException
   {
     String currName;
-    int iterationID = getUserGroupsBegin( cell.getCellHandle(), name );
+    long iterationID = getUserGroupsBegin( cell.getCellHandle(), name );
     groupNames = new ArrayList();
     while( ( currName = getUserGroupsNextString( iterationID ) ) != null ) {
       groupNames.add( currName );
@@ -560,7 +560,7 @@ public class User implements PTSEntry, Serializable, Comparable
   protected void refreshGroups() throws AFSException
   {
     Group currGroup;
-    int iterationID = getUserGroupsBegin( cell.getCellHandle(), name );
+    long iterationID = getUserGroupsBegin( cell.getCellHandle(), name );
 
     groups = new ArrayList();
 
@@ -582,7 +582,7 @@ public class User implements PTSEntry, Serializable, Comparable
   protected void refreshGroupsOwnedNames() throws AFSException
   {
     String currName;
-    int iterationID = this.getGroupsOwnedBegin( cell.getCellHandle(), name );
+    long iterationID = this.getGroupsOwnedBegin( cell.getCellHandle(), name );
     groupsOwnedNames = new ArrayList();
     while( ( currName = this.getGroupsOwnedNextString( iterationID ) ) 
 	   != null ) {
@@ -601,7 +601,7 @@ public class User implements PTSEntry, Serializable, Comparable
   protected void refreshGroupsOwned() throws AFSException
   {
     Group currGroup;
-    int iterationID = getGroupsOwnedBegin( cell.getCellHandle(), name );
+    long iterationID = getGroupsOwnedBegin( cell.getCellHandle(), name );
     groupsOwned = new ArrayList();
     currGroup = new Group( cell );
     while( getGroupsOwnedNext( cellHandle, iterationID, currGroup ) != 0 ) {
@@ -1288,7 +1288,7 @@ public class User implements PTSEntry, Serializable, Comparable
     if( (value != this.USER_OWNER_ACCESS) && 
 	(value != this.USER_ANYUSER_ACCESS) ) {
 	throw new IllegalArgumentException( "Cannot set listStatus to " 
-                                          + value );
+					    + value );
     } else {
 	listStatus = value;
     }
@@ -1313,7 +1313,7 @@ public class User implements PTSEntry, Serializable, Comparable
     if( (value != this.USER_OWNER_ACCESS) && 
 	(value != this.USER_ANYUSER_ACCESS) ) {
 	throw new IllegalArgumentException( "Cannot set listGroupsOwned to " 
-                                          + value );
+					    + value );
     } else {
 	listGroupsOwned = value;
     }
@@ -1339,7 +1339,7 @@ public class User implements PTSEntry, Serializable, Comparable
     if( (value != this.USER_OWNER_ACCESS) && 
 	(value != this.USER_ANYUSER_ACCESS) ) {
 	throw new IllegalArgumentException( "Cannot set listMembership to " 
-                                          + value );
+					    + value );
     } else {
 	listMembership = value;
     }
@@ -1503,7 +1503,7 @@ public class User implements PTSEntry, Serializable, Comparable
    *
    * @return a <code>String</code> representation of the <code>User</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r;
     try {
@@ -1624,7 +1624,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @return    a <code>String</code> representation of the groups belonged to
    * @see       Group#toString
    */
-  protected String getInfoGroups() throws AFSException
+  public String getInfoGroups() throws AFSException
   {
 	String r;
 	r = "User: " + name + "\n\n";
@@ -1644,7 +1644,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @return    a <code>String</code> representation of the groups owned
    * @see       Group#toString
    */
-  protected String getInfoGroupsOwned() throws AFSException
+  public String getInfoGroupsOwned() throws AFSException
   {
 	String r;
 	r = "User: " + name + "\n\n";
@@ -1723,8 +1723,8 @@ public class User implements PTSEntry, Serializable, Comparable
    *                automatically assigned)
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void create( int cellHandle, String userName, 
-                                       String password, int uid )
+  protected static native void create( long cellHandle, String userName, 
+				       String password, int uid )
 	throws AFSException;
 
   /**
@@ -1737,7 +1737,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param groupName      the name of the user to delete
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void delete( int cellHandle, String userName )
+  protected static native void delete( long cellHandle, String userName )
 	throws AFSException;
 
   /**
@@ -1748,7 +1748,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param groupName      the name of the user to unlock
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void unlock( int cellHandle, String userName )
+  protected static native void unlock( long cellHandle, String userName )
 	throws AFSException;
 
   /**
@@ -1763,8 +1763,8 @@ public class User implements PTSEntry, Serializable, Comparable
    * @see User
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getUserInfo( int cellHandle, String name, 
-                                            User user ) 
+  protected static native void getUserInfo( long cellHandle, String name, 
+					    User user ) 
 	throws AFSException;
 
   /**
@@ -1778,8 +1778,8 @@ public class User implements PTSEntry, Serializable, Comparable
    *                 information
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void setUserInfo( int cellHandle, String name, 
-                                            User theUser ) 
+  protected static native void setUserInfo( long cellHandle, String name, 
+					    User theUser ) 
 	throws AFSException;
 
   /**
@@ -1792,8 +1792,8 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param newName     the new name for the user
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void rename( int cellHandle, String oldName, 
-                                       String newName )
+  protected static native void rename( long cellHandle, String oldName, 
+				       String newName )
 	throws AFSException;
 
   /**
@@ -1805,8 +1805,8 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param newPassword     the new password for the user
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void setPassword( int cellHandle, String userName, 
-                                            String newPassword )
+  protected static native void setPassword( long cellHandle, String userName, 
+					    String newPassword )
 	throws AFSException;
 
   /**
@@ -1820,7 +1820,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native int getUserGroupsBegin( int cellHandle, String name )
+  protected static native long getUserGroupsBegin( long cellHandle, String name )
 	throws AFSException;
 
   /**
@@ -1828,11 +1828,11 @@ public class User implements PTSEntry, Serializable, Comparable
    * <code>null</code> if there are no more groups.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see #getUserGroupsBegin
+   * @see getUserGroupsBegin
    * @return the name of the next group
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native String getUserGroupsNextString( int iterationId )
+  protected static native String getUserGroupsNextString( long iterationId )
 	throws AFSException;
 
   /**
@@ -1842,25 +1842,25 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param cellHandle    the handle of the cell to which the users belong
    * @see Cell#getCellHandle
    * @param iterationId   the iteration ID of this iteration
-   * @see #getUserGroupsBegin
+   * @see getUserGroupsBegin
    * @param theGroup   a Group object to be populated with the values of the 
    *                   next group
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getUserGroupsNext( int cellHandle, 
-                                                 int iterationId, 
-                                                 Group theGroup )
+  protected static native int getUserGroupsNext( long cellHandle, 
+						 long iterationId, 
+						 Group theGroup )
     throws AFSException;
 
   /**
    * Signals that the iteration is complete and will not be accessed anymore.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see #getUserGroupsBegin
+   * @see getUserGroupsBegin
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getUserGroupsDone( int iterationId )
+  protected static native void getUserGroupsDone( long iterationId )
 	throws AFSException;
 
   /**
@@ -1872,7 +1872,7 @@ public class User implements PTSEntry, Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getGroupsOwnedCount( int cellHandle, String name )
+  protected static native int getGroupsOwnedCount( long cellHandle, String name )
 	throws AFSException;
 
   /**
@@ -1886,8 +1886,8 @@ public class User implements PTSEntry, Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native int getGroupsOwnedBegin( int cellHandle, 
-                                                   String name )
+  protected static native long getGroupsOwnedBegin( long cellHandle, 
+						   String name )
 	throws AFSException;
 
   /**
@@ -1895,11 +1895,11 @@ public class User implements PTSEntry, Serializable, Comparable
    * if there are no more groups.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see #getGroupsOwnedBegin
+   * @see getGroupsOwnedBegin
    * @return the name of the next group
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native String getGroupsOwnedNextString( int iterationId )
+  protected static native String getGroupsOwnedNextString( long iterationId )
 	throws AFSException;
 
   /**
@@ -1909,25 +1909,25 @@ public class User implements PTSEntry, Serializable, Comparable
    * @param cellHandle    the handle of the cell to which the users belong
    * @see Cell#getCellHandle
    * @param iterationId   the iteration ID of this iteration
-   * @see #getGroupsOwnedBegin
+   * @see getGroupsOwnedBegin
    * @param theGroup   a Group object to be populated with the values of the 
    *                   next group
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getGroupsOwnedNext( int cellHandle, 
-                						  int iterationId, 
-			            			  Group theGroup )
+  protected static native int getGroupsOwnedNext( long cellHandle, 
+						  long iterationId, 
+						  Group theGroup )
     throws AFSException;
 
   /**
    * Signals that the iteration is complete and will not be accessed anymore.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see #getGroupsOwnedBegin
+   * @see getGroupsOwnedBegin
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getGroupsOwnedDone( int iterationId )
+  protected static native void getGroupsOwnedDone( long iterationId )
 	throws AFSException;
 
   /**
@@ -1937,3 +1937,12 @@ public class User implements PTSEntry, Serializable, Comparable
    */
   protected static native void reclaimUserMemory();
 }
+
+
+
+
+
+
+
+
+

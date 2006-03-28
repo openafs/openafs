@@ -1,0 +1,123 @@
+=head1 NAME
+
+fs setclientaddrs - Sets the client interfaces to register with the File Server
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs setclientaddrs> S<<< [B<-address> <I<client network interfaces>>+] >>> [B<-help>]
+
+B<fs setcl> S<<< [B<-a> <I<client network interfaces>>+] >>> [B<-h>]
+
+B<fs sc> S<<< [B<-a> <I<client network interfaces>>+] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs setclientaddrs> command defines the IP addresses of the
+interfaces that the local Cache Manager registers with a File Server when
+first establishing a connection to it.
+
+The File Server uses the addresses when it initiates a remote procedure
+call (RPC) to the Cache Manager (as opposed to responding to an RPC sent
+by the Cache Manager). There are two common circumstances in which the
+File Server initiates RPCs: when it breaks callbacks and when it pings the
+client machine to verify that the Cache Manager is still accessible.
+
+The list of interfaces specified with this command replaces the list that
+the Cache Manager constructs and records in kernel memory as it
+initializes. At that time, if the file F</usr/vice/etc/NetInfo> exists on
+the client machine's local disk, the Cache Manager uses its contents as
+the basis for the list of interfaces addresses. If the file does not
+exist, the Cache Manager instead uses the network interfaces configured
+with the operating system. It then removes from the list any address
+included in the local F</usr/vice/etc/NetRestrict> file. It records the
+final list in kernel memory. (An administrator must create the F<NetInfo>
+and F<NetRestrict> files; there are no default versions of them.)
+
+If an RPC to that interface fails, the File Server simultaneously sends
+RPCs to all of the other interfaces in the list, to learn which of them
+are still available. Whichever interface replies first is the one to which
+the File Server then sends pings and RPCs to break callbacks.
+
+To list the interfaces that the Cache Manager is currently registering
+with File Servers, use the B<fs getclientaddrs> command.
+
+=head1 CAUTIONS
+
+The list specified with this command persists in kernel memory only until
+the client machine reboots. To preserve it across reboots, either list the
+interfaces in the local F</usr/vice/etc/NetInfo> file, or place the
+appropriate B<fs setclientaddrs> command in the machine's AFS
+initialization script.
+
+Changes made with this command do not propagate automatically to File
+Servers to which the Cache Manager has already established a
+connection. To force such File Servers to use the revised list, either
+reboot each file server machine, or change the F<NetInfo> file and reboot
+the client machine.
+
+The fs command interpreter verifies that each of the addresses specified
+as a value for the B<-address> argument is actually configured with the
+operating system on the client machine. If it is not, the command fails
+with an error message that marks the address as a C<Nonexistent
+interface>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-address> <I<client network interfaces>>+
+
+Specifies each IP address to place in the list of interfaces, in dotted
+decimal format. Hostnames are not acceptable. Separate each address with
+one or more spaces.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The message
+
+   Adding <interface>
+
+confirms that each new interface was added to the Cache Manager's
+list. The address appears in hexadecimal format to match the notation used
+in the File Server log, F</usr/afs/logs/FileLog>.
+
+=head1 EXAMPLES
+
+The following example sets the two interfaces that the Cache Manager
+registers with File Servers.
+
+   % fs setclientaddrs 191.255.105.68 191.255.108.84
+   Adding 0xbfff6944
+   Adding 0xbfff6c54
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<NetInfo(5)>,
+L<NetRestrict(5)>,
+L<fileserver(8)>,
+L<fs_getclientaddrs(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

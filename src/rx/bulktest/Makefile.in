@@ -14,7 +14,7 @@ LIBRX=${SRCDIR}/lib/librx.a
 DESTDIR=/usr/andy/
 INSTALL=${SRCDIR}/bin/install
 LIBS=${LIBRX} ${SRCDIR}/lib/liblwp.a
-CFLAGS=${DBG} -I.. -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS}
+CFLAGS=${DBG} -I.. -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS} ${ARCHFLAGS}
 
 all: bulk_client bulk_server
 

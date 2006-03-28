@@ -36,7 +36,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_parse.c,v 1.18.10.1 2005/10/15 01:21:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxgen/rpc_parse.c,v 1.18.2.1 2005/10/15 01:20:03 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

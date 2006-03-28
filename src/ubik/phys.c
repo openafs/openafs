@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8 2003/07/15 23:17:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8.2.1 2006/03/09 06:42:12 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -276,7 +276,7 @@ uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
     thdr.version.epoch = htonl(aversion->epoch);
     thdr.version.counter = htonl(aversion->counter);
     thdr.magic = htonl(UBIK_MAGIC);
-    thdr.size = htonl(HDRSIZE);
+    thdr.size = htons(HDRSIZE);
     code = write(fd, &thdr, sizeof(thdr));
     fsync(fd);			/* preserve over crash */
     uphys_close(fd);

@@ -315,7 +315,7 @@ struct conn {
 #define	QInit(q)    ((q)->prev = (q)->next = (q))
 #define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
 			(q)->next->prev = (e), (q)->next = (e))
-#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next)
+#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
 #define	QNext(e)    ((e)->next)
 #define QPrev(e)    ((e)->prev)
 #define QEmpty(q)   ((q)->prev == (q))
@@ -329,6 +329,7 @@ struct conn {
  */
 #define	QTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vlruq))) - ((char *)(e)))))
 #define	QTOC(e)	    ((struct cell *)((char *) (e)))
+#define	QTOVH(e)   ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vhashq))) - ((char *)(e)))))
 
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
@@ -526,10 +527,14 @@ struct SimpleLocks {
 #ifdef	AFS_OSF_ENV
 #define CWired		0x00000800	/* OSF hack only */
 #else
+#ifdef AFS_DARWIN80_ENV
+#define CDeadVnode        0x00000800
+#else
 #ifdef AFS_DARWIN_ENV
 #define CUBCinit        0x00000800
 #else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
+#endif
 #endif
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
@@ -545,6 +550,7 @@ struct SimpleLocks {
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
 #define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
+#define CVInit          0x10000000      /* being initialized */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1
@@ -557,13 +563,20 @@ struct SimpleLocks {
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
 
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_DARWIN80_ENV)
+#define VREFCOUNT_GT(v, y)    vnode_isinuse(AFSTOV(v), (y))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#define VREFCOUNT(v)          ((v)->vrefCount)
+#define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
+#elif defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&(AFSTOV(v)->v_count))
+#define VREFCOUNT_GT(v, y)      (VREFCOUNT(v)>y)
 #define VREFCOUNT_SET(v, c)	atomic_set(&(AFSTOV(v)->v_count), c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&(AFSTOV(v)->v_count))
 #define VREFCOUNT_INC(v)	atomic_inc(&(AFSTOV(v)->v_count))
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_GT(v,y)     ((v)->vrefCount > (y))
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;
@@ -580,7 +593,10 @@ struct SimpleLocks {
 
 extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#if defined(AFS_DARWIN80_ENV)
+#define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
+#define AFSTOV(vc) ((vc)->v)
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -603,7 +619,7 @@ struct vcache {
     struct vcache *nextfree;	/* next on free list (if free) */
 #endif
     struct vcache *hnext;	/* Hash next */
-    struct vcache *vhnext;	/* vol hash next */
+    struct afs_q vhashq;	/* Hashed per-volume list */
     struct VenusFid fid;
     struct mstat {
 	afs_size_t Length;
@@ -613,7 +629,11 @@ struct vcache {
 	afs_uint32 Group;
 	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
 	afs_uint16 LinkCount;
+#ifdef AFS_DARWIN80_ENV
+        afs_uint16 Type;
+#else
 	/* vnode type is in v.v_type */
+#endif
     } m;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
 #if	defined(AFS_SUN5_ENV)
@@ -641,7 +661,9 @@ struct vcache {
 #ifdef AFS_AIX_ENV
     int ownslock;		/* pid of owner of excl lock, else 0 - defect 3083 */
 #endif
-#ifdef AFS_DARWIN_ENV
+#ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *rwlock;
+#elif defined(AFS_DARWIN_ENV)
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
@@ -898,7 +920,7 @@ struct buffer {
   char lockers;
   char dirty;
   char hashIndex;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
   struct buf *bufp;
 #endif
   afs_rwlock_t lock;          /* the lock for this structure */
@@ -1042,7 +1064,7 @@ extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
 extern afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
-extern struct vcache *afs_vhashTV[VCSIZE]; /* cache hash table on volume */
+extern struct afs_q afs_vhashTV[VCSIZE]; /* cache hash table on volume */
 extern afs_int32 afs_initState;	/*Initialization state */
 extern afs_int32 afs_termState;	/* Termination state */
 extern struct VenusFid afs_rootFid;	/*Root for whole file system */
@@ -1074,6 +1096,8 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 #define DO_STATS 1		/* bits used by FindVCache */
 #define DO_VLRU 2
+#define IS_SLOCK 4
+#define IS_WLOCK 8
 
 /* values for flag param of afs_CheckVolumeNames */
 #define AFS_VOLCHECK_EXPIRED	0x1	/* volumes whose callbacks have expired */
@@ -1112,11 +1136,15 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define CM_CACHESIZEDRAINEDPCT	95	/* wakeup processes when down to here. */
 #define CM_WAITFORDRAINPCT	98	/* sleep if cache is this full. */
 
+/* when afs_cacheBlocks is large, settle for slightly decreased precision */
+#define PERCENT(p, v) \
+    ((afs_cacheBlocks & 0xffe00000) ? ((v) / 100 * (p)) : ((p) * (v) / 100))
+
 #define afs_CacheIsTooFull() \
     (afs_blocksUsed - afs_blocksDiscarded > \
-	(CM_DCACHECOUNTFREEPCT*afs_cacheBlocks)/100 || \
+	PERCENT(CM_DCACHECOUNTFREEPCT, afs_cacheBlocks) || \
      afs_freeDCCount - afs_discardDCCount < \
-	((100-CM_DCACHECOUNTFREEPCT)*afs_cacheFiles)/100)
+	PERCENT(100 - CM_DCACHECOUNTFREEPCT, afs_cacheFiles))
 
 /* Handy max length of a numeric string. */
 #define	CVBS	12		/* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */

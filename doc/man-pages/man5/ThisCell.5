@@ -1,0 +1,292 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH ThisCell 5 "OpenAFS" "5/Jan/2006" "AFS File Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+ThisCell \- Defines the local cell name
+.SH "DESCRIPTION"
+The \fIThisCell\fR file defines the local cell name.  There are two versions
+of this file, one for a AFS client and one for an AFS server.
+.Sh "Client ThisCell"
+The client version of the \fIThisCell\fR file defines the complete Internet
+domain-style name (for example, \f(CWabc.com\fR) of the cell to which the local
+client machine belongs. It must reside in the \fI/usr/vice/etc\fR directory
+on every \s-1AFS\s0 client machine. To change a client machine's cell membership,
+edit the file and reboot the machine.
+.PP
+The file is in \s-1ASCII\s0 format and contains a character string on a single
+line. The \fI\s-1IBM\s0 \s-1AFS\s0 Quick Beginnings\fR instructs the administrator to
+create it during the installation of each client machine.
+.PP
+The client machine's cell membership determines three defaults important
+to its functioning:
+.Ip "\(bu" 4
+The cell in which the machine's users authenticate by default.  The effect
+is two-fold:
+.Ip "\(bu" 8
+The \s-1AFS\s0\-modified login utilities and the klog command interpreter contact
+an Authentication Server in the cell named in the \fIThisCell\fR file (unless
+\fB\-cell\fR argument to the \fBklog\fR command specifies an alternate cell).
+.Ip "\(bu" 8
+The command interpreters combine the cell name with the password that the
+user provides, generating an encryption key from the combination. For
+authentication to succeed, both the cell name and password must match the
+ones used to generate the user's encryption key stored in the
+Authentication Database.
+.Ip "\(bu" 4
+The cell the Cache Manager considers its local, or home, cell. By default,
+the Cache Manager allows programs that reside in its home cell to run with
+setuid permission, but not programs from foreign cells. For more details,
+see the \fBfs getcellstatus\fR and \fBfs setcell\fR reference pages.
+.Ip "\(bu" 4
+Which \s-1AFS\s0 server processes the local \s-1AFS\s0 command interpreters contact by
+default as they execute commands issued on the machine.
+.PP
+The client version of the \fIThisCell\fR file is distinct from the server
+version, which resides in the \fI/usr/afs/etc\fR directory on each \s-1AFS\s0 server
+machine. If a server machine also runs as a client, it is acceptable for
+the server and client versions of the file on the same machine to name
+different cells. However, the behavior that results from this
+configuration can be more confusing than useful.
+.Sh "Server ThisCell"
+The server version of the \fIThisCell\fR file defines the complete Internet
+domain-style name (for example, \f(CWabc.com\fR) of the cell to which the
+server machine belongs. It must reside in the \fI/usr/afs/etc\fR directory on
+every \s-1AFS\s0 server machine.
+.PP
+The file is in \s-1ASCII\s0 format and contains a character string on a single
+line. The initial version of the file is created with the \fBbos
+setcellname\fR command during the installation of the cell's first file
+server machine, and the \fI\s-1IBM\s0 \s-1AFS\s0 Quick Beginnings\fR includes instructions
+for copying it over to additional server machine during their
+installation.
+.PP
+The only reason to edit the file is as part of changing the cell's name,
+which is strongly discouraged because of the large number of configuration
+changes involved. In particular, changing the cell name requires
+rebuilding the entire Authentication Database, because the Authentication
+Server combines the cell name it finds in this file with each user and
+server password and converts the combination into an encryption key before
+recording it in the Database.
+.SH "SEE ALSO"
+the \fIbos_setcellname(8)\fR manpage,
+the \fIfs_getcellstatus(1)\fR manpage,
+the \fIfs_setcell(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "ThisCell 5"
+.IX Name "ThisCell - Defines the local cell name"
+
+.IX Header "NAME"
+
+.IX Header "DESCRIPTION"
+
+.IX Subsection "Client ThisCell"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Subsection "Server ThisCell"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

@@ -1,0 +1,71 @@
+=head1 NAME
+
+fs getcellstatus - Reports whether setuid programs are honored in a cell
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs getcellstatus> S<<< B<-cell> <I<cell name>>+ >>> [B<-help>]
+
+B<fs getce> S<<< B<-c> <I<cell name>>+ >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs getcellstatus> command reports whether the Cache Manager allows
+programs fetched from each specified cell to run with setuid
+permission. To set a cell's setuid status, use the B<fs setcell> command;
+L<fs_setcell(1)> fully describes how AFS treats setuid programs.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cell> <I<cell name>>+
+
+Names each cell for which to report setuid status. Provide the fully
+qualified domain name, or a shortened form that disambiguates it from the
+other cells listed in the local F</usr/vice/etc/CellServDB> file.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output reports one of the following two values as appropriate:
+
+   Cell <cell> status: setuid allowed
+   Cell <cell> status: no setuid allowed
+
+=head1 EXAMPLES
+
+The following example indicates that programs from the cell C<abc.com> are
+not allowed to run with setuid permission.
+
+   % fs getcellstatus abc.com
+   Cell abc.com status: no setuid allowed
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<CellServDB(5)>,
+L<fs_setcell(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

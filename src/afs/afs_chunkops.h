@@ -18,13 +18,6 @@
       Chunks are 0 based and go up by exactly 1, covering the file.
       The other fields are internal and shouldn't be used */
 /* basic parameters */
-#ifdef AFS_NOCHUNKING
-
-#define	AFS_OTHERCSIZE	0x10000
-#define	AFS_LOGCHUNK	16
-#define	AFS_FIRSTCSIZE	0x40000000
-
-#else /* AFS_NOCHUNKING */
 
 #define AFS_OTHERCSIZE  (afs_OtherCSize)
 #define AFS_LOGCHUNK    (afs_LogChunk)
@@ -32,11 +25,6 @@
 
 #define AFS_DEFAULTCSIZE 0x10000
 #define AFS_DEFAULTLSIZE 16
-
-#endif /* AFS_NOCHUNKING */
-
-#define AFS_MINCHUNK 13		/* 8k is minimum */
-#define AFS_MAXCHUNK 18		/* 256K is maximum */
 
 #define AFS_CHUNKOFFSET(offset) ((offset < afs_FirstCSize) ? offset : \
 			 ((offset - afs_FirstCSize) & (afs_OtherCSize - 1)))

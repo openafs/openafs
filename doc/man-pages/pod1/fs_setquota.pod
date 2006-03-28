@@ -1,0 +1,93 @@
+=head1 NAME
+
+fs setquota - Sets the quota for the volume containing a file or directory
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs setquota> S<<< [B<-path> <I<dir/file path>>] >>>
+    S<<< B<-max> <I<max quota in kbytes>> >>> [B<-help>]
+
+B<fs setq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+
+B<fs sq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs setquota> command sets the quota (maximum possible size) of the
+read/write volume that contains the directory or file named by the
+B<-path> argument.
+
+To set the quota on multiple volumes at the same time, use the B<fs
+setvol> command.
+
+To display a volume's quota, use the B<fs examine>, B<fs listquota>, or
+B<fs quota> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-path> <I<dir/file path>>
+
+Names the directory or file for which to set the host volume's
+quota. Partial pathnames are interpreted relative to the current working
+directory, which is also the default value if this argument is omitted.
+
+Specify the read/write path to the file or directory, to avoid the failure
+that results from attempting to change a read-only volume. By convention,
+the read/write path is indicated by placing a period before the cell name
+at the pathname's second level (for example, F</afs/.abc.com>). For
+further discussion of the concept of read/write and read-only paths
+through the filespace, see the B<fs mkmount> reference page.
+
+=item B<-max> <I<max quota in kbytes>>
+
+Sets the maximum amount of file server disk space the volume can
+occupy. Specify the number of one-kilobyte blocks as a positive integer
+(C<1024> is one megabyte). A value of C<0> sets an unlimited quota, but
+the size of the disk partition that houses the volume places an absolute
+limit on the volume's size.
+
+If the B<-path> argument is omitted (to set the quota of the volume
+housing the current working directory), the B<-max> switch must be
+included with this argument.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command imposes a maximum quota of 3000 kilobytes on the
+volume that houses the F</afs/abc.com/usr/smith> directory:
+
+   % fs setquota -path /afs/abc.com/usr/smith -max 3000
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must belong to the system:administrators group.
+
+=head1 SEE ALSO
+
+L<fs_examine(1)>,
+L<fs_listquota(1)>,
+L<fs_quota(1)>,
+L<fs_mkmount(1)>,
+L<fs_setvol(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

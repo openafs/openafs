@@ -1,7 +1,7 @@
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE],[
 AC_MSG_CHECKING(for inode_setattr return type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_inode_setattr_returns_int,
 [
 AC_TRY_COMPILE(
@@ -18,7 +18,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_WRITE_INODE_RETURN_TYPE],[
 AC_MSG_CHECKING(for write_inode return type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_write_inode_returns_int,
 [
 AC_TRY_COMPILE(
@@ -34,7 +34,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_IOP_NAMEIDATA],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether inode_operations.create takes a nameidata)
 AC_CACHE_VAL(ac_cv_linux_func_i_create_takes_nameidata,
 [
@@ -102,7 +102,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether address_space_operations.writepage takes a writeback_control)
 AC_CACHE_VAL(ac_cv_linux_func_a_writepage_takes_writeback_control,
 [
@@ -124,7 +124,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_REFRIGERATOR],[
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
 AC_MSG_CHECKING(whether refrigerator takes PF_FREEZE)
 AC_CACHE_VAL(ac_cv_linux_func_refrigerator_takes_pf_freeze,
 [

@@ -24,7 +24,7 @@ VOLSER  = ${srcdir}/../volser
 BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 	    status.o ../bucoord/bucoord_errs.o
 
-VOLSEROBJS=vsprocs.o
+VOLSEROBJS=vsprocs.o vsutils.o
 VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 
 LWPOBJS     =lock.o
@@ -108,6 +108,9 @@ ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
 
 status.o: ${BUCOORD}/status.c
 	${CC} ${CFLAGS} -c ${BUCOORD}/status.c
+
+vsutils.o: ${VOLSER}/vsutils.c
+	${CC} ${CFLAGS} -c ${VOLSER}/vsutils.c
 
 vsprocs.o: ${VOLSER}/vsprocs.c
 	${CC} ${CFLAGS} -c ${VOLSER}/vsprocs.c
