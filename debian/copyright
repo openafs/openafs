@@ -386,3 +386,6 @@ license:
  * any improvements or extensions that they make and grant Carnegie Mellon
  * the rights to redistribute these changes.
  */
+
+src/afs/LINUX/osi_flush.s included code under IBM Public License with
+permission of the author, Paul MacKerras.
