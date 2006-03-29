@@ -64,6 +64,17 @@ Description: AFS distributed filesystem database server
  installed on the servers that will act as volume location and
  protection servers.
 
+Package: openafs-doc
+Section: doc
+Architecture: all
+Description: AFS distributed filesystem documentation
+ AFS is a distributed filesystem allowing cross-platform sharing of files
+ among multiple computers.  Facilities are provided for access control,
+ authentication, backup and administrative management.
+ .
+ This package contains the OpenAFS user's and reference manuals, some
+ protocol documentation, and other OpenAFS documentation.
+
 Package: libopenafs-dev
 Section: libdevel
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64

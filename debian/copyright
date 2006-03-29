@@ -16,6 +16,23 @@ the Apple Public Source License 2.0.  This license is not considered
 DFSG-free.  Since the repackaging was needed anyway, the WINNT directory
 was also dropped, reducing the size of the upstream tarball by 8MB.
 
+The openafs-doc contains the OpenAFS documentation as distributed by the
+OpenAFS project, which does not include the original source.  These
+documents were originally created using TeX internally by Transarc, the
+original authors of AFS.  By the time that AFS was released as free
+software by IBM after acquiring Transarc, the original source could no
+longer be found.  It has apparently been lost over the years.
+
+Although these HTML and PDF files would not normally be considered source,
+they're all that's available until they can be rewritten and updated in
+some better format.  They have been released under the IBM Public License
+Version 1.0 (included below), the same license as the rest of OpenAFS.
+
+Normally, this documentation could not be included in Debian without being
+accompanied by the original TeX source and build tools under DFSG#2, but
+under the circumstances, these files essentially are the source, as
+they're all that anyone has.
+
 Copyright:
 
    IBM Public License Version 1.0

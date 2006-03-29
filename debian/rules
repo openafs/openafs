@@ -161,7 +161,8 @@ binary-indep: build install binary-source
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
-	dh_installdocs
+	dh_installdocs -XQuickStartWindows -Xwinnotes
+	dh_installexamples
 	dh_link
 	dh_compress
 	dh_fixperms
