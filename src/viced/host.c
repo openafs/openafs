@@ -464,7 +464,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
     host->cpsCall = slept ? (FT_ApproxTime()) : (now);
 
     H_UNLOCK;
-    code = pr_GetHostCPS(ntohl(host->host), &host->hcps);
+    code = pr_GetHostCPS(host->host, &host->hcps);
     H_LOCK;
     if (code) {
 	/*
