@@ -4,11 +4,16 @@ openafs (1.4.0+rc10-1) UNRELEASED; urgency=low
     - Supports Linux 2.6.16.  (Closes: #358203)
     - Suspend should work with newer kernels.  (Closes: #341588)
     - Upstream now includes man pages, so remove our backport.
+  * Subsume openafs-krb5 into this source package.
+    - Acknowledge NMU.  (Closes: #304933)
+    - Update to the OpenAFS aklog and asetkey.  (Closes: #196094)
+    - Backport asetkey from upstream CVS.
+    - Include ka-forwarder from the old migration toolkit.
   * Subsume openafs-doc into this source package.
   * Always pass the system type into Autoconf, following autotools-dev
     best practices.
 
- -- Russ Allbery <rra@debian.org>  Tue, 28 Mar 2006 15:16:01 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 28 Mar 2006 17:03:45 -0800
 
 openafs (1.4.0-4) unstable; urgency=low
 
