@@ -11,10 +11,13 @@ openafs (1.4.0+rc10-1) UNRELEASED; urgency=low
     - Include ka-forwarder from the old migration toolkit.
     - Add man pages for asetkey and ka-forwarder.
   * Subsume openafs-doc into this source package.
+  * Since 2.6 is the supported kernel for etch, build the userspace with
+    a sysname of *_linux26 where supported.  This only affects the sys
+    command.  (Using livesys instead is better.)  (Closes: #358118)
   * Always pass the system type into Autoconf, following autotools-dev
     best practices.
 
- -- Russ Allbery <rra@debian.org>  Wed, 29 Mar 2006 12:36:19 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 29 Mar 2006 12:54:37 -0800
 
 openafs (1.4.0-4) unstable; urgency=low
 
