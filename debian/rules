@@ -101,12 +101,12 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 	mkdir -p $(CURDIR)/debian/tmp
-	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
-	chmod +x debian/afs-rootvol debian/afs-newcell
 	cd doc/man-pages/pod8 && pod2man -c 'AFS Command Reference' \
 	    -r 'OpenAFS' -s 8 asetkey.pod > ../man8/asetkey.8
 	cd doc/man-pages/pod8 && pod2man -c 'AFS Command Reference' \
 	    -r 'OpenAFS' -s 8 ka-forwarder.pod > ../man8/ka-forwarder.8
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	chmod +x debian/afs-rootvol debian/afs-newcell
 	touch build-stamp
 
 clean:
