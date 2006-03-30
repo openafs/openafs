@@ -3131,6 +3131,61 @@ GetCryptCmd(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
+#ifdef AFS_DISCON_ENV
+static char *modenames[] = {
+    "discon",
+    "fetchonly",
+    "partial",
+    "nat",
+    "full",
+    NULL
+};
+
+static afs_int32
+DisconCmd(struct cmd_syndesc *as, char *arock)
+{
+    struct cmd_item *ti;
+    char *modename;
+    int modelen;
+    afs_int32 mode, code;
+    struct ViceIoctl blob;
+
+    blob.in = NULL;
+    blob.in_size = 0;
+
+    ti = as->parms[0].items;
+    if (ti) {
+	modename = ti->data;
+	modelen = strlen(modename);
+	for (mode = 0; modenames[mode] != NULL; mode++)
+	    if (!strncasecmp(modename, modenames[mode], modelen))
+		break;
+	if (modenames[mode] == NULL)
+	    printf("Unknown discon mode \"%s\"\n", modename);
+	else {
+	    memcpy(space, &mode, sizeof mode);
+	    blob.in = space;
+	    blob.in_size = sizeof mode;
+	}
+    }
+
+    blob.out_size = sizeof(mode);
+    blob.out = space;
+    code = pioctl(0, VIOC_DISCON, &blob, 1);
+    if (code)
+	Die(errno, NULL);
+    else {
+	memcpy(&mode, space, sizeof mode);
+	if (mode < sizeof modenames / sizeof (char *))
+	    printf("Discon mode is now \"%s\"\n", modenames[mode]);
+	else
+	    printf("Unknown discon mode %d\n", mode);
+    }
+
+    return 0;
+}
+#endif
+
 #include "AFS_component_version_number.c"
 
 int
@@ -3441,6 +3496,12 @@ defect 3069
     ts = cmd_CreateSyntax("getfid", GetFidCmd, 0,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+
+#ifdef AFS_DISCON_ENV
+    ts = cmd_CreateSyntax("discon", DisconCmd, 0,
+			  "disconnection mode");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "nat | full");
+#endif
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
