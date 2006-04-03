@@ -1480,7 +1480,7 @@ GenerateMiniDump(PEXCEPTION_POINTERS ep)
             DWORD dummyLen;
             DWORD dwValue;
             DWORD code;
-            DWORD dwMiniDumpType = MiniDumpNormal;
+            DWORD dwMiniDumpType = MiniDumpWithDataSegs;
 
             code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                                  0, KEY_QUERY_VALUE, &parmKey);
@@ -1489,7 +1489,7 @@ GenerateMiniDump(PEXCEPTION_POINTERS ep)
                 code = RegQueryValueEx(parmKey, "MiniDumpType", NULL, NULL,
                                         (BYTE *) &dwValue, &dummyLen);
                 if (code == ERROR_SUCCESS)
-                    dwMiniDumpType = dwValue ? 1 : 0;
+                    dwMiniDumpType = dwValue;
                 RegCloseKey (parmKey);
             }
 
