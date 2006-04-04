@@ -2164,11 +2164,13 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 			}
 			if (VNDISK_GET_INO(vnode)) {
 			    if (!Showmode) {
-				Log("Vnode %d (unique %u): corresponding inode %s is missing; vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, PrintInode(NULL, VNDISK_GET_INO(vnode)), ctime((time_t *) & (vnode->serverModifyTime)));
+				time_t serverModifyTime = vnode->serverModifyTime;
+				Log("Vnode %d (unique %u): corresponding inode %s is missing; vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, PrintInode(NULL, VNDISK_GET_INO(vnode)), ctime(&serverModifyTime));
 			    }
 			} else {
 			    if (!Showmode)
-				Log("Vnode %d (unique %u): bad directory vnode (no inode number listed); vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, ctime((time_t *) & (vnode->serverModifyTime)));
+				time_t serverModifyTime = vnode->serverModifyTime;
+				Log("Vnode %d (unique %u): bad directory vnode (no inode number listed); vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, ctime(&serverModifyTime));
 			}
 			memset(vnode, 0, vcp->diskSize);
 			vnodeChanged = 1;

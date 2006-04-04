@@ -389,7 +389,7 @@ Print_fs_FullPerfInfo(a_fs_Results)
     afs_int32 numLongs;		/*# longwords received */
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
     char *printableTime;	/*Ptr to printable time string */
-
+    time_t probeTime;
 
     numLongs = a_fs_Results->data.AFS_CollData_len;
     if (numLongs != fullPerfLongs) {
@@ -400,7 +400,8 @@ Print_fs_FullPerfInfo(a_fs_Results)
 	return;
     }
 
-    printableTime = ctime((time_t *) & (a_fs_Results->probeTime));
+    probeTime = a_fs_Results->probeTime;
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullPerfP = (struct fs_stats_FullPerfStats *)
 	(a_fs_Results->data.AFS_CollData_val);
@@ -449,6 +450,7 @@ afsmon_fsOutput(a_outfile, a_detOutput)
     afs_int32 numLongs;		/* longwords in result */
     afs_int32 *currLong;	/* ptr to longwords in result */
     int i;
+    time_t probeTime;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_outfile= %s, a_detOutput= %d\n",
@@ -464,7 +466,8 @@ afsmon_fsOutput(a_outfile, a_detOutput)
     }
 
     /* get the probe time and strip the \n at the end */
-    printTime = ctime((time_t *) & (xstat_fs_Results.probeTime));
+    probeTime = xstat_fs_Results.probeTime;
+    printTime = ctime(&probeTime);
     printTime[strlen(printTime) - 1] = '\0';
     hostname = xstat_fs_Results.connP->hostName;
 
@@ -709,6 +712,7 @@ Print_cm_PerfInfo()
     afs_int32 numLongs;		/*# longwords received */
     struct afs_stats_CMPerf *perfP;	/*Ptr to performance stats */
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime;
 
     numLongs = xstat_cm_Results.data.AFSCB_CollData_len;
     if (numLongs != perfLongs) {
@@ -718,7 +722,8 @@ Print_cm_PerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    probeTime = xstat_cm_Results.probeTime;
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     perfP = (struct afs_stats_CMPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);
@@ -935,7 +940,7 @@ Print_cm_FullPerfInfo()
     static afs_int32 fullPerfLongs = (sizeof(struct afs_stats_CMFullPerf) >> 2);	/*Correct #longs */
     afs_int32 numLongs;		/*# longs actually received */
     struct afs_stats_CMFullPerf *fullP;	/*Ptr to full perf info */
-
+    time_t probeTime;
     char *printableTime;	/*Ptr to printable time string */
 
     numLongs = xstat_cm_Results.data.AFSCB_CollData_len;
@@ -947,7 +952,8 @@ Print_cm_FullPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    probeTime = xstat_cm_Results.probeTime;
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullP = (struct afs_stats_CMFullPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);
@@ -1029,6 +1035,7 @@ afsmon_cmOutput(a_outfile, a_detOutput)
     afs_int32 numLongs;		/* longwords in result */
     afs_int32 *currLong;	/* ptr to longwords in result */
     int i;
+    time_t probeTime;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_outfile= %s, a_detOutput= %d\n",
@@ -1045,7 +1052,8 @@ afsmon_cmOutput(a_outfile, a_detOutput)
     }
 
     /* get the probe time and strip the \n at the end */
-    printTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    probeTime = xstat_cm_Results.probeTime;
+    printTime = ctime(&probeTime);
     printTime[strlen(printTime) - 1] = '\0';
     hostname = xstat_cm_Results.connP->hostName;
 

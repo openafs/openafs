@@ -36,21 +36,22 @@ RCSID
  * ----------------------------------
  */
 
-printDbHeader(ptr)
-     struct DbHeader *ptr;
+void
+printDbHeader(struct DbHeader *ptr)
 {
+    time_t created = ptr->created;
     printf("version = %d\n", ptr->dbversion);
-    printf("created = %s", ctime((time_t *) & ptr->created));
+    printf("created = %s", ctime(&created));
     printf("cell = %s\n", ptr->cell);
     printf("lastDumpId = %u\n", ptr->lastDumpId);
     printf("lastInstanceId = %d\n", ptr->lastInstanceId);
     printf("lastTapeId = %d\n", ptr->lastTapeId);
 }
 
-printDump(fid, dptr)
-     FILE *fid;
-     struct dump *dptr;
+void
+printDump(FILE *fid, struct dump *dptr)
 {
+    time_t created = dptr->created;
     fprintf(fid, "id = %u\n", dptr->id);
     fprintf(fid, "idHashChain = %d\n", dptr->idHashChain);
     fprintf(fid, "name = %s\n", dptr->dumpName);
@@ -59,7 +60,7 @@ printDump(fid, dptr)
     fprintf(fid, "nameHashChain = %d\n", dptr->nameHashChain);
     fprintf(fid, "flags = 0x%x\n", dptr->flags);
     fprintf(fid, "parent = %u\n", dptr->parent);
-    fprintf(fid, "created = %s", ctime((time_t *) & dptr->created));
+    fprintf(fid, "created = %s", ctime(&created));
     fprintf(fid, "nVolumes = %d\n", dptr->nVolumes);
     /* printTapeSet(&dptr->tapes); */
     fprintf(fid, "firstTape = %d\n", dptr->firstTape);
@@ -67,9 +68,10 @@ printDump(fid, dptr)
 
 }
 
-printDumpEntry(deptr)
-     struct budb_dumpEntry *deptr;
+void 
+printDumpEntry(struct budb_dumpEntry *deptr)
 {
+    time_t created = deptr->created;
     printf("id = %u\n", deptr->id);
     printf("Initial id = %u\n", deptr->initialDumpID);
     printf("Appended id = %u\n", deptr->appendedDumpID);
@@ -94,7 +96,7 @@ printDumpEntry(deptr)
     printf("volumeSet = %s\n", deptr->volumeSetName);
     printf("dump path = %s\n", deptr->dumpPath);
     printf("name = %s\n", deptr->name);
-    printf("created = %s", ctime((time_t *) & deptr->created));
+    printf("created = %s", ctime(&created));
     printf("nVolumes = %d\n", deptr->nVolumes);
 
     printTapeSet(&deptr->tapes, (deptr->flags & BUDB_DUMP_XBSA_NSS));
@@ -156,14 +158,13 @@ printStructDumpHeader(ptr)
 }
 
 int
-printTape(fid, tptr)
-     FILE *fid;
-     struct tape *tptr;
+printTape(FILE *fid, struct tape *tptr)
 {
+    time_t written = tptr->written;
     fprintf(fid, "name = %s\n", tptr->name);
     fprintf(fid, "nameHashChain = %d\n", tptr->nameHashChain);
     fprintf(fid, "flags = 0x%x\n", tptr->flags);
-    fprintf(fid, "written = %s", ctime((time_t *) & tptr->written));
+    fprintf(fid, "written = %s", ctime(&written));
     fprintf(fid, "nMBytes = %d\n", tptr->nMBytes);
     fprintf(fid, "nBytes = %d\n", tptr->nBytes);
     fprintf(fid, "nFiles = %d\n", tptr->nFiles);
@@ -178,9 +179,11 @@ printTape(fid, tptr)
 }
 
 int
-printTapeEntry(teptr)
-     struct budb_tapeEntry *teptr;
+printTapeEntry(struct budb_tapeEntry *teptr)
 {
+    time_t written = teptr->written;
+    time_t expires = teptr->expires;
+
     printf("name = %s\n", teptr->name);
     printf("flags = 0x%x", teptr->flags);
     if (teptr->flags & BUDB_TAPE_TAPEERROR)
@@ -196,8 +199,8 @@ printTapeEntry(teptr)
     if (teptr->flags & BUDB_TAPE_WRITTEN)
 	printf(": Successful");
     printf("\n");
-    printf("written = %s", ctime((time_t *) & teptr->written));
-    printf("expires = %s", cTIME((time_t *) & teptr->expires));
+    printf("written = %s", ctime(&written));
+    printf("expires = %s", cTIME(&expires));
     printf("kBytes Tape Used = %u\n", teptr->useKBytes);
     printf("nMBytes Data = %d\n", teptr->nMBytes);
     printf("nBytes  Data = %d\n", teptr->nBytes);
@@ -227,9 +230,9 @@ printTapeSet(tsptr, nss)
 }
 
 int
-printVolumeEntry(veptr)
-     struct budb_volumeEntry *veptr;
+printVolumeEntry(struct budb_volumeEntry *veptr)
 {
+    time_t clone = veptr->clone;
     printf("name = %s\n", veptr->name);
     printf("flags = 0x%x", veptr->flags);
     if (veptr->flags & BUDB_VOL_TAPEERROR)
@@ -251,7 +254,7 @@ printVolumeEntry(veptr)
     printf("tapeSeq = %d\n", veptr->tapeSeq);
 
     printf("position = %d\n", veptr->position);
-    printf("clone = %s", ctime((time_t *) & veptr->clone));
+    printf("clone = %s", ctime(&clone));
     printf("startByte = %d\n", veptr->startByte);
     printf("nBytes = %d\n", veptr->nBytes);
     printf("seq = %d\n", veptr->seq);
@@ -262,17 +265,17 @@ printVolumeEntry(veptr)
 }
 
 int
-printVolFragment(fid, vfptr)
-     FILE *fid;
-     struct volFragment *vfptr;
+printVolFragment(FILE *fid, struct volFragment *vfptr)
 {
+    time_t clone = vfptr->clone;
+    time_t incTime = vfptr->incTime;
     fprintf(fid, "vol = %d\n", vfptr->vol);
     fprintf(fid, "sameNameChain = %d\n", vfptr->sameNameChain);
     fprintf(fid, "tape = %d\n", vfptr->tape);
     fprintf(fid, "sameTapeChain = %d\n", vfptr->sameTapeChain);
     fprintf(fid, "position = %d\n", vfptr->position);
-    fprintf(fid, "clone = %s", ctime((time_t *) & vfptr->clone));
-    fprintf(fid, "incTime = %s", ctime((time_t *) & vfptr->incTime));
+    fprintf(fid, "clone = %s", ctime(&clone));
+    fprintf(fid, "incTime = %s", ctime(&incTime));
     fprintf(fid, "startByte = %d\n", vfptr->startByte);
     fprintf(fid, "nBytes = %d\n", vfptr->nBytes);
     fprintf(fid, "flags = %d\n", vfptr->flags);

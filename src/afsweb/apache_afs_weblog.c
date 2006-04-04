@@ -91,7 +91,7 @@ get_time()
     char *time_string;
 
     t = time(NULL);
-    time_string = (char *)ctime((time_t *) & t);
+    time_string = (char *)ctime(&t);
     time_string[strlen(time_string) - 1] = '\0';
     return (time_string);
 }
