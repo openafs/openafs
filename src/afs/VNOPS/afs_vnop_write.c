@@ -873,15 +873,6 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
 	return 0;
     }
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-    if (count > 1) {
-	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
-	afs_PutFakeStat(&fakestat);
-	return 0;
-    }
-#endif
-#ifndef	AFS_SUN5_ENV
-#if defined(AFS_SGI_ENV)
     /* unlock any locks for pid - could be wrong for child .. */
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #ifdef AFS_SGI65_ENV
@@ -898,6 +889,12 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+#elif	defined(AFS_SUN5_ENV)
+    if (count > 1) {
+	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
+	afs_PutFakeStat(&fakestat);
+	return 0;
+    }
 #else /* AFS_SGI_ENV */
     if (avc->flockCount) {	/* Release Lock */
 #if	defined(AFS_OSF_ENV) 
@@ -907,7 +904,6 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif
     }
 #endif /* AFS_SGI_ENV */
-#endif /* AFS_SUN5_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
 	if (afs_BBusy()) {
 	    /* do it yourself if daemons are all busy */
