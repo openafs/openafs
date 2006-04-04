@@ -89,6 +89,13 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 RCSID
     ("$Header$");
 
+#ifndef AFS_NT40_ENV
+#include <sys/param.h>
+#include <sys/file.h>
+#ifndef ITIMER_REAL
+#include <sys/time.h>
+#endif /* ITIMER_REAL */
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -99,12 +106,6 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
 #endif
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 #define WCOREDUMP(x)	(x & 0200)
@@ -284,7 +285,7 @@ struct VolumeSummary *volumeSummaryp;	/* Holds all the volumes in a part */
 int nVolumes;			/* Number of volumes (read-write and read-only)
 				 * in volume summary */
 
-extern char * tmpdir = 0;
+char *tmpdir = NULL;
 
 
 
@@ -1000,7 +1001,7 @@ CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 }
 
 int
-OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber, void *rock)
+OnlyOneVolume(struct ViceInodeInfo *inodeinfo, int singleVolumeNumber, void *rock)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -2168,9 +2169,10 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 				Log("Vnode %d (unique %u): corresponding inode %s is missing; vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, PrintInode(NULL, VNDISK_GET_INO(vnode)), ctime(&serverModifyTime));
 			    }
 			} else {
-			    if (!Showmode)
+			    if (!Showmode) {
 				time_t serverModifyTime = vnode->serverModifyTime;
 				Log("Vnode %d (unique %u): bad directory vnode (no inode number listed); vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, ctime(&serverModifyTime));
+			    }
 			}
 			memset(vnode, 0, vcp->diskSize);
 			vnodeChanged = 1;
