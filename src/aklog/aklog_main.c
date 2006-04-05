@@ -10,6 +10,7 @@ static char *rcsid =
 	"$Id$";
 #endif /* lint || SABER */
 
+#include <afsconfig.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -70,7 +71,9 @@ u_long ntohl(u_long x)
 
 #else /* !WINDOWS */
 #include <afs/stds.h>
+#ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
+#endif
 
 #include <afs/param.h>
 #ifdef AFS_SUN5_ENV
