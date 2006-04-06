@@ -50,8 +50,6 @@ RCSID
 #endif
 
 extern struct vcache *afs_globalVp;
-
-
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
@@ -229,8 +227,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!de)
 	    break;
 
-	ino = (avc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
-	ino &= 0x7fffffff;	/* Assumes 32 bit ino_t ..... */
+	ino = afs_calc_inum (avc->fid.Fid.Volume, ntohl(de->fid.vnode));
+
 	if (de->name)
 	    len = strlen(de->name);
 	else {
