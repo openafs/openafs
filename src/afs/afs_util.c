@@ -405,6 +405,7 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
+#ifdef AFS_LINUX20_ENV
 struct afs_md5 {
     unsigned int sz[2];
     afs_int32 counter[4];
@@ -663,3 +664,9 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
     }
     return ino;
 }
+#else
+afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+{
+    return (volume << 16) + vnode;
+}
+#endif
