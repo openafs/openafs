@@ -547,7 +547,7 @@ static probectl main_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
     /* number and list of unimplemented system calls */
