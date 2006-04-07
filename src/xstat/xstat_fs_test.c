@@ -83,8 +83,7 @@ static char *opNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats",
-    "GetCapabilities"
+    "GetXStats"
 };
 
 static char *xferOpNames[] = {
@@ -251,7 +250,8 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
     printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
     printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
 
-    printf("\t%10d fs_nBusies\n\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_nBusies\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
     /*
      * Host module fields.
      */
