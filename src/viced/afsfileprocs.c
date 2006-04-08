@@ -3051,6 +3051,10 @@ SRXAFS_StoreData(struct rx_call * acall, struct AFSFid * Fid,
 		 afs_uint32 Length, afs_uint32 FileLength,
 		 struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
+    if (FileLength > 0x7fffffff || Pos > 0x7fffffff || 
+	(0x7fffffff - Pos) < Length)
+        return EFBIG;
+
     return common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
 	                      OutStatus, Sync);
 }				/*SRXAFS_StoreData */
