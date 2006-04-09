@@ -2233,6 +2233,11 @@ long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         free(ucellp->ticketp);
         ucellp->ticketp = NULL;
     }
+    ucellp->ticketLen = 0;
+    memset(ucellp->sessionKey.data, 0, 8);
+    ucellp->kvno = 0;
+    ucellp->expirationTime = 0;
+    ucellp->userName[0] = '\0';
     ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
     ucellp->gen++;
 
@@ -2251,6 +2256,16 @@ long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
         osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
+
+	if (ucellp->ticketp) {
+	    free(ucellp->ticketp);
+	    ucellp->ticketp = NULL;
+	}
+	ucellp->ticketLen = 0;
+	memset(ucellp->sessionKey.data, 0, 8);
+	ucellp->kvno = 0;
+	ucellp->expirationTime = 0;
+	ucellp->userName[0] = '\0';
         ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
         ucellp->gen++;
     }
