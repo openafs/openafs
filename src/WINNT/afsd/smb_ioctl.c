@@ -40,14 +40,8 @@ void smb_InitIoctl(void)
     smb_ioctlProcsp[VIOCSETAL] = cm_IoctlSetACL;
     smb_ioctlProcsp[VIOC_FLUSHVOLUME] = cm_IoctlFlushVolume;
     smb_ioctlProcsp[VIOCFLUSH] = cm_IoctlFlushFile;
-#ifdef COMMENT
-    /* This functions do not return the data expected by the 
-     * Windows CIFS client.  Calling them only increases the 
-     * number of roundtrips to the file server with no benefit.
-     */
     smb_ioctlProcsp[VIOCSETVOLSTAT] = cm_IoctlSetVolumeStatus;
     smb_ioctlProcsp[VIOCGETVOLSTAT] = cm_IoctlGetVolumeStatus;
-#endif
     smb_ioctlProcsp[VIOCWHEREIS] = cm_IoctlWhereIs;
     smb_ioctlProcsp[VIOC_AFS_STAT_MT_PT] = cm_IoctlStatMountPoint;
     smb_ioctlProcsp[VIOC_AFS_DELETE_MT_PT] = cm_IoctlDeleteMountPoint;
@@ -122,7 +116,7 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
 smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
     long opcode;
-    smb_ioctlProc_t *procp;
+    smb_ioctlProc_t *procp = NULL;
     long code;
 
     if (ioctlp->flags & SMB_IOCTLFLAG_DATAIN) {
@@ -143,7 +137,11 @@ smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
             return CM_ERROR_TOOBIG;
 
         /* check for no such proc */
-        procp = smb_ioctlProcsp[opcode];
+	if (fidp->flags & SMB_FID_IOCTL)
+	    procp = smb_ioctlProcsp[opcode];
+	else
+	    procp = NULL;
+
         if (procp == NULL) 
             return CM_ERROR_BADOP;
 
