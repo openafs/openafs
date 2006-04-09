@@ -1,3 +1,17 @@
+Since 1.4.1 rc10: 1.4.1 rc11 released (9 April 2006)
+
+ * Add code to protect against an undercount of smb_vc_t 
+   references in the smb_allVCsp list.  This is a temporary
+   workaround until the cause of the undercount can be 
+   identified.
+
+ * Change default minidump output to include data segments
+
+ * restore access to cm_IoctlGetVolumeStatus and 
+   cm_IoctlSetVolumeStatus calls for AFS pioctl operations.
+   Still need to figure out why they are being called 
+   for SMB/CIFS IOCTL operations instead of Trans2GetFileInfo.
+
 Since 1.4.1 rc9:  1.4.1 rc10 released (10 March 2006)
 
  * Fix the rx-lwp implementation to randomly generate rx call
@@ -17,7 +31,13 @@ Since 1.4.1 rc9:  1.4.1 rc10 released (10 March 2006)
 
 Since 1.4.1 rc8:
 
- * Nothing
+ * Fix data written to registry as part of BackConnectionHostnames
+   data value
+
+ * Fix initialization bug when allocating cm_server_t objects that
+   would cause servers to appear to be down after each allocation
+   or renewal.   Server would appear up after the next check servers
+   cycle.
 
 Since 1.4.1 rc7: 
 
