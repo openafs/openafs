@@ -192,6 +192,7 @@ typedef struct myncb {
 /* one per virtual circuit */
 typedef struct smb_vc {
     struct smb_vc *nextp;		/* not used */
+    afs_uint32 magic;			/* a magic value to detect bad entries */
     unsigned long refCount;		/* the reference count */
     long flags;			        /* the flags, if any; locked by mx */
     osi_mutex_t mx;			/* the mutex */
@@ -213,6 +214,7 @@ typedef struct smb_vc {
     unsigned short session;		/* This is the Session Index associated with the NCBs */
 } smb_vc_t;
 
+#define SMB_VC_MAGIC ('S' | 'C'<<8 | 'A'<<16 | 'C'<<24)
 					/* have we negotiated ... */
 #define SMB_VCFLAG_USEV3	1	/* ... version 3 of the protocol */
 #define SMB_VCFLAG_USECORE	2	/* ... the core protocol */

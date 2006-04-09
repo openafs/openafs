@@ -858,6 +858,10 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 
     lock_ObtainWrite(&smb_rctLock);
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
         if (lsn == vcp->lsn && lana == vcp->lana) {
             smb_HoldVCNoLock(vcp);
             break;
@@ -869,6 +873,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	lock_ObtainWrite(&smb_globalLock);
         vcp->vcID = ++numVCs;
 	lock_ReleaseWrite(&smb_globalLock);
+	vcp->magic = SMB_VC_MAGIC;
         vcp->refCount = 2; 	/* smb_allVCsp and caller */
         vcp->tidCounter = 1;
         vcp->fidCounter = 1;
@@ -936,24 +941,40 @@ int smb_IsStarMask(char *maskp)
 void smb_ReleaseVCInternal(smb_vc_t *vcp)
 {
     smb_vc_t **vcpp;
+    smb_vc_t * avcp;
 
-#ifdef DEBUG
-    osi_assert(vcp->refCount-- != 0);
-#else
     vcp->refCount--;
-#endif
 
     if (vcp->refCount == 0) {
+      if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
 	/* remove VCP from smb_deadVCsp */
 	for (vcpp = &smb_deadVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
-	    if (*vcpp == vcp) {
-		*vcpp = vcp->nextp;
-		break;
-	    }
+	  if (*vcpp == vcp) {
+	    *vcpp = vcp->nextp;
+	    break;
+	  }
 	} 
 	lock_FinalizeMutex(&vcp->mx);
 	memset(vcp,0,sizeof(smb_vc_t));
 	free(vcp);
+      } else {
+	for (avcp = smb_allVCsp; avcp; avcp = avcp->nextp) {
+	  if (avcp == vcp)
+	    break;
+	}
+	osi_Log3(smb_logp,"VCP not dead and %sin smb_allVCsp vcp %x ref %d",
+		 avcp?"not ":"",vcp, vcp->refCount);
+#ifdef DEBUG
+	GenerateMiniDump(NULL);
+#endif
+	/* This is a wrong.  However, I suspect that there is an undercount
+	 * and I don't want to release 1.4.1 in a state that will allow
+	 * smb_vc_t objects to be deallocated while still in the
+	 * smb_allVCsp list.  The list is supposed to keep a reference
+	 * to the smb_vc_t.  Put it back.
+	 */
+	vcp->refCount++;
+      }
     }
 }
 
@@ -1000,6 +1021,20 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     osi_Log1(smb_logp, "Cleaning up dead vcp 0x%x", vcp);
 
     lock_ObtainWrite(&smb_rctLock);
+    /* remove VCP from smb_allVCsp */
+    for (vcpp = &smb_allVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
+	if ((*vcpp)->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+        if (*vcpp == vcp) {
+            *vcpp = vcp->nextp;
+            vcp->nextp = smb_deadVCsp;
+            smb_deadVCsp = vcp;
+	    /* Hold onto the reference until we are done with this function */
+            break;
+        }
+    }
+
     for (fidpIter = vcp->fidsp; fidpIter; fidpIter = fidpNext) {
         fidpNext = (smb_fid_t *) osi_QNext(&fidpIter->q);
 
@@ -1053,20 +1088,11 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	uidpNext = vcp->usersp;
     }
 
-    /* remove VCP from smb_allVCsp */
-    for (vcpp = &smb_allVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
-	if (*vcpp == vcp) {
-	    *vcpp = vcp->nextp;
-	    vcp->nextp = smb_deadVCsp;
-	    smb_deadVCsp = vcp;
-	    /* We intentionally do not keep a reference to the 
-	     * vcp once it is placed on the deadVCsp list.  This
-	     * allows the refcount to reach 0 so we can delete
-	     * it. */
-	    smb_ReleaseVCNoLock(vcp);
-	    break;
-	}
-    } 
+
+    /* The vcp is now on the deadVCsp list.  We intentionally drop the
+     * reference so that the refcount can reach 0 and we can delete it */
+    smb_ReleaseVCNoLock(vcp);
+    
     lock_ReleaseWrite(&smb_rctLock);
     osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
 }
@@ -3255,6 +3281,10 @@ void smb_CheckVCs(void)
     lock_ObtainWrite(&smb_rctLock);
     for ( vcp=smb_allVCsp, nextp=NULL; vcp; vcp = nextp ) 
     {
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
 	nextp = vcp->nextp;
 
 	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD)
@@ -8804,7 +8834,11 @@ void smb_Shutdown(void)
         smb_fid_t *fidp;
         smb_tid_t *tidp;
      
-        for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
+	for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
             if (fidp->scp != NULL) {
                 cm_scache_t * scp;
