@@ -38,8 +38,6 @@
 static char *illegalChars = "\\/:*?\"<>|";
 BOOL isWindows2000 = FALSE;
 
-smb_vc_t *active_vcp = NULL;
-
 int smbShutdownFlag = 0;
 
 int smb_LogoffTokenTransfer;
@@ -7342,25 +7340,6 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         smb_SendPacket(vcp, outp);
     thrd_Decrement(&ongoingOps);
 
-    if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-        if (active_vcp != vcp) {
-            if (active_vcp) {
-                osi_Log2(smb_logp,
-                      "Replacing active_vcp %x with %x", active_vcp, vcp);
-                smb_ReleaseVC(active_vcp);
-            }
-            smb_HoldVC(vcp);
-	    lock_ObtainWrite(&smb_globalLock);
-            active_vcp = vcp;
-	    lock_ReleaseWrite(&smb_globalLock);
-        }
-        last_msg_time = GetTickCount();
-    } else if (active_vcp == vcp) { 	/* the vcp is dead */
-        smb_ReleaseVC(active_vcp);
-	lock_ObtainWrite(&smb_globalLock);
-        active_vcp = NULL;
-	lock_ReleaseWrite(&smb_globalLock);
-    }
     return;
 }
 
