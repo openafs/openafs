@@ -1,5 +1,5 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.4.1-rc10)
+AM_INIT_AUTOMAKE(openafs,1.4.1)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 AC_PROG_CC
