@@ -26,7 +26,12 @@ typedef u_int64_t Inode;
 #ifdef AFS_SGI62_ENV
 typedef uint64_t Inode;
 #else
+#include <sys/types.h>
+#if AFS_64BIT_ENV
+typedef afs_uint64 Inode;
+#else
 error Need 64 bit Inode defined.
+#endif
 #endif				/* AFS_SGI62_ENV */
 #else /* AFS_64BIT_IOPS_ENV */
 typedef unsigned int Inode;
