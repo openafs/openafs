@@ -1964,7 +1964,7 @@ bc_DumpCmd(as, arock)
     code = bc_StartDmpRst(bc_globalConfig, dumpPath, vsName, volsToDump,
 			  /*destServer */ 0, /*destPartition */ 0,
 			  /*fromDate */ 0,
-			  /*newExt */ 0, /*oldFlag */ 0,
+			  /*newExt */ NULL, /*oldFlag */ 0,
 			  parent, level, bc_Dumper, portp, /*portCount */ 1,
 			  baseds, doAppend, dontExecute);
     if (code)
