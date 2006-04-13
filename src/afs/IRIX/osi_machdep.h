@@ -43,6 +43,7 @@ extern flid_t osi_flid;
 #define vfs_data vfs_bh.bh_first->bd_pdata
 #endif /* AFS_SGI64_ENV */
 
+#define ifnet_flags(x) (x?(x)->if_flags:0)
 
 /*
  * Global lock, semaphore, mutex and state vector support.
