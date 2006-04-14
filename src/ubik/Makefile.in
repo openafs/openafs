@@ -149,8 +149,6 @@ clean:
 
 include ../config/Makefile.version
 
-all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client
-
 ${DESTDIR}${libdir}/libubik.a: libubik.a
 	${INSTALL} $? $@
 
