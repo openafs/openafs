@@ -12,5 +12,5 @@ http://www.openafs.org/pages/release/latest.html \
 
 # Release candidates are stashed in another secret place and we change the
 # version number for proper sorting of versions in Debian.
-opts="uversionmangle=s/\.0-rc/rc/" \
-    http://dl.openafs.org/dl/openafs/candidate/ ([^/]+-rc\d+)/
+#opts="uversionmangle=s/\.0-rc/rc/" \
+#    http://dl.openafs.org/dl/openafs/candidate/ ([^/]+-rc\d+)/
