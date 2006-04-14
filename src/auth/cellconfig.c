@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.5 2005/11/07 19:54:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.6 2006/03/28 18:42:57 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -736,8 +736,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		     struct afsconf_cell *acellInfo)
 {
     afs_int32 code;
-    int tservice, i;
-    size_t len;
+    int tservice, i, len;
     unsigned char answer[1024];
     unsigned char *p;
     char *dotcellname;

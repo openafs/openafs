@@ -1,28 +1,40 @@
 #!/bin/sh
-case `arch` in
-    alpha)
-	echo alpha_linux_22
-	;;
-i[3456]86)
-	echo i386_linux22
-;;
-    ia64)
-    echo ia64_linux24
-;;
-    parisc*)
-	echo parisc_linux24
-	;;
-    ppc)
-	echo ppc_linux22
-	;;
-    sparc|sparc64)
-	echo sparc_linux22
-	;;
-    s390)
-    echo s390_linux22
-    ;;
-	*)
-	echo ERROr:  sysname not yet known
-	exit 1
+# Maps Debian architectures to AFS sysnames for building the clients and
+# libraries.  This doesn't worry about the kernel version; kern-sysname
+# does that when building the kernel module.
+#
+# Not all architectures are listed, only those that OpenAFS supports.
 
+case `dpkg --print-installation-architecture` in
+alpha)
+    echo alpha_linux_24
+    ;;
+amd64)
+    echo amd64_linux24
+    ;;
+hppa)
+    echo parisc_linux24
+    ;;
+i[3456]86)
+    echo i386_linux24
+    ;;
+ia64)
+    echo ia64_linux24
+    ;;
+powerpc)
+    echo ppc_linux24
+    ;;
+ppc64)
+    echo ppc64_linux24
+    ;;
+s390)
+    echo s390_linux24
+    ;;
+sparc|sparc64)
+    echo sparc_linux24
+    ;;
+*)
+    echo "ERROR: unsupported architecture" >&2
+    echo UNKNOWN
+    exit 1
 esac

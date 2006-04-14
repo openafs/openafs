@@ -1,5 +1,5 @@
 dnl
-dnl $Id: kerberos.m4,v 1.1.2.7 2005/07/11 19:16:42 shadow Exp $
+dnl $Id: kerberos.m4,v 1.1.2.8 2006/04/03 19:45:27 shadow Exp $
 dnl
 dnl Kerberos autoconf glue
 dnl
@@ -60,6 +60,7 @@ if test X$conf_krb5 = XYES; then
 	LIBS="$LIBS $KRB5LIBS"
 	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string krb5_524_convert_creds krb524_convert_creds_kdc])
 	AC_CHECK_HEADERS([kerberosIV/krb.h])
+	AC_CHECK_HEADERS([kerberosV/heim_err.h])
 
 AC_MSG_CHECKING(for krb5_creds.keyblock existence)
 AC_CACHE_VAL(ac_cv_krb5_creds_keyblock_exists,
@@ -94,7 +95,16 @@ dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb
 	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
 fi
+
+if test "$ac_cv_header_kerberosV_heim_err_h" = "yes"; then
+    ASETKEY=
+else
+    ASETKEY=asetkey
+fi
+
 AC_SUBST(BUILD_KRB5)
 AC_SUBST(KRB5CFLAGS)
 AC_SUBST(KRB5LIBS)
+AC_SUBST(ASETKEY)
+
 ])dnl

@@ -472,7 +472,7 @@ else
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
 			;;
-		parisc-*-linux-gnu)
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
 			enable_pam="no"
 			;;

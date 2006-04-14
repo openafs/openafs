@@ -1,85 +1,93 @@
 Template: openafs-client/cell-info
 Type: string
-Description: What hosts are DB servers for your home cell?
- AFS uses the file /etc/openafs/CellServDB to hold the list of servers
- that should be contacted to find parts of a cell.  The cell you claim
- this workstation belongs to is not in that file.  Enter the host
- names of the database servers separated by spaces.
- IMPORTANT: If you are creating a new cell and this machine is to be
- a database server in that cell, only enter this machine's name; add
- the other servers later after they are functioning. Also, do not
- enable the AFS client to start at boot on this server until the cell
- is configured.  When you are ready you can edit
+_Description: What hosts are DB servers for your home cell?
+ AFS uses the file /etc/openafs/CellServDB to hold the list of servers that
+ should be contacted to find parts of a cell.  The cell you claim this
+ workstation belongs to is not in that file.  Enter the host names of the
+ database servers separated by spaces. IMPORTANT: If you are creating a new
+ cell and this machine is to be a database server in that cell, only enter
+ this machine's name; add the other servers later after they are
+ functioning. Also, do not enable the AFS client to start at boot on this
+ server until the cell is configured.  When you are ready you can edit
  /etc/openafs/afs.conf.client to enable the client.
 
 Template: openafs-client/thiscell
 Type: string
-Description:  What AFS cell does this workstation belong to?
-   AFS filespace is organized into cells or administrative domains.
-   Each workstation belongs to one cell.  Usually the cell is the DNS
-   domain name of the site.
+_Description:  What AFS cell does this workstation belong to?
+ AFS filespace is organized into cells or administrative domains.
+ Each workstation belongs to one cell.  Usually the cell is the DNS
+ domain name of the site.
 
 Template: openafs-client/cachesize
 Type: string
 Default: 50000
-Description:  How large is your AFS cache (kb)? 
-   AFS uses a  area of the disk to cache remote files for faster
-   access.  This cache will be mounted on /var/cache/openafs.  It is
-   important that the cache not overfill the partition it is located
-   on.  Often, people find it useful to dedicate a partition to their
-   AFS cache.
+_Description:  How large is your AFS cache (kB)?
+ AFS uses an area of the disk to cache remote files for faster
+ access.  This cache will be mounted on /var/cache/openafs.  It is
+ important that the cache not overfill the partition it is located
+ on.  Often, people find it useful to dedicate a partition to their
+ AFS cache.
 
 Template: openafs-client/run-client
 Type: boolean
 Default: true
-Description: Run Openafs client now and at boot?
- Should the Openafs filesystem be started and mounted at boot?
- Normally, most users who install the openafs-client package expect to
- run it at boot.  However, if you are planning on setting up a new
- cell or are on a laptop, you may not want it started at boot time.
- If you answer no to this question, run /etc/init.d/openafs-client
- force-start to run.
+_Description: Run Openafs client now and at boot?
+ Should the Openafs filesystem be started and mounted at boot? Normally,
+ most users who install the openafs-client package expect to run it at
+ boot.  However, if you are planning on setting up a new cell or are on a
+ laptop, you may not want it started at boot time.  If you choose not
+ to start AFS at boot, run /etc/init.d/openafs-client force-start to
+ start the client when you wish to run it.
 
 Template: openafs-client/afsdb
 Type: boolean
 Default: true
-Description: Look up AFS cells in DNS?
- In order to contact an AFS cell, you need the IP addresses of the
- cell's database servers.  Normally, this information is read from
- /etc/openafs/CellServDB.  However, if Openafs cannot find a cell in
- that file it can use DNS to look for AFSDB records that contain the
+_Description: Look up AFS cells in DNS?
+ In order to contact an AFS cell, you need the IP addresses of the cell's
+ database servers.  Normally, this information is read from
+ /etc/openafs/CellServDB.  However, if Openafs cannot find a cell in that
+ file, it can use DNS to look for AFSDB records that contain the
  information.
 
 Template: openafs-client/crypt
 Type: boolean
 Default: true
-Description: ENcrypt authenticated traffic with AFS fileserver? 
- AFS provides a weak form of encryption that can optionally be used
- between a client and the fileservers.  While this encryption is weaker
- than DES and thus is not sufficient for highly confidential data, it
- does provide some confidentiality and is likely to make the job of a
- casual attacker significantly more difficult.
+_Description: Encrypt authenticated traffic with AFS fileserver?
+ AFS provides a weak form of encryption that can optionally be used between
+ a client and the fileservers.  While this encryption is weaker than DES
+ and thus is not sufficient for highly confidential data, it does provide
+ some confidentiality and is likely to make the job of a casual attacker
+ significantly more difficult.
 
 Template: openafs-client/dynroot
 Type: boolean
 Default: false
-Description: Dynamically generate the contents of /afs?
- /afs generally contains an entry for each cell that a client can talk to.  
+_Description: Dynamically generate the contents of /afs?
+ /afs generally contains an entry for each cell that a client can talk to.
  Traditionally, these entries were generated by servers in the client's
  home cell.  However, OpenAFS clients can generate the contents of /afs
  dynamically based on the contents of /etc/openafs/CellServDB and DNS.
  .
- If you generate /afs dynamically, you may need to create 
- /etc/openafs/CellAliases to include aliases for common cells.
- DO NOT SELECT THIS OPTION IF YOU ARE CREATING A NEW CELL.
+ If you generate /afs dynamically, you may need to create
+ /etc/openafs/CellAlias to include aliases for common cells.  (The syntax
+ of this file is one line per alias, with the cell name, a space, and then
+ the alias for that cell.)
 
 Template: openafs-client/fakestat
-type: boolean
-default: true
-Description: Use fakestat to avoid hangs when listing /afs?
- Because AFS is a global file space, operations on the /afs directory
- can generate significant network traffic.  If some AFS cells are
- unavailable then looking at /afs using ls or a graphical file browser
- may hang your machine for minutes.  AFS has an option to simulate
- answers to these operations locally to avoid these hangs.  You want
- this option under most circumstances.
+Type: boolean
+Default: true
+_Description: Use fakestat to avoid hangs when listing /afs?
+ Because AFS is a global file space, operations on the /afs directory can
+ generate significant network traffic.  If some AFS cells are unavailable
+ then looking at /afs using ls or a graphical file browser may hang your
+ machine for minutes.  AFS has an option to simulate answers to these
+ operations locally to avoid these hangs.  You want this option under most
+ circumstances.
+4
+4
+4
+4
+4
+4
+4
+4

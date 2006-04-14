@@ -1,82 +1,90 @@
 #! /bin/sh
-# postinst script for openafs
+#
+# Summary of how this script can be called:
+#
+#  * <postinst> `configure' <most-recently-configured-version>
+#  * <old-postinst> `abort-upgrade' <new version>
+#  * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#    <new-version>
+#  * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#    <failed-install-package> <version> `removing'
+#    <conflicting-package> <version>
 
 set -e
 
-# summary of how this script can be called:
-#        * <postinst> `configure' <most-recently-configured-version>
-#        * <old-postinst> `abort-upgrade' <new version>
-#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
-#          <new-version>
-#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
-#          <failed-install-package> <version> `removing'
-#          <conflicting-package> <version>
-
 case "$1" in
-    configure)
+configure)
+    update-alternatives --install /usr/bin/pagsh pagsh \
+        /usr/bin/pagsh.openafs 100  \
+        --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
+        /usr/share/man/man1/pagsh.openafs.1.gz
 
-    update-alternatives --install /usr/bin/pagsh pagsh /usr/bin/pagsh.openafs 100 \
-    --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz /usr/share/man/man1/pagsh.openafs.1.gz
+    test -d /afs || mkdir /afs
 
-	test -d /afs || mkdir /afs
     . /usr/share/debconf/confmodule
+    db_version 2.0
 
-	db_version 2.0
+    db_get openafs-client/thiscell
+    echo $RET >/etc/openafs/ThisCell
+    THISCELL=$RET
 
-	db_get openafs-client/thiscell
-	echo $RET >/etc/openafs/ThisCell
-	THISCELL=$RET
+    if test -f /etc/openafs/CellServDB ; then
+        :
+    else
+        cp /usr/share/openafs/CellServDB /etc/openafs
+    fi
 
-	if test -f /etc/openafs/CellServDB; then :
-	    else cp /usr/share/openafs/CellServDB \
-	      /etc/openafs
-	    fi
-	if grep  -q -F "$RET" /etc/openafs/CellServDB&& [ "x$RET" != "x" ]  ; then :
-		else db_input critical  openafs-client/cell-info || true
-	    db_input high openafs-client/run-client ||true
-	    db_go
-	    db_get openafs-client/cell-info
-	    if [ "x$RET" != "x" ] ; then
-		echo \>$THISCELL >/etc/openafs/CellServDB.new
-		perl -MSocket -e 'foreach (@ARGV) {' \
-		        -e '@a=gethostbyname($_) and ' \
-		        -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
-		    >>/etc/openafs/CellServDB.new
-			if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
-			    echo None of the hostnames resolved to an address 2>&1
-			    db_reset openafs-client/cell-info ||true
-			    exit 1
-			 fi
-		    cat /etc/openafs/CellServDB.new \
-		      /etc/openafs/CellServDB  >/etc/openafs/CellServDB.tmp
-		    mv /etc/openafs/CellServDB.tmp \
-		      /etc/openafs/CellServDB
-		    rm /etc/openafs/CellServDB.new
-		fi
-	    fi
-		    
-	db_get openafs-client/cachesize
-	echo /afs:/var/cache/openafs:$RET >/etc/openafs/cacheinfo
+    # If ThisCell is not in CellServDB, we have to prompt the user for the
+    # VLDB servers.  Unfortunately, we can't do this in config because we
+    # need the CellServDB file, which is part of the package.  We have to
+    # override a lintian warning for this since prompts at installation time
+    # are frowned upon.
+    if grep -q -F "$RET" /etc/openafs/CellServDB && [ "x$RET" != "x" ] ; then
+        :
+    else
+        db_input critical openafs-client/cell-info || true
+        db_input high openafs-client/run-client || true
+        db_go
+        db_get openafs-client/cell-info
+        if [ "x$RET" != "x" ] ; then
+            echo \>$THISCELL > /etc/openafs/CellServDB.new
+            perl -MSocket -e 'foreach (@ARGV) {' \
+                -e '@a=gethostbyname($_) and ' \
+                -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
+                    >>/etc/openafs/CellServDB.new
+            if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
+                echo None of the hostnames resolved to an address 2>&1
+                db_reset openafs-client/cell-info || true
+                exit 1
+            fi
+            cat /etc/openafs/CellServDB.new /etc/openafs/CellServDB \
+                >/etc/openafs/CellServDB.tmp
+            mv /etc/openafs/CellServDB.tmp /etc/openafs/CellServDB
+            rm /etc/openafs/CellServDB.new
+        fi
+    fi
+                    
+    db_get openafs-client/cachesize
+    echo /afs:/var/cache/openafs:$RET >/etc/openafs/cacheinfo
 
-	db_get openafs-client/run-client
-	echo AFS_CLIENT=$RET >/etc/openafs/afs.conf.client
-	db_get openafs-client/afsdb
-	echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
-	db_get openafs-client/crypt
-	echo AFS_CRYPT=$RET >>/etc/openafs/afs.conf.client
-db_get openafs-client/dynroot
-echo AFS_DYNROOT=$RET >>/etc/openafs/afs.conf.client
-db_get openafs-client/fakestat
-echo AFS_FAKESTAT=$RET >>/etc/openafs/afs.conf.client
+    db_get openafs-client/run-client
+    echo AFS_CLIENT=$RET >/etc/openafs/afs.conf.client
+    db_get openafs-client/afsdb
+    echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
+    db_get openafs-client/crypt
+    echo AFS_CRYPT=$RET >>/etc/openafs/afs.conf.client
+    db_get openafs-client/dynroot
+    echo AFS_DYNROOT=$RET >>/etc/openafs/afs.conf.client
+    db_get openafs-client/fakestat
+    echo AFS_FAKESTAT=$RET >>/etc/openafs/afs.conf.client
     ;;
 
-    abort-upgrade|abort-remove|abort-deconfigure)
-
+abort-upgrade|abort-remove|abort-deconfigure)
     ;;
 
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 0
+*)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 0
     ;;
 esac
 
@@ -86,5 +94,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-

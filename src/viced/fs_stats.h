@@ -126,10 +126,14 @@ struct afs_PerfStats {
     afs_int32 rx_nBusies;	/*Ttl VBUSYs sent to shed load */
     afs_int32 fs_nBusies;	/*Ttl VBUSYs sent during restart/vol clone */
 
+    /* 
+     * Can't count this as an RPC because it breaks the data structure
+     */
+    afs_int32 fs_nGetCaps;	/* Number of GetCapabilities calls */
     /*
      * Spares
      */
-    afs_int32 spare[29];
+    afs_int32 spare[28];
 };
 
 #if FS_STATS_DETAILED
@@ -164,9 +168,8 @@ struct afs_PerfStats {
 #define FS_STATS_RPCIDX_BULKSTATUS	25
 #define FS_STATS_RPCIDX_XSTATSVERSION	26
 #define FS_STATS_RPCIDX_GETXSTATS	27
-#define FS_STATS_RPCIDX_GETCAPABILITIES 28
 
-#define FS_STATS_NUM_RPC_OPS		29
+#define FS_STATS_NUM_RPC_OPS		28
 
 /*
  * Assign an index to each of the File Server's RPC interface routines

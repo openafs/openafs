@@ -86,6 +86,11 @@
 #define SYS_NAME       "i386_linux26"
 #define SYS_NAME_ID    SYS_NAME_ID_i386_linux26
 
+#ifdef __GLIBC__
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
+#define USE_UCONTEXT
+#endif
+#endif
 #endif /* AFS_PARAM_H */
 
 

@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/test/selsubs.c,v 1.8 2003/07/15 23:15:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/lwp/test/selsubs.c,v 1.8.2.1 2006/03/20 13:41:32 jaltman Exp $");
 
 
 #include "lwp.h"
@@ -150,6 +150,7 @@ Log(char *fmt, ...)
     struct timeval now;
     struct timezone tz;
     struct tm *ltime;
+    time_t tt;
     int code;
     PROCESS pid;
     extern char *program;
@@ -157,7 +158,8 @@ Log(char *fmt, ...)
     code = gettimeofday(&now, &tz);
     assert(code == 0);
 
-    ltime = localtime((time_t *) & now.tv_sec);
+    tt = now.tv_sec;
+    ltime = localtime(&tt);
 
     LWP_CurrentProcess(&pid);
     fprintf(stderr, "%s 0x%x %02d:%02d:%02d.%d: ", program ? program : "",

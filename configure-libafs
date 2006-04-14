@@ -756,7 +756,7 @@ fi
 
 PACKAGE=openafs-libafs
 
-VERSION=1.4.1-rc10
+VERSION=1.4.1
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -2662,7 +2662,7 @@ echo "configure:2432: checking your AFS sysname" >&5
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
 			;;
-		parisc-*-linux-gnu)
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
 			enable_pam="no"
 			;;
@@ -8196,15 +8196,55 @@ else
 fi
 done
 
+	for ac_hdr in kerberosV/heim_err.h
+do
+ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
+echo "configure:8204: checking for $ac_hdr" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 8209 "configure"
+#include "confdefs.h"
+#include <$ac_hdr>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:8214: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_hdr=HAVE_`echo $ac_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_hdr 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+fi
+done
+
 
 echo $ac_n "checking for krb5_creds.keyblock existence""... $ac_c" 1>&6
-echo "configure:8202: checking for krb5_creds.keyblock existence" >&5
+echo "configure:8242: checking for krb5_creds.keyblock existence" >&5
 if eval "test \"`echo '$''{'ac_cv_krb5_creds_keyblock_exists'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
 cat > conftest.$ac_ext <<EOF
-#line 8208 "configure"
+#line 8248 "configure"
 #include "confdefs.h"
 #include <krb5.h>
 int main() {
@@ -8212,7 +8252,7 @@ krb5_creds _c;
 printf("%x\n", _c.keyblock);
 ; return 0; }
 EOF
-if { (eval echo configure:8216: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:8256: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_krb5_creds_keyblock_exists=yes
 else
@@ -8227,13 +8267,13 @@ fi
 echo "$ac_t""$ac_cv_krb5_creds_keyblock_exists" 1>&6
 	
 echo $ac_n "checking for krb5_creds.session existence""... $ac_c" 1>&6
-echo "configure:8231: checking for krb5_creds.session existence" >&5
+echo "configure:8271: checking for krb5_creds.session existence" >&5
 if eval "test \"`echo '$''{'ac_cv_krb5_creds_session_exists'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
 cat > conftest.$ac_ext <<EOF
-#line 8237 "configure"
+#line 8277 "configure"
 #include "confdefs.h"
 #include <krb5.h>
 int main() {
@@ -8241,7 +8281,7 @@ krb5_creds _c;
 printf("%x\n", _c.session);
 ; return 0; }
 EOF
-if { (eval echo configure:8245: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:8285: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_krb5_creds_session_exists=yes
 else
@@ -8271,6 +8311,15 @@ fi
 	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
 fi
+
+if test "$ac_cv_header_kerberosV_heim_err_h" = "yes"; then
+    ASETKEY=
+else
+    ASETKEY=asetkey
+fi
+
+
+
 
 
 
@@ -8554,6 +8603,7 @@ s%@KRB5_CONFIG@%$KRB5_CONFIG%g
 s%@BUILD_KRB5@%$BUILD_KRB5%g
 s%@KRB5CFLAGS@%$KRB5CFLAGS%g
 s%@KRB5LIBS@%$KRB5LIBS%g
+s%@ASETKEY@%$ASETKEY%g
 s%@HELPER_SPLINT@%$HELPER_SPLINT%g
 s%@HELPER_SPLINTCFG@%$HELPER_SPLINTCFG%g
 

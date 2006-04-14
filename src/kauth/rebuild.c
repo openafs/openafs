@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/rebuild.c,v 1.11 2003/07/15 23:15:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/rebuild.c,v 1.11.2.1 2006/03/20 13:39:11 jaltman Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -123,6 +123,7 @@ PrintEntry(index, entry)
     int i;
     char Time[100];
     struct tm *tm_p;
+    time_t tt;
 
     printf("\n");
 
@@ -171,7 +172,8 @@ PrintEntry(index, entry)
     if (entry->flags & KAFOLDKEYS)
 	return;
 
-    tm_p = localtime((time_t *) & entry->user_expiration);
+    tt = entry->user_expiration;
+    tm_p = localtime(&tt);
     if (tm_p)
 	strftime(Time, 100, "%m/%d/%Y %H:%M", tm_p);
 
@@ -285,8 +287,8 @@ RebuildEntry(entryp)
     if (strcmp(flags, "") != 0)
 	fprintf(out, " -flags %s", &flags[1]);
     if (entryp->user_expiration != 0xffffffff) {
-	strftime(Time, 50, "%m/%d/%Y %H:%M",
-		 localtime((time_t *) & entryp->user_expiration));
+	time_t tt = entryp->user_expiration;
+	strftime(Time, 50, "%m/%d/%Y %H:%M",localtime(&tt));
 	fprintf(out, " -expiration '%s'", Time);
     }
     fprintf(out, " -lifetime %u", entryp->max_ticket_lifetime);
