@@ -16,8 +16,8 @@ the Apple Public Source License 2.0.  This license is not considered
 DFSG-free.  Since the repackaging was needed anyway, the WINNT directory
 was also dropped, reducing the size of the upstream tarball by 8MB.
 
-The openafs-doc contains the OpenAFS documentation as distributed by the
-OpenAFS project, which does not include the original source.  These
+The openafs-doc package contains the OpenAFS documentation as distributed
+by the OpenAFS project, which does not include the original source.  These
 documents were originally created using TeX internally by Transarc, the
 original authors of AFS.  By the time that AFS was released as free
 software by IBM after acquiring Transarc, the original source could no
