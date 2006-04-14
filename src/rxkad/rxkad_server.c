@@ -19,7 +19,7 @@ RCSID
 
 #include <afs/stds.h>
 #include <sys/types.h>
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#if (defined(AFS_AIX_ENV) && defined(KERNEL) && !defined(UKERNEL)) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
 #include <sys/systm.h>
 #endif
 #include <time.h>
