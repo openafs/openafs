@@ -17,8 +17,9 @@ openafs (1.4.1-1) unstable; urgency=low
     command.  (Using livesys instead is better.)  (Closes: #358118)
   * Always pass the system type into Autoconf, following autotools-dev
     best practices.
+  * Add an explicit copyright statement to debian/copyright.
 
- -- Russ Allbery <rra@debian.org>  Fri, 14 Apr 2006 13:41:00 -0700
+ -- Russ Allbery <rra@debian.org>  Fri, 14 Apr 2006 15:04:45 -0700
 
 openafs (1.4.0-4) unstable; urgency=low
 
