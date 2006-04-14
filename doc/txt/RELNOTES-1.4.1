@@ -1,0 +1,44 @@
+                  OpenAFS Release Notes - Version 1.4.1
+     _________________________________________________________________
+All systems: Major bugfixes.
+New systems: MacOS 10.4 (PowerPC and Intel)
+     _________________________________________________________________
+
+* Bugfixes:
+
+All systems:
+
+- Several race conditions in the host tracking and handling in the fileserver 
+  which could cause inconsistent behavior and crashes have been fixed.
+
+- A fileserver bug where a reference to a volume could be leaked and later 
+  cause a deadlock as a result of a bulk status call
+
+- Reference counting of fileserver objects in unsigned 32 bit integers 
+  instead of signed 16 bit integers.
+
+- Avoid type mismatches when handling time values (betweemn 32 bit and 64 bit
+  variables).
+
+- Fix a memory leak during multilevel packet queue handling.
+
+- Audit log output had been updated to include FIDs for newly created files.
+
+HP-UX 11i:
+
+- 64 bit (large file) inodes are supported.
+
+- Salvager will now handle large (>4gb) partitions.
+
+* New features:
+
+All systems:
+
+- asetkey is now included to ease Kerberos 5 integration for server 
+  administrators.
+
+- A new fileserver statistics collection including callback statistics was 
+  added.
+
+- man pages are now generated.
+
