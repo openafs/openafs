@@ -42,3 +42,73 @@ All systems:
 
 - man pages are now generated.
 
+Microsoft Windows:
+
+- Fixes error message problems experienced by fs.exe and the AFS Explorer
+  Shell Extensions related to the use of Universal Error Codes by the 
+  AFS File Server
+
+- Adds full SMB/CIFS support for byte range locking.  In this implementation
+  all locks are allocated locally and the AFS lock privilege is ignored.
+  While this will not prevent two processes on different machines from 
+  simultaneously writing to the same file, it will prevent two processes
+  on the same machine from doing so.
+
+- The UP server check period has been reduced to once every ten minutes to
+  match the period used by the UNIX clients.  The shorter period will 
+  assist clients maintain RX connections through NATs.
+
+- Fixes the DOWN server check logic to ensure that any server that responds
+  to a check is marked UP unless it is in the process of restarting.
+
+- Add logic to better handle objects that no longer exist on the file server.
+  (VNOVNODE errors.)
+
+- Prevent the removal of existing drive mappings by "afscreds.exe -M"
+
+- Fixes the procmgmt library so that it doesn't cause applications that 
+  unload it to crash.
+
+- Improves the warnings written to the afsd_init.log file when the 
+  Windows RPC Protocol drivers are improperly configured.
+
+- Fixes "fs setserverprefs -vlserver".  Multiple calls with the same
+  server parameter could result in a crash of afsd_service.exe.
+
+- The SMB/CIFS layer was audited for reference miscounts and memory leaks.
+  All SMB objects are now properly counted, locked, and released when 
+  their work is done.
+
+- Prevent file truncation of the user does not have the appropriate access.
+
+- Token management was re-written to allow user tokens to be preserved 
+  during integrated login and freed after logoff is complete.
+
+- Added a mechanism by which abandoned SMB virtual circuits can be 
+  detected and the associated resources cleaned up.
+
+- Prevent the allocation of SMB file handles with a value of 0 or 0xFFFF
+  which would be considered invalid by Windows applications.
+
+- Fixed the processing of cell names to ensure that they are always
+  treated as case insensitive strings.
+
+- Fixed the network provider code to avoid querying the profile location
+  if integrated login is disabled.
+
+- If a mount point string is empty, return Path Not Found to the application.
+
+- Windows returns WSAECONNRESET when an ICMP packet is received in response
+  to a transmitted UDP packet that cannot be delivered.  Do not mark the
+  connection as bad but instead retry the request.
+
+- Fix the data written to the registry as part of the BackConnectionHostnames
+  values.
+
+- Fixed the rx-lwp implementation to always generate unique rx call 
+  identitiers.
+
+- The default "fs minidump" type now includes data segments.
+
+
+
