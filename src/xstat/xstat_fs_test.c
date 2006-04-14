@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_test.c,v 1.8.2.4 2006/03/09 16:29:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/xstat/xstat_fs_test.c,v 1.8.2.6 2006/04/10 15:46:46 shadow Exp $");
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <cmd.h>		/*Command line interpreter */
@@ -83,8 +83,7 @@ static char *opNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats",
-    "GetCapabilities"
+    "GetXStats"
 };
 
 static char *xferOpNames[] = {
@@ -250,7 +249,8 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
     printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
     printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
 
-    printf("\t%10d fs_nBusies\n\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_nBusies\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
     /*
      * Host module fields.
      */

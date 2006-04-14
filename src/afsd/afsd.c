@@ -58,7 +58,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.16 2005/12/01 04:03:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.17 2006/03/23 15:40:10 shadow Exp $");
 
 #define VFS 1
 
@@ -1073,7 +1073,7 @@ CheckCacheBaseDir(char *dir)
             return "cannot use tmpfs as cache partition";
         } else if (statfsbuf.f_type != 0xEF53) {
             return "must use ext2 or ext3 for cache partition";
-        }
+	}
     }
 #endif
 
@@ -1722,10 +1722,13 @@ mainproc(struct cmd_syndesc *as, char *arock)
     sprintf(fullpn_VFile, "%s/", cacheBaseDir);
     vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)
-        && (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+    if  (!(cacheFlags & AFSCALL_INIT_MEMCACHE) && (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+#ifdef AFS_SUN5_ENV
+        printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
+#else
 	printf("%s: ERROR: Cache dir check failed (%s)\n", rn, fsTypeMsg);
-        exit(1);
+	exit(1);
+#endif
     }
 #if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout);

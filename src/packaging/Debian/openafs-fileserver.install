@@ -1,0 +1,31 @@
+debian/tmp/usr/sbin/bosserver           usr/sbin
+debian/tmp/usr/sbin/voldump             usr/sbin
+debian/tmp/usr/sbin/volinfo             usr/sbin
+
+debian/tmp/usr/lib/openafs/up*          usr/sbin
+
+debian/tmp/usr/lib/openafs/fileserver   usr/lib/openafs
+debian/tmp/usr/lib/openafs/salvager     usr/lib/openafs
+debian/tmp/usr/lib/openafs/volserver    usr/lib/openafs
+
+debian/doc/man5/BosConfig.5             usr/share/man/man5
+debian/doc/man5/BosLog.5                usr/share/man/man5
+debian/doc/man5/FORCESALVAGE.5          usr/share/man/man5
+debian/doc/man5/FileLog.5               usr/share/man/man5
+debian/doc/man5/KeyFile.5               usr/share/man/man5
+debian/doc/man5/NoAuth.5                usr/share/man/man5
+debian/doc/man5/SALVAGE.fs.5            usr/share/man/man5
+debian/doc/man5/SalvageLog.5            usr/share/man/man5
+debian/doc/man5/VolserLog.5             usr/share/man/man5
+debian/doc/man5/afs_volume_header.5     usr/share/man/man5
+debian/doc/man5/salvage.lock.5          usr/share/man/man5
+debian/doc/man5/sysid.5                 usr/share/man/man5
+
+debian/doc/man8/bosserver.8             usr/share/man/man8
+debian/doc/man8/fileserver.8            usr/share/man/man8
+debian/doc/man8/salvager.8              usr/share/man/man8
+debian/doc/man8/upclient.8              usr/share/man/man8
+debian/doc/man8/upserver.8              usr/share/man/man8
+debian/doc/man8/voldump.8               usr/share/man/man8
+debian/doc/man8/volinfo.8               usr/share/man/man8
+debian/doc/man8/volserver.8             usr/share/man/man8

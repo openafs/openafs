@@ -101,6 +101,9 @@
 /* Define to 1 if you have the <kerberosIV/krb.h> header file. */
 #undef HAVE_KERBEROSIV_KRB_H
 
+/* Define to 1 if you have the <kerberosV/heim_err.h> header file. */
+#undef HAVE_KERBEROSV_HEIM_ERR_H
+
 /* define if your linux kernel has linux/seq_file.h */
 #undef HAVE_KERNEL_LINUX_SEQ_FILE_H
 

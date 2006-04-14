@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.24 2006/03/09 16:29:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.25 2006/04/07 05:36:59 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6151,56 +6151,25 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     struct host *thost;
     afs_int32 *dataBuffP;
     afs_int32 dataBytes;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETCAPABILITIES]);
     FS_LOCK;
-    (opP->numOps)++;
+    AFSCallStats.GetCapabilities++, AFSCallStats.TotalCalls++;
+    afs_FullPerfStats.overall.fs_nGetCaps++;
     FS_UNLOCK;
-    TM_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    ViceLog(2, ("SAFS_GetCapabilties\n"));
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
 	goto Bad_GetCaps;
 
-    FS_LOCK;
-    AFSCallStats.GetCapabilities++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK;
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) malloc(dataBytes);
     dataBuffP[0] = CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
-    ViceLog(2, ("SAFS_GetCapabilties\n"));
-
   Bad_GetCaps:
     code = CallPostamble(tcon, code, thost);
 
-#if FS_STATS_DETAILED
-    TM_GetTimeOfDay(&opStopTime, 0);
-    fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
     return 0;
 }
 

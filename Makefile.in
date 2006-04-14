@@ -213,6 +213,24 @@ sgiefs:
 vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
+tsalvaged: vol libafsrpc libafsauthent cmd util
+	set -x; \
+	if test "@DEMAND_ATTACH@" = "yes" ; then \
+		case ${SYS_NAME} in \
+		alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+			${COMPILE_PART1} tsalvaged ${COMPILE_PART2} ;; \
+		*_darwin_[1-6][0-9]) \
+			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
+		*_darwin_*) \
+			${COMPILE_PART1} tsalvaged  ${COMPILE_PART2} ;; \
+		*) \
+			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
+		esac \
+	else \
+		echo skipping tsalvaged ; \
+	fi
+
+
 vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
@@ -236,7 +254,7 @@ volser: cmd comerr tviced usd kauth audit
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
 	case ${SYS_NAME} in                                             \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fo]bsd*|*nbsd[234]*)   \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
 	*_darwin_[1-6][0-9])                                            \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
@@ -565,13 +583,13 @@ jafs: libjafs
 jafsadm: libjafsadm
 
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
 	${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -629,6 +647,7 @@ clean2:
 	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tvolser ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tsalvaged ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsd ${COMPILE_CLEAN}
@@ -787,6 +806,7 @@ distclean: clean
 	src/tests/Makefile \
 	src/tests/run-tests \
 	src/tests/OpenAFS/Dirpath.pm \
+	src/tsalvaged/Makefile \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
 	src/tvolser/Makefile \

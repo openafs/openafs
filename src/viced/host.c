@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.26 2006/03/14 00:33:46 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.29 2006/03/30 16:29:22 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -731,6 +731,7 @@ h_TossStuff_r(register struct host *host)
 	    client->CPS.prlist_val = NULL;
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
+		rx_PutConnection(client->tcon);
 	    }
 	    CurrentConnections--;
 	    *cp = client->next;
@@ -761,8 +762,10 @@ h_TossStuff_r(register struct host *host)
 	     * destroying the connection.
 	     */
 	    client = rx_GetSpecific(rxconn, rxcon_client_key);
-	    if (client && client->tcon == rxconn)
+	    if (client && client->tcon == rxconn) {
+		rx_PutConnection(client->tcon);
 		client->tcon = NULL;
+	    }
 	    rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
 	    rx_DestroyConnection(rxconn);
 	}
@@ -831,8 +834,10 @@ h_FreeConnection(struct rx_connection *tcon)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client) {
 	H_LOCK;
-	if (client->tcon == tcon)
+	if (client->tcon == tcon) {
+	    rx_PutConnection(client->tcon);
 	    client->tcon = (struct rx_connection *)0;
+	}
 	H_UNLOCK;
     }
     return 0;
@@ -1679,14 +1684,15 @@ h_FindClient_r(struct rx_connection *tcon)
 			(struct client *)rx_GetSpecific(client->tcon,
 							rxcon_client_key);
 		    if (oldClient) {
-			if (oldClient == client)
+			if (oldClient == client) {
 			    rx_SetSpecific(client->tcon, rxcon_client_key,
 					   NULL);
-			else
+			} else
 			    ViceLog(0,
 				    ("Client-conn mismatch: CL1=%x, CN=%x, CL2=%x\n",
 				     client, client->tcon, oldClient));
 		    }
+		    rx_PutConnection(client->tcon);
 		    client->tcon = (struct rx_connection *)0;
 		}
 		client->refCount++;
@@ -1810,6 +1816,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    oldClient->refCount++;
 	    client = oldClient;
 	} else {
+	    rx_PutConnection(oldClient->tcon);
 	    oldClient->tcon = (struct rx_connection *)0;
 	    ViceLog(0, ("FindClient: deleted client %x(%x) already had conn %x (host %s:%d), stolen by client %x(%x)\n", 
 			oldClient, oldClient->sid, tcon, 
@@ -1827,6 +1834,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	h_Unlock_r(host);
 	CurrentConnections++;	/* increment number of connections */
     }
+    rx_GetConnection(tcon);
     client->tcon = tcon;
     rx_SetSpecific(tcon, rxcon_client_key, client);
     ReleaseWriteLock(&client->lock);
