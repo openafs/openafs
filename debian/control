@@ -94,7 +94,7 @@ Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Priority: extra
 Depends: ${shlibs:Depends}
 Suggests: openafs-doc
-Conflicts: arla-dev
+Conflicts: arla-dev, liblwp-dev
 Description: AFS distributed filesystem development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
