@@ -77,7 +77,9 @@ AFS module $MODULEDIR/$LIBAFS does not exist.
 Not starting AFS.  Please consider building kernel modules using
 instructions in /usr/share/doc/openafs-client/README.modules
 EOF
-        exit 1
+        # We must exit successfully here or openafs-client will fail on
+        # installation unless a module is installed.
+        exit 0
     fi
     LOADED=`/sbin/lsmod | fgrep openafs`
     if [ -z "$LOADED" ] ; then

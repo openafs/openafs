@@ -1,3 +1,12 @@
+openafs (1.4.1-2) unstable; urgency=low
+
+  * Exit successfully in the openafs-client init script if no module is
+    installed, since otherwise openafs-client will fail to install until
+    one builds a module.  This restores previous accidental behavior due
+    to a bug in debhelper.  (Closes: #362695)
+
+ --
+
 openafs (1.4.1-1) unstable; urgency=low
 
   * New upstream release.
