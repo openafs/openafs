@@ -9,7 +9,7 @@ Standards-Version: 3.6.2
 Package: openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2
+Recommends: openafs-modules-source (>= 1.2.9) | openafs-modules2, lsof
 Suggests: openafs-doc
 Conflicts: arla, openafs-modules1
 Description: AFS distributed filesystem client support

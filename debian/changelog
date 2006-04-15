@@ -4,8 +4,10 @@ openafs (1.4.1-2) unstable; urgency=low
     installed, since otherwise openafs-client will fail to install until
     one builds a module.  This restores previous accidental behavior due
     to a bug in debhelper.  (Closes: #362695)
+  * openafs-client recommends lsof, since the init script uses it for
+    cleaner shutdown.
 
- --
+ -- Russ Allbery <rra@debian.org>  Sat, 15 Apr 2006 11:35:22 -0700
 
 openafs (1.4.1-1) unstable; urgency=low
 
