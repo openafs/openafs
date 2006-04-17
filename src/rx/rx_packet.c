@@ -1419,7 +1419,7 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	*port = from.sin_port;
 
 	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d",
-	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(host), ntohs(port), p->header.serial, 
+	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial, 
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, 
 	      p->length));
 	rxi_TrimDataBufs(p, 1);
