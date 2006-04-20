@@ -177,11 +177,21 @@ typedef struct cm_scache {
                                    time. */
     osi_queue_t *fileLocksH;    /* queue of locks (head) */
     osi_queue_t *fileLocksT;    /* queue of locks (tail) */
+
     afs_uint32   sharedLocks;   /* number of shared locks on
-                                 * ::fileLocks */
+                                 * ::fileLocks.  This count does not
+                                 * include locks which have
+                                 * CM_FILELOCK_FLAG_CLIENTONLY set. */
+
     afs_uint32   exclusiveLocks; /* number of exclusive locks on
-                                  * ::fileLocks
+                                  * ::fileLocks.  This count does not
+                                  * include locks which have
+                                  * CM_FILELOCK_FLAG_CLIENTONLY set.
                                   */
+	
+    afs_uint32   clientLocks;   /* number of locks on ::fileLocks that
+                                   have CM_FILELOCK_FLAG_CLIENTONLY
+                                   set. */
 	
     /* volume info */
     struct cm_volume *volp;		/* volume info; held reference */
