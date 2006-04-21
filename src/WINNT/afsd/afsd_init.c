@@ -1169,9 +1169,13 @@ int afsd_InitCM(char **reasonP)
      * which is used for callback RPC messages.
      */
     code = rx_Init(htons(cm_callbackport));
+    if (code != 0) {
+	afsi_log("rx_Init code %x - retrying with a random port number", code);
+	code = rx_Init(0);
+    }
     afsi_log("rx_Init code %x", code);
     if (code != 0) {
-        *reasonP = "afsd: failed to init rx client on port 7001";
+        *reasonP = "afsd: failed to init rx client";
         return -1;
     }
 
