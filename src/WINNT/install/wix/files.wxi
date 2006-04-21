@@ -1395,7 +1395,7 @@
 		<?ifdef env.CommonProgramFiles6432?>
 		  <?define CPF="$(env.CommonProgramFiles)"?>
 		<?else?>
-		  <?define CPF="$(env.CommonProgramFiles(x86)"?>
+		  <?define CPF="$(env.CommonProgramFiles(x86))"?>
 		<?endif?>
 		<?if $(var.Platform) = "x64" ?>
 			<?ifndef Debug?>
