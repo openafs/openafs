@@ -1,3 +1,45 @@
+Changes not present in 1.4.1 and since 1.5.0:
+
+ * Lock request behavior has been altered.  As of this 
+   release a locally allocated lock will be used whenever
+   the volume is RO or the requesting user's permissions 
+   are 'rl'.  This will allow end users to execute programs
+   from RW volumes when they do not have the 'k' privilege.
+
+   Note that a recent discovery indicates that the 'k' bit
+   is only supposed to control the ability to obtain read 
+   locks.  Write locks are to be controlled by the 'w' and 
+   'i' privilege bits.  
+
+ * Code has been added to enable the cache manager to be
+   able to obtain the AFSID of the authenticated user.
+   This is required to be able to determine when "Insert"
+   privileges should apply.  AFS considers a file to be
+   a new file whenever the owner's AFSID matches the 
+   AFSID of the user.  The current implementation relies
+   on the name specified during the SetToken call to be
+   correct.  This will be replaced in the future with a 
+   new RPC that allows the AFSID of the authenticated 
+   user to be obtained.
+
+ * A 32-bit-tools installer for use on 64-bit systems 
+   is now available.  These tools are for use with 32-bit
+   versions of Kerberos for Windows or JPSoftware's 4NT.
+
+Since 1.4.1 rc10: 1.4.1 final released (9 April 2006)
+
+ * Remove the use of the "active_vcp" variable.  This variable
+   no longer serves any useful purpose and was the cause of
+   race conditions that produced under counts of the smb_vc_t
+   references.
+
+ * Change default minidump output to include data segments
+
+ * restore access to cm_IoctlGetVolumeStatus and
+   cm_IoctlSetVolumeStatus calls for AFS pioctl operations.
+   Still need to figure out why they are being called
+   for SMB/CIFS IOCTL operations instead of Trans2GetFileInfo.
+
 Changes not present in 1.4.1: 1.5.0 released (16 Feb 2006)
 
  * Update build system to include the "sys_name" in the 
@@ -52,6 +94,33 @@ Changes not present in 1.4.1: 1.5.0 released (16 Feb 2006)
    used on disconnected mobile computers.
 
  * Added DebugOutputString debugging of the RX library
+
+Since 1.4.1 rc9:  1.4.1 rc10 released (10 March 2006)
+
+ * Fix the rx-lwp implementation to randomly generate rx call
+   identifiers which are supposed to be unique at a given point
+   in time.  This affects some of the command line tools used
+   for debugging but not the AFS Client Service itself which
+   uses the rx-pthreads implementation.
+
+ * xstats_fs_test.exe and xstats_cm_test.exe are now built for
+   Windows although they are not distributed
+
+ * don't generate an exception when logging unexpected SMB packets
+
+ * the data structures used by cm_IoctlGetVolumeStatus and 
+   cm_IoctlSetVolumeStatus are not compatible with the CIFS
+   Get/Set File Information calls so don't bother executing them.
+
+Since 1.4.1 rc8:
+
+ * Fix data written to registry as part of BackConnectionHostnames
+   data value
+
+ * Fix initialization bug when allocating cm_server_t objects that
+   would cause servers to appear to be down after each allocation
+   or renewal.   Server would appear up after the next check servers
+   cycle.
 
 Since 1.4.1 rc7: 
 
