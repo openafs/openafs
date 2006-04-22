@@ -668,12 +668,12 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
  * CM_SCACHESYNC_STOREDATA_EXCL and CM_SCACHEFLAG_DATASTORING.
  */
 long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
-               long rights, long flags)
+               afs_uint32 rights, afs_uint32 flags)
 {
     osi_queueData_t *qdp;
     long code;
     cm_buf_t *tbufp;
-    long outRights;
+    afs_uint32 outRights;
     int bufLocked;
 
     /* lookup this first */
@@ -874,7 +874,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
                 return CM_ERROR_READONLY;
 
             if (cm_HaveAccessRights(scp, up, rights, &outRights)) {
-                if (~outRights & rights) return CM_ERROR_NOACCESS;
+                if (~outRights & rights) 
+		    return CM_ERROR_NOACCESS;
             }
             else {
                 /* we don't know the required access rights */
@@ -990,7 +991,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
 /* for those syncops that setup for RPCs.
  * Called with scache locked.
  */
-void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
+void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 {
     osi_queueData_t *qdp;
     cm_buf_t *tbufp;
@@ -1074,7 +1075,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
  * started before that, can cause old info to be merged from the first call.
  */
 void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
-                    cm_user_t *userp, int flags)
+                    cm_user_t *userp, afs_uint32 flags)
 {
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory

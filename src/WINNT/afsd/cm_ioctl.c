@@ -1896,6 +1896,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
+#ifdef QUERY_AFSID
 long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 {
     afs_int32 code;
@@ -1970,7 +1971,7 @@ long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 
     return 0;
 }
-
+#endif /* QUERY_AFSID */
 
 long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
@@ -2088,11 +2089,14 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     ucellp->kvno = ct.AuthHandle;
     ucellp->expirationTime = ct.EndTimestamp;
     ucellp->gen++;
+#ifdef QUERY_AFSID
     ucellp->uid = ANONYMOUSID;
+#endif
     if (uname) {
         StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
-
+#ifdef QUERY_AFSID
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
+#endif
     }
     ucellp->flags |= CM_UCELLFLAG_RXKAD;
     lock_ReleaseMutex(&userp->mx);

@@ -25,7 +25,7 @@ typedef struct cm_aclent {
     struct cm_aclent *nextp;	/* next guy same vnode */
     struct cm_scache *backp;	/* back ptr to vnode */
     struct cm_user *userp;	/* user whose access is cached */
-    long randomAccess;		/* watch for more rights in acl.h */
+    afs_uint32 randomAccess;	/* watch for more rights in acl.h */
     unsigned long tgtLifetime;	/* time this expires */
 } cm_aclent_t;
 
@@ -33,11 +33,11 @@ extern osi_rwlock_t cm_aclLock;
 
 extern long cm_InitACLCache(int newFile, long size);
 
-extern long cm_FindACLCache(struct cm_scache *scp, struct cm_user *userp, long *rightsp);
+extern long cm_FindACLCache(struct cm_scache *scp, struct cm_user *userp, afs_uint32 *rightsp);
 
 static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp);
 
-extern long cm_AddACLCache(struct cm_scache *scp, struct cm_user *userp, long rights);
+extern long cm_AddACLCache(struct cm_scache *scp, struct cm_user *userp, afs_uint32 rights);
 
 extern void cm_FreeAllACLEnts(struct cm_scache *scp);
 

@@ -32,7 +32,9 @@ typedef struct cm_ucell {
     int iterator;			/* for use as ListTokens cookie */
     long flags;			        /* flags */
     char userName[MAXKTCNAMELEN];	/* user name */
+#ifdef QUERY_AFSID
     afs_uint32 uid;			/* User's AFS ID in this cell */
+#endif
 } cm_ucell_t;
 
 #define CM_UCELLFLAG_HASTIX	1	/* has Kerberos tickets */

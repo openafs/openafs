@@ -32,8 +32,8 @@
  * can't be locked.  Thus, this must always be called in a while loop to stabilize
  * things, since we can always lose the race condition getting to the parent vnode.
  */
-int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up, long rights,
-                        long *outRightsp)
+int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up, afs_uint32 rights,
+                        afs_uint32 *outRightsp)
 {
     cm_scache_t *aclScp;
     long code;

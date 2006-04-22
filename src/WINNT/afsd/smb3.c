@@ -2062,6 +2062,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     long returnEALength;
     char *tidPathp;
     cm_req_t req;
+    int created = 0;
 
     cm_InitReq(&req);
 
@@ -2280,11 +2281,13 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                           &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                             FILE_NOTIFY_CHANGE_FILE_NAME,  
-                             dscp, lastNamep, NULL, TRUE);
-        if (!excl && code == CM_ERROR_EXISTS) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,
+				 FILE_NOTIFY_CHANGE_FILE_NAME,  
+				  dscp, lastNamep, NULL, TRUE);
+	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -2359,6 +2362,11 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	fidp->flags |= SMB_FID_OPENREAD;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
+
+    /* remember that the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
+
     lock_ReleaseMutex(&fidp->mx);
 
     smb_ReleaseFID(fidp);
@@ -4515,6 +4523,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int parmSlot;			/* which parm we're dealing with */
     char *tidPathp;
     cm_req_t req;
+    int created = 0;
 
     cm_InitReq(&req);
 
@@ -4697,11 +4706,13 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                             FILE_NOTIFY_CHANGE_FILE_NAME,
-                             dscp, lastNamep, NULL, TRUE);
-        if (!excl && code == CM_ERROR_EXISTS) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,
+				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 dscp, lastNamep, NULL, TRUE);
+	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -4756,6 +4767,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidp->flags |= SMB_FID_OPENREAD;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
+
+    /* remember if the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
 
     lock_ReleaseMutex(&fidp->mx);
     smb_ReleaseFID(fidp);
@@ -5366,6 +5381,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     char *tidPathp;
     BOOL foundscp;
     cm_req_t req;
+    int created = 0;
 
     cm_InitReq(&req);
 
@@ -5798,11 +5814,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp, &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                              FILE_NOTIFY_CHANGE_FILE_NAME,
-                              dscp, lastNamep, NULL, TRUE);
-        if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,
+				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 dscp, lastNamep, NULL, TRUE);
+	} else if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
             /* Not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -6027,6 +6045,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     fidp->flags = fidflags;
 
+    /* remember if the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
+
     /* save parent dir and pathname for delete or change notification */
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
         fidp->flags |= SMB_FID_NTOPEN;
@@ -6133,6 +6155,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     ULONG *lparmp;
     char *outData;
     cm_req_t req;
+    int created = 0;
 
     cm_InitReq(&req);
 
@@ -6466,11 +6489,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         setAttr.clientModTime = time(NULL);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                           &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                              FILE_NOTIFY_CHANGE_FILE_NAME,
-                              dscp, lastNamep, NULL, TRUE);
-        if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,
+				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 dscp, lastNamep, NULL, TRUE);
+	} else if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
             /* Not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -6626,6 +6651,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     fidp->scp = scp;
 
     fidp->flags = fidflags;
+
+    /* remember if the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
 
     /* save parent dir and pathname for deletion or change notification */
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {

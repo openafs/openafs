@@ -5817,6 +5817,16 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 	fidp->flags &= ~SMB_FID_DELONCLOSE;
     }
 
+    /* if this was a newly created file, then clear the creator
+     * in the stat cache entry. */
+    if (fidp->flags & SMB_FID_CREATED) {
+        lock_ObtainMutex(&fidp->scp->mx);
+	if (fidp->scp->creator == userp)
+	    fidp->scp->creator = NULL;
+	lock_ReleaseMutex(&fidp->scp->mx);
+	fidp->flags &= ~SMB_FID_CREATED;
+    }
+
     if (fidp->flags & SMB_FID_NTOPEN) {
 	fidp->NTopen_dscp = NULL;
         fidp->NTopen_pathp = NULL;
@@ -6846,6 +6856,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     afs_uint32 dosTime;
     char *tidPathp;
     cm_req_t req;
+    int created = 0;			/* the file was new */
 
     cm_InitReq(&req);
 
@@ -6945,11 +6956,13 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                             FILE_NOTIFY_CHANGE_FILE_NAME,
-                             dscp, lastNamep, NULL, TRUE);
-        if (!excl && code == CM_ERROR_EXISTS) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,	
+				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 dscp, lastNamep, NULL, TRUE);
+	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -6993,6 +7006,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* always create it open for read/write */
     fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
+
+    /* remember that the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
 
     /* save a pointer to the vnode */
     fidp->scp = scp;

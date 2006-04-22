@@ -23,14 +23,6 @@ typedef struct cm_fid {
         unsigned long unique;
 } cm_fid_t;
 
-#if 0
-typedef struct cm_accessCache {
-	osi_queue_t q;			/* queue header */
-        struct cm_user *userp;		/* user having access rights */
-        unsigned long rights;		/* rights */
-} cm_accessCache_t;
-#endif
-
 /* Key used for byte range locking.  Each unique key identifies a
    unique client per cm_scache_t for the purpose of locking. */
 typedef afs_uint64 cm_key_t;
@@ -94,49 +86,50 @@ typedef struct cm_prefetch {		/* last region scanned for prefetching */
 #define CM_SCACHE_MAGIC ('S' | 'C'<<8 | 'A'<<16 | 'C'<<24)
 
 typedef struct cm_scache {
-    osi_queue_t q;              /* lru queue; cm_scacheLock */
+    osi_queue_t q;              	/* lru queue; cm_scacheLock */
     afs_uint32      magic;
-    struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
+    struct cm_scache *nextp;		/* next in hash; cm_scacheLock */
     cm_fid_t fid;
-    afs_uint32 flags;		/* flags; locked by mx */
+    afs_uint32 flags;			/* flags; locked by mx */
 
     /* synchronization stuff */
-    osi_mutex_t mx;		/* mutex for this structure */
-    osi_rwlock_t bufCreateLock;	/* read-locked during buffer creation;
-        			 * write-locked to prevent buffers from
-                                 * being created during a truncate op, etc.
-                                 */
+    osi_mutex_t mx;			/* mutex for this structure */
+    osi_rwlock_t bufCreateLock;		/* read-locked during buffer creation;
+                                         * write-locked to prevent buffers from
+					 * being created during a truncate op, etc.
+					 */
     afs_uint32 refCount;		/* reference count; cm_scacheLock */
-    osi_queueData_t *bufReadsp;	/* queue of buffers being read */
+    osi_queueData_t *bufReadsp;		/* queue of buffers being read */
     osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
     /* parent info for ACLs */
     afs_uint32 parentVnode;		/* parent vnode for ACL callbacks */
-    afs_uint32 parentUnique;	/* for ACL callbacks */
+    afs_uint32 parentUnique;		/* for ACL callbacks */
 
     /* local modification stat */
-    afs_uint32 mask;		/* for clientModTime, length and
-                                 * truncPos */
+    afs_uint32 mask;			/* for clientModTime, length and
+                                         * truncPos */
 
     /* file status */
     afs_uint32 fileType;		/* file type */
     time_t clientModTime;	        /* mtime */
     time_t serverModTime;	        /* at server, for concurrent call
                                          * comparisons */
-    osi_hyper_t length;		/* file length */
+    osi_hyper_t length;			/* file length */
     cm_prefetch_t prefetch;		/* prefetch info structure */
-    afs_uint32 unixModeBits;	/* unix protection mode bits */
+    afs_uint32 unixModeBits;		/* unix protection mode bits */
     afs_uint32 linkCount;		/* link count */
     afs_uint32 dataVersion;		/* data version */
-    afs_uint32 owner; 		/* file owner */
-    afs_uint32 group;		/* file owning group */
+    afs_uint32 owner; 			/* file owner */
+    afs_uint32 group;			/* file owning group */
+    cm_user_t *creator;			/* user, if new file */
 
     /* pseudo file status */
-    osi_hyper_t serverLength;	/* length known to server */
+    osi_hyper_t serverLength;		/* length known to server */
 
     /* aux file status */
-    osi_hyper_t truncPos;	/* file size to truncate to before
-                                 * storing data */
+    osi_hyper_t truncPos;		/* file size to truncate to before
+                                         * storing data */
 
     /* symlink and mount point info */
     char mountPointStringp[MOUNTPOINTLEN];	/* the string stored in a mount point;
@@ -317,12 +310,12 @@ extern cm_scache_t *cm_GetNewSCache(void);
 extern int cm_FidCmp(cm_fid_t *, cm_fid_t *);
 
 extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
-	struct cm_req *, long, long);
+	struct cm_req *, afs_uint32, afs_uint32);
 
-extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, long);
+extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, afs_uint32);
 
 extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVolSync *,
-	struct cm_user *, int flags);
+	struct cm_user *, afs_uint32 flags);
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 

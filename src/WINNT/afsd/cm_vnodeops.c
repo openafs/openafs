@@ -2270,6 +2270,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
+	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(scp, &newFileStatus, &volSync,
                                 userp, 0);
@@ -3434,7 +3435,8 @@ long cm_LockCheckPerms(cm_scache_t * scp,
                      CM_SCACHESYNC_NEEDCALLBACK);
 
     if (code == CM_ERROR_NOACCESS &&
-        lock_type == LockWrite) {
+        lock_type == LockWrite &&
+	scp->creator == userp) {
         /* check for PRSFS_INSERT. */
         cm_ucell_t * ucp;
 
@@ -3442,25 +3444,8 @@ long cm_LockCheckPerms(cm_scache_t * scp,
                          CM_SCACHESYNC_GETSTATUS |
                          CM_SCACHESYNC_NEEDCALLBACK);
 
-        if (code) {
-            if (code == CM_ERROR_NOACCESS)
-                osi_Log0(afsd_logp, "cm_LockCheckPerms user has no INSERT bits for scp");
-
-            goto return_code;
-        }
-
-        code = CM_ERROR_NOACCESS;
-
-        lock_ObtainMutex(&userp->mx);
-        for (ucp = userp->cellInfop; ucp; ucp = ucp->nextp) {
-            if (scp->fid.cell == ucp->cellp->cellID) {
-                if (scp->owner == ucp->uid)
-                    code = 0;
-
-                break;
-            }
-        }
-        lock_ReleaseMutex(&userp->mx);
+	if (code == CM_ERROR_NOACCESS)
+	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
     }
 
  return_code:

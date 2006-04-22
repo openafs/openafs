@@ -358,7 +358,7 @@ typedef struct smb_fid {
 
 #define SMB_FID_OPENREAD		1	/* open for reading */
 #define SMB_FID_OPENWRITE		2	/* open for writing */
-#define SMB_FID_UNUSED                  4       /* free for use */
+#define SMB_FID_CREATED                 4       /* a new file */
 #define SMB_FID_IOCTL			8	/* a file descriptor for the
 						 * magic ioctl file */
 #define SMB_FID_OPENDELETE		0x10	/* open for deletion (NT) */
