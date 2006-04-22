@@ -1481,10 +1481,10 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     int outDataTotal;	/* total data bytes */
     int code = 0;
     DWORD rv;
-    DWORD allSubmount;
-    USHORT nShares;
-    DWORD nRegShares;
-    DWORD nSharesRet;
+    DWORD allSubmount = 0;
+    USHORT nShares = 0;
+    DWORD nRegShares = 0;
+    DWORD nSharesRet = 0;
     HKEY hkParam;
     HKEY hkSubmount = NULL;
     smb_rap_share_info_1_t * shares;
