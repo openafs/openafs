@@ -260,6 +260,24 @@ static void create_once(void) {
     pthread_cache_done = 1;
 }
 
+static void cleanup_pthread_cache(void) {
+    thread_p cur = NULL, next = NULL;
+
+    if (pthread_cache_done) {
+	for(queue_Scan(&active_Q, cur, next, thread)) {
+	    queue_Remove(cur);
+	}
+	for(queue_Scan(&cache_Q, cur, next, thread)) {
+	    queue_Remove(cur);
+	}
+
+	pthread_mutex_destroy(&active_Q_mutex);
+	pthread_mutex_destroy(&cache_Q_mutex);
+
+	pthread_cache_done = 0;
+    }
+}	
+
 static void put_thread(thread_p old) {
  
     CloseHandle(old->t_handle);
@@ -358,6 +376,23 @@ static void tsd_free_all(char *tsd[PTHREAD_KEYS_MAX]) {
 	    }
 	}
     } while(call_more_destructors);
+}
+
+static void cleanup_global_tsd(void)
+{
+    thread_p cur = NULL, next = NULL;
+
+    if (tsd_done) {
+	for(queue_Scan(&active_Q, cur, next, thread)) {
+	    tsd_free_all(cur->tsd);
+	}
+
+	TlsFree(tsd_pthread_index);
+	tsd_pthread_index = 0xFFFFFFFF;
+	TlsFree(tsd_index);
+	tsd_index = 0xFFFFFFFF;
+	tsd_done = 0;
+    }
 }
 
 static DWORD WINAPI afs_pthread_create_stub(LPVOID param) {
@@ -700,10 +735,27 @@ static pthread_once_t waiter_cache_once = PTHREAD_ONCE_INIT;
  
 static void init_waiter_cache(void) {
     InitializeCriticalSection(&waiter_cache_cs);
-    waiter_cache_init = 1;
     queue_Init(&waiter_cache);
+    waiter_cache_init = 1;
 }
  
+static void cleanup_waiter_cache(void)
+{
+    cond_waiters_t * cur = NULL, * next = NULL;
+
+    if (waiter_cache_init) {
+	for(queue_Scan(&waiter_cache, cur, next, cond_waiter)) {
+	    queue_Remove(cur);
+
+	    CloseHandle(cur->event);
+	    free(cur);
+	}
+
+	DeleteCriticalSection(&waiter_cache_cs);
+	waiter_cache_init = 0;
+    }
+}
+
 static cond_waiters_t *get_waiter() {
     cond_waiters_t *new = NULL;
  
@@ -1257,3 +1309,37 @@ void pthread_exit(void *status) {
     RaiseException(PTHREAD_EXIT_EXCEPTION, 0, 0, NULL);
 
 }
+
+/*
+ * DllMain() -- Entry-point function called by the DllMainCRTStartup()
+ *     function in the MSVC runtime DLL (msvcrt.dll).
+ *
+ *     Note: the system serializes calls to this function.
+ */
+BOOL WINAPI
+DllMain(HINSTANCE dllInstHandle,/* instance handle for this DLL module */
+        DWORD reason,           /* reason function is being called */
+        LPVOID reserved)
+{                               /* reserved for future use */
+    switch (reason) {
+    case DLL_PROCESS_ATTACH:
+        /* library is being attached to a process */
+        /* disable thread attach/detach notifications */
+        (void)DisableThreadLibraryCalls(dllInstHandle);
+
+	pthread_once(&pthread_cache_once, create_once);
+	pthread_once(&global_tsd_once, tsd_once);
+	pthread_once(&waiter_cache_once, init_waiter_cache);
+	return TRUE;
+
+    case DLL_PROCESS_DETACH:
+	cleanup_waiter_cache();
+	cleanup_global_tsd();
+	cleanup_pthread_cache();
+        return TRUE;
+
+    default:
+        return FALSE;
+    }
+}
+
