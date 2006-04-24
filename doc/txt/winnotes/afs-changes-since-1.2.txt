@@ -1,4 +1,11 @@
-Changes not present in 1.4.1 and since 1.5.0:
+Changes not present in 1.4.1 and since 1.5.0: 1.5.1 released 
+(24 April 2006)
+
+ * Add a DllMain() function to afspthread.dll.  Perform
+   cleanup of thread local storage, rx queues, critical
+   sections, event handles, etc.  This was implemented
+   to avoid crashes in afspthread.dll when applications
+   which load/unload the dll attempt to terminate.
 
  * Lock request behavior has been altered.  As of this 
    release a locally allocated lock will be used whenever
