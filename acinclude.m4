@@ -79,6 +79,13 @@ AC_ARG_ENABLE(debug-lwp,
 AC_ARG_ENABLE(optimize-lwp,
 [  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
 )
+AC_ARG_ENABLE(debug-pam,
+[  --enable-debug-pam			enable compilation of the PAM code with debugging information (defaults to disabled)],, enable_debug_pam="no"
+)
+AC_ARG_ENABLE(optimize-pam,
+[  --disable-optimize-pam		disable optimization for compilation of the PAM code (defaults to enabled)],, enable_optimize_pam="yes"
+)
+
 
 enable_login="no"
 
