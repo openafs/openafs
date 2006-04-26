@@ -613,10 +613,10 @@ AFS_MD5_Update (struct afs_md5 *m, const void *v, size_t len)
 #if defined(AFSBIG_ENDIAN)
 	    int i;
 	    afs_uint32 current[16];
-	    struct x32 *u = (struct x32*)m->save;
+	    struct x32 *us = (struct x32*)m->save;
 	    for(i = 0; i < 8; i++){
-		current[2*i+0] = swap_u_int32_t(u[i].a);
-		current[2*i+1] = swap_u_int32_t(u[i].b);
+		current[2*i+0] = swap_u_int32_t(us[i].a);
+		current[2*i+1] = swap_u_int32_t(us[i].b);
 	    }
 	    calc(m, current);
 #else
