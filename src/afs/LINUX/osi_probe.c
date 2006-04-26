@@ -643,7 +643,7 @@ static probectl ia32_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
 
@@ -782,7 +782,7 @@ static probectl sct32_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
     /* number and list of unimplemented system calls */
@@ -877,7 +877,7 @@ static probectl emu_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
     /* number and list of unimplemented system calls */
