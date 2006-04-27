@@ -224,6 +224,7 @@ typedef struct smb_vc {
 #define SMB_VCFLAG_ALREADYDEAD	0x20	/* do not get tokens from this vc */
 #define SMB_VCFLAG_SESSX_RCVD	0x40	/* we received at least one session setups on this vc */
 #define SMB_VCFLAG_AUTH_IN_PROGRESS 0x80 /* a SMB NT extended authentication is in progress */
+#define SMB_VCFLAG_CLEAN_IN_PROGRESS 0x100
 
 /* one per user session */
 typedef struct smb_user {

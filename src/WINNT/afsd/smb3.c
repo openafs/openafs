@@ -2436,13 +2436,15 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
     switch (p->parmsp[0]) {
     case 1: responseSize = sizeof(qi.u.allocInfo); break;
     case 2: responseSize = sizeof(qi.u.volumeInfo); break;
+    	break;
     case 0x102: responseSize = sizeof(qi.u.FSvolumeInfo); break;
     case 0x103: responseSize = sizeof(qi.u.FSsizeInfo); break;
     case 0x104: responseSize = sizeof(qi.u.FSdeviceInfo); break;
     case 0x105: responseSize = sizeof(qi.u.FSattributeInfo); break;
     case 0x200: /* CIFS Unix Info */
     case 0x301: /* Mac FS Info */
-    default: return CM_ERROR_INVAL;
+    default: 
+	return CM_ERROR_INVAL;
     }
 
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
@@ -2907,6 +2909,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     	goto done;
     }   
 
+    lock_ObtainMutex(&fidp->mx);
     scp = fidp->scp;
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -2932,9 +2935,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
-	lock_ObtainMutex(&fidp->mx);
         *op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
-	lock_ReleaseMutex(&fidp->mx);
         *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
         *op++ = 0;
         *op++ = 0;
@@ -2959,6 +2960,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* send and free the packets */
   done:
     lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseMutex(&fidp->mx);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
     if (code == 0) 
@@ -2992,7 +2994,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }
 
     infoLevel = p->parmsp[1];
-    osi_Log2(smb_logp,"ReceiveTran2SetFileInfo type=[%x] fid=[%x]", infoLevel, fid);
+    osi_Log2(smb_logp,"ReceiveTran2SetFileInfo type 0x%x fid %d", infoLevel, fid);
     if (infoLevel > 0x104 || infoLevel < 0x101) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
@@ -3041,6 +3043,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         /* lock the vnode with a callback; we need the current status
          * to determine what the new status is, in some cases.
          */
+	lock_ObtainMutex(&fidp->mx);
         lock_ObtainMutex(&scp->mx);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
@@ -3062,9 +3065,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
              lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
             smb_UnixTimeFromLargeSearchTime(&attr.clientModTime, &lastMod);
-	    lock_ObtainMutex(&fidp->mx);
             fidp->flags |= SMB_FID_MTIMESETDONE;
-	    lock_ReleaseMutex(&fidp->mx);
         }
 		
         attribute = *((u_long *)(p->datap + 32));
@@ -3083,6 +3084,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
             }
         }
         lock_ReleaseMutex(&scp->mx);
+	lock_ReleaseMutex(&fidp->mx);
 
         /* call setattr */
         if (attr.mask)
@@ -5555,6 +5557,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (shareAccess & FILE_SHARE_WRITE)
         fidflags |= SMB_FID_SHARE_WRITE;
 
+    osi_Log1(smb_logp, "NTCreateX fidflags 0x%x", fidflags);
     code = 0;
 
     /* For an exclusive create, we want to do a case sensitive match for the last component. */
