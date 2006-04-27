@@ -265,7 +265,8 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+                     | CM_SCACHESYNC_NEEDCALLBACK
+                     | CM_SCACHESYNC_LOCK);
 
     if (code == 0 && 
         ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
@@ -315,7 +316,14 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 		}
 	    }
         }
+
+    } else if (code != 0) {
+        goto _done;
     }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+ _done:
 
     lock_ReleaseMutex(&scp->mx);
 
@@ -346,7 +354,8 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+                     | CM_SCACHESYNC_NEEDCALLBACK
+                     | CM_SCACHESYNC_LOCK);
 
     /*
      * If the open will fail because the volume is readonly, then we will
@@ -356,7 +365,8 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
      */
     if (code == CM_ERROR_READONLY)
         code = CM_ERROR_NOACCESS;
-    else if (code == 0 &&
+
+    if (code == 0 &&
              ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
              scp->fileType == CM_SCACHETYPE_FILE) {
         cm_key_t key;
@@ -403,8 +413,13 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 		}
 	    }
         }
+    } else if (code != 0) {
+        goto _done;
     }
 
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+ _done:
     lock_ReleaseMutex(&scp->mx);
 
     return code;

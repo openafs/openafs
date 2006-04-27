@@ -966,6 +966,15 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     unsigned short uid;
     smb_vc_t **vcpp;
 
+
+    lock_ObtainMutex(&vcp->mx);
+    if (vcp->flags & SMB_VCFLAG_CLEAN_IN_PROGRESS) {
+	lock_ReleaseMutex(&vcp->mx);
+	osi_Log1(smb_logp, "Clean of dead vcp 0x%x in progress", vcp);
+	return;
+    }
+    vcp->flags |= SMB_VCFLAG_CLEAN_IN_PROGRESS;
+    lock_ReleaseMutex(&vcp->mx);
     osi_Log1(smb_logp, "Cleaning up dead vcp 0x%x", vcp);
 
     lock_ObtainWrite(&smb_rctLock);
@@ -1043,6 +1052,9 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     smb_ReleaseVCNoLock(vcp);
 
     lock_ReleaseWrite(&smb_rctLock);
+    lock_ObtainMutex(&vcp->mx);
+    vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
+    lock_ReleaseMutex(&vcp->mx);
     osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
 }
 
@@ -5422,7 +5434,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     /* now create the hardlink */
     osi_Log1(smb_logp,"  Attempting to create new link [%s]", osi_LogSaveString(smb_logp, newLastNamep));
     code = cm_Link(newDscp, newLastNamep, sscp, 0, userp, &req);
-    osi_Log1(smb_logp,"  Link returns %d", code);
+    osi_Log1(smb_logp,"  Link returns 0x%x", code);
 
     /* Handle Change Notification */
     if (code == 0) {
@@ -6057,7 +6069,8 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         
     /* make sure we have a writable FD */
     if (!(fidp->flags & SMB_FID_OPENWRITE)) {
-	lock_ReleaseMutex(&fidp->mx);
+	osi_Log2(smb_logp, "smb_WriteData fid %d not OPENWRITE flags 0x%x",
+		  fidp->fid, fidp->flags);
         code = CM_ERROR_BADFDOP;
         goto done;
     }
@@ -6242,14 +6255,14 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
                   fidp->fid);
         code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
-        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns %d",
-                  fidp->fid,code2);
+        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
+                  fidp->fid, code2);
         lock_ReleaseMutex(&scp->mx);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
     }
 
-    osi_Log3(smb_logp, "smb_WriteData fid %d returns %d written %d",
+    osi_Log3(smb_logp, "smb_WriteData fid %d returns 0x%x written %d bytes",
               fidp->fid, code, *writtenp);
     return code;
 }

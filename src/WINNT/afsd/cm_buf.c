@@ -877,7 +877,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
      */
     lock_ReleaseMutex(&bp->mx);
     *bufpp = bp;
-    osi_Log3(buf_logp, "buf_GetNew returning bp 0x%x for file 0x%x, offset 0x%x",
+    osi_Log3(buf_logp, "buf_GetNew returning bp 0x%x for scp 0x%x, offset 0x%x",
               bp, (long) scp, offsetp->LowPart);
     return 0;
 }
@@ -1024,7 +1024,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
     }
     lock_ReleaseWrite(&buf_globalLock);
 
-    osi_Log3(buf_logp, "buf_Get returning bp 0x%x for file 0x%x, offset 0x%x",
+    osi_Log3(buf_logp, "buf_Get returning bp 0x%x for scp 0x%x, offset 0x%x",
               bp, (long) scp, offsetp->LowPart);
 #ifdef TESTING
     buf_ValidateBufQueues();
