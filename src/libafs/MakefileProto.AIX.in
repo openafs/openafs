@@ -126,6 +126,12 @@ dest_afs.ext.32: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
 dest_afs.ext.64: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
 	echo Install for 64-bit Kernel Complete
 
+install_afs.ext.32: $(DESTDIR)$(afskerneldir)/afs.ext.32
+	echo Install for 32-bit Kernel Complete
+
+install_afs.ext.64: $(DESTDIR)$(afskerneldir)/afs.ext.64
+	echo Install for 64-bit Kernel Complete
+
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
 # the iauth authentication mechanism. The model was changed by IBM in the
 # middle of an OS release. So iauth is only supported on AIX 4.1.5 and 
@@ -133,13 +139,10 @@ dest_afs.ext.64: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
 # they are ever made. AIX 4.3 also uses the iauth translator.
 
 LIBAFSIAUTH = afs.ext.32.iauth
-LIBAFS = afs.ext.32
 
 DEST_LIBAFSIAUTH = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
-DEST_LIBAFS = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFS)
 
 INST_LIBAFSIAUTH = ${DESTDIR}${afskerneldir}/$(LIBAFSIAUTH)
-INST_LIBAFS = ${DESTDIR}${afskerneldir}/$(LIBAFS)
 
 $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32: afs.ext.32
 	$(INSTALL) -f $? $@
@@ -151,12 +154,17 @@ $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64: afs.ext.64
 	-${STRIP} -X 64 $@
 	$(INSTALL) -f $?.map $@.map
 	
-$(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
+$(DESTDIR)$(afskerneldir)/afs.ext.32: afs.ext.32
 	$(INSTALL) -f $? $@
-	-${STRIP} $@
+	-${STRIP} -X 32 $@
 	$(INSTALL) -f $?.map $@.map
-	
-$(INST_LIBAFS): $(LIBAFS)
+
+$(DESTDIR)$(afskerneldir)/afs.ext.64: afs.ext.64
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 64 $@
+	$(INSTALL) -f $?.map $@.map
+
+$(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
 	$(INSTALL) -f $? $@
 	-${STRIP} $@
 	$(INSTALL) -f $?.map $@.map

@@ -127,6 +127,18 @@ ${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs: export.ext.nonfs
 ${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs: @AIX64@export64.ext.nonfs
 @AIX64@	${INSTALL} $? $@
 
+${DESTDIR}${afskerneldir}/export.ext: export.ext
+	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/export64.ext: @AIX64@export64.ext
+@AIX64@	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/export.ext.nonfs: export.ext.nonfs
+	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/export64.ext.nonfs: @AIX64@export64.ext.nonfs
+@AIX64@	${INSTALL} $? $@
+
 ${DEST}/lib/afs/export.exp: export.exp
 	${INSTALL} $? $@
 
@@ -166,6 +178,18 @@ ${DEST}/root.client/usr/vice/etc/dkload/cfgafs: cfgafs
 	${INSTALL} $? $@
 
 ${DEST}/root.client/usr/vice/etc/dkload/cfgafs64: @AIX64@cfgafs64
+@AIX64@	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/cfgexport: cfgexport
+	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/cfgexport64: @AIX64@cfgexport64
+@AIX64@	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/cfgafs: cfgafs
+	${INSTALL} $? $@
+
+${DESTDIR}${afskerneldir}/cfgafs64: @AIX64@cfgafs64
 @AIX64@	${INSTALL} $? $@
 
 dest:    ${DEST}/root.client/usr/vice/etc/dkload/export.ext \
