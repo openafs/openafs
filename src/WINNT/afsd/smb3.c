@@ -2618,6 +2618,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_scache_t *scp, *dscp;
     long code = 0;
     char *op;
+    char *pathp;
     char *tidPathp;
     char *lastComp;
     cm_req_t req;
@@ -2645,8 +2646,12 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
         return 0;
     }
+
+    pathp = (char *)(&p->parmsp[3]);
+    if (smb_StoreAnsiFilenames)
+	OemToChar(pathp,pathp);
     osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
-              osi_LogSaveString(smb_logp, (char *)(&p->parmsp[3])));
+              osi_LogSaveString(smb_logp, pathp));
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
@@ -2697,8 +2702,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      */
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         spacep = cm_GetSpace();
-        smb_StripLastComponent(spacep->data, &lastComp,
-                                (char *)(&p->parmsp[3]));
+        smb_StripLastComponent(spacep->data, &lastComp, pathp);
 #ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
@@ -2743,7 +2747,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_data.rootSCachep, (char *)(&p->parmsp[3]),
+    code = cm_NameI(cm_data.rootSCachep, pathp,
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
 
     if (code) {
@@ -2778,7 +2782,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     op = outp->datap;
     /* for info level 108, figure out short name */
     if (infoLevel == 0x108) {
-        code = cm_GetShortName((char *)(&p->parmsp[3]), userp, &req,
+        code = cm_GetShortName(pathp, userp, &req,
                                 tidPathp, scp->fid.vnode, shortName,
                                 (size_t *) &len);
         if (code) {
