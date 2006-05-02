@@ -25,3 +25,4 @@ EXPORTS
 	pthread_attr_getdetachstate			@23
 	pthread_attr_setdetachstate			@24
 	pthread_exit					@25
+	DllMain						@26
