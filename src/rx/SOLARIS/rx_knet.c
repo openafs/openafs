@@ -344,7 +344,7 @@ osi_FreeSocket(register osi_socket *asocket)
     dvec.iov_len = 1;
 
     while (rxk_ListenerPid) {
-	osi_NetSend(rx_socket, &taddr, &dvec, 1, 1, 0);
+	osi_NetSend(rx_socket, &taddr, sizeof(taddr), &dvec, 1, 1, 0);
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
 
@@ -357,8 +357,8 @@ osi_FreeSocket(register osi_socket *asocket)
 }
 
 int
-osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
-	    int nvecs, afs_int32 asize, int istack)
+osi_NetSend(osi_socket asocket, struct sockaddr_storage *saddr, int slen,
+	    struct iovec *dvec, int nvecs, afs_int32 asize, int istack)
 {
     struct sonode *so = (struct sonode *)asocket;
     struct nmsghdr msg;
@@ -371,8 +371,8 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
     }
 
-    msg.msg_name = (struct sockaddr *)addr;
-    msg.msg_namelen = sizeof(struct sockaddr_in);
+    msg.msg_name = (struct sockaddr *) saddr;
+    msg.msg_namelen = slen;
     msg.msg_iov = dvec;
     msg.msg_iovlen = nvecs;
     msg.msg_control = NULL;
@@ -397,8 +397,8 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 }
 
 int
-osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
-	       int nvecs, int *alength)
+osi_NetReceive(osi_socket so, struct sockaddr_storage *saddr, int *slen,
+	       struct iovec *dvec, int nvecs, int *alength)
 {
     struct sonode *asocket = (struct sonode *)so;
     struct nmsghdr msg;
@@ -412,7 +412,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     }
 
     msg.msg_name = NULL;
-    msg.msg_namelen = sizeof(struct sockaddr_in);
+    msg.msg_namelen = *slen;
     msg.msg_iov = NULL;
     msg.msg_iovlen = 0;
     msg.msg_control = NULL;
@@ -436,7 +436,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	if (msg.msg_name == NULL) {
 	    error = -1;
 	} else {
-	    memcpy(addr, msg.msg_name, msg.msg_namelen);
+	    memcpy(saddr, msg.msg_name, msg.msg_namelen);
+	    *slen = msg.msg_namelen;
 	    kmem_free(msg.msg_name, msg.msg_namelen);
 	    *alength = *alength - uio.uio_resid;
 	}

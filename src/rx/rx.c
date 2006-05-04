@@ -373,8 +373,46 @@ static int rxinit_status = 1;
 #define UNLOCK_RX_INIT
 #endif
 
+/*
+ * Now, rx_InitHost is just a stub for rx_InitAddrs
+ */
+
 int
 rx_InitHost(u_int host, u_int port)
+{
+    struct sockaddr_storage saddr;
+    int type = SOCK_DGRAM, len = sizeof(struct sockaddr_in);
+
+    memset((void *) &saddr, 0, sizeof(saddr));
+    rx_ssfamily(&saddr) = AF_INET;
+    ((struct sockaddr_in *) &saddr)->sin_addr.s_addr = host;
+    ((struct sockaddr_in *) &saddr)->sin_port = htons(port);
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    ((struct sockaddr_in *) &saddr)->sin_len = sizeof(struct sockaddr_in);
+#endif
+    return rx_InitAddrs(&saddr, &type, &len, 1);
+}
+
+/*
+ * New API: rx_InitAddrs(struct sockaddr_storage *, int *, int)
+ *
+ * Arguments:
+ *
+ * struct sockaddr_storage - array of struct sockaddr_storage elements,
+ *			     each one listing an interface/protocol to
+ *			     be listened on.
+ * int *		   - array of integers listing the socket type
+ *			     (SOCK_STREAM or SOCK_DGRAM) to be used
+ *			     by the corresponding struct sockaddr_storage
+ * int *		   - array of integers listing saddr sizes
+ * int			   - Number of elements in sockaddr_storage array.
+ *
+ * Note that in general only servers should call this function; clients
+ * should (for now) continue to call rx_Init().
+ */
+
+int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
+		 int nelem)
 {
 #ifdef KERNEL
     osi_timeval_t tv;
@@ -382,7 +420,7 @@ rx_InitHost(u_int host, u_int port)
     struct timeval tv;
 #endif /* KERNEL */
     char *htable, *ptable;
-    int tmp_status;
+    int tmp_status, i;
 
 #if defined(AFS_DJGPP_ENV) && !defined(DEBUG)
     __djgpp_set_quiet_socket(1);
@@ -415,12 +453,26 @@ rx_InitHost(u_int host, u_int port)
 
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
+    
+    rx_socket = -1;
+    rx_port = 0;
 
-    rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
-    if (rx_socket == OSI_NULLSOCKET) {
-	UNLOCK_RX_INIT;
-	return RX_ADDRINUSE;
+    for (i = 0; i < nelem; i++) {
+	switch (types[i]) {
+	case SOCK_DGRAM:
+	    rx_socket = rxi_GetHostUDPSocket(&saddrs[i], salens[i]);
+	    if (rx_socket == OSI_NULLSOCKET) {
+		UNLOCK_RX_INIT;
+		return RX_ADDRINUSE;
+	    }
+	    rx_port = rx_ss2pn(&saddrs[i]);
+	    break;
+	default:
+		return RX_INVALID_OPERATION;
+	}
+
     }
+
 #ifdef	RX_ENABLE_LOCKS
 #ifdef RX_LOCKS_DB
     rxdb_init();
@@ -483,20 +535,19 @@ rx_InitHost(u_int host, u_int port)
 #else
     osi_GetTime(&tv);
 #endif
-    if (port) {
-	rx_port = port;
-    } else {
+
+    if (! rx_port) {
 #if defined(KERNEL) && !defined(UKERNEL)
 	/* Really, this should never happen in a real kernel */
 	rx_port = 0;
 #else
-	struct sockaddr_in addr;
-	int addrlen = sizeof(addr);
-	if (getsockname((int)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
+	struct sockaddr_storage sn;
+	socklen_t addrlen = sizeof(sn);
+	if (getsockname((int)rx_socket, (struct sockaddr *)&sn, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
 	}
-	rx_port = addr.sin_port;
+	rx_port = rx_ss2pn(&sn);
 #endif
     }
     rx_stats.minRtt.sec = 9999999;
@@ -549,6 +600,7 @@ rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
 }
+
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
  * a new thread in this service.  Could be "no" for two reasons: over the
@@ -739,22 +791,50 @@ rx_StartServer(int donateMe)
     return;
 }
 
-/* Create a new client connection to the specified service, using the
- * specified security object to implement the security model for this
- * connection. */
+/*
+ * Now, rx_NewConnection is just a stub for rx_NewConnectionAddrs()
+ */
+
 struct rx_connection *
 rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
 		 register struct rx_securityClass *securityObject,
 		 int serviceSecurityIndex)
 {
-    int hashindex;
+    struct sockaddr_in sin;
+    int len = sizeof(sin), type = SOCK_DGRAM;
+
+    memset((void *) &sin, 0, sizeof(sin));
+
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = shost;
+    sin.sin_port = sport;
+
+    return rx_NewConnectionAddrs((struct sockaddr_storage *) &sin, &type,
+				 &len, 1, sservice, securityObject,
+				 serviceSecurityIndex);
+}
+
+/* Create a new client connection to the specified service, using the
+ * specified security object to implement the security model for this
+ * connection
+ *
+ * This follows the same logic as rx_InitAddrs() for the first four
+ * arguments.
+ */
+struct rx_connection *
+rx_NewConnectionAddrs(struct sockaddr_storage *saddr, int *type, int *slen,
+		      int nelem, u_short sservice,
+		      struct rx_securityClass *securityObject,
+		      int serviceSecurityIndex)
+{
+    int hashindex, i;
     afs_int32 cid;
     register struct rx_connection *conn;
 
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
+    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(rx_ss2v4addr(saddr)), ntohs(rx_ss2pn(saddr)), sservice, securityObject, serviceSecurityIndex));
 
     /* Vasilsi said: "NETPRI protects Cid and Alloc", but can this be true in
      * the case of kmem_alloc? */
@@ -770,7 +850,16 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     conn->type = RX_CLIENT_CONNECTION;
     conn->cid = cid;
     conn->epoch = rx_epoch;
-    conn->peer = rxi_FindPeer(shost, sport, 0, 1);
+    /*
+     * Right now we're going to just call rxi_FindPeer for UDP connections
+     * We're only going to support one.
+     */
+    for (i = 0; i < nelem; i++) {
+	if (type[i] == SOCK_DGRAM) {
+	    conn->peer = rxi_FindPeer(&saddr[i], slen[i], type[i], 0, 1);
+	    break;
+	}
+    }
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
     /* This doesn't work in all compilers with void (they're buggy), so fake it
@@ -1313,7 +1402,17 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    if (socket == OSI_NULLSOCKET) {
 		/* If we don't already have a socket (from another
 		 * service on same port) get a new one */
-		socket = rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
+		struct sockaddr_in sin;
+
+		memset((void *) &sin, 0, sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_addr.s_addr = htonl(INADDR_ANY);
+		sin.sin_port = port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+		sin.sin_len = sizeof(sin);
+#endif
+		socket = rxi_GetHostUDPSocket((struct sockaddr_storage *) &sin,
+					      sizeof(sin));
 		if (socket == OSI_NULLSOCKET) {
 		    USERPRI;
 		    rxi_FreeService(tservice);
@@ -2251,22 +2350,60 @@ rxi_Free(void *addr, register size_t size)
  * refcount will be be decremented. This is used to replace the peer
  * structure hanging off a connection structure */
 struct rx_peer *
-rxi_FindPeer(register afs_uint32 host, register u_short port,
+rxi_FindPeer(struct sockaddr_storage *saddr, int slen, int stype,
 	     struct rx_peer *origPeer, int create)
 {
     register struct rx_peer *pp;
-    int hashIndex;
-    hashIndex = PEER_HASH(host, port);
+    int hashIndex, i, j;
+    for (i = 0, j = 0; i < slen; i++)
+	j += ((unsigned char *) saddr)[i];
+    hashIndex = j % rx_hashTableSize;
     MUTEX_ENTER(&rx_peerHashTable_lock);
     for (pp = rx_peerHashTable[hashIndex]; pp; pp = pp->next) {
-	if ((pp->host == host) && (pp->port == port))
+	if (memcmp(saddr, &pp->saddr, slen) == 0 && stype == pp->socktype)
 	    break;
     }
     if (!pp) {
 	if (create) {
 	    pp = rxi_AllocPeer();	/* This bzero's *pp */
-	    pp->host = host;	/* set here or in InitPeerParams is zero */
-	    pp->port = port;
+	    memcpy(&pp->saddr, saddr, slen);
+	    pp->saddrlen = slen;
+	    pp->socktype = stype;
+	    switch (rx_ssfamily(saddr)) {
+	    case AF_INET:
+		/*
+		 * Should be enough storage for a dotted quad
+		 */
+		sprintf(pp->addrstring, "%d.%d.%d.%d",
+			rx_ss2addrp(saddr)[0], rx_ss2addrp(saddr)[1],
+			rx_ss2addrp(saddr)[2], rx_ss2addrp(saddr)[3]);
+		break;
+#ifdef AF_INET6
+	    case AF_INET6:
+		/*
+		 * This gets more complicated, unfortunately
+		 */
+		if (IN6_IS_ADDR_V4COMPAT(&(rx_ss2sin6(saddr)->sin6_addr))) {
+		    sprintf(pp->addrstring, "%d.%d.%d.%d",
+			    rx_ss2addrp(saddr)[12], rx_ss2addrp(saddr)[13],
+			    rx_ss2addrp(saddr)[14], rx_ss2addrp(saddr)[15]);
+		} else {
+		    sprintf(pp->addrstring, "%x:%x:%x:%x:%x:%x:%x:%x",
+			    ntohs(rx_ss2addrp6(saddr)[0]),
+			    ntohs(rx_ss2addrp6(saddr)[1]),
+			    ntohs(rx_ss2addrp6(saddr)[2]),
+			    ntohs(rx_ss2addrp6(saddr)[3]),
+			    ntohs(rx_ss2addrp6(saddr)[4]),
+			    ntohs(rx_ss2addrp6(saddr)[5]),
+			    ntohs(rx_ss2addrp6(saddr)[6]),
+			    ntohs(rx_ss2addrp6(saddr)[7]));
+		}
+		break;
+#endif /* AF_INET6 */
+	    default:
+		strcpy(pp->addrstring, "??.??.??.??");
+		break;
+	    }
 	    MUTEX_INIT(&pp->peer_lock, "peer_lock", MUTEX_DEFAULT, 0);
 	    queue_Init(&pp->congestionQueue);
 	    queue_Init(&pp->rpcStats);
@@ -2301,8 +2438,8 @@ rxi_FindPeer(register afs_uint32 host, register u_short port,
  * server connection is created, it will be created using the supplied
  * index, if the index is valid for this service */
 struct rx_connection *
-rxi_FindConnection(osi_socket socket, register afs_int32 host,
-		   register u_short port, u_short serviceId, afs_uint32 cid,
+rxi_FindConnection(osi_socket socket, struct sockaddr_storage *saddr,
+		   int slen, int socktype, u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex)
 {
     int hashindex, flag;
@@ -2324,9 +2461,11 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 		MUTEX_EXIT(&rx_connHashTable_lock);
 		return (struct rx_connection *)0;
 	    }
-	    if (pp->host == host && pp->port == port)
+	    if (memcmp(&pp->saddr, saddr, slen) == 0 &&
+						socktype == pp->socktype)
 		break;
-	    if (type == RX_CLIENT_CONNECTION && pp->port == port)
+	    if (type == RX_CLIENT_CONNECTION &&
+					rx_ss2pn(&pp->saddr) == rx_ss2pn(saddr))
 		break;
 	    /* So what happens when it's a callback connection? */
 	    if (		/*type == RX_CLIENT_CONNECTION && */
@@ -2359,7 +2498,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	conn->peer = rxi_FindPeer(host, port, 0, 1);
+	conn->peer = rxi_FindPeer(saddr, slen, socktype, 0, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
 	conn->epoch = epoch;
@@ -2413,7 +2552,7 @@ int (*rx_almostSent) () = 0;
 
 struct rx_packet *
 rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
-		  afs_uint32 host, u_short port, int *tnop,
+		  struct sockaddr_storage *saddr, int slen, int *tnop,
 		  struct rx_call **newcallp)
 {
     register struct rx_call *call;
@@ -2435,36 +2574,29 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
     packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
     dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %x",
-	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,
+	 np->header.serial, packetType, ntohl(rx_ss2v4addr(saddr)),
+	 ntohs(rx_ss2pn(saddr)), np->header.serviceId,
 	 np->header.epoch, np->header.cid, np->header.callNumber,
 	 np->header.seq, np->header.flags, np));
 #endif
 
     if (np->header.type == RX_PACKET_TYPE_VERSION) {
-	return rxi_ReceiveVersionPacket(np, socket, host, port, 1);
+	return rxi_ReceiveVersionPacket(np, socket, saddr, slen, 1);
     }
 
     if (np->header.type == RX_PACKET_TYPE_DEBUG) {
-	return rxi_ReceiveDebugPacket(np, socket, host, port, 1);
+	return rxi_ReceiveDebugPacket(np, socket, saddr, slen, 1);
     }
 #ifdef RXDEBUG
     /* If an input tracer function is defined, call it with the packet and
      * network address.  Note this function may modify its arguments. */
     if (rx_justReceived) {
-	struct sockaddr_in addr;
+	struct sockaddr_in *addr = (struct sockaddr_in *) saddr;
 	int drop;
-	addr.sin_family = AF_INET;
-	addr.sin_port = port;
-	addr.sin_addr.s_addr = host;
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-	addr.sin_len = sizeof(addr);
-#endif /* AFS_OSF_ENV */
-	drop = (*rx_justReceived) (np, &addr);
+	drop = (*rx_justReceived) (np, addr);
 	/* drop packet if return value is non-zero */
 	if (drop)
 	    return np;
-	port = addr.sin_port;	/* in case fcn changed addr */
-	host = addr.sin_addr.s_addr;
     }
 #endif
 
@@ -2475,9 +2607,9 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
     /* Find the connection (or fabricate one, if we're the server & if
      * necessary) associated with this packet */
     conn =
-	rxi_FindConnection(socket, host, port, np->header.serviceId,
-			   np->header.cid, np->header.epoch, type,
-			   np->header.securityIndex);
+	rxi_FindConnection(socket, saddr, slen, SOCK_DGRAM,
+			   np->header.serviceId, np->header.cid,
+			   np->header.epoch, type, np->header.securityIndex);
 
     if (!conn) {
 	/* If no connection found or fabricated, just ignore the packet.
@@ -2612,7 +2744,7 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    *call->callNumber = np->header.callNumber;
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+		dpf(("RecPacket call 0 %d %s: %s.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], rx_AddrStringOf(conn->peer), ntohs(rx_PortOf(conn->peer)), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
 
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -2677,7 +2809,7 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    rxi_ResetCall(call, 0);
 	    *call->callNumber = np->header.callNumber;
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+		dpf(("RecPacket call 0 %d %s: %s.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], rx_AddrStringOf(conn->peer), ntohs(rx_PortOf(conn->peer)), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
 
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -2838,7 +2970,7 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
     /* Now do packet type-specific processing */
     switch (np->header.type) {
     case RX_PACKET_TYPE_DATA:
-	np = rxi_ReceiveDataPacket(call, np, 1, socket, host, port, tnop,
+	np = rxi_ReceiveDataPacket(call, np, 1, socket, saddr, slen, tnop,
 				   newcallp);
 	break;
     case RX_PACKET_TYPE_ACK:
@@ -3082,8 +3214,8 @@ TryAttach(register struct rx_call *acall, register osi_socket socket,
 struct rx_packet *
 rxi_ReceiveDataPacket(register struct rx_call *call,
 		      register struct rx_packet *np, int istack,
-		      osi_socket socket, afs_uint32 host, u_short port,
-		      int *tnop, struct rx_call **newcallp)
+		      osi_socket socket, struct sockaddr_storage *saddr,
+		      int slen, int *tnop, struct rx_call **newcallp)
 {
     int ackNeeded = 0;		/* 0 means no, otherwise ack_reason */
     int newPackets = 0;
@@ -3154,7 +3286,7 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	/* The RX_JUMBO_PACKET is set in all but the last packet in each
 	 * AFS 3.5 jumbogram. */
 	if (flags & RX_JUMBO_PACKET) {
-	    tnp = rxi_SplitJumboPacket(np, host, port, isFirst);
+	    tnp = rxi_SplitJumboPacket(np, saddr, slen, isFirst);
 	} else {
 	    tnp = NULL;
 	}
@@ -6286,9 +6418,9 @@ rx_PrintStats(FILE * file)
 void
 rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 {
-    fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %u.%d.\n",
+/*    fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %u.%d.\n",
 	    ntohl(peer->host), (int)peer->port, (int)peer->burstSize,
-	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
+	    (int)peer->burstWait.sec, (int)peer->burstWait.usec); */
 
     fprintf(file,
 	    "   Rtt %d, " "retry time %u.%06d, " "total sent %d, "
@@ -6918,7 +7050,7 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	       afs_uint32 currentFunc, afs_uint32 totalFunc,
 	       struct clock *queueTime, struct clock *execTime,
 	       afs_hyper_t * bytesSent, afs_hyper_t * bytesRcvd, int isServer,
-	       afs_uint32 remoteHost, afs_uint32 remotePort,
+	       struct sockaddr_storage *saddr,
 	       int addToPeerList, unsigned int *counter)
 {
     int rc = 0;
@@ -6956,8 +7088,19 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	}
 	*counter += totalFunc;
 	for (i = 0; i < totalFunc; i++) {
-	    rpc_stat->stats[i].remote_peer = remoteHost;
-	    rpc_stat->stats[i].remote_port = remotePort;
+	    switch (rx_ssfamily(saddr)) {
+	    case AF_INET:
+		rpc_stat->stats[i].remote_peer =
+					rx_ss2sin(saddr)->sin_addr.s_addr;
+		break;
+	    default:
+#ifdef AF_INET6
+	    case AF_INET6:
+		rpc_stat->stats[i].remote_peer = 0xffffffff;
+		break;
+#endif AF_INET6
+	    }
+	    rpc_stat->stats[i].remote_port = rx_ss2pn(saddr);
 	    rpc_stat->stats[i].remote_is_server = isServer;
 	    rpc_stat->stats[i].interfaceId = rxInterface;
 	    rpc_stat->stats[i].func_total = totalFunc;
@@ -7060,13 +7203,18 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
     if (rxi_monitor_peerStats) {
 	rxi_AddRpcStat(&peer->rpcStats, rxInterface, currentFunc, totalFunc,
 		       queueTime, execTime, bytesSent, bytesRcvd, isServer,
-		       peer->host, peer->port, 1, &rxi_rpc_peer_stat_cnt);
+		       &peer->saddr, 1, &rxi_rpc_peer_stat_cnt);
     }
 
     if (rxi_monitor_processStats) {
+	struct sockaddr_in sin;
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = 0xffffffff;
+	sin.sin_port = 0xffff;
 	rxi_AddRpcStat(&processStats, rxInterface, currentFunc, totalFunc,
 		       queueTime, execTime, bytesSent, bytesRcvd, isServer,
-		       0xffffffff, 0xffffffff, 0, &rxi_rpc_process_stat_cnt);
+		       (struct sockaddr_storage *) &sin, 0,
+		       &rxi_rpc_process_stat_cnt);
     }
 
     MUTEX_EXIT(&peer->peer_lock);

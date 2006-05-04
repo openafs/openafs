@@ -1832,7 +1832,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    if (created) {
 		ViceLog(0, ("FindClient: stillborn client %x(%x); conn %x (host %s:%d) had client %x(%x)\n", 
 			    client, client->sid, tcon, 
-			    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+			    rxr_AddrStringOf(tcon),
 			    ntohs(rxr_PortOf(tcon)),
 			    oldClient, oldClient->sid));
 		if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
@@ -1858,7 +1858,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    oldClient->tcon = (struct rx_connection *)0;
 	    ViceLog(0, ("FindClient: deleted client %x(%x) already had conn %x (host %s:%d), stolen by client %x(%x)\n", 
 			oldClient, oldClient->sid, tcon, 
-			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+			rxr_AddrStringOf(tcon),
 			ntohs(rxr_PortOf(tcon)),
 			client, client->sid));
 	    /* rx_SetSpecific will be done immediately below */
@@ -1907,8 +1907,8 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client == NULL || client->tcon == NULL) {
 	ViceLog(0,
-		("GetClient: no client in conn %x (host %x:%d), VBUSYING\n",
-		 tcon, rxr_HostOf(tcon),ntohs(rxr_PortOf(tcon))));
+		("GetClient: no client in conn %x (host %s:%d), VBUSYING\n",
+		 tcon, rxr_AddrStringOf(tcon),ntohs(rxr_PortOf(tcon))));
 	H_UNLOCK;
 	return VBUSY;
     }

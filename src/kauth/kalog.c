@@ -60,9 +60,9 @@ kalog_Init()
 }
 
 /* log a ticket usage */
-kalog_log(principal, instance, sprincipal, sinstance, realm, hostaddr, type)
-     char *principal, *instance, *sprincipal, *sinstance, *realm;
-     int hostaddr, type;
+void
+kalog_log(char *principal, char *instance, char *sprincipal, char *sinstance,
+	  char *realm, int hostaddr, int type)
 {
     char keybuf[512];		/* not random! 63 . 63 , 63 . 63 max key */
     datum key, data;
@@ -128,7 +128,7 @@ kalog_log(principal, instance, sprincipal, sinstance, realm, hostaddr, type)
 
     dbm_store(kalog_db, key, data, DBM_REPLACE);
 
-    ViceLog(verbose_track, ("%s from %x\n", keybuf, hostaddr));
+    ViceLog(verbose_track, ("%s from %s\n", keybuf, afs_inet_ntoa(hostaddr)));
 }
 
 
@@ -191,5 +191,5 @@ ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
 	break;
     }
 
-    ViceLog(verbose_track, ("%s from %x\n", logbuf, hostaddr));
+    ViceLog(verbose_track, ("%s from %s\n", logbuf, afs_inet_ntoa(hostaddr)));
 }
