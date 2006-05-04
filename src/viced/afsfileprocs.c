@@ -655,10 +655,13 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 #endif /* AFS_PTHREAD_ENV */
     }
 
-    if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
+    if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {
+	char hoststr[16];
 	ViceLog(0,
-		("CheckRights: len=%u, for host=0x%x\n",
-		 client->host->hcps.prlist_len, client->host->host));
+		("CheckRights: len=%u, for host=%s:%d\n",
+		 client->host->hcps.prlist_len, 
+		 afs_inet_ntoa_r(client->host->host, hoststr),
+		 ntohs(client->host->port)));
     } else
 	acl_CheckRights(ACL, &client->host->hcps, &hrights);
     H_UNLOCK;
