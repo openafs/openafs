@@ -1392,11 +1392,15 @@
 
 	<!-- Shared assembly runtime for VS 2005 -->
 	<?if $(env.AFSVER_CL) = "1400"?>
-		<?ifdef env.CommonProgramFiles6432?>
-		  <?define CPF="$(env.CommonProgramFiles)"?>
-		<?else?>
-		  <?define CPF="$(env.CommonProgramFiles(x86))"?>
-		<?endif?>
+		<?if $(var.Platform) = "x64" ?>
+		    <?ifdef env.CommonProgramFiles6432?>
+		    	<?define CPF="$(env.CommonProgramFiles)"?>
+		    <?else?>
+		        <?define CPF="$(env.CommonProgramFiles(x86))"?>
+		    <?endif?>
+                <?else?>
+		    <?define CPF="$(env.CommonProgramFiles)"?>
+                <?endif?>
 		<?if $(var.Platform) = "x64" ?>
 			<?ifndef Debug?>
 				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86_x64.msm"/>
