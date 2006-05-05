@@ -466,6 +466,7 @@ case $AFS_SYSNAME in
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
+		RANLIB="ranlib -c"
 		REGEX_OBJ="regex.o"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"

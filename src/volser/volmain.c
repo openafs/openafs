@@ -408,6 +408,10 @@ main(int argc, char **argv)
     SetLogThreadNumProgram( threadNum );
 #endif
 
+    /* Open FileLog and map stdout, stderr into it */
+    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+    SetupLogSignals();
+
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
 	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
@@ -442,10 +446,6 @@ main(int argc, char **argv)
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);
     memset(busyFlags, 0, sizeof(busyFlags));
-
-    /* Open FileLog and map stdout, stderr into it */
-    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
-    SetupLogSignals();
 
     {
 #ifdef AFS_PTHREAD_ENV

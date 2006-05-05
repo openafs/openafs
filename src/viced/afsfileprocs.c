@@ -1886,7 +1886,7 @@ SRXAFS_ResidencyCmd(struct rx_call * acall, struct AFSFid * Fid,
     return EINVAL;
 }
 
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
 static struct afs_buffer {
     struct afs_buffer *next;
 } *freeBufferList = 0;
@@ -6757,7 +6757,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     int errorCode = 0;		/* Returned error code to caller */
     IHandle_t *ihP;
     FdHandle_t *fdP;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     register char *tbuffer;
 #else /* AFS_NT40_ENV */
     struct iovec tiov[RX_MAXIOVECS];
@@ -6827,7 +6827,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 #if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
 #endif /* FS_STATS_DETAILED */
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     while (Len > 0) {
@@ -6836,7 +6836,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    wlen = optSize;
 	else
 	    wlen = (int)Len;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
 	errorCode = FDH_READ(fdP, tbuffer, wlen);
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
@@ -6870,14 +6870,14 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 #endif /* FS_STATS_DETAILED */
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
 	    return -31;
 	}
 	Len -= wlen;
     }
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
     FDH_CLOSE(fdP);
@@ -6974,7 +6974,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
     int errorCode = 0;		/* Returned error code to caller */
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     register char *tbuffer;	/* data copying buffer */
 #else /* AFS_NT40_ENV */
     struct iovec tiov[RX_MAXIOVECS];	/* no data copying with iovec */
@@ -7114,7 +7114,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     if (Pos > 0)
 	FDH_SEEK(fdP, Pos, 0);
     bytesTransfered = 0;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     /* if length == 0, the loop below isn't going to do anything, including
@@ -7148,7 +7148,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		rlen = optSize;	/* bound by buffer size */
 	    else
 		rlen = (int)tlen;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
 	    errorCode = rx_Read(Call, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
 	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, rlen);
@@ -7161,7 +7161,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		break;
 	    }
 	    rlen = errorCode;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
 	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
 	    errorCode = FDH_WRITEV(fdP, tiov, tnio);
@@ -7174,7 +7174,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	}
     }
   done:
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_PTHREAD_ENV)
     FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
     if (sync) {
