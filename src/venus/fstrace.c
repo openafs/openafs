@@ -285,6 +285,7 @@ DisplayRecord(outFilep, alp, rsize)
     int status;
     int printed;		/* did we print the string yet? */
     afs_int32 *tlp;
+    time_t tmv;
 
     /* decode parameters */
     temp = alp[0];		/* type encoded in low-order 24 bits, t0 high */
@@ -354,7 +355,8 @@ DisplayRecord(outFilep, alp, rsize)
 #endif /* AFS_SGI64_ENV */
 	    break;
 	case ICL_TYPE_UNIXDATE:
-	    printfParms[pfpix++] = (long)ctime((time_t *) & alp[pix]);
+	    tmv = alp[pix];
+	    printfParms[pfpix++] = (long)ctime(&tmv);
 	    break;
 	default:
 	    printf("DisplayRecord: Bad type %d in decode switch.\n", type);
@@ -450,8 +452,9 @@ DisplayRecord(outFilep, alp, rsize)
     }
     if (!printed) {
 	if (alp[1] == ICL_INFO_TIMESTAMP) {
+	    tmv = alp[4];
 	    fprintf(outFilep, "time %d.%06d, pid %u: %s\n", alp[3] / 1000000,
-		    alp[3] % 1000000, alp[2], ctime((time_t *) & alp[4]));
+		    alp[3] % 1000000, alp[2], ctime(&tmv));
 	} else {
 	    fprintf(outFilep, "raw op %d, time %d.%06d, pid %u\n", alp[1],
 		    alp[3] / 1000000, alp[3] % 1000000, alp[2]);
@@ -500,8 +503,9 @@ DisplayRecord(outFilep, alp, rsize)
 		    fprintf(outFilep, "p%d:%s ", i, (char *)&alp[pix]);
 		    break;
 		case ICL_TYPE_UNIXDATE:
+		    tmv = alp[pix];
 		    fprintf(outFilep, "p%d:%s ", i,
-			    ctime((time_t *) & alp[pix]));
+			    ctime(&tmv));
 		    break;
 		default:
 		    printf

@@ -202,7 +202,7 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
 		      &info);
 	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
 		continue;
-	    a = info.rti_info[RTAX_IFA];
+	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (count >= maxSize)	/* no more space */
 		dpf(("Too many interfaces..ignoring 0x%x\n",
@@ -283,7 +283,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 		      &info);
 	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
 		continue;
-	    a = info.rti_info[RTAX_IFA];
+	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (a->sin_addr.s_addr != htonl(0x7f000001) ) {
 		if (count >= maxSize) {	/* no more space */
@@ -293,7 +293,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 		    struct ifreq ifr;
 		    
 		    addrBuffer[count] = a->sin_addr.s_addr;
-		    a = info.rti_info[RTAX_NETMASK];
+		    a = (struct sockaddr_in *) info.rti_info[RTAX_NETMASK];
 		    if (a)
 			maskBuffer[count] = a->sin_addr.s_addr;
 		    else

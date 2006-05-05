@@ -52,11 +52,16 @@ RCSID
 #include "volume.h"
 #include "viceinode.h"
 #include "partition.h"
+#include "daemon_com.h"
 #include "fssync.h"
 
 /* forward declarations */
-void PurgeIndex_r(Volume * vp, VnodeClass class);
-void PurgeHeader_r(Volume * vp);
+static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
+			    afs_int32 * aoffset);
+static void PurgeIndex(Volume * vp, VnodeClass class);
+static void PurgeIndex_r(Volume * vp, VnodeClass class);
+static void PurgeHeader_r(Volume * vp);
+static void PurgeHeader(Volume * vp);
 
 void
 VPurgeVolume_r(Error * ec, Volume * vp)
@@ -78,7 +83,7 @@ VPurgeVolume_r(Error * ec, Volume * vp)
     /*
      * Call the fileserver to break all call backs for that volume
      */
-    FSYNC_askfs(V_id(vp), tpartp->name, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(V_id(vp), tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
 }
 
 void
@@ -89,7 +94,7 @@ VPurgeVolume(Error * ec, Volume * vp)
     VOL_UNLOCK;
 }
 
-#define MAXOBLITATONCE	200
+#define MAXOBLITATONCE	1000
 /* delete a portion of an index, adjusting offset appropriately.  Returns 0 if
    things work and we should be called again, 1 if success full and done, and -1
    if an error occurred.  It adjusts offset appropriately on 0 or 1 return codes,
@@ -148,10 +153,13 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     OS_SYNC(afile->str_fd);
 
     /* finally, do the idec's */
+    V_linkHandle(avp)->ih_flags|=IH_DELAY_SYNC;		/* severe performance penalty */
     for (i = 0; i < iindex; i++) {
 	IH_DEC(V_linkHandle(avp), inodes[i], V_parentId(avp));
 	DOPOLL;
     }
+    V_linkHandle(avp)->ih_flags&=~IH_DELAY_SYNC;
+    IH_CONDSYNC(V_linkHandle(avp));
 
     /* return the new offset */
     *aoffset = offset;
@@ -161,7 +169,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     return -1;
 }
 
-void
+static void
 PurgeIndex(Volume * vp, VnodeClass class)
 {
     VOL_LOCK;
@@ -169,7 +177,7 @@ PurgeIndex(Volume * vp, VnodeClass class)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeIndex_r(Volume * vp, VnodeClass class)
 {
     StreamHandle_t *ifile;
@@ -199,7 +207,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     FDH_CLOSE(fdP);
 }
 
-void
+static void
 PurgeHeader(Volume * vp)
 {
     VOL_LOCK;
@@ -207,7 +215,7 @@ PurgeHeader(Volume * vp)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeHeader_r(Volume * vp)
 {
     IH_REALLYCLOSE(V_diskDataHandle(vp));

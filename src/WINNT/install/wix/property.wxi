@@ -1,34 +1,37 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <Include>
 
+    <Property Id="NETBIOSNAME">$(var.NetbiosName)</Property>
+    <Property Id="USEDNS">$(var.UseDNS)</Property>
     <Property Id="AFSCELLNAME">$(var.CellName)</Property>
+
+<?ifndef BinsOnly ?>
     <Property Id="LOGONOPTIONS">$(var.LogonOptions)</Property>
     <Property Id="FREELANCEMODE">$(var.FreelanceMode)</Property>
-    <Property Id="USEDNS">$(var.UseDNS)</Property>
-	<Property Id="NOFINDLANABYNAME">$(var.NoFindLanaByName)</Property>
-	<Property Id="MOUNTROOT">$(var.MountRoot)</Property>
-	<Property Id="NETBIOSNAME">$(var.NetbiosName)</Property>
-	<Property Id="RXMAXMTU">$(var.RxMaxMTU)</Property>
-	<Property Id="HIDEDOTFILES">$(var.HideDotFiles)</Property>
-	<Property Id="SECURITYLEVEL">$(var.SecurityLevel)</Property>
-	<Property Id="CREDSSTARTUP">1</Property>
-	<Property Id="CREDSAUTOINIT">-a</Property>
-	<Property Id="CREDSRENEWDRMAP">-m</Property>
-	<Property Id="CREDSIPCHDET">-n</Property>
-	<Property Id="CREDSQUIET">-q</Property>
-	<Property Id="SMBAUTHTYPE">$(var.SMBAuthType)</Property>
-	<!-- empty property 
-	<Property Id="CREDSSHOW"></Property>
-	-->
-	<!-- empty property
-	<Property Id="AFSCACHEPATH"></Property>
-	-->
-	<!-- empty property
-	<Property Id="AFSCACHESIZE"></Property>
-	-->
-	<!-- empty property
-	<Property Id="STOREANSIFILENAMES"></Property>
-	-->
+    <Property Id="NOFINDLANABYNAME">$(var.NoFindLanaByName)</Property>
+    <Property Id="MOUNTROOT">$(var.MountRoot)</Property>
+    <Property Id="RXMAXMTU">$(var.RxMaxMTU)</Property>
+    <Property Id="HIDEDOTFILES">$(var.HideDotFiles)</Property>
+    <Property Id="SECURITYLEVEL">$(var.SecurityLevel)</Property>
+    <Property Id="CREDSSTARTUP">1</Property>
+    <Property Id="CREDSAUTOINIT">-a</Property>
+    <Property Id="CREDSRENEWDRMAP">-m</Property>
+    <Property Id="CREDSIPCHDET">-n</Property>
+    <Property Id="CREDSQUIET">-q</Property>
+    <Property Id="SMBAUTHTYPE">$(var.SMBAuthType)</Property>
+    <!-- empty property 
+    <Property Id="CREDSSHOW"></Property>
+    -->
+    <!-- empty property
+    <Property Id="AFSCACHEPATH"></Property>
+    -->
+    <!-- empty property
+    <Property Id="AFSCACHESIZE"></Property>
+    -->
+    <!-- empty property
+    <Property Id="STOREANSIFILENAMES"></Property>
+    -->
+<?endif?>
 
     <!-- Add/remove programs -->
     <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
@@ -44,6 +47,7 @@
     
     <Property Id="InstallMode">Typical</Property>
 
+<?ifndef BinsOnly?>
     <Property Id="AFSCCPATCH">
       <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PatchLevel" Type="registry" />
     </Property>
@@ -116,12 +120,14 @@
 	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="registry" />
     </Property>
     
-    <Property Id="ABORTREASON">$(loc.StrNsisAbortReason)</Property>
-    
     <Property Id="OLDCELLSERVDB">
       <DirectorySearch Id="dsOldCellServDB" Path="[WindowsFolder]" >
         <FileSearch Id="fsOldCellServDB" Name="afsdcell.ini" />
       </DirectorySearch>
     </Property>
 
+<?endif?>
+
+    <Property Id="ABORTREASON">$(loc.StrNsisAbortReason)</Property>
+    
 </Include>

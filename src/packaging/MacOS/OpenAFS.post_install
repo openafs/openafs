@@ -63,7 +63,7 @@ if [ -z "$done" -a  -f CellServDB ]; then
   fi
 fi
 
-if [ -z "$done" ]; then
+if [ -z "$done" -a  -f CellServDB ]; then
   # there are local changes to be merged
   if [ -f CellServDB -a -f CellServDB.master.last ]; then
     echo Merging CellServDB entries....

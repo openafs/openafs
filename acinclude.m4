@@ -16,7 +16,7 @@ AC_ARG_WITH(afs-sysname,
 AC_ARG_ENABLE( obsolete,
 [  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
 AC_ARG_ENABLE( afsdb,
-[  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
+[  --disable-afsdb 			disable AFSDB DNS RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
 [  --disable-pam 			disable PAM support],, enable_pam="yes")
 AC_ARG_ENABLE( bos-restricted-mode,
@@ -33,6 +33,8 @@ AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
+AC_ARG_ENABLE( demand-attach-fs,
+[  --enable-demand-attach-fs 		enable Demand Attach Fileserver (please see documentation)],, enable_demand_attach_fs="no")
 AC_ARG_ENABLE( full-vos-listvol-switch,
 [  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
@@ -77,6 +79,13 @@ AC_ARG_ENABLE(debug-lwp,
 AC_ARG_ENABLE(optimize-lwp,
 [  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
 )
+AC_ARG_ENABLE(debug-pam,
+[  --enable-debug-pam			enable compilation of the PAM code with debugging information (defaults to disabled)],, enable_debug_pam="no"
+)
+AC_ARG_ENABLE(optimize-pam,
+[  --disable-optimize-pam		disable optimization for compilation of the PAM code (defaults to enabled)],, enable_optimize_pam="yes"
+)
+
 
 enable_login="no"
 
@@ -478,7 +487,7 @@ else
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
 			;;
-		parisc-*-linux-gnu)
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
 			enable_pam="no"
 			;;
@@ -946,6 +955,20 @@ fi
 
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
+fi
+
+if test "$enable_demand_attach_fs" = "yes"; then
+	AC_DEFINE(DEMAND_ATTACH_ENABLE, 1, [define if you want the demand attach fileserver])
+	DEMAND_ATTACH="yes"
+else
+	DEMAND_ATTACH="no"
+fi
+AC_SUBST(DEMAND_ATTACH)
+
+if test "$enable_fast_restart" = "yes" &&
+   test "$enable_demand_attach_fs" = "yes" ; then
+	AC_MSG_ERROR([The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless.])
+	exit 1
 fi
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then

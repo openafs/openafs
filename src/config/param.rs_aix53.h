@@ -27,8 +27,6 @@
 #ifdef AFS_NAMEI_ENV
 #define AFS_64BIT_IOPS_ENV	1
 #endif
-#define BITMAP_LATER		1
-#define FAST_RESTART		1
 
 #define AFS_HAVE_FLOCK_SYSID    1
 

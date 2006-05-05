@@ -1,9 +1,11 @@
-﻿<?xml version="1.0" ?>
+<?xml version="1.0" ?>
 <Include>
         <Feature Id="feaOpenAFS" AllowAdvertise="no" Absent="disallow" ConfigurableDirectory="AFSDIR"
             Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
             Title="OpenAFS">
            <ComponentRef Id="efl_desktop_INI" />
+
+  <?ifndef BinsOnly ?>
            <ComponentRef Id="efl_replace_afs_CMD" />
            <ComponentRef Id="efl_uninstall_EXE" />
 
@@ -12,7 +14,9 @@
            <ComponentRef Id="cmf_index2_HTM_en_US" />
            <ComponentRef Id="cmp_index_files_en_US" />
            <ComponentRef Id="cmp_logo_files_en_US" />
+  <?endif?>
 
+  <?ifndef BinsOnly ?>
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
@@ -256,5 +260,56 @@
                 <ComponentRef Id="cmp_Lang_en_US" />
 		
             </Feature>
+  <?else?>
+            <Feature Id="feaBinaries" AllowAdvertise="no" Description="$(loc.StrBinsOnlyLongDesc)"
+                Display="expand" InstallDefault="followParent" Level="100" Title="$(loc.StrBinsOnlyDesc)">
+
+			<?ifdef DebugSyms?>
+				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+                    <ComponentRef Id="cmp_ClientProgramDebug" />
+                    <ComponentRef Id="cmp_CommonCommonDebug" />
+                    <?include runtime_debug.wxi?>
+				</Feature>
+			<?endif?>
+
+				<ComponentRef Id="cmp_CommonDir" />
+
+                <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsauthent2_DLL" />
+                <ComponentRef Id="cmf_afspthread_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
+                <ComponentRef Id="cmf_afsprocmgmt_DLL" />
+
+                <ComponentRef Id="cmf_afsshare_EXE" />
+                <ComponentRef Id="cmf_libosi_DLL" />
+                <ComponentRef Id="cmf_libafsconf_DLL" />
+                <ComponentRef Id="cmf_klog_EXE" />
+                <ComponentRef Id="cmf_tokens_EXE" />
+                <ComponentRef Id="cmf_unlog_EXE" />
+                <ComponentRef Id="cmf_fs_EXE" />
+                <ComponentRef Id="cmf_afsdacl_EXE" />
+                <ComponentRef Id="cmf_symlink_EXE" />
+                <ComponentRef Id="cmf_kpasswd_EXE" />
+                <ComponentRef Id="cmf_pts_EXE" />
+                <ComponentRef Id="cmf_bos_EXE" />
+                <ComponentRef Id="cmf_kas_EXE" />
+                <ComponentRef Id="cmf_vos_EXE" />
+                <ComponentRef Id="cmf_udebug_EXE" />
+                <ComponentRef Id="cmf_translate_et_EXE" />
+                <ComponentRef Id="cmf_rxdebug_EXE" />
+                <ComponentRef Id="cmf_backup_EXE" />
+
+                <ComponentRef Id="rcm_BinsOnly_Parm" />
+                <?if $(env.CPU) = "i386"?>
+            	    <ComponentRef Id="cmf_aklog_EXE" />
+	 	<?endif?>
+                <ComponentRef Id="cmf_cmdebug_EXE" />
+                
+                <!-- Runtime -->
+                <?include runtime.wxi?>
+
+            </Feature>
+  <?endif?>
         </Feature>
 </Include>

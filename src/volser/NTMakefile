@@ -5,6 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_AUXCDEFINES = -DFSSYNC_BUILD_CLIENT
+
 RELDIR=volser
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version

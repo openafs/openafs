@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 HELPER_SPLINT=@HELPER_SPLINT@
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -36,8 +36,9 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 
 DIROBJS=buffer.o dir.o salvage.o
 
-VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
-	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o nuke.o
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
+	 clone.o devname.o common.o ihandle.o listinodes.o \
+	 namei_ops.o nuke.o salvsync-client.o daemon_com.o
 
 FSINTOBJS=# afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
@@ -138,7 +139,13 @@ partition.o: ${VOL}/partition.c
 nuke.o: ${VOL}/nuke.c
 	${COMPILE}
 
-fssync.o: ${VOL}/fssync.c
+fssync-client.o: ${VOL}/fssync-client.c
+	${COMPILE}
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	${COMPILE}
+
+daemon_com.o: ${VOL}/daemon_com.c
 	${COMPILE}
 
 purge.o: ${VOL}/purge.c

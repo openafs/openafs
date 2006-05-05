@@ -38,8 +38,6 @@
 static char *illegalChars = "\\/:*?\"<>|";
 BOOL isWindows2000 = FALSE;
 
-smb_vc_t *active_vcp = NULL;
-
 int smbShutdownFlag = 0;
 
 int smb_LogoffTokenTransfer;
@@ -795,7 +793,7 @@ void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
     struct tm localJunk;
     time_t t = unixTime;
 
-    ltp = localtime((time_t*) &t);
+    ltp = localtime(&t);
 
     /* if we fail, make up something */
     if (!ltp) {
@@ -858,6 +856,10 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 
     lock_ObtainWrite(&smb_rctLock);
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
         if (lsn == vcp->lsn && lana == vcp->lana) {
             smb_HoldVCNoLock(vcp);
             break;
@@ -869,6 +871,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	lock_ObtainWrite(&smb_globalLock);
         vcp->vcID = ++numVCs;
 	lock_ReleaseWrite(&smb_globalLock);
+	vcp->magic = SMB_VC_MAGIC;
         vcp->refCount = 2; 	/* smb_allVCsp and caller */
         vcp->tidCounter = 1;
         vcp->fidCounter = 1;
@@ -936,24 +939,40 @@ int smb_IsStarMask(char *maskp)
 void smb_ReleaseVCInternal(smb_vc_t *vcp)
 {
     smb_vc_t **vcpp;
+    smb_vc_t * avcp;
 
-#ifdef DEBUG
-    osi_assert(vcp->refCount-- != 0);
-#else
     vcp->refCount--;
-#endif
 
     if (vcp->refCount == 0) {
+      if (vcp->flags & SMB_VCFLAG_ALREADYDEAD) {
 	/* remove VCP from smb_deadVCsp */
 	for (vcpp = &smb_deadVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
-	    if (*vcpp == vcp) {
-		*vcpp = vcp->nextp;
-		break;
-	    }
+	  if (*vcpp == vcp) {
+	    *vcpp = vcp->nextp;
+	    break;
+	  }
 	} 
 	lock_FinalizeMutex(&vcp->mx);
 	memset(vcp,0,sizeof(smb_vc_t));
 	free(vcp);
+      } else {
+	for (avcp = smb_allVCsp; avcp; avcp = avcp->nextp) {
+	  if (avcp == vcp)
+	    break;
+	}
+	osi_Log3(smb_logp,"VCP not dead and %sin smb_allVCsp vcp %x ref %d",
+		 avcp?"not ":"",vcp, vcp->refCount);
+#ifdef DEBUG
+	GenerateMiniDump(NULL);
+#endif
+	/* This is a wrong.  However, I suspect that there is an undercount
+	 * and I don't want to release 1.4.1 in a state that will allow
+	 * smb_vc_t objects to be deallocated while still in the
+	 * smb_allVCsp list.  The list is supposed to keep a reference
+	 * to the smb_vc_t.  Put it back.
+	 */
+	vcp->refCount++;
+      }
     }
 }
 
@@ -997,9 +1016,32 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     smb_user_t *uidpNext;
     smb_vc_t **vcpp;
 
+
+    lock_ObtainMutex(&vcp->mx);
+    if (vcp->flags & SMB_VCFLAG_CLEAN_IN_PROGRESS) {
+	lock_ReleaseMutex(&vcp->mx);
+	osi_Log1(smb_logp, "Clean of dead vcp 0x%x in progress", vcp);
+	return;
+    }
+    vcp->flags |= SMB_VCFLAG_CLEAN_IN_PROGRESS;
+    lock_ReleaseMutex(&vcp->mx);
     osi_Log1(smb_logp, "Cleaning up dead vcp 0x%x", vcp);
 
     lock_ObtainWrite(&smb_rctLock);
+    /* remove VCP from smb_allVCsp */
+    for (vcpp = &smb_allVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
+	if ((*vcpp)->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+        if (*vcpp == vcp) {
+            *vcpp = vcp->nextp;
+            vcp->nextp = smb_deadVCsp;
+            smb_deadVCsp = vcp;
+	    /* Hold onto the reference until we are done with this function */
+            break;
+        }
+    }
+
     for (fidpIter = vcp->fidsp; fidpIter; fidpIter = fidpNext) {
         fidpNext = (smb_fid_t *) osi_QNext(&fidpIter->q);
 
@@ -1053,21 +1095,15 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	uidpNext = vcp->usersp;
     }
 
-    /* remove VCP from smb_allVCsp */
-    for (vcpp = &smb_allVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
-	if (*vcpp == vcp) {
-	    *vcpp = vcp->nextp;
-	    vcp->nextp = smb_deadVCsp;
-	    smb_deadVCsp = vcp;
-	    /* We intentionally do not keep a reference to the 
-	     * vcp once it is placed on the deadVCsp list.  This
-	     * allows the refcount to reach 0 so we can delete
-	     * it. */
-	    smb_ReleaseVCNoLock(vcp);
-	    break;
-	}
-    } 
+
+    /* The vcp is now on the deadVCsp list.  We intentionally drop the
+     * reference so that the refcount can reach 0 and we can delete it */
+    smb_ReleaseVCNoLock(vcp);
+    
     lock_ReleaseWrite(&smb_rctLock);
+    lock_ObtainMutex(&vcp->mx);
+    vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
+    lock_ReleaseMutex(&vcp->mx);
     osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
 }
 
@@ -3255,6 +3291,10 @@ void smb_CheckVCs(void)
     lock_ObtainWrite(&smb_rctLock);
     for ( vcp=smb_allVCsp, nextp=NULL; vcp; vcp = nextp ) 
     {
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
 	nextp = vcp->nextp;
 
 	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD)
@@ -5409,7 +5449,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     /* now create the hardlink */
     osi_Log1(smb_logp,"  Attempting to create new link [%s]", osi_LogSaveString(smb_logp, newLastNamep));
     code = cm_Link(newDscp, newLastNamep, sscp, 0, userp, &req);
-    osi_Log1(smb_logp,"  Link returns %d", code);
+    osi_Log1(smb_logp,"  Link returns 0x%x", code);
 
     /* Handle Change Notification */
     if (code == 0) {
@@ -5789,6 +5829,16 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 	fidp->flags &= ~SMB_FID_DELONCLOSE;
     }
 
+    /* if this was a newly created file, then clear the creator
+     * in the stat cache entry. */
+    if (fidp->flags & SMB_FID_CREATED) {
+        lock_ObtainMutex(&fidp->scp->mx);
+	if (fidp->scp->creator == userp)
+	    fidp->scp->creator = NULL;
+	lock_ReleaseMutex(&fidp->scp->mx);
+	fidp->flags &= ~SMB_FID_CREATED;
+    }
+
     if (fidp->flags & SMB_FID_NTOPEN) {
 	fidp->NTopen_dscp = NULL;
         fidp->NTopen_pathp = NULL;
@@ -6044,7 +6094,8 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         
     /* make sure we have a writable FD */
     if (!(fidp->flags & SMB_FID_OPENWRITE)) {
-	lock_ReleaseMutex(&fidp->mx);
+	osi_Log2(smb_logp, "smb_WriteData fid %d not OPENWRITE flags 0x%x",
+		  fidp->fid, fidp->flags);
         code = CM_ERROR_BADFDOP;
         goto done;
     }
@@ -6229,14 +6280,14 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
                   fidp->fid);
         code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
-        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns %d",
-                  fidp->fid,code2);
+        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
+                  fidp->fid, code2);
         lock_ReleaseMutex(&scp->mx);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
     }
 
-    osi_Log3(smb_logp, "smb_WriteData fid %d returns %d written %d",
+    osi_Log3(smb_logp, "smb_WriteData fid %d returns 0x%x written %d bytes",
               fidp->fid, code, *writtenp);
     return code;
 }
@@ -6818,6 +6869,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     afs_uint32 dosTime;
     char *tidPathp;
     cm_req_t req;
+    int created = 0;			/* the file was new */
 
     cm_InitReq(&req);
 
@@ -6917,11 +6969,13 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
-        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-            smb_NotifyChange(FILE_ACTION_ADDED,
-                             FILE_NOTIFY_CHANGE_FILE_NAME,
-                             dscp, lastNamep, NULL, TRUE);
-        if (!excl && code == CM_ERROR_EXISTS) {
+        if (code == 0) {
+	    created = 1;
+	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		smb_NotifyChange(FILE_ACTION_ADDED,	
+				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 dscp, lastNamep, NULL, TRUE);
+	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
              * creating it already, then we open it anyway.  We
              * don't bother retrying after this, since if this next
@@ -6965,6 +7019,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* always create it open for read/write */
     fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
+
+    /* remember that the file was newly created */
+    if (created)
+	fidp->flags |= SMB_FID_CREATED;
 
     /* save a pointer to the vnode */
     fidp->scp = scp;
@@ -7296,25 +7354,6 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         smb_SendPacket(vcp, outp);
     thrd_Decrement(&ongoingOps);
 
-    if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-        if (active_vcp != vcp) {
-            if (active_vcp) {
-                osi_Log2(smb_logp,
-                      "Replacing active_vcp %x with %x", active_vcp, vcp);
-                smb_ReleaseVC(active_vcp);
-            }
-            smb_HoldVC(vcp);
-	    lock_ObtainWrite(&smb_globalLock);
-            active_vcp = vcp;
-	    lock_ReleaseWrite(&smb_globalLock);
-        }
-        last_msg_time = GetTickCount();
-    } else if (active_vcp == vcp) { 	/* the vcp is dead */
-        smb_ReleaseVC(active_vcp);
-	lock_ObtainWrite(&smb_globalLock);
-        active_vcp = NULL;
-	lock_ReleaseWrite(&smb_globalLock);
-    }
     return;
 }
 
@@ -8804,7 +8843,11 @@ void smb_Shutdown(void)
         smb_fid_t *fidp;
         smb_tid_t *tidp;
      
-        for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+		       __FILE__, __LINE__);
+
+	for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
             if (fidp->scp != NULL) {
                 cm_scache_t * scp;

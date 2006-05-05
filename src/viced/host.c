@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 #include <afsconfig.h>
@@ -59,7 +61,11 @@ RCSID
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
-
+#include "callback.h"
+#ifdef AFS_DEMAND_ATTACH_FS
+#include "../util/afsutil_prototypes.h"
+#include "../tviced/serialize_state.h"
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t host_glock_mutex;
@@ -82,6 +88,13 @@ struct host *hostList = 0;	/* linked list of all hosts */
 int hostCount = 0;		/* number of hosts in hostList */
 int rxcon_ident_key;
 int rxcon_client_key;
+
+static struct rx_securityClass *sc = NULL;
+
+static void h_SetupCallbackConn_r(struct host * host);
+static void h_AddHostToHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
+static void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
+static int h_DeleteHostFromHashTableByAddr_r(afs_uint32 addr, afs_uint16 port, struct host *host);
 
 #define CESPERBLOCK 73
 struct CEBlock {		/* block of CESPERBLOCK file entries */
@@ -232,9 +245,9 @@ GetHT()
 {
     register struct host *entry;
 
-    if (HTFree == 0)
+    if (HTFree == NULL)
 	GetHTBlock();
-    assert(HTFree != 0);
+    assert(HTFree != NULL);
     entry = HTFree;
     HTFree = entry->next;
     HTs++;
@@ -448,7 +461,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 	free(host->hcps.prlist_val);	/* this is for hostaclRefresh */
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    slept ? (host->cpsCall = FT_ApproxTime()) : (host->cpsCall = now);
+    host->cpsCall = slept ? (FT_ApproxTime()) : (now);
 
     H_UNLOCK;
     code = pr_GetHostCPS(ntohl(host->host), &host->hcps);
@@ -533,7 +546,6 @@ h_Alloc_r(register struct rx_connection *r_con)
 {
     struct servent *serverentry;
     struct host *host;
-    static struct rx_securityClass *sc = 0;
     afs_int32 now;
 #if FS_STATS_DETAILED
     afs_uint32 newHostAddr_HBO;	/*New host IP addr, in host byte order */
@@ -544,7 +556,7 @@ h_Alloc_r(register struct rx_connection *r_con)
     host->host = rxr_HostOf(r_con);
     host->port = rxr_PortOf(r_con);
 
-    hashInsert_r(host->host, host->port, host);
+    h_AddHostToHashTable_r(host->host, host->port, host);
 
     if (consolePort == 0) {	/* find the portal number for console */
 #if	defined(AFS_OSF_ENV)
@@ -561,24 +573,17 @@ h_Alloc_r(register struct rx_connection *r_con)
 	host->Console = 1;
     /* Make a callback channel even for the console, on the off chance that it
      * makes a request that causes a break call back.  It shouldn't. */
-    {
-	if (!sc)
-	    sc = rxnull_NewClientSecurityObject();
-	host->callback_rxcon =
-	    rx_NewConnection(host->host, host->port, 1, sc, 0);
-	rx_SetConnDeadTime(host->callback_rxcon, 50);
-	rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
-    }
+    h_SetupCallbackConn_r(host);
     now = host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
     host->hostFlags = 0;
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    host->interface = 0;
+    host->interface = NULL;
 #ifdef undef
     host->hcpsfailed = 0;	/* save cycles */
     h_gethostcps(host);		/* do this under host hold/lock */
 #endif
-    host->FirstClient = 0;
+    host->FirstClient = NULL;
     h_Hold_r(host);
     h_Lock_r(host);
     h_InsertList_r(host);	/* update global host List */
@@ -595,6 +600,20 @@ h_Alloc_r(register struct rx_connection *r_con)
 
 }				/*h_Alloc_r */
 
+
+
+/* Make a callback channel even for the console, on the off chance that it
+ * makes a request that causes a break call back.  It shouldn't. */
+static void
+h_SetupCallbackConn_r(struct host * host)
+{
+    if (!sc)
+	sc = rxnull_NewClientSecurityObject();
+    host->callback_rxcon =
+	rx_NewConnection(host->host, host->port, 1, sc, 0);
+    rx_SetConnDeadTime(host->callback_rxcon, 50);
+    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
+}
 
 /* Lookup a host given an IP address and UDP port number. */
 /* hostaddr and hport are in network order */
@@ -732,6 +751,7 @@ h_TossStuff_r(register struct host *host)
 	    client->CPS.prlist_val = NULL;
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
+		rx_PutConnection(client->tcon);
 	    }
 	    CurrentConnections--;
 	    *cp = client->next;
@@ -762,8 +782,10 @@ h_TossStuff_r(register struct host *host)
 	     * destroying the connection.
 	     */
 	    client = rx_GetSpecific(rxconn, rxcon_client_key);
-	    if (client && client->tcon == rxconn)
+	    if (client && client->tcon == rxconn) {
+		rx_PutConnection(client->tcon);
 		client->tcon = NULL;
+	    }
 	    rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
 	    rx_DestroyConnection(rxconn);
 	}
@@ -832,8 +854,10 @@ h_FreeConnection(struct rx_connection *tcon)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client) {
 	H_LOCK;
-	if (client->tcon == tcon)
-	    client->tcon = (struct rx_connection *)0;
+	if (client->tcon == tcon) {
+	    rx_PutConnection(client->tcon);
+	    client->tcon = NULL;
+	}
 	H_UNLOCK;
     }
     return 0;
@@ -878,8 +902,11 @@ h_Enumerate(int (*proc) (), char *param)
     H_UNLOCK;
     for (i = 0; i < count; i++) {
 	held[i] = (*proc) (list[i], held[i], param);
-	if (!held[i])
+	if (!H_ENUMERATE_ISSET_HELD(held[i]))
 	    h_Release(list[i]);	/* this might free up the host */
+	/* bail out of the enumeration early */
+	if (H_ENUMERATE_ISSET_BAIL(held[i]))
+	    break;
     }
     free((void *)list);
     free((void *)held);
@@ -908,17 +935,19 @@ h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
 	h_Hold_r(enumstart); 
     for (host = enumstart; host; host = next, held = nheld) {
 	next = host->next;
-	if (next && !(nheld = h_Held_r(next)))
+	if (next && !(nheld = h_Held_r(next)) && !H_ENUMERATE_ISSET_BAIL(held))
 	    h_Hold_r(next);
 	held = (*proc) (host, held, param);
-	if (!held)
+	if (!H_ENUMERATE_ISSET_HELD(held))
 	    h_Release_r(host); /* this might free up the host */
+	if (H_ENUMERATE_ISSET_BAIL(held))
+	    break;
     }
 }				/*h_Enumerate_r */
 
 /* inserts a new HashChain structure corresponding to this UUID */
-void
-hashInsertUuid_r(struct afsUUID *uuid, struct host *host)
+static void
+h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 {
     int index;
     struct h_hashChain *chain;
@@ -929,7 +958,7 @@ hashInsertUuid_r(struct afsUUID *uuid, struct host *host)
     /* insert into beginning of list for this bucket */
     chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
     if (!chain) {
-	ViceLog(0, ("Failed malloc in hashInsertUuid_r\n"));
+	ViceLog(0, ("Failed malloc in h_AddHostToUuidHashTable_r\n"));
 	assert(0);
     }
     assert(chain);
@@ -940,8 +969,8 @@ hashInsertUuid_r(struct afsUUID *uuid, struct host *host)
 
 
 /* inserts a new HashChain structure corresponding to this address */
-void
-hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
+static void
+h_AddHostToHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int index;
     struct h_hashChain *chain;
@@ -952,7 +981,7 @@ hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
     /* insert into beginning of list for this bucket */
     chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
     if (!chain) {
-	ViceLog(0, ("Failed malloc in hashInsert_r\n"));
+	ViceLog(0, ("Failed malloc in h_AddHostToHashTable_r\n"));
 	assert(0);
     }
     chain->hostPtr = host;
@@ -1017,7 +1046,7 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     /*
      * Create a hash table entry for this address
      */
-    hashInsert_r(addr, port, host);
+    h_AddHostToHashTable_r(addr, port, host);
 
     return 0;
 }
@@ -1072,7 +1101,7 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     /*
      * Remove the hash table entry for this address
      */
-    hashDelete_r(addr, port, host);
+    h_DeleteHostFromHashTableByAddr_r(addr, port, host);
 
     return 0;
 }
@@ -1394,7 +1423,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
-		    hashInsertUuid_r(&identP->uuid, host);
+		    h_AddHostToUuidHashTable_r(&identP->uuid, host);
 		    cb_conn = host->callback_rxcon;
 		    rx_GetConnection(cb_conn);		
 		    H_UNLOCK;
@@ -1693,14 +1722,15 @@ h_FindClient_r(struct rx_connection *tcon)
 			(struct client *)rx_GetSpecific(client->tcon,
 							rxcon_client_key);
 		    if (oldClient) {
-			if (oldClient == client)
+			if (oldClient == client) {
 			    rx_SetSpecific(client->tcon, rxcon_client_key,
 					   NULL);
-			else
+			} else
 			    ViceLog(0,
 				    ("Client-conn mismatch: CL1=%x, CN=%x, CL2=%x\n",
 				     client, client->tcon, oldClient));
 		    }
+		    rx_PutConnection(client->tcon);
 		    client->tcon = (struct rx_connection *)0;
 		}
 		client->refCount++;
@@ -1735,7 +1765,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->authClass = authClass;	/* rx only */
 	    client->sid = rxr_CidOf(tcon);
 	    client->VenusEpoch = rxr_GetEpoch(tcon);
-	    client->CPS.prlist_val = 0;
+	    client->CPS.prlist_val = NULL;
 	    client->CPS.prlist_len = 0;
 	    h_Unlock_r(host);
 	}
@@ -1802,7 +1832,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    if (created) {
 		ViceLog(0, ("FindClient: stillborn client %x(%x); conn %x (host %s:%d) had client %x(%x)\n", 
 			    client, client->sid, tcon, 
-			    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+			    rxr_AddrStringOf(tcon),
 			    ntohs(rxr_PortOf(tcon)),
 			    oldClient, oldClient->sid));
 		if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
@@ -1824,10 +1854,11 @@ h_FindClient_r(struct rx_connection *tcon)
 	    oldClient->refCount++;
 	    client = oldClient;
 	} else {
+	    rx_PutConnection(oldClient->tcon);
 	    oldClient->tcon = (struct rx_connection *)0;
 	    ViceLog(0, ("FindClient: deleted client %x(%x) already had conn %x (host %s:%d), stolen by client %x(%x)\n", 
 			oldClient, oldClient->sid, tcon, 
-			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+			rxr_AddrStringOf(tcon),
 			ntohs(rxr_PortOf(tcon)),
 			client, client->sid));
 	    /* rx_SetSpecific will be done immediately below */
@@ -1841,6 +1872,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	h_Unlock_r(host);
 	CurrentConnections++;	/* increment number of connections */
     }
+    rx_GetConnection(tcon);
     client->tcon = tcon;
     rx_SetSpecific(tcon, rxcon_client_key, client);
     ReleaseWriteLock(&client->lock);
@@ -1875,8 +1907,8 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client == NULL || client->tcon == NULL) {
 	ViceLog(0,
-		("GetClient: no client in conn %x (host %x:%d), VBUSYING\n",
-		 tcon, rxr_HostOf(tcon),ntohs(rxr_PortOf(tcon))));
+		("GetClient: no client in conn %x (host %s:%d), VBUSYING\n",
+		 tcon, rxr_AddrStringOf(tcon),ntohs(rxr_PortOf(tcon))));
 	H_UNLOCK;
 	return VBUSY;
     }
@@ -1975,8 +2007,10 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
     char tmpStr[256];
     char tbuffer[32];
     char hoststr[16];
+    time_t LastCall, expTime;
 
     H_LOCK;
+    LastCall = host->LastCall;
     if (host->hostFlags & HOSTDELETED) {
 	H_UNLOCK;
 	return held;
@@ -1985,12 +2019,13 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
 		       "Host %s:%d down = %d, LastCall %s",
 		       afs_inet_ntoa_r(host->host, hoststr),
 		       ntohs(host->port), (host->hostFlags & VENUSDOWN),
-		       afs_ctime((time_t *) & host->LastCall, tbuffer,
+		       afs_ctime(&LastCall, tbuffer,
 				 sizeof(tbuffer)));
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     for (client = host->FirstClient; client; client = client->next) {
 	if (!client->deleted) {
 	    if (client->tcon) {
+		expTime = client->expTime;
 		(void)afs_snprintf(tmpStr, sizeof tmpStr,
 				   "    user id=%d,  name=%s, sl=%s till %s",
 				   client->ViceId, h_UserName(client),
@@ -1998,8 +2033,7 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
 				   authClass ? "Authenticated" :
 				   "Not authenticated",
 				   client->
-				   authClass ? afs_ctime((time_t *) & client->
-							 expTime, tbuffer,
+				   authClass ? afs_ctime(&expTime, tbuffer,
 							 sizeof(tbuffer))
 				   : "No Limit\n");
 		(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
@@ -2133,6 +2167,540 @@ h_DumpHosts()
     ViceLog(0, ("Created host dump %s\n", AFSDIR_SERVER_HOSTDUMP_FILEPATH));
 
 }				/*h_DumpHosts */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * host state serialization
+ */
+static int h_stateFillHeader(struct host_state_header * hdr);
+static int h_stateCheckHeader(struct host_state_header * hdr);
+static int h_stateAllocMap(struct fs_dump_state * state);
+static int h_stateSaveHost(register struct host * host, int held, struct fs_dump_state * state);
+static int h_stateRestoreHost(struct fs_dump_state * state);
+static int h_stateRestoreIndex(struct host * h, int held, struct fs_dump_state * state);
+static int h_stateVerifyHost(struct host * h, int held, struct fs_dump_state * state);
+static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port);
+static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
+static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
+static void h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out);
+
+
+/* this procedure saves all host state to disk for fast startup */
+int
+h_stateSave(struct fs_dump_state * state)
+{
+    AssignInt64(state->eof_offset, &state->hdr->h_offset);
+
+    /* XXX debug */
+    ViceLog(0, ("h_stateSave:  hostCount=%d\n", hostCount));
+
+    /* invalidate host state header */
+    memset(state->h_hdr, 0, sizeof(struct host_state_header));
+
+    if (fs_stateWriteHeader(state, &state->hdr->h_offset, state->h_hdr,
+			    sizeof(struct host_state_header))) {
+	state->bail = 1;
+	goto done;
+    }
+
+    fs_stateIncEOF(state, sizeof(struct host_state_header));
+
+    h_Enumerate_r(h_stateSaveHost, hostList, (char *)state);
+    if (state->bail) {
+	goto done;
+    }
+
+    h_stateFillHeader(state->h_hdr);
+
+    /* write the real header to disk */
+    state->bail = fs_stateWriteHeader(state, &state->hdr->h_offset, state->h_hdr,
+				      sizeof(struct host_state_header));
+
+ done:
+    return state->bail;
+}
+
+/* demand attach fs
+ * host state serialization
+ *
+ * this procedure restores all host state from a disk for fast startup 
+ */
+int
+h_stateRestore(struct fs_dump_state * state)
+{
+    int i, records;
+
+    /* seek to the right position and read in the host state header */
+    if (fs_stateReadHeader(state, &state->hdr->h_offset, state->h_hdr,
+			   sizeof(struct host_state_header))) {
+	state->bail = 1;
+	goto done;
+    }
+
+    /* check the validity of the header */
+    if (h_stateCheckHeader(state->h_hdr)) {
+	state->bail = 1;
+	goto done;
+    }
+
+    records = state->h_hdr->records;
+
+    if (h_stateAllocMap(state)) {
+	state->bail = 1;
+	goto done;
+    }
+
+    /* iterate over records restoring host state */
+    for (i=0; i < records; i++) {
+	if (h_stateRestoreHost(state) != 0) {
+	    state->bail = 1;
+	    break;
+	}
+    }
+
+ done:
+    return state->bail;
+}
+
+int
+h_stateRestoreIndices(struct fs_dump_state * state)
+{
+    h_Enumerate_r(h_stateRestoreIndex, hostList, (char *)state);
+    return state->bail;
+}
+
+static int
+h_stateRestoreIndex(struct host * h, int held, struct fs_dump_state * state)
+{
+    if (cb_OldToNew(state, h->cblist, &h->cblist)) {
+	return H_ENUMERATE_BAIL(held);
+    }
+    return held;
+}
+
+int
+h_stateVerify(struct fs_dump_state * state)
+{
+    h_Enumerate_r(h_stateVerifyHost, hostList, (char *)state);
+    return state->bail;
+}
+
+static int
+h_stateVerifyHost(struct host * h, int held, struct fs_dump_state * state)
+{
+    int i;
+
+    if (h == NULL) {
+	ViceLog(0, ("h_stateVerifyHost: error: NULL host pointer in linked list\n"));
+	return H_ENUMERATE_BAIL(held);
+    }
+
+    if (h->interface) {
+	for (i = h->interface->numberOfInterfaces-1; i >= 0; i--) {
+	    if (h_stateVerifyAddrHash(state, h, h->interface->interface[i].addr, 
+				      h->interface->interface[i].port)) {
+		state->bail = 1;
+	    }
+	}
+	if (h_stateVerifyUuidHash(state, h)) {
+	    state->bail = 1;
+	}
+    } else if (h_stateVerifyAddrHash(state, h, h->host, h->port)) {
+	state->bail = 1;
+    }
+
+    if (cb_stateVerifyHCBList(state, h)) {
+	state->bail = 1;
+    }
+
+ done:
+    return held;
+}
+
+static int
+h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port)
+{
+    int ret = 0, found = 0;
+    struct host *host = NULL;
+    struct h_hashChain *chain;
+    int index = h_HashIndex(addr);
+    char tmp[16];
+    int chain_len = 0;
+
+    for (chain = hostHashTable[index]; chain; chain = chain->next) {
+	host = chain->hostPtr;
+	if (host == NULL) {
+	    afs_inet_ntoa_r(addr, tmp);
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr hash chain has NULL host ptr (lookup addr %s)\n", tmp));
+	    ret = 1;
+	    goto done;
+	}
+	if ((chain->addr == addr) && (chain->port == port)) {
+	    if (host != h) {
+		ViceLog(0, ("h_stateVerifyAddrHash: warning: addr hash entry points to different host struct (%d, %d)\n", 
+			    h->index, host->index));
+		state->flags.warnings_generated = 1;
+	    }
+	    found = 1;
+	    break;
+	}
+	if (chain_len > FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN) {
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: hash chain length exceeds %d; assuming there's a loop\n",
+			FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN));
+	    ret = 1;
+	    goto done;
+	}
+	chain_len++;
+    }
+
+    if (!found) {
+	afs_inet_ntoa_r(addr, tmp);
+	if (state->mode == FS_STATE_LOAD_MODE) {
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s not found in hash\n", tmp));
+	    ret = 1;
+	    goto done;
+	} else {
+	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s not found in hash\n", tmp));
+	    state->flags.warnings_generated = 1;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+static int
+h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
+{
+    int ret = 0, found = 0;
+    struct host *host = NULL;
+    struct h_hashChain *chain;
+    afsUUID * uuidp = &h->interface->uuid;
+    int index = h_UuidHashIndex(uuidp);
+    char tmp[40];
+    int chain_len = 0;
+
+    for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
+	host = chain->hostPtr;
+	if (host == NULL) {
+	    afsUUID_to_string(uuidp, tmp, sizeof(tmp));
+	    ViceLog(0, ("h_stateVerifyUuidHash: error: uuid hash chain has NULL host ptr (lookup uuid %s)\n", tmp));
+	    ret = 1;
+	    goto done;
+	}
+	if (host->interface &&
+	    afs_uuid_equal(&host->interface->uuid, uuidp)) {
+	    if (host != h) {
+		ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid hash entry points to different host struct (%d, %d)\n", 
+			    h->index, host->index));
+		state->flags.warnings_generated = 1;
+	    }
+	    found = 1;
+	    goto done;
+	}
+	if (chain_len > FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN) {
+	    ViceLog(0, ("h_stateVerifyUuidHash: error: hash chain length exceeds %d; assuming there's a loop\n",
+			FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN));
+	    ret = 1;
+	    goto done;
+	}
+	chain_len++;
+    }
+
+    if (!found) {
+	afsUUID_to_string(uuidp, tmp, sizeof(tmp));
+	if (state->mode == FS_STATE_LOAD_MODE) {
+	    ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n", tmp));
+	    ret = 1;
+	    goto done;
+	} else {
+	    ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n", tmp));
+	    state->flags.warnings_generated = 1;
+	}
+    }
+
+ done:
+    return ret;
+}
+
+/* create the host state header structure */
+static int
+h_stateFillHeader(struct host_state_header * hdr)
+{
+    hdr->stamp.magic = HOST_STATE_MAGIC;
+    hdr->stamp.version = HOST_STATE_VERSION;
+}
+
+/* check the contents of the host state header structure */
+static int
+h_stateCheckHeader(struct host_state_header * hdr)
+{
+    int ret=0;
+
+    if (hdr->stamp.magic != HOST_STATE_MAGIC) {
+	ViceLog(0, ("check_host_state_header: invalid state header\n"));
+	ret = 1;
+    }
+    else if (hdr->stamp.version != HOST_STATE_VERSION) {
+	ViceLog(0, ("check_host_state_header: unknown version number\n"));
+	ret = 1;
+    }
+    return ret;
+}
+
+/* allocate the host id mapping table */
+static int
+h_stateAllocMap(struct fs_dump_state * state)
+{
+    state->h_map.len = state->h_hdr->index_max + 1;
+    state->h_map.entries = (struct idx_map_entry_t *)
+	calloc(state->h_map.len, sizeof(struct idx_map_entry_t));
+    return (state->h_map.entries != NULL) ? 0 : 1;
+}
+
+/* function called by h_Enumerate to save a host to disk */
+static int
+h_stateSaveHost(register struct host * host, int held, struct fs_dump_state * state)
+{
+    int i, if_len=0, hcps_len=0;
+    struct hostDiskEntry hdsk;
+    struct host_state_entry_header hdr;
+    struct Interface * ifp = NULL;
+    afs_int32 * hcps = NULL;
+    struct iovec iov[4];
+    int iovcnt = 2;
+
+    memset(&hdr, 0, sizeof(hdr));
+
+    if (state->h_hdr->index_max < host->index) {
+	state->h_hdr->index_max = host->index;
+    }
+
+    h_hostToDiskEntry_r(host, &hdsk);
+    if (host->interface) {
+	if_len = sizeof(struct Interface) + 
+	    ((host->interface->numberOfInterfaces-1) * sizeof(struct AddrPort));
+	ifp = (struct Interface *) malloc(if_len);
+	assert(ifp != NULL);
+	memcpy(ifp, host->interface, if_len);
+	hdr.interfaces = host->interface->numberOfInterfaces;
+	iov[iovcnt].iov_base = (char *) ifp;
+	iov[iovcnt].iov_len = if_len;
+	iovcnt++;
+    }
+    if (host->hcps.prlist_val) {
+	hdr.hcps = host->hcps.prlist_len;
+	hcps_len = hdr.hcps * sizeof(afs_int32);
+	hcps = (afs_int32 *) malloc(hcps_len);
+	assert(hcps != NULL);
+	memcpy(hcps, host->hcps.prlist_val, hcps_len);
+	iov[iovcnt].iov_base = (char *) hcps;
+	iov[iovcnt].iov_len = hcps_len;
+	iovcnt++;
+    }
+
+    if (hdsk.index > state->h_hdr->index_max)
+	state->h_hdr->index_max = hdsk.index;
+
+    hdr.len = sizeof(struct host_state_entry_header) + 
+	sizeof(struct hostDiskEntry) + if_len + hcps_len;
+    hdr.magic = HOST_STATE_ENTRY_MAGIC;
+
+    iov[0].iov_base = (char *) &hdr;
+    iov[0].iov_len = sizeof(hdr);
+    iov[1].iov_base = (char *) &hdsk;
+    iov[1].iov_len = sizeof(struct hostDiskEntry);
+    
+    if (fs_stateWriteV(state, iov, iovcnt)) {
+	ViceLog(0, ("h_stateSaveHost: failed to save host %d", host->index));
+	state->bail = 1;
+    }
+
+    fs_stateIncEOF(state, hdr.len);
+
+    state->h_hdr->records++;
+
+ done:
+    if (ifp)
+	free(ifp);
+    if (hcps)
+	free(hcps);
+    if (state->bail) {
+	return H_ENUMERATE_BAIL(held);
+    }
+    return held;
+}
+
+/* restores a host from disk */
+static int
+h_stateRestoreHost(struct fs_dump_state * state)
+{
+    int ifp_len=0, hcps_len=0, bail=0;
+    struct host_state_entry_header hdr;
+    struct hostDiskEntry hdsk;
+    struct host *host = NULL;
+    struct Interface *ifp = NULL;
+    afs_int32 * hcps = NULL;
+    struct iovec iov[3];
+    int iovcnt = 1;
+
+    if (fs_stateRead(state, &hdr, sizeof(hdr))) {
+	ViceLog(0, ("h_stateRestoreHost: failed to read host entry header from dump file '%s'\n",
+		    state->fn));
+	bail = 1;
+	goto done;
+    }
+
+    if (hdr.magic != HOST_STATE_ENTRY_MAGIC) {
+	ViceLog(0, ("h_stateRestoreHost: fileserver state dump file '%s' is corrupt.\n",
+		    state->fn));
+	bail = 1;
+	goto done;
+    }
+
+    iov[0].iov_base = (char *) &hdsk;
+    iov[0].iov_len = sizeof(struct hostDiskEntry);
+
+    if (hdr.interfaces) {
+	ifp_len = sizeof(struct Interface) +
+	    ((hdr.interfaces-1) * sizeof(struct AddrPort));
+	ifp = (struct Interface *) malloc(ifp_len);
+	assert(ifp != NULL);
+	iov[iovcnt].iov_base = (char *) ifp;
+	iov[iovcnt].iov_len = ifp_len;
+	iovcnt++;
+    }
+    if (hdr.hcps) {
+	hcps_len = hdr.hcps * sizeof(afs_int32);
+	hcps = (afs_int32 *) malloc(hcps_len);
+	assert(hcps != NULL);
+	iov[iovcnt].iov_base = (char *) hcps;
+	iov[iovcnt].iov_len = hcps_len;
+	iovcnt++;
+    }
+
+    if ((ifp_len + hcps_len + sizeof(hdsk) + sizeof(hdr)) != hdr.len) {
+	ViceLog(0, ("h_stateRestoreHost: host entry header length fields are inconsistent\n"));
+	bail = 1;
+	goto done;
+    }
+
+    if (fs_stateReadV(state, iov, iovcnt)) {
+	ViceLog(0, ("h_stateRestoreHost: failed to read host entry\n"));
+	bail = 1;
+	goto done;
+    }
+
+    if (!hdr.hcps && hdsk.hcps_valid) {
+	/* valid, zero-length host cps ; does this ever happen? */
+	hcps = (afs_int32 *) malloc(sizeof(afs_int32));
+	assert(hcps != NULL);
+    }
+
+    host = GetHT();
+    assert(host != NULL);
+
+    if (ifp) {
+	host->interface = ifp;
+    }
+    if (hcps) {
+	host->hcps.prlist_val = hcps;
+	host->hcps.prlist_len = hdr.hcps;
+    }
+
+    h_diskEntryToHost_r(&hdsk, host);
+    h_SetupCallbackConn_r(host);
+
+    if (ifp) {
+	int i;
+	for (i = ifp->numberOfInterfaces-1; i >= 0; i--) {
+	    h_AddHostToHashTable_r(ifp->interface[i].addr, 
+				   ifp->interface[i].port, host);
+	}
+	h_AddHostToUuidHashTable_r(&ifp->uuid, host);
+    } else {
+	h_AddHostToHashTable_r(host->host, host->port, host);
+    }
+    h_InsertList_r(host);
+
+    /* setup host id map entry */
+    state->h_map.entries[hdsk.index].old_idx = hdsk.index;
+    state->h_map.entries[hdsk.index].new_idx = host->index;
+
+ done:
+    if (bail) {
+	if (ifp)
+	    free(ifp);
+	if (hcps)
+	    free(hcps);
+    }
+    return bail;
+}
+
+/* serialize a host structure to disk */
+static void
+h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out)
+{
+    out->host = in->host;
+    out->port = in->port;
+    out->hostFlags = in->hostFlags;
+    out->Console = in->Console;
+    out->hcpsfailed = in->hcpsfailed;
+    out->LastCall = in->LastCall;
+    out->ActiveCall = in->ActiveCall;
+    out->cpsCall = in->cpsCall;
+    out->cblist = in->cblist;
+#ifdef FS_STATS_DETAILED
+    out->InSameNetwork = in->InSameNetwork;
+#endif
+
+    /* special fields we save, but are not memcpy'd back on restore */
+    out->index = in->index;
+    out->hcps_len = in->hcps.prlist_len;
+    out->hcps_valid = (in->hcps.prlist_val == NULL) ? 0 : 1;
+}
+
+/* restore a host structure from disk */
+static void
+h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out)
+{
+    out->host = in->host;
+    out->port = in->port;
+    out->hostFlags = in->hostFlags;
+    out->Console = in->Console;
+    out->hcpsfailed = in->hcpsfailed;
+    out->LastCall = in->LastCall;
+    out->ActiveCall = in->ActiveCall;
+    out->cpsCall = in->cpsCall;
+    out->cblist = in->cblist;
+#ifdef FS_STATS_DETAILED
+    out->InSameNetwork = in->InSameNetwork;
+#endif
+}
+
+/* index translation routines */
+int
+h_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
+{
+    int ret = 0;
+
+    /* hosts use a zero-based index, so old==0 is valid */
+
+    if (old >= state->h_map.len) {
+	ViceLog(0, ("h_OldToNew: index %d is out of range\n", old));
+	ret = 1;
+    } else if (state->h_map.entries[old].old_idx != old) { /* sanity check */
+	ViceLog(0, ("h_OldToNew: index %d points to an invalid host record\n", old));
+	ret = 1;
+    } else {
+	*new = state->h_map.entries[old].new_idx;
+    }
+
+ done:
+    return ret;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 
 /*
@@ -2348,12 +2916,22 @@ static struct AFSFid zerofid;
  * Since it can serialize them, and pile up, it should be a separate LWP
  * from other events.
  */
-int
+static int
 CheckHost(register struct host *host, int held)
 {
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
     int code;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* kill the checkhost lwp ASAP during shutdown */
+    FS_STATE_RDLOCK;
+    if (fs_state.mode == FS_MODE_SHUTDOWN) {
+	FS_STATE_UNLOCK;
+	return H_ENUMERATE_BAIL(held);
+    }
+    FS_STATE_UNLOCK;
+#endif
 
     /* Host is held by h_Enumerate */
     H_LOCK;
@@ -2455,7 +3033,7 @@ CheckHost(register struct host *host, int held)
  * This routine is called roughly every 5 minutes.
  */
 void
-h_CheckHosts()
+h_CheckHosts(void)
 {
     afs_uint32 now = FT_ApproxTime();
 
@@ -2487,22 +3065,23 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     afs_uint16 myPort;
     int found;
     struct Interface *interface;
+    char hoststr[16];
 
     assert(host);
     assert(interf);
-
-    ViceLog(125,
-	    ("initInterfaceAddr : host %x numAddr %d\n", host->host,
-	     interf->numberOfInterfaces));
 
     number = interf->numberOfInterfaces;
     myAddr = host->host;	/* current interface address */
     myPort = host->port;	/* current port */
 
+    ViceLog(125,
+	    ("initInterfaceAddr : host %s:%d numAddr %d\n", 
+	      afs_inet_ntoa_r(myAddr, hoststr), ntohs(myPort), number));
+
     /* validation checks */
     if (number < 0 || number > AFS_MAX_INTERFACE_ADDR) {
 	ViceLog(0,
-		("Number of alternate addresses returned is %d\n", number));
+		("Invalid number of alternate addresses is %d\n", number));
 	return -1;
     }
 
@@ -2558,7 +3137,6 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     host->interface = interface;
 
     for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-	char hoststr[16];
 	ViceLog(125, ("--- alt address %s:%d\n", 
 		       afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
 		       ntohs(host->interface->interface[i].port)));
@@ -2570,7 +3148,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 /* deleted a HashChain structure for this address and host */
 /* returns 1 on success */
 static int
-hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host)
+h_DeleteHostFromHashTableByAddr_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int flag;
     register struct h_hashChain **hp, *th;

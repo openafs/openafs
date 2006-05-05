@@ -13,6 +13,7 @@ MEDIADIR = $(DESTDIR)\WinInstall
 MEDIABINDIR = $(MEDIADIR)\Dll
 
 MSIFILE = $(MEDIADIR)\openafs-$(LANG).msi
+BINMSIFILE = $(MEDIADIR)\openafs-32bit-tools-$(LANG).msi
 
 WIXINCLUDES = \
 	config.wxi \
@@ -24,6 +25,7 @@ WIXINCLUDES = \
 	lang\$(LANG)\ui.wxi
 
 WIXOBJ = $(OUT)\openafs-$(LANG).wixobj
+BINWIXOBJ  = $(OUT)\openafs-32bit-tools-$(LANG).wixobj
 
 LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW
 
@@ -36,8 +38,9 @@ languages:
 #	$(MAKE) /f NTMakefile /nologo LANG=%l lang
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
+	
 
-lang:: lang_clean $(MSIFILE)
+lang:: lang_clean $(MSIFILE) $(BINMSIFILE)
 
 uninst: 
         $(CD) uninstall
@@ -49,7 +52,7 @@ customactions:
 	$(MAKE) /f NTMakefile /nologo install
 	$(CD) ..
 
-install: uninst customactions languages 
+install: uninst customactions languages
 
 $(MSIFILE): $(WIXOBJ)
 	light -nologo -out $(MSIFILE) \
@@ -71,6 +74,26 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-w0 \
         $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
 
+$(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
+	candle -nologo -out $@	\
+		"-dCellName=$(CELLNAME_DEFAULT)" \
+		-dLanguage=$(LANG) \
+		-dNumericVersion=$(AFSPRODUCT_VERSION)	\
+		-dVersionMajor=$(AFSPRODUCT_VER_MAJOR)	\
+		-dVersionMinor=$(AFSPRODUCT_VER_MINOR)	\
+		-dVersionPatch=$(AFSPRODUCT_VER_PATCH)	\
+		"-dDestDir=$(DESTDIR)\\" \
+		-dCellDbFile=CellServDB \
+		-v0 \
+		-w0 \
+        $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
+
+$(BINMSIFILE): $(BINWIXOBJ)
+	light -nologo -out $(BINMSIFILE) \
+		-loc lang\en_US\strings.wxl \
+		$(BINWIXOBJ)
+	dir $(BINMSIFILE)
+
 # Cleanup
 clean::
 	for %l in ( $(LANGUAGES) ) do \
@@ -81,7 +104,9 @@ clean::
 	$(CD) uninstall
 	$(MAKE) /f NTMakefile /nologo clean
 	$(CD) ..
-	
+
 lang_clean:
 	-$(DEL) $(WIXOBJ)
 	-$(DEL) $(MSIFILE)
+	-$(DEL) $(BINWIXOBJ)
+	-$(DEL) $(BINMSIFILE)

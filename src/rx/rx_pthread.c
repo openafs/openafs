@@ -201,8 +201,8 @@ rxi_ReScheduleEvents(void)
 static void
 rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
 {
-    unsigned int host;
-    u_short port;
+    struct sockaddr_storage saddr;
+    int slen;
     register struct rx_packet *p = (struct rx_packet *)0;
 
     assert(pthread_mutex_lock(&listener_mutex) == 0);
@@ -225,9 +225,10 @@ rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
 	    }
 	}
 
-	if (rxi_ReadPacket(sock, p, &host, &port)) {
+	slen = sizeof(saddr);
+	if (rxi_ReadPacket(sock, p, &saddr, &slen)) {
 	    clock_NewTime();
-	    p = rxi_ReceivePacket(p, sock, host, port, tnop, newcallp);
+	    p = rxi_ReceivePacket(p, sock, &saddr, slen, tnop, newcallp);
 	    if (newcallp && *newcallp) {
 		if (p)
 		    rxi_FreePacket(p);

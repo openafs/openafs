@@ -44,40 +44,40 @@ typedef struct smb_tran2QFSInfo {
     union {
 #pragma pack(push, 2)
         struct {
-            long FSID;			/* file system ID */
-            long sectorsPerAllocUnit;
-            long totalAllocUnits;		/* on the disk */
-            long availAllocUnits;		/* free blocks */
+            unsigned long FSID;			/* file system ID */
+            unsigned long sectorsPerAllocUnit;
+            unsigned long totalAllocUnits;	/* on the disk */
+            unsigned long availAllocUnits;	/* free blocks */
             unsigned short bytesPerSector;	/* bytes per sector */
         } allocInfo;
 #pragma pack(pop)
         struct {
-            long vsn;	        /* volume serial number */
+            unsigned long vsn;	/* volume serial number */
             char vnCount;	/* count of chars in label, incl null */
             char label[12];	/* pad out with nulls */
         } volumeInfo;
         struct {
-            FILETIME vct;	/* volume creation time */
-            long vsn;	        /* volume serial number */
-            long vnCount;	/* length of volume label in bytes */
-            char res[2];	/* reserved */
-            char label[10];	/* volume label */
+            FILETIME vct;		/* volume creation time */
+            unsigned long vsn;	        /* volume serial number */
+            unsigned long vnCount;	/* length of volume label in bytes */
+            char res[2];		/* reserved */
+            char label[10];		/* volume label */
         } FSvolumeInfo;
         struct {
             osi_hyper_t totalAllocUnits;	/* on the disk */
             osi_hyper_t availAllocUnits;	/* free blocks */
-            long sectorsPerAllocUnit;
-            long bytesPerSector;		/* bytes per sector */
+            unsigned long sectorsPerAllocUnit;
+            unsigned long bytesPerSector;	/* bytes per sector */
         } FSsizeInfo;
         struct {
-            long devType;	/* device type */
-            long characteristics;
+            unsigned long devType;		/* device type */
+            unsigned long characteristics;
         } FSdeviceInfo;
         struct {
-            long attributes;
-            long maxCompLength;	/* max path component length */
-            long FSnameLength;	/* length of file system name */
-            char FSname[12];
+            unsigned long attributes;
+            unsigned long maxCompLength;	/* max path component length */
+            unsigned long FSnameLength;		/* length of file system name */
+            unsigned char FSname[12];
         } FSattributeInfo;
     } u;
 } smb_tran2QFSInfo_t;

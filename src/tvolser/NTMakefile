@@ -1,0 +1,126 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_CLIENT
+
+RELDIR=tvolser
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+SRC_DIR = ..\volser
+
+VICED = ..\viced
+VLSERVER = ..\vlserver
+LWP = ..\lwp
+LIBACL = ..\libacl
+UTIL = ..\util
+DIR = ..\dir
+VOLSER = ..\volser
+VOL = ..\vol
+FSINT = ..\fsint
+RX = ..\rx
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+INCFILES = \
+	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\volser.h \
+	$(INCFILEDIR)\volint.h
+
+
+LOCAL_INCFILES = \
+	volser.h \
+	volint.h
+
+############################################################################
+# Build volserver
+
+VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\volserver.exe
+
+VOLSEROBJS=$(OUT)\volmain.obj $(OUT)\volprocs.obj $(OUT)\physio.obj $(OUT)\voltrans.obj $(OUT)\volerr.obj $(OUT)\volint.cs.obj $(OUT)\dumpstuff.obj  $(OUT)\volint.ss.obj $(OUT)\volint.xdr.obj $(OUT)\vscommon.obj
+
+LWPOBJS=$(OUT)\lock.obj $(OUT)\threadname.obj
+
+LIBACLOBJS=$(OUT)\aclprocs.obj $(OUT)\netprocs.obj
+
+UTILOBJS=$(OUT)\assert.obj $(OUT)\uuid.obj $(OUT)\serverLog.obj $(OUT)\fileutil.obj $(OUT)\netutils.obj $(OUT)\dirpath.obj $(OUT)\volparse.obj $(OUT)\flipbase64.obj $(OUT)\softsig.obj
+
+DIROBJS=$(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
+
+VOLOBJS= $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.obj $(OUT)\fssync-client.obj $(OUT)\purge.obj $(OUT)\clone.obj $(OUT)\devname.obj $(OUT)\common.obj $(OUT)\ihandle.obj $(OUT)\listinodes.obj $(OUT)\namei_ops.obj $(OUT)\nuke.obj $(OUT)\salvsync-client.obj $(OUT)\daemon_com.obj
+
+
+VOLSERVER_EXEOBJS = $(VOLSEROBJS) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS)
+
+VOLSERVER_EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib/afs/afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afspthread.lib
+
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) 
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP) 
+
+$(VOLSEROBJS): $(VOLSER)\$$(@B).c
+        $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(VICEDOBJS): $(VICED)\$$(@B).c
+	$(C2OBJ) -I$(VICED) -I$(UTIL) $**
+
+$(UTILOBJS): $(UTIL)\$$(@B).c
+	$(C2OBJ) -I$(UTIL) $**
+
+$(LWPOBJS): $(LWP)\$$(@B).C
+	$(C2OBJ) -I$(LWP) $**
+
+$(LIBACLOBJS): $(LIBACL)\$$(@B).C
+	$(C2OBJ) -I$(LIBACL) $**
+
+$(UTILOBJS): $(UTILACL)\$$(@B).C
+	$(C2OBJ) -I$(UTILACL) $**
+
+$(VLSERVEROBJS): $(VLSERVER)\$$(@B).C
+	$(C2OBJ) -I$(VLSERVER) $**
+
+$(DIROBJS): $(DIR)\$$(@B).C
+	$(C2OBJ) -I$(DIR) $**
+
+$(VOLOBJS): $(VOL)\$$(@B).C
+	$(C2OBJ) -I$(VOL) $**
+
+$(FSINTOBJS): $(FSINT)\$$(@B).C
+	$(C2OBJ) -I$(FSINT) $**
+
+############################################################################
+# Generate versioninfo resources
+$(OUT)\volserver.res: AFS_component_version_number.h
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LOCAL_INCFILES) $(LIBFILE) $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
+		$(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) volerr.c volser.h $(INCFILES)
+	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
+
+mkdir:

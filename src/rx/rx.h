@@ -53,6 +53,8 @@
 #endif
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
 # include "rx_clock.h"
@@ -96,7 +98,7 @@
 #ifndef KERNEL
 typedef void (*rx_destructor_t) (void *);
 int rx_KeyCreate(rx_destructor_t);
-osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
+osi_socket rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen);
 osi_socket rxi_GetUDPSocket(u_short port);
 osi_socket rxi_GetHostTCPSocket(u_int host, u_short port);
 #endif /* KERNEL */
@@ -109,8 +111,18 @@ int ntoh_syserr_conv(int error);
 
 #define	rx_ConnectionOf(call)		((call)->conn)
 #define	rx_PeerOf(conn)			((conn)->peer)
-#define	rx_HostOf(peer)			((peer)->host)
-#define	rx_PortOf(peer)			((peer)->port)
+#ifdef AF_INET6
+#define	rx_HostOf(peer)			((peer)->saddr.ss_family == AF_INET ? \
+		((struct sockaddr_in *) &(peer)->saddr)->sin_addr.s_addr : \
+								0xffffffff)
+#define	rx_PortOf(peer)			((peer)->saddr.ss_family == AF_INET ? \
+		((struct sockaddr_in *) &(peer)->saddr)->sin_port : \
+		((struct sockaddr_in6 *) &(peer)->saddr)->sin6_port)
+#else /* AF_INET6 */
+#define rx_HostOf(peer)			(((struct sockaddr_in *) &(peer)->saddr)->sin_addr.saddr)
+#define rx_PortOf(peer)			(((struct sockaddr_in *) &(peer)->saddr)->sin_port)
+#endif /* AF_INET6 */
+#define rx_AddrStringOf(peer)		((peer)->addrstring)
 #define	rx_SetLocalStatus(call, status)	((call)->localStatus = (status))
 #define rx_GetLocalStatus(call, status) ((call)->localStatus)
 #define	rx_GetRemoteStatus(call)	((call)->remoteStatus)
@@ -363,6 +375,10 @@ struct rx_serverQueueEntry {
     osi_socket *socketp;
 };
 
+/* If we don't support IPv6, use this as a fallback */
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif /* INET6_ADDRSTRLEN */
 
 /* A peer refers to a peer process, specified by a (host,port) pair.  There may be more than one peer on a given host. */
 #ifdef KDUMP_RX_LOCK
@@ -375,8 +391,10 @@ struct rx_peer {
 #ifdef RX_ENABLE_LOCKS
     afs_kmutex_t peer_lock;	/* Lock peer */
 #endif				/* RX_ENABLE_LOCKS */
-    afs_uint32 host;		/* Remote IP address, in net byte order */
-    u_short port;		/* Remote UDP port, in net byte order */
+    struct sockaddr_storage saddr;	/* Remote address structure */
+    int saddrlen;			/* Length of saddr */
+    int socktype;			/* Socket type (SOCK_DGRAM, etc) */
+    char addrstring[INET6_ADDRSTRLEN];  /* Printable address format */
 
     /* interface mtu probably used for this host  -  includes RX Header */
     u_short ifMTU;		/* doesn't include IP header */
@@ -1082,7 +1100,27 @@ typedef struct rx_interface_stat {
 
 #define RX_STATS_SERVICE_ID 409
 
+/*
+ * Definitions for handling struct sockaddr_storage casts, and IPv6
+ */
 
+#ifdef AF_INET6
+#define rx_ss2pn(x) ((x)->ss_family == AF_INET6 ? \
+			((struct sockaddr_in6 *) (x))->sin6_port : \
+			((struct sockaddr_in *) (x))->sin_port)
+#define rx_ss2sin6(x) ((struct sockaddr_in6 *) (x))
+#define rx_ssfamily(x) ((x)->ss_family)
+#define rx_ss2addrp6(x) ((afs_uint16 *) &(((struct sockaddr_in6 *) (x))->sin6_addr.s6_addr))
+#define rx_ss2v4addr(x) ((x)->ss_family == AF_INET ? \
+			((struct sockaddr_in *) (x))->sin_addr.s_addr : \
+			0xffffffff)
+#else /* AF_INET6 */
+#define rx_ss2pn(x) (((struct sockaddr_in *) (x))->sin_port)
+#define rx_ssfamily(x) (((struct sockaddr_in *) (x))->sin_family)
+#define rx_ss2v4addr(x) (((struct sockaddr_in *) (x))->sin_addr.s_addr)
+#endif /* AF_INET6 */
+#define rx_ss2sin(x) ((struct sockaddr_in *) (x))
+#define rx_ss2addrp(x) ((unsigned char *) &(((struct sockaddr_in *) (x))->sin_addr.s_addr))
 
 #endif /* _RX_   End of rx.h */
 

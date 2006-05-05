@@ -68,7 +68,7 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
  * Called with the scp locked.
  */
-long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
+long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 {
     cm_aclent_t *aclp;
     long retval = -1;
@@ -147,7 +147,7 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
  *
  * The scp must be locked when this function is called.
  */
-long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
+long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
 {
     register struct cm_aclent *aclp;
 

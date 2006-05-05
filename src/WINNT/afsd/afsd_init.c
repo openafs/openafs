@@ -1169,9 +1169,13 @@ int afsd_InitCM(char **reasonP)
      * which is used for callback RPC messages.
      */
     code = rx_Init(htons(cm_callbackport));
+    if (code != 0) {
+	afsi_log("rx_Init code %x - retrying with a random port number", code);
+	code = rx_Init(0);
+    }
     afsi_log("rx_Init code %x", code);
     if (code != 0) {
-        *reasonP = "afsd: failed to init rx client on port 7001";
+        *reasonP = "afsd: failed to init rx client";
         return -1;
     }
 
@@ -1547,7 +1551,7 @@ GenerateMiniDump(PEXCEPTION_POINTERS ep)
             DWORD dummyLen;
             DWORD dwValue;
             DWORD code;
-            DWORD dwMiniDumpType = MiniDumpNormal;
+            DWORD dwMiniDumpType = MiniDumpWithDataSegs;
 
             code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                                  0, KEY_QUERY_VALUE, &parmKey);
@@ -1556,7 +1560,7 @@ GenerateMiniDump(PEXCEPTION_POINTERS ep)
                 code = RegQueryValueEx(parmKey, "MiniDumpType", NULL, NULL,
                                         (BYTE *) &dwValue, &dummyLen);
                 if (code == ERROR_SUCCESS)
-                    dwMiniDumpType = dwValue ? 1 : 0;
+                    dwMiniDumpType = dwValue;
                 RegCloseKey (parmKey);
             }
 

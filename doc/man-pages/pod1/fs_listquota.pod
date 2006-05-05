@@ -91,7 +91,7 @@ The following example shows the output for the volume C<user.smith>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the C<l> (lookup) permission on the ACL of the root
+The issuer must have the C<r> (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
 B<-path> argument, and on the ACL of each directory that precedes it in
 the pathname.

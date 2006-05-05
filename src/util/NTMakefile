@@ -48,12 +48,15 @@ LIBOBJS = \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog.obj \
-    $(OUT)\snprintf.obj \
+    	$(OUT)\snprintf.obj \
+    	$(OUT)\strlcat.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
 	$(OUT)\errmap_nt.obj \
 	$(OUT)\dirpath.obj \
+	$(OUT)\strnlen.obj \
+	$(OUT)\strlcpy.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\secutil_nt.obj
 

@@ -382,8 +382,9 @@ dochtim(CTREEPTR np, char *path)
     tm[0].tv_usec = tm[1].tv_usec = 0;
     if (!opt_silent) {
 	char *date;
+	time_t mtime = np->mtime;
 
-	date = ctime((time_t *) & np->mtime);
+	date = ctime(&mtime);
 	date[24] = 0;
 	loudonly_message("utimes %s [%s]", path, date);
     }

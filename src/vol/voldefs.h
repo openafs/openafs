@@ -25,6 +25,9 @@
 #define ROVOL			1
 #define BACKVOL			2
 
+/* maximum numbe of Vice partitions */
+#define	VOLMAXPARTS	255
+
 /* All volumes will have a volume header name in this format */
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
 /* Note that <afs/param.h> must have been included before we get here... */

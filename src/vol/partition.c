@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  *
  * Portions Copyright (c) 2003 Apple Computer, Inc.
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -189,6 +190,14 @@ RCSID
 int aixlow_water = 8;		/* default 8% */
 struct DiskPartition *DiskPartitionList;
 
+#ifdef AFS_DEMAND_ATTACH_FS
+static struct DiskPartition *DiskPartitionTable[VOLMAXPARTS+1];
+
+static struct DiskPartition * VLookupPartition_r(char * path);
+static void AddPartitionToTable_r(struct DiskPartition *);
+static void DeletePartitionFromTable_r(struct DiskPartition *);
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 #ifdef AFS_SGI_XFS_IOPS_ENV
 /* Verify that the on disk XFS inodes on the partition are large enough to
  * hold the AFS attribute. Returns -1 if the attribute can't be set or is
@@ -225,8 +234,16 @@ VerifyXFSInodeSize(char *part, char *fstype)
     }
     return code;
 }
-#endif
+#endif /* AFS_SGI_XFS_IOPS_ENV */
 
+int
+VInitPartitionPackage(void)
+{
+#ifdef AFS_DEMAND_ATTACH_ENV
+    memset(&DiskPartitionTable, 0, sizeof(DiskPartitionTable));
+#endif /* AFS_DEMAND_ATTACH_ENV */
+    return 0;
+}
 
 static void
 VInitPartition_r(char *path, char *devname, Device dev)
@@ -245,6 +262,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     dp->next = 0;
     dp->name = (char *)malloc(strlen(path) + 1);
     strncpy(dp->name, path, strlen(path) + 1);
+    dp->index = volutil_GetPartitionID(path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
     dp->devName = (char *)malloc(2 * strlen(path) + 6);
@@ -254,7 +272,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
     close(afs_open(dp->devName, O_RDWR | O_CREAT, 0600));
-    dp->device = volutil_GetPartitionID(path);
+    dp->device = dp->index;
 #else
     dp->devName = (char *)malloc(strlen(devname) + 1);
     strncpy(dp->devName, devname, strlen(devname) + 1);
@@ -268,6 +286,11 @@ VInitPartition_r(char *path, char *devname, Device dev)
 	(void)namei_ViceREADME(VPartitionPath(dp));
 #endif
     VSetPartitionDiskUsage_r(dp);
+#ifdef AFS_DEMAND_ATTACH_FS
+    AddPartitionToTable_r(dp);
+    queue_Init(&dp->vol_list);
+    assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 static void
@@ -352,7 +375,7 @@ VCheckPartition(char *part, char *devname)
 	return -1;
 #endif
 #endif /* AFS_NAMEI_ENV */
-#endif
+#endif /* !AFS_LINUX20_ENV && !AFS_NT40_ENV */
 
 #if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)
     if (status.st_ino != ROOTINO) {
@@ -825,10 +848,14 @@ struct DiskPartition *
 VGetPartition_r(char *name, int abortp)
 {
     register struct DiskPartition *dp;
+#ifdef AFS_DEMAND_ATTACH_FS
+    dp = VLookupPartition_r(name);
+#else /* AFS_DEMAND_ATTACH_FS */
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	if (strcmp(dp->name, name) == 0)
 	    break;
     }
+#endif /* AFS_DEMAND_ATTACH_FS */
     if (abortp)
 	assert(dp != NULL);
     return dp;
@@ -1234,3 +1261,60 @@ VUnlockPartition(char *name)
     VUnlockPartition_r(name);
     VOL_UNLOCK;
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/* XXX not sure this will work on AFS_NT40_ENV
+ * needs to be tested!
+ */
+struct DiskPartition * 
+VGetPartitionById_r(afs_int32 id, int abortp)
+{
+    struct DiskPartition * dp = NULL;
+
+    if ((id >= 0) && (id <= VOLMAXPARTS)) {
+	dp = DiskPartitionTable[id];
+    }
+
+    if (abortp) {
+	assert(dp != NULL);
+    }
+    return dp;
+}
+
+struct DiskPartition *
+VGetPartitionById(afs_int32 id, int abortp)
+{
+    struct Diskpartition * dp;
+
+    VOL_LOCK;
+    dp = VGetPartitionById_r(id, abortp);
+    VOL_UNLOCK;
+
+    return dp;
+}
+
+static struct DiskPartition * 
+VLookupPartition_r(char * path)
+{
+    afs_int32 id = volutil_GetPartitionID(path);
+
+    if (id < 0 || id > VOLMAXPARTS)
+	return NULL;
+
+    return DiskPartitionTable[id];
+}
+
+static void 
+AddPartitionToTable_r(struct DiskPartition * dp)
+{
+    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    DiskPartitionTable[dp->index] = dp;
+}
+
+static void 
+DeletePartitionFromTable_r(struct DiskPartition * dp)
+{
+    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    DiskPartitionTable[dp->index] = NULL;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */

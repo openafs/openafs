@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*  viced.c	- File Server main loop					 */
@@ -215,6 +217,27 @@ afsUUID FS_HostUUID;
 
 static void FlagMsg();
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * fileserver mode support
+ *
+ * during fileserver shutdown, we have to track the graceful shutdown of
+ * certain background threads before we are allowed to dump state to
+ * disk
+ */
+struct fs_state fs_state = 
+    { FS_MODE_NORMAL, 
+      0, 
+      0, 
+      0, 
+      0,
+      { 1,1,1,1 },
+      PTHREAD_COND_INITIALIZER,
+      PTHREAD_RWLOCK_INITIALIZER
+    };
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 /*
  * Home for the performance statistics.
  */
@@ -420,12 +443,30 @@ FiveMinuteCheckLWP()
 
     ViceLog(1, ("Starting five minute check process\n"));
     setThreadId("FiveMinuteCheckLWP");
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_WRLOCK;
+    while (fs_state.mode == FS_MODE_NORMAL) {
+	fs_state.FiveMinuteLWP_tranquil = 1;
+	FS_STATE_UNLOCK;
+#else
     while (1) {
+#endif
+
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
 #else /* AFS_PTHREAD_ENV */
 	IOMGR_Sleep(fiveminutes);
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+	if (fs_state.mode != FS_MODE_NORMAL) {
+	    break;
+	}
+	fs_state.FiveMinuteLWP_tranquil = 0;
+	FS_STATE_UNLOCK;
+#endif
 
 	/* close the log so it can be removed */
 	ReOpenLog(AFSDIR_SERVER_FILELOG_FILEPATH);	/* don't trunc, just append */
@@ -452,7 +493,17 @@ FiveMinuteCheckLWP()
 			 afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	    }
 	}
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+#endif
     }
+#ifdef AFS_DEMAND_ATTACH_FS
+    fs_state.FiveMinuteLWP_tranquil = 1;
+    FS_LOCK;
+    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    FS_UNLOCK;
+    FS_STATE_UNLOCK;
+#endif
 }				/*FiveMinuteCheckLWP */
 
 
@@ -460,20 +511,50 @@ FiveMinuteCheckLWP()
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
+
 static void
 HostCheckLWP()
 {
     ViceLog(1, ("Starting Host check process\n"));
     setThreadId("HostCheckLWP");
-    while (1) {
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_WRLOCK;
+    while (fs_state.mode == FS_MODE_NORMAL) {
+	fs_state.HostCheckLWP_tranquil = 1;
+	FS_STATE_UNLOCK;
+#else
+    while(1) {
+#endif
+
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
 #else /* AFS_PTHREAD_ENV */
 	IOMGR_Sleep(fiveminutes);
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+	if (fs_state.mode != FS_MODE_NORMAL) {
+	    break;
+	}
+	fs_state.HostCheckLWP_tranquil = 0;
+	FS_STATE_UNLOCK;
+#endif
+
 	ViceLog(2, ("Checking for dead venii & clients\n"));
 	h_CheckHosts();
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+#endif
     }
+#ifdef AFS_DEMAND_ATTACH_FS
+    fs_state.HostCheckLWP_tranquil = 1;
+    FS_LOCK;
+    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    FS_UNLOCK;
+    FS_STATE_UNLOCK;
+#endif
 }				/*HostCheckLWP */
 
 /* This LWP does fsync checks every 5 minutes:  it should not be used for
@@ -496,7 +577,14 @@ FsyncCheckLWP()
     assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
 #endif
 
-    while (1) {
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_WRLOCK;
+    while (fs_state.mode == FS_MODE_NORMAL) {
+	fs_state.FsyncCheckLWP_tranquil = 1;
+	FS_STATE_UNLOCK;
+#else
+    while(1) {
+#endif
 	FSYNC_LOCK;
 #ifdef AFS_PTHREAD_ENV
 	/* rounding is fine */
@@ -513,11 +601,31 @@ FsyncCheckLWP()
 	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
 #endif /* AFS_PTHREAD_ENV */
 	FSYNC_UNLOCK;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+	if (fs_state.mode != FS_MODE_NORMAL) {
+	    break;
+	}
+	fs_state.FsyncCheckLWP_tranquil = 0;
+	FS_STATE_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 	ViceLog(2, ("Checking for fsync events\n"));
 	do {
 	    code = BreakLaterCallBacks();
 	} while (code != 0);
+#ifdef AFS_DEMAND_ATTACH_FS
+	FS_STATE_WRLOCK;
+#endif
     }
+#ifdef AFS_DEMAND_ATTACH_FS
+    fs_state.FsyncCheckLWP_tranquil = 1;
+    FS_LOCK;
+    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    FS_UNLOCK;
+    FS_STATE_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 /*------------------------------------------------------------------------
@@ -604,6 +712,11 @@ PrintCounters()
 	    ("Vice was last started at %s\n",
 	     afs_ctime(&StartTime, tbuffer, sizeof(tbuffer))));
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* XXX perhaps set extended stats verbosity flags
+     * based upon LogLevel ?? */
+    VPrintExtendedCacheStats(VOL_STATS_PER_CHAIN2);
+#endif
     VPrintCacheStats();
     VPrintDiskStats();
     DStat(&dirbuff, &dircall, &dirio);
@@ -656,6 +769,16 @@ ShutDownAndCore(int dopanic)
     time_t now = time(0);
     char tbuffer[32];
 
+    /* do not allows new reqests to be served from now on, all new requests
+     * are returned with an error code of RX_RESTARTING ( transient failure ) */
+    rx_SetRxTranquil();		/* dhruba */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_WRLOCK;
+    fs_state.mode = FS_MODE_SHUTDOWN;
+    FS_STATE_UNLOCK;
+#endif
+
     ViceLog(0,
 	    ("Shutting down file server at %s",
 	     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
@@ -671,10 +794,33 @@ ShutDownAndCore(int dopanic)
     if (!dopanic)
 	PrintCounters();
 
-    /* do not allows new reqests to be served from now on, all new requests
-     * are returned with an error code of RX_RESTARTING ( transient failure ) */
-    rx_SetRxTranquil();		/* dhruba */
+    /* shut down volume package */
     VShutdown();
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (fs_state.options.fs_state_save) {
+	/* 
+	 * demand attach fs
+	 * save fileserver state to disk */
+
+	/* make sure background threads have finished all of their asynchronous 
+	 * work on host and callback structures */
+	FS_STATE_RDLOCK;
+	while (!fs_state.FiveMinuteLWP_tranquil ||
+	       !fs_state.HostCheckLWP_tranquil ||
+	       !fs_state.FsyncCheckLWP_tranquil) {
+	    FS_LOCK;
+	    FS_STATE_UNLOCK;
+	    ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
+	    assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
+	    FS_UNLOCK;
+	    FS_STATE_RDLOCK;
+	}
+
+	/* ok. it should now be fairly safe. let's do the state dump */
+	fs_stateSave();
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     if (debugFile) {
 	rx_PrintStats(debugFile);
@@ -715,7 +861,7 @@ ShutDown(void)
 static void
 FlagMsg()
 {
-    char buffer[1024];
+    char buffer[2048];
 
     /* default supports help flag */
 
@@ -743,8 +889,18 @@ FlagMsg()
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
     strcat(buffer, "[-rxmaxmtu <bytes>] ");
-#if AFS_PTHREAD_ENV
-    strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
+#ifdef AFS_DEMAND_ATTACH_FS
+    strcat(buffer, "[-fs-state-dont-save (disable state save during shutdown)] ");
+    strcat(buffer, "[-fs-state-dont-restore (disable state restore during startup)] ");
+    strcat(buffer, "[-fs-state-verify <none|save|restore|both> (default is both)] ");
+    strcat(buffer, "[-vattachpar <max number of volume attach/shutdown threads> (default is 1)] ");
+    strcat(buffer, "[-vhashsize <log(2) of number of volume hash buckets> (default is 8)] ");
+    strcat(buffer, "[-vlrudisable (disable VLRU functionality)] ");
+    strcat(buffer, "[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ");
+    strcat(buffer, "[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ");
+    strcat(buffer, "[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ");
+#elif AFS_PTHREAD_ENV
+    strcat(buffer, "[-vattachpar <number of volume attach threads> (default is 1)] ");
 #endif
 #ifdef	AFS_AIX32_ENV
     strcat(buffer, "[-m <min percentage spare in partition>] ");
@@ -945,11 +1101,62 @@ ParseArgs(int argc, char *argv[])
 #ifdef AFS_PTHREAD_ENV
 	} else if (!strcmp(argv[i], "-vattachpar")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -vattachpar\n"); 
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
 		return -1; 
 	    }
 	    vol_attach_threads = atoi(argv[++i]);
 #endif /* AFS_PTHREAD_ENV */
+#ifdef AFS_DEMAND_ATTACH_FS
+	} else if (!strcmp(argv[i], "-fs-state-dont-save")) {
+	    fs_state.options.fs_state_save = 0;
+	} else if (!strcmp(argv[i], "-fs-state-dont-restore")) {
+	    fs_state.options.fs_state_restore = 0;
+	} else if (!strcmp(argv[i], "-fs-state-verify")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
+		return -1; 
+	    }
+	    i++;
+	    if (!strcmp(argv[i], "none")) {
+		fs_state.options.fs_state_verify_before_save = 0;
+		fs_state.options.fs_state_verify_after_restore = 0;
+	    } else if (!strcmp(argv[i], "save")) {
+		fs_state.options.fs_state_verify_after_restore = 0;
+	    } else if (!strcmp(argv[i], "restore")) {
+		fs_state.options.fs_state_verify_before_save = 0;
+	    } else if (!strcmp(argv[i], "both")) {
+		/* default */
+	    } else {
+		fprintf(stderr, "invalid argument for %s\n", argv[i-1]);
+		return -1;
+	    }
+	} else if (!strcmp(argv[i], "-vhashsize")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
+		return -1; 
+	    }
+	    VSetVolHashSize(atoi(argv[++i]));
+	} else if (!strcmp(argv[i], "-vlrudisable")) {
+	    VLRU_SetOptions(VLRU_SET_ENABLED, 0);
+	} else if (!strcmp(argv[i], "-vlruthresh")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
+		return -1; 
+	    }
+	    VLRU_SetOptions(VLRU_SET_THRESH, 60*atoi(argv[++i]));
+	} else if (!strcmp(argv[i], "-vlruinterval")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
+		return -1; 
+	    }
+	    VLRU_SetOptions(VLRU_SET_INTERVAL, atoi(argv[++i]));
+	} else if (!strcmp(argv[i], "-vlrumax")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for %s\n", argv[i]); 
+		return -1; 
+	    }
+	    VLRU_SetOptions(VLRU_SET_MAX, atoi(argv[++i]));
+#endif /* AFS_DEMAND_ATTACH_FS */
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
             if ((i + 1) >= argc) {
@@ -1922,6 +2129,15 @@ main(int argc, char *argv[])
 	VShutdown();
 	exit(1);
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (fs_state.options.fs_state_restore) {
+	/*
+	 * demand attach fs
+	 * restore fileserver state */
+	fs_stateRestore();
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     /*
      * We are done calling fopen/fdopen. It is safe to use a large

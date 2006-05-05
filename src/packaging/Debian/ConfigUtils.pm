@@ -24,3 +24,11 @@ sub run ($) {
 	 }
 
 1;
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm
+openafs-dbserver: non-standard-dir-perm

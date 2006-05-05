@@ -52,10 +52,12 @@ static DoStat();
 
 #include "bosint.h"
 
-#define MRAFS_OFFSET  9
-#define ADDPARMOFFSET 26
+/* command offsets for bos salvage command */
+#define MRAFS_OFFSET  10
+#define ADDPARMOFFSET 27
 
-static struct SalvageParms {
+/* MR-AFS salvage parameters */
+struct MRAFSSalvageParms {
     afs_int32 Optdebug;
     afs_int32 Optnowrite;
     afs_int32 Optforce;
@@ -74,7 +76,7 @@ static struct SalvageParms {
     afs_int32 OptLogLevel;
     afs_int32 OptRxDebug;
     afs_uint32 OptResidencies;
-} mrafsParm;
+};
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
@@ -1224,17 +1226,11 @@ StopServer(as)
 
 #define PARMBUFFERSSIZE 32
 
-static
-DoSalvage(aconn, aparm1, aparm2, aoutName, showlog, parallel, atmpDir,
-	  orphans)
-     struct rx_connection *aconn;
-     char *aoutName;
-     char *aparm1;
-     char *aparm2;
-     afs_int32 showlog;
-     char *parallel;
-     char *atmpDir;
-     char *orphans;
+static afs_int32
+DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2, 
+	  char * aoutName, afs_int32 showlog, char * parallel, 
+	  char * atmpDir, char * orphans, int dafs, 
+	  struct MRAFSSalvageParms * mrafsParm)
 {
     register afs_int32 code;
     char *parms[6];
@@ -1285,19 +1281,43 @@ DoSalvage(aconn, aparm1, aparm2, aoutName, showlog, parallel, atmpDir,
 	parms[code] = "";
     if (!aparm2)
 	aparm2 = "";
+
     /* MUST pass canonical (wire-format) salvager path to bosserver */
-    strncpy(tbuffer, AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH, BOZO_BSSIZE);
     if (*aparm2 != 0) {
-	if ((strlen(tbuffer) + 1 + strlen(partName) + 1 + strlen(aparm2) +
-	     1) > BOZO_BSSIZE) {
-	    printf("bos: command line too big\n");
-	    return (E2BIG);
+	/* single volume salvage */
+	if (dafs) {
+	    /* for DAFS, we call the salvagserver binary with special options.
+	     * in this mode, it simply uses SALVSYNC to tell the currently
+	     * running salvageserver to offline and salvage the volume in question */
+	    strncpy(tbuffer, AFSDIR_CANONICAL_SERVER_SALSRV_FILEPATH, BOZO_BSSIZE);
+
+	    if ((strlen(tbuffer) + 9 + strlen(partName) + 1 + strlen(aparm2) +
+		 1) > BOZO_BSSIZE) {
+		printf("bos: command line too big\n");
+		return (E2BIG);
+	    }
+
+	    strcat(tbuffer, " -client ");
+	    strcat(tbuffer, partName);
+	    strcat(tbuffer, " ");
+	    strcat(tbuffer, aparm2);
+	} else {
+	    strncpy(tbuffer, AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH, BOZO_BSSIZE);
+
+	    if ((strlen(tbuffer) + 1 + strlen(partName) + 1 + strlen(aparm2) +
+		 1) > BOZO_BSSIZE) {
+		printf("bos: command line too big\n");
+		return (E2BIG);
+	    }
+
+	    strcat(tbuffer, " ");
+	    strcat(tbuffer, partName);
+	    strcat(tbuffer, " ");
+	    strcat(tbuffer, aparm2);
 	}
-	strcat(tbuffer, " ");
-	strcat(tbuffer, partName);
-	strcat(tbuffer, " ");
-	strcat(tbuffer, aparm2);
     } else {
+	/* partition salvage */
+	strncpy(tbuffer, AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH, BOZO_BSSIZE);
 	if ((strlen(tbuffer) + 4 + strlen(partName) + 1) > BOZO_BSSIZE) {
 	    printf("bos: command line too big\n");
 	    return (E2BIG);
@@ -1306,75 +1326,82 @@ DoSalvage(aconn, aparm1, aparm2, aoutName, showlog, parallel, atmpDir,
 	strcat(tbuffer, partName);
     }
 
-    /* add the parallel option if given */
-    if (parallel != NULL) {
-	if ((strlen(tbuffer) + 11 + strlen(parallel) + 1) > BOZO_BSSIZE) {
-	    printf("bos: command line too big\n");
-	    return (E2BIG);
+    /* For DAFS, specifying a single volume does not result in a standard
+     * salvager call.  Instead, it simply results in a SALVSYNC call to the
+     * online salvager daemon.  This interface does not give us the same rich
+     * set of call flags.  Thus, we skip these steps for DAFS single-volume 
+     * calls */
+    if (!dafs || (*aparm2 == 0)) {
+	/* add the parallel option if given */
+	if (parallel != NULL) {
+	    if ((strlen(tbuffer) + 11 + strlen(parallel) + 1) > BOZO_BSSIZE) {
+		printf("bos: command line too big\n");
+		return (E2BIG);
+	    }
+	    strcat(tbuffer, " -parallel ");
+	    strcat(tbuffer, parallel);
 	}
-	strcat(tbuffer, " -parallel ");
-	strcat(tbuffer, parallel);
-    }
 
-    /* add the tmpdir option if given */
-    if (atmpDir != NULL) {
-	if ((strlen(tbuffer) + 9 + strlen(atmpDir) + 1) > BOZO_BSSIZE) {
-	    printf("bos: command line too big\n");
-	    return (E2BIG);
+	/* add the tmpdir option if given */
+	if (atmpDir != NULL) {
+	    if ((strlen(tbuffer) + 9 + strlen(atmpDir) + 1) > BOZO_BSSIZE) {
+		printf("bos: command line too big\n");
+		return (E2BIG);
+	    }
+	    strcat(tbuffer, " -tmpdir ");
+	    strcat(tbuffer, atmpDir);
 	}
-	strcat(tbuffer, " -tmpdir ");
-	strcat(tbuffer, atmpDir);
-    }
 
-    /* add the orphans option if given */
-    if (orphans != NULL) {
-	if ((strlen(tbuffer) + 10 + strlen(orphans) + 1) > BOZO_BSSIZE) {
-	    printf("bos: command line too big\n");
-	    return (E2BIG);
+	/* add the orphans option if given */
+	if (orphans != NULL) {
+	    if ((strlen(tbuffer) + 10 + strlen(orphans) + 1) > BOZO_BSSIZE) {
+		printf("bos: command line too big\n");
+		return (E2BIG);
+	    }
+	    strcat(tbuffer, " -orphans ");
+	    strcat(tbuffer, orphans);
 	}
-	strcat(tbuffer, " -orphans ");
-	strcat(tbuffer, orphans);
-    }
 
-    if (mrafsParm.Optdebug)
-	strcat(tbuffer, " -debug");
-    if (mrafsParm.Optnowrite)
-	strcat(tbuffer, " -nowrite");
-    if (mrafsParm.Optforce)
-	strcat(tbuffer, " -force");
-    if (mrafsParm.Optoktozap)
-	strcat(tbuffer, " -oktozap");
-    if (mrafsParm.Optrootfiles)
-	strcat(tbuffer, " -rootfiles");
-    if (mrafsParm.Optsalvagedirs)
-	strcat(tbuffer, " -salvagedirs");
-    if (mrafsParm.Optblockreads)
-	strcat(tbuffer, " -blockreads");
-    if (mrafsParm.OptListResidencies)
-	strcat(tbuffer, " -ListResidencies");
-    if (mrafsParm.OptSalvageRemote)
-	strcat(tbuffer, " -SalvageRemote");
-    if (mrafsParm.OptSalvageArchival)
-	strcat(tbuffer, " -SalvageArchival");
-    if (mrafsParm.OptIgnoreCheck)
-	strcat(tbuffer, " -IgnoreCheck");
-    if (mrafsParm.OptForceOnLine)
-	strcat(tbuffer, " -ForceOnLine");
-    if (mrafsParm.OptUseRootDirACL)
-	strcat(tbuffer, " -UseRootDirACL");
-    if (mrafsParm.OptTraceBadLinkCounts)
-	strcat(tbuffer, " -TraceBadLinkCounts");
-    if (mrafsParm.OptDontAskFS)
-	strcat(tbuffer, " -DontAskFS");
-    if (mrafsParm.OptLogLevel) {
-	sprintf(pbuffer, " -LogLevel %ld", mrafsParm.OptLogLevel);
-	strcat(tbuffer, pbuffer);
-    }
-    if (mrafsParm.OptRxDebug)
-	strcat(tbuffer, " -rxdebug");
-    if (mrafsParm.OptResidencies) {
-	sprintf(pbuffer, " -Residencies %lu", mrafsParm.OptResidencies);
-	strcat(tbuffer, pbuffer);
+	if (mrafsParm->Optdebug)
+	    strcat(tbuffer, " -debug");
+	if (mrafsParm->Optnowrite)
+	    strcat(tbuffer, " -nowrite");
+	if (mrafsParm->Optforce)
+	    strcat(tbuffer, " -force");
+	if (mrafsParm->Optoktozap)
+	    strcat(tbuffer, " -oktozap");
+	if (mrafsParm->Optrootfiles)
+	    strcat(tbuffer, " -rootfiles");
+	if (mrafsParm->Optsalvagedirs)
+	    strcat(tbuffer, " -salvagedirs");
+	if (mrafsParm->Optblockreads)
+	    strcat(tbuffer, " -blockreads");
+	if (mrafsParm->OptListResidencies)
+	    strcat(tbuffer, " -ListResidencies");
+	if (mrafsParm->OptSalvageRemote)
+	    strcat(tbuffer, " -SalvageRemote");
+	if (mrafsParm->OptSalvageArchival)
+	    strcat(tbuffer, " -SalvageArchival");
+	if (mrafsParm->OptIgnoreCheck)
+	    strcat(tbuffer, " -IgnoreCheck");
+	if (mrafsParm->OptForceOnLine)
+	    strcat(tbuffer, " -ForceOnLine");
+	if (mrafsParm->OptUseRootDirACL)
+	    strcat(tbuffer, " -UseRootDirACL");
+	if (mrafsParm->OptTraceBadLinkCounts)
+	    strcat(tbuffer, " -TraceBadLinkCounts");
+	if (mrafsParm->OptDontAskFS)
+	    strcat(tbuffer, " -DontAskFS");
+	if (mrafsParm->OptLogLevel) {
+	    sprintf(pbuffer, " -LogLevel %ld", mrafsParm->OptLogLevel);
+	    strcat(tbuffer, pbuffer);
+	}
+	if (mrafsParm->OptRxDebug)
+	    strcat(tbuffer, " -rxdebug");
+	if (mrafsParm->OptResidencies) {
+	    sprintf(pbuffer, " -Residencies %lu", mrafsParm->OptResidencies);
+	    strcat(tbuffer, pbuffer);
+	}
     }
 
     parms[0] = tbuffer;
@@ -1481,22 +1508,36 @@ SalvageCmd(as)
     char tname[BOZO_BSSIZE];
     afs_int32 newID;
     extern struct ubik_client *cstruct;
-    afs_int32 curGoal, showlog = 0, mrafs = 0;
+    afs_int32 curGoal, showlog = 0, dafs = 0, mrafs = 0;
     char *parallel;
     char *tmpDir;
     char *orphans;
     char *tp;
+    char * serviceName;
+    struct MRAFSSalvageParms mrafsParm;
 
     memset(&mrafsParm, 0, sizeof(mrafsParm));
 
     /* parm 0 is machine name, 1 is partition, 2 is volume, 3 is -all flag */
     tconn = GetConn(as, 0);
 
-    /* Find out whether fileserver is running MR-AFS (has a scanner instance) */
-    /* XXX this should really be done some other way, potentially by RPC */
     tp = &tname[0];
-    if (code = BOZO_GetInstanceParm(tconn, "fs", 3, &tp) == 0)
-	mrafs = 1;
+
+    /* find out whether fileserver is running demand attach fs */
+    if (code = BOZO_GetInstanceParm(tconn, "dafs", 0, &tp) == 0) {
+	dafs = 1;
+	serviceName = "dafs";
+	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
+	/* XXX this should really be done some other way, potentially by RPC */
+	if (code = BOZO_GetInstanceParm(tconn, serviceName, 4, &tp) == 0)
+	    mrafs = 1;
+    } else {
+	serviceName = "fs";
+	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
+	/* XXX this should really be done some other way, potentially by RPC */
+	if (code = BOZO_GetInstanceParm(tconn, serviceName, 3, &tp) == 0)
+	    mrafs = 1;
+    }
 
     /* we can do a volume, a partition or the whole thing, but not mixtures
      * thereof */
@@ -1540,6 +1581,14 @@ SalvageCmd(as)
 	    return EINVAL;
 	}
 	orphans = as->parms[8].items->data;
+    }
+
+    if (dafs) {
+	if (!as->parms[9].items) { /* -forceDAFS flag */
+	    printf("This is a demand attach fileserver.  Are you sure you want to proceed with a manual salvage?\n");
+	    printf("must specify -forceDAFS flag in order to proceed.\n");
+	    return EINVAL;
+	}
     }
 
     if (mrafs) {
@@ -1597,7 +1646,7 @@ SalvageCmd(as)
     } else {
 	int stop = 0;
 
-	for (i = 9; i < ADDPARMOFFSET; i++) {
+	for (i = MRAFS_OFFSET; i < ADDPARMOFFSET; i++) {
 	    if (as->parms[i].items) {
 		printf(" %s only possible for MR-AFS fileserver.\n",
 		       as->parms[i].name);
@@ -1610,12 +1659,12 @@ SalvageCmd(as)
 
     if (as->parms[4].items) {
 	/* salvage whole enchilada */
-	curGoal = GetServerGoal(tconn, "fs");
+	curGoal = GetServerGoal(tconn, serviceName);
 	if (curGoal == BSTAT_NORMAL) {
-	    printf("bos: shutting down fs.\n");
-	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_SHUTDOWN);
+	    printf("bos: shutting down '%s'.\n", serviceName);
+	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_SHUTDOWN);
 	    if (code) {
-		printf("bos: failed to stop 'fs' (%s)\n", em(code));
+		printf("bos: failed to stop '%s' (%s)\n", serviceName, em(code));
 		return code;
 	    }
 	    code = BOZO_WaitAll(tconn);	/* wait for shutdown to complete */
@@ -1626,12 +1675,12 @@ SalvageCmd(as)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, NULL, NULL, outName, showlog, parallel, tmpDir,
-		       orphans);
+		       orphans, dafs, &mrafsParm);
 	if (curGoal == BSTAT_NORMAL) {
-	    printf("bos: restarting fs.\n");
-	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_NORMAL);
+	    printf("bos: restarting %s.\n", serviceName);
+	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
 	    if (code) {
-		printf("bos: failed to restart 'fs' (%s)\n", em(code));
+		printf("bos: failed to restart '%s' (%s)\n", serviceName, em(code));
 		return code;
 	    }
 	}
@@ -1651,13 +1700,13 @@ SalvageCmd(as)
 		   as->parms[1].items->data);
 	    return -1;
 	}
-	curGoal = GetServerGoal(tconn, "fs");
+	curGoal = GetServerGoal(tconn, serviceName);
 	/* salvage a whole partition (specified by parms[1]) */
 	if (curGoal == BSTAT_NORMAL) {
-	    printf("bos: shutting down fs.\n");
-	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_SHUTDOWN);
+	    printf("bos: shutting down '%s'.\n", serviceName);
+	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_SHUTDOWN);
 	    if (code) {
-		printf("bos: can't stop 'fs' (%s)\n", em(code));
+		printf("bos: can't stop '%s' (%s)\n", serviceName, em(code));
 		return code;
 	    }
 	    code = BOZO_WaitAll(tconn);	/* wait for shutdown to complete */
@@ -1668,12 +1717,12 @@ SalvageCmd(as)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, NULL, outName,
-		       showlog, parallel, tmpDir, orphans);
+		       showlog, parallel, tmpDir, orphans, dafs, &mrafsParm);
 	if (curGoal == BSTAT_NORMAL) {
-	    printf("bos: restarting fs.\n");
-	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_NORMAL);
+	    printf("bos: restarting '%s'.\n", serviceName);
+	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
 	    if (code) {
-		printf("bos: failed to restart 'fs' (%s)\n", em(code));
+		printf("bos: failed to restart '%s' (%s)\n", serviceName, em(code));
 		return code;
 	    }
 	}
@@ -1723,7 +1772,7 @@ SalvageCmd(as)
 	}
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, tname, outName,
-		       showlog, parallel, tmpDir, orphans);
+		       showlog, parallel, tmpDir, orphans, dafs, &mrafsParm);
 	if (rc)
 	    return rc;
     }
@@ -2153,6 +2202,8 @@ main(argc, argv)
 		"directory to place tmp files");
     cmd_AddParm(ts, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
 		"ignore | remove | attach");
+    cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
+		"(DAFS) force salvage of demand attach fileserver");
     cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL,
 		"(MR-AFS) Run in Debugging mode");
     cmd_AddParm(ts, "-nowrite", CMD_FLAG, CMD_OPTIONAL,

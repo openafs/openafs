@@ -97,6 +97,7 @@
 	<?define cmf_upserver_EXE_guid="4201E9FE-56BC-4852-992A-18E5D75C3B39"?>
 	<?define cmf_afsserver_CPL_guid="7B0D1145-DB1B-47BA-A874-3AB26F86FFB6"?>
 	<?define cmp_Server_Program_Debug_guid="1EDCDA16-216B-434E-A06E-AD1A9D40F5A2"?>
+        <?define rcm_binsonly_parm_guid="A4969933-E01B-476C-B923-4F2EFBA2B78C"?>
 
 <?elseif $(var.Platform) = "Intel"?>
 	<?define PISystemFolder="SystemFolder"?>
@@ -194,6 +195,7 @@
 	<?define cmf_upserver_EXE_guid="3CBD2EF5-43BC-4CA2-B367-87E82DED1406"?>
 	<?define cmf_afsserver_CPL_guid="E270281E-9DB2-40A8-A418-55B4EC4A3FE7"?>
 	<?define cmp_Server_Program_Debug_guid="5F7BA9F7-E9BD-4AC3-9232-5EFBF6B740F8"?>
+        <?define rcm_binsonly_parm_guid="4DFE834A-F129-4FDD-91AD-8A31A849AF0B"?>
 
 <?else?>
 	<?error Unknown platform?>

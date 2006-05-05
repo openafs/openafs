@@ -112,9 +112,7 @@ if [ $firstpass = yes ]; then
     if [ $majorvers -ge 7 ]; then
 	echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
 	(cd $CURDIR && \
-	make -f $RESSRC/Makefile AFSINCLUDE="-I$BINDEST/include" && \
-	cp afssettings $PKGROOT/private/var/db/openafs/etc/config && \
-	make -f $RESSRC/Makefile clean)
+	cp afssettings $PKGROOT/private/var/db/openafs/etc/config )
 	cp settings.plist $PKGROOT/private/var/db/openafs/etc/config/settings.plist.orig
     else
 	echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
@@ -144,6 +142,9 @@ if [ $firstpass = yes ]; then
     ln -s ../../Library/OpenAFS/Tools/bin/kpasswd $PKGROOT/usr/bin/kpasswd.afs
 
     ln -s ../../Library/OpenAFS/Tools/root.client/usr/vice/etc/afsd $PKGROOT/usr/sbin/afsd
+
+    mkdir -p $PKGROOT/Library/Kerberos\ Plug-Ins
+    ln -s ../../Library/OpenAFS/Tools/root.client/Library/Kerberos\ Plug-Ins/aklog.loginLogout $PKGROOT/Library/Kerberos\ Plug-Ins/
 
     chown -R root${SEP}wheel $PKGROOT/usr
     chmod -R og-w $PKGROOT/usr

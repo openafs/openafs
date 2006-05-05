@@ -3,6 +3,7 @@
     <!--
     This file will be included as a child of the root Directory tag.
     -->
+<?ifndef BinsOnly ?>
     <Component Id="rcm_Server" Guid="$(var.rcm_server_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server"/>
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Id="reg_Server3"/>
@@ -204,5 +205,32 @@
     <Component Id="rcm_Loopback" Guid="$(var.rcm_loopback_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="LoopbackInstalled" Type="integer" Value="1" Id="reg_Loopback1" KeyPath="yes" />
     </Component>
-    
+<?else?>
+    <Component Id="rcm_BinsOnly_Parm" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries" KeyPath="yes" Id="reg_Control_Center2" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center3" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Control_Center4" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Id="reg_Control_Center5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Control_Center6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Control_Center7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Control_Center8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_Control_Center9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]Control Center" Id="reg_Control_Center10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Control_Center11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center14" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Control_Center17" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Id="reg_Control_Center18" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Control_Center19" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Control_Center20" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Control_Center21" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_Control_Center22" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]Control Center" Id="reg_Control_Center23" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Control_Center24" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center26" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center27" />
+    </Component>
+<?endif?>
 </Include>

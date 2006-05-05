@@ -192,6 +192,7 @@ typedef struct myncb {
 /* one per virtual circuit */
 typedef struct smb_vc {
     struct smb_vc *nextp;		/* not used */
+    afs_uint32 magic;			/* a magic value to detect bad entries */
     unsigned long refCount;		/* the reference count */
     long flags;			        /* the flags, if any; locked by mx */
     osi_mutex_t mx;			/* the mutex */
@@ -213,6 +214,7 @@ typedef struct smb_vc {
     unsigned short session;		/* This is the Session Index associated with the NCBs */
 } smb_vc_t;
 
+#define SMB_VC_MAGIC ('S' | 'C'<<8 | 'A'<<16 | 'C'<<24)
 					/* have we negotiated ... */
 #define SMB_VCFLAG_USEV3	1	/* ... version 3 of the protocol */
 #define SMB_VCFLAG_USECORE	2	/* ... the core protocol */
@@ -222,6 +224,7 @@ typedef struct smb_vc {
 #define SMB_VCFLAG_ALREADYDEAD	0x20	/* do not get tokens from this vc */
 #define SMB_VCFLAG_SESSX_RCVD	0x40	/* we received at least one session setups on this vc */
 #define SMB_VCFLAG_AUTH_IN_PROGRESS 0x80 /* a SMB NT extended authentication is in progress */
+#define SMB_VCFLAG_CLEAN_IN_PROGRESS 0x100
 
 /* one per user session */
 typedef struct smb_user {
@@ -356,7 +359,7 @@ typedef struct smb_fid {
 
 #define SMB_FID_OPENREAD		1	/* open for reading */
 #define SMB_FID_OPENWRITE		2	/* open for writing */
-#define SMB_FID_UNUSED                  4       /* free for use */
+#define SMB_FID_CREATED                 4       /* a new file */
 #define SMB_FID_IOCTL			8	/* a file descriptor for the
 						 * magic ioctl file */
 #define SMB_FID_OPENDELETE		0x10	/* open for deletion (NT) */

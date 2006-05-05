@@ -32,6 +32,6 @@ BC_Print(acall, acode, aflags, amessage)
 
     tconn = rx_ConnectionOf(acall);
     tpeer = rx_PeerOf(tconn);
-    printf("From %08x: %s <%d>\n", tpeer->host, amessage, acode);
+    printf("From %s: %s <%d>\n", rx_AddrStringOf(tpeer), amessage, acode);
     return 0;
 }

@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*  file.h	- include file for the File Server			*/
@@ -19,6 +21,9 @@
  * Revision 2.1  90/08/07  19:46:16
  * Start with clean version to sync test and dev trees.
  * */
+
+#ifndef _AFS_VICED_VICED_H
+#define _AFS_VICED_VICED_H
 
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
@@ -46,18 +51,6 @@ typedef struct DirHandle {
 } DirHandle;
 
 
-struct cbcounters {
-    int DeleteFiles;
-    int DeleteCallBacks;
-    int BreakCallBacks;
-    int AddCallBacks;
-    int GotSomeSpaces;
-    int DeleteAllCallBacks;
-    int nFEs, nCBs, nblks;
-    int CBsTimedOut;
-    int nbreakers;
-    int GSS1, GSS2, GSS3, GSS4, GSS5;
-};
 
 #define MAXCNTRS (AFS_HIGHEST_OPCODE+1)
 
@@ -219,3 +212,46 @@ extern pthread_mutex_t fsync_glock_mutex;
 #define FSYNC_LOCK
 #define FSYNC_UNLOCK
 #endif /* AFS_PTHREAD_ENV */
+
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * fileserver mode support
+ */
+struct fs_state {
+    volatile int mode;
+    volatile byte FiveMinuteLWP_tranquil;      /* five minute check thread is shutdown or sleeping */
+    volatile byte HostCheckLWP_tranquil;       /* host check thread is shutdown or sleeping */
+    volatile byte FsyncCheckLWP_tranquil;      /* fsync check thread is shutdown or sleeping */
+    volatile byte salvsync_fatal_error;        /* fatal error with salvsync comm */
+
+    /* some command-line options we use in 
+     * various places
+     *
+     * these fields are immutable once we
+     * go multithreaded */
+    struct {
+	byte fs_state_save;
+	byte fs_state_restore;
+	byte fs_state_verify_before_save;
+	byte fs_state_verify_after_restore;
+    } options;
+
+    pthread_cond_t worker_done_cv;
+    pthread_rwlock_t state_lock;
+};
+
+extern struct fs_state fs_state;
+
+/* this lock is defined to be directly above FS_LOCK in the locking hierarchy */
+#define FS_STATE_RDLOCK  assert(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
+#define FS_STATE_WRLOCK  assert(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
+#define FS_STATE_UNLOCK  assert(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
+
+#define FS_MODE_NORMAL    0
+#define FS_MODE_SHUTDOWN  1
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+
+#endif /* _AFS_VICED_VICED_H */

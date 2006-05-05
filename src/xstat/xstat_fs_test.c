@@ -83,8 +83,7 @@ static char *opNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats",
-    "GetCapabilities"
+    "GetXStats"
 };
 
 static char *xferOpNames[] = {
@@ -122,13 +121,14 @@ PrintCallInfo()
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_fs_Results.probeTime;
 
     /*
      * Just print out the results of the particular probe.
      */
     numInt32s = xstat_fs_Results.data.AFS_CollData_len;
     currInt32 = (afs_int32 *) (xstat_fs_Results.data.AFS_CollData_val);
-    printableTime = ctime((time_t *) & (xstat_fs_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
     printf("AFS_XSTATSCOLL_CALL_INFO (coll %d) for FS %s\n[Probe %d, %s]\n\n",
@@ -250,7 +250,8 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
     printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
     printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
 
-    printf("\t%10d fs_nBusies\n\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_nBusies\n", a_ovP->fs_nBusies);
+    printf("\t%10d fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
     /*
      * Host module fields.
      */
@@ -422,6 +423,7 @@ PrintFullPerfInfo()
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
     char *printableTime;	/*Ptr to printable time
 				 * string */
+    time_t probeTime = xstat_fs_Results.probeTime;
 
     numInt32s = xstat_fs_Results.data.AFS_CollData_len;
     if (numInt32s != fullPerfInt32s) {
@@ -430,7 +432,7 @@ PrintFullPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_fs_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullPerfP = (struct fs_stats_FullPerfStats *)
 	(xstat_fs_Results.data.AFS_CollData_val);
@@ -473,6 +475,7 @@ PrintPerfInfo()
     afs_int32 numInt32s;	/*# int32words received */
     struct afs_PerfStats *perfP;	/*Ptr to performance stats */
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_fs_Results.probeTime;
 
     numInt32s = xstat_fs_Results.data.AFS_CollData_len;
     if (numInt32s != perfInt32s) {
@@ -481,7 +484,7 @@ PrintPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_fs_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     perfP = (struct afs_PerfStats *)
 	(xstat_fs_Results.data.AFS_CollData_val);

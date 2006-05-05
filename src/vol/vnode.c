@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -46,6 +48,7 @@ RCSID
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "salvsync.h"
 #if defined(AFS_SGI_ENV)
 #include "sys/types.h"
 #include "fcntl.h"
@@ -73,8 +76,8 @@ RCSID
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
 private int moveHash(register Vnode * vnp, bit32 newHash);
-void StickOnLruChain_r(register Vnode * vnp,
-		       register struct VnodeClassInfo *vcp);
+private void StickOnLruChain_r(register Vnode * vnp,
+			       register struct VnodeClassInfo *vcp);
 
 #define BAD_IGET	-1000
 
@@ -161,6 +164,83 @@ VolumeHashOffset_r(void)
 private Vnode *VnodeHashTable[VNODE_HASH_TABLE_SIZE];
 #define VNODE_HASH(volumeptr,vnodenumber)\
     ((volumeptr->vnodeHashOffset + vnodenumber)&(VNODE_HASH_TABLE_SIZE-1))
+
+/*
+ * new support to secondarily hash vnodes by volume id
+ */
+#define VNVOLUME_HASH(volumeId) (volumeId&(VolumeHashTable.Mask))
+
+#include "rx/rx_queue.h"
+typedef struct VnodeHashByVolumeChainHead {
+    struct rx_queue queue;
+    int len;
+    /* someday we could put a per-chain lock here... */
+#ifdef AFS_DEMAND_ATTACH_FS
+    int busy;
+    pthread_cond_t chain_busy_cv;
+#endif /* AFS_DEMAND_ATTACH_FS */
+} VnodeHashByVolumeChainHead;
+private VnodeHashByVolumeChainHead *VnodeHashByVolumeTable = NULL;
+
+void
+VInitVnHashByVolume(void)
+{
+    register int i;
+
+    VnodeHashByVolumeTable = (VnodeHashByVolumeChainHead *) calloc(VolumeHashTable.Size, 
+								   sizeof(VnodeHashByVolumeChainHead));
+    assert(VnodeHashByVolumeTable != NULL);
+    
+    for (i=0; i < VolumeHashTable.Size; i++) {
+	queue_Init(&VnodeHashByVolumeTable[i]);
+#ifdef AFS_DEMAND_ATTACH_FS
+	assert(pthread_cond_init(&VnodeHashByVolumeTable[i].chain_busy_cv, NULL) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
+    }
+}
+
+static void
+AddToVnHashByVolumeTable(register Vnode * vnp)
+{
+    VnodeHashByVolumeChainHead * head;
+
+    if (queue_IsOnQueue(vnp))
+	return;
+
+    head = &VnodeHashByVolumeTable[VNVOLUME_HASH(vnp->volumePtr->hashid)];
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    while (head->busy) {
+	/* if the hash table is busy, wait */
+	assert(pthread_cond_wait(&head->chain_busy_cv, &vol_glock_mutex) == 0);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    head->len++;
+    queue_Append(head, vnp);
+}
+
+/* for demand-attach, caller MUST hold a ref count on vp */
+static void
+DeleteFromVnHashByVolumeTable(register Vnode * vnp)
+{
+    VnodeHashByVolumeChainHead * head;
+
+    if (!queue_IsOnQueue(vnp))
+	return;
+
+    head = &VnodeHashByVolumeTable[VNVOLUME_HASH(vnp->volumePtr->hashid)];
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    while (head->busy) {
+	/* if the hash table is busy, wait */
+	assert(pthread_cond_wait(&head->chain_busy_cv, &vol_glock_mutex) == 0);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    head->len--;
+    queue_Remove(vnp);
+}
 
 /* Code to invalidate a vnode entry.  Called when we've damaged a vnode, and want
     to prevent future VGetVnode's from applying to it.  Leaves it in the same hash bucket
@@ -305,7 +385,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	unique = vp->nextVnodeUnique++;
 
     if (vp->nextVnodeUnique > V_uniquifier(vp)) {
-	VUpdateVolume_r(ec, vp);
+	VUpdateVolume_r(ec, vp, VOL_UPDATE_WAIT);
 	if (*ec)
 	    return NULL;
     }
@@ -317,7 +397,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
     }
 
     /* Find a slot in the bit map */
-    bitNumber = VAllocBitmapEntry_r(ec, vp, &vp->vnodeIndex[class]);
+    bitNumber = VAllocBitmapEntry_r(ec, vp, &vp->vnodeIndex[class],
+				    VOL_ALLOC_BITMAP_WAIT);
     if (*ec)
 	return NULL;
     vnodeNumber = bitNumberToVnodeNumber(bitNumber, class);
@@ -376,7 +457,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	vnp->volumePtr = vp;
 	vnp->cacheCheck = vp->cacheCheck;
 	vnp->nUsers = 1;
-	moveHash(vnp, newHash);
 	/* This will never block */
 	ObtainWriteLock(&vnp->lock);
 #ifdef AFS_PTHREAD_ENV
@@ -391,18 +471,33 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    FdHandle_t *fdP;
 	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);
 
+	    /* XXX we have a potential race here if two threads
+	     * allocate new vnodes at the same time, and they
+	     * both decide it's time to extend the index
+	     * file size... */
+
 	    VOL_UNLOCK;
 	    fdP = IH_OPEN(ihP);
-	    if (fdP == NULL)
-		Abort("VAllocVnode: can't open index file!\n");
-	    if ((size = FDH_SIZE(fdP)) < 0)
-		Abort("VAllocVnode: can't stat index file!\n");
-	    if (FDH_SEEK(fdP, off, SEEK_SET) < 0)
-		Abort("VAllocVnode: can't seek on index file!\n");
-	    if (off < size) {
-		if (FDH_READ(fdP, &vnp->disk, vcp->diskSize) == vcp->diskSize) {
-		    if (vnp->disk.type != vNull)
-			Abort("VAllocVnode:  addled bitmap or index!\n");
+	    if (fdP == NULL) {
+		Log("VAllocVnode: can't open index file!\n");
+		goto error_encountered;
+	    }
+	    if ((size = FDH_SIZE(fdP)) < 0) {
+		Log("VAllocVnode: can't stat index file!\n");
+		goto error_encountered;
+	    }
+	    if (FDH_SEEK(fdP, off, SEEK_SET) < 0) {
+		Log("VAllocVnode: can't seek on index file!\n");
+		goto error_encountered;
+	    }
+	    if (off + vcp->diskSize <= size) {
+		if (FDH_READ(fdP, &vnp->disk, vcp->diskSize) != vcp->diskSize) {
+		    Log("VAllocVnode: can't read index file!\n");
+		    goto error_encountered;
+		}
+		if (vnp->disk.type != vNull) {
+		    Log("VAllocVnode:  addled bitmap or index!\n");
+		    goto error_encountered;
 		}
 	    } else {
 		/* growing file - grow in a reasonable increment */
@@ -414,9 +509,28 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		free(buf);
 	    }
 	    FDH_CLOSE(fdP);
+	    fdP = NULL;
 	    VOL_LOCK;
+	    goto sane;
+
+	error_encountered:
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VOL_LOCK;
+	    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+	    if (fdP)
+		FDH_CLOSE(fdP);
+	    VInvalidateVnode_r(vnp);
+	    StickOnLruChain_r(vnp, vcp);
+	    return NULL;
+#else
+	    assert(1 == 2);
+#endif
+
 	}
+    sane:
 	VNLog(4, 2, vnodeNumber, (afs_int32) vnp);
+	AddToVnHashByVolumeTable(vnp);
+	moveHash(vnp, newHash);
     }
 
     VNLog(5, 1, (afs_int32) vnp);
@@ -510,6 +624,8 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	vcp->reads++;
 	vnp = VGetFreeVnode_r(vcp);
 	/* Remove it from the old hash chain */
+	if (vnp->volumePtr)
+	    DeleteFromVnHashByVolumeTable(vnp);
 	moveHash(vnp, newHash);
 	/* Remove it from the LRU chain */
 	if (vnp == vcp->lruHead)
@@ -525,6 +641,7 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	vnp->volumePtr = vp;
 	vnp->cacheCheck = vp->cacheCheck;
 	vnp->nUsers = 1;
+	AddToVnHashByVolumeTable(vnp);
 
 	/* This will never block */
 	ObtainWriteLock(&vnp->lock);
@@ -540,11 +657,21 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	if (fdP == NULL) {
 	    Log("VGetVnode: can't open index dev=%u, i=%s\n", vp->device,
 		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VOL_LOCK;
+	    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+	    VOL_UNLOCK;
+#endif
 	    *ec = VIO;
 	    mlkReason = 9;
 	} else if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber), SEEK_SET)
 		   < 0) {
 	    Log("VGetVnode: can't seek on index file vn=%u\n", vnodeNumber);
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VOL_LOCK;
+	    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+	    VOL_UNLOCK;
+#endif
 	    *ec = VIO;
 	    mlkReason = 10;
 	    FDH_REALLYCLOSE(fdP);
@@ -564,8 +691,18 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	     * is not allocated */
 	    if (n == -1 && errno == EIO) {
 		Log("VGetVnode: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n", vnodeNumber, V_id(vp), V_name(vp));
-		VForceOffline_r(vp);
+#ifdef AFS_DEMAND_ATTACH_FS
+		if (programType == fileServer) {
+		    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+		    *ec = VSALVAGING;
+		} else {
+		    VForceOffline_r(vp, 0);
+		    *ec = VSALVAGE;
+		}
+#else
+		VForceOffline_r(vp, 0);
 		*ec = VSALVAGE;
+#endif
 		mlkReason = 4;
 	    } else {
 		mlkReason = 5;
@@ -603,9 +740,19 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 		    *ec = VNOVNODE;
 		} else {
 		    Log("VGetVnode: Bad magic number, vnode %u, volume %u (%s); volume needs salvage\n", vnodeNumber, V_id(vp), V_name(vp));
+#ifdef AFS_DEMAND_ATTACH_FS
+		    if (programType == fileServer) {
+			VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+			*ec = VSALVAGING;
+		    } else {
+			vp->goingOffline = 1;
+			*ec = VSALVAGE;
+		    }
+#else
 		    vp->goingOffline = 1;	/* used to call VOffline, but that would mess
 						 * up the volume ref count if called here */
 		    *ec = VSALVAGE;
+#endif
 		    mlkReason = 7;
 		}
 		VInvalidateVnode_r(vnp);
@@ -728,20 +875,27 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 
 	    /* The vnode has been changed. Write it out to disk */
 	    if (!V_inUse(vp)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+		VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+		*ec = VSALVAGING;
+#else
 		assert(V_needsSalvaged(vp));
 		*ec = VSALVAGE;
+#endif
 	    } else {
 		IHandle_t *ihP = vp->vnodeIndex[class].handle;
 		FdHandle_t *fdP;
 		VOL_UNLOCK;
 		fdP = IH_OPEN(ihP);
-		if (fdP == NULL)
-		    Abort("VPutVnode: can't open index file!\n");
+		if (fdP == NULL) {
+		    Log("VPutVnode: can't open index file!\n");
+		    goto error_encountered;
+		}
 		offset = vnodeIndexOffset(vcp, vnp->vnodeNumber);
 		if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-		    Abort
-			("VPutVnode: can't seek on index file! fdp=0x%x offset=%d, errno=%d\n",
-			 fdP, offset, errno);
+		    Log("VPutVnode: can't seek on index file! fdp=0x%x offset=%d, errno=%d\n",
+			fdP, offset, errno);
+		    goto error_encountered;
 		}
 		code = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
 		if (code != vcp->diskSize) {
@@ -756,8 +910,13 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 			*ec = VIO;
 		    } else {
 			Log("VPutVnode: Couldn't write vnode %u, volume %u (%s) (error %d)\n", vnp->vnodeNumber, V_id(vnp->volumePtr), V_name(vnp->volumePtr), code);
-			VForceOffline_r(vp);
+#ifdef AFS_DEMAND_ATTACH_FS
+			VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+			*ec = VSALVAGING;
+#else
+			VForceOffline_r(vp, 0);
 			*ec = VSALVAGE;
+#endif
 		    }
 		    VOL_UNLOCK;
 		    FDH_REALLYCLOSE(fdP);
@@ -765,6 +924,23 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		    FDH_CLOSE(fdP);
 		}
 		VOL_LOCK;
+		goto sane;
+
+	    error_encountered:
+#ifdef AFS_DEMAND_ATTACH_FS
+		/* XXX instead of dumping core, let's try to request a salvage
+		 * and just fail the putvnode */
+		if (fdP)
+		    FDH_CLOSE(fdP);
+		VOL_LOCK;
+		VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+		*ec = VSALVAGING;
+		goto done;
+#else
+		assert(1 == 2);
+#endif
+
+	    sane:
 		/* If the vnode is to be deleted, and we wrote the vnode out,
 		 * free its bitmap entry. Do after the vnode is written so we
 		 * don't allocate from bitmap before the vnode is written
@@ -787,6 +963,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		 vnp);
     }
 
+ done:
     /* Do not look at disk portion of vnode after this point; it may
      * have been deleted above */
     if (vnp->nUsers-- == 1)
@@ -865,19 +1042,28 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 
 	/* The inode has been changed.  Write it out to disk */
 	if (!V_inUse(vp)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+	    *ec = VSALVAGING;
+#else
 	    assert(V_needsSalvaged(vp));
 	    *ec = VSALVAGE;
+#endif
 	} else {
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
 	    off_t off = vnodeIndexOffset(vcp, vnp->vnodeNumber);
 	    VOL_UNLOCK;
 	    fdP = IH_OPEN(ihP);
-	    if (fdP == NULL)
-		Abort("VPutVnode: can't open index file!\n");
+	    if (fdP == NULL) {
+		Log("VPutVnode: can't open index file!\n");
+		goto error_encountered;
+	    }
 	    code = FDH_SEEK(fdP, off, SEEK_SET);
-	    if (code < 0)
-		Abort("VPutVnode: can't seek on index file!\n");
+	    if (code < 0) {
+		Log("VPutVnode: can't seek on index file!\n");
+		goto error_encountered;
+	    }
 	    code = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
 	    if (code != vcp->diskSize) {
 		/*
@@ -892,14 +1078,33 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 		    *ec = VIO;
 		} else {
 		    Log("VPutVnode: Couldn't write vnode %u, volume %u (%s)\n", vnp->vnodeNumber, V_id(vnp->volumePtr), V_name(vnp->volumePtr));
-		    VForceOffline_r(vp);
+#ifdef AFS_DEMAND_ATTACH_FS
+		    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+		    *ec = VSALVAGING;
+#else
+		    VForceOffline_r(vp, 0);
 		    *ec = VSALVAGE;
+#endif
 		}
 		VOL_UNLOCK;
 	    }
 	    FDH_CLOSE(fdP);
 	    VOL_LOCK;
+	    goto sane;
+
+	error_encountered:
+#ifdef AFS_DEMAND_ATTACH_FS
+	    if (fdP)
+		FDH_CLOSE(fdP);
+	    VOL_LOCK;
+	    VRequestSalvage_r(vp, SALVSYNC_ERROR, 0);
+	    *ec = VSALVAGING;
+#else
+	    assert(1 == 2);
+#endif
+
 	}
+    sane:
 	vcp->writes++;
 	vnp->changed_newTime = vnp->changed_oldTime = 0;
     }
@@ -931,7 +1136,7 @@ moveHash(register Vnode * vnp, bit32 newHash)
     return 0;
 }
 
-void
+private void
 StickOnLruChain_r(register Vnode * vnp, register struct VnodeClassInfo *vcp)
 {
     /* Add it to the circular LRU list */
@@ -950,8 +1155,10 @@ StickOnLruChain_r(register Vnode * vnp, register struct VnodeClassInfo *vcp)
 	vcp->lruHead = vnp->lruNext;
     /* If caching is turned off, set volumeptr to NULL to invalidate the
      * entry */
-    if (!TrustVnodeCacheEntry)
+    if (!TrustVnodeCacheEntry) {
+	DeleteFromVnHashByVolumeTable(vnp);
 	vnp->volumePtr = NULL;
+    }
 }
 
 /* VCloseVnodeFiles - called when a volume is going off line. All open
@@ -962,15 +1169,30 @@ void
 VCloseVnodeFiles_r(Volume * vp)
 {
     int i;
-    Vnode *vnp;
+    Vnode *vnp, *nvnp;
+    VnodeHashByVolumeChainHead * head;
 
-    for (i = 0; i < VNODE_HASH_TABLE_SIZE; i++) {
-	for (vnp = VnodeHashTable[i]; vnp; vnp = vnp->hashNext) {
-	    if (vnp->volumePtr == vp) {
-		IH_REALLYCLOSE(vnp->handle);
-	    }
+    head = &VnodeHashByVolumeTable[VNVOLUME_HASH(vp->hashid)];
+#ifdef AFS_DEMAND_ATTACH_FS
+    while (head->busy) {
+	assert(pthread_cond_wait(&head->chain_busy_cv, &vol_glock_mutex) == 0);
+    }
+
+    head->busy = 1;
+    VOL_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    for (queue_Scan(head, vnp, nvnp, Vnode)) {
+	if (vnp->volumePtr == vp) {
+	    IH_REALLYCLOSE(vnp->handle);
 	}
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+    head->busy = 0;
+    assert(pthread_cond_broadcast(&head->chain_busy_cv) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 /* VReleaseVnodeFiles - called when a volume is going detached. All open
@@ -981,13 +1203,29 @@ void
 VReleaseVnodeFiles_r(Volume * vp)
 {
     int i;
-    Vnode *vnp;
+    Vnode *vnp, *nvnp;
+    VnodeHashByVolumeChainHead * head;
 
-    for (i = 0; i < VNODE_HASH_TABLE_SIZE; i++) {
-	for (vnp = VnodeHashTable[i]; vnp; vnp = vnp->hashNext) {
-	    if (vnp->volumePtr == vp) {
-		IH_RELEASE(vnp->handle);
-	    }
+    head = &VnodeHashByVolumeTable[VNVOLUME_HASH(vp->hashid)];
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    while (head->busy) {
+	assert(pthread_cond_wait(&head->chain_busy_cv, &vol_glock_mutex) == 0);
+    }
+
+    head->busy = 1;
+    VOL_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    for (queue_Scan(head, vnp, nvnp, Vnode)) {
+	if (vnp->volumePtr == vp) {
+	    IH_RELEASE(vnp->handle);
 	}
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+    head->busy = 0;
+    assert(pthread_cond_broadcast(&head->chain_busy_cv) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
 }

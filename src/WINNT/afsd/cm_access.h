@@ -13,7 +13,7 @@
 #include "cm_user.h"
 
 extern int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up,
-	long rights, long *outRights);
+	afs_uint32 rights, afs_uint32 *outRights);
 
 extern long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
 	struct cm_req *reqp);

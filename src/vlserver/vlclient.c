@@ -1323,8 +1323,9 @@ dump_stats(stats, vital_header)
 {
     int i;
     char strg[30];
+    time_t start_time = stats->start_time;
 
-    strncpy(strg, ctime((time_t *) & stats->start_time), sizeof(strg));
+    strncpy(strg, ctime(&start_time), sizeof(strg));
     strg[strlen(strg) - 1] = 0;
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");

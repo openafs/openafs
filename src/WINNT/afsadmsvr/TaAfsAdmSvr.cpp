@@ -7,6 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 #include <afs/param.h>
 #include <afs/stds.h>
 

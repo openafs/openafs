@@ -101,6 +101,7 @@ AFSDOBJS=\
 	$(OUT)\cm_cell.obj \
 	$(OUT)\cm_server.obj \
 	$(OUT)\cm_volume.obj \
+	$(OUT)\cm_config.obj \
 	$(OUT)\cm_conn.obj \
 	$(OUT)\cm_user.obj \
 	$(OUT)\cm_buf.obj \

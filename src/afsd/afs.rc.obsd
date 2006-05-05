@@ -5,5 +5,5 @@
 rm -f /usr/vice/etc/openbsd_afs
 /sbin/modload -o /usr/vice/etc/openbsd_afs /usr/vice/etc/libafs.o 
 
-/usr/vice/etc/afsd -nosettime
+/usr/vice/etc/afsd -afsdb -stat 600
 /usr/vice/bin/fs setcrypt on

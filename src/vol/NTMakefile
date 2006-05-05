@@ -5,6 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_AUXCDEFINES = -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
+
 RELDIR=vol
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
@@ -23,7 +25,8 @@ INCFILES =\
 	$(INCFILEDIR)\afs\viceinode.h \
 	$(INCFILEDIR)\afs\vnode.h \
 	$(INCFILEDIR)\afs\volume.h \
-	$(INCFILEDIR)\afs\voldefs.h
+	$(INCFILEDIR)\afs\voldefs.h \
+	$(INCFILEDIR)\afs\daemon_com.h
 
 
 
@@ -35,7 +38,10 @@ LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
 LIBOBJS =\
 	$(OUT)\common.obj \
 	$(OUT)\clone.obj \
-	$(OUT)\fssync.obj \
+	$(OUT)\fssync-client.obj \
+	$(OUT)\fssync-server.obj \
+	$(OUT)\fssync-debug.obj \
+	$(OUT)\daemon_com.obj \
 	$(OUT)\ntops.obj \
 	$(OUT)\nuke.obj \
 	$(OUT)\partition.obj \

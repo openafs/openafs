@@ -102,6 +102,7 @@ RCSID
 #include "afs/assert.h"
 #include "filesignal.h"
 #include "vutils.h"
+#include "daemon_com.h"
 #include "fssync.h"
 #include <afs/auxinode.h>
 #include <afs/dir.h>

@@ -33,28 +33,19 @@ extern char PRE_Block;		/* used in lwp.c and process.s */
 afs_int32
 savecontext(char (*ep) (), struct lwp_context *savearea, char *newsp)
 {
-#if defined(AFS_IA64_LINUX20_ENV)
-    register unsigned long sp __asm__("r12");
-#elif defined(AFS_AMD64_LINUX24_ENV)
-    register unsigned long sp __asm__("sp");
-#elif defined(AFS_HPUX1122_ENV)
-/* don't need anything special, will use
- * ucontext.uc_stack.ss_sp as it matches r12.
- * This should also work for Linux,
- * but dont have system to test DEE
- */
-#else
-#error	"You need to update stack pointer register for this platform"
+#if defined(AFS_LINUX20_ENV)
+    /* getcontext does not export stack info */
+    int stackvar;
 #endif
 
     PRE_Block = 1;
 
     savearea->state = 0;
     getcontext(&savearea->ucontext);
-#if defined(AFS_HPUX1122_ENV)
-    savearea->topstack = savearea->ucontext.uc_stack.ss_sp;
+#if defined(AFS_LINUX20_ENV)
+    savearea->topstack = &stackvar;
 #else
-    savearea->topstack = sp;
+    savearea->topstack = savearea->ucontext.uc_stack.ss_sp;
 #endif
     switch (savearea->state) {
     case 0:
@@ -98,7 +89,7 @@ returnto(savearea)
 # else
 #  define LWP_SP JB_SP
 # endif
-#elif	defined(AFS_HPUX_ENV)
+#elif	defined(AFS_HPUX_ENV) || defined(AFS_PARISC_LINUX24_ENV)
 #define	LWP_SP	1
 #elif	defined(AFS_LINUX20_ENV)
 #if defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)

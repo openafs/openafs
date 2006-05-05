@@ -265,7 +265,8 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+                     | CM_SCACHESYNC_NEEDCALLBACK
+                     | CM_SCACHESYNC_LOCK);
 
     if (code == 0 && 
         ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
@@ -315,7 +316,14 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 		}
 	    }
         }
+
+    } else if (code != 0) {
+        goto _done;
     }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+ _done:
 
     lock_ReleaseMutex(&scp->mx);
 
@@ -346,7 +354,8 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                       CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+                     | CM_SCACHESYNC_NEEDCALLBACK
+                     | CM_SCACHESYNC_LOCK);
 
     /*
      * If the open will fail because the volume is readonly, then we will
@@ -356,7 +365,8 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
      */
     if (code == CM_ERROR_READONLY)
         code = CM_ERROR_NOACCESS;
-    else if (code == 0 &&
+
+    if (code == 0 &&
              ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
              scp->fileType == CM_SCACHETYPE_FILE) {
         cm_key_t key;
@@ -403,8 +413,13 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 		}
 	    }
         }
+    } else if (code != 0) {
+        goto _done;
     }
 
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+ _done:
     lock_ReleaseMutex(&scp->mx);
 
     return code;
@@ -2270,6 +2285,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
+	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
                 cm_MergeStatus(scp, &newFileStatus, &volSync,
                                 userp, 0);
@@ -3300,7 +3316,8 @@ static void cm_PutFileLock(cm_file_lock_t *l) {
     osi_QAdd(&cm_freeFileLocks, &l->q);
 }
 
-/* called with scp->mx held.  Releases it during processing */
+/* called with scp->mx held.  May release it during processing, but
+   leaves it held on exit. */
 long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
                    cm_req_t * reqp) {
     long code = 0;
@@ -3387,6 +3404,71 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     return code;
 }
 
+/* called with scp->mx held.  May release it during processing, but
+   will exit with lock held.
+
+   This will return:
+
+   - 0 if the user has permission to get the specified lock for the scp
+
+   - CM_ERROR_NOACCESS if not
+
+   Any other error from cm_SyncOp will be sent down untranslated.
+*/
+long cm_LockCheckPerms(cm_scache_t * scp,
+                       int lock_type,
+                       cm_user_t * userp,
+                       cm_req_t * reqp)
+{
+    long rights = 0;
+    long code = 0;
+
+    /* lock permissions are slightly tricky because of the 'i' bit.
+       If the user has PRSFS_LOCK, she can read-lock the file.  If the
+       user has PRSFS_WRITE, she can write-lock the file.  However, if
+       the user has PRSFS_INSERT, then she can write-lock new files,
+       but not old ones.  Since we don't have information about
+       whether a file is new or not, we assume that if the user owns
+       the scp, then she has the permissions that are granted by
+       PRSFS_INSERT. */
+
+    osi_Log3(afsd_logp, "cm_LockCheckPerms for scp[0x%p] type[%d] user[0x%p]",
+             scp, lock_type, userp);
+
+    if (lock_type == LockRead)
+        rights |= PRSFS_LOCK;
+    else if (lock_type == LockWrite)
+        rights |= PRSFS_WRITE;
+    else {
+        /* hmmkay */
+        osi_assert(FALSE);
+        return 0;
+    }
+
+    code = cm_SyncOp(scp, NULL, userp, reqp, rights,
+                     CM_SCACHESYNC_GETSTATUS |
+                     CM_SCACHESYNC_NEEDCALLBACK);
+
+    if (code == CM_ERROR_NOACCESS &&
+        lock_type == LockWrite &&
+	scp->creator == userp) {
+        /* check for PRSFS_INSERT. */
+        cm_ucell_t * ucp;
+
+        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
+                         CM_SCACHESYNC_GETSTATUS |
+                         CM_SCACHESYNC_NEEDCALLBACK);
+
+	if (code == CM_ERROR_NOACCESS)
+	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
+    }
+
+ return_code:
+    osi_Log1(afsd_logp, "cm_LockCheckPerms returning code %d", code);
+
+    return code;
+}
+
 /* called with scp->mx held */
 long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
              LARGE_INTEGER LOffset, LARGE_INTEGER LLength,
@@ -3400,6 +3482,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
     osi_queue_t *q;
     cm_range_t range;
     int wait_unlock = FALSE;
+    int force_client_lock = FALSE;
 
     osi_Log4(afsd_logp, "cm_Lock scp 0x%x type 0x%x offset %d length %d",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
@@ -3471,7 +3554,18 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             /* we already have the lock we need */
             osi_Log3(afsd_logp, "   we already have the correct lock. exclusives[%d], shared[%d], serverLock[%d]", 
                      scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
-            code = 0; /* redundant */
+
+            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+
+            /* special case: if we don't have permission to read-lock
+               the file, then we force a clientside lock.  This is to
+               compensate for applications that obtain a read-lock for
+               reading files off of directories that don't grant
+               read-locks to the user. */
+            if (code == CM_ERROR_NOACCESS && Which == LockRead) {
+                osi_Log0(afsd_logp, "   User has no read-lock perms. Forcing client-side lock");
+                force_client_lock = TRUE;
+            }
 
         } else if ((scp->exclusiveLocks > 0) ||
                 (scp->sharedLocks > 0 && scp->serverLock != LockRead)) {
@@ -3481,11 +3575,33 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                flood of SetLock calls. */
             osi_Log3(afsd_logp, "   already waiting for other lock. exclusives[%d], shared[%d], serverLock[%d]",
                      scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
-            code = CM_ERROR_WOULDBLOCK;
+
+            /* see if we have permission to create the lock in the
+               first place. */
+            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            if (code == 0)
+		code = CM_ERROR_WOULDBLOCK;
+            else if (code == CM_ERROR_NOACCESS && Which == LockRead) {
+                osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
+                force_client_lock = TRUE;
+            }
+
+            /* leave any other codes as-is */
 
         } else {
             int newLock;
             int check_data_version = FALSE;
+
+            /* first check if we have permission to elevate or obtain
+               the lock. */
+            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            if (code) {
+                if (code == CM_ERROR_NOACCESS && Which == LockRead) {
+                    osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
+                    force_client_lock = TRUE;
+                }
+                goto check_code;
+            }
 
             if (scp->serverLock == LockRead && Which == LockWrite) {
             
@@ -3573,7 +3689,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
  check_code:
 
-    if (code != 0) {
+    if (code != 0 && !force_client_lock) {
         /* Special case error translations
 
            Applications don't expect certain errors from a
@@ -3588,7 +3704,13 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         }
     }
 
-    if (code == 0 || (code == CM_ERROR_WOULDBLOCK && allowWait)) {
+    if (code == 0 || (code == CM_ERROR_WOULDBLOCK && allowWait) ||
+        force_client_lock) {
+
+        /* clear the error if we are forcing a client lock, so we
+           don't get confused later. */
+        if (force_client_lock && code != CM_ERROR_WOULDBLOCK)
+            code = 0;
 
         lock_ObtainWrite(&cm_scacheLock);
         fileLock = cm_GetFileLock();
@@ -3606,10 +3728,10 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                             CM_FILELOCK_FLAG_WAITUNLOCK :
                             CM_FILELOCK_FLAG_WAITLOCK));
 
-        if (!SERVERLOCKS_ENABLED(scp))
+        if (force_client_lock || !SERVERLOCKS_ENABLED(scp))
             fileLock->flags |= CM_FILELOCK_FLAG_CLIENTONLY;
 
-        fileLock->lastUpdate = (code == 0) ? time(NULL) : 0;
+        fileLock->lastUpdate = (code == 0 && !force_client_lock) ? time(NULL) : 0;
 
         lock_ObtainWrite(&cm_scacheLock);
         osi_QAddT(&scp->fileLocksH, &scp->fileLocksT, &fileLock->fileq);
@@ -3622,23 +3744,25 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             *lockpp = fileLock;
         }
 
-        if (IS_LOCK_ACCEPTED(fileLock)) {
+        if (IS_LOCK_CLIENTONLY(fileLock)) {
+            scp->clientLocks++;
+        } else if (IS_LOCK_ACCEPTED(fileLock)) {
             if (Which == LockRead)
                 scp->sharedLocks++;
             else
                 scp->exclusiveLocks++;
         }
 
-        osi_Log2(afsd_logp,
-                 "cm_Lock Lock added 0x%p flags 0x%x",
-                 fileLock, fileLock->flags);
+        osi_Log3(afsd_logp,
+                 "cm_Lock Lock added 0x%p flags 0x%x to scp [0x%p]",
+                 fileLock, fileLock->flags, scp);
         osi_Log4(afsd_logp,
-                 "   scp[0x%p] exclusives[%d] shared[%d] serverLock[%d]",
-                 scp, scp->exclusiveLocks, scp->sharedLocks,
+                 "   exclusives[%d] shared[%d] client[%d] serverLock[%d]",
+                 scp->exclusiveLocks, scp->sharedLocks, scp->clientLocks,
                  (int)(signed char) scp->serverLock);
     } else {
         osi_Log1(afsd_logp,
-                 "cm_Lock Rejecting lock (code = %d)", code);
+                 "cm_Lock Rejecting lock (code = 0x%x)", code);
     }
 
     return code;
@@ -3710,7 +3834,9 @@ long cm_UnlockByKey(cm_scache_t * scp,
                 scp->fileLocksT = osi_QPrev(q);
             osi_QRemove(&scp->fileLocksH,q);
 
-            if (IS_LOCK_ACCEPTED(fileLock)) {
+            if (IS_LOCK_CLIENTONLY(fileLock)) {
+                scp->clientLocks--;
+            } else if (IS_LOCK_ACCEPTED(fileLock)) {
                 if (fileLock->lockType == LockRead)
                     scp->sharedLocks--;
                 else
@@ -3743,6 +3869,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
     osi_assertx(scp->sharedLocks >= 0, "scp->sharedLocks < 0");
     osi_assertx(scp->exclusiveLocks >= 0, "scp->exclusiveLocks < 0");
+    osi_assertx(scp->clientLocks >= 0, "scp->clientLocks < 0");
 
     if (!SERVERLOCKS_ENABLED(scp)) {
         osi_Log0(afsd_logp, "  Skipping server lock for scp");
@@ -3823,8 +3950,9 @@ long cm_UnlockByKey(cm_scache_t * scp,
  done:
 
     osi_Log1(afsd_logp, "cm_UnlockByKey code 0x%x", code);
-    osi_Log3(afsd_logp, "   Leaving scp with exclusives[%d], shared[%d], serverLock[%d]",
-             scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
+    osi_Log4(afsd_logp, "   Leaving scp with excl[%d], shared[%d], client[%d], serverLock[%d]",
+             scp->exclusiveLocks, scp->sharedLocks, scp->clientLocks,
+             (int)(signed char) scp->serverLock);
 
     return code;
 }
@@ -3899,7 +4027,9 @@ long cm_Unlock(cm_scache_t *scp,
      * the daemon's traversal of the list.
      */
 
-    if (IS_LOCK_ACCEPTED(fileLock)) {
+    if (IS_LOCK_CLIENTONLY(fileLock)) {
+        scp->clientLocks--;
+    } else if (IS_LOCK_ACCEPTED(fileLock)) {
         if (fileLock->lockType == LockRead)
             scp->sharedLocks--;
         else
@@ -4002,8 +4132,10 @@ long cm_Unlock(cm_scache_t *scp,
 
  done:
 
-    osi_Log4(afsd_logp, "cm_Unlock code 0x%x leaving scp with exclusives[%d], shared[%d], serverLock[%d]",
-             code, scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
+    osi_Log1(afsd_logp, "cm_Unlock code 0x%x", code);
+    osi_Log4(afsd_logp, "  leaving scp with excl[%d], shared[%d], client[%d], serverLock[%d]",
+             scp->exclusiveLocks, scp->sharedLocks, scp->clientLocks,
+             (int)(signed char) scp->serverLock);
 
     return code;
 }
@@ -4028,7 +4160,8 @@ static void cm_LockMarkSCacheLost(cm_scache_t * scp)
         fileLock = 
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
 
-        if (IS_LOCK_ACTIVE(fileLock)) {
+        if (IS_LOCK_ACTIVE(fileLock) &&
+            !IS_LOCK_CLIENTONLY(fileLock)) {
             if (fileLock->lockType == LockRead)
                 scp->sharedLocks--;
             else
@@ -4263,6 +4396,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     osi_queue_t *q;
     cm_req_t req;
     int newLock = -1;
+    int force_client_lock = FALSE;
 
     cm_InitReq(&req);
 
@@ -4305,10 +4439,23 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     lock_ReleaseRead(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
+
+    code = cm_LockCheckPerms(scp, oldFileLock->lockType,
+                             oldFileLock->userp,
+                             &req);
+
+    if (code == CM_ERROR_NOACCESS && oldFileLock->lockType == LockRead) {
+        force_client_lock = TRUE;
+        code = 0;
+    } else if (code) {
+        lock_ReleaseMutex(&scp->mx);
+        return code;
+    }
+
     lock_ObtainWrite(&cm_scacheLock);
 
     /* Check if we already have a sufficient server lock to allow this
-       lock to go through */
+       lock to go through. */
     if (IS_LOCK_WAITLOCK(oldFileLock) &&
        (!SERVERLOCKS_ENABLED(scp) ||
         scp->serverLock == oldFileLock->lockType ||
@@ -4392,12 +4539,27 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
-    if (!SERVERLOCKS_ENABLED(scp) ||
+    if (force_client_lock ||
+        !SERVERLOCKS_ENABLED(scp) ||
         scp->serverLock == oldFileLock->lockType ||
         (oldFileLock->lockType == LockRead &&
          scp->serverLock == LockWrite)) {
 
         oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITLOCK;
+
+        if ((force_client_lock ||
+             !SERVERLOCKS_ENABLED(scp)) &&
+            !IS_LOCK_CLIENTONLY(oldFileLock)) {
+
+            oldFileLock->flags |= CM_FILELOCK_FLAG_CLIENTONLY;
+
+            if (oldFileLock->lockType == LockRead)
+                scp->sharedLocks--;
+            else
+                scp->exclusiveLocks--;
+
+            scp->clientLocks++;
+        }
 
         lock_ReleaseWrite(&cm_scacheLock);
         lock_ReleaseMutex(&scp->mx);
@@ -4498,7 +4660,7 @@ void cm_ReleaseAllLocks(void)
     cm_user_t *userp;
     cm_key_t   key;
     cm_file_lock_t *fileLock;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < cm_data.hashTableSize; i++)
     {

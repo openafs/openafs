@@ -16,7 +16,7 @@ RCSID
 #include "../rx/rx_kcommon.h"
 
 int
-osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
+osi_NetReceive(osi_socket asocket, struct sockaddr_storage *saddr, int *slen,
 	       struct iovec *dvec, int nvecs, int *alength)
 {
     struct uio u;
@@ -42,7 +42,7 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 
     if (haveGlock)
 	AFS_GUNLOCK();
-    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL);
+    code = soreceive(asocket, (saddr ? &nam : NULL), &u, NULL, NULL, NULL);
     if (haveGlock)
 	AFS_GLOCK();
 
@@ -56,8 +56,9 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
     }
 
     *alength -= u.uio_resid;
-    if (addr && nam) {
-	memcpy(addr, mtod(nam, caddr_t), nam->m_len);
+    if (saddr && nam) {
+	memcpy(saddr, mtod(nam, caddr_t), nam->m_len);
+	*slen = nam->m_len;
 	m_freem(nam);
     }
 
@@ -81,8 +82,8 @@ osi_StopListener(void)
  */
 
 int
-osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
-	    int nvecs, afs_int32 alength, int istack)
+osi_NetSend(osi_socket asocket, struct sockaddr_storage *addr, int slen,
+	    struct iovec *dvec, int nvecs, afs_int32 alength, int istack)
 {
     int i, code;
     struct iovec iov[RX_MAXIOVECS];
@@ -108,8 +109,8 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     nam = m_get(M_DONTWAIT, MT_SONAME);
     if (!nam)
 	return ENOBUFS;
-    nam->m_len = addr->sin_len = sizeof(struct sockaddr_in);
-    memcpy(mtod(nam, caddr_t), addr, addr->sin_len);
+    nam->m_len = slen;
+    memcpy(mtod(nam, caddr_t), addr, slen);
 
     if (haveGlock)
 	AFS_GUNLOCK();

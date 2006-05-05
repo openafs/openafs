@@ -31,6 +31,9 @@
  * of the possibility of such damages.
  */
 
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>

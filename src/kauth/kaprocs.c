@@ -659,7 +659,8 @@ kamCreateUser(call, aname, ainstance, ainitpw)
 	return code;
     }
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))),
 	  LOG_CRUSER);
     return code;
 }
@@ -957,8 +958,8 @@ kamSetPassword(call, aname, ainstance, akvno, apassword)
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
-	  LOG_CHPASSWD);
+    KALOG(aname, ainstance, NULL, NULL, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_CHPASSWD);
     return code;
 
   abort:
@@ -1295,15 +1296,15 @@ Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
     des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
 		     user_schedule, &tentry.key, ENCRYPT);
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
-	  LOG_AUTHENTICATE);
+    KALOG(aname, ainstance, sname, sinst, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_AUTHENTICATE);
     return code;
 
   abort:
     COUNT_ABO;
     ubik_AbortTrans(tt);
-    KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
-	  LOG_AUTHFAILED);
+    KALOG(aname, ainstance, sname, sinst, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_AUTHFAILED);
     return code;
 }
 
@@ -1522,8 +1523,8 @@ kamSetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
-	  LOG_SETFIELDS);
+    KALOG(aname, ainstance, NULL, NULL, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_SETFIELDS);
     return code;
 
   abort:
@@ -1601,8 +1602,8 @@ kamDeleteUser(call, aname, ainstance)
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
-	  LOG_DELUSER);
+    KALOG(aname, ainstance, NULL, NULL, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_DELUSER);
     return code;
 }
 
@@ -2011,7 +2012,7 @@ GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
 		     schedule, &authSessionKey, ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(name, instance, sname, sinstance, (import ? authDomain : NULL),
-	  call->conn->peer->host, LOG_GETTICKET);
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_GETTICKET);
     return code;
 
   abort:
@@ -2358,8 +2359,8 @@ SKAM_Unlock(call, aname, ainstance, spare1, spare2, spare3, spare4)
     kaux_write(to, 0, 0);	/* zero failure counters at this offset */
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
-	  LOG_UNLOCK);
+    KALOG(aname, ainstance, NULL, NULL, NULL,
+	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_UNLOCK);
     goto exit;
 
   abort:

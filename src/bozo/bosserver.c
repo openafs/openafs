@@ -51,7 +51,7 @@ RCSID
 #define BOZO_LWP_STACKSIZE	16000
 extern int BOZO_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
-extern struct bnode_ops fsbnode_ops, ezbnode_ops, cronbnode_ops;
+extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 void bozo_Log();
 
@@ -895,6 +895,7 @@ main(int argc, char **argv, char **envp)
     }
 
     bnode_Register("fs", &fsbnode_ops, 3);
+    bnode_Register("dafs", &dafsbnode_ops, 4);
     bnode_Register("simple", &ezbnode_ops, 1);
     bnode_Register("cron", &cronbnode_ops, 2);
 

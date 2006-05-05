@@ -54,7 +54,7 @@ main(int argc, char **argv)
     time_t current_time;	/*Current time of day */
     time_t tokenExpireTime;	/*When token expires */
     char *expireString;		/*Char string of expiration time */
-    char UserName[16];		/*Printable user name */
+    char UserName[MAXKTCNAMELEN * 2 + 2]; /*Printable user name */
     struct ktc_principal serviceName, clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
 

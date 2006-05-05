@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/cellconfig.h>
+#include <afs/ptserver.h>
+#include <ubik.h>
 
 #ifndef DJGPP
 #include <windows.h>
@@ -1893,6 +1896,83 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
+#ifdef QUERY_AFSID
+long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
+{
+    afs_int32 code;
+    namelist lnames;
+    idlist lids;
+    static struct afsconf_cell info;
+    struct rx_connection *serverconns[MAXSERVERS];
+    struct rx_securityClass *sc[3];
+    afs_int32 scIndex = 2;	/* authenticated - we have a token */
+    struct ubik_client *pruclient = NULL;
+    struct afsconf_dir *tdir;
+    int i;
+    char * p, * r;
+
+    tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+    code = afsconf_GetCellInfo(tdir, ucellp->cellp->name, "afsprot", &info);
+    afsconf_Close(tdir);
+
+    sc[0] = 0;
+    sc[1] = 0;
+    sc[2] = 0;
+
+    /* we have the token that was given to us in the settoken 
+     * call.   we just have to use it. 
+     */
+    scIndex = 2;	/* kerberos ticket */
+    sc[2] = rxkad_NewClientSecurityObject(rxkad_clear, &ucellp->sessionKey,
+					  ucellp->kvno, ucellp->ticketLen,
+					  ucellp->ticketp);
+
+    memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
+    for (i = 0; i < info.numServers; i++)
+	serverconns[i] =
+	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+			     info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+			     scIndex);
+
+    code = ubik_ClientInit(serverconns, &pruclient);
+    if (code) {
+	return code;
+    }
+
+    code = rxs_Release(sc[scIndex]);
+
+    lids.idlist_len = 0;
+    lids.idlist_val = 0;
+    lnames.namelist_len = 1;
+    lnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
+    strncpy(lnames.namelist_val[0], uname, PR_MAXNAMELEN);
+    lnames.namelist_val[0][PR_MAXNAMELEN-1] = '\0';
+    for ( p=lnames.namelist_val[0], r=NULL; *p; p++ ) {
+	if (isupper(*p))
+	    *p = tolower(*p);
+	if (*p == '@')
+	    r = p;
+    }
+    if (r && !stricmp(r+1,ucellp->cellp->name))
+	*r = '\0';
+
+    code = ubik_Call(PR_NameToID, pruclient, 0, &lnames, &lids);
+    if (lids.idlist_val) {
+	*uid = *lids.idlist_val;
+	free(lids.idlist_val);
+    }
+    if (lnames.namelist_val)
+	free(lnames.namelist_val);
+
+    if ( pruclient ) {
+	ubik_ClientDestroy(pruclient);
+	pruclient = NULL;
+    }
+
+    return 0;
+}
+#endif /* QUERY_AFSID */
+
 long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     char *saveDataPtr;
@@ -1909,6 +1989,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     char sessionKey[8];
     char *smbname;
     int release_userp = 0;
+    char * wdir = NULL;
 
     saveDataPtr = ioctlp->inDatap;
 
@@ -2008,8 +2089,15 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     ucellp->kvno = ct.AuthHandle;
     ucellp->expirationTime = ct.EndTimestamp;
     ucellp->gen++;
-    if (uname) 
+#ifdef QUERY_AFSID
+    ucellp->uid = ANONYMOUSID;
+#endif
+    if (uname) {
         StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
+#ifdef QUERY_AFSID
+	cm_UsernameToId(uname, ucellp, &ucellp->uid);
+#endif
+    }
     ucellp->flags |= CM_UCELLFLAG_RXKAD;
     lock_ReleaseMutex(&userp->mx);
 
@@ -2233,6 +2321,11 @@ long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         free(ucellp->ticketp);
         ucellp->ticketp = NULL;
     }
+    ucellp->ticketLen = 0;
+    memset(ucellp->sessionKey.data, 0, 8);
+    ucellp->kvno = 0;
+    ucellp->expirationTime = 0;
+    ucellp->userName[0] = '\0';
     ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
     ucellp->gen++;
 
@@ -2251,6 +2344,16 @@ long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
         osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
+
+	if (ucellp->ticketp) {
+	    free(ucellp->ticketp);
+	    ucellp->ticketp = NULL;
+	}
+	ucellp->ticketLen = 0;
+	memset(ucellp->sessionKey.data, 0, 8);
+	ucellp->kvno = 0;
+	ucellp->expirationTime = 0;
+	ucellp->userName[0] = '\0';
         ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
         ucellp->gen++;
     }

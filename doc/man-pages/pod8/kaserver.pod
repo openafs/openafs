@@ -2,12 +2,18 @@
 
 kaserver - Initializes the Authentication Server
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
 
 B<kaserver> [B<-noAuth>] [B<-fastKeys>] [B<-database> <I<dbpath>>]
-    [B<-localfiles> <I<lclpath>>] [B<-minhours> <I<n>>]
-    [B<-servers> <I<serverlist>>] [B<-enable_peer_stats>]
+    S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
+    S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -5578,7 +5578,7 @@ Sizes(as)
 	code = ktime_DateToInt32(as->parms[4].items->data, &fromdate);
 	if (code) {
 	    fprintf(STDERR, "vos: failed to parse date '%s' (error=%d))\n",
-		    as->parms[1].items->data, code);
+		    as->parms[4].items->data, code);
 	    return code;
 	}
     }

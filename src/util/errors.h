@@ -50,6 +50,7 @@
 				 * to THIS server to find out where */
 #define VIO		112	/* Vnode temporarily unaccessible, but not known 
 				 * to be permanently bad. */
+#define VSALVAGING      113     /* Volume is being salvaged (demand attach fs) */
 #define VRESTRICTED     120	/* Volume is restricted from using one or more
 				 * of the given residencies; do a
 				 * vos examine to find out the current

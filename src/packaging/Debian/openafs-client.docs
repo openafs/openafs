@@ -2,5 +2,3 @@ README
 debian/README.servers
 debian/configuration-transcript.txt
 debian/README.modules
-NEWS
-RELNOTES-1.2.6

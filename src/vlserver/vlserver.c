@@ -179,8 +179,8 @@ main(argc, argv)
 	} else if (strcmp(argv[index], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
 
-	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
-	    if ((i + 1) >= argc) {
+	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
+	    if ((index + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		return -1; 
 	    }

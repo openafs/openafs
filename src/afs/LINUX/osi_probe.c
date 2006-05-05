@@ -64,6 +64,9 @@
 #include <linux/init.h>
 #include <linux/unistd.h>
 #include <linux/mm.h>
+#ifdef AFS_LINUX26_ENV
+#include <scsi/scsi.h> /* for scsi_command_size */
+#endif
 
 #if defined(AFS_PPC64_LINUX26_ENV)
 #include <asm/abs_addr.h>
@@ -114,16 +117,28 @@
 
 /* Allow the user to specify sys_call_table addresses */
 static unsigned long sys_call_table_addr[4] = { 0,0,0,0 };
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
+module_param_array(sys_call_table_addr, long, NULL, 0);
+#else
 MODULE_PARM(sys_call_table_addr, "1-4l");
+#endif
 MODULE_PARM_DESC(sys_call_table_addr, "Location of system call tables");
 
 /* If this is set, we are more careful about avoiding duplicate matches */
 static int probe_carefully = 1;
+#ifdef module_param
+module_param(probe_carefully, int, 0);
+#else
 MODULE_PARM(probe_carefully, "i");
+#endif
 MODULE_PARM_DESC(probe_carefully, "Probe for system call tables carefully");
 
 static int probe_ignore_syscalls[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
+module_param_array(probe_ignore_syscalls, int, NULL, 0);
+#else
 MODULE_PARM(probe_ignore_syscalls, "1-8i");
+#endif
 MODULE_PARM_DESC(probe_ignore_syscalls, "Syscalls to ignore in table checks");
 
 #ifdef OSI_PROBE_DEBUG
@@ -138,19 +153,35 @@ MODULE_PARM_DESC(probe_ignore_syscalls, "Syscalls to ignore in table checks");
  * 0x0040 - automatically ignore setgroups and afs_syscall
  */
 static int probe_debug = 0x41;
+#ifdef module_param
+module_param(probe_debug, int, 0);
+#else
 MODULE_PARM(probe_debug, "i");
+#endif
 MODULE_PARM_DESC(probe_debug, "Debugging level");
 
 static unsigned long probe_debug_addr[4] = { 0,0,0,0 };
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
+module_param_array(probe_debug_addr, long, NULL, 0);
+#else
 MODULE_PARM(probe_debug_addr, "1-4l");
+#endif
 MODULE_PARM_DESC(probe_debug_addr, "Debug range starting locations");
 
 static unsigned long probe_debug_range = 0;
+#ifdef module_param
+module_param(probe_debug_range, long, 0);
+#else
 MODULE_PARM(probe_debug_range, "l");
+#endif
 MODULE_PARM_DESC(probe_debug_range, "Debug range length");
 
 static unsigned long probe_debug_tag = 0;
+#ifdef module_param
+module_param(probe_debug_tag, long, 0);
+#else
 MODULE_PARM(probe_debug_tag, "l");
+#endif
 MODULE_PARM_DESC(probe_debug_tag, "Debugging output start tag");
 #endif
 
@@ -243,6 +274,11 @@ typedef struct {
     unsigned long try_base;         /* default base address for scan */
     unsigned long try_base_mask;    /* base address bits to force to zero */
     unsigned long try_length;       /* default length for scan */
+
+    unsigned long alt_try_sect_sym;     /* symbol in section to try scanning */
+    unsigned long alt_try_base;         /* default base address for scan */
+    unsigned long alt_try_base_mask;    /* base address bits to force to zero */
+    unsigned long alt_try_length;       /* default length for scan */
 
     int n_zapped_syscalls;          /* number of unimplemented system calls */
     int *zapped_syscalls;           /* list of unimplemented system calls */
@@ -505,6 +541,15 @@ static probectl main_probe = {
     16384,
 #endif
 
+#ifdef AFS_LINUX26_ENV
+    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size,
+    0x3ffff,
+    0x30000,
+#else
+    0, 0, 0, 0,
+#endif
+
     /* number and list of unimplemented system calls */
     ((sizeof(main_zapped_syscalls)/sizeof(main_zapped_syscalls[0])) - 1),
     main_zapped_syscalls,
@@ -591,6 +636,16 @@ static probectl ia32_probe = {
     (unsigned long)&init_mm,
     0,
     (0x180000 / sizeof(unsigned long *)),
+
+#ifdef AFS_LINUX26_ENV
+    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size,
+    0x3ffff,
+    0x30000,
+#else
+    0, 0, 0, 0,
+#endif
+
 
     /* number and list of unimplemented system calls */
     ((sizeof(ia32_zapped_syscalls)/sizeof(ia32_zapped_syscalls[0])) - 1),
@@ -721,6 +776,15 @@ static probectl sct32_probe = {
     16384,
 #endif
 
+#ifdef AFS_LINUX26_ENV
+    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size,
+    0x3ffff,
+    0x30000,
+#else
+    0, 0, 0, 0,
+#endif
+
     /* number and list of unimplemented system calls */
     ((sizeof(sct32_zapped_syscalls)/sizeof(sct32_zapped_syscalls[0])) - 1),
     sct32_zapped_syscalls,
@@ -806,6 +870,15 @@ static probectl emu_probe = {
     (unsigned long)&sys_close,
     0xfffff,
     0x20000,
+
+#ifdef AFS_LINUX26_ENV
+    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size,
+    0x3ffff,
+    0x30000,
+#else
+    0, 0, 0, 0,
+#endif
 
     /* number and list of unimplemented system calls */
     ((sizeof(emu_zapped_syscalls)/sizeof(emu_zapped_syscalls[0])) - 1),
@@ -1091,6 +1164,66 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
     }                           \
 } while (0)
 #endif
+static void *scan_for_syscall_table(probectl *P, PROBETYPE *B, unsigned long L)
+{
+    tryctl *T;
+    void *answer;
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+    void *answer2;
+#endif
+#ifdef OSI_PROBE_DEBUG
+    void *final_answer = 0;
+#endif
+#ifdef OSI_PROBE_DEBUG
+    if (probe_debug & 0x0007)
+	printk("<7>osi_probe: %s                      base=0x%lx, len=0x%lx\n",
+	       P->symbol, (unsigned long)B, L);
+    if (probe_debug & 0x0009) {
+	printk("<7>osi_probe: %s                      ktxt_lower_bound=0x%lx\n",
+	       P->symbol, ktxt_lower_bound);
+	printk("<7>osi_probe: %s                      NR_syscalls=%d\n",
+	       P->symbol, NR_syscalls);
+    }
+#endif
+
+    for (T = P->trylist; T->name; T++) {
+	answer = try(P, T, B, L);
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+	answer2 = try(P, T, (PROBETYPE *)(2 + (void *)B), L);
+#ifdef OSI_PROBE_DEBUG
+	if (probe_debug & 0x0003) {
+	    printk("<7>osi_probe: %s = 0x%016lx %s (even)\n",
+		   P->symbol, (unsigned long)(answer), T->name);
+	    printk("<7>osi_probe: %s = 0x%016lx %s (odd)\n",
+		   P->symbol, (unsigned long)(answer2), T->name);
+	}
+#endif
+	if (answer && answer2) answer = 0;
+	else if (answer2) answer = answer2;
+#endif
+	if (answer)
+	    return answer;
+    }
+
+    /* XXX more checks here */
+
+    answer = try_harder(P, B, L);
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+    answer2 = try_harder(P, (PROBETYPE *)(2 + (void *)B), L);
+#ifdef OSI_PROBE_DEBUG
+    if (probe_debug & 0x0005) {
+	printk("<7>osi_probe: %s = 0x%016lx pattern scan (even)\n",
+	       P->symbol, (unsigned long)(answer));
+	printk("<7>osi_probe: %s = 0x%016lx pattern scan (odd)\n",
+	       P->symbol, (unsigned long)(answer2));
+    }
+#endif
+    if (answer && answer2) answer = 0;
+    else if (answer2) answer = answer2;
+#endif
+    return answer;
+}
+
 static void *do_find_syscall_table(probectl *P, char **method)
 {
 #ifdef OSI_PROBE_KALLSYMS
@@ -1103,11 +1236,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
 #endif
     PROBETYPE *B;
     unsigned long L;
-    tryctl *T;
     void *answer;
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
-    void *answer2;
-#endif
 #ifdef OSI_PROBE_DEBUG
     void *final_answer = 0;
 #endif
@@ -1155,61 +1284,66 @@ static void *do_find_syscall_table(probectl *P, char **method)
 	}
     }
 #endif
-
-#ifdef OSI_PROBE_DEBUG
-    if (probe_debug & 0x0007)
-	printk("<7>osi_probe: %s                      base=0x%lx, len=0x%lx\n",
-	       P->symbol, (unsigned long)B, L);
-    if (probe_debug & 0x0009) {
-	printk("<7>osi_probe: %s                      ktxt_lower_bound=0x%lx\n",
-	       P->symbol, ktxt_lower_bound);
-	printk("<7>osi_probe: %s                      NR_syscalls=%d\n",
-	       P->symbol, NR_syscalls);
-    }
-#endif
-
-    for (T = P->trylist; T->name; T++) {
-	answer = try(P, T, B, L);
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
-	answer2 = try(P, T, (PROBETYPE *)(2 + (void *)B), L);
-#ifdef OSI_PROBE_DEBUG
-	if (probe_debug & 0x0003) {
-	    printk("<7>osi_probe: %s = 0x%016lx %s (even)\n",
-		   P->symbol, (unsigned long)(answer), T->name);
-	    printk("<7>osi_probe: %s = 0x%016lx %s (odd)\n",
-		   P->symbol, (unsigned long)(answer2), T->name);
-	}
-#endif
-	if (answer && answer2) answer = 0;
-	else if (answer2) answer = answer2;
-#endif
-        check_result(answer, T->name);
-    }
-
-    /* XXX more checks here */
-
-    answer = try_harder(P, B, L);
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
-    answer2 = try_harder(P, (PROBETYPE *)(2 + (void *)B), L);
-#ifdef OSI_PROBE_DEBUG
-    if (probe_debug & 0x0005) {
-	printk("<7>osi_probe: %s = 0x%016lx pattern scan (even)\n",
-	       P->symbol, (unsigned long)(answer));
-	printk("<7>osi_probe: %s = 0x%016lx pattern scan (odd)\n",
-	       P->symbol, (unsigned long)(answer2));
-    }
-#endif
-    if (answer && answer2) answer = 0;
-    else if (answer2) answer = answer2;
-#endif
+   
+    answer = scan_for_syscall_table(P, B, L);
     check_result(answer, "pattern scan");
-
+    B = (PROBETYPE *)((P->alt_try_base) & ~(P->alt_try_base_mask));
+    L = P->alt_try_length;
+    /* Now, see if the kernel will tell us something better than the default */
+#ifdef OSI_PROBE_KALLSYMS
+    if (kallsyms_address_to_symbol && P->alt_try_sect_sym) {
+	ret = kallsyms_address_to_symbol(P->alt_try_sect_sym,
+					 &mod_name, &mod_start, &mod_end,
+					 &sec_name, &sec_start, &sec_end,
+					 &sym_name, &sym_start, &sym_end);
+	if (ret) {
+	    B = (PROBETYPE *)sec_start;
+	    L = (sec_end - sec_start) / sizeof(unsigned long);
+	}
+    }
+#endif
+    if (B && L) {
+	answer = scan_for_syscall_table(P, B, L);
+	check_result(answer, "pattern scan");
+    }
 #ifdef OSI_PROBE_DEBUG
     return final_answer;
 #else
     return 0;
 #endif
 }
+
+#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+static int check_writable(unsigned long address) 
+{ 
+    pgd_t *pgd = pgd_offset_k(address);
+#ifdef PUD_SIZE
+    pud_t *pud;
+#endif
+    pmd_t *pmd;
+    pte_t *pte;
+
+    if (pgd_none(*pgd))
+	return 0;
+#ifdef PUD_SIZE
+    pud = pud_offset(pgd, address);
+    if (pud_none(*pud))
+	return 0;
+    pmd = pmd_offset(pud, address);
+#else
+    pmd = pmd_offset(pgd, address);
+#endif
+    if (pmd_none(*pmd))
+	return 0;
+    if (pmd_large(*pmd))
+	pte = (pte_t *)pmd;
+    else
+	pte = pte_offset_kernel(pmd, address);
+    if (pte_none(*pte) || !pte_present(*pte) || !pte_write(*pte))
+	return 0;
+    return 1;
+}
+#endif
 
 void *osi_find_syscall_table(int which)
 {
@@ -1235,6 +1369,13 @@ void *osi_find_syscall_table(int which)
 	return 0;
     }
     printk("Found %s at 0x%lx (%s)\n", P->desc, (unsigned long)answer, method);
+#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+    if (!check_writable((unsigned long)answer)) {
+	printk("Address 0x%lx is not writable.\n", (unsigned long)answer);
+	printk("System call hooks will not be installed; proceeding anyway\n");
+	return 0;
+    }
+#endif
     return answer;
 }
 

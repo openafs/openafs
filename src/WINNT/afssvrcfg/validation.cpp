@@ -11,6 +11,9 @@
 * INCLUDES _________________________________________________________________
 *
 */
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 #include "afscfg.h"
 #include "resource.h"
 #include "validation.h"

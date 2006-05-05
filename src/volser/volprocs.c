@@ -61,6 +61,7 @@ RCSID
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include "vol.h"
+#include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include "afs/audit.h"
@@ -844,7 +845,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 
     {
 	struct DiskPartition *tpartp = originalvp->partition;
-	FSYNC_askfs(cloneId, tpartp->name, FSYNC_RESTOREVOLUME, 0);
+	FSYNC_VolOp(cloneId, tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
     }
     return 0;
 
@@ -1355,8 +1356,7 @@ VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
     DFlushVolume(V_parentId(tt->volume)); /* Ensure dir buffers get dropped */
 
     code = RestoreVolume(acid, tt->volume, (aflags & 1), cookie);	/* last is incrementalp */
-    FSYNC_askfs(tt->volid, NULL, FSYNC_RESTOREVOLUME, 0l);	/*break call backs on the
-								 * restored volume */
+    FSYNC_VolOp(tt->volid, NULL, FSYNC_VOL_BREAKCBKS, 0l, NULL);
     tt->rxCallPtr = (struct rx_call *)0;
     tcode = TRELE(tt);
 
@@ -1422,7 +1422,7 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
     }
     strcpy(tt->lastProcName, "SetForwarding");
     tt->rxCallPtr = acid;
-    FSYNC_askfs(tt->volid, NULL, FSYNC_MOVEVOLUME, anewsite);
+    FSYNC_VolOp(tt->volid, NULL, FSYNC_VOL_MOVE, anewsite, NULL);
     tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
@@ -1672,6 +1672,9 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 
     /* Only report attached partitions */
     for (i = 0; i < VOLMAXPARTS; i++) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	dp = VGetPartitionById(i, 0);
+#else
 	if (i < 26) {
 	    namehead[6] = i + 'a';
 	    namehead[7] = '\0';
@@ -1682,6 +1685,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	    namehead[8] = '\0';
 	}
 	dp = VGetPartition(namehead, 0);
+#endif
 	if (dp)
 	    partList.partId[j++] = i;
     }
@@ -1792,7 +1796,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -2007,7 +2011,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on the volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);
@@ -2819,7 +2823,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 	return EIO;
     }
     close(fd);
-    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 
     for (dp = DiskPartitionList; dp && strcmp(dp->name, pname);
 	 dp = dp->next);
@@ -2854,8 +2858,8 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     if (unlink(opath) < 0) {
 	Log("1 SAFS_VolConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
     }
-    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
-    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
+    FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
     return 0;
 #else /* AFS_NAMEI_ENV */
     return EINVAL;

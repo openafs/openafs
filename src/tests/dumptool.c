@@ -314,6 +314,7 @@ main(int argc, char *argv[])
     struct winsize win;
     FILE *f;
     int fd;
+    time_t tmv;
 
 #ifdef RESIDENCY
     for (i = 0; i < RS_MAXRESIDENCIES; i++) {
@@ -486,9 +487,12 @@ main(int argc, char *argv[])
 	    printf(" needsSalvaged");
 	printf("\n");
 	printf("\tuniquifier = %lu\n", vol.uniquifier);
-	printf("\tCreation date = %s", ctime((time_t *) & vol.creationDate));
-	printf("\tLast access date = %s", ctime((time_t *) & vol.accessDate));
-	printf("\tLast update date = %s", ctime((time_t *) & vol.updateDate));
+	tmv = vol.creationDate;
+	printf("\tCreation date = %s", ctime(&tmv));
+	tmv = vol.accessDate;
+	printf("\tLast access date = %s", ctime(&tmv));
+	tmv = vol.updateDate;
+	printf("\tLast update date = %s", ctime(&tmv));
 	printf("\tVolume owner = %lu\n", vol.owner);
     }
 
