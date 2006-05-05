@@ -11,6 +11,9 @@
  * INCLUDES ___________________________________________________________________
  *
  */
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 #include "afscfg.h"		// Main header for this application
 #include "resource.h"
 #include "salvage_results_dlg.h"

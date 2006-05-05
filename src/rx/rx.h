@@ -53,6 +53,8 @@
 #endif
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
 # include "rx_clock.h"

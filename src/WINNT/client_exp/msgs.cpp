@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include "stdafx.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -15,7 +19,6 @@ extern "C" {
 #include <string.h>
 #include <stdarg.h>
 
-#include "stdafx.h"
 #include "msgs.h"
 
 

@@ -98,7 +98,6 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 {
     int binds, code = 0;
     osi_socket socketFd = OSI_NULLSOCKET;
-    struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
     int pmtu=IP_PMTUDISC_DONT;
