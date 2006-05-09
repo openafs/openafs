@@ -375,6 +375,7 @@ static int rxinit_status = 1;
 
 /*
  * Now, rx_InitHost is just a stub for rx_InitAddrs
+ * Parameters are in network byte order.
  */
 
 int
@@ -386,7 +387,7 @@ rx_InitHost(u_int host, u_int port)
     memset((void *) &saddr, 0, sizeof(saddr));
     rx_ssfamily(&saddr) = AF_INET;
     ((struct sockaddr_in *) &saddr)->sin_addr.s_addr = host;
-    ((struct sockaddr_in *) &saddr)->sin_port = htons(port);
+    ((struct sockaddr_in *) &saddr)->sin_port = (u_short)port;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     ((struct sockaddr_in *) &saddr)->sin_len = sizeof(struct sockaddr_in);
 #endif
