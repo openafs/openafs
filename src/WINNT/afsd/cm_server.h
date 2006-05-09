@@ -103,4 +103,6 @@ extern void cm_FreeServer(cm_server_t* server);
 
 extern void cm_FreeServerList(cm_serverRef_t** list);
 
+extern void cm_ForceNewConnectionsAllServers(void);
+
 #endif /*  __CM_SERVER_H_ENV__ */

@@ -29,6 +29,20 @@ osi_rwlock_t cm_serverLock;
 
 cm_server_t *cm_allServersp;
 
+void
+cm_ForceNewConnectionsAllServers(void)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        cm_GetServerNoLock(tsp);
+	cm_ForceNewConnections(tsp);
+        cm_PutServerNoLock(tsp);
+    }
+    lock_ReleaseRead(&cm_serverLock);
+}
+
 void 
 cm_PingServer(cm_server_t *tsp)
 {
