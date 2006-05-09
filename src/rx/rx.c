@@ -455,7 +455,7 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
 
-    rx_socket = -1;
+    rx_socket = OSI_NULLSOCKET;
     rx_port = 0;
 
     for (i = 0; i < nelem; i++) {
@@ -7101,7 +7101,7 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	    case AF_INET6:
 		rpc_stat->stats[i].remote_peer = 0xffffffff;
 		break;
-#endif AF_INET6
+#endif /* AF_INET6 */
 	    }
 	    rpc_stat->stats[i].remote_port = rx_ss2pn(saddr);
 	    rpc_stat->stats[i].remote_is_server = isServer;
