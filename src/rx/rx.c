@@ -454,7 +454,7 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
 
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
-    
+
     rx_socket = -1;
     rx_port = 0;
 
@@ -469,7 +469,7 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
 	    rx_port = rx_ss2pn(&saddrs[i]);
 	    break;
 	default:
-		return RX_INVALID_OPERATION;
+	    return RX_INVALID_OPERATION;
 	}
 
     }
@@ -2375,7 +2375,7 @@ rxi_FindPeer(struct sockaddr_storage *saddr, int slen, int stype,
 		/*
 		 * Should be enough storage for a dotted quad
 		 */
-		sprintf(pp->addrstring, "%d.%d.%d.%d",
+		snprintf(pp->addrstring, sizeof pp->addrstring, "%d.%d.%d.%d",
 			rx_ss2addrp(saddr)[0], rx_ss2addrp(saddr)[1],
 			rx_ss2addrp(saddr)[2], rx_ss2addrp(saddr)[3]);
 		break;
@@ -2385,19 +2385,21 @@ rxi_FindPeer(struct sockaddr_storage *saddr, int slen, int stype,
 		 * This gets more complicated, unfortunately
 		 */
 		if (IN6_IS_ADDR_V4COMPAT(&(rx_ss2sin6(saddr)->sin6_addr))) {
-		    sprintf(pp->addrstring, "%d.%d.%d.%d",
+		    snprintf(pp->addrstring,
+			    sizeof pp->addrstring, "%d.%d.%d.%d",
 			    rx_ss2addrp(saddr)[12], rx_ss2addrp(saddr)[13],
 			    rx_ss2addrp(saddr)[14], rx_ss2addrp(saddr)[15]);
 		} else {
-		    sprintf(pp->addrstring, "%x:%x:%x:%x:%x:%x:%x:%x",
-			    ntohs(rx_ss2addrp6(saddr)[0]),
-			    ntohs(rx_ss2addrp6(saddr)[1]),
-			    ntohs(rx_ss2addrp6(saddr)[2]),
-			    ntohs(rx_ss2addrp6(saddr)[3]),
-			    ntohs(rx_ss2addrp6(saddr)[4]),
-			    ntohs(rx_ss2addrp6(saddr)[5]),
-			    ntohs(rx_ss2addrp6(saddr)[6]),
-			    ntohs(rx_ss2addrp6(saddr)[7]));
+		    snprintf(pp->addrstring,
+			     sizeof pp->addrstring, "%x:%x:%x:%x:%x:%x:%x:%x",
+			     ntohs(rx_ss2addrp6(saddr)[0]),
+			     ntohs(rx_ss2addrp6(saddr)[1]),
+			     ntohs(rx_ss2addrp6(saddr)[2]),
+			     ntohs(rx_ss2addrp6(saddr)[3]),
+			     ntohs(rx_ss2addrp6(saddr)[4]),
+			     ntohs(rx_ss2addrp6(saddr)[5]),
+			     ntohs(rx_ss2addrp6(saddr)[6]),
+			     ntohs(rx_ss2addrp6(saddr)[7]));
 		}
 		break;
 #endif /* AF_INET6 */
