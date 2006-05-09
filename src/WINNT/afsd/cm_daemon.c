@@ -58,7 +58,8 @@ void cm_IpAddrDaemon(long parm)
 	if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
 	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
 	    Sleep(2500);
-            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+	    cm_ForceNewConnectionsAllServers();
+            cm_CheckServers(CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    smb_CheckVCs();
 	}	
     }
