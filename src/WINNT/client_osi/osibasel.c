@@ -34,8 +34,9 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ObtainWriteProc)(lockp);
-		return;
+	    return;
 	}
 
 	/* otherwise we're the fast base type */
@@ -64,6 +65,7 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ObtainReadProc)(lockp);
 		return;
 	}
@@ -92,6 +94,7 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ReleaseReadProc)(lockp);
 		return;
 	}
@@ -118,6 +121,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ReleaseWriteProc)(lockp);
 		return;
 	}
@@ -144,6 +148,7 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ConvertWToRProc)(lockp);
 		return;
 	}
@@ -173,6 +178,7 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ObtainMutexProc)(lockp);
 		return;
 	}
@@ -202,6 +208,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->ReleaseMutexProc)(lockp);
 		return;
 	}
@@ -229,6 +236,7 @@ int lock_TryRead(struct osi_rwlock *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		return (osi_lockOps[i]->TryReadProc)(lockp);
 
 	/* otherwise we're the fast base type */
@@ -257,6 +265,7 @@ int lock_TryWrite(struct osi_rwlock *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		return (osi_lockOps[i]->TryWriteProc)(lockp);
 
 	/* otherwise we're the fast base type */
@@ -285,6 +294,7 @@ int lock_TryMutex(struct osi_mutex *lockp) {
         CRITICAL_SECTION *csp;
 
 	if ((i=lockp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		return (osi_lockOps[i]->TryMutexProc)(lockp);
 
 	/* otherwise we're the fast base type */
@@ -312,6 +322,7 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->SleepRProc)(sleepVal, lockp);
 		return;
 	}
@@ -339,6 +350,7 @@ void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->SleepWProc)(sleepVal, lockp);
 		return;
 	}
@@ -364,6 +376,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
         CRITICAL_SECTION *csp;
 
 	if ((i = lockp->type) != 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->SleepMProc)(sleepVal, lockp);
 		return;
 	}
@@ -388,6 +401,7 @@ void lock_FinalizeRWLock(osi_rwlock_t *lockp)
 	long i;
 
 	if ((i=lockp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->FinalizeRWLockProc)(lockp);
 }
 
@@ -396,6 +410,7 @@ void lock_FinalizeMutex(osi_mutex_t *lockp)
 	long i;
 
 	if ((i=lockp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->FinalizeMutexProc)(lockp);
 }
 
@@ -404,6 +419,7 @@ void lock_InitializeMutex(osi_mutex_t *mp, char *namep)
 	int i;
 
 	if ((i = osi_lockTypeDefault) > 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->InitializeMutexProc)(mp, namep);
 		return;
 	}
@@ -424,6 +440,7 @@ void lock_InitializeRWLock(osi_rwlock_t *mp, char *namep)
 	int i;
 
 	if ((i = osi_lockTypeDefault) > 0) {
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		(osi_lockOps[i]->InitializeRWLockProc)(mp, namep);
 		return;
 	}
@@ -445,6 +462,7 @@ int lock_GetRWLockState(osi_rwlock_t *lp)
         CRITICAL_SECTION *csp;
 
 	if ((i=lp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		return (osi_lockOps[i]->GetRWLockState)(lp);
 
 	/* otherwise we're the fast base type */
@@ -466,6 +484,7 @@ int lock_GetMutexState(struct osi_mutex *mp) {
         CRITICAL_SECTION *csp;
 
 	if ((i=mp->type) != 0)
+	    if (i >= 0 && i < OSI_NLOCKTYPES)
 		return (osi_lockOps[i]->GetMutexState)(mp);
 
 	/* otherwise we're the fast base type */
