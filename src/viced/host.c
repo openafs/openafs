@@ -953,6 +953,12 @@ hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
     /* hash into proper bucket */
     index = h_HashIndex(addr);
 
+    /* don't add the same entry multiple times */
+    for (chain = hostHashTable[index]; chain; chain = chain->next) {
+	if (chain->hostPtr == host && chain->addr == addr && chain->port == port)
+	    return;
+    }
+
     /* insert into beginning of list for this bucket */
     chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
     if (!chain) {
@@ -964,7 +970,6 @@ hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
     chain->addr = addr;
     chain->port = port;
     hostHashTable[index] = chain;
-
 }
 
 /*
@@ -1321,40 +1326,35 @@ h_GetHost_r(struct rx_connection *tcon)
 		    h_Lock_r(oldHost);
 
                     if (oldHost->interface) {
+			int code2;
 			afsUUID uuid = oldHost->interface->uuid;
                         cb_conn = oldHost->callback_rxcon;
                         rx_GetConnection(cb_conn);
 			rx_SetConnDeadTime(cb_conn, 2);
 			rx_SetConnHardDeadTime(cb_conn, AFS_HARDDEADTIME);
 			H_UNLOCK;
-			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
+			code2 = RXAFSCB_ProbeUuid(cb_conn, &uuid);
 			H_LOCK;
 			rx_SetConnDeadTime(cb_conn, 50);
 			rx_SetConnHardDeadTime(cb_conn, AFS_HARDDEADTIME);
                         rx_PutConnection(cb_conn);
                         cb_conn=NULL;
-			if (code && MultiProbeAlternateAddress_r(oldHost)) {
+			if (code2) {
+			    /* The primary address is either not responding or
+			     * is not the client we are looking for.  
+			     * MultiProbeAlternateAddress_r() will remove the
+			     * alternate interfaces that do not have the same
+			     * Uuid. */
+			    ViceLog(0,("CB: ProbeUuid for %s:%d failed %d\n",
+					 afs_inet_ntoa_r(oldHost->host, hoststr),
+					 ntohs(oldHost->port),code2));
+			    MultiProbeAlternateAddress_r(oldHost);
                             probefail = 1;
                         }
                     } else {
                         probefail = 1;
                     }
 
-                    if (probefail) {
-                        /* The old host is either does not have a Uuid,
-                         * is not responding to Probes, 
-                         * or does not have a matching Uuid. 
-                         * Delete it! */
-                        oldHost->hostFlags |= HOSTDELETED;
-                        h_Unlock_r(oldHost);
-			/* Let the holder be last release */
-			if (!oheld) {
-			    h_Release_r(oldHost);
-			}
-			oldHost = NULL;
-                    }
-                }
-		if (oldHost) {
 		    /* This is a new address for an existing host. Update
 		     * the list of interfaces for the existing host and
 		     * delete the host structure we just allocated. */
@@ -1365,8 +1365,13 @@ h_GetHost_r(struct rx_connection *tcon)
 				  ntohs(hport), 
 				  afs_inet_ntoa_r(oldHost->host, hoststr2),
 				  ntohs(oldHost->port)));
-			if (oldHost->host == haddr) {
-			    /* We have just been contacted by a client behind a NAT */
+			if (probefail || oldHost->host == haddr) {
+			    /* The probe failed which means that the old address is 
+			     * either unreachable or is not the same host we were just
+			     * contacted by.  We will also remove addresses if only
+			     * the port has changed because that indicates the client
+			     * is behind a NAT. 
+			     */
 			    removeInterfaceAddr_r(oldHost, oldHost->host, oldHost->port);
 			} else {
 			    int i, found;
@@ -2396,6 +2401,8 @@ CheckHost(register struct host *host, int held)
 		}
 	    } else {
 		if (!(host->hostFlags & VENUSDOWN) && host->cblist) {
+		    char hoststr[16];
+		    (void)afs_inet_ntoa_r(host->host, hoststr);
 		    if (host->interface) {
 			afsUUID uuid = host->interface->uuid;
 			H_UNLOCK;
@@ -2403,11 +2410,8 @@ CheckHost(register struct host *host, int held)
 			H_LOCK;
 			if (code) {
 			    if (MultiProbeAlternateAddress_r(host)) {
-				char hoststr[16];
-				(void)afs_inet_ntoa_r(host->host, hoststr);
-				ViceLog(0,
-					("ProbeUuid failed for host %s:%d\n",
-					 hoststr, ntohs(host->port)));
+				ViceLog(0,("CheckHost: Probing all interfaces of host %s:%d failed, code %d\n",
+					    hoststr, ntohs(host->port), code));
 				host->hostFlags |= VENUSDOWN;
 			    }
 			}
@@ -2416,11 +2420,9 @@ CheckHost(register struct host *host, int held)
 			code = RXAFSCB_Probe(cb_conn);
 			H_LOCK;
 			if (code) {
-			    char hoststr[16];
-			    (void)afs_inet_ntoa_r(host->host, hoststr);
 			    ViceLog(0,
-				    ("Probe failed for host %s:%d\n", hoststr,
-				     ntohs(host->port)));
+				    ("CheckHost: Probe failed for host %s:%d, code %d\n", 
+				     hoststr, ntohs(host->port), code));
 			    host->hostFlags |= VENUSDOWN;
 			}
 		    }
