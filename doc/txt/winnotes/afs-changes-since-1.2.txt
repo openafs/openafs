@@ -1,4 +1,28 @@
-Since 1.4.1 rc10: 1.4.1 rc11 released (9 April 2006)
+Since 1.4.1a: 1.4.1b (16 May 2006)
+
+ * More changes to cleanup of smb_vc_t objects in
+   order to prevent race conditions.
+
+ * Reduce the amount of Power Management event logging
+   to afsd_init.log
+
+ * If the client detects that the IP address has 
+   changed, force the use of new RX connections.  This
+   enables the file server to recognize that the client
+   has moved.
+
+Since 1.4.1: 1.4.1a (1 May 2006)
+
+ * Remove a race condition and deadlock associated 
+   with cleanup of smb_vc_t objects.
+
+ * Fix the ANSI filename support.  One function that
+   required it was missing the translations.
+
+ * Fix the pthread library so that it can be loaded
+   and unloaded safely by an application.
+
+Since 1.4.1 rc10: 1.4.1 released (9 April 2006)
 
  * Add code to protect against an undercount of smb_vc_t 
    references in the smb_allVCsp list.  This is a temporary
