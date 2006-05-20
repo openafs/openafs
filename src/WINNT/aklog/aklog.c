@@ -199,10 +199,15 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     strcpy(lastcell, aserver->cell);
 
     if (!pr_Initialize (0, confname, aserver->cell)) {
-        char sname[PR_MAXNAMELEN];
+        char sname[PR_MAXNAMELEN], *at;
+
         strncpy(sname, username, PR_MAXNAMELEN);
         sname[PR_MAXNAMELEN-1] = '\0';
-        *status = pr_SNameToId (sname, &viceId);
+
+	at = strchr(sname, '@');
+	if (at && !stricmp(at+1, realm_of_cell))
+	    *at = '\0';
+	*status = pr_SNameToId (sname, &viceId);
     }
 
     if (dflag)
