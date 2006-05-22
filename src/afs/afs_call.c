@@ -50,7 +50,6 @@ afs_uint32 rx_bindhost;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
-kmutex_t afs_rxglobal_lock;
 #endif
 
 #if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)

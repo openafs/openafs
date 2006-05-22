@@ -441,10 +441,6 @@ rx_InitHost(u_int host, u_int port)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
 #endif /* KERNEL && AFS_HPUX110_ENV */
-#else /* RX_ENABLE_LOCKS */
-#if defined(KERNEL) && defined(AFS_GLOBAL_SUNLOCK) && !defined(AFS_HPUX_ENV) && !defined(AFS_OBSD_ENV)
-    mutex_init(&afs_rxglobal_lock, "afs_rxglobal_lock", MUTEX_DEFAULT, NULL);
-#endif /* AFS_GLOBAL_SUNLOCK */
 #endif /* RX_ENABLE_LOCKS */
 
     rxi_nCalls = 0;
