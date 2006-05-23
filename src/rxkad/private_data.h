@@ -48,15 +48,17 @@ struct rxkad_cidgen {
     afs_int32 ipAddr;		/* or an approximation to it */
 };
 
+#define PDATA_SIZE(l) (sizeof(struct rxkad_cprivate) - MAXKTCTICKETLEN + (l))
+
 /* private data in client-side security object */
 struct rxkad_cprivate {
     afs_int32 kvno;		/* key version of ticket */
-    afs_int32 ticketLen;	/* length of ticket */
+    afs_int16 ticketLen;	/* length of ticket */
+    rxkad_type type;		/* always client */
+    rxkad_level level;		/* minimum security level of client */
     fc_KeySchedule keysched;	/* the session key */
     fc_InitializationVector ivec;	/* initialization vector for cbc */
     char ticket[MAXKTCTICKETLEN];	/* the ticket for the server */
-    rxkad_type type;		/* always client */
-    rxkad_level level;		/* minimum security level of client */
 };
 
 /* Per connection client-side info */
