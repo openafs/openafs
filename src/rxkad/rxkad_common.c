@@ -68,7 +68,7 @@ RCSID
 #include <strings.h>
 #endif
 #endif
-
+#include <afs/afsutil.h>
 #endif /* KERNEL */
 
 #include <des/stats.h>
@@ -311,7 +311,8 @@ FreeObject(struct rx_securityClass *aobj)
     tcp = (struct rxkad_cprivate *)aobj->privateData;
     rxi_Free(aobj, sizeof(struct rx_securityClass));
     if (tcp->type & rxkad_client) {
-	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	afs_int32 psize = PDATA_SIZE(tcp->ticketLen);
+	rxi_Free(tcp, psize);
     } else if (tcp->type & rxkad_server) {
 	rxi_Free(tcp, sizeof(struct rxkad_sprivate));
     } else {
