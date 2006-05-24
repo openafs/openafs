@@ -860,7 +860,8 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
 		       __FILE__, __LINE__);
 
-        if (lsn == vcp->lsn && lana == vcp->lana) {
+        if (lsn == vcp->lsn && lana == vcp->lana &&
+	    !(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
             smb_HoldVCNoLock(vcp);
             break;
         }
@@ -1094,10 +1095,6 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	lock_ObtainWrite(&smb_rctLock);
 	uidpNext = vcp->usersp;
     }
-
-    lock_ObtainMutex(&vcp->mx);
-    vcp->flags &= ~SMB_VCFLAG_CLEAN_IN_PROGRESS;
-    lock_ReleaseMutex(&vcp->mx);
 
     /* The vcp is now on the deadVCsp list.  We intentionally drop the
      * reference so that the refcount can reach 0 and we can delete it */
@@ -7731,6 +7728,8 @@ void smb_Server(VOID *parmp)
          * then we are in big trouble. This means either :
          *   a) we have the wrong NCB.
          *   b) Netbios screwed up the call.
+	 *   c) The VC was already marked dead before we were able to
+	 *      process the call
          * Obviously this implies that 
          *   ( LSNs[idx_session] != ncbp->ncb_lsn ||
          *   lanas[idx_session] != ncbp->ncb_lana_num )
@@ -7745,7 +7744,7 @@ void smb_Server(VOID *parmp)
                      ncbp->ncb_lana_num);
 
             /* Also log in the trace log. */
-            osi_Log4(smb_logp, "Server: BAD VCP!"
+            osi_Log4(smb_logp, "Server: VCP does not exist!"
                       "LSNs[idx_session]=[%d],"
                       "lanas[idx_session]=[%d],"
                       "ncbp->ncb_lsn=[%d],"

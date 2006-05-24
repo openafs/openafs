@@ -1027,6 +1027,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
 
     if (!ipc) {
+	if (!strcmp(shareName, "*."))
+	    strcpy(shareName, "all");
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
 	if (!shareFound) {
 	    smb_ReleaseUID(uidp);
@@ -1669,7 +1671,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
 
     outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
 
-    if(!stricmp(shareName,"all")) {
+    if(!stricmp(shareName,"all") || !strcmp(shareName,"*.")) {
         rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                           KEY_QUERY_VALUE, &hkParam);
         if (rv == ERROR_SUCCESS) {
@@ -3228,7 +3230,8 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         requestFileName[0] == '\\' &&
         !_strnicmp(cm_NetbiosName,&requestFileName[1],nbnLen) &&
         requestFileName[nbnLen+1] == '\\' &&
-        !_strnicmp("all",&requestFileName[nbnLen+2],3)) 
+        (!_strnicmp("all",&requestFileName[nbnLen+2],3) || 
+	  !_strnicmp("*.",&requestFileName[nbnLen+2],2)))
     {
         USHORT * sp;
         struct smb_v2_referral * v2ref;
