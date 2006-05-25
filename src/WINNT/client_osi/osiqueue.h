@@ -59,6 +59,11 @@ extern void osi_QAddH(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *e
  */
 extern void osi_QRemove(osi_queue_t **headpp, osi_queue_t *eltp);
 
+/* remove an element from a queue with both head and tail pointers; 
+ * takes address of head and tail lists, and element to remove as parameters.
+ */
+extern void osi_QRemoveHT(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *eltp);
+
 /* initialize the queue package */
 extern void osi_InitQueue(void);
 
