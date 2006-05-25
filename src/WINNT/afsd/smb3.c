@@ -1029,6 +1029,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
 
     if (!ipc) {
+	if (!strcmp(shareName, "*."))
+	    strcpy(shareName, "all");
         uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
         if (uidp)
@@ -1599,7 +1601,8 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
         for (i=0; i < nRegShares && cshare < nSharesRet; i++) {
             len = sizeof(thisShare);
             rv = RegEnumValue(hkSubmount, i, thisShare, &len, NULL, NULL, NULL, NULL);
-            if (rv == ERROR_SUCCESS && strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
+            if (rv == ERROR_SUCCESS && strlen(thisShare) && 
+		(!allSubmount || (stricmp(thisShare,"all") && strcmp(thisShare,"*.")))) {
                 strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
                 shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
                 shares[cshare].shi1_remark = cstrp - outp->datap;
@@ -1685,7 +1688,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
 
     outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
 
-    if(!stricmp(shareName,"all")) {
+    if(!stricmp(shareName,"all") || !strcmp(shareName,"*.")) {
         rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                           KEY_QUERY_VALUE, &hkParam);
         if (rv == ERROR_SUCCESS) {
@@ -3248,7 +3251,8 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         requestFileName[0] == '\\' &&
         !_strnicmp(cm_NetbiosName,&requestFileName[1],nbnLen) &&
         requestFileName[nbnLen+1] == '\\' &&
-        !_strnicmp("all",&requestFileName[nbnLen+2],3)) 
+        (!_strnicmp("all",&requestFileName[nbnLen+2],3) ||
+	 !_strnicmp("*.",&requestFileName[nbnLen+2],2)))
     {
         USHORT * sp;
         struct smb_v2_referral * v2ref;
