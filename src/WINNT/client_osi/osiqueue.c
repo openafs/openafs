@@ -93,19 +93,53 @@ void osi_QAddT(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *eltp)
 
 void osi_QRemove(osi_queue_t **headpp, osi_queue_t *eltp)
 {
-	osi_queue_t *np;	/* next dude */
+    osi_queue_t *np = eltp->nextp;	/* next dude */
+    osi_queue_t *pp = eltp->prevp;	/* prev dude */
 
-	np = eltp->nextp;	/* useful for both paths */
+    if (eltp == *headpp) {
+	/* we're the first element in the list */
+	*headpp = np;
+	if (np) 
+	    np->prevp = NULL;
+    }
+    else {
+	pp->nextp = np;
+	if (np) 
+	    np->prevp = pp;
+    }
+    eltp->prevp = NULL;
+    eltp->nextp = NULL;
+}
 
-	if (eltp == *headpp) {
-		/* we're the first element in the list */
-		*headpp = np;
-		if (np) np->prevp = NULL;
-	}
-	else {
-		eltp->prevp->nextp = np;
-		if (np) np->prevp = eltp->prevp;
-	}
+void osi_QRemoveHT(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *eltp)
+{
+    osi_queue_t *np = eltp->nextp;	/* next dude */
+    osi_queue_t *pp = eltp->prevp;	/* prev dude */
+
+    if (eltp == *headpp && eltp == *tailpp) 
+    {
+    	*headpp = *tailpp = NULL;
+    }
+    else if (eltp == *headpp) {
+	/* we're the first element in the list */
+	*headpp = np;
+	if (np) 
+	    np->prevp = NULL;
+    }	
+    else if (eltp == *tailpp) {
+	/* we're the last element in the list */
+	*tailpp = pp;
+	if (pp) 
+	    pp->nextp = NULL;
+    }	
+    else {
+	if (pp)
+		pp->nextp = np;
+	if (np)
+		np->prevp = pp;
+    }
+    eltp->prevp = NULL; 
+    eltp->nextp = NULL;
 }
 
 void osi_InitQueue(void)

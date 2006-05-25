@@ -46,7 +46,7 @@ void cm_AdjustLRU(cm_scache_t *scp)
 {
     if (scp == cm_data.scacheLRULastp)
         cm_data.scacheLRULastp = (cm_scache_t *) osi_QPrev(&scp->q);
-    osi_QRemove((osi_queue_t **) &cm_data.scacheLRUFirstp, &scp->q);
+    osi_QRemoveHT((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
     osi_QAdd((osi_queue_t **) &cm_data.scacheLRUFirstp, &scp->q);
     if (!cm_data.scacheLRULastp) 
         cm_data.scacheLRULastp = scp;

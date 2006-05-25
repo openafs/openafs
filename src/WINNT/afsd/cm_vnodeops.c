@@ -3668,7 +3668,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
             if (scp->fileLocksT == q)
                 scp->fileLocksT = osi_QPrev(q);
-            osi_QRemove(&scp->fileLocksH,q);
+            osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, q);
 
             if(IS_LOCK_ACCEPTED(fileLock)) {
                 if(fileLock->lockType == LockRead)
@@ -3920,7 +3920,7 @@ long cm_Unlock(cm_scache_t *scp,
     lock_ObtainWrite(&cm_scacheLock);
     if (scp->fileLocksT == q)
         scp->fileLocksT = osi_QPrev(q);
-    osi_QRemove(&scp->fileLocksH, q);
+    osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, q);
 
     /*
      * Don't delete it here; let the daemon delete it, to simplify
@@ -4528,7 +4528,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 	lock_ObtainWrite(&cm_scacheLock);
         if (scp->fileLocksT == &oldFileLock->fileq)
             scp->fileLocksT = osi_QPrev(&oldFileLock->fileq);
-        osi_QRemove(&scp->fileLocksH, &oldFileLock->fileq);
+        osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, &oldFileLock->fileq);
 	lock_ReleaseWrite(&cm_scacheLock);
     } else if (code == 0 && IS_LOCK_WAITLOCK(oldFileLock)) {
         scp->serverLock = newLock;

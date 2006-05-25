@@ -65,7 +65,8 @@ EXPORTS
 	osi_LogPrint		@58
 	osi_LogSaveString	@59
 	osi_InitPanic		@60
-	osi_InitTraceOption @61
+	osi_InitTraceOption     @61
 	osi_LogEvent0		@62
 	osi_LogEvent		@63
-    osi_HexifyString    @64
+        osi_HexifyString        @64
+        osi_QRemoveHT           @65

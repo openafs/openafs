@@ -56,6 +56,7 @@ static CRITICAL_SECTION osi_critSec[OSI_SLEEPHASHSIZE];
  * should be ignored.
  */
 static osi_sleepInfo_t *osi_sleepers[OSI_SLEEPHASHSIZE];
+static osi_sleepInfo_t *osi_sleepersEnd[OSI_SLEEPHASHSIZE];
 
 /* allocate space for lock operations */
 osi_lockOps_t *osi_lockOps[OSI_NLOCKTYPES];
@@ -109,7 +110,7 @@ void osi_FreeSleepInfo(osi_sleepInfo_t *ap)
 	if (ap->states & OSI_SLEEPINFO_INHASH) {
 		ap->states &= ~OSI_SLEEPINFO_INHASH;
 		idx = osi_SLEEPHASH(ap->value);
-		osi_QRemove((osi_queue_t **) &osi_sleepers[idx], &ap->q);
+		osi_QRemoveHT((osi_queue_t **) &osi_sleepers[idx], (osi_queue_t **) &osi_sleepersEnd[idx], &ap->q);
 	}
 
 	if (ap->states & OSI_SLEEPINFO_DELETED) {
@@ -226,6 +227,7 @@ void osi_Init(void)
 	for(i=0;i<OSI_SLEEPHASHSIZE; i++) {
 		InitializeCriticalSection(&osi_critSec[i]);
 		osi_sleepers[i] = (osi_sleepInfo_t *) NULL;
+	        osi_sleepersEnd[i] = (osi_sleepInfo_t *) NULL;
 	}
 
 	/* free list CS */
@@ -265,13 +267,15 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
 		sp = osi_AllocSleepInfo();
 		TlsSetValue(osi_SleepSlot, sp);
 	}
-	else
+	else {
 		sp->states = 0;
+        }
 	sp->refCount = 0;
         sp->waitFor = waitFor;
         sp->value = (long) patchp;
-        osi_QAdd((osi_queue_t **) &turnp->firstp, &sp->q);
-        if (!turnp->lastp) turnp->lastp = sp;
+        osi_QAddT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
+        if (!turnp->lastp) 
+	  turnp->lastp = sp;
         LeaveCriticalSection(releasep);
 
 	/* now wait for the signal */
@@ -309,11 +313,12 @@ void osi_TSignal(osi_turnstile_t *turnp)
 {
 	osi_sleepInfo_t *sp;
         
-	if (!turnp->lastp) return;
+	if (!turnp->lastp) 
+	    return;
         
         sp = turnp->lastp;
 	turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
-        osi_QRemove((osi_queue_t **) &turnp->firstp, &sp->q);
+        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
         sp->states |= OSI_SLEEPINFO_SIGNALLED;
         ReleaseSemaphore(sp->sema, 1, (long *) 0);
 }
@@ -325,7 +330,7 @@ void osi_TBroadcast(osi_turnstile_t *turnp)
         
         while(sp = turnp->lastp) {
 		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
-	        osi_QRemove((osi_queue_t **) &turnp->firstp, &sp->q);
+	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
 	        sp->states |= OSI_SLEEPINFO_SIGNALLED;
 	        ReleaseSemaphore(sp->sema, 1, (long *) 0);
 	}	/* while someone's still asleep */
@@ -370,7 +375,7 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
                  * the crit sec.
                  */
 		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&tsp->q);
-	        osi_QRemove((osi_queue_t **) &turnp->firstp, &tsp->q);
+	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &tsp->q);
                 
 		/* do the patching required for lock obtaining */
                 if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
@@ -425,14 +430,15 @@ void osi_SleepSpin(long sleepValue, CRITICAL_SECTION *releasep)
 		sp = osi_AllocSleepInfo();
 		TlsSetValue(osi_SleepSlot, sp);
 	}
-	else
+	else {
 		sp->states = 0;
+	}
 	sp->refCount = 0;
 	sp->value = sleepValue;
 	idx = osi_SLEEPHASH(sleepValue);
 	csp = &osi_critSec[idx];
 	EnterCriticalSection(csp);
-	osi_QAdd((osi_queue_t **) &osi_sleepers[idx], &sp->q);
+	osi_QAddT((osi_queue_t **) &osi_sleepers[idx], (osi_queue_t **) &osi_sleepersEnd[idx], &sp->q);
 	sp->states |= OSI_SLEEPINFO_INHASH;
 	LeaveCriticalSection(releasep);
 	LeaveCriticalSection(csp);
