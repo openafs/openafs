@@ -127,8 +127,8 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
      */
-    code = cm_SyncOp(scp, NULL, up, reqp, 0, CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+    code = cm_SyncOp(scp, NULL, up, reqp, 0, 
+		      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         return code;
         
@@ -145,14 +145,13 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
             return code;
         }       
                 
-        osi_Log1(afsd_logp, "GetAccess parent %x", aclScp);
+        osi_Log1(afsd_logp, "GetAccess parent scp %x user %x", aclScp, up);
         lock_ObtainMutex(&aclScp->mx);
-        code = cm_GetCallback(aclScp, up, reqp, 1);
+	code = cm_SyncOp(aclScp, NULL, up, reqp, 0,
+ 		          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseMutex(&aclScp->mx);
         cm_ReleaseSCache(aclScp);
         lock_ObtainMutex(&scp->mx);
-    } else {
-        code = cm_GetCallback(scp, up, reqp, 1);
     }
 
     return code;
