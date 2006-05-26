@@ -170,6 +170,8 @@ smb_username_t *usernamesp = NULL;
 
 smb_waitingLockRequest_t *smb_allWaitingLocks;
 
+DWORD smb_TlsRequestSlot = -1;
+
 /* forward decl */
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 			NCB *ncbp, raw_write_cont_t *rwcp);
@@ -203,6 +205,39 @@ int smb_ServerLanManagerLength = sizeof(smb_ServerLanManager);
 
 /* Faux server GUID. This is never checked. */
 GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
+
+void smb_ResetServerPriority()
+{
+    void * p = TlsGetValue(smb_TlsRequestSlot);
+    if (p) {
+	free(p);
+	TlsSetValue(smb_TlsRequestSlot, NULL);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+    }
+}
+
+void smb_SetRequestStartTime()
+{
+    time_t * tp = malloc(sizeof(time_t));
+    if (tp) {
+	*tp = osi_Time();
+
+	if (!TlsSetValue(smb_TlsRequestSlot, tp))
+	    free(tp);
+    }
+}
+
+void smb_UpdateServerPriority()
+{
+    time_t *tp = TlsGetValue(smb_TlsRequestSlot);
+
+    if (tp) {
+	time_t now = osi_Time();
+
+	/* Give one priority boost for each 15 seconds */
+	SetThreadPriority(GetCurrentThread(), (now - *tp) / 15);
+    }
+}
 
 char * myCrt_Dispatch(int i)
 {
@@ -7575,6 +7610,9 @@ void smb_Server(VOID *parmp)
 	    smb_ReleaseVC(vcp);
 	    vcp = NULL;
 	}
+
+	smb_ResetServerPriority();
+
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBreturns[myIdx],
                                                  FALSE, INFINITE);
 
@@ -7906,6 +7944,8 @@ void smb_Server(VOID *parmp)
             smb_concurrentCalls--;
             continue;
         }
+
+	smb_SetRequestStartTime();
 
         vcp->errorCount = 0;
         bufp = (struct smb_packet *) ncbp->ncb_buffer;
@@ -8538,6 +8578,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     EVENT_HANDLE retHandle;
     char eventName[MAX_PATH];
 
+    smb_TlsRequestSlot = TlsAlloc();
+
 #ifndef DJGPP
     smb_MBfunc = aMBfunc;
 #endif /* DJGPP */
@@ -9061,6 +9103,8 @@ void smb_Shutdown(void)
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
+
+    TlsFree(smb_TlsRequestSlot);
 }
 
 /* Get the UNC \\<servername>\<sharename> prefix. */

@@ -462,6 +462,9 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
             bp->waitCount = bp->waitRequests = 1;
         }
         osi_SleepM((long) bp, &bp->mx);
+
+	smb_UpdateServerPriority();
+
         lock_ObtainMutex(&bp->mx);
         osi_Log1(afsd_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
         bp->waitCount--;

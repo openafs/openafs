@@ -696,6 +696,10 @@ extern char *smb_GetSharename(void);
 
 extern DWORD smb_ServerExceptionFilter(void);
 
+extern void smb_UpdateServerPriority(void);
+extern void smb_SetRequestStartTime(void);
+extern void smb_ResetServerPriority(void);
+
 /* include other include files */
 #include "smb3.h"
 #include "smb_ioctl.h"
