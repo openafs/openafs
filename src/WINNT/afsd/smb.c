@@ -2555,8 +2555,6 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 	    dead_sessions[vcp->session] = TRUE;
 	    lock_ReleaseWrite(&smb_globalLock);
 	    smb_CleanupDeadVC(vcp);
-	    smb_ReleaseVC(vcp);
-	    vcp = NULL;
 	} else {
 	    lock_ReleaseMutex(&vcp->mx);
 	}
