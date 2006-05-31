@@ -231,7 +231,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     struct sockaddr_dl *sdl;
     struct rt_addrinfo info;
     char *buf, *lim, *next;
-    int count = 0, addrcount = 0;
+    int count = 0, addrcount = 0, i;
 
 #if !defined(AFS_USERSPACE_IP_ADDR)
     count = rx_getAllAddr_internal(addrBuffer, 1024, 0);
