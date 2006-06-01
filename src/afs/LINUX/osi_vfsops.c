@@ -344,10 +344,8 @@ afs_put_inode(struct inode *ip)
     struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
-    if (VREFCOUNT(vcp) == 2) {
-	if (VREFCOUNT(vcp) == 2)
-	    afs_InactiveVCache(vcp, NULL);
-    }
+    if (VREFCOUNT(vcp) == 2) 
+	afs_InactiveVCache(vcp, NULL);
     AFS_GUNLOCK();
 }
 
