@@ -1517,9 +1517,9 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     smb_vc_t *vcp = NULL;
     smb_ioctl_t *ioctlp;
 
+    lock_ObtainMutex(&fidp->mx);
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(fidp->refCount-- > 0);
-    lock_ObtainMutex(&fidp->mx);
     if (fidp->refCount == 0 && (fidp->delete)) {
         vcp = fidp->vcp;
         fidp->vcp = NULL;
