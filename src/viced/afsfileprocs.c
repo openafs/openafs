@@ -6837,7 +6837,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
 	if (errorCode <= 0) {
 	    FDH_CLOSE(fdP);
-	    VTakeOffline(volptr);
 	    return EIO;
 	}
 	wlen = errorCode;
