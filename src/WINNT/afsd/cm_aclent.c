@@ -82,7 +82,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
         if (aclp->userp == userp) {
             if (aclp->tgtLifetime && aclp->tgtLifetime <= osi_Time()) {
                 /* ticket expired */
-                osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
+                osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
                 CleanupACLEnt(aclp);
 
                 /* move to the tail of the LRU queue */
@@ -96,7 +96,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 			cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
 
 		    /* move to the head of the LRU queue */
-		    osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
+		    osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
 		    osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
 			       (osi_queue_t **) &cm_data.aclLRUEndp,
 			       &aclp->q);
@@ -125,7 +125,7 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
 
     aclp = cm_data.aclLRUEndp;
     cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
-    osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
+    osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
 
     if (aclp->backp && scp != aclp->backp) {
         ascp = aclp->backp;
