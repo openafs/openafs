@@ -1681,7 +1681,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         /* otherwise, we have to make an RPC to get the status */
         sflags = CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK;
-        cm_SyncOp(scp, NULL, NULL, NULL, 0, sflags);
+        cm_SyncOp(scp, NULL, userp, reqp, 0, sflags);
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
         lock_ReleaseMutex(&scp->mx);
