@@ -2525,16 +2525,19 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_SEND_PACKET_FAILURE, s);
 #endif /* !DJGPP */
 
-	osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
-		 vcp, vcp->usersp);
-
-  	lock_ObtainMutex(&vcp->mx);
-  	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-  	lock_ReleaseMutex(&vcp->mx);
-	lock_ObtainWrite(&smb_globalLock);
- 	dead_sessions[vcp->session] = TRUE;
- 	lock_ReleaseWrite(&smb_globalLock);
- 	smb_CleanupDeadVC(vcp);
+	lock_ObtainMutex(&vcp->mx);
+	if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+	    osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
+		      vcp, vcp->usersp);
+	    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+	    lock_ReleaseMutex(&vcp->mx);
+	    lock_ObtainWrite(&smb_globalLock);
+	    dead_sessions[vcp->session] = TRUE;
+	    lock_ReleaseWrite(&smb_globalLock);
+	    smb_CleanupDeadVC(vcp);
+	} else {
+	    lock_ReleaseMutex(&vcp->mx);
+	}
     }
 
     if (localNCB)
@@ -8111,9 +8114,18 @@ void smb_Listener(void *parmp)
             smb_FreePacket(outp);
 
 	    lock_ObtainMutex(&vcp->mx);
-	    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-	    lock_ReleaseMutex(&vcp->mx);
-	    smb_CleanupDeadVC(vcp);
+	    if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+		osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
+			  vcp, vcp->usersp);
+		vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+		lock_ReleaseMutex(&vcp->mx);
+		lock_ObtainWrite(&smb_globalLock);
+		dead_sessions[vcp->session] = TRUE;
+		lock_ReleaseWrite(&smb_globalLock);
+		smb_CleanupDeadVC(vcp);
+	    } else {
+		lock_ReleaseMutex(&vcp->mx);
+	    }
         } else {
             /* assert that we do not exceed the maximum number of sessions or NCBs.
              * we should probably want to wait for a session to be freed in case
