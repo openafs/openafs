@@ -371,17 +371,13 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
      */
     tcurlen = call->curlen;
     tnLeft = call->nLeft;
-    if (!call->error && tcurlen > sizeof(afs_int32)
-	&& tnLeft > sizeof(afs_int32)) {
+    if (!call->error && tcurlen >= sizeof(afs_int32)
+	&& tnLeft >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((size_t)tcurpos & (sizeof(afs_int32) - 1))) {
-	    *value = *((afs_int32 *) (tcurpos));
-	} else {
-	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
-	}
+	memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - (u_short)sizeof(afs_int32);
-	call->nLeft = tnLeft - (u_short)sizeof(afs_int32);
+	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->nLeft = (u_short)(tnLeft - sizeof(afs_int32));
 	return sizeof(afs_int32);
     }
 
@@ -778,8 +774,8 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    buf += t;
 	    nbytes -= t;
 	    call->curpos += t;
-	    call->curlen -= t;
-	    call->nFree -= t;
+	    call->curlen -= (u_short)t;
+	    call->nFree -= (u_short)t;
 
 	    if (!call->curlen) {
 		/* need to get another struct iov */
@@ -835,8 +831,8 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 	tcurpos = call->curpos;
 	memcpy(tcurpos, buf, nbytes);
 	call->curpos = tcurpos + nbytes;
-	call->curlen = tcurlen - nbytes;
-	call->nFree = tnFree - nbytes;
+	call->curlen = (u_short)(tcurlen - nbytes);
+	call->nFree = (u_short)(tnFree - nbytes);
 	return nbytes;
     }
 
@@ -876,8 +872,8 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
      *
      * We are relying on nFree being zero unless the call is in send mode.
      */
-    tcurlen = (int)call->curlen;
-    tnFree = (int)call->nFree;
+    tcurlen = call->curlen;
+    tnFree = call->nFree;
     if (!call->error && tcurlen >= sizeof(afs_int32)
 	&& tnFree >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
@@ -887,8 +883,8 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
 	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - (u_short)sizeof(afs_int32);
-	call->nFree = tnFree - (u_short)sizeof(afs_int32);
+	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->nFree = (u_short)(tnFree - sizeof(afs_int32));
 	return sizeof(afs_int32);
     }
 
