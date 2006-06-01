@@ -143,8 +143,8 @@ if [ $firstpass = yes ]; then
 
     ln -s ../../Library/OpenAFS/Tools/root.client/usr/vice/etc/afsd $PKGROOT/usr/sbin/afsd
 
-    mkdir -p $PKGROOT/Library/Kerberos\ Plug-Ins
-    ln -s ../../Library/OpenAFS/Tools/root.client/Library/Kerberos\ Plug-Ins/aklog.loginLogout $PKGROOT/Library/Kerberos\ Plug-Ins/
+#    mkdir -p $PKGROOT/Library/Kerberos\ Plug-Ins
+#    ln -s ../../Library/OpenAFS/Tools/root.client/Library/Kerberos\ Plug-Ins/aklog.loginLogout $PKGROOT/Library/Kerberos\ Plug-Ins/
 
     chown -R root${SEP}wheel $PKGROOT/usr
     chmod -R og-w $PKGROOT/usr
