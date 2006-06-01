@@ -422,7 +422,8 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		break;
 	    }
 	    /* now, if we got EWOULDBLOCK, and we're supposed to wait, we do */
-	    if (((code == EWOULDBLOCK) || (code == EAGAIN))
+	    if (((code == EWOULDBLOCK) || (code == EAGAIN) || 
+		 (code == UAEWOULDBLOCK) || (code == UAEAGAIN))
 		&& !(acom & LOCK_NB)) {
 		/* sleep for a second, allowing interrupts */
 		ReleaseWriteLock(&avc->lock);
