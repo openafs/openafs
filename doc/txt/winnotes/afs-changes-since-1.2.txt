@@ -1,5 +1,14 @@
-Since 1.4.1b: 
+Since 1.4.1b:  1.4.1c (31 May 2006)
  
+ * Speed up the performance of the cache manager by not 
+   holding the smb_fid_t mutex across calls to cm_SyncOp 
+   and AFS RPCs.
+
+ * Ensure that all smb_fid_t flag references are protected.
+
+ * Remove a deadlock between smb_fid_t mutex and 
+   smb_rctLock introduced in 1.4.1.
+
  * Fix aklog AFSID lookup to use not send the realm
    name when the realm is the local realm for the 
    cell.  The PT Server doesn't strip the realm 
