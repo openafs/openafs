@@ -917,6 +917,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
         if (bufLocked) 
             lock_ReleaseMutex(&bufp->mx);
         osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
+
+	smb_UpdateServerPriority();
+
         if (bufLocked) 
             lock_ObtainMutex(&bufp->mx);
         lock_ObtainMutex(&scp->mx);
