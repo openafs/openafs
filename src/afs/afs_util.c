@@ -51,10 +51,6 @@ RCSID
 #include <sys/fp_io.h>
 #endif
 
-#if	defined(AFS_XBSD_ENV)
-#include <crypto/md5.h>
-#endif
-
 afs_int32 afs_new_inum = 0;
 
 #ifndef afs_cv2string
@@ -409,14 +405,7 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
-#if	defined(AFS_XBSD_ENV)
-
-#define afs_md5 MD5Context
-#define AFS_MD5_Init(m) MD5Init((m))
-#define AFS_MD5_Update(m, p, l) MD5Update((m), (void *)(p), (l))
-#define AFS_MD5_Final(r, m) MD5Final((r), (m))
-
-#else
+#ifdef AFS_LINUX20_ENV
 
 struct afs_md5 {
     unsigned int sz[2];
@@ -657,7 +646,6 @@ AFS_MD5_Final (void *res, struct afs_md5 *m)
 	}
     }
 }
-#endif
 
 afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 { 
@@ -677,3 +665,12 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
     }
     return ino;
 }
+
+#else
+
+afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+{
+    return (volume << 16) + vnode;
+}
+
+#endif
