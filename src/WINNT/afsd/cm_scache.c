@@ -853,7 +853,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             if (!cm_HaveCallback(scp)) {
                 osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
                           scp);
-                if (bufLocked) lock_ReleaseMutex(&bufp->mx);
+                if (bufLocked) 
+		    lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetCallback(scp, userp, reqp, 0);
                 if (bufLocked) {
                     lock_ReleaseMutex(&scp->mx);
