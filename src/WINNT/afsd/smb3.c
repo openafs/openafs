@@ -134,7 +134,7 @@ void OutputDebugF(char * format, ...) {
 }
 
 void OutputDebugHexDump(unsigned char * buffer, int len) {
-    int i,j,k;
+    int i,j,k,pcts=0;
     char buf[256];
     static char tr[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
@@ -159,9 +159,13 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
         buf[j] = tr[k / 16]; buf[j+1] = tr[k % 16];
 
         j = (i%16);
-        j = j + 56 + ((j>7)?1:0);
+        j = j + 56 + ((j>7)?1:0) + pcts;
 
         buf[j] = (k>32 && k<127)?k:'.';
+		if (k == '%') {
+			buf[++j] = k;
+			pcts++;
+		}
     }    
     if(i) {
         osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buf));
