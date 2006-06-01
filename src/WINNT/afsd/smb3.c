@@ -2886,6 +2886,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     unsigned short infoLevel;
     int nbytesRequired;
     unsigned short fid;
+    int delonclose = 0;
     cm_user_t *userp;
     smb_fid_t *fidp;
     cm_scache_t *scp;
@@ -2937,7 +2938,10 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }   
 
     lock_ObtainMutex(&fidp->mx);
+    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
     scp = fidp->scp;
+    cm_HoldSCache(scp);
+    lock_ReleaseMutex(&fidp->mx);
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -2962,7 +2966,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
-        *op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
+        *op++ = (delonclose ? 1 : 0);
         *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
         *op++ = 0;
         *op++ = 0;
@@ -2974,10 +2978,14 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         unsigned long len;
         char *name;
 
+	lock_ReleaseMutex(&scp->mx);
+	lock_ObtainMutex(&fidp->mx);
+	lock_ObtainMutex(&scp->mx);
         if (fidp->NTopen_wholepathp)
             name = fidp->NTopen_wholepathp;
         else
             name = "\\";	/* probably can't happen */
+	lock_ReleaseMutex(&fidp->mx);
         len = strlen(name);
         outp->totalData = (len*2) + 4;	/* this is actually what we want to return */
         *((u_long *)op) = len * 2; op += 4;
@@ -2987,7 +2995,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* send and free the packets */
   done:
     lock_ReleaseMutex(&scp->mx);
-    lock_ReleaseMutex(&fidp->mx);
+    cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
     if (code == 0) 
@@ -3044,6 +3052,9 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         return 0;
     }
+
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
     osi_Log1(smb_logp, "T2 SFileInfo type 0x%x", infoLevel);
@@ -3060,8 +3071,6 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     	goto done;
     }   
 
-    scp = fidp->scp;
-
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         FILETIME lastMod;
         unsigned int attribute;
@@ -3070,15 +3079,17 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         /* lock the vnode with a callback; we need the current status
          * to determine what the new status is, in some cases.
          */
-	lock_ObtainMutex(&fidp->mx);
         lock_ObtainMutex(&scp->mx);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
+	lock_ReleaseMutex(&scp->mx);
         if (code) {
-            lock_ReleaseMutex(&scp->mx);
             goto done;
         }
+
+	lock_ObtainMutex(&fidp->mx);
+	lock_ObtainMutex(&scp->mx);
 
         /* prepare for setattr call */
         attr.mask = 0;
@@ -3147,6 +3158,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }       
 
   done:
+    cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
     if (code == 0) 
@@ -4896,6 +4908,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
     /* set inp->fid so that later read calls in same msg can find fid */
@@ -4903,7 +4917,6 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     userp = smb_GetUser(vcp, inp);
 
-    scp = fidp->scp;
 
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -5102,6 +5115,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
   doneSync:
     lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
 
@@ -5133,17 +5147,18 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
     userp = smb_GetUser(vcp, inp);
-        
-    scp = fidp->scp;
         
     /* otherwise, stat the file */
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) goto done;
+    if (code)
+	goto done;
 
     /* decode times.  We need a search time, but the response to this
      * call provides the date first, not the time, as returned in the
@@ -5172,6 +5187,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
   done:
     lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
     return code;
@@ -5204,11 +5220,11 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
     userp = smb_GetUser(vcp, inp);
-        
-    scp = fidp->scp;
         
     /* now prepare to call cm_setattr.  This message only sets various times,
      * and AFS only implements mtime, and we'll set the mtime if that's
@@ -5229,8 +5245,10 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             osi_Log1(smb_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
         }
     }
-    else code = 0;
+    else 
+	code = 0;
 
+    cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
     return code;
