@@ -5862,6 +5862,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
                                  dscp, fullPathp, NULL, TRUE);
         }
         free(fullPathp);
+	lock_ObtainMutex(&fidp->mx);
 	fidp->flags &= ~SMB_FID_DELONCLOSE;
     }
 
