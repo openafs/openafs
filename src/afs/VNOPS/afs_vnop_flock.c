@@ -24,6 +24,7 @@ RCSID
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
+#include "afs/unified_afs.h"
 
 /* Static prototypes */
 static int HandleGetLock(register struct vcache *avc,
