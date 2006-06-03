@@ -265,6 +265,9 @@ typedef struct cm_scache {
 #define CM_SCACHESYNC_NOWAIT		0x100000/* don't wait for the state,
 						 * just fail */
 
+/* flags for cm_RecycleSCache	*/
+#define CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS 	0x1
+
 /* flags for cm_MergeStatus */
 #define CM_MERGEFLAG_FORCE		1	/* check mtime before merging;
 						 * used to see if we're merging
@@ -332,5 +335,7 @@ extern int cm_FindFileType(cm_fid_t *fidp);
 extern long cm_ValidateSCache(void);
 
 extern long cm_ShutdownSCache(void);
+
+extern long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags);
 
 #endif /*  __CM_SCACHE_H_ENV__ */

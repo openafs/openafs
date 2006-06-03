@@ -406,11 +406,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    cm_scache_t * scp;
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
+
 	    scp = cm_FindSCache(fidp);
 	    if (scp) {
-		cm_scache_t *pscp = cm_FindSCacheParent(scp);
-		cm_CleanFile(scp, userp, reqp);
-		cm_ReleaseSCache(scp);
+		cm_scache_t *pscp = NULL;
+		
+		if (scp->fileType != CM_SCACHETYPE_DIRECTORY)
+		    pscp = cm_FindSCacheParent(scp);
+
+		lock_ObtainWrite(&cm_scacheLock);
+		cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS);
+		lock_ReleaseWrite(&cm_scacheLock);
+
 		if (pscp) {
 		    if (pscp->cbExpires > 0 && pscp->cbServerp != NULL) {
 			lock_ObtainMutex(&pscp->mx);
@@ -505,6 +512,58 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             case VREADONLY         : s = "VREADONLY";          break;
             case EAGAIN            : s = "EAGAIN";             break;
             case EACCES            : s = "EACCES";             break;
+	    case ENOENT            : s = "ENOENT";             break;
+            case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			
+            case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break; 			
+            case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break; 		
+            case CM_ERROR_RETRY		    : s = "CM_ERROR_RETRY";              break; 
+            case CM_ERROR_NOACCESS	    : s = "CM_ERROR_NOACCESS";           break; 
+            case CM_ERROR_NOSUCHFILE	    : s = "CM_ERROR_NOSUCHFILE";         break; 			
+            case CM_ERROR_STOPNOW	    : s = "CM_ERROR_STOPNOW";            break; 			
+            case CM_ERROR_TOOBIG	    : s = "CM_ERROR_TOOBIG";             break; 				
+            case CM_ERROR_INVAL		    : s = "CM_ERROR_INVAL";              break; 				
+            case CM_ERROR_BADFD		    : s = "CM_ERROR_BADFD";              break; 				
+            case CM_ERROR_BADFDOP	    : s = "CM_ERROR_BADFDOP";            break; 			
+            case CM_ERROR_EXISTS	    : s = "CM_ERROR_EXISTS";             break; 				
+            case CM_ERROR_CROSSDEVLINK	    : s = "CM_ERROR_CROSSDEVLINK";       break; 			
+            case CM_ERROR_BADOP		    : s = "CM_ERROR_BADOP";              break; 				
+            case CM_ERROR_BADPASSWORD       : s = "CM_ERROR_BADPASSWORD";        break;         
+            case CM_ERROR_NOTDIR	    : s = "CM_ERROR_NOTDIR";             break; 				
+            case CM_ERROR_ISDIR		    : s = "CM_ERROR_ISDIR";              break; 				
+            case CM_ERROR_READONLY	    : s = "CM_ERROR_READONLY";           break; 			
+            case CM_ERROR_WOULDBLOCK	    : s = "CM_ERROR_WOULDBLOCK";         break; 			
+            case CM_ERROR_QUOTA		    : s = "CM_ERROR_QUOTA";              break; 				
+            case CM_ERROR_SPACE		    : s = "CM_ERROR_SPACE";              break; 				
+            case CM_ERROR_BADSHARENAME	    : s = "CM_ERROR_BADSHARENAME";       break; 			
+            case CM_ERROR_BADTID	    : s = "CM_ERROR_BADTID";             break; 				
+            case CM_ERROR_UNKNOWN	    : s = "CM_ERROR_UNKNOWN";            break; 			
+            case CM_ERROR_NOMORETOKENS	    : s = "CM_ERROR_NOMORETOKENS";       break; 			
+            case CM_ERROR_NOTEMPTY	    : s = "CM_ERROR_NOTEMPTY";           break; 			
+            case CM_ERROR_USESTD	    : s = "CM_ERROR_USESTD";             break; 				
+            case CM_ERROR_REMOTECONN	    : s = "CM_ERROR_REMOTECONN";         break; 			
+            case CM_ERROR_ATSYS		    : s = "CM_ERROR_ATSYS";              break; 				
+            case CM_ERROR_NOSUCHPATH	    : s = "CM_ERROR_NOSUCHPATH";         break; 			
+            case CM_ERROR_CLOCKSKEW	    : s = "CM_ERROR_CLOCKSKEW";          break; 			
+            case CM_ERROR_BADSMB	    : s = "CM_ERROR_BADSMB";             break; 				
+            case CM_ERROR_ALLBUSY	    : s = "CM_ERROR_ALLBUSY";            break; 			
+            case CM_ERROR_NOFILES	    : s = "CM_ERROR_NOFILES";            break; 			
+            case CM_ERROR_PARTIALWRITE	    : s = "CM_ERROR_PARTIALWRITE";       break; 			
+            case CM_ERROR_NOIPC		    : s = "CM_ERROR_NOIPC";              break; 				
+            case CM_ERROR_BADNTFILENAME	    : s = "CM_ERROR_BADNTFILENAME";      break; 			
+            case CM_ERROR_BUFFERTOOSMALL    : s = "CM_ERROR_BUFFERTOOSMALL";     break; 			
+            case CM_ERROR_RENAME_IDENTICAL  : s = "CM_ERROR_RENAME_IDENTICAL";   break; 		
+            case CM_ERROR_ALLOFFLINE        : s = "CM_ERROR_ALLOFFLINE";         break;          
+            case CM_ERROR_AMBIGUOUS_FILENAME: s = "CM_ERROR_AMBIGUOUS_FILENAME"; break;  
+            case CM_ERROR_BADLOGONTYPE	    : s = "CM_ERROR_BADLOGONTYPE";       break; 	    
+            case CM_ERROR_GSSCONTINUE       : s = "CM_ERROR_GSSCONTINUE";        break;         
+            case CM_ERROR_TIDIPC            : s = "CM_ERROR_TIDIPC";             break;              
+            case CM_ERROR_TOO_MANY_SYMLINKS : s = "CM_ERROR_TOO_MANY_SYMLINKS";  break;   
+            case CM_ERROR_PATH_NOT_COVERED  : s = "CM_ERROR_PATH_NOT_COVERED";   break;    
+            case CM_ERROR_LOCK_CONFLICT     : s = "CM_ERROR_LOCK_CONFLICT";      break;       
+            case CM_ERROR_SHARING_VIOLATION : s = "CM_ERROR_SHARING_VIOLATION";  break;   
+            case CM_ERROR_ALLDOWN           : s = "CM_ERROR_ALLDOWN";            break;             
+            case CM_ERROR_TOOFEWBUFS	    : s = "CM_ERROR_TOOFEWBUFS";         break; 			
+            case CM_ERROR_TOOMANYBUFS	    : s = "CM_ERROR_TOOMANYBUFS";        break; 			
             }
             osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)", 
                      errorCode, s);
