@@ -246,7 +246,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_EXISTS;
     else if (error == 20) 
         error = CM_ERROR_NOTDIR;
-    else if (error == 2) 
+    else if (error == 2)	/* ENOENT */
         error = CM_ERROR_NOSUCHFILE;
     else if (error == 11        /* EAGAIN, most servers */
              || error == 35)	/* EAGAIN, Digital UNIX */

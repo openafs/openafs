@@ -1344,6 +1344,13 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) 
         cm_MergeStatus(dscp, &newDirStatus, &volSync, userp, 0);
+	else if (code == CM_ERROR_NOSUCHFILE) {
+		/* windows would not have allowed the request to delete the file 
+		 * if it did not believe the file existed.  therefore, we must 
+		 * have an inconsistent view of the world.
+		 */
+		dscp->cbServerp = NULL;
+	}
     lock_ReleaseMutex(&dscp->mx);
 
     return code;
