@@ -1384,6 +1384,8 @@ h_GetHost_r(struct rx_connection *tcon)
 		     * the list of interfaces for the existing host and
 		     * delete the host structure we just allocated. */
 		    if (oldHost->host != haddr || oldHost->port != hport) {
+			struct rx_connection *rxconn;
+
 			ViceLog(25,
 				("CB: new addr %s:%d for old host %s:%d\n",
 				  afs_inet_ntoa_r(haddr, hoststr),
@@ -1419,6 +1421,30 @@ h_GetHost_r(struct rx_connection *tcon)
 			addInterfaceAddr_r(oldHost, haddr, hport);
 			oldHost->host = haddr;
 			oldHost->port = hport;
+			rxconn = oldHost->callback_rxcon;
+			oldHost->callback_rxcon = host->callback_rxcon;
+			host->callback_rxcon = NULL;
+			
+			if (rxconn) {
+			    struct client *client;
+			    /*
+			     * If rx_DestroyConnection calls h_FreeConnection we will
+			     * deadlock on the host_glock_mutex. Work around the problem
+			     * by unhooking the client from the connection before
+			     * destroying the connection.
+			     */
+			    client = rx_GetSpecific(rxconn, rxcon_client_key);
+			    if (client) {
+				if (client->tcon != rxconn) 
+				    ViceLog(0,("CB: client %x tcon %x didn't match rxconn %x\n", client, client->tcon, rxconn));
+				else {
+				    rx_PutConnection(client->tcon);
+				    client->tcon = NULL;
+				}
+			    }
+			    rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
+			    rx_DestroyConnection(rxconn);
+			}
 		    }
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
