@@ -1,3 +1,81 @@
+Since 1.5.1:
+
+ * A deadlock was detected when performing "fs flushall" if the 
+   file server reports VNOVNODE.   The scp->createBufferLock is 
+   already held by the current thread and there is no mechanism 
+   to propagate the knowledge.  Therefore, an alternate mechanism 
+   for clearing the cache must be developed.  A new function 
+   cm_RecycleSCache(scp,flags) has been extracted from 
+   cm_GetNewSCache().  This function performs the task of recycling 
+   an cm_scache_t object.  When called from cm_GetNewSCache() with 
+   no flags the expectation is that there are no associated buffers 
+   that are queued to be read or written.  When called from 
+   cm_Analyze() with the CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS
+   flag, any queued buffers will be de-queued and marked as if 
+   the operations were performed so the data can be discarded.
+
+ * CM_ERROR codes were logged as "unknown" by cm_Analyze.
+
+ * In response to VNOVNODE, the parent is only discarded if the current
+   cm_scache_t is not a directory.
+
+ * In the Ioctl FlushFile and FlushVolume functions, there were no
+   checks to protect against flushing the Freelance SCache entries.
+
+ * In FlushFile, the wrong cm_scache_t object was being released.
+
+ * In cm_GetNewSCache, do not allow Freelance SCache entries to be
+   recycled.  Choose a new entry if cm_RecycleSCache fails.
+
+ * Speed up the performance of the cache manager by not 
+   holding the smb_fid_t mutex across calls to cm_SyncOp 
+   and AFS RPCs.
+
+ * Ensure that all smb_fid_t flag references are protected.
+
+ * Remove a deadlock between smb_fid_t mutex and 
+   smb_rctLock introduced in 1.4.1.
+
+ * Fix aklog AFSID lookup to use not send the realm
+   name when the realm is the local realm for the 
+   cell.  The PT Server doesn't strip the realm 
+   name when it is the local realm.
+
+ * Treat "\\afs\*." as an alias for "\\afs\all" 
+
+ * Dynamically adjust the priority of server threads
+   based upon the age of the CIFS request that is 
+   being processed.  The priority is bumped one level
+   for every 15 seconds of processing time.
+
+ * The original openafs contribution mis-used the 
+   cm_GetCallback function.  This function should only
+   be called as a side effect of a call to
+   cm_SyncOp(CM_SCACHESYNC_NEEDCALLBACK).  The way it
+   was being called results in a FetchStatus RPC being 
+   performed even when the client already has a valid
+   callback and does so in a manner that destroys the
+   synchronization of the threads that are calling 
+   cm_SyncOp.  If nothing else this results in a 
+   significant performance penalty.
+
+ * More changes to cleanup of smb_vc_t objects in
+   order to prevent race conditions.
+
+ * Reduce the amount of Power Management event logging
+   to afsd_init.log
+
+ * If the client detects that the IP address has 
+   changed, force the use of new RX connections.  This
+   enables the file server to recognize that the client
+   has moved.
+
+ * Remove a race condition and deadlock associated 
+   with cleanup of smb_vc_t objects.
+
+ * Fix the ANSI filename support.  One function that
+   required it was missing the translations.
+
 Changes not present in 1.4.1 and since 1.5.0: 1.5.1 released 
 (24 April 2006)
 
