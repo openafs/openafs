@@ -1,3 +1,32 @@
+Since 1.4.1d:
+
+ * A deadlock was detected when performing "fs flushall" if the 
+   file server reports VNOVNODE.   The scp->createBufferLock is 
+   already held by the current thread and there is no mechanism 
+   to propagate the knowledge.  Therefore, an alternate mechanism 
+   for clearing the cache must be developed.  A new function 
+   cm_RecycleSCache(scp,flags) has been extracted from 
+   cm_GetNewSCache().  This function performs the task of recycling 
+   an cm_scache_t object.  When called from cm_GetNewSCache() with 
+   no flags the expectation is that there are no associated buffers 
+   that are queued to be read or written.  When called from 
+   cm_Analyze() with the CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS
+   flag, any queued buffers will be de-queued and marked as if 
+   the operations were performed so the data can be discarded.
+
+ * CM_ERROR codes were logged as "unknown" by cm_Analyze.
+
+ * In response to VNOVNODE, the parent is only discarded if the current
+   cm_scache_t is not a directory.
+
+ * In the Ioctl FlushFile and FlushVolume functions, there were no
+   checks to protect against flushing the Freelance SCache entries.
+
+ * In FlushFile, the wrong cm_scache_t object was being released.
+
+ * In cm_GetNewSCache, do not allow Freelance SCache entries to be
+   recycled.  Choose a new entry if cm_RecycleSCache fails.
+
 Since 1.4.1c:  1.4.1d (2 June 2006)
 
  * Add a missing lock that was lost during the pullup
