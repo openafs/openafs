@@ -3460,7 +3460,6 @@ long cm_LockCheckPerms(cm_scache_t * scp,
         lock_type == LockWrite &&
 	scp->creator == userp) {
         /* check for PRSFS_INSERT. */
-        cm_ucell_t * ucp;
 
         code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
                          CM_SCACHESYNC_GETSTATUS |
@@ -3470,7 +3469,6 @@ long cm_LockCheckPerms(cm_scache_t * scp,
 	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
     }
 
- return_code:
     osi_Log1(afsd_logp, "cm_LockCheckPerms returning code %d", code);
 
     return code;
