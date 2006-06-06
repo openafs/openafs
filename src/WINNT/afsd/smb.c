@@ -4773,7 +4773,8 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
      * in a readonly volume doesn't mean it shojuld be marked as RO 
      */
     if (newScp->fileType == CM_SCACHETYPE_DIRECTORY ||
-        newScp->fileType == CM_SCACHETYPE_MOUNTPOINT)
+        newScp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+	newScp->fileType == CM_SCACHETYPE_INVALID)
         attrs = SMB_ATTR_DIRECTORY;
     else
         attrs = 0;

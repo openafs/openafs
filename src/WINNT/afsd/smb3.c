@@ -2828,7 +2828,9 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((u_long *)op) = scp->linkCount; op += 4;
         *op++ = 0;
         *op++ = 0;
-        *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
+        *op++ = ((scp->fileType == CM_SCACHETYPE_DIRECTORY || 
+		  scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+		  scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         *op++ = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
@@ -2950,7 +2952,9 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
         *op++ = (delonclose ? 1 : 0);
-        *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
+        *op++ = ((scp->fileType == CM_SCACHETYPE_DIRECTORY || 
+		  scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+		  scp->fileType == CM_SCACHETYPE_INVALID)? 1 : 0);
         *op++ = 0;
         *op++ = 0;
     }
@@ -6122,7 +6126,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
     smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
     smb_SetSMBParmByte(outp, parmSlot,
-                        scp->fileType == CM_SCACHETYPE_DIRECTORY); /* is a dir? */
+                        (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+			 scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+			 scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
     lock_ReleaseMutex(&scp->mx);
     smb_SetSMBDataLength(outp, 0);
 
@@ -6755,7 +6761,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* EOF */
         *((USHORT *)outData) = 0; outData += 2;	/* filetype */
         *((USHORT *)outData) = 0; outData += 2;	/* dev state */
-        *((USHORT *)outData) = (scp->fileType == CM_SCACHETYPE_DIRECTORY);
+        *((USHORT *)outData) = ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         outData += 2;	/* is a dir? */
         lock_ReleaseMutex(&scp->mx);
     } else {
@@ -6803,7 +6811,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* EOF */
         *((USHORT *)outData) = 0; outData += 2;	/* filetype */
         *((USHORT *)outData) = 0; outData += 2;	/* dev state */
-        *((USHORT *)outData) = (scp->fileType == CM_SCACHETYPE_DIRECTORY);
+        *((USHORT *)outData) = ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         outData += 1;	/* is a dir? */
         memset(outData,0,24); outData += 24; /* Volume ID and file ID */
         *((ULONG *)outData) = 0x001f01ffL; outData += 4; /* Maxmimal access rights */
