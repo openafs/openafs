@@ -128,6 +128,7 @@ de_DE:
 # Local clean target; augments predefined clean target
 
 clean::
+	$(DEL) *.pdb
 	$(CD) lang
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean

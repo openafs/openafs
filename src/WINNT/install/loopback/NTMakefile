@@ -57,3 +57,4 @@ $(EXEFILE): $(EXEOBJFILES)
 install:  $(DLLFILE) $(EXEFILE)
 
 clean	::
+	$(DEL) *.pdb

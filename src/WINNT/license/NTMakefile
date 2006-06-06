@@ -41,3 +41,8 @@ mkdir:
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..
+
+clean ::
+	$(CD) lang
+	@$(MAKECMD) /nologo /f NTMakefile clean
+	$(CD) ..

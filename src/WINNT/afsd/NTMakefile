@@ -499,6 +499,7 @@ clean::
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
         $(DEL) afsd_eventmessages.h
+	$(DEL) MSG*.bin
 	$(DEL) $(CONF_DLLFILE)
 	$(DEL) $(LOGON_DLLFILE)
 	$(DEL) $(LOG95_DLLFILE)

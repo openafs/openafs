@@ -71,3 +71,7 @@ install9x: install
 
 clean::
 	$(DEL) $(INCFILES) $(DLLFILE)
+	$(DEL) $(LANGNAME)\afsevent.h
+	$(DEL) $(LANGNAME)\event.h
+	$(DEL) $(LANGNAME)\event.rc
+	$(DEL) $(LANGNAME)\MSG*.bin
