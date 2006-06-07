@@ -229,10 +229,12 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
    limited multiple asynchronous conversations. */
 #ifdef KDUMP_RX_LOCK
 struct rx_connection_rx_lock {
+    int magic;
     struct rx_connection_rx_lock *next;	/*  on hash chain _or_ free list */
     struct rx_peer_rx_lock *peer;
 #else
 struct rx_connection {
+    int magic;
     struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
 #endif
@@ -306,6 +308,7 @@ struct rx_connection {
  * requests. */
 
 struct rx_service {
+    int magic;
     u_short serviceId;		/* Service number */
     u_short servicePort;	/* UDP port for this service */
     char *serviceName;		/* Name of the service */
@@ -365,9 +368,11 @@ struct rx_serverQueueEntry {
 /* A peer refers to a peer process, specified by a (host,port) pair.  There may be more than one peer on a given host. */
 #ifdef KDUMP_RX_LOCK
 struct rx_peer_rx_lock {
+    int magic;
     struct rx_peer_rx_lock *next;	/* Next in hash conflict or free list */
 #else
 struct rx_peer {
+    int magic;
     struct rx_peer *next;	/* Next in hash conflict or free list */
 #endif
 #ifdef RX_ENABLE_LOCKS
@@ -453,6 +458,7 @@ struct rx_call_rx_lock {
 #else
 struct rx_call {
 #endif
+    int magic;
     struct rx_queue queue_item_header;	/* Call can be on various queues (one-at-a-time) */
     struct rx_queue tq;		/* Transmit packet queue */
     struct rx_queue rq;		/* Receive packet queue */
@@ -719,6 +725,7 @@ struct rx_securityObjectStats {
  * provide routines to create these objects.  Rx provides a basic routine to
  * allocate one of these objects; this routine must be called by the class. */
 struct rx_securityClass {
+    int magic;
     struct rx_securityOps {
 	int (*op_Close) (struct rx_securityClass * aobj);
 	int (*op_NewConnection) (struct rx_securityClass * aobj,

@@ -43,6 +43,7 @@ RCSID
 #include "rx/xdr.h"
 #endif
 #include "rx/rx.h"
+#include "afs/magic.h"
 #else /* ! KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -64,6 +65,7 @@ RCSID
 #ifdef AFS_PTHREAD_ENV
 #include "rx/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
+#include <afs/magic.h>
 #endif /* KERNEL */
 
 #include <des/stats.h>
@@ -186,6 +188,7 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     size = sizeof(struct rx_securityClass);
     tsc = (struct rx_securityClass *)rxi_Alloc(size);
     memset((void *)tsc, 0, size);
+    tsc->magic = MAGIC_RXSECURITY;
     tsc->refCount = 1;		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
