@@ -113,8 +113,6 @@ struct client {
     struct client *next;	/* next client entry for host */
     struct host *host;		/* ptr to parent host entry */
     afs_int32 sid;		/* Connection number from this host */
-    struct rx_connection *tcon;	/* most recent server connection
-				 * associated with this client */
     prlist CPS;			/* cps for authentication */
     int ViceId;			/* Vice ID of user */
     afs_int32 expTime;		/* RX-only: expiration time */
@@ -205,7 +203,6 @@ extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
 			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
-extern int h_FreeConnection(struct rx_connection *tcon);
 extern void h_Enumerate(int (*proc) (), char *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
