@@ -313,20 +313,24 @@ OpenLog(const char *fileName)
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
     }
-#if defined(AFS_PTHREAD_ENV)
     /* redirect stdout and stderr so random printf's don't write to data */
-    assert(freopen(NULLDEV, "w", stdout) != NULL);
-    assert(freopen(NULLDEV, "w", stderr) != NULL);
+    (void)freopen(fileName, "a", stdout);
+    (void)freopen(fileName, "a", stderr);
+#ifdef HAVE_SETVBUF
+#ifdef SETVBUF_REVERSED
+    setvbuf(stderr, _IONBF, NULL, 0);
+#else
+    setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+#else
+    setbuf(stderr, NULL);
+#endif
 
+#if defined(AFS_PTHREAD_ENV)
     assert(pthread_mutex_init(&serverLogMutex, NULL) == 0);
+#endif /* AFS_PTHREAD_ENV */
 
     serverLogFD = tempfd;
-#else
-    close(tempfd);		/* just checking.... */
-    (void)freopen(fileName, "w", stdout);
-    (void)freopen(fileName, "w", stderr);
-    serverLogFD = fileno(stdout);
-#endif /* AFS_PTHREAD_ENV */
 
     return 0;
 }				/*OpenLog */
@@ -356,27 +360,24 @@ ReOpenLog(const char *fileName)
     }
 #endif
 
-#if defined(AFS_PTHREAD_ENV)
     LOCK_SERVERLOG();
     if (serverLogFD > 0)
 	close(serverLogFD);
     serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
+    if (serverLogFD > 0) {
+	(void)freopen(fileName, "a", stdout);
+	(void)freopen(fileName, "a", stderr);
+#ifdef HAVE_SETVBUF
+#ifdef SETVBUF_REVERSED
+	setvbuf(stderr, _IONBF, NULL, 0);
+#else
+	setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+#else
+	setbuf(stderr, NULL);
+#endif
+
+    }
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
-#else
-
-    tempfd = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
-    if (tempfd < 0) {
-	printf("Unable to open log file %s\n", fileName);
-	return -1;
-    }
-    close(tempfd);
-
-    (void)freopen(fileName, "a", stdout);
-    (void)freopen(fileName, "a", stderr);
-    serverLogFD = fileno(stdout);
-
-
-    return 0;
-#endif /* AFS_PTHREAD_ENV */
 }
