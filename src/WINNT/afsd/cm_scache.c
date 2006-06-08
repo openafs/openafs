@@ -59,15 +59,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     cm_scache_t *tscp;
     int i;
 
-#ifdef AFS_FREELANCE_CLIENT
-    /* Do not recycle Freelance cache entries */
-    if ( cm_freelanceEnabled && 
-         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
-	return -1;
-#endif /* AFS_FREELANCE_CLIENT */
-
-
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
 	/* hash it out first */
 	i = CM_SCACHE_HASH(&scp->fid);
