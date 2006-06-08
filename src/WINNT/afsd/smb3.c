@@ -2825,12 +2825,12 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
-        *((u_long *)op) = scp->linkCount; op += 4;
-        *op++ = 0;
-        *op++ = 0;
+        *((u_long *)op) = scp->linkCount; op += 4;	/* Link count */
+        *op++ = 0;					/* Delete Pending */
         *op++ = ((scp->fileType == CM_SCACHETYPE_DIRECTORY || 
 		  scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 		  scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
+        *op++ = 0;
         *op++ = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
@@ -2950,8 +2950,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
-        *((u_long *)op) = scp->linkCount; op += 4;
-        *op++ = (delonclose ? 1 : 0);
+        *((u_long *)op) = scp->linkCount; op += 4;	/* Link count */
+        *op++ = (delonclose ? 1 : 0);			/* Delete Pending */
         *op++ = ((scp->fileType == CM_SCACHETYPE_DIRECTORY || 
 		  scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 		  scp->fileType == CM_SCACHETYPE_INVALID)? 1 : 0);
