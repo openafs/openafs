@@ -67,7 +67,7 @@
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS	1
 
 /* Machine / Operating system information */
 #define SYS_NAME	"sparc64_linux26"
