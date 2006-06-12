@@ -3550,6 +3550,9 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	if (serial
 	    && (tp->header.serial == serial || tp->firstSerial == serial))
 	    rxi_ComputePeerNetStats(call, tp, ap, np);
+	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
+	    newAckCount++;
+	}
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* XXX Hack. Because we have to release the global rx lock when sending
 	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
@@ -3560,9 +3563,6 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	 * set the ack bits in the packets and have rxi_Start remove the packets
 	 * when it's done transmitting.
 	 */
-	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
-	    newAckCount++;
-	}
 	if (call->flags & RX_CALL_TQ_BUSY) {
 #ifdef RX_ENABLE_LOCKS
 	    tp->flags |= RX_PKTFLAG_ACKED;
