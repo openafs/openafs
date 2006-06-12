@@ -68,7 +68,7 @@
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS       2	/* Set to Userdisabled, allow sysctl to override */
+#define AFS_GCPAGS       1
 
 /* Machine / Operating system information */
 #define SYS_NAME	"s390_linux26"
