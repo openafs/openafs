@@ -1361,9 +1361,10 @@ rxi_SetCallNumberVector(register struct rx_connection *aconn,
                          service name might be used for probing for
                          statistics) */
 struct rx_service *
-rx_NewService(u_short port, u_short serviceId, char *serviceName,
-	      struct rx_securityClass **securityObjects, int nSecurityObjects,
-	      afs_int32(*serviceProc) (struct rx_call * acall))
+rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId, 
+		  char *serviceName, struct rx_securityClass **securityObjects,
+		  int nSecurityObjects, 
+		  afs_int32(*serviceProc) (struct rx_call * acall))
 {
     osi_socket socket = OSI_NULLSOCKET;
     register struct rx_service *tservice;
@@ -1394,7 +1395,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
     for (i = 0; i < RX_MAX_SERVICES; i++) {
 	register struct rx_service *service = rx_services[i];
 	if (service) {
-	    if (port == service->servicePort) {
+	    if (port == service->servicePort && host == service->serviceHost) {
 		if (service->serviceId == serviceId) {
 		    /* The identical service has already been
 		     * installed; if the caller was intending to
@@ -1435,6 +1436,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    service = tservice;
 	    service->magic = MAGIC_RXSVC;
 	    service->socket = socket;
+	    service->serviceHost = host;
 	    service->servicePort = port;
 	    service->serviceId = serviceId;
 	    service->serviceName = serviceName;
@@ -1456,6 +1458,14 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
     (osi_Msg "rx_NewService: cannot support > %d services\n",
      RX_MAX_SERVICES);
     return 0;
+}
+
+struct rx_service *
+rx_NewService(u_short port, u_short serviceId, char *serviceName,
+	      struct rx_securityClass **securityObjects, int nSecurityObjects,
+	      afs_int32(*serviceProc) (struct rx_call * acall))
+{
+    return rx_NewServiceHost(htonl(INADDR_ANY), port, serviceId, serviceName, securityObjects, nSecurityObjects, serviceProc);
 }
 
 /* Generic request processing loop. This routine should be called

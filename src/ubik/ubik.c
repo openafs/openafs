@@ -240,6 +240,8 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 	    ubik_sc[secIndex] = secClass;
 	}
     }
+    /* for backwards compat this should keep working as it does now 
+       and not host bind */
     code = rx_Init(myPort);
     if (code < 0)
 	return code;
