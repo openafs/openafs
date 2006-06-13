@@ -295,6 +295,7 @@ struct rx_connection {
 
 struct rx_service {
     u_short serviceId;		/* Service number */
+    afs_uint32 serviceHost;	/* IP address for this service */
     u_short servicePort;	/* UDP port for this service */
     char *serviceName;		/* Name of the service */
     osi_socket socket;		/* socket structure or file descriptor */

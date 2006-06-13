@@ -167,6 +167,7 @@ int SawPctSpare;
 int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
+int rxBind = 0;		/* don't bind */
 int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						 * already implied */
@@ -738,6 +739,7 @@ FlagMsg()
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
     strcat(buffer, "[-rxmaxmtu <bytes>] ");
+    strcat(buffer, "[-rxbind (bind the Rx socket to one address)] ");
 #if AFS_PTHREAD_ENV
     strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
 #endif
@@ -1054,6 +1056,8 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-nojumbo")) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[i], "-rxbind")) {
+	    rxBind = 1;
 	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -1555,6 +1559,43 @@ Do_VLRegisterRPC()
 }
 
 afs_int32
+SetupVL()
+{
+    afs_int32 code;
+    extern int rxi_numNetAddrs;
+    extern afs_uint32 rxi_NetAddrs[];
+
+#ifndef AFS_NT40_ENV
+    if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
+	/*
+	 * Find addresses we are supposed to register as per the netrestrict 
+	 * and netinfo files (/usr/afs/local/NetInfo and 
+	 * /usr/afs/local/NetRestict)
+	 */
+	char reason[1024];
+	afs_int32 code = parseNetFiles(FS_HostAddrs, NULL, NULL,
+				       ADDRSPERSITE, reason,
+				       AFSDIR_SERVER_NETINFO_FILEPATH,
+				       AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	if (code < 0) {
+	    ViceLog(0, ("Can't register any valid addresses: %s\n", reason));
+	    exit(1);
+	}
+	FS_HostAddr_cnt = (afs_uint32) code;
+    } else
+#endif
+    {
+	FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
+    }
+
+    if (FS_HostAddr_cnt == 1 && rxBind == 1)
+	code = FS_HostAddrs[0];
+    else 
+	code = htonl(INADDR_ANY);
+    return code;
+}
+
+afs_int32
 InitVL()
 {
     afs_int32 code;
@@ -1587,30 +1628,7 @@ InitVL()
     /* A good sysid file exists; inform the vlserver. If any conflicts,
      * we always use the latest interface available as the real truth.
      */
-#ifndef AFS_NT40_ENV
-    if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
-	/*
-	 * Find addresses we are supposed to register as per the netrestrict 
-	 * and netinfo files (/usr/afs/local/NetInfo and 
-	 * /usr/afs/local/NetRestict)
-	 */
-	char reason[1024];
-	afs_int32 code = parseNetFiles(FS_HostAddrs, NULL, NULL,
-				       ADDRSPERSITE, reason,
-				       AFSDIR_SERVER_NETINFO_FILEPATH,
-				       AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-	if (code < 0) {
-	    ViceLog(0, ("Can't register any valid addresses: %s\n", reason));
-	    exit(1);
-	}
-	FS_HostAddr_cnt = (afs_uint32) code;
-    } else
-#endif
-    {
-	FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
-    }
 
-    FS_registered = 1;
     code = Do_VLRegisterRPC();
     return code;
 }
@@ -1635,6 +1653,7 @@ main(int argc, char *argv[])
 #endif
     int curLimit;
     time_t t;
+    afs_uint32 rx_bindhost;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1800,7 +1819,9 @@ main(int argc, char *argv[])
 #endif
     if (udpBufSize)
 	rx_SetUdpBufSize(udpBufSize);	/* set the UDP buffer size for receive */
-    if (rx_Init((int)htons(7000)) < 0) {
+    rx_bindhost = SetupVL();
+
+    if (rx_InitHost(rx_bindhost, (int)htons(7000)) < 0) {
 	ViceLog(0, ("Cannot initialize RX\n"));
 	exit(1);
     }
@@ -1817,11 +1838,12 @@ main(int argc, char *argv[])
     sc[1] = 0;			/* rxvab_NewServerSecurityObject(key1, 0) */
     sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
     sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
-    tservice = rx_NewService( /* port */ 0, /* service id */ 1,	/*service name */
-			     "AFS",
-							/* security classes */ sc,
-							/* numb sec classes */
-			     4, RXAFS_ExecuteRequest);
+    tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */ 
+				 1,	/*service name */
+				 "AFS",
+				 /* security classes */ sc,
+				 /* numb sec classes */
+				 4, RXAFS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));

@@ -71,6 +71,11 @@ static afs_int32 nextDay;
 
 struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 int bozo_newKTs;
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
+
 #ifdef BOS_RESTRICTED_MODE
 int bozo_isrestricted = 0;
 int bozo_restdisable = 0;
@@ -719,6 +724,7 @@ main(int argc, char **argv, char **envp)
     int i;
     char namebuf[AFSDIR_PATH_MAX];
     int rxMaxMTU = -1;
+    afs_uint32 host = htonl(INADDR_ANY);
 #ifndef AFS_NT40_ENV
     int nofork = 0;
     struct stat sb;
@@ -813,6 +819,9 @@ main(int argc, char **argv, char **envp)
 	    bozo_isrestricted = 1;
 	}
 #endif
+	else if (strcmp(argv[code], "-rxbind") == 0) {
+	    rxBind = 1;
+	}
 	else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -864,14 +873,14 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-rxmaxmtu <bytes>] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-rxmaxmtu <bytes>] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif
@@ -1027,7 +1036,23 @@ main(int argc, char **argv, char **envp)
 	rx_SetMaxMTU(rxMaxMTU);
     }
 
-    tservice = rx_NewService( /* port */ 0, /* service id */ 1,
+    if (rxBind) {
+	afs_int32 ccode;
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) 
+            host = SHostAddrs[0];
+    }
+
+    tservice = rx_NewServiceHost(host,  /* port */ 0, /* service id */ 1,
 			     /*service name */ "bozo",
 			     /* security classes */
 			     bozo_rxsc,
@@ -1037,8 +1062,8 @@ main(int argc, char **argv, char **envp)
     rx_SetStackSize(tservice, BOZO_LWP_STACKSIZE);	/* so gethostbyname works (in cell stuff) */
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", bozo_rxsc, 3,
-		      RXSTATS_ExecuteRequest);
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", bozo_rxsc,
+			  3, RXSTATS_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_StartServer(1);		/* donate this process */

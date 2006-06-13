@@ -106,6 +106,10 @@ afs_int32 statusSize;
 afs_int32 BufferSize;		/* Size in B stored for data */
 char *centralLogFile;
 afs_int32 lastLog;		/* Log last pass info */
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
@@ -857,6 +861,7 @@ WorkerBee(as, arock)
     PROCESS dbWatcherPid;
 #endif
     time_t t;
+    afs_uint32 host = htonl(INADDR_ANY);
 
     debugLevel = 0;
 
@@ -1039,8 +1044,25 @@ WorkerBee(as, arock)
 	autoQuery = 0;
 
     localauth = (as->parms[5].items ? 1 : 0);
+    rxBind = (as->parms[8].items ? 1 : 0);
 
-    code = rx_Init(htons(BC_TAPEPORT + portOffset));
+    if (rxBind) {
+        afs_int32 ccode;
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) 
+            host = SHostAddrs[0];
+    }
+
+    code = rx_InitHost(host, htons(BC_TAPEPORT + portOffset));
     if (code) {
 	TapeLog(0, 0, code, 0, "rx init failed on port %u\n",
 		BC_TAPEPORT + portOffset);
@@ -1080,7 +1102,7 @@ WorkerBee(as, arock)
     }
 
     service =
-	rx_NewService(0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
+	rx_NewServiceHost, (host, 0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
     if (!service) {
 	TLog(0, "rx_NewService");
 	exit(1);
@@ -1183,6 +1205,8 @@ main(argc, argv)
 		"file to restore to");
     cmd_AddParm(ts, "-xbsaforcemultiple", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
 		"Force multiple XBSA server support");
+    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+		"bind Rx socket");
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {

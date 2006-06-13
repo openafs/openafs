@@ -76,6 +76,11 @@ char dbDir[AFSDIR_PATH_MAX], cellConfDir[AFSDIR_PATH_MAX];
 /* debugging control */
 int debugging = 0;
 
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
+
 #if defined(AFS_PTHREAD_ENV)
 char *
 threadNum(void)
@@ -357,11 +362,10 @@ main(argc, argv)
     struct afsconf_cell cellinfo;
     time_t currentTime;
     afs_int32 code = 0;
+    afs_uint32 host = ntohl(INADDR_ANY);
 
     char  clones[MAXHOSTSPERCELL];
 
-	
-	
     struct rx_service *tservice;
     struct rx_securityClass *sca[3];
 
@@ -517,6 +521,24 @@ main(argc, argv)
 
     rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */
 
+    if (rxBind) {
+	afs_int32 ccode;
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) {
+            host = SHostAddrs[0];
+	    rx_InitHost(host, htons(AFSCONF_BUDBPORT));
+	}
+    }
+
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT), 
 				  &cellinfo,
@@ -540,7 +562,7 @@ main(argc, argv)
     rx_SetNoJumbo();
 
     tservice =
-	rx_NewService(0, BUDB_SERVICE, "BackupDatabase", sca, 3,
+	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, 3,
 		      BUDB_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	LogError(0, "Could not create backup database rx service\n");
