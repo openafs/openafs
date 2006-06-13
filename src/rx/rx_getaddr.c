@@ -197,8 +197,10 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 	    /* Expand the compacted addresses */
 	    rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
 		      &info);
-	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET) {
+		addrcount--;
 		continue;
+	    }
 	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (count >= maxSize)	/* no more space */
@@ -233,14 +235,6 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     char *buf, *lim, *next;
     int count = 0, addrcount = 0, i;
 
-#if !defined(AFS_USERSPACE_IP_ADDR)
-    count = rx_getAllAddr_internal(addrBuffer, 1024, 0);
-    for (i = 0; i < count; i++) {
-	maskBuffer[i] = htonl(0xffffffff);
-	mtuBuffer[i] = htonl(1500);
-    }
-    return count;
-#else /* AFS_USERSPACE_IP_ADDR */
     mib[0] = CTL_NET;
     mib[1] = PF_ROUTE;
     mib[2] = 0;
@@ -290,8 +284,10 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 	    /* Expand the compacted addresses */
 	    rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
 		      &info);
-	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET) {
+		addrcount--;
 		continue;
+	    }
 	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (a->sin_addr.s_addr != htonl(0x7f000001) ) {
@@ -323,7 +319,6 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     }
     free(buf);
     return count;
-#endif
 }
 
 
