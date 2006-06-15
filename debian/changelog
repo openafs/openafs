@@ -3,6 +3,7 @@ openafs (1.4.1-3) unstable; urgency=low
   * Include all of AFS's local XDR implementation in the build for
     shlibafsrpc, fixing problems with undefined symbols in the PAM module
     on AMD64.
+  * Update standards version to 3.7.2 (no changes required).
 
  --
 
