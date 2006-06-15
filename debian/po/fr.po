@@ -12,23 +12,23 @@
 #
 #    Developers do not need to manually edit POT or PO files.
 #
+# Christian Perrier <bubulle@debian.org>, 2006.
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.4rc1-1\n"
+"Project-Id-Version: fr\n"
 "Report-Msgid-Bugs-To: hartmans@debian.org\n"
 "POT-Creation-Date: 2006-06-07 12:06-0700\n"
-"PO-Revision-Date: 2005-08-22 15:11+0200\n"
+"PO-Revision-Date: 2006-06-08 06:46+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.9.1\n"
+"X-Generator: KBabel 1.11.2\n"
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-#, fuzzy
 msgid "DB server host names for your home cell:"
 msgstr ""
 "Hôtes serveurs de bases de données pour votre cellule locale (« home "
@@ -63,7 +63,6 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
-#, fuzzy
 msgid "AFS cell this workstation belongs to:"
 msgstr "Cellule AFS dont ce poste de travail fait partie :"
 
@@ -83,7 +82,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:24
 msgid "Size of AFS cache in kB:"
-msgstr ""
+msgstr "Taille du cache d'AFS (ko) :"
 
 #. Type: string
 #. Description
@@ -97,7 +96,7 @@ msgstr ""
 "AFS utilise une partie du disque pour mettre en cache des fichiers distants "
 "et accélérer les accès. Ce cache sera monté sur /var/cache/openafs. Il est "
 "important que le cache ne remplisse pas la partition sur laquelle il est "
-"situé. De nombreux utilisateurs choisissent de dédier une partition pour le "
+"situé. De nombreux utilisateurs choisissent de dédier une partition au "
 "cache d'AFS."
 
 #. Type: boolean
@@ -109,7 +108,6 @@ msgstr "Lancer le client AFS maintenant, puis à chaque démarrage ?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
-#, fuzzy
 msgid ""
 "Normally, most users who install the openafs-client package expect AFS to be "
 "mounted automatically at boot.  However, if you are planning on setting up a "
@@ -117,14 +115,12 @@ msgid ""
 "you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
 "start to start the client when you wish to run it."
 msgstr ""
-"Veuillez indiquer si le système de fichiers Openafs doit être mis en service "
-"et monté au démarrage. Normalement, la majorité des utilisateurs qui "
-"installent le paquet openafs-client s'attendent à ce qu'il soit lancé au "
-"démarrage. Cependant, si vous prévoyez de mettre en service une nouvelle "
-"cellule ou si vous utilisez un ordinateur portable, vous ne souhaitez peut-"
-"être pas le lancer au démarrage. Si vous préférez ne pas le lancer au "
-"démarrage, utilisez la commande « /etc/init.d/openafs-client force-start » "
-"pour le lancer quand vous en aurez besoin."
+"La majorité des utilisateurs qui installent le paquet openafs-client "
+"s'attendent à ce qu'il soit lancé au démarrage. Cependant, si vous prévoyez "
+"de mettre en service une nouvelle cellule ou si vous utilisez un ordinateur "
+"portable, vous ne souhaitez peut-être pas le lancer au démarrage. Si vous "
+"préférez ne pas le lancer au démarrage, utilisez la commande « /etc/init.d/"
+"openafs-client force-start » pour le lancer quand vous en aurez besoin."
 
 #. Type: boolean
 #. Description
@@ -143,7 +139,7 @@ msgid ""
 msgstr ""
 "Afin de contacter une cellule AFS, vous avez besoin des adresses IP de ses "
 "serveurs de bases de données. Cette information est normalement extraite de /"
-"etc/openafs/CellServDB. Cependant, si Openafs ne peut pas trouver de cellule "
+"etc/openafs/CellServDB. Cependant, si OpenAFS ne peut pas trouver de cellule "
 "dans ce fichier, il peut utiliser le DNS pour rechercher des enregistrements "
 "AFSDB qui fourniront cette information."
 
@@ -202,7 +198,7 @@ msgid ""
 msgstr ""
 "Si vous créez /afs de manière dynamique, vous aurez peut-être à créer /etc/"
 "openafs/CellAlias pour inclure les alias des cellules communes. Ce fichier "
-"comporte une ligne par alias, avec le nom de la cellule, un espace et "
+"comporte une ligne par alias, avec le nom de la cellule, une espace et "
 "l'alias utilisé pour la cellule."
 
 #. Type: boolean
@@ -233,7 +229,6 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-#, fuzzy
 msgid "Cell this server serves files for:"
 msgstr "Cellule pour laquelle ce serveur est un serveur de fichiers :"
 
@@ -297,6 +292,3 @@ msgstr ""
 "ces plateformes de même que le serveur de fichiers à processus légers. Il "
 "est probable que le serveur refusera tout simplement de démarrer. Cependant, "
 "s'il démarre quand même, des corruptions de données peuvent avoir lieu."
-
-#~ msgid "How large is your AFS cache (kB)?"
-#~ msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
