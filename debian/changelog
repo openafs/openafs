@@ -6,7 +6,7 @@ openafs (1.4.1-3) unstable; urgency=low
   * When creating a new file server in afs-newcell, use a set of tuning
     flags from Harald Barth rather than relying on the defaults.  This
     doesn't help with general bos create; long term, the defaults need to
-    be fixed.
+    be fixed.  (Closes: #364100)
   * Add a note in README.servers about fileserver tuning options.
   * Update debconf templates to follow the best practice recommendations
     from the Developer's Reference.
