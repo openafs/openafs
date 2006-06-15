@@ -97,7 +97,9 @@ configure-stamp:
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	touch configure-stamp
 
-build: configure-stamp build-stamp
+build: build-arch build-indep
+build-arch: configure-stamp build-stamp
+build-indep:
 build-stamp:
 	dh_testdir
 	mkdir -p $(CURDIR)/debian/tmp
@@ -111,9 +113,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp configure-stamp
 	rm -f build-modules-stamp configure-modules-stamp
-ifeq (Makefile,$(wildcard Makefile))
-	$(MAKE) distclean
-endif
+	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean
 
 install: DH_OPTIONS=
@@ -295,6 +295,6 @@ binary-modules: install-modules
 	dh_md5sums
 	dh_builddeb --destdir="$(KPKG_DEST_DIR)"
 
-.PHONY: build clean binary-indep binary-arch binary install configure
-.PHONY: kdist_configure kdist_image kdist kdist_clean binary-source
-.PHONY: configure-modules build-modules install-modules binary-modules
+.PHONY: binary binary-arch binary-indep binary-modules binary-source build
+.PHONY: build-arch build-indep build-modules clean configure configure-modules
+.PHONY: install install-modules kdist kdist_clean kdist_configure kdist_image
