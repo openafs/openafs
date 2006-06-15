@@ -1208,7 +1208,7 @@ GetCallerAccess(struct cmd_syndesc *as, char *arock)
         struct vcxstat2 stat;
         blob.out_size = sizeof(struct vcxstat2);
         blob.in_size = 0;
-        blob.out = &stat;
+        blob.out = (void *)&stat;
         code = pioctl(ti->data, VIOC_GETVCXSTATUS2, &blob, 1);
         if (code) {
             Die(errno, ti->data);
@@ -2006,13 +2006,28 @@ SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
 static int
 GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 {
-    afs_int32 code;
+    afs_int32 code, filesUsed;
     struct ViceIoctl blob;
     afs_int32 parms[MAXGCSIZE];
+    double percentFiles, percentBlocks;
+    afs_int32 flags = 0;
+
+    if (as->parms[0].items){ /* -files */
+	flags = 1;
+    } else if (as->parms[1].items){ /* -excessive */
+	flags = 2;
+    } else {
+	flags = 0;
+    }
 
     memset(parms, '\0', sizeof parms);	/* avoid Purify UMR error */
-    blob.in = NULL;
-    blob.in_size = 0;
+    if (flags){
+	blob.in = (char *)&flags;
+	blob.in_size = sizeof(afs_int32);
+    } else {	/* be backward compatible */
+	blob.in = NULL;
+	blob.in_size = 0;
+    }
     blob.out_size = sizeof(parms);
     blob.out = (char *)parms;
     code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
@@ -2020,11 +2035,45 @@ GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 	Die(errno, NULL);
 	return 1;
     }
-    printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
-	   parms[1], parms[0]);
-    if (parms[1] > parms[0])
-	printf
-	    ("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
+
+    if (!flags){
+	printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
+		parms[1], parms[0]);
+	if (parms[1] > parms[0])
+		printf("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
+	return 0;
+    }
+
+    percentBlocks = ((double)parms[1]/parms[0]) * 100;
+    printf("AFS using %5.0f%% of cache blocks (%d of %d 1k blocks)\n",
+	   percentBlocks, parms[1], parms[0]);
+
+    filesUsed = parms[2] - parms[3];
+    percentFiles = ((double)filesUsed/parms[2]) * 100;
+    printf("          %5.0f%% of the cache files (%d of %d files)\n",
+	    percentFiles, filesUsed, parms[2]);
+    if (flags == 2){
+	printf("	afs_cacheFiles: %10d\n", parms[2]);
+	printf("	IFFree:         %10d\n", parms[3]); 
+	printf("	IFEverUsed:     %10d\n", parms[4]); 
+	printf("	IFDataMod:      %10d\n", parms[5]); 
+	printf("	IFDirtyPages:   %10d\n", parms[6]);
+	printf("	IFAnyPages:     %10d\n", parms[7]); 
+	printf("	IFDiscarded:    %10d\n", parms[8]);
+	printf("	DCentries:  %10d\n", parms[9]);
+	printf("	  0k-   4K: %10d\n", parms[10]); 
+	printf("	  4k-  16k: %10d\n", parms[11]); 
+	printf("	 16k-  64k: %10d\n", parms[12]); 
+	printf("	 64k- 256k: %10d\n", parms[13]); 
+	printf("	256k-   1M: %10d\n", parms[14]); 
+	printf("	      >=1M: %10d\n", parms[15]); 
+    }
+
+    if (percentBlocks > 90)
+	printf("[cache size usage over 90%, consider increasing cache size]\n");
+    if (percentFiles > 90)
+	printf("[cache file usage over 90%, consider increasing '-files' argument to afsd]\n");
+	 
     return 0;
 }
 
@@ -3372,6 +3421,8 @@ defect 3069
 
     ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, 0,
 			  "get cache usage info");
+    cmd_AddParm(ts, "-files", CMD_FLAG, CMD_OPTIONAL, "Show cach files used as well");
+    cmd_AddParm(ts, "-excessive", CMD_FLAG, CMD_OPTIONAL, "excessively verbose cache stats");
 
     ts = cmd_CreateSyntax("listcells", ListCellsCmd, 0,
 			  "list configured cells");

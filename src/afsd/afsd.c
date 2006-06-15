@@ -2396,7 +2396,7 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 		param5, param6, param7);
 #endif
 
-    if (afsd_verbose)
+    if (afsd_debug)
 	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);
     return (error);

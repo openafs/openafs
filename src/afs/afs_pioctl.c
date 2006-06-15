@@ -2175,11 +2175,51 @@ DECL_PIOCTL(PSetCacheSize)
 DECL_PIOCTL(PGetCacheSize)
 {
     afs_int32 results[MAXGCSTATS];
-
+    afs_int32 flags;
+    register struct dcache * tdc;
+    int i, size;
+    
     AFS_STATCNT(PGetCacheSize);
+
+    if (sizeof(afs_int32) == ainSize){
+	memcpy((char *)&flags, ain, sizeof(afs_int32));
+    } else if (0 == ainSize){ 
+	flags = 0;
+    } else {
+	return EINVAL;
+    }
+    
     memset((char *)results, 0, sizeof(results));
     results[0] = afs_cacheBlocks;
     results[1] = afs_blocksUsed;
+    results[2] = afs_cacheFiles;
+    
+    if (1 == flags){
+        for (i = 0; i < afs_cacheFiles; i++) {
+	    if (afs_indexFlags[i] & IFFree) results[3]++;
+	}
+    } else if (2 == flags){
+        for (i = 0; i < afs_cacheFiles; i++) {
+	    if (afs_indexFlags[i] & IFFree) results[3]++;
+	    if (afs_indexFlags[i] & IFEverUsed) results[4]++;
+	    if (afs_indexFlags[i] & IFDataMod) results[5]++;
+	    if (afs_indexFlags[i] & IFDirtyPages) results[6]++;
+	    if (afs_indexFlags[i] & IFAnyPages) results[7]++;
+	    if (afs_indexFlags[i] & IFDiscarded) results[8]++;
+
+	    tdc = afs_indexTable[i];
+	    if (tdc){
+	        results[9]++;
+	        size = tdc->validPos;
+	        if ( 0 < size && size < (1<<12) ) results[10]++;
+    	        else if (size < (1<<14) ) results[11]++;
+	        else if (size < (1<<16) ) results[12]++;
+	        else if (size < (1<<18) ) results[13]++;
+	        else if (size < (1<<20) ) results[14]++;
+	        else if (size >= (1<<20) ) results[15]++;
+	    }
+        }
+    }
     memcpy(aout, (char *)results, sizeof(results));
     *aoutSize = sizeof(results);
     return 0;
