@@ -321,7 +321,17 @@ Adding Additional Servers
               -cmd /usr/lib/openafs/volserver \
               -cmd /usr/lib/openafs/salvager -localauth
 
-      For a file server, this is all you have to do.
+      For a file server, this is all you have to do.  The above uses the
+      default fileserver options, however, which are not particularly
+      well-tuned for modern systems.  afs-newcell uses the following
+      parameters from Harald Barth:
+
+          -p 23 -busyat 600 -rxpck 400 -s 1200 -l 1200 -cb 65535
+          -b 240 -vc 1200
+
+      If you want to add any additional fileserver options, enclose
+      /usr/lib/openafs/fileserver and the following options in double
+      quotes when giving the bos create command.
 
   4.  For database servers, also install openafs-dbserver and then use bos
       addhost to add the new server to /etc/openafs/server/CellServDB:
