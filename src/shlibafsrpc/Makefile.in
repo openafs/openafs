@@ -55,6 +55,8 @@ XDROBJS =\
 	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
+	xdr_update.o \
+	xdr_refernce.o \
 	AFS_component_version_number.o
 
 RXOBJS =\
