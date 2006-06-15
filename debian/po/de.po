@@ -15,8 +15,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-18 12:47-0700\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2006-06-07 12:06-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-msgid "What hosts are DB servers for your home cell?"
+msgid "DB server host names for your home cell:"
 msgstr ""
 
 #. Type: string
@@ -49,7 +49,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:16
 #, fuzzy
-msgid "What AFS cell does this workstation belong to?"
+msgid "AFS cell this workstation belongs to:"
 msgstr "Für welche Zelle liefert der Server Dateien?"
 
 #. Type: string
@@ -64,7 +64,7 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kB)?"
+msgid "Size of AFS cache in kB:"
 msgstr ""
 
 #. Type: string
@@ -87,12 +87,11 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:34
 msgid ""
-"Should the Openafs filesystem be started and mounted at boot? Normally, most "
-"users who install the openafs-client package expect to run it at boot.  "
-"However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time.  If you choose not to start AFS at "
-"boot, run /etc/init.d/openafs-client force-start to start the client when "
-"you wish to run it."
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
 msgstr ""
 
 #. Type: boolean
@@ -175,7 +174,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-msgid "What cell does this server serve files for?"
+#, fuzzy
+msgid "Cell this server serves files for:"
 msgstr "Für welche Zelle liefert der Server Dateien?"
 
 #. Type: string

@@ -14,8 +14,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
-"Report-Msgid-Bugs-To: debian-l10n-portuguese@lists.debian.org\n"
-"POT-Creation-Date: 2005-08-18 12:47-0700\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2006-06-07 12:06-0700\n"
 "PO-Revision-Date: 2005-08-26 18:53-0300\n"
 "Last-Translator: André Luís Lopes <andrelop@debian.org>\n"
 "Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
@@ -26,7 +26,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-msgid "What hosts are DB servers for your home cell?"
+#, fuzzy
+msgid "DB server host names for your home cell:"
 msgstr "Quais hosts são servidor DB para sua célula home ?"
 
 #. Type: string
@@ -58,7 +59,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
-msgid "What AFS cell does this workstation belong to?"
+#, fuzzy
+msgid "AFS cell this workstation belongs to:"
 msgstr "A qual célula AFS esta estação de trabalho pertence ?"
 
 #. Type: string
@@ -76,8 +78,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kB)?"
-msgstr "Qual o tamanho de seu cache AFS (KB) ?"
+msgid "Size of AFS cache in kB:"
+msgstr ""
 
 #. Type: string
 #. Description
@@ -102,22 +104,21 @@ msgstr "Executar o cliente OpenAFS agora e em tempo de inicialização ?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
+#, fuzzy
 msgid ""
-"Should the Openafs filesystem be started and mounted at boot? Normally, most "
-"users who install the openafs-client package expect to run it at boot.  "
-"However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time.  If you choose not to start AFS at "
-"boot, run /etc/init.d/openafs-client force-start to start the client when "
-"you wish to run it."
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
 msgstr ""
 "O sistema de arquivos OpenAFS deverá ser iniciado e montando em tempo de "
 "inicialização ? Normalmente, a maioria dos usuários que instalam o pacote "
 "openafs-client esperam executá-lo em tempo de inicialização. Porém, caso "
 "você esteja planejando configurar uma nova célula ou esteja em um laptop, "
 "você pode não desejar iniciar o OpenAFS em tempo de inicialização. Caso você "
-"opte por não iniciar o AFS em tempo de inicialização, execute "
-"/etc/init.d/openafs-cliente force-start para iniciar o cliente quando "
-"desejar executá-lo."
+"opte por não iniciar o AFS em tempo de inicialização, execute /etc/init.d/"
+"openafs-cliente force-start para iniciar o cliente quando desejar executá-lo."
 
 #. Type: boolean
 #. Description
@@ -193,9 +194,9 @@ msgid ""
 "cell.)"
 msgstr ""
 "Caso você gere o /afs dinamicamente, você pode precisar criar o /etc/openafs/"
-"CellAlias para incluir apelidos (aliases) para células comuns. (A "
-"sintaxe desse arquivo é uma linha por apelido, com o nome da célula, "
-"um espaço e depois o apelido para a célula.)"
+"CellAlias para incluir apelidos (aliases) para células comuns. (A sintaxe "
+"desse arquivo é uma linha por apelido, com o nome da célula, um espaço e "
+"depois o apelido para a célula.)"
 
 #. Type: boolean
 #. Description
@@ -225,7 +226,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-msgid "What cell does this server serve files for?"
+#, fuzzy
+msgid "Cell this server serves files for:"
 msgstr "Para qual célula este servidor serve arquivos ?"
 
 #. Type: string
@@ -288,6 +290,9 @@ msgstr ""
 "Provavelmente, o servidor de arquivos irá simplesmente falhar ao iniciar. "
 "Caso consiga ser iniciado, poderá causar corrupção de dados. Você foi "
 "avisado."
+
+#~ msgid "How large is your AFS cache (kB)?"
+#~ msgstr "Qual o tamanho de seu cache AFS (KB) ?"
 
 #~ msgid "50000"
 #~ msgstr "50000"

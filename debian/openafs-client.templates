@@ -1,6 +1,6 @@
 Template: openafs-client/cell-info
 Type: string
-_Description: What hosts are DB servers for your home cell?
+_Description: DB server host names for your home cell:
  AFS uses the file /etc/openafs/CellServDB to hold the list of servers that
  should be contacted to find parts of a cell.  The cell you claim this
  workstation belongs to is not in that file.  Enter the host names of the
@@ -13,7 +13,7 @@ _Description: What hosts are DB servers for your home cell?
 
 Template: openafs-client/thiscell
 Type: string
-_Description:  What AFS cell does this workstation belong to?
+_Description: AFS cell this workstation belongs to:
  AFS filespace is organized into cells or administrative domains.
  Each workstation belongs to one cell.  Usually the cell is the DNS
  domain name of the site.
@@ -21,7 +21,7 @@ _Description:  What AFS cell does this workstation belong to?
 Template: openafs-client/cachesize
 Type: string
 Default: 50000
-_Description:  How large is your AFS cache (kB)?
+_Description: Size of AFS cache in kB:
  AFS uses an area of the disk to cache remote files for faster
  access.  This cache will be mounted on /var/cache/openafs.  It is
  important that the cache not overfill the partition it is located
@@ -32,12 +32,12 @@ Template: openafs-client/run-client
 Type: boolean
 Default: true
 _Description: Run Openafs client now and at boot?
- Should the Openafs filesystem be started and mounted at boot? Normally,
- most users who install the openafs-client package expect to run it at
- boot.  However, if you are planning on setting up a new cell or are on a
- laptop, you may not want it started at boot time.  If you choose not
- to start AFS at boot, run /etc/init.d/openafs-client force-start to
- start the client when you wish to run it.
+ Normally, most users who install the openafs-client package expect AFS to
+ be mounted automatically at boot.  However, if you are planning on
+ setting up a new cell or are on a laptop, you may not want it started at
+ boot time.  If you choose not to start AFS at boot, run
+ /etc/init.d/openafs-client force-start to start the client when you wish
+ to run it.
 
 Template: openafs-client/afsdb
 Type: boolean

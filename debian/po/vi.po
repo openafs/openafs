@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4rc1-1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-18 12:47-0700\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2006-06-07 12:06-0700\n"
 "PO-Revision-Date: 2005-08-19 16:26+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -19,7 +19,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-msgid "What hosts are DB servers for your home cell?"
+#, fuzzy
+msgid "DB server host names for your home cell:"
 msgstr "Máy nào chạy trình phục vụ cơ sở dữ liệu cho ô chính bạn?"
 
 #. Type: string
@@ -36,8 +37,8 @@ msgid ""
 "cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
 "client to enable the client."
 msgstr ""
-"AFS dùng tập tin « /etc/openafs/CellServDB » để chứa danh sách các máy phục vụ "
-"nên được liên hệ để tìm phần ô. Bạn đã tuyên bố máy trạm này thuộc một ô "
+"AFS dùng tập tin « /etc/openafs/CellServDB » để chứa danh sách các máy phục "
+"vụ nên được liên hệ để tìm phần ô. Bạn đã tuyên bố máy trạm này thuộc một ô "
 "không phải trong tập tin ấy. Hãy nhập tên máy của những máy phục vụ cơ sở dữ "
 "liệu, định giới bằng dấu cách. QUAN TRỌNG: nếu bạn đang tạo một ô mới, và "
 "máy này sẽ là một máy phục vụ cơ sở dữ liệu trong ô ấy, thì bạn hãy nhập chỉ "
@@ -49,7 +50,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
-msgid "What AFS cell does this workstation belong to?"
+#, fuzzy
+msgid "AFS cell this workstation belongs to:"
 msgstr "Máy trạm này thuộc ô AFS nào?"
 
 #. Type: string
@@ -66,8 +68,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kB)?"
-msgstr "Bạn có bộ nhớ tạm AFS lớn bao nhiêu (theo kB)?"
+msgid "Size of AFS cache in kB:"
+msgstr ""
 
 #. Type: string
 #. Description
@@ -92,13 +94,13 @@ msgstr "Chạy trình khách Openafs ngay bây giờ và cũng khi khởi độn
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
+#, fuzzy
 msgid ""
-"Should the Openafs filesystem be started and mounted at boot? Normally, most "
-"users who install the openafs-client package expect to run it at boot.  "
-"However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time.  If you choose not to start AFS at "
-"boot, run /etc/init.d/openafs-client force-start to start the client when "
-"you wish to run it."
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
 msgstr ""
 "Có nên khởi chạy và gắn hệ thống tập tin Openafs khi khởi động máy không? "
 "Bình thường, phần lớn người dùng cài đặt gói « openafs-client » thì định "
@@ -167,10 +169,10 @@ msgid ""
 "cell.  However, OpenAFS clients can generate the contents of /afs "
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
-"Thư mục « /afs » thường chứa một mục ghi cho mỗi ô mà trình khách có thể liên "
-"hệ. Trước này, trình phục vụ trong ô chính của trình khác đã tạo ra mục ghi "
-"này. Tuy nhiên, trình khách loại OpenAFS có thể tạo ra nội dung « /afs » một "
-"cách động, đựa vào nội dung « /etc/openafs/CellServDB » và vào DNS."
+"Thư mục « /afs » thường chứa một mục ghi cho mỗi ô mà trình khách có thể "
+"liên hệ. Trước này, trình phục vụ trong ô chính của trình khác đã tạo ra mục "
+"ghi này. Tuy nhiên, trình khách loại OpenAFS có thể tạo ra nội dung « /afs » "
+"một cách động, đựa vào nội dung « /etc/openafs/CellServDB » và vào DNS."
 
 #. Type: boolean
 #. Description
@@ -182,7 +184,9 @@ msgid ""
 "cell.)"
 msgstr ""
 "Nếu bạn chọn tạo ra « /afs » một cách động, có lẽ bạn sẽ cần phải tạo « etc/"
-"openafs/CellAlias » (bí danh ô) để gồm bí danh cho các ô chung. (Cú pháp của tập tin này là một dòng cho mỗi bí danh, mà chứa tên ô, rồi một dấu cách, rồi bí danh cho ô đó.)"
+"openafs/CellAlias » (bí danh ô) để gồm bí danh cho các ô chung. (Cú pháp của "
+"tập tin này là một dòng cho mỗi bí danh, mà chứa tên ô, rồi một dấu cách, "
+"rồi bí danh cho ô đó.)"
 
 #. Type: boolean
 #. Description
@@ -203,18 +207,19 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Vì AFS là một khoảng cách toàn cục, thao tác trên thư mục « /afs » có thể tạo "
-"ra nhiều tải cho mạng. Nếu một số ô AFS không sẵn sàng thì việc xem « /afs » "
-"dùng lệnh « ls » (liệt kê) hoặc dùng một trình đồ họa duyệt tập tin thì có thể "
-"treo cứng máy bạn trong vòng nhiều phút. AFS tùy chọn có thể mô phỏng trả "
-"lời cho thao tác loại này một cách địa phương, để tránh treo cứng hệ thống "
-"như thế. Đệ nghi bạn sử dụng tùy chọn này: nó cần thiết trong phần lớn "
-"trường hợp."
+"Vì AFS là một khoảng cách toàn cục, thao tác trên thư mục « /afs » có thể "
+"tạo ra nhiều tải cho mạng. Nếu một số ô AFS không sẵn sàng thì việc xem « /"
+"afs » dùng lệnh « ls » (liệt kê) hoặc dùng một trình đồ họa duyệt tập tin "
+"thì có thể treo cứng máy bạn trong vòng nhiều phút. AFS tùy chọn có thể mô "
+"phỏng trả lời cho thao tác loại này một cách địa phương, để tránh treo cứng "
+"hệ thống như thế. Đệ nghi bạn sử dụng tùy chọn này: nó cần thiết trong phần "
+"lớn trường hợp."
 
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-msgid "What cell does this server serve files for?"
+#, fuzzy
+msgid "Cell this server serves files for:"
 msgstr "Trình phục vụ này phục vụ tập tin cho ô nào?"
 
 #. Type: string
@@ -249,12 +254,12 @@ msgid ""
 msgstr ""
 "Giữa Openafs phiên bản 1.1 và 1.2, vài tập tin đã được di chuyển. Đặc biệt, "
 "những tập tin trong « /etc/openafs/server-local » (trình phục vụ địa phương) "
-"đã được chia ra nhiều vị trí khác. Tập tin « BosConfig » lúc này trong « /etc/"
-"openafs », và những tập tin khác có trong « /var/lib/openafs ». Nếu bạn chọn "
-"tiếp tục nâng cấp, các tập tin ấy sẽ được di chuyển như thế. Bạn hãy sử dụng "
-"lệnh « bos restart » (khởi chạy lại) để khởi chạy lại các trình phục vụ của "
-"bạn. Mọi thay đổi cấu hình được tạo trước khi bạn khởi chạy lại thì sẽ bị "
-"mất."
+"đã được chia ra nhiều vị trí khác. Tập tin « BosConfig » lúc này trong « /"
+"etc/openafs », và những tập tin khác có trong « /var/lib/openafs ». Nếu bạn "
+"chọn tiếp tục nâng cấp, các tập tin ấy sẽ được di chuyển như thế. Bạn hãy sử "
+"dụng lệnh « bos restart » (khởi chạy lại) để khởi chạy lại các trình phục vụ "
+"của bạn. Mọi thay đổi cấu hình được tạo trước khi bạn khởi chạy lại thì sẽ "
+"bị mất."
 
 #. Type: note
 #. Description
@@ -276,3 +281,6 @@ msgstr ""
 "tin theo mạch. Rất có thể là trình phục vụ tập tin sẽ không khởi chạy, nhưng "
 "mà nếu nó có phải khởi chạy thì dữ liệu có thể bị hỏng. Bạn đã nhận một cảnh "
 "báo rồi."
+
+#~ msgid "How large is your AFS cache (kB)?"
+#~ msgstr "Bạn có bộ nhớ tạm AFS lớn bao nhiêu (theo kB)?"

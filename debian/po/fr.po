@@ -15,8 +15,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4rc1-1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-18 12:47-0700\n"
+"Report-Msgid-Bugs-To: hartmans@debian.org\n"
+"POT-Creation-Date: 2006-06-07 12:06-0700\n"
 "PO-Revision-Date: 2005-08-22 15:11+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -28,7 +28,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
-msgid "What hosts are DB servers for your home cell?"
+#, fuzzy
+msgid "DB server host names for your home cell:"
 msgstr ""
 "Hôtes serveurs de bases de données pour votre cellule locale (« home "
 "cell ») :"
@@ -62,7 +63,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
-msgid "What AFS cell does this workstation belong to?"
+#, fuzzy
+msgid "AFS cell this workstation belongs to:"
 msgstr "Cellule AFS dont ce poste de travail fait partie :"
 
 #. Type: string
@@ -80,8 +82,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kB)?"
-msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
+msgid "Size of AFS cache in kB:"
+msgstr ""
 
 #. Type: string
 #. Description
@@ -107,13 +109,13 @@ msgstr "Lancer le client AFS maintenant, puis à chaque démarrage ?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
+#, fuzzy
 msgid ""
-"Should the Openafs filesystem be started and mounted at boot? Normally, most "
-"users who install the openafs-client package expect to run it at boot.  "
-"However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time.  If you choose not to start AFS at "
-"boot, run /etc/init.d/openafs-client force-start to start the client when "
-"you wish to run it."
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
 msgstr ""
 "Veuillez indiquer si le système de fichiers Openafs doit être mis en service "
 "et monté au démarrage. Normalement, la majorité des utilisateurs qui "
@@ -149,7 +151,8 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:55
 msgid "Encrypt authenticated traffic with AFS fileserver?"
-msgstr "Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
+msgstr ""
+"Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
 
 #. Type: boolean
 #. Description
@@ -198,13 +201,16 @@ msgid ""
 "cell.)"
 msgstr ""
 "Si vous créez /afs de manière dynamique, vous aurez peut-être à créer /etc/"
-"openafs/CellAlias pour inclure les alias des cellules communes. Ce fichier comporte une ligne par alias, avec le nom de la cellule, un espace et l'alias utilisé pour la cellule."
+"openafs/CellAlias pour inclure les alias des cellules communes. Ce fichier "
+"comporte une ligne par alias, avec le nom de la cellule, un espace et "
+"l'alias utilisé pour la cellule."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:79
 msgid "Use fakestat to avoid hangs when listing /afs?"
-msgstr "Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
+msgstr ""
+"Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
 
 #. Type: boolean
 #. Description
@@ -227,7 +233,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
-msgid "What cell does this server serve files for?"
+#, fuzzy
+msgid "Cell this server serves files for:"
 msgstr "Cellule pour laquelle ce serveur est un serveur de fichiers :"
 
 #. Type: string
@@ -247,7 +254,8 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
-msgstr "Faut-il procéder au déplacement de fichiers requis pour la mise à jour ?"
+msgstr ""
+"Faut-il procéder au déplacement de fichiers requis pour la mise à jour ?"
 
 #. Type: boolean
 #. Description
@@ -290,3 +298,5 @@ msgstr ""
 "est probable que le serveur refusera tout simplement de démarrer. Cependant, "
 "s'il démarre quand même, des corruptions de données peuvent avoir lieu."
 
+#~ msgid "How large is your AFS cache (kB)?"
+#~ msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
