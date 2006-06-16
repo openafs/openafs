@@ -2048,6 +2048,9 @@ GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
     printf("AFS using %5.0f%% of cache blocks (%d of %d 1k blocks)\n",
 	   percentBlocks, parms[1], parms[0]);
 
+    if (parms[2] == 0)
+	return 0;
+
     filesUsed = parms[2] - parms[3];
     percentFiles = ((double)filesUsed/parms[2]) * 100;
     printf("          %5.0f%% of the cache files (%d of %d files)\n",
