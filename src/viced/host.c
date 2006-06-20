@@ -1609,6 +1609,8 @@ h_FindClient_r(struct rx_connection *tcon)
 	H_UNLOCK;
 	ObtainWriteLock(&client->lock);	/* released at end */
 	H_LOCK;
+    } else {
+	client = NULL;
     }
 
     authClass = rx_SecurityClassOf((struct rx_connection *)tcon);
