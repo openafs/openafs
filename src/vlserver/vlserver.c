@@ -333,6 +333,7 @@ main(argc, argv)
 
     if (rxBind) {
 	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -340,7 +341,9 @@ main(argc, argv)
 				  ADDRSPERSITE, reason,
 				  AFSDIR_SERVER_NETINFO_FILEPATH,
 				  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else {
+        } else 
+#endif	
+	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
         if (ccode == 1) {
