@@ -435,6 +435,7 @@ main(int argc, char **argv)
 	rx_SetUdpBufSize(udpBufSize);	/* set the UDP buffer size for receive */
     if (rxBind) {
 	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -442,7 +443,9 @@ main(int argc, char **argv)
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else {
+        } else 
+#endif	
+	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
         if (ccode == 1) 
