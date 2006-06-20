@@ -24,16 +24,14 @@ RCSID
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
 #include "rx/rx.h"
-#include "afs/magic.h"
 #else /* KERNEL */
 #include "rx.h"
-#include <afs/magic.h>
 #endif /* KERNEL */
 
 /* The null security object.  No authentication, no nothing. */
 
 static struct rx_securityOps null_ops;
-static struct rx_securityClass null_object = { MAGIC_RXSECURITY, &null_ops, 0, 0 };
+static struct rx_securityClass null_object = { &null_ops, 0, 0 };
 
 struct rx_securityClass *
 rxnull_NewServerSecurityObject(void)

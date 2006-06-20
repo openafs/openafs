@@ -77,7 +77,6 @@ extern afs_int32 afs_termState;
 #include "sys/lock_def.h"
 #endif /* AFS_AIX41_ENV */
 # include "rxgen_consts.h"
-# include "afs/magic.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <errno.h>
@@ -108,7 +107,6 @@ extern afs_int32 afs_termState;
 # include "rx_globals.h"
 # include "rx_trace.h"
 # include <afs/rxgen_consts.h>
-# include <afs/magic.h>
 #endif /* KERNEL */
 
 int (*registerProgram) () = 0;
@@ -836,7 +834,6 @@ rx_NewConnectionAddrs(struct sockaddr_storage *saddr, int *type, int *slen,
 
     SPLVAR;
 
-    osi_Assert(securityObject->magic == MAGIC_RXSECURITY);
     clock_NewTime();
     dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(rx_ss2v4addr(saddr)), ntohs(rx_ss2pn(saddr)), sservice, securityObject, serviceSecurityIndex));
 
@@ -851,7 +848,6 @@ rx_NewConnectionAddrs(struct sockaddr_storage *saddr, int *type, int *slen,
     NETPRI;
     MUTEX_ENTER(&rx_connHashTable_lock);
     cid = (rx_nextCid += RX_MAXCALLS);
-    conn->magic = MAGIC_RXCONN;
     conn->type = RX_CLIENT_CONNECTION;
     conn->cid = cid;
     conn->epoch = rx_epoch;
@@ -915,14 +911,10 @@ int rxi_lowConnRefCount = 0;
 void
 rxi_CleanupConnection(struct rx_connection *conn)
 {
-    osi_Assert(conn->magic == MAGIC_RXCONN);
-
     /* Notify the service exporter, if requested, that this connection
      * is being destroyed */
     if (conn->type == RX_SERVER_CONNECTION && conn->service->destroyConnProc)
 	(*conn->service->destroyConnProc) (conn);
-
-    conn->magic = MAGIC_RXCONN_FREE;
 
     /* Notify the security module that this connection is being destroyed */
     RXS_DestroyConnection(conn->securityObject, conn);
@@ -976,8 +968,6 @@ rxi_CleanupConnection(struct rx_connection *conn)
 void
 rxi_DestroyConnection(register struct rx_connection *conn)
 {
-    osi_Assert(conn->magic == MAGIC_RXCONN);
-
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxi_DestroyConnectionNoLock(conn);
     /* conn should be at the head of the cleanup list */
@@ -1136,7 +1126,6 @@ rx_GetConnection(register struct rx_connection *conn)
 {
     SPLVAR;
 
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     NETPRI;
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->refCount++;
@@ -1161,7 +1150,6 @@ rx_NewCall(register struct rx_connection *conn)
     struct clock queueTime;
     SPLVAR;
 
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     clock_NewTime();
     dpf(("rx_MakeCall(conn %x)\n", conn));
 
@@ -1434,7 +1422,6 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		}
 	    }
 	    service = tservice;
-	    service->magic = MAGIC_RXSVC;
 	    service->socket = socket;
 	    service->serviceHost = host;
 	    service->servicePort = port;
@@ -1616,8 +1603,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     struct rx_service *service = NULL;
     SPLVAR;
 
-    osi_Assert(cur_service->magic == MAGIC_RXSVC);
-
     MUTEX_ENTER(&freeSQEList_lock);
 
     if ((sq = rx_FreeSQEList)) {
@@ -1784,8 +1769,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     register struct rx_call *call = (struct rx_call *)0, *choice2;
     struct rx_service *service = NULL;
     SPLVAR;
-
-    osi_Assert(cur_service->magic == MAGIC_RXSVC);
 
     NETPRI;
     MUTEX_ENTER(&freeSQEList_lock);
@@ -1963,7 +1946,6 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
     register struct rx_service *service;
     afs_int32 error;
     SPLVAR;
-    osi_Assert(call->magic == MAGIC_RXCALL);
 
 
 
@@ -2198,8 +2180,6 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     register struct rx_call *nxp;	/* Next call pointer, for queue_Scan */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
-    osi_Assert(conn->magic == MAGIC_RXCONN);
-
     /* Grab an existing call structure, or allocate a new one.
      * Existing call structures are assumed to have been left reset by
      * rxi_FreeCall */
@@ -2271,8 +2251,6 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     if (*call->callNumber == 0)
 	*call->callNumber = 1;
 
-    call->magic = MAGIC_RXCALL;
-    
     return call;
 }
 
@@ -2294,14 +2272,10 @@ rxi_FreeCall(register struct rx_call *call)
     register struct rx_connection *conn = call->conn;
 
 
-    osi_Assert(call->magic == MAGIC_RXCALL);
-
     if (call->state == RX_STATE_DALLY || call->state == RX_STATE_HOLD)
 	(*call->callNumber)++;
     rxi_ResetCall(call, 0);
     call->conn->call[channel] = (struct rx_call *)0;
-
-    call->magic = MAGIC_RXCALL_FREE;
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
@@ -2403,7 +2377,6 @@ rxi_FindPeer(struct sockaddr_storage *saddr, int slen, int stype,
     if (!pp) {
 	if (create) {
 	    pp = rxi_AllocPeer();	/* This bzero's *pp */
-	    pp->magic = MAGIC_RXPEER;
 	    memcpy(&pp->saddr, saddr, slen);
 	    pp->saddrlen = slen;
 	    pp->socktype = stype;
@@ -2458,10 +2431,8 @@ rxi_FindPeer(struct sockaddr_storage *saddr, int slen, int stype,
     if (pp && create) {
 	pp->refCount++;
     }
-    if (origPeer) {
-	osi_Assert(origPeer->magic == MAGIC_RXPEER);
+    if (origPeer)
 	origPeer->refCount--;
-    }
     MUTEX_EXIT(&rx_peerHashTable_lock);
     return pp;
 }
@@ -2540,7 +2511,6 @@ rxi_FindConnection(osi_socket socket, struct sockaddr_storage *saddr,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	conn->magic = MAGIC_RXCONN;
 	conn->peer = rxi_FindPeer(saddr, slen, socktype, 0, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
@@ -6056,7 +6026,6 @@ rxi_ReapConnections(void)
 	     peer_ptr++) {
 	    struct rx_peer *peer, *next, *prev;
 	    for (prev = peer = *peer_ptr; peer; peer = next) {
-		osi_Assert(peer->magic == MAGIC_RXPEER);
 		next = peer->next;
 		code = MUTEX_TRYENTER(&peer->peer_lock);
 		if ((code) && (peer->refCount == 0)
@@ -6136,8 +6105,6 @@ rxi_ReapConnections(void)
 int
 rxs_Release(struct rx_securityClass *aobj)
 {
-    osi_Assert(aobj->magic == MAGIC_RXSECURITY);
-
     return RXS_Close(aobj);
 }
 
@@ -6985,9 +6952,7 @@ void
 rx_SetSpecific(struct rx_connection *conn, int key, void *ptr)
 {
     int i;
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     MUTEX_ENTER(&conn->conn_data_lock);
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     if (!conn->specific) {
 	conn->specific = (void **)malloc((key + 1) * sizeof(void *));
 	for (i = 0; i < key; i++)
@@ -7013,9 +6978,7 @@ void *
 rx_GetSpecific(struct rx_connection *conn, int key)
 {
     void *ptr;
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     MUTEX_ENTER(&conn->conn_data_lock);
-    osi_Assert(conn->magic == MAGIC_RXCONN);
     if (key >= conn->nSpecific)
 	ptr = NULL;
     else

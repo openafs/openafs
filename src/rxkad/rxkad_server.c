@@ -38,7 +38,6 @@ RCSID
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <des.h>
-#include <afs/magic.h>
 #include <afs/afsutil.h>
 #include <des/stats.h>
 #include "private_data.h"
@@ -151,7 +150,6 @@ rxkad_NewServerSecurityObject(rxkad_level level, char *get_key_rock,
     size = sizeof(struct rx_securityClass);
     tsc = (struct rx_securityClass *)osi_Alloc(size);
     memset(tsc, 0, size);
-    tsc->magic = MAGIC_RXSECURITY;
     tsc->refCount = 1;		/* caller has one reference */
     tsc->ops = &rxkad_server_ops;
     size = sizeof(struct rxkad_sprivate);

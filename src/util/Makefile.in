@@ -33,7 +33,6 @@ includes = \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
 	${TOP_INCDIR}/afs/softsig.h \
-	${TOP_INCDIR}/afs/magic.h \
 	${TOP_INCDIR}/potpourri.h 
 
 all: ${includes} \
@@ -167,7 +166,6 @@ install: \
 	${DESTDIR}${includedir}/afs/afs_atomlist.h \
 	${DESTDIR}${includedir}/afs/afs_lhash.h \
 	${DESTDIR}${includedir}/afs/softsig.h \
-	${DESTDIR}${includedir}/afs/magic.h \
 	${DESTDIR}${includedir}/potpourri.h \
 	${DESTDIR}${libdir}/afs/util.a \
 	${DESTDIR}${libdir}/afs/libafsutil.a \
@@ -219,9 +217,6 @@ ${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/magic.h: ${srcdir}/magic.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
