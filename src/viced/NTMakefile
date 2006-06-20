@@ -65,21 +65,21 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXEPREP) 
 
 ############################################################################
-# generate versioninfo resources
-$(OUT)\fileserver.res: AFS_component_version_number.h
-
-install:  $(INCFILES) $(OUT)\fileserver.res
-
-############################################################################
 # Build cbd - not generally distributed debugging program
-CBD = $(OUT)\cbd.exe
+CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
-$(OUT)\cbd.obj: callback.c
+$(OBJ)\cbd.obj: callback.c
 	$(C2OBJ) $** -DINTERPRET_DUMP
 
 $(CBD): $(OUT)\cbd.obj 
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
+
+############################################################################
+# generate versioninfo resources
+$(OUT)\fileserver.res: AFS_component_version_number.h
+
+install:  $(INCFILES) $(OUT)\fileserver.res $(CBD)
 
 mkdir:
 	

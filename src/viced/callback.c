@@ -2723,7 +2723,7 @@ ReadDump(char *file)
     return now;
 }
 
-#include "AFS_component_version_number.c"
+#include "AFS_component_version_number.h"
 
 int
 main(int argc, char **argv)
