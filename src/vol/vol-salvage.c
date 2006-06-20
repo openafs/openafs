@@ -2228,7 +2228,7 @@ CopyOnWrite(register struct DirSummary *dir)
     struct VnodeDiskObject vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     Inode oldinode, newinode;
-    int code;
+    afs_sfsize_t code;
 
     if (dir->copied || Testing)
 	return;
@@ -2279,18 +2279,19 @@ CopyAndSalvage(register struct DirSummary *dir)
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     Inode oldinode, newinode;
     DirHandle newdir;
-    register afs_int32 code;
+    afs_int32 code;
+    afs_sfsize_t lcode;
     afs_int32 parentUnique = 1;
     struct VnodeEssence *vnodeEssence;
 
     if (Testing)
 	return;
     Log("Salvaging directory %u...\n", dir->vnodeNumber);
-    code =
+    lcode =
 	IH_IREAD(vnodeInfo[vLarge].handle,
 		 vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		 sizeof(vnode));
-    assert(code == sizeof(vnode));
+    assert(lcode == sizeof(vnode));
     oldinode = VNDISK_GET_INO(&vnode);
     /* Increment the version number by a whole lot to avoid problems with
      * clients that were promised new version numbers--but the file server
@@ -2321,8 +2322,10 @@ CopyAndSalvage(register struct DirSummary *dir)
     if (code) {
 	/* didn't really build the new directory properly, let's just give up. */
 	code = IH_DEC(dir->ds_linkH, newinode, dir->rwVid);
-	assert(code == 0);
 	Log("Directory salvage returned code %d, continuing.\n", code);
+	if (code) {
+	    Log("also failed to decrement link count on new inode");
+	}
 	assert(1 == 2);
     }
     Log("Checking the results of the directory salvage...\n");
@@ -2335,11 +2338,11 @@ CopyAndSalvage(register struct DirSummary *dir)
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
     VNDISK_SET_LEN(&vnode, Length(&newdir));
-    code =
+    lcode =
 	IH_IWRITE(vnodeInfo[vLarge].handle,
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
-    assert(code == sizeof(vnode));
+    assert(lcode == sizeof(vnode));
 #ifdef AFS_NT40_ENV
     nt_sync(fileSysDevice);
 #else
@@ -2786,7 +2789,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
     struct VnodeEssence *vep;
     afs_int32 v, pv;
     IHandle_t *h;
-    int nBytes;
+    afs_sfsize_t nBytes;
     ViceFid pa;
     VnodeId LFVnode, ThisVnode;
     Unique LFUnique, ThisUnique;
@@ -3059,7 +3062,7 @@ void
 ClearROInUseBit(struct VolumeSummary *summary)
 {
     IHandle_t *h = summary->volumeInfoHandle;
-    int nBytes;
+    afs_sfsize_t nBytes;
 
     VolumeDiskData volHeader;
 

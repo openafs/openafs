@@ -35,6 +35,10 @@ AFSIAUTHOBJS = \
 	osi_vfsops_iauth.o \
 	osi_vnodeops_iauth.o
 
+AFS_OS_CLEAN = \
+	*.exp \
+	export.h
+
 # System specific build commands
 STRIP = /bin/strip
 DBUG  = -g

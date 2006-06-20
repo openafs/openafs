@@ -410,7 +410,7 @@ osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
 
 
 clean:
-	-$(RM) -rf STATIC* MODLOAD*
+	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)
 	-$(RM) -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx linux
 
 include ${TOP_OBJDIR}/src/config/Makefile.version
