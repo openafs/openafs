@@ -113,7 +113,11 @@ cfgafs64.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
 	${CC} -q64 ${CFLAGS} -c ${srcdir}/cfgafs.c -o cfgafs64.o
 
 clean:
-	$(RM) -f *.o *.Zlst *.map *.out cfgexport cfgafs *.ext AFS_component_version_number.c export.exp export64.exp
+	$(RM) -f *.o *.Zlst *.map *.out AFS_component_version_number.c
+	$(RM) -f export.exp export64.exp
+	$(RM) -f cfgexport cfgexport64
+	$(RM) -f cfgafs cfgafs64
+	$(RM) -f *.ext *.ext.nonfs
 
 ${DEST}/root.client/usr/vice/etc/dkload/export.ext: export.ext
 	${INSTALL} $? $@

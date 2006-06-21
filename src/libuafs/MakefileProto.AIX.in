@@ -30,6 +30,11 @@ LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.a
 LIBAFSWEBKRB = nsafs.krb.a
 
+
+AFS_OS_CLEAN = \
+	*.exp \
+	export.h
+
 # To get __file__ (afs_osi_pag.c) you need to specify language level 
 # C99 to xlc_r like this:
 OPTF=-O -qlanglvl=stdc99
