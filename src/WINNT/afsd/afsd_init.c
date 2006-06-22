@@ -1254,11 +1254,15 @@ int afsd_InitDaemons(char **reasonP)
     /* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
+	int attempts = 10;
+
         osi_Log0(afsd_logp, "Loading Root Volume from cell");
-        code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
-                                  &req, CM_FLAG_CREATE, &cm_data.rootVolumep);
-        afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-                 (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
+	do {
+	    code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
+				       &req, CM_FLAG_CREATE, &cm_data.rootVolumep);
+	    afsi_log("cm_GetVolumeByName code %x root vol %x", code,
+		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
+	} while (code && --attempts);
         if (code != 0) {
             *reasonP = "can't find root volume in root cell";
             return -1;
