@@ -940,13 +940,13 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
                 /* we don't know the required access rights */
                 if (bufLocked) lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetAccessRights(scp, up, reqp);
-                if (code) 
-                    return code;
                 if (bufLocked) {
                     lock_ReleaseMutex(&scp->mx);
                     lock_ObtainMutex(&bufp->mx);
                     lock_ObtainMutex(&scp->mx);
                 }
+                if (code) 
+                    return code;
                 continue;
             }
         }
