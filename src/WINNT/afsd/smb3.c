@@ -4670,7 +4670,6 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 return CM_ERROR_BADSHARENAME;
         }
 #endif /* DFS_SUPPORT */
-
         /* otherwise, scp points to the parent directory.  Do a lookup,
          * and truncate the file if we find it, otherwise we create the
          * file.
@@ -5250,6 +5249,137 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     return code;
 }
 
+long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+{
+    osi_hyper_t offset;
+    long count, written = 0, total_written = 0;
+    unsigned short fd;
+    unsigned pid;
+    smb_fid_t *fidp;
+    long code = 0;
+    cm_user_t *userp;
+    cm_attr_t truncAttr;	/* attribute struct used for truncating file */
+    char *op;
+    int inDataBlockCount;
+
+    fd = smb_GetSMBParm(inp, 2);
+    count = smb_GetSMBParm(inp, 10);
+
+    offset.HighPart = 0;
+    offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
+
+    if (*inp->wctp == 14) {
+        /* we have a request with 64-bit file offsets */
+#ifdef AFS_LARGEFILES
+        offset.HighPart = smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16);
+#else
+        if ((smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16)) != 0) {
+            /* uh oh */
+            osi_Log0(smb_logp, "smb_ReceiveV3WriteX offset requires largefile support");
+            /* we shouldn't have received this op if we didn't specify
+               largefile support */
+            return CM_ERROR_BADOP;
+        }
+#endif
+    }
+
+    op = inp->data + smb_GetSMBParm(inp, 11);
+    inDataBlockCount = count;
+
+    osi_Log4(smb_logp, "smb_ReceiveV3WriteX fid %d, off 0x%x:%08x, size 0x%x",
+             fd, offset.HighPart, offset.LowPart, count);
+        
+    fd = smb_ChainFID(fd, inp);
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp)
+        return CM_ERROR_BADFD;
+        
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_IOCTL) {
+	lock_ReleaseMutex(&fidp->mx);
+        code = smb_IoctlV3Write(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
+    lock_ReleaseMutex(&fidp->mx);
+    userp = smb_GetUserFromVCP(vcp, inp);
+
+    /* special case: 0 bytes transferred means there is no data
+       transferred.  A slight departure from SMB_COM_WRITE where this
+       means that we are supposed to truncate the file at this
+       position. */
+
+    {
+        cm_key_t key;
+        LARGE_INTEGER LOffset;
+        LARGE_INTEGER LLength;
+
+        pid = ((smb_t *) inp)->pid;
+        key = cm_GenerateKey(vcp->vcID, pid, fd);
+
+        LOffset.HighPart = offset.HighPart;
+        LOffset.LowPart = offset.LowPart;
+        LLength.HighPart = 0;
+        LLength.LowPart = count;
+
+        lock_ObtainMutex(&fidp->scp->mx);
+        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&fidp->scp->mx);
+
+        if (code)
+            goto done;
+    }
+
+    /*
+     * Work around bug in NT client
+     *
+     * When copying a file, the NT client should first copy the data,
+     * then copy the last write time.  But sometimes the NT client does
+     * these in the wrong order, so the data copies would inadvertently
+     * cause the last write time to be overwritten.  We try to detect this,
+     * and don't set client mod time if we think that would go against the
+     * intention.
+     */
+    lock_ObtainMutex(&fidp->mx);
+    if ((fidp->flags & SMB_FID_MTIMESETDONE) != SMB_FID_MTIMESETDONE) {
+        fidp->scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
+        fidp->scp->clientModTime = time(NULL);
+    }
+    lock_ReleaseMutex(&fidp->mx);
+
+    code = 0;
+    while ( code == 0 && count > 0 ) {
+#ifndef DJGPP
+	code = smb_WriteData(fidp, &offset, count, op, userp, &written);
+#else /* DJGPP */
+	code = smb_WriteData(fidp, &offset, count, op, userp, &written, FALSE);
+#endif /* !DJGPP */
+	if (code == 0 && written == 0)
+            code = CM_ERROR_PARTIALWRITE;
+
+        offset = LargeIntegerAdd(offset,
+                                 ConvertLongToLargeInteger(written));
+        count -= written;
+        total_written += written;
+        written = 0;
+    }
+
+ done_writing:
+    
+    /* slots 0 and 1 are reserved for request chaining and will be
+       filled in when we return. */
+    smb_SetSMBParm(outp, 2, total_written);
+    smb_SetSMBParm(outp, 3, 0); /* reserved */
+    smb_SetSMBParm(outp, 4, 0); /* reserved */
+    smb_SetSMBParm(outp, 5, 0); /* reserved */
+    smb_SetSMBDataLength(outp, 0);
+
+ done:
+    smb_ReleaseFID(fidp);
+    cm_ReleaseUser(userp);
+
+    return code;
+}
 
 long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -5266,12 +5396,33 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     fd = smb_GetSMBParm(inp, 2);
     count = smb_GetSMBParm(inp, 5);
-    offset.HighPart = 0;	/* too bad */
     offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
 
-    osi_Log3(smb_logp, "smb_ReceiveV3Read fd %d, off 0x%x, size 0x%x",
-             fd, offset.LowPart, count);
-        
+    if (*inp->wctp == 12) {
+        /* a request with 64-bit offsets */
+#ifdef AFS_LARGEFILES
+        offset.HighPart = smb_GetSMBParm(inp, 10) | (smb_GetSMBParm(inp, 11) << 16);
+
+        if (LargeIntegerLessThanZero(offset)) {
+            osi_Log2(smb_logp, "smb_ReceiveV3Read offset too large (0x%x:%08x)",
+                     offset.HighPart, offset.LowPart);
+            return CM_ERROR_BADSMB;
+        }
+#else
+        if ((smb_GetSMBParm(inp, 10) | (smb_GetSMBParm(inp, 11) << 16)) != 0) {
+            osi_Log0(smb_logp, "smb_ReceiveV3Read offset is 64-bit.  Dropping");
+            return CM_ERROR_BADSMB;
+        } else {
+            offset.HighPart = 0;
+        }
+#endif
+    } else {
+        offset.HighPart = 0;
+    }
+
+    osi_Log4(smb_logp, "smb_ReceiveV3Read fd %d, off 0x%x:%08x, size 0x%x",
+             fd, offset.HighPart, offset.LowPart, count);
+
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp) {

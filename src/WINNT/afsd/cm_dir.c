@@ -16,9 +16,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <osi.h>
+#include "afsd.h"
 #include <rx/rx.h>
 
-#include "afsd.h"
 
 /* compute how many 32 byte entries an AFS 3 dir requires for storing
  * the specified name.

@@ -12,10 +12,10 @@
 #include <malloc.h>
 #include <string.h>
 
-#include <rx/rx.h>
-
 #include <WINNT/afsreg.h>
 #include "afsd.h"
+#include <rx/rx.h>
+
 #ifdef AFS_FREELANCE_CLIENT
 #include "cm_freelance.h"
 #include "stdio.h"

@@ -30,6 +30,8 @@ extern long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb
 
 extern long smb_IoctlWrite(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
+extern long smb_IoctlV3Write(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
 extern long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 #ifndef DJGPP

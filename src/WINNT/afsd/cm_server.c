@@ -21,9 +21,9 @@
 #include <malloc.h>
 #include <string.h>
 
+#include "afsd.h"
 #include <osi.h>
 #include <rx/rx.h>
-#include "afsd.h"
 
 osi_rwlock_t cm_serverLock;
 
@@ -224,6 +224,16 @@ void cm_PutServer(cm_server_t *serverp)
 void cm_PutServerNoLock(cm_server_t *serverp)
 {
     osi_assert(serverp->refCount-- > 0);
+}
+
+void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit)
+{
+    lock_ObtainMutex(&serverp->mx);
+    if (no64bit)
+        serverp->flags |= CM_SERVERFLAG_NO64BIT;
+    else
+        serverp->flags &= ~CM_SERVERFLAG_NO64BIT;
+    lock_ReleaseMutex(&serverp->mx);
 }
 
 void cm_SetServerPrefs(cm_server_t * serverp)

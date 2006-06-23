@@ -404,6 +404,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afspthread.lib \
         $(LANAHELPERLIB)
 
 $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_EXELIBS)

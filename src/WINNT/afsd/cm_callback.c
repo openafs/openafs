@@ -21,10 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "afsd.h"
 #include <osi.h>
 #include <rx_pthread.h>
 
-#include "afsd.h"
 #include <WINNT/syscfg.h>
 #include <WINNT/afsreg.h>
 #include <../afsrdr/kif.h>
@@ -475,6 +475,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	
 	lock_ReleaseWrite(&cm_scacheLock);
 	
+	/* reset the No 64-bit flag on the server */
+	cm_SetServerNo64Bit(tsp, 0);
+
 	/* we're done with the server structure */
 	if (tsp) 
             cm_PutServer(tsp);
@@ -829,7 +832,7 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
     cep->Length.high = scp->length.HighPart;
     cep->Length.low = scp->length.LowPart;
 #else
-    cep->Length = ((afs_int64)scp->length.HighPart)<<32 | scp->length.LowPart;
+    cep->Length = (afs_int64) scp->length.QuadPart;
 #endif
     cep->DataVersion = scp->dataVersion;
     cep->callback = afs_data_pointer_to_int32(scp->cbServerp);

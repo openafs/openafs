@@ -181,7 +181,7 @@ typedef struct cm_scache {
                                   * include locks which have
                                   * CM_FILELOCK_FLAG_CLIENTONLY set.
                                   */
-	
+
     afs_uint32   clientLocks;   /* number of locks on ::fileLocks that
                                    have CM_FILELOCK_FLAG_CLIENTONLY
                                    set. */
@@ -244,6 +244,10 @@ typedef struct cm_scache {
 #define CM_SCACHEFLAG_WATCHEDSUBTREE	0x100000 /* dir subtree being watched */
 #define CM_SCACHEFLAG_ANYWATCH \
 			(CM_SCACHEFLAG_WATCHED | CM_SCACHEFLAG_WATCHEDSUBTREE)
+
+#define CM_SCACHEFLAG_NO64BITOPS        0x200000 /* only supports
+                                                    32-bit fetch/store
+                                                    operations */
 
 /* sync flags for calls to the server.  The CM_SCACHEFLAG_FETCHING,
  * CM_SCACHEFLAG_STORING and CM_SCACHEFLAG_SIZESTORING flags correspond to the
