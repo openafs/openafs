@@ -155,12 +155,6 @@
                 </Component>
 
                 <Directory Id="dirCommon_en_US" Name="en_US" src="$(var.SrcDir)\WINNT\doc\help\en_US\">
-                    <Component Id="cmf_afs_nt_HLP_en_US" Guid="A59FF1E3-984F-47E0-8A65-590A01B6E1C4">
-                        <File Id="fileafs_nt_HLP_en_US" Name="afs-nt.hlp" LongName="afs-nt.hlp" KeyPath="yes" DiskId="1">
-							<Shortcut Id="scClientHelp_en_US" Directory="dirShortCut" Name="CliHelp.lnk" LongName="Client Help.lnk" Description="$(loc.StrHlpFileDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                        </File>
-                        <File Id="fileafs_nt2_CNT_en_US" Name="afs-nt.cnt" LongName="afs-nt.cnt" DiskId="1"  />
-                    </Component>
 
                     <Component Id="cmp_Lang_en_US" Guid="9B6B5AB2-8BD1-402D-BFC0-63255740A653">
                         <File Id="filetaafssvrmgr_CNT_en_US" Name="taafs.cnt" LongName="taafssvrmgr.cnt" DiskId="1" />
@@ -835,6 +829,16 @@
                         <File Id="fileafsdacl_EXE" Name="afsdacl.exe" KeyPath="yes" DiskId="1" />
                     </Component>
   <?ifndef BinsOnly ?>
+
+        <!-- en_US help -->
+
+                    <Component Id="cmf_afs_nt_HLP_en_US" Guid="E9CAF872-E71B-466E-9560-9E6F542128E4">
+                        <File Id="fileafs_nt_HLP_en_US" Name="afs-nt.hlp" LongName="afs-nt.hlp" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.hlp">
+							<Shortcut Id="scClientHelp_en_US" Directory="dirShortCut" Name="CliHelp.lnk" LongName="Client Help.lnk" Description="$(loc.StrHlpFileDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                        </File>
+                        <File Id="fileafs_nt2_CNT_en_US" Name="afs-nt.cnt" LongName="afs-nt.cnt" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.cnt" />
+                    </Component>
+
                     <Component Win64="$(var.Win64)" Id="cmf_afscreds_EXE" Guid="$(var.cmf_afscreds_EXE_guid)">
                         <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
 							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
