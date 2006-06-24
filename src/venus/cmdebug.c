@@ -41,6 +41,7 @@ RCSID
 #include <rx/rx.h>
 #include <lock.h>
 #include <afs/afs_args.h>
+#include <afs/afsutil.h>
 
 extern struct hostent *hostutil_GetHostByName();
 
