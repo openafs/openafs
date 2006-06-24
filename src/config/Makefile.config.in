@@ -13,6 +13,7 @@ afssrvlibexecdir=@afssrvlibexecdir@
 afssrvsbindir=@afssrvsbindir@
 bindir=@bindir@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
 includedir=@includedir@
 libdir=@libdir@
 libexecdir=@libexecdir@

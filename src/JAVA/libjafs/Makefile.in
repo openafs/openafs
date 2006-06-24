@@ -16,6 +16,7 @@ TOP_JLIBDIR=@TOP_SRCDIR@/JAVA/libjafs
 JNI_INC=${JAVA_HOME}/include
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
 bindir=@bindir@
 sbindir=@sbindir@
 libexecdir=@libexecdir@
