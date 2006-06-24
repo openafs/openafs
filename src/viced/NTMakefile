@@ -68,8 +68,8 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 # Build cbd - not generally distributed debugging program
 CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
-$(OUT)\cbd.obj: callback.c
-	$(C2OBJ) $** -DINTERPRET_DUMP
+$(OUT)\cbd.obj: callback.c AFS_component_version_number.h
+	$(C2OBJ) callback.c -DINTERPRET_DUMP
 
 $(CBD): $(OUT)\cbd.obj 
 	$(EXECONLINK)

@@ -2723,7 +2723,11 @@ ReadDump(char *file)
     return now;
 }
 
+#ifdef AFS_NT40_ENV
 #include "AFS_component_version_number.h"
+#else
+#include "AFS_component_version_number.c"
+#endif
 
 int
 main(int argc, char **argv)
