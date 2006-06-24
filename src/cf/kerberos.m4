@@ -58,7 +58,14 @@ if test X$conf_krb5 = XYES; then
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string krb5_524_convert_creds krb524_convert_creds_kdc])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string])
+	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
+	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
+		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
+		    [LIBS="-lkrb524 $LIBS"
+		     KRB5LIBS="-lkrb524 $LIBS"
+		     AC_DEFINE([HAVE_KRB524_CONVERT_CREDS_KDC], 1,
+			 [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
 	AC_CHECK_HEADERS([kerberosIV/krb.h])
 	AC_CHECK_HEADERS([kerberosV/heim_err.h])
 
