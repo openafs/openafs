@@ -91,6 +91,9 @@ typedef struct cm_req {
 				   cache managers treat it as "server is down"*/
 
 #include "cm_server.h"
+#ifndef AFS_PTHREAD_ENV
+#define AFS_PTHREAD_ENV 1
+#endif
 #include "rx.h"
 
 extern void cm_InitConn(void);

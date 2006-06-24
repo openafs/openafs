@@ -3573,7 +3573,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             }
 
         } else if ((scp->exclusiveLocks > 0) ||
-                (scp->sharedLocks > 0 && scp->serverLock != LockRead)) {
+                   (scp->sharedLocks > 0 && scp->serverLock != LockRead)) {
 
             /* We are already waiting for some other lock.  We should
                wait for the daemon to catch up instead of generating a
@@ -3609,7 +3609,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             }
 
             if (scp->serverLock == LockRead && Which == LockWrite) {
-            
+
                 /* We want to escalate the lock to a LockWrite.
                    Unfortunately that's not really possible without
                    letting go of the current lock.  But for now we do
@@ -3651,7 +3651,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
                 /* am I sane? */
                 osi_assert(newLock == LockRead);
-                
+
                 code = cm_IntSetLock(scp, userp, newLock, reqp);
             }
 
@@ -4462,9 +4462,9 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     /* Check if we already have a sufficient server lock to allow this
        lock to go through. */
     if (IS_LOCK_WAITLOCK(oldFileLock) &&
-       (!SERVERLOCKS_ENABLED(scp) ||
-        scp->serverLock == oldFileLock->lockType ||
-        scp->serverLock == LockWrite)) {
+        (!SERVERLOCKS_ENABLED(scp) ||
+         scp->serverLock == oldFileLock->lockType ||
+         scp->serverLock == LockWrite)) {
 
         oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITLOCK;
 
@@ -4505,7 +4505,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
             }
 
             if (IS_LOCK_ACCEPTED(fileLock) &&
-               INTERSECT_RANGE(oldFileLock->range, fileLock->range)) {
+                INTERSECT_RANGE(oldFileLock->range, fileLock->range)) {
 
                 if (oldFileLock->lockType != LockRead ||
                    fileLock->lockType != LockRead) {

@@ -51,6 +51,8 @@ typedef struct cm_serverRef {
 #define CM_SERVERFLAG_DOWN	1	/* server is down */
 #define CM_SERVERFLAG_PREF_SET	2       /* server preference set by user */
 #define CM_SERVERFLAG_PINGING 	4 	/* a ping against this server in progress */
+#define CM_SERVERFLAG_NO64BIT   8       /* server has no support for
+                                           64-bit operations. */
 
 /* flags for procedures */
 #define CM_FLAG_CHECKUPSERVERS		1	/* check working servers */
@@ -104,5 +106,7 @@ extern void cm_FreeServer(cm_server_t* server);
 extern void cm_FreeServerList(cm_serverRef_t** list);
 
 extern void cm_ForceNewConnectionsAllServers(void);
+
+extern void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit);
 
 #endif /*  __CM_SERVER_H_ENV__ */

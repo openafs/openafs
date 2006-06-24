@@ -16,6 +16,9 @@
 
 #include <ntsecapi.h>
 
+/* Support largefiles by default */
+#define AFS_LARGEFILES
+
 /* basic core protocol SMB structure */
 typedef struct smb {
     unsigned char id[4];
@@ -340,7 +343,7 @@ typedef struct smb_fid {
                                            originally (used to close
                                            the file if session is
                                            terminated) */
-    long offset;			/* our file pointer */
+    osi_hyper_t offset;			/* our file pointer */
     smb_ioctl_t *ioctlp;		/* ptr to ioctl structure */
 					/* Under NT, we may need to know the
 					 * parent directory and pathname used
@@ -376,7 +379,7 @@ typedef struct smb_fid {
 #define SMB_FID_SHARE_READ              0x1000
 #define SMB_FID_SHARE_WRITE             0x2000
 
-#define SMB_FID_QLOCK_HIGH              0x0fe00000
+#define SMB_FID_QLOCK_HIGH              0x7f000000
 #define SMB_FID_QLOCK_LOW               0x00000000
 #define SMB_FID_QLOCK_LENGTH            1
 #define SMB_FID_QLOCK_PID               0

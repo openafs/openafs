@@ -19,10 +19,9 @@
 #endif /* !DJGPP */
 #include <string.h>
 #include <malloc.h>
+#include "afsd.h"
 #include <osi.h>
 #include <rx/rx.h>
-
-#include "afsd.h"
 
 osi_rwlock_t cm_volumeLock;
 

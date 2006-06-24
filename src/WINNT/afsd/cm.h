@@ -10,6 +10,9 @@
 #ifndef __CM_H_ENV__
 #define __CM_H_ENV__ 1
 
+#ifndef AFS_PTHREAD_ENV
+#define AFS_PTHREAD_ENV 1
+#endif
 #include <rx/rx.h>
 #ifdef DJGPP      /* we need these for vldbentry decl., etc. */
 #include <afs/vldbint.h>

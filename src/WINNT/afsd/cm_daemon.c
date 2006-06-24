@@ -21,11 +21,12 @@
 #include <malloc.h>
 #include <string.h>
 
+#include "afsd.h"
+
 #include <rx/rx.h>
 #include <rx/rx_prototypes.h>
 #include <WINNT/afsreg.h>
 
-#include "afsd.h"
 #include "afsicf.h"
 
 /* in seconds */

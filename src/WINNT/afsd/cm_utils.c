@@ -64,10 +64,10 @@
 
 #include <string.h>
 #include <malloc.h>
+#include "afsd.h"
 #include <osi.h>
 #include <rx/rx.h>
 
-#include "afsd.h"
 
 static osi_once_t cm_utilsOnce;
 

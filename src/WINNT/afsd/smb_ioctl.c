@@ -280,6 +280,51 @@ done:
         return code;
 }
 
+/* called from smb_ReceiveV3WriteX when we receive a write call on the IOCTL
+ * file descriptor.
+ */
+long smb_IoctlV3Write(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+{
+	smb_ioctl_t *iop;
+        long count;
+        long code;
+        char *op;
+        int inDataBlockCount;
+
+	code = 0;
+	count = smb_GetSMBParm(inp, 10);
+        iop = fidp->ioctlp;
+        
+	smb_IoctlPrepareWrite(fidp, iop);
+
+        op = inp->data + smb_GetSMBParm(inp, 11);
+        inDataBlockCount = count;
+	
+        if (count + iop->inCopied > SMB_IOCTL_MAXDATA) {
+		code = CM_ERROR_TOOBIG;
+                goto done;
+        }
+        
+	/* copy data */
+        memcpy(iop->inDatap + iop->inCopied, op, count);
+        
+        /* adjust counts */
+        iop->inCopied += count;
+
+done:
+	/* return # of bytes written */
+	if (code == 0) {
+		smb_SetSMBParm(outp, 2, count);
+                smb_SetSMBParm(outp, 3, 0); /* reserved */
+	        smb_SetSMBParm(outp, 4, 0); /* reserved */
+	        smb_SetSMBParm(outp, 5, 0); /* reserved */
+	        smb_SetSMBDataLength(outp, 0);
+        }
+
+        return code;
+}
+
+
 /* called from V3 read to handle IOCTL descriptor reads */
 long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {

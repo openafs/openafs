@@ -16,10 +16,10 @@
 #include <string.h>
 #include <malloc.h>
 #include <osi.h>
+#include "afsd.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/unified_afs.h>
-#include "afsd.h"
 
 osi_rwlock_t cm_connLock;
 

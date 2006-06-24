@@ -551,6 +551,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
         lock_ObtainMutex(&cm_Freelance_Lock);
         scp->length.LowPart = (DWORD)strlen(mp)+4;
+        scp->length.HighPart = 0;
         strncpy(scp->mountPointStringp,mp,MOUNTPOINTLEN);
         scp->mountPointStringp[MOUNTPOINTLEN-1] = '\0';
         lock_ReleaseMutex(&cm_Freelance_Lock);
@@ -1148,6 +1149,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->FileType = CM_SCACHETYPE_DIRECTORY;
         statusp->LinkCount = scp->linkCount;
         statusp->Length = cm_fakeDirSize;
+        statusp->Length_hi = 0;
         statusp->DataVersion = cm_data.fakeDirVersion;
         statusp->Author = 0x1;
         statusp->Owner = 0x0;
@@ -1220,11 +1222,11 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     }
     if (!(scp->mask & CM_SCACHEMASK_LENGTH)) {
         scp->length.LowPart = statusp->Length;
-        scp->length.HighPart = 0;
+        scp->length.HighPart = statusp->Length_hi;
     }
 
     scp->serverLength.LowPart = statusp->Length;
-    scp->serverLength.HighPart = 0;
+    scp->serverLength.HighPart = statusp->Length_hi;
 
     scp->linkCount = statusp->LinkCount;
     scp->dataVersion = statusp->DataVersion;

@@ -24,11 +24,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "afsd.h"
 #include <osi.h>
 #include <rx\rx.h>
 #include <rx/rx_prototypes.h>
-
-#include "afsd.h"
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
@@ -351,6 +350,8 @@ char * myCrt_Dispatch(int i)
         return "(2d)ReceiveV3OpenX";
     case 0x2e:
         return "(2e)ReceiveV3ReadX";
+    case 0x2f:
+        return "(2f)ReceiveV3WriteX";
     case 0x32:
         return "(32)ReceiveV3Tran2A";
     case 0x33:
@@ -2965,11 +2966,32 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     fd = smb_GetSMBParm(inp, 0);
     count = smb_GetSMBParm(inp, 3);
     minCount = smb_GetSMBParm(inp, 4);
-    offset.HighPart = 0;	/* too bad */
     offset.LowPart = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
 
-    osi_Log3(smb_logp, "smb_ReceieveCoreReadRaw fd %d, off 0x%x, size 0x%x",
-             fd, offset.LowPart, count);
+    if (*inp->wctp == 10) {
+        /* we were sent a request with 64-bit file offsets */
+#ifdef AFS_LARGEFILES
+        offset.HighPart = smb_GetSMBParm(inp, 8) | (smb_GetSMBParm(inp, 9) << 16);
+
+        if (LargeIntegerLessThanZero(offset)) {
+            osi_Log0(smb_logp, "smb_ReceiveCoreReadRaw received negative 64-bit offset");
+            goto send1;
+        }
+#else
+        if ((smb_GetSMBParm(inp, 8) | (smb_GetSMBParm(inp, 9) << 16)) != 0) {
+            osi_Log0(smb_logp, "smb_ReceiveCoreReadRaw received 64-bit file offset.  Dropping request.");
+            goto send1;
+        } else {
+            offset.HighPart = 0;
+        }
+#endif
+    } else {
+        /* we were sent a request with 32-bit file offsets */
+        offset.HighPart = 0;
+    }
+
+    osi_Log4(smb_logp, "smb_ReceieveCoreReadRaw fd %d, off 0x%x:%08x, size 0x%x",
+             fd, offset.HighPart, offset.LowPart, count);
 
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
@@ -2982,7 +3004,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
         key = cm_GenerateKey(vcp->vcID, pid, fd);
 
-        LOffset.HighPart = 0;
+        LOffset.HighPart = offset.HighPart;
         LOffset.LowPart = offset.LowPart;
         LLength.HighPart = 0;
         LLength.LowPart = count;
@@ -3218,6 +3240,9 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         caps = NTNEGOTIATE_CAPABILITY_NTSTATUS |
 #ifdef DFS_SUPPORT
                NTNEGOTIATE_CAPABILITY_DFS |
+#endif
+#ifdef AFS_LARGEFILES
+               NTNEGOTIATE_CAPABILITY_LARGEFILES |
 #endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
@@ -4580,7 +4605,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         cm_ReleaseUser(userp);
         return code;
     }
-	
+
 #ifdef DFS_SUPPORT
     if (newScp->fileType == CM_SCACHETYPE_DFSLINK) {
         cm_ReleaseSCache(newScp);
@@ -6456,7 +6481,8 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	if (code == 0 && written == 0)
             code = CM_ERROR_PARTIALWRITE;
 
-        offset.LowPart += written;
+        offset = LargeIntegerAdd(offset,
+                                 ConvertLongToLargeInteger(written));
         count -= written;
         total_written += written;
         written = 0;
@@ -6492,8 +6518,8 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     fd = smb_GetSMBParm(inp, 0);
     fidp = smb_FindFID(vcp, fd, 0);
 
-    osi_Log2(smb_logp, "Completing Raw Write offset %x count %x",
-             rwcp->offset.LowPart, rwcp->count);
+    osi_Log3(smb_logp, "Completing Raw Write offset 0x%x:%08x count %x",
+             rwcp->offset.HighPart, rwcp->offset.LowPart, rwcp->count);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -6566,16 +6592,44 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     fd = smb_GetSMBParm(inp, 0);
     totalCount = smb_GetSMBParm(inp, 1);
     count = smb_GetSMBParm(inp, 10);
-    offset.HighPart = 0;	/* too bad */
-    offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
     writeMode = smb_GetSMBParm(inp, 7);
 
     op = (char *) inp->data;
     op += smb_GetSMBParm(inp, 11);
 
+    offset.HighPart = 0;
+    offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
+
+    if (*inp->wctp == 14) {
+        /* we received a 64-bit file offset */
+#ifdef AFS_LARGEFILES
+        offset.HighPart = smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16);
+
+        if (LargeIntegerLessThanZero(offset)) {
+            osi_Log2(smb_logp,
+                     "smb_ReceiveCoreWriteRaw received negative file offset 0x%x:%08x",
+                     offset.HighPart, offset.LowPart);
+            return CM_ERROR_BADSMB;
+        }
+#else
+        if ((smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16)) != 0) {
+            osi_Log0(smb_logp,
+                     "smb_ReceiveCoreWriteRaw received 64-bit file offset, but we don't support large files");
+            return CM_ERROR_BADSMB;
+        }
+
+        offset.HighPart = 0;
+#endif
+    } else {
+        offset.HighPart = 0;    /* 32-bit file offset */
+    }
+    
     osi_Log4(smb_logp,
-             "smb_ReceiveCoreWriteRaw fd %d, off 0x%x, size 0x%x, WriteMode 0x%x",
-             fd, offset.LowPart, count, writeMode);
+             "smb_ReceiveCoreWriteRaw fd %d, off 0x%x:%08x, size 0x%x",
+             fd, offset.HighPart, offset.LowPart, count);
+    osi_Log1(smb_logp,
+             "               WriteRaw WriteMode 0x%x",
+             writeMode);
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
@@ -6636,7 +6690,9 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	if (code == 0 && written == 0)
             code = CM_ERROR_PARTIALWRITE;
 
-        offset.LowPart += written;
+        offset = LargeIntegerAdd(offset,
+                                 ConvertLongToLargeInteger(written));
+
         count -= written;
         total_written += written;
         written = 0;
@@ -6680,10 +6736,13 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         return code;
     }
 
+    offset = LargeIntegerAdd(offset,
+                             ConvertLongToLargeInteger(count));
+
     rwcp->code = 0;
     rwcp->buf = rawBuf;
-    rwcp->offset.HighPart = 0;
-    rwcp->offset.LowPart = offset.LowPart + count;
+    rwcp->offset.HighPart = offset.HighPart;
+    rwcp->offset.LowPart = offset.LowPart;
     rwcp->count = totalCount - count;
     rwcp->writeMode = writeMode;
     rwcp->alreadyWritten = total_written;
@@ -7103,6 +7162,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     long code = 0;
+    osi_hyper_t new_offset;
     long offset;
     int whence;
     unsigned short fd;
@@ -7144,15 +7204,20 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == 0) {
         if (whence == 1) {
             /* offset from current offset */
-            offset += fidp->offset;
+            new_offset = LargeIntegerAdd(fidp->offset,
+                                         ConvertLongToLargeInteger(offset));
         }
         else if (whence == 2) {
             /* offset from current EOF */
-            offset += scp->length.LowPart;
+            new_offset = LargeIntegerAdd(scp->length,
+                                         ConvertLongToLargeInteger(offset));
+        } else {
+            new_offset = ConvertLongToLargeInteger(offset);
         }
-        fidp->offset = offset;
-        smb_SetSMBParm(outp, 0, offset & 0xffff);
-        smb_SetSMBParm(outp, 1, (offset>>16) & 0xffff);
+
+        fidp->offset = new_offset;
+        smb_SetSMBParm(outp, 0, new_offset.LowPart & 0xffff);
+        smb_SetSMBParm(outp, 1, (new_offset.LowPart>>16) & 0xffff);
         smb_SetSMBDataLength(outp, 0);
     }
     lock_ReleaseMutex(&scp->mx);
@@ -8607,6 +8672,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_dispatchTable[0x2d].flags |= SMB_DISPATCHFLAG_CHAINED;
     smb_dispatchTable[0x2e].procp = smb_ReceiveV3ReadX;
     smb_dispatchTable[0x2e].flags |= SMB_DISPATCHFLAG_CHAINED;
+    smb_dispatchTable[0x2f].procp = smb_ReceiveV3WriteX;
+    smb_dispatchTable[0x2f].flags |= SMB_DISPATCHFLAG_CHAINED;
     smb_dispatchTable[0x32].procp = smb_ReceiveV3Tran2A;	/* both are same */
     smb_dispatchTable[0x32].flags |= SMB_DISPATCHFLAG_NORESPONSE;
     smb_dispatchTable[0x33].procp = smb_ReceiveV3Tran2A;

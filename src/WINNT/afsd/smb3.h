@@ -175,6 +175,8 @@ extern long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pac
 
 extern long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
+extern long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
 extern long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
