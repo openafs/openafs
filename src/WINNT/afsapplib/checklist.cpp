@@ -218,9 +218,9 @@ BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (procListbox)
-      hResult = CallWindowProc ((WNDPROC)LongToPtr(procListbox), hList, msg, wp, lp);
+      hResult = (BOOL)CallWindowProc ((WNDPROC)LongToPtr(procListbox), hList, msg, wp, lp);
    else
-      hResult = DefWindowProc (hList, msg, wp, lp);
+      hResult = (BOOL)DefWindowProc (hList, msg, wp, lp);
 
     return (hResult?TRUE:FALSE);
 }
@@ -263,13 +263,13 @@ BOOL CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             if (clrNew != clrLast)
                hbrStatic = CreateSolidBrush (clrLast = clrNew);
             SetBkColor ((HDC)wp, clrLast);
-            return (BOOL)hbrStatic;
+            return (BOOL)(INT_PTR)hbrStatic;
             }
          break;
       }
 
    if (procOld)
-      return CallWindowProc ((WNDPROC)procOld, hDlg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)procOld, hDlg, msg, wp, lp);
    else
       return FALSE;
 }
@@ -365,7 +365,7 @@ void CheckList_OnDrawCheckbox (HWND hList, int id, LPDRAWITEMSTRUCT lpds)
    // step 2e: draw the background field
    //
    BOOL fHit = CheckList_OnHitTest (hList, id);
-   BOOL fChecked = LB_GetCheck (hList, id);
+   BOOL fChecked = (BOOL)LB_GetCheck (hList, id);
 
    clrBack = GetSysColor (COLOR_WINDOW);
    if ( (lpds->itemState & ODS_DISABLED) ||
@@ -549,7 +549,7 @@ void CheckList_OnMouseMove (HWND hList)
 {
    if (GetCapture() == hList)
       {
-      int ii = LB_GetHit (hList);
+      int ii = (int)LB_GetHit (hList);
       if (ii != -1)
          {
          CheckList_RedrawCheck (hList, ii);
@@ -566,7 +566,7 @@ void CheckList_OnButtonDown (HWND hList)
       POINT pt = { LOWORD(dw), HIWORD(dw) };
       ScreenToClient (hList, &pt);
 
-      int ii = SendMessage (hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x,pt.y));
+      int ii = (int)SendMessage (hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x,pt.y));
       if (HIWORD(ii) == 0)
          {
          BOOL fHit = CheckList_OnHitTest (hList, ii);
@@ -588,7 +588,7 @@ void CheckList_OnButtonUp (HWND hList)
       {
       ReleaseCapture();
 
-      int ii = LB_GetHit (hList);
+      int ii = (int)LB_GetHit (hList);
       if (ii != -1)
          {
          LB_SetHit (hList, -1);
@@ -599,7 +599,7 @@ void CheckList_OnButtonUp (HWND hList)
             CheckList_RedrawCheck (hList, ii);
          else
             {
-            BOOL fChecked = LB_GetCheck (hList, ii);
+            BOOL fChecked = (BOOL)LB_GetCheck (hList, ii);
             CheckList_OnSetCheck_Selected (hList, !fChecked);
             }
          }
@@ -615,10 +615,10 @@ void CheckList_OnDoubleClick (HWND hList)
       POINT pt = { LOWORD(dw), HIWORD(dw) };
       ScreenToClient (hList, &pt);
 
-      int ii = SendMessage (hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x,pt.y));
+      int ii = (int)SendMessage (hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x,pt.y));
       if (HIWORD(ii) == 0)
          {
-         BOOL fChecked = LB_GetCheck (hList, ii);
+         BOOL fChecked = (BOOL)LB_GetCheck (hList, ii);
 
          CheckList_OnSetCheck_Selected (hList, !fChecked);
          }
@@ -648,7 +648,7 @@ void CheckList_OnSetCheck_Selected (HWND hList, BOOL fCheck)
       }
    else // single-sel listbox
       {
-      int ii = SendMessage (hList, LB_GETCURSEL, 0, 0);
+      int ii = (int)SendMessage (hList, LB_GETCURSEL, 0, 0);
       if (ii != LB_ERR)
          {
          LB_SetCheck (hList, ii, fCheck);

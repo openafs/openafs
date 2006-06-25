@@ -136,7 +136,7 @@ BOOL RegisterSpinnerClass (void)
 
       if (GetClassInfo (THIS_HINST, TEXT("scrollbar"), &wc))
          {
-         oldSpinnerProc = (LONG)wc.lpfnWndProc;
+         oldSpinnerProc = (LONG)(LONG_PTR)wc.lpfnWndProc;
 
          wc.lpfnWndProc = (WNDPROC)SpinnerProc;
          wc.style = CS_GLOBALCLASS;
@@ -265,7 +265,7 @@ BOOL CALLBACK SpinnerProc (HWND hSpinner, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_CREATE)
       {
-      aSpinners[ (int)((LPCREATESTRUCT)lp)->lpCreateParams ].hSpinner = hSpinner;
+      aSpinners[ (int)(INT_PTR)((LPCREATESTRUCT)lp)->lpCreateParams ].hSpinner = hSpinner;
       }
 
    SpinnerInfo *psi = Spinner_FindSpinnerInfo (hSpinner, NULL);
@@ -321,9 +321,9 @@ BOOL CALLBACK SpinnerProc (HWND hSpinner, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldSpinnerProc == 0)
-      return DefWindowProc (hSpinner, msg, wp, lp);
+      return (BOOL)DefWindowProc (hSpinner, msg, wp, lp);
    else
-      return CallWindowProc ((WNDPROC)oldSpinnerProc, hSpinner, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)(LONG_PTR)oldSpinnerProc, hSpinner, msg, wp, lp);
 }
 
 
@@ -416,9 +416,9 @@ BOOL CALLBACK SpinnerDialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc == 0)
-      return DefWindowProc (hDlg, msg, wp, lp);
+      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
    else
-      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
 }
 
 
@@ -457,7 +457,7 @@ BOOL CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp)
             break;
 
          case WM_ENABLE:
-            EnableWindow (psi->hSpinner, wp);
+            EnableWindow (psi->hSpinner, (BOOL)wp);
             break;
 
          case WM_KILLFOCUS:
@@ -501,9 +501,9 @@ BOOL CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hBuddy, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hBuddy, msg, wp, lp);
    else
-      return DefWindowProc (hBuddy, msg, wp, lp);
+      return (BOOL)DefWindowProc (hBuddy, msg, wp, lp);
 }
 
 
@@ -663,7 +663,7 @@ BOOL Spinner_OnSetRect (SpinnerInfo *psi, WPARAM wp, LPARAM lp)
 
 BOOL Spinner_OnGetSpinner (SpinnerInfo *psi, WPARAM wp, LPARAM lp)
 {
-   return (BOOL)psi->hSpinner;
+   return (BOOL)(INT_PTR)psi->hSpinner;
 }
 
 

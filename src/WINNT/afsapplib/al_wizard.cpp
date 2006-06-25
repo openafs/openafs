@@ -642,7 +642,7 @@ BOOL WIZARD::SendStateCommand (int st, WIZARD_COMMAND wc)
    LPWIZARD_STATE pState;
    if ((pState = FindState (st)) != NULL)
       {
-      rc = CallWindowProc ((WNDPROC)(pState->dlgproc), NULL, WM_COMMAND, MAKEWPARAM(IDC_WIZARD,(WORD)wc), (LPARAM)this);
+      rc = (BOOL)CallWindowProc ((WNDPROC)(pState->dlgproc), NULL, WM_COMMAND, MAKEWPARAM(IDC_WIZARD,(WORD)wc), (LPARAM)this);
       }
 
    return rc;
@@ -697,9 +697,9 @@ BOOL CALLBACK WIZARD::Template_LeftPaneHook (HWND hLHS, UINT msg, WPARAM wp, LPA
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hLHS, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hLHS, msg, wp, lp);
    else
-      return DefWindowProc (hLHS, msg, wp, lp);
+      return (BOOL)DefWindowProc (hLHS, msg, wp, lp);
 }
 
 
@@ -707,11 +707,11 @@ BOOL WIZARD::Template_ForwardMessage (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    HWND hRHS;
    if ((hRHS = GetRightHandWindow()) != NULL)
-      return SendMessage (hRHS, msg, wp, lp);
+      return (BOOL)SendMessage (hRHS, msg, wp, lp);
 
    LPWIZARD_STATE pState;
    if ((pState = FindState (m_stCurrent)) != NULL)
-      return CallWindowProc ((WNDPROC)(pState->dlgproc), hWnd, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)(pState->dlgproc), hWnd, msg, wp, lp);
 
    return FALSE;
 }
@@ -996,9 +996,9 @@ BOOL CALLBACK WIZARD::Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPAR
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hBkg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hBkg, msg, wp, lp);
    else
-      return DefWindowProc (hBkg, msg, wp, lp);
+      return (BOOL)DefWindowProc (hBkg, msg, wp, lp);
 }
 
 
@@ -1047,8 +1047,8 @@ void WIZARD::Background_OnSize (void)
          for (COLORREF clr = clrWASH_BRIGHTEST; clr >= clrWASH_DARKEST; clr -= clrWASH_INCREMENT)
             {
             RECT rSection = rr;
-            rSection.top = yy;
-            rSection.bottom = yy +cy;
+            rSection.top = (LONG)yy;
+            rSection.bottom = (LONG)(yy +cy);
             HBRUSH hbr = CreateSolidBrush (ToPALETTERGB(clr));
             FillRect (hdcTarget, &rSection, hbr);
             DeleteObject (hbr);

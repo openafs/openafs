@@ -236,7 +236,7 @@ BOOL CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return DefWindowProc (hSockAddr, msg, wp, lp);
+   return (BOOL)DefWindowProc (hSockAddr, msg, wp, lp);
 }
 
 
@@ -472,7 +472,7 @@ BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                else
                   clr = GetSysColor (COLOR_BTNFACE);
                SetBkColor ((HDC)wp, clr);
-               return (BOOL)CreateSolidBrush (clr);
+               return (BOOL)(INT_PTR)CreateSolidBrush (clr);
                }
             }
          break;
@@ -510,9 +510,9 @@ BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return DefWindowProc (hDlg, msg, wp, lp);
+      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
@@ -556,9 +556,9 @@ BOOL CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, SockAddrEditProc);
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return DefWindowProc (hEdit, msg, wp, lp);
+      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
 }
 
 

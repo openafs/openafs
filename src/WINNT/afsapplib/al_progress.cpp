@@ -66,7 +66,7 @@ PROGRESSDISPLAY::~PROGRESSDISPLAY (void)
 
 void PROGRESSDISPLAY::Init (HWND hWnd)
 {
-   SetWindowLongPtr (hWnd, DWLP_USER, (LONG)this);
+   SetWindowLongPtr (hWnd, DWLP_USER, (LONG_PTR)this);
    Subclass_AddHook (hWnd, PROGRESSDISPLAY::ProgressDisplay_HookProc);
 
    m_msgFinish = 0;
@@ -207,9 +207,9 @@ BOOL CALLBACK PROGRESSDISPLAY::ProgressDisplay_HookProc (HWND hWnd, UINT msg, WP
       }
 
    if (oldproc)
-      return CallWindowProc ((WNDPROC)oldproc, hWnd, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldproc, hWnd, msg, wp, lp);
    else
-      return DefWindowProc (hWnd, msg, wp, lp);
+      return (BOOL)DefWindowProc (hWnd, msg, wp, lp);
 }
 
 
