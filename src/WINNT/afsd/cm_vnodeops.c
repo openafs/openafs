@@ -2321,12 +2321,17 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseWrite(&scp->bufCreateLock);
     if (code == 0) {
         lock_ObtainMutex(&scp->mx);
-        scp->flags &= ~(CM_SCACHEFLAG_OVERQUOTA
-                         | CM_SCACHEFLAG_OUTOFSPACE);
+
         if (scp->mask & (CM_SCACHEMASK_TRUNCPOS
                           | CM_SCACHEMASK_CLIENTMODTIME
                           | CM_SCACHEMASK_LENGTH))
             code = cm_StoreMini(scp, userp, reqp);
+
+        if (scp->flags & (CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE)) {
+	    code = (scp->flags & CM_SCACHEFLAG_OVERQUOTA) ? CM_ERROR_QUOTA : CM_ERROR_SPACE;
+	    scp->flags &= ~(CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE);
+	}
+
         lock_ReleaseMutex(&scp->mx);
     }
     return code;
