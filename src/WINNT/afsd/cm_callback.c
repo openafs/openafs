@@ -475,12 +475,13 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	
 	lock_ReleaseWrite(&cm_scacheLock);
 	
-	/* reset the No 64-bit flag on the server */
-	cm_SetServerNo64Bit(tsp, 0);
+	if (tsp) {
+	    /* reset the No 64-bit flag on the server */
+	    cm_SetServerNo64Bit(tsp, 0);
 
-	/* we're done with the server structure */
-	if (tsp) 
+	    /* we're done with the server structure */
             cm_PutServer(tsp);
+	}
     }
     MUTEX_EXIT(&callp->lock);
     return 0;
