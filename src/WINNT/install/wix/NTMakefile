@@ -13,7 +13,9 @@ MEDIADIR = $(DESTDIR)\WinInstall
 MEDIABINDIR = $(MEDIADIR)\Dll
 
 MSIFILE = $(MEDIADIR)\openafs-$(LANG).msi
+!IF ("$(CPU)" == "i386")
 BINMSIFILE = $(MEDIADIR)\openafs-32bit-tools-$(LANG).msi
+!ENDIF
 
 WIXINCLUDES = \
 	config.wxi \
@@ -25,7 +27,9 @@ WIXINCLUDES = \
 	lang\$(LANG)\ui.wxi
 
 WIXOBJ = $(OUT)\openafs-$(LANG).wixobj
+!IF ("$(CPU)" == "i386")
 BINWIXOBJ  = $(OUT)\openafs-32bit-tools-$(LANG).wixobj
+!ENDIF
 
 LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW
 
@@ -74,6 +78,7 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-w0 \
         $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
 
+!IF ("$(CPU)" == "i386")
 $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
 	candle -nologo -out $@	\
 		"-dCellName=$(CELLNAME_DEFAULT)" \
@@ -93,6 +98,7 @@ $(BINMSIFILE): $(BINWIXOBJ)
 		-loc lang\en_US\strings.wxl \
 		$(BINWIXOBJ)
 	dir $(BINMSIFILE)
+!ENDIF
 
 # Cleanup
 clean::
@@ -108,5 +114,7 @@ clean::
 lang_clean:
 	-$(DEL) $(WIXOBJ)
 	-$(DEL) $(MSIFILE)
+!IF ("$(CPU)" == "i386")
 	-$(DEL) $(BINWIXOBJ)
 	-$(DEL) $(BINMSIFILE)
+!ENDIF
