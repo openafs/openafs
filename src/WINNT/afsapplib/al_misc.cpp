@@ -61,7 +61,7 @@ EXPORTED void AfsAppLib_SetAppInstance (HINSTANCE hInst)
 }
 
 
-EXPORTED extern "C" BOOLEAN _stdcall DllEntryPoint (HANDLE hInst, DWORD dwReason, PVOID pReserved)
+EXPORTED BOOLEAN _stdcall DllEntryPoint (HANDLE hInst, DWORD dwReason, PVOID pReserved)
 {
    switch (dwReason)
       {
@@ -167,7 +167,7 @@ BOOL CALLBACK AnimationHook (HWND hIcon, UINT msg, WPARAM wp, LPARAM lp)
       {
       case WM_TIMER:
          int iFrame;
-         iFrame = GetWindowData (hIcon, GWD_ANIMATIONFRAME);
+         iFrame = (int)GetWindowData (hIcon, GWD_ANIMATIONFRAME);
          AfsAppLib_AnimateIcon (hIcon, &iFrame);
          SetWindowData (hIcon, GWD_ANIMATIONFRAME, iFrame);
          break;
@@ -178,9 +178,9 @@ BOOL CALLBACK AnimationHook (HWND hIcon, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hIcon, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hIcon, msg, wp, lp);
    else
-      return DefWindowProc (hIcon, msg, wp, lp);
+      return (BOOL)DefWindowProc (hIcon, msg, wp, lp);
 }
 
 
@@ -208,7 +208,7 @@ void AfsAppLib_StopAnimation (HWND hIcon)
 BOOL CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID idLanguage)
 {
    DWORD idClient;
-   if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
+   if ((idClient = (DWORD)AfsAppLib_GetAdminServerClientID()) != 0)
       {
       ULONG status;
       return asc_ErrorCodeTranslate (idClient, code, idLanguage, pszText, &status);
@@ -263,7 +263,7 @@ LPCELLLIST AfsAppLib_GetCellList (HKEY hkBase, LPTSTR pszRegPath)
       if (RegOpenKey (hkBase, pszRegPath, &hk) == 0)
          {
          TCHAR szCell[ cchNAME ];
-         for (size_t ii = 0; RegEnumKey (hk, ii, szCell, cchNAME) == 0; ++ii)
+         for (size_t ii = 0; RegEnumKey (hk, (DWORD)ii, szCell, cchNAME) == 0; ++ii)
             {
             if (REALLOC (lpcl->aCells, lpcl->nCells, 1+ii, cREALLOC_CELLLIST))
                {
@@ -461,7 +461,7 @@ BOOL AfsAppLib_GetLocalCell (LPTSTR pszCell, ULONG *pStatus)
    if (szCell[0] == TEXT('\0'))
       {
       DWORD idClient;
-      if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
+      if ((idClient = (DWORD)AfsAppLib_GetAdminServerClientID()) != 0)
          {
          rc = asc_LocalCellGet (idClient, szCell, &status);
          }

@@ -274,7 +274,7 @@ BOOL CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return DefWindowProc (hElapsed, msg, wp, lp);
+   return (BOOL)DefWindowProc (hElapsed, msg, wp, lp);
 }
 
 
@@ -515,7 +515,7 @@ BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                else
                   clr = GetSysColor (COLOR_BTNFACE);
                SetBkColor ((HDC)wp, clr);
-               return (BOOL)CreateSolidBrush (clr);
+               return (BOOL)(INT_PTR)CreateSolidBrush (clr);
                }
             }
          break;
@@ -540,9 +540,9 @@ BOOL CALLBACK ElapsedDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return DefWindowProc (hDlg, msg, wp, lp);
+      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
@@ -576,9 +576,9 @@ BOOL CALLBACK ElapsedEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, ElapsedEditProc);
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return DefWindowProc (hEdit, msg, wp, lp);
+      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
 }
 
 

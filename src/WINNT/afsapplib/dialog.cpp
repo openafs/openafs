@@ -194,7 +194,7 @@ BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return DefWindowProc (hDlg, msg, wp, lp);
+   return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
 
 }
 
@@ -207,7 +207,7 @@ LPPROPSHEET PropSheet_Create (LONG idsTitle, BOOL fContextHelp, HWND hParent, LP
    psh->sh.dwFlags = PSH_MODELESS | ((fContextHelp) ? PSH_HASHELP : 0);
    psh->sh.hwndParent = hParent;
    psh->sh.hInstance = THIS_HINST;
-   psh->sh.pszCaption = (HIWORD(idsTitle)) ? (LPTSTR)idsTitle : FormatString(TEXT("%1"),TEXT("%m"),idsTitle);
+   psh->sh.pszCaption = (HIWORD(idsTitle)) ? (LPTSTR)(LONG_PTR)idsTitle : FormatString(TEXT("%1"),TEXT("%m"),idsTitle);
    psh->fMadeCaption = (HIWORD(idsTitle)) ? FALSE : TRUE;
    psh->lpUser = lp;
    return psh;
@@ -220,7 +220,7 @@ LPPROPSHEET PropSheet_Create (int idsTitle, BOOL fContextHelp, HWND hParent, LPA
 
 LPPROPSHEET PropSheet_Create (LPTSTR pszTitle, BOOL fContextHelp, HWND hParent, LPARAM lp)
 {
-   return PropSheet_Create ((LONG)pszTitle, fContextHelp, hParent, lp);
+   return PropSheet_Create ((LONG)(LONG_PTR)pszTitle, fContextHelp, hParent, lp);
 }
 
 
@@ -244,7 +244,7 @@ BOOL PropSheet_AddTab (LPPROPSHEET psh, LONG idsTitle, int idd, DLGPROC dlgproc,
 
    if (HIWORD(idsTitle))
       {
-      psp.pszTitle = (LPTSTR)idsTitle;
+      psp.pszTitle = (LPTSTR)(LONG_PTR)idsTitle;
       psp.dwFlags |= PSP_USETITLE;
       }
    else if (idsTitle != 0)
@@ -284,7 +284,7 @@ BOOL PropSheet_AddTab (LPPROPSHEET psh, int idsTitle, int idd, DLGPROC dlgproc, 
 
 BOOL PropSheet_AddTab (LPPROPSHEET psh, LPTSTR pszTitle, int idd, DLGPROC dlgproc, LPARAM lpUser, BOOL fHelpButton, BOOL fStartPage)
 {
-   return PropSheet_AddTab (psh, (LONG)pszTitle, idd, dlgproc, lpUser, fHelpButton, fStartPage);
+   return PropSheet_AddTab (psh, (LONG)(LONG_PTR)pszTitle, idd, dlgproc, lpUser, fHelpButton, fStartPage);
 }
 
 
@@ -306,9 +306,9 @@ BOOL CALLBACK PropSheet_HookProc (HWND hSheet, UINT msg, WPARAM wp, LPARAM lp)
 
    BOOL rc;
    if (oldproc)
-      rc = CallWindowProc ((WNDPROC)oldproc, hSheet, msg, wp, lp);
+      rc = (BOOL)CallWindowProc ((WNDPROC)oldproc, hSheet, msg, wp, lp);
    else
-      rc = DefWindowProc (hSheet, msg, wp, lp);
+      rc = (BOOL)DefWindowProc (hSheet, msg, wp, lp);
 
    switch (msg)
       {
@@ -824,7 +824,7 @@ HLISTITEM cdecl FL_AddItem (HWND hList, LPVIEWINFO lpvi, LPARAM lp, int iImage1,
          }
       else
          {
-         FastList_SetItemText (hList, hItem, ii, apszColumns[ iColumn ]);
+         FastList_SetItemText (hList, hItem, (int)ii, apszColumns[ (int)iColumn ]);
          }
       }
 
@@ -1073,7 +1073,7 @@ void LV_RestoreView (HWND hList, LPVIEWINFO lpvi)
       lvc.fmt = (lpvi->cxColumns[ iColumn ] & COLUMN_RIGHTJUST) ? LVCFMT_RIGHT : (lpvi->cxColumns[ iColumn ] & COLUMN_CENTERJUST) ? LVCFMT_CENTER : LVCFMT_LEFT;
       lvc.pszText = szText;
       lvc.cx = (lpvi->cxColumns[ iColumn ] & (~COLUMN_JUSTMASK));
-      lvc.iSubItem = ii;
+      lvc.iSubItem = (int)ii;
       ListView_InsertColumn (hList, ii, &lvc);
       }
 
@@ -1137,10 +1137,10 @@ BOOL CALLBACK LV_SortView_Numeric (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
    int ii1 = LV_GetIndex (lpvsi->hList, lp1);
    int ii2 = LV_GetIndex (lpvsi->hList, lp2);
 
-   LV_GetItemText (lpvsi->hList, ii1, lpvsi->iColSort, szText);
+   LV_GetItemText (lpvsi->hList, ii1, (short)lpvsi->iColSort, szText);
    d1 = atof (szText);
 
-   LV_GetItemText (lpvsi->hList, ii2, lpvsi->iColSort, szText);
+   LV_GetItemText (lpvsi->hList, ii2, (short)lpvsi->iColSort, szText);
    d2 = atof (szText);
 
    if (lpvsi->fAscending)
@@ -1159,8 +1159,8 @@ BOOL CALLBACK LV_SortView_Alphabetic (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
    int ii1 = LV_GetIndex (lpvsi->hList, lp1);
    int ii2 = LV_GetIndex (lpvsi->hList, lp2);
 
-   LV_GetItemText (lpvsi->hList, ii1, lpvsi->iColSort, szText1);
-   LV_GetItemText (lpvsi->hList, ii2, lpvsi->iColSort, szText2);
+   LV_GetItemText (lpvsi->hList, ii1, (short)lpvsi->iColSort, szText1);
+   LV_GetItemText (lpvsi->hList, ii2, (short)lpvsi->iColSort, szText2);
 
    if (lpvsi->fAscending)
       return lstrcmp (szText2, szText1);
@@ -1234,7 +1234,7 @@ void cdecl LV_AddItem (HWND hList, LPVIEWINFO lpvi, int index, LPARAM lp, int iI
          }
       else
          {
-         ListView_SetItemText (hList, dw, ii, apszColumns[ iColumn ]);
+         ListView_SetItemText (hList, dw, (int)ii, apszColumns[ iColumn ]);
          }
       }
 }
@@ -1449,7 +1449,7 @@ UINT LB_AddItem (HWND hList, LPCTSTR psz, LPARAM lp)
 void LB_EnsureVisible (HWND hList, UINT index)
 {
    int cyItem;
-   if ((cyItem = SendMessage (hList, LB_GETITEMHEIGHT, 0, 0)) != 0)
+   if ((cyItem = (int)SendMessage (hList, LB_GETITEMHEIGHT, 0, 0)) != 0)
       {
       RECT rClient;
       GetClientRect (hList, &rClient);
@@ -1457,7 +1457,7 @@ void LB_EnsureVisible (HWND hList, UINT index)
       if ((cWindow = cyRECT(rClient) / cyItem) == 0)
          cWindow = 1;
 
-      int idxTop = SendMessage (hList, LB_GETTOPINDEX, 0, 0);
+      int idxTop = (int)SendMessage (hList, LB_GETTOPINDEX, 0, 0);
       if (index < (UINT)idxTop)
          {
          SendMessage (hList, LB_SETTOPINDEX, index, 0);
@@ -1555,7 +1555,7 @@ BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
       case LB_DELETESTRING:
          {
          int iItemSkip = (int)wp;
-         int iItemMax = SendMessage (hList, LB_GETCOUNT, 0, 0);
+         int iItemMax = (int)SendMessage (hList, LB_GETCOUNT, 0, 0);
          int cchMax = 0;
          int iItem;
 
@@ -1563,7 +1563,7 @@ BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
             {
             if (iItem == iItemSkip)
                continue;
-            int cch = SendMessage (hList, LB_GETTEXTLEN, (WPARAM)iItem, 0);
+            int cch = (int)SendMessage (hList, LB_GETTEXTLEN, (WPARAM)iItem, 0);
             cchMax = max (cch, cchMax);
             }
 
@@ -1587,9 +1587,9 @@ BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hList, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hList, msg, wp, lp);
    else
-      return DefWindowProc (hList, msg, wp, lp);
+      return (BOOL)DefWindowProc (hList, msg, wp, lp);
 }
 
 
@@ -1803,7 +1803,7 @@ void StopHourGlass (void)
 void DisplayContextMenu (HMENU hm, POINT ptScreen, HWND hParent)
 {
    HMENU hmDummy = CreateMenu();
-   InsertMenu (hmDummy, 0, MF_POPUP, (UINT)hm, NULL);
+   InsertMenu (hmDummy, 0, MF_POPUP, (UINT)(UINT_PTR)hm, NULL);
 
    TrackPopupMenu (GetSubMenu (hmDummy, 0),
                    TPM_LEFTALIGN | TPM_RIGHTBUTTON,

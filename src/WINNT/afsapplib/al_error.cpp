@@ -42,7 +42,7 @@ void cdecl ErrorDialog (DWORD dwStatus, LPTSTR pszError, LPTSTR pszFmt, ...)
 {
    va_list arg;
    va_start (arg, pszFmt);
-   vErrorDialog (FALSE, dwStatus, (LONG)pszError, pszFmt, arg);
+   vErrorDialog (FALSE, dwStatus, (LONG)(LONG_PTR)pszError, pszFmt, arg);
 }
 
 void cdecl ErrorDialog (DWORD dwStatus, int idsError, LPTSTR pszFmt, ...)
@@ -56,7 +56,7 @@ void cdecl FatalErrorDialog (DWORD dwStatus, LPTSTR pszError, LPTSTR pszFmt, ...
 {
    va_list arg;
    va_start (arg, pszFmt);
-   vErrorDialog (TRUE, dwStatus, (LONG)pszError, pszFmt, arg);
+   vErrorDialog (TRUE, dwStatus, (LONG)(LONG_PTR)pszError, pszFmt, arg);
 }
 
 void cdecl FatalErrorDialog (DWORD dwStatus, int idsError, LPTSTR pszFmt, ...)

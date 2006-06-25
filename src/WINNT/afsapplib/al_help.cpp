@@ -131,7 +131,7 @@ BOOL AfsAppLib_HandleHelp (int idd, HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          else
             {
             if (g_szHelpfile)
-               WinHelp ((HWND)(lphi->hItemHandle), g_szHelpfile, HELP_WM_HELP, (DWORD)g_adh[ ih ].adwContext);
+               WinHelp ((HWND)(lphi->hItemHandle), g_szHelpfile, HELP_WM_HELP, (DWORD)(DWORD_PTR)g_adh[ ih ].adwContext);
             }
 
          rc = TRUE;

@@ -177,7 +177,7 @@ BOOL AfsAppLib_ShowOpenCellDialog (LPOPENCELLDLG_PARAMS lpp)
          lpp->hCreds = AfsAppLib_GetCredentials (NULL);
       }
 
-   int rc = ModalDialogParam (lpp->idd, lpp->hParent, (DLGPROC)OpenCell_DlgProc, (LPARAM)lpp);
+   INT_PTR rc = ModalDialogParam (lpp->idd, lpp->hParent, (DLGPROC)OpenCell_DlgProc, (LPARAM)lpp);
 
    return (rc == IDOK) ? TRUE : FALSE;
 }
@@ -480,7 +480,7 @@ BOOL AfsAppLib_ShowCredentialsDialog (LPCREDENTIALSDLG_PARAMS lpp)
          lpp->hCreds = AfsAppLib_GetCredentials (NULL);
       }
 
-   int rc = ModalDialogParam (lpp->idd, lpp->hParent, (DLGPROC)NewCreds_DlgProc, (LPARAM)lpp);
+   INT_PTR rc = ModalDialogParam (lpp->idd, lpp->hParent, (DLGPROC)NewCreds_DlgProc, (LPARAM)lpp);
 
    return (rc == IDOK) ? TRUE : FALSE;
 }
@@ -834,7 +834,7 @@ BOOL AfsAppLib_CheckCredentials (LPCHECKCREDS_PARAMS lpp)
             pp.bcdp.idd = IDD_APPLIB_BADCREDS;
             }
 
-         int rc = ModalDialogParam (pp.bcdp.idd, pp.bcdp.hParent, (DLGPROC)BadCreds_DlgProc, (LPARAM)&pp);
+         INT_PTR rc = ModalDialogParam (pp.bcdp.idd, pp.bcdp.hParent, (DLGPROC)BadCreds_DlgProc, (LPARAM)&pp);
          if (rc == IDCANCEL)
             {
             fCredsOK = TRUE; // user says ignore bad credentials this time.

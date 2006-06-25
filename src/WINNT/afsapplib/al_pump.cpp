@@ -81,9 +81,9 @@ BOOL CALLBACK Modeless_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return DefWindowProc (hDlg, msg, wp, lp);
+      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
@@ -211,9 +211,9 @@ BOOL CALLBACK WindowData_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp);
+      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp);
    else
-      return DefWindowProc (hWnd, msg, wp, lp);
+      return (BOOL)DefWindowProc (hWnd, msg, wp, lp);
 }
 
 
