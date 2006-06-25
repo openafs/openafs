@@ -31,12 +31,18 @@ EXELIBS = \
     $(DESTDIR)\lib\afsauthent.lib \
     $(DESTDIR)\lib\afs\afskauth.lib
 
+!IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
 OTHERLIBS = \
-    ..\kfw\lib\i386\krbv4w32.lib \
-    ..\kfw\lib\i386\krb5_32.lib \
-    ..\kfw\lib\i386\comerr32.lib \
+    ..\kfw\lib\$(CPU)\krb5_64.lib \
+    ..\kfw\lib\$(CPU)\comerr64.lib \
     dnsapi.lib mpr.lib
-
+!else
+OTHERLIBS = \
+    ..\kfw\lib\$(CPU)\krbv4w32.lib \
+    ..\kfw\lib\$(CPU)\krb5_32.lib \
+    ..\kfw\lib\$(CPU)\comerr32.lib \
+    dnsapi.lib mpr.lib
+!endif
 afscflags = -I..\kfw\inc\krb5 -I..\kfw\inc\krb4 $(afscflags)
 
 $(AKLOGOBJS): $$(@B).c
