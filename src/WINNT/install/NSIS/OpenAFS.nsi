@@ -2813,6 +2813,11 @@ DoEnglish:
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.pdb"
 !endif
 
+   File "..\..\doc\help\en_US\afs-light.CNT"
+   File "..\..\doc\help\en_US\afs-light.hlp"
+   File "..\..\doc\help\en_US\afs-nt.CNT"
+   File "..\..\doc\help\en_US\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"           "$INSTDIR\Common\afs_config_1033.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.dll"              "$INSTDIR\Common\afs_cpa_1033.dll" "$INSTDIR"
@@ -2825,10 +2830,6 @@ DoEnglish:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"   "$INSTDIR\Common\TaAfsServerManager_1033.dll" "$INSTDIR"
    File "..\..\doc\help\en_US\afs-cc.CNT"
    File "..\..\doc\help\en_US\afs-cc.hlp"
-   File "..\..\doc\help\en_US\afs-light.CNT"
-   File "..\..\doc\help\en_US\afs-light.hlp"
-   File "..\..\doc\help\en_US\afs-nt.CNT"
-   File "..\..\doc\help\en_US\afs-nt.HLP"
    File "..\..\doc\help\en_US\taafscfg.CNT"
    File "..\..\doc\help\en_US\taafscfg.hlp"
    File "..\..\doc\help\en_US\taafssvrmgr.CNT"
@@ -2871,6 +2872,11 @@ DoGerman:
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.pdb"
 !endif
 
+   File "..\..\doc\help\de_DE\afs-light.CNT"
+   File "..\..\doc\help\de_DE\afs-light.hlp"
+   File "..\..\doc\help\de_DE\afs-nt.CNT"
+   File "..\..\doc\help\de_DE\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"           "$INSTDIR\Common\afs_config_1032.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.dll"              "$INSTDIR\Common\afs_cpa_1032.dll" "$INSTDIR" 
@@ -2883,10 +2889,6 @@ DoGerman:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"   "$INSTDIR\Common\TaAfsServerManager_1032.dll" "$INSTDIR" 
    File "..\..\doc\help\de_DE\afs-cc.CNT"
    File "..\..\doc\help\de_DE\afs-cc.hlp"
-   File "..\..\doc\help\de_DE\afs-light.CNT"
-   File "..\..\doc\help\de_DE\afs-light.hlp"
-   File "..\..\doc\help\de_DE\afs-nt.CNT"
-   File "..\..\doc\help\de_DE\afs-nt.HLP"
    File "..\..\doc\help\de_DE\taafscfg.CNT"
    File "..\..\doc\help\de_DE\taafscfg.hlp"
    File "..\..\doc\help\de_DE\taafssvrmgr.CNT"
@@ -2929,6 +2931,11 @@ DoSpanish:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.pdb"
 !endif
 
+   File "..\..\doc\help\es_ES\afs-light.CNT"
+   File "..\..\doc\help\es_ES\afs-light.hlp"
+   File "..\..\doc\help\es_ES\afs-nt.CNT"
+   File "..\..\doc\help\es_ES\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"          "$INSTDIR\Common\afs_config_1034.dll" "$INSTDIR"  
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.dll"             "$INSTDIR\Common\afs_cpa_1034.dll" "$INSTDIR"  
@@ -2941,10 +2948,6 @@ DoSpanish:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"  "$INSTDIR\Common\TaAfsServerManager_1034.dll" "$INSTDIR"  
    File "..\..\doc\help\es_ES\afs-cc.CNT"
    File "..\..\doc\help\es_ES\afs-cc.hlp"
-   File "..\..\doc\help\es_ES\afs-light.CNT"
-   File "..\..\doc\help\es_ES\afs-light.hlp"
-   File "..\..\doc\help\es_ES\afs-nt.CNT"
-   File "..\..\doc\help\es_ES\afs-nt.HLP"
    File "..\..\doc\help\es_ES\taafscfg.CNT"
    File "..\..\doc\help\es_ES\taafscfg.hlp"
    File "..\..\doc\help\es_ES\taafssvrmgr.CNT"
@@ -2987,6 +2990,11 @@ DoJapanese:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.pdb"
 !endif
 
+   File "..\..\doc\help\ja_JP\afs-light.CNT"
+   File "..\..\doc\help\ja_JP\afs-light.hlp"
+   File "..\..\doc\help\ja_JP\afs-nt.CNT"
+   File "..\..\doc\help\ja_JP\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"           "$INSTDIR\Common\afs_config_1041.dll" "$INSTDIR"   
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.dll"              "$INSTDIR\Common\afs_cpa_1041.dll" "$INSTDIR"   
@@ -2999,10 +3007,6 @@ DoJapanese:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"   "$INSTDIR\Common\TaAfsServerManager_1041.dll" "$INSTDIR"   
    File "..\..\doc\help\ja_JP\afs-cc.CNT"
    File "..\..\doc\help\ja_JP\afs-cc.hlp"
-   File "..\..\doc\help\ja_JP\afs-light.CNT"
-   File "..\..\doc\help\ja_JP\afs-light.hlp"
-   File "..\..\doc\help\ja_JP\afs-nt.CNT"
-   File "..\..\doc\help\ja_JP\afs-nt.HLP"
    File "..\..\doc\help\ja_JP\taafscfg.CNT"
    File "..\..\doc\help\ja_JP\taafscfg.hlp"
    File "..\..\doc\help\ja_JP\taafssvrmgr.CNT"
@@ -3045,6 +3049,11 @@ DoKorean:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.pdb"
 !endif
 
+   File "..\..\doc\help\ko_KR\afs-light.CNT"
+   File "..\..\doc\help\ko_KR\afs-light.hlp"
+   File "..\..\doc\help\ko_KR\afs-nt.CNT"
+   File "..\..\doc\help\ko_KR\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"           "$INSTDIR\Common\afs_config_1042.dll" "$INSTDIR"    
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.dll"              "$INSTDIR\Common\afs_cpa_1042.dll" "$INSTDIR"    
@@ -3057,10 +3066,6 @@ DoKorean:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"   "$INSTDIR\Common\TaAfsServerManager_1042.dll" "$INSTDIR"    
    File "..\..\doc\help\ko_KR\afs-cc.CNT"
    File "..\..\doc\help\ko_KR\afs-cc.hlp"
-   File "..\..\doc\help\ko_KR\afs-light.CNT"
-   File "..\..\doc\help\ko_KR\afs-light.hlp"
-   File "..\..\doc\help\ko_KR\afs-nt.CNT"
-   File "..\..\doc\help\ko_KR\afs-nt.HLP"
    File "..\..\doc\help\ko_KR\taafscfg.CNT"
    File "..\..\doc\help\ko_KR\taafscfg.hlp"
    File "..\..\doc\help\ko_KR\taafssvrmgr.CNT"
@@ -3104,6 +3109,11 @@ DoPortugueseBR:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.pdb"
 !endif
 
+   File "..\..\doc\help\pt_BR\afs-light.CNT"
+   File "..\..\doc\help\pt_BR\afs-light.hlp"
+   File "..\..\doc\help\pt_BR\afs-nt.CNT"
+   File "..\..\doc\help\pt_BR\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"           "$INSTDIR\Common\afs_config_1046.dll" "$INSTDIR"     
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.dll"              "$INSTDIR\Common\afs_cpa_1046.dll" "$INSTDIR"     
@@ -3116,10 +3126,6 @@ DoPortugueseBR:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"   "$INSTDIR\Common\TaAfsServerManager_1046.dll" "$INSTDIR"     
    File "..\..\doc\help\pt_BR\afs-cc.CNT"
    File "..\..\doc\help\pt_BR\afs-cc.hlp"
-   File "..\..\doc\help\pt_BR\afs-light.CNT"
-   File "..\..\doc\help\pt_BR\afs-light.hlp"
-   File "..\..\doc\help\pt_BR\afs-nt.CNT"
-   File "..\..\doc\help\pt_BR\afs-nt.HLP"
    File "..\..\doc\help\pt_BR\taafscfg.CNT"
    File "..\..\doc\help\pt_BR\taafscfg.hlp"
    File "..\..\doc\help\pt_BR\taafssvrmgr.CNT"
@@ -3162,6 +3168,11 @@ DoSimpChinese:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.pdb"
 !endif
 
+   File "..\..\doc\help\zh_CN\afs-light.CNT"
+   File "..\..\doc\help\zh_CN\afs-light.hlp"
+   File "..\..\doc\help\zh_CN\afs-nt.CNT"
+   File "..\..\doc\help\zh_CN\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"           "$INSTDIR\Common\afs_config_2052.dll" "$INSTDIR"      
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.dll"              "$INSTDIR\Common\afs_cpa_2052.dll" "$INSTDIR"      
@@ -3174,10 +3185,6 @@ DoSimpChinese:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"   "$INSTDIR\Common\TaAfsServerManager_2052.dll" "$INSTDIR"      
    File "..\..\doc\help\zh_CN\afs-cc.CNT"
    File "..\..\doc\help\zh_CN\afs-cc.hlp"
-   File "..\..\doc\help\zh_CN\afs-light.CNT"
-   File "..\..\doc\help\zh_CN\afs-light.hlp"
-   File "..\..\doc\help\zh_CN\afs-nt.CNT"
-   File "..\..\doc\help\zh_CN\afs-nt.HLP"
    File "..\..\doc\help\zh_CN\taafscfg.CNT"
    File "..\..\doc\help\zh_CN\taafscfg.hlp"
    File "..\..\doc\help\zh_CN\taafssvrmgr.CNT"
@@ -3220,6 +3227,11 @@ DoTradChinese:
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.pdb"
 !endif
 
+   File "..\..\doc\help\zh_TW\afs-light.CNT"
+   File "..\..\doc\help\zh_TW\afs-light.hlp"
+   File "..\..\doc\help\zh_TW\afs-nt.CNT"
+   File "..\..\doc\help\zh_TW\afs-nt.HLP"
+
    SetOutPath "$INSTDIR\Common"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"           "$INSTDIR\Common\afs_config_1028.dll" "$INSTDIR"       
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.dll"              "$INSTDIR\Common\afs_cpa_1028.dll" "$INSTDIR"       
@@ -3232,10 +3244,6 @@ DoTradChinese:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"   "$INSTDIR\Common\TaAfsServerManager_1028.dll" "$INSTDIR"       
    File "..\..\doc\help\zh_TW\afs-cc.CNT"
    File "..\..\doc\help\zh_TW\afs-cc.hlp"
-   File "..\..\doc\help\zh_TW\afs-light.CNT"
-   File "..\..\doc\help\zh_TW\afs-light.hlp"
-   File "..\..\doc\help\zh_TW\afs-nt.CNT"
-   File "..\..\doc\help\zh_TW\afs-nt.HLP"
    File "..\..\doc\help\zh_TW\taafscfg.CNT"
    File "..\..\doc\help\zh_TW\taafscfg.hlp"
    File "..\..\doc\help\zh_TW\taafssvrmgr.CNT"
