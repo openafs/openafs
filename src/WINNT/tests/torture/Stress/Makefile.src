@@ -1,0 +1,18 @@
+NAME=Stress
+TARGETTYPE=EXE
+TARGETSS=console
+
+OBJS= \
+	$(O)\Stress.obj
+
+INCLUDES=..\include
+
+USE_DEFAULTLIB=1
+
+USE_LIBC_DLL=1
+C_DEFINE=-DHAVE_HESOID 
+
+#####
+
+
+

@@ -1,0 +1,25 @@
+NAME=DumpAfsLog
+TARGETTYPE=EXE
+TARGETSS=console
+
+OBJS= \
+	$(O)\DumpAfsLog.obj
+
+
+#INCLUDES=$(O);$(MOIRABASE)\include;$(MOIRABASE)\mmc;$(PISMERE)\athena\auth\krb4\include;$(PISMERE)\athena\wshelper\include;$(PISMERE)\athena\auth\krb5\src\include;$(PISMERE)\athena\auth\krb5\src\include\krb5;$(PISMERE)\athena\auth\krb5\src\lib;$(PISMERE)\athena\auth\krb5\src\lib\krb5\asn.1;$(PISMERE)\athena\auth\krb5\src\krb524;$(PISMERE)\athena\auth\krb5\src\lib\krb5\krb
+#LIB_PATHS = $(PISMERE)\athena\auth\krb4\krbv4\krbdll\$(O);$(PISMERE)\athena\wshelper\wshelper\$(O);$(MOIRABASE)\util\et\$(O);$(MOIRABASE)\lib\$(O);$(PISMERE)\athena\auth\krb5\src\lib\krb5\$(O);$(PISMERE)\target\lib\$(T)
+
+
+USE_DEFAULTLIB=1
+
+LIBS= wsock32.lib advapi32.lib user32.lib \
+      dnsapi.lib oleaut32.lib \
+      ole32.lib wldap32.lib
+
+
+USE_LIBC_DLL=1
+
+#####
+
+
+

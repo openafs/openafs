@@ -1,0 +1,32 @@
+NAME=WinTorture
+TARGETTYPE=EXE
+TARGETSS=console
+
+OBJS= \
+	$(O)\nbio.obj \
+	$(O)\output.obj \
+	$(O)\ResolveLocker.obj \
+	$(O)\WinThreads.obj \
+	$(O)\WinTorture.obj \
+
+
+INCLUDES=..\include; \
+	$(PISMERE)\athena\wshelper\include; \
+	$(PISMERE)\athena\util\locker\lib
+
+!ifdef NODEBUG
+LIB_PATHS=$(PISMERE)\target\lib\i386\rel
+!else
+LIB_PATHS=$(PISMERE)\target\lib\i386\dbg
+!endif
+
+USE_DEFAULTLIB=1
+
+LIBS=krbv4w32.lib oncrpc.lib Kernel32.lib Psapi.lib wshelp32.lib locker.lib athdir.lib Ws2_32.lib Mpr.lib oleaut32.lib Advapi32.lib ole32.lib User32.lib
+USE_LIBC_DLL=1
+C_DEFINE=-DHAVE_HESOID 
+
+#####
+
+
+
