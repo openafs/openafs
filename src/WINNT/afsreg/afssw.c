@@ -58,9 +58,14 @@ afssw_GetServerInstallDir(char **bufPP)  /* [out] data buffer */
 int
 afssw_GetClientInstallDir(char **bufPP)   /* [out] data buffer */
 {
-    return StringDataRead(AFSREG_CLT_SW_VERSION_KEY,
+    int retval = StringDataRead(AFSREG_CLT_SW_VERSION_KEY,
 			  AFSREG_CLT_SW_VERSION_DIR_VALUE,
 			  bufPP);
+    if (retval)
+	retval = StringDataRead(AFSREG_CLT_TOOLS_SW_VERSION_KEY,
+			  AFSREG_CLT_SW_VERSION_DIR_VALUE,
+			  bufPP);
+    return retval;
 }
 
 /*

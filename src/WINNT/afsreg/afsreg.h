@@ -23,9 +23,8 @@
 #define AFSREG_SVR_SW_NAME   "AFS Server"
 
 #define AFSREG_CLT_SVC_NAME  "TransarcAFSDaemon"
-#define AFSREG_CLT_SW_NAME   "AFS Client"
-
-
+#define AFSREG_CLT_SW_NAME   	  "AFS Client"
+#define AFSREG_CLT_TOOLS_SW_NAME  "AFS Client 32-Bit Binaries"
 
 /* ---- NT system configuration information ---- */
 
@@ -122,6 +121,13 @@
 
 #define AFSREG_CLT_SW_VERSION_KEY  AFSREG_CLT_SW_KEY "\\CurrentVersion"
 #define AFSREG_CLT_SW_VERSION_SUBKEY  AFSREG_CLT_SW_SUBKEY "\\CurrentVersion"
+
+#define AFSREG_CLT_TOOLS_SW_SUBKEY \
+    "Software\\TransarcCorporation\\" AFSREG_CLT_TOOLS_SW_NAME
+#define AFSREG_CLT_TOOLS_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_TOOLS_SW_SUBKEY
+
+#define AFSREG_CLT_TOOLS_SW_VERSION_KEY  AFSREG_CLT_TOOLS_SW_KEY "\\CurrentVersion"
+#define AFSREG_CLT_TOOLS_SW_VERSION_SUBKEY  AFSREG_CLT_TOOLS_SW_SUBKEY "\\CurrentVersion"
 
 /* AFSREG_CLT_SW_VERSION_KEY values */
 #define AFSREG_CLT_SW_VERSION_DIR_VALUE   "PathName"
