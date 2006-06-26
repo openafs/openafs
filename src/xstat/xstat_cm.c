@@ -23,6 +23,8 @@ RCSID
 #include "xstat_cm.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 
+#include <afs/afsutil.h>
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
