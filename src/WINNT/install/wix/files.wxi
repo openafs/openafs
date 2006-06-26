@@ -870,7 +870,6 @@
                             <ServiceDependency Id="NetBIOS" />
                             <ServiceDependency Id="PNP_TDI" Group="yes"/>
                         </ServiceInstall>
-                        <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />
                     </Component>
   <?endif?>
@@ -911,6 +910,7 @@
 		    <?endif?>
                      <Component Win64="$(var.Win64)" Id="cmf_cmdebug_EXE" Guid="$(var.cmf_cmdebug_EXE_guid)">
                         <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
+                        <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
                     </Component>
   <?ifndef BinsOnly?>
  		    <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_CPL" Guid="$(var.cmf_afs_cpa_CPL_guid)">
