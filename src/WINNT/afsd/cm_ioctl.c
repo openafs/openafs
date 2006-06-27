@@ -2657,6 +2657,7 @@ long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp)
     if (cmd) {             /* generate a new UUID */
         UuidCreate((UUID *) &uuid);
         cm_data.Uuid = uuid;
+	cm_ForceNewConnectionsAllServers();
     }
 
     memcpy(ioctlp->outDatap, &cm_data.Uuid, sizeof(cm_data.Uuid));
