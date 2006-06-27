@@ -876,11 +876,13 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         lock_ReleaseMutex(&unp->mx);
 
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
-        lock_ObtainMutex(&uidp->mx);
-        uidp->unp = unp;
-        osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
-        lock_ReleaseMutex(&uidp->mx);
-        smb_ReleaseUID(uidp);
+	if (uidp) {
+	    lock_ObtainMutex(&uidp->mx);
+	    uidp->unp = unp;
+	    osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
+	    lock_ReleaseMutex(&uidp->mx);
+	    smb_ReleaseUID(uidp);
+	}
     }
 
     /* Return UID to the client */
@@ -980,7 +982,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tid_t *tidp;
-    smb_user_t *uidp;
+    smb_user_t *uidp = NULL;
     unsigned short newTid;
     char shareName[256];
     char *sharePath;
@@ -989,7 +991,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     char *pathp;
     char *passwordp;
     char *servicep;
-    cm_user_t *userp;
+    cm_user_t *userp = NULL;
     int ipc = 0;
         
     osi_Log0(smb_logp, "SMB3 receive tree connect");
@@ -1022,7 +1024,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     }
 
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-    userp = smb_GetUserFromUID(uidp);
+    if (uidp)
+	userp = smb_GetUserFromUID(uidp);
 
     lock_ObtainMutex(&vcp->mx);
     newTid = vcp->tidCounter++;
@@ -1035,7 +1038,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	    strcpy(shareName, "all");
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
 	if (!shareFound) {
-	    smb_ReleaseUID(uidp);
+	    if (uidp)
+		smb_ReleaseUID(uidp);
             smb_ReleaseTID(tidp);
             return CM_ERROR_BADSHARENAME;
 	}
@@ -1053,7 +1057,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
         smb_SetSMBParm(outp, 2, 0);
         sharePath = NULL;
     }
-    smb_ReleaseUID(uidp);
+    if (uidp)
+	smb_ReleaseUID(uidp);
 
     lock_ObtainMutex(&tidp->mx);
     tidp->userp = userp;
