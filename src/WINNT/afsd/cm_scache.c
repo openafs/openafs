@@ -1246,7 +1246,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     }       
     else {
         osi_Log1(afsd_logp, "Merge, Invalid File Type, scp %x", scp);
-        scp->fileType = 0;	/* invalid */
+        scp->fileType = CM_SCACHETYPE_INVALID;	/* invalid */
     }
     /* and other stuff */
     scp->parentVnode = statusp->ParentVnode;

@@ -684,6 +684,14 @@ extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int 
 extern int smb_SUser(cm_user_t *userp);
 
 #ifndef DJGPP
+long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+	cm_user_t *userp, long *writtenp);
+#else /* DJGPP */
+long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
+	cm_user_t *userp, long *writtenp, int dosflag);
+#endif /* !DJGPP */
+
+#ifndef DJGPP
 extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 	char *op, cm_user_t *userp, long *readp);
 #else /* DJGPP */

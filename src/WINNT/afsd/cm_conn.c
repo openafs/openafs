@@ -522,7 +522,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             case EINVAL            : s = "EINVAL";             break;
 	    case UAEINVAL          : s = "UAEINVAL";	       break;
             case EACCES            : s = "EACCES";             break;
-	    case UAEACCES 	   : s = "UAECCES";            break;
+	    case UAEACCES 	   : s = "UAEACCES";           break;
 	    case ENOENT            : s = "ENOENT"; 	       break;
 	    case UAENOENT          : s = "UAENOENT";           break;
 	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			

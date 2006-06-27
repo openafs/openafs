@@ -4247,8 +4247,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             NeedShortName = 1;
         }
 
-        osi_Log3(smb_logp, "T2 search dir vn %u name %s (%s)",
-                  dep->fid.vnode, osi_LogSaveString(smb_logp, dep->name),
+        osi_Log4(smb_logp, "T2 search dir vn %u uniq %u name %s (%s)",
+                  dep->fid.vnode, dep->fid.unique, 
+		  osi_LogSaveString(smb_logp, dep->name),
                   NeedShortName ? osi_LogSaveString(smb_logp, shortName) : "");
 
         /* When matching, we are using doing a case fold if we have a wildcard mask.
@@ -5263,7 +5264,6 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_fid_t *fidp;
     long code = 0;
     cm_user_t *userp;
-    cm_attr_t truncAttr;	/* attribute struct used for truncating file */
     char *op;
     int inDataBlockCount;
 
