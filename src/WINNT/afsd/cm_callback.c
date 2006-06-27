@@ -1618,7 +1618,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                     struct cm_req *reqp, long flags)
 {
     long code;
-    cm_conn_t *connp;
+    cm_conn_t *connp = NULL;
     AFSFetchStatus afsStatus;
     AFSVolSync volSync;
     AFSCallBack callback;
@@ -1627,7 +1627,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     int mustCall;
     long sflags;
     cm_fid_t sfid;
-    struct rx_connection * callp;
+    struct rx_connection * callp = NULL;
 
     osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
              scp, scp->fid.cell, scp->fid.volume, flags);
