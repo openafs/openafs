@@ -2647,6 +2647,24 @@ long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
   return 0;
 }
 
+long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp)
+{
+    long cmd;
+    afsUUID uuid;
+
+    memcpy(&cmd, ioctlp->inDatap, sizeof(long));
+
+    if (cmd) {             /* generate a new UUID */
+        UuidCreate((UUID *) &uuid);
+        cm_data.Uuid = uuid;
+    }
+
+    memcpy(ioctlp->outDatap, &cm_data.Uuid, sizeof(cm_data.Uuid));
+    ioctlp->outDatap += sizeof(cm_data.Uuid);
+
+    return 0;
+}
+
 /* 
  * functions to dump contents of various structures. 
  * In debug build (linked with crt debug library) will dump allocated but not freed memory
