@@ -3533,6 +3533,56 @@ GetPrefCmd(struct cmd_syndesc *as, char *arock)
 #endif /* WIN32 */
 
 static int
+UuidCmd(struct cmd_syndesc *asp, char *arock)
+{
+    long code;
+    long inValue;
+    afsUUID outValue;
+    struct ViceIoctl blob;
+    char * uuidstring = NULL;
+
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
+#else
+    if (geteuid()) {
+        fprintf (stderr, "Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif
+
+    if (asp->parms[0].items) {
+        inValue = 1;            /* generate new UUID */
+    } else {
+        inValue = 0;            /* just show the current UUID */
+    }
+
+    blob.in_size = sizeof(inValue);
+    blob.in = (char *) &inValue;
+    blob.out_size = sizeof(outValue);
+    blob.out = (char *) &outValue;
+
+    code = pioctl(NULL, VIOC_UUIDCTL, &blob, 1);
+    if (code) {
+        Die(errno, NULL);
+        return code;
+    }
+
+    UuidToString((UUID *) &outValue, &uuidstring);
+
+    printf("%sUUID: %s",
+           ((inValue == 1)?"New ":""),
+           uuidstring);
+
+    if (uuidstring)
+        RpcStringFree(&uuidstring);
+
+    return 0;
+}
+
+static int
 TraceCmd(struct cmd_syndesc *asp, char *arock)
 {
     long code;
@@ -4542,6 +4592,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "reset log contents");
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL, "dump log contents");
     cmd_CreateAlias(ts, "tr");
+
+    ts = cmd_CreateSyntax("uuid", UuidCmd, 0, "manage the UUID for the cache manager");
+    cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_OPTIONAL, "generate a new UUID");
 
     ts = cmd_CreateSyntax("memdump", MemDumpCmd, 0, "dump memory allocs in debug builds");
     cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
