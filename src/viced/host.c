@@ -269,6 +269,230 @@ FreeHT(register struct host *entry)
 
 }				/*FreeHT */
 
+afs_int32
+hpr_Initialize(struct ubik_client **uclient)
+{
+    afs_int32 code;
+    struct rx_connection *serverconns[MAXSERVERS];
+    struct rx_securityClass *sc[3];
+    struct afsconf_dir *tdir;
+    char tconfDir[100] = "";
+    char tcell[64] = "";
+    struct ktc_token ttoken;
+    afs_int32 scIndex;
+    struct afsconf_cell info;
+    afs_int32 i;
+    char cellstr[64];
+
+    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    if (!tdir) {
+	fprintf(stderr,
+		"libprot: Could not open configuration directory: %s.\n",
+		AFSDIR_SERVER_ETC_DIRPATH);
+      return -1;
+    }
+    
+    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
+    if (code) {
+	fprintf(stderr,
+		"libprot: Could not get local cell. [%d]\n", code);
+	return code;
+    }
+    
+    code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
+    if (code) {
+	fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
+		cellstr, confDir, AFSDIR_CELLSERVDB_FILE);
+	return code;
+    }
+    
+    afsconf_Close(tdir);
+    
+    code = rx_Init(0);
+    if (code) {
+        fprintf(stderr, "libprot:  Could not initialize rx.\n");
+        return code;
+    }
+    
+    scIndex = 2;
+    sc[0] = 0;
+    sc[1] = 0;
+    sc[2] = 0;
+    /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
+     * to force use of the KeyFile.  secLevel == 0 implies -noauth was
+     * specified. */
+    if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
+        code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
+        if (code)
+            fprintf(stderr,
+                    "libprot: clientauthsecure returns %d %s"
+                    " (so trying noauth)\n", code, error_message(code));
+        if (code)
+            scIndex = 0;        /* use noauth */
+        if (scIndex != 2)
+            /* if there was a problem, an unauthenticated conn is returned */
+            sc[scIndex] = sc[2];
+    } else {
+        struct ktc_principal sname;
+        strcpy(sname.cell, info.name);
+        sname.instance[0] = 0;
+        strcpy(sname.name, "afs");
+        code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+        if (code)
+            scIndex = 0;
+        else {
+            if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
+                /* this is a kerberos ticket, set scIndex accordingly */
+                scIndex = 2;
+            else {
+                fprintf(stderr,
+                        "libprot: funny kvno (%d) in ticket, proceeding\n",
+                        ttoken.kvno);
+                scIndex = 2;
+            }
+            sc[2] =
+                rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
+                                              ttoken.kvno, ttoken.ticketLen,
+                                              ttoken.ticket);
+        }
+    }
+    if ((scIndex == 0) && (sc[0] == 0))
+        sc[0] = rxnull_NewClientSecurityObject();
+    if ((scIndex == 0))
+        com_err("fileserver", code,
+                "Could not get afs tokens, running unauthenticated.");
+    
+    memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
+    for (i = 0; i < info.numServers; i++) {
+        serverconns[i] =
+            rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+                             info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+                             scIndex);
+    }
+
+    code = ubik_ClientInit(serverconns, uclient);
+    if (code) {
+        com_err("fileserver", code, "ubik client init failed.");
+    }
+
+    code = rxs_Release(sc[scIndex]);
+    return code;
+}
+
+int
+hpr_End(struct ubik_client *uclient)
+{
+    int code = 0;
+
+    if (uclient) {
+        code = ubik_ClientDestroy(uclient);
+    }
+    return code;
+}
+
+int
+hpr_GetHostCPS(afs_int32 host, prlist *CPS)
+{
+#ifdef AFS_PTHREAD_ENV
+    register afs_int32 code;
+    afs_int32 over;
+    struct ubik_client *uclient = 
+	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+
+    if (!uclient) {
+        code = hpr_Initialize(&uclient);
+        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+    }
+
+    over = 0;
+    code = ubik_Call(PR_GetHostCPS, uclient, 0, host, CPS, &over);
+    if (code != PRSUCCESS)
+        return code;
+    if (over) {
+      /* do something about this, probably make a new call */
+      /* don't forget there's a hard limit in the interface */
+        fprintf(stderr,
+                "membership list for host id %d exceeds display limit\n",
+                host);
+    }
+    return 0;
+#else
+    return pr_GetHostCPS(host, CPS);
+#endif
+}
+
+int
+hpr_NameToId(namelist *names, idlist *ids)
+{
+#ifdef AFS_PTHREAD_ENV
+    register afs_int32 code;
+    register afs_int32 i;
+    struct ubik_client *uclient = 
+	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+
+    if (!uclient) {
+        code = hpr_Initialize(&uclient);
+        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+    }
+
+    for (i = 0; i < names->namelist_len; i++)
+        stolower(names->namelist_val[i]);
+    code = ubik_Call(PR_NameToID, uclient, 0, names, ids);
+    return code;
+#else
+    return pr_NameToId(names, ids);
+#endif
+}
+
+int
+hpr_IdToName(idlist *ids, namelist *names)
+{
+#ifdef AFS_PTHREAD_ENV
+    register afs_int32 code;
+    struct ubik_client *uclient = 
+	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+    
+    if (!uclient) {
+        code = hpr_Initialize(&uclient);
+        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+    }
+
+    code = ubik_Call(PR_IDToName, uclient, 0, ids, names);
+    return code;
+#else
+    return pr_IdToName(ids, names);
+#endif
+}
+
+int
+hpr_GetCPS(afs_int32 id, prlist *CPS)
+{
+#ifdef AFS_PTHREAD_ENV
+    register afs_int32 code;
+    afs_int32 over;
+    struct ubik_client *uclient = 
+	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+
+    if (!uclient) {
+        code = hpr_Initialize(&uclient);
+        assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+    }
+
+    over = 0;
+    code = ubik_Call(PR_GetCPS, uclient, 0, id, CPS, &over);
+    if (code != PRSUCCESS)
+        return code;
+    if (over) {
+      /* do something about this, probably make a new call */
+      /* don't forget there's a hard limit in the interface */
+        fprintf(stderr, "membership list for id %d exceeds display limit\n",
+                id);
+    }
+    return 0;
+#else
+    return pr_GetCPS(id, CPS);
+#endif
+}
 
 static short consolePort = 0;
 
@@ -466,7 +690,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
     host->cpsCall = slept ? (FT_ApproxTime()) : (now);
 
     H_UNLOCK;
-    code = pr_GetHostCPS(ntohl(host->host), &host->hcps);
+    code = hpr_GetHostCPS(ntohl(host->host), &host->hcps);
     H_LOCK;
     if (code) {
 	/*
@@ -1546,7 +1770,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
     }
 
     H_UNLOCK;
-    code = pr_NameToId(&lnames, &lids);
+    code = hpr_NameToId(&lnames, &lids);
     H_LOCK;
     if (code == 0) {
 	if (lids.idlist_val) {
@@ -1661,7 +1885,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	expTime = 0x7fffffff;
     } else if (authClass == 2) {
 	afs_int32 kvno;
-
+    
 	/* kerberos ticket */
 	code = rxkad_GetServerInfo(tcon, /*level */ 0, &expTime,
 				   tname, tinst, tcell, &kvno);
@@ -1758,7 +1982,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->CPS.prlist_val = AnonCPS.prlist_val;
 	} else {
 	    H_UNLOCK;
-	    code = pr_GetCPS(viceid, &client->CPS);
+	    code = hpr_GetCPS(viceid, &client->CPS);
 	    H_LOCK;
 	    if (code) {
 		char hoststr[16];
@@ -1925,6 +2149,7 @@ h_UserName(struct client *client)
     static char User[PR_MAXNAMELEN + 1];
     namelist lnames;
     idlist lids;
+    afs_int32 code;
 
     lids.idlist_len = 1;
     lids.idlist_val = (afs_int32 *) malloc(1 * sizeof(afs_int32));
@@ -1935,7 +2160,7 @@ h_UserName(struct client *client)
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;
     lids.idlist_val[0] = client->ViceId;
-    if (pr_IdToName(&lids, &lnames)) {
+    if (hpr_IdToName(&lids, &lnames)) {
 	/* We need to free id we alloced above! */
 	free(lids.idlist_val);
 	return "*UNKNOWN USER NAME*";
