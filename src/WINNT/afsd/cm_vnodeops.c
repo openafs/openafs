@@ -2020,6 +2020,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     }	/* while there are still more files to process */
     lock_ObtainMutex(&dscp->mx);
 
+#if 0
     /* If we did the InlineBulk RPC pull out the return code */
     if (inlinebulk) {
 	if ((&bb.stats[0])->errorCode) {
@@ -2027,7 +2028,9 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
 			userp, reqp, &dscp->fid, &volSync, NULL, NULL, (&bb.stats[0])->errorCode);
 	    code = cm_MapRPCError((&bb.stats[0])->errorCode, reqp);
 	}
-    } else { 
+    } else
+#endif	
+    { 
 	code = 0;
     }
 
