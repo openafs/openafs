@@ -673,7 +673,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                  && (scp->bulkStatProgress.QuadPart <= thyper.QuadPart))
             {
                 scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
-                cm_TryBulkStat(scp, &thyper, userp, reqp);
+                code = cm_TryBulkStat(scp, &thyper, userp, reqp);
                 scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
                 scp->bulkStatProgress = thyper;
             }
@@ -1780,7 +1780,7 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
  * check anyway, but we want to minimize the chance that we have to leave stuff
  * unstat'd.
  */
-#define CM_BULKMAX		128
+#define CM_BULKMAX		(3 * AFSCBMAX)
 
 /* rock for bulk stat calls */
 typedef struct cm_bulkStat {
@@ -1878,11 +1878,12 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 /* called with a locked scp and a pointer to a buffer.  Make bulk stat
  * calls on all undeleted files in the page of the directory specified.
  */
-void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
-                     cm_req_t *reqp)
+afs_int32
+cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
+	       cm_req_t *reqp)
 {
     long code;
-    cm_bulkStat_t bb;	/* this is *BIG*, probably 12K or so;
+    cm_bulkStat_t bb;	/* this is *BIG*, probably 16K or so;
                          * watch for stack problems */
     AFSCBFids fidStruct;
     AFSBulkStats statStruct;
@@ -1897,13 +1898,14 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     cm_scache_t *scp;
     cm_fid_t tfid;
     struct rx_connection * callp;
+    int inlinebulk = 0;		/* Did we use InlineBulkStatus RPC or not? */
 
     osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%p", dscp);
 
     /* should be on a buffer boundary */
     osi_assert((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0);
 
-    bb.counter = 0;
+    memset(&bb, 0, sizeof(bb));
     bb.bufOffset = *offsetp;
 
     lock_ReleaseMutex(&dscp->mx);
@@ -1913,7 +1915,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     /* if we failed, bail out early */
     if (code && code != CM_ERROR_STOPNOW) {
         lock_ObtainMutex(&dscp->mx);
-        return;
+        return code;
     }
 
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
@@ -1940,18 +1942,29 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                 continue;
 
             callp = cm_GetRxConn(connp);
-            code = RXAFS_BulkStatus(callp, &fidStruct,
+	    if (!(connp->serverp->flags & CM_SERVERFLAG_NOINLINEBULK)) {
+		code = RXAFS_InlineBulkStatus(callp, &fidStruct,
                                      &statStruct, &callbackStruct, &volSync);
+		if (code == RXGEN_OPCODE) {
+		    cm_SetServerNoInlineBulk(connp->serverp, 0);
+		} else {
+		    inlinebulk = 1;
+		}
+	    }
+	    if (!inlinebulk) {
+		code = RXAFS_BulkStatus(callp, &fidStruct,
+					&statStruct, &callbackStruct, &volSync);
+	    }
             rx_PutConnection(callp);
 
         } while (cm_Analyze(connp, userp, reqp, &dscp->fid,
                              &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
-
         if (code)
-            osi_Log1(afsd_logp, "CALL BulkStatus FAILURE code 0x%x", code);
+            osi_Log2(afsd_logp, "CALL %sBulkStatus FAILURE code 0x%x", 
+		      inlinebulk ? "Inline" : "", code);
         else
-            osi_Log0(afsd_logp, "CALL BulkStatus SUCCESS");
+            osi_Log1(afsd_logp, "CALL %sBulkStatus SUCCESS", inlinebulk ? "Inline" : "");
 
         /* may as well quit on an error, since we're not going to do
          * much better on the next immediate call, either.
@@ -1994,8 +2007,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bb.callbacks[j],
                                             CM_CALLBACK_MAINTAINCOUNT);
-                cm_MergeStatus(scp, &bb.stats[j], &volSync,
-                                userp, 0);
+                cm_MergeStatus(scp, &bb.stats[j], &volSync, userp, 0);
             }       
             lock_ReleaseMutex(&scp->mx);
             cm_ReleaseSCache(scp);
@@ -2007,7 +2019,20 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
         filex += filesThisCall;
     }	/* while there are still more files to process */
     lock_ObtainMutex(&dscp->mx);
-    osi_Log0(afsd_logp, "END cm_TryBulkStat");
+
+    /* If we did the InlineBulk RPC pull out the return code */
+    if (inlinebulk) {
+	if ((&bb.stats[0])->errorCode) {
+	    cm_Analyze(NULL /*connp was released by the previous cm_Analyze */, 
+			userp, reqp, &dscp->fid, &volSync, NULL, NULL, (&bb.stats[0])->errorCode);
+	    code = cm_MapRPCError((&bb.stats[0])->errorCode, reqp);
+	}
+    } else { 
+	code = 0;
+    }
+
+    osi_Log1(afsd_logp, "END cm_TryBulkStat code = 0x%x", code);
+    return code;
 }       
 
 void cm_StatusFromAttr(AFSStoreStatus *statusp, cm_scache_t *scp, cm_attr_t *attrp)

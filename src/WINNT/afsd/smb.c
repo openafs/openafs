@@ -1965,7 +1965,7 @@ void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
         if (dsp->flags & SMB_DIRSEARCH_BULKST) {
             dsp->flags &= ~SMB_DIRSEARCH_BULKST;
             dsp->scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
-            dsp->scp->bulkStatProgress = hones;
+            dsp->scp->bulkStatProgress = hzero;
         }	
         lock_ReleaseMutex(&dsp->scp->mx);
     }	
@@ -4122,6 +4122,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                  && LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
                 scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
                 dsp->flags |= SMB_DIRSEARCH_BULKST;
+		dsp->scp->bulkStatProgress = hzero;
             }
             lock_ReleaseMutex(&scp->mx);
         }
@@ -4229,12 +4230,13 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                                                       scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
                     int now = GetTickCount();
-                    if (now - req.startTime > 5000) {
+                    if (now - req.startTime < 5000) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
                         dsp->flags &= ~SMB_DIRSEARCH_BULKST;
+			dsp->scp->bulkStatProgress = hzero;
                     } else
-                        cm_TryBulkStat(scp, &thyper, userp, &req);
+                        code = cm_TryBulkStat(scp, &thyper, userp, &req);
                 }
             } else {
                 lock_ObtainMutex(&scp->mx);
