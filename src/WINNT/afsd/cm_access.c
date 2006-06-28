@@ -150,7 +150,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
             return code;
         }       
                 
-        osi_Log1(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
+        osi_Log2(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
         lock_ObtainMutex(&aclScp->mx);
 
 	code = cm_GetCallback(aclScp, userp, reqp, 1);

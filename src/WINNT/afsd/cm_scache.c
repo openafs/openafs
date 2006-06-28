@@ -1164,8 +1164,14 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->Group = 0;
         statusp->SyncCounter = 0;
         statusp->dataVersionHigh = 0;
+	statusp->errorCode = 0;
     }
 #endif /* AFS_FREELANCE_CLIENT */
+
+    if (statusp->errorCode != 0) {	
+	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
+	return;
+    }
 
     if (!(flags & CM_MERGEFLAG_FORCE)
          && statusp->DataVersion < (unsigned long) scp->dataVersion) {
