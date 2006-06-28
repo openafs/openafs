@@ -236,6 +236,16 @@ void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit)
     lock_ReleaseMutex(&serverp->mx);
 }
 
+void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no)
+{
+    lock_ObtainMutex(&serverp->mx);
+    if (no)
+        serverp->flags |= CM_SERVERFLAG_NOINLINEBULK;
+    else
+        serverp->flags &= ~CM_SERVERFLAG_NOINLINEBULK;
+    lock_ReleaseMutex(&serverp->mx);
+}
+
 void cm_SetServerPrefs(cm_server_t * serverp)
 {
     unsigned long	serverAddr; 	/* in host byte order */

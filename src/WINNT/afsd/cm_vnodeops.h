@@ -76,7 +76,7 @@ extern long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags,
                               cm_user_t *userp, cm_req_t *reqp, 
                               cm_scache_t **outpScpp);
 
-extern void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
+extern afs_int32 cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
 	cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,

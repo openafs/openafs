@@ -476,8 +476,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	lock_ReleaseWrite(&cm_scacheLock);
 	
 	if (tsp) {
-	    /* reset the No 64-bit flag on the server */
+	    /* reset the No flags on the server */
 	    cm_SetServerNo64Bit(tsp, 0);
+	    cm_SetServerNoInlineBulk(tsp, 0);
 
 	    /* we're done with the server structure */
             cm_PutServer(tsp);
@@ -1692,7 +1693,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 		
         /* now make the RPC */
         osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u", 
-                 scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+                 scp, sfid.volume, sfid.vnode, sfid.unique);
         do {
             code = cm_Conn(&sfid, userp, reqp, &connp);
             if (code) 

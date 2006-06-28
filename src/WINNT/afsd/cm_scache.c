@@ -1245,7 +1245,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
             scp->fileType = CM_SCACHETYPE_SYMLINK;
     }       
     else {
-        osi_Log1(afsd_logp, "Merge, Invalid File Type, scp %x", scp);
+        osi_Log2(afsd_logp, "Merge, Invalid File Type (%d), scp %x", statusp->FileType, scp);
         scp->fileType = CM_SCACHETYPE_INVALID;	/* invalid */
     }
     /* and other stuff */
