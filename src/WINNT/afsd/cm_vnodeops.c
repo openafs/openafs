@@ -1840,7 +1840,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     if (tscp) {
         if (lock_TryMutex(&tscp->mx)) {
             /* we have an entry that we can look at */
-            if (cm_HaveCallback(tscp)) {
+            if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
                 /* we have a callback on it.  Don't bother
                  * fetching this stat entry, since we're happy
                  * with the info we have.
@@ -1999,7 +1999,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
              * Right now, be pretty conservative: if there's a
              * callback or a pending call, skip it.
              */
-            if (scp->cbServerp == NULL
+            if ((scp->cbServerp == NULL || (scp->flags & CM_SCACHEFLAG_EACCESS))
                  && !(scp->flags &
                        (CM_SCACHEFLAG_FETCHING
                          | CM_SCACHEFLAG_STORING
