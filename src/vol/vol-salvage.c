@@ -3074,7 +3074,7 @@ ClearROInUseBit(struct VolumeSummary *summary)
     volHeader.inService = 1;
     volHeader.dontSalvage = DONT_SALVAGE;
     if (!Testing) {
-	nBytes = IH_IREAD(h, 0, (char *)&volHeader, sizeof(volHeader));
+	nBytes = IH_IWRITE(h, 0, (char *)&volHeader, sizeof(volHeader));
 	assert(nBytes == sizeof(volHeader));
     }
 }
