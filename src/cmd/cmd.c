@@ -165,6 +165,15 @@ PrintParmHelp(register struct cmd_parmdesc *aparm)
 	printf(" <arg>+");
 }
 
+extern char *AFSVersion;
+
+static int
+VersionProc(register struct cmd_syndesc *as, char *arock)
+{
+    printf("%s\n", AFSVersion);
+    return 0;
+}
+
 void
 PrintSyntax(register struct cmd_syndesc *as)
 {
@@ -658,6 +667,16 @@ cmd_Dispatch(int argc, char **argv)
 				  "search by help text");
 	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
 			"help string");
+	    ts = cmd_CreateSyntax("version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("-version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("-help", HelpProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("--version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("--help", HelpProc, (char *)0,
+				  (char *)CMD_HIDDEN);
 	}
     }
 
