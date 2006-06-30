@@ -1105,7 +1105,7 @@ WorkerBee(as, arock)
     }
 
     service =
-	rx_NewServiceHost, (host, 0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
+	rx_NewServiceHost(host, 0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
     if (!service) {
 	TLog(0, "rx_NewService");
 	exit(1);
