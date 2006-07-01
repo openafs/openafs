@@ -40,21 +40,9 @@ allocTaskId()
 }
 
 
-#ifdef notdef
-void static
-DisplayNode(nodePtr)
-     struct dumpNode *nodePtr;
-{
-    TapeLog(99, nodePtr->dumpId, "Created dumpNode");
-    return;
-
-}
-#endif
-
 /* initialize the node list used to keep track of the active dumps */
 void
-InitNodeList(portOffset)
-     afs_int32 portOffset;
+InitNodeList(afs_int32 portOffset)
 {
     maxTaskID = (portOffset * 1000) + 1;	/* this is the first task id alotted */
     headNode.taskID = -1;
@@ -74,8 +62,7 @@ InitNodeList(portOffset)
  */
 
 void
-CreateNode(newNode)
-     struct dumpNode **newNode;
+CreateNode(struct dumpNode **newNode)
 {
     /* get space */
     *newNode = (struct dumpNode *)(malloc(sizeof(struct dumpNode)));
@@ -91,8 +78,7 @@ CreateNode(newNode)
 
 /* free the space allotted to the node with <taskID> */
 void
-FreeNode(taskID)
-     afs_int32 taskID;
+FreeNode(afs_int32 taskID)
 {
     struct dumpNode *oldPtr, *newPtr, *curPtr;
     int done;
@@ -132,9 +118,7 @@ FreeNode(taskID)
 }
 
 afs_int32
-GetNthNode(aindex, aresult)
-     afs_int32 aindex;
-     afs_int32 *aresult;
+GetNthNode(afs_int32 aindex, afs_int32 *aresult)
 {
     register struct dumpNode *tn;
     register int i;
@@ -155,9 +139,7 @@ GetNthNode(aindex, aresult)
 
 /* return the node with <taskID> into <resultNode> */
 afs_int32
-GetNode(taskID, resultNode)
-     afs_int32 taskID;
-     struct dumpNode **resultNode;
+GetNode(afs_int32 taskID, struct dumpNode **resultNode)
 {
     struct dumpNode *tmpPtr;
     int done;
