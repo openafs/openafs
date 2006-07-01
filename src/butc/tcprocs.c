@@ -42,8 +42,8 @@ RCSID
 #include "error_macros.h"
 #include "butc_xbsa.h"
 
-callPermitted(call)
-     struct rx_call *call;
+int
+callPermitted(struct rx_call *call)
 {
     /* before this code can be used, the rx connection, on the bucoord side, must */
     /* be changed so that it will set up for token passing instead of using  a    */
@@ -57,9 +57,7 @@ callPermitted(call)
  */
 
 static int
-CopyDumpDesc(toDump, fromDump)
-     struct tc_dumpDesc *toDump;
-     tc_dumpArray *fromDump;
+CopyDumpDesc(struct tc_dumpDesc *toDump, tc_dumpArray *fromDump)
 {
     struct tc_dumpDesc *toPtr, *fromPtr;
     int i;
@@ -82,9 +80,7 @@ CopyDumpDesc(toDump, fromDump)
 
 
 static int
-CopyRestoreDesc(toRestore, fromRestore)
-     struct tc_restoreDesc *toRestore;
-     tc_restoreArray *fromRestore;
+CopyRestoreDesc(struct tc_restoreDesc *toRestore, tc_restoreArray *fromRestore)
 {
     struct tc_restoreDesc *toPtr, *fromPtr;
     int i;
@@ -112,8 +108,7 @@ CopyRestoreDesc(toRestore, fromRestore)
 }
 
 static int
-CopyTapeSetDesc(toPtr, fromPtr)
-     struct tc_tapeSet *toPtr, *fromPtr;
+CopyTapeSetDesc(struct tc_tapeSet *toPtr, struct tc_tapeSet *fromPtr)
 {
 
     toPtr->id = fromPtr->id;
@@ -134,10 +129,7 @@ CopyTapeSetDesc(toPtr, fromPtr)
  */
 
 afs_int32
-STC_LabelTape(acid, label, taskId)
-     struct rx_call *acid;
-     struct tc_tapeLabel *label;
-     afs_uint32 *taskId;
+STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -217,11 +209,7 @@ STC_LabelTape(acid, label, taskId)
  */
 
 afs_int32
-STC_PerformDump(rxCallId, tcdiPtr, tc_dumpArrayPtr, taskId)
-     struct rx_call *rxCallId;
-     struct tc_dumpInterface *tcdiPtr;
-     tc_dumpArray *tc_dumpArrayPtr;
-     afs_int32 *taskId;
+STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_dumpArray *tc_dumpArrayPtr, afs_int32 *taskId)
 {
     struct dumpNode *newNode = 0;
     statusP statusPtr = 0;
@@ -320,11 +308,7 @@ STC_PerformDump(rxCallId, tcdiPtr, tc_dumpArrayPtr, taskId)
 }
 
 afs_int32
-STC_PerformRestore(acid, dumpSetName, arestores, taskID)
-     struct rx_call *acid;
-     char *dumpSetName;		/* not used */
-     tc_restoreArray *arestores;
-     afs_int32 *taskID;
+STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *arestores, afs_int32 *taskID)
 {
     struct dumpNode *newNode;
     statusP statusPtr;
@@ -401,10 +385,7 @@ STC_PerformRestore(acid, dumpSetName, arestores, taskID)
 }
 
 afs_int32
-STC_ReadLabel(acid, label, taskId)
-     struct rx_call *acid;
-     struct tc_tapeLabel *label;
-     afs_uint32 *taskId;
+STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
 {
     afs_int32 code;
 
@@ -427,9 +408,7 @@ STC_ReadLabel(acid, label, taskId)
  */
 
 afs_int32
-STC_RestoreDb(rxCall, taskId)
-     struct rx_call *rxCall;
-     afs_uint32 *taskId;
+STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -499,10 +478,7 @@ STC_RestoreDb(rxCall, taskId)
  */
 
 afs_int32
-STC_SaveDb(rxCall, archiveTime, taskId)
-     struct rx_call *rxCall;
-     Date archiveTime;
-     afs_uint32 *taskId;
+STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -585,10 +561,7 @@ STC_SaveDb(rxCall, archiveTime, taskId)
  */
 
 afs_int32
-STC_ScanDumps(acid, addDbFlag, taskId)
-     struct rx_call *acid;
-     afs_int32 addDbFlag;
-     afs_uint32 *taskId;
+STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -667,9 +640,7 @@ STC_ScanDumps(acid, addDbFlag, taskId)
  */
 
 afs_int32
-STC_TCInfo(acid, tciptr)
-     struct rx_call *acid;
-     struct tc_tcInfo *tciptr;
+STC_TCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
 {
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
@@ -681,10 +652,7 @@ STC_TCInfo(acid, tciptr)
 /* STC_DeleteDump
  */
 afs_int32
-STC_DeleteDump(acid, dumpID, taskId)
-     struct rx_call *acid;
-     afs_uint32 dumpID;
-     afs_uint32 *taskId;
+STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
 {
     struct deleteDumpIf *ptr = 0;
     statusP statusPtr = 0;

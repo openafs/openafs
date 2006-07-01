@@ -119,8 +119,7 @@ osi_audit()
 }
 
 static afs_int32
-SafeATOL(anum)
-     register char *anum;
+SafeATOL(register char *anum)
 {
     register afs_int32 total;
     register int tc;
@@ -155,10 +154,8 @@ SafeATOL(anum)
  *	should deal with signed numbers. Should signal error if no digits
  *	seen.
  */
-atocl(numstring, crunit, number)
-     char *numstring;
-     char crunit;		/* Units to report number in */
-     afs_int32 *number;
+int
+atocl(char *numstring, char crunit, afs_int32 *number)
 {
     float total;
     afs_int32 runits;
@@ -255,8 +252,7 @@ atocl(numstring, crunit, number)
 
 /* replace last two ocurrences of / by _ */
 static
-stringReplace(name)
-     char *name;
+stringReplace(char *name)
 {
     char *pos;
     char buffer[256];
@@ -271,9 +267,7 @@ stringReplace(name)
 }
 
 static
-stringNowReplace(logFile, deviceName)
-     char *logFile, *deviceName;
-
+stringNowReplace(char *logFile, char *deviceName)
 {
     char *pos = 0;
     char storeDevice[256];
@@ -323,10 +317,7 @@ stringNowReplace(logFile, deviceName)
 
 #define	LINESIZE	256
 static afs_int32
-GetDeviceConfig(filename, config, portOffset)
-     char *filename;
-     struct tapeConfig *config;
-     afs_int32 portOffset;
+GetDeviceConfig(char *filename, struct tapeConfig *config, afs_int32 portOffset)
 {
     FILE *devFile = 0;
     char line[LINESIZE];
@@ -415,9 +406,7 @@ GetDeviceConfig(filename, config, portOffset)
 /* GetConfigParams
  */
 static afs_int32
-GetConfigParams(filename, port)
-     char *filename;
-     afs_int32 port;
+GetConfigParams(char *filename, afs_int32 port)
 {
     char paramFile[256];
     FILE *devFile = 0;
@@ -840,10 +829,8 @@ GetConfigParams(filename, port)
     return (code);
 }
 
-static
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
@@ -1169,9 +1156,8 @@ WorkerBee(as, arock)
 #include "AFS_component_version_number.c"
 #endif
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     register struct cmd_item *ti;
