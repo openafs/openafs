@@ -1243,7 +1243,7 @@ bc_VolRestoreCmd(as, arock)
 		       &destServ, destPartition, fromDate, newExt, oldFlag,
 		       /*parentDump */ 0, /*dumpLevel */ 0,
 		       bc_Restorer, ports, portCount,
-		       /*dumpSched */ 0, /*append */ 0, dontExecute);
+		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1406,7 +1406,7 @@ bc_DiskRestoreCmd(as, arock)
 		       &destServ, destPartition, fromDate, newExt, oldFlag,
 		       /*parentDump */ 0, /*dumpLevel */ 0,
 		       bc_Restorer, ports, portCount,
-		       /*dumpSched */ 0, /*append */ 0, dontExecute);
+		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1568,7 +1568,7 @@ bc_VolsetRestoreCmd(as, arock)
 			  newExt, oldFlag,
 			  /*parentDump */ 0, /*dumpLevel */ 0,
 			  bc_Restorer, ports, portCount,
-			  /*dumpSched */ 0, /*append */ 0, dontExecute);
+			  /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1962,7 +1962,7 @@ bc_DumpCmd(as, arock)
 	return (0);
 
     code = bc_StartDmpRst(bc_globalConfig, dumpPath, vsName, volsToDump,
-			  /*destServer */ 0, /*destPartition */ 0,
+			  /*destServer */ NULL, /*destPartition */ 0,
 			  /*fromDate */ 0,
 			  /*newExt */ NULL, /*oldFlag */ 0,
 			  parent, level, bc_Dumper, portp, /*portCount */ 1,
