@@ -46,9 +46,7 @@ dlqlinkT entries_to_flush;
 int dbWatcherinprogress;
 
 afs_int32
-threadEntryDir(anEntry, size, type)
-     char *anEntry;
-     afs_int32 size, type;
+threadEntryDir(char *anEntry, afs_int32 size, afs_int32 type)
 {
     dlqlinkP entryPtr;
     char *entry = NULL;
@@ -91,9 +89,7 @@ threadEntryDir(anEntry, size, type)
  */
 
 afs_int32
-threadEntry(anEntry, size, type)
-     char *anEntry;
-     afs_int32 size, type;
+threadEntry(char *anEntry, afs_int32 size, afs_int32 type)
 {
     dlqlinkP entryPtr;
     char *entry = NULL;
@@ -132,8 +128,7 @@ threadEntry(anEntry, size, type)
 /* ------------------------------------------------------------------ */
 
 afs_int32
-useDump(dumpEntryPtr)
-     struct budb_dumpEntry *dumpEntryPtr;
+useDump(struct budb_dumpEntry *dumpEntryPtr)
 {
     afs_int32 code = 0;
 
@@ -147,8 +142,7 @@ useDump(dumpEntryPtr)
  *     Creates a dump entry (finished) and puts it onto the savedEntries list.
  */
 afs_int32
-finishDump(aDumpEntryPtr)
-     struct budb_dumpEntry *aDumpEntryPtr;
+finishDump(struct budb_dumpEntry *aDumpEntryPtr)
 {
     afs_int32 code = 0;
 
@@ -163,16 +157,7 @@ finishDump(aDumpEntryPtr)
  *     Creates a tape entry and puts it onto the savedEntries list.
  */
 afs_int32
-useTape(aTapeEntryPtr, dumpID, tapename, tapeSeq, useCount, written,
-	expiration, tapepos)
-     struct budb_tapeEntry *aTapeEntryPtr;
-     afs_int32 dumpID;
-     char *tapename;
-     afs_int32 tapeSeq;
-     afs_int32 useCount;
-     Date written;
-     Date expiration;
-     afs_int32 tapepos;
+useTape(struct budb_tapeEntry *aTapeEntryPtr, afs_int32 dumpID, char *tapename, afs_int32 tapeSeq, afs_int32 useCount, Date written, Date expiration, afs_int32 tapepos)
 {
     afs_int32 code = 0;
 
@@ -197,9 +182,7 @@ useTape(aTapeEntryPtr, dumpID, tapename, tapeSeq, useCount, written,
  *     Creates a tape entry (finished) and puts it onto the savedEntries list.
  */
 afs_int32
-finishTape(aTapeEntryPtr, useKBytes)
-     struct budb_tapeEntry *aTapeEntryPtr;
-     afs_int32 useKBytes;
+finishTape(struct budb_tapeEntry *aTapeEntryPtr, afs_int32 useKBytes)
 {
     afs_int32 code = 0;
 
@@ -217,18 +200,7 @@ finishTape(aTapeEntryPtr, useKBytes)
  *     Creates a volume entry and puts it onto the savedEntries list.
  */
 afs_int32
-addVolume(aVolEntryPtr, dumpID, tapename, volname, volid, cloneDate, startPos,
-	  volBytes, fragment, flags)
-     struct budb_volumeEntry *aVolEntryPtr;
-     afs_int32 dumpID;
-     char *tapename;
-     char *volname;
-     afs_int32 volid;
-     Date cloneDate;
-     afs_int32 startPos;
-     afs_int32 volBytes;
-     int fragment;
-     afs_int32 flags;
+addVolume(struct budb_volumeEntry *aVolEntryPtr, afs_int32 dumpID, char *tapename, char *volname, afs_int32 volid, Date cloneDate, afs_int32 startPos, afs_int32 volBytes, int fragment, afs_int32 flags)
 {
     afs_int32 code = 0;
     int allo = 0;
@@ -270,8 +242,7 @@ addVolume(aVolEntryPtr, dumpID, tapename, volname, volid, cloneDate, startPos,
  *     and tapes and volumes should not be added to the DB.
  */
 afs_int32
-flushSavedEntries(status)
-     afs_int32 status;
+flushSavedEntries(afs_int32 status)
 {
     dlqlinkP entryPtr;
     struct budb_tapeEntry *tapePtr;
@@ -318,6 +289,7 @@ flushSavedEntries(status)
     return (code);
 }
 
+void
 waitDbWatcher()
 {
     int message = 0;
@@ -342,6 +314,7 @@ waitDbWatcher()
 #define MAXVOLUMESTOADD 100
 int addvolumes = 1;
 
+void
 dbWatcher()
 {
     dlqlinkP entryPtr;
