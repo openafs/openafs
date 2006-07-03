@@ -42,7 +42,7 @@ languages:
 #	$(MAKE) /f NTMakefile /nologo LANG=%l lang
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
-	
+
 
 lang:: lang_clean $(MSIFILE) $(BINMSIFILE)
 
