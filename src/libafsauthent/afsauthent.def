@@ -110,6 +110,8 @@ EXPORTS
         PR_ListSuperGroups				@108
 	ka_AuthSpecificServersConn			@109
 	ka_KeyCheckSum					@110
+	rx_Finalize					@111
+	rx_InitHost					@112
 
 
 

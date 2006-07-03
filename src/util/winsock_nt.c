@@ -25,11 +25,11 @@ RCSID
  * 
  * Returns 0 on success, -1 on error.
  */
+static int once = 1;
+
 int
 afs_winsockInit(void)
 {
-    static int once = 1;
-
     if (once) {
 	int code;
 	WSADATA data;
@@ -46,6 +46,13 @@ afs_winsockInit(void)
 	    return -1;
     }
     return 0;
+}
+
+void
+afs_winsockCleanup(void)
+{
+    WSACleanup();
+    once = 0;
 }
 
 /* This function will begin to fail in the year 2038 */
