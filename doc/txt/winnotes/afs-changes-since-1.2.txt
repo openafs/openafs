@@ -1,4 +1,59 @@
+Since 1.5.2:
+
+ * move headers, libraries, and samples from OpenAFS\Client to 
+   OpenAFS\SDK
+
+ * remove the auto-registration of AFS IDs for foreign cells
+   from integrated logon.  this permits afslogon.dll to avoid 
+   initializing the RX library.  afslogon.dll is a network 
+   provider library and as such it is loaded into all applications
+   which perform a CreateProcessAsUser call.  Initializing the
+   RX library spawns background threads to listen for inbound
+   packets.  When the network provider is unloaded from the 
+   process, the RX library does not cleanup the threads.  If they
+   continue to execute after the library is unloaded, the process
+   will crash.
+
+ * implement inline bulk status calls.  this will significantly
+   improve the performance of directory listings.
+
+ * prevent a crash when evaluating mountpoints to volumes that do not
+   exist
+
+ * new command: fs uuid [-generate]
+   displays the current uuid and allows a new one to be generated
+   on the fly without restarting the afs client service.
+
+ * fix the 64-bit installers to properly document the install 
+   location
+
+ * move help files to the proper location so they can be located by
+   the system tray tool and the control panel.
+
+ * "over quota" and "disk full" errors were not being reported to the 
+   caller.
+
+ * largefile support has been added.  Files greater than 31-bits can no
+   longer be written to file servers which do not support large files.
+   When file servers support large files, files up to 64-bits can be
+   read or written.
+
+ * cm_SyncOp could return with the input buffer unlocked upon error
+   which would result in a panic condition.  This bug was introduced
+   in 1.4.1.
+
+ * vlserver failover when freelance mode did not work.  This prevented
+   the root.afs volume from being loaded if the first vlserver could
+   not be reached.
+
 Since 1.5.1:
+
+ * A bug in the CIFS Standard Info response packet caused directories
+   to appear as standard files.  This prevented Microsoft Vista from
+   being able to walk the AFS directory tree.
+
+ * Mount points must be reported as directories in response to 
+   Query Path Info operations.
 
  * A deadlock was detected when performing "fs flushall" if the 
    file server reports VNOVNODE.   The scp->createBufferLock is 
