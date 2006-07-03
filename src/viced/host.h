@@ -30,6 +30,7 @@ extern pthread_mutex_t host_glock_mutex;
     assert(pthread_mutex_lock(&host_glock_mutex) == 0)
 #define H_UNLOCK \
     assert(pthread_mutex_unlock(&host_glock_mutex) == 0)
+extern pthread_key_t viced_uclient_key;
 #else /* AFS_PTHREAD_ENV */
 #define H_LOCK
 #define H_UNLOCK

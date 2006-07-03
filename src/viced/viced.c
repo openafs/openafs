@@ -203,6 +203,10 @@ int sendBufSize = 16384;	/* send buffer size */
 
 struct timeval tp;
 
+#ifdef AFS_PTHREAD_ENV
+pthread_key_t viced_uclient_key;
+#endif
+
 /*
  * FileServer's name and IP address, both network byte order and
  * host byte order.
@@ -1519,6 +1523,11 @@ InitPR()
 		("Couldn't initialize protection library; code=%d.\n", code));
 	return code;
     }
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_key_create(&viced_uclient_key, NULL) == 0);
+#endif
+
     SystemId = SYSADMINID;
     SystemAnyUser = ANYUSERID;
     SystemAnyUserCPS.prlist_len = 0;
