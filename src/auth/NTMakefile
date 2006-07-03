@@ -112,7 +112,7 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 
 install_headers: $(INCFILES)
 
-install: $(AFSAUTH_LIBFILE) $(OUT)\setkey.exe # $(COPYAUTH_EXEFILE) $(AFSAUTH_KRB_LIBFILE)
+install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe # $(COPYAUTH_EXEFILE)
 
 install9x: install
 
