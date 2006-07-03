@@ -2021,6 +2021,10 @@ rx_Finalize(void)
     }
     rxi_flushtrace();
 
+#ifdef AFS_NT40_ENV
+    afs_winsockCleanup();
+#endif
+
     rxinit_status = 1;
     UNLOCK_RX_INIT;
 }
