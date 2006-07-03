@@ -1,3 +1,34 @@
+Since 1.4.2-beta1: 
+ * move headers, libraries, and samples from OpenAFS\Client to 
+   OpenAFS\SDK
+
+ * remove the auto-registration of AFS IDs for foreign cells
+   from integrated logon.  this permits afslogon.dll to avoid 
+   initializing the RX library.  afslogon.dll is a network 
+   provider library and as such it is loaded into all applications
+   which perform a CreateProcessAsUser call.  Initializing the
+   RX library spawns background threads to listen for inbound
+   packets.  When the network provider is unloaded from the 
+   process, the RX library does not cleanup the threads.  If they
+   continue to execute after the library is unloaded, the process
+   will crash.
+
+ * prevent a crash when evaluating mountpoints to volumes that do not
+   exist
+
+ * "over quota" and "disk full" errors were not being reported to the 
+   caller.
+
+ * move help files to the proper location so they can be located by
+   the system tray tool and the control panel.
+
+ * Prevent a panic caused by cm_SyncOp returning unlocked buffers.
+
+ * Fix vlserver failover when mounting root.afs volume (Freelance
+   mode disabled)
+
+ * Allow Freelance Scache entries to be recycled
+
 Since 1.4.1d:
 
  * A deadlock was detected when performing "fs flushall" if the 
@@ -26,6 +57,8 @@ Since 1.4.1d:
 
  * In cm_GetNewSCache, do not allow Freelance SCache entries to be
    recycled.  Choose a new entry if cm_RecycleSCache fails.
+
+
 
 Since 1.4.1c:  1.4.1d (2 June 2006)
 
