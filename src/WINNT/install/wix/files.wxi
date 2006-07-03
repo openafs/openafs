@@ -949,7 +949,121 @@
   <?endif?>
                     </Component>
                 <?endif?>
+                </Directory> <!-- /Program -->
+            </Directory> <!-- /Client -->
+  <?ifndef BinsOnly ?>
+            <Directory Id="dirServer" Name="Server">
+                <Directory Id="dirusr" Name="usr">
+                    <Directory Id="dirafs" Name="afs">
+                        <Directory Id="dirbin" Name="bin" src="$(var.ServerDir)">
+                             <Component Win64="$(var.Win64)" Id="cmf_vlserver_EXE" Guid="$(var.cmf_vlserver_EXE_guid)">
+                                <File Id="filevlserver_EXE" Name="vlser.exe" LongName="vlserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_volinfo_EXE" Guid="$(var.cmf_volinfo_EXE_guid)">
+                                <File Id="filevolinfo_EXE" Name="volin.exe" LongName="volinfo.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_volserver_EXE" Guid="$(var.cmf_volserver_EXE_guid)">
+                                <File Id="filevolserver_EXE" Name="volse.exe" LongName="volserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_afskill_EXE" Guid="$(var.cmf_afskill_EXE_guid)">
+                                <File Id="fileafskill_EXE" Name="afski.exe" LongName="afskill.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_EXE" Guid="$(var.cmf_afssvrcfg_EXE_guid)">
+                                <File Id="fileafssvrcfg_EXE" Name="afssv.exe" LongName="afssvrcfg.exe" KeyPath="yes" DiskId="1">
+									<Shortcut Id="scSvrCfgWizard" Directory="dirShortCut" Name="SvrCfgWz.lnk" LongName="Server Configuration Wizard.lnk" Description="$(loc.StrCfgWzdDesc)" Arguments="/wizard" Icon="ico_afssvrcfg" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                                </File>
+                            </Component>
+			    <?if $(env.CPU) = "i386"?>
+                                    <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
+                                	<File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
+	                            </Component>
+			    <?endif?>
+                             <Component Win64="$(var.Win64)" Id="cmf_bosctlsvc_EXE" Guid="$(var.cmf_bosctlsvc_EXE_guid)">
+                                <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
+                                <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
+                                <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes" Interactive="yes">
+									<!-- ServiceConfig does nothing 
+                                    <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="5" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
+                                    -->
+                                </ServiceInstall>
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_bosserver_EXE" Guid="$(var.cmf_bosserver_EXE_guid)">
+                                <File Id="filebosserver_EXE" Name="bosse.exe" LongName="bosserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_buserver_EXE" Guid="$(var.cmf_buserver_EXE_guid)">
+                                <File Id="filebuserver_EXE" Name="buser.exe" LongName="buserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_fileserver_EXE" Guid="$(var.cmf_fileserver_EXE_guid)">
+                                <File Id="filefileserver_EXE" Name="files.exe" LongName="fileserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_fms_EXE" Guid="$(var.cmf_fms_EXE_guid)">
+                                <File Id="filefms_EXE" Name="fms.exe" LongName="fms.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\fms.exe"/>
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_butc_EXE" Guid="$(var.cmf_butc_EXE_guid)">
+                                <File Id="filebutc_EXE" Name="butc.exe" LongName="butc.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\butc.exe"/>
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_kaserver_EXE" Guid="$(var.cmf_kaserver_EXE_guid)">
+                                <File Id="filekaserver_EXE" Name="kaser.exe" LongName="kaserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_ptserver_EXE" Guid="$(var.cmf_ptserver_EXE_guid)">
+                                <File Id="fileptserver_EXE" Name="ptser.exe" LongName="ptserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_salvager_EXE" Guid="$(var.cmf_salvager_EXE_guid)">
+                                <File Id="filesalvager_EXE" Name="salva.exe" LongName="salvager.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_upclient_EXE" Guid="$(var.cmf_upclient_EXE_guid)">
+                                <File Id="fileupclient_EXE" Name="upcli.exe" LongName="upclient.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+                            <Component Win64="$(var.Win64)" Id="cmf_upserver_EXE" Guid="$(var.cmf_upserver_EXE_guid)">
+                                <File Id="fileupserver_EXE" Name="upser.exe" LongName="upserver.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
+							<Component Win64="$(var.Win64)" Id="cmf_afsserver_CPL" Guid="$(var.cmf_afsserver_CPL_guid)">
+								<File Id="fileafsserver_CPL" Name="afsserve.cpl" LongName="afsserver.cpl" KeyPath="yes" DiskId="1"/>
+						        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Server CPL" Type="string" Value="[#fileafsserver_CPL]" Id="reg_Server30" />
+							</Component>
+
+                            <Component Id="cmp_Server_Program" Guid="8C4D0351-8EBF-4192-BF63-DCB3AADF4115" KeyPath="yes">
+                                <CreateFolder />
+                                <CreateFolder Directory="dirlog" />
+                                <CreateFolder Directory="diretc" />
+                                <CreateFolder Directory="dirlocal" />
+                            </Component>
+                            
+                        <?ifdef DebugSyms?>
+                            <Component Win64="$(var.Win64)" Id="cmp_Server_Program_Debug" Guid="$(var.cmp_Server_Program_Debug_guid)">
+                                <File Id="filevlserver_PDB" Name="vlser.pdb" LongName="vlserver.pdb" DiskId="1" />
+                                <File Id="filevolinfo_PDB" Name="volin.pdb" LongName="volinfo.pdb" DiskId="1" />
+                                <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
+                                <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
+                                <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
+				<?if $(env.CPU) = "i386"?>
+                                	<File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
+				<?endif?>
+                                <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
+                                <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
+                                <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />
+                                <File Id="filefileserver_PDB" Name="files.pdb" LongName="fileserver.pdb" DiskId="1" />
+                                <File Id="filefms_PDB" Name="fms.pdb" LongName="fms.pdb" DiskId="1" src="$(var.EtcDir)\fms.pdb"/>
+                                <File Id="filebutc_PDB" Name="butc.pdb" LongName="butc.pdb" DiskId="1" src="$(var.EtcDir)\butc.pdb"/>
+                                <File Id="filekaserver_PDB" Name="kaser.pdb" LongName="kaserver.pdb" DiskId="1" />
+                                <File Id="fileptserver_PDB" Name="ptser.pdb" LongName="ptserver.pdb" DiskId="1" />
+                                <File Id="filesalvager_PDB" Name="salva.pdb" LongName="salvager.pdb" DiskId="1" />
+                                <File Id="fileupclient_PDB" Name="upcli.pdb" LongName="upclient.pdb" DiskId="1" />
+                                <File Id="fileupserver_PDB" Name="upser.pdb" LongName="upserver.pdb" DiskId="1" />
+								<File Id="fileafsserver_PDB" Name="afsserve.pdb" LongName="afsserver.pdb" KeyPath="yes" DiskId="1"/>
+                            </Component>
+                        <?endif?>
+                        
+                        </Directory>
+                        <Directory Id="dirlog" Name="log" />
+                        <Directory Id="diretc" Name="etc" />
+                        <Directory Id="dirlocal" Name="local" />
+                    </Directory>
+                </Directory>
+            </Directory> <!-- Server -->
+  <?endif?>
   <?ifndef BinsOnly?>                  
+            <Directory Id="dirSDK" Name="SDK">
                     <Directory Id="dirSample" Name="Sample">
                         <Component Id="cmp_SDK_Sample" Guid="F9373E95-F410-4AA5-AA79-07C11EE00334">
                             <File Id="filetoken_C" Name="token.c" LongName="token.c" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\afsd\sample\token.c"/>
@@ -1266,119 +1380,7 @@
                             </Component>
                         </Directory>
                     </Directory>
-  <?endif?>
-                </Directory> <!-- /Program -->
-            </Directory> <!-- /Client -->
-  <?ifndef BinsOnly ?>
-            <Directory Id="dirServer" Name="Server">
-                <Directory Id="dirusr" Name="usr">
-                    <Directory Id="dirafs" Name="afs">
-                        <Directory Id="dirbin" Name="bin" src="$(var.ServerDir)">
-                             <Component Win64="$(var.Win64)" Id="cmf_vlserver_EXE" Guid="$(var.cmf_vlserver_EXE_guid)">
-                                <File Id="filevlserver_EXE" Name="vlser.exe" LongName="vlserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                             <Component Win64="$(var.Win64)" Id="cmf_volinfo_EXE" Guid="$(var.cmf_volinfo_EXE_guid)">
-                                <File Id="filevolinfo_EXE" Name="volin.exe" LongName="volinfo.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                             <Component Win64="$(var.Win64)" Id="cmf_volserver_EXE" Guid="$(var.cmf_volserver_EXE_guid)">
-                                <File Id="filevolserver_EXE" Name="volse.exe" LongName="volserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                             <Component Win64="$(var.Win64)" Id="cmf_afskill_EXE" Guid="$(var.cmf_afskill_EXE_guid)">
-                                <File Id="fileafskill_EXE" Name="afski.exe" LongName="afskill.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                             <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_EXE" Guid="$(var.cmf_afssvrcfg_EXE_guid)">
-                                <File Id="fileafssvrcfg_EXE" Name="afssv.exe" LongName="afssvrcfg.exe" KeyPath="yes" DiskId="1">
-									<Shortcut Id="scSvrCfgWizard" Directory="dirShortCut" Name="SvrCfgWz.lnk" LongName="Server Configuration Wizard.lnk" Description="$(loc.StrCfgWzdDesc)" Arguments="/wizard" Icon="ico_afssvrcfg" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                                </File>
-                            </Component>
-			    <?if $(env.CPU) = "i386"?>
-                                    <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
-                                	<File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
-	                            </Component>
-			    <?endif?>
-                             <Component Win64="$(var.Win64)" Id="cmf_bosctlsvc_EXE" Guid="$(var.cmf_bosctlsvc_EXE_guid)">
-                                <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
-                                <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
-                                <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes" Interactive="yes">
-									<!-- ServiceConfig does nothing 
-                                    <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="5" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
-                                    -->
-                                </ServiceInstall>
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_bosserver_EXE" Guid="$(var.cmf_bosserver_EXE_guid)">
-                                <File Id="filebosserver_EXE" Name="bosse.exe" LongName="bosserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_buserver_EXE" Guid="$(var.cmf_buserver_EXE_guid)">
-                                <File Id="filebuserver_EXE" Name="buser.exe" LongName="buserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_fileserver_EXE" Guid="$(var.cmf_fileserver_EXE_guid)">
-                                <File Id="filefileserver_EXE" Name="files.exe" LongName="fileserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_fms_EXE" Guid="$(var.cmf_fms_EXE_guid)">
-                                <File Id="filefms_EXE" Name="fms.exe" LongName="fms.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\fms.exe"/>
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_butc_EXE" Guid="$(var.cmf_butc_EXE_guid)">
-                                <File Id="filebutc_EXE" Name="butc.exe" LongName="butc.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\butc.exe"/>
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_kaserver_EXE" Guid="$(var.cmf_kaserver_EXE_guid)">
-                                <File Id="filekaserver_EXE" Name="kaser.exe" LongName="kaserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_ptserver_EXE" Guid="$(var.cmf_ptserver_EXE_guid)">
-                                <File Id="fileptserver_EXE" Name="ptser.exe" LongName="ptserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_salvager_EXE" Guid="$(var.cmf_salvager_EXE_guid)">
-                                <File Id="filesalvager_EXE" Name="salva.exe" LongName="salvager.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_upclient_EXE" Guid="$(var.cmf_upclient_EXE_guid)">
-                                <File Id="fileupclient_EXE" Name="upcli.exe" LongName="upclient.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Win64="$(var.Win64)" Id="cmf_upserver_EXE" Guid="$(var.cmf_upserver_EXE_guid)">
-                                <File Id="fileupserver_EXE" Name="upser.exe" LongName="upserver.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-							<Component Win64="$(var.Win64)" Id="cmf_afsserver_CPL" Guid="$(var.cmf_afsserver_CPL_guid)">
-								<File Id="fileafsserver_CPL" Name="afsserve.cpl" LongName="afsserver.cpl" KeyPath="yes" DiskId="1"/>
-						        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Server CPL" Type="string" Value="[#fileafsserver_CPL]" Id="reg_Server30" />
-							</Component>
-
-                            <Component Id="cmp_Server_Program" Guid="8C4D0351-8EBF-4192-BF63-DCB3AADF4115" KeyPath="yes">
-                                <CreateFolder />
-                                <CreateFolder Directory="dirlog" />
-                                <CreateFolder Directory="diretc" />
-                                <CreateFolder Directory="dirlocal" />
-                            </Component>
-                            
-                        <?ifdef DebugSyms?>
-                            <Component Win64="$(var.Win64)" Id="cmp_Server_Program_Debug" Guid="$(var.cmp_Server_Program_Debug_guid)">
-                                <File Id="filevlserver_PDB" Name="vlser.pdb" LongName="vlserver.pdb" DiskId="1" />
-                                <File Id="filevolinfo_PDB" Name="volin.pdb" LongName="volinfo.pdb" DiskId="1" />
-                                <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
-                                <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
-                                <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
-				<?if $(env.CPU) = "i386"?>
-                                	<File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
-				<?endif?>
-                                <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
-                                <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
-                                <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />
-                                <File Id="filefileserver_PDB" Name="files.pdb" LongName="fileserver.pdb" DiskId="1" />
-                                <File Id="filefms_PDB" Name="fms.pdb" LongName="fms.pdb" DiskId="1" src="$(var.EtcDir)\fms.pdb"/>
-                                <File Id="filebutc_PDB" Name="butc.pdb" LongName="butc.pdb" DiskId="1" src="$(var.EtcDir)\butc.pdb"/>
-                                <File Id="filekaserver_PDB" Name="kaser.pdb" LongName="kaserver.pdb" DiskId="1" />
-                                <File Id="fileptserver_PDB" Name="ptser.pdb" LongName="ptserver.pdb" DiskId="1" />
-                                <File Id="filesalvager_PDB" Name="salva.pdb" LongName="salvager.pdb" DiskId="1" />
-                                <File Id="fileupclient_PDB" Name="upcli.pdb" LongName="upclient.pdb" DiskId="1" />
-                                <File Id="fileupserver_PDB" Name="upser.pdb" LongName="upserver.pdb" DiskId="1" />
-								<File Id="fileafsserver_PDB" Name="afsserve.pdb" LongName="afsserver.pdb" KeyPath="yes" DiskId="1"/>
-                            </Component>
-                        <?endif?>
-                        
-                        </Directory>
-                        <Directory Id="dirlog" Name="log" />
-                        <Directory Id="diretc" Name="etc" />
-                        <Directory Id="dirlocal" Name="local" />
-                    </Directory>
-                </Directory>
-            </Directory> <!-- Server -->
+            </Directory> <!-- SDK -->
   <?endif?>
 
         </Directory> <!-- AFS -->
