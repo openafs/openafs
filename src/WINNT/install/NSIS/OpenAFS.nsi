@@ -1071,14 +1071,14 @@ SectionEnd
 
 Section /o "Software Development Kit (SDK)" secSDK
 
-    SetOutPath "$INSTDIR\Client\Program\lib"
-    File /r "${AFS_CLIENT_LIBDIR}\*.*"
+   SetOutPath "$INSTDIR\SDK\lib"
+   File /r "${AFS_CLIENT_LIBDIR}\*.*"
 
-    SetOutPath "$INSTDIR\Client\Program\Include"
-    File /r "${AFS_BUILD_INCDIR}\*.*"    
+   SetOutPath "$INSTDIR\SDK\Include"
+   File /r "${AFS_BUILD_INCDIR}\*.*"    
 
    ; Client Sample
-   SetOutPath "$INSTDIR\Client\Program\Sample"
+   SetOutPath "$INSTDIR\SDK\Sample"
    File "..\..\afsd\sample\token.c"
 
    ;Store install folder
@@ -1448,7 +1448,7 @@ NoDocs:
 ; the SDK is installed.  If not, we don't need to push it on the user.
 ; If they are there, we want to make sure they match the installed version.
 CheckSDK:
-   IfFileExists "$INSTDIR\Client\Program\Include\main.h" +1 NoSDK
+   IfFileExists "$INSTDIR\SDK\Include\main.h" +1 NoSDK
    SectionGetFlags ${secSDK} $0
    IntOp $0 $0 | ${SF_SELECTED}
    SectionSetFlags ${secSDK} $0
@@ -1838,15 +1838,21 @@ StartRemove:
 
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.pdb"
 
+  Delete /REBOOTOK "$INSTDIR\SDK\Include\*"
+  Delete /REBOOTOK "$INSTDIR\SDK\Include\afs\*"
+  Delete /REBOOTOK "$INSTDIR\SDK\Include\rx\*"
+  Delete /REBOOTOK "$INSTDIR\SDK\Sample\*"
+  Delete /REBOOTOK "$INSTDIR\SDK\*"
+
+  RMDir  "$INSTDIR\SDK\Sample"
+  RMDir  "$INSTDIR\SDK\Include\afs"
+  RMDir  "$INSTDIR\SDK\Include\rx"
+  RMDir  "$INSTDIR\SDK\Include"
+  RMDir  "$INSTDIR\SDK"
+
   Delete /REBOOTOK "$INSTDIR\Client\Program\*"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\*"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\afs\*"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\rx\*"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\Sample\*"
-  RMDir  "$INSTDIR\Client\Program\Sample"
-  RMDir  "$INSTDIR\Client\Program\Include\afs"
-  RMDir  "$INSTDIR\Client\Program\Include\rx"
-  RMDir  "$INSTDIR\Client\Program\Include"
+  Delete /REBOOTOK "$INSTDIR\Client\*"
+
   RMDir  "$INSTDIR\Client\Program"
   RMDir  "$INSTDIR\Client"
 
