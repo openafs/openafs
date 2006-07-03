@@ -88,6 +88,7 @@ int  KFW_AFS_copy_system_file_to_default_cache(char *);
 #define PROBE_USERNAME               "OPENAFS-KDC-PROBE"
 #define PROBE_PASSWORD_LEN           16
 
+#define DO_NOT_REGISTER_VARNAME  "OPENAFS_DO_NOT_REGISTER_AFS_ID"
 #ifdef  __cplusplus
 }
 #endif
