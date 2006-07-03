@@ -35,7 +35,6 @@ DWORD TraceOption = 0;
 
 HANDLE hDLL;
 
-WSADATA WSAjunk;
 #define AFS_LOGON_EVENT_NAME TEXT("AFS Logon")
 
 void DebugEvent0(char *a) 
@@ -79,11 +78,19 @@ BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
     switch (reason) {
     case DLL_PROCESS_ATTACH:
         /* Initialization Mutex */
-        hInitMutex = CreateMutex(NULL, FALSE, NULL);
+	if (!bInit) {
+	    hInitMutex = CreateMutex(NULL, FALSE, NULL);
+	    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
+	}
         break;
 
     case DLL_PROCESS_DETACH:
-        CloseHandle(hInitMutex);
+	/* do nothing on unload because we might 
+	 * be reloaded.
+	 */
+	CloseHandle(hInitMutex);
+	hInitMutex = NULL;
+	bInit = FALSE;
         break;
 
     case DLL_THREAD_ATTACH:
@@ -100,14 +107,28 @@ void AfsLogonInit(void)
 {
     if ( bInit == FALSE ) {
         if ( WaitForSingleObject( hInitMutex, INFINITE ) == WAIT_OBJECT_0 ) {
-            if ( bInit == FALSE ) {
-                rx_Init(0);
-                initAFSDirPath();
-                ka_Init(0);
-                bInit = TRUE;
-            }
-            ReleaseMutex(hInitMutex);
-        }
+	    /* initAFSDirPath() initializes an array and sets a 
+	     * flag so that the initialization can only occur
+	     * once.  No cleanup will be done when the DLL is 
+	     * unloaded so the initialization will not be 
+	     * performed again on a subsequent reload
+	     */
+	    initAFSDirPath();
+
+	    /* ka_Init initializes a number of error tables.
+	     * and then calls ka_CellConfig() which grabs 
+	     * an afsconf_dir structure via afsconf_Open().
+	     * Upon a second attempt to call ka_CellConfig()
+	     * the structure will be released with afsconf_Close()
+	     * and then re-opened.  Could this corrupt memory?
+	     * 
+	     * We only need this if we are not using KFW.
+	     */
+	    if (!KFW_is_available())
+		ka_Init(0);
+	    bInit = TRUE;
+	}
+	ReleaseMutex(hInitMutex);
     }
 }
 
@@ -915,7 +936,7 @@ DWORD APIENTRY NPLogonNotify(
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
      * for this user 
      */
-    if ( KFW_is_available() ) {
+    if (ISLOGONINTEGRATED(opt.LogonOption) && KFW_is_available()) {
         sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
         KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
 
