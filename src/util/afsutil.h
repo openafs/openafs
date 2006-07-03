@@ -97,6 +97,7 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 
 /* Initialize the windows sockets before calling networking routines. */
      extern int afs_winsockInit(void);
+     extern void afs_winsockCleanup(void);
 
      struct timezone {
 	 int tz_minuteswest;	/* of Greenwich */
