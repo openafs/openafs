@@ -67,6 +67,28 @@ ucstring(char *d, char *s, int n)
     return original_d;
 }
 
+int
+stolower(char *s)
+{
+  while (*s) {
+        if (isupper(*s))
+            *s = tolower(*s);
+        s++;
+    }
+    return 0;
+}
+
+int
+stoupper(char *s)
+{
+  while (*s) {
+        if (islower(*s))
+            *s = toupper(*s);
+        s++;
+    }
+    return 0;
+}
+
 /* strcompose - concatenate strings passed to it.
  * Input: 
  *   buf: storage for the composed string. Any data in it will be lost.
