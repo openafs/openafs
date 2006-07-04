@@ -765,14 +765,3 @@ pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngrou
 		  nusers, 0, 0);
     return code;
 }
-
-int
-stolower(char *s)
-{
-    while (*s) {
-	if (isupper(*s))
-	    *s = tolower(*s);
-	s++;
-    }
-    return 0;
-}
