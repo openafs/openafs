@@ -96,7 +96,7 @@ kauth.xdr.o: kauth.xdr.c kauth.h
 $(UKSRCS): kauth.h
 
 kauth.cs.c: kauth.rg
-	${RXGEN} -x -C -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -u -x -C -o $@ ${srcdir}/kauth.rg
 
 kauth.ss.c: kauth.rg
 	${RXGEN} -x -S -o $@ ${srcdir}/kauth.rg
@@ -105,7 +105,7 @@ kauth.xdr.c: kauth.rg
 	${RXGEN} -x -c -o $@ ${srcdir}/kauth.rg
 
 kauth.h: kauth.rg
-	${RXGEN} -x -h -o $@ ${srcdir}/kauth.rg
+	${RXGEN} -u -x -h -o $@ ${srcdir}/kauth.rg
 
 kauth.xdr.c: kauth.h
 kauth.cs.c: kauth.h

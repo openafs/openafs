@@ -397,7 +397,7 @@ bc_UpdateHosts()
 
     /* fetch the version number */
     code =
-	ubik_Call(BUDB_GetTextVersion, uhptr->uh_client, 0, ctPtr->textType,
+	ubik_BUDB_GetTextVersion(uhptr->uh_client, 0, ctPtr->textType,
 		  &ctPtr->textVersion);
     if (code)
 	ERROR(code);

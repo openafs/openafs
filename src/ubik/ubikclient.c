@@ -306,8 +306,8 @@ ubik_ClientDestroy(struct ubik_client * aclient)
  *     error.
  */
 
-static struct rx_connection *
-RefreshConn(struct rx_connection *tc)
+struct rx_connection *
+ubik_RefreshConn(struct rx_connection *tc)
 {
     afs_uint32 host;
     u_short port;
@@ -428,7 +428,7 @@ ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
 		     */
 		    tc = aclient->conns[count];
 		    if (tc && rx_ConnError(tc)) {
-			aclient->conns[count] = tc = RefreshConn(tc);
+			aclient->conns[count] = tc = ubik_RefreshConn(tc);
 		    }
 		    if (!tc)
 			break;
@@ -463,7 +463,7 @@ ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
 	    /*needsync */
 	    tc = aclient->conns[count];
 	    if (tc && rx_ConnError(tc)) {
-		aclient->conns[count] = tc = RefreshConn(tc);
+		aclient->conns[count] = tc = ubik_RefreshConn(tc);
 	    }
 	    if (!tc)
 		break;
@@ -537,7 +537,7 @@ try_GetSyncSite(register struct ubik_client *aclient, afs_int32 apos)
     /* get this conn */
     tc = aclient->conns[apos];
     if (tc && rx_ConnError(tc)) {
-	aclient->conns[apos] = (tc = RefreshConn(tc));
+	aclient->conns[apos] = (tc = ubik_RefreshConn(tc));
     }
     if (!tc) {
 	return -1;
@@ -626,7 +626,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 	}
 
 	if (rx_ConnError(tc)) {
-	    tc = RefreshConn(tc);
+	    tc = ubik_RefreshConn(tc);
 	    aclient->conns[*apos] = tc;
 	}
 

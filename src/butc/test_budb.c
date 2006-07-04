@@ -55,7 +55,7 @@ connect_buserver()
     }
 
     /* Get the versin */
-    code = ubik_Call(BUDB_T_GetVersion, udbHandle.uh_client, 0, &version);
+    code = ubik_BUDB_T_GetVersion(udbHandle.uh_client, 0, &version);
     if (code) {
 	printf("Error in ubik_Call to BUDB_T_GetVersion\n");
 	ERROR(code);
@@ -73,7 +73,7 @@ verifyDb()
     afs_int32 status, orphans, host;
 
     code =
-	ubik_Call(BUDB_DbVerify, udbHandle.uh_client, 0, &status, &orphans,
+	ubik_BUDB_DbVerify(udbHandle.uh_client, 0, &status, &orphans,
 		  &host);
     if (code) {
 	printf("Error in ubik_Call to BUDB_DbVerify\n");

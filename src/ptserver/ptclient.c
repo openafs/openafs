@@ -267,7 +267,7 @@ main(argc, argv)
 	    /* use ubik_Call to do the work, finding an up server and handling
 	     * the job of finding a sync site, if need be */
 	    else
-		code = ubik_Call(PR_INewEntry, pruclient, 0, name, id, oid);
+		code = ubik_PR_INewEntry(pruclient, 0, name, id, oid);
 	    if (CodeOk(code))
 		com_err(whoami, code, "on %s %s %d %d", op, name, id, oid);
 	} else if (!strcmp(op, "sf")) {
@@ -277,7 +277,7 @@ main(argc, argv)
 		code = PRBADARG;
 	    else
 		code =
-		    ubik_Call(PR_SetFieldsEntry, pruclient, 0, id, mask,
+		    ubik_PR_SetFieldsEntry(pruclient, 0, id, mask,
 			      access, gq, uq, 0, 0);
 	    if (CodeOk(code))
 		com_err(whoami, code, "on %s %d %x %x %d %d", op, id, mask,
@@ -290,7 +290,7 @@ main(argc, argv)
 		code = PRBADARG;
 	    else
 		code =
-		    ubik_Call(PR_ChangeEntry, pruclient, 0, id, newname, oid,
+		    ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid,
 			      newid);
 	    if (CodeOk(code))
 		com_err(whoami, code, "on %s %d %s %d %d", op, id, newname,
@@ -300,7 +300,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_WhereIsIt, pruclient, 0, id, &pos);
+		code = ubik_PR_WhereIsIt(pruclient, 0, id, &pos);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    else
@@ -311,7 +311,7 @@ main(argc, argv)
 	    if (GetInt32(&pos))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_DumpEntry, pruclient, 0, pos, &entry);
+		code = ubik_PR_DumpEntry(pruclient, 0, pos, &entry);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS) {
@@ -332,7 +332,7 @@ main(argc, argv)
 	    if (GetInt32(&id) || GetInt32(&gid))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_AddToGroup, pruclient, 0, id, gid);
+		code = ubik_PR_AddToGroup(pruclient, 0, id, gid);
 	    if (CodeOk(code))
 		com_err(whoami, code, "on %s %d %d", op, id, gid);
 	} else if (!strcmp(op, "iton")) {
@@ -351,7 +351,7 @@ main(argc, argv)
 	    }
 	    lnames.namelist_val = 0;
 	    lnames.namelist_len = 0;
-	    code = ubik_Call(PR_IDToName, pruclient, 0, &lid, &lnames);
+	    code = ubik_PR_IDToName(pruclient, 0, &lid, &lnames);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS) {
@@ -382,7 +382,7 @@ main(argc, argv)
 	    }
 	    lid.idlist_val = 0;
 	    lid.idlist_len = 0;
-	    code = ubik_Call(PR_NameToID, pruclient, 0, &lnames, &lid);
+	    code = ubik_PR_NameToID(pruclient, 0, &lnames, &lid);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS) {
@@ -399,7 +399,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_Delete, pruclient, 0, id);
+		code = ubik_PR_Delete(pruclient, 0, id);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	} else if (!strcmp(op, "dg")) {
@@ -407,7 +407,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_Delete, pruclient, 0, id);
+		code = ubik_PR_Delete(pruclient, 0, id);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	} else if (!strcmp(op, "rm")) {
@@ -415,7 +415,7 @@ main(argc, argv)
 	    if (GetInt32(&id) || GetInt32(&gid))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_RemoveFromGroup, pruclient, 0, id, gid);
+		code = ubik_PR_RemoveFromGroup(pruclient, 0, id, gid);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	}
@@ -428,7 +428,7 @@ main(argc, argv)
 		code = PRBADARG;
 	    else
 		code =
-		    ubik_Call(PR_ListSuperGroups, pruclient, 0, id, &alist,
+		    ubik_PR_ListSuperGroups(pruclient, 0, id, &alist,
 			      &over);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
@@ -453,7 +453,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_GetCPS, pruclient, 0, id, &alist, &over);
+		code = ubik_PR_GetCPS(pruclient, 0, id, &alist, &over);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS) {
@@ -480,7 +480,7 @@ main(argc, argv)
 		hostaddr = hostinfo->h_addr_list[0];
 		id = ntohl(hostaddr->s_addr);
 		code =
-		    ubik_Call(PR_GetHostCPS, pruclient, 0, id, &alist, &over);
+		    ubik_PR_GetHostCPS(pruclient, 0, id, &alist, &over);
 	    }
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
@@ -506,7 +506,7 @@ main(argc, argv)
 		code = PRBADARG;
 	    else
 		code =
-		    ubik_Call(PR_ListElements, pruclient, 0, id, &alist,
+		    ubik_PR_ListElements(pruclient, 0, id, &alist,
 			      &over);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
@@ -539,13 +539,13 @@ main(argc, argv)
 	    if (GetString(name, sizeof(name)))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_NewEntry, pruclient, 0, name, 1, &id);
+		code = ubik_PR_NewEntry(pruclient, 0, name, 1, &id);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS)
 		printf("Id is %d.\n", id);
 	} else if (!strcmp(op, "lm")) {
-	    code = ubik_Call(PR_ListMax, pruclient, 0, &id, &gid);
+	    code = ubik_PR_ListMax(pruclient, 0, &id, &gid);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS)
@@ -556,7 +556,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_SetMax, pruclient, 0, id, 0);
+		code = ubik_PR_SetMax(pruclient, 0, id, 0);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	} else if (!strcmp(op, "smg")) {
@@ -564,7 +564,7 @@ main(argc, argv)
 	    if (GetInt32(&id))
 		code = PRBADARG;
 	    else
-		code = ubik_Call(PR_SetMax, pruclient, 0, id, 1);
+		code = ubik_PR_SetMax(pruclient, 0, id, 1);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	} else if (!strcmp(op, "sin")) {
@@ -609,7 +609,7 @@ main(argc, argv)
 /*		continue;*/
 	    }
 	    uentry.Mask = PRUPDATE_IDHASH;
-	    code = ubik_Call(PR_UpdateEntry, pruclient, 0, 0, name, &uentry);
+	    code = ubik_PR_UpdateEntry(pruclient, 0, 0, name, &uentry);
 	    if (code) {
 		printf("Failed to update entry %s (err=%d)\n", name, code);
 		continue;
@@ -637,7 +637,7 @@ main(argc, argv)
 	    }
 	    uentry.Mask = PRUPDATE_NAMEHASH;
 	    code =
-		ubik_Call(PR_UpdateEntry, pruclient, 0, id, "_foo_", &uentry);
+		ubik_PR_UpdateEntry(pruclient, 0, id, "_foo_", &uentry);
 	    if (code) {
 		printf("Failed to update entry with id %d (err=%d)\n", id,
 		       code);
@@ -667,7 +667,7 @@ main(argc, argv)
 /*		continue;*/
 	    }
 	    uentry.Mask = PRUPDATE_IDHASH;
-	    code = ubik_Call(PR_UpdateEntry, pruclient, 0, 0, name, &uentry);
+	    code = ubik_PR_UpdateEntry(pruclient, 0, 0, name, &uentry);
 	    if (code) {
 		printf("Failed to update entry %s (err=%d)\n", name, code);
 		continue;
@@ -695,7 +695,7 @@ main(argc, argv)
 	    }
 	    uentry.Mask = PRUPDATE_NAMEHASH;
 	    code =
-		ubik_Call(PR_UpdateEntry, pruclient, 0, id, "_foo_", &uentry);
+		ubik_PR_UpdateEntry(pruclient, 0, id, "_foo_", &uentry);
 	    if (code) {
 		printf("Failed to update entry with id %d (err=%d)\n", id,
 		       code);

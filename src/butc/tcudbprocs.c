@@ -1168,7 +1168,7 @@ restoreDbHeader(tapeInfo, rstTapeInfoPtr, nextHeader)
 
     /* Add the database header to the database */
     code =
-	ubik_Call(BUDB_RestoreDbHeader, udbHandle.uh_client, 0,
+	ubik_BUDB_RestoreDbHeader(udbHandle.uh_client, 0,
 		  &hostDbHeader);
     if (code) {
 	ErrorLog(0, rstTapeInfoPtr->taskId, code, 0,
