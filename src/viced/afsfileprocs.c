@@ -5527,7 +5527,7 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 {				/*SRXAFS_XStatsVersion */
 
     struct client *t_client = NULL;	/* tmp ptr to client data */
-    struct rx_connection *tcon;
+    struct rx_connection *tcon = rx_ConnectionOf(a_call);
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
