@@ -1076,12 +1076,11 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
         *tp++ = 'A';
         *tp++ = ':';
         *tp++ = 0;
-        *tp++ = 'N';
-        *tp++ = 'T';
+        *tp++ = 'A';
         *tp++ = 'F';
         *tp++ = 'S';
         *tp++ = 0;
-        smb_SetSMBDataLength(outp, 8);
+        smb_SetSMBDataLength(outp, 7);
     } else {
         strcpy(tp, "IPC");
         smb_SetSMBDataLength(outp, 4);
@@ -2643,18 +2642,38 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         nbytesRequired = 22;
     else if (infoLevel == SMB_INFO_QUERY_EA_SIZE) 
         nbytesRequired = 26;
-    else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) 
+    else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
+#ifdef COMMENT
         nbytesRequired = 40;
-    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) 
-        nbytesRequired = 24;
+#else
+        nbytesRequired = 34;
+#endif
+    }
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
+#ifdef COMMENT
+	nbytesRequired = 24;
+#else
+	nbytesRequired = 22;
+#endif
+    }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) 
         nbytesRequired = 4;
+#if 0
+    else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) 
+        nbytesRequired = ???;
+    else if (infoLevel == SMB_QUERY_FILE_ALL_INFO) 
+        nbytesRequired = ???;
+#endif
     else if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) 
         nbytesRequired = 30;
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
+#ifdef COMMENT
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+#else
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
+#endif
         return 0;
     }
 
@@ -2816,6 +2835,11 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((u_long *)op) = scp->length.LowPart; op += 4;	/* alloc size */
         attributes = smb_Attributes(scp);
         *((u_short *)op) = attributes; op += 2;	/* attributes */
+
+	/* now, if we are being asked about extended attrs, return a 0 size */
+	if (infoLevel == SMB_INFO_QUERY_EA_SIZE) {
+	    *((u_long *)op) = 0; op += 4;
+	}
     }
     else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
@@ -2824,8 +2848,13 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((FILETIME *)op) = ft; op += 8;	/* last write time */
         *((FILETIME *)op) = ft; op += 8;	/* last change time */
         extAttributes = smb_ExtAttributes(scp);
+#ifdef COMMENT
         *((u_long *)op) = extAttributes; op += 4; /* extended attribs */
         *((u_long *)op) = 0; op += 4;	/* don't know what this is */
+#else
+	/* The CIFS Specs say */
+        *((u_short *)op) = extAttributes; op += 2; /* extended attributes */
+#endif 
     }
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
@@ -2835,17 +2864,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *op++ = ((scp->fileType == CM_SCACHETYPE_DIRECTORY || 
 		  scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 		  scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
+#ifdef COMMENT
         *op++ = 0;
         *op++ = 0;
+#endif
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         memset(op, 0, 4); op += 4;	/* EA size */
     }
 
-    /* now, if we are being asked about extended attrs, return a 0 size */
-    if (infoLevel == SMB_INFO_QUERY_EA_SIZE) {
-        *((u_long *)op) = 0; op += 4;
-    }
 
 
     /* send and free the packets */

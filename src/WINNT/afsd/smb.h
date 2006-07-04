@@ -81,6 +81,7 @@ typedef struct smb {
 #define SMB_QUERY_FILE_COMPRESSION_INFO 0x10B
 #define SMB_QUERY_FILE_UNIX_BASIC       0x200
 #define SMB_QUERY_FILE_UNIX_LINK        0x201
+#define SMB_INFO_PASSTHROUGH           0x1000
 
 #define SMB_SET_FILE_UNIX_BASIC         0x200
 #define SMB_SET_FILE_UNIX_LINK          0x201
