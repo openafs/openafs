@@ -35,7 +35,6 @@
 
 /* These characters are illegal in Windows filenames */
 static char *illegalChars = "\\/:*?\"<>|";
-BOOL isWindows2000 = FALSE;
 
 int smbShutdownFlag = 0;
 
@@ -3135,6 +3134,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int coreProtoIndex;
     int v3ProtoIndex;
     int NTProtoIndex;
+    int VistaProtoIndex;
     int protoIndex;			        /* index we're using */
     int namex;
     int dbytes;
@@ -3155,6 +3155,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     coreProtoIndex = -1;		/* not found */
     v3ProtoIndex = -1;
     NTProtoIndex = -1;
+    VistaProtoIndex = -1;
     while(namex < dbytes) {
         osi_Log1(smb_logp, "Protocol %s",
                   osi_LogSaveString(smb_logp, namep+1));
@@ -3172,6 +3173,9 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         else if (smb_useV3 && strcmp("NT LM 0.12", namep+1) == 0) {
             NTProtoIndex = tcounter;
         }
+        else if (smb_useV3 && strcmp("SMB 2.001", namep+1) == 0) {
+            VistaProtoIndex = tcounter;
+        }
 
         /* compute size of protocol entry */
         entryLength = (int)strlen(namep+1);
@@ -3184,6 +3188,10 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     lock_ObtainMutex(&vcp->mx);
+    if (VistaProtoIndex != -1) {
+        protoIndex = VistaProtoIndex;
+        vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
+    }
     if (NTProtoIndex != -1) {
         protoIndex = NTProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
