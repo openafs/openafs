@@ -31,8 +31,17 @@ LIBFILE = $(DESTDIR)\lib\afsrxstat.lib
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
-	$(RXGEN) -x $**
+rxstat.cs.c: rxstat.xg rxstat.h
+	$(RXGEN) -x -C -o $@ rxstat.xg
+
+rxstat.ss.c: rxstat.xg rxstat.h
+	$(RXGEN) -x -S -o $@ rxstat.xg
+
+rxstat.xdr.c: rxstat.xg rxstat.h
+	$(RXGEN) -x -c -o $@ rxstat.xg
+
+rxstat.h: rxstat.xg
+	$(RXGEN) -x -h -o $@ rxstat.xg
 
 copyheader: rxstat.h
    $(COPY) rxstat.h $(INCFILEDIR)\rx\rxstat.h

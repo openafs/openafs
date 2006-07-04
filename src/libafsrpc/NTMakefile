@@ -30,7 +30,7 @@ XDROBJS = $(OUT)\xdr.obj $(OUT)\xdr_array.obj $(OUT)\xdr_arrayn.obj $(OUT)\xdr_f
 	$(OUT)\xdr_rec.obj  $(OUT)\xdr_refernce.obj $(OUT)\xdr_rx.obj $(OUT)\xdr_update.obj \
 	$(OUT)\xdr_afsuuid.obj $(OUT)\xdr_int64.obj $(OUT)\xdr_int32.obj
 
-RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj $(OUT)\rx.obj \
+RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj $(OUT)\rx.obj $(OUT)\rx_clock_nt.obj \
 	$(OUT)\rx_null.obj $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj $(OUT)\rx_packet.obj \
 	$(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj
 

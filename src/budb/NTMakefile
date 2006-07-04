@@ -92,8 +92,20 @@ $(OUT)\buserver.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen budb.rg
-budb.xdr.c budb.cs.c budb.ss.c 	$(INCFILEDIR)\budb.h: budb.rg
-	$(RXGEN) $**
+
+budb.cs.c: budb.rg budb.h
+	$(RXGEN) -u -C -o $@ budb.rg
+
+budb.ss.c: budb.rg budb.h
+	$(RXGEN) -S -o $@ budb.rg
+
+budb.xdr.c: budb.rg budb.h
+	$(RXGEN) -c -o $@ budb.rg
+
+budb.h: budb.rg
+	$(RXGEN) -u -h -o budb.h budb.rg
+
+$(INCFILEDIR)\budb.h: budb.h
 	$(COPY) budb.h $(INCFILEDIR)\budb.h 
 
 ############################################################################

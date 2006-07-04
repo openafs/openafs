@@ -232,8 +232,6 @@ LOGON_DLLOBJS =\
 LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afsauthent.lib \
     $(DESTDIR)\lib\libafsconf.lib \
-    $(DESTDIR)\lib\afsrxkad.lib \
-    $(DESTDIR)\lib\afsdes.lib \
     $(LANAHELPERLIB) \
     $(AFSKFWLIB)
 
