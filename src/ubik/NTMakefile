@@ -18,7 +18,7 @@ INCFILES =\
 	$(INCFILEDIR)\ubik.h \
 	$(INCFILEDIR)\ubik_int.h 
 
-
+install_headers: $(INCFILES)
 
 ############################################################################
 # install afsubik.lib
@@ -87,8 +87,17 @@ $(OUT)\udebug.res: AFS_component_version_number.h
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
 
-ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c ubik_int.h: ubik_int.xg
-	$(RXGEN) -x $**
+ubik_int.cs.c: ubik_int.xg ubik_int.h
+	$(RXGEN) -x -C -o $@ ubik_int.xg
+
+ubik_int.ss.c: ubik_int.xg ubik_int.h
+	$(RXGEN) -x -S -o $@ ubik_int.xg
+
+ubik_int.xdr.c: ubik_int.xg ubik_int.h
+	$(RXGEN) -x -c -o $@ ubik_int.xg
+
+ubik_int.h: ubik_int.xg
+	$(RXGEN) -x -h -o $@ ubik_int.xg
 
 ############################################################################
 # compile_et on uerrors.et

@@ -10,6 +10,7 @@
 RELDIR=ptserver
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = -DAFS_USE_GETTIMEOFDAY
 
 ############################################################################
 # Definitions for installing header files
@@ -137,8 +138,17 @@ $(OUT)\ptclient.res: AFS_component_version_number.h
 
 $(INCFILEDIR)\afs\ptint.h : ptint.h
 
-ptint.ss.c ptint.cs.c ptint.xdr.c ptint.h: ptint.xg
-	$(RXGEN) -x $**
+ptint.cs.c: ptint.xg ptint.h
+	$(RXGEN) -x -C -u -o $@ ptint.xg
+
+ptint.ss.c: ptint.xg ptint.h
+	$(RXGEN) -x -S -o $@ ptint.xg
+
+ptint.xdr.c: ptint.xg ptint.h
+	$(RXGEN) -x -c -o $@ ptint.xg
+
+ptint.h: ptint.xg
+	$(RXGEN) -x -h -u -o $@ ptint.xg
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET

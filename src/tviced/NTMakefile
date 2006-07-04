@@ -88,6 +88,7 @@ $(FSINTOBJS): $(FSINT)\$$(@B).C
 
 EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \

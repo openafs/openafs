@@ -118,9 +118,17 @@ $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)
 ############################################################################
 # Definitions for generating files via RXGEN
 
-bosint.h bosint.cs.c bosint.ss.c bosint.xdr.c: bosint.xg
-	$(RXGEN) -x $**
+bosint.cs.c: bosint.xg bosint.h
+	$(RXGEN) -x -C -o $@ bosint.xg
 
+bosint.ss.c: bosint.xg bosint.h
+	$(RXGEN) -x -S -o $@ bosint.xg
+
+bosint.xdr.c: bosint.xg bosint.h
+	$(RXGEN) -x -c -o $@ bosint.xg
+
+bosint.h: bosint.xg
+	$(RXGEN) -x -h -o $@ bosint.xg
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET
