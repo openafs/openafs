@@ -223,8 +223,10 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
     f_print(fout, "\nextern %s %s%s%s(\n", type, prefix, defp->pc.proc_prefix,
 	    defp->pc.proc_name);
 
-    if (callTconnF) {
+    if (callTconnF == 1) {
 	f_print(fout, "\t/*IN */ struct rx_call *z_call");
+    } else if (callTconnF == 2) {
+	f_print(fout, "\tregister struct ubik_client *aclient, afs_int32 aflags");
     } else {
 	f_print(fout, "\t/*IN */ struct rx_connection *z_conn");
     }
@@ -269,6 +271,9 @@ psprocdef(definition * defp)
     } else {
 	psproc1(defp, 0, "int", "", 0xFFFFFFFF);
     }
+
+    if (uflag && !kflag)
+	psproc1(defp, 2, "int", "ubik_", 0xFFFFFFFF);
 
     if (*ServerPrefix)
 	psproc1(defp, 1, "afs_int32", ServerPrefix, 0xFFFFFFFF);

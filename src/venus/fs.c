@@ -1714,7 +1714,7 @@ defect #3069
 	if (code == 0) {
 	    /* make the check.  Don't complain if there are problems with init */
 	    code =
-		ubik_Call(VL_GetEntryByNameO, uclient, 0, volName,
+		ubik_VL_GetEntryByNameO(uclient, 0, volName,
 			  &vldbEntry);
 	    if (code == VL_NOENT) {
 		fprintf(stderr,

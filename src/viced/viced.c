@@ -207,6 +207,10 @@ struct timeval tp;
 pthread_key_t viced_uclient_key;
 #endif
 
+#ifdef AFS_PTHREAD_ENV
+pthread_key_t viced_uclient_key;
+#endif
+
 /*
  * FileServer's name and IP address, both network byte order and
  * host byte order.
@@ -1763,7 +1767,7 @@ Do_VLRegisterRPC()
 	FS_HostAddrs_HBO[i] = ntohl(FS_HostAddrs[i]);
     addrs.bulkaddrs_len = FS_HostAddr_cnt;
     addrs.bulkaddrs_val = (afs_uint32 *) FS_HostAddrs_HBO;
-    code = ubik_Call(VL_RegisterAddrs, cstruct, 0, &FS_HostUUID, 0, &addrs);
+    code = ubik_VL_RegisterAddrs(cstruct, 0, &FS_HostUUID, 0, &addrs);
     if (code) {
 	if (code == VL_MULTIPADDR) {
 	    ViceLog(0,
