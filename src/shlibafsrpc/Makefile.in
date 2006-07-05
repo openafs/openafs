@@ -1,7 +1,7 @@
 # API version. When something changes, increment as appropriate. 
 # Ignore at your own risk.
 LIBAFSRPCMAJOR=1
-LIBAFSRPCMINOR=0
+LIBAFSRPCMINOR=1
 
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
