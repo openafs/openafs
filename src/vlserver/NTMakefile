@@ -166,7 +166,7 @@ install_headers: $(INCFILES)
 # clean up
 
 clean::
-	$(DEL) vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h$$ 
+	$(DEL) vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h
 	$(DEL) vlserver.h vl_errors.c $(INCFILES)
 
 mkdir:
