@@ -29,16 +29,20 @@ div.Section1
 
 </head>
 
-<body lang=EN-US>
-
-<div class=Section1>
-
-<p class=MsoNormal><a href="http://www.openafs.org/windows.html"><span
-style='color:windowtext;text-decoration:none'><img border=0 width=184
-height=127 src="logo_files/image001.jpg"></span></a></p>
-
-</div>
-
-</body>
+<frameset cols="216,1*">
+ <frameset rows="15%,1*">
+  <frame name=logo src=logo.htm>
+  <frame name="Table of Contents" src=toc.htm>
+ </frameset>
+ <frame name=Main src=relnotes.htm>
+ <noframes>
+  <body lang=EN-US>
+  <div class=Section1>
+  <p class=MsoNormal>This page uses frames, but your browser doesn't support
+  them.</p>
+  </div>
+  </body>
+ </noframes>
+</frameset>
 
 </html>

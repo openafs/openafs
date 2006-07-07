@@ -1,1291 +1,788 @@
-<html xmlns:v="urn:schemas-microsoft-com:vml"
-xmlns:o="urn:schemas-microsoft-com:office:office"
-xmlns:w="urn:schemas-microsoft-com:office:word"
-xmlns="http://www.w3.org/TR/REC-html40">
+<html>
 
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
-<meta name=ProgId content=Word.Document>
-<meta name=Generator content="Microsoft Word 11">
-<meta name=Originator content="Microsoft Word 11">
-<base target="OpenAFS for Windows Release Notes">
-<link rel=File-List href="toc_files/filelist.xml">
-<title>OpenAFS for Windows Release Notes TOC</title>
-<!--[if gte mso 9]><xml>
- <o:DocumentProperties>
-  <o:Author>Jeffrey Altman</o:Author>
-  <o:LastAuthor>Jeffrey Altman</o:LastAuthor>
-  <o:Revision>1</o:Revision>
-  <o:TotalTime>9</o:TotalTime>
-  <o:Created>2005-09-25T21:11:00Z</o:Created>
-  <o:LastSaved>2005-09-25T21:11:00Z</o:LastSaved>
-  <o:Pages>1</o:Pages>
-  <o:Words>4476</o:Words>
-  <o:Characters>25515</o:Characters>
-  <o:Company>Secure Endpoints Inc.</o:Company>
-  <o:Lines>212</o:Lines>
-  <o:Paragraphs>59</o:Paragraphs>
-  <o:CharactersWithSpaces>29932</o:CharactersWithSpaces>
-  <o:Version>11.6568</o:Version>
- </o:DocumentProperties>
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <w:WordDocument>
-  <w:ValidateAgainstSchemas/>
-  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
-  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
-  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
-  <w:Compatibility>
-   <w:BreakWrappedTables/>
-   <w:SnapToGridInCell/>
-   <w:WrapTextWithPunct/>
-   <w:UseAsianBreakRules/>
-   <w:UseWord2002TableStyleRules/>
-   <w:UseFELayout/>
-  </w:Compatibility>
-  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
- </w:WordDocument>
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <w:LatentStyles DefLockedState="false" LatentStyleCount="156">
- </w:LatentStyles>
-</xml><![endif]-->
+<meta name=Generator content="Microsoft Word 11 (filtered)">
+<base target=Main>
 <style>
 <!--
  /* Font Definitions */
  @font-face
 	{font-family:"MS Mincho";
-	panose-1:2 2 6 9 4 2 5 8 3 4;
-	mso-font-alt:"\FF2D\FF33 \660E\671D";
-	mso-font-charset:128;
-	mso-generic-font-family:modern;
-	mso-font-pitch:fixed;
-	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+	panose-1:2 2 6 9 4 2 5 8 3 4;}
 @font-face
 	{font-family:"\@MS Mincho";
-	panose-1:2 2 6 9 4 2 5 8 3 4;
-	mso-font-charset:128;
-	mso-generic-font-family:modern;
-	mso-font-pitch:fixed;
-	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+	panose-1:2 2 6 9 4 2 5 8 3 4;}
  /* Style Definitions */
  p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{mso-style-parent:"";
-	margin:0pt;
+	{margin:0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc1, li.MsoToc1, div.MsoToc1
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin:0pt;
+	{margin:0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc2, li.MsoToc2, div.MsoToc2
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin-top:0pt;
+	{margin-top:0pt;
 	margin-right:0pt;
 	margin-bottom:0pt;
 	margin-left:12.0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc3, li.MsoToc3, div.MsoToc3
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin-top:0pt;
+	{margin-top:0pt;
 	margin-right:0pt;
 	margin-bottom:0pt;
 	margin-left:24.0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc4, li.MsoToc4, div.MsoToc4
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin-top:0pt;
+	{margin-top:0pt;
 	margin-right:0pt;
 	margin-bottom:0pt;
 	margin-left:36.0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc5, li.MsoToc5, div.MsoToc5
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin-top:0pt;
+	{margin-top:0pt;
 	margin-right:0pt;
 	margin-bottom:0pt;
 	margin-left:48.0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 p.MsoToc6, li.MsoToc6, div.MsoToc6
-	{mso-style-update:auto;
-	mso-style-noshow:yes;
-	mso-style-next:Normal;
-	margin-top:0pt;
+	{margin-top:0pt;
 	margin-right:0pt;
 	margin-bottom:0pt;
 	margin-left:60.0pt;
 	margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman";
-	mso-fareast-font-family:"MS Mincho";}
+	font-family:"Times New Roman";}
 a:link, span.MsoHyperlink
 	{color:blue;
-	text-decoration:underline;
-	text-underline:single;}
+	text-decoration:underline;}
 a:visited, span.MsoHyperlinkFollowed
 	{color:purple;
-	text-decoration:underline;
-	text-underline:single;}
+	text-decoration:underline;}
 @page Section1
 	{size:612.0pt 792.0pt;
-	margin:72.0pt 90.0pt 72.0pt 90.0pt;
-	mso-header-margin:36.0pt;
-	mso-footer-margin:36.0pt;
-	mso-paper-source:0;}
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;}
 div.Section1
 	{page:Section1;}
 -->
 </style>
-<!--[if gte mso 10]>
-<style>
- /* Style Definitions */
- table.MsoNormalTable
-	{mso-style-name:"Table Normal";
-	mso-tstyle-rowband-size:0;
-	mso-tstyle-colband-size:0;
-	mso-style-noshow:yes;
-	mso-style-parent:"";
-	mso-padding-alt:0pt 5.4pt 0pt 5.4pt;
-	mso-para-margin:0pt;
-	mso-para-margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Times New Roman";
-	mso-ansi-language:#0400;
-	mso-fareast-language:#0400;
-	mso-bidi-language:#0400;}
-</style>
-<![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext="edit" spidmax="2050"/>
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <o:shapelayout v:ext="edit">
-  <o:idmap v:ext="edit" data="1"/>
- </o:shapelayout></xml><![endif]-->
+
 </head>
 
-<body lang=EN-US link=blue vlink=purple style='tab-interval:36.0pt'>
+<body lang=EN-US link=blue vlink=purple>
 
 <div class=Section1>
 
-<p class=MsoNormal><!--[if supportFields]><span style='mso-element:field-begin'></span><span
-style='mso-spacerun:yes'> </span>RD
-&quot;C:\\src\\openafs\\openafs-1-4-branch\\doc\\txt\\winnotes\\relnotes.htm&quot;
-\f <![endif]--><!--[if supportFields]><span style='mso-element:field-end'></span><![endif]--><!--[if supportFields]><span
-style='mso-element:field-begin'></span><span
-style='mso-spacerun:yes'> </span>TOC \h \z \n \u <span style='mso-element:field-separator'></span><![endif]--><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872163">1. Installer Options</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872164">2. System Requirements</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872165">2.1 Supported Operating Systems</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872166">2.1.1 Unsupported Operating Systems</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872167">2.2 Disk Space</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872168">2.3 Additional Software</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872169">3. Operational Notes</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872170">3.1. Requirements for Kerberos 5
-Authentication</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872171">3.1.1. Active Directory</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872172">3.1.2. Using the krb524 service</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872173">3.2. Use of the Microsoft Loopback Adapter</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872174">3.3. Using Freelance (Dynamic Root) Mode to
-Improve Mobility</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872175">3.4. Locating AFS Volume Database Servers</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872176">3.5. Obtaining AFS Tokens as a Part of
-Windows Logon</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872177">3.6. AFS System Tray Command Line Options</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872178">3.7. The “AFS Client Admins” Authorization
-Group</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872179">3.8. OpenAFS support for UNC paths</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872180">3.9. OpenAFS includes aklog.exe</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872181">3.10. OpenAFS Servers on Windows are
-Unsupported</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872182">3.11. OpenAFS Debugging Symbol files</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872183">3.12. Maximum File Size is 2GB</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872184">3.13. Encrypted AFS File Access</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872185">3.14. Authenticated Access to the OpenAFS Client
-Service</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872186">3.15. No More INI Files</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872187">3.16. Microsoft Windows Internet Connection
-Firewall</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872188">3.17. Browsing AFS from the Explorer Shell
-and Office</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872189">3.18. Byte Range Locking</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872190">3.19. Automatic Discarding of AFS Tokens at
-Logoff</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872191">3.20. Terminal Server installations</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872192">3.21. Hidden Dot Files</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872193">3.22. Status Cache Limits</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872194">3.23. NETBIOS over TCP/IP must be enabled</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872195">3.24. OpenAFS binaries are digitally signed</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872196">3.25. Maximum Size of the AFSCache File</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872197">3.26. Filename Character Sets</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872198">3.27. Known Character Set Issues with Roaming
-Profiles</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872199">3.28. The AFSCache File</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872200">3.29. Restricting OpenAFS Client Service
-Start and Stop</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872201">3.30. The @sys Name List</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872202">3.31. Symlinks to AFS UNC paths</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872203">3.32. Cache Manager Debugging Now Supported</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872204">3.33. Windows Logon Caching vs. Kerberos
-Logons</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872205">3.34. Initial Server Preferences</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872206">3.35. File Timestamps</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872207">3.36. Windows RPC client support must be
-installed</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872208">3.37. Generating Minidumps of the OpenAFS
-Client Service</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872209">3.38. AFS Client Universally Unique
-Identifiers</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872210">4. How to Debug Problems with OpenAFS for
-Windows:</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872211">4.1. pioctl debugging (IoctlDebug registry
-key)</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872212">4.2. afsd_service initialization log
-(%WinDir%\TEMP\afsd_init.log)</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872213">4.3. afsd_service debug logs (fs trace {-on,
--off, -dump} -&gt;%WinDir%\TEMP\afsd.log)</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872214">4.4. Using SysInternal’s DbgView and FileMon
-Tools</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872215">4.5. Microsoft MiniDumps<span
-style='mso-spacerun:yes'>  </span>(fs minidump -&gt; %WinDir%\TEMP\afsd.dmp)</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872216">4.6. Single Sign-on (Integrated Logon)
-debugging</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872217">4.7. RX (AFS RPC) debugging (rxdebug)</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872218">4.8. Cache Manager debugging (cmdebug)</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872219">4.9. Persistent Cache consistency check</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872220">5. Reporting Bugs:</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872221">6. How to Contribute to the Development of
-OpenAFS for Windows</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872222">6.1. The USENIX OpenAFS Fund</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872223">6.2. Secure Endpoints Inc.</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872224">6.3. The MIT Kerberos Account</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872225">6.4. Direct contributions of code and/or
-documentation</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872226">6.5. OpenAFS for Windows Mailing Lists</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872227">7. MSI Deployment Guide</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872228">7.1. Introduction</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872229">7.1.1 Requirements</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872230">7.1.2 Authoring a Transform</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872231">7.2. Configuration Options</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872232">7.2.1 Configurable Properties</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872233">7.2.1.1 Setting Properties</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872234">7.2.1.2 OpenAFS for Windows Properties</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872235">(Service parameters):</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872236">(Network provider):</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872237">(OpenAFS Client):</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872238">7.2.1.2.1 Registry Properties</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872239">AFSCACHEPATH</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872240">AFSCACHESIZE</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872241">AFSCELLNAME</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872242">FREELANCEMODE</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872243">HIDEDOTFILES</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872244">LOGONOPTIONS</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872245">MOUNTROOT</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872246">NETBIOSNAME</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872247">NOFINDLANABYNAME</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872248">RXMAXMTU</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872249">SECURITYLEVEL</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872250">SMBAUTHTYPE</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872251">STOREANSIFILENAMES</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872252">USEDNS</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872253">7.2.1.2.2 AFSCreds.exe Properties</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872254">CREDSSTARTUP</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872255">CREDSAUTOINIT</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872256">CREDSIPCHDET</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872257">CREDSQUIET</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872258">CREDSRENEWDRMAP</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc6 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872259">CREDSSHOW</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872260">7.2.2 Existing Registry Entries</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872261">7.2.3 Replacing Configuration Files</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872262">7.2.3.1 Components for Configuration Files</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872263">7.2.4 Adding Domain Specific Registry Keys</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872264">7.2.5 Adding Site Specific Freelance Registry
-Keys</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872265">7.3 Additional Resources</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872266">7.4. Upgrades</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc1 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872267">Appendix A: Registry Values</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872268">A.1. Service parameters</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872269">Regkey:
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872270">Value: LANadapter</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872271">Value: CacheSize</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872272">Value: ChunkSize</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872273">Value: Daemons</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872274">Value: ServerThreads</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872275">Value: Stats</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872276">Value: LogoffPreserveTokens</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872277">Value: RootVolume</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872278">Value: Mountroot</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872279">Value: CachePath</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872280">Value: NonPersistentCaching</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872281">Value: ValidateCache</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872282">Value: TrapOnPanic</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872283">Value: NetbiosName</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872284">Value: IsGateway</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872285">Value: ReportSessionStartups</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872286">Value: TraceBufferSize</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872287">Value: SysName</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872288">Value: SecurityLevel</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872289">Value: UseDNS</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872290">Value: FreelanceClient</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872291">Value: HideDotFiles</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872292">Value: MaxMpxRequests</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872293">Value: MaxVCPerServer</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872294">Value: Cell</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872295">Value: RxNoJumbo</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872296">Value: RxMaxMTU</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872297">Value: ConnDeadTimeout</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872298">Value: HardDeadTimeout</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872299">Value: TraceOption</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872300">Value: AllSubmount</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872301">Value: NoFindLanaByName</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872302">Value: MaxCPUs</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872303">Value: smbAuthType</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872304">Value: MaxLogSize</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872305">Value: FlushOnHibernate</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872306">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872307">Value: &lt;Drive Letter:&gt; for example
-&quot;G:&quot;</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872308">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872309">Value: CellServDBDir</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872310">Value: VerifyServiceSignature</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872311">Value: IoctlDebug</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872312">Value: MiniDumpType</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872313">Value: StoreAnsiFilenames</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872314">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872315">Value: &quot;smb/cifs share name&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872316">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Freelance]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872317">Value: &quot;numeric value&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872318">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872319">Value: &quot;numeric value&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872320">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Submounts]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872321">Value: &quot;submount name&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872322">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server
-Preferences\VLDB]</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872323">Value: &quot;hostname or ip address&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872324">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server
-Preferences\File]</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872325">Value: &quot;hostname or ip address&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872326">A.2. Integrated Logon Network provider
-parameters</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872327">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872328">Value: FailLoginsSilently</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872329">Regkey:
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872330">Value: NoWarnings</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872331">Value: AuthentProviderPath</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872332">Value: Class</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872333">Value: DependOnGroup</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872334">Value: DependOnService</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872335">Value: Name</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872336">Value: ProviderPath</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872337">A.2.1 Domain specific configuration keys for
-the Network Provider</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872338">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872339">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872340">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain&quot;domain
-name&quot;]</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872341">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872342">Example:</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872343">A.2.1.1 Domain specific configuration values</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
-
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872344">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+<p class=MsoNormal></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980939">1. Installer Options</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980940">2. System Requirements</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980941">2.1 Supported Operating Systems</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980942">2.1.1 Unsupported Operating Systems</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980943">2.2 Disk Space</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980944">2.3 Additional Software Packages</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980945">3. Operational Notes</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980946">3.1. Requirements for Kerberos 5
+Authentication</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980947">3.1.1. Active Directory</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980948">3.1.2. Using the krb524 service</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980949">3.2. Use of the Microsoft Loopback Adapter</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980950">3.3. Using Freelance (Dynamic Root) Mode
+to Improve Mobility</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980951">3.4. Locating AFS Volume Database Servers</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980952">3.5. Obtaining AFS Tokens as a Part of
+Windows Logon</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980953">3.6. AFS System Tray Command Line Options</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980954">3.7. The “AFS Client Admins” Authorization
+Group</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980955">3.8. OpenAFS support for UNC paths</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980956">3.9. OpenAFS includes aklog.exe</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980957">3.10. OpenAFS Servers on Windows are
+Unsupported</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980958">3.11. OpenAFS Debugging Symbol files</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980959">3.12. Maximum File Size is 2GB</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980960">3.13. Encrypted AFS File Access</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980961">3.14. Authenticated Access to the OpenAFS
+Client Service</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980962">3.15. No More INI Files</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980963">3.16. Microsoft Windows Internet
+Connection Firewall</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980964">3.17. Browsing AFS from the Explorer Shell
+and Office</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980965">3.18. Byte Range Locking</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980966">3.19. Automatic Discarding of AFS Tokens
+at Logoff</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980967">3.20. Terminal Server installations</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980968">3.21. Hidden Dot Files</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980969">3.22. Status Cache Limits</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980970">3.23. NETBIOS over TCP/IP must be enabled</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980971">3.24. OpenAFS binaries are digitally
+signed</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980972">3.25. Maximum Size of the AFSCache File</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980973">3.26. Filename Character Sets</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980974">3.27. Known Character Set Issues with
+Roaming Profiles</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980975">3.28. The AFSCache File</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980976">3.29. Restricting OpenAFS Client Service
+Start and Stop</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980977">3.30. The @sys Name List</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980978">3.31. Symlinks to AFS UNC paths</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980979">3.32. Cache Manager Debugging Now
+Supported</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980980">3.33. Windows Logon Caching vs. Kerberos
+Logons</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980981">3.34. Initial Server Preferences</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980982">3.35. File Timestamps</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980983">3.36. Windows RPC client support must be
+installed</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980984">3.37. Generating Minidumps of the OpenAFS
+Client Service</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980985">3.38. AFS Client Universally Unique
+Identifiers</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980986">3.39. Delayed Write Errors with Microsoft
+Office Applications</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980987">3.40. Global Drives (aka Service Drive
+Letters) are no longer supported by Microsoft</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980988">4. How to Debug Problems with OpenAFS for
+Windows:</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980989">4.1. pioctl debugging (IoctlDebug registry
+key)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980990">4.2. afsd_service initialization log
+(%WinDir%\TEMP\afsd_init.log)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980991">4.3. afsd_service debug logs (fs trace
+{-on, -off, -dump} -&gt;%WinDir%\TEMP\afsd.log)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980992">4.4. Using SysInternal’s DbgView and
+FileMon Tools</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980993">4.5. Microsoft MiniDumps  (fs minidump
+-&gt; %WinDir%\TEMP\afsd.dmp)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980994">4.6. Single Sign-on (Integrated Logon)
+debugging</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980995">4.7. RX (AFS RPC) debugging (rxdebug)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980996">4.8. Cache Manager debugging (cmdebug)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980997">4.9. Persistent Cache consistency check</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980998">5. Reporting Bugs:</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139980999">6. How to Contribute to the Development of
+OpenAFS for Windows</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981000">6.1. The USENIX OpenAFS Fund</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981001">6.2. Secure Endpoints Inc.</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981002">6.3. The MIT Kerberos Account</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981003">6.4. Direct contributions of code and/or
+documentation</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981004">6.5. OpenAFS for Windows Mailing Lists</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981005">7. MSI Deployment Guide</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981006">7.1. Introduction</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981007">7.1.1 Requirements</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981008">7.1.2 Authoring a Transform</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981009">7.2. Configuration Options</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981010">7.2.1 Configurable Properties</a></span></p>
+
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981011">7.2.1.1 Setting Properties</a></span></p>
+
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981012">7.2.1.2 OpenAFS for Windows Properties</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981013">(Service parameters):</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981014">(Network provider):</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981015">(OpenAFS Client):</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981016">7.2.1.2.1 Registry Properties</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981017">AFSCACHEPATH</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981018">AFSCACHESIZE</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981019">AFSCELLNAME</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981020">FREELANCEMODE</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981021">HIDEDOTFILES</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981022">LOGONOPTIONS</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981023">MOUNTROOT</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981024">NETBIOSNAME</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981025">NOFINDLANABYNAME</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981026">RXMAXMTU</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981027">SECURITYLEVEL</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981028">SMBAUTHTYPE</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981029">STOREANSIFILENAMES</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981030">USEDNS</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981031">7.2.1.2.2 AFSCreds.exe Properties</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981032">CREDSSTARTUP</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981033">CREDSAUTOINIT</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981034">CREDSIPCHDET</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981035">CREDSQUIET</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981036">CREDSRENEWDRMAP</a></span></p>
+
+<p class=MsoToc6><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981037">CREDSSHOW</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981038">7.2.2 Existing Registry Entries</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981039">7.2.3 Replacing Configuration Files</a></span></p>
+
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981040">7.2.3.1 Components for Configuration Files</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981041">7.2.4 Adding Domain Specific Registry Keys</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981042">7.2.5 Adding Site Specific Freelance
+Registry Keys</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981043">7.3 Additional Resources</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981044">7.4. Upgrades</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981045">Appendix A: Registry Values</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981046">A.1. Service parameters</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981047">Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981048">Value: LANadapter</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981049">Value: CacheSize</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981050">Value: ChunkSize</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981051">Value: Daemons</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981052">Value: ServerThreads</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981053">Value: Stats</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981054">Value: LogoffPreserveTokens</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981055">Value: RootVolume</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981056">Value: Mountroot</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981057">Value: CachePath</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981058">Value: NonPersistentCaching</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981059">Value: ValidateCache</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981060">Value: TrapOnPanic</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981061">Value: NetbiosName</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981062">Value: IsGateway</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981063">Value: ReportSessionStartups</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981064">Value: TraceBufferSize</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981065">Value: SysName</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981066">Value: SecurityLevel</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981067">Value: UseDNS</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981068">Value: FreelanceClient</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981069">Value: HideDotFiles</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981070">Value: MaxMpxRequests</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981071">Value: MaxVCPerServer</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981072">Value: Cell</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981073">Value: RxNoJumbo</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981074">Value: RxMaxMTU</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981075">Value: ConnDeadTimeout</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981076">Value: HardDeadTimeout</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981077">Value: TraceOption</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981078">Value: AllSubmount</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981079">Value: NoFindLanaByName</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981080">Value: MaxCPUs</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981081">Value: smbAuthType</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981082">Value: MaxLogSize</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981083">Value: FlushOnHibernate</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981084">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981085">Value: &lt;Drive Letter:&gt; for example
+&quot;G:&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981086">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981087">Value: CellServDBDir</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981088">Value: VerifyServiceSignature</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981089">Value: IoctlDebug</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981090">Value: MiniDumpType</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981091">Value: StoreAnsiFilenames</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981092">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981093">Value: &quot;smb/cifs share name&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981094">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981095">Value: &quot;numeric value&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981096">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981097">Value: &quot;numeric value&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981098">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Submounts]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981099">Value: &quot;submount name&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981100">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981101">Value: &quot;hostname or ip address&quot;</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981102">Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\File]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981103">Value: &quot;hostname or ip address&quot;</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981104">A.2. Integrated Logon Network provider
+parameters</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981105">Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981106">Value: FailLoginsSilently</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981107">Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981108">Value: NoWarnings</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981109">Value: AuthentProviderPath</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981110">Value: Class</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981111">Value: DependOnGroup</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981112">Value: DependOnService</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981113">Value: Name</a></span></p>
+
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981114">Value: ProviderPath</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981115">A.2.1 Domain specific configuration keys
+for the Network Provider</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981116">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981117">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981118">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain&quot;domain
+name&quot;]</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981119">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981120">Example:</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981121">A.2.1.1 Domain specific configuration
+values</a></span></p>
+
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981122">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain&quot;domain
 name&quot;]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872345">Value: LogonOptions</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981123">Value: LogonOptions</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872346">Value: FailLoginsSilentl</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981124">Value: FailLoginsSilentl</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872347">Value: LogonScript</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981125">Value: LogonScript</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872348">Value: LoginRetryInterval</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981126">Value: LoginRetryInterval</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872349">Value: LoginSleepInterval</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981127">Value: LoginSleepInterval</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872350">Value: TheseCells</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981128">Value: TheseCells</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872351">A.2.1.2<span style='mso-spacerun:yes'> 
-</span>Selection of effective values for domain specific configuration</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981129">A.2.1.2  Selection of effective values for
+domain specific configuration</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872352">A.2.1.3 Exceptions to A.2.1.2</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981130">A.2.1.3 Exceptions to A.2.1.2</a></span></p>
 
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872353">2.1.3.1 'FailLoginsSilently'</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981131">2.1.3.1 'FailLoginsSilently'</a></span></p>
 
-<p class=MsoToc4 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872354">2.1.3.2 'LogonScript'</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc4><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981132">2.1.3.2 'LogonScript'</a></span></p>
 
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872355">A.3. AFS Credentials System Tray Tool
-parameters</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981133">A.3. AFS Credentials System Tray Tool
+parameters</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872356">Regkey:
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981134">Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872357">Value: Gateway</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981135">Value: Gateway</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872358">Value: Cell</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981136">Value: Cell</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872359">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]
-[HKCU\SOFTWARE\OpenAFS\Client]</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981137">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]
+[HKCU\SOFTWARE\OpenAFS\Client]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872360">Value: ShowTrayIcon</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981138">Value: ShowTrayIcon</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872361">Value: EnableKFW</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981139">Value: EnableKFW</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872362">Value: Use524</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981140">Value: Use524</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872363">Value: AfscredsShortcutParams</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981141">Value: AfscredsShortcutParams</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872364">Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981142">Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872365">Value: Authentication Cell</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981143">Value: Authentication Cell</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872366">Regkey:
-[HKCU\SOFTWARE\OpenAFS\Client\Reminders]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981144">Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Reminders]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872367">Value: &quot;afs cell name&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981145">Value: &quot;afs cell name&quot;</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872368">Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Active
-Maps]</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981146">Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Active
+Maps]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872369">Value: &quot;upper case drive letter&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981147">Value: &quot;upper case drive letter&quot;</a></span></p>
 
-<p class=MsoToc3 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872370">Regkey:
-[HKCU\SOFTWARE\OpenAFS\Client\Mappings]</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc3><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981148">Regkey:
+[HKCU\SOFTWARE\OpenAFS\Client\Mappings]</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872371">Value: &quot;upper case drive letter&quot;</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981149">Value: &quot;upper case drive letter&quot;</a></span></p>
 
-<p class=MsoToc2 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872372">A.4 OpenAFS Client Service Environment
-Variables</a></span></span><span style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc2><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981150">A.4 OpenAFS Client Service Environment
+Variables</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872373">Variable: AFS_RPC_ENCRYPT</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981151">Variable: AFS_RPC_ENCRYPT</a></span></p>
 
-<p class=MsoToc5 style='tab-stops:right dotted 431.5pt'><span
-class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="relnotes.htm#_Toc126872374">Variable: AFS_RPC_PROTSEQ</a></span></span><span
-style='mso-no-proof:yes'><o:p></o:p></span></p>
+<p class=MsoToc5><span class=MsoHyperlink><a
+href="../relnotes.htm#_Toc139981152">Variable: AFS_RPC_PROTSEQ</a></span></p>
 
-<p class=MsoNormal><!--[if supportFields]><span style='mso-element:field-end'></span><![endif]--><o:p>&nbsp;</o:p></p>
-
-<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal>&nbsp;</p>
 
 </div>
 
