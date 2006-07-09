@@ -117,7 +117,7 @@
 
 /* Allow the user to specify sys_call_table addresses */
 static unsigned long sys_call_table_addr[4] = { 0,0,0,0 };
-#ifdef module_param_array
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(sys_call_table_addr, long, NULL, 0);
 #else
 MODULE_PARM(sys_call_table_addr, "1-4l");
@@ -134,7 +134,7 @@ MODULE_PARM(probe_carefully, "i");
 MODULE_PARM_DESC(probe_carefully, "Probe for system call tables carefully");
 
 static int probe_ignore_syscalls[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
-#ifdef module_param_array
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(probe_ignore_syscalls, int, NULL, 0);
 #else
 MODULE_PARM(probe_ignore_syscalls, "1-8i");
@@ -161,7 +161,7 @@ MODULE_PARM(probe_debug, "i");
 MODULE_PARM_DESC(probe_debug, "Debugging level");
 
 static unsigned long probe_debug_addr[4] = { 0,0,0,0 };
-#ifdef module_param_array
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(probe_debug_addr, long, NULL, 0);
 #else
 MODULE_PARM(probe_debug_addr, "1-4l");
