@@ -47,7 +47,7 @@ void cm_InitConn(void)
 	HKEY parmKey;
         
     if (osi_Once(&once)) {
-		lock_InitializeRWLock(&cm_connLock, "connection global lock");
+	lock_InitializeRWLock(&cm_connLock, "connection global lock");
 
         /* keisa - read timeout value for lanmanworkstation  service.
          * jaltman - as per 
@@ -56,29 +56,30 @@ void cm_InitConn(void)
          * I believe that the default should not be short.  Instead, we should wait until
          * RX times out before reporting a timeout to the SMB client.
          */
-		code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, LANMAN_WKS_PARAM_KEY,
-                            0, KEY_QUERY_VALUE, &parmKey);
-		if (code == ERROR_SUCCESS)
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, LANMAN_WKS_PARAM_KEY,
+			    0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS)
         {
-		    DWORD dummyLen = sizeof(sessTimeout);
-		    code = RegQueryValueEx(parmKey, LANMAN_WKS_SESSION_TIMEOUT, NULL, NULL, 
-                                   (BYTE *) &sessTimeout, &dummyLen);
-		    if (code == ERROR_SUCCESS)
+	    DWORD dummyLen = sizeof(sessTimeout);
+	    code = RegQueryValueEx(parmKey, LANMAN_WKS_SESSION_TIMEOUT, NULL, NULL, 
+				   (BYTE *) &sessTimeout, &dummyLen);
+	    if (code == ERROR_SUCCESS)
             {
-                afsi_log("lanmanworkstation : SessTimeout %d", sessTimeout);
                 RDRtimeout = sessTimeout;
-                if ( ConnDeadtimeout < RDRtimeout + 15 ) {
-                    ConnDeadtimeout = RDRtimeout + 15;
-                    afsi_log("ConnDeadTimeout increased to %d", ConnDeadtimeout);
-                }
-                if ( HardDeadtimeout < 2 * ConnDeadtimeout ) {
-                    HardDeadtimeout = 2 * ConnDeadtimeout;
-                    afsi_log("HardDeadTimeout increased to %d", HardDeadtimeout);
-                }
-            }
+	    }
         }
 
-        osi_EndOnce(&once);
+	afsi_log("lanmanworkstation : SessTimeout %d", sessTimeout);
+	if ( ConnDeadtimeout < RDRtimeout + 15 ) {
+	    ConnDeadtimeout = RDRtimeout + 15;
+	    afsi_log("ConnDeadTimeout increased to %d", ConnDeadtimeout);
+	}
+	if ( HardDeadtimeout < 2 * ConnDeadtimeout ) {
+	    HardDeadtimeout = 2 * ConnDeadtimeout;
+	    afsi_log("HardDeadTimeout increased to %d", HardDeadtimeout);
+	}
+
+	osi_EndOnce(&once);
     }
 }
 
@@ -181,7 +182,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     if (reqp->flags & CM_REQ_NORETRY)
         goto out;
 
-    /* if timeout - check that it did not exceed the SMB timeout
+    /* if timeout - check that it did not exceed the HardDead timeout
      * and retry */
     
     /* timeleft - get if from reqp the same way as cmXonnByMServers does */
@@ -193,7 +194,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 #endif
 	    
     /* leave 5 seconds margin for sleep */
-    timeLeft = RDRtimeout - timeUsed;
+    timeLeft = HardDeadtimeout - timeUsed;
 
     if (errorCode == CM_ERROR_TIMEDOUT) {
         if (timeLeft > 5 ) {
