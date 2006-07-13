@@ -63,8 +63,11 @@ static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
 static void PurgeHeader(Volume * vp);
 
+/* No lock needed. Only the volserver will call this, and only one transaction
+ * can have a given volume (volid/partition pair) in use at a time 
+ */
 void
-VPurgeVolume_r(Error * ec, Volume * vp)
+VPurgeVolume(Error * ec, Volume * vp)
 {
     struct DiskPartition *tpartp = vp->partition;
     char purgePath[MAXPATHLEN];
@@ -84,14 +87,6 @@ VPurgeVolume_r(Error * ec, Volume * vp)
      * Call the fileserver to break all call backs for that volume
      */
     FSYNC_VolOp(V_id(vp), tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
-}
-
-void
-VPurgeVolume(Error * ec, Volume * vp)
-{
-    VOL_LOCK;
-    VPurgeVolume_r(ec, vp);
-    VOL_UNLOCK;
 }
 
 #define MAXOBLITATONCE	1000
