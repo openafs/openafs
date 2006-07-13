@@ -51,11 +51,12 @@ struct rxkad_cidgen {
 #define PDATA_SIZE(l) (sizeof(struct rxkad_cprivate) - MAXKTCTICKETLEN + (l))
 
 /* private data in client-side security object */
+/* type and level offsets should match sprivate */
 struct rxkad_cprivate {
-    afs_int32 kvno;		/* key version of ticket */
-    afs_int16 ticketLen;	/* length of ticket */
     rxkad_type type;		/* always client */
     rxkad_level level;		/* minimum security level of client */
+    afs_int32 kvno;		/* key version of ticket */
+    afs_int16 ticketLen;	/* length of ticket */
     fc_KeySchedule keysched;	/* the session key */
     fc_InitializationVector ivec;	/* initialization vector for cbc */
     char ticket[MAXKTCTICKETLEN];	/* the ticket for the server */
@@ -69,12 +70,13 @@ struct rxkad_cconn {
 };
 
 /* private data in server-side security object */
+/* type and level offsets should match cprivate */
 struct rxkad_sprivate {
+    rxkad_type type;		/* always server */
+    rxkad_level level;		/* minimum security level of server */
     char *get_key_rock;		/* rock for get_key function */
     int (*get_key) ();		/* func. of kvno and server key ptr */
     int (*user_ok) ();		/* func called with new client name */
-    rxkad_type type;		/* always server */
-    rxkad_level level;		/* minimum security level of server */
 };
 
 /* private data in server-side connection */
