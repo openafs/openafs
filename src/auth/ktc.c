@@ -71,7 +71,7 @@ RCSID
 
 /* For malloc() */
 #include <stdlib.h>
-
+#include "ktc.h"
 
 #ifdef	notdef
 /* AFS_KERBEROS_ENV is now conditionally defined in the Makefile */
@@ -132,7 +132,6 @@ int afs_tf_init(), afs_tf_get_pname(), afs_tf_get_pinst(), afs_tf_get_cred();
 int afs_tf_save_cred(), afs_tf_close(), afs_tf_create();
 int afs_tf_dest_tkt();
 static void ktc_LocalCell();
-char *ktc_tkt_string();
 #endif /* AFS_KERBEROS_ENV */
 
 #ifdef AFS_DUX40_ENV
@@ -1437,7 +1436,13 @@ char *getenv();
 static char krb_ticket_string[4096] = "";
 
 char *
-ktc_tkt_string()
+ktc_tkt_string(void)
+{
+    return ktc_tkt_string_uid(getuid());
+}
+
+char *
+ktc_tkt_string_uid(uid_t uid)
 {
     char *env;
 
@@ -1450,7 +1455,7 @@ ktc_tkt_string()
 	} else {
 	    /* 32 bits of signed integer will always fit in 11 characters
 	     * (including the sign), so no need to worry about overflow */
-	    (void)sprintf(krb_ticket_string, "%s%d", TKT_ROOT, getuid());
+	    (void)sprintf(krb_ticket_string, "%s%d", TKT_ROOT, uid);
 	}
     }
     UNLOCK_GLOBAL_MUTEX;
@@ -1469,8 +1474,7 @@ ktc_tkt_string()
  */
 
 void
-ktc_set_tkt_string(val)
-     char *val;
+ktc_set_tkt_string(char * val)
 {
 
     LOCK_GLOBAL_MUTEX;
