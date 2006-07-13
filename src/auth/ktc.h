@@ -11,7 +11,7 @@
 #define _AFS_AUTH_KTC_H
 
 extern char * ktc_tkt_string(void);
-extern char * ktc_tkt_string_uid(uid_t);
+extern char * ktc_tkt_string_uid(afs_uint32);
 extern void ktc_set_tkt_string(char *);
 
 
