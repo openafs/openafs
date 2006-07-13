@@ -13,7 +13,7 @@
 RCSID
     ("$Header$");
 
-#if defined(AFS_AIX41_ENV) && !defined(AFS_AIX51_ENV)
+#if defined(AFS_AIX51_ENV)
 #include <sys/types.h>
 #include <sys/param.h>
 #include <stdio.h>
@@ -40,28 +40,18 @@ afs_initialize(struct secmethod_table *meths)
      */
     ka_Init(0);
     memset(meths, 0, sizeof(struct secmethod_table));
+
     /*
-     * Initialize the exported interface routines. Except the authenticate one
-     * the others are currently mainly noops.
+     * Initialize the exported interface routines.
+     * Aside from method_authenticate, these are just no-ops.
      */
     meths->method_chpass = afs_chpass;
     meths->method_authenticate = afs_authenticate;
     meths->method_passwdexpired = afs_passwdexpired;
     meths->method_passwdrestrictions = afs_passwdrestrictions;
+    meths->method_getpasswd = afs_getpasswd;
 
-    /*
-     * These we need to bring in because, for afs users, /etc/security/user's
-     * "registry" must non-local (i.e. DCE) since otherwise it assumes it's a
-     * local domain and uses valid_crypt(passwd) to validate the afs passwd
-     * which, of course, will fail. NULL return from these routine simply
-     * means use the local version ones after all.
-     */
-    meths->method_getgrgid = afs_getgrgid;
-    meths->method_getgrset = afs_getgrset;
-    meths->method_getgrnam = afs_getgrnam;
-    meths->method_getpwnam = afs_getpwnam;
-    meths->method_getpwuid = afs_getpwuid;
     return (0);
 }
 
-#endif /* AFS_AIX41_ENV && !AFS_AIX51_ENV */
+#endif /* AFS_AIX51_ENV */
