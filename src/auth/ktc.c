@@ -1442,7 +1442,7 @@ ktc_tkt_string(void)
 }
 
 char *
-ktc_tkt_string_uid(uid_t uid)
+ktc_tkt_string_uid(afs_uint32 uid)
 {
     char *env;
 
