@@ -465,12 +465,14 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
 #ifdef AFS_LINUX24_ENV
     if (code == 0 && (cmd == F_SETLK || cmd == F_SETLKW)) {
+#ifdef AFS_LINUX26_ENV
        struct file_lock flp2;
        flp2 = *flp;
-#ifdef AFS_LINUX26_ENV
        flp2.fl_flags &=~ FL_SLEEP;
-#endif
        code = posix_lock_file(fp, &flp2);
+#else
+       code = posix_lock_file(fp, flp, 0);
+#endif 
        osi_Assert(code != -EAGAIN); /* there should be no conflicts */
        if (code) {
            struct AFS_FLOCK flock2;
