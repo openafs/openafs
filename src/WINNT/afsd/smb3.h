@@ -52,20 +52,20 @@ typedef struct smb_tran2QFSInfo {
         } allocInfo;
 #pragma pack(pop)
         struct {
-            unsigned long vsn;	/* volume serial number */
-            char vnCount;	/* count of chars in label, incl null */
-            char label[12];	/* pad out with nulls */
+            unsigned long vsn;			/* volume serial number */
+            char vnCount;			/* count of chars in label, incl null */
+            char label[12];			/* pad out with nulls */
         } volumeInfo;
         struct {
-            FILETIME vct;		/* volume creation time */
+            FILETIME      vct;		/* volume creation time */
             unsigned long vsn;	        /* volume serial number */
             unsigned long vnCount;	/* length of volume label in bytes */
             char res[2];		/* reserved */
             char label[10];		/* volume label */
         } FSvolumeInfo;
         struct {
-            osi_hyper_t totalAllocUnits;	/* on the disk */
-            osi_hyper_t availAllocUnits;	/* free blocks */
+            LARGE_INTEGER totalAllocUnits;	/* on the disk */
+            LARGE_INTEGER availAllocUnits;	/* free blocks */
             unsigned long sectorsPerAllocUnit;
             unsigned long bytesPerSector;	/* bytes per sector */
         } FSsizeInfo;
@@ -81,6 +81,128 @@ typedef struct smb_tran2QFSInfo {
         } FSattributeInfo;
     } u;
 } smb_tran2QFSInfo_t;
+
+typedef struct {
+    union {
+	struct {
+	    unsigned long  creationDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  lastAccessDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  lastWriteDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  dataSize;
+	    unsigned long  allocationSize;
+	    unsigned short attributes;
+	    unsigned long  eaSize;
+	} QPstandardInfo;
+	struct {
+	    unsigned long  creationDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  lastAccessDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  lastWriteDateTime;	/* SMB_DATE / SMB_TIME */
+	    unsigned long  dataSize;
+	    unsigned long  allocationSize;
+	    unsigned short attributes;
+	    unsigned long  eaSize;
+	} QPeaSizeInfo;
+	struct {
+	    unsigned short maxDataCount;
+	    unsigned short eaErrorOffset;
+	    unsigned long  listLength;
+	    unsigned char  eaList[128];
+	} QPeasFromListInfo;
+	struct {
+	    unsigned short maxDataCount;
+	    unsigned short eaErrorOffset;
+	    unsigned long  listLength;
+	    unsigned char  eaList[128];
+	} QPallEasInfo;
+	struct {
+	    FILETIME       creationTime;
+	    FILETIME       lastAccessTime;
+	    FILETIME       lastWriteTime;
+	    FILETIME       changeTime;
+	    unsigned short attributes;
+	} QPfileBasicInfo;
+	struct {
+	    LARGE_INTEGER  allocationSize;
+	    LARGE_INTEGER  endOfFile;
+	    unsigned long  numberOfLinks;
+	    unsigned char  deletePending;
+	    unsigned char  directory;
+	} QPfileStandardInfo;
+	struct {
+	    unsigned long  eaSize;
+	} QPfileEaInfo;
+	struct {
+	    unsigned long  fileNameLength;
+	    unsigned char  fileName[512];
+	} QPfileNameInfo;
+	struct {
+	    FILETIME       creationTime;
+	    FILETIME       lastAccessTime;
+	    FILETIME       lastWriteTime;
+	    FILETIME       changeTime;
+	    unsigned short attributes;
+	    LARGE_INTEGER  allocationSize;
+	    LARGE_INTEGER  endOfFile;
+	    unsigned long  numberOfLinks;
+	    unsigned char  deletePending;
+	    unsigned char  directory;
+	    LARGE_INTEGER  indexNumber;
+	    unsigned long  eaSize;
+	    unsigned long  accessFlags;
+	    LARGE_INTEGER  indexNumber2;
+	    LARGE_INTEGER  currentByteOffset;
+	    unsigned long  mode;
+	    unsigned long  alignmentRequirement;
+	    unsigned long  fileNameLength;
+	    unsigned char  fileName[512];
+	} QPfileAllInfo;
+	struct {
+	    unsigned long  fileNameLength;
+	    unsigned char  fileName[512];
+	} QPfileAltNameInfo;
+	struct {
+	    unsigned long  nextEntryOffset;
+	    unsigned long  streamNameLength;
+	    LARGE_INTEGER  streamSize;
+	    LARGE_INTEGER  streamAllocationSize;
+	    unsigned char  fileName[512];
+	} QPfileStreamInfo;
+	struct {
+	    LARGE_INTEGER  compressedFileSize;
+	    unsigned short compressionFormat;
+	    unsigned char  compressionUnitShift;
+	    unsigned char  chuckShift;
+	    unsigned char  clusterShift;
+	    unsigned char  reserved[3];
+	} QPfileCompressionInfo;
+    } u;
+} smb_tran2QPathInfo_t;
+
+typedef struct {
+    union {
+	struct {
+	    FILETIME 	   creationTime;
+	    FILETIME       lastAccessTime;
+	    FILETIME	   lastWriteTime;
+	    FILETIME	   lastChangeTime;
+	    unsigned short attributes;
+	} QFbasicInfo;
+	struct {
+	    LARGE_INTEGER  allocationSize;
+	    LARGE_INTEGER  endOfFile;
+	    unsigned long  numberOfLinks;
+	    unsigned char  deletePending;
+	    unsigned char  directory;
+	} QFstandardInfo;
+	struct {
+	    unsigned long  eaSize;
+	} QFeaInfo;
+	struct {	
+	    unsigned long  fileNameLength;
+	    unsigned char  fileName[512];
+	} QFfileNameInfo;
+    } u;
+} smb_tran2QFileInfo_t;
 
 /* more than enough opcodes for today, anyway */
 #define SMB_TRAN2_NOPCODES		20
