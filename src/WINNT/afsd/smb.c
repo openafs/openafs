@@ -4655,12 +4655,12 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
         smb_UnixTimeFromDosUTime(&attr.clientModTime, dosTime);
     }
-    if ((newScp->unixModeBits & 0222) && (attribute & 1) != 0) {
+    if ((newScp->unixModeBits & 0222) && (attribute & SMB_ATTR_READONLY) != 0) {
         /* we're told to make a writable file read-only */
         attr.unixModeBits = newScp->unixModeBits & ~0222;
         attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
     }
-    else if ((newScp->unixModeBits & 0222) == 0 && (attribute & 1) == 0) {
+    else if ((newScp->unixModeBits & 0222) == 0 && (attribute & SMB_ATTR_READONLY) == 0) {
         /* we're told to make a read-only file writable */
         attr.unixModeBits = newScp->unixModeBits | 0222;
         attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
@@ -7009,7 +7009,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     /* compute initial mode bits based on read-only flag in attributes */
     initialModeBits = 0666;
-    if (attributes & 1) initialModeBits &= ~0222;
+    if (attributes & SMB_ATTR_READONLY) 
+	initialModeBits &= ~0222;
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);

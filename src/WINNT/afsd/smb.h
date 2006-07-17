@@ -83,9 +83,27 @@ typedef struct smb {
 #define SMB_QUERY_FILE_UNIX_LINK        0x201
 #define SMB_INFO_PASSTHROUGH           0x1000
 
+#define SMB_SET_FILE_BASIC_INFO         0x101
+#define SMB_SET_FILE_DISPOSITION_INFO   0x102
+#define SMB_SET_FILE_ALLOCATION_INFO    0x103
+#define SMB_SET_FILE_END_OF_FILE_INFO   0x104
 #define SMB_SET_FILE_UNIX_BASIC         0x200
 #define SMB_SET_FILE_UNIX_LINK          0x201
 #define SMB_SET_FILE_UNIX_HLINK         0x203
+
+#define SMB_INFO_ALLOCATION 		1
+#define SMB_INFO_VOLUME			2
+#define SMB_QUERY_FS_VOLUME_INFO 	0x102
+#define SMB_QUERY_FS_SIZE_INFO		0x103
+#define SMB_QUERY_FS_DEVICE_INFO	0x104
+#define SMB_QUERY_FS_ATTRIBUTE_INFO	0x105
+#define SMB_INFO_UNIX			0x200
+#define SMB_INFO_MACOS			0x301
+
+#define SMB_FIND_FILE_DIRECTORY_INFO      0x101
+#define SMB_FIND_FILE_FULL_DIRECTORY_INFO 0x102
+#define SMB_FIND_FILE_NAMES_INFO	  0x103
+#define SMB_FIND_FILE_BOTH_DIRECTORY_INFO 0x104
 
 /* more defines */
 #define SMB_NOPCODES		256	/* # of opcodes in the dispatch table */
@@ -386,7 +404,7 @@ typedef struct smb_fid {
 #define SMB_FID_QLOCK_PID               0
 
 /*
- * SMB file attributes (32-bit)
+ * SMB file attributes (16-bit)
  */
 #define SMB_ATTR_READONLY       0x0001
 #define SMB_ATTR_HIDDEN         0x0002 /* hidden file for the purpose of dir listings */
@@ -395,6 +413,8 @@ typedef struct smb_fid {
 #define SMB_ATTR_DIRECTORY      0x0010
 #define SMB_ATTR_ARCHIVE        0x0020
 #define SMB_ATTR_DEVICE         0x0040
+
+/* the following are Extended File Attributes (32-bit) */
 #define SMB_ATTR_NORMAL         0x0080 /* normal file. Only valid if used alone */
 #define SMB_ATTR_TEMPORARY      0x0100
 #define SMB_ATTR_SPARSE_FILE    0x0200 /* used with dfs links */
@@ -403,6 +423,13 @@ typedef struct smb_fid {
 #define SMB_ATTR_OFFLINE        0x1000
 #define SMB_ATTR_NOT_CONTENT_INDEXED 0x2000
 #define SMB_ATTR_ENCRYPTED      0x4000
+#define SMB_ATTR_POSIX_SEMANTICS	0x01000000
+#define SMB_ATTR_BACKUP_SEMANTICS	0x02000000
+#define SMB_ATTR_DELETE_ON_CLOSE	0x04000000
+#define SMB_ATTR_SEQUENTIAL_SCAN	0x08000000
+#define SMB_ATTR_RANDOM_ACCESS		0x10000000
+#define SMB_ATTR_NO_BUFFERING		0x20000000
+#define SMB_ATTR_WRITE_THROUGH		0x80000000
 
 #define LOCKING_ANDX_SHARED_LOCK        0x01 /* Read-only lock */
 #define LOCKING_ANDX_OPLOCK_RELEASE     0x02 /* Oplock break notification */
