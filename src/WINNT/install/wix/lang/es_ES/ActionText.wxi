@@ -1,6 +1,6 @@
 <Include>
 
-<ProgressText Action="Advertise" Template="">Mostrar aplicaciÛn</ProgressText>
+<ProgressText Action="Advertise">Mostrar aplicaci√≥n</ProgressText>
 
 <ProgressText Action="AllocateRegistrySpace" Template="Espacio disponible: [1]">Asignando espacio del registro</ProgressText>
 
@@ -8,11 +8,11 @@
 
 <ProgressText Action="BindImage" Template="Archivo: [1]">Enlazando archivos ejecutables</ProgressText>
 
-<ProgressText Action="CCPSearch" Template="">Buscando productos necesarios</ProgressText>
+<ProgressText Action="CCPSearch">Buscando productos necesarios</ProgressText>
 
-<ProgressText Action="CostFinalize" Template="">Calculando el espacio necesario</ProgressText>
+<ProgressText Action="CostFinalize">Calculando el espacio necesario</ProgressText>
 
-<ProgressText Action="CostInitialize" Template="">Calculando el espacio necesario</ProgressText>
+<ProgressText Action="CostInitialize">Calculando el espacio necesario</ProgressText>
 
 <ProgressText Action="CreateFolders" Template="Carpeta: [1]">Creando carpetas</ProgressText>
 
@@ -20,55 +20,55 @@
 
 <ProgressText Action="DeleteServices" Template="Servicio: [1]">Eliminando servicios</ProgressText>
 
-<ProgressText Action="DuplicateFiles" Template="Archivo: [1], directorio: [9], tamaÒo: [6]">Creando archivos duplicados</ProgressText>
+<ProgressText Action="DuplicateFiles" Template="Archivo: [1], directorio: [9], tama√±o: [6]">Creando archivos duplicados</ProgressText>
 
-<ProgressText Action="FileCost" Template="">Calculando el espacio necesario</ProgressText>
+<ProgressText Action="FileCost">Calculando el espacio necesario</ProgressText>
 
-<ProgressText Action="FindRelatedProducts" Template="Se encontrÛ esta aplicaciÛn: [1]">Buscando aplicaciones relacionadas</ProgressText>
+<ProgressText Action="FindRelatedProducts" Template="Se encontr√≥ esta aplicaci√≥n: [1]">Buscando aplicaciones relacionadas</ProgressText>
 
-<ProgressText Action="GenerateScript" Template="[1]">Generando operaciones de secuencias de comandos para la acciÛn:</ProgressText>
+<ProgressText Action="GenerateScript" Template="[1]">Generando operaciones de secuencias de comandos para la acci√≥n:</ProgressText>
 
-<ProgressText Action="InstallAdminPackage" Template="Archivo: [1], directorio: [9], tamaÒo: [6]">Copiando archivos de instalaciÛn de la red</ProgressText>
+<ProgressText Action="InstallAdminPackage" Template="Archivo: [1], directorio: [9], tama√±o: [6]">Copiando archivos de instalaci√≥n de la red</ProgressText>
 
-<ProgressText Action="InstallFiles" Template="Archivo: [1], directorio: [9], tamaÒo: [6]">Copiando archivos nuevos</ProgressText>
+<ProgressText Action="InstallFiles" Template="Archivo: [1], directorio: [9], tama√±o: [6]">Copiando archivos nuevos</ProgressText>
 
-<ProgressText Action="InstallODBC" Template="">Instalando componentes ODBC</ProgressText>
+<ProgressText Action="InstallODBC">Instalando componentes ODBC</ProgressText>
 
 <ProgressText Action="InstallServices" Template="Servicio: [2]">Instalando servicios nuevos</ProgressText>
 
-<ProgressText Action="InstallSFPCatalogFile" Template="Archivo: [1],  dependencias: [2]">Instalar cat·logo de sistema</ProgressText>
+<ProgressText Action="InstallSFPCatalogFile" Template="Archivo: [1],  dependencias: [2]">Instalar cat√°logo de sistema</ProgressText>
 
-<ProgressText Action="InstallValidate" Template="">Validando la instalaciÛn</ProgressText>
+<ProgressText Action="InstallValidate">Validando la instalaci√≥n</ProgressText>
 
-<ProgressText Action="LaunchConditions" Template="">Evaluando condiciones de inicio</ProgressText>
+<ProgressText Action="LaunchConditions">Evaluando condiciones de inicio</ProgressText>
 
-<ProgressText Action="MigrateFeatureStates" Template="AplicaciÛn: [1]">Transfiriendo los estados de las caracterÌsticas desde las aplicaciones relacionadas</ProgressText>
+<ProgressText Action="MigrateFeatureStates" Template="Aplicaci√≥n: [1]">Transfiriendo los estados de las caracter√≠sticas desde las aplicaciones relacionadas</ProgressText>
 
-<ProgressText Action="MoveFiles" Template="Archivo: [1], directorio: [9], tamaÒo: [6]">Moviendo archivos</ProgressText>
+<ProgressText Action="MoveFiles" Template="Archivo: [1], directorio: [9], tama√±o: [6]">Moviendo archivos</ProgressText>
 
-<ProgressText Action="MsiPublishAssemblies" Template="Contexto de aplicaciÛn:[1], Nombre de asamblea:[2]">Publicar informaciÛn de la asamblea</ProgressText>
+<ProgressText Action="MsiPublishAssemblies" Template="Contexto de aplicaci√≥n:[1], Nombre de asamblea:[2]">Publicar informaci√≥n de la asamblea</ProgressText>
 
-<ProgressText Action="MsiUnpublishAssemblies" Template="Contexto de aplicaciÛn:[1], Nombre de asamblea:[2]">No publicar informaciÛn de la asamblea</ProgressText>
+<ProgressText Action="MsiUnpublishAssemblies" Template="Contexto de aplicaci√≥n:[1], Nombre de asamblea:[2]">No publicar informaci√≥n de la asamblea</ProgressText>
 
-<ProgressText Action="PatchFiles" Template="Archivo: [1], directorio: [2], tamaÒo: [3]">Revisando archivos</ProgressText>
+<ProgressText Action="PatchFiles" Template="Archivo: [1], directorio: [2], tama√±o: [3]">Revisando archivos</ProgressText>
 
-<ProgressText Action="ProcessComponents" Template="">Actualizando el registro de componentes</ProgressText>
+<ProgressText Action="ProcessComponents">Actualizando el registro de componentes</ProgressText>
 
 <ProgressText Action="PublishComponents" Template="Id. del componente: [1], capacitador: [2]">Publicar componentes aceptables</ProgressText>
 
-<ProgressText Action="PublishFeatures" Template="FunciÛn: [1]">Publicar funciones del producto</ProgressText>
+<ProgressText Action="PublishFeatures" Template="Funci√≥n: [1]">Publicar funciones del producto</ProgressText>
 
-<ProgressText Action="PublishProduct" Template="">Publicar informaciÛn del producto</ProgressText>
+<ProgressText Action="PublishProduct">Publicar informaci√≥n del producto</ProgressText>
 
 <ProgressText Action="RegisterClassInfo" Template="Id. de clase: [1]">Registrando servidores de clases</ProgressText>
 
 <ProgressText Action="RegisterComPlus" Template="IdApl: [1]{{, Tipo de apl.: [2], Usuarios: [3], RSN: [4]}}">Registrando aplicaciones y componentes COM+</ProgressText>
 
-<ProgressText Action="RegisterExtensionInfo" Template="ExtensiÛn: [1]">Registrando servidores de extensiones</ProgressText>
+<ProgressText Action="RegisterExtensionInfo" Template="Extensi√≥n: [1]">Registrando servidores de extensiones</ProgressText>
 
 <ProgressText Action="RegisterFonts" Template="Fuente: [1]">Registrando fuentes</ProgressText>
 
-<ProgressText Action="RegisterMIMEInfo" Template="Tipo de contenido MIME: [1], extensiÛn: [2]">Registrando informaciÛn MIME</ProgressText>
+<ProgressText Action="RegisterMIMEInfo" Template="Tipo de contenido MIME: [1], extensi√≥n: [2]">Registrando informaci√≥n MIME</ProgressText>
 
 <ProgressText Action="RegisterProduct" Template="[1]">Registrando el producto</ProgressText>
 
@@ -80,33 +80,33 @@
 
 <ProgressText Action="RemoveDuplicateFiles" Template="Archivo: [1], directorio: [9]">Quitando archivos duplicados</ProgressText>
 
-<ProgressText Action="RemoveEnvironmentStrings" Template="Nombre: [1], valor: [2], acciÛn [3]">Actualizando cadenas de entorno</ProgressText>
+<ProgressText Action="RemoveEnvironmentStrings" Template="Nombre: [1], valor: [2], acci√≥n [3]">Actualizando cadenas de entorno</ProgressText>
 
-<ProgressText Action="RemoveExistingProducts" Template="AplicaciÛn: [1], LÌnea de comandos: [2]">Quitando aplicaciones</ProgressText>
+<ProgressText Action="RemoveExistingProducts" Template="Aplicaci√≥n: [1], L√≠nea de comandos: [2]">Quitando aplicaciones</ProgressText>
 
 <ProgressText Action="RemoveFiles" Template="Archivo: [1], directorio: [9]">Quitando archivos</ProgressText>
 
 <ProgressText Action="RemoveFolders" Template="Carpeta: [1]">Quitando carpetas</ProgressText>
 
-<ProgressText Action="RemoveIniValues" Template="Archivo: [1], secciÛn: [2], clave: [3], valor: [4]">Quitando entradas de archivos INI</ProgressText>
+<ProgressText Action="RemoveIniValues" Template="Archivo: [1], secci√≥n: [2], clave: [3], valor: [4]">Quitando entradas de archivos INI</ProgressText>
 
-<ProgressText Action="RemoveODBC" Template="">Quitando componentes ODBC</ProgressText>
+<ProgressText Action="RemoveODBC">Quitando componentes ODBC</ProgressText>
 
 <ProgressText Action="RemoveRegistryValues" Template="Clave: [1], nombre: [2]">Quitando valores del registro del sistema</ProgressText>
 
 <ProgressText Action="RemoveShortcuts" Template="Acceso directo: [1]">Quitando accesos directos</ProgressText>
 
-<ProgressText Action="RMCCPSearch" Template="">Buscando productos necesarios</ProgressText>
+<ProgressText Action="RMCCPSearch">Buscando productos necesarios</ProgressText>
 
-<ProgressText Action="Rollback" Template="[1]">AcciÛn de restauraciÛn:</ProgressText>
+<ProgressText Action="Rollback" Template="[1]">Acci√≥n de restauraci√≥n:</ProgressText>
 
 <ProgressText Action="RollbackCleanup" Template="Archivo: [1]">Quitando copias de seguridad</ProgressText>
 
-<ProgressText Action="SelfRegModules" Template="Archivo: [1], carpeta: [2]">Registrando mÛdulos</ProgressText>
+<ProgressText Action="SelfRegModules" Template="Archivo: [1], carpeta: [2]">Registrando m√≥dulos</ProgressText>
 
-<ProgressText Action="SelfUnregModules" Template="Archivo: [1], carpeta: [2]">Eliminando mÛdulos del registro</ProgressText>
+<ProgressText Action="SelfUnregModules" Template="Archivo: [1], carpeta: [2]">Eliminando m√≥dulos del registro</ProgressText>
 
-<ProgressText Action="SetODBCFolders" Template="">Inicializando directorios ODBC</ProgressText>
+<ProgressText Action="SetODBCFolders">Inicializando directorios ODBC</ProgressText>
 
 <ProgressText Action="StartServices" Template="Servicio: [1]">Iniciando servicios</ProgressText>
 
@@ -114,29 +114,29 @@
 
 <ProgressText Action="UnmoveFiles" Template="Archivo: [1], directorio: [9]">Quitando archivos movidos</ProgressText>
 
-<ProgressText Action="UnpublishComponents" Template="Id. del componente: [1], capacitador: [2]">Anular publicaciÛn de componentes aceptables</ProgressText>
+<ProgressText Action="UnpublishComponents" Template="Id. del componente: [1], capacitador: [2]">Anular publicaci√≥n de componentes aceptables</ProgressText>
 
-<ProgressText Action="UnpublishFeatures" Template="FunciÛn: [1]">Anular publicaciÛn de funciones del producto</ProgressText>
+<ProgressText Action="UnpublishFeatures" Template="Funci√≥n: [1]">Anular publicaci√≥n de funciones del producto</ProgressText>
 
-<ProgressText Action="UnpublishProduct" Template="">Anular publicaciÛn de informaciÛn del producto</ProgressText>
+<ProgressText Action="UnpublishProduct">Anular publicaci√≥n de informaci√≥n del producto</ProgressText>
 
 <ProgressText Action="UnregisterClassInfo" Template="Id. de clase: [1]">Eliminar del registro los servidores de clases</ProgressText>
 
 <ProgressText Action="UnregisterComPlus" Template="IdApl: [1]{{, Tipo de apl.: [2]}}">Quitando aplicaciones y componentes COM+ del registro</ProgressText>
 
-<ProgressText Action="UnregisterExtensionInfo" Template="ExtensiÛn: [1]">Eliminando del registro los servidores de extensiones</ProgressText>
+<ProgressText Action="UnregisterExtensionInfo" Template="Extensi√≥n: [1]">Eliminando del registro los servidores de extensiones</ProgressText>
 
 <ProgressText Action="UnregisterFonts" Template="Fuente: [1]">Eliminando del registro las fuentes</ProgressText>
 
-<ProgressText Action="UnregisterMIMEInfo" Template="Tipo de contenido MIME: [1], extensiÛn: [2]">Eliminando del registro informaciÛn MIME</ProgressText>
+<ProgressText Action="UnregisterMIMEInfo" Template="Tipo de contenido MIME: [1], extensi√≥n: [2]">Eliminando del registro informaci√≥n MIME</ProgressText>
 
 <ProgressText Action="UnregisterProgIdInfo" Template="IdProg: [1]">Eliminando identificadores de programa del registro</ProgressText>
 
 <ProgressText Action="UnregisterTypeLibraries" Template="Id. de la biblioteca: [1]">Eliminando del registro bibliotecas de tipos</ProgressText>
 
-<ProgressText Action="WriteEnvironmentStrings" Template="Nombre: [1], valor: [2], acciÛn [3]">Actualizando cadenas de entorno</ProgressText>
+<ProgressText Action="WriteEnvironmentStrings" Template="Nombre: [1], valor: [2], acci√≥n [3]">Actualizando cadenas de entorno</ProgressText>
 
-<ProgressText Action="WriteIniValues" Template="Archivo: [1], secciÛn: [2], clave: [3], valor: [4]">Escribiendo valores de los archivos INI</ProgressText>
+<ProgressText Action="WriteIniValues" Template="Archivo: [1], secci√≥n: [2], clave: [3], valor: [4]">Escribiendo valores de los archivos INI</ProgressText>
 
 <ProgressText Action="WriteRegistryValues" Template="Clave: [1], nombre: [2], valor: [3]">Escribiendo valores del registro del sistema</ProgressText>
 
