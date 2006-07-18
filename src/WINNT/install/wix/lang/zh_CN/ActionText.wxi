@@ -1,143 +1,143 @@
 <Include>
 
-<ProgressText Action="Advertise" Template="">通知应用程序</ProgressText>
+<ProgressText Action="Advertise">脥篓脰陋脫娄脫脙鲁脤脨貌</ProgressText>
 
-<ProgressText Action="AllocateRegistrySpace" Template="自由空间: [1]">正在分配注册表空间</ProgressText>
+<ProgressText Action="AllocateRegistrySpace" Template="脳脭脫脡驴脮录盲: [1]">脮媒脭脷路脰脜盲脳垄虏谩卤铆驴脮录盲</ProgressText>
 
-<ProgressText Action="AppSearch" Template="属性: [1]，签名: [2]">正在搜索已安装的应用程序</ProgressText>
+<ProgressText Action="AppSearch" Template="脢么脨脭: [1]拢卢脟漏脙没: [2]">脮媒脭脷脣脩脣梅脪脩掳虏脳掳碌脛脫娄脫脙鲁脤脨貌</ProgressText>
 
-<ProgressText Action="BindImage" Template="文件: [1]">绑定可执行文件</ProgressText>
+<ProgressText Action="BindImage" Template="脦脛录镁: [1]">掳贸露篓驴脡脰麓脨脨脦脛录镁</ProgressText>
 
-<ProgressText Action="CCPSearch" Template="">正在搜索符合资格的产品</ProgressText>
+<ProgressText Action="CCPSearch">脮媒脭脷脣脩脣梅路没潞脧脳脢赂帽碌脛虏煤脝路</ProgressText>
 
-<ProgressText Action="CostFinalize" Template="">正在计算空间需求</ProgressText>
+<ProgressText Action="CostFinalize">脮媒脭脷录脝脣茫驴脮录盲脨猫脟贸</ProgressText>
 
-<ProgressText Action="CostInitialize" Template="">正在计算空间需求</ProgressText>
+<ProgressText Action="CostInitialize">脮媒脭脷录脝脣茫驴脮录盲脨猫脟贸</ProgressText>
 
-<ProgressText Action="CreateFolders" Template="文件夹: [1]">正在创建文件夹</ProgressText>
+<ProgressText Action="CreateFolders" Template="脦脛录镁录脨: [1]">脮媒脭脷麓麓陆篓脦脛录镁录脨</ProgressText>
 
-<ProgressText Action="CreateShortcuts" Template="快捷方式: [1]">正在创建快捷方式</ProgressText>
+<ProgressText Action="CreateShortcuts" Template="驴矛陆脻路陆脢陆: [1]">脮媒脭脷麓麓陆篓驴矛陆脻路陆脢陆</ProgressText>
 
-<ProgressText Action="DeleteServices" Template="服务: [1]">正在删除服务</ProgressText>
+<ProgressText Action="DeleteServices" Template="路镁脦帽: [1]">脮媒脭脷脡戮鲁媒路镁脦帽</ProgressText>
 
-<ProgressText Action="DuplicateFiles" Template="文件: [1]，目录: [9]，大小: [6]">正在创建重复文件</ProgressText>
+<ProgressText Action="DuplicateFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]拢卢麓贸脨隆: [6]">脮媒脭脷麓麓陆篓脰脴赂麓脦脛录镁</ProgressText>
 
-<ProgressText Action="FileCost" Template="">正在计算空间需求</ProgressText>
+<ProgressText Action="FileCost">脮媒脭脷录脝脣茫驴脮录盲脨猫脟贸</ProgressText>
 
-<ProgressText Action="FindRelatedProducts" Template="找到应用程序: [1]">正在搜索相关产品</ProgressText>
+<ProgressText Action="FindRelatedProducts" Template="脮脪碌陆脫娄脫脙鲁脤脨貌: [1]">脮媒脭脷脣脩脣梅脧脿鹿脴虏煤脝路</ProgressText>
 
-<ProgressText Action="GenerateScript" Template="[1]">正在生成脚本操作，用于：</ProgressText>
+<ProgressText Action="GenerateScript" Template="[1]">脮媒脭脷脡煤鲁脡陆脜卤戮虏脵脳梅拢卢脫脙脫脷拢潞</ProgressText>
 
-<ProgressText Action="InstallAdminPackage" Template="文件: [1]，目录: [9]，大小: [6]">正在复制网络安装文件</ProgressText>
+<ProgressText Action="InstallAdminPackage" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]拢卢麓贸脨隆: [6]">脮媒脭脷赂麓脰脝脥酶脗莽掳虏脳掳脦脛录镁</ProgressText>
 
-<ProgressText Action="InstallFiles" Template="文件: [1]，目录: [9]，大小: [6]">正在复制新文件</ProgressText>
+<ProgressText Action="InstallFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]拢卢麓贸脨隆: [6]">脮媒脭脷赂麓脰脝脨脗脦脛录镁</ProgressText>
 
-<ProgressText Action="InstallODBC" Template="">正在安装 ODBC 组件</ProgressText>
+<ProgressText Action="InstallODBC">脮媒脭脷掳虏脳掳 ODBC 脳茅录镁</ProgressText>
 
-<ProgressText Action="InstallServices" Template="服务: [2]">正在安装新服务</ProgressText>
+<ProgressText Action="InstallServices" Template="路镁脦帽: [2]">脮媒脭脷掳虏脳掳脨脗路镁脦帽</ProgressText>
 
-<ProgressText Action="InstallSFPCatalogFile" Template="文件: [1]， 依存关系: [2]">正在安装系统目录</ProgressText>
+<ProgressText Action="InstallSFPCatalogFile" Template="脦脛录镁: [1]拢卢 脪脌麓忙鹿脴脧碌: [2]">脮媒脭脷掳虏脳掳脧碌脥鲁脛驴脗录</ProgressText>
 
-<ProgressText Action="InstallValidate" Template="">正在验证安装</ProgressText>
+<ProgressText Action="InstallValidate">脮媒脭脷脩茅脰陇掳虏脳掳</ProgressText>
 
-<ProgressText Action="LaunchConditions" Template="">正在评估启动条件</ProgressText>
+<ProgressText Action="LaunchConditions">脮媒脭脷脝脌鹿脌脝么露炉脤玫录镁</ProgressText>
 
-<ProgressText Action="MigrateFeatureStates" Template="应用程序: [1]">正在从相关应用程序迁移功能</ProgressText>
+<ProgressText Action="MigrateFeatureStates" Template="脫娄脫脙鲁脤脨貌: [1]">脮媒脭脷麓脫脧脿鹿脴脫娄脫脙鲁脤脨貌脟篓脪脝鹿娄脛脺</ProgressText>
 
-<ProgressText Action="MoveFiles" Template="文件: [1]，目录: [9]，大小: [6]">正在移动文件</ProgressText>
+<ProgressText Action="MoveFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]拢卢麓贸脨隆: [6]">脮媒脭脷脪脝露炉脦脛录镁</ProgressText>
 
-<ProgressText Action="MsiPublishAssemblies" Template="应用程序环境:[1], 汇编名:[2]">发行汇编信息</ProgressText>
+<ProgressText Action="MsiPublishAssemblies" Template="脫娄脫脙鲁脤脨貌禄路戮鲁:[1], 禄茫卤脿脙没:[2]">路垄脨脨禄茫卤脿脨脜脧垄</ProgressText>
 
-<ProgressText Action="MsiUnpublishAssemblies" Template="应用程序环境:[1], 汇编名:[2]">停止发行汇编信息</ProgressText>
+<ProgressText Action="MsiUnpublishAssemblies" Template="脫娄脫脙鲁脤脨貌禄路戮鲁:[1], 禄茫卤脿脙没:[2]">脥拢脰鹿路垄脨脨禄茫卤脿脨脜脧垄</ProgressText>
 
-<ProgressText Action="PatchFiles" Template="文件: [1]，目录: [2]，大小: [3]">正在修补文件</ProgressText>
+<ProgressText Action="PatchFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [2]拢卢麓贸脨隆: [3]">脮媒脭脷脨脼虏鹿脦脛录镁</ProgressText>
 
-<ProgressText Action="ProcessComponents" Template="">正在更新组件注册表</ProgressText>
+<ProgressText Action="ProcessComponents">脮媒脭脷赂眉脨脗脳茅录镁脳垄虏谩卤铆</ProgressText>
 
-<ProgressText Action="PublishComponents" Template="组件 ID: [1]，资格认证者: [2]">正在发布合格的组件</ProgressText>
+<ProgressText Action="PublishComponents" Template="脳茅录镁 ID: [1]拢卢脳脢赂帽脠脧脰陇脮脽: [2]">脮媒脭脷路垄虏录潞脧赂帽碌脛脳茅录镁</ProgressText>
 
-<ProgressText Action="PublishFeatures" Template="功能: [1]">正在发布产品功能</ProgressText>
+<ProgressText Action="PublishFeatures" Template="鹿娄脛脺: [1]">脮媒脭脷路垄虏录虏煤脝路鹿娄脛脺</ProgressText>
 
-<ProgressText Action="PublishProduct" Template="">正在发布产品信息</ProgressText>
+<ProgressText Action="PublishProduct">脮媒脭脷路垄虏录虏煤脝路脨脜脧垄</ProgressText>
 
-<ProgressText Action="RegisterClassInfo" Template="Class Id: [1]">正在注册类服务器</ProgressText>
+<ProgressText Action="RegisterClassInfo" Template="Class Id: [1]">脮媒脭脷脳垄虏谩脌脿路镁脦帽脝梅</ProgressText>
 
-<ProgressText Action="RegisterComPlus" Template="AppId: [1]{{, AppType: [2], Users: [3], RSN: [4]}}">正在注册 COM+ 应用程序和组件</ProgressText>
+<ProgressText Action="RegisterComPlus" Template="AppId: [1]{{, AppType: [2], Users: [3], RSN: [4]}}">脮媒脭脷脳垄虏谩 COM+ 脫娄脫脙鲁脤脨貌潞脥脳茅录镁</ProgressText>
 
-<ProgressText Action="RegisterExtensionInfo" Template="扩展: [1]">正在注册扩展服务器</ProgressText>
+<ProgressText Action="RegisterExtensionInfo" Template="脌漏脮鹿: [1]">脮媒脭脷脳垄虏谩脌漏脮鹿路镁脦帽脝梅</ProgressText>
 
-<ProgressText Action="RegisterFonts" Template="字体: [1]">正在注册字体</ProgressText>
+<ProgressText Action="RegisterFonts" Template="脳脰脤氓: [1]">脮媒脭脷脳垄虏谩脳脰脤氓</ProgressText>
 
-<ProgressText Action="RegisterMIMEInfo" Template="MIME 内容类型: [1]，扩展: [2]">正在注册 MIME 信息</ProgressText>
+<ProgressText Action="RegisterMIMEInfo" Template="MIME 脛脷脠脻脌脿脨脥: [1]拢卢脌漏脮鹿: [2]">脮媒脭脷脳垄虏谩 MIME 脨脜脧垄</ProgressText>
 
-<ProgressText Action="RegisterProduct" Template="[1]">正在注册产品</ProgressText>
+<ProgressText Action="RegisterProduct" Template="[1]">脮媒脭脷脳垄虏谩虏煤脝路</ProgressText>
 
-<ProgressText Action="RegisterProgIdInfo" Template="ProgId: [1]">正在注册程序标识符</ProgressText>
+<ProgressText Action="RegisterProgIdInfo" Template="ProgId: [1]">脮媒脭脷脳垄虏谩鲁脤脨貌卤锚脢露路没</ProgressText>
 
-<ProgressText Action="RegisterTypeLibraries" Template="LibID: [1]">正在注册类型库</ProgressText>
+<ProgressText Action="RegisterTypeLibraries" Template="LibID: [1]">脮媒脭脷脳垄虏谩脌脿脨脥驴芒</ProgressText>
 
-<ProgressText Action="RegisterUser" Template="[1]">正在注册用户</ProgressText>
+<ProgressText Action="RegisterUser" Template="[1]">脮媒脭脷脳垄虏谩脫脙禄搂</ProgressText>
 
-<ProgressText Action="RemoveDuplicateFiles" Template="文件: [1]，目录: [9]">正在删除重复的文件</ProgressText>
+<ProgressText Action="RemoveDuplicateFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]">脮媒脭脷脡戮鲁媒脰脴赂麓碌脛脦脛录镁</ProgressText>
 
-<ProgressText Action="RemoveEnvironmentStrings" Template="名称: [1]，数值: [2]，动作 [3]">正在更新环境字符串</ProgressText>
+<ProgressText Action="RemoveEnvironmentStrings" Template="脙没鲁脝: [1]拢卢脢媒脰碌: [2]拢卢露炉脳梅 [3]">脮媒脭脷赂眉脨脗禄路戮鲁脳脰路没麓庐</ProgressText>
 
-<ProgressText Action="RemoveExistingProducts" Template="应用程序: [1]，命令行: [2]">正在删除应用程序</ProgressText>
+<ProgressText Action="RemoveExistingProducts" Template="脫娄脫脙鲁脤脨貌: [1]拢卢脙眉脕卯脨脨: [2]">脮媒脭脷脡戮鲁媒脫娄脫脙鲁脤脨貌</ProgressText>
 
-<ProgressText Action="RemoveFiles" Template="文件: [1]，目录: [9]">正在删除文件</ProgressText>
+<ProgressText Action="RemoveFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]">脮媒脭脷脡戮鲁媒脦脛录镁</ProgressText>
 
-<ProgressText Action="RemoveFolders" Template="文件夹: [1]">正在删除文件夹</ProgressText>
+<ProgressText Action="RemoveFolders" Template="脦脛录镁录脨: [1]">脮媒脭脷脡戮鲁媒脦脛录镁录脨</ProgressText>
 
-<ProgressText Action="RemoveIniValues" Template="文件: [1]，节: [2]，键: [3]，数值: [4]">正在删除 INI 文件条目</ProgressText>
+<ProgressText Action="RemoveIniValues" Template="脦脛录镁: [1]拢卢陆脷: [2]拢卢录眉: [3]拢卢脢媒脰碌: [4]">脮媒脭脷脡戮鲁媒 INI 脦脛录镁脤玫脛驴</ProgressText>
 
-<ProgressText Action="RemoveODBC" Template="">正在删除 ODBC 组件</ProgressText>
+<ProgressText Action="RemoveODBC">脮媒脭脷脡戮鲁媒 ODBC 脳茅录镁</ProgressText>
 
-<ProgressText Action="RemoveRegistryValues" Template="键值: [1]，名称: [2]">正在删除系统注册表值</ProgressText>
+<ProgressText Action="RemoveRegistryValues" Template="录眉脰碌: [1]拢卢脙没鲁脝: [2]">脮媒脭脷脡戮鲁媒脧碌脥鲁脳垄虏谩卤铆脰碌</ProgressText>
 
-<ProgressText Action="RemoveShortcuts" Template="快捷方式: [1]">正在删除快捷方式</ProgressText>
+<ProgressText Action="RemoveShortcuts" Template="驴矛陆脻路陆脢陆: [1]">脮媒脭脷脡戮鲁媒驴矛陆脻路陆脢陆</ProgressText>
 
-<ProgressText Action="RMCCPSearch" Template="">正在搜索符合资格的产品</ProgressText>
+<ProgressText Action="RMCCPSearch">脮媒脭脷脣脩脣梅路没潞脧脳脢赂帽碌脛虏煤脝路</ProgressText>
 
-<ProgressText Action="Rollback" Template="[1]">回滚操作: </ProgressText>
+<ProgressText Action="Rollback" Template="[1]">禄脴鹿枚虏脵脳梅: </ProgressText>
 
-<ProgressText Action="RollbackCleanup" Template="文件: [1]">正在删除备份文件</ProgressText>
+<ProgressText Action="RollbackCleanup" Template="脦脛录镁: [1]">脮媒脭脷脡戮鲁媒卤赂路脻脦脛录镁</ProgressText>
 
-<ProgressText Action="SelfRegModules" Template="文件: [1]，文件夹: [2]">正在注册模块</ProgressText>
+<ProgressText Action="SelfRegModules" Template="脦脛录镁: [1]拢卢脦脛录镁录脨: [2]">脮媒脭脷脳垄虏谩脛拢驴茅</ProgressText>
 
-<ProgressText Action="SelfUnregModules" Template="文件: [1]，文件夹: [2]">正在撤销模块的注册</ProgressText>
+<ProgressText Action="SelfUnregModules" Template="脦脛录镁: [1]拢卢脦脛录镁录脨: [2]">脮媒脭脷鲁路脧煤脛拢驴茅碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="SetODBCFolders" Template="">正在初始化 ODBC 目录</ProgressText>
+<ProgressText Action="SetODBCFolders">脮媒脭脷鲁玫脢录禄炉 ODBC 脛驴脗录</ProgressText>
 
-<ProgressText Action="StartServices" Template="服务: [1]">正在启动服务</ProgressText>
+<ProgressText Action="StartServices" Template="路镁脦帽: [1]">脮媒脭脷脝么露炉路镁脦帽</ProgressText>
 
-<ProgressText Action="StopServices" Template="服务: [1]">正在停止服务</ProgressText>
+<ProgressText Action="StopServices" Template="路镁脦帽: [1]">脮媒脭脷脥拢脰鹿路镁脦帽</ProgressText>
 
-<ProgressText Action="UnmoveFiles" Template="文件: [1]，目录: [9]">正在删除移动过的文件</ProgressText>
+<ProgressText Action="UnmoveFiles" Template="脦脛录镁: [1]拢卢脛驴脗录: [9]">脮媒脭脷脡戮鲁媒脪脝露炉鹿媒碌脛脦脛录镁</ProgressText>
 
-<ProgressText Action="UnpublishComponents" Template="组件 ID: [1]，资格认证者: [2]">正在取消合格组件的发布</ProgressText>
+<ProgressText Action="UnpublishComponents" Template="脳茅录镁 ID: [1]拢卢脳脢赂帽脠脧脰陇脮脽: [2]">脮媒脭脷脠隆脧没潞脧赂帽脳茅录镁碌脛路垄虏录</ProgressText>
 
-<ProgressText Action="UnpublishFeatures" Template="功能: [1]">正在取消产品功能的发布</ProgressText>
+<ProgressText Action="UnpublishFeatures" Template="鹿娄脛脺: [1]">脮媒脭脷脠隆脧没虏煤脝路鹿娄脛脺碌脛路垄虏录</ProgressText>
 
-<ProgressText Action="UnpublishProduct" Template="">正在取消产品信息的发布</ProgressText>
+<ProgressText Action="UnpublishProduct">脮媒脭脷脠隆脧没虏煤脝路脨脜脧垄碌脛路垄虏录</ProgressText>
 
-<ProgressText Action="UnregisterClassInfo" Template="Class Id: [1]">正在撤销类服务器的注册</ProgressText>
+<ProgressText Action="UnregisterClassInfo" Template="Class Id: [1]">脮媒脭脷鲁路脧煤脌脿路镁脦帽脝梅碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterComPlus" Template="AppId: [1]{{, AppType: [2]}}">正在撤销 COM+ 应用程序和组件的注册</ProgressText>
+<ProgressText Action="UnregisterComPlus" Template="AppId: [1]{{, AppType: [2]}}">脮媒脭脷鲁路脧煤 COM+ 脫娄脫脙鲁脤脨貌潞脥脳茅录镁碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterExtensionInfo" Template="扩展: [1]">正在撤销扩展服务器的注册</ProgressText>
+<ProgressText Action="UnregisterExtensionInfo" Template="脌漏脮鹿: [1]">脮媒脭脷鲁路脧煤脌漏脮鹿路镁脦帽脝梅碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterFonts" Template="字体: [1]">正在撤销字体的注册</ProgressText>
+<ProgressText Action="UnregisterFonts" Template="脳脰脤氓: [1]">脮媒脭脷鲁路脧煤脳脰脤氓碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterMIMEInfo" Template="MIME 内容类型: [1]，扩展: [2]">正在撤销 MIME 信息的注册</ProgressText>
+<ProgressText Action="UnregisterMIMEInfo" Template="MIME 脛脷脠脻脌脿脨脥: [1]拢卢脌漏脮鹿: [2]">脮媒脭脷鲁路脧煤 MIME 脨脜脧垄碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterProgIdInfo" Template="ProgId: [1]">正在撤销程序标识符的注册</ProgressText>
+<ProgressText Action="UnregisterProgIdInfo" Template="ProgId: [1]">脮媒脭脷鲁路脧煤鲁脤脨貌卤锚脢露路没碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="UnregisterTypeLibraries" Template="LibID: [1]">正在撤销类型库的注册</ProgressText>
+<ProgressText Action="UnregisterTypeLibraries" Template="LibID: [1]">脮媒脭脷鲁路脧煤脌脿脨脥驴芒碌脛脳垄虏谩</ProgressText>
 
-<ProgressText Action="WriteEnvironmentStrings" Template="名称: [1]，数值: [2]，动作 [3]">正在更新环境字符串</ProgressText>
+<ProgressText Action="WriteEnvironmentStrings" Template="脙没鲁脝: [1]拢卢脢媒脰碌: [2]拢卢露炉脳梅 [3]">脮媒脭脷赂眉脨脗禄路戮鲁脳脰路没麓庐</ProgressText>
 
-<ProgressText Action="WriteIniValues" Template="文件: [1]，节: [2]，键: [3]，数值: [4]">正在写入 INI 文件数值</ProgressText>
+<ProgressText Action="WriteIniValues" Template="脦脛录镁: [1]拢卢陆脷: [2]拢卢录眉: [3]拢卢脢媒脰碌: [4]">脮媒脭脷脨麓脠毛 INI 脦脛录镁脢媒脰碌</ProgressText>
 
-<ProgressText Action="WriteRegistryValues" Template="键: [1]，名称: [2]，数值: [3]">正在写入系统注册表值</ProgressText>
+<ProgressText Action="WriteRegistryValues" Template="录眉: [1]拢卢脙没鲁脝: [2]拢卢脢媒脰碌: [3]">脮媒脭脷脨麓脠毛脧碌脥鲁脳垄虏谩卤铆脰碌</ProgressText>
 
 </Include>

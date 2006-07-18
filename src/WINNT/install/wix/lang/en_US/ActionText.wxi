@@ -1,6 +1,6 @@
 <Include>
 
-<ProgressText Action="Advertise" Template="">Advertising application</ProgressText>
+<ProgressText Action="Advertise">Advertising application</ProgressText>
 
 <ProgressText Action="AppSearch" Template="Property: [1], Signature: [2]">Searching for installed applications</ProgressText>
 
@@ -8,11 +8,11 @@
 
 <ProgressText Action="BindImage" Template="File: [1]">Binding executables</ProgressText>
 
-<ProgressText Action="CCPSearch" Template="">Searching for qualifying products</ProgressText>
+<ProgressText Action="CCPSearch">Searching for qualifying products</ProgressText>
 
-<ProgressText Action="CostFinalize" Template="">Computing space requirements</ProgressText>
+<ProgressText Action="CostFinalize">Computing space requirements</ProgressText>
 
-<ProgressText Action="CostInitialize" Template="">Computing space requirements</ProgressText>
+<ProgressText Action="CostInitialize">Computing space requirements</ProgressText>
 
 <ProgressText Action="CreateFolders" Template="Folder: [1]">Creating folders</ProgressText>
 
@@ -22,7 +22,7 @@
 
 <ProgressText Action="DuplicateFiles" Template="File: [1],  Directory: [9],  Size: [6]">Creating duplicate files</ProgressText>
 
-<ProgressText Action="FileCost" Template="">Computing space requirements</ProgressText>
+<ProgressText Action="FileCost">Computing space requirements</ProgressText>
 
 <ProgressText Action="FindRelatedProducts" Template="Found application: [1]">Searching for related applications</ProgressText>
 
@@ -32,13 +32,13 @@
 
 <ProgressText Action="InstallFiles" Template="File: [1],  Directory: [9],  Size: [6]">Copying new files</ProgressText>
 
-<ProgressText Action="InstallODBC" Template="">Installing ODBC components</ProgressText>
+<ProgressText Action="InstallODBC">Installing ODBC components</ProgressText>
 
 <ProgressText Action="InstallServices" Template="Service: [2]">Installing new services</ProgressText>
 
-<ProgressText Action="InstallValidate" Template="">Validating install</ProgressText>
+<ProgressText Action="InstallValidate">Validating install</ProgressText>
 
-<ProgressText Action="LaunchConditions" Template="">Evaluating launch conditions</ProgressText>
+<ProgressText Action="LaunchConditions">Evaluating launch conditions</ProgressText>
 
 <ProgressText Action="MigrateFeatureStates" Template="Application: [1]">Migrating feature states from related applications</ProgressText>
 
@@ -46,13 +46,13 @@
 
 <ProgressText Action="PatchFiles" Template="File: [1],  Directory: [2],  Size: [3]">Patching files</ProgressText>
 
-<ProgressText Action="ProcessComponents" Template="">Updating component registration</ProgressText>
+<ProgressText Action="ProcessComponents">Updating component registration</ProgressText>
 
 <ProgressText Action="PublishComponents" Template="Component ID: [1], Qualifier: [2]">Publishing Qualified Components</ProgressText>
 
 <ProgressText Action="PublishFeatures" Template="Feature: [1]">Publishing Product Features</ProgressText>
 
-<ProgressText Action="PublishProduct" Template="">Publishing product information</ProgressText>
+<ProgressText Action="PublishProduct">Publishing product information</ProgressText>
 
 <ProgressText Action="RegisterClassInfo" Template="Class Id: [1]">Registering Class servers</ProgressText>
 
@@ -84,13 +84,13 @@
 
 <ProgressText Action="RemoveIniValues" Template="File: [1],  Section: [2],  Key: [3], Value: [4]">Removing INI files entries</ProgressText>
 
-<ProgressText Action="RemoveODBC" Template="">Removing ODBC components</ProgressText>
+<ProgressText Action="RemoveODBC">Removing ODBC components</ProgressText>
 
 <ProgressText Action="RemoveRegistryValues" Template="Key: [1], Name: [2]">Removing system registry values</ProgressText>
 
 <ProgressText Action="RemoveShortcuts" Template="Shortcut: [1]">Removing shortcuts</ProgressText>
 
-<ProgressText Action="RMCCPSearch" Template="">Searching for qualifying products</ProgressText>
+<ProgressText Action="RMCCPSearch">Searching for qualifying products</ProgressText>
 
 <ProgressText Action="Rollback" Template="[1]">Rolling back action:</ProgressText>
 
@@ -100,7 +100,7 @@
 
 <ProgressText Action="SelfUnregModules" Template="File: [1], Folder: [2]">Unregistering modules</ProgressText>
 
-<ProgressText Action="SetODBCFolders" Template="">Initializing ODBC directories</ProgressText>
+<ProgressText Action="SetODBCFolders">Initializing ODBC directories</ProgressText>
 
 <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
 
@@ -112,7 +112,7 @@
 
 <ProgressText Action="UnpublishFeatures" Template="Feature: [1]">Unpublishing Product Features</ProgressText>
 
-<ProgressText Action="UnpublishProduct" Template="">Unpublishing product information</ProgressText>
+<ProgressText Action="UnpublishProduct">Unpublishing product information</ProgressText>
 
 <ProgressText Action="UnregisterClassInfo" Template="Class Id: [1]">Unregister Class servers</ProgressText>
 

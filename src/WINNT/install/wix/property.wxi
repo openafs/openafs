@@ -49,75 +49,75 @@
 
 <?ifndef BinsOnly?>
     <Property Id="AFSCCPATCH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PatchLevel" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PatchLevel" Type="raw" />
     </Property>
     <Property Id="AFSCCMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MajorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MajorVersion" Type="raw" />
     </Property>
     <Property Id="AFSCCMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MinorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MinorVersion" Type="raw" />
     </Property>
     <Property Id="AFSCCPATH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PathName" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSCC_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PathName" Type="directory" />
     </Property>
     
     <Property Id="AFSCLIENTPATCH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PatchLevel" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PatchLevel" Type="raw" />
     </Property>
     <Property Id="AFSCLIENTMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MajorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MajorVersion" Type="raw" />
     </Property>
     <Property Id="AFSCLIENTMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MinorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MinorVersion" Type="raw" />
     </Property>
     <Property Id="AFSCLIENTPATH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PathName" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSClient_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PathName" Type="directory" />
     </Property>
 
     <Property Id="AFSDOCPATCH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PatchLevel" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PatchLevel" Type="raw" />
     </Property>
     <Property Id="AFSDOCMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MajorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MajorVersion" Type="raw" />
     </Property>
     <Property Id="AFSDOCMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MinorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MinorVersion" Type="raw" />
     </Property>
     <Property Id="AFSDOCPATH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PathName" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSDoc_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PathName" Type="directory" />
     </Property>
 
     <Property Id="AFSSERVERPATCH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PatchLevel" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PatchLevel" Type="raw" />
     </Property>
     <Property Id="AFSSERVERMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MajorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MajorVersion" Type="raw" />
     </Property>
     <Property Id="AFSSERVERMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MinorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MinorVersion" Type="raw" />
     </Property>
     <Property Id="AFSSERVERPATH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PathName" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSServer_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PathName" Type="directory" />
     </Property>
     
     <Property Id="AFSSDKPATCH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PatchLevel" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PatchLevel" Type="raw" />
     </Property>
     <Property Id="AFSSDKMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_major" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MajorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_major" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MajorVersion" Type="raw" />
     </Property>
     <Property Id="AFSSDKMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MinorVersion" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MinorVersion" Type="raw" />
     </Property>
     <Property Id="AFSSDKPATH">
-      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_path" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PathName" Type="registry" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rl_AFSSDK_path" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PathName" Type="directory" />
     </Property>
 
 	<Property Id="NSISVERSION">
-	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Ver" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="DisplayVersion" Type="registry" />
+	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Ver" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="DisplayVersion" Type="raw" />
 	</Property>
     <Property Id="NSISUNINSTALL">
-	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="registry" />
+	  <RegistrySearch Win64="$(var.Win64)" Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="file" />
     </Property>
     
     <Property Id="OLDCELLSERVDB">
