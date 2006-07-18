@@ -1,143 +1,143 @@
 <Include>
 
-<ProgressText Action="Advertise" Template="">���b�Ŷ����ε{��</ProgressText>
+<ProgressText Action="Advertise">¥¿¦b«Å¶ÇÀ³¥Îµ{¦¡</ProgressText>
 
-<ProgressText Action="AllocateRegistrySpace" Template="�i�ΪŶ�: [1]">��z�n���ȪŶ�</ProgressText>
+<ProgressText Action="AllocateRegistrySpace" Template="¥i¥ÎªÅ¶¡: [1]">¾ã²zµn¿ý­ÈªÅ¶¡</ProgressText>
 
-<ProgressText Action="AppSearch" Template="�ݩ�: [1], ñ�W: [2]">�j�M�w�w�˪����ε{��</ProgressText>
+<ProgressText Action="AppSearch" Template="ÄÝ©Ê: [1], Ã±¦W: [2]">·j´M¤w¦w¸ËªºÀ³¥Îµ{¦¡</ProgressText>
 
-<ProgressText Action="BindImage" Template="�ɮ�: [1]">���b���X�i����</ProgressText>
+<ProgressText Action="BindImage" Template="ÀÉ®×: [1]">¥¿¦bµ²¦X¥i°õÀÉ</ProgressText>
 
-<ProgressText Action="CCPSearch" Template="">���b�j�M�ŦX���󪺲��~</ProgressText>
+<ProgressText Action="CCPSearch">¥¿¦b·j´M²Å¦X±ø¥óªº²£«~</ProgressText>
 
-<ProgressText Action="CostFinalize" Template="">�p��һݪŶ�</ProgressText>
+<ProgressText Action="CostFinalize">­pºâ©Ò»ÝªÅ¶¡</ProgressText>
 
-<ProgressText Action="CostInitialize" Template="">�p��һݪŶ�</ProgressText>
+<ProgressText Action="CostInitialize">­pºâ©Ò»ÝªÅ¶¡</ProgressText>
 
-<ProgressText Action="CreateFolders" Template="��Ƨ�: [1]">���b�إ߸�Ƨ�</ProgressText>
+<ProgressText Action="CreateFolders" Template="¸ê®Æ§¨: [1]">¥¿¦b«Ø¥ß¸ê®Æ§¨</ProgressText>
 
-<ProgressText Action="CreateShortcuts" Template="���|: [1]">���b�إ߱��|</ProgressText>
+<ProgressText Action="CreateShortcuts" Template="±¶®|: [1]">¥¿¦b«Ø¥ß±¶®|</ProgressText>
 
-<ProgressText Action="DeleteServices" Template="�A��: [1]">�R���A��</ProgressText>
+<ProgressText Action="DeleteServices" Template="ªA°È: [1]">§R°£ªA°È</ProgressText>
 
-<ProgressText Action="DuplicateFiles" Template="�ɮ�: [1], �ؿ�: [9],  �j�p: [6]">�إ߭����ɮ�</ProgressText>
+<ProgressText Action="DuplicateFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9],  ¤j¤p: [6]">«Ø¥ß­«½ÆÀÉ®×</ProgressText>
 
-<ProgressText Action="FileCost" Template="">�p��һݪŶ�</ProgressText>
+<ProgressText Action="FileCost">­pºâ©Ò»ÝªÅ¶¡</ProgressText>
 
-<ProgressText Action="FindRelatedProducts" Template="�w��줧���ε{��: [1]">�j�M�������ε{��</ProgressText>
+<ProgressText Action="FindRelatedProducts" Template="¤w§ä¨ì¤§À³¥Îµ{¦¡: [1]">·j´M¬ÛÃöÀ³¥Îµ{¦¡</ProgressText>
 
-<ProgressText Action="GenerateScript" Template="[1]">���b���ʧ@���� script �ާ@:</ProgressText>
+<ProgressText Action="GenerateScript" Template="[1]">¥¿¦b¬°°Ê§@²£¥Í script ¾Þ§@:</ProgressText>
 
-<ProgressText Action="InstallAdminPackage" Template="�ɮ�: [1], �ؿ�: [9], �j�p: [6]">���b�ƻs�����w���ɮ�</ProgressText>
+<ProgressText Action="InstallAdminPackage" Template="ÀÉ®×: [1], ¥Ø¿ý: [9], ¤j¤p: [6]">¥¿¦b½Æ»sºô¸ô¦w¸ËÀÉ®×</ProgressText>
 
-<ProgressText Action="InstallFiles" Template="�ɮ�: [1], �ؿ�: [9],  �j�p: [6]">���b�ƻs�s���ɮ�</ProgressText>
+<ProgressText Action="InstallFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9],  ¤j¤p: [6]">¥¿¦b½Æ»s·sªºÀÉ®×</ProgressText>
 
-<ProgressText Action="InstallODBC" Template="">�w�� ODBC ����</ProgressText>
+<ProgressText Action="InstallODBC">¦w¸Ë ODBC ¤¸¥ó</ProgressText>
 
-<ProgressText Action="InstallServices" Template="�A��: [2]">�w��</ProgressText>
+<ProgressText Action="InstallServices" Template="ªA°È: [2]">¦w¸Ë</ProgressText>
 
-<ProgressText Action="InstallSFPCatalogFile" Template="�ɮ�: [1]�A�̦s��: [2]">���b�w�˨t�����O�ؿ�</ProgressText>
+<ProgressText Action="InstallSFPCatalogFile" Template="ÀÉ®×: [1]¡A¨Ì¦s©Ê: [2]">¥¿¦b¦w¸Ë¨t²ÎÃþ§O¥Ø¿ý</ProgressText>
 
-<ProgressText Action="InstallValidate" Template="">���Ҧw��</ProgressText>
+<ProgressText Action="InstallValidate">ÅçÃÒ¦w¸Ë</ProgressText>
 
-<ProgressText Action="LaunchConditions" Template="">����������</ProgressText>
+<ProgressText Action="LaunchConditions">ÀËÅç°õ¦æ±ø¥ó</ProgressText>
 
-<ProgressText Action="MigrateFeatureStates" Template="���ε{��: [1]">�q�������ε{���ഫ�\�બ�A</ProgressText>
+<ProgressText Action="MigrateFeatureStates" Template="À³¥Îµ{¦¡: [1]">±q¬ÛÃöÀ³¥Îµ{¦¡Âà´«¥\¯àª¬ºA</ProgressText>
 
-<ProgressText Action="MoveFiles" Template="�ɮ�: [1], �ؿ�: [9],  �j�p: [6]">���b�����ɮ�</ProgressText>
+<ProgressText Action="MoveFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9],  ¤j¤p: [6]">¥¿¦b²¾°ÊÀÉ®×</ProgressText>
 
-<ProgressText Action="MsiPublishAssemblies" Template="���ε{�����e:[1], �զX�W��:[2]">���b���G�զX��T</ProgressText>
+<ProgressText Action="MsiPublishAssemblies" Template="À³¥Îµ{¦¡¤º®e:[1], ²Õ¦X¦WºÙ:[2]">¥¿¦b¤½§G²Õ¦X¸ê°T</ProgressText>
 
-<ProgressText Action="MsiUnpublishAssemblies" Template="���ε{�����e:[1], �զX�W��:[2]">���b�Ѱ����G�զX��T</ProgressText>
+<ProgressText Action="MsiUnpublishAssemblies" Template="À³¥Îµ{¦¡¤º®e:[1], ²Õ¦X¦WºÙ:[2]">¥¿¦b¸Ñ°£¤½§G²Õ¦X¸ê°T</ProgressText>
 
-<ProgressText Action="PatchFiles" Template="�ɮ�: [1],  �ؿ�: [2],  �j�p: [3]">�׸��ɮ�</ProgressText>
+<ProgressText Action="PatchFiles" Template="ÀÉ®×: [1],  ¥Ø¿ý: [2],  ¤j¤p: [3]">­×¸ÉÀÉ®×</ProgressText>
 
-<ProgressText Action="ProcessComponents" Template="">��s����n��</ProgressText>
+<ProgressText Action="ProcessComponents">§ó·s¤¸¥óµn¿ý</ProgressText>
 
-<ProgressText Action="PublishComponents" Template="���� ID: [1], Qualifier: [2]">�o�G�X�椸��</ProgressText>
+<ProgressText Action="PublishComponents" Template="¤¸¥ó ID: [1], Qualifier: [2]">µo§G¦X®æ¤¸¥ó</ProgressText>
 
-<ProgressText Action="PublishFeatures" Template="�\��: [1]">�o�G���~�\��</ProgressText>
+<ProgressText Action="PublishFeatures" Template="¥\¯à: [1]">µo§G²£«~¥\¯à</ProgressText>
 
-<ProgressText Action="PublishProduct" Template="">�o�G���~��T</ProgressText>
+<ProgressText Action="PublishProduct">µo§G²£«~¸ê°T</ProgressText>
 
-<ProgressText Action="RegisterClassInfo" Template="Class Id: [1]">�n�� Class ���A��</ProgressText>
+<ProgressText Action="RegisterClassInfo" Template="Class Id: [1]">µn¿ý Class ¦øªA¾¹</ProgressText>
 
-<ProgressText Action="RegisterComPlus" Template="AppId: [1]{{, AppType: [2], Users: [3], RSN: [4]}}">�n�� COM+ ���ε{���Τ���</ProgressText>
+<ProgressText Action="RegisterComPlus" Template="AppId: [1]{{, AppType: [2], Users: [3], RSN: [4]}}">µn¿ý COM+ À³¥Îµ{¦¡¤Î¤¸¥ó</ProgressText>
 
-<ProgressText Action="RegisterExtensionInfo" Template="����: [1]">�n���������A��</ProgressText>
+<ProgressText Action="RegisterExtensionInfo" Template="©µ¦ù: [1]">µn¿ý©µ¦ù¦øªA¾¹</ProgressText>
 
-<ProgressText Action="RegisterFonts" Template="�r��: [1]">�n���r��</ProgressText>
+<ProgressText Action="RegisterFonts" Template="¦r«¬: [1]">µn¿ý¦r«¬</ProgressText>
 
-<ProgressText Action="RegisterMIMEInfo" Template="MIME Content Type: [1], Extension: [2]">�n�� MIME ��T</ProgressText>
+<ProgressText Action="RegisterMIMEInfo" Template="MIME Content Type: [1], Extension: [2]">µn¿ý MIME ¸ê°T</ProgressText>
 
-<ProgressText Action="RegisterProduct" Template="[1]">���b�n�����~</ProgressText>
+<ProgressText Action="RegisterProduct" Template="[1]">¥¿¦bµn¿ý²£«~</ProgressText>
 
-<ProgressText Action="RegisterProgIdInfo" Template="ProgId: [1]">�n���{���ѧO</ProgressText>
+<ProgressText Action="RegisterProgIdInfo" Template="ProgId: [1]">µn¿ýµ{¦¡ÃÑ§O</ProgressText>
 
-<ProgressText Action="RegisterTypeLibraries" Template="LibID: [1]">�n�� type libraries</ProgressText>
+<ProgressText Action="RegisterTypeLibraries" Template="LibID: [1]">µn¿ý type libraries</ProgressText>
 
-<ProgressText Action="RegisterUser" Template="[1]">���b�n���ϥΪ�</ProgressText>
+<ProgressText Action="RegisterUser" Template="[1]">¥¿¦bµn¿ý¨Ï¥ÎªÌ</ProgressText>
 
-<ProgressText Action="RemoveDuplicateFiles" Template="�ɮ�: [1], �ؿ�: [9]">���������ɮ�</ProgressText>
+<ProgressText Action="RemoveDuplicateFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9]">²¾°£­«½ÆÀÉ®×</ProgressText>
 
-<ProgressText Action="RemoveEnvironmentStrings" Template="�W��: [1], ��: [2], �ʧ@ [3]">��s���Ҧr��</ProgressText>
+<ProgressText Action="RemoveEnvironmentStrings" Template="¦W¼µ: [1], ­È: [2], °Ê§@ [3]">§ó·sÀô¹Ò¦r¦ê</ProgressText>
 
-<ProgressText Action="RemoveExistingProducts" Template="���ε{��: [1], �R�O�C: [2]">�������ε{��</ProgressText>
+<ProgressText Action="RemoveExistingProducts" Template="À³¥Îµ{¦¡: [1], ©R¥O¦C: [2]">²¾°£À³¥Îµ{¦¡</ProgressText>
 
-<ProgressText Action="RemoveFiles" Template="�ɮ�: [1], �ؿ�: [9]">���b�����ɮ�</ProgressText>
+<ProgressText Action="RemoveFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9]">¥¿¦b²¾°£ÀÉ®×</ProgressText>
 
-<ProgressText Action="RemoveFolders" Template="��Ƨ�: [1]">���b������Ƨ�</ProgressText>
+<ProgressText Action="RemoveFolders" Template="¸ê®Æ§¨: [1]">¥¿¦b²¾°£¸ê®Æ§¨</ProgressText>
 
-<ProgressText Action="RemoveIniValues" Template="�ɮ�: [1],  Section: [2],  Key: [3], Value: [4]">���b���� INI �ɮ�</ProgressText>
+<ProgressText Action="RemoveIniValues" Template="ÀÉ®×: [1],  Section: [2],  Key: [3], Value: [4]">¥¿¦b²¾°£ INI ÀÉ®×</ProgressText>
 
-<ProgressText Action="RemoveODBC" Template="">���b���� ODBC ����</ProgressText>
+<ProgressText Action="RemoveODBC">¥¿¦b²¾°£ ODBC ¤¸¥ó</ProgressText>
 
-<ProgressText Action="RemoveRegistryValues" Template="���X: [1], �W��: [2]">���b�����t�εn����</ProgressText>
+<ProgressText Action="RemoveRegistryValues" Template="¾÷½X: [1], ¦WºÙ: [2]">¥¿¦b²¾°£¨t²Îµn¿ý­È</ProgressText>
 
-<ProgressText Action="RemoveShortcuts" Template="���|: [1]">���b�������|</ProgressText>
+<ProgressText Action="RemoveShortcuts" Template="±¶®|: [1]">¥¿¦b²¾°£±¶®|</ProgressText>
 
-<ProgressText Action="RMCCPSearch" Template="">���b�j�M�ŦX���󪺲��~</ProgressText>
+<ProgressText Action="RMCCPSearch">¥¿¦b·j´M²Å¦X±ø¥óªº²£«~</ProgressText>
 
-<ProgressText Action="Rollback" Template="[1]">�_��ʧ@:</ProgressText>
+<ProgressText Action="Rollback" Template="[1]">´_­ì°Ê§@:</ProgressText>
 
-<ProgressText Action="RollbackCleanup" Template="�ɮ�: [1]">���b�����ƥ��ɮ�</ProgressText>
+<ProgressText Action="RollbackCleanup" Template="ÀÉ®×: [1]">¥¿¦b²¾°£³Æ¥÷ÀÉ®×</ProgressText>
 
-<ProgressText Action="SelfRegModules" Template="�ɮ�: [1], ��Ƨ�: [2]">���b�n���Ҳ�</ProgressText>
+<ProgressText Action="SelfRegModules" Template="ÀÉ®×: [1], ¸ê®Æ§¨: [2]">¥¿¦bµn¿ý¼Ò²Õ</ProgressText>
 
-<ProgressText Action="SelfUnregModules" Template="�ɮ�: [1], ��Ƨ�: [2]">�Ѱ��n���Ҳ�</ProgressText>
+<ProgressText Action="SelfUnregModules" Template="ÀÉ®×: [1], ¸ê®Æ§¨: [2]">¸Ñ°£µn¿ý¼Ò²Õ</ProgressText>
 
-<ProgressText Action="SetODBCFolders" Template="">�Ұ� ODBC �ؿ�</ProgressText>
+<ProgressText Action="SetODBCFolders">±Ò°Ê ODBC ¥Ø¿ý</ProgressText>
 
-<ProgressText Action="StartServices" Template="�A��: [1]">�ҰʪA��</ProgressText>
+<ProgressText Action="StartServices" Template="ªA°È: [1]">±Ò°ÊªA°È</ProgressText>
 
-<ProgressText Action="StopServices" Template="�A��: [1]">����A��</ProgressText>
+<ProgressText Action="StopServices" Template="ªA°È: [1]">°±¤îªA°È</ProgressText>
 
-<ProgressText Action="UnmoveFiles" Template="�ɮ�: [1], �ؿ�: [9]">���b�����Q���ʪ��ɮ�</ProgressText>
+<ProgressText Action="UnmoveFiles" Template="ÀÉ®×: [1], ¥Ø¿ý: [9]">¥¿¦b²¾°£³Q²¾°ÊªºÀÉ®×</ProgressText>
 
-<ProgressText Action="UnpublishComponents" Template="���� ID: [1], Qualifier: [2]">�Ѱ��o�G�X�椸��</ProgressText>
+<ProgressText Action="UnpublishComponents" Template="¤¸¥ó ID: [1], Qualifier: [2]">¸Ñ°£µo§G¦X®æ¤¸¥ó</ProgressText>
 
-<ProgressText Action="UnpublishFeatures" Template="�\��: [1]">�Ѱ��o�G���~�\��</ProgressText>
+<ProgressText Action="UnpublishFeatures" Template="¥\¯à: [1]">¸Ñ°£µo§G²£«~¥\¯à</ProgressText>
 
-<ProgressText Action="UnpublishProduct" Template="">�Ѱ��o�G���~��T</ProgressText>
+<ProgressText Action="UnpublishProduct">¸Ñ°£µo§G²£«~¸ê°T</ProgressText>
 
-<ProgressText Action="UnregisterClassInfo" Template="Class Id: [1]">�Ѱ��n�� Class ���A��</ProgressText>
+<ProgressText Action="UnregisterClassInfo" Template="Class Id: [1]">¸Ñ°£µn¿ý Class ¦øªA¾¹</ProgressText>
 
-<ProgressText Action="UnregisterComPlus" Template="AppId: [1]{{, AppType: [2]}}">�Ѱ��n�� COM+ ���ε{���Τ���</ProgressText>
+<ProgressText Action="UnregisterComPlus" Template="AppId: [1]{{, AppType: [2]}}">¸Ñ°£µn¿ý COM+ À³¥Îµ{¦¡¤Î¤¸¥ó</ProgressText>
 
-<ProgressText Action="UnregisterExtensionInfo" Template="����: [1]">�Ѱ��n���������A��</ProgressText>
+<ProgressText Action="UnregisterExtensionInfo" Template="©µ¦ù: [1]">¸Ñ°£µn¿ý©µ¦ù¦øªA¾¹</ProgressText>
 
-<ProgressText Action="UnregisterFonts" Template="�r��: [1]">�Ѱ��n���r��</ProgressText>
+<ProgressText Action="UnregisterFonts" Template="¦r«¬: [1]">¸Ñ°£µn¿ý¦r«¬</ProgressText>
 
-<ProgressText Action="UnregisterMIMEInfo" Template="MIME Content Type: [1], Extension: [2]">�Ѱ��n�� MIME ��T</ProgressText>
+<ProgressText Action="UnregisterMIMEInfo" Template="MIME Content Type: [1], Extension: [2]">¸Ñ°£µn¿ý MIME ¸ê°T</ProgressText>
 
-<ProgressText Action="UnregisterProgIdInfo" Template="ProgId: [1]">�Ѱ��n���{���ѧO</ProgressText>
+<ProgressText Action="UnregisterProgIdInfo" Template="ProgId: [1]">¸Ñ°£µn¿ýµ{¦¡ÃÑ§O</ProgressText>
 
-<ProgressText Action="UnregisterTypeLibraries" Template="LibID: [1]">�Ѱ��n�� type libraries</ProgressText>
+<ProgressText Action="UnregisterTypeLibraries" Template="LibID: [1]">¸Ñ°£µn¿ý type libraries</ProgressText>
 
-<ProgressText Action="WriteEnvironmentStrings" Template="�W��: [1], ��: [2], �ʧ@ [3]">��s���Ҧr��</ProgressText>
+<ProgressText Action="WriteEnvironmentStrings" Template="¦W¼µ: [1], ­È: [2], °Ê§@ [3]">§ó·sÀô¹Ò¦r¦ê</ProgressText>
 
-<ProgressText Action="WriteIniValues" Template="�ɮ�: [1],  Section: [2],  Key: [3], Value: [4]">�g�J INI �ɮ�</ProgressText>
+<ProgressText Action="WriteIniValues" Template="ÀÉ®×: [1],  Section: [2],  Key: [3], Value: [4]">¼g¤J INI ÀÉ®×</ProgressText>
 
-<ProgressText Action="WriteRegistryValues" Template="���X: [1], �W��: [2], ��: [3]">���b�g�J�t�εn��</ProgressText>
+<ProgressText Action="WriteRegistryValues" Template="¾÷½X: [1], ¦WºÙ: [2], ­È: [3]">¥¿¦b¼g¤J¨t²Îµn¿ý</ProgressText>
 
 </Include>
