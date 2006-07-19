@@ -675,7 +675,7 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 
     if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {
 	char hoststr[16];
-	ViceLog(0,
+	ViceLog(5,
 		("CheckRights: len=%u, for host=%s:%d\n",
 		 client->host->hcps.prlist_len, 
 		 afs_inet_ntoa_r(client->host->host, hoststr),
