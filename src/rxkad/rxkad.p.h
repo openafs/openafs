@@ -88,7 +88,7 @@ typedef char rxkad_level;
 #define rxkad_LevelIndex(level) \
     ((((level) >= 0) && ((level) <= 2)) ? (level) : 0)
 #define rxkad_TypeIndex(type) \
-    ((((type) == 1) || ((type) == 2)) ? (type) : 0)
+    ((((type) == 1) || ((type) == 2)) ? ((type)-1) : 0)
 
 
 extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
