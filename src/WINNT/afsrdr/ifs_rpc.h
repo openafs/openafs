@@ -39,11 +39,11 @@
 
 
 /* maximum number of users, based on SID, that can access AFS at one time */
-#define MAX_AFS_USERS			20
+#define MAX_AFS_USERS			256
 
 /* maximum number of threads that can make simultaneous calls into afsrdr,
    because we maintain a credential set for each thread in a single table. */
-#define MAX_CRED_MAPS			32
+#define MAX_CRED_MAPS			64
 
 /* size if outgoing/incoming RPC buffer (for parameters only, not bulk data) */
 #define RPC_BUF_SIZE			2048

@@ -256,8 +256,11 @@ LoadFuncs(
     if (error) return 0;
     return 1;
 }
-
+#if defined(_IA64_) || defined(_AMD64_)
+#define KERB5DLL "krb5_64.dll"
+#else
 #define KERB5DLL "krb5_32.dll"
+#endif
 static BOOL
 IsKrb5Available()
 {
@@ -418,7 +421,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 #endif
 	
-	if (fh == INVALID_HANDLE_VALUE) {
+    if (fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         gle = GetLastError();
@@ -763,7 +766,6 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     if (!pathp)
         return CM_ERROR_NOSUCHPATH;
 
-    //sprintf(tpath, "%c:\\", pathp[0]);
     rootDir = CreateFile(pathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (rootDir == INVALID_HANDLE_VALUE)
         return CM_ERROR_NOSUCHPATH;
@@ -779,10 +781,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
     code = WideCharToMultiByte(CP_UTF8, 0/*WC_NO_BEST_FIT_CHARS*/, wpath, length/sizeof(wchar_t), outPathp, outSize/sizeof(wchar_t), NULL, NULL);
 
-//    strcpy(outPathp, tpath);
     return 0;
-#endif
-
+#else
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */
 	firstp = pathp + 2;
@@ -884,6 +884,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	    *p = '\\';
     }
     return 0;
+#endif
 }
 
 long

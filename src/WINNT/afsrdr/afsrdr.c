@@ -298,7 +298,7 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     }
     StringCbCatN(str, len, IrpSp->FileObject->FileName.Buffer, IrpSp->FileObject->FileName.Length);
 
-    /* request to open heirarchical parent of specified path */
+    /* request to open hierarchical parent of specified path */
     /* remove last path component */
     if (IrpSp->Flags & SL_OPEN_TARGET_DIRECTORY)
     {

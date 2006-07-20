@@ -241,7 +241,6 @@ rpc_t *rpc_create(int size_hint)
 {
     ULONG size;
     rpc_t *rpc;
-    ULONG status;
 
     size = sizeof(rpc_t) + 2*RPC_BUF_SIZE;
     rpc = malloc(size);
@@ -268,10 +267,8 @@ void rpc_destroy(rpc_t *rpc)
 
 rpc_transact(rpc_t *rpc)
 {
-    HANDLE hf;
-    int ret;
     ULONG header_len;
-    DWORD err, read = 0;
+    DWORD read = 0;
 
     if (!rpc)
         return IFSL_GENERIC_FAILURE;
@@ -736,7 +733,7 @@ uc_flush(ULONG fid)
 
 /* downcall stubs */
 #ifndef RPC_KERN
-dc_break_callback(ULONG fid)
+long dc_break_callback(ULONG fid)
 {
     rpc_t *rpc;
     ULONG status;
@@ -757,7 +754,7 @@ dc_break_callback(ULONG fid)
     return status;
 }
 
-dc_release_hooks()
+long dc_release_hooks(void)
 {
     rpc_t *rpc;
     ULONG status;
@@ -1240,7 +1237,6 @@ rpc_parse(rpc_t *rpc)
         break;
     case RPC_UNLINK:
         {
-            ULONG fid, unlink;
             rpc_unmarshal_wstr(rpc, name);
             status = uc_unlink(name);
             rpc_marshal_long(rpc, status);

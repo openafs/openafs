@@ -664,10 +664,10 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
             }
 
 #ifdef AFSIFS
-			/* for the IFS version, we bulkstat the dirents because this
-			   routine is used in place of smb_ReceiveCoreSearchDir.  our
-			   other option is to modify smb_ReceiveCoreSearchDir itself, 
-			   but this seems to be the proper use for cm_ApplyDir. */
+	    /* for the IFS version, we bulkstat the dirents because this
+	       routine is used in place of smb_ReceiveCoreSearchDir.  our
+	       other option is to modify smb_ReceiveCoreSearchDir itself, 
+	       but this seems to be the proper use for cm_ApplyDir. */
             lock_ObtainMutex(&scp->mx);
             if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0
                  && (scp->bulkStatProgress.QuadPart <= thyper.QuadPart))
