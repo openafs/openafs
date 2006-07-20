@@ -286,6 +286,7 @@ rpc_transact(rpc_t *rpc)
 
 /* upcall stubs */
 #ifdef RPC_KERN
+long
 uc_namei(WCHAR *name, ULONG *fid)
 {
     rpc_t *rpc;
@@ -317,6 +318,7 @@ uc_namei(WCHAR *name, ULONG *fid)
     return status;
 }
 
+long
 uc_check_access(ULONG fid, ULONG access, ULONG *granted)
 {
     rpc_t *rpc;
@@ -345,6 +347,7 @@ uc_check_access(ULONG fid, ULONG access, ULONG *granted)
     return status;
 }
 
+long
 uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *granted, ULONG *fid)
 {
     rpc_t *rpc;
@@ -375,6 +378,7 @@ uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *
     return status;
 }
 
+long
 uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation, LARGE_INTEGER *access, LARGE_INTEGER *change, LARGE_INTEGER *written)
 {
     rpc_t *rpc;
@@ -407,6 +411,7 @@ uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
     return status;
 }
 
+long
 uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER access, LARGE_INTEGER change, LARGE_INTEGER written)
 {
     rpc_t *rpc;
@@ -439,6 +444,7 @@ uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER acces
     return status;
 }
 
+long
 uc_trunc(ULONG fid, LARGE_INTEGER size)
 {
     rpc_t *rpc;
@@ -466,6 +472,7 @@ uc_trunc(ULONG fid, LARGE_INTEGER size)
     return status;
 }
 
+long
 uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
 {
     rpc_t *rpc;
@@ -495,6 +502,7 @@ uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
     return status;
 }
 
+long
 uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data)
 {
     rpc_t *rpc;
@@ -524,6 +532,7 @@ uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *da
     return status;
 }
 
+long
 uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG *len)
 {
     rpc_t *rpc;
@@ -555,6 +564,7 @@ uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char
     return status;
 }
 
+long
 uc_close(ULONG fid)
 {
     rpc_t *rpc;
@@ -581,6 +591,7 @@ uc_close(ULONG fid)
     return status;
 }
 
+long
 uc_unlink(WCHAR *name)
 {
     rpc_t *rpc;
@@ -607,6 +618,7 @@ uc_unlink(WCHAR *name)
     return status;
 }
 
+long
 uc_ioctl_write(ULONG length, char *data, ULONG *key)
 {
     rpc_t *rpc;
@@ -634,6 +646,7 @@ uc_ioctl_write(ULONG length, char *data, ULONG *key)
     return status;
 }
 
+long
 uc_ioctl_read(ULONG key, ULONG *length, char *data)
 {
     rpc_t *rpc;
@@ -661,6 +674,7 @@ uc_ioctl_read(ULONG key, ULONG *length, char *data)
     return status;
 }
 
+long
 uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid)
 {
     rpc_t *rpc;
@@ -691,6 +705,7 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
     return status;
 }
 
+long
 uc_flush(ULONG fid)
 {
     rpc_t *rpc;
