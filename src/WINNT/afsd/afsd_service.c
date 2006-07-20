@@ -59,6 +59,10 @@ int powerEventsRegistered = 0;
  */
 static void afsd_notifier(char *msgp, char *filep, long line)
 {
+#ifdef AFSIFS
+    int i;
+#endif
+
     if (filep)
     	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG_AND_LOCATION, 
                  filep, line, msgp);
@@ -1033,6 +1037,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     HMODULE hHookDll;
     HMODULE hAdvApi32;
+#ifdef AFSIFS
+    int cnt;
+#endif
 
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 

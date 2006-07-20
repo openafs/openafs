@@ -329,8 +329,10 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
+#ifndef AFSIFS
     char *drivep;
     char netbiosName[MAX_NB_NAME_LENGTH];
+#endif
     char tbuffer[256]="";
     HANDLE fh;
     HKEY hk;
@@ -637,6 +639,9 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     long rcount;
     long ioCount;
     DWORD gle;
+#ifdef AFSIFS
+    char *data;
+#endif
 
     rcount = (long)(reqp->mp - reqp->data);
     if (rcount <= 0) {
@@ -763,7 +768,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     if (rootDir == INVALID_HANDLE_VALUE)
         return CM_ERROR_NOSUCHPATH;
 
-    wpath = tpath;
+    wpath = (wchar_t *)tpath;
     length = 0;
     if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, wpath, 1000, &length, NULL))
     {
