@@ -37,10 +37,7 @@ HANDLE hAFSDMainThread = NULL;
 HANDLE hAFSDWorkerThread[WORKER_THREADS];
 #endif
 
-/* for the IFS version, set the event DoTerminate, on which all
-   worker threads wait.  they will exit, and then everything else
-   can uninitialize. */
-HANDLE WaitToTerminate, DoTerminate;
+HANDLE WaitToTerminate;
 
 int GlobalStatus;
 
@@ -89,10 +86,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     DebugBreak();	
 #endif
 
-#ifndef AFSIFS
     SetEvent(WaitToTerminate);
-#else
-    SetEvent(DoTerminate);
+#ifdef AFSIFS
     WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
     for (i = 0; i < WORKER_THREADS; i++)
         CloseHandle(hAFSDWorkerThread[i]);
@@ -201,11 +196,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         }
 
       doneTrace:
-#ifndef AFSIFS
         SetEvent(WaitToTerminate);
-#else
-        SetEvent(DoTerminate);
-#endif
         break;
 
     case SERVICE_CONTROL_INTERROGATE:
@@ -273,11 +264,7 @@ afsd_ServiceControlHandlerEx(
         }
 
       doneTrace:
-#ifndef AFSIFS
         SetEvent(WaitToTerminate);
-#else
-        SetEvent(DoTerminate);
-#endif
         dwRet = NO_ERROR;
         break;
 
@@ -388,7 +375,9 @@ afsd_ServiceControlHandlerEx(
 #define MAX_RETRIES 30
 static void MountGlobalDrives(void)
 {
+#ifndef AFSIFS
     char szAfsPath[_MAX_PATH];
+#endif
     char szDriveToMapTo[5];
     DWORD dwResult;
     char szKeyName[256];
@@ -454,16 +443,18 @@ static void MountGlobalDrives(void)
 
 static void DismountGlobalDrives()
 {
+#ifndef AFSIFS
     char szAfsPath[_MAX_PATH];
     char szDriveToMapTo[5];
-    DWORD dwResult;
-    char szKeyName[256];
-    HKEY hKey;
-    DWORD dwIndex = 0;
     DWORD dwDriveSize;
     DWORD dwSubMountSize;
     char szSubMount[256];
     DWORD dwType;
+#endif
+    DWORD dwResult;
+    char szKeyName[256];
+    HKEY hKey;
+    DWORD dwIndex = 0;
 
     sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSREG_CLT_SVC_PARAM_SUBKEY);
 
@@ -471,7 +462,9 @@ static void DismountGlobalDrives()
     if (dwResult != ERROR_SUCCESS)
         return;
 
-#ifndef AFSIFS    
+#ifdef AFSIFS    
+    /* FIXFIX: implement */
+#else
     while (1) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
@@ -491,8 +484,6 @@ static void DismountGlobalDrives()
         
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
     }        
-#else
-	/* FIXFIX: implement */
 #endif
 
     RegCloseKey(hKey);
@@ -1057,12 +1048,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
 
-#ifdef AFSIFS
-    DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
-    if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
-#endif
-
 #ifndef NOTSERVICE
     hAdvApi32 = LoadLibrary("advapi32.dll");
     if (hAdvApi32 == NULL)
@@ -1474,11 +1459,9 @@ main(int argc, char * argv[])
 		
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
             getchar();  
-#ifndef AFSIFS
             SetEvent(WaitToTerminate);
-#else
-            SetEvent(DoTerminate);
-			dc_release_hooks();
+#ifdef AFSIFS
+	    dc_release_hooks();
 #endif
         }
     }

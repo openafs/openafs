@@ -83,9 +83,6 @@ struct user_map_entry user_map[MAX_AFS_USERS];
 
 CRITICAL_SECTION mapLock, scp_list_lock;
 
-/* an event set by the controlling program to cause worker threads to terminate */
-extern HANDLE DoTerminate;
-
 scp_status_t *scp_list_head = NULL;
 
 
@@ -404,7 +401,7 @@ ifs_ImpersonateClient(LARGE_INTEGER user_id)
 /****************************/
 /* upcalls                  */
 /****************************/
-uc_namei(WCHAR *name, ULONG *fid)	/* performs name<->fid mapping, and enters it into table */
+long uc_namei(WCHAR *name, ULONG *fid)	/* performs name<->fid mapping, and enters it into table */
 {
     char *buffer;				/* we support semi-infinite path lengths */
     long code;
@@ -472,7 +469,7 @@ uc_namei(WCHAR *name, ULONG *fid)	/* performs name<->fid mapping, and enters it 
 /* this should only be called right after open, so we do not need to stat file.
  * we only check the server's restrictions.  sharing violations are handled in the
  * kernel. the access mode we grant sticks with the file_object until its death. */
-uc_check_access(ULONG fid, ULONG access, ULONG *granted)
+long uc_check_access(ULONG fid, ULONG access, ULONG *granted)
 {
     ULONG afs_acc, afs_gr;
     cm_scache_t *scp;
@@ -537,7 +534,7 @@ uc_check_access(ULONG fid, ULONG access, ULONG *granted)
     return 0;
 }
 
-uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *granted, ULONG *fid)
+long uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *granted, ULONG *fid)
 {
     char *buffer;					/* we support semi-infinite path lengths */
     long code;
@@ -610,7 +607,7 @@ uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *
 
 /* this does not fill the attribs member completely.  additional flags must
    be added in the kernel, such as read-only. */
-uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
+long uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
 		LARGE_INTEGER *access, LARGE_INTEGER *change, LARGE_INTEGER *written)
 {
     cm_scache_t *scp;
@@ -640,7 +637,7 @@ uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
 }
 
 /* set atime, mtime, etc. */
-uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER access,
+long uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER access,
 		   LARGE_INTEGER change, LARGE_INTEGER written)
 {
     return IFSL_GENERIC_FAILURE;
@@ -722,7 +719,7 @@ long uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *d
 /* FIXFIX: this does not catch all overquota errors, because the file
  * is not necessarily written to the server when this returns. */
 /* write data to a file */
-uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data)
+long uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data)
 {
     ULONG code;
     cm_scache_t *scp;
@@ -739,13 +736,14 @@ uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *da
     return 0;
 }
 
-uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid)
+long uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid)
 {
     int code;
     cm_req_t req;
     char *curdir, *curfile, *newdir, *newfile;
     cm_scache_t *dscp1, *dscp2, *scp;
     char b1[MAX_PATH], b2[MAX_PATH], b3[MAX_PATH];
+    wchar_t b3_w[MAX_PATH];
 
     code = !(scp = ifs_FindScp(fid));
     if (!code)
@@ -778,8 +776,8 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
             {
                 strcat(b3, "\\");
                 strcat(b3, b2);
-		// TODO: Must convert b3 to type WCHAR*
-                uc_namei(b3, new_fid);
+		mbstowcs(b3_w, b3, MAX_PATH);
+                uc_namei(b3_w, new_fid);
             }
             else
             {
@@ -904,7 +902,7 @@ long uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count,
     ULONG code;
     char buffer[2048];
     cm_req_t req;
-    cm_scache_t *scp, *child_scp;
+    cm_scache_t *scp;
     readdir_context_t context;
     LARGE_INTEGER cookie;
 
@@ -947,7 +945,7 @@ long uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count,
     return code;
 }
 
-uc_close(ULONG fid)
+long uc_close(ULONG fid)
 {
     cm_scache_t *scp;
     cm_req_t req;
@@ -988,7 +986,7 @@ uc_close(ULONG fid)
     return 0;
 }
 
-uc_unlink(WCHAR *name)
+long uc_unlink(WCHAR *name)
 {
     char buffer[2048];
     long code;
@@ -1020,7 +1018,7 @@ uc_unlink(WCHAR *name)
 }
 
 
-int uc_ioctl_write(ULONG length, char *data, ULONG_PTR *key)
+long uc_ioctl_write(ULONG length, char *data, ULONG_PTR *key)
 {
     smb_ioctl_t *iop;
 
@@ -1035,11 +1033,11 @@ int uc_ioctl_write(ULONG length, char *data, ULONG_PTR *key)
     return 0;
 }
 
-int uc_ioctl_read(ULONG_PTR key, ULONG *length, char *data)
+long uc_ioctl_read(ULONG_PTR key, ULONG *length, char *data)
 {
     smb_ioctl_t *iop;
 
-    iop = key;
+    iop = (smb_ioctl_t *)key;
     osi_assert(iop);
 
     cm_HoldUser(userp);
@@ -1130,8 +1128,8 @@ DWORD WINAPI ifs_MainLoop(LPVOID param)
     while (1)
     {
 	/* just check if the event is already signalled, do not wait */
-	if (WaitForSingleObject(DoTerminate, 0) == WAIT_OBJECT_0)
-		break;
+	if (WaitForSingleObject(WaitToTerminate, 0) == WAIT_OBJECT_0)
+	    break;
 
 	/* read request... */
 	st = ReadFile(pipe, bufIn, TRANSFER_BUF_SIZE, &lenIn, NULL);

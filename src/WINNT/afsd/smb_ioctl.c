@@ -138,11 +138,7 @@ smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
             return CM_ERROR_TOOBIG;
 
         /* check for no such proc */
-	if (fidp->flags & SMB_FID_IOCTL)
-	    procp = smb_ioctlProcsp[opcode];
-	else
-	    procp = NULL;
-
+	procp = smb_ioctlProcsp[opcode];
         if (procp == NULL) 
             return CM_ERROR_BADOP;
 

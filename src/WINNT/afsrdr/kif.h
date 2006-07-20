@@ -30,23 +30,24 @@
 
 
 /* this is based on BUF_FILEHASH, but we were not getting unique hashes */
-#define FID_HASH_FN(fidp)		((((fidp)->vnode + \
-					   ((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	+ \
-					   (fidp)->volume + \
-					   (fidp)->cell)))
+#define FID_HASH_FN(fidp) \
+    ((((fidp)->vnode + \
+    ((fidp)->unique << 13) + ((fidp)->unique >> (32-13)) + \
+    (fidp)->volume + \
+    (fidp)->cell)))
 
 
 /* dirent information */
 struct readdir_data
-	{
-	LARGE_INTEGER cookie;
-	long offset;
-	LARGE_INTEGER creation, access, write, change, size;
-	ULONG attribs, name_length;			/* chars */
-	CCHAR short_name_length;			/* chars */
-	WCHAR short_name[14];
-	WCHAR name[];
-	};
+{
+    LARGE_INTEGER cookie;
+    long offset;
+    LARGE_INTEGER creation, access, write, change, size;
+    ULONG attribs, name_length;			/* chars */
+    CCHAR short_name_length;			/* chars */
+    WCHAR short_name[14];
+    WCHAR name[];
+};
 typedef struct readdir_data readdir_data_t;
 
 
@@ -56,35 +57,35 @@ typedef struct readdir_data readdir_data_t;
 
 #define IFSL_SUCCESS				(IFSL_SUCCESS_BASE + 0)
 #define IFSL_DOES_NOT_EXIST			(IFSL_FAIL_BASE + 1)
-#define IFSL_NOT_IMPLEMENTED		(IFSL_FAIL_BASE + 2)
+#define IFSL_NOT_IMPLEMENTED			(IFSL_FAIL_BASE + 2)
 #define IFSL_END_OF_ENUM			(IFSL_SUCCESS_BASE + 3)
 #define IFSL_CANNOT_MAKE			(IFSL_FAIL_BASE + 4)
 #define IFSL_END_OF_FILE			(IFSL_SUCCESS_BASE + 5)
 #define IFSL_NO_ACCESS				(IFSL_FAIL_BASE + 6)
-#define IFSL_BUFFER_TOO_SMALL		(IFSL_FAIL_BASE + 7)
-#define IFSL_SHARING_VIOLATION		(IFSL_FAIL_BASE + 8)
+#define IFSL_BUFFER_TOO_SMALL			(IFSL_FAIL_BASE + 7)
+#define IFSL_SHARING_VIOLATION			(IFSL_FAIL_BASE + 8)
 #define IFSL_BAD_INPUT				(IFSL_FAIL_BASE + 9)
-#define IFSL_GENERIC_FAILURE		(IFSL_FAIL_BASE + 10)
+#define IFSL_GENERIC_FAILURE			(IFSL_FAIL_BASE + 10)
 #define IFSL_OPEN_CREATED			(IFSL_SUCCESS_BASE + 11)
 #define IFSL_OPEN_EXISTS			(IFSL_FAIL_BASE + 12)
 #define IFSL_OPEN_OPENED			(IFSL_SUCCESS_BASE + 13)
-#define IFSL_OPEN_OVERWRITTEN		(IFSL_SUCCESS_BASE + 14)
-#define IFSL_OPEN_SUPERSCEDED		(IFSL_SUCCESS_BASE + 15)
+#define IFSL_OPEN_OVERWRITTEN			(IFSL_SUCCESS_BASE + 14)
+#define IFSL_OPEN_SUPERSCEDED			(IFSL_SUCCESS_BASE + 15)
 #define IFSL_BADFILENAME			(IFSL_FAIL_BASE + 16)
 #define IFSL_READONLY				(IFSL_FAIL_BASE + 17)
 #define IFSL_IS_A_DIR				(IFSL_FAIL_BASE + 18)
-#define IFSL_PATH_DOES_NOT_EXIST	(IFSL_FAIL_BASE + 19)
+#define IFSL_PATH_DOES_NOT_EXIST		(IFSL_FAIL_BASE + 19)
 #define IFSL_IS_A_FILE				(IFSL_FAIL_BASE + 20)
 #define IFSL_NO_FILE				(IFSL_FAIL_BASE + 21)
 #define IFSL_NOT_EMPTY				(IFSL_FAIL_BASE + 22)
 #define IFSL_RPC_TIMEOUT			(IFSL_FAIL_BASE + 23)
 #define IFSL_OVERQUOTA				(IFSL_FAIL_BASE + 24)
-#define IFSL_MEMORY					(IFSL_FAIL_BASE + 25)
-#define IFSL_UNSPEC					(IFSL_FAIL_BASE + 26)
+#define IFSL_MEMORY				(IFSL_FAIL_BASE + 25)
+#define IFSL_UNSPEC				(IFSL_FAIL_BASE + 26)
 
 
 /* ioctl codes */
-#define IOCTL_AFSRDR_IOCTL		CTL_CODE(IOCTL_DISK_BASE, 0x007, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+#define IOCTL_AFSRDR_IOCTL	CTL_CODE(IOCTL_DISK_BASE, 0x007, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_AFSRDR_DOWNCALL	CTL_CODE(IOCTL_DISK_BASE, 0x008, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_AFSRDR_GET_PATH	CTL_CODE(IOCTL_DISK_BASE, 0x009, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 

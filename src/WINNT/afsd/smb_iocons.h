@@ -43,7 +43,7 @@ struct sbstruct {
 
 #define CM_IOCTLCACHEPARMS		16
 typedef struct cm_cacheParms {
-	long parms[CM_IOCTLCACHEPARMS];
+        afs_uint64 parms[CM_IOCTLCACHEPARMS];
 } cm_cacheParms_t;
 
 /* set cell flags */
