@@ -1655,6 +1655,7 @@ NTSTATUS AfsRdrSetInfo(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
     SYNC_FAIL(STATUS_UNSUCCESSFUL);
 }       
 
+long
 dc_break_callback(ULONG fid)
 {
     afs_fcb_t *fcb;
@@ -1699,9 +1700,11 @@ dc_break_callback(ULONG fid)
     return 0;
 }
 
-dc_release_hooks()
+long
+dc_release_hooks(void)
 {
     KeSetEvent(&comExt->cancelEvent, 0, FALSE);
+    return 0;
 }
 
 /**********************************************************

@@ -109,4 +109,4 @@ long uc_flush(ULONG fid);
 
 /* downcalls */
 long dc_break_callback(ULONG fid);
-long dc_release_hooks();
+long dc_release_hooks(void);
