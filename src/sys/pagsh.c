@@ -15,6 +15,9 @@ RCSID
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
+#ifdef AFS_AIX51_ENV
+#include <sys/cred.h>
+#endif
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,6 +89,13 @@ main(int argc, char *argv[])
 static afs_uint32
 curpag(void)
 {
+#if defined(AFS_AIX51_ENV)
+    afs_int32 pag;
+
+    if (get_pag(PAG_AFS, &pag) < 0 || pag == 0)
+        pag = -1;
+    return pag;
+#else
     afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -109,6 +119,7 @@ curpag(void)
 	    return -1;
     }
     return -1;
+#endif
 }
 
 int
