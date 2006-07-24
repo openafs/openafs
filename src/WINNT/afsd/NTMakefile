@@ -239,7 +239,8 @@ LOGON_DLLSDKLIBS =\
 	ole32.lib \
 	adsiid.lib \
 	activeds.lib \
-    userenv.lib
+	user32.lib \
+        userenv.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
@@ -360,7 +361,7 @@ $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
 
 # afscpcc.exe
 $(EXEDIR)\afscpcc.exe: $(OUT)\afscpcc.obj $(OUT)\afscpcc.res $(LOGON_DLLLIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib userenv.lib
 	$(EXEPREP)
 
 

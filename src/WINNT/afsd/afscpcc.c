@@ -1,5 +1,5 @@
 /*
- * Copyright 2005, Secure Endpoints Inc.
+ * Copyright 2005,2006 Secure Endpoints Inc.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the MIT License.  
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     KFW_initialize();
 
-    return KFW_AFS_copy_system_file_to_default_cache(argv[1]);
+    return KFW_AFS_copy_file_cache_to_default_cache(argv[1]);
 }
 
 

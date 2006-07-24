@@ -90,7 +90,8 @@ EXEOBJS = \
 
 VCLIBS =\
 	comctl32.lib \
-	shell32.lib
+	shell32.lib \
+	userenv.lib
 
 EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
