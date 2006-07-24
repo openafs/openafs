@@ -53,13 +53,14 @@ CLIENTOBJS = \
     $(OUT)\RegistrySupport.obj 
 
 VCLIBS =\
-    iphlpapi.lib \
+    	iphlpapi.lib \
 	comctl32.lib \
 	shell32.lib \
 	uuid.lib \
 	ole32.lib \
 	mpr.lib \
-    netapi32.lib 
+	userenv.lib \
+    	netapi32.lib 
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \

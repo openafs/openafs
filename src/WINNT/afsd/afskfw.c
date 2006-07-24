@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 Secure Endpoints Inc.
+ * Copyright (c) 2004, 2005, 2006 Secure Endpoints Inc.
  * Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
  * 
@@ -60,6 +60,9 @@
 #undef  USE_KRB4
 #include "afskfw-int.h"
 #include "afskfw.h"
+#include <userenv.h>
+#include <Sddl.h>
+#include <Aclapi.h>
 
 #include <osilog.h>
 #include <afs/ptserver.h>
@@ -3492,6 +3495,103 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
     return success;
 }
 
+int 
+KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
+{
+    // SID_IDENTIFIER_AUTHORITY authority = SECURITY_NT_SID_AUTHORITY;
+    PSID pSystemSID = NULL;
+    DWORD SystemSIDlength, UserSIDlength;
+    PACL ccacheACL = NULL;
+    DWORD ccacheACLlength;
+    PTOKEN_USER pTokenUser = NULL;
+    DWORD retLen;
+    int ret = 0;  
+
+    /* Get System SID */
+    ConvertStringSidToSid(SDDL_LOCAL_SYSTEM, &pSystemSID);
+
+    /* Create ACL */
+    SystemSIDlength = GetLengthSid(pSystemSID);
+    ccacheACLlength = sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE)
+        + SystemSIDlength - sizeof(DWORD);
+
+    if (hUserToken) {
+	if (!GetTokenInformation(hUserToken, TokenUser, NULL, 0, &retLen))
+	{
+	    if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+		pTokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
+
+		GetTokenInformation(hUserToken, TokenUser, pTokenUser, retLen, &retLen);
+	    }		 
+	}
+
+	if (pTokenUser) {
+	    UserSIDlength = GetLengthSid(pTokenUser->User.Sid);
+
+	    ccacheACLlength += sizeof(ACCESS_ALLOWED_ACE) + UserSIDlength 
+		- sizeof(DWORD);
+	}
+    }
+
+    ccacheACL = GlobalAlloc(GMEM_FIXED, ccacheACLlength);
+    InitializeAcl(ccacheACL, ccacheACLlength, ACL_REVISION);
+    AddAccessAllowedAceEx(ccacheACL, ACL_REVISION, 0,
+                         STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL,
+                         pSystemSID);
+    if (pTokenUser) {
+	AddAccessAllowedAceEx(ccacheACL, ACL_REVISION, 0,
+			     STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL,
+			     pTokenUser->User.Sid);
+	if (!SetNamedSecurityInfo( filename, SE_FILE_OBJECT,
+				   DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+				   NULL,
+				   NULL, 
+				   ccacheACL,
+				   NULL)) {
+	    ret = 1;
+	}
+	if (!SetNamedSecurityInfo( filename, SE_FILE_OBJECT,
+				   OWNER_SECURITY_INFORMATION,
+				   pTokenUser->User.Sid,
+				   NULL, 
+				   NULL,
+				   NULL)) {
+	    ret = 1;
+	}
+    } else {
+	if (!SetNamedSecurityInfo( filename, SE_FILE_OBJECT,
+				   DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+				   NULL,
+				   NULL, 
+				   ccacheACL,
+				   NULL)) {
+	    ret = 1;
+	}
+    }
+
+    if (pSystemSID)
+	LocalFree(pSystemSID);
+    if (pTokenUser)
+	LocalFree(pTokenUser);
+    if (ccacheACL)
+	GlobalFree(ccacheACL);
+    return ret;
+}
+
+int 
+KFW_AFS_obtain_user_temp_directory(HANDLE hUserToken, char *newfilename, int size)
+{
+    int  retval = 0;
+    DWORD dwSize = size-1;	/* leave room for nul */
+
+    *newfilename = '\0';
+
+    if ( !ExpandEnvironmentStringsForUser(hUserToken, "%TEMP%", newfilename, size) &&
+	 !ExpandEnvironmentStringsForUser(hUserToken, "%TMP%", newfilename, size))
+	return 1;
+    return 0;
+}
+
 void
 KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 {
@@ -3537,6 +3637,8 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     code = pkrb5_cc_initialize(ctx, ncc, princ);
     if (code) goto cleanup;
 
+    KFW_AFS_set_file_cache_dacl(filename, NULL);
+
     code = pkrb5_cc_copy_creds(ctx,cc,ncc);
 
   cleanup:
@@ -3558,7 +3660,7 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 }
 
 int
-KFW_AFS_copy_system_file_to_default_cache(char * filename)
+KFW_AFS_copy_file_cache_to_default_cache(char * filename)
 {
     char cachename[264] = "FILE:";
     krb5_context		ctx = 0;
