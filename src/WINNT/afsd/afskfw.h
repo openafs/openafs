@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003 SkyRope, LLC
+* Copyright (c) 2004, 2005, 2006 Secure Endpoints Inc.
+* Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without 
@@ -62,6 +63,10 @@ BOOL KFW_probe_kdc(struct afsconf_cell *);
 int  KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
 void KFW_import_windows_lsa(void);
 BOOL KFW_AFS_get_lsa_principal(char *, DWORD *);
+int  KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken);
+int  KFW_AFS_obtain_user_temp_directory(HANDLE hUserToken, char *newfilename, int size);
+int  KFW_AFS_copy_file_cache_to_default_cache(char * filename);
+
 
 /* These functions are only to be used in the afslogon.dll */
 void KFW_AFS_copy_cache_to_system_file(char *, char *);

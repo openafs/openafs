@@ -161,7 +161,7 @@ PSECURITY_ATTRIBUTES CreateCacheFileSA()
     psa = GlobalAlloc(GMEM_FIXED, sizeof(SECURITY_ATTRIBUTES));
     psa->nLength = sizeof(SECURITY_ATTRIBUTES);
     psa->lpSecurityDescriptor = psd;
-    psa->bInheritHandle = TRUE;
+    psa->bInheritHandle = FALSE;
 
     return psa;
 }       
