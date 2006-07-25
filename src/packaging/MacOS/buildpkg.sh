@@ -60,6 +60,13 @@ if [ $firstpass = yes ]; then
     if [ ! -f CellServDB ]; then
        echo "A CellServDB file must be placed in the working directory"
        die=1
+    else
+       if grep -q 'GCO Public CellServDB' CellServDB ; then
+         touch CellServDB
+       else
+          echo "A proper CellServDB file must be placed in the working directory"
+          die=1
+       fi
     fi
     FILES="ReadMe.rtf License.rtf CellServDB.list OpenAFS.info OpenAFS.post_install OpenAFS.pre_upgrade csrvdbmerge.pl 2.0.txt"
     for f in $FILES; do
