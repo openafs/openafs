@@ -963,6 +963,7 @@ setkey(key)
 }
 #endif
 
+#if 0
 /*
  * "encrypt" routine (for backwards compatibility)
  */
@@ -993,6 +994,7 @@ encrypt(block, flag)
     }
     return (0);
 }
+#endif
 
 #ifdef CRYPT_DEBUG
 STATIC
