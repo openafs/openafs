@@ -3500,15 +3500,23 @@ KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
 {
     // SID_IDENTIFIER_AUTHORITY authority = SECURITY_NT_SID_AUTHORITY;
     PSID pSystemSID = NULL;
-    DWORD SystemSIDlength, UserSIDlength;
+    DWORD SystemSIDlength = 0, UserSIDlength = 0;
     PACL ccacheACL = NULL;
-    DWORD ccacheACLlength;
+    DWORD ccacheACLlength = 0;
     PTOKEN_USER pTokenUser = NULL;
     DWORD retLen;
+    DWORD gle;
     int ret = 0;  
 
+    if (!filename) {
+	return 1;
+    }
+
     /* Get System SID */
-    ConvertStringSidToSid(SDDL_LOCAL_SYSTEM, &pSystemSID);
+    if (!ConvertStringSidToSid("S-1-5-18", &pSystemSID)) {
+	ret = 1;
+	goto cleanup;
+    }
 
     /* Create ACL */
     SystemSIDlength = GetLengthSid(pSystemSID);
@@ -3533,7 +3541,11 @@ KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
 	}
     }
 
-    ccacheACL = GlobalAlloc(GMEM_FIXED, ccacheACLlength);
+    ccacheACL = (PACL) LocalAlloc(LPTR, ccacheACLlength);
+    if (!ccacheACL) {
+ 	ret = 1;
+ 	goto cleanup;
+     }
     InitializeAcl(ccacheACL, ccacheACLlength, ACL_REVISION);
     AddAccessAllowedAceEx(ccacheACL, ACL_REVISION, 0,
                          STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL,
@@ -3548,7 +3560,9 @@ KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
 				   NULL, 
 				   ccacheACL,
 				   NULL)) {
-	    ret = 1;
+ 	    gle = GetLastError();
+ 	    if (gle != ERROR_NO_TOKEN)
+		ret = 1;
 	}
 	if (!SetNamedSecurityInfo( filename, SE_FILE_OBJECT,
 				   OWNER_SECURITY_INFORMATION,
@@ -3556,7 +3570,9 @@ KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
 				   NULL, 
 				   NULL,
 				   NULL)) {
-	    ret = 1;
+ 	    gle = GetLastError();
+ 	    if (gle != ERROR_NO_TOKEN)
+		ret = 1;
 	}
     } else {
 	if (!SetNamedSecurityInfo( filename, SE_FILE_OBJECT,
@@ -3565,16 +3581,19 @@ KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken)
 				   NULL, 
 				   ccacheACL,
 				   NULL)) {
-	    ret = 1;
+ 	    gle = GetLastError();
+ 	    if (gle != ERROR_NO_TOKEN)
+		ret = 1;
 	}
     }
 
+  cleanup:
     if (pSystemSID)
 	LocalFree(pSystemSID);
     if (pTokenUser)
 	LocalFree(pTokenUser);
     if (ccacheACL)
-	GlobalFree(ccacheACL);
+	LocalFree(ccacheACL);
     return ret;
 }
 
@@ -3583,28 +3602,36 @@ KFW_AFS_obtain_user_temp_directory(HANDLE hUserToken, char *newfilename, int siz
 {
     int  retval = 0;
     DWORD dwSize = size-1;	/* leave room for nul */
-
-    *newfilename = '\0';
-
-    if ( !ExpandEnvironmentStringsForUser(hUserToken, "%TEMP%", newfilename, size) &&
-	 !ExpandEnvironmentStringsForUser(hUserToken, "%TMP%", newfilename, size))
-	return 1;
+    DWORD dwLen  = 0;
+ 
+    if (!hUserToken || !newfilename || size <= 0)
+ 	return;
+ 
+     *newfilename = '\0';
+ 
+     dwLen = ExpandEnvironmentStringsForUser(hUserToken, "%TEMP%", newfilename, dwSize);
+     if ( !dwLen || dwLen > dwSize )
+ 	dwLen = ExpandEnvironmentStringsForUser(hUserToken, "%TMP%", newfilename, dwSize);
+     if ( !dwLen || dwLen > dwSize )
+ 	return 1;
+ 
+     newfilename[dwSize] = '\0';
     return 0;
 }
 
 void
 KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 {
-    char filename[256];
+    char filename[MAX_PATH] = "";
     DWORD count;
-    char cachename[264] = "FILE:";
+    char cachename[MAX_PATH + 8] = "FILE:";
     krb5_context		ctx = 0;
     krb5_error_code		code;
     krb5_principal              princ = 0;
     krb5_ccache			cc  = 0;
     krb5_ccache                 ncc = 0;
 
-    if (!pkrb5_init_context)
+    if (!pkrb5_init_context || !user || !szLogonId)
         return;
 
     count = GetEnvironmentVariable("TEMP", filename, sizeof(filename));
@@ -3637,7 +3664,8 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     code = pkrb5_cc_initialize(ctx, ncc, princ);
     if (code) goto cleanup;
 
-    KFW_AFS_set_file_cache_dacl(filename, NULL);
+    code = KFW_AFS_set_file_cache_dacl(filename, NULL);
+    if (code) goto cleanup;
 
     code = pkrb5_cc_copy_creds(ctx,cc,ncc);
 
@@ -3662,7 +3690,7 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 int
 KFW_AFS_copy_file_cache_to_default_cache(char * filename)
 {
-    char cachename[264] = "FILE:";
+    char cachename[MAX_PATH + 8] = "FILE:";
     krb5_context		ctx = 0;
     krb5_error_code		code;
     krb5_principal              princ = 0;
@@ -3670,10 +3698,10 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
     krb5_ccache                 ncc = 0;
     int retval = 1;
 
-    if (!pkrb5_init_context)
+    if (!pkrb5_init_context || !filename)
         return 1;
 
-    if ( strlen(filename) + 6 > sizeof(cachename) )
+    if ( strlen(filename) + sizeof("FILE:") > sizeof(cachename) )
         return 1;
 
     strcat(cachename, filename);
