@@ -415,25 +415,25 @@ char * myCrt_2Dispatch(int i)
     default:
         return "unknown SMB op-2";
     case 0:
-        return "S(00)CreateFile";
+        return "S(00)CreateFile_ReceiveTran2Open";
     case 1:
-        return "S(01)FindFirst";
+        return "S(01)FindFirst_ReceiveTran2SearchDir";
     case 2:
-        return "S(02)FindNext";	/* FindNext */
+        return "S(02)FindNext_ReceiveTran2SearchDir";	/* FindNext */
     case 3:
         return "S(03)QueryFileSystem_ReceiveTran2QFSInfo";
     case 4:
-        return "S(04)??";
+        return "S(04)SetFileSystem_ReceiveTran2SetFSInfo";
     case 5:
-        return "S(05)QueryFileInfo_ReceiveTran2QPathInfo";
+        return "S(05)QueryPathInfo_ReceiveTran2QPathInfo";
     case 6:
-        return "S(06)SetFileInfo_ReceiveTran2SetPathInfo";
+        return "S(06)SetPathInfo_ReceiveTran2SetPathInfo";
     case 7:
-        return "S(07)SetInfoHandle_ReceiveTran2QFileInfo";
+        return "S(07)QueryFileInfo_ReceiveTran2QFileInfo";
     case 8:
-        return "S(08)??_ReceiveTran2SetFileInfo";
+        return "S(08)SetFileInfo_ReceiveTran2SetFileInfo";
     case 9:
-        return "S(09)??_ReceiveTran2FSCTL";
+        return "S(09)_ReceiveTran2FSCTL";
     case 10:
         return "S(0a)_ReceiveTran2IOCTL";
     case 11:
@@ -2336,6 +2336,32 @@ unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm)
 }
 
 /* return the parm'th parameter in the smbp packet */
+unsigned int smb_GetSMBParmLong(smb_packet_t *smbp, int parm)
+{
+    int parmCount;
+    unsigned char *parmDatap;
+
+    parmCount = *smbp->wctp;
+
+    if (parm + 1 >= parmCount) {
+	char s[100];
+
+	sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
+                parm, parmCount, smbp->ncb_length);
+	osi_Log3(smb_logp,"Bad SMB param %d out of %d, ncb len %d",
+                 parm, parmCount, smbp->ncb_length);
+#ifndef DJGPP
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_BAD_SMB_PARAM, 
+		 __FILE__, __LINE__, parm, parmCount, smbp->ncb_length);
+#endif /* !DJGPP */
+        osi_panic(s, __FILE__, __LINE__);
+    }
+    parmDatap = smbp->wctp + (2*parm) + 1;
+        
+    return parmDatap[0] + (parmDatap[1] << 8) + (parmDatap[2] << 16) + (parmDatap[3] << 24);
+}
+
+/* return the parm'th parameter in the smbp packet */
 unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset)
 {
     int parmCount;
@@ -2386,7 +2412,7 @@ void smb_SetSMBParmLong(smb_packet_t *smbp, int slot, unsigned int parmValue)
     *parmDatap++ = parmValue & 0xff;
     *parmDatap++ = (parmValue>>8) & 0xff;
     *parmDatap++ = (parmValue>>16) & 0xff;
-    *parmDatap++ = (parmValue>>24) & 0xff;
+    *parmDatap   = (parmValue>>24) & 0xff;
 }
 
 void smb_SetSMBParmDouble(smb_packet_t *smbp, int slot, char *parmValuep)
@@ -3191,8 +3217,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (VistaProtoIndex != -1) {
         protoIndex = VistaProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
-    }
-    if (NTProtoIndex != -1) {
+    } else if (NTProtoIndex != -1) {
         protoIndex = NTProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
     }
@@ -3209,7 +3234,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (protoIndex == -1)
         return CM_ERROR_INVAL;
-    else if (NTProtoIndex != -1) {
+    else if (VistaProtoIndex != 1 || NTProtoIndex != -1) {
         smb_SetSMBParm(outp, 0, protoIndex);
         if (smb_authType != SMB_AUTH_NONE) {
             smb_SetSMBParmByte(outp, 1,
@@ -3254,7 +3279,9 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
-               NTNEGOTIATE_CAPABILITY_NTSMB;
+               NTNEGOTIATE_CAPABILITY_NTSMB |
+	       NTNEGOTIATE_CAPABILITY_LARGE_READX |
+	       NTNEGOTIATE_CAPABILITY_LARGE_WRITEX; 
 
         if ( smb_authType == SMB_AUTH_EXTENDED )
             caps |= NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY;
@@ -6388,9 +6415,11 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
 long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    osi_hyper_t offset;
-    long count, written = 0, total_written = 0;
     unsigned short fd;
+    unsigned short count;
+    osi_hyper_t offset;
+    unsigned short hint;
+    long written = 0, total_written = 0;
     unsigned pid;
     smb_fid_t *fidp;
     long code = 0;
@@ -6402,7 +6431,8 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fd = smb_GetSMBParm(inp, 0);
     count = smb_GetSMBParm(inp, 1);
     offset.HighPart = 0;	/* too bad */
-    offset.LowPart = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
+    offset.LowPart = smb_GetSMBParmLong(inp, 2);
+    hint = smb_GetSMBParm(inp, 4);
 
     op = smb_GetSMBData(inp, NULL);
     op = smb_ParseDataBlock(op, NULL, &inDataBlockCount);
@@ -6412,36 +6442,21 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+	osi_Log0(smb_logp, "smb_ReceiveCoreWrite fid not found");
         return CM_ERROR_BADFD;
+    }
         
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
         code = smb_IoctlWrite(fidp, vcp, inp, outp);
 	smb_ReleaseFID(fidp);
+	osi_Log1(smb_logp, "smb_ReceiveCoreWrite ioctl code 0x%x", code);
 	return code;
     }
     lock_ReleaseMutex(&fidp->mx);
     userp = smb_GetUserFromVCP(vcp, inp);
-
-    /* special case: 0 bytes transferred means truncate to this position */
-    if (count == 0) {
-        cm_req_t req;
-
-        cm_InitReq(&req);
-
-        truncAttr.mask = CM_ATTRMASK_LENGTH;
-        truncAttr.length.LowPart = offset.LowPart;
-        truncAttr.length.HighPart = 0;
-        lock_ObtainMutex(&fidp->mx);
-        code = cm_SetAttr(fidp->scp, &truncAttr, userp, &req);
-	fidp->flags |= SMB_FID_LENGTHSETDONE;
-        lock_ReleaseMutex(&fidp->mx);
-        smb_SetSMBParm(outp, 0, /* count */ 0);
-        smb_SetSMBDataLength(outp, 0);
-        goto done;
-    }
 
     {
         cm_key_t key;
@@ -6460,8 +6475,30 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
         lock_ReleaseMutex(&fidp->scp->mx);
 
-        if (code)
+        if (code) {
+	    osi_Log1(smb_logp, "smb_ReceiveCoreWrite lock check failure 0x%x", code);
             goto done;
+	}
+    }
+
+    /* special case: 0 bytes transferred means truncate to this position */
+    if (count == 0) {
+        cm_req_t req;
+
+	osi_Log1(smb_logp, "smb_ReceiveCoreWrite truncation to length 0x%x", offset.LowPart);
+        
+        cm_InitReq(&req);
+
+        truncAttr.mask = CM_ATTRMASK_LENGTH;
+        truncAttr.length.LowPart = offset.LowPart;
+        truncAttr.length.HighPart = 0;
+        lock_ObtainMutex(&fidp->mx);
+        code = cm_SetAttr(fidp->scp, &truncAttr, userp, &req);
+	fidp->flags |= SMB_FID_LENGTHSETDONE;
+        lock_ReleaseMutex(&fidp->mx);
+	smb_SetSMBParm(outp, 0, 0 /* count */);
+	smb_SetSMBDataLength(outp, 0);
+	goto done;
     }
 
     /*
@@ -6498,10 +6535,15 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         written = 0;
     }
     
+    osi_Log2(smb_logp, "smb_ReceiveCoreWrite total written 0x%x code 0x%x",
+             total_written, code);
+        
     /* set the packet data length to 3 bytes for the data block header,
      * plus the size of the data.
      */
     smb_SetSMBParm(outp, 0, total_written);
+    smb_SetSMBParmLong(outp, 1, offset.LowPart);
+    smb_SetSMBParm(outp, 3, hint);
     smb_SetSMBDataLength(outp, 0);
 
   done:

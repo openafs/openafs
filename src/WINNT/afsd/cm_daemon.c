@@ -278,10 +278,6 @@ void cm_Daemon(long parm)
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 
     while (daemon_ShutdownFlag == 0) {
-	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
-        if (daemon_ShutdownFlag == 1)
-            return;
-
 	if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
 	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
@@ -364,6 +360,10 @@ void cm_Daemon(long parm)
                 SetEvent(WaitToTerminate);
             }
         }
+
+	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
+        if (daemon_ShutdownFlag == 1)
+            return;
     }
 }       
 

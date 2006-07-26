@@ -2464,7 +2464,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
     case SMB_INFO_UNIX: 	/* CIFS Unix Info */
     case SMB_INFO_MACOS: 	/* Mac FS Info */
     default: 
-	return CM_ERROR_INVAL;
+	return CM_ERROR_BADOP;
     }
 
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
@@ -3089,7 +3089,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
         smb_ReleaseFID(fidp);
         return 0;
     }
@@ -3207,7 +3207,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     if (infoLevel > SMB_SET_FILE_END_OF_FILE_INFO || infoLevel < SMB_SET_FILE_BASIC_INFO) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
         smb_ReleaseFID(fidp);
         return 0;
     }
@@ -3336,6 +3336,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         cm_attr_t attr;
 
         attr.mask = CM_ATTRMASK_LENGTH;
+		attr.length.HighPart = 0;
         attr.length.LowPart = size;
         code = cm_SetAttr(scp, &attr, userp, &req);
     }       
