@@ -603,6 +603,8 @@ extern void smb_SetSMBDataLength(smb_packet_t *smbp, unsigned int dsize);
 
 extern unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm);
 
+extern unsigned int smb_GetSMBParmLong(smb_packet_t *smbp, int parm);
+
 extern unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset);
 
 extern void smb_SetSMBParm(smb_packet_t *smbp, int slot, unsigned int parmValue);
