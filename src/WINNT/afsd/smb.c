@@ -3279,9 +3279,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
-               NTNEGOTIATE_CAPABILITY_NTSMB |
-	       NTNEGOTIATE_CAPABILITY_LARGE_READX |
-	       NTNEGOTIATE_CAPABILITY_LARGE_WRITEX; 
+               NTNEGOTIATE_CAPABILITY_NTSMB;
 
         if ( smb_authType == SMB_AUTH_EXTENDED )
             caps |= NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY;
