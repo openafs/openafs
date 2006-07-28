@@ -1,3 +1,24 @@
+Since 1.5.3:
+
+ * Corrections to the Integrated Logon functionality that permits
+   Kerberos 5 TGTs to be communicated into the user session.  The
+   transfer is now more secure and succeeds when the user does not
+   have read permission to the %SystemRoot%\TEMP directory.
+
+ * NSIS installer updated to version 2.18
+
+ * WiX installer updated to version 2.0.4221.0
+
+ * Updates to the IFS functionality for 64-bit correctness and 
+   permit compilation.	 The IFS functionality works for pioctl()
+   operations but not much else at this point.
+
+ * A major re-write of the OpenAFS implementation of the CIFS Tran2
+   query and set functions.  
+
+ * Ignore the Windows CIFS client session timeout entirely.  Timeout
+   only after the AFS Hard Dead Timeout period expires.
+
 Since 1.5.2:
 
  * move headers, libraries, and samples from OpenAFS\Client to 

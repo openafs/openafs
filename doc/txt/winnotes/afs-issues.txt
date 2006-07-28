@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.5.0000 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.3 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -62,8 +62,6 @@ in smb_Listener() thread.
 
 (18) Memory Mapped File support
 
-(19) Large file support [both SMB/CIFS and AFS]
-
 (20) NSIS Installer issues
      (a) integration with KFW install script
      (b) Optional removal of AFS Server volumes
@@ -93,8 +91,6 @@ in smb_Listener() thread.
      The creation of submounts should only be possible via afsshare.exe 
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
-
-(24) No support for byte range locking (or locking at all)  
 
 -------------------------------------------------------------------------
 List of unfunded projects:
@@ -135,9 +131,8 @@ List of unfunded projects:
         13. need to add support for all of the new registry values since 1.2.8
   10. Add support for configurable Icon file representing AFS folders within the Explorer Shell
   11. Documentation Documentation Documentation
-  12. Large File support (> 2GB) in SMB/CIFS client
   13. Integrate KFW installation into the NSIS and MSI installers
-  14. Add support for byte range locking to AFS (requires changes to the servers)
+  14. Add support for server side byte range locking.
   15. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
