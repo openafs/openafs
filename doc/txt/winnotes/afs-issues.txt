@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.4.0050 release of OpenAFS 
+This file is a rough list of known issues with the 1.4.1xxx release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -34,9 +34,6 @@ in smb_Listener() thread.
      be automatically prompted for different cells
 
 (12) AFS Integrated Logon:
-(12b) If using Kerberos, need to figure out a means of passing credentials
-      into the user space until such time as I finish the new credential
-      cache service.
 (12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
 
@@ -75,7 +72,7 @@ in smb_Listener() thread.
 (22) CIFS Remote Administration Protocol implementation is incomplete.
      Notifications are not made to requestors when the view of a file
      or folder changes due to token acquisition; token expiration; or
-     token destruction
+     token destruction.
 
 (23) Remove submount creation as a side effect of AFS drive mapping.
      
@@ -93,8 +90,6 @@ in smb_Listener() thread.
      The creation of submounts should only be possible via afsshare.exe 
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
-
-(24) No support for byte range locking (or locking at all)  
 
 -------------------------------------------------------------------------
 List of unfunded projects:

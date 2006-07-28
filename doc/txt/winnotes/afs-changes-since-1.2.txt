@@ -1,3 +1,13 @@
+Since 1.4.2-beta2:
+ * Corrections to the Integrated Logon functionality that permits
+   Kerberos 5 TGTs to be communicated into the user session.  The
+   transfer is now more secure and succeeds when the user does not
+   have read permission to the %SystemRoot%\TEMP directory.
+
+ * NSIS installer updated to version 2.18
+
+ * WiX installer updated to version 2.0.4221.0
+
 Since 1.4.2-beta1: 
  * move headers, libraries, and samples from OpenAFS\Client to 
    OpenAFS\SDK
@@ -29,7 +39,7 @@ Since 1.4.2-beta1:
 
  * Allow Freelance Scache entries to be recycled
 
-Since 1.4.1d:
+Since 1.4.1d: 1.4.2-beta1 released 14 June 2006
 
  * A deadlock was detected when performing "fs flushall" if the 
    file server reports VNOVNODE.   The scp->createBufferLock is 
