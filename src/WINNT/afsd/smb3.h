@@ -119,7 +119,8 @@ typedef struct {
 	    FILETIME       lastAccessTime;
 	    FILETIME       lastWriteTime;
 	    FILETIME       changeTime;
-	    unsigned short attributes;
+	    unsigned long  attributes;
+	    unsigned long  reserved;
 	} QPfileBasicInfo;
 	struct {
 	    LARGE_INTEGER  allocationSize;
@@ -127,6 +128,7 @@ typedef struct {
 	    unsigned long  numberOfLinks;
 	    unsigned char  deletePending;
 	    unsigned char  directory;
+	    unsigned short reserved;
 	} QPfileStandardInfo;
 	struct {
 	    unsigned long  eaSize;
@@ -140,7 +142,7 @@ typedef struct {
 	    FILETIME       lastAccessTime;
 	    FILETIME       lastWriteTime;
 	    FILETIME       changeTime;
-	    unsigned short attributes;
+	    unsigned long  attributes;
 	    LARGE_INTEGER  allocationSize;
 	    LARGE_INTEGER  endOfFile;
 	    unsigned long  numberOfLinks;
@@ -185,7 +187,7 @@ typedef struct {
 	    FILETIME       lastAccessTime;
 	    FILETIME	   lastWriteTime;
 	    FILETIME	   lastChangeTime;
-	    unsigned short attributes;
+	    unsigned long  attributes;
 	} QFbasicInfo;
 	struct {
 	    LARGE_INTEGER  allocationSize;
@@ -245,6 +247,9 @@ extern long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
 extern long smb_ReceiveTran2SetFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2QFSInfoFid(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
 extern long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p,

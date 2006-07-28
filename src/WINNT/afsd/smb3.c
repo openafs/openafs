@@ -2433,12 +2433,24 @@ long smb_ReceiveTran2FindNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t 
     return CM_ERROR_BADOP;
 }
 
+long smb_ReceiveTran2QFSInfoFid(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+    unsigned short fid;
+    unsigned short infolevel;
+
+    infolevel = p->parmsp[0];
+    fid = p->parmsp[1];
+    osi_Log2(smb_logp, "T2 QFSInfoFid InfoLevel 0x%x fid 0x%x - NOT_SUPPORTED", infolevel, fid);
+    
+    return CM_ERROR_BADOP;
+}
+
 long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     smb_tran2Packet_t *outp;
     smb_tran2QFSInfo_t qi;
     int responseSize;
-    static char FSname[6] = {'A', 0, 'F', 0, 'S', 0};
+    static char FSname[8] = {'A', 0, 'F', 0, 'S', 0, 0, 0};
         
     osi_Log1(smb_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
 
@@ -2492,7 +2504,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
         memset((char *)&qi.u.FSvolumeInfo.vct, 0, 4);
         qi.u.FSvolumeInfo.vsn = 1234;
         qi.u.FSvolumeInfo.vnCount = 8;
-        memcpy(qi.u.FSvolumeInfo.label, "A\0F\0S\0\0", 8);
+        memcpy(qi.u.FSvolumeInfo.label, "A\0F\0S\0\0\0", 8);
         break;
 
     case SMB_QUERY_FS_SIZE_INFO: 
@@ -2522,10 +2534,10 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
          *	   we can't handle long (non-8.3) names,
          *	   despite our protestations to the contrary.
          */
-        qi.u.FSattributeInfo.attributes = 0x4013;
-        qi.u.FSattributeInfo.maxCompLength = 255;
-        qi.u.FSattributeInfo.FSnameLength = 6;
-        memcpy(qi.u.FSattributeInfo.FSname, FSname, 6);
+        qi.u.FSattributeInfo.attributes = 0x4003;
+        qi.u.FSattributeInfo.maxCompLength = MAX_PATH;
+        qi.u.FSattributeInfo.FSnameLength = sizeof(FSname);
+        memcpy(qi.u.FSattributeInfo.FSname, FSname, sizeof(FSname));
         break;
     }   
         
@@ -2637,8 +2649,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_user_t *userp;
     cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
-    smb_fid_t *fidp;
-    unsigned short fid;
     int delonclose = 0;
     long code = 0;
     char *pathp;
@@ -2647,16 +2657,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_req_t req;
 
     cm_InitReq(&req);
-
-    fid = p->parmsp[0];
-    fidp = smb_FindFID(vcp, fid, 0);
-    if (fidp) {
-	lock_ObtainMutex(&fidp->mx);
-	delonclose = fidp->flags & SMB_FID_DELONCLOSE;
-	lock_ReleaseMutex(&fidp->mx);
-	smb_ReleaseFID(fidp);
-	fidp = NULL;
-    }
 
     infoLevel = p->parmsp[0];
     if (infoLevel == SMB_INFO_IS_NAME_VALID) 
@@ -2825,15 +2825,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             goto done;
         }
 
-	qpi.u.QPfileAltNameInfo.fileNameLength = len * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileAltNameInfo.fileName, shortName, len);
+	qpi.u.QPfileAltNameInfo.fileNameLength = (len + 1) * 2;
+        mbstowcs((unsigned short *)qpi.u.QPfileAltNameInfo.fileName, shortName, len + 1);
 
         goto done;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
 	len = strlen(lastComp);
-	qpi.u.QPfileNameInfo.fileNameLength = len * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileNameInfo.fileName, lastComp, len);
+	qpi.u.QPfileNameInfo.fileNameLength = (len + 1) * 2;
+        mbstowcs((unsigned short *)qpi.u.QPfileNameInfo.fileName, lastComp, len + 1);
 
         goto done;
     }
@@ -2856,8 +2856,17 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileBasicInfo.changeTime = ft;
         extAttributes = smb_ExtAttributes(scp);
 	qpi.u.QPfileBasicInfo.attributes = extAttributes;
+	qpi.u.QPfileBasicInfo.reserved = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
+	smb_fid_t *fidp = smb_FindFIDByScache(vcp, scp);
+	if (fidp) {
+	    lock_ObtainMutex(&fidp->mx);
+	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
+	    lock_ReleaseMutex(&fidp->mx);
+	    smb_ReleaseFID(fidp);
+	}
+
         qpi.u.QPfileStandardInfo.allocationSize = scp->length;
         qpi.u.QPfileStandardInfo.endOfFile = scp->length;
         qpi.u.QPfileStandardInfo.numberOfLinks = scp->linkCount;
@@ -2866,6 +2875,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	    ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 	      scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 	      scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
+        qpi.u.QPfileStandardInfo.reserved = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         qpi.u.QPfileEaInfo.eaSize = 0;
@@ -2897,8 +2907,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPfileAllInfo.mode = 0;
 	qpi.u.QPfileAllInfo.alignmentRequirement = 0;
 	len = strlen(lastComp);
-	qpi.u.QPfileAllInfo.fileNameLength = len * 2;
-        mbstowcs((unsigned short *)qpi.u.QPfileAllInfo.fileName, lastComp, len);
+	qpi.u.QPfileAllInfo.fileNameLength = (len + 1) * 2;
+        mbstowcs((unsigned short *)qpi.u.QPfileAllInfo.fileName, lastComp, len + 1);
     }
 
     /* send and free the packets */
@@ -2924,53 +2934,36 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     return CM_ERROR_BADOP;
 #else
     long code = 0;
-    unsigned short fid;
     smb_fid_t *fidp;
     unsigned short infoLevel;
+    char * pathp;
     smb_tran2Packet_t *outp;
     smb_tran2QPathInfo_t *spi;
     cm_user_t *userp;
-    cm_scache_t *scp;
+    cm_scache_t *scp, *dscp;
     cm_req_t req;
+    cm_space_t *spacep;
+    char *tidPathp;
+    char *lastComp;
 
     cm_InitReq(&req);
 
-    fid = p->parmsp[0];
-    fidp = smb_FindFID(vcp, fid, 0);
-
-    if (fidp == NULL) {
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
-        return 0;
-    }
-
-    infoLevel = p->parmsp[1];
-    osi_Log2(smb_logp,"ReceiveTran2SetPathInfo type 0x%x fid %d", infoLevel, fid);
+    infoLevel = p->parmsp[0];
+    osi_Log1(smb_logp,"ReceiveTran2SetPathInfo type 0x%x", infoLevel);
     if (infoLevel != SMB_INFO_STANDARD && 
 	infoLevel != SMB_INFO_QUERY_EA_SIZE &&
 	infoLevel != SMB_INFO_QUERY_ALL_EAS) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
-        smb_ReleaseFID(fidp);
         return 0;
     }
 
-    lock_ObtainMutex(&fidp->mx);
-    if (!(fidp->flags & SMB_FID_OPENWRITE)) {
-	lock_ReleaseMutex(&fidp->mx);
-        smb_ReleaseFID(fidp);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
-        return 0;
-    }
-
-    scp = fidp->scp;
-    cm_HoldSCache(scp);
-    lock_ReleaseMutex(&fidp->mx);
-
-    outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, 0);
-
-    outp->totalParms = 2;
-    outp->totalData = 0;
+    pathp = (char *)(&p->parmsp[3]);
+    if (smb_StoreAnsiFilenames)
+	OemToChar(pathp,pathp);
+    osi_Log2(smb_logp, "T2 SetPathInfo infolevel 0x%x path %s", infoLevel,
+              osi_LogSaveString(smb_logp, pathp));
 
     userp = smb_GetTran2User(vcp, p);
     if (!userp) {
@@ -2978,6 +2971,110 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     	code = CM_ERROR_BADSMB;
     	goto done;
     }   
+
+    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if (code == CM_ERROR_TIDIPC) {
+        /* Attempt to use a TID allocated for IPC.  The client
+         * is probably looking for DCE RPC end points which we
+         * don't support OR it could be looking to make a DFS
+         * referral request. 
+         */
+        osi_Log0(smb_logp, "Tran2Open received IPC TID");
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
+
+    /*
+    * XXX Strange hack XXX
+    *
+    * As of Patch 7 (13 January 98), we are having the following problem:
+    * In NT Explorer 4.0, whenever we click on a directory, AFS gets
+    * requests to look up "desktop.ini" in all the subdirectories.
+    * This can cause zillions of timeouts looking up non-existent cells
+    * and volumes, especially in the top-level directory.
+    *
+    * We have not found any way to avoid this or work around it except
+    * to explicitly ignore the requests for mount points that haven't
+    * yet been evaluated and for directories that haven't yet been
+    * fetched.
+    */
+    if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
+        spacep = cm_GetSpace();
+        smb_StripLastComponent(spacep->data, &lastComp, pathp);
+#ifndef SPECIAL_FOLDERS
+        /* Make sure that lastComp is not NULL */
+        if (lastComp) {
+            if (stricmp(lastComp, "\\desktop.ini") == 0) {
+                code = cm_NameI(cm_data.rootSCachep, spacep->data,
+                                 CM_FLAG_CASEFOLD
+                                 | CM_FLAG_DIRSEARCH
+                                 | CM_FLAG_FOLLOW,
+                                 userp, tidPathp, &req, &dscp);
+                if (code == 0) {
+#ifdef DFS_SUPPORT
+                    if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                        if ( WANTS_DFS_PATHNAMES(p) )
+                            code = CM_ERROR_PATH_NOT_COVERED;
+                        else
+                            code = CM_ERROR_BADSHARENAME;
+                    } else
+#endif /* DFS_SUPPORT */
+                    if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
+                        code = CM_ERROR_NOSUCHFILE;
+                    else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
+                        cm_buf_t *bp = buf_Find(dscp, &hzero);
+                        if (bp)
+                            buf_Release(bp);
+                        else
+                            code = CM_ERROR_NOSUCHFILE;
+                    }
+                    cm_ReleaseSCache(dscp);
+                    if (code) {
+                        cm_FreeSpace(spacep);
+                        cm_ReleaseUser(userp);
+                        smb_SendTran2Error(vcp, p, opx, code);
+                        return 0;
+                    }
+                }
+            }
+        }
+#endif /* SPECIAL_FOLDERS */
+
+        cm_FreeSpace(spacep);
+    }
+
+    /* now do namei and stat, and copy out the info */
+    code = cm_NameI(cm_data.rootSCachep, pathp,
+                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    if (code) {
+        cm_ReleaseUser(userp);
+        smb_SendTran2Error(vcp, p, opx, code);
+        return 0;
+    }
+
+    fidp = smb_FindFIDByScache(vcp, scp);
+    if (!fidp) {
+        cm_ReleaseUser(userp);
+        cm_ReleaseSCache(scp);
+	smb_SendTran2Error(vcp, p, opx, code);
+        return 0;
+    }
+
+    lock_ObtainMutex(&fidp->mx);
+    if (!(fidp->flags & SMB_FID_OPENWRITE)) {
+	lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        cm_ReleaseUser(userp);
+        cm_ReleaseSCache(scp);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
+        return 0;
+    }
+    lock_ReleaseMutex(&fidp->mx);
+
+    outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, 0);
+
+    outp->totalParms = 2;
+    outp->totalData = 0;
 
     spi = (smb_tran2QPathInfo_t *)p->datap;
     if (infoLevel == SMB_INFO_STANDARD || infoLevel == SMB_INFO_QUERY_EA_SIZE) {
@@ -3159,9 +3256,9 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             name = "\\";	/* probably can't happen */
 	lock_ReleaseMutex(&fidp->mx);
         len = (unsigned long)strlen(name);
-        outp->totalData = (len*2) + 4;	/* this is actually what we want to return */
-        qfi.u.QFfileNameInfo.fileNameLength = len * 2;
-        mbstowcs((unsigned short *)qfi.u.QFfileNameInfo.fileName, name, len);
+        outp->totalData = ((len+1)*2) + 4;	/* this is actually what we want to return */
+        qfi.u.QFfileNameInfo.fileNameLength = (len + 1) * 2;
+        mbstowcs((unsigned short *)qfi.u.QFfileNameInfo.fileName, name, len + 1);
     }
 
     /* send and free the packets */

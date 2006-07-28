@@ -2280,7 +2280,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    afs_int32 parms[MAXGCSIZE];
+    afs_uint64 parms[MAXGCSIZE];
 
     memset(parms, 0, sizeof(parms));
     blob.in = NULL;
