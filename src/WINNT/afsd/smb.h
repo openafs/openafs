@@ -93,10 +93,13 @@ typedef struct smb {
 
 #define SMB_INFO_ALLOCATION 		1
 #define SMB_INFO_VOLUME			2
+#define SMB_QUERY_FS_LABEL_INFO         0x101
 #define SMB_QUERY_FS_VOLUME_INFO 	0x102
 #define SMB_QUERY_FS_SIZE_INFO		0x103
 #define SMB_QUERY_FS_DEVICE_INFO	0x104
 #define SMB_QUERY_FS_ATTRIBUTE_INFO	0x105
+#define SMB_QUERY_FS_QUOTA_INFO         0x106
+#define SMB_QUERY_FS_CONTROL_INFO       0x107
 #define SMB_INFO_UNIX			0x200
 #define SMB_INFO_MACOS			0x301
 
@@ -572,6 +575,8 @@ extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPath
 
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 
+extern smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp);
+
 extern void smb_HoldFIDNoLock(smb_fid_t *fidp);
 
 extern void smb_ReleaseFID(smb_fid_t *fidp);
@@ -700,10 +705,6 @@ extern char *myCrt_RapDispatch(int i);
 extern unsigned int smb_Attributes(cm_scache_t *scp);
 
 extern int smb_ChainFID(int fid, smb_packet_t *inp);
-
-extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
-
-extern void smb_ReleaseFID(smb_fid_t *fidp);
 
 extern unsigned char *smb_ParseDataBlock(unsigned char *inp, char **chainpp, int *lengthp);
 

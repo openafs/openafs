@@ -444,6 +444,8 @@ char * myCrt_2Dispatch(int i)
         return "S(0d)_ReceiveTran2CreateDirectory";
     case 14:
         return "S(0e)_ReceiveTran2SessionSetup";
+    case 15:
+	return "S(0f)_QueryFileSystemInformationFid";
     case 16:
         return "S(10)_ReceiveTran2GetDfsReferral";
     case 17:
@@ -1501,6 +1503,25 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 	}
     }
 
+    lock_ReleaseWrite(&smb_rctLock);
+    return fidp;
+}
+
+smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
+{
+    smb_fid_t *fidp = NULL;
+    int newFid = 0;
+        
+    if (!scp)
+        return NULL;
+
+    lock_ObtainWrite(&smb_rctLock);
+    for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
+        if (scp == fidp->scp) {
+            fidp->refCount++;
+            break;
+        }
+    }
     lock_ReleaseWrite(&smb_rctLock);
     return fidp;
 }
@@ -8775,6 +8796,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
     smb_tran2DispatchTable[13].procp = smb_ReceiveTran2CreateDirectory;
     smb_tran2DispatchTable[14].procp = smb_ReceiveTran2SessionSetup;
+    smb_tran2DispatchTable[15].procp = smb_ReceiveTran2QFSInfoFid;
     smb_tran2DispatchTable[16].procp = smb_ReceiveTran2GetDFSReferral;
     smb_tran2DispatchTable[17].procp = smb_ReceiveTran2ReportDFSInconsistency;
 
