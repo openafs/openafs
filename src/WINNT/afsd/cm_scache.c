@@ -1079,12 +1079,13 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
         /* ensure that the buffer isn't already in the I/O list */
         for(qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
-            if (tbufp == bufp) break;
+            if (tbufp == bufp) 
+		break;
         }
-        osi_assert(qdp != NULL);
-        osi_assert(osi_GetQData(qdp) == bufp);
-        osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
-        osi_QDFree(qdp);
+	if (qdp) {
+	    osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
+	    osi_QDFree(qdp);
+	}
         if (bufp) {
             bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
             if (bufp->flags & CM_BUF_WAITING) {
@@ -1100,12 +1101,13 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
         /* ensure that the buffer isn't already in the I/O list */
         for(qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
-            if (tbufp == bufp) break;
+            if (tbufp == bufp) 
+		break;
         }
-        osi_assert(qdp != NULL);
-        osi_assert(osi_GetQData(qdp) == bufp);
-        osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
-        osi_QDFree(qdp);
+	if (qdp) {
+	    osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
+	    osi_QDFree(qdp);
+	}
         if (bufp) {
             bufp->cmFlags &= ~CM_BUF_CMSTORING;
             if (bufp->flags & CM_BUF_WAITING) {
