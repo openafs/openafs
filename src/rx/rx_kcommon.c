@@ -1149,9 +1149,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p,
     if (!code) {
 	p->length = nbytes - RX_HEADER_SIZE;;
 	if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
-	    if (nbytes > 0)
-		rxi_MorePackets(rx_initSendWindow);
-	    else {
+	    if (nbytes <= 0) {
 		MUTEX_ENTER(&rx_stats_mutex);
 		rx_stats.bogusPacketOnRead++;
 		switch (rx_ssfamily(saddr)) {
