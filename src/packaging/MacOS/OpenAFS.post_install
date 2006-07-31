@@ -47,7 +47,7 @@ if [ ! -f CellServDB -a -f CellServDB.save -a -f CellServDB.master.last ]; then
 fi
 
 # upgrading between 2 post-1.2.7 releases (or the testing case)
-if [ -f CellServDB.master.last -a  -f CellServDB ]; then
+if [ -f CellServDB.master.last ]; then
   if cmp -s CellServDB.master.last CellServDB.master ; then
     echo No CellServDB updates
     done=1
@@ -63,7 +63,7 @@ if [ -z "$done" -a  -f CellServDB ]; then
   fi
 fi
 
-if [ -z "$done" ]; then
+if [ -z "$done" -a  -f CellServDB ]; then
   # there are local changes to be merged
   if [ -f CellServDB -a -f CellServDB.master.last ]; then
     echo Merging CellServDB entries....
