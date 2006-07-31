@@ -90,6 +90,7 @@ DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
+DECL_PIOCTL(PNFSNukeCreds);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -194,113 +195,13 @@ static int (*(CpioctlSw[])) () = {
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
 };
 
+static int (*(OpioctlSw[])) () = {
+    PBogus,			/* 0 */
+	PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
+};
+
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
 int afs_nobody = NFS_NOBODY;
-
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
-static void
-afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
-{
-    dst->in = (char *)(unsigned long)src->in;
-    dst->out = (char *)(unsigned long)src->out;
-    dst->in_size = src->in_size;
-    dst->out_size = src->out_size;
-}
-#endif
-
-/*
- * If you need to change copyin_afs_ioctl(), you may also need to change
- * copyin_iparam().
- */
-
-static int
-copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
-{
-    int code;
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
-    struct afs_ioctl32 dst32;
-
-    if (!(IS64U)) {
-	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
-	if (!code)
-	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
-	return code;
-    }
-#endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
-
-
-#if defined(AFS_HPUX_64BIT_ENV)
-    struct afs_ioctl32 dst32;
-
-    if (is_32bit(u.u_procp)) {	/* is_32bit() in proc_iface.h */
-	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
-	if (!code)
-	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
-	return code;
-    }
-#endif /* defined(AFS_HPUX_64BIT_ENV) */
-
-#if defined(AFS_SUN57_64BIT_ENV)
-    struct afs_ioctl32 dst32;
-
-    if (get_udatamodel() == DATAMODEL_ILP32) {
-	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
-	if (!code)
-	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
-	return code;
-    }
-#endif /* defined(AFS_SUN57_64BIT_ENV) */
-
-#if defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)
-    struct afs_ioctl32 dst32;
-
-    if (!ABI_IS_64BIT(get_current_abi())) {
-	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
-	if (!code)
-	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
-	return code;
-    }
-#endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
-
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
-    struct afs_ioctl32 dst32;
-
-#ifdef AFS_SPARC64_LINUX26_ENV
-    if (test_thread_flag(TIF_32BIT))
-#elif AFS_SPARC64_LINUX24_ENV
-    if (current->thread.flags & SPARC_FLAG_32BIT)
-#elif defined(AFS_SPARC64_LINUX20_ENV)
-    if (current->tss.flags & SPARC_FLAG_32BIT)
-
-#elif defined(AFS_AMD64_LINUX26_ENV)
-    if (test_thread_flag(TIF_IA32))
-#elif defined(AFS_AMD64_LINUX20_ENV)
-    if (current->thread.flags & THREAD_IA32)
-
-#elif defined(AFS_PPC64_LINUX26_ENV)
-    if (current->thread_info->flags & _TIF_32BIT)
-#elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT)
-
-#elif defined(AFS_S390X_LINUX26_ENV)
-    if (test_thread_flag(TIF_31BIT))
-#elif defined(AFS_S390X_LINUX20_ENV)
-    if (current->thread.flags & S390_FLAG_31BIT)
-
-#else
-#error pioctl32 not done for this linux
-#endif
-    {
-	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
-	if (!code)
-	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
-	return code;
-    }
-#endif /* defined(AFS_LINUX_64BIT_KERNEL) */
-
-    AFS_COPYIN(cmarg, (caddr_t) dst, sizeof *dst, code);
-    return code;
-}
 
 int
 HandleIoctl(register struct vcache *avc, register afs_int32 acom,
@@ -857,7 +758,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
-    struct AFS_UCRED *tmpcred;
+    struct AFS_UCRED *tmpcred = NULL;
 #endif
     struct AFS_UCRED *foreigncreds = NULL;
     register afs_int32 code = 0;
@@ -883,7 +784,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     }
     if ((com & 0xff) == PSetClientContext) {
 #ifdef AFS_NEED_CLIENTCONTEXT
-#if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
 	code = HandleClientContext(&data, &com, &foreigncreds, credp);
 #else
 	code = HandleClientContext(&data, &com, &foreigncreds, osi_curcred());
@@ -913,7 +814,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	 * like afs_osi_suser(cred) which, I think, is better since it
 	 * generalizes and supports multi cred environments...
 	 */
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
 	tmpcred = credp;
 	credp = foreigncreds;
 #elif defined(AFS_AIX41_ENV)
@@ -1039,7 +940,9 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	set_p_cred(u.u_procp, tmpcred);	/* restore original credentials */
 #elif	defined(AFS_SGI_ENV)
 	OSI_SET_CURRENT_CRED(tmpcred);	/* restore original credentials */
-#elif	!defined(AFS_SUN5_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+	credp = tmpcred;		/* restore original credentials */
+#else
 	osi_curcred() = tmpcred;	/* restore original credentials */
 #endif /* AFS_HPUX101_ENV */
 	crfree(foreigncreds);
@@ -1104,6 +1007,10 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     case 'C':			/* Coordinated/common pioctls */
 	pioctlSw = CpioctlSw;
 	pioctlSwSize = sizeof(CpioctlSw);
+	break;
+    case 'O':			/* Coordinated/common pioctls */
+	pioctlSw = OpioctlSw;
+	pioctlSwSize = sizeof(OpioctlSw);
 	break;
     default:
 	afs_PutFakeStat(&fakestate);
@@ -2811,8 +2718,8 @@ DECL_PIOCTL(PSetSysName)
     register struct afs_exporter *exporter;
     register struct unixuser *au;
     register afs_int32 pag, error;
-    int t, count, num = 0;
-    char **sysnamelist[MAXNUMSYSNAMES];
+    int t, count, num = 0, allpags = 0;
+    char **sysnamelist;
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
@@ -2826,6 +2733,10 @@ DECL_PIOCTL(PSetSysName)
     memset(inname, 0, MAXSYSNAME);
     memcpy((char *)&setsysname, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
+    if (setsysname & 0x8000) {
+	allpags = 1;
+	setsysname &= ~0x8000;
+    }
     if (setsysname) {
 
 	/* Check my args */
@@ -2850,7 +2761,11 @@ DECL_PIOCTL(PSetSysName)
 	ain += t + 1;
 	num = count;
     }
-    if ((*acred)->cr_gid == RMTUSER_REQ) {	/* Handles all exporters */
+    if ((*acred)->cr_gid == RMTUSER_REQ ||
+	(*acred)->cr_gid == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
+	if (allpags && (*acred)->cr_gid != RMTUSER_REQ_PRIV) {
+	    return EPERM;
+	}
 	pag = PagInCred(*acred);
 	if (pag == NOPAG) {
 	    return EINVAL;	/* Better than panicing */
@@ -2862,8 +2777,8 @@ DECL_PIOCTL(PSetSysName)
 	    afs_PutUser(au, READ_LOCK);
 	    return EINVAL;	/* Better than panicing */
 	}
-	error = EXP_SYSNAME(exporter, (setsysname ? cp2 : NULL), sysnamelist,
-			    &num);
+	error = EXP_SYSNAME(exporter, (setsysname ? cp2 : NULL), &sysnamelist,
+			    &num, allpags);
 	if (error) {
 	    if (error == ENODEV)
 		foundname = 0;	/* sysname not set yet! */
@@ -2873,9 +2788,11 @@ DECL_PIOCTL(PSetSysName)
 	    }
 	} else {
 	    foundname = num;
-	    strcpy(outname, (*sysnamelist)[0]);
+	    strcpy(outname, sysnamelist[0]);
 	}
 	afs_PutUser(au, READ_LOCK);
+	if (setsysname)
+	    afs_sysnamegen++;
     } else {
 	/* Not xlating, so local case */
 	if (!afs_sysname)
@@ -2883,10 +2800,14 @@ DECL_PIOCTL(PSetSysName)
 	if (!setsysname) {	/* user just wants the info */
 	    strcpy(outname, afs_sysname);
 	    foundname = afs_sysnamecount;
-	    *sysnamelist = afs_sysnamelist;
+	    sysnamelist = afs_sysnamelist;
 	} else {		/* Local guy; only root can change sysname */
 	    if (!afs_osi_suser(*acred))
 		return EACCES;
+
+	    /* allpags makes no sense for local use */
+	    if (allpags)
+		return EINVAL;
 
 	    /* clear @sys entries from the dnlc, once afs_lookup can
 	     * do lookups of @sys entries and thinks it can trust them */
@@ -2904,6 +2825,7 @@ DECL_PIOCTL(PSetSysName)
 		}
 	    }
 	    afs_sysnamecount = setsysname;
+	    afs_sysnamegen++;
 	}
     }
     if (!setsysname) {
@@ -2914,13 +2836,13 @@ DECL_PIOCTL(PSetSysName)
 	    strcpy(cp, outname);	/* ... the entry, ... */
 	    cp += strlen(outname) + 1;
 	    for (count = 1; count < foundname; ++count) {	/* ... or list. */
-		if (!(*sysnamelist)[count])
+		if (!sysnamelist[count])
 		    osi_Panic
 			("PSetSysName: no afs_sysnamelist entry to read\n");
-		t = strlen((*sysnamelist)[count]);
+		t = strlen(sysnamelist[count]);
 		if (t >= MAXSYSNAME)
 		    osi_Panic("PSetSysName: sysname entry garbled\n");
-		strcpy(cp, (*sysnamelist)[count]);
+		strcpy(cp, sysnamelist[count]);
 		cp += t + 1;
 	    }
 	}
@@ -3189,6 +3111,7 @@ DECL_PIOCTL(PExportAfs)
 {
     afs_int32 export, newint =
 	0, type, changestate, handleValue, convmode, pwsync, smounts;
+    afs_int32 rempags = 0, pagcb = 0;
     register struct afs_exporter *exporter;
 
     AFS_STATCNT(PExportAfs);
@@ -3201,10 +3124,12 @@ DECL_PIOCTL(PExportAfs)
     exporter = exporter_find(type);
     if (newint) {
 	export = handleValue & 3;
-	changestate = handleValue & 0xff;
+	changestate = handleValue & 0xfff;
 	smounts = (handleValue >> 2) & 3;
 	pwsync = (handleValue >> 4) & 3;
 	convmode = (handleValue >> 6) & 3;
+	rempags = (handleValue >> 8) & 3;
+	pagcb = (handleValue >> 10) & 3;
     } else {
 	changestate = (handleValue >> 16) & 0x1;
 	convmode = (handleValue >> 16) & 0x2;
@@ -3250,6 +3175,18 @@ DECL_PIOCTL(PExportAfs)
 		    afs_NFSRootOnly = 1;
 		    exporter->exp_states &= ~EXP_SUBMOUNTS;
 		}
+	    }
+	    if (rempags & 2) {
+		if (rempags & 1)
+		    exporter->exp_states |= EXP_CLIPAGS;
+		else
+		    exporter->exp_states &= ~EXP_CLIPAGS;
+	    }
+	    if (pagcb & 2) {
+		if (pagcb & 1)
+		    exporter->exp_states |= EXP_CALLBACK;
+		else
+		    exporter->exp_states &= ~EXP_CALLBACK;
 	    }
 	    handleValue = exporter->exp_states;
 	    memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
@@ -3390,7 +3327,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 {
     char *ain, *inData;
     afs_uint32 hostaddr;
-    afs_int32 uid, g0, g1, i, code, pag, exporter_type;
+    afs_int32 uid, g0, g1, i, code, pag, exporter_type, isroot = 0;
     struct afs_exporter *exporter, *outexporter;
     struct AFS_UCRED *newcred;
     struct unixuser *au;
@@ -3453,26 +3390,28 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	 * code fails for remote client roots.
 	 */
 	uid = afs_nobody;	/* NFS_NOBODY == -2 */
+	isroot = 1;
     }
     newcred = crget();
-#if defined(AFS_LINUX26_ENV)
-    newcred->cr_group_info = groups_alloc(0);
-#endif
 #ifdef	AFS_AIX41_ENV
     setuerror(0);
 #endif
-    newcred->cr_gid = RMTUSER_REQ;
+    newcred->cr_gid = isroot ? RMTUSER_REQ_PRIV : RMTUSER_REQ;
 #ifdef AFS_AIX51_ENV
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
+#elif defined(AFS_LINUX26_ENV)
+    newcred->cr_group_info = groups_alloc(2);
+    GROUP_AT(newcred->cr_group_info, 0) = g0;
+    GROUP_AT(newcred->cr_group_info, 1) = g1;
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
 #endif
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
-#else
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
+#elif !defined(AFS_LINUX26_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
     newcred->cr_ngroups = 2;
 #else
     for (i = 2; i < NGROUPS; i++)
@@ -3965,5 +3904,57 @@ DECL_PIOCTL(PCallBackAddr)
 	afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
     }				/* Outer loop over addrs */
 #endif /* UKERNEL */
+    return 0;
+}
+
+DECL_PIOCTL(PNFSNukeCreds)
+{
+    afs_uint32 addr, code;
+    register afs_int32 i;
+    register struct unixuser *tu;
+
+    AFS_STATCNT(PUnlog);
+    if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    if (ainSize < sizeof(afs_int32))
+	return EINVAL;
+    memcpy(&addr, ain, sizeof(afs_int32));
+
+    if ((*acred)->cr_gid == RMTUSER_REQ_PRIV && !addr) {
+	tu = afs_GetUser(areq->uid, -1, SHARED_LOCK);
+	if (!tu->exporter || !(addr = EXP_GETHOST(tu->exporter))) {
+	    afs_PutUser(tu, SHARED_LOCK);
+	    return EACCES;
+	}
+	afs_PutUser(tu, SHARED_LOCK);
+    } else if (!afs_osi_suser(acred)) {
+	return EACCES;
+    }
+
+    ObtainWriteLock(&afs_xuser, 227);
+    for (i = 0; i < NUSERS; i++) {
+	for (tu = afs_users[i]; tu; tu = tu->next) {
+	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
+		tu->vid = UNDEFVID;
+		tu->states &= ~UHasTokens;
+		/* security is not having to say you're sorry */
+		memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+		tu->refCount++;
+		ReleaseWriteLock(&afs_xuser);
+		afs_ResetUserConns(tu);
+		tu->refCount--;
+		ObtainWriteLock(&afs_xuser, 228);
+#ifdef UKERNEL
+		/* set the expire times to 0, causes
+		 * afs_GCUserData to remove this entry
+		 */
+		tu->ct.EndTimestamp = 0;
+		tu->tokenTime = 0;
+#endif /* UKERNEL */
+	    }
+	}
+    }
+    ReleaseWriteLock(&afs_xuser);
     return 0;
 }

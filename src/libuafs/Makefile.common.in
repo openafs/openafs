@@ -87,6 +87,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
 	$(UOBJ)/afs_lhash.o \
 	$(UOBJ)/afs_analyze.o \
+	$(UOBJ)/afs_error.o \
 	$(UOBJ)/afs_axscache.o  \
 	$(UOBJ)/afs_buffer.o	\
 	$(UOBJ)/afs_callback.o	\
@@ -98,15 +99,18 @@ UAFSOBJ = \
 	$(UOBJ)/afs_dcache.o \
 	$(UOBJ)/afs_dir.o		\
 	$(UOBJ)/afs_dynroot.o \
+	$(UOBJ)/afs_icl.o \
 	$(UOBJ)/afs_init.o \
 	$(UOBJ)/afs_lock.o	\
 	$(UOBJ)/afs_mariner.o \
 	$(UOBJ)/afs_memcache.o	\
+	$(UOBJ)/afs_md5.o	\
 	$(UOBJ)/afs_osidnlc.o	\
 	$(UOBJ)/afs_osi_pag.o \
 	$(UOBJ)/afs_segments.o \
 	$(UOBJ)/afs_server.o \
 	$(UOBJ)/afs_stat.o \
+	$(UOBJ)/afs_syscall.o \
 	$(UOBJ)/afs_user.o \
 	$(UOBJ)/afs_util.o \
 	$(UOBJ)/afs_vcache.o \
@@ -208,6 +212,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_atomlist.o \
 	$(WEBOBJ)/afs_lhash.o \
 	$(WEBOBJ)/afs_analyze.o \
+	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
 	$(WEBOBJ)/afs_callback.o \
@@ -219,15 +224,18 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
 	$(WEBOBJ)/afs_dynroot.o \
+	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
+	$(WEBOBJ)/afs_md5.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
 	$(WEBOBJ)/afs_segments.o \
 	$(WEBOBJ)/afs_server.o \
 	$(WEBOBJ)/afs_stat.o \
+	$(WEBOBJ)/afs_syscall.o \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
@@ -330,6 +338,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_atomlist.o \
 	$(WEBOBJ)/afs_lhash.o \
 	$(WEBOBJ)/afs_analyze.o \
+	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
 	$(WEBOBJ)/afs_callback.o \
@@ -341,15 +350,18 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
 	$(WEBOBJ)/afs_dynroot.o \
+	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
+	$(WEBOBJ)/afs_md5.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
 	$(WEBOBJ)/afs_segments.o \
 	$(WEBOBJ)/afs_server.o \
 	$(WEBOBJ)/afs_stat.o \
+	$(WEBOBJ)/afs_syscall.o \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
@@ -447,6 +459,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_atomlist.o \
 	$(JUAFS)/afs_lhash.o \
 	$(JUAFS)/afs_analyze.o \
+	$(JUAFS)/afs_error.o \
 	$(JUAFS)/afs_axscache.o  \
 	$(JUAFS)/afs_buffer.o	\
 	$(JUAFS)/afs_callback.o	\
@@ -458,15 +471,18 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_dcache.o \
 	$(JUAFS)/afs_dir.o \
 	$(JUAFS)/afs_dynroot.o \
+	$(JUAFS)/afs_icl.o \
 	$(JUAFS)/afs_init.o \
 	$(JUAFS)/afs_lock.o	\
 	$(JUAFS)/afs_mariner.o \
 	$(JUAFS)/afs_memcache.o	\
+	$(JUAFS)/afs_md5.o \
 	$(JUAFS)/afs_osidnlc.o	\
 	$(JUAFS)/afs_osi_pag.o \
 	$(JUAFS)/afs_segments.o \
 	$(JUAFS)/afs_server.o \
 	$(JUAFS)/afs_stat.o \
+	$(JUAFS)/afs_syscall.o \
 	$(JUAFS)/afs_user.o \
 	$(JUAFS)/afs_util.o \
 	$(JUAFS)/afs_vcache.o \
@@ -584,6 +600,8 @@ $(UOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE1)
 $(UOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE1)
+$(UOBJ)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
+	$(CRULE1)
 $(UOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE1)
 $(UOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
@@ -657,6 +675,8 @@ $(UOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
 $(UOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE1)
 $(UOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
+	$(CRULE1)
+$(UOBJ)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE1)
 $(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
@@ -736,7 +756,11 @@ $(UOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE1)
 $(UOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS
+$(UOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS
+$(UOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
@@ -833,6 +857,8 @@ $(WEBOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE2)
 $(WEBOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE2)
+$(WEBOBJ)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
+	$(CRULE2)
 $(WEBOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE2)
 $(WEBOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
@@ -906,6 +932,8 @@ $(WEBOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
 $(WEBOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE2)
 $(WEBOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
+	$(CRULE2)
+$(WEBOBJ)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE2)
 $(WEBOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE2)
@@ -981,7 +1009,11 @@ $(WEBOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE2)
 $(WEBOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE2) -DAFS_NONFSTRANS
+$(WEBOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE2) -DAFS_NONFSTRANS
+$(WEBOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE2) -DAFS_NONFSTRANS
@@ -1086,6 +1118,8 @@ $(JUAFS)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE1)
 $(JUAFS)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE1)
+$(JUAFS)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
+	$(CRULE1)
 $(JUAFS)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE1)
 $(JUAFS)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
@@ -1159,6 +1193,8 @@ $(JUAFS)/AFS_component_version_number.o: AFS_component_version_number.c
 $(JUAFS)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE1)
 $(JUAFS)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
+	$(CRULE1)
+$(JUAFS)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE1)
 $(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
@@ -1234,7 +1270,11 @@ $(JUAFS)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE1)
 $(JUAFS)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS
+$(JUAFS)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS
+$(JUAFS)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS

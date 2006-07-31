@@ -2250,6 +2250,28 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 
 	    tdc->validPos = Position + size;
 	    afs_CFileTruncate(file, size);	/* prune it */
+        } else if (afs_IsDynrootMount(avc)) {
+	    char *dynrootDir;
+	    int dynrootLen;
+
+	    afs_GetDynrootMount(&dynrootDir, &dynrootLen, &tsmall->OutStatus);
+
+	    dynrootDir += Position;
+	    dynrootLen -= Position;
+	    if (size > dynrootLen)
+		size = dynrootLen;
+	    if (size < 0)
+		size = 0;
+	    code = afs_CFileWrite(file, 0, dynrootDir, size);
+	    afs_PutDynroot();
+
+	    if (code == size)
+		code = 0;
+	    else
+		code = -1;
+
+	    tdc->validPos = Position + size;
+	    afs_CFileTruncate(file, size);	/* prune it */
 	} else
 	    /*
 	     * Not a dynamic vnode:  do the real fetch.

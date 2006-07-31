@@ -18,9 +18,13 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
+#include "rx/rx_globals.h"
+#include "afs/pagcb.h"
 
-int afs_nfsclient_reqhandler(), afs_nfsclient_hold(), afs_PutNfsClientPag();
-int afs_nfsclient_sysname(), afs_nfsclient_GC(), afs_nfsclient_stats();
+void afs_nfsclient_hold(), afs_PutNfsClientPag(), afs_nfsclient_GC();
+static void afs_nfsclient_getcreds();
+int afs_nfsclient_sysname(), afs_nfsclient_stats(), afs_nfsclient_checkhost();
+afs_int32 afs_nfsclient_gethost();
 #ifdef AFS_AIX_IAUTH_ENV
 int afs_allnfsreqs, afs_nfscalls;
 #endif
@@ -33,6 +37,8 @@ struct exporterops nfs_exportops = {
     afs_nfsclient_sysname,
     afs_nfsclient_GC,
     afs_nfsclient_stats,
+    afs_nfsclient_checkhost,
+    afs_nfsclient_gethost
 };
 
 
@@ -89,7 +95,7 @@ afs_GetNfsClientPag(uid, host)
 
 /* Decrement refCount; must always match a previous afs_FindNfsClientPag/afs_GetNfsClientPag call .
 It's also called whenever a unixuser structure belonging to the remote user associated with the nfsclientpag structure, np, is garbage collected. */
-int
+void
 afs_PutNfsClientPag(np)
      register struct nfsclientpag *np;
 {
@@ -146,7 +152,9 @@ afs_FindNfsClientPag(uid, host, pag)
  */
 struct afs_exporter *afs_nfsexported = 0;
 static afs_int32 init_nfsexporter = 0;
-afs_nfsclient_init()
+
+void
+afs_nfsclient_init(void)
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -166,16 +174,15 @@ afs_nfsclient_init()
  * phases of any remote call (via the NFS server or pioctl).
  */
 int
-afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
-     register struct afs_exporter *exporter, **outexporter;
-     struct AFS_UCRED **cred;
-     register afs_int32 host;
-     afs_int32 *pagparam;
+afs_nfsclient_reqhandler(struct afs_exporter *exporter,
+			 struct AFS_UCRED **cred,
+			 afs_int32 host, afs_int32 *pagparam,
+			 struct afs_exporter **outexporter)
 {
     register struct nfsclientpag *np, *tnp;
     extern struct unixuser *afs_FindUser(), *afs_GetUser();
     register struct unixuser *au = 0;
-    afs_int32 pag, code = 0;
+    afs_int32 uid, pag, code = 0;
 
     AFS_ASSERT_GLOCK();
     AFS_STATCNT(afs_nfsclient_reqhandler);
@@ -191,12 +198,15 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
     }
 /*    ObtainWriteLock(&afs_xnfsreq); */
     pag = PagInCred(*cred);
-    if (pag != NOPAG) {
+    uid = (*cred)->cr_uid;
+    if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
+	uid = pag;
+    } else if (pag != NOPAG) {
 	/* Do some minimal pag verification */
 	if (pag > getpag()) {
 	    pag = NOPAG;	/* treat it as not paged since couldn't be good  */
 	} else {
-	    if (au = afs_FindUser(pag, -1, READ_LOCK)) {
+	    if ((au = afs_FindUser(pag, -1, READ_LOCK))) {
 		if (!au->exporter) {
 		    pag = NOPAG;
 		    afs_PutUser(au, READ_LOCK);
@@ -206,16 +216,24 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
 		pag = NOPAG;	/*  No unixuser struct so pag not trusted  */
 	}
     }
-    np = afs_FindNfsClientPag((*cred)->cr_uid, host, 0);
+    np = afs_FindNfsClientPag(uid, host, 0);
     afs_Trace4(afs_iclSetp, CM_TRACE_NFSREQH, ICL_TYPE_INT32, pag,
 	       ICL_TYPE_LONG, (*cred)->cr_uid, ICL_TYPE_INT32, host,
 	       ICL_TYPE_POINTER, np);
+    /* If remote-pags are enabled, we are no longer interested in what PAG
+     * they claimed, and from here on we should behave as if they claimed
+     * none at all, which is to say we use the (local) pag named in the
+     * nfsclientpag structure (if any).  This is deferred until here so
+     * that we can log the PAG they claimed.
+     */
+    if ((afs_nfsexporter->exp_states & EXP_CLIPAGS))
+       	pag = NOPAG;
     if (!np) {
 	/* Even if there is a "good" pag coming in we don't accept it if no nfsclientpag struct exists for the user since that would mean that the translator rebooted and therefore we ignore all older pag values */
 #ifdef	AFS_OSF_ENV
-	if (code = setpag(u.u_procp, cred, -1, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
+	if (code = setpag(u.u_procp, cred, -1, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
 #else
-	if (code = setpag(cred, -1, &pag, 1)) {
+	if ((code = setpag(cred, -1, &pag, 0))) {
 #endif
 	    if (au)
 		afs_PutUser(au, READ_LOCK);
@@ -225,14 +243,15 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
 #endif
 	    return (code);
 	}
-	np = afs_GetNfsClientPag((*cred)->cr_uid, host);
+	np = afs_GetNfsClientPag(uid, host);
 	np->pag = pag;
+	np->client_uid = (*cred)->cr_uid;
     } else {
 	if (pag == NOPAG) {
 #ifdef	AFS_OSF_ENV
-	    if (code = setpag(u.u_procp, cred, np->pag, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
+	    if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
 #else
-	    if (code = setpag(cred, np->pag, &pag, 1)) {
+	    if ((code = setpag(cred, np->pag, &pag, 0))) {
 #endif
 		afs_PutNfsClientPag(np);
 /*		ReleaseWriteLock(&afs_xnfsreq);	*/
@@ -247,9 +266,9 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
 	    if (tnp->uid && (tnp->uid != (afs_int32) - 2)) {	/* allow "root" initiators */
 		/* Pag doesn't belong to caller; treat it as an unpaged call too */
 #ifdef	AFS_OSF_ENV
-		if (code = setpag(u.u_procp, cred, np->pag, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
+		if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
 #else
-		if (code = setpag(cred, np->pag, &pag, 1)) {
+		if ((code = setpag(cred, np->pag, &pag, 0))) {
 #endif
 		    afs_PutNfsClientPag(np);
 		    afs_PutUser(au, READ_LOCK);
@@ -269,6 +288,10 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
     if (!(au->exporter)) {	/* Created new unixuser struct */
 	np->refCount++;		/* so it won't disappear */
 	au->exporter = (struct afs_exporter *)np;
+	if ((afs_nfsexporter->exp_states & EXP_CALLBACK))
+	    afs_nfsclient_getcreds(au);
+    } else while (au->states & UNFSGetCreds) {
+	afs_osi_Sleep((void *)au);
     }
     *pagparam = pag;
     *outexporter = (struct afs_exporter *)np;
@@ -282,9 +305,123 @@ afs_nfsclient_reqhandler(exporter, cred, host, pagparam, outexporter)
     return 0;
 }
 
+void
+afs_nfsclient_getcreds(au)
+    struct unixuser *au;
+{
+    struct nfsclientpag *np = (struct nfsclientpag *)(au->exporter);
+    struct rx_securityClass *csec;
+    struct rx_connection *tconn;
+    SysNameList tsysnames;
+    CredInfos tcreds;
+    CredInfo *tcred;
+    struct unixuser *tu;
+    struct cell *tcell;
+    int code, i, cellnum;
+
+    au->states |= UNFSGetCreds;
+    memset(&tcreds, 0, sizeof(tcreds));
+    memset(&tsysnames, 0, sizeof(tsysnames));
+
+    /* Get a connection */
+    /* This sucks a little.  We should cache the connections or something.
+     * But at this point I don't yet think it's worth the effort.
+     */
+    csec = rxnull_NewClientSecurityObject();
+    AFS_GUNLOCK();
+    tconn = rx_NewConnection(np->host, htons(7001), PAGCB_SERVICEID, csec, 0);
+    AFS_GLOCK();
+
+    /* Get the sysname, if needed */
+    if (!np->sysnamecount) {
+	AFS_GUNLOCK();
+	code = PAGCB_GetSysName(tconn, np->uid, &tsysnames);
+	AFS_GLOCK();
+	if (code ||
+	    tsysnames.SysNameList_len <= 0 ||
+	    tsysnames.SysNameList_len > MAXNUMSYSNAMES)
+	    goto done;
+    
+	for(i = 0; i < np->sysnamecount; i++)
+	    afs_osi_Free(np->sysname[i], MAXSYSNAME);
+
+	np->sysnamecount = tsysnames.SysNameList_len;
+	for(i = 0; i < np->sysnamecount; i++)
+	    np->sysname[i] = tsysnames.SysNameList_val[i].sysname;
+        afs_osi_Free(tsysnames.SysNameList_val,
+                     tsysnames.SysNameList_len * sizeof(SysNameEnt));
+    }
+
+    /* Get credentials */
+    AFS_GUNLOCK();
+    code = PAGCB_GetCreds(tconn, np->uid, &tcreds);
+    AFS_GLOCK();
+    if (code)
+	goto done;
+
+    /* Now, set the credentials they gave us... */
+    for (i = 0; i < tcreds.CredInfos_len; i++) {
+	tcred = &tcreds.CredInfos_val[i];
+
+	/* Find the cell.  If it is unknown to us, punt this entry. */
+	tcell = afs_GetCellByName(tcred->cellname, READ_LOCK);
+	afs_osi_Free(tcred->cellname, strlen(tcred->cellname) + 1);
+	if (!tcell) {
+	    memset(tcred->ct.HandShakeKey, 0, 8);
+	    memset(tcred->st.st_val, 0, tcred->st.st_len);
+	    afs_osi_Free(tcred->st.st_val, tcred->st.st_len);
+	    continue;
+	}
+	cellnum = tcell->cellNum;
+	afs_PutCell(tcell, READ_LOCK);
+
+	/* Find the appropriate unixuser.  This might be the same as
+	 * the one we were passed (au), but that's OK.
+	 */
+	tu = afs_GetUser(np->pag, cellnum, WRITE_LOCK);
+	if (!(tu->exporter)) {	/* Created new unixuser struct */
+	    np->refCount++;		/* so it won't disappear */
+	    tu->exporter = (struct afs_exporter *)np;
+	}
+
+	/* free any old secret token, and keep the new one */
+	if (tu->stp != NULL) {
+	    afs_osi_Free(tu->stp, tu->stLen);
+	}
+	tu->stp = tcred->st.st_val;
+	tu->stLen = tcred->st.st_len;
+
+	/* copy the clear token */
+	memset(&tu->ct, 0, sizeof(tu->ct));
+	memcpy(tu->ct.HandShakeKey, tcred->ct.HandShakeKey, 8);
+	memset(tcred->ct.HandShakeKey, 0, 8);
+	tu->ct.AuthHandle     = tcred->ct.AuthHandle;
+	tu->ct.ViceId         = tcred->ct.ViceId;
+	tu->ct.BeginTimestamp = tcred->ct.BeginTimestamp;
+	tu->ct.EndTimestamp   = tcred->ct.EndTimestamp;
+
+	/* Set everything else, reset connections, and move on. */
+	tu->vid = tcred->vid;
+	tu->states |= UHasTokens;
+	tu->states &= ~UTokensBad;
+	afs_SetPrimary(tu, !!(tcred->states & UPrimary));
+	tu->tokenTime = osi_Time();
+	afs_ResetUserConns(tu);
+	afs_PutUser(tu, WRITE_LOCK);
+    }
+    afs_osi_Free(tcreds.CredInfos_val, tcreds.CredInfos_len * sizeof(CredInfo));
+
+done:
+    AFS_GUNLOCK();
+    rx_DestroyConnection(tconn);
+    AFS_GLOCK();
+    au->states &= ~UNFSGetCreds;
+    afs_osi_Wakeup((void *)au);
+}
+
 
 /* It's called whenever a new unixuser structure is created for the remote user associated with the nfsclientpag structure, np */
-int
+void
 afs_nfsclient_hold(np)
      register struct nfsclientpag *np;
 {
@@ -296,17 +433,51 @@ afs_nfsclient_hold(np)
 }
 
 
+/* check if this exporter corresponds to the specified host */
+int
+afs_nfsclient_checkhost(np, host)
+    register struct nfsclientpag *np;
+{
+    if (np->type != EXP_NFS)
+	return 0;
+    return np->host == host;
+}
+
+
+/* get the host for this exporter, or 0 if there is an error */
+afs_int32
+afs_nfsclient_gethost(np)
+    register struct nfsclientpag *np;
+{
+    if (np->type != EXP_NFS)
+	return 0;
+    return np->host;
+}
+
+
 /* if inname is non-null, a new system name value is set for the remote user (inname contains the new sysname). In all cases, outname returns the current sysname value for this remote user */
 int 
 afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname, 
-		      char **outname[], int *num)
+		      char ***outname, int *num, int allpags)
 {
+    register struct nfsclientpag *tnp;
+    register afs_int32 i;
     char *cp;
     int count, t;
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
 #endif
     AFS_STATCNT(afs_nfsclient_sysname);
+    if (allpags > 0) {
+	/* update every client, not just the one making the request */
+	i = NHash(np->host);
+	MObtainWriteLock(&afs_xnfspag, 315);
+	for (tnp = afs_nfspags[i]; tnp; tnp = tnp->next) {
+	    if (tnp != np && tnp->host == np->host)
+		afs_nfsclient_sysname(tnp, inname, outname, num, -1);
+	}
+	MReleaseWriteLock(&afs_xnfspag);
+    }
     if (inname) {
 	if (np->sysname) {
 	    for(count=0; count < np->sysnamecount;++count) {
@@ -323,17 +494,20 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
 	    cp += t+1;
 	}
 	np->sysnamecount = *num;
-    } else if (!np->sysname) {
+    } else if (!np->sysnamecount) {
 	return ENODEV;      /* XXX */
     }
-    *outname = np->sysname;
-    *num = np->sysnamecount;
+    if (allpags >= 0) {
+	/* Don't touch our arguments when called recursively */
+	*outname = np->sysname;
+	*num = np->sysnamecount;
+    }
     return 0;
 }
 
 
 /* Garbage collect routine for the nfs exporter. When pag is -1 then all entries are removed (used by the nfsclient_shutdown routine); else if it's non zero then only the entry with that pag is removed, else all "timedout" entries are removed. TimedOut entries are those who have no "unixuser" structures associated with them (i.e. unixusercnt == 0) and they haven't had any activity the last NFSCLIENTGC seconds */
-int
+void
 afs_nfsclient_GC(exporter, pag)
      register struct afs_exporter *exporter;
      register afs_int32 pag;
@@ -457,6 +631,7 @@ afs_iauth_unregister()
 
 
 
+void
 shutdown_nfsclnt()
 {
 #if defined(AFS_SGIMP_ENV)

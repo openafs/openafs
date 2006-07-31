@@ -26,8 +26,30 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 <ppc64_linux26>
 	osi_flush.o \
+<linux26 linux_26>
+	osi_export.o \
+	osi_nfssrv.o \
+<linux24 linux_24 linux26 linux_26>
+	osi_ioctl.o \
+	osi_proc.o \
 <all>
 	osi_vnodeops.o 
+
+AFS_OS_PAGOBJS = \
+	osi_alloc.o \
+	osi_cred.o \
+	osi_groups.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_probe.o \
+	osi_sleep.o \
+	osi_syscall.o \
+<ppc64_linux26>
+	osi_flush.o \
+<linux24 linux_24 linux26 linux_26>
+	osi_ioctl.o \
+<all>
+	osi_pag_module.o 
 
 AFS_OS_NFSOBJS =
 
@@ -45,6 +67,9 @@ LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 # the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
 CCFLAGS = -Wno-strict-prototypes
 DEFINES = $(COMMON_DEFINES)
+
+# CFLAGS_* and AFLAGS_* will be copied into the kbuild makefile
+CFLAGS_afs_pag_user.o = -DAFS_PAG_MANAGER
 
 <i386_linux22 i386_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
@@ -255,8 +280,8 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 	cp libafs.ko $@
 
 .FORCE:
-libafs.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+libafs.ko afspag.ko: .FORCE
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
 <all -linux26 -linux_26 -umlinux26>

@@ -51,6 +51,7 @@ afs_rwlock_t afs_xuser;
 struct unixuser *afs_users[NUSERS];
 
 
+#ifndef AFS_PAG_MANAGER
 /* Forward declarations */
 void afs_ResetAccessCache(afs_int32 uid, int alock);
 
@@ -86,6 +87,7 @@ RemoveUserConns(register struct unixuser *au)
     }				/*For each chain */
 
 }				/*RemoveUserConns */
+#endif /* !AFS_PAG_MANAGER */
 
 
 /* Called from afs_Daemon to garbage collect unixusers no longer using system,
@@ -105,8 +107,10 @@ afs_GCUserData(int aforce)
     AFS_STATCNT(afs_GCUserData);
     /* Obtain locks in valid order */
     ObtainWriteLock(&afs_xuser, 95);
+#ifndef AFS_PAG_MANAGER
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 96);
+#endif
     now = osi_Time();
     for (i = 0; i < NUSERS; i++) {
 	for (lu = &afs_users[i], tu = *lu; tu; tu = nu) {
@@ -128,7 +132,9 @@ afs_GCUserData(int aforce)
 	    nu = tu->next;
 	    if (delFlag) {
 		*lu = tu->next;
+#ifndef AFS_PAG_MANAGER
 		RemoveUserConns(tu);
+#endif
 		if (tu->stp)
 		    afs_osi_Free(tu->stp, tu->stLen);
 		if (tu->exporter)
@@ -139,13 +145,18 @@ afs_GCUserData(int aforce)
 	    }
 	}
     }
+#ifndef AFS_PAG_MANAGER
     ReleaseWriteLock(&afs_xconn);
-    ReleaseWriteLock(&afs_xuser);
+#endif
+#ifndef AFS_PAG_MANAGER
     ReleaseReadLock(&afs_xserver);
+#endif
+    ReleaseWriteLock(&afs_xuser);
 
 }				/*afs_GCUserData */
 
 
+#ifndef AFS_PAG_MANAGER
 /*
  * Check for unixusers who encountered bad tokens, and reset the access
  * cache for these guys.  Can't do this when token expiration detected,
@@ -253,6 +264,7 @@ afs_ResetUserConns(register struct unixuser *auser)
     afs_ResetAccessCache(auser->uid, 1);
     auser->states &= ~UNeedsReset;
 }				/*afs_ResetUserConns */
+#endif /* !AFS_PAG_MANAGER */
 
 
 struct unixuser *

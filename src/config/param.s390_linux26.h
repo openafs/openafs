@@ -29,7 +29,6 @@
 #define AFS_S390_LINUX22_ENV	1
 #define AFS_S390_LINUX24_ENV	1
 #define AFS_S390_LINUX26_ENV	1
-#define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 137

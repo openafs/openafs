@@ -39,6 +39,9 @@ struct vfsmount *afs_cacheMnt;
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
+#if defined(AFS_LINUX26_ENV)
+extern struct export_operations afs_export_ops;
+#endif
 extern afs_rwlock_t afs_xvcache;
 extern struct afs_q VLRU;
 
@@ -131,6 +134,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(AFS_LINUX26_ENV)
+    sb->s_export_op = &afs_export_ops;
+#endif
 #if defined(MAX_NON_LFS)
 #ifdef AFS_64BIT_CLIENT
 #if !defined(MAX_LFS_FILESIZE)
@@ -503,10 +509,39 @@ vattr2inode(struct inode *ip, struct vattr *vp)
 #if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+    /* Set the mtime nanoseconds to the sysname generation number.
+     * This convinces NFS clients that all directories have changed
+     * any time the sysname list changes.
+     */
+    ip->i_mtime.tv_nsec = afs_sysnamegen;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
 #else
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;
     ip->i_ctime = vp->va_ctime.tv_sec;
 #endif
+}
+
+/* osi_linux_free_inode_pages
+ *
+ * Free all vnodes remaining in the afs hash.  Must be done before
+ * shutting down afs and freeing all memory.
+ */
+void
+osi_linux_free_inode_pages(void)
+{
+    int i;
+    struct vcache *tvc, *nvc;
+    extern struct vcache *afs_vhashT[VCSIZE];
+
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; ) {
+	    int slept;
+	
+	    nvc = tvc->hnext;
+	    if (afs_FlushVCache(tvc, &slept))		/* slept always 0 for linux? */
+		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
+	    tvc = nvc;
+	}
+    }
 }

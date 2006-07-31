@@ -21,6 +21,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/afs_osi.h"
+#include "afs/afs_md5.h"
 
 /* Local variables. */
 afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
@@ -571,6 +572,17 @@ afs_choose_cell_by_name(struct cell *cell, void *arg)
 }
 
 static void *
+afs_choose_cell_by_handle(struct cell *cell, void *arg)
+{
+    if (!arg) {
+	/* Safety net */
+	return cell;
+    } else {
+	return memcmp(cell->cellHandle, (char *)arg, 16) ? NULL : cell;
+    }
+}
+
+static void *
 afs_choose_cell_by_num(struct cell *cell, void *arg)
 {
     return (cell->cellNum == *((afs_int32 *) arg)) ? cell : NULL;
@@ -657,6 +669,17 @@ afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
 }
 
 struct cell *
+afs_GetCellByHandle(void *handle, afs_int32 locktype)
+{
+    struct cell *tc;
+
+    tc = afs_TraverseCells(&afs_choose_cell_by_handle, handle);
+    if (tc)
+	afs_UpdateCellLRU(tc);
+    return tc;
+}
+
+struct cell *
 afs_GetPrimaryCell(afs_int32 locktype)
 {
     return afs_GetCellByName(afs_thiscell, locktype);
@@ -725,6 +748,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
+	AFS_MD5_String(tc->cellHandle, tc->cellName, strlen(tc->cellName));
 	RWLOCK_INIT(&tc->lock, "cell lock");
 	newc = 1;
 	if (afs_thiscell && !strcmp(acellName, afs_thiscell))

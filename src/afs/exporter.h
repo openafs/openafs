@@ -17,6 +17,7 @@
 #define NFS_NOBODY      -2	/* maps Nfs's "nobody" but since not declared by some systems (i.e. Ultrix) we use a constant  */
 #endif
 #define	RMTUSER_REQ		0xabc
+#define	RMTUSER_REQ_PRIV	0xabe
 
 /**
   * There is a limitation on the number of bytes that can be passed into
@@ -51,11 +52,13 @@
 
 struct exporterops {
     int (*export_reqhandler) ();
-    int (*export_hold) ();
-    int (*export_rele) ();
+    void (*export_hold) ();
+    void (*export_rele) ();
     int (*export_sysname) ();
-    int (*export_garbagecollect) ();
+    void (*export_garbagecollect) ();
     int (*export_statistics) ();
+    int (*export_checkhost) ();
+    afs_int32 (*export_gethost) ();
 };
 
 struct exporterstats {
@@ -83,6 +86,8 @@ struct afs_exporter {
 #define	EXP_UNIXMODE	2
 #define	EXP_PWSYNC	4
 #define	EXP_SUBMOUNTS	8
+#define EXP_CLIPAGS    16
+#define EXP_CALLBACK   32
 
 
 #define	AFS_NFSFULLFID	1
@@ -93,12 +98,16 @@ struct afs_exporter {
         (*(EXP)->exp_op->export_hold)(EXP)
 #define	EXP_RELE(EXP)	\
         (*(EXP)->exp_op->export_rele)(EXP)
-#define	EXP_SYSNAME(EXP, INNAME, OUTNAME, NUM)   \
-        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME, NUM)
+#define	EXP_SYSNAME(EXP, INNAME, OUTNAME, NUM, ALLPAGS)   \
+        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME, NUM, ALLPAGS)
 #define	EXP_GC(EXP, param)	\
         (*(EXP)->exp_op->export_garbagecollect)(EXP, param)
 #define	EXP_STATISTICS(EXP)	\
         (*(EXP)->exp_op->export_statistics)(EXP)
+#define	EXP_CHECKHOST(EXP, HOST)	\
+        (*(EXP)->exp_op->export_checkhost)(EXP, HOST)
+#define	EXP_GETHOST(EXP)	\
+        (*(EXP)->exp_op->export_checkhost)(EXP)
 
 struct afs3_fid {
     u_short len;

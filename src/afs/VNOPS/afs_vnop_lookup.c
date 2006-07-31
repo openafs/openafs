@@ -27,9 +27,11 @@ RCSID
 #include "afs/nfsclient.h"
 #include "afs/exporter.h"
 #include "afs/afs_osidnlc.h"
+#include "afs/afs_dynroot.h"
 
 
 extern struct DirEntry *afs_dir_GetBlob();
+extern struct vcache *afs_globalVp;
 
 
 afs_int32 afs_bkvolpref = 0;
@@ -52,45 +54,37 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
  *
  * NOTE: this function returns a held volume structure in *volpp if it returns 0!
  */
-int
-EvalMountPoint(register struct vcache *avc, struct vcache *advc,
-	       struct volume **avolpp, register struct vrequest *areq)
+static int
+EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
+              struct volume **avolpp, register struct vrequest *areq,
+	      afs_uint32 *acellidxp, afs_uint32 *avolnump)
 {
-    afs_int32 code;
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char *cpos, *volnamep;
-    char type, *buf;
+    char *cpos, *volnamep, *x;
+    char *buf;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
+    afs_uint32 volid, cellidx;
 
-    AFS_STATCNT(EvalMountPoint);
-#ifdef notdef
-    if (avc->mvid && (avc->states & CMValid))
-	return 0;		/* done while racing */
-#endif
-    *avolpp = NULL;
-    code = afs_HandleLink(avc, areq);
-    if (code)
-	return code;
-
-    /* Determine which cell and volume the mointpoint goes to */
-    type = avc->linkData[0];	/* '#'=>Regular '%'=>RW */
-    cpos = afs_strchr(&avc->linkData[1], ':');	/* if cell name present */
+    cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
 	volnamep = cpos + 1;
 	*cpos = 0;
-	tcell = afs_GetCellByName(&avc->linkData[1], READ_LOCK);
+	tcell = afs_GetCellByName(data, READ_LOCK);
 	*cpos = ':';
+    } else if (cellnum) {
+	volnamep = data;
+	tcell = afs_GetCell(cellnum, READ_LOCK);
     } else {
-	volnamep = &avc->linkData[1];
-	tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
+	return ENODEV;
     }
     if (!tcell)
 	return ENODEV;
 
+    cellidx = tcell->cellIndex;
     mtptCell = tcell->cellNum;	/* The cell for the mountpoint */
     if (tcell->lcellp) {
 	hac = 1;		/* has associated cell */
@@ -98,15 +92,47 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     }
     afs_PutCell(tcell, READ_LOCK);
 
+    /* Look for an all-numeric volume ID */
+    volid = 0;
+    for (x = volnamep; *x >= '0' && *x <= '9'; x++)
+	volid = (volid * 10) + (*x - '0');
+
+    /*
+     * If the volume ID was all-numeric, and they didn't ask for a
+     * pointer to the volume structure, then just return the number
+     * as-is.  This is currently only used for handling name lookups
+     * in the dynamic mount directory.
+     */
+    if (!*x && !avolpp) {
+	if (acellidxp)
+	    *acellidxp = cellidx;
+	if (avolnump)
+	    *avolnump = volid;
+	return 0;
+    }
+
+    /*
+     * If the volume ID was all-numeric, and the type was '%', then
+     * assume whoever made the mount point knew what they were doing,
+     * and don't second-guess them by forcing use of a RW volume when
+     * they gave the ID of something else.
+     */
+    if (!*x && type == '%') {
+	tfid.Fid.Volume = volid;	/* remember BK volume */
+	tfid.Cell = mtptCell;
+	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
+	if (!tvp)
+	    return ENODEV;	/* oops, can't do it */
+	goto done;
+    }
+
     /* Is volume name a "<n>.backup" or "<n>.readonly" name */
     len = strlen(volnamep);
     roname = ((len > 9) && (strcmp(&volnamep[len - 9], ".readonly") == 0))
 	|| ((len > 7) && (strcmp(&volnamep[len - 7], ".backup") == 0));
 
     /* When we cross mountpoint, do we stay in the same cell */
-    samecell = (avc->fid.Cell == mtptCell) || (hac
-					       && (avc->fid.Cell ==
-						   assocCell));
+    samecell = (cellnum == mtptCell) || (hac && (cellnum == assocCell));
 
     /* Decide whether to prefetch the BK, or RO.  Also means we want the BK or
      * RO.
@@ -117,9 +143,9 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      *   want to prefetch the RO volume.
      */
     if ((type == '#') && !roname) {
-	if (afs_bkvolpref && samecell && (avc->states & CBackup))
+	if (afs_bkvolpref && samecell && (states & CBackup))
 	    prefetch = 3;	/* Prefetch the BK */
-	else if (!samecell || (avc->states & CRO))
+	else if (!samecell || (states & CRO))
 	    prefetch = 2;	/* Prefetch the RO */
 	else
 	    prefetch = 1;	/* Do not prefetch */
@@ -163,7 +189,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	return ENODEV;		/* Couldn't find the volume */
 
     /* Don't cross mountpoint from a BK to a BK volume */
-    if ((avc->states & CBackup) && (tvp->states & VBackup)) {
+    if ((states & CBackup) && (tvp->states & VBackup)) {
 	afs_PutVolume(tvp, WRITE_LOCK);
 	return ENODEV;
     }
@@ -190,11 +216,44 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	    return ENODEV;	/* oops, can't do it */
     }
 
+done:
+    if (acellidxp)
+	*acellidxp = cellidx;
+    if (avolnump)
+	*avolnump = tvp->volume;
+    if (avolpp)
+	*avolpp = tvp;
+    else
+	afs_PutVolume(tvp, WRITE_LOCK);
+    return 0;
+}
+
+int
+EvalMountPoint(register struct vcache *avc, struct vcache *advc,
+	       struct volume **avolpp, register struct vrequest *areq)
+{
+    afs_int32 code;
+
+    AFS_STATCNT(EvalMountPoint);
+#ifdef notdef
+    if (avc->mvid && (avc->states & CMValid))
+	return 0;		/* done while racing */
+#endif
+    *avolpp = NULL;
+    code = afs_HandleLink(avc, areq);
+    if (code)
+	return code;
+
+    /* Determine which cell and volume the mointpoint goes to */
+    code = EvalMountData(avc->linkData[0], avc->linkData + 1,
+                         avc->states, avc->fid.Cell, avolpp, areq, 0, 0);
+    if (code) return code;
+
     if (avc->mvid == 0)
 	avc->mvid =
 	    (struct VenusFid *)osi_AllocSmallSpace(sizeof(struct VenusFid));
-    avc->mvid->Cell = tvp->cell;
-    avc->mvid->Fid.Volume = tvp->volume;
+    avc->mvid->Cell = (*avolpp)->cell;
+    avc->mvid->Fid.Volume = (*avolpp)->volume;
     avc->mvid->Fid.Vnode = 1;
     avc->mvid->Fid.Unique = 1;
     avc->states |= CMValid;
@@ -214,11 +273,10 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      * cd'ing via a new path to a volume will reset the ".." pointer
      * to the new path.
      */
-    tvp->mtpoint = avc->fid;	/* setup back pointer to mtpoint */
+    (*avolpp)->mtpoint = avc->fid;	/* setup back pointer to mtpoint */
     if (advc)
-	tvp->dotdot = advc->fid;
+	(*avolpp)->dotdot = advc->fid;
 
-    *avolpp = tvp;
     return 0;
 }
 
@@ -313,7 +371,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
         if (code) goto done;
         vnode_ref(AFSTOV(root_vp));
 #endif
-	if (tvolp) {
+	if (tvolp && !afs_InReadDir(root_vp)) {
 	    /* Is this always kosher?  Perhaps we should instead use
 	     * NBObtainWriteLock to avoid potential deadlock.
 	     */
@@ -420,7 +478,7 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
     else {
 	au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
 	if (au->exporter) {
-	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num, 0);
 	    if (error) {
 		strcpy(bufp, "@sys");
 		afs_PutUser(au, 0);
@@ -444,7 +502,7 @@ Check_AtSys(register struct vcache *avc, const char *aname,
 
     if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
-	state->name = (char *)osi_AllocLargeSpace(AFS_SMALLOCSIZ);
+	state->name = (char *)osi_AllocLargeSpace(MAXSYSNAME);
 	state->allocked = 1;
 	state->index =
 	    afs_getsysname(areq, avc, state->name, &num, sysnamelist);
@@ -497,8 +555,9 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
 	    if (au->exporter) {
 		error =
-		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num, 0);
 		if (error) {
+		    afs_PutUser(au, 0);
 		    return 0;
 		}
 	    }
@@ -1170,7 +1229,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     *avcp = NULL;		/* Since some callers don't initialize it */
     bulkcode = 0;
 
-    if (!(adp->states & CStatd)) {
+    if (!(adp->states & CStatd) && !afs_InReadDir(adp)) {
 	if ((code = afs_VerifyVCache2(adp, &treq))) {
 	    goto done;
 	}
@@ -1182,7 +1241,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	/* looking up ".." in root via special hacks */
 	if (adp->mvid == (struct VenusFid *)0 || adp->mvid->Fid.Volume == 0) {
 #ifdef	AFS_OSF_ENV
-	    extern struct vcache *afs_globalVp;
 	    if (adp == afs_globalVp) {
 		struct vnode *rvp = AFSTOV(adp);
 /*
@@ -1249,6 +1307,63 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	goto done;
     }
 
+    /*
+     * Special case lookup of ".." in the dynamic mount directory.
+     * The parent of this directory is _always_ the AFS root volume.
+     */
+    if (afs_IsDynrootMount(adp) &&
+	aname[0] == '.' && aname[1] == '.' && !aname[2]) {
+
+	ObtainReadLock(&afs_xvcache);
+	osi_vnhold(afs_globalVp, 0);
+	ReleaseReadLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
+        vnode_get(AFSTOV(afs_globalVp));
+#endif
+	code = 0;
+	*avcp = tvc = afs_globalVp;
+	hit = 1;
+	goto done;
+    }
+
+    /*
+     * Special case lookups in the dynamic mount directory.
+     * The names here take the form cell:volume, similar to a mount point.
+     * EvalMountData parses that and returns a cell and volume ID, which
+     * we use to construct the appropriate dynroot Fid.
+     */
+    if (afs_IsDynrootMount(adp)) {
+	struct VenusFid tfid;
+	afs_uint32 cellidx, volid;
+
+	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid);
+	if (code)
+	    goto done;
+	afs_GetDynrootMountFid(&tfid);
+	tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
+	tfid.Fid.Unique = volid;
+	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	hit = 1;
+	goto done;
+    }
+
+#ifdef AFS_LINUX26_ENV
+    /*
+     * Special case of the dynamic mount volume in a static root.
+     * This is really unfortunate, but we need this for the translator.
+     */
+    if (adp == afs_globalVp && !afs_GetDynrootEnable() &&
+	!strcmp(aname, AFS_DYNROOT_MOUNTNAME)) {
+	struct VenusFid tfid;
+
+	afs_GetDynrootMountFid(&tfid);
+	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	code = 0;
+	hit = 1;
+	goto done;
+    }
+#endif
+
     Check_AtSys(adp, aname, &sysState, &treq);
     tname = sysState.name;
 
@@ -1291,8 +1406,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	struct VenusFid tfid;
 
 	/* now we have to lookup the next fid */
-	tdc =
-	    afs_GetDCache(adp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
+	if (afs_InReadDir(adp))
+	    tdc = adp->dcreaddir;
+	else
+	    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq,
+				&dirOffset, &dirLen, 1);
 	if (!tdc) {
 	    *avcp = NULL;	/* redundant, but harmless */
 	    code = EIO;
@@ -1309,24 +1427,30 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 * cases we need to worry about:
 	 * 1. The cache data is being fetched by another process.
 	 * 2. The cache data is no longer valid
+	 *
+	 * If a readdir is in progress _in this thread_, it has a shared
+	 * lock on the vcache and has obtained current data, so we just
+	 * use that.  This eliminates several possible deadlocks.  
 	 */
-	while ((adp->states & CStatd)
-	       && (tdc->dflags & DFFetching)
-	       && hsame(adp->m.DataVersion, tdc->f.versionNo)) {
-	    ReleaseReadLock(&tdc->lock);
-	    ReleaseReadLock(&adp->lock);
-	    afs_osi_Sleep(&tdc->validPos);
-	    ObtainReadLock(&adp->lock);
-	    ObtainReadLock(&tdc->lock);
-	}
-	if (!(adp->states & CStatd)
-	    || !hsame(adp->m.DataVersion, tdc->f.versionNo)) {
-	    ReleaseReadLock(&tdc->lock);
-	    ReleaseReadLock(&adp->lock);
-	    afs_PutDCache(tdc);
-	    if (tname && tname != aname)
-		osi_FreeLargeSpace(tname);
-	    goto redo;
+	if (!afs_InReadDir(adp)) {
+	    while ((adp->states & CStatd)
+		   && (tdc->dflags & DFFetching)
+		   && hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+		ReleaseReadLock(&tdc->lock);
+		ReleaseReadLock(&adp->lock);
+		afs_osi_Sleep(&tdc->validPos);
+		ObtainReadLock(&adp->lock);
+		ObtainReadLock(&tdc->lock);
+	    }
+	    if (!(adp->states & CStatd)
+		|| !hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+		ReleaseReadLock(&tdc->lock);
+		ReleaseReadLock(&adp->lock);
+		afs_PutDCache(tdc);
+		if (tname && tname != aname)
+		    osi_FreeLargeSpace(tname);
+		goto redo;
+	    }
 	}
 
 	/* Save the version number for when we call osi_dnlc_enter */
@@ -1357,7 +1481,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	tname = sysState.name;
 
 	ReleaseReadLock(&tdc->lock);
-	afs_PutDCache(tdc);
+	if (!afs_InReadDir(adp))
+	    afs_PutDCache(tdc);
 
 	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
 	    ReleaseReadLock(&adp->lock);
@@ -1391,7 +1516,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 * dirCookie tells us where to start prefetching from.
 	 */
 	if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)
-	    && !afs_IsDynroot(adp)) {
+	    && !afs_IsDynroot(adp) && !afs_InReadDir(adp)) {
 	    afs_int32 retry;
 	    /* if the entry is not in the cache, or is in the cache,
 	     * but hasn't been statd, then do a bulk stat operation.

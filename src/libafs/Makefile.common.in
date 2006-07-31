@@ -12,6 +12,7 @@ INCLUDE= -I.  -I/usr/include -I${TOP_OBJDIR}/src/config
 
 TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
 TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
+TOP_OBJ_SYS = ${TOP_OBJDIR}/src/sys
 TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
 
 TOP_SRC_AFS = ${TOP_SRCDIR}/afs
@@ -85,19 +86,25 @@ AFSAOBJS = \
 	afs_dcache.o \
 	afs_dir.o		\
 	afs_dynroot.o		\
+	afs_error.o \
+	afs_icl.o \
 	afs_init.o \
 	afs_lock.o	\
 	afs_mariner.o \
+	afs_md5.o \
 	afs_memcache.o	\
 	afs_osi.o		\
 	afs_osidnlc.o	\
 	afs_osi_alloc.o	\
+	afs_osi_gcpags.o	\
 	afs_osi_pag.o \
 	afs_osi_uio.o \
 	afs_osi_vget.o \
+	afs_osi_vm.o \
 	afs_segments.o \
 	afs_server.o \
 	afs_stat.o \
+	afs_syscall.o \
 	afs_user.o \
 	afs_util.o \
 	afs_vcache.o \
@@ -161,12 +168,61 @@ AFSNFSOBJS = \
 	afs_nfsdisp.o	\
 	afs_call_nfs.o \
 	afs_pioctl_nfs.o \
+	Kpagcb.cs.o	\
+	Kpagcb.xdr.o	\
 	$(AFS_OS_NFSOBJS)
 
 AFSNONFSOBJS = \
 	afs_call.o \
 	afs_pioctl.o \
 	$(AFS_OS_NONFSOBJS)
+
+# init daemons call pioctl
+AFSPAGOBJS = \
+	afs_atomlist.o \
+	afs_error.o \
+	afs_icl.o \
+	afs_lhash.o \
+	afs_lock.o	\
+	afs_osi.o		\
+	afs_osi_alloc.o	\
+	afs_osi_gcpags.o	\
+	afs_osi_pag.o \
+	afs_pag_call.o \
+	afs_pag_cred.o \
+	afs_pag_user.o \
+	afs_stat.o \
+	afs_syscall.o \
+	afsaux.o		\
+	xdr_arrayn.o	\
+	xdr_array.o	\
+	xdr_int32.o	\
+	xdr_int64.o	\
+	rx.o		\
+	rx_rdwr.o	\
+	rx_clock.o	\
+	rx_event.o	\
+	rx_globals.o	\
+	rx_kmutex.o	\
+	rx_knet.o	\
+	rx_kcommon.o	\
+	rx_misc.o	\
+	rx_null.o	\
+	rx_getaddr.o	\
+	rx_packet.o	\
+	rx_multi.o	\
+	xdr_rx.o	\
+	Kpagcb.ss.o	\
+	Kpagcb.xdr.o	\
+	Krxstat.ss.o	\
+	Krxstat.xdr.o	\
+	Krmtsys.cs.o	\
+	Krmtsys.xdr.o	\
+	rxstat.o	\
+	AFS_component_version_number.o\
+	xdr_afsuuid.o	\
+	xdr.o		\
+	afs_uuid.o $(AFS_OS_PAGOBJS)
 
 
 # Compilation rules
@@ -191,9 +247,13 @@ afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE_OPT)
 afs_dynroot.o: 	$(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE_OPT)
+afs_error.o: $(TOP_SRC_AFS)/afs_error.c
+	$(CRULE_OPT)
 afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE_OPT)
 afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
+	$(CRULE_OPT)
+afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE_OPT)
 afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
 	$(CRULE_OPT)
@@ -201,12 +261,16 @@ afs_osi.o: 	$(TOP_SRC_AFS)/afs_osi.c
 	$(CRULE_OPT)
 afs_osi_alloc.o: $(TOP_SRC_AFS)/afs_osi_alloc.c
 	$(CRULE_OPT)
+afs_osi_gcpags.o: 	$(TOP_SRC_AFS)/afs_osi_gcpags.c
+	$(CRULE_OPT)
 afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 	$(CRULE_OPT)
 afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE_OPT)
 afs_osi_vget.o: $(TOP_SRC_AFS)/afs_osi_vget.c
 	$(CRULE_NOOPT)
+afs_osi_vm.o: 	$(TOP_SRC_AFS)/afs_osi_vm.c
+	$(CRULE_OPT)
 afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE_OPT)
 afs_server.o: $(TOP_SRC_AFS)/afs_server.c
@@ -269,13 +333,21 @@ afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
 	$(CRULE_NOOPT)
 afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
 	$(CRULE_NOOPT)
+afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE_NOOPT)
 AFS_component_version_number.o: AFS_component_version_number.c
 	$(CRULE_NOOPT)
 afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE_NOOPT)
 afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE_NOOPT)
+afs_pag_call.o: $(TOP_SRC_AFS)/afs_pag_call.c
+	$(CRULE_NOOPT)
+afs_pag_cred.o: $(TOP_SRC_AFS)/afs_pag_cred.c
+	$(CRULE_NOOPT)
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
+	$(CRULE_NOOPT)
+afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 	$(CRULE_NOOPT)
 fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE_NOOPT)
@@ -315,6 +387,12 @@ Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE_NOOPT)
 rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE_NOOPT)
+Kpagcb.cs.o: $(TOP_OBJ_FSINT)/Kpagcb.cs.c
+	$(CRULE_NOOPT)
+Kpagcb.ss.o: $(TOP_OBJ_FSINT)/Kpagcb.ss.c
+	$(CRULE_NOOPT)
+Kpagcb.xdr.o: $(TOP_OBJ_FSINT)/Kpagcb.xdr.c
+	$(CRULE_NOOPT)
 Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE_NOOPT)
 Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
@@ -322,6 +400,10 @@ Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 	$(CRULE_NOOPT)
 Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
+	$(CRULE_NOOPT)
+Krmtsys.xdr.o: $(TOP_OBJ_SYS)/Krmtsys.xdr.c
+	$(CRULE_NOOPT)
+Krmtsys.cs.o: $(TOP_OBJ_SYS)/Krmtsys.cs.c
 	$(CRULE_NOOPT)
 afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
 	$(CRULE_NOOPT)
@@ -361,6 +443,10 @@ afs_call_nfs.o:	$(TOP_SRC_AFS)/afs_call.c
 afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE_NOOPT)
 
+# Special objects for the PAG module
+afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
+	$(CRULE_OPT) -DAFS_PAG_MANAGER
+
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
 # in the per-platform Makefiles.
@@ -386,7 +472,13 @@ osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
 	$(CRULE_NOOPT)
 osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 	$(CRULE_OPT)
+osi_ioctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c
+	$(CRULE_NOOPT)
 osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
+	$(CRULE_NOOPT)
+osi_pag_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pag_module.c
+	$(CRULE_NOOPT)
+osi_proc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_proc.c
 	$(CRULE_NOOPT)
 osi_probe.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_probe.c
 	$(CRULE_NOOPT)
@@ -396,6 +488,10 @@ osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
 	$(CRULE_NOOPT)
 osi_flush.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_flush.s
 	$(CRULE_OPT)
+osi_export.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_export.c
+	$(CRULE_NOOPT)
+osi_nfssrv.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_nfssrv.c
+	$(CRULE_NOOPT)
 osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
 	$(CRULE_NOOPT)
 osi_cred.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c

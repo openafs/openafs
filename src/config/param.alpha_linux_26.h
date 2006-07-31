@@ -23,7 +23,6 @@
 #define AFS_ALPHA_LINUX26_ENV  1
 #define __alpha        1
 #define AFS_LINUX_64BIT_KERNEL 1
-#define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 338

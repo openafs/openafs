@@ -89,6 +89,10 @@ int afs_symlink
 	code = afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
 	goto done;
     }
+    if (afs_IsDynrootMount(adp)) {
+	code = EROFS;
+	goto done;
+    }
 
     code = afs_VerifyVCache(adp, &treq);
     if (code) {

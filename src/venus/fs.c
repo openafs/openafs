@@ -2198,6 +2198,37 @@ CallBackRxConnCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
+NukeNFSCredsCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    afs_int32 hostAddr;
+    struct hostent *thp;
+    
+    ti = as->parms[0].items;
+    thp = hostutil_GetHostByName(ti->data);
+    if (!thp) {
+	fprintf(stderr, "host %s not found in host table.\n", ti->data);
+	return 1;
+    }
+    else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
+    
+    /* now do operation */
+    blob.in_size = sizeof(afs_int32);
+    blob.out_size = sizeof(afs_int32);
+    blob.in = (char *) &hostAddr;
+    blob.out = (char *) &hostAddr;
+    
+    code = pioctl(0, VIOC_NFS_NUKE_CREDS, &blob, 1);
+    if (code < 0) {
+	Die(errno, 0);
+	return 1;
+    }
+    return 0;
+}
+
+static int
 NewCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code, linkedstate = 0, size = 0, *lp;
@@ -2521,7 +2552,7 @@ ExportAfsCmd(struct cmd_syndesc *as, char *arock)
     struct ViceIoctl blob;
     struct cmd_item *ti;
     int export = 0, type = 0, mode = 0, exp = 0, exportcall, pwsync =
-	0, smounts = 0;
+	0, smounts = 0, clipags = 0, pagcb = 0;
 
     ti = as->parms[0].items;
     if (strcmp(ti->data, "nfs") == 0)
@@ -2574,8 +2605,29 @@ ExportAfsCmd(struct cmd_syndesc *as, char *arock)
 	    return 1;
 	}
     }
+    if (ti = as->parms[5].items) {	/* -clipags */
+	if (strcmp(ti->data, "on") == 0)
+	    clipags = 3;
+	else if (strcmp(ti->data, "off") == 0)
+	    clipags = 2;
+	else {
+	    fprintf(stderr, "Illegal argument %s\n", ti->data);
+	    return 1;
+	}
+    }
+    if (ti = as->parms[6].items) {	/* -pagcb */
+	if (strcmp(ti->data, "on") == 0)
+	    pagcb = 3;
+	else if (strcmp(ti->data, "off") == 0)
+	    pagcb = 2;
+	else {
+	    fprintf(stderr, "Illegal argument %s\n", ti->data);
+	    return 1;
+	}
+    }
     exportcall =
-	(type << 24) | (mode << 6) | (pwsync << 4) | (smounts << 2) | export;
+	(type << 24) | (pagcb << 10) | (clipags << 8) |
+	(mode << 6) | (pwsync << 4) | (smounts << 2) | export;
     type &= ~0x70;
     /* make the call */
     blob.in = (char *)&exportcall;
@@ -2606,6 +2658,13 @@ ExportAfsCmd(struct cmd_syndesc *as, char *arock)
 	printf("\t%s\n",
 	       (exportcall & 8 ? "Allow mounts of /afs/.. subdirs" :
 		"Only mounts to /afs allowed"));
+	printf("\t%s\n",
+	       (exportcall & 16 ? "Client-assigned PAG's are used" :
+		"Client-assigned PAG's are not used"));
+	printf("\t%s\n",
+	       (exportcall & 32 ?
+		"Callbacks are made to get creds from new clients" :
+		"Callbacks are not made to get creds from new clients"));
     } else {
 	printf("'%s' translator is disabled\n", exported_types[type]);
     }
@@ -3509,6 +3568,10 @@ defect 3069
 		"run on strict 'uid check' mode (on | off)");
     cmd_AddParm(ts, "-submounts", CMD_SINGLE, CMD_OPTIONAL,
 		"allow nfs mounts to subdirs of /afs/.. (on  | off)");
+    cmd_AddParm(ts, "-clipags", CMD_SINGLE, CMD_OPTIONAL,
+		"enable use of client-assigned PAG's (on  | off)");
+    cmd_AddParm(ts, "-pagcb", CMD_SINGLE, CMD_OPTIONAL,
+		"enable callbacks to get creds from new clients (on  | off)");
 
 
     ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, 0,
@@ -3553,6 +3616,9 @@ defect 3069
 			  "disconnection mode");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_OPTIONAL, "nat | full");
 #endif
+
+    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, 0, "nuke credentials for NFS client");
+    cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)

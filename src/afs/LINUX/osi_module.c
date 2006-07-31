@@ -38,10 +38,6 @@ RCSID
 #include <linux/kernel.h>
 #endif
 
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
-#include <linux/seq_file.h>
-#endif
-
 extern struct file_system_type afs_fs_type;
 
 #if !defined(AFS_LINUX24_ENV)
@@ -86,6 +82,9 @@ init_module(void)
 #endif /* !defined(AFS_LINUX24_ENV) */
 
     osi_Init();
+#ifdef AFS_LINUX26_ENV
+    osi_linux_nfssrv_init();
+#endif
 
     err = osi_syscall_init();
     if (err)
@@ -96,7 +95,8 @@ init_module(void)
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
 #ifdef AFS_LINUX24_ENV
-    afsproc_init();
+    osi_proc_init();
+    osi_ioctl_init();
 #endif
 
     return 0;
@@ -115,10 +115,14 @@ cleanup_module(void)
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
+#ifdef AFS_LINUX26_ENV
+    osi_linux_nfssrv_shutdown();
+#endif
     osi_linux_free_afs_memory();
 
 #ifdef AFS_LINUX24_ENV
-    afsproc_exit();
+    osi_ioctl_clean();
+    osi_proc_clean();
 #endif
     return;
 }

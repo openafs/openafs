@@ -183,4 +183,7 @@ struct cm_initparams {
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 #define VIOC_DISCON		_CVICEIOCTL(5)	/* set/get discon mode */
 
+/* OpenAFS-specific 'O' pioctl's */
+#define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
+
 #endif /* AFS_VENUS_H */
