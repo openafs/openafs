@@ -114,10 +114,18 @@ Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
 int
 ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 {
-    struct tm *timePtr;
     time_t     tt = timeSecs;
+    struct tm *timePtr;
+#ifndef AFS_NT40_ENV
+    struct tm timeP;
 
+    timePtr = &timeP;
+
+    memset(&timePtr, 0, sizeof(timePtr));
+    localtime_r(&tt, &timePtr);
+#else
     timePtr = localtime(&tt);
+#endif
 
     /* copy the relevant fields */
     ktimePtr->sec = timePtr->tm_sec;
