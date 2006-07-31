@@ -45,7 +45,7 @@ bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
     afs_int32 code = 0;
 
     code =
-	ubik_Call(VL_GetEntryByID, uclient, 0, volID, volType, vldbEntryPtr);
+	ubik_VL_GetEntryByID(uclient, 0, volID, volType, vldbEntryPtr);
     return (code);
 }
 

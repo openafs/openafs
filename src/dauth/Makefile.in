@@ -46,13 +46,13 @@ adkint.cs.o:	adkint.cs.c
 adkint.xdr.o:	adkint.xdr.c adkint.h
 
 adkint.cs.c: adkint.xg
-	${RXGEN} -C -o $@ ${srcdir}/adkint.xg
+	${RXGEN} -C -u -o $@ ${srcdir}/adkint.xg
 
 adkint.xdr.c: adkint.xg
 	${RXGEN} -c -o $@ ${srcdir}/adkint.xg
 
 adkint.h: adkint.xg
-	${RXGEN} -h -o $@ ${srcdir}/adkint.xg
+	${RXGEN} -h -u -o $@ ${srcdir}/adkint.xg
 
 dlog:		dlog.o $(VERS) $(OBJS) $(LIBS)
 		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERS) $(OBJS) ${LIBS} \

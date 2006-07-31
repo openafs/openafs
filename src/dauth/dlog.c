@@ -20,13 +20,13 @@
  * to decode the decrypted result. As a side-effect of using the AFS/DFS
  * translator as the intermediary, this program also does not have to access
  * any KRB5 location/configuration information--it just contacts the servers
- * listed in the CellServDB in the usual manner (via ubik_Call).
+ * listed in the CellServDB in the usual manner (via ubik_.
  *
  * This works as follows:
  * 
  * 1. dlog sends a GetTickets request to the intermediary.
  *
- * 2. The intermediary reformats the request as an KRB5 AS request, asking
+ * 2. The intermediary reformats the request as an KRB5 AS request(asking
  *    for a ticket made out to the specified principal, suitable for contacting
  *    the AFS/DFS translator principal. This is determined by the server, and
  *    is by default "afs".
@@ -665,7 +665,7 @@ CommandProc(as, arock)
      */
     reply_p = (adk_reply_ptr) 0;
     error_p = (adk_error_ptr) 0;
-    code = ubik_Call(ADK_GetTicket, ubik_handle, 0,	/* Ubik flags */
+    code = ubik_ADK_GetTicket(ubik_handle, 0,	/* Ubik flags */
 		     name,	/* IN:  Principal: must be exact DCE principal */
 		     nonce,	/* IN:  Input nonce */
 		     lifetime,	/* IN:  lifetime */

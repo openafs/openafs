@@ -213,6 +213,10 @@ afsUUID FS_HostUUID;
 
 static void FlagMsg();
 
+#ifdef AFS_PTHREAD_ENV
+pthread_key_t viced_uclient_key;
+#endif
+
 /*
  * Home for the performance statistics.
  */
@@ -1533,7 +1537,7 @@ Do_VLRegisterRPC()
 	FS_HostAddrs_HBO[i] = ntohl(FS_HostAddrs[i]);
     addrs.bulkaddrs_len = FS_HostAddr_cnt;
     addrs.bulkaddrs_val = (afs_uint32 *) FS_HostAddrs_HBO;
-    code = ubik_Call(VL_RegisterAddrs, cstruct, 0, &FS_HostUUID, 0, &addrs);
+    code = ubik_VL_RegisterAddrs(cstruct, 0, &FS_HostUUID, 0, &addrs);
     if (code) {
 	if (code == VL_MULTIPADDR) {
 	    ViceLog(0,

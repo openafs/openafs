@@ -79,6 +79,7 @@ struct commandline {
     int dflag;
     int xflag;
     int yflag;
+    int uflag;
     char *infile;
     char *outfile;
 };
@@ -91,7 +92,7 @@ static char *IncludeDir[MAXCPPARGS];
 int nincludes = 0;
 char *OutFileFlag = "";
 char OutFile[256];
-char Sflag = 0, Cflag = 0, hflag = 0, cflag = 0, kflag = 0;
+char Sflag = 0, Cflag = 0, hflag = 0, cflag = 0, kflag = 0, uflag = 0;
 char zflag = 0;			/* If set, abort server stub if rpc call returns non-zero */
 char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
@@ -181,7 +182,7 @@ main(int argc, char *argv[])
     if (!parseargs(argc, argv, &cmd)) {
 	f_print(stderr, "usage: %s infile\n", cmdname);
 	f_print(stderr,
-		"       %s [-c | -h | -l | -m | -C | -S | -r | -k | -R | -p | -d | -z] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
+		"       %s [-c | -h | -l | -m | -C | -S | -r | -k | -R | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
 		cmdname);
 	f_print(stderr, "       %s [-s udp|tcp]* [-o outfile] [infile]\n",
 		cmdname);
@@ -470,6 +471,8 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     if (xflag) {
 	f_print(fout, "#include \"rx/rx_globals.h\"\n");
     }
+    if (uflag)
+	f_print(fout, "#include <ubik.h>\n");
     f_print(fout, "#else	/* UKERNEL */\n");
     f_print(fout, "#include \"h/types.h\"\n");
     f_print(fout, "#ifndef	SOCK_DGRAM  /* XXXXX */\n");
@@ -521,6 +524,8 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
 	f_print(fout, "#include <rx/rx_globals.h>\n");
     }
     f_print(fout, "#include <afs/rxgen_consts.h>\n");
+    if (uflag)
+	f_print(fout, "#include <ubik.h>\n");
     f_print(fout, "#endif	/* KERNEL */\n\n");
     f_print(fout, "#ifdef AFS_NT40_ENV\n");
     f_print(fout, "#ifndef AFS_RXGEN_EXPORT\n");
@@ -813,6 +818,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		case 'k':
 		case 'p':
 		case 'd':
+		case 'u':
 		case 'x':
 		case 'y':
 		case 'z':
@@ -869,6 +875,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     cmd->Cflag = Cflag = flag['C'];
     cmd->Sflag = Sflag = flag['S'];
     cmd->rflag = flag['r'];
+    cmd->uflag = uflag = flag['u'];
     cmd->kflag = kflag = flag['k'];
     cmd->pflag = flag['p'];
     cmd->dflag = debug = flag['d'];

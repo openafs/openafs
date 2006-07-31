@@ -75,7 +75,7 @@ ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
 ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
 
 ptint.cs.c: ptint.xg
-	${RXGEN} -x -C -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -C -u -o $@ ${srcdir}/ptint.xg
 
 ptint.ss.c: ptint.xg
 	${RXGEN} -x -S -o $@ ${srcdir}/ptint.xg
@@ -84,7 +84,7 @@ ptint.xdr.c: ptint.xg
 	${RXGEN} -x -c -o $@ ${srcdir}/ptint.xg
 
 ptint.h: ptint.xg
-	${RXGEN} -x -h -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -x -h -u -o $@ ${srcdir}/ptint.xg
 
 ptint.cs.c: ptint.h
 ptint.ss.c: ptint.h
