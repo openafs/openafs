@@ -3235,10 +3235,13 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     lock_ObtainMutex(&vcp->mx);
+#if 0
     if (VistaProtoIndex != -1) {
         protoIndex = VistaProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
-    } else if (NTProtoIndex != -1) {
+    } else 
+#endif	
+	if (NTProtoIndex != -1) {
         protoIndex = NTProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
     }
