@@ -45,7 +45,6 @@ RCSID
 static afs_int32 hostAddr = 0;
 static int hostAddrLookup = 0;
 char *afs_server = 0, server_name[128];
-afs_int32 host;
 static afs_int32 SetClientCreds();
 
 /* Picks up the name of the remote afs client host where the rmtsys 
@@ -122,6 +121,7 @@ rx_connection(afs_int32 * errorcode, char *syscall)
 {
     struct rx_connection *conn;
     struct rx_securityClass *null_securityObject;
+    afs_int32 host;
 
     if (!(host = GetAfsServerAddr(syscall))) {
 	*errorcode = -1;
