@@ -2174,7 +2174,6 @@ MoveVolume(as)
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
-	free(p);
 	exit(1);
     }
     if (TESTM)
@@ -2327,7 +2326,6 @@ CopyVolume(as)
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
-	free(p);
 	exit(1);
     }
 
