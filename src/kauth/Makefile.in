@@ -52,7 +52,7 @@ OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalo
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
 
-all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb \
+all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb ka-forwarder \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
 	depinstall
@@ -200,6 +200,9 @@ krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS)
 
+ka-forwarder: ka-forwarder.o
+	${CC} -o $@ ${CFLAGS} ka-forwarder.o ${LIBS} ${XLIBS}
+
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
@@ -240,6 +243,7 @@ install: \
 	${DESTDIR}${libdir}/afs/libkauth.krb.a \
 	${DESTDIR}${afssrvsbindir}/kadb_check \
 	${DESTDIR}${afssrvsbindir}/kdb \
+	${DESTDIR}${afssrvsbindir}/ka-forwarder \
 	${DESTDIR}${includedir}/afs/kautils.h \
 	${DESTDIR}${includedir}/afs/kauth.h \
 	${DESTDIR}${includedir}/afs/kaport.h
@@ -292,6 +296,9 @@ ${DESTDIR}${afssrvsbindir}/kadb_check: rebuild
 ${DESTDIR}${afssrvsbindir}/kdb: kdb
 	${INSTALL} -s $? $@
 
+${DESTDIR}${afssrvsbindir}/ka-forwarder: ka-forwarder
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/kautils.h: kautils.h
 	${INSTALL} $? $@
 
@@ -318,6 +325,7 @@ dest: \
 	${DEST}/lib/afs/libkauth.krb.a \
 	${DEST}/etc/kdb \
 	${DEST}/etc/kadb_check \
+	${DEST}/root.server/usr/afs/bin/ka-forwarder \
 	${DEST}/include/afs/kautils.h \
 	${DEST}/include/afs/kauth.h \
 	${DEST}/include/afs/kaport.h
@@ -354,6 +362,9 @@ ${DEST}/etc/kadb_check: rebuild
 
 ${DEST}/etc/kdb: kdb 
 	${INSTALL} -s $? $@
+
+${DEST}/root.server/usr/afs/bin/ka-forwarder: ka-forwarder
+	${INSTALL} $? $@
 
 ${DEST}/include/afs/kautils.h: kautils.h
 	${INSTALL} $? $@
