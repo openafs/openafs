@@ -524,7 +524,11 @@ EXT int rxdebug_active;
 #define dpf(args)
 #endif
 #else
+#ifdef DPF_FSLOG
+#define dpf(args) FSLog args
+#else
 #define dpf(args) if (rx_debugFile) rxi_DebugPrint args; else
+#endif 
 #endif
 #define rx_Log_event rxevent_debugFile
 

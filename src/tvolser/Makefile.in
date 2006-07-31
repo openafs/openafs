@@ -23,6 +23,7 @@ DIR=../dir
 VOL=../vol
 FSINT=../fsint
 VOLSER=../volser
+RX=../rx
 
 VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o
 
@@ -42,8 +43,10 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 
 FSINTOBJS=# afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
+RXOBJS=rx_pthread.o
+
 objects= ${VOLSEROBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
@@ -51,6 +54,8 @@ all: volserver
 
 COMPILE=${CC} ${CFLAGS} -c $?
 
+rx_pthread.o: ${RX}/rx_pthread.c
+	${COMPILE} -DDPF_FSLOG
 volmain.o: ${VOLSER}/volmain.c
 	${COMPILE}
 volprocs.o: ${VOLSER}/volprocs.c
