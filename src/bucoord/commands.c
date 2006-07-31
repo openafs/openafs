@@ -1564,7 +1564,7 @@ bc_VolsetRestoreCmd(as, arock)
 
     /* Perform the call to start the restore */
     code = bc_StartDmpRst(bc_globalConfig, "disk", "restore", volsToRestore,
-			  /*destserver */ 0, /*destpartition */ 0, fromDate,
+			  /*destserver */ NULL, /*destpartition */ 0, fromDate,
 			  newExt, oldFlag,
 			  /*parentDump */ 0, /*dumpLevel */ 0,
 			  bc_Restorer, ports, portCount,
