@@ -306,6 +306,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
     int retry_flag = 1;
     int code = 0;
     char hoststr[16], hoststr2[16];
+    struct ubik_client *uclient;
+
     if (!tconn) {
 	ViceLog(0, ("CallPreamble: unexpected null tconn!\n"));
 	return -1;
@@ -329,9 +331,20 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	/* Take down the old connection and re-read the key file */
 	ViceLog(0,
 		("CallPreamble: Couldn't get CPS. Reconnect to ptserver\n"));
+#ifdef AFS_PTHREAD_ENV
+	uclient = (struct ubik_client *)pthread_getspecific(viced_uclient_key);
+
+	/* Is it still necessary to drop this? We hit the net, we should... */
 	H_UNLOCK;
-	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+	if (uclient) 
+	    hpr_End(uclient);
+	code = hpr_Initialize(&uclient);
+
+	assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
+#else
+	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+#endif
 	if (code) {
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
