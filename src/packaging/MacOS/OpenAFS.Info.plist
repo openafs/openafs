@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>OpenAFS 1.5.3</string>
+	<string>OpenAFS 1.5.5</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.openafs.OpenAFS.pkg</string>
 	<key>CFBundleName</key>
 	<string>OpenAFS</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.5.3</string>
+	<string>1.5.5</string>
 	<key>IFMajorVersion</key>
 	<integer>1</integer>
 	<key>IFMinorVersion</key>
