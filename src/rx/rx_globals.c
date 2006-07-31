@@ -32,8 +32,10 @@ RCSID
 #define INIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllexport)
+#define EXT2 __declspec(dllexport)
 #else
 #define EXT
+#define EXT2 
 #endif
 
 #ifdef KERNEL

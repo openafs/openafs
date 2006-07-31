@@ -134,7 +134,14 @@ rx: des
 	$(NTMAKE)
 	$(CD) ..\..
 
-rxstat: rx
+ubik_headers: rx
+     echo ***** $@
+	$(DOCD) $(SRC)\ubik
+	$(CD) $(SRC)\ubik
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+rxstat: ubik_headers
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

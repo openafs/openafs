@@ -27,8 +27,17 @@ LIBS = \
 ############################################################################
 # Definitions for generating files via RXGEN
 
-update.cs.c update.ss.c update.er.c update.h: update.xg
-	$(RXGEN) $**
+update.cs.c: update.xg update.h
+	$(RXGEN) -u -C -o $@ update.xg
+
+update.ss.c: update.xg update.h
+	$(RXGEN) -S -o $@ update.xg
+
+update.xdr.c: update.xg	update.h
+	$(RXGEN) -c -o $@ update.xg
+
+update.h: update.xg
+	$(RXGEN) -u -h -o $@ update.xg
 
 ############################################################################
 # upserver

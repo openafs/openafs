@@ -86,3 +86,5 @@ EXPORTS
 	VOTE_function_names				@84 DATA
 	rx_Finalize					@85
 	pr_End						@86
+        VOTE_GetSyncSite                                @87
+        ubik_RefreshConn                                @88
