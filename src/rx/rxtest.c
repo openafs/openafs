@@ -34,9 +34,9 @@
 #include <afs/afsutil.h>
 
 static void usage(char *);
-static void do_client(struct sockaddr *);
+static void do_client(struct sockaddr *, socklen_t);
 static void *client_thread_send(void *);
-static void do_server(unsigned short);
+static void do_server(struct sockaddr_storage *, int);
 static int32_t rxtest_ExecuteRequest(struct rx_call *call);
 static int get_key(char *, int, struct ktc_encryptionKey *);
 
@@ -177,7 +177,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		do_client(res->ai_addr);
+		do_client(res->ai_addr, res->ai_addrlen);
 
 		freeaddrinfo(res);
 	} else if (strcmp(argv[optind], "server") == 0) {
@@ -200,7 +200,8 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		do_server(((struct sockaddr_in *) res->ai_addr)->sin_port);
+		do_server((struct sockaddr_storage *) res->ai_addr,
+			  res->ai_addrlen);
 
 		freeaddrinfo(res);
 	} else {
@@ -239,13 +240,12 @@ usage(char *argv0)
 }
 
 static void
-do_client(struct sockaddr *s)
+do_client(struct sockaddr *s, socklen_t slen)
 {
-	struct sockaddr_in *sin = (struct sockaddr_in *) s;
 	struct rx_connection *conn;
 	struct rx_call *call;
 	struct rx_securityClass *secureobj;
-	int ret, secureindex = 0, i, totalbytes, code;
+	int ret, secureindex = 0, i, totalbytes, code, socktype = SOCK_STREAM;
 	struct timeval stp, etp;
 	double seconds;
 	unsigned char c = 0;
@@ -341,8 +341,9 @@ do_client(struct sockaddr *s)
 	if (rx_window_size)
 		rx_TcpSetWindowSize(rx_window_size);
 
-	conn = rx_NewConnection(sin->sin_addr.s_addr, ntohs(sin->sin_port),
-				RX_SERVER_ID, secureobj, secureindex);
+	conn = rx_NewConnectionAddrs((struct sockaddr_storage *) s, &socktype,
+				     (int *) &slen, 1, RX_SERVER_ID, secureobj,
+				     secureindex);
 
 	if (!conn) {
 		fprintf(stderr, "Failed to contact server\n");
@@ -396,6 +397,11 @@ do_client(struct sockaddr *s)
 	} else {
 
 		call = rx_NewCall(conn);
+
+		if (call == NULL) {
+			fprintf(stderr, "rx_NewCall() failed!\n");
+			exit(1);
+		}
 
 		if (gettimeofday(&stp, NULL) < 0) {
 			fprintf(stderr, "gettimeofday failed: %s\n",
@@ -470,6 +476,11 @@ client_thread_send(void *arg)
 
 	call = rx_NewCall(ti->conn);
 
+	if (call == NULL) {
+		fprintf(stderr, "rx_NewCall() failed!\n");
+		exit(1);
+	}
+
 	for (i = 0, ti->totalbytes = 0;
 	     ti->totalbytes + write_size < data_size; i++) {
 		
@@ -506,16 +517,16 @@ client_thread_send(void *arg)
 }
 
 static void
-do_server(unsigned short port)
+do_server(struct sockaddr_storage *saddr, int slen)
 {
 	struct rx_service *service;
 	struct rx_securityClass *secureobj = rxnull_NewServerSecurityObject();
-	int ret, secureindex = 1;
+	int ret, secureindex = 1, socktype = SOCK_STREAM;
 
-	ret = rx_Init(port);
+	ret = rx_InitAddrs(saddr, &socktype, &slen, 1);
 
 	if (ret) {
-		fprintf(stderr, "rx_Init failed\n");
+		fprintf(stderr, "rx_InitAddrs failed\n");
 		exit(1);
 	}
 

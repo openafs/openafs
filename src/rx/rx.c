@@ -141,6 +141,15 @@ static unsigned int rxi_rpc_peer_stat_cnt;
 
 static unsigned int rxi_rpc_process_stat_cnt;
 
+/*
+ * A list of addresses that we established during rx_InitAddrs()
+ */
+
+static int n_addresses;
+static struct sockaddr_storage *init_addresses;
+static int *init_socklens;
+static int *init_socktypes;
+
 #if !defined(offsetof)
 #include <stddef.h>		/* for definition of offsetof() */
 #endif
@@ -457,7 +466,22 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
     rx_socket = -1;
     rx_port = 0;
 
+    /*
+     * Initialize the global variables holding the addresses (we'll use them
+     * later).  Also create the necessary UDP socket(s) if they're specified.
+     */
+
+    n_addresses = nelem;
+    init_addresses = (struct sockaddr_storage *)
+				malloc(sizeof(struct sockaddr_storage) * nelem);
+    init_socklens = (int *) malloc(sizeof(int) * nelem);
+    init_socktypes = (int *) malloc(sizeof(int) * nelem);
+
     for (i = 0; i < nelem; i++) {
+	memcpy((void *) &init_addresses[i], &saddrs[i], salens[i]);
+	init_socklens[i] = salens[i];
+	init_socktypes[i] = types[i];
+
 	switch (types[i]) {
 	case SOCK_DGRAM:
 	    rx_socket = rxi_GetHostUDPSocket(&saddrs[i], salens[i]);
@@ -467,8 +491,15 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
 	    }
 	    rx_port = rx_ss2pn(&saddrs[i]);
 	    break;
+#ifdef AFS_PTHREAD_ENV
+	case SOCK_STREAM:
+	    /*
+	     * We don't create the socket until we get to rx_NewService
+	     */
+	    break;
+#endif /* AFS_PTHREAD_ENV */
 	default:
-		return RX_INVALID_OPERATION;
+	    return RX_INVALID_OPERATION;
 	}
 
     }
@@ -536,7 +567,7 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
     osi_GetTime(&tv);
 #endif
 
-    if (! rx_port) {
+    if (! rx_port && types[0] != SOCK_STREAM) {
 #if defined(KERNEL) && !defined(UKERNEL)
 	/* Really, this should never happen in a real kernel */
 	rx_port = 0;
@@ -858,14 +889,12 @@ rx_NewConnectionAddrs(struct sockaddr_storage *saddr, int *type, int *slen,
     conn->epoch = rx_epoch;
     /*
      * Right now we're going to just call rxi_FindPeer for UDP connections
-     * We're only going to support one.
+     * We're only going to support the first one now; later, we can
+     * support multiple. XXX
      */
-    for (i = 0; i < nelem; i++) {
-	if (type[i] == SOCK_DGRAM) {
-	    conn->peer = rxi_FindPeer(&saddr[i], slen[i], type[i], 0, 1);
-	    break;
-	}
-    }
+
+    conn->peer = rxi_FindPeer(&saddr[0], slen[0], type[0], 0, 1);
+
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
     /* This doesn't work in all compilers with void (they're buggy), so fake it
@@ -897,12 +926,15 @@ rx_NewConnectionAddrs(struct sockaddr_storage *saddr, int *type, int *slen,
     USERPRI;
 
     /*
-     * Try to open a new TCP connection
+     * Try to open a new TCP connection, if we have a TCP connection
+     * requested.  For now, just check the first one.
      */
 
 #ifdef AFS_PTHREAD_ENV
-    rxi_TcpNewConnection(conn);
-#endif
+    if (type[0] == SOCK_STREAM) {
+	rxi_TcpNewConnection(conn);
+    }
+#endif /* AFS_PTHREAD_ENV */
 
     return conn;
 }
@@ -1177,7 +1209,7 @@ rx_NewCall(register struct rx_connection *conn)
      */
 
 #ifdef AFS_PTHREAD_ENV
-    if (conn->tcpDescriptor >= 0) {
+    if (rx_PeerOf(conn)->socktype == SOCK_STREAM) {
 	return rxi_TcpNewCall(conn);
     }
 #endif
@@ -1379,9 +1411,8 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	      afs_int32(*serviceProc) (struct rx_call * acall))
 {
     osi_socket socket = OSI_NULLSOCKET;
-    osi_socket tcpsocket = OSI_NULLSOCKET;
-    register struct rx_service *tservice;
-    register int i;
+    register struct rx_service *tservice, *retservice = NULL;
+    register int i, j;
     SPLVAR;
 
     clock_NewTime();
@@ -1393,7 +1424,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	return 0;
     }
     if (port == 0) {
-	if (rx_port == 0) {
+	if (rx_ss2pn(&init_addresses[0]) == 0) {
 	    (osi_Msg
 	     "rx_NewService: A non-zero port must be specified on this call if a non-zero port was not provided at Rx initialization (service %s).\n",
 	     serviceName);
@@ -1405,78 +1436,78 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 
     tservice = rxi_AllocService();
     NETPRI;
-    for (i = 0; i < RX_MAX_SERVICES; i++) {
-	register struct rx_service *service = rx_services[i];
-	if (service) {
-	    if (port == service->servicePort) {
-		if (service->serviceId == serviceId) {
-		    /* The identical service has already been
-		     * installed; if the caller was intending to
-		     * change the security classes used by this
-		     * service, he/she loses. */
-		    (osi_Msg
-		     "rx_NewService: tried to install service %s with service id %d, which is already in use for service %s\n",
-		     serviceName, serviceId, service->serviceName);
-		    USERPRI;
-		    rxi_FreeService(tservice);
-		    return service;
+    for (i = 0; i < n_addresses; i++) {
+	for (j = 0; j < RX_MAX_SERVICES; j++) {
+	    register struct rx_service *service = rx_services[j];
+	    if (service) {
+	        if (init_socklens[i] == service->serviceAddrLen &&
+		    memcmp((void *) &init_addresses[i], &service->serviceAddr,
+			   init_socklens[i]) == 0) {
+		    if (service->serviceId == serviceId) {
+			/* The identical service has already been
+			 * installed; if the caller was intending to
+			 * change the security classes used by this
+			 * service, he/she loses. */
+			(osi_Msg
+			"rx_NewService: tried to install service %s with service id %d, which is already in use for service %s\n",
+			 serviceName, serviceId, service->serviceName);
+			rxi_FreeService(tservice);
+			retservice = service;
+		    }
+		    /* Different service, same port: re-use the socket
+		     * which is bound to the same port */
+		    socket = service->socket;
 		}
-		/* Different service, same port: re-use the socket
-		 * which is bound to the same port */
-		socket = service->socket;
-		tcpsocket = service->tcpSocket;
-	    }
-	} else {
-	    if (socket == OSI_NULLSOCKET) {
+	    } else {
+	        if (socket == OSI_NULLSOCKET) {
 		/* If we don't already have a socket (from another
 		 * service on same port) get a new one */
-		struct sockaddr_in sin;
 
-		memset((void *) &sin, 0, sizeof(sin));
-		sin.sin_family = AF_INET;
-		sin.sin_addr.s_addr = htonl(INADDR_ANY);
-		sin.sin_port = port;
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-		sin.sin_len = sizeof(sin);
-#endif
-		socket = rxi_GetHostUDPSocket((struct sockaddr_storage *) &sin,
-					      sizeof(sin));
-		if (socket == OSI_NULLSOCKET) {
-		    USERPRI;
-		    rxi_FreeService(tservice);
-		    return 0;
-		}
-	    }
+		    switch (init_socktypes[i]) {
+		    case SOCK_DGRAM:
+			socket = rxi_GetHostUDPSocket(&init_addresses[i],
+						      init_socklens[i]);
+			break;
 #ifdef AFS_PTHREAD_ENV
-	    if (tcpsocket == OSI_NULLSOCKET) {
-		tcpsocket = rxi_GetHostTCPSocket(htonl(INADDR_ANY), port);
-		if (tcpsocket == OSI_NULLSOCKET) {
-		    USERPRI;
-		    rxi_FreeService(tservice);
-		    return 0;
-		}
+		    case SOCK_STREAM:
+			socket = rxi_GetHostTCPSocket(&init_addresses[i],
+						      init_socklens[i]);
+			break;
+#endif /* AFS_PTHREAD_ENV */
+		    }
+
+		    if (socket == OSI_NULLSOCKET) {
+			USERPRI;
+			rxi_FreeService(tservice);
+			return 0;
+		    }
+	        }
+		service = tservice;
+		service->socket = socket;
+		memcpy((void *) &service->serviceAddr,
+		       (void *) &init_addresses[i], init_socklens[i]);
+		service->serviceAddrLen = init_socklens[i];
+		service->socketType = init_socktypes[i];
+		service->serviceId = serviceId;
+		service->serviceName = serviceName;
+		service->nSecurityObjects = nSecurityObjects;
+		service->securityObjects = securityObjects;
+		service->minProcs = 0;
+		service->maxProcs = 1;
+		service->idleDeadTime = 60;
+		service->connDeadTime = rx_connDeadTime;
+		service->executeRequestProc = serviceProc;
+		service->checkReach = 0;
+		rx_services[i] = service;	/* not visible until now */
+		retservice = service;
 	    }
-#endif
-	    service = tservice;
-	    service->socket = socket;
-	    service->tcpSocket = tcpsocket;
-	    service->servicePort = port;
-	    service->serviceId = serviceId;
-	    service->serviceName = serviceName;
-	    service->nSecurityObjects = nSecurityObjects;
-	    service->securityObjects = securityObjects;
-	    service->minProcs = 0;
-	    service->maxProcs = 1;
-	    service->idleDeadTime = 60;
-	    service->connDeadTime = rx_connDeadTime;
-	    service->executeRequestProc = serviceProc;
-	    service->checkReach = 0;
-	    rx_services[i] = service;	/* not visible until now */
-	    USERPRI;
-	    return service;
-	}
+    	}
     }
     USERPRI;
+
+    if (retservice)
+	return retservice;
+
     rxi_FreeService(tservice);
     (osi_Msg "rx_NewService: cannot support > %d services\n",
      RX_MAX_SERVICES);
@@ -1778,8 +1809,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
 	rxi_calltrace(RX_CALL_START, call);
 	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n",
-	     call->conn->service->servicePort, call->conn->service->serviceId,
-	     call));
+	     rx_ss2pn(&call->conn->service->serviceAddr),
+	     call->conn->service->serviceId, call));
 
 	CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 	MUTEX_EXIT(&call->lock);
@@ -1927,8 +1958,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
 	rxi_calltrace(RX_CALL_START, call);
 	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n",
-	     call->conn->service->servicePort, call->conn->service->serviceId,
-	     call));
+	     rx_ss2pn(&call->conn->service->serviceAddr),
+	     call->conn->service->serviceId, call));
     } else {
 	dpf(("rx_GetCall(socketp=0x%x, *socketp=0x%x)\n", socketp, *socketp));
     }

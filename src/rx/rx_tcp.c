@@ -162,6 +162,7 @@ int rxi_tcp_data_packets_received = 0;
 int rxi_tcp_ack_packets_received = 0;
 int rxi_tcp_transmit_window_closed = 0;
 int rxi_tcp_last_packets_sent = 0;
+int rxi_tcp_short_circuit_read = 0;
 
 /*
  * Setup variables needed for the RxTCP package.
@@ -256,6 +257,7 @@ rxi_TcpNewConnection(struct rx_connection *conn)
 
 	if (err != EINPROGRESS) {
 		conn->tcpDescriptor = -1;
+		MUTEX_EXIT(&conn->conn_call_lock);
 		return;
 	}
 
@@ -363,6 +365,14 @@ struct rx_call *rxi_TcpNewCall(struct rx_connection *conn)
 	unsigned char buf[sizeof(afs_uint32)];
 	afs_uint32 *ibuf = (afs_uint32 *) buf;
 	struct rx_call *call;
+
+	/*
+ 	 * If the connection failed (no descriptor), return NULL right away
+	 */
+
+	if (conn->tcpDescriptor == -1) {
+		return NULL;
+	}
 
 	/*
 	 * First off, allocate the call structure.  Right now rxi_NewCall()
@@ -862,6 +872,7 @@ rxi_TcpReadPacket(struct rx_connection *conn, unsigned char *type,
 					     (cc - data_needed);
 			conn->tcpPacketLen = cc - data_needed;
 			data_needed = 0;
+			rxi_tcp_short_circuit_read++;
 		} else {
 			iov[0].iov_base = (caddr_t) iov[0].iov_base + cc;
 			data_needed -= cc;
@@ -1298,10 +1309,10 @@ rxi_TcpNewServerConnection(void *arg)
 	u_short port;
 	struct rx_connection *conn;
 	struct rx_call *call;
-	struct sockaddr_in sin;
-	socklen_t namelen = sizeof(sin);
+	struct sockaddr_storage ss;
+	socklen_t namelen = sizeof(ss);
 
-	if (getpeername(s, (struct sockaddr *) &sin, &namelen) < 0) {
+	if (getpeername(s, (struct sockaddr *) &ss, &namelen) < 0) {
 		close(s);
 		return NULL;
 	}
@@ -1358,8 +1369,8 @@ rxi_TcpNewServerConnection(void *arg)
 
 	printf("Epoch = %d, cid = %d, service = %d\n", epoch, cid, service);
 
-	if ((conn = rxi_FindConnection(OSI_NULLSOCKET, sin.sin_addr.s_addr,
-				       sin.sin_port, service, cid, epoch,
+	if ((conn = rxi_FindConnection(OSI_NULLSOCKET, &ss, namelen,
+				       SOCK_STREAM, service, cid, epoch,
 				       RX_SERVER_CONNECTION, 0)) == NULL) {
 		close(s);
 		return NULL;
@@ -1460,13 +1471,12 @@ rxi_TcpNewServerConnection(void *arg)
 }
 
 osi_socket
-rxi_GetHostTCPSocket(u_int host, u_short port)
+rxi_GetHostTCPSocket(struct sockaddr_storage *saddr, int salen)
 {
 	osi_socket socketFd = OSI_NULLSOCKET;
-	struct sockaddr_in taddr;
 	int code;
 
-	socketFd = socket(AF_INET, SOCK_STREAM, 0);
+	socketFd = socket(saddr->ss_family, SOCK_STREAM, 0);
 
 	if (socketFd < 0) {
 		perror("socket");
@@ -1474,14 +1484,7 @@ rxi_GetHostTCPSocket(u_int host, u_short port)
 		goto error;
 	}
 
-	taddr.sin_addr.s_addr = host;
-	taddr.sin_family = AF_INET;
-	taddr.sin_port = (u_short) port;
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-	taddr.sin_len = sizeof(struct sockaddr_in);
-#endif
-
-	code = bind(socketFd, (struct sockaddr *) &taddr, sizeof(taddr));
+	code = bind(socketFd, (struct sockaddr *) saddr, salen);
 
 	if (code) {
 		perror("bind");

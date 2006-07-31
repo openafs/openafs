@@ -561,6 +561,7 @@ extern void rx_FlushWrite(struct rx_call *call);
 
 
 /* rx_tcp.c */
+extern void rxi_TcpNewConnection(struct rx_connection *);
 extern void *rxi_TcpNewServerConnection(void *);
 extern struct rx_call *rxi_TcpNewCall(struct rx_connection *);
 extern void *rxi_TcpServerProc(void *);

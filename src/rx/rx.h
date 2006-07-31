@@ -100,7 +100,7 @@ typedef void (*rx_destructor_t) (void *);
 int rx_KeyCreate(rx_destructor_t);
 osi_socket rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen);
 osi_socket rxi_GetUDPSocket(u_short port);
-osi_socket rxi_GetHostTCPSocket(u_int host, u_short port);
+osi_socket rxi_GetHostTCPSocket(struct sockaddr_storage *saddr, int salen);
 #endif /* KERNEL */
 
 
@@ -324,10 +324,11 @@ struct rx_connection {
 
 struct rx_service {
     u_short serviceId;		/* Service number */
-    u_short servicePort;	/* UDP port for this service */
+    struct sockaddr_storage serviceAddr;  /* Service address */
+    int serviceAddrLen; 	/* Service address length */
+    int socketType;		/* Socket type (UDP or TCP) */
     char *serviceName;		/* Name of the service */
     osi_socket socket;		/* socket structure or file descriptor */
-    osi_socket tcpSocket;	/* TCP socket for this service */
     u_short nRequestsRunning;	/* Number of requests currently in progress */
     u_short nSecurityObjects;	/* Number of entries in security objects array */
     struct rx_securityClass **securityObjects;	/* Array of security class objects */
