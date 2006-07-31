@@ -44,47 +44,8 @@ struct afsop_cell {
 
 char afs_zeros[AFS_ZEROS];
 char afs_rootVolumeName[64] = "";
-struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
-struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 afs_uint32 rx_bindhost;
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-kmutex_t afs_global_lock;
-#endif
-
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
-long afs_global_owner;
-#endif
-
-#if defined(AFS_OSF_ENV)
-simple_lock_data_t afs_global_lock;
-#endif
-
-#if defined(AFS_DARWIN_ENV) 
-#ifdef AFS_DARWIN80_ENV
-lck_mtx_t  *afs_global_lock;
-#else
-struct lock__bsd__ afs_global_lock;
-#endif
-#endif
-
-#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
-struct lock afs_global_lock;
-struct proc *afs_global_owner;
-#endif
-#ifdef AFS_FBSD50_ENV
-struct mtx afs_global_mtx;
-#endif
-
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
-thread_t afs_global_owner;
-#endif /* AFS_OSF_ENV */
-
-#if defined(AFS_AIX41_ENV)
-simple_lock_data afs_global_lock;
-#endif
-
-afs_int32 afs_initState = 0;
 afs_int32 afs_termState = 0;
 afs_int32 afs_setTime = 0;
 int afs_cold_shutdown = 0;
