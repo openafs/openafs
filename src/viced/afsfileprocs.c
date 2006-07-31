@@ -1742,14 +1742,11 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
  * SAFS_ReleaseLock)
  */
 static afs_int32
-HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
+HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLockType LockingType)
 {
     int Time;			/* Used for time */
     int writeVnode = targetptr->changed_oldTime;	/* save original status */
 
-    /* Does the caller has Lock priviledges; root extends locks, however */
-    if (LockingType != LockExtend && !(rights & PRSFS_LOCK))
-	return (EACCES);
     targetptr->changed_oldTime = 1;	/* locking doesn't affect any time stamp */
     Time = FT_ApproxTime();
     switch (LockingType) {
@@ -1760,12 +1757,19 @@ HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
 		0;
 	Time += AFS_LOCKWAIT;
 	if (LockingType == LockRead) {
+	    if ( !(rights & PRSFS_LOCK) )
+		return(EACCES);
+ 
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
 		targetptr->disk.lock.lockTime = Time;
 	    } else
 		return (EAGAIN);
-	} else {
+	} else if (LockingType == LockWrite) {
+	    if ( !(rights & PRSFS_WRITE) && 
+		 !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
+		return(EACCES);
+
 	    if (targetptr->disk.lock.lockCount == 0) {
 		targetptr->disk.lock.lockCount = -1;
 		targetptr->disk.lock.lockTime = Time;
@@ -5140,7 +5144,7 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the particular type of set locking, type */
-    errorCode = HandleLocking(targetptr, rights, type);
+    errorCode = HandleLocking(targetptr, client, rights, type);
 
   Bad_SetLock:
     /* Write the all modified vnodes (parent, new files) and volume back */
@@ -5266,7 +5270,7 @@ SAFSS_ExtendLock(struct rx_call *acall, struct AFSFid *Fid,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the actual lock extension */
-    errorCode = HandleLocking(targetptr, rights, LockExtend);
+    errorCode = HandleLocking(targetptr, client, rights, LockExtend);
 
   Bad_ExtendLock:
     /* Put back file's vnode and volume */
@@ -5393,7 +5397,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the actual lock release */
-    if ((errorCode = HandleLocking(targetptr, rights, LockRelease)))
+    if ((errorCode = HandleLocking(targetptr, client, rights, LockRelease)))
 	goto Bad_ReleaseLock;
 
     /* if no more locks left, a callback would be triggered here */
