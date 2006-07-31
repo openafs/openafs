@@ -2,25 +2,26 @@
 # make_kbuild_makefile.pl
 # Generate a Makefile for use with the Linux 2.6+ kernel build system
 #
-# Usage: make_kbuild_makefile.pl ${KDIR} ${TARG} Makefiles...
+# Usage: make_kbuild_makefile.pl ${KDIR} Makefiles...
 #
 # The specified makefiles will be scanned for variable values
-# The module ${TARG} will be built in ${TOP_SRCDIR}/src/libafs/${KDIR}.
-# It will include objects listed in ${AFSAOBJS} and ${AFSNONFSOBJS}
+# The libafs.ko module will be built in ${TOP_SRCDIR}/src/libafs/${KDIR}.
+# It will include objects listed in ${AFSAOBJS} and ${AFSNFSOBJS}
+# The afspag.ko module will be built from objects listed in ${AFSPAGOBJS}.
 # Appropriate source files for each object will be symlinked into ${KDIR}
 # EXTRA_CFLAGS will be set to ${CFLAGS} ${COMMON_INCLUDE}
+# Any CFLAGS_* and AFLAGS_* variables will be copied
 
 # Produces ${KDIR}/Makefile, suitable for use with kbuild
 
 use IO::File;
 
 
-if (@ARGV < 3) {
-  die "Usage: echo objects... | $0 KDIR TARG Makefiles...\n";
+if (@ARGV < 2) {
+  die "Usage: $0 KDIR Makefiles...\n";
 }
 
-($KDIR, $TARG, @Makefiles) = @ARGV;
-$TARG =~ s/\.k?o$//;
+($KDIR, @Makefiles) = @ARGV;
 
 ## Read in all of the Makefiles given on the command line
 ## Our ultimate goal is to find the correct source file for each object.
@@ -61,7 +62,8 @@ foreach $mf (@Makefiles) {
 
 
 $KDIR = "$vars{TOP_OBJDIR}/src/libafs/$KDIR";
-@objects = (split(' ', $vars{AFSAOBJS}), split(' ', $vars{AFSNONFSOBJS}));
+@libafs_objs = (split(' ', $vars{AFSAOBJS}), split(' ', $vars{AFSNFSOBJS}));
+@afspag_objs = (split(' ', $vars{AFSPAGOBJS}));
 
 $MV = new IO::File("$vars{TOP_OBJDIR}/src/config/Makefile.version", O_RDONLY)
         or die "$vars{TOP_OBJDIR}/src/config/Makefile.version: $!\n";
@@ -75,8 +77,9 @@ if (! -d $KDIR) {
   mkdir($KDIR, 0777) or die "$KDIR: $!\n";
 }
 
+%all_objs = map(($_ => 1), @libafs_objs, @afspag_objs);
 
-foreach (@objects) {
+foreach (keys %all_objs) {
   die "No source known for $_\n" unless exists $deps{$_};
   if($deps{$_} =~ /\.s$/) {
      ($src = $_) =~ s/\.o$/.s/;
@@ -103,9 +106,14 @@ $cflags =~ s#-I(?!/)#-I$KDIR/#g;
 $cflags =~ s/\s+/ \\\n /g;
 $F = new IO::File("$KDIR/Makefile", O_WRONLY|O_CREAT|O_TRUNC, 0666)
      or die "$KDIR/Makefile: $!\n";
+foreach (sort keys %vars) {
+  next unless /^[AC]FLAGS_/;
+  print $F "$_ = $vars{$_}\n";
+}
 print $F "EXTRA_CFLAGS=$cflags\n";
-print $F "obj-m := $TARG.o\n";
-print $F "$TARG-objs := ", join("\\\n $_", @objects), "\n";
+print $F "obj-m := libafs.o afspag.o\n";
+print $F "libafs-objs := ", join("\\\n $_", @libafs_objs), "\n";
+print $F "afspag-objs := ", join("\\\n $_", @afspag_objs), "\n";
 print $F "\n$MakefileVersion\n";
 $F->close() or die "$KDIR/Makefile: $!\n";
 

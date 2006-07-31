@@ -971,10 +971,9 @@ shutdown_osifile(void)
     return;
 }
 
-int
+void
 afs_nfsclient_init(void)
 {
-    return 0;
 }
 
 void

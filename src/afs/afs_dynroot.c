@@ -12,8 +12,13 @@
  *
  * Implements:
  * afs_IsDynrootFid
+ * afs_IsDynrootMountFid
+ * afs_IsDynrootAnyFid
  * afs_GetDynrootFid
+ * afs_GetDynrootMountFid
  * afs_IsDynroot
+ * afs_IsDynrootMount
+ * afs_IsDynrootAny
  * afs_DynrootInvalidate
  * afs_GetDynroot
  * afs_PutDynroot
@@ -37,33 +42,15 @@
 
 #include "afs/prs_fs.h"
 #include "afs/dir.h"
+#include "afs/afs_dynroot.h"
 
 #define AFS_DYNROOT_CELLNAME	"dynroot"
 #define AFS_DYNROOT_VOLUME	1
 #define AFS_DYNROOT_VNODE	1
+#define AFS_DYNROOT_MOUNT_VNODE 3
 #define AFS_DYNROOT_UNIQUE	1
 
-/*
- * Vnode numbers in dynroot are composed of a type field (upper 8 bits)
- * and a type-specific identifier in the lower 24 bits.
- */
-#define VN_TYPE_CELL		0x01	/* Corresponds to a struct cell */
-#define VN_TYPE_ALIAS		0x02	/* Corresponds to a struct cell_alias */
-#define VN_TYPE_SYMLINK		0x03	/* User-created symlink in /afs */
-
-#define VNUM_TO_VNTYPE(vnum)	((vnum) >> 24)
-#define VNUM_TO_VNID(vnum)	((vnum) & 0x00ffffff)
-#define VNUM_FROM_TYPEID(type, id) \
-				((type) << 24 | (id))
-#define VNUM_TO_CIDX(vnum)	(VNUM_TO_VNID(vnum) >> 2)
-#define VNUM_TO_RW(vnum)	(VNUM_TO_VNID(vnum) >> 1 & 1)
-#define VNUM_FROM_CIDX_RW(cidx, rw) \
-				VNUM_FROM_TYPEID(VN_TYPE_CELL, \
-						 ((cidx) << 2 | (rw) << 1))
-#define VNUM_FROM_CAIDX_RW(caidx, rw) \
-				VNUM_FROM_TYPEID(VN_TYPE_ALIAS, \
-						 ((caidx) << 2 | (rw) << 1))
-
+static int afs_dynrootInit = 0;
 static int afs_dynrootEnable = 0;
 static int afs_dynrootCell = 0;
 
@@ -71,6 +58,8 @@ static afs_rwlock_t afs_dynrootDirLock;
 /* Start of variables protected by afs_dynrootDirLock */
 static char *afs_dynrootDir = NULL;
 static int afs_dynrootDirLen;
+static char *afs_dynrootMountDir = NULL;
+static int afs_dynrootMountDirLen;
 static int afs_dynrootDirLinkcnt;
 static int afs_dynrootDirVersion;
 static int afs_dynrootVersion = 1;
@@ -97,7 +86,7 @@ static int afs_dynSymlinkIndex = 0;
 static int
 afs_dynrootCellInit()
 {
-    if (afs_dynrootEnable && !afs_dynrootCell) {
+    if (!afs_dynrootCell) {
 	afs_int32 cellHosts[MAXCELLHOSTS];
 	struct cell *tc;
 	int code;
@@ -121,13 +110,35 @@ afs_dynrootCellInit()
 /*
  * Returns non-zero iff fid corresponds to the top of the dynroot volume.
  */
-int
-afs_IsDynrootFid(struct VenusFid *fid)
+static int
+_afs_IsDynrootFid(struct VenusFid *fid)
 {
-    return (afs_dynrootEnable && fid->Cell == afs_dynrootCell
+    return (fid->Cell == afs_dynrootCell
 	    && fid->Fid.Volume == AFS_DYNROOT_VOLUME
 	    && fid->Fid.Vnode == AFS_DYNROOT_VNODE
 	    && fid->Fid.Unique == AFS_DYNROOT_UNIQUE);
+}
+
+int
+afs_IsDynrootFid(struct VenusFid *fid)
+{
+    return (afs_dynrootEnable && _afs_IsDynrootFid(fid));
+}
+
+int
+afs_IsDynrootMountFid(struct VenusFid *fid)
+{
+    return (fid->Cell == afs_dynrootCell
+	    && fid->Fid.Volume == AFS_DYNROOT_VOLUME
+	    && fid->Fid.Vnode == AFS_DYNROOT_MOUNT_VNODE
+	    && fid->Fid.Unique == AFS_DYNROOT_UNIQUE);
+}
+
+int
+afs_IsDynrootAnyFid(struct VenusFid *fid)
+{
+    return (fid->Cell == afs_dynrootCell
+	    && fid->Fid.Volume == AFS_DYNROOT_VOLUME);
 }
 
 /*
@@ -142,6 +153,15 @@ afs_GetDynrootFid(struct VenusFid *fid)
     fid->Fid.Unique = AFS_DYNROOT_UNIQUE;
 }
 
+void
+afs_GetDynrootMountFid(struct VenusFid *fid)
+{
+    fid->Cell = afs_dynrootCell;
+    fid->Fid.Volume = AFS_DYNROOT_VOLUME;
+    fid->Fid.Vnode = AFS_DYNROOT_MOUNT_VNODE;
+    fid->Fid.Unique = AFS_DYNROOT_UNIQUE;
+}
+
 /*
  * Returns non-zero iff avc is a pointer to the dynroot /afs vnode.
  */
@@ -149,6 +169,18 @@ int
 afs_IsDynroot(struct vcache *avc)
 {
     return afs_IsDynrootFid(&avc->fid);
+}
+
+int
+afs_IsDynrootMount(struct vcache *avc)
+{
+    return afs_IsDynrootMountFid(&avc->fid);
+}
+
+int
+afs_IsDynrootAny(struct vcache *avc)
+{
+    return afs_IsDynrootAnyFid(&avc->fid);
 }
 
 /*
@@ -302,6 +334,9 @@ afs_RebuildDynroot(void)
     /* Reserve space for "." and ".." */
     curChunk += 2;
 
+    /* Reserve space for the dynamic-mount directory */
+    afs_dynroot_computeDirEnt(AFS_DYNROOT_MOUNTNAME, &curPage, &curChunk);
+
     for (cellidx = 0;; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	if (!c)
@@ -371,10 +406,12 @@ afs_RebuildDynroot(void)
     for (i = 0; i < NHASHENT; i++)
 	dirHeader->hashTable[i] = 0;
 
-    /* Install "." and ".." */
+    /* Install ".", "..", and the dynamic mount directory */
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
-    linkCount += 2;
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
+			  AFS_DYNROOT_MOUNTNAME, AFS_DYNROOT_MOUNT_VNODE);
+    linkCount += 3;
 
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK);
@@ -433,6 +470,49 @@ afs_RebuildDynroot(void)
     ReleaseWriteLock(&afs_dynrootDirLock);
 }
 
+static void
+afs_RebuildDynrootMount(void)
+{
+    int i;
+    int curChunk, curPage;
+    char *newDir;
+    struct DirHeader *dirHeader;
+
+    newDir = afs_osi_Alloc(AFS_PAGESIZE);
+
+    /*
+     * Now actually construct the directory.
+     */
+    curChunk = 13;
+    curPage = 0;
+    dirHeader = (struct DirHeader *)newDir;
+
+    dirHeader->header.pgcount = 0;
+    dirHeader->header.tag = htons(1234);
+    dirHeader->header.freecount = 0;
+
+    dirHeader->header.freebitmap[0] = 0xff;
+    dirHeader->header.freebitmap[1] = 0x1f;
+    for (i = 2; i < EPP / 8; i++)
+	dirHeader->header.freebitmap[i] = 0;
+    dirHeader->alloMap[0] = EPP - DHE - 1;
+    for (i = 1; i < MAXPAGES; i++)
+	dirHeader->alloMap[i] = EPP;
+    for (i = 0; i < NHASHENT; i++)
+	dirHeader->hashTable[i] = 0;
+
+    /* Install "." and ".." */
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
+
+    ObtainWriteLock(&afs_dynrootDirLock, 549);
+    if (afs_dynrootMountDir)
+	afs_osi_Free(afs_dynrootMountDir, afs_dynrootMountDirLen);
+    afs_dynrootMountDir = newDir;
+    afs_dynrootMountDirLen = AFS_PAGESIZE;
+    ReleaseWriteLock(&afs_dynrootDirLock);
+}
+
 /*
  * Returns a pointer to the base of the dynroot directory in memory,
  * length thereof, and a FetchStatus.
@@ -468,6 +548,37 @@ afs_GetDynroot(char **dynrootDir, int *dynrootLen,
     }
 }
 
+void
+afs_GetDynrootMount(char **dynrootDir, int *dynrootLen,
+		    struct AFSFetchStatus *status)
+{
+    ObtainReadLock(&afs_dynrootDirLock);
+    if (!afs_dynrootMountDir) {
+	ReleaseReadLock(&afs_dynrootDirLock);
+	afs_RebuildDynrootMount();
+	ObtainReadLock(&afs_dynrootDirLock);
+    }
+
+    if (dynrootDir)
+	*dynrootDir = afs_dynrootMountDir;
+    if (dynrootLen)
+	*dynrootLen = afs_dynrootMountDirLen;
+
+    if (status) {
+	memset(status, 0, sizeof(struct AFSFetchStatus));
+	status->FileType = Directory;
+	status->LinkCount = 1;
+	status->Length = afs_dynrootMountDirLen;
+	status->DataVersion = 1;
+	status->CallerAccess = PRSFS_LOOKUP | PRSFS_READ;
+	status->AnonymousAccess = PRSFS_LOOKUP | PRSFS_READ;
+	status->UnixModeBits = 0755;
+	status->ParentVnode = 1;
+	status->ParentUnique = 1;
+	status->dataVersionHigh = 0;
+    }
+}
+
 /*
  * Puts back the dynroot read lock.
  */
@@ -485,11 +596,18 @@ afs_PutDynroot(void)
 int
 afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 {
-    if (!afs_dynrootEnable)
-	return 0;
+    char *bp, tbuf[CVBS];
 
-    if (afs_IsDynroot(avc)) {
+    if (_afs_IsDynrootFid(&avc->fid)) {
+	if (!afs_dynrootEnable)
+	    return 0;
 	afs_GetDynroot(0, 0, status);
+	afs_PutDynroot();
+	return 1;
+    }
+
+    if (afs_IsDynrootMount(avc)) {
+	afs_GetDynrootMount(0, 0, status);
 	afs_PutDynroot();
 	return 1;
     }
@@ -540,7 +658,8 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	}
 
 	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_CELL
-	    && VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_ALIAS) {
+	    && VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_ALIAS
+	    && VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_MOUNT) {
 	    afs_warn("dynroot vnode inconsistency, unknown VNTYPE %d\n",
 		     VNUM_TO_VNTYPE(avc->fid.Fid.Vnode));
 	    return 0;
@@ -579,6 +698,31 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 
 	    status->UnixModeBits = 0755;
 	    afs_PutCellAlias(ca);
+
+	} else if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) == VN_TYPE_MOUNT) {
+	    c = afs_GetCellByIndex(cellidx, READ_LOCK);
+	    if (!c) {
+		afs_warn("dynroot vnode inconsistency, can't find cell %d\n",
+			 cellidx);
+		return 0;
+	    }
+
+	    /*
+	     * linkData needs to contain "%cell:volumeid"
+	     */
+	    namelen = strlen(c->cellName);
+	    bp = afs_cv2string(&tbuf[CVBS], avc->fid.Fid.Unique);
+	    linklen = 2 + namelen + strlen(bp);
+	    avc->linkData = afs_osi_Alloc(linklen + 1);
+	    strcpy(avc->linkData, "%");
+	    afs_strcat(avc->linkData, c->cellName);
+	    afs_strcat(avc->linkData, ":");
+	    afs_strcat(avc->linkData, bp);
+
+	    status->UnixModeBits = 0644;
+	    status->ParentVnode = AFS_DYNROOT_MOUNT_VNODE;
+	    afs_PutCell(c, READ_LOCK);
+
 	} else {
 	    c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	    if (!c) {
@@ -609,15 +753,27 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 }
 
 /*
+ * Make sure dynroot initialization has been done.
+ */
+int
+afs_InitDynroot(void)
+{
+    if (afs_dynrootInit)
+	return 0;
+    RWLOCK_INIT(&afs_dynrootDirLock, "afs_dynrootDirLock");
+    RWLOCK_INIT(&afs_dynSymlinkLock, "afs_dynSymlinkLock");
+    afs_dynrootInit = 0;
+    return afs_dynrootCellInit();
+}
+
+/*
  * Enable or disable dynroot.  Returns 0 if successful.
  */
 int
 afs_SetDynrootEnable(int enable)
 {
-    RWLOCK_INIT(&afs_dynrootDirLock, "afs_dynrootDirLock");
-    RWLOCK_INIT(&afs_dynSymlinkLock, "afs_dynSymlinkLock");
     afs_dynrootEnable = enable;
-    return afs_dynrootCellInit();
+    return afs_InitDynroot();
 }
 
 /*

@@ -224,6 +224,7 @@ struct cell {
     time_t timeout;		/* data expire time, if non-zero */
     struct cell_name *cnamep;	/* pointer to our cell_name */
     afs_rwlock_t lock;		/* protects cell data */
+    unsigned char cellHandle[16];	/* deterministic handle for this cell */
 };
 
 struct cell_name {
@@ -248,6 +249,7 @@ struct cell_alias {
 #define UPrimary        4	/* on iff primary identity */
 #define UNeedsReset	8	/* needs afs_ResetAccessCache call done */
 #define UPAGCounted    16	/* entry seen during PAG search (for stats) */
+#define UNFSGetCreds   32	/* getting creds for NFS client */
 /* A flag used by afs_GCPAGs to keep track of
  * which entries in afs_users need to be deleted.
  * The lifetime of its presence in the table is the
@@ -279,6 +281,7 @@ struct unixuser {
     char *stp;			/* pointer to ticket itself */
     struct ClearToken ct;
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
+    void *cellinfo;             /* pointer to cell info (PAG manager only) */
 };
 
 struct conn {
@@ -539,6 +542,7 @@ struct SimpleLocks {
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
 #define CForeign	0x00002000	/* this is a non-afs vcache */
+#define CReadDir	0x00004000	/* readdir in progress */
 #define CUnlinked	0x00010000
 #define CBulkStat	0x00020000	/* loaded by a bulk stat, and not ref'd since */
 #define CUnlinkedDel	0x00040000
@@ -696,6 +700,8 @@ struct vcache {
     afs_uint32 vstates;		/* vstate bits */
 #endif				/* defined(AFS_SUN5_ENV) */
     struct dcache *dchint;
+    struct dcache *dcreaddir;	/* dcache for in-progress readdir */
+    unsigned int readdir_pid;   /* pid of the thread in readdir */
 #ifdef AFS_LINUX22_ENV
     u_short mapcnt;		/* Number of mappings of this file. */
 #endif
@@ -1043,6 +1049,8 @@ struct memCacheEntry {
 
 /*#define afs_DirtyPages(avc)	(((avc)->states & CDirty) || osi_VMDirty_p((avc)))*/
 #define	afs_DirtyPages(avc)	((avc)->states & CDirty)
+
+#define afs_InReadDir(avc) (((avc)->states & CReadDir) && (avc)->readdir_pid == MyPidxx)
 
 /* The PFlush algorithm makes use of the fact that Fid.Unique is not used in
   below hash algorithms.  Change it if need be so that flushing algorithm

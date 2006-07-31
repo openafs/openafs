@@ -10,6 +10,7 @@
 package RMTSYS_
 statindex 10
 prefix	S
+const RMTSYS_MAXPATHLEN = 4096;
 #define MAXPATHLEN 4096
 
 %#include <rx/rx.h>

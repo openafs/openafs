@@ -118,6 +118,16 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 
     if ((vType(avc) == VDIR) || (avc->states & CForeign)) {
 	/* rights are just those from acl */
+	if (afs_InReadDir(avc)) {
+	    /* if we are already in readdir, then they may have read and
+	     * lookup, and nothing else, and nevermind the real ACL.
+	     * Otherwise we might end up with problems trying to call
+	     * FetchStatus on the vnode readdir is working on, and that
+	     * would be a real mess.
+	     */
+	    dirBits = PRSFS_LOOKUP | PRSFS_READ;
+	    return (arights == (dirBits & arights));
+	}
 	return (arights == afs_GetAccessBits(avc, arights, areq));
     } else {
 	/* some rights come from dir and some from file.  Specifically, you 

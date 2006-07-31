@@ -1752,7 +1752,8 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (cached)
 	    *cached = 1;
 	osi_Assert((tvc->states & CVInit) == 0);
-	if (tvc->states & CStatd) {
+	/* If we are in readdir, return the vnode even if not statd */
+	if ((tvc->states & CStatd) || afs_InReadDir(tvc)) {
 	    ReleaseSharedLock(&afs_xvcache);
 	    return tvc;
 	}
@@ -1894,9 +1895,24 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (afs_DynrootNewVnode(tvc, &OutStatus)) {
 	    afs_ProcessFS(tvc, &OutStatus, areq);
 	    tvc->states |= CStatd | CUnique;
+	    tvc->parentVnode  = OutStatus.ParentVnode;
+	    tvc->parentUnique = OutStatus.ParentUnique;
 	    code = 0;
 	} else {
 	    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+	    /* For the NFS translator's benefit, make sure
+	     * non-directory vnodes always have their parent FID set
+	     * correctly, even when created as a result of decoding an
+	     * NFS filehandle.  It would be nice to also do this for
+	     * directories, but we can't because the fileserver fills
+	     * in the FID of the directory itself instead of that of
+	     * its parent.
+	     */
+            if (!code && OutStatus.FileType != Directory &&
+		!tvc->parentVnode) {
+		tvc->parentVnode  = OutStatus.ParentVnode;
+		tvc->parentUnique = OutStatus.ParentUnique;
+            }
 	}
     }
 

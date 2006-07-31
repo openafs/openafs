@@ -263,6 +263,9 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
 	return code;
     }
+    if (afs_IsDynrootMount(adp)) {
+	return ENOENT;
+    }
 
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);

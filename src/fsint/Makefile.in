@@ -16,7 +16,10 @@ all: \
 depinstall: \
 	${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/afscbint.h \
-	Kcallback.ss.c Kcallback.h Kvice.cs.c Kvice.h Kvice.xdr.c afscbint.h afsint.h 
+	${TOP_INCDIR}/afs/pagcb.h \
+	Kcallback.ss.c Kcallback.h Kvice.cs.c Kvice.h Kvice.xdr.c \
+	Kpagcb.ss.c Kpagcb.h Kpagcb.cs.c Kpagcb.xdr.c \
+        afscbint.h afsint.h pagcb.h
 
 libafsint.a: ${OBJS} AFS_component_version_number.o
 	-$(RM) -f $@
@@ -45,6 +48,21 @@ Kvice.xdr.c: common.xg afsint.xg
 
 Kvice.h: common.xg afsint.xg
 	${RXGEN} -x -k -h -o Kvice.h ${srcdir}/afsint.xg
+
+Kpagcb.cs.c: pagcb.xg Kpagcb.h
+	${RXGEN} -x -k -C -o Kpagcb.cs.c ${srcdir}/pagcb.xg
+
+Kpagcb.ss.c: pagcb.xg Kpagcb.h
+	${RXGEN} -x -k -S -o Kpagcb.ss.c ${srcdir}/pagcb.xg
+
+Kpagcb.xdr.c: pagcb.xg
+	${RXGEN} -x -k -c -o Kpagcb.xdr.c ${srcdir}/pagcb.xg
+
+Kpagcb.h: pagcb.xg
+	${RXGEN} -x -k -h -o Kpagcb.h ${srcdir}/pagcb.xg
+
+pagcb.h: pagcb.xg
+	${RXGEN} -x -h -o pagcb.h ${srcdir}/pagcb.xg
 
 Kcallback.h: common.xg afscbint.xg
 	${RXGEN} -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
@@ -85,6 +103,9 @@ ${TOP_INCDIR}/afs/afsint.h: afsint.h
 ${TOP_INCDIR}/afs/afscbint.h: afscbint.h
 	${INSTALL} $? $@
 
+${TOP_INCDIR}/afs/pagcb.h: pagcb.h
+	${INSTALL} $? $@
+
 install: \
 	${DESTDIR}${libdir}/afs/libafsint.a \
 	${DESTDIR}${includedir}/afs/afsint.h \
@@ -119,8 +140,8 @@ ${DEST}/include/afs/afsint.h: afsint.h
 
 clean:
 	$(RM) -f *.o *.cs.c *.ss.c *.er.c *.a *.xdr.c core \
-		afsint.h afscbint.h AFS_component_version_number.c   \
-	Kvice.h Kcallback.h
+		afsint.h afscbint.h pagcb.h AFS_component_version_number.c   \
+	Kvice.h Kcallback.h Kpagcb.h
 
 include ../config/Makefile.version
 

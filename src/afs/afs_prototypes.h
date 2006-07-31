@@ -11,15 +11,9 @@
 #define _AFS_PROTOTYPES_H_
 
 /* afs_analyze.c */
-extern void init_et_to_sys_error(void);
-extern void afs_FinalizeReq(struct vrequest *areq);
 extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
 		       struct VenusFid *afid, register struct vrequest *areq,
 		       int op, afs_int32 locktype, struct cell *cellp);
-extern int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where);
-extern void afs_CopyError(register struct vrequest *afrom,
-			  register struct vrequest *ato);
-extern void init_sys_error_to_et(void);
 
 /* afs_axscache.c */
 extern afs_rwlock_t afs_xaxs;
@@ -45,82 +39,12 @@ extern afs_int32 afs_setTime;
 extern char afs_rootVolumeName[64];
 extern void afs_shutdown(void);
 extern void afs_FlushCBs(void);
-extern struct afs_icl_set *afs_icl_allSets;
-extern int afs_icl_CreateLog(char *name, afs_int32 logSize,
-			     struct afs_icl_log **outLogpp);
-extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
-				      afs_uint32 flags,
-				      struct afs_icl_log **outLogpp);
-extern int afs_icl_CopyOut(register struct afs_icl_log *logp,
-			   afs_int32 * bufferp, afs_int32 * bufSizep,
-			   afs_uint32 * cookiep, afs_int32 * flagsp);
-extern int afs_icl_GetLogParms(struct afs_icl_log *logp, afs_int32 * maxSizep,
-			       afs_int32 * curSizep);
-extern int afs_icl_LogHold(register struct afs_icl_log *logp);
-extern int afs_icl_LogHoldNL(register struct afs_icl_log *logp);
-extern int afs_icl_LogUse(register struct afs_icl_log *logp);
-extern int afs_icl_LogFreeUse(register struct afs_icl_log *logp);
-extern int afs_icl_LogSetSize(register struct afs_icl_log *logp,
-			      afs_int32 logSize);
-extern int afs_icl_ZapLog(register struct afs_icl_log *logp);
-extern int afs_icl_LogRele(register struct afs_icl_log *logp);
-extern int afs_icl_LogReleNL(register struct afs_icl_log *logp);
-extern int afs_icl_ZeroLog(register struct afs_icl_log *logp);
-extern int afs_icl_LogFree(register struct afs_icl_log *logp);
-extern struct afs_icl_log *afs_icl_FindLog(char *name);
-extern int
-  afs_icl_EnumerateLogs(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
-extern int afs_icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
-			     struct afs_icl_log *fatalLogp,
-			     struct afs_icl_set **outSetpp);
-extern int afs_icl_CreateSetWithFlags(char *name,
-				      struct afs_icl_log *baseLogp,
-				      struct afs_icl_log *fatalLogp,
-				      afs_uint32 flags,
-				      struct afs_icl_set **outSetpp);
-extern int afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int setValue);
-extern int afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int *getValuep);
-extern int afs_icl_ZeroSet(struct afs_icl_set *setp);
-extern int
-  afs_icl_EnumerateSets(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
-extern int afs_icl_AddLogToSet(struct afs_icl_set *setp,
-			       struct afs_icl_log *newlogp);
-extern int afs_icl_SetSetStat(struct afs_icl_set *setp, int op);
-extern int afs_icl_SetHold(register struct afs_icl_set *setp);
-extern int afs_icl_ZapSet(register struct afs_icl_set *setp);
-extern int afs_icl_SetRele(register struct afs_icl_set *setp);
-extern int afs_icl_SetFree(register struct afs_icl_set *setp);
-extern struct afs_icl_set *afs_icl_FindSet(char *name);
-
-extern int afs_icl_Event4(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2, long p3, long p4);
-extern int afs_icl_Event3(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2, long p3);
-extern int afs_icl_Event2(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2);
-extern int afs_icl_Event1(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1);
-extern int afs_icl_Event0(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT);
-extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
-				 afs_int32 op, afs_int32 types, long p1,
-				 long p2, long p3, long p4);
-
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
 extern void shutdown_afstest(void);
 extern void afs_shutdown_BKG(void);
+extern int afs_syscall_call(long parm, long parm2, long parm3,
+			    long parm4, long parm5, long parm6);
 
 
 /* afs_callback.c */
@@ -208,6 +132,7 @@ extern afs_int32 afs_NewCell(char *acellName, afs_int32 * acellHosts,
 extern afs_int32 afs_SetPrimaryCell(char *acellName);
 extern struct cell *afs_GetCell(afs_int32 acell, afs_int32 locktype);
 extern struct cell *afs_GetCellStale(afs_int32 acell, afs_int32 locktype);
+extern struct cell *afs_GetCellByHandle(void *handle, afs_int32 locktype);
 extern struct cell *afs_GetCellByIndex(afs_int32 cellidx, afs_int32 locktype);
 extern struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetPrimaryCell(afs_int32 locktype);
@@ -342,14 +267,22 @@ extern int afs_InitCacheFile(char *afile, ino_t ainode);
 
 /* afs_dynroot.c */
 extern int afs_IsDynrootFid(struct VenusFid *fid);
+extern int afs_IsDynrootMountFid(struct VenusFid *fid);
+extern int afs_IsDynrootAnyFid(struct VenusFid *fid);
 extern void afs_GetDynrootFid(struct VenusFid *fid);
+extern void afs_GetDynrootMountFid(struct VenusFid *fid);
 extern int afs_IsDynroot(struct vcache *avc);
+extern int afs_IsDynrootMount(struct vcache *avc);
+extern int afs_IsDynrootAny(struct vcache *avc);
 extern void afs_DynrootInvalidate(void);
 extern void afs_GetDynroot(char **dynrootDir, int *dynrootLen,
+			   struct AFSFetchStatus *status);
+extern void afs_GetDynrootMount(char **dynrootDir, int *dynrootLen,
 			   struct AFSFetchStatus *status);
 extern void afs_PutDynroot(void);
 extern int afs_DynrootNewVnode(struct vcache *avc,
 			       struct AFSFetchStatus *status);
+extern int afs_InitDynroot(void);
 extern int afs_SetDynrootEnable(int enable);
 extern int afs_GetDynrootEnable(void);
 extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred,
@@ -357,9 +290,95 @@ extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred,
 extern int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred,
 				 char *aname, char *atargetName);
 
+/* afs_error.c */
+extern void init_et_to_sys_error(void);
+extern afs_int32 et_to_sys_error(afs_int32 in);
+extern void afs_FinalizeReq(struct vrequest *areq);
+extern int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where);
+extern void afs_CopyError(register struct vrequest *afrom,
+			  register struct vrequest *ato);
+extern void init_sys_error_to_et(void);
+
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
+
+/* afs_icl.c */
+extern struct afs_icl_set *afs_icl_allSets;
+extern int afs_icl_InitLogs(void);
+extern int afs_icl_CreateLog(char *name, afs_int32 logSize,
+			     struct afs_icl_log **outLogpp);
+extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
+				      afs_uint32 flags,
+				      struct afs_icl_log **outLogpp);
+extern int afs_icl_CopyOut(register struct afs_icl_log *logp,
+			   afs_int32 * bufferp, afs_int32 * bufSizep,
+			   afs_uint32 * cookiep, afs_int32 * flagsp);
+extern int afs_icl_GetLogParms(struct afs_icl_log *logp, afs_int32 * maxSizep,
+			       afs_int32 * curSizep);
+extern int afs_icl_LogHold(register struct afs_icl_log *logp);
+extern int afs_icl_LogHoldNL(register struct afs_icl_log *logp);
+extern int afs_icl_LogUse(register struct afs_icl_log *logp);
+extern int afs_icl_LogFreeUse(register struct afs_icl_log *logp);
+extern int afs_icl_LogSetSize(register struct afs_icl_log *logp,
+			      afs_int32 logSize);
+extern int afs_icl_ZapLog(register struct afs_icl_log *logp);
+extern int afs_icl_LogRele(register struct afs_icl_log *logp);
+extern int afs_icl_LogReleNL(register struct afs_icl_log *logp);
+extern int afs_icl_ZeroLog(register struct afs_icl_log *logp);
+extern int afs_icl_LogFree(register struct afs_icl_log *logp);
+extern struct afs_icl_log *afs_icl_FindLog(char *name);
+extern int
+  afs_icl_EnumerateLogs(int (*aproc)
+
+			  (char *name, char *arock, struct afs_icl_log * tp),
+			char *arock);
+extern int afs_icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
+			     struct afs_icl_log *fatalLogp,
+			     struct afs_icl_set **outSetpp);
+extern int afs_icl_CreateSetWithFlags(char *name,
+				      struct afs_icl_log *baseLogp,
+				      struct afs_icl_log *fatalLogp,
+				      afs_uint32 flags,
+				      struct afs_icl_set **outSetpp);
+extern int afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID,
+			     int setValue);
+extern int afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID,
+			     int *getValuep);
+extern int afs_icl_ZeroSet(struct afs_icl_set *setp);
+extern int
+  afs_icl_EnumerateSets(int (*aproc)
+
+			  (char *name, char *arock, struct afs_icl_log * tp),
+			char *arock);
+extern int afs_icl_AddLogToSet(struct afs_icl_set *setp,
+			       struct afs_icl_log *newlogp);
+extern int afs_icl_SetSetStat(struct afs_icl_set *setp, int op);
+extern int afs_icl_SetHold(register struct afs_icl_set *setp);
+extern int afs_icl_ZapSet(register struct afs_icl_set *setp);
+extern int afs_icl_SetRele(register struct afs_icl_set *setp);
+extern int afs_icl_SetFree(register struct afs_icl_set *setp);
+extern struct afs_icl_set *afs_icl_FindSet(char *name);
+
+extern int afs_icl_Event4(register struct afs_icl_set *setp,
+			  afs_int32 eventID, afs_int32 lAndT, long p1,
+			  long p2, long p3, long p4);
+extern int afs_icl_Event3(register struct afs_icl_set *setp,
+			  afs_int32 eventID, afs_int32 lAndT, long p1,
+			  long p2, long p3);
+extern int afs_icl_Event2(register struct afs_icl_set *setp,
+			  afs_int32 eventID, afs_int32 lAndT, long p1,
+			  long p2);
+extern int afs_icl_Event1(register struct afs_icl_set *setp,
+			  afs_int32 eventID, afs_int32 lAndT, long p1);
+extern int afs_icl_Event0(register struct afs_icl_set *setp,
+			  afs_int32 eventID, afs_int32 lAndT);
+extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
+				 afs_int32 op, afs_int32 types, long p1,
+				 long p2, long p3, long p4);
+extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
+		       long *retval);
+
 
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
@@ -368,6 +387,7 @@ extern afs_rwlock_t afs_puttofileLock;
 extern char *afs_sysname;
 extern char *afs_sysnamelist[MAXNUMSYSNAMES];
 extern int afs_sysnamecount;
+extern int afs_sysnamegen;
 extern afs_int32 cacheInfoModTime;
 extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles,
 			 afs_int32 ablocks, afs_int32 aDentries,
@@ -464,6 +484,11 @@ extern void shutdown_memcache(void);
 /* afs_nfsclnt.c */
 extern struct afs_exporter *afs_nfsexported;
 extern struct afs_exporter *afs_nfsexporter;
+extern void afs_nfsclient_init(void);
+extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
+				    struct AFS_UCRED **cred,
+				    afs_int32 host, afs_int32 *pagparam,
+				    struct afs_exporter **outexporter);
 
 /* afs_osi.c */
 extern afs_lock_t afs_ftf;
@@ -472,6 +497,23 @@ extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
 extern void afs_osi_MaskUserLoop(void);
+extern void osi_Init(void);
+extern void afs_osi_MaskSignals(void);
+extern void afs_osi_UnmaskRxkSignals(void);
+extern void afs_osi_RxkRegister(void);
+extern void afs_osi_Invisible(void);
+extern void shutdown_osi(void);
+extern int afs_osi_suser(void *credp);
+extern void afs_osi_TraverseProcTable(void);
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
+extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
+#endif
+
+/* afs_osi_alloc.c */
+#ifndef AFS_FBSD_ENV
+extern afs_lock_t osi_fsplock;
+extern afs_lock_t osi_flplock;
+#endif
 extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
 #ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
@@ -480,25 +522,10 @@ extern void *afs_osi_Alloc_NoSleep(size_t x);
 extern void afs_osi_Free(void *x, size_t asize);
 #endif
 extern void afs_osi_FreeStr(char *x);
-extern void osi_Init(void);
-extern int osi_Active(register struct vcache *avc);
-extern void osi_FlushPages(register struct vcache *avc,
-			   struct AFS_UCRED *credp);
-extern void osi_FlushText_really(register struct vcache *vp);
-extern void afs_osi_MaskSignals(void);
-extern void afs_osi_UnmaskRxkSignals(void);
-extern void afs_osi_RxkRegister(void);
-extern void afs_osi_Invisible(void);
-extern int osi_VMDirty_p(struct vcache *avc);
-#ifndef UKERNEL
-extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
-#endif
-extern void shutdown_osi(void);
-extern int afs_osi_suser(void *credp);
-extern void afs_osi_TraverseProcTable(void);
-#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
-extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
-#endif
+extern void osi_FreeLargeSpace(void *adata);
+extern void osi_FreeSmallSpace(void *adata);
+extern void *osi_AllocLargeSpace(size_t size);
+extern void *osi_AllocSmallSpace(size_t size);
 
 /* afs_osi_pag.c */
 extern int afs_setpag();
@@ -514,21 +541,21 @@ extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
 
-/* afs_osi_alloc.c */
-#ifndef AFS_FBSD_ENV
-extern afs_lock_t osi_fsplock;
-extern afs_lock_t osi_flplock;
-#endif
-extern void osi_FreeLargeSpace(void *adata);
-extern void osi_FreeSmallSpace(void *adata);
-extern void *osi_AllocLargeSpace(size_t size);
-extern void *osi_AllocSmallSpace(size_t size);
-
 /* afs_osi_uio.c */
 extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio,
 		      struct iovec *aoutvec);
 extern int afsio_trim(struct uio *auio, afs_int32 asize);
 extern int afsio_skip(struct uio *auio, afs_int32 asize);
+
+/* afs_osi_vm.c */
+extern int osi_Active(register struct vcache *avc);
+extern void osi_FlushPages(register struct vcache *avc,
+			   struct AFS_UCRED *credp);
+extern void osi_FlushText_really(register struct vcache *vp);
+extern int osi_VMDirty_p(struct vcache *avc);
+#ifndef UKERNEL
+extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
+#endif
 
 
 
@@ -657,6 +684,21 @@ extern void vcache2inode(struct vcache *avc);
 extern void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp);
 #endif
 
+/* afs_pag_call.c */
+extern afs_int32 afs_nfs_server_addr;
+extern void afspag_Init(afs_int32 nfs_server_addr);
+extern void afspag_Shutdown(void);
+
+/* afs_pag_cred.c */
+extern afs_rwlock_t afs_xpagcell;
+extern afs_rwlock_t afs_xpagsys;
+extern int afspag_PUnlog(char *ain, afs_int32 ainSize,
+			 struct AFS_UCRED **acred);
+extern int afspag_PSetTokens(char *ain, afs_int32 ainSize,
+			     struct AFS_UCRED **acred);
+extern int afspag_PSetSysName(char *ain, afs_int32 ainSize,
+                              struct AFS_UCRED **acred);
+
 /* afs_pioctl.c */
 extern struct VenusFid afs_rootFid;
 extern afs_int32 afs_waitForever;
@@ -738,6 +780,9 @@ extern void afs_GetCMStat(char **ptr, unsigned *size);
 #ifndef AFS_NOSTATS
 extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
+
+/* afs_syscall.c */
+extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 
 
 /* UKERNEL/afs_usrops.c */
@@ -1083,6 +1128,7 @@ extern u_short afs_uuid_hash(afsUUID * uuid);
 /* MOVE THEM TO APPROPRIATE LOCATIONS */
 extern afs_int32 RXAFSCB_ExecuteRequest(struct rx_call *acall);
 extern afs_int32 RXSTATS_ExecuteRequest(struct rx_call *acall);
+extern afs_int32 PAGCB_ExecuteRequest(struct rx_call *acall);
 
 
 

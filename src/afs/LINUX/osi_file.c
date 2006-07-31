@@ -20,10 +20,11 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
+#if defined(AFS_LINUX26_ENV)
+#include "h/namei.h"
+#endif
 
 
-int afs_osicred_initialized = 0;
-struct AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 #if defined(AFS_LINUX24_ENV)
@@ -356,3 +357,190 @@ shutdown_osifile(void)
 	afs_osicred_initialized = 0;
     }
 }
+
+/* Intialize cache device info and fragment size for disk cache partition. */
+int
+osi_InitCacheInfo(char *aname)
+{
+    int code;
+    struct dentry *dp;
+    extern ino_t cacheInode;
+    extern struct osi_dev cacheDev;
+    extern afs_int32 afs_fsfragsize;
+    extern struct super_block *afs_cacheSBp;
+    extern struct vfsmount *afs_cacheMnt;
+    code = osi_lookupname_internal(aname, 1, &afs_cacheMnt, &dp);
+    if (code)
+	return ENOENT;
+
+    cacheInode = dp->d_inode->i_ino;
+    cacheDev.dev = dp->d_inode->i_sb->s_dev;
+    afs_fsfragsize = dp->d_inode->i_sb->s_blocksize - 1;
+    afs_cacheSBp = dp->d_inode->i_sb;
+
+    dput(dp);
+
+    return 0;
+}
+
+
+#define FOP_READ(F, B, C) (F)->f_op->read(F, B, (size_t)(C), &(F)->f_pos)
+#define FOP_WRITE(F, B, C) (F)->f_op->write(F, B, (size_t)(C), &(F)->f_pos)
+
+/* osi_rdwr
+ * seek, then read or write to an open inode. addrp points to data in
+ * kernel space.
+ */
+int
+osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
+{
+#ifdef AFS_LINUX26_ENV
+    struct file *filp = osifile->filp;
+#else
+    struct file *filp = &osifile->file;
+#endif
+    KERNEL_SPACE_DECL;
+    int code = 0;
+    struct iovec *iov;
+    afs_size_t count;
+    unsigned long savelim;
+
+    savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
+
+    if (uiop->uio_seg == AFS_UIOSYS)
+	TO_USER_SPACE();
+
+    /* seek to the desired position. Return -1 on error. */
+    if (filp->f_op->llseek) {
+	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset)
+	    return -1;
+    } else
+	filp->f_pos = uiop->uio_offset;
+
+    while (code == 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
+	iov = uiop->uio_iov;
+	count = iov->iov_len;
+	if (count == 0) {
+	    uiop->uio_iov++;
+	    uiop->uio_iovcnt--;
+	    continue;
+	}
+
+	if (rw == UIO_READ)
+	    code = FOP_READ(filp, iov->iov_base, count);
+	else
+	    code = FOP_WRITE(filp, iov->iov_base, count);
+
+	if (code < 0) {
+	    code = -code;
+	    break;
+	} else if (code == 0) {
+	    /*
+	     * This is bad -- we can't read any more data from the
+	     * file, but we have no good way of signaling a partial
+	     * read either.
+	     */
+	    code = EIO;
+	    break;
+	}
+
+	iov->iov_base += code;
+	iov->iov_len -= code;
+	uiop->uio_resid -= code;
+	uiop->uio_offset += code;
+	code = 0;
+    }
+
+    if (uiop->uio_seg == AFS_UIOSYS)
+	TO_KERNEL_SPACE();
+
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
+
+    return code;
+}
+
+/* setup_uio 
+ * Setup a uio struct.
+ */
+void
+setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf, afs_offs_t pos,
+	  int count, uio_flag_t flag, uio_seg_t seg)
+{
+    iovecp->iov_base = (char *)buf;
+    iovecp->iov_len = count;
+    uiop->uio_iov = iovecp;
+    uiop->uio_iovcnt = 1;
+    uiop->uio_offset = pos;
+    uiop->uio_seg = seg;
+    uiop->uio_resid = count;
+    uiop->uio_flag = flag;
+}
+
+
+/* uiomove
+ * UIO_READ : dp -> uio
+ * UIO_WRITE : uio -> dp
+ */
+int
+uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop)
+{
+    int count;
+    struct iovec *iov;
+    int code;
+
+    while (length > 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
+	iov = uiop->uio_iov;
+	count = iov->iov_len;
+
+	if (!count) {
+	    uiop->uio_iov++;
+	    uiop->uio_iovcnt--;
+	    continue;
+	}
+
+	if (count > length)
+	    count = length;
+
+	switch (uiop->uio_seg) {
+	case AFS_UIOSYS:
+	    switch (rw) {
+	    case UIO_READ:
+		memcpy(iov->iov_base, dp, count);
+		break;
+	    case UIO_WRITE:
+		memcpy(dp, iov->iov_base, count);
+		break;
+	    default:
+		printf("uiomove: Bad rw = %d\n", rw);
+		return -EINVAL;
+	    }
+	    break;
+	case AFS_UIOUSER:
+	    switch (rw) {
+	    case UIO_READ:
+		AFS_COPYOUT(dp, iov->iov_base, count, code);
+		break;
+	    case UIO_WRITE:
+		AFS_COPYIN(iov->iov_base, dp, count, code);
+		break;
+	    default:
+		printf("uiomove: Bad rw = %d\n", rw);
+		return -EINVAL;
+	    }
+	    break;
+	default:
+	    printf("uiomove: Bad seg = %d\n", uiop->uio_seg);
+	    return -EINVAL;
+	}
+
+	dp += count;
+	length -= count;
+	iov->iov_base += count;
+	iov->iov_len -= count;
+	uiop->uio_offset += count;
+	uiop->uio_resid -= count;
+    }
+    return 0;
+}
+
