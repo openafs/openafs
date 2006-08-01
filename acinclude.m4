@@ -13,8 +13,6 @@ SRCDIR_PARENT=`pwd`
 AC_ARG_WITH(afs-sysname,
 [  --with-afs-sysname=sys    use sys for the afs sysname]
 )
-AC_ARG_ENABLE( obsolete,
-[  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
 AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB DNS RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
@@ -918,11 +916,6 @@ if test "x$PTHREAD_LIBS" = xerror; then
 fi
 AC_SUBST(PTHREAD_LIBS)
 
-WITH_OBSOLETE=NO
-if test "$enable_obsolete" = "yes"; then
-	WITH_OBSOLETE=YES
-fi
-
 HOST_CPU="$host_cpu"
 
 if test "x$with_bsd_kernel_headers" != "x"; then
@@ -1136,7 +1129,6 @@ AC_SUBST(TOP_SRCDIR)
 AC_SUBST(TOP_INCDIR)
 AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
-AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 

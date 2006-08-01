@@ -73,9 +73,7 @@ src/log/Makefile \
 src/log/test/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
-src/mpp/Makefile \
 src/null/Makefile \
-src/package/Makefile \
 src/pam/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \
@@ -121,7 +119,6 @@ src/vlserver/Makefile \
 src/vol/Makefile \
 src/vol/test/Makefile \
 src/volser/Makefile \
-src/wsadmin.src/Makefile \
 src/xstat/Makefile \
 src/helper-splint.sh \
 )

@@ -57,10 +57,8 @@ log        - programs to show and forget tokens (and optionally forget tokens
 login      - afs aware login replacement, and optional replacement which
 	     gets kerberos tickets
 lwp        - lightweight process library
-mpp        - macro processor for use with package
 ntp        - out of date bundled NTP implementation
 null       - empty archive library
-package    - package system for local disk software maintenance
 pam        - pluggable authentication modules for afs authentication.
 pinstall   - "portable" install command
 procmgmt   - "portable" process management library.
@@ -93,8 +91,6 @@ viced      - fileserver.
 vlserver   - volume location server
 vol        - volume library for managing volumes on-disk.
 volser     - volume server package. includes volserver and vos client.
-wsadmin.src - sample package files
-wsadmin.lib - sample package files
 xstat      - extended statistics clients for cachemanagers and fileservers
 xinstall   - unused more modern install program
 tools      - contributed configuration/maintenance tools
@@ -103,5 +99,3 @@ include    - build-time include file install area; may be used in automake time
 cf         - autoconf config files
 afsinstall - leftovers from IBM AFS including installation notes and helper
 	     scripts
-
-

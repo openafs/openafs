@@ -10,10 +10,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-# Enable build+install of obsolete and insecure packages
-# Set to anything other than YES, or comment out to disable the build
-WITH_OBSOLETE=@WITH_OBSOLETE@
-
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
 # To compile AFS from scratch in the src tree run "make".
@@ -562,14 +558,14 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
-finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
+finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
-finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
+finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
@@ -674,8 +670,6 @@ clean2:
 	-${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
 	-${COMPILE_PART1} JAVA/libjafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
-	-${COMPILE_PART1} mpp ${COMPILE_CLEAN}
-	-${COMPILE_PART1} package ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
@@ -751,9 +745,7 @@ distclean: clean
 	src/log/Makefile \
 	src/lwp/test/Makefile \
 	src/lwp/Makefile \
-	src/mpp/Makefile \
 	src/null/Makefile \
-	src/package/Makefile \
 	src/pam/Makefile \
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \
@@ -798,7 +790,6 @@ distclean: clean
 	src/vol/Makefile \
 	src/vol/test/Makefile \
 	src/volser/Makefile \
-	src/wsadmin.src/Makefile \
 	src/xstat/Makefile  \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \
@@ -809,27 +800,3 @@ pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
 
 maintainer-clean: pristine
-
-#
-# Below targets are all deprecated, obsolete, 
-# see README.OBSOLETE for more info
-#
-
-mpp: project
-	@case ${WITH_OBSOLETE} in \
-	YES) 	${COMPILE_PART1} mpp ${COMPILE_PART2} ;; \
-	*)	echo skipping deprecated target: mpp ;; \
-	esac
-
-package: project mpp
-	@case ${WITH_OBSOLETE} in \
-	YES) 	${COMPILE_PART1} package ${COMPILE_PART2} ;; \
-	*)	echo skipping deprecated target: package ;; \
-	esac
-
-package.files: package
-	@case ${WITH_OBSOLETE} in \
-	YES) 	${DESTDIR}/bin/makepkgfiles afs.dev ;; \
-	*)	echo skipping deprecated target: package.files ;; \
-	esac
-
