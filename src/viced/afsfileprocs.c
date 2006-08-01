@@ -6029,7 +6029,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) malloc(dataBytes);
-    dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS;
+    dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
 #if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
 #endif
