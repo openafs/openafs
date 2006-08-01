@@ -5997,7 +5997,7 @@ DoubleToPrintable(double x, char * buf, int len)
     return buf;
 }
 
-static void
+void
 VPrintExtendedCacheStats_r(int flags)
 {
     int i, j;
