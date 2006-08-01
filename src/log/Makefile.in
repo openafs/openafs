@@ -40,14 +40,8 @@ all: unlog tokens tokens.krb kseal
 kseal: kseal.o ${LIBRARIES}
 	${CC} -o kseal kseal.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
 
-log: log.o ${LIBRARIES}
-	${CC} -o log log.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
-
 unlog: unlog.o ${LIBRARIES}
 	${CC} -o unlog unlog.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
-
-passwd:	passwd.o ${LIBRARIES}
-	${CC} -o passwd passwd.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
 
 tokens: tokens.o ${LIBRARIES}
 	${CC} -o tokens tokens.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
@@ -88,7 +82,7 @@ dest: unlog tokens tokens.krb kseal
 # Misc. targets
 #
 clean:	
-	$(RM) -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
+	$(RM) -f *.o unlog tokens kseal core AFS_component_version_number.c tokens.krb
 
 test:
 	cd test; $(MAKE)
