@@ -7,7 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include ../config/Makefile.version
+include ../../config/Makefile.version
 
 all: afssettings
 
