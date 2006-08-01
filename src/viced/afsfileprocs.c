@@ -6187,7 +6187,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) malloc(dataBytes);
-    dataBuffP[0] = CAPABILITY_ERRORTRANS;
+    dataBuffP[0] = CAPABILITY_ERRORTRANS | CAPABILITY_WRITELOCKACL;
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
