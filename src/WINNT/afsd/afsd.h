@@ -12,22 +12,13 @@
 
 #include <afs/param.h>
 
-#ifndef DJGPP
 BOOL InitClass(HANDLE);
 BOOL InitInstance(HANDLE, int);
 
 LONG APIENTRY MainWndProc(HWND, unsigned int, unsigned int, long);
 BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
-#endif /* !DJGPP */
 
-#ifndef DJGPP
 #include <nb30.h>
-#else /* DJGPP */
-#include <sys/farptr.h>
-#include <go32.h>
-#include "dosdefs95.h"
-#include "largeint95.h"
-#endif /* !DJGPP */
 
 #include "afsdicon.h"
 
@@ -64,11 +55,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_freelance.h"
 #include "smb_ioctl.h"
 #include "afsd_init.h"
-#ifdef DJGPP
-#include "afs/afsmsg95.h"
-#else
 #include "afsd_eventlog.h"
-#endif
 
 #include <afs/vldbint.h>
 #include <afs/afsint.h>

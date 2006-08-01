@@ -41,7 +41,6 @@ INCFILES =\
 	$(INCFILEDIR)\smb3.h \
 	$(INCFILEDIR)\smb_iocons.h \
 	$(INCFILEDIR)\smb_ioctl.h \
-	$(INCFILEDIR)\afsmsg95.h \
 	$(INCFILEDIR)\afsrpc.h \
 !IFDEF OSICRASH
 	$(INCFILEDIR)\afsdcrash.h \
@@ -257,25 +256,6 @@ $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DEL) $*.lib $*.exp
 
 ############################################################################
-# afslog95.dll
-
-LOG95_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslog95.dll
-
-LOG95_DLLOBJS =\
-	$(OUT)\afslog95.obj \
-	$(OUT)\afslog95.res
-
-LOG95_DLLLIBS =\
-	$(DESTDIR)\lib\afsauthent.lib \
-	$(DESTDIR)\lib\libafsconf.lib
-
-$(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
-	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslog95.def dnsapi.lib mpr.lib
-	$(DLLPREP)
-	$(COPY) $*.lib $(DESTDIR)\lib
-	$(DEL) $*.lib $*.exp
-
-############################################################################
 # Install target; primary makefile target
 
 install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
@@ -296,15 +276,6 @@ install: install_headers install_objs $(CONF_DLLFILE) \
 	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
 	$(DESTDIR)\bin\kpasswd.exe $(EXEDIR)\cmdebug.exe $(EXEDIR)\afscpcc.exe
-
-install9X: install_headers $(CONF_DLLFILE) \
-	$(EXEDIR)\klog.exe \
-	$(EXEDIR)\tokens.exe \
-	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
-	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
-	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
-	$(EXEDIR)\afsshare.exe \
-	$(DESTDIR)\bin\kpasswd.exe
 
 install_libutils: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \
@@ -512,8 +483,6 @@ $(OUT)\afsd_service.res: afsd_service.rc afsd_eventmessages.rc AFS_component_ver
 
 $(OUT)\afslogon.res: afslogon.rc AFS_component_version_number.h
 
-$(OUT)\afslog95.res: afslog95.rc AFS_component_version_number.h
-
 $(OUT)\libafsconf.res: libafsconf.rc AFS_component_version_number.h
 
 ############################################################################
@@ -526,6 +495,5 @@ clean::
         $(DEL) MSG?????.bin
 	$(DEL) $(CONF_DLLFILE)
 	$(DEL) $(LOGON_DLLFILE)
-	$(DEL) $(LOG95_DLLFILE)
 
 mkdir:

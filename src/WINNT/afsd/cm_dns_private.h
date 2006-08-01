@@ -9,15 +9,6 @@
 #ifndef __DNS_AFS_private_h_env_
 #define __DNS_AFS_private_h_env_
 
-#ifdef DJGPP
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-/*#else
-  #include <windows.h>*/
-#endif
-
 #ifdef KERNEL
 #define SOCKET struct osi_socket *
 #else
@@ -29,79 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-#ifdef DJGPP
-
-char *inet_ntoa(struct in_addr in)
-{
-  static char   out[256];
-  char temp[20];
-  unsigned long sVal,pVal;
-
-  out[0] = '\0';
-
-
-  pVal = ntohl(in.s_addr);
-
-  sVal = pVal;
-  sVal >>= 24;
-  sprintf(out,"%ld",sVal);
-
-  sVal = pVal;
-  sVal <<= 8;
-  sVal >>= 24;
-  sprintf(out,"%s.%ld",out,sVal);
-
-  sVal = pVal;
-  sVal <<= 16;
-  sVal >>= 24;
-  sprintf(out,"%s.%ld",out,sVal);
-
-  sVal = pVal;
-  sVal <<= 24;
-  sVal >>= 24;
-  sprintf(out,"%s.%ld",out,sVal);
-
-  return(&out[0]);
-}
-
-unsigned long inet_addr(const char *cp)
-{
-  
-  unsigned long val=0;
-  unsigned char sVal;
-  
-  char   cp2[256];
-
-  char*  ptr = cp2;
-  int    i;
-  int    len;
-
-  strcpy(cp2,cp);
-
-  for (i=0; i<=strlen(cp); i++)
-    {
-      if (cp2[i] == '.')
-	{
-	  cp2[i] = '\0';
-	  sVal = atoi(ptr);
-	  ptr = &cp2[i+1];
-	  val = val << 8;
-	  val &= 0xffffff00;
-	  val |= sVal;
-	  //printf("%x\t%lx\n",sVal,val);
-	};
-    };
-  sVal = atoi(ptr);
-  val = val << 8;
-  val &= 0xffffff00;
-  val |= sVal;
-  //printf("%x\t%lx\n",sVal,val);
-  
-  return htonl(val);
-}
-
-#endif /* DJGPP */
 
 #define BUFSIZE                 2048
 

@@ -61,16 +61,6 @@ extern void lwp_abort(void);
 #ifdef AFS_SUN5_ENV
 #include <fcntl.h>
 #endif
-#ifdef AFS_DJGPP_ENV
-#include "dosdefs95.h"
-#include "netbios95.h"
-#include <sys/socket.h>
-#include <sys/farptr.h>
-#include <dpmi.h>
-#include <go32.h>
-#include <crt0.h>
-int _crt0_startup_flags = _CRT0_FLAG_LOCK_MEMORY;
-#endif /* AFS_DJGPP_ENV */
 
 #if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
 
@@ -133,13 +123,8 @@ struct IoRequest {
 
     struct IoRequest    *next;	/* for iorFreeList */
 
-#ifdef AFS_DJGPP_ENV
-    NCB                  *ncbp;
-    dos_ptr              dos_ncb;
-#endif /* AFS_DJGPP_ENV */
-
 };
-
+
 /********************************\
 * 				 *
 *  Stuff for managing signals    *
@@ -179,15 +164,6 @@ static PROCESS iomgr_badpid;
 static void SignalIO(int fds, fd_set *rfds, fd_set *wfds, fd_set *efs,
 		    int code);
 static void SignalTimeout(int code, struct timeval *timeout);
-
-#ifdef AFS_DJGPP_ENV
-/* handle Netbios NCB completion */
-static int NCB_fd;
-int anyNCBComplete = FALSE;
-int handler_seg, handler_off;  /* seg:off of NCB completion handler */
-static __dpmi_regs        callback_regs;
-static _go32_dpmi_seginfo callback_info;
-#endif /* AFS_DJGPP_ENV */
 
 /* fd_set pool managment. 
  * Use the pool instead of creating fd_set's on the stack. fd_set's can be
@@ -437,9 +413,7 @@ static int IOMGR(void *dummy)
 	    /* Note: SignalSignals() may yield! */
 	    if (anySigsDelivered && SignalSignals ())
 		woke_someone = TRUE;
-#ifndef AFS_DJGPP_ENV
 	    FT_GetTimeOfDay(&junk, 0);    /* force accurate time check */
-#endif
 	    TM_Rescan(Requests);
 	    for (;;) {
 		register struct IoRequest *req;
@@ -465,11 +439,6 @@ static int IOMGR(void *dummy)
 		LWP_QSignal(req->pid);
 		req->pid->iomgrRequest = 0;
 	    }
-
-#ifdef AFS_DJGPP_ENV
-            if (IOMGR_CheckNCB())    /* check for completed netbios requests */
-              woke_someone = TRUE;
-#endif /* AFS_DJGPP_ENV */
 
 	    if (woke_someone) LWP_DispatchProcess();
 	} while (woke_someone);
@@ -552,14 +521,6 @@ static int IOMGR(void *dummy)
 	    }
 #endif /* NT40 */
 
-#ifdef AFS_DJGPP_ENV
-            /* We do this also for the DOS-box Win95 client, since
-               NCB calls don't interrupt a select, but we want to catch them
-               in a reasonable amount of time (say, half a second). */
-            iomgr_timeout.tv_sec = 0;
-            iomgr_timeout.tv_usec = IOMGR_WIN95WAITTIME;
-#endif /* DJGPP */
-
 	    /* Check one last time for a signal delivery.  If one comes after
 	       this, the signal handler will set iomgr_timeout to zero, causing
 	       the select to return immediately.  The timer package won't return
@@ -569,11 +530,6 @@ static int IOMGR(void *dummy)
 	       the parameters to select.  This may a bad assumption.  -DN */
 	    if (anySigsDelivered)
 		continue;	/* go to the top and handle them. */
-
-#ifdef AFS_DJGPP_ENV
-            if (IOMGR_CheckNCB())    /* check for completed netbios requests */
-              LWP_DispatchProcess();
-#endif /* AFS_DJGPP_ENV */
 
 #ifdef AFS_NT40_ENV
 	    if (IOMGR_readfds.fd_count == 0 && IOMGR_writefds.fd_count == 0
@@ -658,14 +614,9 @@ static int IOMGR(void *dummy)
 		    continue;
 		}
 #endif /* AFS_NT40_ENV */
-#ifndef AFS_DJGPP_ENV
 	    	FT_GetTimeOfDay(&junk, 0);
-#endif
 		SignalTimeout(code, &timeout);
 	    }
-#ifdef AFS_DJGPP_ENV
-            IOMGR_CheckNCB();
-#endif /* AFS_DJGPP_ENV */
 	}
 	LWP_DispatchProcess();
     }
@@ -820,10 +771,6 @@ int IOMGR_Initialize(void)
     anySigsDelivered = TRUE; /* A soft signal may have happened before
 	IOMGR_Initialize:  so force a check for signals regardless */
     memset(allOnes, 0xff, sizeof(allOnes));
-
-#ifdef AFS_DJGPP_ENV
-    install_ncb_handler();
-#endif /* AFS_DJGPP_ENV */
 
     return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
 			     "IO MANAGER", &IOMGR_Id);
@@ -1073,171 +1020,10 @@ int IOMGR_CancelSignal (int signo)
 /* This routine calls select is a fashion that simulates the standard sleep routine */
 void IOMGR_Sleep (int seconds)
 {
-#ifndef AFS_DJGPP_ENV
     struct timeval timeout;
 
     timeout.tv_sec = seconds;
     timeout.tv_usec = 0;
     IOMGR_Select(0, 0, 0, 0, &timeout);
-#else
-    struct timeval timeout;
-    int s;
-    fd_set set, empty;
-    FD_ZERO(&empty);
-    FD_ZERO(&set);
-    s = socket(AF_INET,SOCK_STREAM,0);
-    FD_SET(s,&set);
-
-    timeout.tv_sec = seconds;
-    timeout.tv_usec = 0;
-    IOMGR_Select(1,&set,&empty,&empty,&timeout);
-    close(s);
-#endif            /* DJGPP  */
 }
 #endif	/* USE_PTHREADS */
-
-
-#ifdef AFS_DJGPP_ENV
-
-/* Netbios code for djgpp port */
-
-int IOMGR_NCBSelect(NCB *ncbp, dos_ptr dos_ncb, struct timeval *timeout)
-{
-  struct IoRequest *request;
-  int result;
-  
-  if (timeout != NULL && timeout->tv_sec == 0 && timeout->tv_usec == 0)
-  {
-    /* Poll */
-    if (ncbp->ncb_event != NULL)
-    {
-      /* error */
-      return -1;
-    }
-    
-    if (get_dos_member_b(NCB, dos_ncb, ncb_cmd_cplt) != 0xff)
-    {
-      return 1;
-    }
-    else {
-      return 0;
-    }
-  }
-
-  /* Construct request block & insert */
-  request = NewRequest();
-  request->ncbp = ncbp;
-  request->dos_ncb = dos_ncb;
-  
-  if (timeout == NULL)
-  {
-    request->timeout.TotalTime.tv_sec = -1;
-    request->timeout.TotalTime.tv_usec = -1;
-  }
-  else
-  {
-    request -> timeout.TotalTime = *timeout;
-    /* check for bad request */
-    if (timeout->tv_sec < 0 || timeout->tv_usec < 0 || timeout->tv_usec > 999999)
-    {
-      /* invalid arg */
-      iomgr_badtv = *timeout;
-      iomgr_badpid = LWP_ActiveProcess;
-      /* now fixup request */
-      if(request->timeout.TotalTime.tv_sec < 0)
-        request->timeout.TotalTime.tv_sec = 1;
-      request->timeout.TotalTime.tv_usec = 100000;
-    }
-  }
-
-  request->timeout.BackPointer = (char *)request;
-
-  /* Insert my PID in case of IOMGR_Cancel */
-  request -> pid = LWP_ActiveProcess;
-  LWP_ActiveProcess -> iomgrRequest = request;
-  
-#ifdef DEBUG
-  request -> timeout.Next = (struct TM_Elem *) 1;
-  request -> timeout.Prev = (struct TM_Elem *) 1;
-#endif /* DEBUG */
-  TM_Insert(Requests, &request->timeout);
-
-  if (ncbp->ncb_event != NULL)
-  {
-    /* since we were given an event, we can return immediately and just
-       signal the event once the request completes. */
-    return 0;
-  }
-  else
-  {
-    /* Wait for action */
-    
-    LWP_QWait();
-    
-    /* Update parameters & return */
-    result = request -> result;
-
-    FreeRequest(request);
-    return (result > 1 ? 1 : result);
-  }
-}
-      
-int IOMGR_CheckNCB(void)
-{
-  int woke_someone = FALSE;
-  EVENT_HANDLE ev;
-  PROCESS pid;
-  
-  anyNCBComplete = FALSE;
-  FOR_ALL_ELTS(r, Requests, {
-    register struct IoRequest *req;
-    req = (struct IoRequest *) r -> BackPointer;
-
-    if (req->dos_ncb && get_dos_member_b(NCB, req->dos_ncb, ncb_cmd_cplt) != 0xff)
-    {
-      /* this NCB has completed */
-      TM_Remove(Requests, &req->timeout);
-
-      /* copy out NCB from DOS to virtual space */
-      dosmemget(req->dos_ncb, sizeof(NCB), (char *) req->ncbp);
-
-      if (ev = req->ncbp->ncb_event)
-      {
-        thrd_SetEvent(ev);
-      }
-      else
-      {
-        woke_someone = TRUE;
-        LWP_QSignal(pid=req->pid);
-        pid->iomgrRequest = 0;
-      }
-    }
-  })
-  return woke_someone;
-}
-
-int ncb_handler(__dpmi_regs *r)
-{
-  anyNCBComplete = TRUE;  /* NCB completed */
-  /* Make sure that the IOMGR process doesn't pause on the select. */
-  iomgr_timeout.tv_sec = 0;
-  iomgr_timeout.tv_usec = 0;
-  return;
-}
-
-int install_ncb_handler(void)
-{
-  callback_info.pm_offset = (long) ncb_handler;
-  if (_go32_dpmi_allocate_real_mode_callback_retf(&callback_info,
-                                                  &callback_regs))
- {
-      fprintf(stderr, "error, allocate_real_mode_callback_retf failed\n");
-      return -1;
- }
-
- handler_seg = callback_info.rm_segment;
- handler_off = callback_info.rm_offset;
- 
- /*printf("NCB handler_seg=0x%x, off=0x%x\n", handler_seg, handler_off);*/
-}
-#endif /* AFS_DJGPP_ENV */

@@ -15,9 +15,6 @@
 /*#include "osi.h"*/
 #include "osifd.h"
 #include "osiqueue.h"
-#ifdef DJGPP
-#include "osithrd95.h"
-#endif /* DJGPP */
 
 /* states bits */
 #define OSI_SLEEPINFO_SIGNALLED	1	/* this sleep structure has been signalled */
@@ -52,11 +49,7 @@ typedef struct osi_sleepFD{
 
 /* struct for single-shot initialization support */
 typedef struct osi_once {
-#ifndef DJGPP
 	long atomic;	/* used for atomicity */
-#else
-	osi_mutex_t atomic;	/* used for atomicity */
-#endif /* !DJGPP */
 	int done;	/* tells if initialization is done */
 } osi_once_t;
 
@@ -83,10 +76,8 @@ extern void osi_SleepSpin(LONG_PTR value, Crit_Sec *counterp);
 /* spin lock version of wakeup, used internally only */
 extern void osi_WakeupSpin(LONG_PTR value);
 
-#ifndef DJGPP
 /* exported function to sleep on a value */
 extern void osi_Sleep (LONG_PTR);
-#endif
 
 extern void osi_FreeSleepInfo(osi_sleepInfo_t *);
 
@@ -111,12 +102,10 @@ extern int osi_TestOnce(osi_once_t *);
 extern void osi_EndOnce(osi_once_t *);
 
 
-#ifndef DJGPP
 /* exported function to wakeup those sleeping on a value */
 extern void osi_Wakeup (LONG_PTR);
 
 extern void osi_Init (void);
-#endif /* !DJGPP */
 
 /* create a ptr to a cookie */
 osi_sleepFD_t *osi_CreateSleepCookie(void);
@@ -129,9 +118,7 @@ int osi_NextSleepCookie(osi_sleepFD_t *);
 
 /* functions for the sleep FD implementation */
 extern long osi_SleepFDCreate(osi_fdType_t *, osi_fd_t **);
-#ifndef DJGPP
 extern long osi_SleepFDGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
-#endif
 extern long osi_SleepFDClose(osi_fd_t *);
 
 /* functions for getting hash sizes */

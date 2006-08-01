@@ -10,7 +10,7 @@
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
 #ifndef UKERNEL
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #include "rx_xmit_nt.h"
 #endif
 #ifndef AFS_NT40_ENV
@@ -33,7 +33,7 @@
  */
 
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #ifndef MIN
 #define MIN(a,b)  ((a)<(b)?(a):(b))
 #endif

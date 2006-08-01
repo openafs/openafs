@@ -326,14 +326,4 @@ extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 fl
 /* SMB auth related functions */
 extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 
-#ifdef DJGPP
-#define DELETE (0x00010000)
-#define READ_CONTROL (0x00020000)
-#define SYNCHRONIZE (0x00100000)
-#define FILE_WRITE_ATTRIBUTES ( 0x0100 )
-#define FILE_GENERIC_READ (0x00120089)
-#define FILE_GENERIC_WRITE (0x00120116)
-#define FILE_GENERIC_EXECUTE (0x001200a0)
-#endif /* DJGPP */
-
 #endif /*  __SMB3_H_ENV__ */

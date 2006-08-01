@@ -15,11 +15,7 @@
 #include <malloc.h>
 
 #include <osi.h>
-#ifndef DJGPP
 #include "afsrpc.h"
-#else
-#include "afsrpc95.h"
-#endif
 
 #include "afsd.h"
 #include "afsd_init.h"

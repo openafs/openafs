@@ -10,11 +10,9 @@
 #define _OSI_LOG_H__ 1
 
 #include "osi.h"
-#ifndef DJGPP
 #include "osisleep.h"
 #include "osibasel.h"
 #include "osistatl.h"
-#endif /* !DJGPP */
 #include "osifd.h"
 #include "osiqueue.h"
 
@@ -65,9 +63,7 @@ extern void osi_LogReset(osi_log_t *);
 
 extern long osi_LogFDCreate(osi_fdType_t *, osi_fd_t **);
 
-#ifndef DJGPP
 extern long osi_LogFDGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
-#endif
 
 extern long osi_LogFDClose(osi_fd_t *);
 

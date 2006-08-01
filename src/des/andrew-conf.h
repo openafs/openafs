@@ -54,7 +54,7 @@
 #endif
 #else /* AFS_XBSD_ENV */
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_LINUX20_ENV)
 #ifdef AFS_PARISC_LINUX20_ENV
 #include "conf-parisc-linux.h"
 #else

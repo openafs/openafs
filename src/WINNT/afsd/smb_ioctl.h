@@ -34,12 +34,7 @@ extern long smb_IoctlV3Write(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, 
 
 extern long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
-#ifndef DJGPP
 extern long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *outp);
-#else /* DJGPP */
-extern long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
-	smb_packet_t *outp, dos_ptr rawBuf);
-#endif /* !DJGPP */
 
 #endif /*  __SMB_IOCTL_H_ENV__ */

@@ -12,9 +12,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#endif
 #include <osi.h>
 #include <stdio.h>
 #include <assert.h>
@@ -112,12 +110,8 @@ void buf_IncrSyncer(long parm)
     lock_ReleaseWrite(&buf_globalLock);
     nAtOnce = (long)sqrt((double)cm_data.buf_nbuffers);
     while (buf_ShutdownFlag == 0) {
-#ifndef DJGPP
         i = SleepEx(5000, 1);
         if (i != 0) continue;
-#else
-        thrd_Sleep(5000);
-#endif /* DJGPP */
             
         if (buf_ShutdownFlag == 1)
             return;
@@ -342,9 +336,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                                "buf_IncrSyncer");
 
         osi_assertx(phandle != NULL, "buf: can't create incremental sync proc");
-#ifndef DJGPP
         CloseHandle(phandle);
-#endif /* !DJGPP */
     }
 
 #ifdef TESTING
@@ -358,7 +350,6 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
  */
 long buf_AddBuffers(afs_uint64 nbuffers)
 {
-#ifndef DJGPP
     /* The size of a virtual cache cannot be changed after it has
      * been created.  Subsequent calls to MapViewofFile() with
      * an existing mapping object name would not allow the 
@@ -372,43 +363,6 @@ long buf_AddBuffers(afs_uint64 nbuffers)
               nbuffers, cm_data.buf_nbuffers);
 
     return CM_ERROR_INVAL;
-#else
-    cm_buf_t *bp;
-    int i;
-    char *data;
-
-    data = malloc(buf_nbuffers * cm_data.buf_blockSize);
-
-    /* Create buffer headers and put in free list */
-    bp = malloc(nbuffers * sizeof(*bp));
-
-    for (i=0; i<nbuffers; i++) {
-        memset(bp, 0, sizeof(*bp));
-        
-        lock_InitializeMutex(&bp->mx, "cm_buf_t");
-
-        /* grab appropriate number of bytes from aligned zone */
-        bp->datap = data;
-
-        bp->flags |= CM_BUF_INLRU;
-
-        lock_ObtainWrite(&buf_globalLock);
-        /* note that buf_allp chain is covered by buf_globalLock now */
-        bp->allp = cm_data.buf_allp;
-        cm_data.buf_allp = bp;
-        osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-        if (!cm_data.buf_freeListEndp) 
-            cm_data.buf_freeListEndp = bp;
-        cm_data.buf_nbuffers++;
-        lock_ReleaseWrite(&buf_globalLock);
-
-        bp++;
-        data += cm_data.buf_blockSize;
-	
-    }	 /* for loop over all buffers */
-
-    return 0;
-#endif /* DJGPP */
 }       
 
 /* interface to set the number of buffers to an exact figure.
@@ -958,10 +912,8 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)));
 
         /* setup offset, event */
-#ifndef DJGPP  /* doesn't seem to be used */
         bp->over.Offset = bp->offset.LowPart;
         bp->over.OffsetHigh = bp->offset.HighPart;
-#endif /* !DJGPP */
 
         /* start the I/O; may drop lock */
         bp->flags |= CM_BUF_READING;
@@ -974,9 +926,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 
         if (code != 0) {
             /* failure or queued */
-#ifndef DJGPP   /* cm_bufRead always returns 0 */
             if (code != ERROR_IO_PENDING) {
-#endif
                 bp->error = code;
                 bp->flags |= CM_BUF_ERROR;
                 bp->flags &= ~CM_BUF_READING;
@@ -990,9 +940,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
                 buf_ValidateBufQueues();
 #endif /* TESTING */
                 return code;
-#ifndef DJGPP
             }
-#endif
         } else {
             /* otherwise, I/O completed instantly and we're done, except
              * for padding the xfr out with 0s and checking for EOF

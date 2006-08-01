@@ -10,10 +10,6 @@
 #ifndef __CM_SCACHE_H_ENV__
 #define __CM_SCACHE_H_ENV__ 1
 
-#ifdef DJGPP
-#include "largeint95.h"
-#endif /* DJGPP */
-
 #define MOUNTPOINTLEN   1024
 
 typedef struct cm_fid {

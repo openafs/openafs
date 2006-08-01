@@ -13,7 +13,6 @@
 RCSID
     ("$Header$");
 
-#ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/types.h>
@@ -522,5 +521,3 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */
-
-#endif /* !AFS_DJGPP_ENV */

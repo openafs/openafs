@@ -316,12 +316,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             nbytes = count;	/* don't go past end of request */
 
         /* now copy the data */
-#ifdef DJGPP
-        if (dosflag)
-            dosmemget((dos_ptr)op, nbytes, bufferp->datap + bufIndex);
-        else
-#endif /* DJGPP */
-            memcpy(bufferp->datap + bufIndex, op, nbytes);
+	memcpy(bufferp->datap + bufIndex, op, nbytes);
         buf_SetDirty(bufferp);
 
         /* and record the last writer */

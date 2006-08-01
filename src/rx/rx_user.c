@@ -31,7 +31,7 @@ RCSID
 # include <sys/ioctl.h>
 #endif
 # include <fcntl.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
 # include <sys/syscall.h>
 #endif
 #include <afs/afs_args.h>
@@ -104,7 +104,7 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 #endif
 
 #if 0
-#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_NT40_ENV) 
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
@@ -137,14 +137,13 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 	(osi_Msg "%sbind failed\n", name);
 	goto error;
     }
-#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_NT40_ENV) 
     /*
      * Set close-on-exec on rx socket 
      */
     fcntl(socketFd, F_SETFD, 1);
 #endif
 
-#ifndef AFS_DJGPP_ENV
     /* Use one of three different ways of getting a socket buffer expanded to
      * a reasonable size.
      */
@@ -177,7 +176,6 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 	rx_stats.socketGreedy = greedy;
 	MUTEX_EXIT(&rx_stats_mutex);
     }
-#endif /* AFS_DJGPP_ENV */
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
@@ -273,7 +271,7 @@ static int myNetFlags[ADDRSPERSITE];
 static u_int rxi_numNetAddrs;
 static int Inited = 0;
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 int
 rxi_getaddr(void)
 {
@@ -375,7 +373,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
 int
 rxi_syscall(a3, a4, a5)
      afs_uint32 a3, a4;
@@ -404,7 +402,6 @@ rx_GetIFInfo(void)
 {
     int s;
     int i, j, len, res;
-#ifndef AFS_DJGPP_ENV
     struct ifconf ifc;
     struct ifreq ifs[ADDRSPERSITE];
     struct ifreq *ifr;
@@ -412,7 +409,6 @@ rx_GetIFInfo(void)
     char buf[BUFSIZ], *cp, *cplim;
 #endif
     struct sockaddr_in *a;
-#endif /* AFS_DJGPP_ENV */
 
     LOCK_IF_INIT;
     if (Inited) {
@@ -432,7 +428,6 @@ rx_GetIFInfo(void)
     if (s < 0)
 	return;
 
-#ifndef AFS_DJGPP_ENV
 #ifdef	AFS_AIX41_ENV
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
@@ -600,10 +595,6 @@ rx_GetIFInfo(void)
 	    rxi_MorePackets(npackets * (ncbufs + 1));
 	}
     }
-#else /* AFS_DJGPP_ENV */
-    close(s);
-    return;
-#endif /* AFS_DJGPP_ENV */
 }
 #endif /* AFS_NT40_ENV */
 

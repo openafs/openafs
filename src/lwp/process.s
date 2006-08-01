@@ -8,9 +8,7 @@
  */
 
 #define	IGNORE_STDS_H	1
-/*#ifndef AFS_DJGPP_ENV*/
 #include <afs/param.h>
-/*#endif /* AFS_DJGPP_ENV */
 
 #if defined(RIOS)
 

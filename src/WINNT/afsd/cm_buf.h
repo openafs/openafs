@@ -85,9 +85,7 @@ typedef struct cm_buf {
     char *datap;		/* data in this buffer */
     unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
-#ifndef DJGPP
     OVERLAPPED over;	        /* overlapped structure for I/O */
-#endif
         
     /* fields added for the CM; locked by scp->mx */
     long dataVersion;	        /* data version of this page */
@@ -152,9 +150,7 @@ extern cm_buf_t *buf_LockedFind(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
-#ifndef DJGPP
 extern HANDLE buf_GetFileHandle(long);
-#endif /* !DJGPP */
 
 extern void buf_LockedCleanAsync(cm_buf_t *, cm_req_t *);
 

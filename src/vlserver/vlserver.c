@@ -312,7 +312,7 @@ main(argc, argv)
     }
     memcpy(&myHost, th->h_addr, sizeof(afs_int32));
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */

@@ -13,11 +13,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <rpc.h>
 #include "dbrpc.h"
-#endif /* !DJGPP */
 #include <malloc.h>
 #include "osi.h"
 #include <assert.h>
@@ -29,9 +27,7 @@ long osi_nextFD = 0;
 
 osi_fdOps_t osi_TypeFDOps = {
 	osi_FDTypeCreate,
-#ifndef DJGPP
 	osi_FDTypeGetInfo,
-#endif
 	osi_FDTypeClose
 };
 
@@ -216,7 +212,6 @@ long osi_FDTypeCreate(osi_fdType_t *fdTypep, osi_fd_t **outpp)
 }
 
 
-#ifndef DJGPP
 long osi_FDTypeGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *outp)
 {
 	osi_typeFD_t *fdp;
@@ -239,7 +234,6 @@ long osi_FDTypeGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *outp)
 		return OSI_DBRPC_EOF;
 	}
 }
-#endif /* !DJGPP */
 
 long osi_FDTypeClose(osi_fd_t *ifdp)
 {

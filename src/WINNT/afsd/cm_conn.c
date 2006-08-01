@@ -10,9 +10,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#endif /* !DJGPP */
 #include <string.h>
 #include <malloc.h>
 #include <osi.h>
@@ -86,11 +84,7 @@ void cm_InitConn(void)
 void cm_InitReq(cm_req_t *reqp)
 {
 	memset((char *)reqp, 0, sizeof(cm_req_t));
-#ifndef DJGPP
 	reqp->startTime = GetTickCount();
-#else
-        gettimeofday(&reqp->startTime, NULL);
-#endif
 }
 
 static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
@@ -186,12 +180,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
      * and retry */
     
     /* timeleft - get if from reqp the same way as cmXonnByMServers does */
-#ifndef DJGPP
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-#else
-    gettimeofday(&now, NULL);
-    timeUsed = sub_time(now, reqp->startTime) / 1000;
-#endif
 	    
     /* leave 5 seconds margin for sleep */
     timeLeft = HardDeadtimeout - timeUsed;
@@ -336,44 +325,30 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     {       
         char addr[16];
         char *format;
-#ifndef DJGPP
 	DWORD msgID;
-#endif
         switch ( errorCode ) {
         case VNOVOL:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VNOVOL;
-#endif
             format = "Server %s reported volume %d as not attached.";
             break;
         case VMOVED:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VMOVED;
-#endif
             format = "Server %s reported volume %d as moved.";
             break;
         case VOFFLINE:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VOFFLINE;
-#endif
             format = "Server %s reported volume %d as offline.";
             break;
         case VSALVAGE:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VSALVAGE;
-#endif
             format = "Server %s reported volume %d as needs salvage.";
             break;
         case VNOSERVICE:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VNOSERVICE;
-#endif
             format = "Server %s reported volume %d as not in service.";
             break;
         case VIO:
-#ifndef DJGPP
 	    msgID = MSG_SERVER_REPORTS_VIO;
-#endif
             format = "Server %s reported volume %d as temporarily unaccessible.";
             break;
         }
@@ -386,9 +361,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                  ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
 
 	osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
-#ifndef DJGPP
 	LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
-#endif
 
         /* Mark server offline for this volume */
         if (!serversp) {
@@ -454,9 +427,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                  ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
                  ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
 
-#ifndef DJGPP
 	LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
-#endif /* !DJGPP */
 	  
         retry = 0;
         osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime exceeded addr[%s]",
@@ -605,9 +576,6 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     long firstError = 0;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
     long timeUsed, timeLeft, hardTimeLeft;
-#ifdef DJGPP
-    struct timeval now;
-#endif /* DJGPP */        
 
     if (serversp == NULL) {
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_NOSUCHVOLUME);
@@ -616,12 +584,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
     *connpp = NULL;
 
-#ifndef DJGPP
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-#else
-    gettimeofday(&now, NULL);
-    timeUsed = sub_time(now, reqp->startTime) / 1000;
-#endif
         
     /* leave 5 seconds margin of safety */
     timeLeft =  ConnDeadtimeout - timeUsed - 5;

@@ -23,7 +23,7 @@ RCSID
 #include "lwp.h"
 #include "preempt.h"
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) 
 int PRE_Block = 0;
 
 

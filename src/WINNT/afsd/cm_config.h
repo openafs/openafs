@@ -21,9 +21,6 @@
 #ifndef __CM_CONFIG_INTERFACES_ONLY__
 
 #include <stdio.h>
-#ifdef DJGPP
-#include <netinet/in.h>
-#endif /* DJGPP */
 
 typedef FILE cm_configFile_t;
 

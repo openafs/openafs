@@ -59,7 +59,7 @@ hton_syserr_conv(register afs_int32 code)
 
     if (code == ENOSPC)
 	err = VDISKFULL;
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_NT40_ENV) 
     /* EDQUOT doesn't exist on solaris */
     else if (code == EDQUOT)
 	err = VOVERQUOTA;
@@ -82,7 +82,7 @@ ntoh_syserr_conv(int code)
     if (code == VDISKFULL)
 	err = ENOSPC;
     else if (code == VOVERQUOTA)
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) 
 	err = ENOSPC;
 #else
 	err = EDQUOT;

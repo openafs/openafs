@@ -166,7 +166,6 @@ LWP_WaitForKeystroke(int seconds)
     struct timeval twait;
     struct timeval *tp = NULL;
 
-#ifndef AFS_DJGPP_ENV
 #ifdef AFS_LINUX20_ENV
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
@@ -179,10 +178,6 @@ LWP_WaitForKeystroke(int seconds)
 	return 1;
 #endif
 #endif
-#else /* DJGPP */
-    if (stdin->_cnt > 0)
-	return 1;
-#endif /* DJGPP */
 
     FD_ZERO(&rdfds);
     FD_SET(fileno(stdin), &rdfds);

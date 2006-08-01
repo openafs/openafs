@@ -10,10 +10,6 @@
 #ifndef __SMB_H_ENV__
 #define __SMB_H_ENV__ 1
 
-#ifdef DJGPP
-#include "netbios95.h"
-#endif /* DJGPP */
-
 #include <ntsecapi.h>
 
 /* Support largefiles by default */
@@ -185,10 +181,6 @@ typedef struct smb_packet {
     unsigned char oddByte;
     unsigned short ncb_length;
     unsigned char flags;
-#ifdef DJGPP
-    dos_ptr dos_pkt;
-    unsigned int dos_pkt_sel;
-#endif /* DJGPP */
 } smb_packet_t;
 
 /* smb_packet flags */
@@ -201,11 +193,6 @@ typedef struct myncb {
     NCB ncb;			        /* ncb to use */
     struct myncb *nextp;		/* when on free list */
     long magic;
-#ifdef DJGPP
-    dos_ptr dos_ncb;
-    smb_packet_t *orig_pkt;
-    unsigned int dos_ncb_sel;
-#endif /* DJGPP */
 } smb_ncb_t;
 
 /* structures representing environments from kernel / SMB network.
@@ -522,9 +509,7 @@ typedef struct smb_dispatch {
 
 extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
 	int nThreads
-#ifndef DJGPP
         , void *aMBfunc
-#endif
   );
 
 extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime);
@@ -714,21 +699,11 @@ extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int 
 
 extern int smb_SUser(cm_user_t *userp);
 
-#ifndef DJGPP
 long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 	cm_user_t *userp, long *writtenp);
-#else /* DJGPP */
-long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
-	cm_user_t *userp, long *writtenp, int dosflag);
-#endif /* !DJGPP */
 
-#ifndef DJGPP
 extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 	char *op, cm_user_t *userp, long *readp);
-#else /* DJGPP */
-extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
-	char *op, cm_user_t *userp, long *readp, int dosflag);
-#endif /* !DJGPP */
 
 extern long smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp, int attrs);
 

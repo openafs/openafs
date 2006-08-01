@@ -20,20 +20,9 @@
 RCSID
     ("$Header$");
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 
-#ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#else
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-typedef int SOCKET;
-#endif
 
 #include "rx.h"
 #include "rx_packet.h"
@@ -159,4 +148,4 @@ sendmsg(osi_socket socket, struct msghdr *msgP, int flags)
     return code;
 
 }
-#endif /* AFS_NT40_ENV || AFS_DJGPP_ENV */
+#endif /* AFS_NT40_ENV */

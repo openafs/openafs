@@ -11,10 +11,8 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/cellconfig.h>
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
-#endif
 #include "cm_dns_private.h"
 #include "cm_dns.h"
 #include <lwp.h>
@@ -28,9 +26,6 @@
 /*extern void afsi_log(char *pattern, ...);*/
 
 static char dns_addr[30];
-#ifdef DJGPP
-extern char cm_confDir[];
-#endif
 static int cm_dnsEnabled = -1;
 
 void DNSlowerCase(char *str)
@@ -59,16 +54,8 @@ int cm_InitDNS(int enabled)
     strcpy(dns_addr, addr);
   } else {
     /* Now check for the AFSDNS.INI file */
-#ifdef DJGPP
-    strcpy(configpath, cm_confDir);
-#elif defined(AFS_WIN95_ENV)
-    char *path = getenv("AFSCONF");
-    if (path) strcpy(configpath, path);
-    else strcpy(configpath, "c:\\afscli");
-#else  /* nt */
     code = GetWindowsDirectory(configpath, sizeof(configpath));
     if (code == 0 || code > sizeof(configpath)) return -1;
-#endif
     strcat(configpath, "\\afsdns.ini");
 
     /* Currently we only get (and query) the first nameserver.  Getting
@@ -665,14 +652,6 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
       return (-1);
     } 
   
-#ifdef DJGPP
-  /* the win95 sock.vxd will not allow sendto for unbound sockets, 
-   *   so just bind to nothing and it works */
-  
-  __djgpp_set_socket_blocking_mode(commSock, 0);
-  bind(commSock,0,sizeof( SOCKADDR_IN ) );
-#endif /* DJGPP */
-
   strncpy(query, cellName, 1024);
   query[1023] = 0;
   if (query[strlen(query)-1] != '.') {

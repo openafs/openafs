@@ -10,9 +10,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -73,9 +71,6 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_GETRXKCRYPT] = cm_IoctlGetRxkcrypt;
 	smb_ioctlProcsp[VIOC_SETRXKCRYPT] = cm_IoctlSetRxkcrypt;
 	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
-#ifdef DJGPP
-	smb_ioctlProcsp[VIOC_SHUTDOWN] = cm_IoctlShutdown;
-#endif
 	smb_ioctlProcsp[VIOC_TRACEMEMDUMP] = cm_IoctlMemoryDump;
 	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
         smb_ioctlProcsp[VIOC_FLUSHALL] = cm_IoctlFlushAllVolumes;
@@ -414,9 +409,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 /* called from Read Raw to handle IOCTL descriptor reads */
 long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		      smb_packet_t *outp
-#ifdef DJGPP
-		      , dos_ptr rawBuf
-#endif /* DJGPP */
 		      )
 {
     smb_ioctl_t *iop;
@@ -424,15 +416,6 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     NCB *ncbp;
     long code;
     cm_user_t *userp;
-#ifdef DJGPP
-    dos_ptr dos_ncb;
-
-    if (rawBuf == 0)
-    {
-	osi_Log0(afsd_logp, "Failed to get raw buf for smb_IoctlReadRaw");
-	return -1;
-    }
-#endif /* DJGPP */
 
     iop = fidp->ioctlp;
 
@@ -481,15 +464,8 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     /*ncbp->ncb_lana_num = smb_LANadapter;*/
     ncbp->ncb_lana_num = vcp->lana;
 
-#ifndef DJGPP
     ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;
     code = Netbios(ncbp);
-#else /* DJGPP */
-    dosmemput(iop->outCopied + iop->outAllocp, ncbp->ncb_length, rawBuf);
-    ncbp->ncb_buffer = rawBuf;
-    dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
-    code = Netbios(ncbp, dos_ncb);
-#endif /* !DJGPP */
 
     if (code != 0)
 	osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);

@@ -380,7 +380,6 @@ configureBackConnectionHostNames(void)
 }
 
 
-#if !defined(DJGPP)
 static void afsd_InitServerPreferences(void)
 {
     HKEY hkPrefs = 0;
@@ -530,7 +529,6 @@ static void afsd_InitServerPreferences(void)
         RegCloseKey(hkPrefs);
     }
 }
-#endif /* DJGPP */
 
 /*
  * AFSD Initialization
@@ -1238,9 +1236,7 @@ int afsd_InitCM(char **reasonP)
     /* Initialize the RPC server for session keys */
     RpcInit();
 
-#if !defined(DJGPP)
     afsd_InitServerPreferences();
-#endif
     return 0;
 }
 

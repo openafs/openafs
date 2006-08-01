@@ -423,10 +423,6 @@ int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types, int *salens,
     char *htable, *ptable;
     int tmp_status, i;
 
-#if defined(AFS_DJGPP_ENV) && !defined(DEBUG)
-    __djgpp_set_quiet_socket(1);
-#endif
-
     SPLVAR;
 
     INIT_PTHREAD_LOCKS;

@@ -14,10 +14,6 @@
 #define AFS_PTHREAD_ENV 1
 #endif
 #include <rx/rx.h>
-#ifdef DJGPP      /* we need these for vldbentry decl., etc. */
-#include <afs/vldbint.h>
-#include <afs/afsint.h>
-#endif /* DJGPP */
 
 /* from .xg file */
 /* FIXME: these were "long" but Windows NT wants "int" */

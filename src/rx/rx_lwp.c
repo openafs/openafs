@@ -393,19 +393,11 @@ rxi_Listen(osi_socket sock)
      * Put the socket into non-blocking mode so that rx_Listener
      * can do a polling read before entering select
      */
-#ifndef AFS_DJGPP_ENV
     if (fcntl(sock, F_SETFL, FNDELAY) == -1) {
 	perror("fcntl");
 	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
 	return -1;
     }
-#else
-    if (__djgpp_set_socket_blocking_mode(sock, 1) < 0) {
-	perror("__djgpp_set_socket_blocking_mode");
-	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
-	return -1;
-    }
-#endif /* AFS_DJGPP_ENV */
 
     if (sock > FD_SETSIZE - 1) {
 	(osi_Msg "rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",

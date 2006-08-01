@@ -1,13 +1,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winreg.h>
 #include <winsock2.h>
-#else
-#include <netdb.h>
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -33,14 +29,11 @@ int cm_freelanceEnabled = 1;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 
 static int freelance_ShutdownFlag = 0;
-#if !defined(DJGPP)
 static HANDLE hFreelanceChangeEvent = 0;
 static HANDLE hFreelanceSymlinkChangeEvent = 0;
-#endif
 
 void cm_InitFakeRootDir();
 
-#if !defined(DJGPP)
 void cm_FreelanceChangeNotifier(void * parmp) {
     HKEY   hkFreelance = 0;
 
@@ -130,25 +123,20 @@ void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
         }
     }
 }
-#endif
 
 void                                          
 cm_FreelanceShutdown(void)                    
 {                                             
     freelance_ShutdownFlag = 1;               
-#if !defined(DJGPP)                           
     if (hFreelanceChangeEvent != 0)           
         thrd_SetEvent(hFreelanceChangeEvent); 
     if (hFreelanceSymlinkChangeEvent != 0)           
         thrd_SetEvent(hFreelanceSymlinkChangeEvent); 
-#endif                                        
 }                                             
 
 void cm_InitFreelance() {
-#if !defined(DJGPP)
     thread_t phandle;
     int lpid;
-#endif
 
     lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
 
@@ -165,7 +153,6 @@ void cm_InitFreelance() {
     cm_InitFakeRootDir();
     // --- end of yj code
 
-#if !defined(DJGPP)
     /* Start the registry monitor */
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
                           NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
@@ -176,7 +163,6 @@ void cm_InitFreelance() {
                           NULL, 0, &lpid, "cm_FreelanceSymlinkChangeNotifier");
     osi_assert(phandle != NULL);
     thrd_CloseHandle(phandle);
-#endif
 }
 
 /* yj: Initialization of the fake root directory */
@@ -480,16 +466,13 @@ long cm_InitLocalMountPoints() {
     char hdir[120];
     long code;
     char rootCellName[256];
-#if !defined(DJGPP)
     HKEY hkFreelance = 0, hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
     DWORD dwMountPoints = 0;
     DWORD dwIndex;
     DWORD dwSymlinks = 0;
     FILETIME ftLastWriteTime;
-#endif
 
-#if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
@@ -680,7 +663,6 @@ long cm_InitLocalMountPoints() {
         RegCloseKey(hkFreelance);
         return 0;
     }
-#endif
 
     /* What follows is the old code to read freelance mount points 
      * out of a text file modified to copy the data into the registry
@@ -697,7 +679,6 @@ long cm_InitLocalMountPoints() {
         fp = fopen(hdir, "r");
     }
 
-#if !defined(DJGPP)
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                     0,
@@ -708,12 +689,9 @@ long cm_InitLocalMountPoints() {
                     &hkFreelance,
                     NULL);
     dwIndex = 0;
-#endif
 
     if (!fp) {
-#if !defined(DJGPP)
         RegCloseKey(hkFreelance);
-#endif
         rootCellName[0] = '.';
       	code = cm_GetRootCellName(&rootCellName[1]);
         if (code == 0) {
@@ -769,7 +747,6 @@ long cm_InitLocalMountPoints() {
         if (t2)
             *(t2+1) = '\0';
 
-#if !defined(DJGPP)
         if ( hkFreelance ) {
             char szIndex[16];
             /* we are migrating to the registry */
@@ -778,7 +755,6 @@ long cm_InitLocalMountPoints() {
             dwSize = (DWORD)strlen(line) + 1;
             RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
         }
-#endif 
 
         // line is not empty, so let's parse it
         t = strchr(line, '#');
@@ -805,12 +781,10 @@ long cm_InitLocalMountPoints() {
         aLocalMountPoint++;
     }
     fclose(fp);
-#if !defined(DJGPP)
     if ( hkFreelance ) {
         RegCloseKey(hkFreelance);
         DeleteFile(hdir);
     }
-#endif
     return 0;
 }
 
@@ -818,7 +792,6 @@ int cm_getNoLocalMountPoints() {
     return cm_noLocalMountPoints;
 }
 
-#if !defined(DJGPP)
 long cm_FreelanceMountPointExists(char * filename)
 {
     char* cp;
@@ -968,7 +941,6 @@ long cm_FreelanceSymlinkExists(char * filename)
 
     return found;
 }
-#endif
 
 long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp)
 {
@@ -978,12 +950,10 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     char fullname[200];
     int n;
     int alias = 0;
-#if !defined(DJGPP)
     HKEY hkFreelance = 0;
     DWORD dwType, dwSize;
     DWORD dwMountPoints;
     DWORD dwIndex;
-#endif
 
     /* before adding, verify the cell name; if it is not a valid cell,
        don't add the mount point.
@@ -1006,18 +976,15 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             return -1;
     }
 
-#if !defined(DJGPP)
     if ( cm_FreelanceMountPointExists(filename) ||
          cm_FreelanceSymlinkExists(filename) )
         return -1;
-#endif
     
     osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
               osi_LogSaveString(afsd_logp,cellname));
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-#if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
@@ -1072,7 +1039,6 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         }
         RegCloseKey(hkFreelance);
     } else 
-#endif
     {
         cm_GetConfigDir(hfile);
         strcat(hfile, AFS_FREELANCE_INI);
@@ -1111,16 +1077,13 @@ long cm_FreelanceRemoveMount(char *toremove)
     char hfile[120], hfile2[120];
     FILE *fp1, *fp2;
     int found=0;
-#if !defined(DJGPP)
     HKEY hkFreelance = 0;
     DWORD dwType, dwSize;
     DWORD dwMountPoints;
     DWORD dwIndex;
-#endif
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-#if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
@@ -1161,7 +1124,6 @@ long cm_FreelanceRemoveMount(char *toremove)
         }
         RegCloseKey(hkFreelance);
     } else 
-#endif
     {
         cm_GetConfigDir(hfile);
         strcat(hfile, AFS_FREELANCE_INI);
@@ -1215,12 +1177,10 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     char line[512];
     char fullname[200];
     int alias = 0;
-#if !defined(DJGPP)
     HKEY hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
     DWORD dwSymlinks;
     DWORD dwIndex;
-#endif
 
     /* before adding, verify the filename.  If it is already in use, either as 
      * as mount point or a cellname, do not permit the creation of the symlink.
@@ -1243,15 +1203,12 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
             return -1;
     }
 
-#if !defined(DJGPP)
     if ( cm_FreelanceMountPointExists(filename) ||
          cm_FreelanceSymlinkExists(filename) )
         return -1;
-#endif
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-#if !defined(DJGPP)
     if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                         AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                         0,
@@ -1306,7 +1263,6 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
         }
         RegCloseKey(hkFreelanceSymlinks);
     } 
-#endif
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
     /* cm_reInitLocalMountPoints(); */
@@ -1324,16 +1280,13 @@ long cm_FreelanceRemoveSymlink(char *toremove)
     char line[512];
     char shortname[200];
     int found=0;
-#if !defined(DJGPP)
     HKEY hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
     DWORD dwSymlinks;
     DWORD dwIndex;
-#endif
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-#if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
@@ -1372,7 +1325,6 @@ long cm_FreelanceRemoveSymlink(char *toremove)
         }
         RegCloseKey(hkFreelanceSymlinks);
     }
-#endif
     
     lock_ReleaseMutex(&cm_Freelance_Lock);
     cm_noteLocalMountPointChange();

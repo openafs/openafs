@@ -12,12 +12,10 @@
 
 
 typedef struct iovec
-#ifndef AFS_DJGPP_ENV
 {
     void *iov_base;
     int iov_len;
 }
-#endif
 iovec_t;
 
 struct msghdr {

@@ -11,7 +11,6 @@
 #include <afs/stds.h>
 
 #include <errno.h>
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
 #ifndef EWOULDBLOCK
@@ -59,7 +58,6 @@
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 #endif /* EWOULDBLOCK */
-#endif /* !DJGPP */
 #include <afs/unified_afs.h>
 
 #include <string.h>

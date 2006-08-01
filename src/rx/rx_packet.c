@@ -61,7 +61,7 @@ RCSID
 #include "sys/types.h"
 #include <sys/stat.h>
 #include <errno.h>
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #ifndef EWOULDBLOCK

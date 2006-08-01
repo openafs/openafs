@@ -13,11 +13,7 @@
 #include <afs/ptserver.h>
 #include <ubik.h>
 
-#ifndef DJGPP
 #include <windows.h>
-#else
-#include <sys/socket.h>
-#endif /* !DJGPP */
 #include <errno.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -34,13 +30,8 @@
 #include "smb.h"
 #include "cm_server.h"
 
-#ifndef DJGPP
 #include <rx/rxkad.h>
 #include "afsrpc.h"
-#else
-#include <rx/rxkad.h>
-#include "afsrpc95.h"
-#endif
 
 #include "cm_rpc.h"
 #include <strsafe.h>
@@ -194,19 +185,10 @@ void cm_ResetACLCache(cm_user_t *userp)
  */
 void TranslateExtendedChars(char *str)
 {
-#ifdef DJGPP
-    char *p;
-#endif
-
     if (!str || !*str)
         return;
 
-#ifndef DJGPP
     CharToOem(str, str);
-#else
-    p = str;
-    while (*p) *p++ &= 0x7f;  /* turn off high bit; probably not right */
-#endif
 }
         
 /* parse the passed-in file name and do a namei on it.  If we fail,
@@ -2052,12 +2034,10 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
 #endif
 
-#ifndef DJGPP   /* for win95, session key is back in pioctl */
 		/* uuid */
         memcpy(&uuid, tp, sizeof(uuid));
         if (!cm_FindTokenEvent(uuid, sessionKey))
             return CM_ERROR_INVAL;
-#endif /* !DJGPP */
     } else {
         cellp = cm_data.rootCellp;
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
@@ -2080,7 +2060,6 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         free(ucellp->ticketp);	/* Discard old token if any */
     ucellp->ticketp = malloc(ticketLen);
     memcpy(ucellp->ticketp, ticket, ticketLen);
-#ifndef DJGPP
     /*
      * Get the session key from the RPC, rather than from the pioctl.
      */
@@ -2088,10 +2067,6 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
     */
     memcpy(ucellp->sessionKey.data, sessionKey, sizeof(sessionKey));
-#else
-    /* for win95, we are getting the session key from the pioctl */
-    memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
-#endif /* !DJGPP */
     ucellp->kvno = ct.AuthHandle;
     ucellp->expirationTime = ct.EndTimestamp;
     ucellp->gen++;
@@ -2169,7 +2144,6 @@ long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     /* clear token */
     ct.AuthHandle = ucellp->kvno;
-#ifndef DJGPP
     /*
      * Don't give out a real session key here
      */
@@ -2177,9 +2151,6 @@ long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
     memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
     */
     memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
-#else
-    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
-#endif /* !DJGPP */
     ct.ViceId = 37;			/* XXX */
     ct.BeginTimestamp = 0;		/* XXX */
     ct.EndTimestamp = ucellp->expirationTime;
@@ -2214,10 +2185,7 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ucell_t *ucellp;
     struct ClearToken ct;
     char *tp;
-#ifndef DJGPP
     afs_uuid_t uuid;
-#endif /* !DJGPP */
-
     cm_SkipIoctlPath(ioctlp);
 
     tp = ioctlp->inDatap;
@@ -2230,10 +2198,8 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         return CM_ERROR_NOSUCHCELL;
     tp += strlen(tp) + 1;
 
-#ifndef DJGPP
     /* uuid */
     memcpy(&uuid, tp, sizeof(uuid));
-#endif /* !DJGPP */
 
     lock_ObtainMutex(&userp->mx);
 
@@ -2258,7 +2224,6 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     /* clear token */
     ct.AuthHandle = ucellp->kvno;
-#ifndef DJGPP
     /*
      * Don't give out a real session key here
      */
@@ -2266,9 +2231,6 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
     */
     memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
-#else
-    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
-#endif /* !DJGPP */
     ct.ViceId = 37;			/* XXX */
     ct.BeginTimestamp = 0;		/* XXX */
     ct.EndTimestamp = ucellp->expirationTime;
@@ -2292,9 +2254,7 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     lock_ReleaseMutex(&userp->mx);
 
-#ifndef DJGPP
     cm_RegisterNewTokenEvent(uuid, ucellp->sessionKey.data);
-#endif /* !DJGPP */
 
     return 0;
 }
@@ -2616,16 +2576,6 @@ long cm_IoctlRxStatPeer(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
     return 0;
 }
-
-#ifdef DJGPP
-extern int afsd_shutdown(int);
-extern int afs_shutdown;
-
-long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp) {
-  afs_shutdown = 1;   /* flag to shut down */
-  return 0;
-}
-#endif /* DJGPP */
 
 long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {

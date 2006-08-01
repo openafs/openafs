@@ -11,13 +11,8 @@
 #include <afs/stds.h>
 #include <afs/cellconfig.h>
 
-#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#endif /* !DJGPP */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,23 +26,13 @@
 #endif
 
 /* TODO: these should be pulled in from dirpath.h */
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 #define AFS_THISCELL "ThisCell"
-#endif
 #define AFS_CELLSERVDB_UNIX "CellServDB"
 #define AFS_CELLSERVDB_NT "afsdcell.ini"
 #ifndef AFSDIR_CLIENT_ETC_DIRPATH
 #define AFSDIR_CLIENT_ETC_DIRPATH "c:/afs"
 #endif
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
 #define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
-#ifdef DJGPP
-extern char cm_confDir[];
-extern int errno;
-#endif /* DJGPP */
-#else
-#define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
-#endif /* DJGPP || WIN95 */
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -149,10 +134,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     int foundCell = 0;
     long code;
     int tracking = 1, partial = 0;
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
-    char *afsconf_path;
-    DWORD dwSize;
-#endif
 
     if ( IsWindowsModule(cellNamep) )
 	return -3;
@@ -160,33 +141,9 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     cm_GetCellServDB(wdir);
     tfilep = fopen(wdir, "r");
 
-#if defined(DJGPP) || defined(AFS_WIN95_ENV)
-    if (!tfilep) {
-        /* If we are using DJGPP client, cellservdb will be in afsconf dir. */
-        /* If we are in Win95 here, we are linking with klog etc. and are
-        using DJGPP client even though DJGPP is not defined.  So we still
-        need to check AFSCONF for location. */
-        dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-        afsconf_path = malloc(dwSize);
-        dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-        if (!afsconf_path)
-            strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        else {
-            strcpy(wdir, afsconf_path);
-            free(afsconf_path);
-        }
-        strcat(wdir, "/");
-        strcat(wdir, AFS_CELLSERVDB);
-        /*fprintf(stderr, "opening cellservdb file %s\n", wdir);*/
-        tfilep = fopen(wdir, "r");
-        if (!tfilep) 
-	    return -2;
-    }
-#else
     /* If we are NT or higher, we don't do DJGPP, So just fail */
     if ( !tfilep )
         return -2;
-#endif
 
     bestp = fopen(wdir, "r");
     
@@ -270,7 +227,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             else inRightCell = 0;
         }
         else {
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
             valuep = strchr(lineBuffer, '#');
 	    if (valuep == NULL) {
 		fclose(tfilep);
@@ -286,9 +242,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') 
                 valuep[strlen(valuep) - 1] = '\0';
 
-#endif /* !DJGPP */
 	    if (inRightCell) {
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
                 thp = gethostbyname(valuep);
@@ -305,9 +259,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 			(*procp)(rockp, &vlSockAddr, valuep);
                     foundCell = 1;
 		}
-#else
-                thp = 0;
-#endif /* !DJGPP */
                 if (!thp) {
                     long ip_addr;
 		    int c1, c2, c3, c4;
@@ -376,14 +327,12 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #endif /* AFS_AFSDB_ENV */
 }
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 /* look up the CellServDBDir's name in the Registry 
  * or use the Client Dirpath value to produce a CellServDB 
  * filename
  */
 long cm_GetCellServDB(char *cellNamep)
 {
-#if !defined(DJGPP)
 	DWORD code, dummyLen;
 	HKEY parmKey;
     int tlen;
@@ -406,10 +355,6 @@ long cm_GetCellServDB(char *cellNamep)
     tlen = (int)strlen(cellNamep);
     if (cellNamep[tlen-1] != '\\') 
         strcat(cellNamep, "\\");
-#else
-    strcpy(cellNamep, cm_confDir);
-    strcat(cellNamep,"/");
-#endif /* !DJGPP */
         
     strcat(cellNamep, AFS_CELLSERVDB);
 	return 0;
@@ -435,48 +380,6 @@ long cm_GetRootCellName(char *cellNamep)
 
 	return 0;
 }
-#else
-/* look up the root cell's name in the THISCELL file */
-long cm_GetRootCellName(char *cellNamep)
-{
-        FILE *thisCell;
-        char thisCellPath[256];
-        char *newline;
-        DWORD dwSize;
-
-#ifdef DJGPP
-        strcpy(thisCellPath, cm_confDir);
-#else
-        /* Win 95 */
-        char *afsconf_path;
-        dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-        afsconf_path = malloc(dwSize);
-        dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-        if (!afsconf_path)
-          strcpy(thisCellPath, AFSDIR_CLIENT_ETC_DIRPATH);
-        else {
-          strcpy(thisCellPath, afsconf_path);
-          free(afsconf_path);
-        }
-#endif
-        strcat(thisCellPath,"/");
-
-        strcat(thisCellPath, AFS_THISCELL);
-        thisCell = fopen(thisCellPath, "r");
-        if (thisCell == NULL)
-          return -1;
-
-        fgets(cellNamep, 256, thisCell);
-        fclose(thisCell);
-
-        newline = strrchr(cellNamep,'\n');
-        if (newline) *newline = '\0';
-        newline = strrchr(cellNamep,'\r');
-        if (newline) *newline = '\0';
-
-        return 0;
-}
-#endif /* !DJGPP */
 
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
@@ -484,32 +387,11 @@ cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
     long tlen;
     FILE *tfilep;
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
     /* add trailing backslash, if required */
     tlen = (long)(strlen(wdir));
     if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
-    DWORD dwSize;
-    char *afsconf_path;
-    
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-
-    if (!afsconf_path)
-	strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-	strcpy(wdir, afsconf_path);
-	free(afsconf_path);
-    }
-#endif /* !DJGPP */
-    strcat(wdir,"/");
-#endif /* DJGPP || WIN95 */
 
     strcat(wdir, namep);
         
@@ -518,7 +400,6 @@ cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
     return ((cm_configFile_t *) tfilep);        
 }	
 
-#ifndef DJGPP
 long cm_WriteConfigString(char *labelp, char *valuep)
 {
     DWORD code, dummyDisp;
@@ -538,9 +419,7 @@ long cm_WriteConfigString(char *labelp, char *valuep)
 
     return (long)0;
 }
-#endif /* !DJGPP */
 
-#ifndef DJGPP
 long cm_WriteConfigInt(char *labelp, long value)
 {
 	DWORD code, dummyDisp;
@@ -560,7 +439,6 @@ long cm_WriteConfigInt(char *labelp, long value)
 
 	return 0;
 }
-#endif /* !DJGPP */
 
 cm_configFile_t *cm_OpenCellFile(void)
 {
@@ -657,34 +535,13 @@ long cm_CloseCellFile(cm_configFile_t *filep)
     long code;
     long closeCode;
     int tlen;
-#ifdef AFS_WIN95_ENV
-    char *afsconf_path;
-    DWORD dwSize;
-#endif
-	closeCode = fclose((FILE *)filep);
+    closeCode = fclose((FILE *)filep);
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
 	/* add trailing backslash, if required */
     tlen = (int)strlen(wdir);
     if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-    if (!afsconf_path)
-        strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-        strcpy(wdir, afsconf_path);
-        free(afsconf_path);
-    }
-#endif /* !DJGPP */
-    strcat(wdir,"/");
-#endif /* DJGPP || WIN95 */
 
     strcpy(sdir, wdir);
 
@@ -717,27 +574,10 @@ void cm_GetConfigDir(char *dir)
     DWORD dwSize;
 #endif
 
-#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
 	/* add trailing backslash, if required */
     tlen = (int)strlen(wdir);
     if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-#ifdef DJGPP
-    strcpy(wdir,cm_confDir);
-#else
-    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-    afsconf_path = malloc(dwSize);
-    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
-    if (!afsconf_path)
-        strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    else {
-        strcpy(wdir, afsconf_path);
-        free(afsconf_path);
-    }
-#endif /* !DJGPP */
-    strcat(wdir,"\\");
-#endif /* DJGPP || WIN95 */
     strcpy(dir, wdir);
 }
