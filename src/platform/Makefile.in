@@ -1,0 +1,26 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+
+all:
+	cd $(MKAFS_OSTYPE) ; \
+	echo $(MAKE) all; \
+	$(MAKE) all
+dest:
+	cd $(MKAFS_OSTYPE) ; \
+	echo $(MAKE) DEST=${DEST} dest; \
+	$(MAKE) DEST=${DEST} dest
+install:
+	cd $(MKAFS_OSTYPE) ; \
+	echo $(MAKE) DESTDIR=${DESTDIR} install; \
+	$(MAKE) DESTDIR=${DESTDIR} install
+
+
+include ${TOP_OBJDIR}/src/config/Makefile.version
