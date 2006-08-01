@@ -6,8 +6,10 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # Common elements for Makefiles for all system types.
-#
-SHELL=/bin/sh
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include ../config/Makefile.version
 
 all:
 	cd $(MKAFS_OSTYPE) ; \
@@ -22,5 +24,3 @@ install:
 	echo $(MAKE) DESTDIR=${DESTDIR} install; \
 	$(MAKE) DESTDIR=${DESTDIR} install
 
-
-include ${TOP_OBJDIR}/src/config/Makefile.version
