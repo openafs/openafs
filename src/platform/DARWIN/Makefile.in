@@ -12,18 +12,16 @@ include ../../config/Makefile.version
 all: afssettings
 
 afssettings: afssettings.m 
-        ${CC} ${CFLAGS} -o afssettings afssettings.m -framework Foundation
+	${CC} ${CFLAGS} -o afssettings afssettings.m -framework Foundation
 
 install: \
-        ${DESTDIR}${bindir}/afssettings
+	${DESTDIR}${bindir}/afssettings
 
 dest: \
-        ${DEST}/bin/afssettings
-
+	${DEST}/bin/afssettings
 
 ${DESTDIR}${bindir}/afssettings: afssettings
-        ${INSTALL} -s $? $@
-
+	${INSTALL} -s $? $@
 
 ${DEST}/bin/afssettings: afssettings
 	${INSTALL} -s $? $@
