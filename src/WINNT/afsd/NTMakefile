@@ -388,6 +388,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afspthread.lib \
         $(LANAHELPERLIB)
 
