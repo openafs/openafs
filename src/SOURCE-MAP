@@ -27,7 +27,6 @@ config     - build system OS-specific configuration
 dauth      - dlog - get a krb ticket for use with the AFS/DFS translator
              dpass - also part of the AFS/DFS migration kit
 des        - des library
-des_stub   - remnant of export restrictions on encryption code.
 dir        - afs directory handling library (client and server, internal format)
 export     - from the README:
         EXPORT is an aix3.1 kernel extension whose sole purpose in

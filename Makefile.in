@@ -735,7 +735,6 @@ distclean: clean
 	src/dauth/Makefile \
 	src/des/test/Makefile \
 	src/des/Makefile \
-	src/des_stub/Makefile \
 	src/dir/test/Makefile \
 	src/dir/Makefile \
 	src/export/Makefile \

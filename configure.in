@@ -40,7 +40,6 @@ src/config/Makefile.version-NOCML \
 src/dauth/Makefile \
 src/des/Makefile \
 src/des/test/Makefile \
-src/des_stub/Makefile \
 src/dir/Makefile \
 src/dir/test/Makefile \
 src/export/Makefile \
