@@ -73,7 +73,6 @@ src/log/Makefile \
 src/log/test/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
-src/null/Makefile \
 src/pam/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \

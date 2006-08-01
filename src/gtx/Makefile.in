@@ -38,7 +38,7 @@ LIBS=\
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${TOP_LIBDIR}/libtermlib.a  ${XLIBS}
+EXTRA_LIBS=${TXLIBS} ${XLIBS}
 
 KEYMAP_SRCS=keymap.c input.c frame.c
 

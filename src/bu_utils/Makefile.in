@@ -13,7 +13,7 @@ all: fms
 FMSLIBS=${TOP_LIBDIR}/libcmd.a \
 	${TXLIBS} \
         ${TOP_LIBDIR}/libusd.a \
-	${TOP_LIBDIR}/libtermlib.a ${XLIBS} \
+	${XLIBS} \
 	${TOP_LIBDIR}/util.a
 
 fms: fms.o

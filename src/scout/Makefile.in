@@ -49,7 +49,7 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${TOP_LIBDIR}/libtermlib.a ${XLIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${XLIBS}
 
 #
 # Installation targets

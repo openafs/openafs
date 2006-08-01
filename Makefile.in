@@ -261,19 +261,7 @@ venus: cmd comerr volser ptserver
 afsd: cmd comerr sys kauth
 	${COMPILE_PART1} afsd ${COMPILE_PART2}
 
-null: cmd comerr
-	${COMPILE_PART1} null ${COMPILE_PART2}
-
-${TOP_LIBDIR}/libtermlib.a: 
-	$(RM) -f ${TOP_LIBDIR}/libtermlib.a
-	case ${SYS_NAME} in \
-	rs_aix* | sun4x_* | sunx86_* | sgi_6? | *linux* | *_darwin* | *fbsd* | ia64_hpux*) \
-		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a ;; \
-	*) \
-		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
-	esac
-
-gtx: cmd comerr null auth kauth ${TOP_LIBDIR}/libtermlib.a
+gtx: cmd comerr auth kauth
 	${COMPILE_PART1} gtx ${COMPILE_PART2}
 
 fsprobe: cmd comerr util fsint volser
@@ -627,7 +615,6 @@ clean2:
 	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsd ${COMPILE_CLEAN}
-	-${COMPILE_PART1} null ${COMPILE_CLEAN}
 	-${COMPILE_PART1} gtx ${COMPILE_CLEAN}
 	-${COMPILE_PART1} fsprobe ${COMPILE_CLEAN}
 	-${COMPILE_PART1} scout ${COMPILE_CLEAN}
@@ -745,7 +732,6 @@ distclean: clean
 	src/log/Makefile \
 	src/lwp/test/Makefile \
 	src/lwp/Makefile \
-	src/null/Makefile \
 	src/pam/Makefile \
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \

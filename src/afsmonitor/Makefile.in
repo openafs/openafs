@@ -34,7 +34,7 @@ LIBS=${TOP_LIBDIR}/libxstat_fs.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${TOP_LIBDIR}/libtermlib.a  ${XLIBS}
+EXTRA_LIBS=${TXLIBS} ${XLIBS}
 
 all: afsmonitor
 
