@@ -198,18 +198,15 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 volserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
 
-${DEST}/root.server/usr/afs/bin/volserver: volserver
-	${INSTALL} -ns $? $@
+install: volserver
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_PROGRAM} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
 
-install: ${DESTDIR}${afssrvlibexecdir}/volserver
+dest: volserver
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} volserver ${DEST}/root.server/usr/afs/bin/volserver
 
 clean:
 	$(RM) -f *.o volserver core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${afssrvlibexecdir}/volserver: volserver
-	${INSTALL} -ns $? $@
-
-dest: ${DEST}/root.server/usr/afs/bin/volserver
-

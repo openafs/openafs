@@ -10,7 +10,8 @@ set -e
 manpage="$1"
 dest="$2"
 
-install=@TOP_OBJDIR@/src/pinstall/pinstall
+INSTALL="@INSTALL@"
+install="@INSTALL_DATA@"
 
 # We have to include all of the variables here since several of them refer to
 # each other and this is the only way we get them all expanded.
@@ -47,5 +48,5 @@ sed -e "s%/usr/afs/local/BosConfig%${afsbosconfigdir}/BosConfig%g" \
     -e "s%/usr/afs/local%${afslocaldir}%g" \
     -e "s%/usr/afs/logs%${afslogsdir}%g" \
     -e "s%/usr/vice/etc%${viceetcdir}%g" "$manpage" > "$manpage".tmp
-$install -c -f -m 0644 "$manpage".tmp "$dest"
+$install "$manpage".tmp "$dest"
 rm "$manpage".tmp

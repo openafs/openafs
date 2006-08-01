@@ -82,34 +82,36 @@ read_tape: read_tape.c
 clean:
 	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
 
-install:  
+install: butc read_tape
+	${INSTALL} -d ${DESTDIR}${sbindir}
 	@case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} butc ${DEST}/etc/butc ; \
-		${INSTALL} butc ${DEST}/etc/butc ;; \
+		echo ${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc ;; \
 	*_darwin_*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
-		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
-		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
+		echo ${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc ;; \
 	esac
-	${INSTALL} read_tape ${DESTDIR}${sbindir}/read_tape
+	${INSTALL_PROGRAM} read_tape ${DESTDIR}${sbindir}/read_tape
+
+dest: butc read_tape
+	${INSTALL} -d ${DEST}/etc
+	@case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL_PROGRAM} butc ${DEST}/etc/butc ; \
+		${INSTALL_PROGRAM} butc ${DEST}/etc/butc ;; \
+	*_darwin_*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*) \
+		echo ${INSTALL_PROGRAM} butc ${DEST}/etc/butc ; \
+		${INSTALL_PROGRAM} butc ${DEST}/etc/butc ;; \
+	esac
+	${INSTALL_PROGRAM} read_tape ${DEST}/etc/read_tape
 
 include ../config/Makefile.version
-dest:  
-	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
-		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
-	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
-		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
-	*_darwin_*) \
-		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
-	*) \
-		echo ${INSTALL} butc ${DEST}/etc/butc ; \
-		${INSTALL} butc ${DEST}/etc/butc ;; \
-	esac
-	${INSTALL} read_tape ${DEST}/etc/read_tape
-

@@ -50,21 +50,15 @@ afsmon-parselog:  afsmon-parselog.o ${LIBS}
 	${CC} ${CFLAGS} -o afsmon-parselog afsmon-parselog.c \
 		${LIBS} ${EXTRA_LIBS}
 
-#
-# Misc others
-#
-install:  ${DESTDIR}${bindir}/afsmonitor
+install: afsmonitor
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} afsmonitor ${DESTDIR}${bindir}/afsmonitor
+
+dest: afsmonitor
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} afsmonitor ${DEST}/bin/afsmonitor
 
 clean:
 	$(RM) -f *.o afsmonitor AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DEST}/bin/afsmonitor: afsmonitor
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/afsmonitor: afsmonitor
-	${INSTALL} $? $@
-
-
-dest:  ${DEST}/bin/afsmonitor
-

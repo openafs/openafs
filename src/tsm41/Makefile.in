@@ -97,13 +97,9 @@ aix_auth.o:
 aix_ident.o: ${srcdir}/aix41_ident.c
 	${CCRULE}
 
-${DEST}/root.client/usr/vice/etc/afs_dynamic_auth: afs_dynamic_auth
-	${INSTALL} $? $@
-
-${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth: afs_dynamic_kerbauth
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_auth \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth
-
+dest: afs_dynamic_auth afs_dynamic_kerbauth
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc
+	${INSTALL_PROGRAM} afs_dynamic_auth \
+		${DEST}/root.client/usr/vice/etc/afs_dynamic_auth
+	${INSTALL_PROGRAM} afs_dynamic_kerbauth \
+		${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth

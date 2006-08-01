@@ -12,6 +12,27 @@ all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/but
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
+${TOP_LIBDIR}/libbubasics.a: libbubasics.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/bumon.h: bumon.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/butc.h: butc.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/bubasics.h: bubasics.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/tcdata.h: tcdata.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/butm.h: butm.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/butx.h: butx.h
+	${INSTALL_DATA} $? $@
+
 libbubasics.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f libbubasics.a
 	ar r libbubasics.a ${OBJS} AFS_component_version_number.o
@@ -64,28 +85,27 @@ butx_errs.c butx.h: butx_errs.et
 #
 # Installation targets
 #
-install: ${DESTDIR}${libdir}/afs/libbubasics.a ${DESTDIR}${includedir}/afs/bumon.h ${DESTDIR}${includedir}/afs/butc.h ${DESTDIR}${includedir}/afs/bubasics.h ${DESTDIR}${includedir}/afs/tcdata.h ${DESTDIR}${includedir}/afs/butm.h ${DESTDIR}${includedir}/afs/butx.h
+install: libbubasics.a bumon.h butc.h bubasics.h tcdata.h butm.h butx.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libbubasics.a ${DESTDIR}${libdir}/afs/libbubasics.a
+	${INSTALL_DATA} bumon.h ${DESTDIR}${includedir}/afs/bumon.h
+	${INSTALL_DATA} butc.h ${DESTDIR}${includedir}/afs/butc.h
+	${INSTALL_DATA} bubasics.h ${DESTDIR}${includedir}/afs/bubasics.h
+	${INSTALL_DATA} tcdata.h ${DESTDIR}${includedir}/afs/tcdata.h
+	${INSTALL_DATA} butm.h ${DESTDIR}${includedir}/afs/butm.h
+	${INSTALL_DATA} butx.h ${DESTDIR}${includedir}/afs/butx.h
 
-${DEST}/lib/afs/libbubasics.a: libbubasics.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/bumon.h: bumon.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/butc.h: butc.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/bubasics.h: bubasics.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/tcdata.h: tcdata.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/butm.h: butm.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/butx.h: butx.h
-	${INSTALL} $? $@
+dest: libbubasics.a bumon.h butc.h bubasics.h tcdata.h butm.h butx.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libbubasics.a ${DEST}/lib/afs/libbubasics.a
+	${INSTALL_DATA} bumon.h ${DEST}/include/afs/bumon.h
+	${INSTALL_DATA} butc.h ${DEST}/include/afs/butc.h
+	${INSTALL_DATA} bubasics.h ${DEST}/include/afs/bubasics.h
+	${INSTALL_DATA} tcdata.h ${DEST}/include/afs/tcdata.h
+	${INSTALL_DATA} butm.h ${DEST}/include/afs/butm.h
+	${INSTALL_DATA} butx.h ${DEST}/include/afs/butx.h
 
 #
 # Common targets
@@ -96,47 +116,3 @@ clean:
 		butc_errs.c butx_errs.c butm_errs.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbubasics.a: libbubasics.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbubasics.a: libbubasics.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/bumon.h: bumon.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/bumon.h: bumon.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/butc.h: butc.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/butc.h: butc.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/bubasics.h: bubasics.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/bubasics.h: bubasics.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/tcdata.h: tcdata.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/tcdata.h: tcdata.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/butm.h: butm.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/butm.h: butm.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/butx.h: butx.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/butx.h: butx.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libbubasics.a ${DEST}/include/afs/bumon.h ${DEST}/include/afs/butc.h ${DEST}/include/afs/bubasics.h ${DEST}/include/afs/tcdata.h ${DEST}/include/afs/butm.h ${DEST}/include/afs/butx.h
-

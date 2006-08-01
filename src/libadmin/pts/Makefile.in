@@ -25,27 +25,23 @@ LIBOBJS = ${ADMINOBJS} ${PTSERVEROBJS}
 
 all: ${TOP_INCDIR}/afs/afs_ptsAdmin.h ${TOP_LIBDIR}/libptsadmin.a
 
-install: ${DESTDIR}${includedir}/afs/afs_ptsAdmin.h ${DESTDIR}${libdir}/afs/libptsadmin.a
-
-dest: ${DEST}/include/afs/afs_ptsAdmin.h ${DEST}/lib/afs/libptsadmin.a
-
 ${TOP_INCDIR}/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libptsadmin.a: libptsadmin.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-${DESTDIR}${libdir}/afs/libptsadmin.a: libptsadmin.a
-	${INSTALL} $? $@
+install: afs_ptsAdmin.h libptsadmin.a
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} afs_ptsAdmin.h ${DESTDIR}${includedir}/afs/afs_ptsAdmin.h
+	${INSTALL_DATA} libptsadmin.a ${DESTDIR}${libdir}/afs/libptsadmin.a
 
-${DEST}/lib/afs/libptsadmin.a: libptsadmin.a
-	${INSTALL} $? $@
+dest: afs_ptsAdmin.h libptsadmin.a
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} afs_ptsAdmin.h ${DEST}/include/afs/afs_ptsAdmin.h
+	${INSTALL_DATA} libptsadmin.a ${DEST}/lib/afs/libptsadmin.a
 
 libptsadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

@@ -138,21 +138,16 @@ DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
 .PHONY: libafs
 
 libafs:	$(LIBAFSNONFS) $(LIBAFS)
-install_libafs:	$(INST_LIBAFSNONFS) $(INST_LIBAFS)
-dest_libafs:	$(DEST_LIBAFSNONFS) $(DEST_LIBAFS)
 
+install_libafs:	$(LIBAFS) $(LIBAFSNONFS)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(INST_LIBAFSNONFS)
 
-$(INST_LIBAFS): $(LIBAFS)
-	${INSTALL} -f $? $@
-
-$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
-	${INSTALL} -f $? $@
+dest_libafs: $(LIBAFS) $(LIBAFSNONFS)
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(RM) -f $@

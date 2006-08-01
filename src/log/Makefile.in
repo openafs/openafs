@@ -62,31 +62,27 @@ tokens.o: tokens.c ${TOP_INCDIR}/rx/xdr.h AFS_component_version_number.c
 #
 # Install targets
 #
-install: \
-	${DESTDIR}${bindir}/unlog \
-	${DESTDIR}${bindir}/tokens \
-	${DESTDIR}${bindir}/tokens.krb \
-	${DESTDIR}${afssrvbindir}/tokens \
-	${DESTDIR}${afssrvbindir}/tokens.krb \
-	${DESTDIR}${sbindir}/kseal
+install: unlog tokens tokens.krb kseal
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} unlog ${DESTDIR}${bindir}/unlog
+	${INSTALL_PROGRAM} tokens ${DESTDIR}${bindir}/tokens
+	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${bindir}/tokens.krb
+	${INSTALL_PROGRAM} tokens ${DESTDIR}${afssrvbindir}/tokens
+	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${afssrvbindir}/tokens.krb
+	${INSTALL_PROGRAM} kseal ${DESTDIR}${sbindir}/kseal
 
-${DEST}/bin/unlog: unlog
-	${INSTALL} $? $@
-
-${DEST}/bin/tokens: tokens
-	${INSTALL} $? $@
-
-${DEST}/bin/tokens.krb: tokens.krb
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/tokens: tokens
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/tokens.krb: tokens.krb
-	${INSTALL} $? $@
-
-${DEST}/etc/kseal: kseal
-	${INSTALL} $? $@
+dest: unlog tokens tokens.krb kseal
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} unlog ${DEST}/bin/unlog
+	${INSTALL_PROGRAM} tokens ${DEST}/bin/tokens
+	${INSTALL_PROGRAM} tokens.krb ${DEST}/bin/tokens.krb
+	${INSTALL_PROGRAM} tokens ${DEST}/root.server/usr/afs/bin/tokens
+	${INSTALL_PROGRAM} tokens.krb ${DEST}/root.server/usr/afs/bin/tokens.krb
+	${INSTALL_PROGRAM} kseal ${DEST}/etc/kseal
 
 #
 # Misc. targets
@@ -98,30 +94,3 @@ test:
 	cd test; $(MAKE)
 
 include ../config/Makefile.version
-
-${DESTDIR}${bindir}/unlog: unlog
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/tokens: tokens
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/tokens.krb: tokens.krb
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/tokens: tokens
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/tokens.krb: tokens.krb
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/kseal: kseal
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/bin/unlog \
-	${DEST}/bin/tokens \
-	${DEST}/bin/tokens.krb \
-	${DEST}/root.server/usr/afs/bin/tokens \
-	${DEST}/root.server/usr/afs/bin/tokens.krb \
-	${DEST}/etc/kseal
-

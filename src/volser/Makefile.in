@@ -59,6 +59,15 @@ all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
+${TOP_INCDIR}/afs/volser.h: volser.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/volint.h: volint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libvolser.a: libvolser.a
+	${INSTALL_DATA} $? $@
+
 restorevol: restorevol.c
 	${CC} ${CFLAGS} -o restorevol ${srcdir}/restorevol.c \
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
@@ -118,47 +127,63 @@ lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${sbindir}/restorevol \
-	${DESTDIR}${sbindir}/voldump \
-	${DESTDIR}${includedir}/afs/volser.h \
-	${DESTDIR}${includedir}/afs/volint.h \
-	${DESTDIR}${sbindir}/vos \
-	${DESTDIR}${afssrvsbindir}/vos \
-	${DESTDIR}${afssrvlibexecdir}/volserver \
-	${DESTDIR}${libdir}/afs/libvolser.a
-
-
-${DEST}/include/afs/volser.h: volser.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/volint.h: volint.h
-	${INSTALL} $? $@
-
-${DEST}/etc/restorevol: restorevol
-	${INSTALL} $? $@
-
-${DEST}/etc/voldump: voldump
-	${INSTALL} $? $@
-
-${DEST}/etc/vos ${DEST}/root.server/usr/afs/bin/vos: vos
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libvolser.a: libvolser.a
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/volserver: volserver
+install: restorevol voldump volser.h volint.h vos volserver libvolser.a
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_PROGRAM} restorevol ${DESTDIR}${sbindir}/restorevol
+	${INSTALL_PROGRAM} voldump ${DESTDIR}${sbindir}/voldump
+	${INSTALL_DATA} volser.h ${DESTDIR}${includedir}/afs/volser.h
+	${INSTALL_DATA} volint.h ${DESTDIR}${includedir}/afs/volint.h
+	${INSTALL_PROGRAM} vos ${DESTDIR}${sbindir}/vos
+	${INSTALL_PROGRAM} vos ${DESTDIR}${afssrvsbindir}/vos
+	${INSTALL_DATA} libvolser.a ${DESTDIR}${libdir}/afs/libvolser.a
 	@case ${SYS_NAME} in \
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-	echo "Don't install volserver for ${SYS_NAME}" ;; \
+		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
-	echo ${INSTALL} -ns $? $@ ; \
-	${INSTALL} -ns $? $@ ;; \
+		echo ${INSTALL_PROGRAM} volserver \
+			${DESTDIR}${afssrvlibexecdir}/volserver ; \
+		${INSTALL_PROGRAM} volserver \
+			${DESTDIR}${afssrvlibexecdir}/volserver ;; \
 	*_darwin_*) \
-	echo "Don't install volserver for ${SYS_NAME}" ;; \
+		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*) \
-	echo ${INSTALL} -ns $? $@ ; \
-	${INSTALL} -ns $? $@ ;; \
+		echo ${INSTALL_PRORAM} volserver \
+			${DESTDIR}${afssrvlibexecdir}/volserver ; \
+		${INSTALL_PROGRAM} volserver \
+			${DESTDIR}${afssrvlibexecdir}/volserver ;; \
+	esac
+
+dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} restorevol ${DEST}/etc/restorevol
+	${INSTALL_PROGRAM} voldump ${DEST}/etc/voldump
+	${INSTALL_DATA} volser.h ${DEST}/include/afs/volser.h
+	${INSTALL_DATA} volint.h ${DEST}/include/afs/volint.h
+	${INSTALL_PROGRAM} vos ${DEST}/etc/vos
+	${INSTALL_PROGRAM} vos ${DEST}/root.server/usr/afs/bin/vos
+	${INSTALL_DATA} libvolser.a ${DEST}/lib/afs/libvolser.a
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+		echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL_PROGRAM} volserver \
+			${DEST}/root.server/usr/afs/bin/volserver ; \
+		${INSTALL_PROGRAM} -ns volserver \
+			${DEST}/root.server/usr/afs/bin/volserver ;; \
+	*_darwin_*) \
+		echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*) \
+		echo ${INSTALL_PROGRAM} volserver \
+			${DEST}/root.server/usr/afs/bin/volserver ; \
+		${INSTALL_PROGRAM} volserver \
+			${DEST}/root.server/usr/afs/bin/volserver ;; \
 	esac
 
 #
@@ -168,66 +193,11 @@ clean:
 	$(RM) -f *.o *.a core volserver volint.ss.c volint.cs.c volint.h \
 	volint.xdr.c vos volser.h volerr.c AFS_component_version_number.c restorevol voldump
 
-include ../config/Makefile.version
-
-${DESTDIR}${sbindir}/restorevol: restorevol
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/voldump: voldump
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/volser.h: volser.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/volser.h: volser.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/volint.h: volint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/volint.h: volint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/vos: vos
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/vos: vos
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/volserver: volserver
-	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-	echo "Don't install volserver for ${SYS_NAME}" ;; \
-	*_darwin_[1-6][0-9]) \
-	echo ${INSTALL} -ns $? $@ ; \
-	${INSTALL} -ns $? $@ ;; \
-	*_darwin_*) \
-	echo "Don't install volserver for ${SYS_NAME}" ;; \
-	*) \
-	echo ${INSTALL} -ns $? $@ ; \
-	${INSTALL} -ns $? $@ ;; \
-	esac
-
-${DESTDIR}${libdir}/afs/libvolser.a: libvolser.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libvolser.a: libvolser.a
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/etc/restorevol \
-	${DEST}/etc/voldump \
-	${DEST}/include/afs/volser.h \
-	${DEST}/include/afs/volint.h \
-	${DEST}/etc/vos \
-	${DEST}/root.server/usr/afs/bin/vos \
-	${DEST}/root.server/usr/afs/bin/volserver \
-	${DEST}/lib/afs/libvolser.a
-
-
 check-splint::
 	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    vos.c restorevol.c \
 	    vsprocs.c vsutils.c lockprocs.c volerr.c \
 	    volmain.c volprocs.c physio.c common.c voltrans.c \
 	    dumpstuff.c
+
+include ../config/Makefile.version

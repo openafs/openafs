@@ -83,6 +83,45 @@ all: gtxtest \
 	${TOP_INCDIR}/afs/gtxwindows.h \
 	${TOP_INCDIR}/afs/gtxX11win.h
 
+${TOP_LIBDIR}/libgtx.a: libgtx.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxcurseswin.h: gtxcurseswin.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxdumbwin.h: gtxdumbwin.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxframe.h: gtxframe.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxinput.h: gtxinput.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxkeymap.h: gtxkeymap.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxlightobj.h: gtxlightobj.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxobjdict.h: gtxobjdict.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxobjects.h: gtxobjects.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxtextcb.h: gtxtextcb.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxtextobj.h: gtxtextobj.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxwindows.h: gtxwindows.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/gtxX11win.h: gtxX11win.h
+	${INSTALL_DATA} $? $@
+
 tests: object_test screen_test curses_test cb_test gtxtest
 
 # All objects in the library
@@ -148,154 +187,39 @@ libgtx.a: ${LIBOBJS} AFS_component_version_number.o
 	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
 	${RANLIB} $@
 
-install: \
-	${DESTDIR}${libdir}/afs/libgtx.a \
-	${DESTDIR}${includedir}/afs/gtxcurseswin.h \
-	${DESTDIR}${includedir}/afs/gtxdumbwin.h \
-	${DESTDIR}${includedir}/afs/gtxframe.h \
-	${DESTDIR}${includedir}/afs/gtxinput.h \
-	${DESTDIR}${includedir}/afs/gtxkeymap.h \
-	${DESTDIR}${includedir}/afs/gtxlightobj.h \
-	${DESTDIR}${includedir}/afs/gtxobjdict.h \
-	${DESTDIR}${includedir}/afs/gtxobjects.h \
-	${DESTDIR}${includedir}/afs/gtxtextcb.h \
-	${DESTDIR}${includedir}/afs/gtxtextobj.h \
-	${DESTDIR}${includedir}/afs/gtxwindows.h \
-	${DESTDIR}${includedir}/afs/gtxX11win.h
+install: libgtx.a
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libgtx.a ${DESTDIR}${libdir}/afs/libgtx.a
+	${INSTALL_DATA} gtxcurseswin.h ${DESTDIR}${includedir}/afs/gtxcurseswin.h
+	${INSTALL_DATA} gtxdumbwin.h ${DESTDIR}${includedir}/afs/gtxdumbwin.h
+	${INSTALL_DATA} gtxframe.h ${DESTDIR}${includedir}/afs/gtxframe.h
+	${INSTALL_DATA} gtxinput.h ${DESTDIR}${includedir}/afs/gtxinput.h
+	${INSTALL_DATA} gtxkeymap.h ${DESTDIR}${includedir}/afs/gtxkeymap.h
+	${INSTALL_DATA} gtxlightobj.h ${DESTDIR}${includedir}/afs/gtxlightobj.h
+	${INSTALL_DATA} gtxobjdict.h ${DESTDIR}${includedir}/afs/gtxobjdict.h
+	${INSTALL_DATA} gtxobjects.h ${DESTDIR}${includedir}/afs/gtxobjects.h
+	${INSTALL_DATA} gtxtextcb.h ${DESTDIR}${includedir}/afs/gtxtextcb.h
+	${INSTALL_DATA} gtxtextobj.h ${DESTDIR}${includedir}/afs/gtxtextobj.h
+	${INSTALL_DATA} gtxwindows.h ${DESTDIR}${includedir}/afs/gtxwindows.h
+	${INSTALL_DATA} gtxX11win.h ${DESTDIR}${includedir}/afs/gtxX11win.h
 
-${DESTDIR}${libdir}/afs/libgtx.a: libgtx.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxcurseswin.h: gtxcurseswin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxdumbwin.h: gtxdumbwin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxframe.h: gtxframe.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxinput.h: gtxinput.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxkeymap.h: gtxkeymap.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxlightobj.h: gtxlightobj.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxobjdict.h: gtxobjdict.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxobjects.h: gtxobjects.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxtextcb.h: gtxtextcb.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxtextobj.h: gtxtextobj.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxwindows.h: gtxwindows.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/gtxX11win.h: gtxX11win.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/afs/libgtx.a \
-	${DEST}/include/afs/gtxcurseswin.h \
-	${DEST}/include/afs/gtxdumbwin.h \
-	${DEST}/include/afs/gtxframe.h \
-	${DEST}/include/afs/gtxinput.h \
-	${DEST}/include/afs/gtxkeymap.h \
-	${DEST}/include/afs/gtxlightobj.h \
-	${DEST}/include/afs/gtxobjdict.h \
-	${DEST}/include/afs/gtxobjects.h \
-	${DEST}/include/afs/gtxtextcb.h \
-	${DEST}/include/afs/gtxtextobj.h \
-	${DEST}/include/afs/gtxwindows.h \
-	${DEST}/include/afs/gtxX11win.h
-
-${DEST}/lib/afs/libgtx.a: libgtx.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxcurseswin.h: gtxcurseswin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxdumbwin.h: gtxdumbwin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxframe.h: gtxframe.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxinput.h: gtxinput.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxkeymap.h: gtxkeymap.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxlightobj.h: gtxlightobj.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxobjdict.h: gtxobjdict.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxobjects.h: gtxobjects.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxtextcb.h: gtxtextcb.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxtextobj.h: gtxtextobj.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxwindows.h: gtxwindows.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/gtxX11win.h: gtxX11win.h
-	${INSTALL} $? $@
-
-
-${TOP_LIBDIR}/libgtx.a: libgtx.a
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxcurseswin.h: gtxcurseswin.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxdumbwin.h: gtxdumbwin.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxframe.h: gtxframe.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxinput.h: gtxinput.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxkeymap.h: gtxkeymap.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxlightobj.h: gtxlightobj.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxobjdict.h: gtxobjdict.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxobjects.h: gtxobjects.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxtextcb.h: gtxtextcb.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxtextobj.h: gtxtextobj.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxwindows.h: gtxwindows.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/gtxX11win.h: gtxX11win.h
-	${INSTALL} $? $@
-
+dest: libgtx.a
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libgtx.a ${DEST}/lib/afs/libgtx.a
+	${INSTALL_DATA} gtxcurseswin.h ${DEST}/include/afs/gtxcurseswin.h
+	${INSTALL_DATA} gtxdumbwin.h ${DEST}/include/afs/gtxdumbwin.h
+	${INSTALL_DATA} gtxframe.h ${DEST}/include/afs/gtxframe.h
+	${INSTALL_DATA} gtxinput.h ${DEST}/include/afs/gtxinput.h
+	${INSTALL_DATA} gtxkeymap.h ${DEST}/include/afs/gtxkeymap.h
+	${INSTALL_DATA} gtxlightobj.h ${DEST}/include/afs/gtxlightobj.h
+	${INSTALL_DATA} gtxobjdict.h ${DEST}/include/afs/gtxobjdict.h
+	${INSTALL_DATA} gtxobjects.h ${DEST}/include/afs/gtxobjects.h
+	${INSTALL_DATA} gtxtextcb.h ${DEST}/include/afs/gtxtextcb.h
+	${INSTALL_DATA} gtxtextobj.h ${DEST}/include/afs/gtxtextobj.h
+	${INSTALL_DATA} gtxwindows.h ${DEST}/include/afs/gtxwindows.h
+	${INSTALL_DATA} gtxX11win.h ${DEST}/include/afs/gtxX11win.h
 
 #
 # Misc targets
@@ -304,5 +228,3 @@ clean:
 	$(RM) -f  *.o *.a *.ln object_test screen_test curses_test core cb_test gtxtest AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-

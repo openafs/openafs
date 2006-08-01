@@ -57,27 +57,24 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 
 all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) linktest
 
+${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
+	${INSTALL_DATA} $? $@
+
 webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
-
-install: \
-	${DESTDIR}${libdir}/$(LIBUAFS) \
-	${DESTDIR}${libdir}/$(LIBJUAFS)
-
-dest: \
-	${DEST}/root.perf/include/afs/param.h \
-	${DEST}/root.perf/include/afs/stds.h \
-	${DEST}/root.perf/include/afs/afs_sysnames.h \
-	${DEST}/root.perf/include/afs/afs_stats.h \
-	${DEST}/root.perf/include/afs/sysincludes.h \
-	${DEST}/root.perf/include/afs/afs_usrops.h \
-	${DEST}/root.perf/lib/libdes.a \
-	${DEST}/root.perf/lib/$(LIBUAFS) \
-	${DEST}/root.perf/lib/$(LIBJUAFS)
 
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
@@ -1357,64 +1354,35 @@ clean:
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest $(AFS_OS_CLEAN)
 
 
-${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
+install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/$(LIBUAFS)
+	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DESTDIR}${libdir}/$(LIBJUAFS)
 
-${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
-
-
-${DESTDIR}${libdir}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
-
-
-${DEST}/root.afsweb/usr/lib/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
-
-${DEST}/root.afsweb/usr/lib/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/param.h: $(TOP_INCDIR)/afs/param.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/stds.h: $(TOP_INCDIR)/afs/stds.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_sysnames.h: $(TOP_INCDIR)/afs/afs_sysnames.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_stats.h: $(TOP_INCDIR)/afs/afs_stats.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/sysincludes.h: $(TOP_SRCDIR)/afs/sysincludes.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_usrops.h: $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/libdes.a: ${TOP_OBJDIR}/lib/libdes.a
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
+dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
+		$(TOP_INCDIR)/afs/afs_sysnames.h \
+		$(TOP_INCDIR)/afs/afs_stats.h \
+		$(TOP_SRCDIR)/afs/sysincludes.h \
+		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
+		${TOP_OBJDIR}/lib/libdes.a UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
+	${INSTALL} -d ${DEST}/root.perf/include/afs
+	${INSTALL} -d ${DEST}/root.perf/lib
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/param.h \
+		${DEST}/root.perf/include/afs/param.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/stds.h \
+		${DEST}/root.perf/include/afs/stds.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_sysnames.h \
+		${DEST}/root.perf/include/afs/afs_sysnames.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_stats.h \
+		${DEST}/root.perf/include/afs/afs_stats.h
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/sysincludes.h \
+		${DEST}/root.perf/include/afs/sysincludes.h
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
+		${DEST}/root.perf/include/afs/afs_usrops.h
+	${INSTALL_DATA} ${TOP_OBJDIR}/lib/libdes.a \
+		${DEST}/root.perf/lib/libdes.a
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
+	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DEST}/root.perf/lib/$(LIBJUAFS)
 
 #
 # Common directory and other build targets

@@ -40,18 +40,15 @@ main.o: main.c AFS_component_version_number.c
 #
 # Installation targets
 #
-install: ${DESTDIR}${afssrvlibexecdir}/vfsck
+install: vfsck
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_PROGRAM} vfsck ${DESTDIR}${afssrvlibexecdir}/vfsck
 
-${DEST}/root.server/etc/vfsck: vfsck
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/vfsck: vfsck
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/vfsck: vfsck
-	${INSTALL} $? $@
-
-dest: ${DEST}/root.server/etc/vfsck ${DEST}/root.server/usr/afs/bin/vfsck
+dest: vfsck
+	${INSTALL} -d ${DEST}/root.server/etc
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} vfsck ${DEST}/root.server/etc/vfsck
+	${INSTALL_PROGRAM} vfsck ${DEST}/root.server/usr/afs/bin/vfsck
 	case ${SYS_NAME} in \
 		hp_ux10?) \
 			${CP} ${srcdir}/bcheckrc ${DEST}/root.server/etc ;; \

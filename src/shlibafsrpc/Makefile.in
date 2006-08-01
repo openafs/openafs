@@ -136,10 +136,18 @@ LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 
 all: ${TOP_LIBDIR}/${LIBAFSRPC}
 
-install: ${DESTDIR}${libdir}/${LIBAFSRPC}
+${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
+	${INSTALL_DATA} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
+	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
-${DEST}/lib/${LIBAFSRPC}: ${LIBAFSRPC}
-	${INSTALL} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
+install: ${LIBAFSRPC}
+	${INSTALL_DATA} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
+	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
+
+dest: ${LIBAFSRPC}
+	${INSTALL_DATA} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
@@ -410,16 +418,3 @@ afsaux.o: ${FSINT}/afsaux.c
 
 clean:
 	$(RM) -f *.o libafsrpc*
-
-${DESTDIR}${libdir}/${LIBAFSRPC}: ${LIBAFSRPC}
-	${INSTALL} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
-	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
-
-${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
-	${INSTALL} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
-	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
-
-dest: ${DEST}/lib/${LIBAFSRPC}
-

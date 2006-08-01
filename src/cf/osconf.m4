@@ -643,7 +643,6 @@ case $AFS_SYSNAME in
 		;;
 
 	sgi_62)
-		PINSTALL_LIBS=-lmld
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
@@ -658,7 +657,6 @@ case $AFS_SYSNAME in
 		;;
 
 	sgi_63)
-		PINSTALL_LIBS=-lmld
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
@@ -1045,7 +1043,6 @@ AC_SUBST(PAM_CFLAGS)
 AC_SUBST(PAM_LIBS)
 AC_SUBST(PAM_DBG)
 AC_SUBST(PAM_OPTMZ)
-AC_SUBST(PINSTALL_LIBS)
 AC_SUBST(RANLIB)
 AC_SUBST(REGEX_OBJ)
 AC_SUBST(RM)

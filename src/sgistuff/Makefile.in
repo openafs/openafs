@@ -32,7 +32,23 @@ TARGETS=$(AUTHLIBS)
 
 all: ${TOP_LIBDIR}/afsauthlib.so ${TOP_LIBDIR}/afskauthlib.so
 
-install install.noversion: ${DESTDIR}${libdir}/afsauthlib.so ${DESTDIR}${libdir}/afskauthlib.so
+${TOP_LIBDIR}/afsauthlib.so: afsauthlib.so
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/afskauthlib.so: afskauthlib.so
+	${INSTALL_DATA} $? $@
+
+install install.noversion: afsauthlib.so afskauthlib.so
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} afsauthlib.so ${DESTDIR}${libdir}/afsauthlib.so
+	${INSTALL_DATA} afskauthlib.so ${DESTDIR}${libdir}/afskauthlib.so
+
+dest: afsauthlib.so afskauthlib.so
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc
+	${INSTALL_DATA} afsauthlib.so \
+		${DEST}/root.client/usr/vice/etc/afsauthlib.so
+	${INSTALL_DATA} afskauthlib.so \
+		${DEST}/root.client/usr/vice/etc/afskauthlib.so
 
 clean:
 	$(RM) -f $(AUTHLIBS) $(AUTHFILES) 
@@ -54,24 +70,3 @@ herror.o: herror.c
 
 sgi_auth.o: sgi_auth.c
 	${CC} ${CFLAGS} -c sgi_auth.c
-
-${TOP_LIBDIR}/afsauthlib.so: afsauthlib.so
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/afskauthlib.so: afskauthlib.so
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afsauthlib.so: afsauthlib.so
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afskauthlib.so: afskauthlib.so
-	${INSTALL} $? $@
-
-${DEST}/root.client/usr/vice/etc/afsauthlib.so: afsauthlib.so
-	${INSTALL} $? $@
-
-${DEST}/root.client/usr/vice/etc/afskauthlib.so: afskauthlib.so
-	${INSTALL} $? $@
-
-dest: ${DEST}/root.client/usr/vice/etc/afsauthlib.so ${DEST}/root.client/usr/vice/etc/afskauthlib.so
-

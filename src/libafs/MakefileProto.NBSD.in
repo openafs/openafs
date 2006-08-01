@@ -92,18 +92,6 @@ dest_libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
 
 
-$(INST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
-
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
 

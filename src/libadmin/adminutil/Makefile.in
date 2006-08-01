@@ -23,6 +23,12 @@ VOLSER = ../../volser
 
 all: ${TOP_LIBDIR}/libafsadminutil.a ${TOP_INCDIR}/afs/afs_utilAdmin.h
 
+${TOP_LIBDIR}/libafsadminutil.a: libafsadminutil.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
+	${INSTALL_DATA} $? $@
+
 afs_AdminBosErrors.c ${DESTDIR}/include/afs/afs_AdminBosErrors.h: afs_AdminBosErrors.et
 	${INSTALL} ${srcdir}/afs_AdminErrors.h ${TOP_INCDIR}/afs
 	$(RM) -f afs_AdminBosErrors.c afs_AdminBosErrors.h
@@ -33,37 +39,37 @@ afs_AdminCfgErrors.c ${DESTDIR}/include/afs/afs_AdminCfgErrors.h: afs_AdminCfgEr
 	$(RM) -f ${srcdir}/afs_AdminCfgErrors.c afs_AdminCfgErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminCfgErrors.et -h afs_AdminCfgErrors
 	cp afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminCfgErrors.h
- 
+
 afs_AdminClientErrors.c ${DESTDIR}/include/afs/afs_AdminClientErrors.h: afs_AdminClientErrors.et
 	$(RM) -f ${srcdir}/afs_AdminClientErrors.c afs_AdminClientErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminClientErrors.et -h afs_AdminClientErrors
 	cp afs_AdminClientErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h
- 
+
 afs_AdminMiscErrors.c ${DESTDIR}/include/afs/afs_AdminMiscErrors.h: afs_AdminMiscErrors.et
 	$(RM) -f ${srcdir}/afs_AdminMiscErrors.c afs_AdminMiscErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminMiscErrors.et -h afs_AdminMiscErrors
 	cp afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminMiscErrors.h
- 
+
 afs_AdminCommonErrors.c ${DESTDIR}/include/afs/afs_AdminCommonErrors.h: afs_AdminCommonErrors.et
 	$(RM) -f ${srcdir}/afs_AdminCommonErrors.c afs_AdminCommonErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminCommonErrors.et -h afs_AdminCommonErrors
 	cp afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminCommonErrors.h
- 
+
 afs_AdminKasErrors.c ${DESTDIR}/include/afs/afs_AdminKasErrors.h: afs_AdminKasErrors.et
 	$(RM) -f ${srcdir}/afs_AdminKasErrors.c afs_AdminKasErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminKasErrors.et -h afs_AdminKasErrors
 	cp afs_AdminKasErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h
- 
+
 afs_AdminPtsErrors.c ${DESTDIR}/include/afs/afs_AdminPtsErrors.h: afs_AdminPtsErrors.et
 	$(RM) -f ${srcdir}/afs_AdminPtsErrors.c afs_AdminPtsErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminPtsErrors.et -h afs_AdminPtsErrors
 	cp afs_AdminPtsErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h
- 
+
 afs_AdminUtilErrors.c ${DESTDIR}/include/afs/afs_AdminUtilErrors.h: afs_AdminUtilErrors.et
 	$(RM) -f ${srcdir}/afs_AdminUtilErrors.c afs_AdminUtilErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminUtilErrors.et -h afs_AdminUtilErrors
 	cp afs_AdminUtilErrors.h ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h
- 
+
 afs_AdminVosErrors.c ${DESTDIR}/include/afs/afs_AdminVosErrors.h: afs_AdminVosErrors.et
 	$(RM) -f ${srcdir}/afs_AdminVosErrors.c afs_AdminVosErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminVosErrors.et -h afs_AdminVosErrors
@@ -95,27 +101,17 @@ ADMINOBJS = \
 
 LIBOBJS = ${ADMINOBJS} ${ERROROBJS}
 
-install: ${DESTDIR}${libdir}/afs/libafsadminutil.a ${DESTDIR}${includedir}/afs/afs_utilAdmin.h
+install: libafsadminutil.a afs_utilAdmin.h
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libafsadminutil.a ${DESTDIR}${libdir}/afs/libafsadminutil.a
+	${INSTALL_DATA} afs_utilAdmin.h ${DESTDIR}${includedir}/afs/afs_utilAdmin.h
 
-dest: ${DEST}/lib/afs/libafsadminutil.a ${DEST}/include/afs/afs_utilAdmin.h
-
-${DESTDIR}${libdir}/afs/libafsadminutil.a: libafsadminutil.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libafsadminutil.a: libafsadminutil.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libafsadminutil.a: libafsadminutil.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_utilAdmin.h: afs_utilAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_utilAdmin.h: afs_utilAdmin.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
-	${INSTALL} $? $@
+dest: libafsadminutil.a afs_utilAdmin.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libafsadminutil.a ${DEST}/lib/afs/libafsadminutil.a
+	${INSTALL_DATA} afs_utilAdmin.h ${DEST}/include/afs/afs_utilAdmin.h
 
 libafsadminutil.a: ${LIBOBJS}
 	-$(RM) -f $@

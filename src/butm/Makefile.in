@@ -21,10 +21,8 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 
 all: ${TOP_LIBDIR}/libbutm.a
 
-install: ${DESTDIR}${libdir}/afs/libbutm.a
-
-${DEST}/lib/afs/libbutm.a: libbutm.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libbutm.a: libbutm.a
+	${INSTALL_DATA} $? $@
 
 libbutm.a: file_tm.o AFS_component_version_number.o
 	-$(RM) -f $@
@@ -41,15 +39,15 @@ test_ftm: test_ftm.o libbutm.a
 test: test_ftm
 	echo 'Usage: ./test_ftm -conf config -tape xxx *'
 
+install: libbutm.a
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} libbutm.a ${DESTDIR}${libdir}/afs/libbutm.a
+
+dest: libbutm.a
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} libbutm.a ${DEST}/lib/afs/libbutm.a
+
 clean:
 	$(RM) -f *.o *.a core test_ftm AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbutm.a: libbutm.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbutm.a: libbutm.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libbutm.a
-

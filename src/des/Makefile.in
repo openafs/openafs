@@ -50,6 +50,24 @@ all: \
 	${TOP_INCDIR}/mit-cpyright.h \
 	${TOP_INCDIR}/des_odd.h
 
+${TOP_LIBDIR}/libdes.a: libdes.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/des.h: des.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/des_prototypes.h: des_prototypes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/des_conf.h: des_conf.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/mit-cpyright.h: mit-cpyright.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/des_odd.h: odd.h
+	${INSTALL_DATA} $? $@
+
 #
 # Build rules
 #
@@ -155,31 +173,25 @@ make_e.o: make_e.c ${INCLS}
 #
 # Install targets
 #
-install:  \
-	${DESTDIR}${libdir}/libdes.a \
-	${DESTDIR}${includedir}/des.h \
-	${DESTDIR}${includedir}/des_prototypes.h \
-	${DESTDIR}${includedir}/des_conf.h \
-	${DESTDIR}${includedir}/mit-cpyright.h \
-	${DESTDIR}${includedir}/des_odd.h
+install: libdes.a des.h des_prototypes.h des_conf.h mit-cpyright.h odd.h
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL_DATA} libdes.a ${DESTDIR}${libdir}/libdes.a
+	${INSTALL_DATA} des.h ${DESTDIR}${includedir}/des.h
+	${INSTALL_DATA} des_prototypes.h ${DESTDIR}${includedir}/des_prototypes.h
+	${INSTALL_DATA} des_conf.h ${DESTDIR}${includedir}/des_conf.h
+	${INSTALL_DATA} mit-cpyright.h ${DESTDIR}${includedir}/mit-cpyright.h
+	${INSTALL_DATA} odd.h ${DESTDIR}${includedir}/des_odd.h
 
-${DEST}/lib/libdes.a: libdes.a
-	${INSTALL} $? $@
-
-${DEST}/include/des.h: des.h
-	${INSTALL} $? $@
-
-${DEST}/include/des_prototypes.h: des_prototypes.h
-	${INSTALL} $? $@
-
-${DEST}/include/des_conf.h: des_conf.h
-	${INSTALL} $? $@
-
-${DEST}/include/mit-cpyright.h: mit-cpyright.h
-	${INSTALL} $? $@
-
-${DEST}/include/des_odd.h: odd.h
-	${INSTALL} $? $@
+dest: libdes.a des.h des_prototypes.h des_conf.h mit-cpyright.h odd.h
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include
+	${INSTALL_DATA} libdes.a ${DEST}/lib/libdes.a
+	${INSTALL_DATA} des.h ${DEST}/include/des.h
+	${INSTALL_DATA} des_prototypes.h ${DEST}/include/des_prototypes.h
+	${INSTALL_DATA} des_conf.h ${DEST}/include/des_conf.h
+	${INSTALL_DATA} mit-cpyright.h ${DEST}/include/mit-cpyright.h
+	${INSTALL_DATA} odd.h ${DEST}/include/des_odd.h
 
 #
 # Misc. targets
@@ -195,48 +207,3 @@ clean:
 	cd test; $(MAKE) clean
 
 include ../config/Makefile.version
-
-${DESTDIR}${libdir}/libdes.a: libdes.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libdes.a: libdes.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/des.h: des.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/des.h: des.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/des_prototypes.h: des_prototypes.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/des_prototypes.h: des_prototypes.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/des_conf.h: des_conf.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/des_conf.h: des_conf.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/mit-cpyright.h: mit-cpyright.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/mit-cpyright.h: mit-cpyright.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/des_odd.h: odd.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/des_odd.h: odd.h
-	${INSTALL} $? $@
-
-dest:  \
-	${DEST}/lib/libdes.a \
-	${DEST}/include/des.h \
-	${DEST}/include/des_prototypes.h \
-	${DEST}/include/des_conf.h \
-	${DEST}/include/mit-cpyright.h \
-	${DEST}/include/des_odd.h
-

@@ -45,6 +45,21 @@ depinstall: \
 	${TOP_INCDIR}/afs/vldbint.h \
 	${TOP_INCDIR}/afs/cnvldb.h 
 
+${TOP_LIBDIR}/libvldb.a: libvldb.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vl_opcodes.h: vl_opcodes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vlserver.h: vlserver.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vldbint.h: vldbint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
+	${INSTALL_DATA} $? $@
+
 vldb_check: vldb_check.o ${LIBS}
 	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} ${XLIBS} 
 
@@ -109,88 +124,35 @@ vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 
 system: install
 
-${DEST}/root.server/usr/afs/bin/vlserver: vlserver
-	${INSTALL} $? $@
+install: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
+		vldbint.h cnvldb.h
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver
+	${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert
+	${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check
+	${INSTALL_DATA} libvldb.a ${DESTDIR}${libdir}/afs/libvldb.a
+	${INSTALL_DATA} vl_opcodes.h ${DESTDIR}${includedir}/afs/vl_opcodes.h
+	${INSTALL_DATA} vlserver.h ${DESTDIR}${includedir}/afs/vlserver.h
+	${INSTALL_DATA} vldbint.h ${DESTDIR}${includedir}/afs/vldbint.h
+	${INSTALL_DATA} cnvldb.h ${DESTDIR}${includedir}/afs/cnvldb.h
 
-${DEST}/etc/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
-
-${TOP_LIBDIR}/libvldb.a: libvldb.a
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vl_opcodes.h: vl_opcodes.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vlserver.h: vlserver.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vldbint.h: vldbint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
-	${INSTALL} $? $@
-
-install: \
-	${DESTDIR}${afssrvlibexecdir}/vlserver \
-	${DESTDIR}${afssrvsbindir}/vldb_convert \
-	${DESTDIR}${libdir}/afs/libvldb.a \
-	${DESTDIR}${includedir}/afs/vl_opcodes.h \
-	${DESTDIR}${includedir}/afs/vlserver.h \
-	${DESTDIR}${includedir}/afs/vldbint.h \
-	${DESTDIR}${includedir}/afs/cnvldb.h \
-	${DESTDIR}${afssrvsbindir}/vldb_check
-
-${DESTDIR}${afssrvlibexecdir}/vlserver: vlserver
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
-
-${DESTDIR}${libdir}/afs/libvldb.a: libvldb.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vl_opcodes.h: vl_opcodes.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vlserver.h: vlserver.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vldbint.h: vldbint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/cnvldb.h: cnvldb.h
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/vldb_check: vldb_check
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/vlserver \
-	${DEST}/etc/vldb_convert \
-	${DEST}/lib/afs/libvldb.a \
-	${DEST}/include/afs/vl_opcodes.h \
-	${DEST}/include/afs/vlserver.h \
-	${DEST}/include/afs/vldbint.h \
-	${DEST}/include/afs/cnvldb.h \
-	${DEST}/etc/vldb_check
-
-${DEST}/lib/afs/libvldb.a: libvldb.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/vl_opcodes.h: vl_opcodes.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/vlserver.h: vlserver.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/vldbint.h: vldbint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/cnvldb.h: cnvldb.h
-	${INSTALL} $? $@
-
-${DEST}/etc/vldb_check: vldb_check
-	${INSTALL} $? $@
+dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
+		vldbint.h cnvldb.h
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver
+	${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert
+	${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check
+	${INSTALL_DATA} libvldb.a ${DEST}/lib/afs/libvldb.a
+	${INSTALL_DATA} vl_opcodes.h ${DEST}/include/afs/vl_opcodes.h
+	${INSTALL_DATA} vlserver.h ${DEST}/include/afs/vlserver.h
+	${INSTALL_DATA} vldbint.h ${DEST}/include/afs/vldbint.h
+	${INSTALL_DATA} cnvldb.h ${DEST}/include/afs/cnvldb.h
 
 #
 # Misc targets

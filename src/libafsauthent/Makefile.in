@@ -94,10 +94,8 @@ LIBOBJS = \
 
 all: ${TOP_LIBDIR}/libafsauthent.a
 
-install: ${DESTDIR}${libdir}/libafsauthent.a
-
-${DEST}/lib/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
+	${INSTALL_DATA} $? $@
 
 libafsauthent.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -255,11 +253,10 @@ setpag.o: ${SYS}/setpag.c
 clean:
 	$(RM) -f *.o *.a libafsauthent*
 
-${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+install: libafsauthent.a
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
 
-${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/libafsauthent.a
-
+dest: libafsauthent.a
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} libafsauthent.a ${DEST}/lib/libafsauthent.a

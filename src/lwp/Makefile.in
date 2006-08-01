@@ -15,9 +15,24 @@ CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${ARCHFLAGS} ${COMMON_INCL}
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
 
-all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+all: ${TOP_LIBDIR}/liblwp.a depinstall
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+
+${TOP_LIBDIR}/liblwp.a: liblwp.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/lock.h: lock.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/lwp.h: lwp.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/preempt.h: preempt.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/timer.h: timer.h
+	${INSTALL_DATA} $? $@
 
 #
 # Build rules
@@ -143,22 +158,23 @@ rw.o: rw.c
 #
 # Install targets
 #
-install: ${DESTDIR}${libdir}/liblwp.a ${DESTDIR}${includedir}/lock.h ${DESTDIR}${includedir}/lwp.h ${DESTDIR}${includedir}/preempt.h ${DESTDIR}${includedir}/timer.h
+install: liblwp.a lock.h lwp.h preempt.h timer.h
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
+	${INSTALL_DATA} lock.h ${DESTDIR}${includedir}/lock.h
+	${INSTALL_DATA} lwp.h ${DESTDIR}${includedir}/lwp.h
+	${INSTALL_DATA} preempt.h ${DESTDIR}${includedir}/preempt.h
+	${INSTALL_DATA} timer.h ${DESTDIR}${includedir}/timer.h
 
-${DEST}/lib/liblwp.a: liblwp.a
-	${INSTALL} $? $@
-
-${DEST}/include/lock.h: lock.h
-	${INSTALL} $? $@
-
-${DEST}/include/lwp.h: lwp.h
-	${INSTALL} $? $@
-
-${DEST}/include/preempt.h: preempt.h
-	${INSTALL} $? $@
-
-${DEST}/include/timer.h: timer.h
-	${INSTALL} $? $@
+dest: liblwp.a lock.h lwp.h preempt.h timer.h
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include
+	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
+	${INSTALL_DATA} lock.h ${DEST}/include/lock.h
+	${INSTALL_DATA} lwp.h ${DEST}/include/lwp.h
+	${INSTALL_DATA} preempt.h ${DEST}/include/preempt.h
+	${INSTALL_DATA} timer.h ${DEST}/include/timer.h
 
 #
 # Misc. targets
@@ -167,35 +183,3 @@ clean:
 	$(RM) -f *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/liblwp.a: liblwp.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/liblwp.a: liblwp.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/lock.h: lock.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/lock.h: lock.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/lwp.h: lwp.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/lwp.h: lwp.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/preempt.h: preempt.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/preempt.h: preempt.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/timer.h: timer.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/timer.h: timer.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/liblwp.a ${DEST}/include/lock.h ${DEST}/include/lwp.h ${DEST}/include/preempt.h ${DEST}/include/timer.h
-

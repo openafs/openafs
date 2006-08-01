@@ -27,6 +27,12 @@ LIBS=${TOP_LIBDIR}/libvolser.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
 
 all: ${TOP_INCDIR}/afs/fsprobe.h ${TOP_LIBDIR}/libfsprobe.a fsprobe_test
 
+${TOP_INCDIR}/afs/fsprobe.h: fsprobe.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libfsprobe.a: libfsprobe.a
+	${INSTALL_DATA} $? $@
+
 #
 # Build targets
 #
@@ -46,13 +52,17 @@ fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
 #
 # Install targets
 #
-install: ${DESTDIR}${includedir}/afs/fsprobe.h ${DESTDIR}${libdir}/afs/libfsprobe.a 
+install: fsprobe.h libfsprobe.a
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} fsprobe.h ${DESTDIR}${includedir}/afs/fsprobe.h
+	${INSTALL_DATA} libfsprobe.a ${DESTDIR}${libdir}/afs/libfsprobe.a 
 
-${DEST}/include/afs/fsprobe.h: fsprobe.h
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libfsprobe.a: libfsprobe.a
-	${INSTALL} $? $@
+dest: fsprobe.h libfsprobe.a
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} fsprobe.h ${DEST}/include/afs/fsprobe.h
+	${INSTALL_DATA} libfsprobe.a ${DEST}/lib/afs/libfsprobe.a 
 
 #
 # Misc others
@@ -61,18 +71,3 @@ clean:
 	$(RM) -f *.o fsprobe_test libfsprobe.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${includedir}/afs/fsprobe.h: fsprobe.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/fsprobe.h: fsprobe.h
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libfsprobe.a: libfsprobe.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libfsprobe.a: libfsprobe.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/include/afs/fsprobe.h ${DEST}/lib/afs/libfsprobe.a 
-

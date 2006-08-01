@@ -33,7 +33,6 @@ all: gi \
 	salvager \
 	volinfo \
 	fssync-debug \
-	$(FS_CONV_OSF40D) \
 	$(XFS_SIZE_CHECK) \
 	$(FS_CONV_SOL26) \
 	${TOP_INCDIR}/afs/nfs.h \
@@ -48,97 +47,118 @@ all: gi \
 	${TOP_INCDIR}/afs/ihandle.h \
 	${TOP_INCDIR}/afs/namei_ops.h
 
+${TOP_LIBDIR}/vlib.a: vlib.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libvlib.a: vlib.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/nfs.h: nfs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vnode.h: vnode.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/viceinode.h: viceinode.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/volume.h: volume.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/voldefs.h: voldefs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/partition.h: partition.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/fssync.h: fssync.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/salvsync.h: salvsync.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/daemon_com.h: daemon_com.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ihandle.h: ihandle.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/namei_ops.h: namei_ops.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/salvage.h: salvage.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vol-salvage.h: vol-salvage.h
+	${INSTALL_DATA} $? $@
+
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${libdir}/afs/vlib.a \
-	${DESTDIR}${libdir}/afs/libvlib.a \
-	${DESTDIR}${afssrvlibexecdir}/salvager \
-	${DESTDIR}${afssrvsbindir}/volinfo \
-	${DESTDIR}${afssrvsbindir}/fssync-debug \
-	$(install_FS_CONV_OSF40D) \
-	$(install_XFS_SIZE_CHECK) \
-	$(install_FS_CONV_SOL26) \
-	${DESTDIR}${includedir}/afs/nfs.h \
-	${DESTDIR}${includedir}/afs/vnode.h \
-	${DESTDIR}${includedir}/afs/viceinode.h \
-	${DESTDIR}${includedir}/afs/volume.h \
-	${DESTDIR}${includedir}/afs/voldefs.h \
-	${DESTDIR}${includedir}/afs/partition.h \
-	${DESTDIR}${includedir}/afs/fssync.h \
-	${DESTDIR}${includedir}/afs/salvsync.h \
-	${DESTDIR}${includedir}/afs/daemon_com.h \
-	${DESTDIR}${includedir}/afs/ihandle.h \
-	${DESTDIR}${includedir}/afs/namei_ops.h
-
-${DEST}/root.server/usr/afs/bin/salvager: salvager 
-	${INSTALL} -s $? $@
-
-${DEST}/root.server/usr/afs/bin/volinfo: volinfo
-	${INSTALL} -s $? $@
-
-${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
-	if test "@DEMAND_ATTACH@" = "no"; then \
-		${INSTALL} -s $? $@ ; \
+install: vlib.a salvager volinfo fssync-debug
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/vlib.a
+	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/libvlib.a
+	${INSTALL_PROGRAM} salvager ${DESTDIR}${afssrvlibexecdir}/salvager
+	${INSTALL_PROGRAM} volinfo ${DESTDIR}${afssrvsbindir}/volinfo
+	${INSTALL_DATA} nfs.h ${DESTDIR}${includedir}/afs/nfs.h
+	${INSTALL_DATA} vnode.h ${DESTDIR}${includedir}/afs/vnode.h
+	${INSTALL_DATA} viceinode.h ${DESTDIR}${includedir}/afs/viceinode.h
+	${INSTALL_DATA} volume.h ${DESTDIR}${includedir}/afs/volume.h
+	${INSTALL_DATA} voldefs.h ${DESTDIR}${includedir}/afs/voldefs.h
+	${INSTALL_DATA} partition.h ${DESTDIR}${includedir}/afs/partition.h
+	${INSTALL_DATA} fssync.h ${DESTDIR}${includedir}/afs/fssync.h
+	${INSTALL_DATA} salvsync.h ${DESTDIR}${includedir}/afs/salvsync.h
+	${INSTALL_DATA} daemon_com.h ${DESTDIR}${includedir}/afs/daemon_com.h
+	${INSTALL_DATA} ihandle.h ${DESTDIR}${includedir}/afs/ihandle.h
+	${INSTALL_DATA} namei_ops.h ${DESTDIR}${includedir}/afs/namei_ops.h
+	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
+		${INSTALL_PROGRAM} fssync-debug \
+			${DESTDIR}${afssrvsbindir}/fssync-debug ; \
+	fi
+	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
+		${INSTALL_PROGRAM} xfs_size_check \
+			${DESTDIR}${afssrvsbindir}/xfs_size_check ; \
+	fi
+	set -x; if test x"$(install_FS_CONV_SOL26)" != x"" ; then \
+		${INSTALL_PROGRAM} fs_conv_sol26 \
+			${DESTDIR}${afssrvsbindir}/fs_conv_sol26 ; \
 	fi
 
-${DEST}/lib/afs/vlib.a: vlib.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libvlib.a: vlib.a
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/fs_conv_dux40D:  fs_conv_dux40D
-	${INSTALL} -s $? $@
-
-${DESTDIR}${afssrvsbindir}/xfs_size_check:  xfs_size_check
-	${INSTALL} -s $? $@
-
-${DESTDIR}${afssrvsbindir}/fs_conv_sol26:  fs_conv_sol26
-	${INSTALL} -s $? $@
-
-$(DEST)/root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
-	${INSTALL} -s $? $@
-
-$(DEST)/root.server/usr/afs/bin/xfs_size_check:  xfs_size_check
-	${INSTALL} -s $? $@
-
-$(DEST)/root.server/usr/afs/bin/fs_conv_sol26:  fs_conv_sol26
-	${INSTALL} -s $? $@
-
-${DEST}/include/afs/nfs.h: nfs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/vnode.h: vnode.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/viceinode.h: viceinode.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/volume.h: volume.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/voldefs.h: voldefs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/partition.h: partition.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/fssync.h: fssync.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/salvsync.h: salvsync.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/daemon_com.h: daemon_com.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ihandle.h: ihandle.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/namei_ops.h: namei_ops.h
-	${INSTALL} $? $@
+dest: vlib.a salvager volinfo fssync-debug
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/vlib.a
+	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/libvlib.a
+	${INSTALL_PROGRAM} salvager ${DEST}/root.server/usr/afs/bin/salvager
+	${INSTALL_PROGRAM} volinfo ${DEST}/root.server/usr/afs/bin/volinfo
+	${INSTALL_DATA} nfs.h ${DEST}/include/afs/nfs.h
+	${INSTALL_DATA} vnode.h ${DEST}/include/afs/vnode.h
+	${INSTALL_DATA} viceinode.h ${DEST}/include/afs/viceinode.h
+	${INSTALL_DATA} volume.h ${DEST}/include/afs/volume.h
+	${INSTALL_DATA} voldefs.h ${DEST}/include/afs/voldefs.h
+	${INSTALL_DATA} partition.h ${DEST}/include/afs/partition.h
+	${INSTALL_DATA} fssync.h ${DEST}/include/afs/fssync.h
+	${INSTALL_DATA} salvsync.h ${DEST}/include/afs/salvsync.h
+	${INSTALL_DATA} daemon_com.h ${DEST}/include/afs/daemon_com.h
+	${INSTALL_DATA} ihandle.h ${DEST}/include/afs/ihandle.h
+	${INSTALL_DATA} namei_ops.h ${DEST}/include/afs/namei_ops.h
+	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
+		${INSTALL_PROGRAM} fssync-debug \
+			${DEST}/root.server/usr/afs/bin/fssync-debug ; \
+	fi
+	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
+		${INSTALL_PROGRAM} xfs_size_check \
+			$(DEST)/root.server/usr/afs/bin/xfs_size_check ; \
+	fi
+	set -x; if test x"$(install_FS_CONV_SOL26)" != x"" ; then \
+		${INSTALL_PROGRAM} fs_conv_sol26 \
+			$(DEST)/root.server/usr/afs/bin/fs_conv_sol26 ; \
+	fi
 
 #
 # Build targets
@@ -195,9 +215,6 @@ fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
 vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}
 
-fs_conv_dux40D: fs_conv_411.o ${LIBS}
-	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}
-
 fs_conv_sol26: fs_conv_411.o ${LIBS}
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} ${XLIBS}
 
@@ -218,127 +235,6 @@ test:
 	cd test; $(MAKE)
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/vlib.a: vlib.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/vlib.a: vlib.a
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libvlib.a: vlib.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libvlib.a: vlib.a
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/salvager: salvager
-	${INSTALL} -s $? $@
-
-${DESTDIR}${afssrvsbindir}/volinfo: volinfo
-	${INSTALL} -s $? $@
-
-${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
-	if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL} -s $? $@ ; \
-	fi
-
-${DESTDIR}${includedir}/afs/nfs.h: nfs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/nfs.h: nfs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vnode.h: vnode.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vnode.h: vnode.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/viceinode.h: viceinode.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/viceinode.h: viceinode.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/volume.h: volume.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/volume.h: volume.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/voldefs.h: voldefs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/voldefs.h: voldefs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/partition.h: partition.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/partition.h: partition.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/fssync.h: fssync.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/fssync.h: fssync.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/salvsync.h: salvsync.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/salvsync.h: salvsync.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/daemon_com.h: daemon_com.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/daemon_com.h: daemon_com.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ihandle.h: ihandle.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ihandle.h: ihandle.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/namei_ops.h: namei_ops.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/namei_ops.h: namei_ops.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/salvage.h: salvage.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/salvage.h: salvage.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vol-salvage.h: vol-salvage.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vol-salvage.h: vol-salvage.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/afs/vlib.a \
-	${DEST}/lib/afs/libvlib.a \
-	${DEST}/root.server/usr/afs/bin/salvager \
-	${DEST}/root.server/usr/afs/bin/volinfo \
-	${DEST}/root.server/usr/afs/bin/fssync-debug \
-	$(dest_FS_CONV_OSF40D) \
-	$(dest_XFS_SIZE_CHECK) \
-	$(dest_FS_CONV_SOL26) \
-	${DEST}/include/afs/nfs.h \
-	${DEST}/include/afs/vnode.h \
-	${DEST}/include/afs/viceinode.h \
-	${DEST}/include/afs/volume.h \
-	${DEST}/include/afs/voldefs.h \
-	${DEST}/include/afs/partition.h \
-	${DEST}/include/afs/fssync.h \
-	${DEST}/include/afs/salvsync.h \
-	${DEST}/include/afs/daemon_com.h \
-	${DEST}/include/afs/ihandle.h \
-	${DEST}/include/afs/namei_ops.h
 
 check-splint::
 	sh $(HELPER_SPLINT) $(CFLAGS) \

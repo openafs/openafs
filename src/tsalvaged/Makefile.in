@@ -47,14 +47,6 @@ SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIR
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
 
-INSTALL_TARGS = ${DESTDIR}${afssrvlibexecdir}/salvageserver \
-		${DESTDIR}${afssrvsbindir}/fssync-debug \
-		${DESTDIR}${afssrvsbindir}/salvsync-debug
-
-DEST_TARGS =	${DEST}/root.server/usr/afs/bin/salvageserver \
-		${DEST}/root.server/usr/afs/bin/fssync-debug \
-		${DEST}/root.server/usr/afs/bin/salvsync-debug
-
 all: salvageserver fssync-debug salvsync-debug
 
 salvaged.o: ${VOL}/salvaged.c
@@ -172,29 +164,26 @@ fssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
 	${CC} ${LDFLAGS} -o salvsync-debug ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
-${DEST}/root.server/usr/afs/bin/salvageserver: salvageserver
-	${INSTALL} -ns $? $@
+install: salvageserver fssync-debug salvsync-debug
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL_PROGRAM} salvageserver \
+		${DESTDIR}${afssrvlibexecdir}/salvageserver
+	${INSTALL_PROGRAM} fssync-debug \
+		${DESTDIR}${afssrvsbindir}/fssync-debug
+	${INSTALL_PROGRAM} salvsync-debug \
+		${DESTDIR}${afssrvsbindir}/salvsync-debug
 
-${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
-	${INSTALL} -s $? $@
-
-${DEST}/root.server/usr/afs/bin/salvsync-debug: salvsync-debug
-	${INSTALL} -s $? $@
-
-install: ${INSTALL_TARGS}
+dest: salvageserver fssync-debug salvsync-debug
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} salvageserver \
+		${DEST}/root.server/usr/afs/bin/salvageserver
+	${INSTALL_PROGRAM} fssync-debug \
+		${DEST}/root.server/usr/afs/bin/fssync-debug
+	${INSTALL_PROGRAM} salvsync-debug \
+		${DEST}/root.server/usr/afs/bin/salvsync-debug
 
 clean:
 	$(RM) -f *.o salvageserver core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${afssrvlibexecdir}/salvageserver: salvageserver
-	${INSTALL} -ns $? $@
-
-${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
-	${INSTALL} -s $? $@
-
-${DESTDIR}${afssrvsbindir}/salvsync-debug: salvsync-debug
-	${INSTALL} -s $? $@
-
-dest: ${DEST_TARGS}

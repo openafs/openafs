@@ -64,10 +64,14 @@ test: translate_et
 #
 # Install targets
 #
-install: ${DESTDIR}${bindir}/translate_et
+install:
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_PROGRAM} translate_et ${DESTDIR}${bindir}/translate_et
 
-${DEST}/bin/translate_et: translate_et
-	${INSTALL} $? $@
+dest:
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_PROGRAM} translate_et ${DEST}/bin/translate_et
+
 
 #
 # Misc. targets
@@ -77,9 +81,3 @@ clean:
 	$(RM) -f *.o translate_et core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${bindir}/translate_et: translate_et
-	${INSTALL} $? $@
-
-dest: ${DEST}/bin/translate_et
-

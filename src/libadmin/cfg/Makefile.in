@@ -26,30 +26,25 @@ LIBOBJS =\
 	${UBIKOBJS} \
 	${CFGOBJS}
 
-
 all: ${TOP_INCDIR}/afs/afs_cfgAdmin.h ${TOP_LIBDIR}/libcfgadmin.a
 
-install: ${DESTDIR}${includedir}/afs/afs_cfgAdmin.h ${DESTDIR}${libdir}/afs/libcfgadmin.a
-
-dest: ${DEST}/include/afs/afs_cfgAdmin.h ${DEST}/lib/afs/libcfgadmin.a
-
 ${TOP_INCDIR}/afs/afs_cfgAdmin.h: afs_cfgAdmin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_cfgAdmin.h: afs_cfgAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_cfgAdmin.h: afs_cfgAdmin.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libcfgadmin.a: libcfgadmin.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-${DESTDIR}${libdir}/afs/libcfgadmin.a: libcfgadmin.a
-	${INSTALL} $? $@
+install: libcfgadmin.a afs_cfgAdmin.h
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} afs_cfgAdmin.h ${DESTDIR}${includedir}/afs/afs_cfgAdmin.h
+	${INSTALL_DATA} libcfgadmin.a ${DESTDIR}${libdir}/afs/libcfgadmin.a
 
-${DEST}/lib/afs/libcfgadmin.a: libcfgadmin.a
-	${INSTALL} $? $@
+dest: libcfgadmin.a afs_cfgAdmin.h
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} afs_cfgAdmin.h ${DEST}/include/afs/afs_cfgAdmin.h
+	${INSTALL_DATA} libcfgadmin.a ${DEST}/lib/afs/libcfgadmin.a
 
 libcfgadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

@@ -8,8 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-
 all: uss
 
 CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
@@ -103,10 +101,13 @@ y.tab.c : grammar.y
 #
 # Installation targets
 #
-install: ${DESTDIR}${sbindir}/uss
+install:
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} uss ${DESTDIR}${sbindir}/uss
 
-${DEST}/etc/uss: uss
-	${INSTALL} $? $@
+dest:
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} uss ${DEST}/etc/uss
 
 #
 # Misc. targets
@@ -115,10 +116,3 @@ clean:
 	$(RM) -f *.o uss y.tab.c y.tab.h lex.yy.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-#
-${DESTDIR}${sbindir}/uss: uss
-	${INSTALL} $? $@
-
-dest: ${DEST}/etc/uss
-

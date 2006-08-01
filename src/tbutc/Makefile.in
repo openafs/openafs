@@ -124,20 +124,18 @@ file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
 #
 # Install targets
 #
-install: ${DESTDIR}${sbindir}/butc
-dest: ${DEST}/etc/butc
+install: butc
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc
 
-${DEST}/etc/butc: butc
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/butc: butc
-	${INSTALL} $? $@
+dest: butc
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} butc ${DEST}/etc/butc
 
 #
 # Misc targets
 #
-include ../config/Makefile.version
-
 clean:
 	$(RM) -f *.o *.a core AFS_component_version_number.c butc
 
+include ../config/Makefile.version

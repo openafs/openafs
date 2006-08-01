@@ -21,6 +21,18 @@ depinstall: \
 	Kpagcb.ss.c Kpagcb.h Kpagcb.cs.c Kpagcb.xdr.c \
         afscbint.h afsint.h pagcb.h
 
+${TOP_LIBDIR}/libafsint.a: libafsint.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afsint.h: afsint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afscbint.h: afscbint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/pagcb.h: pagcb.h
+	${INSTALL_DATA} $? $@
+
 libafsint.a: ${OBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
@@ -94,45 +106,21 @@ afscbint.h: common.xg afscbint.xg
 #
 # Installation targets
 #
-${TOP_LIBDIR}/libafsint.a: libafsint.a
-	${INSTALL} $? $@
+install: libafsint.a afsint.h afscbint.h pagcb.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libafsint.a ${DESTDIR}${libdir}/afs/libafsint.a
+	${INSTALL_DATA} afsint.h ${DESTDIR}${includedir}/afs/afsint.h
+	${INSTALL_DATA} afscbint.h ${DESTDIR}${includedir}/afs/afscbint.h
+	${INSTALL_DATA} pagcb.h ${DESTDIR}${includedir}/afs/pagcb.h
 
-${TOP_INCDIR}/afs/afsint.h: afsint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afscbint.h: afscbint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/pagcb.h: pagcb.h
-	${INSTALL} $? $@
-
-install: \
-	${DESTDIR}${libdir}/afs/libafsint.a \
-	${DESTDIR}${includedir}/afs/afsint.h \
-	${DESTDIR}${includedir}/afs/afscbint.h
-
-${DESTDIR}${libdir}/afs/libafsint.a: libafsint.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afsint.h: afsint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afscbint.h: afscbint.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/afs/libafsint.a \
-	${DEST}/include/afs/afsint.h \
-	${DEST}/include/afs/afscbint.h
-
-${DEST}/lib/afs/libafsint.a: libafsint.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afscbint.h: afscbint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afsint.h: afsint.h
-	${INSTALL} $? $@
+dest: libafsint.a afsint.h afscbint.h pagcb.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libafsint.a ${DEST}/lib/afs/libafsint.a
+	${INSTALL_DATA} afsint.h ${DEST}/include/afs/afsint.h
+	${INSTALL_DATA} afscbint.h ${DEST}/include/afs/afscbint.h
+	${INSTALL_DATA} pagcb.h ${DEST}/include/afs/pagcb.h
 
 #
 # Misc targets
@@ -144,4 +132,3 @@ clean:
 	Kvice.h Kcallback.h Kpagcb.h
 
 include ../config/Makefile.version
-

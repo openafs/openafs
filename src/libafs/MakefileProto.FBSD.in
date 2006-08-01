@@ -96,31 +96,14 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
-# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
-install_libafs:	$(INST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-dest_libafs:	$(DEST_LIBAFSNONFS)
-#libafs:
-#	echo WARNING: No kernel module for ${SYS_NAME}
 
-#install_libafs:
-#	echo WARNING: No kernel module for ${SYS_NAME}
+install_libafs:	$(LIBAFSNONFS)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(INST_LIBAFSNONFS)
 
-#dest_libafs:
-#	echo WARNING: No kernel module for ${SYS_NAME}
-
-
-$(INST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
+dest_libafs: $(LIBAFSNONFS)
+	${INSTALL} -d ${DEST}/root.client/bin
+	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -r -o ${LIBAFS}.kld ${AFSAOBJS} ${AFSNFSOBJS}

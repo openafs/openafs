@@ -61,27 +61,14 @@ clean	:
 	$(RM) -f *.o gram.c test_gram.c core package package_test *.BAK y.output yacc.tmp yacc.acts\
 	AFS_component_version_number.c lex.c y.tab.h
 
-install:   ${DESTDIR}${sbindir}/package ${DESTDIR}${sbindir}/package_test ${DESTDIR}${sbindir}/makepkgfiles
+install: package package_test makepkgfiles
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} package ${DESTDIR}${sbindir}/package
+	${INSTALL_PROGRAM} package_test ${DESTDIR}${sbindir}/package_test
+	${INSTALL_PROGRAM} makepkgfiles ${DESTDIR}${sbindir}/makepkgfiles
 
-
-${DEST}/etc/package: package
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/package: package
-	${INSTALL} $? $@
-
-${DEST}/etc/package_test: package_test
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/package_test: package_test
-	${INSTALL} $? $@
-
-${DEST}/etc/makepkgfiles: makepkgfiles
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/makepkgfiles: makepkgfiles
-	${INSTALL} $? $@
-
-
-dest:   ${DEST}/etc/package ${DEST}/etc/package_test ${DEST}/etc/makepkgfiles
-
+dest: package package_test makepkgfiles
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} package ${DEST}/etc/package
+	${INSTALL_PROGRAM} package_test ${DEST}/etc/package_test
+	${INSTALL_PROGRAM} makepkgfiles ${DEST}/etc/makepkgfiles

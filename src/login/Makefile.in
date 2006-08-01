@@ -68,26 +68,15 @@ login.krb.o: login.c
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${bindir}/login \
-	${DESTDIR}${bindir}/login.krb
+install: login login.krb
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_PROGRAM} login ${DESTDIR}${bindir}/login
+	${INSTALL_PROGRAM} login.krb ${DESTDIR}${bindir}/login.krb
 
-${DESTDIR}${bindir}/login: login
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/login.krb: login.krb
-	${INSTALL} $? $@
-
-
-dest: \
-	${DEST}/bin/login \
-	${DEST}/bin/login.krb
-
-${DEST}/bin/login: login
-	${INSTALL} $? $@
-
-${DEST}/bin/login.krb: login.krb
-	${INSTALL} $? $@
+dest: login login.krb
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_PROGRAM} login ${DEST}/bin/login
+	${INSTALL_PROGRAM} login.krb ${DEST}/bin/login.krb
 
 #
 # Misc. targets
@@ -96,4 +85,3 @@ clean:
 	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
 
 include ../config/Makefile.version
-

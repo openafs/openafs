@@ -29,6 +29,12 @@ CFLAGS =  ${PAM_DBG} ${PAM_OPTMZ} ${INCLUDES} ${PAM_CFLAGS}
 
 all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 
+${TOP_LIBDIR}/pam_afs.so.1: pam_afs.so.1
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
+	${INSTALL_DATA} $? $@
+
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -c ${srcdir}/afs_setcred.c -o afs_setcred.o
 
@@ -104,13 +110,15 @@ test_pam: test_pam.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-install:  ${DESTDIR}${libdir}/pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
+install: pam_afs.so.1 pam_afs.krb.so.1
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.so.1
+	${INSTALL_DATA} pam_afs.krb.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
 
-${DEST}/lib/pam_afs.so.1: pam_afs.so.1
-	${INSTALL} $? $@
-
-${DEST}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
+dest: pam_afs.so.1 pam_afs.krb.so.1
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} pam_afs.so.1 ${DEST}/lib/pam_afs.so.1
+	${INSTALL_DATA} pam_afs.krb.so.1 ${DEST}/lib/pam_afs.krb.so.1
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
@@ -122,18 +130,3 @@ clean:
 	$(RM) -f *.a *.o *.so.1 test_pam core *~ AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${libdir}/pam_afs.so.1: pam_afs.so.1
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/pam_afs.so.1: pam_afs.so.1
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
-
-dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
-

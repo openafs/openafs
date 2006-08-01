@@ -15,6 +15,12 @@ all: depinstall ${TOP_LIBDIR}/librxstat.a
 depinstall: \
 	${TOP_INCDIR}/rx/rxstat.h Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c
 
+${TOP_INCDIR}/rx/rxstat.h: rxstat.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/librxstat.a: librxstat.a
+	${INSTALL_DATA} $? $@
+
 #
 # Build targets
 #
@@ -51,13 +57,17 @@ Krxstat.xdr.c: rxstat.xg
 #
 # Install targets
 #
-install:   ${DESTDIR}${includedir}/rx/rxstat.h ${DESTDIR}${libdir}/librxstat.a
+install: rxstat.h librxstat.a
+	${INSTALL} -d ${DESTDIR}${includedir}/rx
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} rxstat.h ${DESTDIR}${includedir}/rx/rxstat.h
+	${INSTALL_DATA} librxstat.a ${DESTDIR}${libdir}/librxstat.a
 
-${DEST}/lib/librxstat.a: librxstat.a
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rxstat.h: rxstat.h
-	${INSTALL} $? $@
+dest: rxstat.h librxstat.a
+	${INSTALL} -d ${DEST}/include/rx
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} rxstat.h ${DEST}/include/rx/rxstat.h
+	${INSTALL_DATA} librxstat.a ${DEST}/lib/librxstat.a
 
 #
 # Misc. targets
@@ -66,17 +76,3 @@ clean:
 	$(RM) -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${includedir}/rx/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/rx/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/librxstat.a: librxstat.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/librxstat.a: librxstat.a
-	${INSTALL} $? $@
-
-dest:   ${DEST}/include/rx/rxstat.h ${DEST}/lib/librxstat.a
-

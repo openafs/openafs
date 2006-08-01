@@ -22,29 +22,23 @@ LIBOBJS = ${ADMINOBJS} ${BOZOOBJS}
 
 all: ${TOP_INCDIR}/afs/afs_bosAdmin.h ${TOP_LIBDIR}/libbosadmin.a
 
-install: ${DESTDIR}${includedir}/afs/afs_bosAdmin.h ${DESTDIR}${libdir}/afs/libbosadmin.a
-
-dest: ${DEST}/include/afs/afs_bosAdmin.h ${DEST}/lib/afs/libbosadmin.a
-
 ${TOP_INCDIR}/afs/afs_bosAdmin.h: afs_bosAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_bosAdmin.h: afs_bosAdmin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_bosAdmin.h: afs_bosAdmin.h
-	${INSTALL} $? $@
-
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libbosadmin.a: libbosadmin.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-${DEST}/lib/afs/libbosadmin.a: libbosadmin.a
-	${INSTALL} $? $@
+install: libbosadmin.a afs_bosAdmin.h
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} afs_bosAdmin.h ${DESTDIR}${includedir}/afs/afs_bosAdmin.h
+	${INSTALL_DATA} libbosadmin.a ${DESTDIR}${libdir}/afs/libbosadmin.a
 
-${DESTDIR}${libdir}/afs/libbosadmin.a: libbosadmin.a
-	${INSTALL} $? $@
-
+dest: libbosadmin.a afs_bosAdmin.h
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} afs_bosAdmin.h ${DEST}/include/afs/afs_bosAdmin.h
+	${INSTALL_DATA} libbosadmin.a ${DEST}/lib/afs/libbosadmin.a
 
 libbosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

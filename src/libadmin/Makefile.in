@@ -10,18 +10,15 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: ${TOP_INCDIR}/afs/afs_Admin.h
 
-install: ${DESTDIR}${includedir}/afs/afs_Admin.h
-
-${DEST}/include/afs/afs_Admin.h: afs_Admin.h
-	${INSTALL} $? $@
-
-clean:
-
-${DESTDIR}${includedir}/afs/afs_Admin.h: afs_Admin.h
-	${INSTALL} $? $@
-
 ${TOP_INCDIR}/afs/afs_Admin.h: afs_Admin.h
 	${INSTALL} $? $@
 
-dest: ${DEST}/include/afs/afs_Admin.h
+install:
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} afs_Admin.h ${DESTDIR}${includedir}/afs/afs_Admin.h
 
+dest:
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} afs_Admin.h ${DEST}/include/afs/afs_Admin.h
+
+clean:

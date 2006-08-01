@@ -47,6 +47,18 @@ SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o
 
 all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
 
+${TOP_LIBDIR}/libbudb.a: libbudb.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb.h: budb.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_client.h: budb_client.h
+	${INSTALL_DATA} $? $@
+
 #
 # budb_errs.o actually depends on neither budb_client.h nor budb_errs.h
 # but generating either of them will rebuild budb_errs.c
@@ -97,27 +109,25 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 #
 # Install targets
 #
-install: \
-	${DESTDIR}${libdir}/afs/libbudb.a \
-	${DESTDIR}${includedir}/afs/budb.h \
-	${DESTDIR}${includedir}/afs/budb_errs.h \
-	${DESTDIR}${includedir}/afs/budb_client.h \
-	${DESTDIR}${afssrvlibexecdir}/buserver
+install: libbudb.a budb.h budb_errs.h budb_client.h budb_server
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_DATA} libbudb.a ${DESTDIR}${libdir}/afs/libbudb.a
+	${INSTALL_DATA} budb.h ${DESTDIR}${includedir}/afs/budb.h
+	${INSTALL_DATA} budb_errs.h ${DESTDIR}${includedir}/afs/budb_errs.h
+	${INSTALL_DATA} budb_client.h ${DESTDIR}${includedir}/afs/budb_client.h
+	${INSTALL_PROGRAM} budb_server ${DESTDIR}${afssrvlibexecdir}/buserver
 
-${DEST}/lib/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/buserver: budb_server
-	${INSTALL} -f $? $@
+dest: libbudb.a budb.h budb_errs.h budb_client.h budb_server
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_DATA} libbudb.a ${DEST}/lib/afs/libbudb.a
+	${INSTALL_DATA} budb.h ${DEST}/include/afs/budb.h
+	${INSTALL_DATA} budb_errs.h ${DEST}/include/afs/budb_errs.h
+	${INSTALL_DATA} budb_client.h ${DEST}/include/afs/budb_client.h
+	${INSTALL_PROGRAM} budb_server ${DEST}/root.server/usr/afs/bin/buserver
 
 #
 # Misc targets
@@ -127,37 +137,3 @@ clean:
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
-	${INSTALL} -f $? $@
-
-dest: \
-	${DEST}/lib/afs/libbudb.a \
-	${DEST}/include/afs/budb.h \
-	${DEST}/include/afs/budb_errs.h \
-	${DEST}/include/afs/budb_client.h \
-	${DEST}/root.server/usr/afs/bin/buserver
-

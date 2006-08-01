@@ -54,6 +54,36 @@ depinstall: \
 	${TOP_INCDIR}/afs/ptint.h \
 	${TOP_INCDIR}/afs/ptserver.h
 
+${TOP_LIBDIR}/libprot.a: libprot.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prclient.h: ptclient.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prerror.h: pterror.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/print.h: ptint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prserver.h: ptserver.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptclient.h: ptclient.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptuser.h: ptuser.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/pterror.h: pterror.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptint.h: ptint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptserver.h: ptserver.h
+	${INSTALL_DATA} $? $@
+
 #
 # Build targets
 #
@@ -92,10 +122,10 @@ ptint.xdr.c: ptint.h
 
 Kptint.cs.c: ptint.xg Kptint.h
 	${RXGEN} -x -k -C -o Kptint.cs.c ${srcdir}/ptint.xg
- 
+
 Kptint.xdr.c: ptint.xg
 	${RXGEN} -x -k -c -o Kptint.xdr.c ${srcdir}/ptint.xg
- 
+
 Kptint.h: ptint.xg
 	${RXGEN} -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
@@ -153,70 +183,58 @@ pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
 ubik.o: ubik.c ${INCLS}
 
 prerror.h: pterror.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_PT' >> $@
 
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${afssrvlibexecdir}/ptserver \
-	${DESTDIR}${afssrvbindir}/pts \
-	${DESTDIR}${bindir}/pts \
-	${DESTDIR}${afssrvsbindir}/pt_util \
-	${DESTDIR}${afssrvsbindir}/prdb_check \
-	${DESTDIR}${libdir}/afs/libprot.a \
-	${DESTDIR}${includedir}/afs/prclient.h \
-	${DESTDIR}${includedir}/afs/prerror.h \
-	${DESTDIR}${includedir}/afs/print.h \
-	${DESTDIR}${includedir}/afs/prserver.h \
-	${DESTDIR}${includedir}/afs/ptclient.h \
-	${DESTDIR}${includedir}/afs/ptuser.h \
-	${DESTDIR}${includedir}/afs/pterror.h \
-	${DESTDIR}${includedir}/afs/ptint.h \
-	${DESTDIR}${includedir}/afs/ptserver.h
+install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+		ptint.h ptserver.h
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver
+	${INSTALL} pts ${DESTDIR}${afssrvbindir}/pts
+	${INSTALL} pts ${DESTDIR}${bindir}/pts
+	${INSTALL} pt_util ${DESTDIR}${afssrvsbindir}/pt_util
+	${INSTALL} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check
+	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
+	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
+	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/prerror.h
+	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/print.h
+	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/prserver.h
+	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/ptclient.h
+	${INSTALL_DATA} ptuser.h ${DESTDIR}${includedir}/afs/ptuser.h
+	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/pterror.h
+	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/ptint.h
+	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/ptserver.h
 
-${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	${INSTALL} $? $@
-
-${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${DEST}/etc/prdb_check: db_verify
-	${INSTALL} -f $? $@
-
-${DEST}/include/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
+dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+		ptint.h ptserver.h
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} ptserver ${DEST}/root.server/usr/afs/bin/ptserver
+	${INSTALL} pts ${DEST}/root.server/usr/afs/bin/pts
+	${INSTALL} pts ${DEST}/bin/pts
+	${INSTALL} pt_util ${DEST}/root.server/usr/afs/bin/pt_util
+	${INSTALL} db_verify ${DEST}/etc/prdb_check
+	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
+	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/prclient.h
+	${INSTALL_DATA} pterror.h ${DEST}/include/afs/prerror.h
+	${INSTALL_DATA} ptint.h ${DEST}/include/afs/print.h
+	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/prserver.h
+	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/ptclient.h
+	${INSTALL_DATA} ptuser.h ${DEST}/include/afs/ptuser.h
+	${INSTALL_DATA} pterror.h ${DEST}/include/afs/pterror.h
+	${INSTALL_DATA} ptint.h ${DEST}/include/afs/ptint.h
+	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/ptserver.h
 
 #
 # Misc. targets
@@ -227,94 +245,3 @@ clean:
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/pts: pts
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/pts: pts
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	${INSTALL} -f $? $@
-
-${DESTDIR}${libdir}/afs/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/ptserver \
-	${DEST}/root.server/usr/afs/bin/pts \
-	${DEST}/bin/pts \
-	${DEST}/root.server/usr/afs/bin/pt_util \
-	${DEST}/etc/prdb_check \
-	${DEST}/lib/afs/libprot.a \
-	${DEST}/include/afs/prclient.h \
-	${DEST}/include/afs/prerror.h \
-	${DEST}/include/afs/print.h \
-	${DEST}/include/afs/prserver.h \
-	${DEST}/include/afs/ptclient.h \
-	${DEST}/include/afs/ptuser.h \
-	${DEST}/include/afs/pterror.h \
-	${DEST}/include/afs/ptint.h \
-	${DEST}/include/afs/ptserver.h

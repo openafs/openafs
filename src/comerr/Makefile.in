@@ -9,6 +9,18 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 
+${TOP_INCDIR}/afs/com_err.h: com_err.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/error_table.h: error_table.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libcom_err.a: libcom_err.a
+	${INSTALL_DATA} $? $@
+
 et_lex.lex.c: et_lex.lex.l
 	$(RM) -f et_lex.lex.c
 	$(LEX) -t $(srcdir)/et_lex.lex.l > et_lex.lex.c
@@ -25,25 +37,29 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RANLIB) $@
+
 #
 # Installation targets
 #
-install:  ${DESTDIR}${bindir}/compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
+install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_PROGRAM} compile_et ${DESTDIR}${bindir}/compile_et
+	${INSTALL_DATA} com_err.h ${DESTDIR}${includedir}/afs/com_err.h
+	${INSTALL_DATA} error_table.h ${DESTDIR}${includedir}/afs/error_table.h
+	${INSTALL_DATA} mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
+	${INSTALL_DATA} libcom_err.a ${DESTDIR}${libdir}/afs/libcom_err.a
 
-${DEST}/bin/compile_et: compile_et
-	${INSTALL} $? $@
-
-${DEST}/include/afs/com_err.h: com_err.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/error_table.h: error_table.h 
-	${INSTALL} $? $@
-
-${DEST}/include/afs/mit-sipb-cr.h: mit-sipb-cr.h
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libcom_err.a: libcom_err.a
-	${INSTALL} $? $@
+dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_PROGRAM} compile_et ${DEST}/bin/compile_et
+	${INSTALL_DATA} com_err.h ${DEST}/include/afs/com_err.h
+	${INSTALL_DATA} error_table.h ${DEST}/include/afs/error_table.h
+	${INSTALL_DATA} mit-sipb-cr.h ${DEST}/include/afs/mit-sipb-cr.h
+	${INSTALL_DATA} libcom_err.a ${DEST}/lib/afs/libcom_err.a
 
 clean:
 	$(RM) -f *~ \#* *.bak *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
@@ -59,32 +75,3 @@ compile_et.o:  AFS_component_version_number.c
 error_table.o: et_lex.lex.c
 
 include ../config/Makefile.version
-${DESTDIR}${bindir}/compile_et: compile_et
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/com_err.h: com_err.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/com_err.h: com_err.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/error_table.h: error_table.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/error_table.h: error_table.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/mit-sipb-cr.h: mit-sipb-cr.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libcom_err.a: libcom_err.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libcom_err.a: libcom_err.a
-	${INSTALL} $? $@
-
-dest:  ${DEST}/bin/compile_et ${DEST}/include/afs/com_err.h ${DEST}/include/afs/error_table.h ${DEST}/include/afs/mit-sipb-cr.h ${DEST}/lib/afs/libcom_err.a
-

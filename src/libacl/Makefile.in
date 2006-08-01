@@ -19,6 +19,15 @@ depinstall: \
 	${TOP_INCDIR}/afs/acl.h \
 	${TOP_INCDIR}/afs/prs_fs.h 
 
+${TOP_LIBDIR}/libacl.a: libacl.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/acl.h: acl.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
+	${INSTALL_DATA} $? $@
+
 libacl.a: aclprocs.o netprocs.o AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ aclprocs.o netprocs.o AFS_component_version_number.o
@@ -31,43 +40,19 @@ netprocs.o: netprocs.c acl.h
 #
 # Installation targets
 #
+install: libacl.a acl.h prs_fs.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libacl.a ${DESTDIR}${libdir}/afs/libacl.a
+	${INSTALL_DATA} acl.h ${DESTDIR}${includedir}/afs/acl.h
+	${INSTALL_DATA} prs_fs.h ${DESTDIR}${includedir}/afs/prs_fs.h
 
-${TOP_LIBDIR}/libacl.a: libacl.a
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/acl.h: acl.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
-
-install: \
-	${DESTDIR}${libdir}/afs/libacl.a \
-	${DESTDIR}${includedir}/afs/acl.h \
-	${DESTDIR}${includedir}/afs/prs_fs.h
-
-${DESTDIR}${libdir}/afs/libacl.a: libacl.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/acl.h: acl.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libacl.a \
-	${DEST}/include/afs/acl.h \
-	${DEST}/include/afs/prs_fs.h
-
-${DEST}/lib/afs/libacl.a: libacl.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/acl.h: acl.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
-
+dest: libacl.a acl.h prs_fs.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libacl.a ${DEST}/lib/afs/libacl.a
+	${INSTALL_DATA} acl.h ${DEST}/include/afs/acl.h
+	${INSTALL_DATA} prs_fs.h ${DEST}/include/afs/prs_fs.h
 
 #
 # Misc. targets
@@ -79,5 +64,3 @@ clean:
 	$(RM) -f acltest *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-

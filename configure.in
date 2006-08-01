@@ -80,8 +80,6 @@ src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
 src/pam/Makefile \
-src/pinstall/Makefile \
-src/pinstall/test/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \

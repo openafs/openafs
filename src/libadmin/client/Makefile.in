@@ -17,27 +17,23 @@ LIBOBJS = ${ADMINOBJS}
 
 all: ${TOP_INCDIR}/afs/afs_clientAdmin.h ${TOP_LIBDIR}/libclientadmin.a
 
-install: ${DESTDIR}${includedir}/afs/afs_clientAdmin.h ${DESTDIR}${libdir}/afs/libclientadmin.a
-
-dest: ${DEST}/include/afs/afs_clientAdmin.h ${DEST}/lib/afs/libclientadmin.a
-
 ${TOP_INCDIR}/afs/afs_clientAdmin.h: afs_clientAdmin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_clientAdmin.h: afs_clientAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_clientAdmin.h: afs_clientAdmin.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libclientadmin.a: libclientadmin.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-${DESTDIR}${libdir}/afs/libclientadmin.a: libclientadmin.a
-	${INSTALL} $? $@
+install: afs_clientAdmin.h libclientadmin.a
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} afs_clientAdmin.h ${DESTDIR}${includedir}/afs/afs_clientAdmin.h
+	${INSTALL_DATA} libclientadmin.a ${DESTDIR}${libdir}/afs/libclientadmin.a
 
-${DEST}/lib/afs/libclientadmin.a: libclientadmin.a
-	${INSTALL} $? $@
+dest: afs_clientAdmin.h libclientadmin.a
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} afs_clientAdmin.h ${DEST}/include/afs/afs_clientAdmin.h
+	${INSTALL_DATA} libclientadmin.a ${DEST}/lib/afs/libclientadmin.a
 
 libclientadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

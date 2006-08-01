@@ -30,7 +30,13 @@ rxdebug: rxdebug.o ${LIBS}
 #
 # Install targets
 #
-install:  ${DESTDIR}${sbindir}/rxdebug
+install: rxdebug
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} rxdebug ${DESTDIR}${sbindir}/rxdebug
+
+dest: rxdebug
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} rxdebug ${DEST}/etc/rxdebug
 
 #
 # Misc. targets
@@ -39,11 +45,3 @@ clean:
 	$(RM) -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
 
 include ../config/Makefile.version
-
-dest: ${DEST}/etc/rxdebug
-
-${DESTDIR}${sbindir}/rxdebug: rxdebug
-	${INSTALL} $? $@
-
-${DEST}/etc/rxdebug: rxdebug
-	${INSTALL} $? $@

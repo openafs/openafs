@@ -127,16 +127,16 @@ libafs: $(LIBAFSNONFS) ;
 install_libafs: $(LIBAFSNONFS) ;
 	-mkdir -p ${INST_LIBAFSNONFS}
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents
-	$(INSTALL) -f ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents/MacOS
-	$(INSTALL) -f ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
+	$(INSTALL) -m 644 ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
 
 dest_libafs: $(LIBAFSNONFS) ;
 	-mkdir -p ${DEST_LIBAFSNONFS}
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents
-	$(INSTALL) -f ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents/MacOS
-	$(INSTALL) -f ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
+	$(INSTALL) -m 644 ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
 
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)

@@ -14,6 +14,12 @@ CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${A
 
 all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
 
+${TOP_LIBDIR}/libusd.a: libusd.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/usd.h: usd.h
+	${INSTALL_DATA} $? $@
+
 #
 # Build targets
 #
@@ -27,13 +33,17 @@ usd_file.o: usd_file.c usd.h
 #
 # Installation targets
 #
-install: ${DESTDIR}${libdir}/afs/libusd.a ${DESTDIR}${includedir}/afs/usd.h
+install: libusd.a usd.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libusd.a ${DESTDIR}${libdir}/afs/libusd.a
+	${INSTALL_DATA} usd.h ${DESTDIR}${includedir}/afs/usd.h
 
-${DEST}/lib/afs/libusd.a: libusd.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/usd.h: usd.h
-	${INSTALL} $? $@
+dest: libusd.a usd.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libusd.a ${DEST}/lib/afs/libusd.a
+	${INSTALL_DATA} usd.h ${DEST}/include/afs/usd.h
 
 #
 # Misc. targets
@@ -42,17 +52,3 @@ clean:
 	$(RM) -f *.o libusd.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libusd.a: libusd.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libusd.a: libusd.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/usd.h: usd.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/usd.h: usd.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libusd.a ${DEST}/include/afs/usd.h
-

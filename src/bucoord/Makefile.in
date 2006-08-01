@@ -20,6 +20,9 @@ LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
 
 all: ${TOP_LIBDIR}/libbxdb.a backup
 
+${TOP_LIBDIR}/libbxdb.a: libbxdb.a
+	${INSTALL_DATA} $? $@
+
 libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
@@ -62,13 +65,17 @@ bucoord_errs.c bc.h:	bucoord_errs.et bc.p.h
 # Install targets
 #
 
-install: ${DESTDIR}${libdir}/afs/libbxdb.a ${DESTDIR}${sbindir}/backup
+install: libbxdb.a backup
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_DATA} libbxdb.a ${DESTDIR}${libdir}/afs/libbxdb.a
+	${INSTALL_PROGRAM} backup ${DESTDIR}${sbindir}/backup
 
-${DEST}/lib/afs/libbxdb.a: libbxdb.a
-	${INSTALL} $? $@
-
-${DEST}/etc/backup: backup
-	${INSTALL} $? $@
+dest: libbxdb.a backup
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_DATA} libbxdb.a ${DEST}/lib/afs/libbxdb.a
+	${INSTALL_PROGRAM} backup ${DEST}/etc/backup
 
 #
 # Misc targets
@@ -78,14 +85,3 @@ clean:
 	$(RM) -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbxdb.a: libbxdb.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbxdb.a: libbxdb.a
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/backup: backup
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libbxdb.a ${DEST}/etc/backup
-

@@ -475,10 +475,9 @@ install_COPYFILES:
 	chmod 644 ${DESTDIR}${afskerneldir}/afs
 
 dest_COPYFILES:
-	${INSTALL} -f sgi_system ${DEST}/root.client/bin/afs.sm
-	chmod 644 ${DEST}/root.client/bin/afs.sm
-	${INSTALL} -f sgi_master ${DEST}/root.client/bin/afs
-	chmod 644 ${DEST}/root.client/bin/afs
+	${INSTALL} -d ${DEST}/root.client/bin
+	${INSTALL} -m 644 sgi_system ${DEST}/root.client/bin/afs.sm
+	${INSTALL} -m 644 sgi_master ${DEST}/root.client/bin/afs
 
 # Create symlinks to clients we don't need to build.
 # If this changes, also change the kdump symlinks.

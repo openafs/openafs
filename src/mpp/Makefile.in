@@ -8,15 +8,13 @@ include ../config/Makefile.version
 
 all: ${PROGRAM}
 
-install: ${DESTDIR}${sbindir}/mpp
+install: mpp
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} mpp ${DESTDIR}${sbindir}/mpp
 
-dest: ${DEST}/etc/mpp
-
-${DESTDIR}${sbindir}/mpp: mpp
-	${INSTALL} $? $@
-
-${DEST}/etc/mpp: mpp
-	${INSTALL} $? $@
+dest: mpp
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} mpp ${DEST}/etc/mpp
 
 installdoc: mpp.1
 	${INSTALL} -c mpp.1 ${DEST}/man/man1

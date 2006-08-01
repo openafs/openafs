@@ -129,10 +129,8 @@ LIBOBJS = \
 
 all: ${TOP_LIBDIR}/libafsrpc.a
 
-install: ${DESTDIR}${libdir}/libafsrpc.a
-
-${DEST}/lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
+	${INSTALL_DATA} $? $@
 
 libafsrpc.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -398,14 +396,13 @@ afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} ${FSINT}/afsaux.c
 
+install: libafsrpc.a
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} libafsrpc.a ${DESTDIR}${libdir}/libafsrpc.a
+
+dest: libafsrpc.a
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} libafsrpc.a ${DEST}/lib/libafsrpc.a
+
 clean:
 	$(RM) -f *.o libafsrpc*
-
-${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/libafsrpc.a
-

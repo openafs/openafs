@@ -36,31 +36,21 @@ depinstall: \
 	${TOP_INCDIR}/rx/rxkad_prototypes.h \
 	${TOP_INCDIR}/rx/fcrypt.h
 
-#
-# Install targets
-#
-install:   \
-	${DESTDIR}${libdir}/librxkad.a \
-	${DESTDIR}${includedir}/rx/fcrypt.h \
-	${DESTDIR}${includedir}/rx/rxkad.h \
-	${DESTDIR}${includedir}/rx/rxkad_prototypes.h
+${TOP_LIBDIR}/librxkad.a: librxkad.a
+	${INSTALL_DATA} $? $@
 
-${DEST}/lib/librxkad.a: librxkad.a
-	${INSTALL} $? $@
+${TOP_INCDIR}/rx/fcrypt.h: fcrypt.h
+	${INSTALL_DATA} $? $@
 
-${DEST}/include/rx/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
+${TOP_INCDIR}/rx/rxkad.h: rxkad.h
+	${INSTALL_DATA} $? $@
 
-${DEST}/include/rx/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
+${TOP_INCDIR}/rx/rxkad_prototypes.h: rxkad_prototypes.h
+	${INSTALL_DATA} $? $@
 
 #
 # Build targets
 #
-
 librxkad.a: ${OBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
@@ -85,7 +75,7 @@ ticket5.o: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
 crc.o: crc.c ${INCLS}
 
 md4.o: md4.c ${INCLS}
- 
+
 md5.o: md5.c ${INCLS}
 
 fcrypt.o: ${srcdir}/domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
@@ -106,9 +96,29 @@ fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
 fc_test.o: ${INCLS}
 
 #
+# Install targets
+#
+install: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}/rx
+	${INSTALL_DATA} librxkad.a ${DESTDIR}${libdir}/librxkad.a
+	${INSTALL_DATA} fcrypt.h ${DESTDIR}${includedir}/rx/fcrypt.h
+	${INSTALL_DATA} rxkad.h ${DESTDIR}${includedir}/rx/rxkad.h
+	${INSTALL_DATA} rxkad_prototypes.h \
+		${DESTDIR}${includedir}/rx/rxkad_prototypes.h
+
+dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include/rx
+	${INSTALL_DATA} librxkad.a ${DEST}/lib/librxkad.a
+	${INSTALL_DATA} fcrypt.h ${DEST}/include/rx/fcrypt.h
+	${INSTALL_DATA} rxkad.h ${DEST}/include/rx/rxkad.h
+	${INSTALL_DATA} rxkad_prototypes.h \
+		${DEST}/include/rx/rxkad_prototypes.h
+
+#
 # Misc. targets
 #
-
 clean: 
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
 		AFS_component_version_number.c \
@@ -117,43 +127,14 @@ clean:
 
 test:
 	cd test; $(MAKE)
+
 # These sources are kept in a separate directory so that we can use an
 # ACL to comply with source export restrictions.
 
 fcrypt.h: domestic/fcrypt.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 sboxes.h: domestic/sboxes.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/librxkad.a: librxkad.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/librxkad.a: librxkad.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/rx/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/rx/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/rx/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
-
-dest:   \
-	${DEST}/lib/librxkad.a \
-	${DEST}/include/rx/fcrypt.h \
-	${DEST}/include/rx/rxkad.h \
-	${DEST}/include/rx/rxkad_prototypes.h
-

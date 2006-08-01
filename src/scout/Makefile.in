@@ -54,10 +54,13 @@ scout: scout.o $(LIBS)
 #
 # Installation targets
 #
-install: ${DESTDIR}${bindir}/scout
+install: scout
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_PROGRAM} scout ${DESTDIR}${bindir}/scout
 
-${DEST}/bin/scout: scout
-	${INSTALL} $? $@
+dest: scout
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_PROGRAM} scout ${DEST}/bin/scout
 
 #
 # Misc targets
@@ -66,9 +69,3 @@ clean:
 	$(RM) -f *.o scout core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${bindir}/scout: scout
-	${INSTALL} $? $@
-
-dest: ${DEST}/bin/scout
-

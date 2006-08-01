@@ -40,29 +40,23 @@ LIBVOSADMIN=${TOP_LIBDIR}/libvosadmin.a
 
 all: ${TOP_INCDIR}/afs/afs_vosAdmin.h ${TOP_LIBDIR}/libvosadmin.a
 
-install: ${DESTDIR}${includedir}/afs/afs_vosAdmin.h ${DESTDIR}${libdir}/afs/libvosadmin.a
-
-dest: ${DEST}/include/afs/afs_vosAdmin.h ${DEST}/lib/afs/libvosadmin.a
-
 ${TOP_INCDIR}/afs/afs_vosAdmin.h: afs_vosAdmin.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_vosAdmin.h: afs_vosAdmin.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_vosAdmin.h: afs_vosAdmin.h
-	${INSTALL} $? $@
-
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libvosadmin.a: libvosadmin.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-${DESTDIR}${libdir}/afs/libvosadmin.a: libvosadmin.a
-	${INSTALL} $? $@
+install: afs_vosAdmin.h libvosadmin.a
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_DATA} afs_vosAdmin.h ${DESTDIR}${includedir}/afs/afs_vosAdmin.h
+	${INSTALL_DATA} libvosadmin.a ${DESTDIR}${libdir}/afs/libvosadmin.a
 
-${DEST}/lib/afs/libvosadmin.a: libvosadmin.a
-	${INSTALL} $? $@
-
+dest: afs_vosAdmin.h libvosadmin.a
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL_DATA} afs_vosAdmin.h ${DEST}/include/afs/afs_vosAdmin.h
+	${INSTALL_DATA} libvosadmin.a ${DEST}/lib/afs/libvosadmin.a
 
 libvosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

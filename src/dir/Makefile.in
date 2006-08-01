@@ -15,6 +15,12 @@ all: \
 depinstall: \
 	${TOP_INCDIR}/afs/dir.h 
 
+${TOP_INCDIR}/afs/dir.h: dir.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libdir.a: libdir.a
+	${INSTALL_DATA} $? $@
+
 libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ buffer.o dir.o salvage.o  AFS_component_version_number.o
@@ -33,36 +39,22 @@ salvage.o: salvage.c dir.h
 #
 # Install targets
 #
-${TOP_INCDIR}/afs/dir.h: dir.h
-	${INSTALL} $? $@
+install: libdir.a dir.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libdir.a ${DESTDIR}${libdir}/afs/libdir.a
+	${INSTALL_DATA} dir.h ${DESTDIR}${includedir}/afs/dir.h
 
-${TOP_LIBDIR}/libdir.a: libdir.a
-	${INSTALL} $? $@
-
-install: \
-	${DESTDIR}${libdir}/afs/libdir.a \
-	${DESTDIR}${includedir}/afs/dir.h
-
-${DESTDIR}${libdir}/afs/libdir.a: libdir.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/dir.h: dir.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/afs/libdir.a \
-	${DEST}/include/afs/dir.h
-
-${DEST}/lib/afs/libdir.a: libdir.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/dir.h: dir.h
-	${INSTALL} $? $@
+dest: libdir.a dir.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libdir.a ${DEST}/lib/afs/libdir.a
+	${INSTALL_DATA} dir.h ${DEST}/include/afs/dir.h
 
 #
 # Misc. targets
 #
-include ../config/Makefile.version
-
 clean:
 	$(RM) -f *.o *.a core AFS_component_version_number.c
+
+include ../config/Makefile.version

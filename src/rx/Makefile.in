@@ -18,22 +18,15 @@ XDROBJS_common = xdr.o xdr_array.o xdr_rx.o xdr_afsuuid.o
 
 XDROBJS = xdr_arrayn.o ${XDROBJS_common}
 
-XDROBJS_djgpp = xdr_rec.o xdr_stdio.o \
-	xdr_float.o  xdr_refernce.o  xdr_update.o \
-	xdr_mem.o ${XDROBJS_common}
-
 RXOBJS_common = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o \
 	rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o rx_trace.o \
 	rx_conncache.o xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
 
 RXOBJS = ${RXOBJS_common} 
-RXOBJS_djgpp = ${RXOBJS_common} rx_xmit_nt.o
 
 MULTIOBJS = rx_multi.o
 
 LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
-
-LIBOBJS_djgpp = ${RXOBJS_djgpp} ${MULTIOBJS} ${XDROBJS_djgpp}
 
 BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
@@ -46,11 +39,6 @@ all: \
 	${TOP_LIBDIR}/librx.a
 
 depinstall: includes
-
-install-djgpp: \
-	includes \
-	${TOP_INCDIR}/rx/rx_xmit_nt.h \
-	${TOP_LIBDIR}/librx-djgpp.a
 
 RX_component_version_number.c: AFS_component_version_number.c
 	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
@@ -93,15 +81,9 @@ librx.a: ${LIBOBJS} RX_component_version_number.o
 	$(AR) crv $@ ${LIBOBJS} RX_component_version_number.o
 	$(RANLIB) $@
 
-librx-djgpp.a: ${LIBOBJS_djgpp} RX_component_version_number.o
-	-$(RM) -f librx-djgpp.a
-	$(AR) crv librx-djgpp.a RX_component_version_number.o ${LIBOBJS_djgpp}
-	$(RANLIB) librx-djgpp.a
-
 #
 # Install targets
 #
-
 includes: \
 	${TOP_INCDIR}/rx/rx_packet.h \
 	${TOP_INCDIR}/rx/rx_prototypes.h \
@@ -120,190 +102,95 @@ includes: \
 	${TOP_INCDIR}/rx/xdr_prototypes.h
 
 ${TOP_LIBDIR}/librx.a: librx.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/librx-djgpp.a: librx-djgpp.a
-	${INSTALL} $? ${TOP_LIBDIR}/librx-djgpp.a
-	${INSTALL} $? ${TOP_LIBDIR}/librx.a
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_packet.h: rx_packet.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_prototypes.h: rx_prototypes.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx.h: rx.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_user.h: rx_user.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_event.h: rx_event.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_queue.h: rx_queue.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_globals.h: rx_globals.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_clock.h: rx_clock.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_multi.h: rx_multi.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_pthread.h: rx_pthread.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_lwp.h: rx_lwp.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_misc.h: rx_misc.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_null.h: rx_null.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/xdr.h: xdr.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/xdr_prototypes.h: xdr_prototypes.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_xmit_nt.h: rx_xmit_nt.h 
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
-install: \
-	${DESTDIR}${libdir}/librx.a \
-	${DESTDIR}${includedir}/rx/rx_packet.h \
-	${DESTDIR}${includedir}/rx/rx_prototypes.h \
-	${DESTDIR}${includedir}/rx/rx.h \
-	${DESTDIR}${includedir}/rx/rx_user.h \
-	${DESTDIR}${includedir}/rx/rx_event.h \
-	${DESTDIR}${includedir}/rx/rx_queue.h \
-	${DESTDIR}${includedir}/rx/rx_globals.h \
-	${DESTDIR}${includedir}/rx/rx_clock.h \
-	${DESTDIR}${includedir}/rx/rx_multi.h \
-	${DESTDIR}${includedir}/rx/rx_pthread.h \
-	${DESTDIR}${includedir}/rx/rx_lwp.h \
-	${DESTDIR}${includedir}/rx/rx_misc.h \
-	${DESTDIR}${includedir}/rx/rx_null.h \
-	${DESTDIR}${includedir}/rx/xdr.h \
-	${DESTDIR}${includedir}/rx/xdr_prototypes.h
+install: librx.a
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}/rx
+	${INSTALL_DATA} librx.a ${DESTDIR}${libdir}/librx.a
+	${INSTALL_DATA} rx_packet.h ${DESTDIR}${includedir}/rx/rx_packet.h
+	${INSTALL_DATA} rx_prototypes.h ${DESTDIR}${includedir}/rx/rx_prototypes.h
+	${INSTALL_DATA} rx.h ${DESTDIR}${includedir}/rx/rx.h
+	${INSTALL_DATA} rx_user.h ${DESTDIR}${includedir}/rx/rx_user.h
+	${INSTALL_DATA} rx_event.h ${DESTDIR}${includedir}/rx/rx_event.h
+	${INSTALL_DATA} rx_queue.h ${DESTDIR}${includedir}/rx/rx_queue.h
+	${INSTALL_DATA} rx_globals.h ${DESTDIR}${includedir}/rx/rx_globals.h
+	${INSTALL_DATA} rx_clock.h ${DESTDIR}${includedir}/rx/rx_clock.h
+	${INSTALL_DATA} rx_multi.h ${DESTDIR}${includedir}/rx/rx_multi.h
+	${INSTALL_DATA} rx_pthread.h ${DESTDIR}${includedir}/rx/rx_pthread.h
+	${INSTALL_DATA} rx_lwp.h ${DESTDIR}${includedir}/rx/rx_lwp.h
+	${INSTALL_DATA} rx_misc.h ${DESTDIR}${includedir}/rx/rx_misc.h
+	${INSTALL_DATA} rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
+	${INSTALL_DATA} xdr.h ${DESTDIR}${includedir}/rx/xdr.h
+	${INSTALL_DATA} xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
 
-${DESTDIR}${libdir}/librx.a: librx.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_packet.h: rx_packet.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_prototypes.h: rx_prototypes.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx.h: rx.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_user.h: rx_user.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_event.h: rx_event.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_queue.h: rx_queue.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_globals.h: rx_globals.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_clock.h: rx_clock.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_multi.h: rx_multi.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_pthread.h: rx_pthread.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_lwp.h: rx_lwp.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_misc.h: rx_misc.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/rx_null.h: rx_null.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/xdr_prototypes.h: xdr_prototypes.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/rx/xdr.h: xdr.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/librx.a \
-	${DEST}/include/rx/rx_packet.h \
-	${DEST}/include/rx/rx_prototypes.h \
-	${DEST}/include/rx/rx.h \
-	${DEST}/include/rx/rx_user.h \
-	${DEST}/include/rx/rx_event.h \
-	${DEST}/include/rx/rx_queue.h \
-	${DEST}/include/rx/rx_globals.h \
-	${DEST}/include/rx/rx_clock.h \
-	${DEST}/include/rx/rx_multi.h \
-	${DEST}/include/rx/rx_pthread.h \
-	${DEST}/include/rx/rx_lwp.h \
-	${DEST}/include/rx/rx_misc.h \
-	${DEST}/include/rx/rx_null.h \
-	${DEST}/include/rx/xdr.h \
-	${DEST}/include/rx/xdr_prototypes.h
-
-${DEST}/lib/librx.a: librx.a
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_packet.h: rx_packet.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_prototypes.h: rx_prototypes.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx.h: rx.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_user.h: rx_user.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_event.h: rx_event.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_queue.h: rx_queue.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_globals.h: rx_globals.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_clock.h: rx_clock.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_multi.h: rx_multi.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_pthread.h: rx_pthread.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_lwp.h: rx_lwp.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_misc.h: rx_misc.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_null.h: rx_null.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/xdr.h: xdr.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/xdr_prototypes.h: xdr_prototypes.h
-	${INSTALL} $? $@
+dest: librx.a
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include/rx
+	${INSTALL_DATA} librx.a ${DEST}/lib/librx.a
+	${INSTALL_DATA} rx_packet.h ${DEST}/include/rx/rx_packet.h
+	${INSTALL_DATA} rx_prototypes.h ${DEST}/include/rx/rx_prototypes.h
+	${INSTALL_DATA} rx.h ${DEST}/include/rx/rx.h
+	${INSTALL_DATA} rx_user.h ${DEST}/include/rx/rx_user.h
+	${INSTALL_DATA} rx_event.h ${DEST}/include/rx/rx_event.h
+	${INSTALL_DATA} rx_queue.h ${DEST}/include/rx/rx_queue.h
+	${INSTALL_DATA} rx_globals.h ${DEST}/include/rx/rx_globals.h
+	${INSTALL_DATA} rx_clock.h ${DEST}/include/rx/rx_clock.h
+	${INSTALL_DATA} rx_multi.h ${DEST}/include/rx/rx_multi.h
+	${INSTALL_DATA} rx_pthread.h ${DEST}/include/rx/rx_pthread.h
+	${INSTALL_DATA} rx_lwp.h ${DEST}/include/rx/rx_lwp.h
+	${INSTALL_DATA} rx_misc.h ${DEST}/include/rx/rx_misc.h
+	${INSTALL_DATA} rx_null.h ${DEST}/include/rx/rx_null.h
+	${INSTALL_DATA} xdr.h ${DEST}/include/rx/xdr.h
+	${INSTALL_DATA} xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
 
 #
 # Misc. targets

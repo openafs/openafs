@@ -15,6 +15,15 @@ all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
 
+${TOP_LIBDIR}/libcmd.a: libcmd.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libcmd64.a: libcmd64.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/cmd.h: cmd.h
+	${INSTALL_DATA} $? $@
+
 cmd.h: cmd_errors.et cmd.p.h
 	$(RM) -f cmd.h cmd_errors.c
 	${COMPILE_ET} -p ${srcdir} cmd_errors -h cmd
@@ -30,7 +39,6 @@ cmd_errors64.o: cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
 	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o ${srcdir}/cmd.c
-
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
@@ -48,18 +56,23 @@ AFS_component_version_number64.o: AFS_component_version_number.c
 #
 # Install targets
 #
-install: ${DESTDIR}${libdir}/afs/libcmd.a ${DESTDIR}${includedir}/afs/cmd.h
+install: libcmd.a cmd.h
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libcmd.a ${DESTDIR}${libdir}/afs/libcmd.a
+	${INSTALL_DATA} cmd.h ${DESTDIR}${includedir}/afs/cmd.h
 
-install64: install ${DESTDIR}${libdir}/afs/libcmd64.a
+install64: install libcmd64.a
+	${INSTALL_DATA} libcmd64.a ${DESTDIR}${libdir}/afs/libcmd64.a
 
-${DEST}/include/afs/cmd.h: cmd.h
-	${INSTALL} $? $@
+dest: libcmd.a cmd.h
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libcmd.a ${DEST}/lib/afs/libcmd.a
+	${INSTALL_DATA} cmd.h ${DEST}/include/afs/cmd.h
 
-${DEST}/lib/afs/libcmd.a: libcmd.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libcmd64.a: libcmd64.a
-	${INSTALL} $? $@
+dest64: dest libcmd64.a
+	${INSTALL_DATA} libcmd64.a ${DEST}/lib/afs/libcmd64.a
 
 #
 # Misc targets
@@ -71,24 +84,3 @@ clean:
 	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libcmd.a: libcmd.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libcmd.a: libcmd.a
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libcmd64.a: libcmd64.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libcmd64.a: libcmd64.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/cmd.h: cmd.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/cmd.h: cmd.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libcmd.a ${DEST}/include/afs/cmd.h
-
-dest64: dest ${DEST}/lib/afs/libcmd64.a

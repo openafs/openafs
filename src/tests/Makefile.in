@@ -75,35 +75,11 @@ backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h
 parsevnode.o parsevol.o pathname.o repair.o:    dumpscan_errs.h
 stagehdr.o util.o:                              dumpscan_errs.h
 
-${DEST}/etc/afsdump_scan: afsdump_scan
-	${INSTALL} $? $@
-
-${DEST}/etc/afsdump_dirlist: afsdump_dirlist
-	${INSTALL} $? $@
-
-${DEST}/etc/afsdump_extract: afsdump_extract
-	${INSTALL} $? $@
-
-${DEST}/etc/dumptool: dumptool
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/afsdump_scan: afsdump_scan
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/afsdump_dirlist: afsdump_dirlist
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/afsdump_extract: afsdump_extract
-	${INSTALL} $? $@
-
-${DESTDIR}${sbindir}/dumptool: dumptool
-	${INSTALL} $? $@
-
 ${TOP_LIBDIR}/libxfiles.a: libxfiles.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libdumpscan.a: libdumpscan.a
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 SYS_LIBS	= ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
 

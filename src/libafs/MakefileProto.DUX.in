@@ -85,27 +85,16 @@ DEST_AFSMOD = ${DEST}/root.client/bin/${AFSMOD}
 
 .PHONY: libafs install_libafs
 libafs:	${LIBAFSNONFS} ${AFSMOD}
-install_libafs:	${INST_LIBAFSNONFS} ${INST_AFSMOD}
-dest_libafs:	${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
 
+install_libafs:	${LIBAFSNONFS} ${AFSMOD}
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	$(INSTALL) -m 644 ${LIBAFSNONFS} ${INST_LIBAFSNONFS}
+	$(INSTALL) -m 644 ${AFSMOD} ${INST_AFSMOD}
 
-${INST_LIBAFS}: ${LIBAFS}
-	$(INSTALL) -f $? $@
-
-${INST_LIBAFSNONFS}: ${LIBAFSNONFS}
-	$(INSTALL) -f $? $@
-
-${INST_AFSMOD}: ${AFSMOD}
-	$(INSTALL) -f $? $@
-
-${DEST_LIBAFS}: ${LIBAFS}
-	$(INSTALL) -f $? $@
-
-${DEST_LIBAFSNONFS}: ${LIBAFSNONFS}
-	$(INSTALL) -f $? $@
-
-${DEST_AFSMOD}: ${AFSMOD}
-	$(INSTALL) -f $? $@
+dest_libafs: ${LIBAFSNONFS} ${AFSMOD}
+	${INSTALL} -d ${DEST}/root.client/bin
+	$(INSTALL) -m 644 ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}
+	$(INSTALL) -m 644 ${AFSMOD} ${DEST_AFSMOD}
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}

@@ -30,16 +30,16 @@ COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
 
-all: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+all: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
 	$(MAKE) build
 
-all_nolibafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+all_nolibafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
 	$(MAKE) build TARGET=finale_nolibafs
 
-only_libafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+only_libafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
 	$(MAKE) build TARGET=libafs
 
-only_libafs_tree: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+only_libafs_tree: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
 	$(MAKE) build TARGET=libafs_tree
 
 install: all install_dirs
@@ -53,15 +53,15 @@ install_only_libafs: only_libafs install_dirs
 
 dest: all dest_dirs
 	$(MAKE) build COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 dest_nolibafs: all_nolibafs dest_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 packages: dest
 	@case ${SYS_NAME} in \
@@ -79,7 +79,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -112,10 +112,7 @@ tests: all
 config: 
 	${COMPILE_PART1} config ${COMPILE_PART2}
 
-pinstall: config
-	${COMPILE_PART1} pinstall ${COMPILE_PART2}
-
-procmgmt: pinstall
+procmgmt: config
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
 util: procmgmt des
@@ -138,10 +135,10 @@ cmd: comerr
 lwp: util lwp_depinstall
 	${COMPILE_PART1} lwp ${COMPILE_PART2}
 
-rxgen: pinstall 
+rxgen: config
 	${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: pinstall lwp rxgen rx_depinstall
+rx: config lwp rxgen rx_depinstall
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxstat: rx rxstat_depinstall
@@ -165,10 +162,10 @@ export:
 export_build: fsint
 	${COMPILE_PART1} export ${COMPILE_PART2}
 
-afs: export pinstall comerr afs_depinstall
+afs: config export comerr afs_depinstall
 	${COMPILE_PART1} afs ${COMPILE_PART2}
 
-des: config pinstall
+des: config
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
 sys: cmd comerr afs des rx rxstat fsint sys_depinstall
@@ -368,50 +365,50 @@ man-pages:
 #
 # encode dependencies within the _depinstall targets as required
 #
-lwp_depinstall: pinstall
+lwp_depinstall: config
 	${COMPILE_PART1} lwp ${COMPILE_DEPINSTALL}
 
-rx_depinstall: pinstall
+rx_depinstall: config
 	${COMPILE_PART1} rx ${COMPILE_DEPINSTALL}
 
-rxkad_depinstall: pinstall comerr
+rxkad_depinstall: config comerr
 	${COMPILE_PART1} rxkad ${COMPILE_DEPINSTALL}
 
-ubik_depinstall: pinstall comerr rxgen
+ubik_depinstall: config comerr rxgen
 	${COMPILE_PART1} ubik ${COMPILE_DEPINSTALL}
 
-vlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
+vlserver_depinstall: config rxgen ubik_depinstall auth_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
 
-auth_depinstall: pinstall comerr
+auth_depinstall: config comerr
 	${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
 
-fsint_depinstall: pinstall rxgen
+fsint_depinstall: config rxgen
 	${COMPILE_PART1} fsint ${COMPILE_DEPINSTALL}
 
-rxstat_depinstall: pinstall rxgen
+rxstat_depinstall: config rxgen
 	${COMPILE_PART1} rxstat ${COMPILE_DEPINSTALL}
 
-libacl_depinstall: pinstall
+libacl_depinstall: config
 	${COMPILE_PART1} libacl ${COMPILE_DEPINSTALL}
 
-afs_depinstall: pinstall comerr
+afs_depinstall: config comerr
 	${COMPILE_PART1} afs ${COMPILE_DEPINSTALL}
 
-dir_depinstall: pinstall
+dir_depinstall: config
 	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
 
-sys_depinstall: pinstall
+sys_depinstall: config
 	${COMPILE_PART1} sys ${COMPILE_DEPINSTALL}
 
-kauth_depinstall: pinstall rxgen comerr
+kauth_depinstall: config rxgen comerr
 	${COMPILE_PART1} kauth ${COMPILE_DEPINSTALL}
 
-ptserver_depinstall: pinstall rxgen comerr
+ptserver_depinstall: config rxgen comerr
 	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
 
 ${DEST}/bin/dedebug: dedebug
-	${INSTALL} -s $? $@
+	${INSTALL} $? $@
 
 
 #
@@ -618,7 +615,6 @@ clean:
 
 clean2:
 	-${COMPILE_PART1} config ${COMPILE_CLEAN}
-	-${COMPILE_PART1} pinstall ${COMPILE_CLEAN}
 	-${COMPILE_PART1} procmgmt ${COMPILE_CLEAN}
 	-${COMPILE_PART1} util ${COMPILE_CLEAN}
 	-${COMPILE_PART1} audit ${COMPILE_CLEAN}
@@ -780,8 +776,6 @@ distclean: clean
 	src/null/Makefile \
 	src/package/Makefile \
 	src/pam/Makefile \
-	src/pinstall/test/Makefile \
-	src/pinstall/Makefile \
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \
 	src/ptserver/Makefile \

@@ -21,18 +21,15 @@ fms: fms.o
 
 fms.o:  fms.c AFS_component_version_number.o
 
-install: ${DESTDIR}${sbindir}/fms
+install: fms
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} fms ${DESTDIR}${sbindir}/fms
 
-${DEST}/etc/fms: fms
-	${INSTALL} $? $@
+dest: fms
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} fms ${DEST}/etc/fms
 
 clean:
 	$(RM) -f *.o fms AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${sbindir}/fms: fms
-	${INSTALL} $? $@
-
-dest: ${DEST}/etc/fms
-

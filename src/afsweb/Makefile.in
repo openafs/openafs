@@ -37,82 +37,100 @@ system apache_afs_web_secure:
 			echo Clean, make, and install the lib for 1.2 ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_CFLAGS=-DAIX $(APACHE_AFS_LIB) ; \
-			${INSTALL} ${APACHE_AFS_LIB} ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL_DATA} ${APACHE_AFS_LIB} ${DEST}/root.afsweb/lib/apache_1.2/${APACHE_AFS_LIB} ; \
 			echo Make and install source for 1.2 ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG=-DAPACHE_1_2 ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2/$(SRC_MODULE) ; \
 			echo Make and install the lib for 1.3.1 ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_CFLAGS=-DAIX $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1/$(APACHE_AFS_LIB) ; \
 			echo Make and install source for 1.3.1 ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1/$(SRC_MODULE) ; \
 			echo Clean, make, and install the lib for 1.3.6 ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_CFLAGS=-DAIX $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6"; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6/$(APACHE_AFS_LIB) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			echo Make and install source for 1.3.1 ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6 ; \
 			echo Do the binaries ; \
 			$(MAKE) AUX_CFLAGS=-DAIX $(BINARIES) ;; \
 		sun*) \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DSOLARIS $(APACHE_AFS_LIB) ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.2/$(APACHE_AFS_LIB) ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DSOLARIS $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1/$(APACHE_AFS_LIB) ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DSOLARIS $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6" ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6/$(APACHE_AFS_LIB) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG=-DAPACHE_1_2 ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2/$(SRC_MODULE) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1/$(SRC_MODULE) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6/$(SRC_MODULE) ; \
 			$(MAKE) AUX_CFLAGS=-DSOLARIS "XLIBS=-lsocket -lnsl" $(BINARIES) ;; \
 		*linux*) \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DLINUX $(APACHE_AFS_LIB) ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.2 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.2/$(APACHE_AFS_LIB) ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DLINUX $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.1 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.1/$(APACHE_AFS_LIB) ; \
 			$(MAKE) libclean ; \
 			$(MAKE) AUX_FLAGS=-DLINUX $(APACHE_AFS_LIB) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6" ; \
-			${INSTALL} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/lib/apache_1.3.6 ; \
+			${INSTALL_DATA} $(APACHE_AFS_LIB) ${DEST}/root.afsweb/lib/apache_1.3.6/$(APACHE_AFS_LIB) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG=-DAPACHE_1_2 ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.2 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.2/$(SRC_MODULE) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_1" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.1 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.1/$(SRC_MODULE) ; \
 			/bin/rm -f $(SRC_MODULE) ; \
 			$(MAKE) $(SRC_MODULE) VERSION_CFLAG="-DAPACHE_1_3 -DAPACHE_1_3_6" ; \
-			${INSTALL} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL} -d ${DEST}/root.afsweb/src/apache_1.3.6 ; \
+			${INSTALL_DATA} $(SRC_MODULE) ${DEST}/root.afsweb/src/apache_1.3.6/$(SRC_MODULE) ; \
 			$(MAKE) AUX_CFLAGS=-DLINUX "XLIBS=-lnsl" $(BINARIES) ;; \
 		* ) \
 			 echo "NOT BUILT FOR ${SYS_NAME}"; ;; \
 	esac
-	${INSTALL} ${APACHEAFS_DOC} ${DEST}/root.afsweb/doc
-	${INSTALL} ${APACHE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install
-	chmod a+x ${DEST}/root.afsweb/install/${APACHE_INSTALL_SCRIPT}
-	chmod a+w ${DEST}/root.afsweb/install/${APACHE_INSTALL_SCRIPT}
-	${INSTALL} $(BINARIES) ${DEST}/root.afsweb/bin
+	${INSTALL} -d ${DEST}/root.afsweb/doc
+	${INSTALL_DATA} ${APACHEAFS_DOC} ${DEST}/root.afsweb/doc/${APACHEAFS_DOC}
+	${INSTALL} -d ${DEST}/root.afsweb/install
+	${INSTALL_SCRIPT} ${APACHE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install/${APACHE_INSTALL_SCRIPT}
+	${INSTALL} -d ${DEST}/root.afsweb/bin
+	${INSTALL_PROGRAM} $(BINARIES) ${DEST}/root.afsweb/bin
 
 netscape_afs_web_secure:
-	${INSTALL} ${NETSCAPE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install
-	chmod a+x ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
-	chmod a+w ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
+	${INSTALL} -d ${DEST}/root.afsweb/install
+	${INSTALL} -m 755 ${NETSCAPE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install
 
 all: 
 

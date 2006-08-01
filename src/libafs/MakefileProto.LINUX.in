@@ -160,7 +160,7 @@ setup:
 		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
 		ln -fs ../config $${KDIR}/config; \
 	done 
-	
+
 # Compile SP and MP clients as requested
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
@@ -302,50 +302,42 @@ ${LIBAFS_BM}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 <all>
 
-install_libafs:	$(INST_LIBAFS) 
+install_libafs:	$(LIBAFS) 
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
 	echo SP Install Complete
 
-install_libafs.mp: $(INST_LIBAFS_MP)
+install_libafs.mp: $(LIBAFS_MP)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_MP)
 	echo MP Install Complete
 
-install_libafs.ep: $(INST_LIBAFS_EP)
+install_libafs.ep: $(LIBAFS_EP)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_EP)
 	echo EP Install Complete
 
-install_libafs.bm: $(INST_LIBAFS_BM)
+install_libafs.bm: $(LIBAFS_BM)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_BM)
 	echo BM Install Complete
 
-dest_libafs:	$(DEST_LIBAFS) 
+dest_libafs:	$(LIBAFS) 
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
 	echo SP Install Complete
 
-dest_libafs.mp: $(DEST_LIBAFS_MP)
+dest_libafs.mp: $(LIBAFS_MP)
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_MP)
 	echo MP Install Complete
 
-dest_libafs.ep: $(DEST_LIBAFS_EP)
+dest_libafs.ep: $(LIBAFS_EP)
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_EP)
 	echo EP Install Complete
 
-dest_libafs.bm: $(DEST_LIBAFS_BM)
+dest_libafs.bm: $(LIBAFS_BM)
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
+	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS_BM)
 	echo BM Install Complete
-
-$(INST_LIBAFS): $(LIBAFS)
-	${INSTALL} -f $? $@
-
-$(INST_LIBAFS_MP): $(LIBAFS_MP)
-	${INSTALL} -f $? $@
-
-$(INST_LIBAFS_EP): $(LIBAFS_EP)
-	${INSTALL} -f $? $@
-
-$(INST_LIBAFS_BM): $(LIBAFS_BM)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS_MP): $(LIBAFS_MP)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS_EP): $(LIBAFS_EP)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS_BM): $(LIBAFS_BM)
-	${INSTALL} -f $? $@

@@ -91,20 +91,14 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 libafs:	$(LIBAFSNONFS)
 	ls -l libafs.o
-install_libafs:	$(INST_LIBAFSNONFS)
-dest_libafs:	$(DEST_LIBAFSNONFS)
 
-$(INST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
+install_libafs:	$(LIBAFS)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFSNONFS)
 
-$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
+dest_libafs: $(LIBAFS)
+	${INSTALL} -d ${DEST}/root.client/bin
+	$(INSTALL) -m 644 $(LIBAFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}

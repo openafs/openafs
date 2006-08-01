@@ -205,24 +205,22 @@ fileserver: ${objects} ${LIBS}
 state_analyzer: ${SDBGOBJS}
 	${CC} ${LDFLAGS} -o state_analyzer ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
 
-${DEST}/root.server/usr/afs/bin/fileserver: fileserver
-	${INSTALL} -ns $? $@
+install: fileserver state_analyzer
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL_PROGRAM} fileserver \
+		${DESTDIR}${afssrvlibexecdir}/fileserver
+	${INSTALL_PROGRAM} state_analyzer \
+		${DESTDIR}${afssrvsbindir}/state_analyzer
 
-${DEST}/root.server/usr/afs/bin/state_analyzer: state_analyzer
-	${INSTALL} $? $@
-
-install: ${DESTDIR}${afssrvlibexecdir}/fileserver ${DESTDIR}${afssrvsbindir}/state_analyzer
+dest: fileserver state_analyzer
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} fileserver \
+		${DEST}/root.server/usr/afs/bin/fileserver
+	${INSTALL_PROGRAM} state_analyzer \
+		${DEST}/root.server/usr/afs/bin/state_analyzer
 
 clean:
 	$(RM) -f *.o fileserver state_analyzer core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
-	${INSTALL} -ns $? $@
-
-${DESTDIR}${afssrvsbindir}/state_analyzer: state_analyzer
-	${INSTALL} $? $@
-
-dest: ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/root.server/usr/afs/bin/state_analyzer
-

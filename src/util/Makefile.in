@@ -42,6 +42,63 @@ all: ${includes} \
 
 depinstall: ${includes}
 
+${TOP_INCDIR}/afs/dirpath.h: dirpath.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/assert.h: ${srcdir}/assert.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/vice.h: ${srcdir}/vice.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/remote.h: ${srcdir}/remote.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/util.a: util.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libafsutil.a: util.a
+	${INSTALL_DATA} $? $@
+
 dirpath.h: ${srcdir}/dirpath.hin Makefile
 	( sed \
 		-e "s+@afsconfdir+${afsconfdir}+" \
@@ -55,7 +112,8 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		-e "s+@afsbackupdir+${afsbackupdir}+" \
 		-e "s+@afsbosconfigdir+${afsbosconfigdir}+" \
 		${srcdir}/dirpath.hin >dirpath.h.tmp && \
-		mv dirpath.h.tmp dirpath.h )
+		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
+		mv dirpath.h.tmp dirpath.h ; fi)
 
 util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
@@ -149,211 +207,55 @@ rxkstats.o: ${srcdir}/rxkstats.c ${includes}
 KDIR=../libafs/afs
 UKDIR=../libuafs/afs
 
-install: \
-	${DESTDIR}${includedir}/afs/dirpath.h \
-	${DESTDIR}${includedir}/afs/pthread_nosigs.h \
-	${DESTDIR}${includedir}/afs/assert.h \
-	${DESTDIR}${includedir}/afs/errors.h \
-	${DESTDIR}${includedir}/afs/vice.h \
-	${DESTDIR}${includedir}/afs/remote.h \
-	${DESTDIR}${includedir}/afs/ktime.h \
-	${DESTDIR}${includedir}/afs/fileutil.h \
-	${DESTDIR}${includedir}/afs/netutils.h \
-	${DESTDIR}${includedir}/afs/packages.h \
-	${DESTDIR}${includedir}/afs/afsutil.h \
-	${DESTDIR}${includedir}/afs/afsutil_prototypes.h \
-	${DESTDIR}${includedir}/afs/pthread_glock.h \
-	${DESTDIR}${includedir}/afs/afs_atomlist.h \
-	${DESTDIR}${includedir}/afs/afs_lhash.h \
-	${DESTDIR}${includedir}/afs/softsig.h \
-	${DESTDIR}${includedir}/potpourri.h \
-	${DESTDIR}${libdir}/afs/util.a \
-	${DESTDIR}${libdir}/afs/libafsutil.a \
-	${DESTDIR}${bindir}/sys
-
-${TOP_INCDIR}/afs/dirpath.h: dirpath.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/assert.h: ${srcdir}/assert.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/vice.h: ${srcdir}/vice.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/remote.h: ${srcdir}/remote.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
-	${INSTALL} $? $@
-
-
-${TOP_LIBDIR}/util.a: util.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libafsutil.a: util.a
-	${INSTALL} $? $@
-
-
-${DESTDIR}${includedir}/afs/dirpath.h: dirpath.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/assert.h: ${srcdir}/assert.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/errors.h: ${srcdir}/errors.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/vice.h: ${srcdir}/vice.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/remote.h: ${srcdir}/remote.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ktime.h: ${srcdir}/ktime.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/netutils.h: ${srcdir}/netutils.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/packages.h: ${srcdir}/packages.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afsutil.h: ${srcdir}/afsutil.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/softsig.h: ${srcdir}/softsig.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/potpourri.h: ${srcdir}/potpourri.h
-	${INSTALL} $? $@
-
-
-${DESTDIR}${libdir}/afs/util.a: util.a
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libafsutil.a: util.a
-	${INSTALL} $? $@
-
-
-${DESTDIR}${bindir}/sys: sys
-	${INSTALL} $? $@
-
-
-${DEST}/include/afs/dirpath.h: dirpath.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/assert.h: ${srcdir}/assert.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/errors.h: ${srcdir}/errors.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/vice.h: ${srcdir}/vice.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/remote.h: ${srcdir}/remote.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ktime.h: ${srcdir}/ktime.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/netutils.h: ${srcdir}/netutils.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/packages.h: ${srcdir}/packages.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afsutil.h: ${srcdir}/afsutil.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/softsig.h: ${srcdir}/softsig.h
-	${INSTALL} $? $@
-
-${DEST}/include/potpourri.h: ${srcdir}/potpourri.h
-	${INSTALL} $? $@
-
-
-${DEST}/lib/afs/util.a: util.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libafsutil.a: util.a
-	${INSTALL} $? $@
-
-
-${DEST}/bin/sys: sys
-	${INSTALL} $? $@
+install: dirpath.h util.a sys
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_DATA} dirpath.h ${DESTDIR}${includedir}/afs/dirpath.h
+	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DESTDIR}${includedir}/afs/pthread_nosigs.h
+	${INSTALL_DATA} ${srcdir}/assert.h ${DESTDIR}${includedir}/afs/assert.h
+	${INSTALL_DATA} ${srcdir}/errors.h ${DESTDIR}${includedir}/afs/errors.h
+	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
+	${INSTALL_DATA} ${srcdir}/remote.h ${DESTDIR}${includedir}/afs/remote.h
+	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
+	${INSTALL_DATA} ${srcdir}/fileutil.h ${DESTDIR}${includedir}/afs/fileutil.h
+	${INSTALL_DATA} ${srcdir}/netutils.h ${DESTDIR}${includedir}/afs/netutils.h
+	${INSTALL_DATA} ${srcdir}/packages.h ${DESTDIR}${includedir}/afs/packages.h
+	${INSTALL_DATA} ${srcdir}/afsutil.h ${DESTDIR}${includedir}/afs/afsutil.h
+	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DESTDIR}${includedir}/afs/afsutil_prototypes.h
+	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DESTDIR}${includedir}/afs/pthread_glock.h
+	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DESTDIR}${includedir}/afs/afs_atomlist.h
+	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DESTDIR}${includedir}/afs/afs_lhash.h
+	${INSTALL_DATA} ${srcdir}/softsig.h ${DESTDIR}${includedir}/afs/softsig.h
+	${INSTALL_DATA} ${srcdir}/potpourri.h ${DESTDIR}${includedir}/potpourri.h
+	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
+	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
+	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
+
+dest: dirpath.h util.a sys
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_DATA} dirpath.h ${DEST}/include/afs/dirpath.h
+	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DEST}/include/afs/pthread_nosigs.h
+	${INSTALL_DATA} ${srcdir}/assert.h ${DEST}/include/afs/assert.h
+	${INSTALL_DATA} ${srcdir}/errors.h ${DEST}/include/afs/errors.h
+	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
+	${INSTALL_DATA} ${srcdir}/remote.h ${DEST}/include/afs/remote.h
+	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h
+	${INSTALL_DATA} ${srcdir}/fileutil.h ${DEST}/include/afs/fileutil.h
+	${INSTALL_DATA} ${srcdir}/netutils.h ${DEST}/include/afs/netutils.h
+	${INSTALL_DATA} ${srcdir}/packages.h ${DEST}/include/afs/packages.h
+	${INSTALL_DATA} ${srcdir}/afsutil.h ${DEST}/include/afs/afsutil.h
+	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DEST}/include/afs/afsutil_prototypes.h
+	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DEST}/include/afs/pthread_glock.h
+	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DEST}/include/afs/afs_atomlist.h
+	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DEST}/include/afs/afs_lhash.h
+	${INSTALL_DATA} ${srcdir}/softsig.h ${DEST}/include/afs/softsig.h
+	${INSTALL_DATA} ${srcdir}/potpourri.h ${DEST}/include/potpourri.h
+	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
+	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
+	${INSTALL_PROGRAM} sys ${DEST}/bin/sys
 
 #
 # Misc targets
@@ -367,28 +269,6 @@ test:
 	cd test; $(MAKE)
 
 include ../config/Makefile.version
-
-dest: \
-	${DEST}/include/afs/dirpath.h \
-	${DEST}/include/afs/pthread_nosigs.h \
-	${DEST}/include/afs/assert.h \
-	${DEST}/include/afs/errors.h \
-	${DEST}/include/afs/vice.h \
-	${DEST}/include/afs/remote.h \
-	${DEST}/include/afs/ktime.h \
-	${DEST}/include/afs/fileutil.h \
-	${DEST}/include/afs/netutils.h \
-	${DEST}/include/afs/packages.h \
-	${DEST}/include/afs/afsutil.h \
-	${DEST}/include/afs/afsutil_prototypes.h \
-	${DEST}/include/afs/pthread_glock.h \
-	${DEST}/include/afs/afs_atomlist.h \
-	${DEST}/include/afs/afs_lhash.h \
-	${DEST}/include/afs/softsig.h \
-	${DEST}/include/potpourri.h \
-	${DEST}/lib/afs/util.a \
-	${DEST}/lib/afs/libafsutil.a \
-	${DEST}/bin/sys
 
 check-splint:
 	sh $(HELPER_SPLINT) $(CFLAGS) \
