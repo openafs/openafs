@@ -347,14 +347,6 @@ aklog: comerr ptserver
 platform: 
 	${COMPILE_PART1} platform ${COMPILE_PART2}
 
-login: cmd comerr kauth rxkad pam sia tsm41 sgistuff aklog
-	set -x; \
-	if test "@BUILD_LOGIN@" = "yes"; then \
-		${COMPILE_PART1} login ${COMPILE_PART2} ; \
-	else \
-		echo Skipping login for ${SYS_NAME} ; \
-	fi
-
 man-pages:
 	if test -d "doc/man-pages" ; then \
 		cd doc/man-pages ${COMPILE_PART2} ; \
@@ -582,14 +574,14 @@ jafsadm: libjafsadm
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -659,7 +651,6 @@ clean2:
 	-${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
 	-${COMPILE_PART1} sia ${COMPILE_CLEAN}
 	-${COMPILE_PART1} aklog ${COMPILE_CLEAN}
-	-${COMPILE_PART1} login ${COMPILE_CLEAN}
 	-${COMPILE_PART1} pam ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsweb ${COMPILE_CLEAN}
 	-${COMPILE_PART1} update ${COMPILE_CLEAN}
@@ -767,7 +758,6 @@ distclean: clean
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/log/test/Makefile \
 	src/log/Makefile \
-	src/login/Makefile \
 	src/lwp/test/Makefile \
 	src/lwp/Makefile \
 	src/mpp/Makefile \

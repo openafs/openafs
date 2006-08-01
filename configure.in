@@ -71,7 +71,6 @@ src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/Makefile \
 src/log/test/Makefile \
-src/login/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
 src/mpp/Makefile \
