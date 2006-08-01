@@ -82,6 +82,8 @@ src/package/Makefile \
 src/pam/Makefile \
 src/pinstall/Makefile \
 src/pinstall/test/Makefile \
+src/platform/Makefile \
+src/platform/${MKAFS_OSTYPE}/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
