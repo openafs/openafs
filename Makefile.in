@@ -188,9 +188,6 @@ ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
-dauth: cmd comerr ubik cmd auth kauth comerr
-	${COMPILE_PART1} dauth ${COMPILE_PART2}
-
 libacl: cmd comerr ptserver libacl_depinstall
 	${COMPILE_PART1} libacl ${COMPILE_PART2}
 
@@ -456,7 +453,7 @@ libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
 	esac
 
-afsweb: kauth dauth 
+afsweb: kauth
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
 
 update: cmd comerr auth
@@ -584,15 +581,16 @@ jafsadm: libjafsadm
 
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
-	venus update xstat afsmonitor dauth rxdebug libafsrpc \
+	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
-	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
+	venus update xstat afsmonitor rxdebug libafsrpc \
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -638,7 +636,6 @@ clean2:
 	-${COMPILE_PART1} ubik ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ptserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} kauth ${COMPILE_CLEAN}
-	-${COMPILE_PART1} dauth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libacl ${COMPILE_CLEAN}
 	-${COMPILE_PART1} dir ${COMPILE_CLEAN}
 	-${COMPILE_PART1} vol ${COMPILE_CLEAN}
@@ -705,7 +702,6 @@ clean2:
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
- 
 distclean: clean
 	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
@@ -736,7 +732,6 @@ distclean: clean
 	src/config/Makefile.version \
 	src/config/Makefile.version-NOCML \
 	src/config/Makefile.config \
-	src/dauth/Makefile \
 	src/des/test/Makefile \
 	src/des/Makefile \
 	src/dir/test/Makefile \

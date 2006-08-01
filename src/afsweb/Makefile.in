@@ -16,7 +16,6 @@ UKSRCS=nsafs.h nsafs.c securehash.c
 # Targets for Apache AFS Web Secure
 #
 APACHE_AFS_LIB=libapacheafs.a
-DCE_ADK_LIB=libadk.a
 APACHE_AFS_COMMON_LIB=libcommon.a
 
 BINARIES=weblog weblog_starter
@@ -144,8 +143,6 @@ install:
 ## code. Be sure to compile with the VERSION_CFLAG=-DAPACHE_1_3 option for Apache 1.3
 ##
 APACHE_INCLUDES=-Iapache_includes
-EXTRA_CFLAGS=-DENABLE_DCE_DLOG -I../dauth/
-ADKOBJS=../dauth/adkint.cs.o ../dauth/adkint.xdr.o
 
 XLIBS=
 DEFINES=-DSTATUS
@@ -154,7 +151,7 @@ DEBUG_FLAG=
 AUX_CFLAGS=
 VERSION_CFLAG=
 AFS_INCL=-I${TOP_INCDIR} -I.. -I../config
-CFLAGS=$(OPTF) $(DEFINES) -I. -I.. $(EXTRA_CFLAGS) $(VERSION_CFLAG) $(DEBUG_FLAG)
+CFLAGS=$(OPTF) $(DEFINES) -I. -I.. $(VERSION_CFLAG) $(DEBUG_FLAG)
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
              ${TOP_INCDIR}/lock.h  \
@@ -189,15 +186,11 @@ OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 	$(CCOBJ) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
 
 
-weblog: weblog.o $(APACHE_AFS_COMMON_LIB) $(DCE_ADK_LIB)
-	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(DCE_ADK_LIB) $(XLIBS)
+weblog: weblog.o $(APACHE_AFS_COMMON_LIB)
+	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(XLIBS)
 
 weblog_starter: apache_afs_weblog.o weblog_errors.h 
 	$(CC) -o $@ apache_afs_weblog.o 
-
-$(DCE_ADK_LIB): 
-	- /bin/rm -f $@ 
-	$(AR) $(ARFLAGS) $@ $(ADKOBJS)  	
 
 $(APACHE_AFS_COMMON_LIB):$(LIBCOMMON_OBJS)
 	- /bin/rm -f $@
@@ -216,7 +209,7 @@ afs_module.c: apache_afs_module.c
 		-DAPACHE_1_3*)	echo '#include "ap_compat.h"' >> afs_module.c ;; \
 	  esac \
 	; cat apache_afs_module.c >> afs_module.c
-	 
+
 ##
 ##Dependencies
 ##
@@ -234,7 +227,7 @@ apache_afs_plugin.o: apache_api.h apache_afs_plugin.c apache_afs_client.o apache
 
 
 clean:
-	-/bin/rm -f *.o $(BINARIES) $(APACHE_AFS_LIB) $(APACHE_AFS_COMMON_LIB) $(DCE_ADK_LIB)
+	-/bin/rm -f *.o $(BINARIES) $(APACHE_AFS_LIB) $(APACHE_AFS_COMMON_LIB)
 
 libclean:
 	-/bin/rm -f $(APACHE_AFS_LIB) $(LIBOBJS)

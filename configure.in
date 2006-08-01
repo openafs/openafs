@@ -37,7 +37,6 @@ src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
 src/config/Makefile.version-NOCML \
-src/dauth/Makefile \
 src/des/Makefile \
 src/des/test/Makefile \
 src/dir/Makefile \
