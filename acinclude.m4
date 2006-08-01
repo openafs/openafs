@@ -9,7 +9,7 @@ AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
 
-#BOZO_SAVE_CORES pam sia
+#BOZO_SAVE_CORES pam
 AC_ARG_WITH(afs-sysname,
 [  --with-afs-sysname=sys    use sys for the afs sysname]
 )

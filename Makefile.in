@@ -318,15 +318,6 @@ tsm41: cmd comerr kauth rxkad
 		echo Skipping tsm41 for ${SYS_NAME} ;; \
 	esac
 
-sia: cmd comerr kauth rxkad
-	set -x; \
-	case ${SYS_NAME} in \
-	alpha_dux* ) \
-		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
-	* ) \
-		echo Skipping sia for ${SYS_NAME} ;; \
-	esac
-
 sgistuff: cmd comerr kauth rxkad
 	set -x; \
 	case ${SYS_NAME} in \

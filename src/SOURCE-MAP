@@ -75,7 +75,6 @@ rxkad      - kerberos security module for rx.
 rxstat     - rx statistics package
 scout      - monitoring tool for afs fileservers.
 sgistuff   - SGI authentication plugin for graphical login
-sia        - Digital UNIX authentication plugin
 sys        - local and remote system call interfaces. basic PAG-creation 
 	     and remote system call handling for NFS translator
 tbutc      - pthread version of butc.
