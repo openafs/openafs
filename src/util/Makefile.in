@@ -114,6 +114,7 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		${srcdir}/dirpath.hin >dirpath.h.tmp && \
 		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
 		mv dirpath.h.tmp dirpath.h ; fi)
+	rm -f dirpath.h.tmp
 
 util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
