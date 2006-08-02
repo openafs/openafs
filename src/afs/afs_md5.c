@@ -39,11 +39,6 @@
 
 RCSID("$Id$");
 
-#undef WORDS_BIGENDIAN
-#ifdef AFSBIG_ENDIAN
-#define WORDS_BIGENDIAN 1
-#endif
-
 #include "afs_md5.h"
 
 #define A m->counter[0]
@@ -224,13 +219,13 @@ AFS_MD5_Update(struct afs_md5 *m, const void *v, size_t len)
 	if (offset == 64) {
 #if defined(WORDS_BIGENDIAN)
 	    int i;
-	    afs_uint32 current[16];
-	    struct x32 *u = (struct x32 *)m->save;
+	    afs_uint32 cur[16];
+	    struct x32 *ui = (struct x32 *)m->save;
 	    for (i = 0; i < 8; i++) {
-		current[2 * i + 0] = swap_afs_uint32(u[i].a);
-		current[2 * i + 1] = swap_afs_uint32(u[i].b);
+		cur[2 * i + 0] = swap_afs_uint32(ui[i].a);
+		cur[2 * i + 1] = swap_afs_uint32(ui[i].b);
 	    }
-	    calc(m, current);
+	    calc(m, cur);
 #else
 	    calc(m, (afs_uint32 *) m->save);
 #endif

@@ -120,7 +120,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
     volatile unsigned char *Schar = (unsigned char *)&S;
     int i;
 
-#if defined(vax) || (defined(mips) && defined(MIPSEL)) || defined(AFSLITTLE_ENDIAN)
+#ifndef WORDS_BIGENDIAN
 #define Byte0 3
 #define Byte1 2
 #define Byte2 1

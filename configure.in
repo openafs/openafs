@@ -52,8 +52,8 @@ src/kauth/test/Makefile \
 src/kopenafs/Makefile \
 src/libacl/Makefile \
 src/libacl/test/Makefile \
-src/libadmin/adminutil/Makefile \
 src/libadmin/Makefile \
+src/libadmin/adminutil/Makefile \
 src/libadmin/bos/Makefile \
 src/libadmin/cfg/Makefile \
 src/libadmin/cfg/test/Makefile \
@@ -106,8 +106,8 @@ src/tviced/Makefile \
 src/tvolser/Makefile \
 src/ubik/Makefile \
 src/update/Makefile \
-src/usd/test/Makefile \
 src/usd/Makefile \
+src/usd/test/Makefile \
 src/uss/Makefile \
 src/util/Makefile \
 src/util/test/Makefile \
