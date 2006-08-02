@@ -508,6 +508,9 @@ shlibafsauthent: ubik auth kauth shlibafsrpc
 		echo Not building shared libafsauthent for ${SYS_NAME} ;; \
 	esac
 
+kopenafs: config sys
+	${COMPILE_PART1} kopenafs ${COMPILE_PART2}
+
 libadmin_real: 
 	${COMPILE_PART1} libadmin ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/adminutil ${COMPILE_PART2}
@@ -550,14 +553,14 @@ finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit 
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform
+	platform kopenafs
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform
+	platform kopenafs
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -645,6 +648,7 @@ clean2:
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} kopenafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}
@@ -706,6 +710,7 @@ distclean: clean
 	src/gtx/Makefile \
 	src/kauth/test/Makefile \
 	src/kauth/Makefile \
+	src/kopenafs/Makefile \
 	src/libacl/test/Makefile \
 	src/libacl/Makefile \
 	src/libadmin/adminutil/Makefile \

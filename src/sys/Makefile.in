@@ -19,7 +19,7 @@ CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCF
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
-OBJECTS= afssyscalls.o setpag.o glue.o syscall.o
+OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o syscall.o
 SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
@@ -123,6 +123,9 @@ glue.o: glue.c afssyscalls.h
 
 setpag.o: setpag.c afssyscalls.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/setpag.c
+
+pioctl.o: pioctl.c afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/pioctl.c
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp

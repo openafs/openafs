@@ -1,0 +1,137 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+# API version. When something changes, increment as appropriate. 
+# Ignore at your own risk.
+MAJOR		= 1
+MINOR		= 0
+
+CC		= ${MT_CC}
+INCLUDES	= -I. -I${srcdir} -I../sys
+CFLAGS		= ${COMMON_CFLAGS} ${INCLUDES} ${MT_CFLAGS} ${SHLIB_CFLAGS}
+
+SYS		= ${srcdir}/../sys
+SYSOBJS		= glue.o pioctl.o setpag.o syscall.o
+LIBOBJS		= kopenafs.o ${SYSOBJS} AFS_component_version_number.o
+
+LIBKOPENAFS	= libkopenafs.${SHLIB_SUFFIX}.${MAJOR}.${MINOR}
+
+all: ${TOP_LIBDIR}/${LIBKOPENAFS} ${TOP_LIBDIR}/libkopenafs.a \
+		${TOP_INCDIR}/kopenafs.h
+
+${TOP_LIBDIR}/${LIBKOPENAFS}: ${LIBKOPENAFS}
+	${INSTALL_DATA} ${LIBKOPENAFS} ${TOP_LIBDIR}/${LIBKOPENAFS}
+	-ln -f -s ${LIBKOPENAFS} \
+		${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBKOPENAFS} \
+		${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
+
+${TOP_LIBDIR}/libkopenafs.a: libkopenafs.a
+	${INSTALL_DATA} libkopenafs.a $@
+
+${TOP_INCDIR}/kopenafs.h: kopenafs.h
+	${INSTALL_DATA} kopenafs.h $@
+
+glue.o: ${SYS}/glue.c ${SYS}/afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${SYS}/glue.c
+
+pioctl.o: ${SYS}/pioctl.c ${SYS}/afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${SYS}/pioctl.c
+
+setpag.o: ${SYS}/setpag.c ${SYS}/afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${SYS}/setpag.c
+
+# This file is only actually used on SGI and AIX, but some systems can't cope
+# with an empty .o file being included in a link.
+syscall.o: ${SYS}/syscall.s
+	@set -x; case "$(SYS_NAME)" in \
+	sgi_*) \
+                ${CC} ${CFLAGS} -c ${SYS}/syscall.s; \
+		;; \
+	*fbsd* | *obsd* | *nbsd*) \
+		${CCOBJ} -E ${SFLAGS} syscall.s > syscall.S ; \
+		${AS} syscall.S -o syscall.o ; \
+		$(RM) -f syscall.S; \
+		;; \
+	rs_aix*) \
+		/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		as -o syscall.o syscall.ss; \
+		$(RM) syscall.ss; \
+		;; \
+	*) \
+		touch syscall.o; \
+		;; \
+	esac
+
+libkopenafs.a: ${LIBOBJS}
+	${RM} -f $@
+	${AR} crv $@ ${LIBOBJS}
+	${RANLIB} $@
+
+${LIBKOPENAFS}: ${LIBOBJS}
+	case ${SYS_NAME} in \
+	rs_aix*) \
+		${SHLIB_LINKER} -o ${LIBKOPENAFS} ${LIBOBJS} \
+			-bE:${srcdir}/kopenafs.exp ${MT_LIBS}; \
+		;; \
+	sun*_5*) \
+		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${MAJOR} \
+			-o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
+		;; \
+	*_linux*) \
+		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${MAJOR} \
+			-Wl,--version-script=${srcdir}/mapfile \
+			-o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
+		;; \
+	*) \
+		${SHLIB_LINKER} -o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
+		;; \
+	esac
+
+test-unlog: test-unlog.o libkopenafs.a
+	${CC} -o test-unlog test-unlog.o libkopenafs.a ${XLIBS} ${CFLAGS}
+
+test-setpag: test-setpag.o libkopenafs.a
+	${CC} -o test-setpag test-setpag.o libkopenafs.a ${XLIBS} ${CFLAGS}
+
+#
+# Installation targets
+#
+install: ${LIBKOPENAFS}
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL_DATA} libkopenafs.a ${DESTDIR}${libdir}/libkopenafs.a
+	${INSTALL_DATA} ${LIBKOPENAFS} ${DESTDIR}${libdir}/${LIBKOPENAFS}
+	-ln -f -s ${LIBKOPENAFS} \
+		${DESTDIR}${libdir}/libkopenafs.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBKOPENAFS} \
+		${DESTDIR}${libdir}/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
+	${INSTALL_DATA} kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
+
+dest: ${LIBKOPENAFS}
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include
+	${INSTALL_DATA} libkopenafs.a ${DEST}/lib/libkopenafs.a
+	${INSTALL_DATA} ${LIBKOPENAFS} ${DEST}/lib/${LIBKOPENAFS}
+	-ln -f -s ${LIBKOPENAFS} \
+		${DEST}/lib/libkopenafs.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBKOPENAFS} \
+		${DEST}/lib/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
+	${INSTALL_DATA} kopenafs.h ${DEST}/include/kopenafs.h
+
+#
+# Misc targets
+#
+clean:
+	$(RM) -f *.o *.a ${LIBKOPENAFS} AFS_component_version_number.c
+
+include ../config/Makefile.version

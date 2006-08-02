@@ -1,0 +1,13 @@
+# Export map for libkopenafs, used on Linux and Solaris to restrict
+# exports from the shared libraries to just the public ABI.  Add symbol
+# versioning while we're at it, just in case.
+
+KOPENAFS_1.0 {
+    global:
+        k_hasafs;
+        k_setpag;
+        k_unlog;
+        k_pioctl;
+    local:
+        *;
+};

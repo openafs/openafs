@@ -1050,8 +1050,14 @@ if test "$ac_cv_header_regex_h" = "yes" && \
 else
     AC_MSG_RESULT(no)
 fi
-	
+
+AC_TYPE_SIGNAL
 AC_CHECK_TYPE(ssize_t, int)
+AC_CHECK_TYPE([sig_atomic_t], ,
+    [AC_DEFINE([sig_atomic_t], [int],
+        [Define to int if <signal.h> does not define.])],
+[#include <sys/types.h>
+#include <signal.h>])
 AC_SIZEOF_TYPE(long)
 
 AC_MSG_CHECKING(size of time_t)

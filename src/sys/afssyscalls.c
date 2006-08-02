@@ -59,7 +59,6 @@ static void check_iops(int index, char *fun, char *file, int line);
 #pragma weak xiinc = iinc
 #pragma weak xidec = idec
 #pragma weak xiopen = iopen
-#pragma weak xlpioctl = lpioctl
 #ifdef notdef
 #pragma weak xiread = iread
 #pragma weak xiwrite = iwrite
@@ -204,11 +203,6 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 }
 #endif /* notdef */
 
-int
-lpioctl(char *path, int cmd, char *cmarg, int follow)
-{
-    return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
-}
 #else /* AFS_SGI_ENV */
 
 #ifndef AFS_NAMEI_ENV
@@ -306,57 +300,6 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 #endif
 
 #endif /* AFS_NAMEI_ENV */
-
-#if defined(AFS_DARWIN80_ENV)
-int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
-		     long param4, long param5, long param6, int *rval) {
-  struct afssysargs syscall_data;
-  int code;
-  int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
-  if(fd < 0)
-    return -1;
-
-  syscall_data.syscall = syscall;
-  syscall_data.param1 = param1;
-  syscall_data.param2 = param2;
-  syscall_data.param3 = param3;
-  syscall_data.param4 = param4;
-  syscall_data.param5 = param5;
-  syscall_data.param6 = param6;
-
-  code = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-
-  close(fd);
-  if (code)
-     return code;
-  *rval=syscall_data.retval;
-  return 0;
-}
-#endif
-
-int
-lpioctl(char *path, int cmd, char *cmarg, int follow)
-{
-    int errcode, rval;
-
-#if defined(AFS_LINUX20_ENV)
-    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, 
-			    follow, &errcode);
-
-    if(rval)
-	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, 
-			  follow);
-#elif defined(AFS_DARWIN80_ENV)
-    rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
-			     follow, 0, 0, &errcode);
-    if (rval)
-	errcode = rval;
-#else
-    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
-#endif
-
-    return (errcode);
-}
 
 #endif /* !AFS_SGI_ENV */
 #endif /* !AFS_AIX32_ENV */

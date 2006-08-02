@@ -72,7 +72,8 @@ SYSOBJS = \
 	afssyscalls.o \
 	rmtsysnet.o \
 	glue.o \
-	setpag.o
+	setpag.o \
+	pioctl.o
 
 PTSERVEROBJS = \
 	ptclient.o \
@@ -248,6 +249,9 @@ glue.o: ${SYS}/glue.c
 	${CCRULE}
 
 setpag.o: ${SYS}/setpag.c
+	${CCRULE}
+
+pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
 
 clean:

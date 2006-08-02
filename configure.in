@@ -49,6 +49,7 @@ src/gtx/Makefile \
 src/JAVA/libjafs/Makefile \
 src/kauth/Makefile \
 src/kauth/test/Makefile \
+src/kopenafs/Makefile \
 src/libacl/Makefile \
 src/libacl/test/Makefile \
 src/libadmin/adminutil/Makefile \
