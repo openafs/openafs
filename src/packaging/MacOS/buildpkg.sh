@@ -53,7 +53,6 @@ fi
 
 if [ $firstpass = yes ]; then
     if [ -x /usr/bin/curl ]; then
-#    /usr/bin/curl -f -O http://www.central.org/dl/cellservdb/CellServDB
 	/usr/bin/curl -f -O http://dl.central.org/dl/cellservdb/CellServDB
     fi
 
@@ -166,6 +165,7 @@ if [ $secondpass = yes ]; then
 	cp OpenAFS.post_install $PKGRES/postinstall
 	cp OpenAFS.pre_upgrade $PKGRES/preupgrade
 	cp OpenAFS.post_install $PKGRES/postupgrade
+	cp background.jpg $PKGRES/background.jpg
 	if [ $majorvers -ge 8 ]; then
 	    cp InstallationCheck $PKGRES
 	    mkdir -p $PKGRES/English.lproj
@@ -206,7 +206,14 @@ if [ $secondpass = yes ]; then
     mkdir $CURDIR/dmg
     mv $CURDIR/OpenAFS.pkg $CURDIR/dmg
     rm -rf $CURDIR/OpenAFS.dmg
-    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
+    cp Uninstall $CURDIR/dmg/Uninstall.command
+    cp DS_Store $CURDIR/dmg/.DS_Store
+    mkdir $CURDIR/dmg/.background
+    cp afslogo.jpg $CURDIR/dmg/.background
+#    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
+    hdiutil makehybrid -hfs -hfs-volume-name OpenAFS -hfs-openfolder $CURDIR/dmg $CURDIR/dmg -o $CURDIR/TMP.dmg
+    hdiutil convert -format UDZO TMP.dmg -o $CURDIR/OpenAFS.dmg
+    rm $CURDIR/TMP.dmg
     rm -rf $CURDIR/dmg
     # Unfortunately, sudo sets $USER to root, so I can't chown the 
     #.pkg dir back to myself
