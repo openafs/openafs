@@ -959,16 +959,6 @@ case $AFS_SYSNAME in
 		AC_SUBST(install_XFS_SIZE_CHECK)
 		AC_SUBST(dest_XFS_SIZE_CHECK)
 	;;
-	
-	alpha_dux*)
-		FS_CONV_OSF40D="fs_conv_dux40D"
-		install_FS_CONV_OSF40D='$(DESTDIR)${afssrvsbindir}/fs_conv_dux40D'
-		dest_FS_CONV_OSF40D='$(DEST)/root.server/usr/afs/bin/fs_conv_dux40D'
-
-		AC_SUBST(FS_CONV_OSF40D)
-		AC_SUBST(install_FS_CONV_OSF40D)
-		AC_SUBST(dest_FS_CONV_OSF40D)
-	;;
 esac
 
 

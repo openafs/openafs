@@ -205,17 +205,6 @@ case $system in
         *-osf*)
 		MKAFS_OSTYPE=DUX
                 AC_MSG_RESULT(alpha_dux)
-		if test "x$enable_kernel_module" = "xyes"; then
-		 if test "x$with_dux_kernel_headers" != "x"; then
-		   HEADER_RT=`ls ${with_dux_kernel_headers}/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
-		 else
- 		   HEADER_RT=`ls /usr/sys/*/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
-		 fi
-		fi
-		if test "$HEADER_RT" = "*" ; then
-			AC_MSG_ERROR([Need a configured kernel directory])
-		fi
-		AC_SUBST([HEADER_RT])
                 ;;
         powerpc-*-darwin*)
 		MKAFS_OSTYPE=DARWIN
