@@ -117,8 +117,7 @@ if [ $firstpass = yes ]; then
     echo openafs.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
     if [ $majorvers -ge 7 ]; then
 	echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
-	(cd $CURDIR && \
-	cp afssettings $PKGROOT/private/var/db/openafs/etc/config )
+        cp -RP $PKGROOT/Library/OpenAFS/Tools/etc/afssettings $PKGROOT/private/var/db/openafs/etc/config
 	cp settings.plist $PKGROOT/private/var/db/openafs/etc/config/settings.plist.orig
     else
 	echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
