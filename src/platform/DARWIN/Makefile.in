@@ -15,15 +15,15 @@ afssettings: afssettings.m
 	${CC} ${CFLAGS} -o afssettings afssettings.m -framework Foundation
 
 install: \
-	${DESTDIR}${bindir}/afssettings
+	${DESTDIR}${sbindir}/afssettings
 
 dest: \
-	${DEST}/bin/afssettings
+	${DEST}/etc/afssettings
 
-${DESTDIR}${bindir}/afssettings: afssettings
+${DESTDIR}${sbindir}/afssettings: afssettings
 	${INSTALL} -s $? $@
 
-${DEST}/bin/afssettings: afssettings
+${DEST}/etc/afssettings: afssettings
 	${INSTALL} -s $? $@
 
 clean:

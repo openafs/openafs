@@ -581,7 +581,8 @@ finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
