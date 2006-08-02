@@ -59,11 +59,14 @@ if [ -z "$done" -a  -f CellServDB ]; then
   if cmp -s CellServDB CellServDB.master ; then
     echo CellServDB is up to date.
     cp CellServDB.master CellServDB.master.last
+    if [ ! -f CellServDB ]; then
+      cp CellServDB.master CellServDB
+    fi
     done=1
   fi
 fi
 
-if [ -z "$done" -a  -f CellServDB ]; then
+if [ -z "$done" ]; then
   # there are local changes to be merged
   if [ -f CellServDB -a -f CellServDB.master.last ]; then
     echo Merging CellServDB entries....
@@ -73,7 +76,7 @@ if [ -z "$done" -a  -f CellServDB ]; then
     # this is a new install, or an upgrade from pre-1.2.7
     echo "Installing new CellServDB"
     cp CellServDB.master CellServDB.master.last
-    if [ ! -e CellServDB ]; then
+    if [ ! -f CellServDB ]; then
 	cp CellServDB.master CellServDB
     fi
   fi
@@ -88,4 +91,7 @@ elif [ -e config/afssettings ]; then
   # turn off execution of afssettings
   chmod a-x config/afssettings
 fi
+
+#here we should run tools which configure the client, and then if it's enabled:
+/Library/StartupItems/OpenAFS/OpenAFS start
 

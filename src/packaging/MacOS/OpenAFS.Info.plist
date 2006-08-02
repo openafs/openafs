@@ -18,6 +18,10 @@
 	<false/>
 	<key>IFPkgFlagAuthorizationAction</key>
 	<string>RootAuthorization</string>
+	<key>IFPkgFlagBackgroundAlignment</key>
+	<string>bottomright</string>
+	<key>IfPkgFlagBackgroundScaling</key>
+	<string>proportional</string>
 	<key>IFPkgFlagDefaultLocation</key>
 	<string>/</string>
 	<key>IFPkgFlagInstallFat</key>
@@ -27,7 +31,7 @@
 	<key>IFPkgFlagRelocatable</key>
 	<false/>
 	<key>IFPkgFlagRestartAction</key>
-	<string>RecommendedRestart</string>
+	<string>NoRestart</string>
 	<key>IFPkgFlagRootVolumeOnly</key>
 	<true/>
 	<key>IFPkgFlagUpdateInstalledLanguages</key>
