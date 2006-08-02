@@ -22,9 +22,9 @@
 #endif /* HAVE_STRINGS_H */
 #endif /* HAVE_STRING_H */
 
+#include <afs/stds.h>
 #include <krb5.h>
 
-#include <afs/stds.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>

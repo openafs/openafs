@@ -60,17 +60,16 @@ u_long ntohl(u_long x)
 /* #include <krb.h> */
 #endif /* 0 */
 
+#include <afs/stds.h>
 #include <krb5.h>
 
 #ifdef WINDOWS
 
-#include <afs/stds.h>
 #include <afs/auth.h>
 #include <rx/rxkad.h>
 #include <afs/dirpath.h>
 
 #else /* !WINDOWS */
-#include <afs/stds.h>
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
 #endif
