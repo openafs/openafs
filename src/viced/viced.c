@@ -200,6 +200,7 @@ int busy_threshold = 600;
 int abort_threshold = 10;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 int sendBufSize = 16384;	/* send buffer size */
+int saneacls = 0;		/* Sane ACLs Flag */
 
 struct timeval tp;
 
@@ -1389,6 +1390,9 @@ ParseArgs(int argc, char *argv[])
 	    /* set syslog logging flag */
 	    mrafsStyleLogs = 1;
 	} 
+	else if (strcmp(argv[i], "-saneacls") == 0) {
+	    saneacls = 1;
+	}
 	else {
 	    return (-1);
 	}
