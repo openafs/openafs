@@ -13,26 +13,15 @@
 RCSID
     ("$Header$");
 
-#if	defined(AFS_DUX40_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_SUN54_ENV)
-#if defined AFS_DUX40_ENV
-#define OSVERS "DUX 4.0D"
-#else
-#if	defined(AFS_SUN54_ENV)
+#include <stdio.h>
+
+#if defined(AFS_SUN54_ENV)
 #define OSVERS "SunOS 5.6"
-#else
-#define OSVERS "SunOS 4.1.1"
-#endif
-#endif
 #include <sys/types.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <sys/param.h>
-#include <stdio.h>
-#ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
-#else
-#include <ufs/fs.h>
-#endif
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sys/mount.h>
@@ -43,35 +32,13 @@ RCSID
 #include <time.h>
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
-#ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
-#else
-#include <ufs/inode.h>
-#endif
 #else /* AFS_VFSINCL_ENV */
-#ifdef	AFS_DUX40_ENV
-#include <ufs/inode.h>
-#else
 #include <sys/inode.h>
-#endif
 #endif /* AFS_VFSINCL_ENV */
-#ifdef	AFS_AIX_ENV
-#include <sys/vfs.h>
-#include <sys/lockf.h>
-#else
-#ifdef	AFS_HPUX_ENV
-#include <unistd.h>
-#include <checklist.h>
-#else
-#ifdef	  AFS_SUN5_ENV
 #include <sys/mnttab.h>
 #include <sys/mntent.h>
 #include <sys/vfstab.h>
-#else
-#include <fstab.h>
-#endif
-#endif
-#endif
 #include <fcntl.h>
 #include <afs/osi_inode.h>
 #include <errno.h>
@@ -88,70 +55,6 @@ char *rawname(), *unrawname(), *vol_DevName(), *blockcheck();
 #define ROOTINODE	2
 int force = 0, verbose = 0, unconv = 0;
 
-#ifdef	AFS_DUX40_ENV
-int
-sortinodes(a, b)
-     int *a, *b;
-{
-    if (*a < *b)
-	return -1;
-    if (*a > *b)
-	return +1;
-    return 0;
-}
-
-int
-BuildInodes(path)
-     char *path;
-{
-    DIR *d;
-    struct dirent *de;
-    char p[256];
-    struct stat stats;
-    int code = 0;
-
-    d = opendir(path);
-    if (!d) {
-	printf("Cannot open %s: error %d\n", path, errno);
-	return -1;
-    }
-
-    while (de = readdir(d)) {
-	if (iarraysize == 0) {
-	    iarraysize = 1000;
-	    iarray = (int *)malloc(iarraysize * sizeof(int));
-	}
-	if (icount >= iarraysize) {
-	    iarraysize += 1000;
-	    iarray = (int *)realloc(iarray, iarraysize * sizeof(int));
-	}
-	iarray[icount] = de->d_ino;
-	icount++;
-
-	if ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0))
-	    continue;
-
-	strcpy(p, path);
-	strcat(p, "/");
-	strcat(p, de->d_name);
-
-	code = stat(p, &stats);
-	if (code) {
-	    printf("Cannot stat %s: error %d\n", path, errno);
-	    return -1;
-	}
-	if (S_ISDIR(stats.st_mode)) {
-	    code = BuildInodes(p);
-	    if (code)
-		break;
-	}
-    }
-
-    closedir(d);
-    return code;
-}
-#endif
-
 static
 ConvCmd(as)
      struct cmd_syndesc *as;
@@ -167,8 +70,6 @@ UnConvCmd(as)
     unconv = 1;
     handleit(as);
 }
-
-#if	defined(AFS_SUN54_ENV)
 
 static
 handleit(as)
@@ -283,105 +184,6 @@ handleit(as)
     }
 }
 
-#else /* AFS_SUN54_ENV */
-
-handleit(as)
-     struct cmd_syndesc *as;
-{
-    register struct cmd_item *ti;
-    char *dname;
-    afs_int32 haspart = 0;
-
-    if (as->parms[1].items)
-	verbose = 1;
-    else
-	verbose = 0;
-    if (as->parms[2].items)
-	force = 1;
-    else
-	force = 0;
-
-    if (unconv) {
-	printf
-	    ("Unconverts from a %s AFS partition to a pre-%s compatible format.\n\n",
-	     OSVERS, OSVERS);
-    } else {
-	printf
-	    ("Converts a pre-%s AFS partition to a %s compatible format.\n\n",
-	     OSVERS, OSVERS);
-    }
-    if (!force) {
-	printf
-	    ("*** Must use the '-force' option for command to have effect! ***\n");
-	if (!verbose) {
-	    printf
-		("*** Use the '-verbose' option to report what will be converted ***\n");
-	    exit(1);
-	}
-    }
-
-    for (ti = as->parms[0].items; ti; ti = ti->next) {
-	struct fstab *fsent;
-	char *namep = ti->data;
-	int found = 0;
-
-	haspart = 1;
-	setfsent();
-	while (fsent = getfsent()) {
-	    char *part = fsent->fs_file;
-
-	    if (!strncmp(namep, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
-		if (!strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
-		    if (!strncmp(part, namep, strlen(part) + 1)) {
-			if (dname = unrawname(fsent->fs_spec)) {
-			    ProcessFileSys(dname, namep);
-			    found = 1;
-			    break;
-			}
-		    }
-		}
-	    } else {
-		if (!rawname(namep) || !unrawname(namep))
-		    break;
-		if (!strcmp(fsent->fs_spec, rawname(namep))
-		    || !strcmp(fsent->fs_spec, unrawname(namep))) {
-		    if (dname = unrawname(fsent->fs_spec)) {
-			ProcessFileSys(dname, fsent->fs_file);
-			found = 1;
-			break;
-		    }
-		}
-	    }
-	}
-	if (!found)
-	    printf("Unknown input AFS partition name or device: %s\n", namep);
-	endfsent();
-    }
-
-    if (!haspart) {
-	int didSome = 0;
-	struct fstab *fsent;
-
-	setfsent();
-	while (fsent = getfsent()) {
-	    char *part = fsent->fs_file;
-
-	    if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE) == 0) {
-		if (dname = unrawname(fsent->fs_spec)) {
-		    ProcessFileSys(dname, part);
-		    didSome++;
-		}
-	    }
-	}
-	endfsent();
-	if (!didSome)
-	    printf
-		("No file system partitions named %s* found; not processed\n",
-		 VICE_PARTITION_PREFIX);
-    }
-}
-#endif /* AFS_SUN54_ENV */
-
 
 #include "AFS_component_version_number.c"
 
@@ -395,35 +197,15 @@ main(argc, argv)
 	printf("must be run as root; sorry\n");
 	exit(1);
     }
-#ifdef	AFS_DUX40_ENV
-    ts = cmd_CreateSyntax("convert", ConvCmd, 0,
-			  "Convert to DUX 4.0D format");
-#else
-#if	defined(AFS_SUN54_ENV)
     ts = cmd_CreateSyntax("convert", ConvCmd, 0,
 			  "Convert to AFS SunOS 5.6 format");
-#else
-    ts = cmd_CreateSyntax("convert", ConvCmd, 0,
-			  "Convert to AFS 4.1.1 format");
-#endif
-#endif
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose mode");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"Safeguard enforce switch");
     cmd_AddParm(ts, "-device", CMD_LIST, CMD_OPTIONAL, "AFS raw device name");
-#ifdef	AFS_DUX40_ENV
-    ts = cmd_CreateSyntax("unconvert", UnConvCmd, 0,
-			  "Convert back from OSF 4.0D to earlier formats");
-#else
-#if	defined(AFS_SUN54_ENV)
     ts = cmd_CreateSyntax("unconvert", UnConvCmd, 0,
 			  "Convert back from AFS SunOS 5.6 to earlier formats");
-#else
-    ts = cmd_CreateSyntax("unconvert", UnConvCmd, 0,
-			  "Convert back from AFS 4.1.1 to earlier formats");
-#endif
-#endif
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose mode");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
@@ -439,9 +221,6 @@ ProcessFileSys(dname, path)
      char *dname, *path;
 {
     struct stat status, stat1;
-#if	!defined(AFS_SUN54_ENV)
-    struct ufs_args ufsargs;
-#endif
     char devbuffer[120], *devname;
     int i, j, mounted = 0, code;
 
@@ -460,58 +239,14 @@ ProcessFileSys(dname, path)
     }
     strcpy(devbuffer, dname);
     devname = devbuffer;
-#if	!defined(AFS_SUN54_ENV)
-    EnsureDevice(devname);
-#endif
-    if (!mounted) {
-#ifdef	AFS_DUX40_ENV
-	ufsargs.fspec = devname;
-	code = mount(MOUNT_UFS, path, 0, &ufsargs);
-#else
-#if	defined(AFS_SUN54_ENV)
-	code = 0;
-#else
-	ufsargs.fspec = devname;
-	code = mount("4.2", path, M_NEWTYPE, &ufsargs);
-#endif
-#endif
-	if (code < 0) {
-	    printf("Couldn't mount %s on %s (err=%d)\n", devname, path,
-		   errno);
-	    return;
-	}
-    }
 
     if (stat(path, &status) == -1) {
 	printf("Couldn't find file system \"%s\"\n", path);
 	return;
     }
-#ifdef	AFS_DUX40_ENV
-    icount = 0;
-    code = BuildInodes(path);
-    if (code) {
-	printf("Couldn't generate list of all inodes in directory %s\n",
-	       path);
-	return;
-    }
-    if (icount)
-	qsort(iarray, icount, sizeof(int), sortinodes);
-#endif
-
-#if	!defined(AFS_SUN54_ENV)
-    if (!(devname = vol_DevName(status.st_dev))) {
-	printf("Couldn't get devname for %d\n", status.st_dev);
-	return;
-    }
-#endif
 
     if (ProcessAfsInodes(devname, path) == -1)
 	printf("Unable to get inodes for \"%s\"; not processed\n", path);
-    if (!mounted) {
-#ifdef	AFS_DUX40_ENV
-	umount(path);
-#endif
-    }
 }
 
 
@@ -531,11 +266,7 @@ ProcessAfsInodes(devname, partition)
 
     sync();
     sleep(5);			/* XXXX */
-#if	defined(AFS_SUN54_ENV)
     sprintf(rdev, "%s", devname);
-#else
-    sprintf(rdev, "/dev/r%s", devname);
-#endif
     pfd = open(rdev, O_RDWR);
     if (pfd < 0) {
 	printf("Could not read device %s to get inode list\n", rdev);
@@ -571,35 +302,19 @@ ProcessAfsInodes(devname, partition)
 	   partition, rdev);
     for (c = 0; c < super.fs.fs_ncg; c++) {
 	daddr_t dblk1;
-#if	defined(AFS_SUN54_ENV)
 	daddr_t f1;
 	offset_t off;
-#endif
 
 	i = c * super.fs.fs_ipg;
 	e = i + super.fs.fs_ipg;
-#ifdef	AFS_DUX40_ENV
-	dblk1 = fsbtodb(&super.fs, itod(&super.fs, i));
-	code = lseek(pfd, (off_t) ((off_t) dblk1 * DEV_BSIZE), L_SET);
-#else
-#if	defined(AFS_SUN54_ENV)
 	f1 = fsbtodb(&super.fs, itod(&super.fs, i));
 	off = (offset_t) f1 << DEV_BSHIFT;
 	code = llseek(pfd, off, L_SET);
-#else
-	code =
-	    lseek(pfd, dbtob(fsbtodb(&super.fs, itod(&super.fs, i))), L_SET);
-#endif
-#endif
 	if (code == -1) {
 	    printf("Error reading inodes for partition %s; run vfsck\n",
 		   partition);
 	    printf("%d: %s\n", errno, strerror(errno));
-#if	defined(AFS_SUN54_ENV)
 	    printf("file number = %d; offset = %ld\n", pfd, off);
-#else
-	    printf("file number = %d\n", pfd);
-#endif
 	    goto out;
 	}
 	while (i < e) {
@@ -616,195 +331,6 @@ ProcessAfsInodes(devname, partition)
 
 	    /* Step through each inode */
 	    for (p = inodes; p < einodes && i < e; i++, p++)
-#ifdef	AFS_DUX40_ENV
-	    {
-		afs_uint32 v1, v2, v3, v4;
-		afs_uint32 volid, vnode, uniq, vers;
-		afs_uint32 type, rwvol;
-		afs_uint32 t;
-		int special;
-
-		if ((p->di_mode & IFMT) != IFREG) {
-		    /* This inode is not an AFS inode so 
-		     * zero out all the spare fields.
-		     */
-		  zeroSpares:
-		    if (!(p->di_flags & IC_PROPLIST)) {
-			p->di_proplb = 0;
-		    }
-		    if (!(p->di_flags & IC_XUID)) {
-			p->di_uid = 0;
-		    }
-		    if (!(p->di_flags & IC_XGID)) {
-			p->di_gid = 0;
-		    }
-		    mod = 1;
-		    ncnt++;
-		    continue;
-		}
-
-/*	    printf("Inode %d: proplb=%u, uid=%u, bcuid=0x%x, bcgid=0x%x, gid=0x%x\n",
- *                 i , p->di_proplb, p->di_uid, p->di_bcuid, p->di_bcgid,
- *		       p->di_gid);
- */
-
-		if (unconv) {	/*unconvert */
-		    /* Check if the inode is not a DUX40D AFS inode */
-		    if (p->di_proplb != VICEMAGIC
-			|| (p->di_flags & IC_PROPLIST)) {
-			ccnt++;
-			if (verbose)
-			    printf("   AFS Inode %d: already unconverted\n",
-				   i);
-			continue;
-		    }
-
-		    v1 = p->di_uid;
-		    v2 = p->di_gid;
-		    v3 = ((u_int) (p->di_bcuid)) << 16 |
-			((u_int) (p->di_bcgid));
-
-		    /* We have a sorted list of ufs inodes. Is it one of these */
-		    while ((istep < icount) && (i > iarray[istep])) {
-			istep++;
-		    }
-		    if ((istep < icount) && (i == iarray[istep])) {
-			/* Yes, its a ufs inode */
-			if (verbose)
-			    printf("   Inode %d: Not an AFS Inode\n", i);
-			goto zeroSpares;
-		    }
-
-		    /* Is it not an AFS inode. !IS_VICEMAGIC check */
-		    if (!(v2 || v3)) {
-			if (verbose)
-			    printf("Warning: Inode %d: Unreferenced inode\n",
-				   i);
-			continue;	/* skip, making no change */
-		    }
-
-		    volid = v1;
-		    if (((v2 >> 3) == 0x1fffffff) && (v2 & 0x3)) {
-			special = 1;	/* INODESPECIAL */
-			type = v2 & 0x3;
-			rwvol = v3;
-			if (verbose) {
-			    printf
-				("   %s AFS Inode %d: Vol=%u, RWVol=%u, Type=%d\n",
-				 (force ? "Unconverting" :
-				  "Would have unconverted"), i, volid, rwvol,
-				 type);
-			}
-		    } else {
-			special = 0;
-			vnode = ((v2 >> 27) << 16) + (v3 & 0xffff);
-			uniq = (v2 & 0x3fffff);
-			vers =
-			    (((v2 >> 22) & 0x1f) << 16) +
-			    ((v3 >> 16) & 0xffff);
-			if (verbose) {
-			    printf
-				("   %s AFS Inode %d: RWVol=%u, VNode=%u, Uniq=%u, Vers=%u\n",
-				 (force ? "Unconverting" :
-				  "Would have unconverted"), i, volid, vnode,
-				 uniq, vers);
-			}
-		    }
-
-		    /* Now unconvert the DUX40D AFS inode to the OSF30 version */
-		    p->di_proplb = v1;
-		    p->di_uid = v2;
-		    p->di_gid = v3;
-		    p->di_flags &= ~(IC_PROPLIST | IC_XUID | IC_XGID);
-		    p->di_bcuid = 0;
-		    p->di_bcgid = -2;
-		    mod = 1;
-		    cnt++;
-		    wcnt++;
-
-		} else {	/*convert */
-		    if ((p->di_proplb == VICEMAGIC
-			 && !(p->di_flags & IC_PROPLIST))
-			|| (p->di_uid == 0 && p->di_gid == 0)
-			|| (p->di_flags & (IC_XUID | IC_XGID))) {
-			/* This inode is either already converted or not an AFS inode */
-			/* We have a sorted list of ufs inodes. Is it one of these    */
-			while ((istep < icount) && (i > iarray[istep])) {
-			    istep++;
-			}
-			if ((istep < icount) && (i == iarray[istep])) {
-			    /* Yes, its a ufs inode */
-			    if (verbose) {
-				printf("   Inode %d: Not an AFS Inode %s\n",
-				       i, ((p->di_spare[1]
-					    || p->
-					    di_spare[2]) ? "(fixed)" : ""));
-			    }
-			    goto zeroSpares;
-			}
-
-			/* Is it a AFS inode. IS_VICEMAGIC check */
-			if ((p->di_uid || p->di_gid)
-			    && !(p->di_flags & (IC_XUID | IC_XGID))) {
-			    ccnt++;
-			    if (verbose)
-				printf("   AFS Inode %d: already converted\n",
-				       i);
-			    continue;
-			}
-
-			/* Not an AFS nor UFS inode */
-			printf("Warning: Inode %d: Unreferenced inode\n", i);
-			continue;	/* skip, making no changes */
-		    }
-
-		    v1 = p->di_proplb;
-		    v2 = p->di_uid;
-		    v3 = p->di_gid;
-
-		    volid = v1;
-		    if (((v2 >> 3) == 0x1fffffff) && (v2 & 0x3)) {
-			special = 1;	/* INODESPECIAL */
-			type = v2 & 0x3;
-			rwvol = v3;
-			if (verbose) {
-			    printf
-				("   %s AFS Inode %d: Vol=%u, RWVol=%u, Type=%d\n",
-				 (force ? "Converting" :
-				  "Would have converted"), i, volid, rwvol,
-				 type);
-			}
-		    } else {
-			special = 0;
-			vnode = ((v2 >> 27) << 16) + (v3 & 0xffff);
-			uniq = (v2 & 0x3fffff);
-			vers =
-			    (((v2 >> 22) & 0x1f) << 16) +
-			    ((v3 >> 16) & 0xffff);
-			if (verbose) {
-			    printf
-				("   %s AFS Inode %d: RWVol=%u, VNode=%u, Uniq=%u, Vers=%u\n",
-				 (force ? "Converting" :
-				  "Would have converted"), i, volid,
-				 (vnode & 0x1fffff), (uniq & 0x3fffff),
-				 (vers & 0x1fffff));
-			}
-		    }
-
-		    /* Now convert the OSF30 AFS inode to the DUX40D version */
-		    p->di_proplb = VICEMAGIC;
-		    p->di_uid = v1;
-		    p->di_gid = v2;
-		    p->di_bcuid = (u_short) (v3 >> 16);
-		    p->di_bcgid = (u_short) v3;
-		    p->di_flags &= ~(IC_PROPLIST);
-		    p->di_flags |= (IC_XUID | IC_XGID);
-		    mod = 1;
-		    cnt++;
-		    wcnt++;
-		}		/*convert */
-	    }
-#else
 	    {
 		afs_uint32 p1, p2, p3, p4;
 		int p5;
@@ -906,7 +432,6 @@ ProcessAfsInodes(devname, partition)
 			("Non AFS Inode %d: (p1=%x,p2=%x,p3=%x, p4=%x,p5=%x) ignoring..\n",
 			 i, p1, p2, p3, p4, p5);
 	    }
-#endif
 
 	    if (mod && force) {
 		if (lseek(pfd, -bufsize, SEEK_CUR) == -1) {	/* Point to loc bef read */
@@ -1113,21 +638,6 @@ EnsureDevice(abuffer)
     closedir(dirp);
     return 1;			/* failed */
 }
-#else
-
-#include "AFS_component_version_number.c"
-
-main(argc, argv)
-     int argc;
-     char *argv[];
-{
-    printf
-	("%s: **ONLY** supported for SunOS 3.5-4.x and dux4.0D systems ...\n",
-	 argv[0]);
-}
-#endif /*       defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV) */
-
-#if	defined(AFS_SUN54_ENV)
 
 /*
 ** Open the /etc/vfstab file to map the raw device name to the mountable
@@ -1201,4 +711,16 @@ CheckMountedDevice(devName)
     return 0;
 }
 
-#endif /* AFS_SUN54_ENV */
+#else /* !AFS_SUN54_ENV */
+
+#include "AFS_component_version_number.c"
+
+main(argc, argv)
+     int argc;
+     char *argv[];
+{
+    printf
+	("%s: **ONLY** supported for Solaris 2.4 and later ...\n",
+	 argv[0]);
+}
+#endif /* !AFS_SUN5_ENV */
