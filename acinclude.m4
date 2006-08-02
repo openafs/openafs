@@ -1021,8 +1021,16 @@ AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
 
+dnl Don't build PAM on IRIX; the interface doesn't work for us.
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
-	HAVE_PAM="yes"
+        case $AFS_SYSNAME in
+        sgi_*)
+                HAVE_PAM="no"
+                ;;
+        *)
+	        HAVE_PAM="yes"
+                ;;
+        esac
 else
 	HAVE_PAM="no"
 fi
