@@ -71,10 +71,10 @@
 
 RCSID("$Id$");
 
-#undef WORDS_BIGENDIAN
-#ifdef AFSBIG_ENDIAN
-#define WORDS_BIGENDIAN 1
-#endif
+
+
+
+
 
 #include "md5.h"
 #include "hash.h"
