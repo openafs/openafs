@@ -19,6 +19,7 @@ all: config mkvers \
 	${TOP_INCDIR}/afs/afs_args.h \
 	${TOP_INCDIR}/afs/icl.h \
 	${TOP_INCDIR}/afs/venus.h \
+	${TOP_INCDIR}/afs/vioc.h \
 	${TOP_INCDIR}/afs/debug.h
 
 Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
@@ -84,6 +85,9 @@ ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCD
 ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
 	$(INST)
 
+${DEST}/include/afs/vioc.h ${DESTDIR}${includedir}/afs/vioc.h ${TOP_INCDIR}/afs/vioc.h: ${srcdir}/vioc.h 
+	$(INST)
+
 ${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: ${srcdir}/debug.h 
 	$(INST)
 
@@ -98,6 +102,7 @@ install: ${DESTDIR}${includedir}/afs/param.h \
 	${DESTDIR}${includedir}/afs/afs_args.h \
 	${DESTDIR}${includedir}/afs/icl.h \
 	${DESTDIR}${includedir}/afs/venus.h \
+	${DESTDIR}${includedir}/afs/vioc.h \
 	${DESTDIR}${includedir}/afs/debug.h
 
 clean:
@@ -109,5 +114,6 @@ dest: ${DEST}/include/afs/param.h \
 	${DEST}/include/afs/afs_args.h \
 	${DEST}/include/afs/icl.h \
 	${DEST}/include/afs/venus.h \
+	${DEST}/include/afs/vioc.h \
 	${DEST}/include/afs/debug.h
 
