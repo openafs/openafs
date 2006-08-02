@@ -34,7 +34,6 @@ all: gi \
 	volinfo \
 	fssync-debug \
 	$(XFS_SIZE_CHECK) \
-	$(FS_CONV_SOL26) \
 	${TOP_INCDIR}/afs/nfs.h \
 	${TOP_INCDIR}/afs/vnode.h \
 	${TOP_INCDIR}/afs/viceinode.h \
@@ -123,10 +122,6 @@ install: vlib.a salvager volinfo fssync-debug
 		${INSTALL_PROGRAM} xfs_size_check \
 			${DESTDIR}${afssrvsbindir}/xfs_size_check ; \
 	fi
-	set -x; if test x"$(install_FS_CONV_SOL26)" != x"" ; then \
-		${INSTALL_PROGRAM} fs_conv_sol26 \
-			${DESTDIR}${afssrvsbindir}/fs_conv_sol26 ; \
-	fi
 
 dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL} -d ${DEST}/lib/afs
@@ -154,10 +149,6 @@ dest: vlib.a salvager volinfo fssync-debug
 	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
 		${INSTALL_PROGRAM} xfs_size_check \
 			$(DEST)/root.server/usr/afs/bin/xfs_size_check ; \
-	fi
-	set -x; if test x"$(install_FS_CONV_SOL26)" != x"" ; then \
-		${INSTALL_PROGRAM} fs_conv_sol26 \
-			$(DEST)/root.server/usr/afs/bin/fs_conv_sol26 ; \
 	fi
 
 #
@@ -215,12 +206,6 @@ fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
 vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}
 
-fs_conv_sol26: fs_conv_411.o ${LIBS}
-	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} ${XLIBS}
-
-fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -c ${srcdir}/fs_conv_411.c
-
 xfs_size_check: xfs_size_check.c
 	${CC} ${CFLAGS} -o xfs_size_check ${srcdir}/xfs_size_check.c
 
@@ -229,7 +214,7 @@ xfs_size_check: xfs_size_check.c
 #
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
-	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi
 
 test:
 	cd test; $(MAKE)

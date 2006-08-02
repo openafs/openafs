@@ -960,16 +960,6 @@ case $AFS_SYSNAME in
 		AC_SUBST(dest_XFS_SIZE_CHECK)
 	;;
 	
-	sun4x_*|sunx86_*)
-		FS_CONV_SOL26="fs_conv_sol26"
-		install_FS_CONV_SOL26='$(DESTDIR)${afssrvsbindir}/fs_conv_sol26'
-		dest_FS_CONV_SOL26='$(DEST)/root.server/usr/afs/bin/fs_conv_sol26'
-
-		AC_SUBST(FS_CONV_SOL26)
-		AC_SUBST(install_FS_CONV_SOL26)
-		AC_SUBST(dest_FS_CONV_SOL26)
-	;;
-
 	alpha_dux*)
 		FS_CONV_OSF40D="fs_conv_dux40D"
 		install_FS_CONV_OSF40D='$(DESTDIR)${afssrvsbindir}/fs_conv_dux40D'

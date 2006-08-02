@@ -90,14 +90,6 @@ YACC = @YACC@
 #
 # Special build targets
 #
-dest_FS_CONV_OSF40D = @dest_FS_CONV_OSF40D@
-install_FS_CONV_OSF40D = @install_FS_CONV_OSF40D@
-FS_CONV_OSF40D = @FS_CONV_OSF40D@
-
-dest_FS_CONV_SOL26 = @dest_FS_CONV_SOL26@
-install_FS_CONV_SOL26 = @install_FS_CONV_SOL26@
-FS_CONV_SOL26 = @FS_CONV_SOL26@
-
 dest_XFS_SIZE_CHECK = @dest_XFS_SIZE_CHECK@
 install_XFS_SIZE_CHECK = @install_XFS_SIZE_CHECK@
 XFS_SIZE_CHECK = @XFS_SIZE_CHECK@

@@ -5,10 +5,44 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-SHELL=/bin/sh
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-# We have no platform-specific stuff for this platform (yet).
-all:
-install:
-dest:
+INCLS = ${TOP_INCDIR}/afs/afsint.h ${TOP_INCDIR}/afs/cmd.h \
+	${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/param.h
+
+LIBS = ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libacl.a
+
+all: fs_conv_sol26
+
+#
+# Build targets
+#
+fs_conv_sol26: fs_conv_sol26.o ${LIBS}
+	${CC} ${CFLAGS} -o fs_conv_sol26 fs_conv_sol26.o \
+		${TOP_LIBDIR}/libcmd.a ${LIBS} ${XLIBS}
+
+fs_conv_sol26: ${INCLS} AFS_component_version_number.c
+
+#
+# Installation targets
+#
+install: fs_conv_sol26
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL_PROGRAM} fs_conv_sol26 \
+		${DESTDIR}${afssrvsbindir}/fs_conv_sol26
+
+dest: fs_conv_sol26
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} fs_conv_sol26 \
+		$(DEST)/root.server/usr/afs/bin/fs_conv_sol26
+
+#
+# Misc. targets
+#
 clean:
+	$(RM) -f *.o *.a AFS_component_version_number.c fs_conv_sol26
+
+include ../config/Makefile.version
