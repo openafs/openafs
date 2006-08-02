@@ -20,7 +20,7 @@ INCLUDES	= -I. -I${srcdir} -I../sys
 CFLAGS		= ${COMMON_CFLAGS} ${INCLUDES} ${MT_CFLAGS} ${SHLIB_CFLAGS}
 
 SYS		= ${srcdir}/../sys
-SYSOBJS		= glue.o pioctl.o setpag.o syscall.o
+SYSOBJS		= glue.o pioctl.o setpag.o
 LIBOBJS		= kopenafs.o ${SYSOBJS} AFS_component_version_number.o
 
 LIBKOPENAFS	= libkopenafs.${SHLIB_SUFFIX}.${MAJOR}.${MINOR}
@@ -29,11 +29,8 @@ all: ${TOP_LIBDIR}/${LIBKOPENAFS} ${TOP_LIBDIR}/libkopenafs.a \
 		${TOP_INCDIR}/kopenafs.h
 
 ${TOP_LIBDIR}/${LIBKOPENAFS}: ${LIBKOPENAFS}
-	${INSTALL_DATA} ${LIBKOPENAFS} ${TOP_LIBDIR}/${LIBKOPENAFS}
-	-ln -f -s ${LIBKOPENAFS} \
-		${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBKOPENAFS} \
-		${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
+	../config/shlib-install -d ${TOP_LIBDIR} \
+		-l libkopenafs -M ${MAJOR} -m ${MINOR}
 
 ${TOP_LIBDIR}/libkopenafs.a: libkopenafs.a
 	${INSTALL_DATA} libkopenafs.a $@
@@ -53,47 +50,41 @@ setpag.o: ${SYS}/setpag.c ${SYS}/afssyscalls.h
 # This file is only actually used on SGI and AIX, but some systems can't cope
 # with an empty .o file being included in a link.
 syscall.o: ${SYS}/syscall.s
-	@set -x; case "$(SYS_NAME)" in \
+	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_*) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s; \
 		;; \
-	*fbsd* | *obsd* | *nbsd*) \
-		${CCOBJ} -E ${SFLAGS} syscall.s > syscall.S ; \
-		${AS} syscall.S -o syscall.o ; \
-		$(RM) -f syscall.S; \
-		;; \
-	rs_aix*) \
+	rs_aix* | hp_ux10*) \
 		/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss; \
 		$(RM) syscall.ss; \
 		;; \
 	*) \
-		touch syscall.o; \
+		touch syscall.o ; \
 		;; \
 	esac
 
 libkopenafs.a: ${LIBOBJS}
 	${RM} -f $@
-	${AR} crv $@ ${LIBOBJS}
+	@set -e; set -x; case "$(SYS_NAME)" in \
+	sgi_* | rs_aix* | hp_ux10*) \
+		${AR} crv $@ ${LIBOBJS} syscall.o ;; \
+	*) \
+		${AR} crv $@ ${LIBOBJS} ;; \
+	esac
 	${RANLIB} $@
 
 ${LIBKOPENAFS}: ${LIBOBJS}
-	case ${SYS_NAME} in \
-	rs_aix*) \
-		${SHLIB_LINKER} -o ${LIBKOPENAFS} ${LIBOBJS} \
-			-bE:${srcdir}/kopenafs.exp ${MT_LIBS}; \
-		;; \
-	sun*_5*) \
-		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${MAJOR} \
-			-o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
-		;; \
-	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${MAJOR} \
-			-Wl,--version-script=${srcdir}/mapfile \
-			-o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
+	@set -e; set -x; case ${SYS_NAME} in \
+	sgi_* | rs_aix* | hp_ux10*) \
+		../config/shlib-build -d $(srcdir) -l libkopenafs \
+			-M ${MAJOR} -m ${MINOR} -- \
+			${LIBOBJS} syscall.o ${MT_LIBS} ; \
 		;; \
 	*) \
-		${SHLIB_LINKER} -o ${LIBKOPENAFS} ${LIBOBJS} ${MT_LIBS}; \
+		../config/shlib-build -d $(srcdir) -l libkopenafs \
+			-M ${MAJOR} -m ${MINOR} -- \
+			${LIBOBJS} ${MT_LIBS} ; \
 		;; \
 	esac
 
@@ -110,28 +101,23 @@ install: ${LIBKOPENAFS}
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL_DATA} libkopenafs.a ${DESTDIR}${libdir}/libkopenafs.a
-	${INSTALL_DATA} ${LIBKOPENAFS} ${DESTDIR}${libdir}/${LIBKOPENAFS}
-	-ln -f -s ${LIBKOPENAFS} \
-		${DESTDIR}${libdir}/libkopenafs.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBKOPENAFS} \
-		${DESTDIR}${libdir}/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
 	${INSTALL_DATA} kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
+	../config/shlib-install -d ${DESTDIR}${libdir} \
+		-l libkopenafs -M ${MAJOR} -m ${MINOR}
 
 dest: ${LIBKOPENAFS}
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} libkopenafs.a ${DEST}/lib/libkopenafs.a
-	${INSTALL_DATA} ${LIBKOPENAFS} ${DEST}/lib/${LIBKOPENAFS}
-	-ln -f -s ${LIBKOPENAFS} \
-		${DEST}/lib/libkopenafs.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBKOPENAFS} \
-		${DEST}/lib/libkopenafs.${SHLIB_SUFFIX}.${MAJOR}
 	${INSTALL_DATA} kopenafs.h ${DEST}/include/kopenafs.h
+	../config/shlib-install -d ${DEST}/lib \
+		-l libkopenafs -M ${MAJOR} -m ${MINOR}
 
 #
 # Misc targets
 #
 clean:
-	$(RM) -f *.o *.a ${LIBKOPENAFS} AFS_component_version_number.c
+	$(RM) -f *.o *.a ${LIBKOPENAFS} AFS_component_version_number.c \
+		test-setpag test-unlog
 
 include ../config/Makefile.version

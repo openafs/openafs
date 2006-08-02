@@ -48,46 +48,13 @@ afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
 
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
-	set -x; \
-	case "$(SYS_NAME)" in \
-	hp_ux* | ia64_hpux*) \
-		$(LD) $(LDFLAGS) -c ${srcdir}/mapfile.hp -o $@ \
-			afs_setcred.o afs_auth.o afs_util.o \
-			$(SHOBJS) $(LIBS) ;; \
-	sun*_5*) \
-		$(LD) $(LDFLAGS) -M ${srcdir}/mapfile -o $@ \
-			afs_setcred.o afs_auth.o afs_util.o \
-			$(SHOBJS) $(LIBS) ;; \
-	*linux*) \
-		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
-			afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
-	*fbsd*| *nbsd*) \
-		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
-			afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
-	* ) \
-		echo No link line for system $(SYS_NAME). ;; \
-	esac
+	../config/shlib-build -d $(srcdir) -f pam_afs.so.1 -l pam_afs -- \
+		afs_setcred.o afs_auth.o afs_util.o ${SHOBJS} ${LIBS}
 
 pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
-	set -x; \
-	case "$(SYS_NAME)" in \
-	hp_ux* | ia64_hpux*) \
-		$(LD) $(LDFLAGS) -c ${srcdir}/mapfile.hp -o $@ \
-			afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
-			$(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
-	sun*_5*) \
-		$(LD) $(LDFLAGS) -M ${srcdir}/mapfile -o $@ \
-			afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
-			$(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
-	*linux*) \
-		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
-			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
-	*fbsd*| *nbsd*) \
-		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
-			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
-	* ) \
-		echo No link line for system $(SYS_NAME). ;; \
-	esac
+	../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
+		afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
+		${SHOBJS} ${KLIBS}
 
 test_pam: test_pam.o
 	set -x; \

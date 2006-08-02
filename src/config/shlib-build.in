@@ -1,0 +1,121 @@
+#!/bin/sh
+#
+# Builds a shared library, incorporating the random portability work that we
+# have to do.  Gets the basic information from Autoconf and knows how to find
+# the appropriate system-specific map or version file and set library SONAMEs.
+#
+# This is not libtool.  If it appears to be in danger of evolving into
+# libtool, please shoot it and start over, possibly by rewriting AFS in Ada.
+
+# We take the following regular arguments: -d <srcdir>, -f <filename>, -l
+# <library>, -M <major>, and -m <minor>.  If -f is given, it overrides -l and
+# specifies the complete filename of the shared library to build.  We then
+# expect a -- option indicating the end of our arguments and the rest of the
+# arguments are passed along verbatim to the linker.
+
+linker="@SHLIB_LINKER@"
+suffix="@SHLIB_SUFFIX@"
+sysname="@AFS_SYSNAME@"
+
+library=
+major=
+minor=
+srcdir=.
+done=
+while [ -z "$done" ] && [ $# -gt 0 ] ; do
+    case "$1" in
+    -d)
+        shift
+        srcdir="$1"
+        shift
+        ;;
+    -f)
+        shift
+        filename="$1"
+        shift
+        ;;
+    -l)
+        shift
+        library="$1"
+        shift
+        ;;
+    -M)
+        shift
+        major="$1"
+        shift
+        ;;
+    -m)
+        shift
+        minor="$1"
+        shift
+        ;;
+    --)
+        shift
+        done=yes
+        ;;
+    *)
+        echo 'Usage: shlib-build -l <lib> -M <major> -m <minor> -- ...' >&2
+        exit 1
+        ;;
+    esac
+done
+if [ -z "$library" ] ; then
+    echo 'Usage: shlib-install -l <lib> -M <major> -m <minor>' >&2
+    exit 1
+fi
+
+# Print out what we're doing while we do it for debugging.
+export=
+if [ -z "$filename" ] ; then
+    if [ -z "$major" ] ; then
+        filename="$library.$suffix"
+        soname=
+    else
+        filename="$library.$suffix.$major.$minor"
+        soname="$library.$suffix.$major"
+    fi
+fi
+case $sysname in
+rs_aix*)
+    if [ -f "$srcdir/$library.exp" ] ; then
+        export="-bE:$srcdir/$library.exp"
+    fi
+    echo "$linker $export -o $filename $*"
+    $linker $export -o "$filename" "$@"
+    ;;
+sun*_5*)
+    if [ -f "$srcdir/$library.map" ] ; then
+        export="-Wl,-M$srcdir/$library.map"
+    fi
+    if [ -z "$soname" ] ; then
+        echo "$linker $export -o $filename $*"
+        $linker $export -o "$filename" "$@"
+    else
+        echo "$linker $export -h $soname -o $filename $*"
+        $linker $export -h "$soname" -o "$filename" "$@"
+    fi
+    ;;
+*_linux*)
+    if [ -f "$srcdir/$library.map" ] ; then
+        export="-Wl,--version-script=$srcdir/$library.map"
+    fi
+    if [ -z "$soname" ] ; then
+        echo "$linker $export -o $filename $*"
+        $linker $export -o "$filename" "$@"
+    else
+        echo "$linker $export -Wl,-h,$soname -o $filename $*"
+        $linker $export -Wl,-h,"$soname" -o "$filename" "$@"
+    fi
+    ;;
+hp_ux*)
+    if [ -f "$srcdir/$library.hp" ] ; then
+        export="-c $srcdir/$library.hp"
+    fi
+    echo "$linker $export -o $filename $*"
+    $linker $export -o "$filename" "$@"
+    ;;
+*)
+    echo "$linker -o $filename $*"
+    $linker -o "$filename" "$@"
+    ;;
+esac

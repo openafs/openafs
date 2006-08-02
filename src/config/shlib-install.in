@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# Install a shared library, doing the appropriate portable linking depending
+# on the platform.  We don't deal with rpath.
+#
+# This is not libtool.  If it appears to be in danger of evolving into
+# libtool, please shoot it and start over, possibly by rewriting AFS in Ada.
+
+# We take the following regular arguments: -d <destination>, -l <library>, -M
+# <major>, -m <minor>.
+
+INSTALL="@INSTALL@"
+install="@INSTALL_DATA@"
+suffix="@SHLIB_SUFFIX@"
+sysname="@AFS_SYSNAME@"
+
+library=
+major=
+minor=
+while [ $# -gt 0 ] ; do
+    case "$1" in
+    -d)
+        shift
+        dest="$1"
+        shift
+        ;;
+    -l)
+        shift
+        library="$1"
+        shift
+        ;;
+    -M)
+        shift
+        major="$1"
+        shift
+        ;;
+    -m)
+        shift
+        minor="$1"
+        shift
+        ;;
+    *)
+        echo 'Usage: shlib-install -d <dest> -l <lib> -M <maj> -m <min>' >&2
+        exit 1
+        ;;
+    esac
+done
+if [ -z "$library" ] || [ -z "$dest" ] ; then
+    echo 'Usage: shlib-install -d <dest> -l <lib> -M <maj> -m <min>' >&2
+    exit 1
+fi
+
+if [ -z "$major" ] ; then
+    filename="$library.$suffix"
+else
+    filename="$library.$suffix.$major.$minor"
+fi
+case $sysname in
+rs_aix*)
+    $install "$filename" "$dest/$library.$suffix.shared"
+    ;;
+hp_ux*)
+    if [ -z "$major" ] ; then
+        $install "$filename" "$dest/$library.$suffix"
+    else
+        $install "$filename" "$dest/$library.$suffix.$major"
+        ln -s -f "$library.$suffix.$major" "$dest/$library.$suffix"
+    fi
+    ;;
+*)
+    if [ -z "$major" ] ; then
+        $install "$filename" "$dest/$library.$suffix"
+    else
+        $install "$filename" $dest/"$filename"
+        ln -s -f "$filename" "$dest/$library.$suffix"
+        ln -s -f "$filename" "$dest/$library.$suffix.$major"
+    fi
+    ;;
+esac

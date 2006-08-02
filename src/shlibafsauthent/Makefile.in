@@ -103,31 +103,24 @@ LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTH
 all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 
 ${TOP_LIBDIR}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
-	${INSTALL_DATA} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
-	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
+	../config/shlib-install -d ${TOP_LIBDIR} \
+		-l libafsauthent \
+		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
 
 install: ${LIBAFSAUTHENT}
-	${INSTALL_DATA} ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
-	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}.${LIBFASAUTHENTMAJOR}
+	../config/shlib-install -d ${DESTDIR}${libdir} \
+		-l libafsauthent \
+		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
 
 dest: ${LIBAFSAUTHENT}
-	${INSTALL_DATA} ${LIBAFSAUTHENT} ${DEST}/lib/${LIBAFSAUTHENT}
-	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
+	../config/shlib-install -d ${DEST}/lib \
+		-l libafsauthent \
+		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
 
 ${LIBAFSAUTHENT}: ${LIBOBJS}
-	case ${SYS_NAME} in \
-	rs_aix4*) \
-		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS};; \
-	sun*_5*) \
-		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
-	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
-	*) \
-		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
-	esac
+	../config/shlib-build -d $(srcdir) -l libafsauthent \
+		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
+		${LIBOBJS} ${MT_LIBS}
 
 audit.o: ${AUDIT}/audit.c
 	${CCRULE}
@@ -281,4 +274,4 @@ pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent*
+	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so*

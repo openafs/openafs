@@ -747,7 +747,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		LD="/usr/ccs/bin/ld"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -768,7 +768,7 @@ case $AFS_SYSNAME in
 		LD="/usr/ccs/bin/ld"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -790,7 +790,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -812,7 +812,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -834,7 +834,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -856,7 +856,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
@@ -878,7 +878,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		;;
 
 	sunx86_58)
@@ -899,7 +899,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		;;
 
 	sunx86_59)
@@ -920,7 +920,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		;;
 
 	sunx86_510)
@@ -941,7 +941,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		;;
 esac
 

@@ -37,6 +37,8 @@ src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
 src/config/Makefile.version-NOCML \
+src/config/shlib-build \
+src/config/shlib-install \
 src/des/Makefile \
 src/des/test/Makefile \
 src/dir/Makefile \
@@ -120,5 +122,7 @@ src/vol/Makefile \
 src/vol/test/Makefile \
 src/volser/Makefile \
 src/xstat/Makefile \
-src/helper-splint.sh \
-)
+src/helper-splint.sh,
+
+[chmod a+x src/config/shlib-build
+ chmod a+x src/config/shlib-install])

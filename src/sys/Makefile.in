@@ -1,8 +1,3 @@
-# API version. When something changes, increment as appropriate. 
-# Ignore at your own risk.
-LIBAFSSETPAGMAJOR=1
-LIBAFSSETPAGMINOR=0
-
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -19,7 +14,8 @@ CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCF
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
-OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o syscall.o
+OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o \
+	AFS_component_version_number.o
 SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
@@ -80,39 +76,32 @@ depinstall: \
 	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h 
 
 libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
-		AFS_component_version_number.o ${LIBSYS_AIX_EXP}
-	$(RANLIB) $@
-	@set -x; case "${SYS_NAME}" in                   	\
-		rs_aix*) 			        \
-			$(AR) crv $@ afsl.exp;;         \
+	$(RM) -f $@
+	@set -e; set -x; case "$(SYS_NAME)" in \
+	sgi_* | hp_ux10*) \
+		${AR} crv $@ ${OBJECTS} ${RMTOBJS} syscall.o ;; \
+	rs_aix*) \
+		${AR} crv $@ ${OBJECTS} ${RMTOBJS} syscall.o afsl.exp ;; \
+	*) \
+		${AR} crv $@ ${OBJECTS} ${RMTOBJS} ;; \
 	esac
+	$(RANLIB) $@
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 
 syscall.o: syscall.s
-	@set -x; case "$(SYS_NAME)" in \
-	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sun4x_5?? | sunx86_5? | sunx86_5?? ) \
-		/usr/ccs/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
-		as -o syscall.o syscall.ss;		\
-		$(RM) syscall.ss;;				\
-	 sgi_* |*_darwin* ) \
-                ${CC} ${CFLAGS} -c ${srcdir}/syscall.s;;          \
-	 alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${srcdir}/syscall.s; \
-		${AS} -o syscall.o syscall.i; \
-		$(RM) -f syscall.ss syscall.i;; \
-	 hp_ux11? ) \
-		touch syscall.o;; \
-	 amd64_fbsd*|i386_*bsd*|*nbsd*) \
-		${CCOBJ} -E ${SFLAGS} syscall.s > syscall.S ; \
-		${AS} syscall.S -o syscall.o ;  \
-		$(RM) -f syscall.S ;;\
-	 *) \
+	@set -e; set -x; case "$(SYS_NAME)" in \
+	sgi_*) \
+                ${CC} ${CFLAGS} -c ${SYS}/syscall.s; \
+		;; \
+	rs_aix* | hp_ux10*) \
 		/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
-		as -o syscall.o syscall.ss;		\
-		$(RM) syscall.ss;;				\
+		as -o syscall.o syscall.ss; \
+		$(RM) syscall.ss; \
+		;; \
+	*) \
+		touch syscall.o ; \
+		;; \
 	esac
 
 afssyscalls.o: afssyscalls.c afssyscalls.h

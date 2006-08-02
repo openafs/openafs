@@ -1,2 +1,4 @@
 Makefile
-libafsrpc.so.1.1
+libafsrpc.a*
+libafsrpc.sl*
+libafsrpc.so*

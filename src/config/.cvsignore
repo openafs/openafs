@@ -15,4 +15,6 @@ Makefile.sun4x_56
 Makefile.sun4x_57
 param.h.new
 Makefile.config
+shlib-build
+shlib-install
 stamp-h1

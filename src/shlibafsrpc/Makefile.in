@@ -137,31 +137,21 @@ LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 all: ${TOP_LIBDIR}/${LIBAFSRPC}
 
 ${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
-	${INSTALL_DATA} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
-	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
+	../config/shlib-install -d ${TOP_LIBDIR} \
+		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
 
 install: ${LIBAFSRPC}
-	${INSTALL_DATA} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
-	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
+	../config/shlib-install -d ${DESTDIR}${libdir} \
+		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
 
 dest: ${LIBAFSRPC}
-	${INSTALL_DATA} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
-	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
+	../config/shlib-install -d ${DEST}/lib \
+		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
 
 ${LIBAFSRPC}: ${LIBOBJS}
-	case ${SYS_NAME} in \
-	rs_aix4* | rs_aix5*) \
-		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:${srcdir}/afsrpc.exp ${MT_LIBS};; \
-	sun*_5*) \
-		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
-	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
-	*) \
-		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
-	esac
+	../config/shlib-build -d $(srcdir) -l libafsrpc \
+		-M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR} -- \
+		${LIBOBJS} ${MT_LIBS}
 
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
@@ -417,4 +407,4 @@ afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o libafsrpc*
+	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so*

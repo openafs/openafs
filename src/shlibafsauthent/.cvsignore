@@ -1,2 +1,4 @@
 Makefile
-libafsauthent.so.1.0
+libafsauthent.a.*
+libafsauthent.sl*
+libafsauthent.so*
