@@ -990,7 +990,7 @@ fs_stateFillHeader(struct fs_state_header * hdr)
     hdr->timestamp = FT_ApproxTime();
     hdr->server_uuid = FS_HostUUID;
     hdr->valid = 1;
-#ifdef AFSBIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
     hdr->endianness = 1;
 #else
     hdr->endianness = 0;
@@ -1016,7 +1016,7 @@ fs_stateCheckHeader(struct fs_state_header * hdr)
 	ViceLog(0, ("fs_stateCheckHeader: dump was previously flagged invalid\n"));
 	ret = 1;
     }
-#ifdef AFSBIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
     else if (!hdr->endianness) {
 	ViceLog(0, ("fs_stateCheckHeader: wrong endianness\n"));
 	ret = 1;

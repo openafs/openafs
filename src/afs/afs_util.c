@@ -561,7 +561,7 @@ calc (struct afs_md5 *m, afs_uint32 *data)
  * From `Performance analysis of MD5' by Joseph D. Touch <touch@isi.edu>
  */
 
-#if defined(AFSBIG_ENDIAN)
+#if defined(WORDS_BIGENDIAN)
 static inline afs_uint32
 swap_u_int32_t (afs_uint32 t)
 {
@@ -599,7 +599,7 @@ AFS_MD5_Update (struct afs_md5 *m, const void *v, size_t len)
 	p += l;
 	len -= l;
 	if(offset == 64){
-#if defined(AFSBIG_ENDIAN)
+#if defined(WORDS_BIGENDIAN)
 	    int i;
 	    afs_uint32 temp[16];
 	    struct x32 *us = (struct x32*)m->save;

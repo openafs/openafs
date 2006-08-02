@@ -76,11 +76,6 @@ RCSID
 #include "private_data.h"
 #include <des/stats.h>
 
-#undef WORDS_BIGENDIAN
-#ifdef AFSBIG_ENDIAN
-#define WORDS_BIGENDIAN 1
-#endif
-
 /*
  * Unrolling of the inner loops helps the most on pentium chips
  * (ca 18%). On risc machines only expect a modest improvement (ca 5%).

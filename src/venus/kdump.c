@@ -288,7 +288,7 @@ typedef struct timeval {
     int tv_usec;
 } timeval_t;			/* Needed here since KERNEL defined. */
 #endif /*AFS_ALPHA_LINUX20_ENV */
-#if defined(AFSBIG_ENDIAN)
+#if defined(WORDS_BIGENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
 #else
 #define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
