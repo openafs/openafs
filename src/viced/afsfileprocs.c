@@ -6033,6 +6033,8 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 #if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
 #endif
+    if (saneacls)
+	dataBuffP[0] |= VICED_CAPABILITY_SANEACLS;
 
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;

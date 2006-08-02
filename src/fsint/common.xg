@@ -174,12 +174,13 @@ typedef afs_int32 serverList<AFSMAXCELLHOSTS>;
 typedef afs_uint32 cacheConfig<>;
 
 const AFSCAPABILITIESMAX = 196;
-typedef afs_int32 Capabilities<AFSCAPABILITIESMAX>;
+typedef afs_uint32 Capabilities<AFSCAPABILITIESMAX>;
 
 /* Viced Capability Flags */
 const VICED_CAPABILITY_ERRORTRANS	= 0x0001;
 const VICED_CAPABILITY_64BITFILES	= 0x0002;
 const VICED_CAPABILITY_WRITELOCKACL     = 0x0004;
+const VICED_CAPABILITY_SANEACLS         = 0x0008;
 
 /* Cache Manager Capability Flags */
 const CLIENT_CAPABILITY_ERRORTRANS	= 0x0001;
