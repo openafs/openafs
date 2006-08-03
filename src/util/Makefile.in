@@ -99,18 +99,20 @@ ${TOP_LIBDIR}/util.a: util.a
 ${TOP_LIBDIR}/libafsutil.a: util.a
 	${INSTALL_DATA} $? $@
 
+# Use " as the sed boundary character because we lose anyway if that occurs
+# in path names.
 dirpath.h: ${srcdir}/dirpath.hin Makefile
 	( sed \
-		-e "s+@afsconfdir+${afsconfdir}+" \
-		-e "s+@viceetcdir+${viceetcdir}+" \
-		-e "s+@afssrvbindir+${afssrvbindir}+" \
-		-e "s+@afssrvsbindir+${afssrvsbindir}+" \
-		-e "s+@afssrvlibexecdir+${afssrvlibexecdir}+" \
-		-e "s+@afsdbdir+${afsdbdir}+" \
-		-e "s+@afslogsdir+${afslogsdir}+" \
-		-e "s+@afslocaldir+${afslocaldir}+" \
-		-e "s+@afsbackupdir+${afsbackupdir}+" \
-		-e "s+@afsbosconfigdir+${afsbosconfigdir}+" \
+		-e 's"@afsconfdir"${afsconfdir}"' \
+		-e 's"@viceetcdir"${viceetcdir}"' \
+		-e 's"@afssrvbindir"${afssrvbindir}"' \
+		-e 's"@afssrvsbindir"${afssrvsbindir}"' \
+		-e 's"@afssrvlibexecdir"${afssrvlibexecdir}"' \
+		-e 's"@afsdbdir"${afsdbdir}"' \
+		-e 's"@afslogsdir"${afslogsdir}"' \
+		-e 's"@afslocaldir"${afslocaldir}"' \
+		-e 's"@afsbackupdir"${afsbackupdir}"' \
+		-e 's"@afsbosconfigdir"${afsbosconfigdir}"' \
 		${srcdir}/dirpath.hin >dirpath.h.tmp && \
 		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
 		mv dirpath.h.tmp dirpath.h ; fi)
