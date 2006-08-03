@@ -100,12 +100,14 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+
 project: cmd comerr 
 
 tests: all 
 	${COMPILE_PART1} tests ${COMPILE_PART2}
 
-config: 
+config: prelude
 	${COMPILE_PART1} config ${COMPILE_PART2}
 
 procmgmt: config
