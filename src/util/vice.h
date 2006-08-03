@@ -12,6 +12,9 @@
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#if defined(__sun) && defined(__SVR4)
+# include <sys/ioccom.h>
+#endif
 
 /*
  * Structures used to pass data into AFS ioctls.  The buffer pointers may be
