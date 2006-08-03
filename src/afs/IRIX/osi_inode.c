@@ -292,60 +292,9 @@ struct icreateargs {
 int
 icreate(struct icreateargs *uap, rval_t * rvp)
 {
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    AFS_STATCNT(icreate);
-    return (afs_syscall_icreate
-	    (uap->dev, uap->near_inode, uap->param1, uap->param2, uap->param3,
-	     uap->param4, rvp));
-#else
     return ENOSYS;
-#endif
 }
 
-#ifdef AFS_SGI_EFS_IOPS_ENV
-int
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
-     afs_uint32 dev, near_inode, param1, param2, param3, param4;
-     rval_t *rvp;
-{
-    struct inode *ip, *newip;
-    struct afsparms *ap;
-    struct cred cr;
-    int error;
-
-    AFS_STATCNT(afs_syscall_icreate);
-    if (!afs_suser(NULL))
-	return EPERM;
-
-    if (error = getinode(0, (dev_t) dev, 2, &ip))
-	return error;
-
-    cr.cr_uid = 0;
-    cr.cr_gid = -2;
-    if (error = efs_ialloc(ip, IFREG, 1, NODEV, &newip, &cr)) {
-	iput(ip);
-	return error;
-    }
-    iput(ip);
-    osi_Assert(newip);
-    newip->i_flags |= IACC | IUPD | ICHG;
-
-    osi_Assert(newip->i_afs == NULL);
-    newip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
-    if (param2 == INODESPECIAL)
-	newip->i_version = EFS_IVER_AFSSPEC;
-    else
-	newip->i_version = EFS_IVER_AFSINO;
-    ap = (struct afsparms *)newip->i_afs;
-    ap->vicep1 = param1;	/* VOLid */
-    ap->vicep2 = param2;	/* Vnode # */
-    ap->vicep3 = param3;	/* SPEC:type INO:vnode uniq */
-    ap->vicep4 = param4;	/* SPEC:parentId INO:data version */
-    rvp->r_val1 = newip->i_number;
-    iput(newip);
-    return 0;
-}
-#else /* !AFS_SGI_EFS_IOPS_ENV */
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
      afs_uint32 dev, near_inode, param1, param2, param3, param4;
@@ -353,7 +302,6 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
 {
     return ENOSYS;
 }
-#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 /* inode creation routines for icreatename64 entry point. Use for EFS/XFS
@@ -646,19 +594,6 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
     if (!vfsp)
 	return ENXIO;
 
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    if (vfsp->vfs_fstype == efs_fstype) {
-	struct inode *ip;
-	if (error = igetinode(vfsp, (dev_t) dev, inode, &ip))
-	    return error;
-	vp = EFS_ITOV(ip);
-	if (error = vfile_alloc((usrmod + 1) & (FMASK), &fp, &fd)) {
-	    iput(ip);
-	    return error;
-	}
-	iunlock(ip);
-    } else
-#endif /* AFS_SGI_EFS_IOPS_ENV */
     if (vfsp->vfs_fstype == xfs_fstype) {
 	struct xfs_inode *xip;
 	if (error = xfs_igetinode(vfsp, (dev_t) dev, inode, &xip))
@@ -788,40 +723,6 @@ afs_syscall_iopen(dev, inode, usrmod, rvp)
  * Only VICEMAGIC type inodes.
  */
 #ifdef AFS_SGI_XFS_IOPS_ENV
-#ifdef AFS_SGI_EFS_IOPS_ENV
-/* efs_iincdec
- *
- * XFS/EFS iinc/idec code for EFS. Uses 32 bit inode numbers. 
- */
-static int
-efs_iincdec(vfsp, inode, inode_p1, amount)
-     struct vfs *vfsp;
-     int inode, inode_p1, amount;
-{
-    struct inode *ip;
-    int error;
-
-    if (error = igetinode(vfsp, NULL, inode, &ip))
-	return error;
-
-    if (!IS_VICEMAGIC(ip))
-	error = EPERM;
-    else if (((struct afsparms *)ip->i_afs)->vicep1 != inode_p1)
-	error = ENXIO;
-    else {
-	ip->i_nlink += amount;
-	osi_Assert(ip->i_nlink >= 0);
-	if (ip->i_nlink == 0) {
-	    CLEAR_VICEMAGIC(ip);
-	    afsidestroy(ip);
-	}
-	ip->i_flags |= ICHG;
-    }
-    /* XXX sync write?? */
-    iput(ip);
-    return error;
-}
-#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 /* xfs_iincdec
  *
@@ -989,11 +890,6 @@ iincdec64(int dev, int inode_hi, int inode_lo, int inode_p1, int amount)
 	inode |= inode_lo;
 	return xfs_iincdec64(vfsp, inode, inode_p1, amount);
     }
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    else if (vfsp->vfs_fstype == efs_fstype) {
-	return efs_iincdec(vfsp, inode_lo, inode_p1, amount);
-    }
-#endif /* AFS_SGI_EFS_IOPS_ENV */
     return ENXIO;
 }
 

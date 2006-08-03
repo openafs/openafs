@@ -82,12 +82,6 @@ RCSID
 #if defined(AFS_SGI_ENV)
 #include <fcntl.h>
 #include <mntent.h>
-#ifdef AFS_SGI_EFS_IOPS_ENV
-#define ROOTINO EFS_ROOTINO
-#include <sys/fs/efs.h>
-#include "sgiefs/efs.h"		/* until 5.1 release */
-#endif
-
 
 #else
 #ifndef AFS_LINUX20_ENV

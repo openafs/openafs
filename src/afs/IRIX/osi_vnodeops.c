@@ -1912,19 +1912,6 @@ afs_InitDualFSCacheOps(struct vnode *vp)
 	return;
     inited = 1;
 
-
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    swp = vfs_getvfssw("efs");
-    if (swp) {
-	afs_efs_vnodeopsp = swp->vsw_vnodeops;
-	if (vp && vp->v_op == afs_efs_vnodeopsp) {
-	    afs_CacheFSType = AFS_SGI_EFS_CACHE;
-	    afs_IGetVnode = afs_EFSIGetVnode;
-	    found = 1;
-	}
-    }
-#endif /* AFS_SGI_EFS_IOPS_ENV */
-
     swp = vfs_getvfssw("xfs");
     if (swp) {
 	afs_xfs_vnodeopsp = swp->vsw_vnodeops;

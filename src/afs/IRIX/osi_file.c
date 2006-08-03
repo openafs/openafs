@@ -23,31 +23,6 @@ afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
 
-
-/* As of 6.2, we support either XFS or EFS clients. osi_UFSOpen
- * now vectors to the correct EFS or XFS function. If new functionality is
- * added which accesses the inode, that will also need EFS/XFS variants.
- */
-#ifdef AFS_SGI_EFS_IOPS_ENV
-vnode_t *
-afs_EFSIGetVnode(ino_t ainode)
-{
-    struct inode *ip;
-    int error;
-
-    if ((error = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode, &ip))) {
-	osi_Panic("afs_EFSIGetVnode: igetinode failed, error=%d", error);
-    }
-    /* We don't care about atimes on the cache files, so disable them.  I'm not
-     * sure that this is the right place to do this: it should be *after* readi 
-     * and getattr and stuff. 
-     */
-    ip->i_flags &= ~(ISYN | IACC);
-    iunlock(ip);
-    return (EFS_ITOV(ip));
-}
-#endif /* AFS_SGI_EFS_IOPS_ENV */
-
 vnode_t *
 afs_XFSIGetVnode(ino_t ainode)
 {
@@ -153,18 +128,6 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     return code;
 }
 
-#ifdef AFS_SGI_EFS_IOPS_ENV
-void
-osi_DisableAtimes(struct vnode *avp)
-{
-    if (afs_CacheFSType == AFS_SGI_EFS_CACHE) {
-	struct inode *ip = EFS_VTOI(avp);
-	ip->i_flags &= ~IACC;
-    }
-
-}
-#endif /* AFS_SGI_EFS_IOPS_ENV */
-
 
 /* Generic read interface */
 int
@@ -198,9 +161,6 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
-#ifdef AFS_SGI_EFS_IOPS_ENV
-	osi_DisableAtimes(afile->vnode);
-#endif /* AFS_SGI_EFS_IOPS_ENV */
     } else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
 		   ICL_TYPE_INT32, code);
