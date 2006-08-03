@@ -6,6 +6,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 

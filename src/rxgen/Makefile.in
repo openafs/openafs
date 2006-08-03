@@ -6,6 +6,10 @@
 #
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c \
 	rpc_svcout.c rpc_clntout.c

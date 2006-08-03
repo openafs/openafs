@@ -6,6 +6,10 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \

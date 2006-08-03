@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o

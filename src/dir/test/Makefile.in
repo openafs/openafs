@@ -7,6 +7,10 @@
 
 srcdir=../../..
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 LIBS = ${srcdir}/lib/libdir.a ${srcdir}/lib/util.a  ${srcdir}/lib/liblwp.a
 CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS} ${ARCHFLAGS}

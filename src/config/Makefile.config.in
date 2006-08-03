@@ -107,10 +107,6 @@ KERNELDIR = ../libafs
 # Build helper apps
 #
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh
 
