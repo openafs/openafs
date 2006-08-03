@@ -87,8 +87,8 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 #
 # Build targets
 #
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o xht.o
+	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o xht.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
@@ -99,6 +99,8 @@ ptprocs.o: ptprocs.c ${INCLS}
 utils.o: utils.c ${INCLS} 
 
 map.o: map.c ${INCLS}
+
+xht.o: xht.c ${INCLS}
 
 ptint.ss.o: ptint.ss.c ptint.xdr.c ptint.xg
 ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
@@ -177,8 +179,8 @@ testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
-pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
+pt_util: pt_util.o ptutils.o ubik.o utils.o map.o xht.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o xht.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
 
 ubik.o: ubik.c ${INCLS}
 

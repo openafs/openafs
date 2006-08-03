@@ -429,6 +429,14 @@ main(int argc, char **argv)
     OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);	/* set up logging */
     SetupLogSignals();
 
+#if defined(PRDB_EXTENSIONS)
+    code = pr_XHTInit();
+    if (code) {
+	com_err(whoami, code, "XHT init failed");
+	PT_EXIT(1);
+    }
+#endif
+
     prdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!prdir) {
 	fprintf(stderr, "ptserver: can't open configuration directory.\n");
@@ -575,3 +583,4 @@ main(int argc, char **argv)
     osi_audit(PTS_FinishEvent, -1, AUD_END);
     exit(0);
 }
+/* vi:set cin noet sw=4 tw=70: */

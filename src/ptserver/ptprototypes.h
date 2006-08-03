@@ -42,5 +42,14 @@ extern afs_int32 RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid);
 extern afs_int32 IsOwnerOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid);
 extern afs_int32 OwnerOf(struct ubik_trans *at, afs_int32 gid);
 extern afs_int32 IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid);
-
+#if defined(PRDB_EXTENSIONS)
+extern int pr_XHTInit(void);
+extern int pr_WriteXHTEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct hashentry *tentry);
+extern int pr_ReadXHTEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct hashentry *tentry);
+extern int pr_LoadXHTs(struct ubik_trans *tt);
+extern int pr_CreateXHT(struct ubik_trans *tt, struct pr_xht *table);
+extern afs_int32 RemoveFromExtendedHash(struct ubik_trans *tt, struct pr_xht *table, void *aname, int anamelen, afs_int32 *loc);
+extern afs_int32 AddToExtendedHash(struct ubik_trans *tt, struct pr_xht *table, void *aname, int anamelen, afs_int32 loc);
 #endif
+#endif
+/* vi:set cin noet sw=4 tw=70: */

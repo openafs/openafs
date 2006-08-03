@@ -99,10 +99,12 @@ pr_PrintEntry(FILE *f, int hostOrder, afs_int32 ea, struct prentry *e, int inden
 
     if (e->cellid)
 	fprintf(f, "cellid == %d\n", host(e->cellid));
+#if !(defined(PR_REMEMBER_TIMES) && defined(PRDB_EXTENSIONS))
     for (i = 0; i < sizeof(e->reserved) / sizeof(e->reserved[0]); i++)
 	if (e->reserved[i])
 	    fprintf(f, "reserved field [%d] not zero: %d\n", i,
 		    host(e->reserved[i]));
+#endif
 
     fprintf(f, "%*s", indent, "");
     fprintf(f, "Entry at %d: flags 0x%x, id %di, next %d.\n", ea,

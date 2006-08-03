@@ -1705,6 +1705,24 @@ read_DbHeader(struct ubik_trans *tt)
 int pr_noAuth;
 afs_int32 initd = 0;
 
+#if defined(PRDB_EXTENSIONS)
+afs_int32
+InitDBExtensions(struct ubik_trans *tt)
+{
+    afs_int32 code, entry;
+    struct hashentry hent;
+
+    code = pr_LoadXHTs(tt);
+    if (code)
+	return code;
+
+    code = ubik_EndTrans(tt);
+    if (code)
+	return code;
+    return PRSUCCESS;
+}
+#endif
+
 afs_int32
 Initdb()
 {
@@ -1744,10 +1762,14 @@ Initdb()
 	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
+#if defined(PRDB_EXTENSIONS)
+	return InitDBExtensions(tt);
+#else
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
 	return PRSUCCESS;
+#endif
     }
     /* else we need to build a database */
     code = ubik_EndTrans(tt);
@@ -1794,10 +1816,14 @@ Initdb()
 	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
+#if defined(PRDB_EXTENSIONS)
+	return InitDBExtensions(tt);
+#else
 	code = ubik_EndTrans(tt);
 	if (code)
 	    return code;
 	return PRSUCCESS;
+#endif
     }
 
     /* Initialize the database header */
@@ -1837,10 +1863,14 @@ Initdb()
 	return code;
     }
 
+#if defined(PRDB_EXTENSIONS)
+    return InitDBExtensions(tt);
+#else
     code = ubik_EndTrans(tt);
     if (code)
 	return code;
     return PRSUCCESS;
+#endif
 }
 
 afs_int32
@@ -2187,3 +2217,4 @@ AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size)
     else
 	return PRSUCCESS;
 }
+/* vi:set cin noet sw=4 tw=70: */

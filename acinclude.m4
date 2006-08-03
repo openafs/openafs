@@ -29,6 +29,8 @@ AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
 AC_ARG_ENABLE( supergroups,
 [  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
+AC_ARG_ENABLE( prdb-extensions,
+[  --enable-prdb-extensions 		enable support for pts database extensions],, enable_prdb_extensions="no")
 AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
@@ -947,6 +949,10 @@ fi
 # Fast restart
 if test "$enable_supergroups" = "yes"; then
 	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
+fi
+
+if test "$enable_prdb_extensions" = "yes"; then
+	AC_DEFINE(PRDB_EXTENSIONS, 1, [define if you want to have pts database extensions])
 fi
 
 if test "$enable_fast_restart" = "yes"; then
