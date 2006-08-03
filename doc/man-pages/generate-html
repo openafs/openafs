@@ -7,6 +7,28 @@ use vars qw(@ISA);
 use Pod::Simple::Search;
 @ISA = qw(Pod::Simple::HTML);
 
+# Add a link back to the index page to the top and bottom of each generated
+# page.
+#
+# The hideous approach we have to use is because, unless we create a
+# Pod::Simple::HTML object and then rebless it, the html_header_after_title
+# and html_footer subs are placed in the OpenAFS::HTML package.  That means we
+# can't override them in a subclass and still call the SUPER version since
+# we'll be overwriting the SUPER version, and there aren't other good
+# opportunities to change the default values that I can see.
+sub new {
+    my $class = shift;
+    my $self = Pod::Simple::HTML->new (@_);
+    bless ($self, 'OpenAFS::HTML');
+    my $link = '<p class="indexlink"><a href="../index.html">'
+        . 'Back to Index</a></p>' . "\n";
+    my $after = $self->html_header_after_title;
+    $self->html_header_after_title ($after . $link);
+    my $end = $self->html_footer;
+    $self->html_footer ($link . $end);
+    return $self;
+}
+
 sub do_man_link {
     my ($self, $token) = @_;
     my $page = $token->attr ('to');

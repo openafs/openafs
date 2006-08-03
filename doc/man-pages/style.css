@@ -30,6 +30,8 @@
     background-color: #fff;
   }
 
+  p.indexlink { text-align: right }
+
   body.pod h1 { font-size: large }
   body.pod h2 { font-size: large }
   
