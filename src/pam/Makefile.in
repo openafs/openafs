@@ -27,7 +27,7 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
 CFLAGS =  ${PAM_DBG} ${PAM_OPTMZ} ${INCLUDES} ${PAM_CFLAGS}
 
-all: test_pam pam_afs.so.1 pam_afs.krb.so.1
+all: test_pam pam_afs.so.1 pam_afs.krb.so.1 pam_aklog.so.1
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -c ${srcdir}/afs_setcred.c -o afs_setcred.o
@@ -55,6 +55,10 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
 	../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
 		afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
 		${SHOBJS} ${KLIBS}
+
+pam_aklog.so.1: pam_aklog.o
+	../config/shlib-build -d $(srcdir) -f pam_aklog.so.1 -l pam_aklog -- \
+		${TOP_LIBDIR}/libkopenafs.a ${PAM_LIBS}
 
 test_pam: test_pam.o
 	set -x; \
