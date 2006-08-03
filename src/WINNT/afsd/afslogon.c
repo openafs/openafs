@@ -398,7 +398,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
             hkDoms = NULL;
         }
     } else
-        DebugEvent("Not opening domain key for [%s]", effDomain);
+        DebugEvent("Not opening domain key");
 
     /* Each individual can either be specified on the domain key, the domains key or in the
        net provider key.  They fail over in that order.  If none is found, we just use the 
