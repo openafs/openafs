@@ -124,7 +124,7 @@ dest: ${LIBAFSAUTHENT}
 ${LIBAFSAUTHENT}: ${LIBOBJS}
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
-		${LIBOBJS} ${MT_LIBS}
+		-L${TOP_LIBDIR} -lafsrpc ${LIBOBJS} ${MT_LIBS}
 
 audit.o: ${AUDIT}/audit.c
 	${CCRULE}
