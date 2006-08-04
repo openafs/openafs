@@ -49,4 +49,4 @@ dest: fs_conv_sol26
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c fs_conv_sol26
 
-include ../config/Makefile.version
+include ../../config/Makefile.version
