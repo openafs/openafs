@@ -243,11 +243,6 @@ Known Problems
    * I'm fairly sure that the fileserver man page no longer documents all
      of the fileserver options.
 
-   * The package man page should probably mention the (pointless) package
-     apropos and package help commands, or they could be removed.  There
-     used to be separate man pages for them, but that seemed rather
-     pointless.
-
    * There are lingering references to AFS Development or AFS Product
      Support in descriptions of options that one should generally not
      use.  Also, all of the manual references refer to the "IBM" manual.
@@ -257,9 +252,6 @@ Known Problems
      combines them, but the SalvageLog man page doesn't reflect this.
 
    * The CellServDB documentation hasn't been updated for -dynroot.
-
-   * The aklog man page isn't in POD.  (Neither is the mpp man page, but
-     I don't think we care about it and it's not currently installed.)
 
    * In the suite introduction pages (pts, vos, etc.), each of the
      subcommands in the initial list should be a link to the relevant
