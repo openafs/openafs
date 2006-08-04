@@ -87,4 +87,14 @@ extern void osi_linux_free_inode_pages(void);
 /* osi_vnodeops.c */
 extern void afs_fill_inode(struct inode *ip, struct vattr *vattr);
 
+/* osi_groups.c */
+extern void osi_keyring_init(void);
+extern void osi_keyring_shutdown(void);
+extern int __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
+		     int change_parent);
+#ifdef LINUX_KEYRING_SUPPORT
+extern struct key_type key_type_afs_pag;
+#endif /* LINUX_KEYRING_SUPPORT */
+
+
 #endif /* _OSI_PROTO_H_ */

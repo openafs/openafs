@@ -462,8 +462,6 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	/* Additional testing */
 	if (((ret >> 24) & 0xff) == 'A')
 	    return ret;
-	else
-	    return NOPAG;
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     }
     return NOPAG;
@@ -496,7 +494,7 @@ PagInCred(const struct AFS_UCRED *cred)
     gid_t g0, g1;
 
     AFS_STATCNT(PagInCred);
-    if (cred == NULL) {
+    if (cred == NULL || cred == afs_osi_credp) {
 	return NOPAG;
     }
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -518,11 +516,15 @@ PagInCred(const struct AFS_UCRED *cred)
 	return NOPAG;
     }
 #elif defined(AFS_LINUX26_ENV)
-    if (cred->cr_group_info->ngroups < 2)
-	return NOPAG;
+    if (cred->cr_group_info->ngroups < 2) {
+	pag = NOPAG;
+	goto out;
+    }
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-    if (cred->cr_ngroups < 2)
-	return NOPAG;
+    if (cred->cr_ngroups < 2) {
+	pag = NOPAG;
+	goto out;
+    }
 #endif
 #if defined(AFS_AIX51_ENV)
     g0 = cred->cr_groupset.gs_union.un_groups[0];
@@ -536,5 +538,23 @@ PagInCred(const struct AFS_UCRED *cred)
 #endif
 #endif
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
+out:
+#ifdef LINUX_KEYRING_SUPPORT
+    if (pag == NOPAG) {
+	struct key *key;
+	afs_uint32 pag, newpag;
+
+	key = request_key(&key_type_afs_pag, "_pag", NULL);
+	if (!IS_ERR(key)) {
+	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
+
+		pag = (afs_uint32) key->payload.value;
+		if (((pag >> 24) & 0xff) == 'A')
+		    __setpag(&cred, pag, &newpag, 0);
+	    }
+	    key_put(key);
+	} 
+    }
+#endif
     return pag;
 }

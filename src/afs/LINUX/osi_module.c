@@ -86,14 +86,19 @@ init_module(void)
     osi_linux_nfssrv_init();
 #endif
 
+#ifndef LINUX_KEYRING_SUPPORT
     err = osi_syscall_init();
     if (err)
 	return err;
+#endif
     err = afs_init_inodecache();
     if (err)
 	return err;
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
+#ifdef LINUX_KEYRING_SUPPORT
+    osi_keyring_init();
+#endif
 #ifdef AFS_LINUX24_ENV
     osi_proc_init();
     osi_ioctl_init();
@@ -110,6 +115,7 @@ void
 cleanup_module(void)
 #endif
 {
+    osi_keyring_shutdown();
     osi_sysctl_clean();
     osi_syscall_clean();
     unregister_filesystem(&afs_fs_type);
