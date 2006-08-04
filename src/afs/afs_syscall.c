@@ -582,15 +582,9 @@ Afs_syscall()
     osi_InitGlock();
 #endif
     if (uap->syscall == AFSCALL_CALL) {
-#ifdef	AFS_SUN5_ENV
-	code =
-	    afs_syscall_call(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
-			     uap->parm5, uap->parm6, rvp, CRED());
-#else
 	code =
 	    afs_syscall_call(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 			     uap->parm5, uap->parm6);
-#endif
     } else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
 	register proc_t *procp;
