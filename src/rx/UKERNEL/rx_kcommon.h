@@ -22,7 +22,6 @@
 #include "afs/lock.h"
 #include "rx/rx.h"
 #include "rx/rx_globals.h"
-#include "afs/longc_procs.h"
 #include "afs/afs_stats.h"
 
 extern struct usr_ifnet *usr_ifnet;

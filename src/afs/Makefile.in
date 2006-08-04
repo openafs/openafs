@@ -40,11 +40,14 @@ afszcm.cat: afs_trace.msf
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
 
-depinstall: afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h ${TOP_INCDIR}/afs/unified_afs.h ${TOP_INCDIR}/afs/sysctl.h
-	case ${SYS_NAME} in \
-	    pmax_ul43 | pmax_ul43a) \
-		${INSTALL} longc_procs.h ${TOP_INCDIR}/afs/longc_procs.h ;; \
-	esac
+depinstall: afszcm.cat AFS_component_version_number.c \
+	${TOP_INCDIR}/afs/afs.h \
+	${TOP_INCDIR}/afs/osi_inode.h \
+	${TOP_INCDIR}/afs/afs_stats.h \
+	${TOP_INCDIR}/afs/exporter.h \
+	${TOP_INCDIR}/afs/nfsclient.h \
+	${TOP_INCDIR}/afs/unified_afs.h \
+	${TOP_INCDIR}/afs/sysctl.h
 
 ${TOP_INCDIR}/afs/afs.h: afs.h
 	${INSTALL_DATA} afs.h $@
@@ -78,11 +81,6 @@ install: unified_afs.h
 	${INSTALL_DATA} sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DESTDIR}${includedir}/afs/unified_afs.h
 	case ${SYS_NAME} in \
-	    pmax_ul43 | pmax_ul43a) \
-		${INSTALL_DATA} longc_procs.h \
-		    ${DESTDIR}${includedir}/afs/longc_procs.h ;; \
-	esac
-	case ${SYS_NAME} in \
 	    *linux*) \
 		${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_vfs.h \
 		    ${DESTDIR}${includedir}/afs/osi_vfs.h || true ;;\
@@ -99,10 +97,6 @@ dest: unified_afs.h
 	${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_inode.h ${DEST}/include/afs/osi_inode.h
 	${INSTALL_DATA} sysctl.h ${DEST}/include/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DEST}/include/afs/unified_afs.h
-	case ${SYS_NAME} in \
-	    pmax_ul43 | pmax_ul43a) \
-		${INSTALL_DATA} longc_procs.h ${DEST}/include/afs/longc_procs.h ;; \
-	esac
 	case ${SYS_NAME} in \
 	    next_mach30 | vax_ul43 | *_darwin* | i386_fbsd*) \
 		echo skipping afszcm.cat install for ${SYS_NAME} ;; \
