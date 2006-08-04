@@ -82,38 +82,6 @@ AC_TRY_COMPILE(
 AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN([LINUX_KERNEL_SOCK_CREATE],[
-AC_MSG_CHECKING(for 5th argument in sock_create found in some SELinux kernels)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ -DKBUILD_BASENAME=\\"libafs\\" $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_kernel_sock_create_v,
-[
-AC_TRY_COMPILE(
-  [#include <linux/net.h>],
-  [
-  sock_create(0,0,0,0,0)
-  ],
-  ac_cv_linux_kernel_sock_create_v=yes,
-  ac_cv_linux_kernel_sock_create_v=no)])
-AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)
-CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
-AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-default -Werror-implicit-function-declaration -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
-[
-AC_TRY_COMPILE(
-  [#include <linux/fs.h>],
-  [
-  page_follow_link(0,0)
-  ],
-  ac_cv_linux_kernel_page_follow_link=yes,
-  ac_cv_linux_kernel_page_follow_link=no)])
-AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
-CPPFLAGS="$save_CPPFLAGS"])
-
 AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
   AC_MSG_CHECKING(for linux/seq_file.h in kernel)
   if test -f "${LINUX_KERNEL_PATH}/include/linux/seq_file.h"; then
