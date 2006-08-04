@@ -125,7 +125,7 @@ int smb_hideDotFiles;
 /* global state about V3 protocols */
 int smb_useV3;		/* try to negotiate V3 */
 
-static showErrors = 1;
+static showErrors = 0;
 /* MessageBox or something like it */
 int (_stdcall *smb_MBfunc)(HWND, LPCTSTR, LPCTSTR, UINT) = NULL;
 
@@ -7769,8 +7769,7 @@ void smb_Listener(void *parmp)
             if (showErrors)
                 code = (*smb_MBfunc)(NULL, tbuffer, "AFS Client Service: Fatal Error",
                                       MB_OK|MB_SERVICE_NOTIFICATION);
-            osi_assert(tbuffer);
-            ExitThread(1);
+            osi_panic(tbuffer, __FILE__, __LINE__);
         }
 
         /* check for remote conns */
