@@ -130,6 +130,10 @@ case $system in
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
 		 fi
+               if test -f "$LINUX_KERNEL_PATH/include/linux/utsrelease.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 LINUX_VERSION="$linux_kvers"
+               else
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		  if test "x$linux_kvers" = "x"; then
@@ -152,6 +156,7 @@ case $system in
 		 else
                     enable_kernel_module="no"
                  fi
+               fi
 		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
