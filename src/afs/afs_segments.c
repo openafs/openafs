@@ -145,7 +145,7 @@ unsigned int storeallmissing = 0;
  * Environment:
  *	Called with avc write-locked.
  */
-#if defined (AFS_HPUX_ENV) || defined(AFS_ULTRIX_ENV)
+#if defined (AFS_HPUX_ENV)
 int NCHUNKSATONCE = 3;
 #else
 int NCHUNKSATONCE = 64;

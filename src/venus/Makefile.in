@@ -94,8 +94,6 @@ fstrace.o: fstrace.c AFS_component_version_number.c
 
 fstrace: fstrace.o
 	case ${SYS_NAME} in \
-		pmax_ul43 | pmax_ul43a ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a /usr/lib/libi.a ;; \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		sun*_4* ) \
