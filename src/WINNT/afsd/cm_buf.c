@@ -89,12 +89,43 @@ extern int cm_diskCacheEnabled;
 /* set this to 1 when we are terminating to prevent access attempts */
 static int buf_ShutdownFlag = 0;
 
+void buf_HoldLocked(cm_buf_t *bp)
+{
+    osi_assert(bp->magic == CM_BUF_MAGIC);
+    bp->refCount++;
+}
+
 /* hold a reference to an already held buffer */
 void buf_Hold(cm_buf_t *bp)
 {
-    osi_assert(bp->magic == CM_BUF_MAGIC);
     lock_ObtainWrite(&buf_globalLock);
-    bp->refCount++;
+    buf_HoldLocked(bp);
+    lock_ReleaseWrite(&buf_globalLock);
+}
+
+/* code to drop reference count while holding buf_globalLock */
+void buf_ReleaseLocked(cm_buf_t *bp)
+{
+    /* ensure that we're in the LRU queue if our ref count is 0 */
+    osi_assert(bp->magic == CM_BUF_MAGIC);
+    osi_assert(bp->refCount > 0);
+    if (--bp->refCount == 0) {
+        if (!(bp->flags & CM_BUF_INLRU)) {
+            osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
+
+            /* watch for transition from empty to one element */
+            if (!cm_data.buf_freeListEndp)
+                cm_data.buf_freeListEndp = cm_data.buf_freeListp;
+            bp->flags |= CM_BUF_INLRU;
+        }
+    }
+}       
+
+/* release a buffer.  Buffer must be referenced, but unlocked. */
+void buf_Release(cm_buf_t *bp)
+{
+    lock_ObtainWrite(&buf_globalLock);
+    buf_ReleaseLocked(bp);
     lock_ReleaseWrite(&buf_globalLock);
 }
 
@@ -108,7 +139,7 @@ void buf_IncrSyncer(long parm)
 
     lock_ObtainWrite(&buf_globalLock);
     bp = cm_data.buf_allp;
-    bp->refCount++;
+    buf_HoldLocked(bp);
     lock_ReleaseWrite(&buf_globalLock);
     nAtOnce = (long)sqrt((double)cm_data.buf_nbuffers);
     while (buf_ShutdownFlag == 0) {
@@ -141,11 +172,11 @@ void buf_IncrSyncer(long parm)
              * and so can be followed even when holding no locks.
              */
             lock_ObtainWrite(&buf_globalLock);
-            buf_LockedRelease(bp);
+            buf_ReleaseLocked(bp);
             bp = bp->allp;
             if (!bp) 
                 bp = cm_data.buf_allp;
-            bp->refCount++;
+	    buf_HoldLocked(bp);
             lock_ReleaseWrite(&buf_globalLock);
         }	/* for loop over a bunch of buffers */
     }		/* whole daemon's while loop */
@@ -426,14 +457,6 @@ long buf_SetNBuffers(afs_uint64 nbuffers)
         return CM_ERROR_INVAL;
 }
 
-/* release a buffer.  Buffer must be referenced, but unlocked. */
-void buf_Release(cm_buf_t *bp)
-{
-    lock_ObtainWrite(&buf_globalLock);
-    buf_LockedRelease(bp);
-    lock_ReleaseWrite(&buf_globalLock);
-}
-
 /* wait for reading or writing to clear; called with write-locked
  * buffer and unlocked scp and returns with locked buffer.
  */
@@ -497,27 +520,10 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
     osi_Log1(afsd_logp, "WaitIO finished wait for bp 0x%p", bp);
 }
 
-/* code to drop reference count while holding buf_globalLock */
-void buf_LockedRelease(cm_buf_t *bp)
-{
-    /* ensure that we're in the LRU queue if our ref count is 0 */
-    osi_assert(bp->refCount > 0);
-    if (--bp->refCount == 0) {
-        if (!(bp->flags & CM_BUF_INLRU)) {
-            osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-
-            /* watch for transition from empty to one element */
-            if (!cm_data.buf_freeListEndp)
-                cm_data.buf_freeListEndp = cm_data.buf_freeListp;
-            bp->flags |= CM_BUF_INLRU;
-        }
-    }
-}       
-
 /* find a buffer, if any, for a particular file ID and offset.  Assumes
  * that buf_globalLock is write locked when called.
  */
-cm_buf_t *buf_LockedFind(struct cm_scache *scp, osi_hyper_t *offsetp)
+cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
 {
     long i;
     cm_buf_t *bp;
@@ -527,7 +533,7 @@ cm_buf_t *buf_LockedFind(struct cm_scache *scp, osi_hyper_t *offsetp)
         if (cm_FidCmp(&scp->fid, &bp->fid) == 0
              && offsetp->LowPart == bp->offset.LowPart
              && offsetp->HighPart == bp->offset.HighPart) {
-            bp->refCount++;
+            buf_HoldLocked(bp);
             break;
         }
     }
@@ -544,7 +550,7 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
     cm_buf_t *bp;
 
     lock_ObtainWrite(&buf_globalLock);
-    bp = buf_LockedFind(scp, offsetp);
+    bp = buf_FindLocked(scp, offsetp);
     lock_ReleaseWrite(&buf_globalLock);
 
     return bp;
@@ -557,7 +563,7 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
  * at any given time, and also ensures that the log is forced sufficiently far,
  * if this buffer contains logged data.
  */
-void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
+void buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 {
     long code = 0;
 
@@ -566,11 +572,11 @@ void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
         lock_ReleaseMutex(&bp->mx);
 
-	osi_Log1(afsd_logp, "buf_LockedCleanAsync starts I/O on 0x%p", bp);
+	osi_Log1(afsd_logp, "buf_CleanAsyncLocked starts I/O on 0x%p", bp);
         code = (*cm_buf_opsp->Writep)(&bp->fid, &bp->offset,
                                        cm_data.buf_blockSize, 0, bp->userp,
                                        reqp);
-	osi_Log2(afsd_logp, "buf_LockedCleanAsync I/O on 0x%p, done=%d", bp, code);
+	osi_Log2(afsd_logp, "buf_CleanAsyncLocked I/O on 0x%p, done=%d", bp, code);
                 
         lock_ObtainMutex(&bp->mx);
         if (code) 
@@ -690,7 +696,11 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
         lock_ObtainWrite(&buf_globalLock);
         /* check to see if we lost the race */
         if (scp) {
-            if (bp = buf_LockedFind(scp, offsetp)) {
+            if (bp = buf_FindLocked(scp, offsetp)) {
+		/* Do not call buf_ReleaseLocked() because we 
+		 * do not want to allow the buffer to be added
+		 * to the free list.
+		 */
                 bp->refCount--;
                 lock_ReleaseWrite(&buf_globalLock);
                 return CM_BUF_EXISTS;
@@ -754,7 +764,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                  * just the lock required to minimize contention
                  * on the big lock.
                  */
-                bp->refCount++;
+                buf_HoldLocked(bp);
                 lock_ReleaseWrite(&buf_globalLock);
 
                 /* grab required lock and clean; this only
@@ -1073,7 +1083,7 @@ void buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
     lock_ObtainMutex(&bp->mx);
-    buf_LockedCleanAsync(bp, reqp);
+    buf_CleanAsyncLocked(bp, reqp);
     lock_ReleaseMutex(&bp->mx);
 }       
 
@@ -1138,7 +1148,7 @@ long buf_CleanAndReset(void)
     for(i=0; i<cm_data.buf_hashSize; i++) {
         for(bp = cm_data.buf_hashTablepp[i]; bp; bp = bp->hashp) {
             if ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
-                bp->refCount++;
+                buf_HoldLocked(bp);
                 lock_ReleaseWrite(&buf_globalLock);
 
                 /* now no locks are held; clean buffer and go on */
@@ -1148,7 +1158,7 @@ long buf_CleanAndReset(void)
 
                 /* relock and release buffer */
                 lock_ObtainWrite(&buf_globalLock);
-                buf_LockedRelease(bp);
+                buf_ReleaseLocked(bp);
             } /* dirty */
         } /* over one bucket */
     }	/* for loop over all hash buckets */
@@ -1228,7 +1238,6 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
     osi_hyper_t bufEnd;
     long code;
     long bufferPos;
-    int didRelease;
     long i;
 
     /* assert that cm_bufCreateLock is held in write mode */
@@ -1243,10 +1252,9 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
         return 0;
     }
 
-    bufp->refCount++;
+    buf_HoldLocked(bufp);
     lock_ReleaseWrite(&buf_globalLock);
     for(; bufp; bufp = nbufp) {
-        didRelease = 0;
         lock_ObtainMutex(&bufp->mx);
 
         bufEnd.HighPart = 0;
@@ -1267,14 +1275,16 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                           | CM_SCACHESYNC_GETSTATUS
                           | CM_SCACHESYNC_SETSIZE
                           | CM_SCACHESYNC_BUFLOCKED);
-        /* if we succeeded in our locking, and this applies to the right
+
+	
+	lock_ObtainWrite(&buf_globalLock);
+	/* if we succeeded in our locking, and this applies to the right
          * file, and the truncate request overlaps the buffer either
          * totally or partially, then do something.
          */
         if (code == 0 && cm_FidCmp(&bufp->fid, &scp->fid) == 0
              && LargeIntegerLessThan(*sizep, bufEnd)) {
 
-            lock_ObtainWrite(&buf_globalLock);
 
             /* destroy the buffer, turning off its dirty bit, if
              * we're truncating the whole buffer.  Otherwise, set
@@ -1301,42 +1311,30 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                 memset(bufp->datap + bufferPos, 0,
                         cm_data.buf_blockSize - bufferPos);
             }
-
-            lock_ReleaseWrite(&buf_globalLock);
         }
 		
         lock_ReleaseMutex(&scp->mx);
         lock_ReleaseMutex(&bufp->mx);
-        if (!didRelease) {
-            lock_ObtainWrite(&buf_globalLock);
-            nbufp = bufp->fileHashp;
-            if (nbufp) nbufp->refCount++;
-            buf_LockedRelease(bufp);
-            lock_ReleaseWrite(&buf_globalLock);
-        }
-
-        /* bail out early if we fail */
-        if (code) {
-            /* at this point, nbufp is held; bufp has already been
-             * released.
-             */
-            if (nbufp) 
-                buf_Release(nbufp);
-
-#ifdef TESTING
-            buf_ValidateBufQueues();
-#endif /* TESTING */
-
-            return code;
-        }
+    
+	if (!code) {
+	    nbufp = bufp->fileHashp;
+	    if (nbufp) 
+		buf_HoldLocked(nbufp);
+	} else {
+	    /* This forces the loop to end and the error code
+	     * to be returned. */
+	    nbufp = NULL;
+	}
+	buf_ReleaseLocked(bufp);
+	lock_ReleaseWrite(&buf_globalLock);
     }
 
 #ifdef TESTING
     buf_ValidateBufQueues();
 #endif /* TESTING */
 
-    /* success */
-    return 0;
+    /* done */
+    return code;
 }
 
 long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
@@ -1353,8 +1351,9 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainWrite(&buf_globalLock);
     bp = cm_data.buf_fileHashTablepp[i];
     if (bp) 
-        bp->refCount++;
+        buf_HoldLocked(bp);
     lock_ReleaseWrite(&buf_globalLock);
+    
     for (; bp; bp = nbp) {
         didRelease = 0;	/* haven't released this buffer yet */
 
@@ -1363,7 +1362,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             lock_ObtainMutex(&bp->mx);
 
             /* start cleaning the buffer, and wait for it to finish */
-            buf_LockedCleanAsync(bp, reqp);
+            buf_CleanAsyncLocked(bp, reqp);
             buf_WaitIO(scp, bp);
             lock_ReleaseMutex(&bp->mx);
 
@@ -1377,10 +1376,10 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
              */
             if (!(bp->flags & CM_BUF_DIRTY)) {
                 if (bp->refCount == 1) {	/* bp is held above */
-                    buf_LockedRelease(bp);
                     nbp = bp->fileHashp;
                     if (nbp) 
-                        nbp->refCount++;
+                        buf_HoldLocked(nbp);
+                    buf_ReleaseLocked(bp);
                     didRelease = 1;
                     buf_Recycle(bp);
                 }
@@ -1393,15 +1392,16 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
       skip:
         if (!didRelease) {
             lock_ObtainWrite(&buf_globalLock);
-            if (nbp = bp->fileHashp) 
-                nbp->refCount++;
-            buf_LockedRelease(bp);
+            nbp = bp->fileHashp;
+	    if (nbp)
+                buf_HoldLocked(nbp);
+            buf_ReleaseLocked(bp);
             lock_ReleaseWrite(&buf_globalLock);
         }
     }	/* for loop over a bunch of buffers */
 
 #ifdef TESTING
-            buf_ValidateBufQueues();
+    buf_ValidateBufQueues();
 #endif /* TESTING */
 
     /* done */
@@ -1421,7 +1421,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainWrite(&buf_globalLock);
     bp = cm_data.buf_fileHashTablepp[i];
     if (bp) 
-        bp->refCount++;
+        buf_HoldLocked(bp);
     lock_ReleaseWrite(&buf_globalLock);
     for (; bp; bp = nbp) {
         /* clean buffer synchronously */
@@ -1447,10 +1447,10 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
         }
 
         lock_ObtainWrite(&buf_globalLock);
-        buf_LockedRelease(bp);
         nbp = bp->fileHashp;
         if (nbp) 
-            nbp->refCount++;
+            buf_HoldLocked(nbp);
+        buf_ReleaseLocked(bp);
         lock_ReleaseWrite(&buf_globalLock);
     }	/* for loop over a bunch of buffers */
 

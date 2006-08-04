@@ -146,9 +146,11 @@ extern void buf_Hold(cm_buf_t *);
 
 extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
 
-extern void buf_LockedRelease(cm_buf_t *);
+extern void buf_ReleaseLocked(cm_buf_t *);
 
-extern cm_buf_t *buf_LockedFind(struct cm_scache *, osi_hyper_t *);
+extern void buf_HoldLocked(cm_buf_t *);
+
+extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
@@ -156,13 +158,13 @@ extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 extern HANDLE buf_GetFileHandle(long);
 #endif /* !DJGPP */
 
-extern void buf_LockedCleanAsync(cm_buf_t *, cm_req_t *);
-
 extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
 extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
 extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
+
+extern void buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *);
 
 extern void buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
