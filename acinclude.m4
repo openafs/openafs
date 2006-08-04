@@ -558,6 +558,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
+
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
@@ -576,7 +577,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
-	  	 LINUX_IOP_NAMEIDATA
+	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
+	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
@@ -749,6 +753,24 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
+		 fi
+		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
+		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
+		 fi
+		 if test "x$ac_cv_linux_func_refrigerator_takes_pf_freeze" = "xyes" ; then
+		  AC_DEFINE(LINUX_REFRIGERATOR_TAKES_PF_FREEZE, 1, [define if your refrigerator takes PF_FREEZE])
+		 fi
+		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_i_permission_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_PERMISSION_TAKES_NAMEIDATA, 1, [define if your iops.permission takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
 		 fi
                 :
 		fi
