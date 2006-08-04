@@ -577,3 +577,13 @@ struct nameidata _nameidata;
       ac_cv_linux_func_d_revalidate_takes_nameidata=yes,
       ac_cv_linux_func_d_revalidate_takes_nameidata=no)])
   AC_MSG_RESULT($ac_cv_linux_func_d_revalidate_takes_nameidata)])
+
+AC_DEFUN([LINUX_GET_SB_HAS_STRUCT_VFSMOUNT], [
+  AC_MSG_CHECKING([for struct vfsmount * in get_sb_nodev()])
+  AC_CACHE_VAL([ac_cv_linux_get_sb_has_struct_vfsmount], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[get_sb_nodev(0,0,0,0,0);],
+      ac_cv_linux_get_sb_has_struct_vfsmount=yes,
+      ac_cv_linux_get_sb_has_struct_vfsmount=no)])
+  AC_MSG_RESULT($ac_cv_linux_get_sb_has_struct_vfsmount)])
