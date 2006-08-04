@@ -70,6 +70,10 @@
 #include <linux/security.h>
 #endif
 #include <linux/suspend.h>
+#if defined(LINUX_KEYRING_SUPPORT)
+#include <linux/rwsem.h>
+#include <linux/key.h>
+#endif
 #endif
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
  * inclusion of uaccess.h.

@@ -587,3 +587,41 @@ AC_DEFUN([LINUX_GET_SB_HAS_STRUCT_VFSMOUNT], [
       ac_cv_linux_get_sb_has_struct_vfsmount=yes,
       ac_cv_linux_get_sb_has_struct_vfsmount=no)])
   AC_MSG_RESULT($ac_cv_linux_get_sb_has_struct_vfsmount)])
+
+AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
+  AC_MSG_CHECKING([for linux kernel keyring support])
+  AC_CACHE_VAL([ac_cv_linux_keyring_support], [
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+#include <linux/keyctl.h>
+#include <asm/unistd.h>
+static int errno;
+static inline _syscall2(long, keyctl, int, option, void*, arg2);],
+[#ifdef CONFIG_KEYS
+keyctl(KEYCTL_JOIN_SESSION_KEYRING, NULL);
+request_key(NULL, NULL, NULL);
+#else
+#error rebuild your kernel with CONFIG_KEYS
+#endif],
+      ac_cv_linux_keyring_support=yes,
+      ac_cv_linux_keyring_support=no)])
+  AC_MSG_RESULT($ac_cv_linux_keyring_support)
+  if test "x$ac_cv_linux_keyring_support" = "xyes"; then
+    AC_DEFINE([LINUX_KEYRING_SUPPORT], 1, [define if your kernel has keyring support])
+  fi])
+
+AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
+  AC_MSG_CHECKING([if key_alloc() takes a struct task *])
+  AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+],
+[(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);],
+      ac_cv_key_alloc_needs_struct_task=yes,
+      ac_cv_key_alloc_needs_struct_task=no)])
+  AC_MSG_RESULT($ac_cv_key_alloc_needs_struct_task)
+  if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
+    AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
+  fi])
