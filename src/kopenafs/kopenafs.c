@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdlib.h>
-#include <sys/signal.h>
+#include <signal.h>
 
 #include <afsconfig.h>
 #include <afs/afssyscalls.h>
