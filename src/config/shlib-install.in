@@ -9,6 +9,8 @@
 # We take the following regular arguments: -d <destination>, -l <library>, -M
 # <major>, -m <minor>.
 
+set -e
+
 INSTALL="@INSTALL@"
 install="@INSTALL_DATA@"
 suffix="@SHLIB_SUFFIX@"

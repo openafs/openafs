@@ -13,6 +13,8 @@
 # expect a -- option indicating the end of our arguments and the rest of the
 # arguments are passed along verbatim to the linker.
 
+set -e
+
 linker="@SHLIB_LINKER@"
 suffix="@SHLIB_SUFFIX@"
 sysname="@AFS_SYSNAME@"
