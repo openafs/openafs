@@ -290,10 +290,6 @@ typedef afs_int32 ViceOfflineType;
 %#define NoSalvage 0
 %#define Salvage 1
 
-%#ifdef KERNEL
-%#include "../afs/longc_procs.h"
-%#endif
-
 %#define MAXCMDINT64S   			3
 %#define MAXCMDINT32S   			200
 %#define MAXCMDCHARS    			256

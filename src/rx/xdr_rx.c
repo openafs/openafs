@@ -55,8 +55,6 @@ RCSID
 #endif /* !UKERNEL */
 #include "rx/rx.h"
 
-#include "afs/longc_procs.h"
-
 #else /* KERNEL */
 #include <sys/types.h>
 #include <stdio.h>
