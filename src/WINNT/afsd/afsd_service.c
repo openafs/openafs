@@ -372,8 +372,9 @@ afsd_ServiceControlHandlerEx(
  * Mount a drive into AFS if there global mapping
  */
 /* DEE Could check first if we are run as SYSTEM */
-#define MAX_RETRIES 30
-static void MountGlobalDrives(void)
+#define MAX_RETRIES 10
+#define MAX_DRIVES  23
+static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
 {
 #ifndef AFSIFS
     char szAfsPath[_MAX_PATH];
@@ -394,7 +395,7 @@ static void MountGlobalDrives(void)
     if (dwResult != ERROR_SUCCESS)
         return;
 
-    while (dwRetry < MAX_RETRIES) {
+    while (dwIndex < MAX_DRIVES) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
         dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
@@ -407,7 +408,7 @@ static void MountGlobalDrives(void)
         }
 
 #ifndef AFSIFS
-        for ( ; dwRetry < MAX_RETRIES; dwRetry++)
+        for (dwRetry = 0 ; dwRetry < MAX_RETRIES; dwRetry++)
         {
             NETRESOURCE nr;
             memset (&nr, 0x00, sizeof(NETRESOURCE));
@@ -435,10 +436,32 @@ static void MountGlobalDrives(void)
         }
 #else
 	/* FIXFIX: implement */
+	afsi_log("GlobalAutoMap of %s to %s not implemented", szDriveToMapTo, szSubMount);
 #endif
     }        
 
     RegCloseKey(hKey);
+    return 0;
+}
+
+static HANDLE hThreadMountGlobalDrives = NULL;
+
+static void MountGlobalDrives()
+{
+    DWORD tid;
+
+    hThreadMountGlobalDrives = CreateThread(NULL, 0, MountGlobalDrivesThread, 0, 0, &tid);
+
+    if ( hThreadMountGlobalDrives ) {
+        DWORD rc = WaitForSingleObject( hThreadMountGlobalDrives, 15000 );
+	if (rc == WAIT_TIMEOUT) {
+	    afsi_log("GlobalAutoMap thread failed to complete after 15 seconds");
+	} else if (rc == WAIT_OBJECT_0) {
+	    afsi_log("GlobalAutoMap thread completed");
+	    CloseHandle( hThreadMountGlobalDrives );
+	    hThreadMountGlobalDrives = NULL;
+	}
+    }
 }
 
 static void DismountGlobalDrives()
@@ -456,6 +479,19 @@ static void DismountGlobalDrives()
     HKEY hKey;
     DWORD dwIndex = 0;
 
+    if ( hThreadMountGlobalDrives ) {
+        DWORD rc = WaitForSingleObject(hThreadMountGlobalDrives, 0);
+
+	if (rc == WAIT_TIMEOUT) {
+	    afsi_log("GlobalAutoMap thread failed to complete before service shutdown");
+	}
+	else if (rc == WAIT_OBJECT_0) {
+	    afsi_log("GlobalAutoMap thread completed");
+	    CloseHandle( hThreadMountGlobalDrives );
+	    hThreadMountGlobalDrives = NULL;
+	}
+    }
+
     sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSREG_CLT_SVC_PARAM_SUBKEY);
 
     dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey);
@@ -465,7 +501,7 @@ static void DismountGlobalDrives()
 #ifdef AFSIFS    
     /* FIXFIX: implement */
 #else
-    while (1) {
+    while (dwIndex < MAX_DRIVES) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
         dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
