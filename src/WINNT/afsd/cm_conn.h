@@ -11,8 +11,8 @@
 #define __CM_CONN_H_ENV__ 1
 
 #define	CM_CONN_DEFAULTRDRTIMEOUT	45
-#define CM_CONN_CONNDEADTIME		60
-#define CM_CONN_HARDDEADTIME        120
+#define CM_CONN_CONNDEADTIME		 0
+#define CM_CONN_HARDDEADTIME             0
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
