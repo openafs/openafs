@@ -20,6 +20,7 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/unified_afs.h>
+#include <WINNT/afsreg.h>
 
 osi_rwlock_t cm_connLock;
 
@@ -41,10 +42,11 @@ void cm_PutConn(cm_conn_t *connp)
 
 void cm_InitConn(void)
 {
-	static osi_once_t once;
-	long code;
-	DWORD sessTimeout;
-	HKEY parmKey;
+    static osi_once_t once;
+    long code;
+    DWORD dwValue;
+    DWORD dummyLen;
+    HKEY parmKey;
         
     if (osi_Once(&once)) {
 	lock_InitializeRWLock(&cm_connLock, "connection global lock");
@@ -60,24 +62,39 @@ void cm_InitConn(void)
 			    0, KEY_QUERY_VALUE, &parmKey);
 	if (code == ERROR_SUCCESS)
         {
-	    DWORD dummyLen = sizeof(sessTimeout);
+	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, LANMAN_WKS_SESSION_TIMEOUT, NULL, NULL, 
-				   (BYTE *) &sessTimeout, &dummyLen);
+				   (BYTE *) &dwValue, &dummyLen);
 	    if (code == ERROR_SUCCESS)
-            {
-                RDRtimeout = sessTimeout;
-	    }
+                RDRtimeout = dwValue;
+	    RegCloseKey(parmKey);
         }
 
-	afsi_log("lanmanworkstation : SessTimeout %d", sessTimeout);
-	if ( ConnDeadtimeout < RDRtimeout + 15 ) {
-	    ConnDeadtimeout = RDRtimeout + 15;
-	    afsi_log("ConnDeadTimeout increased to %d", ConnDeadtimeout);
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+			     0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+	    dummyLen = sizeof(DWORD);
+	    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
+				    (BYTE *) &dwValue, &dummyLen);
+	    if (code == ERROR_SUCCESS)
+                ConnDeadtimeout = dwValue;
+
+	    dummyLen = sizeof(DWORD);
+	    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
+				    (BYTE *) &dwValue, &dummyLen);
+	    if (code == ERROR_SUCCESS)
+                HardDeadtimeout = dwValue;
+	    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+	    RegCloseKey(parmKey);
 	}
-	if ( HardDeadtimeout < 2 * ConnDeadtimeout ) {
-	    HardDeadtimeout = 2 * ConnDeadtimeout;
-	    afsi_log("HardDeadTimeout increased to %d", HardDeadtimeout);
-	}
+
+	afsi_log("lanmanworkstation : SessTimeout %d", RDRtimeout);
+	if (ConnDeadtimeout == 0)
+	    ConnDeadtimeout = RDRtimeout / 2;
+	afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+	if (HardDeadtimeout == 0)
+	    HardDeadtimeout = RDRtimeout;
+	afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
 
 	osi_EndOnce(&once);
     }

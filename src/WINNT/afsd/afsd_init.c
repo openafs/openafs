@@ -997,16 +997,6 @@ int afsd_InitCM(char **reasonP)
     if (rx_enable_process_stats)
         afsi_log("RX Process Statistics gathering is enabled");
 
-    dummyLen = sizeof(ConnDeadtimeout);
-    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
-                           (BYTE *) &ConnDeadtimeout, &dummyLen);
-    afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
-
-    dummyLen = sizeof(HardDeadtimeout);
-    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
-                           (BYTE *) &HardDeadtimeout, &dummyLen);
-    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
 			    (BYTE *) &dwValue, &dummyLen);
