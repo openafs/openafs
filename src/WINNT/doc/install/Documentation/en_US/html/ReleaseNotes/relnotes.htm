@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
 <meta name=Generator content="Microsoft Word 11 (filtered)">
-<title>OpenAFS for Windows 1.5.3 Release Notes</title>
+<title>OpenAFS for Windows 1.5.6 Release Notes</title>
 
 <style>
 <!--
@@ -306,7 +306,7 @@ ul
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.5.3<br>
+<p class=MsoTitle>OpenAFS for Windows 1.5.6<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
@@ -354,44 +354,44 @@ OpenAFS as part of your computing infrastructure please contribute to its
 continued growth.</p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417109">1. Installer Options<span
+href="#_Toc115417109">1. Installer Options<span
 style='color:windowtext;display:none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>1</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417110">2. System Requirements<span
+href="#_Toc115417110">2. System Requirements<span
 style='color:windowtext;display:none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>2</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417111">3. Operational Notes<span
+href="#_Toc115417111">3. Operational Notes<span
 style='color:windowtext;display:none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>2</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417112">4. How to Debug Problems
+href="#_Toc115417112">4. How to Debug Problems
 with OpenAFS for Windows:<span style='color:windowtext;display:none;text-decoration:
 none'> </span><span
 style='color:windowtext;display:none;text-decoration:none'>11</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417113">5. Reporting Bugs:<span
+href="#_Toc115417113">5. Reporting Bugs:<span
 style='color:windowtext;display:none;text-decoration:none'> </span><span
 style='color:windowtext;display:none;text-decoration:none'>13</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417114">6. How to Contribute to
+href="#_Toc115417114">6. How to Contribute to
 the Development of OpenAFS for Windows<span style='color:windowtext;display:
 none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>14</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417115">7. MSI Deployment Guide<span
+href="#_Toc115417115">7. MSI Deployment Guide<span
 style='color:windowtext;display:none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>15</span></a></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><a
-href="../../oafw-1-4-release-notes.doc#_Toc115417116">Appendix A: Registry
+href="#_Toc115417116">Appendix A: Registry
 Values<span style='color:windowtext;display:none;text-decoration:none'>. </span><span
 style='color:windowtext;display:none;text-decoration:none'>26</span></a></span></p>
 
@@ -412,7 +412,7 @@ Installation System, or</p>
 style='font-size:9.0pt'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span>a Windows Installer package (.msi) that is built using WiX and
 can be customized for organizations via the use of MSI Transforms (see <a
-href="../../oafw-1-4-release-notes.doc#_MSI_Deployment_Guide">MSI Deployment
+href="#_MSI_Deployment_Guide">MSI Deployment
 Guide</a>)</p>
 
 <h1 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993083"></a><a
@@ -571,7 +571,7 @@ a win in all situations except when the cell name does not match the realm name
 and the principal names placed into the ACL’s are not the principal names from
 the Kerberos 5 ticket.  To support this transition, OpenAFS for Windows 1.4
 adds a new registry value, <i><a
-href="../../oafw-1-4-release-notes.doc#_Value___: Use524">Use524</a></i>, to
+href="#_Value___: Use524">Use524</a></i>, to
 force the use of krb524d.  However, the availability of this option should only
 be used by individuals until such time as their organizations can provide a
 more permanent solution.</p>
@@ -661,7 +661,7 @@ path</i>; otherwise the mount point will be a <i>regular path</i>.  These mount
 points are preserved in the registry at key:</p>
 
 <p class=PreformattedText style='margin-left:35.45pt'><a
-href="../../oafw-1-4-release-notes.doc#_Regkey:_[HKLMSOFTWAREOpenAFSClie">HKLM\SOFTWARE\OpenAFS\Client\Freelance</a></p>
+href="#_Regkey:_[HKLMSOFTWAREOpenAFSClie">HKLM\SOFTWARE\OpenAFS\Client\Freelance</a></p>
 
 <p class=MsoNormal>Additional mount points may be manually created using the
 &quot;fs mkmount&quot; command.  Mount points may be removed using the &quot;fs
@@ -695,7 +695,7 @@ volume.</p>
 <p class=MsoNormal>The symlinks are stored in the registry at:</p>
 
 <p class=PreformattedText style='margin-left:35.45pt'><a
-href="../../oafw-1-4-release-notes.doc#_Regkey:_[HKLMSOFTWAREOpenAFSClie_1">HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks</a> </p>
+href="#_Regkey:_[HKLMSOFTWAREOpenAFSClie_1">HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks</a> </p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993094"></a><a
 name="_Toc126872175"></a><a name="_Toc115417046"></a><a name="_Toc115416110">3.4.
@@ -738,7 +738,7 @@ Kerberos KDC is inaccessible at logon time.</p>
 <p class=MsoNormal>Integrated Login supports the ability to obtain tokens for
 multiple cells.  For further information on how to configure this feature read
 the <a href="../relnotes.htm#_Value:_TheseCells">TheseCells</a> value in <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>.</p>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993096"></a><a
 name="_Toc126872177"></a><a name="_Toc115417048"></a><a name="_Toc115416112">3.6.
@@ -787,8 +787,8 @@ installers to use “-A -N -M -Q” as startup options.  Currently, there is no
 user interface to change this selection after install time although these
 options may be altered via the registry on either per machine or per user
 basis.  See <a
-href="../../oafw-1-4-release-notes.doc#_Value___: AfscredsShortcutParams">AfscredsShortcutParams</a>
-in <a href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix
+href="#_Value___: AfscredsShortcutParams">AfscredsShortcutParams</a>
+in <a href="#_Appendix_A:_Registry_Values">Appendix
 A</a>.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993097"></a><a
@@ -865,7 +865,7 @@ Client Administrators.  The local &quot;SYSTEM&quot; account is an implicit
 member of the &quot;AFS Client Admins&quot; group.</p>
 
 <p class=MsoNormal>Setting the default sysname for a machine should be done via
-the <a href="../../oafw-1-4-release-notes.doc#_Value_:_SysName">registry</a>
+the <a href="#_Value_:_SysName">registry</a>
 and not via &quot;fs sysname&quot;.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993098"></a><a
@@ -1021,10 +1021,10 @@ No More INI Files</a></h2>
 <p class=MsoNormal>Previous AFS clients for Windows stored configuration data
 in Windows .INI files.   OpenAFS 1.4 does not use Windows .INI files for the storage
 of configuration data.   All settings are now stored in the registry (see <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>). 
+href="#_Appendix_A:_Registry_Values">Appendix A</a>). 
 The CellServDB file is now stored in the %PROGRAMFILES%\OpenAFS\Client
 directory.   The <i><a
-href="../../oafw-1-4-release-notes.doc#_Value___: CellServDBDir">CellServDBDir</a></i>
+href="#_Value___: CellServDBDir">CellServDBDir</a></i>
 registry value can be used to specify an alternative location.</p>
 
 <p class=MsoNormal>OpenAFS 1.4 will relocate the contents of the “afsdcell.ini”
@@ -1141,9 +1141,9 @@ registry can be determined for Local Accounts, Active Directory accounts and
 NT4 accounts.</p>
 
 <p class=MsoNormal>If there is a need to disable this functionality, the <a
-href="../../oafw-1-4-release-notes.doc#_Value_:_LogoffPreserveTokens">LogoffPreserveTokens</a>
+href="#_Value_:_LogoffPreserveTokens">LogoffPreserveTokens</a>
 registry value can be used. (see <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>.)</p>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>.)</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993110"></a><a
 name="_Toc126872191"></a><a name="_Toc115417062"></a><a name="_Toc115416126">3.20.
@@ -1204,9 +1204,9 @@ tracking down problems caused by the mixture of files from different releases. 
 </p>
 
 <p class=MsoNormal><a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>
 documents the &quot;<a
-href="../../oafw-1-4-release-notes.doc#_Value___: VerifyServiceSignature">VerifyServiceSignature</a>&quot;
+href="#_Value___: VerifyServiceSignature">VerifyServiceSignature</a>&quot;
 registry value which can be used to disable the signature check.  The file
 version check cannot be disabled.</p>
 
@@ -1278,7 +1278,7 @@ any of the following characters:</p>
 <p class=PreformattedText>&nbsp;</p>
 
 <p class=MsoNormal>OpenAFS 1.4 provides an optional registry value, <i><a
-href="../../oafw-1-4-release-notes.doc#_Value___: StoreAnsiFilenames">StoreAnsiFilenames</a></i>,
+href="#_Value___: StoreAnsiFilenames">StoreAnsiFilenames</a></i>,
 that can be set to instruct OpenAFS to store filenames using the ANSI Code Page
 instead of the OEM Code Page.  The ANSI Code Page is a compatible superset of
 Latin-1.  This setting is not the default setting because making this change
@@ -1387,9 +1387,9 @@ Initial Server Preferences</a></h2>
 <p class=MsoNormal>VLDB and File Server Preferences can now be provided initial
 values using registry keys.  This is useful for managed machines in a Windows
 domain which are centrally located (e.g., in a computing lab.)  See <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>
 for details on the &quot;<a
-href="../../oafw-1-4-release-notes.doc#_Regkey:_[HKLMSOFTWAREOpenAFSClie_2">Server
+href="#_Regkey:_[HKLMSOFTWAREOpenAFSClie_2">Server
 Preferences</a>&quot; keys.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993125"></a><a
@@ -1528,7 +1528,7 @@ of the wide range of issues that have been discovered over the years.</p>
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993134"></a><a
 name="_Toc126872211"></a><a name="_Toc115417082"></a><a name="_Toc115416146">4.1.
 pioctl debugging (</a><a
-href="../../oafw-1-4-release-notes.doc#_Value___: IoctlDebug">IoctlDebug</a>
+href="#_Value___: IoctlDebug">IoctlDebug</a>
 registry key)</h2>
 
 <p class=MsoNormal>pioctl (path-based ioctl) calls are used by various tools to
@@ -1599,7 +1599,7 @@ be due to a programming error in the software.  A quick review of the location
 in the source code will quickly reveal the reason for the termination.</p>
 
 <p class=MsoNormal>The <i><a
-href="../../oafw-1-4-release-notes.doc#_Value___: MaxLogSize">MaxLogSize</a></i>
+href="#_Value___: MaxLogSize">MaxLogSize</a></i>
 registry value determines the maximum size of the %WINDIR%\TEMP\afsd_init.log
 file.  If the file is larger than this value when OpenAFS Client Service
 starts, the file will be reset to 0 bytes.  If value is set to 0, the file will
@@ -1615,7 +1615,7 @@ and the Cache Manager it is often useful to examine a log of the operations
 being performed.  While running the AFS Client Service keeps an in memory log
 of many of its actions.   The default number of actions preserved at any one
 time is 5000.  This can be adjusted with the <a
-href="../../oafw-1-4-release-notes.doc#_Value_:_TraceBufferSize">registry value</a>:</p>
+href="#_Value_:_TraceBufferSize">registry value</a>:</p>
 
 <p class=PreformattedText> 
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
@@ -1634,7 +1634,7 @@ Using SysInternal’s DbgView and FileMon Tools</a></h2>
 to capture internal OpenAFS Client Service events is to use a tool such as
 Sysinternal's DbgView to capture real-time debugging output.  When the OpenAFS
 Client Service starts and Bit 2 of the <a
-href="../../oafw-1-4-release-notes.doc#_Value__:_TraceOption">TraceOption</a>
+href="#_Value__:_TraceOption">TraceOption</a>
 value in the registry is set, all trace log events are output using the Windows
 Debug Monitor interface (OutputDebugString).  </p>
 
@@ -1677,7 +1677,7 @@ Single Sign-on (Integrated Logon) debugging</a></h2>
 <p class=MsoNormal>If you are having trouble with the Integrated Logon
 operations it is often useful to be able to obtain a log of what it is
 attempting to do.   Setting Bit 0 of the <a
-href="../../oafw-1-4-release-notes.doc#_Value__:_TraceOption">TraceOption</a> registry
+href="#_Value__:_TraceOption">TraceOption</a> registry
 value:</p>
 
 <p class=PreformattedText> 
@@ -2066,7 +2066,7 @@ Configuration Options</a></h2>
 
 <p class=MsoNormal>The logic necessary to implement many of the settings
 described in <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>
 are present in the MSI.  Most of these can be controlled by setting the
 corresponding properties to the desired value.  Some settings may require
 modifying existing registry entries (though not recommended) or adding new resources
@@ -2091,7 +2091,7 @@ the installer.</p>
 
 <p class=MsoNormal>For each property, the associated registry setting is
 referenced by the same text used in <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>.</p>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>.</p>
 
 <p class=MsoNormal>Strings are quoted using single quotes (e.g. 'a string'). An
 empty string is denoted as ''.  Note that you can't author null values into the
@@ -2167,10 +2167,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993162"></a><a name="_Toc126872239"></a><a
   name="_Toc115416170">AFSCACHEPATH</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_CachePath">CachePath</a></p>
+  href="#_Value_:_CachePath">CachePath</a></p>
   <p class=MsoList>Valid values    : string .</p>
   </td>
  </tr>
@@ -2179,10 +2179,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993163"></a><a name="_Toc126872240"></a><a
   name="_Toc115416171">AFSCACHESIZE</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: CacheSize">CacheSize</a></p>
+  href="#_Value___: CacheSize">CacheSize</a></p>
   <p class=MsoList>Valid values    : numeric</p>
   </td>
  </tr>
@@ -2191,10 +2191,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993164"></a><a name="_Toc126872241"></a><a
   name="_Toc115416172">AFSCELLNAME</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_Cell">Cell</a></p>
+  href="#_Value_:_Cell">Cell</a></p>
   <p class=MsoList>Valid values    : string</p>
   </td>
  </tr>
@@ -2203,10 +2203,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993165"></a><a name="_Toc126872242"></a><a
   name="_Toc115416173">FREELANCEMODE</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_FreelanceClient">FreelanceClient</a></p>
+  href="#_Value_:_FreelanceClient">FreelanceClient</a></p>
   <p class=MsoList>Valid values    : '1' or '0'</p>
   </td>
  </tr>
@@ -2215,10 +2215,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993166"></a><a name="_Toc126872243"></a><a
   name="_Toc115416174">HIDEDOTFILES</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_HideDotFiles">HideDotFiles</a></p>
+  href="#_Value_:_HideDotFiles">HideDotFiles</a></p>
   <p class=MsoList>Valid values    : '1' or '0'</p>
   </td>
  </tr>
@@ -2227,15 +2227,15 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993167"></a><a name="_Toc126872244"></a><a
   name="_Toc115416175">LOGONOPTIONS</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Network_provider):">(Network
+  href="#_(Network_provider):">(Network
   provider)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: LogonOptions">LogonOptions</a></p>
+  href="#_Value___: LogonOptions">LogonOptions</a></p>
   <p class=MsoList>Valid values    : '0', '1' or '3'</p>
   <p class=MsoNormal>See <a
-  href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix
+  href="#_Appendix_A:_Registry_Values">Appendix
   A</a> <a
-  href="../../oafw-1-4-release-notes.doc#_A.2.1_Domain_specific_configuration">section
+  href="#_A.2.1_Domain_specific_configuration">section
   2.1 (Domain specific configuration keys for Network Provider)</a> for more
   details.</p>
   </td>
@@ -2245,10 +2245,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993168"></a><a name="_Toc126872245"></a><a
   name="_Toc115416176">MOUNTROOT</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_Mountroot">Mountroot</a></p>
+  href="#_Value_:_Mountroot">Mountroot</a></p>
   <p class=MsoList>Valid values    : string</p>
   </td>
  </tr>
@@ -2257,10 +2257,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993169"></a><a name="_Toc126872246"></a><a
   name="_Toc115416177">NETBIOSNAME</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: NetbiosName">NetbiosName</a></p>
+  href="#_Value___: NetbiosName">NetbiosName</a></p>
   <p class=MsoList>Valid values    : string (at most 15 characters)</p>
   </td>
  </tr>
@@ -2269,10 +2269,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993170"></a><a name="_Toc126872247"></a><a
   name="_Toc115416178">NOFINDLANABYNAME</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: NoFindLanaByName">NoFindLanaByName</a></p>
+  href="#_Value___: NoFindLanaByName">NoFindLanaByName</a></p>
   <p class=MsoList>Valid values    : '1' or '0'</p>
   </td>
  </tr>
@@ -2281,10 +2281,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993171"></a><a name="_Toc126872248"></a><a
   name="_Toc115416179">RXMAXMTU</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_RxMaxMTU">RxMaxMTU</a></p>
+  href="#_Value_:_RxMaxMTU">RxMaxMTU</a></p>
   <p class=MsoList>Valid values    : numeric</p>
   </td>
  </tr>
@@ -2293,10 +2293,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993172"></a><a name="_Toc126872249"></a><a
   name="_Toc115416180">SECURITYLEVEL</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_SecurityLevel">SecurityLevel</a></p>
+  href="#_Value_:_SecurityLevel">SecurityLevel</a></p>
   <p class=MsoList>Valid values    : '1' or '0'</p>
   </td>
  </tr>
@@ -2305,10 +2305,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993173"></a><a name="_Toc126872250"></a><a
   name="_Toc115416181">SMBAUTHTYPE</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: smbAuthType">SMBAuthType</a></p>
+  href="#_Value___: smbAuthType">SMBAuthType</a></p>
   <p class=MsoList>Valid values    : '0','1' or '2'</p>
   </td>
  </tr>
@@ -2317,9 +2317,9 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993174"></a><a name="_Toc126872251"></a><a
   name="_Toc115416182">STOREANSIFILENAMES</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(OpenAFS_Client):">(OpenAFS Client)</a></p>
+  href="#_(OpenAFS_Client):">(OpenAFS Client)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value___: StoreAnsiFilenames">StoreAnsiFilenames</a></p>
+  href="#_Value___: StoreAnsiFilenames">StoreAnsiFilenames</a></p>
   <p class=MsoList>Valid values    : '0' or '1'</p>
   </td>
  </tr>
@@ -2328,10 +2328,10 @@ entries associated with OpenAFS for Windows.</p>
   <h6><a name="_Toc139993175"></a><a name="_Toc126872252"></a><a
   name="_Toc115416183">USEDNS</a></h6>
   <p class=MsoList>Registry key    : <a
-  href="../../oafw-1-4-release-notes.doc#_(Service_parameters):">(Service
+  href="#_(Service_parameters):">(Service
   parameters)</a></p>
   <p class=MsoList>Registry value : <a
-  href="../../oafw-1-4-release-notes.doc#_Value_:_UseDNS">UseDNS</a></p>
+  href="#_Value_:_UseDNS">UseDNS</a></p>
   <p class=MsoList>Valid values    : '1' or '0'</p>
   </td>
  </tr>
@@ -2446,7 +2446,7 @@ margin-left:39.6pt;text-indent:-21.6pt'>1.1.<span style='font:7.0pt "Times New R
 margin-left:39.6pt;text-indent:-21.6pt'>1.2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
 </span>In the Component table, locate the component you need to change ( Ctrl-F
 invokes the 'Find' dialog).  The component names are listed below in section <a
-href="../../oafw-1-4-release-notes.doc#_2.3.1_Components_for_Configuration ">7.2.3.1</a>. 
+href="#_2.3.1_Components_for_Configuration ">7.2.3.1</a>. 
 For this example, the component name is 'elf_CellServDB'.</p>
 
 <p class=MsoNormal style='margin-top:4.3pt;margin-right:0pt;margin-bottom:4.3pt;
@@ -2861,7 +2861,7 @@ Registry Keys</a></h3>
 keys.</p>
 
 <p class=MsoNormal>    Refer to <a
-href="../../oafw-1-4-release-notes.doc#_Appendix_A:_Registry_Values">Appendix A</a>
+href="#_Appendix_A:_Registry_Values">Appendix A</a>
 section 2.1 for more information.</p>
 
 <p class=MsoNormal>    Columns that are unspecified should be left empty.</p>
