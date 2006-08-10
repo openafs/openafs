@@ -268,7 +268,7 @@ configureBackConnectionHostNames(void)
     HKEY hkMSV10;
     HKEY hkClient;
     DWORD dwType;
-    DWORD dwSize;
+    DWORD dwSize, dwAllocSize;
     DWORD dwValue;
     PBYTE pHostNames = NULL, pName = NULL;
     BOOL  bNameFound = FALSE;   
@@ -280,12 +280,16 @@ configureBackConnectionHostNames(void)
                        &hkMSV10) == ERROR_SUCCESS )
     {
 	if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
-			     &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
-	    dwSize += strlen(cm_NetbiosName) + 1;
-	    pHostNames = malloc(dwSize);
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) {
+	    dwAllocSize += 1 /* in case the source string is not nul terminated */
+		+ strlen(cm_NetbiosName) + 2;
+	    pHostNames = malloc(dwAllocSize);
+	    dwSize = dwAllocSize;
 	    if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
 				 pHostNames, &dwSize) == ERROR_SUCCESS) {
-		for (pName = pHostNames; *pName ; pName += strlen(pName) + 1)
+		for (pName = pHostNames; 
+		     (pName - pHostNames < dwSize) && *pName; 
+		     pName += strlen(pName) + 1)
 		{
 		    if ( !stricmp(pName, cm_NetbiosName) ) {
 			bNameFound = TRUE;
@@ -299,7 +303,6 @@ configureBackConnectionHostNames(void)
             int size = strlen(cm_NetbiosName) + 2;
             if ( !pHostNames ) {
                 pHostNames = malloc(size);
-                dwSize = size;
 		pName = pHostNames;
             }
             StringCbCopyA(pName, size, cm_NetbiosName);
@@ -307,7 +310,7 @@ configureBackConnectionHostNames(void)
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;
-            dwSize += strlen(cm_NetbiosName) + 1;
+            dwSize += pName - pHostNames + 1;
             RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
 
             if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
