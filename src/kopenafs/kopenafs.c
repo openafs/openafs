@@ -12,8 +12,9 @@
  * included in the libsys code.
  */
 
-#include <errno.h>
+#include <sys/param.h>
 #include <netinet/in.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <signal.h>
 
