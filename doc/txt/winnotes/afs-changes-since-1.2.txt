@@ -1,3 +1,31 @@
+Since 1.5.4/1.5.5:
+
+ * integrated logon could cause winlogin.exe to blue screen windows
+   if it was called with a domain that does not exist on the machine.
+   this is possible during a sysprep.
+
+ * corrections to cm_buf_t handling to ensure that buffers are
+   removed from queues before they are freed and that holds are
+   obtained on the next buffer in a chain before releasing the
+   current one.
+
+ * do not generate MessageBox dialogs on network errors.  they 
+   cause more trouble then they are worth.
+
+ * move GlobalAutoMapper into a separate thread so that it does
+   not prevent service startup if the WNetAddConnection2 call
+   does not return.
+
+ * restrict hard dead and connection timeouts to the CIFS Session
+   Timeout value.  This is being done to try to prevent virtual 
+   circuits from being destroyed prematurely.
+
+ * Fix the code that writes the backconnectionhostnames value
+   to ensure that the data buffer is written with the correct 
+   length.
+
+ (there were no windows specific changes between 1.5.4 and 1.5.5)
+
 Since 1.5.3:
 
  * Corrections to the Integrated Logon functionality that permits
