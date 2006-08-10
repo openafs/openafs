@@ -944,8 +944,9 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         /* add the buffer to the list */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, tbp);
-        osi_QAdd((osi_queue_t **)&heldBufListp, &qdp->q);
-        if (!heldBufListEndp) heldBufListEndp = qdp;
+        osi_QAddH((osi_queue_t **)&heldBufListp, 
+		  (osi_queue_t **)&heldBufListEndp, 
+		  &qdp->q);
         /* leave tbp held (from buf_Get) */
 
         if (!reserving) 
@@ -1013,9 +1014,9 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         /* add the buffer to the list */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, tbp);
-        osi_QAdd((osi_queue_t **)&biop->bufListp, &qdp->q);
-        if (!biop->bufListEndp) 
-            biop->bufListEndp = qdp;
+        osi_QAddH((osi_queue_t **)&biop->bufListp, 
+		  (osi_queue_t **)&biop->bufListEndp, 
+		  &qdp->q);
         buf_Hold(tbp);
 
         /* from now on, a failure just stops our collection process, but
@@ -1032,6 +1033,9 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     for (qdp = heldBufListp; qdp; qdp = tqdp) {
         tqdp = (osi_queueData_t *) osi_QNext(&qdp->q);
         tbp = osi_GetQData(qdp);
+	osi_QRemoveHT((osi_queue_t **) &heldBufListp,
+		      (osi_queue_t **) &heldBufListEndp,
+		      &qdp->q);
         osi_QDFree(qdp);
         buf_Release(tbp);
     }
@@ -1084,6 +1088,9 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
                 
         /* extract buffer and free queue data */
         bufp = osi_GetQData(qdp);
+	osi_QRemoveHT((osi_queue_t **) &biop->bufListp,
+		      (osi_queue_t **) &biop->bufListEndp,
+		      &qdp->q);
         osi_QDFree(qdp);
 
         /* now, mark I/O as done, unlock the buffer and release it */
