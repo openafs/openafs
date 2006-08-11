@@ -137,7 +137,9 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
     astat->size = OSIFILE_INODE(afile)->i_size;
+#ifdef STRUCT_INODE_HAS_I_BLKSIZE
     astat->blksize = OSIFILE_INODE(afile)->i_blksize;
+#endif
 #if defined(AFS_LINUX26_ENV)
     astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
     astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;

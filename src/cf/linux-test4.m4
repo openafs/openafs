@@ -188,6 +188,17 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE], [
+  AC_MSG_CHECKING([for i_blksize in struct inode])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_blksize], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printk("%d\n", _inode.i_blksize);],
+      ac_cv_linux_fs_struct_inode_has_i_blksize=yes,
+      ac_cv_linux_fs_struct_inode_has_i_blksize=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blksize)])
+
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
