@@ -39,11 +39,19 @@ RCSID
 #endif
 
 static unsigned long nfs_server_addr = 0;
+#if defined(module_param)
+module_param(nfs_server_addr, long, 0);
+#else
 MODULE_PARM(nfs_server_addr,  "l");
+#endif
 MODULE_PARM_DESC(nfs_server_addr,  "IP Address of NFS Server");
 
 static char *this_cell = 0;
+#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
+module_param_array(this_cell, charp, 0);
+#else
 MODULE_PARM(this_cell, "s");
+#endif
 MODULE_PARM_DESC(this_cell, "Local cell name");
 
 #if defined(AFS_LINUX24_ENV)

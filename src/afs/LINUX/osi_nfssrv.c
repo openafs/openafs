@@ -26,7 +26,11 @@ RCSID
 #include <linux/sunrpc/svcauth.h>
 
 static unsigned long authtab_addr = 0;
+#if defined(module_param)
+module_param(authtab_addr, long, 0);
+#else
 MODULE_PARM(authtab_addr, "l");
+#endif
 MODULE_PARM_DESC(authtab_addr, "Address of the authtab array.");
 
 extern struct auth_ops *authtab[] __attribute__((weak));

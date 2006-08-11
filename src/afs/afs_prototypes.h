@@ -769,6 +769,8 @@ extern int osi_dnlc_purgevol(struct VenusFid *fidp);
 extern int osi_dnlc_init(void);
 extern int osi_dnlc_shutdown(void);
 
+/* afs_pag_cred.c */
+extern void afspag_SetPrimaryCell(char *acell);
 
 /* afs_stat.c */
 extern struct afs_CMStats afs_cmstats;
