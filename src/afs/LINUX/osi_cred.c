@@ -33,7 +33,11 @@ int ncreds_inuse = 0;
  * test if no creds in pool before grabbing lock in crfree().
  */
 #if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+static DEFINE_MUTEX(linux_cred_pool_lock);
+#else
 static DECLARE_MUTEX(linux_cred_pool_lock);
+#endif
 #else
 static struct semaphore linux_cred_pool_lock = MUTEX;
 #endif

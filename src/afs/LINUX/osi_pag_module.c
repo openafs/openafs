@@ -55,7 +55,11 @@ MODULE_PARM(this_cell, "s");
 MODULE_PARM_DESC(this_cell, "Local cell name");
 
 #if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+DEFINE_MUTEX(afs_global_lock);
+#else
 DECLARE_MUTEX(afs_global_lock);
+#endif
 struct proc_dir_entry *openafs_procfs;
 #else
 struct semaphore afs_global_lock = MUTEX;
