@@ -11,12 +11,15 @@ CFLAGS += $CPPFLAGS
 obj-m += conftest.o
 _ACEOF
     cat >conftest.c <<\_ACEOF
+#include <linux/module.h>
 $1
 
 void conftest(void)
 { 
 $2
 } 
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     cd ..
   fi

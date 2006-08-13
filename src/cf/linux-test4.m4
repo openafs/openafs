@@ -107,10 +107,9 @@ AC_DEFUN([LINUX_EXPORTS_SYS_CHDIR], [
   AC_MSG_CHECKING([for exported sys_chdir])
   AC_CACHE_VAL([ac_cv_linux_exports_sys_chdir], [
     AC_TRY_KBUILD(
-[#include <linux/modversions.h>],
-[#ifndef __ver_sys_chdir
-#error sys_chdir not exported
-#endif],
+[extern asmlinkage long sys_chdir(void) __attribute__((weak));],
+[void *address = &sys_chdir;
+printk("%p\n", address);],
       ac_cv_linux_exports_sys_chdir=yes,
       ac_cv_linux_exports_sys_chdir=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_chdir)])
@@ -120,23 +119,33 @@ AC_DEFUN([LINUX_EXPORTS_SYS_CLOSE], [
   AC_MSG_CHECKING([for exported sys_close])
   AC_CACHE_VAL([ac_cv_linux_exports_sys_close], [
     AC_TRY_KBUILD(
-[#include <linux/modversions.h>],
-[#ifndef __ver_sys_close
-#error sys_close not exported
-#endif],
+[extern asmlinkage long sys_close(void) __attribute__((weak));],
+[void *address = &sys_close;
+printk("%p\n", address);],
       ac_cv_linux_exports_sys_close=yes,
       ac_cv_linux_exports_sys_close=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_close)])
+
+
+AC_DEFUN([LINUX_EXPORTS_SYS_OPEN], [
+  AC_MSG_CHECKING([for exported sys_open])
+  AC_CACHE_VAL([ac_cv_linux_exports_sys_open], [
+    AC_TRY_KBUILD(
+[extern asmlinkage long sys_open(void) __attribute__((weak));],
+[void *address = &sys_open;
+printk("%p\n", address);],
+      ac_cv_linux_exports_sys_open=yes,
+      ac_cv_linux_exports_sys_open=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_sys_open)])
 
 
 AC_DEFUN([LINUX_EXPORTS_SYS_WAIT4], [
   AC_MSG_CHECKING([for exported sys_wait4])
   AC_CACHE_VAL([ac_cv_linux_exports_sys_wait4], [
     AC_TRY_KBUILD(
-[#include <linux/modversions.h>],
-[#ifndef __ver_sys_wait4
-#error sys_wait4 not exported
-#endif],
+[extern asmlinkage long sys_wait4(void) __attribute__((weak));],
+[void *address = &sys_wait4;
+printk("%p\n", address);],
       ac_cv_linux_exports_sys_wait4=yes,
       ac_cv_linux_exports_sys_wait4=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)])
