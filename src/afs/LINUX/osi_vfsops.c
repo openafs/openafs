@@ -512,7 +512,9 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_ino = vp->va_nodeid;
     ip->i_nlink = vp->va_nlink;
     ip->i_blocks = vp->va_blocks;
+#ifdef STRUCT_INODE_HAS_I_BLKSIZE
     ip->i_blksize = vp->va_blocksize;
+#endif
     ip->i_rdev = vp->va_rdev;
     ip->i_mode = vp->va_mode;
     ip->i_uid = vp->va_uid;
