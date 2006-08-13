@@ -3771,10 +3771,11 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	 * be unable to accept packets of the size that prior AFS versions would
 	 * send without asking.  */
 	if (peer->maxMTU != tSize) {
+	    if (peer->maxMTU > tSize) /* possible cong., maxMTU decreased */
+		peer->congestSeq++;
 	    peer->maxMTU = tSize;
 	    peer->MTU = MIN(tSize, peer->MTU);
 	    call->MTU = MIN(call->MTU, tSize);
-	    peer->congestSeq++;
 	}
 
 	if (np->length == rx_AckDataSize(ap->nAcks) + 3 * sizeof(afs_int32)) {
