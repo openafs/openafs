@@ -606,6 +606,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
+                 LINUX_EXPORTS_SYS_CHDIR
+                 LINUX_EXPORTS_SYS_CLOSE
+                 LINUX_EXPORTS_SYS_OPEN
+                 LINUX_EXPORTS_SYS_WAIT4
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
@@ -619,9 +623,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                    LINUX_EXPORTS_KALLSYMS_SYMBOL
                    LINUX_EXPORTS_SYS_CALL_TABLE
                    LINUX_EXPORTS_IA32_SYS_CALL_TABLE
-                   LINUX_EXPORTS_SYS_CHDIR
-                   LINUX_EXPORTS_SYS_CLOSE
-                   LINUX_EXPORTS_SYS_WAIT4
                    if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
                          linux_syscall_method=none
                          if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
@@ -650,6 +651,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+		 fi
+		 if test "x$ac_cv_linux_exports_sys_open" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_SYS_OPEN, 1, [define if your linux kernel exports sys_open])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
