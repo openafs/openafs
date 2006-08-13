@@ -350,23 +350,6 @@ afs_clear_inode(struct inode *ip)
 #endif
 }
 
-/* afs_put_inode
- * Linux version of inactive.  When refcount == 2, we are about to
- * decrement to 1 and the only reference remaining should be for
- * the VLRU
- */
-
-static void
-afs_put_inode(struct inode *ip)
-{
-    struct vcache *vcp = VTOAFS(ip);
-
-    AFS_GLOCK();
-    if (VREFCOUNT(vcp) == 2) 
-	afs_InactiveVCache(vcp, NULL);
-    AFS_GUNLOCK();
-}
-
 /* afs_put_super
  * Called from unmount to release super_block. */
 static void
@@ -452,7 +435,6 @@ struct super_operations afs_sops = {
   .destroy_inode =	afs_destroy_inode,
 #endif
   .clear_inode =	afs_clear_inode,
-  .put_inode =		afs_put_inode,
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
 #if !defined(AFS_LINUX24_ENV)

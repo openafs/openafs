@@ -827,8 +827,9 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
-    if (vcp->states & CUnlinked)
-	(void) afs_InactiveVCache(vcp, NULL);
+    ObtainWriteLock(&vcp->lock, 537);
+    (void) afs_InactiveVCache(vcp, NULL);
+    ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
 
     iput(ip);
