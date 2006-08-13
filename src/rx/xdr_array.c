@@ -52,7 +52,9 @@ RCSID
 #define bzero(A,C) memset((A), 0, (C))
 #endif
 #else
+#ifndef AFS_DARWIN90_ENV
 #include <sys/systm.h>
+#endif
 #endif /* AFS_LINUX20_ENV */
 #else
 #include <stdio.h>
