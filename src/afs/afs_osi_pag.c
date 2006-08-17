@@ -539,7 +539,7 @@ PagInCred(const struct AFS_UCRED *cred)
 #endif
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 out:
-#ifdef LINUX_KEYRING_SUPPORT
+#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     if (pag == NOPAG) {
 	struct key *key;
 	afs_uint32 pag, newpag;
