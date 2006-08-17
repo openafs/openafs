@@ -282,7 +282,7 @@ configureBackConnectionHostNames(void)
                        &hkMSV10) == ERROR_SUCCESS )
     {
         if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
-			     &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) {
 	    dwAllocSize += 1 /* in case the source string is not nul terminated */
 		+ strlen(cm_NetbiosName) + 2;
 	    pHostNames = malloc(dwAllocSize);
