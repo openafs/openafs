@@ -292,7 +292,7 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
-    unsigned int resid;
+    afs_size_t resid;
     register afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
     uio_t uio;
@@ -343,7 +343,7 @@ afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
-    unsigned int resid;
+    afs_size_t resid;
     register afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
     uio_t uio;
