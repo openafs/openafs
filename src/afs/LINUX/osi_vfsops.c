@@ -57,11 +57,6 @@ int afs_fill_super(struct super_block *sb, void *data, int silent);
  * 2) Mount call comes to us via do_mount -> read_super -> afs_read_super.
  *    We are expected to setup the super_block. See afs_read_super.
  */
-#if defined(AFS_LINUX26_ENV)
-struct backing_dev_info afs_backing_dev_info = {
-	.ra_pages	= (VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE,
-	.state		= 0,
-};
 
 
 /* afs_read_super
@@ -105,6 +100,11 @@ struct file_system_type afs_fs_type = {
 };
 #endif
 
+#if defined(AFS_LINUX26_ENV)
+struct backing_dev_info afs_backing_dev_info = {
+	.ra_pages	= (VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE,
+	.state		= 0,
+};
 
 int
 afs_fill_super(struct super_block *sb, void *data, int silent)
