@@ -149,6 +149,8 @@ ${LIBAFSRPC}: ${LIBOBJS}
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:${srcdir}/afsrpc.exp ${MT_LIBS};; \
 	sun*_5*) \
 		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+	amd64_linux*) \
+		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile.afs_xdr -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*_linux*) \
 		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*) \
