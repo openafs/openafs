@@ -1,0 +1,12 @@
+diff -uNr afs-krb5.orig/src/asetkey.c afs-krb5/src/asetkey.c
+--- afs-krb5.orig/src/asetkey.c	2005-04-08 15:55:35.637620000 -0400
++++ afs-krb5/src/asetkey.c	2005-04-08 15:55:57.614279120 -0400
+@@ -81,7 +81,7 @@
+ 		exit(1);
+ 	}
+ 
+-	code = afsconf_AddKey(tdir, kvno, key->contents);
++	code = afsconf_AddKey(tdir, kvno, key->contents, 1);
+ 	if (code) {
+ 	    printf("setkey: failed to set key, code %ld.\n", code);
+ 	    exit(1);
