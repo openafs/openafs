@@ -1,3 +1,21 @@
+Since 1.4.2-beta3:  (1.4.2-rc1 released 22 Aug 2006)
+
+ * integrated logon could cause winlogin.exe to blue screen windows
+   if it was called with a domain that does not exist on the machine.
+   this is possible during a sysprep.
+
+ * do not generate MessageBox dialogs on network errors.  they 
+   cause more trouble then they are worth.
+
+ * Fix the code that writes the backconnectionhostnames value
+   to ensure that the data buffer is written with the correct 
+   length.
+
+ * corrections to cm_buf_t handling to ensure that buffers are
+   removed from queues before they are freed and that holds are
+   obtained on the next buffer in a chain before releasing the
+   current one.
+
 Since 1.4.2-beta2:
  * Corrections to the Integrated Logon functionality that permits
    Kerberos 5 TGTs to be communicated into the user session.  The
