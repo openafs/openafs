@@ -1,0 +1,1491 @@
+# Openafs Spec $Revision$
+
+%define afsvers 1.4.2
+%define pkgvers 1.4.2
+%define pkgrel 1
+
+%if %{?osvers:0}%{!?osvers:1}
+%define osvers 1
+%endif
+
+# Determine presence of rpmbuild command line --define arguments used for
+# option specification
+%define kernvers_on_cmdline %{?kernvers:1}%{!?kernvers:0}
+%define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
+%define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
+
+# Determine the version of the kernel to build against
+# - automatically select the latest kernel with sources from /lib/modules
+# - note that this can be overridden on the command line
+#
+%if !%{kernvers_on_cmdline}
+%define kernvers %(%{_sourcedir}/openafs-kernel-version.sh)
+%endif
+%define kversis %{_sourcedir}/openafs-kvers-is.sh
+%define kvers %(%{kversis} parsev %{kernvers})
+%define kvers_is_24 %(%{kversis} %{kvers} "2.4")
+%define kvers_is_26 %(%{kversis} %{kvers} "2.6")
+%define ktype %(%{kversis} parset %{kernvers})
+%define kversion %(%{kversis} kvers %{kernvers})
+
+# This is where to look for kernel build include files.  Default
+# is /lib/modules/<kvers>/build, but you can define kbase and
+# kend on the commandline to change that.
+#
+%if %{?kbase:0}%{!?kbase:1}
+%define kbase /lib/modules/
+%endif
+%if %{?kend:0}%{!?kend:1}
+%define kend /build
+%endif
+# Let the buildscript define the ksrcdir directly -- needed for RHEL4
+%if %{?ksrcdir:0}%{!?ksrcdir:1}
+%define ksrcdir %{kbase}%{kernvers}%{kend}
+%endif
+
+%if %{?kmoddir:0}%{!?kmoddir:1}
+%define kmoddir /lib/modules
+%endif
+%define kxmoddir %{kmoddir}/%{kernvers}
+
+# Set 'debugspec' to 1 if you want to debug the spec file.  This will
+# not remove the installed tree as part of the %clean operation
+%if %{?debugspec:0}%{!?debugspec:1}
+%define debugspec 0
+%endif
+
+# Set 'krb5support' to 1 if you want to build the openafs-krb5 package
+# to distribute aklog and asetkey
+%define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
+
+# Set 'bootkernelsupport' to 1 if you want to build the
+# kernel module for Red Hat BOOT Kernels on x86.
+%define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
+
+# Define the location of your init.d directory
+%define initdir /etc/init.d
+
+# Define the location of the PAM security module directory
+%define pamdir /%{_lib}/security
+
+# Define the set of kernel module variations to be built:
+# For 2.4 kernels we just build everything at once for a particular
+# kernel.   So we build up, smp, and bigmem all at once.
+# For 2.6 kernels we have to build against the specific kernel headers
+# for a particular kernel variation.  AFS will handle the specific smp or
+# non-smp determination.  So just always build as if it's "up" -- the kernel
+# version will have the 'variation' type already in the version #.
+
+%define up_package 0
+%define smp_package 0
+%define bigmem_package 0
+%define hugemem_package 0
+%define largesmp_package 0
+
+#######################################################################
+# 2.4
+%if %{kvers_is_24}
+%define kdepend kernel-source
+%define up_package 1
+%define smp_package 1
+%define largesmp_package 1
+%define smp_ext smp
+%define largesmp_ext largesmp
+
+%define bigmem_package %(%{kversis} find %{ksrcdir} %{_target_cpu} bigmem) 
+%if %{bigmem_package}
+%define bigmem_ext bigmem
+%endif
+
+%define hugemem_package %(%{kversis} find %{ksrcdir} %{_target_cpu} hugemem) 
+%if %{hugemem_package}
+%define hugemem_ext hugemem
+%endif
+
+%define kvariations up smp largesmp %{?bigmem_ext:%{bigmem_ext}} %{?hugemem_ext:%{hugemem_ext}}
+
+#######################################################################
+# 2.6
+%else
+%if %{kvers_is_26}
+%define kvariations up
+%define up_package %(%{kversis} "%{ktype}" "")
+%define smp_package %(%{kversis} "%{ktype}" "smp")
+%define largesmp_package %(%{kversis} "%{ktype}" "largesmp")
+%define hugemem_package %(%{kversis} "%{ktype}" "hugemem")
+
+%if !%{up_package} && !%{smp_package} && !%{hugemem_package} && !%{largesmp_package}
+%error "unknown kernel type: %{ktype}"
+%endif
+
+%if !%{kernvers_on_cmdline}
+%define kdepend %{ksrcdir}/include/linux/version.h
+%endif
+
+#######################################################################
+# other kernels?
+%else
+%error "unknown kernel version: ${kvers} (parsed from %{kernvers})"
+%endif
+%endif
+
+#######################################################################
+# You probably don't need to change anything beyond this line
+# NOTE: If you do, please email me!!!
+
+# Determine which elements of OpenAFS to build.  For non-x86 arches
+# (subject to the ExclusiveArch setting, below), we build both userspace
+# and modules.  For most x86 arches, we build just the kernel modules.  For
+# i386, we build just the userspace.  If you're running an i386 kernel,
+# you'll need to tweak that last bit.
+%if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
+
+%ifarch x86_64 ia64
+%define build_userspace 1
+%define build_modules 1
+%endif
+
+%ifarch %{ix86}
+%define build_userspace 0
+%define build_modules 1
+%endif
+
+%ifarch i386
+%define build_userspace 1
+%define build_modules 0
+%endif
+
+%endif
+
+# deal with cmdline specification
+%if %{build_userspace_on_cmdline} || %{build_modules_on_cmdline}
+%if !%{build_userspace_on_cmdline}
+%define build_userspace 0
+%endif
+%if !%{build_modules_on_cmdline}
+%define build_modules 0
+%endif
+%endif
+
+# Make sure RPM doesn't complain about installed but non-packaged files.
+#define __check_files  %{nil}
+
+Summary: OpenAFS distributed filesystem
+Name: openafs
+Version: %{pkgvers}
+Release: %{osvers}.%{pkgrel}
+License: IBM Public License
+URL: http://www.openafs.org
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Packager: Derek Atkins <warlord@MIT.EDU>
+Group: Networking/Filesystems
+BuildRequires: %{?kdepend:%{kdepend}, } pam-devel
+ExclusiveArch: %{ix86} x86_64 ia64
+
+#    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
+Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
+Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar.bz2
+%define srcdir openafs-%{afsvers}
+
+Source2: openafs-ThisCell
+# http://grand.central.org/dl/cellservdb/CellServDB
+Source3: openafs-CellServDB
+Source4: openafs-SuidCells
+Source5: openafs-cacheinfo
+# Source6: openafs-afsmodname
+Source7: openafs-LICENSE.Sun
+Source8: openafs-README
+Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
+Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
+
+Source15: openafs.sysconfig
+Source16: openafs-client.init
+Source17: openafs-server.init
+
+#  from ftp://ftp.cmf.nrl.navy.mil/pub/kerberos5/afs-krb5-2.0.tar.gz
+Source20: openafs-krb5-2.0.tar.gz
+
+Source30: openafs-kernel-version.sh
+Source31: openafs-buildall.sh
+Source32: openafs-makesrc.sh
+Source33: openafs-kvers-is.sh
+
+Patch0:  openafs-1.4.0-kmodule26.patch
+#Patch1:  openafs-1.4.1-moduleparam.patch
+
+Patch10: afs-krb5-2.0-krb524.patch
+Patch11: afs-krb5-2.0-libsocket.patch
+Patch12: afs-krb5-2.0-com_err.patch
+Patch13: afs-krb5-2.0-openafs1.3.patch
+Patch14: afs-krb5-2.0-res_search.patch
+
+%description
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides common files shared across all the various
+OpenAFS packages but are not necessarily tied to a client or server.
+
+The OpenAFS SRPM can be rebuilt with the following options to control
+what gets built:
+
+ --define "kernvers 2.4.20-1.1376_FC3" Specify the specific kernel version 
+                                  to build modules against. The default is
+                                  to build against the currently-running
+                                  kernel.
+ --define "kbase /lib/modules/"   The base location to look for kernel headers
+ --define "kend /build"           The 'end' location to look for kernels
+                                  The build will define ksrvdir as
+                                  %%{kbase}<kernvers>%%{kend}
+
+ --without krb5                   Disable krb5 support (default: with krb5)
+ --with bitmap-later              Enable "bitmap later" support
+ --with bos-restricted            Enable "bos restricted" mode
+ --with fast-restart              Enable "fast restart" mode
+ --with largefiles                Enable "largefile fileserver" mode
+ --with supergroups               Enable "supergroups"
+
+ --target=i386                    The target architecture to build for.
+                                  When building for a non-default target
+                                  the build may choose whether to build
+                                  userspace or kernel modules automatically.
+                                  The defaults are probably what you want.
+
+ --define "build_userspace 1"     Request building of userspace tools
+ --define "build_modules 1"       Request building of kernel modules
+                                  You probably never need to specify these.
+
+ --define "kmoddir /lib/modules"  This is the base location where modules
+                                  will be installed.  You probably don't
+                                  need to change this ever.
+
+To a kernel module for your running kernel, just run:
+  rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{osvers}.%{pkgrel}.src.rpm
+
+##############################################################################
+#
+# build the userspace side of things if so requested
+#
+##############################################################################
+%if %{build_userspace}
+
+%package client
+Requires: binutils, openafs-kernel, openafs = %{PACKAGE_VERSION}
+Summary: OpenAFS Filesystem Client
+Group: Networking/Filesystem
+
+%description client
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides basic client support to mount and manipulate
+AFS.
+
+%package server
+Requires: openafs = %{PACKAGE_VERSION}
+Summary: OpenAFS Filesystem Server
+Group: Networking/Filesystems
+
+%description server
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides basic server support to host files in an AFS
+Cell.
+
+%package authlibs
+Summary: OpenAFS authentication shared libraries
+Group: Networking/Filesystems
+
+%description authlibs
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a shared version of libafsrpc and libafsauthent. 
+None of the programs included with OpenAFS currently use these shared 
+libraries; however, third-party software that wishes to perform AFS 
+authentication may link against them.
+
+%package authlibs-devel
+Requires: openafs-authlibs = %{PACKAGE_VERSION}
+Requires: openafs-devel = %{PACKAGE_VERSION}
+Summary: OpenAFS shared library development
+Group: Development/Filesystems
+
+%description authlibs-devel
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package includes the static versions of libafsrpc and 
+libafsauthent, and symlinks required for building against the dynamic 
+libraries.
+
+%package devel
+Summary: OpenAFS Development Libraries and Headers
+Group: Development/Filesystems
+
+%description devel
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides static development libraries and headers needed
+to compile AFS applications.  Note: AFS currently does not provide
+shared libraries.
+
+%package docs
+Summary: OpenAFS user and administrator documentation
+Requires: openafs = %{PACKAGE_VERSION}
+Group: Networking/Filesystems
+
+%description docs
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides HTML documentation for OpenAFS users and system
+administrators.
+
+%package kernel-source
+Summary: OpenAFS Kernel Module source tree
+Group: Networking/Filesystems
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+
+%description kernel-source
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides the source code to build your own AFS kernel
+module.
+
+%package compat
+Summary: OpenAFS client compatibility symlinks
+Requires: openafs = %{PACKAGE_VERSION}, openafs-client = %{PACKAGE_VERSION}
+Group: Networking/Filesystems
+Obsoletes: openafs-client-compat
+
+%description compat
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides compatibility symlinks in /usr/afsws.  It is
+completely optional, and is only necessary to support legacy
+applications and scripts that hard-code the location of AFS client
+programs.
+
+%package kpasswd
+Summary: OpenAFS KA kpasswd support
+Requires: openafs
+Group: Networking/Filesystems
+
+%description kpasswd
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides the compatibility symlink for kpasswd, in case
+you are using KAserver instead of Krb5.
+
+%if %{krb5support}
+%package krb5
+Summary: OpenAFS programs to use with krb5
+Requires: openafs = %{PACKAGE_VERSION}
+Group: Networking/Filesystems
+BuildRequires: krb5-devel
+
+%description krb5
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides compatibility programs so you can use krb5
+to authenticate to AFS services, instead of using AFS's homegrown
+krb4 lookalike services.
+%endif
+
+%endif
+
+##############################################################################
+#
+# build the kernel modules if so requested
+#
+##############################################################################
+%if %{build_modules}
+
+%define modkversion %(echo %{kernvers} | cut -d- -f1)
+%define modkrelease %(echo %{kernvers} | cut -d- -f2)
+%define modpkgrel %{modkversion}_%{modkrelease}_%{pkgrel}
+
+%if %{up_package}
+%package kernel
+Summary: OpenAFS Kernel Module (compiled for UP)
+Release: %{modpkgrel}
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+Requires: kernel = %{kversion}
+Group: Networking/Filesystems
+
+%description kernel
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a precompiled AFS kernel module for %{kernvers}.
+%endif
+
+%if %{smp_package}
+%package kernel-smp
+Summary: OpenAFS Kernel Module (compiled for SMP)
+Release: %{modpkgrel}
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+Requires: kernel-smp = %{kversion}
+Group: Networking/Filesystems
+
+%description kernel-smp
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a precompiled AFS kernel module for %{kernvers}.
+%endif
+
+%if %{largesmp_package}
+%package kernel-largesmp
+Summary: OpenAFS Kernel Module (compiled for LARGESMP)
+Release: %{modpkgrel}
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+Requires: kernel-largesmp = %{kversion}
+Group: Networking/Filesystems
+
+%description kernel-largesmp
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a precompiled AFS kernel module for %{kernvers}.
+%endif
+ 
+%if %{bigmem_package}
+%package kernel-bigmem
+Summary: OpenAFS Kernel Module (compiled for SMP & big memory support)
+Release: %{modpkgrel}
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+Requires: kernel-bigmem = %{kversion}
+Group: Networking/Filesystems
+
+%description kernel-bigmem
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a precompiled AFS kernel module for %{kernvers}.
+%endif
+
+%if %{hugemem_package}
+%package kernel-hugemem
+Summary: OpenAFS Kernel Module (compiled for SMP & huge memory support)
+Release: %{modpkgrel}
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+Requires: kernel-hugemem = %{kversion}
+Group: Networking/Filesystems
+
+%description kernel-hugemem
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides a precompiled AFS kernel module for %{kernvers}.
+%endif
+
+%endif
+
+##############################################################################
+#
+# PREP
+#
+##############################################################################
+
+%prep
+
+: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+: @@@
+: @@@ kernel version:     %{kernvers}
+: @@@ base kernel version:%{kversion}
+: @@@ kernel modules dir: %{kxmoddir}
+: @@@ kernel source dir:  %{ksrcdir}
+%if %{kvers_is_24}
+: @@@ kernel variations:  %{kvariations}
+%else
+%if %{up_package}
+: @@@ kernel type:        up
+%else
+: @@@ kernel type:        %{ktype}
+%endif
+%endif
+: @@@ PAM modules dir:    %{pamdir}
+: @@@ build userspace:    %{build_userspace}
+: @@@ build modules:      %{build_modules}
+: @@@ arch:               %{_arch}
+: @@@ target cpu:         %{_target_cpu}
+: @@@
+: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# Install OpenAFS src and doc
+#%setup -q -n %{srcdir}
+%setup -q -b 1 -n %{srcdir}
+
+# Patch openafs to build a kernel module named "openafs" instead of "libafs"
+%patch0 -p1 -b .kmod26
+
+# Patch to work around the Linux 2.6.9 module_param function
+#%patch1 -p0 -b .modparam
+
+%if %{build_userspace}
+# Save some time -- install these if we're building userspace
+
+# Install the Krb5 Migration Kit
+%setup -q -T -D -a 20 -n %{srcdir}
+
+#
+# patch afs-krb5 migration kit to work with openafs-1.3 and krb5-1.3;
+# add some features and fix bugs
+#
+
+# krb524 is no longer in a separate library as of krb5-1.3; handle this
+%patch10 -p0 -b .krb524
+
+# make sure NETLIBS gets added to the proper programs (seems to be 
+# needed only for Solaris)
+%patch11 -p0 -b .libsocket
+
+# find an existing libcom_err and use that
+%patch12 -p0 -b .com_err
+
+# make afs-krb5 work with recent OpenAFS; includes and prototypes
+%patch13 -p0 -b .openafs13
+
+# nothing in afs-krb5 actually uses res_search
+%patch14 -p0 -b .res_search
+
+(cd afs-krb5/src && autoreconf) || exit 1
+
+%endif
+
+
+##############################################################################
+#
+# building
+#
+##############################################################################
+%build
+
+case %{kernvers} in
+   2.4.*)
+       kv='24'
+       ;;
+   2.6.*)
+       kv='26'
+       ;;
+   *)
+       echo "I don't know how to build linux-`expr ${kernvers} : \(^[0-9]*[.][0-9]*\)`"
+       exit 1
+       ;;
+esac
+
+case %{_arch} in
+       x86_64)                         sysname=amd64_linux${kv}        ;;
+       alpha*)                         sysname=alpha_linux_${kv}       ;;
+       i386|i486|i586|i686|athlon)     sysname=i386_linux${kv}         ;;
+       *)                              sysname=%{_arch}_linux${kv}     ;;
+esac
+
+%ifarch %{ix86}
+archlist="i386 i586 i686 athlon"
+%if %{bootkernelsupport}
+  archlist="${archlist} BOOT"
+%endif
+%else
+archlist=%{_arch}
+%endif
+
+#
+# PrintDefine var value statements file
+#
+PrintDefine() {
+    case $3 in
+    *ifn*)
+	echo "#ifndef $1" >> $4
+	;;
+    esac
+    case $3 in
+    *und*)
+	echo "#undef $1" >> $4
+	;;
+    esac
+    case $3 in
+    *def*)
+	echo "#define $1 $2" >> $4
+	;;
+    esac
+    case $3 in
+    *end*)
+	echo "#endif" >> $4
+	;;
+    esac
+    case $3 in
+    *inc*)
+	echo "#include $1" >> $4
+	;;
+    esac
+    case $3 in
+    *nl*)
+	echo "" >> $4
+	;;
+    esac
+}
+
+# PrintRedhatKernelFix arch mp file
+PrintRedhatKernelFix() {
+    arch="$1"
+    up=0
+    smp=0
+    largesmp=0
+    ent=0
+    bigmem=0
+    hugemem=0
+    boot=0
+    bootsmp=0
+
+    case "$2" in
+       up)     up=1;;
+       smp)    smp=1;;
+       largesmp) largesmp=1;;
+       bigmem) bigmem=1;;
+       hugemem) hugemem=1;;
+       *)
+               echo "$2 not supported"
+               exit 2;;
+    esac
+
+    file="$3"
+
+    rm -f $file
+    touch $file
+
+    PrintDefine "REDHAT_FIX_H" "" ifn,def,nl $file
+
+    PrintDefine __BOOT_KERNEL_ENTERPRISE $ent     und,def,nl $file
+    PrintDefine __BOOT_KERNEL_BIGMEM     $bigmem  und,def,nl $file
+    PrintDefine __BOOT_KERNEL_HUGEMEM    $hugemem und,def,nl $file
+    PrintDefine __BOOT_KERNEL_SMP        $smp     und,def,nl $file
+    PrintDefine __BOOT_KERNEL_LARGESMP   $largesmp und,def,nl $file
+    PrintDefine __BOOT_KERNEL_UP         $up      und,def,nl $file
+    PrintDefine __BOOT_KERNEL_BOOT       $boot    und,def,nl $file
+    PrintDefine __BOOT_KERNEL_BOOTSMP    $bootsmp und,def,nl $file
+
+    PrintDefine '"/boot/kernel.h"' "" inc,nl $file	# include file
+
+    for ar in $archlist ; do
+	if [ "$ar" = "$arch" ]; then
+	    PrintDefine "__MODULE_KERNEL_$ar" "1" ifn,def,end $file
+	else
+	    PrintDefine "__MODULE_KERNEL_$ar" "" und $file	# undef
+        fi
+    done
+    echo "" >> $file
+
+    PrintDefine "" "" end $file
+
+    if [ %{debugspec} = 1 ] ; then
+	echo "Kernel Configuration File for Red Hat kernels:"
+	cat $file
+    fi
+}
+
+config_opts="--enable-redhat-buildsys \
+	%{?_with_bitmap_later:--enable-bitmap-later} \
+	%{?_with_bos_restricted:--enable-bos-restricted-mode} \
+	%{?_with_fast_restart:--enable-fast-restart} \
+	%{?_with_largefiles:--enable-largefile-fileserver} \
+	%{?_with_supergroups:--enable-supergroups} \
+	--enable-transarc-paths"
+
+# Configure AFS
+
+CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
+
+./configure --with-afs-sysname=${sysname} \
+       --prefix=%{_prefix} \
+       --libdir=%{_libdir} \
+       --bindir=%{_bindir} \
+       --sbindir=%{_sbindir} \
+       --with-linux-kernel-headers=%{ksrcdir} \
+%if %{krb5support}
+	--with-krb5-conf \
+%endif
+       $config_opts \
+       || exit 1
+
+%if %{build_userspace}
+# Build the user-space AFS stuff
+make dest_nolibafs || exit 1
+
+# Build the libafs tree
+make only_libafs_tree || exit 1
+
+%if %{krb5support}
+# Now build ka-forwarder
+(cd afs-krb5/src &&
+	./configure --prefix=%{_prefix} --with-krb5=%{_prefix}/kerberos \
+               --libdir=%{_libdir} \
+               --bindir=%{_bindir} \
+               --sbindir=%{_sbindir} \
+               --with-afs=`pwd`/../../${sysname}/dest/ && \
+	make all PROGS="ka-forwarder" && \
+	install -c -s ka-forwarder `pwd`/../../${sysname}/dest/etc ) \
+	|| exit 1
+%endif
+
+%endif
+
+%if %{build_modules}
+%if %{kvers_is_24}
+# Build all the kernel modules for linux 2.4.x
+for variation in %{kvariations}
+do
+    if [ ${variation} = up ]
+    then
+       local_smp_def=-DREDHAT_FIX
+       suffix=
+    else
+       local_smp_def="-DAFS_SMP -DREDHAT_FIX"
+       suffix=${variation}
+    fi
+
+    PrintRedhatKernelFix %{_target_cpu} $variation src/config/redhat-fix.h
+    make dest_only_libafs LOCAL_SMP_DEF="${local_smp_def}" \
+	LINUX_MODULE_NAME="${suffix}" MPS=SP
+
+done
+rm -f src/config/redhat-fix.h
+
+%elseif %{kvers_is_26}
+# Build the kernel module for this version of linux 2.6.x
+# Notice how much easier this is than 2.4.  On the other hand,
+# we require much more external support to build multiple modules.
+
+  # the MPS=SP just means that we don't add a '.mp' to the name.
+  make dest_only_libafs MPS=SP
+
+%endif
+%endif
+
+
+##############################################################################
+#
+# installation
+#
+##############################################################################
+%install
+
+export DONT_GPRINTIFY=1
+
+[ $RPM_BUILD_ROOT != / ] && rm -rf $RPM_BUILD_ROOT
+
+case %{kernvers} in
+   2.4.*)
+       kv='24'
+       kmodend=.o
+       ;;
+   2.6.*)
+       kv='26'
+       kmodend=.ko
+       ;;
+   *)
+       echo "I don't know how to build linux-`expr ${kernvers} : \(^[0-9]*[.][0-9]*\)`"
+       exit 1
+       ;;
+esac
+
+case %{_arch} in
+       x86_64)                         sysname=amd64_linux${kv}        ;;
+       alpha*)                         sysname=alpha_linux_${kv}       ;;
+       i386|i486|i586|i686|athlon)     sysname=i386_linux${kv}         ;;
+       *)                              sysname=%{_arch}_linux${kv}     ;;
+esac
+
+# Build install tree
+%if %{build_userspace}
+mkdir -p $RPM_BUILD_ROOT%{_sbindir}
+mkdir -p $RPM_BUILD_ROOT%{_libdir}
+mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
+mkdir -p $RPM_BUILD_ROOT%{initdir}
+mkdir -p $RPM_BUILD_ROOT/etc/openafs
+mkdir -p $RPM_BUILD_ROOT%{pamdir}
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/afs/etc
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/afs/logs
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/etc
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/cache
+chmod 700 $RPM_BUILD_ROOT%{_prefix}/vice/cache
+mkdir -p $RPM_BUILD_ROOT%{_mandir}
+
+# Copy files from dest to the appropriate places in BuildRoot
+tar cf - -C ${sysname}/dest bin include | tar xf - -C $RPM_BUILD_ROOT%{_prefix}
+tar cf - -C ${sysname}/dest/lib . | tar xf - -C $RPM_BUILD_ROOT%{_libdir}
+tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
+tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
+tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
+
+# Link kpasswd to kapasswd
+ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+
+# Copy root.client config files
+install -m 755 %{SOURCE15} $RPM_BUILD_ROOT/etc/sysconfig/openafs
+install -m 755 %{SOURCE16} $RPM_BUILD_ROOT%{initdir}/openafs-client
+install -m 755 %{SOURCE17} $RPM_BUILD_ROOT%{initdir}/openafs-server
+
+# Copy PAM modules
+install -m 755 ${sysname}/dest/lib/pam* $RPM_BUILD_ROOT%{pamdir}
+
+# PAM symlinks
+ln -sf pam_afs.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.so
+ln -sf pam_afs.krb.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so
+
+# Populate /usr/vice/etc
+uve=$RPM_BUILD_ROOT%{_prefix}/vice/etc
+install -p -m 644 %{SOURCE2} $uve/ThisCell
+install -p -m 644 %{SOURCE3} $uve/CellServDB
+install -p -m 644 %{SOURCE4} $uve/SuidCells
+install -p -m 644 %{SOURCE5} $uve/cacheinfo
+
+#
+# install kernel-source
+#
+
+# Install the kernel module source tree
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
+tar cf - -C libafs_tree . | \
+	tar xf - -C $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
+
+# Next, copy the LICENSE Files, README
+install -m 644 src/LICENSE $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
+install -m 644 %{SOURCE7} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
+install -m 644 %{SOURCE8} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/README
+
+#
+# Install DOCUMENTATION
+#
+
+# Build the DOC directory
+mkdir -p $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
+tar cf - -C doc LICENSE html pdf | \
+    tar xf - -C $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
+install -m 644 %{SOURCE10} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
+install -m 644 %{SOURCE11} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
+
+#
+# man pages
+#
+tar cf - -C doc/man-pages man1 man5 man8 | \
+    tar xf - -C $RPM_BUILD_ROOT%{_mandir}
+
+# Copy the uninstalled krb5 files (or delete the unused krb5 files)
+%if %{krb5support}
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/asetkey $RPM_BUILD_ROOT%{_sbindir}/asetkey
+%else
+rm -f $RPM_BUILD_ROOT%{_mandir}/man8/asetkey.*
+%endif
+
+# remove unused man pages
+for x in afs_ftpd afs_inetd afs_login afs_rcp afs_rlogind afs_rsh \
+    dkload knfs package runntp; do
+	rm -f $RPM_BUILD_ROOT%{_mandir}/man1/${x}.1
+done
+
+# rename kpasswd to kapasswd
+mv $RPM_BUILD_ROOT%{_mandir}/man1/kpasswd.1 $RPM_BUILD_ROOT%{_mandir}/man1/kapasswd.1
+
+# gzip man pages
+gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
+
+# create list of man pages that go in the 'openafs' package
+/bin/ls $RPM_BUILD_ROOT%{_mandir}/man1 \
+	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^rxdebug|scout|^sys|tokens|translate|udebug|unlog|^uss|^vos' \
+	>openafs-man1files
+
+/bin/ls $RPM_BUILD_ROOT%{_mandir}/man5 \
+	|egrep 'CellServDB|ThisCell|afsmonitor|^butc|^uss' \
+	>openafs-man5files
+
+/bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
+	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^uss' \
+	>openafs-man8files
+
+#
+# create filelist
+#
+grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
+%{_bindir}/afsmonitor
+%{_bindir}/bos
+%{_bindir}/fs
+%{_bindir}/kapasswd
+%{_bindir}/kpasswd
+%{_bindir}/klog
+%{_bindir}/klog.krb
+%{_bindir}/pagsh
+%{_bindir}/pagsh.krb
+%{_bindir}/pts
+%{_bindir}/scout
+%{_bindir}/sys
+%{_bindir}/tokens
+%{_bindir}/tokens.krb
+%{_bindir}/translate_et
+%{_bindir}/udebug
+%{_bindir}/unlog
+%{_sbindir}/backup
+%{_sbindir}/butc
+%{_sbindir}/copyauth
+%{_sbindir}/fms
+%{_sbindir}/fstrace
+%{_sbindir}/kas
+%{_sbindir}/kseal
+%{_sbindir}/read_tape
+%{_sbindir}/restorevol
+%{_sbindir}/rxdebug
+%{_sbindir}/uss
+%{_sbindir}/vos
+%{_sbindir}/vsys
+EOF-openafs-file-list
+
+# add man pages to the list
+cat openafs-man1files \
+	| ( while read x; do echo "%{_mandir}/man1/$x"; done ) \
+	>>openafs-file-list
+cat openafs-man5files \
+	| ( while read x; do echo "%{_mandir}/man5/$x"; done ) \
+	>>openafs-file-list
+cat openafs-man8files \
+	| ( while read x; do echo "%{_mandir}/man8/$x"; done ) \
+	>>openafs-file-list
+
+#
+# Install compatiblity links
+#
+for d in bin:bin etc:sbin; do
+  olddir=`echo $d | sed 's/:.*$//'`
+  newdir=`echo $d | sed 's/^.*://'`
+  mkdir -p $RPM_BUILD_ROOT%{_prefix}/afsws/$olddir
+  for f in `cat openafs-file-list`; do
+    if echo $f | grep -q /$newdir/; then
+      fb=`basename $f`
+      ln -sf %{_prefix}/$newdir/$fb $RPM_BUILD_ROOT%{_prefix}/afsws/$olddir/$fb
+    fi
+  done
+done
+
+#
+# Remove files we're not installing
+#
+
+# remove duplicated files from /usr/afs/bin
+for f in bos fs kas klog klog.krb kpwvalid pts tokens tokens.krb udebug vos ; do
+  rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/$f
+done
+
+# compile_et is duplicated in e2fsprogs
+# the rest are not needed.
+for f in compile_et dlog dpass install knfs livesys xstat_cm_test xstat_fs_test ; do
+  rm -f $RPM_BUILD_ROOT%{_bindir}/$f
+done
+
+# not supported on Linux or duplicated
+for f in kdb rmtsysd kpwvalid ; do
+  rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
+done
+rm -f $RPM_BUILD_ROOT%{_sbindir}/kdump*
+
+# remove man pages from programs deleted above
+for f in 1/dlog 1/dpass 1/livesys 1/xstat_cm_test 1/xstat_fs_test 8/kdb 8/kpwvalid 8/xfs_size_check 1/package_test 5/package 8/package ; do
+  rm -f $RPM_BUILD_ROOT%{_mandir}/man$f.*
+done
+
+# PAM modules are doubly-installed  Remove the version we don't need
+for f in pam_afs.krb.so.1 pam_afs.so.1 ; do
+  rm -f $RPM_BUILD_ROOT%{_libdir}/$f
+done
+
+# Remove empty files from the krb5 migration
+for f in afs2k5db fakeka ; do
+  rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
+done
+
+%endif
+
+%if %{build_modules}
+# Install the kernel modules
+for variation in %{kvariations}
+do
+    if [ ${variation} = up ]
+    then
+       kvar=%{kxmoddir}
+       modname=libafs-%{kernvers}${kmodend}
+    else
+       kvar=%{kxmoddir}${variation}
+       modname=libafs-%{kernvers}${variation}${kmodend}
+    fi
+
+    srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
+    dstdir=$RPM_BUILD_ROOT${kvar}/kernel/fs/openafs
+
+    mkdir -p ${dstdir}
+
+    # Mark kernel modules as executable; otherwise they won't get stripped 
+    # by /usr/lib/rpm/brp-strip
+    install -m 744 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
+done
+%endif
+
+##############################################################################
+###
+### clean
+###
+##############################################################################
+%clean
+rm -f openafs-file-list
+[ "$RPM_BUILD_ROOT" != "/" -a "x%{debugspec}" != "x1" ] && \
+	rm -fr $RPM_BUILD_ROOT
+
+
+##############################################################################
+###
+### scripts
+###
+##############################################################################
+%if %{build_userspace}
+
+%pre compat
+if [ -e %{_prefix}/afsws ]; then
+        /bin/rm -fr %{_prefix}/afsws
+fi
+
+%post client
+chkconfig --add openafs-client
+if [ ! -d /afs ]; then
+	mkdir /afs
+	chown root.root /afs
+	chmod 0755 /afs
+fi
+
+echo
+echo The AFS cache is configured for 100 MB. Edit the
+echo /usr/vice/etc/cacheinfo file to change this before
+echo running AFS for the first time. You should also
+echo set your home cell in /usr/vice/etc/ThisCell.
+echo
+echo Also, you may want to edit /etc/pam.d/login and
+echo possibly others there to get an AFS token on login.
+echo Put the line:
+echo 
+echo    auth	   sufficient   %{pamdir}/pam_afs.so try_first_pass ignore_root
+echo
+echo before the one for pwdb.
+echo
+
+%post server
+chkconfig --add openafs-server
+%{initdir}/openafs-server condrestart
+
+%post authlibs
+/sbin/ldconfig
+
+%postun authlibs
+/sbin/ldconfig
+
+%preun
+if [ $1 = 0 ] ; then
+	[ -d /afs ] && rmdir /afs
+fi
+
+%preun client
+if [ $1 = 0 ] ; then
+        %{initdir}/openafs-client stop
+        chkconfig --del openafs-client
+fi
+
+%preun server
+if [ $1 = 0 ] ; then
+        %{initdir}/openafs-server stop
+        chkconfig --del openafs-server
+fi
+
+%endif
+
+%if %{build_modules}
+
+%if %{up_package}
+%post kernel
+/sbin/depmod -ae %{kernvers}
+
+%postun kernel
+/sbin/depmod -ae %{kernvers}
+
+%endif
+
+%if %{smp_package}
+%post kernel-smp
+/sbin/depmod -ae %{kernvers}%{?smp_ext:%{smp_ext}}
+
+%postun kernel-smp
+/sbin/depmod -ae %{kernvers}%{?smp_ext:%{smp_ext}}
+%endif
+
+%if %{largesmp_package}
+%post kernel-largesmp
+/sbin/depmod -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
+
+%postun kernel-largesmp
+/sbin/depmod -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
+%endif
+ 
+%if %{bigmem_package}
+%post kernel-bigmem
+/sbin/depmod -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
+
+%postun kernel-bigmem
+/sbin/depmod -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
+%endif
+
+%if %{hugemem_package}
+%post kernel-hugemem
+/sbin/depmod -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
+
+%postun kernel-hugemem
+/sbin/depmod -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
+%endif
+
+%endif
+
+
+##############################################################################
+###
+### file lists
+###
+##############################################################################
+%if %{build_userspace}
+
+%files -f openafs-file-list
+%defattr(-,root,root)
+%config /etc/sysconfig/openafs
+%doc %{_docdir}/openafs-%{afsvers}/LICENSE
+
+%files docs
+%defattr(-,root,root)
+%doc %{_docdir}/openafs-%{afsvers}
+
+%files client
+%defattr(-,root,root)
+%dir %{_prefix}/vice
+%dir %{_prefix}/vice/cache
+%dir %{_prefix}/vice/etc
+%config %{_prefix}/vice/etc/CellServDB
+%config %{_prefix}/vice/etc/SuidCells
+%config %{_prefix}/vice/etc/ThisCell
+%config %{_prefix}/vice/etc/cacheinfo
+%{_bindir}/cmdebug
+%{_bindir}/up
+%{_prefix}/vice/etc/afsd
+%{pamdir}/pam_afs.krb.so.1
+%{pamdir}/pam_afs.krb.so
+%{pamdir}/pam_afs.so.1
+%{pamdir}/pam_afs.so
+%{initdir}/openafs-client
+%{_mandir}/man1/cmdebug.*
+%{_mandir}/man1/up.*
+%{_mandir}/man5/afs*
+%{_mandir}/man5/cacheinfo.*
+%{_mandir}/man8/afsd.*
+
+%files server
+%defattr(-,root,root)
+%dir %{_prefix}/afs
+%dir %{_prefix}/afs/bin
+%dir %{_prefix}/afs/etc
+%dir %{_prefix}/afs/logs
+%{_prefix}/afs/bin/bosserver
+%{_prefix}/afs/bin/bos_util
+%{_prefix}/afs/bin/buserver
+%{_prefix}/afs/bin/fileserver
+# Should we support KAServer?
+%{_prefix}/afs/bin/kaserver
+%{_prefix}/afs/bin/pt_util
+%{_prefix}/afs/bin/ptserver
+%{_prefix}/afs/bin/salvager
+%{_prefix}/afs/bin/upclient
+%{_prefix}/afs/bin/upserver
+%{_prefix}/afs/bin/vlserver
+%{_prefix}/afs/bin/volinfo
+%{_prefix}/afs/bin/volserver
+%{_sbindir}/kadb_check
+%{_sbindir}/prdb_check
+%{_sbindir}/vldb_check
+%{_sbindir}/vldb_convert
+%{_sbindir}/voldump
+%{initdir}/openafs-server
+%{_mandir}/man5/AuthLog.*
+%{_mandir}/man5/BackupLog.*
+%{_mandir}/man5/BosConfig.*
+%{_mandir}/man5/BosLog.*
+%{_mandir}/man5/FORCESALVAGE.*
+%{_mandir}/man5/FileLog.*
+%{_mandir}/man5/KeyFile.*
+%{_mandir}/man5/NetInfo.*
+%{_mandir}/man5/NetRestrict.*
+%{_mandir}/man5/NoAuth.*
+%{_mandir}/man5/SALVAGE.fs.*
+%{_mandir}/man5/SalvageLog.*
+%{_mandir}/man5/sysid.*
+%{_mandir}/man5/UserList.*
+%{_mandir}/man5/VLLog.*
+%{_mandir}/man5/VolserLog.*
+%{_mandir}/man5/bdb.DB0.*
+%{_mandir}/man5/fms.log.*
+%{_mandir}/man5/kaserver.DB0.*
+%{_mandir}/man5/kaserverauxdb.*
+%{_mandir}/man5/prdb.DB0.*
+%{_mandir}/man5/salvage.lock.*
+%{_mandir}/man5/tapeconfig.*
+%{_mandir}/man5/vldb.DB0.*
+%{_mandir}/man8/buserver.*
+%{_mandir}/man8/fileserver.*
+%{_mandir}/man8/kadb_check.*
+%{_mandir}/man8/prdb_check.*
+%{_mandir}/man8/ptserver.*
+%{_mandir}/man8/salvager.*
+%{_mandir}/man8/upclient.*
+%{_mandir}/man8/upserver.*
+%{_mandir}/man8/vldb_check.*
+%{_mandir}/man8/vlserver.*
+%{_mandir}/man8/voldump.*
+%{_mandir}/man8/volinfo.*
+%{_mandir}/man8/volserver.*
+#%{_mandir}/man8/vldb_convert.*
+
+%files authlibs
+%defattr(-,root,root)
+%{_libdir}/libafsauthent.so.*
+%{_libdir}/libafsrpc.so.*
+
+%files authlibs-devel
+%defattr(-,root,root)
+%{_libdir}/libafsauthent.a
+%{_libdir}/libafsauthent.so
+%{_libdir}/libafsrpc.a
+%{_libdir}/libafsrpc.so
+
+%files devel
+%defattr(-,root,root)
+%{_bindir}/rxgen
+%{_includedir}/afs
+%{_includedir}/des.h
+%{_includedir}/des_conf.h
+%{_includedir}/des_odd.h
+%{_includedir}/des_prototypes.h
+%{_includedir}/lock.h
+%{_includedir}/lwp.h
+%{_includedir}/mit-cpyright.h
+%{_includedir}/potpourri.h
+%{_includedir}/preempt.h
+%{_includedir}/rx
+%{_includedir}/timer.h
+%{_includedir}/ubik.h
+%{_includedir}/ubik_int.h
+%{_libdir}/afs
+%{_libdir}/libdes.a
+%{_libdir}/liblwp.a
+%{_libdir}/librx.a
+%{_libdir}/librxkad.a
+%{_libdir}/librxstat.a
+%{_libdir}/libubik.a
+%{_mandir}/man1/rxgen.*
+
+%files kernel-source
+%defattr(-,root,root)
+%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
+%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
+%{_prefix}/src/openafs-kernel-%{afsvers}/README
+%{_prefix}/src/openafs-kernel-%{afsvers}/src
+
+%files compat
+%defattr(-,root,root)
+%{_prefix}/afsws
+
+%files kpasswd
+%defattr(-,root,root)
+%{_bindir}/kpasswd
+%{_bindir}/kpwvalid
+
+%if %{krb5support}
+%files krb5
+%defattr(-,root,root)
+%{_bindir}/aklog
+%{_sbindir}/asetkey
+%{_sbindir}/ka-forwarder
+%{_mandir}/man1/aklog.*
+%{_mandir}/man8/asetkey.*
+%endif
+
+%endif
+
+%if %{build_modules}
+
+%if %{up_package}
+%files kernel
+%defattr(-,root,root)
+%{kxmoddir}/kernel/fs/openafs/openafs.*
+%endif
+
+%if %{smp_package}
+%files kernel-smp
+%defattr(-,root,root)
+%{kxmoddir}%{?smp_ext:%{smp_ext}}/kernel/fs/openafs/openafs.*
+%endif
+
+%if %{largesmp_package}
+%files kernel-largesmp
+%defattr(-,root,root)
+%{kxmoddir}%{?largesmp_ext:%{largesmp_ext}}/kernel/fs/openafs/openafs.*
+%endif
+ 
+%if %{bigmem_package}
+%files kernel-bigmem
+%defattr(-,root,root)
+%{kxmoddir}%{?bigmem_ext:%{bigmem_ext}}/kernel/fs/openafs/openafs.*
+%endif
+
+%if %{hugemem_package}
+%files kernel-hugemem
+%defattr(-,root,root)
+%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/kernel/fs/openafs/openafs.*
+%endif
+
+%endif
+
+##############################################################################
+###
+### openafs.spec change log
+###
+##############################################################################
+%changelog
+* Sun Aug 20 2006  Derrick Brashear <shadow@dementia.org> 1.4.2-1
+- update to 1.4.2
+- use installed aklog manpage.
+- moduleparam patch obsoleted.
+
+* Tue Apr 18 2006  Derek Atkins <warlord@MIT.EDU> 1.4.1-2
+- fix the module_param_array macro for Linux 2.6.9.
+
+* Sat Apr 15 2006  Derek Atkins <warlord@MIT.EDU> 1.4.1-1
+- update to 1.4.1 release.
+- distribute asetkey from openafs instead of krb5-migration kit
+- don't need to apply the FC5 patches because they are part of the distro.
+- install asetkey into the "proper" place
+- dont list a manpage twice.
+- package asetkey man page.  delete it when not needed.
+
+* Thu Apr  6 2006  Derek Atkins <warlord@MIT.EDU>
+- turn authlibs back on, because RT #18767 was applied to CVS.
+
+* Wed Mar 29 2006  Derek Atkins <warlord@MIT.EDU> 1.4.1rc10-1
+- update to 1.4.1rc10, build on FC5
+- fix the man pages (distribute into various packages)
+- include patches for FC5, RT #29112 and #29122
+
+* Mon Dec 19 2005  Derek Atkins <warlord@MIT.EDU>
+- openafs-server shouldn't depend on the kernel module.
+
+* Thu Nov 17 2005  Derek Atkins <warlord@MIT.EDU>
+- patch from Mike Polek <mike at pictage.com> to run depmod for
+  the target kernel and not the running kernel.
+
+* Tue Nov  8 2005  Derek Atkins <warlord@MIT.EDU>
+- build aklog from the openafs sources, not from the krb5 migration kit.
+
+* Fri Nov  4 2005  Derek Atkins <warlord@MIT.EDU>
+- set openafs-kernel-source to Provide openafs-kernel
+
+* Thu Oct 20 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0-1
+- update afs-krb5 res_search patch: look for res_search and __res_search
+- update to 1.4.0 final
+
+* Mon Oct 10 2005  Derek Atkins <warlord@MIT.EDU>
+- remove all kdump builds.
+
+* Thu Oct  6 2005  Derek Atkins <warlord@MIT.EDU>
+- fix openafs-kernel-version.sh so it will build an RPM for the
+  currently-running kernel even if it's smp on 2.6.
+
+* Tue Sep 27 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc5-1
+- upgrade to 1.4.0rc5
+- turn off authlibs packages
+
+* Fri Sep 23 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc4-2
+- add kmodule26 patch: fix the kernel module name on 2.6 kernels so
+  it's called "openafs" and not "libafs".  This fixes the shutdown
+  problem.
+
+* Thu Sep 22 2005  Derek Atkins <warlord@MIT.EDU>
+- update kversis script, add 'kvers' operation
+- fix bug that 2.6 smp/hugemem kernels don't provide
+  kernel-foo = %{kernvers} with 'smp', 'hugemem', etc.
+- add patch to remove res_search from the afs-krb5 configure
+
+* Thu Sep 15 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc4-1
+- Update to 1.4.0rc4
+- Update the afs-krb5 krb524 patch so it actually works on
+  some older systems like RHEL3 that still need -lkrb524.
+- Update the buildall script so choose better architecture support,
+  e.g. don't build i586 on RHEL.
+- Update the rebuild information in the SPEC file.
+- Add support for finding .EL kernels in openafs-kvers-is.sh
+- Add additional error messages when kernel version/type parsing fails.
+- Update the buildall script to use the kernel srcdir directly.
+
+* Wed Sep 14 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc3-2
+- Add "hugemem" to 2.4 configs
+- Add checks to support scripts to determine whether to build
+  the bigmem and/or hugemem kernels for 2.4.
+
+* Mon Sep 12 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc3-1
+- Added some afs-krb5 patches to get the migration kit to build
+  on modern AFS and modern Kerberos.
+- Added authlibs and authlibs-devel packages as per UMich changes.
+
+* Sun Sep 11 2005  Derek Atkins <warlord@MIT.EDU>
+- Merged in some of the 2.6 changes from wingc@engin.umich.edu
+
+* Sat Sep 10 2005  Derek Atkins <warlord@MIT.EDU>
+- Merged in lots of changes from David Howells and Nalin Dahyabhai
+  from Red Hat.   Initial attempt at a release of 1.4.  Still need
+  to work in a 2.6 build system.
