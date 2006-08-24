@@ -73,6 +73,7 @@ RCSID
 #define VolserVersion "2.0"
 #define N_SECURITY_OBJECTS 3
 
+extern struct Lock localLock;
 extern struct volser_trans *TransList();
 #ifndef AFS_PTHREAD_ENV
 extern int (*vol_PollProc) ();
@@ -423,6 +424,8 @@ main(int argc, char **argv)
     }
 #endif
     VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
+    /* For nuke() */
+    Lock_Init(&localLock);
     DInit(40);
 #ifndef AFS_PTHREAD_ENV
     vol_PollProc = IOMGR_Poll;	/* tell vol pkg to poll io system periodically */
