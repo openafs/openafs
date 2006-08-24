@@ -217,10 +217,6 @@ afsUUID FS_HostUUID;
 
 static void FlagMsg();
 
-#ifdef AFS_PTHREAD_ENV
-pthread_key_t viced_uclient_key;
-#endif
-
 /*
  * Home for the performance statistics.
  */
