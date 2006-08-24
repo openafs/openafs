@@ -208,14 +208,6 @@ struct timeval tp;
 pthread_key_t viced_uclient_key;
 #endif
 
-#ifdef AFS_PTHREAD_ENV
-pthread_key_t viced_uclient_key;
-#endif
-
-#ifdef AFS_PTHREAD_ENV
-pthread_key_t viced_uclient_key;
-#endif
-
 /*
  * FileServer's name and IP address, both network byte order and
  * host byte order.
