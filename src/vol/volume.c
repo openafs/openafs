@@ -201,7 +201,6 @@ int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
 ProgramType programType;	/* The type of program using the package */
 
-
 /* extended volume package statistics */
 VolPkgStats VStats;
 
