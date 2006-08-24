@@ -282,6 +282,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if (code) {
 	fprintf(stderr,
 		"libprot: Could not get local cell. [%d]\n", code);
+	afsconf_Close(tdir);
 	return code;
     }
     
@@ -289,14 +290,14 @@ hpr_Initialize(struct ubik_client **uclient)
     if (code) {
 	fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
 		cellstr, confDir, AFSDIR_CELLSERVDB_FILE);
+	afsconf_Close(tdir);
 	return code;
     }
-    
-    afsconf_Close(tdir);
     
     code = rx_Init(0);
     if (code) {
         fprintf(stderr, "libprot:  Could not initialize rx.\n");
+	afsconf_Close(tdir);
         return code;
     }
     
@@ -360,7 +361,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if (code) {
         com_err("fileserver", code, "ubik client init failed.");
     }
-
+    afsconf_Close(tdir);
     code = rxs_Release(sc[scIndex]);
     return code;
 }
