@@ -121,7 +121,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
         Sleep(dwDelay);
 
     /* for directories, this sends a change notification on the dir itself */
-	if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
 #ifndef AFSIFS
         if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(0,
