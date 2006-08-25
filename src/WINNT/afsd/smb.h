@@ -20,6 +20,7 @@
 #define AFS_LARGEFILES
 
 /* basic core protocol SMB structure */
+#pragma pack(push, 1)
 typedef struct smb {
     unsigned char id[4];
     unsigned char com;
@@ -37,7 +38,7 @@ typedef struct smb {
     unsigned char wct;
     unsigned char vdata[1];
 } smb_t;
-
+#pragma pack(pop)
 
 /* reb values */
 #define SMB_FLAGS_SUPPORT_LOCKREAD         0x01

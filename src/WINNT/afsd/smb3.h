@@ -40,9 +40,12 @@ typedef struct smb_tran2Dispatch {
         long flags;
 } smb_tran2Dispatch_t;
 
+/* Data Structures that are written to or read from the wire directly
+ * must be byte aligned (no padding).
+ */
+#pragma pack(push, 1)
 typedef struct smb_tran2QFSInfo {
     union {
-#pragma pack(push, 2)
         struct {
             unsigned long FSID;			/* file system ID */
             unsigned long sectorsPerAllocUnit;
@@ -50,7 +53,6 @@ typedef struct smb_tran2QFSInfo {
             unsigned long availAllocUnits;	/* free blocks */
             unsigned short bytesPerSector;	/* bytes per sector */
         } allocInfo;
-#pragma pack(pop)
         struct {
             unsigned long vsn;			/* volume serial number */
             char vnCount;			/* count of chars in label, incl null */
@@ -205,6 +207,7 @@ typedef struct {
 	} QFfileNameInfo;
     } u;
 } smb_tran2QFileInfo_t;
+#pragma pack(pop)
 
 /* more than enough opcodes for today, anyway */
 #define SMB_TRAN2_NOPCODES		20
