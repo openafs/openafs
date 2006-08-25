@@ -1,3 +1,8 @@
+Since 1.4.2-rc1: (1.4.2-rc2 released 25 Aug 2006)
+
+ * Do not panic if the maximum number of volume entries are in use
+   and one of them can be recycled.
+
 Since 1.4.2-beta3:  (1.4.2-rc1 released 22 Aug 2006)
 
  * integrated logon could cause winlogin.exe to blue screen windows
