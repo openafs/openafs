@@ -436,7 +436,8 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
                         break;
                     }
                 }
-                osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
+		if (!volp)
+		    osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
             }
 
             if (volp) {
