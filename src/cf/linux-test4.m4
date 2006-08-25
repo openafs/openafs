@@ -621,6 +621,9 @@ static inline _syscall2(long, keyctl, int, option, void*, arg2);],
 [#ifdef CONFIG_KEYS
 keyctl(KEYCTL_JOIN_SESSION_KEYRING, NULL);
 request_key(NULL, NULL, NULL);
+#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
+#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
+#endif
 #else
 #error rebuild your kernel with CONFIG_KEYS
 #endif],
