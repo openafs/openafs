@@ -3419,22 +3419,14 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	    lock_ReleaseMutex(&fidp->mx);
         }
     }       
-    else if (infoLevel == SMB_SET_FILE_ALLOCATION_INFO) {
+    else if (infoLevel == SMB_SET_FILE_ALLOCATION_INFO ||
+	     infoLevel == SMB_SET_FILE_END_OF_FILE_INFO) {
         LARGE_INTEGER size = *((LARGE_INTEGER *)(p->datap));
         cm_attr_t attr;
 
         attr.mask = CM_ATTRMASK_LENGTH;
         attr.length.LowPart = size.LowPart;
         attr.length.HighPart = size.HighPart;
-        code = cm_SetAttr(scp, &attr, userp, &req);
-    }       
-    else if (infoLevel == SMB_SET_FILE_END_OF_FILE_INFO) {
-        unsigned short size = *((unsigned short *)(p->datap));
-        cm_attr_t attr;
-
-        attr.mask = CM_ATTRMASK_LENGTH;
-		attr.length.HighPart = 0;
-        attr.length.LowPart = size;
         code = cm_SetAttr(scp, &attr, userp, &req);
     }       
 
