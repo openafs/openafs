@@ -879,12 +879,14 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         lock_ReleaseMutex(&unp->mx);
 
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
-        lock_ObtainMutex(&uidp->mx);
-        uidp->unp = unp;
-        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
-        osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
-        lock_ReleaseMutex(&uidp->mx);
-        smb_ReleaseUID(uidp);
+	if (uidp) {
+	    lock_ObtainMutex(&uidp->mx);
+	    uidp->unp = unp;
+	    osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
+	    osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
+	    lock_ReleaseMutex(&uidp->mx);
+	    smb_ReleaseUID(uidp);
+	}
     }
 
     /* Return UID to the client */

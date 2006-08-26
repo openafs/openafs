@@ -268,7 +268,7 @@ configureBackConnectionHostNames(void)
     HKEY hkMSV10;
     HKEY hkClient;
     DWORD dwType;
-    DWORD dwSize, dwAllocSize;
+    DWORD dwSize = 0, dwAllocSize = 0;
     DWORD dwValue;
     PBYTE pHostNames = NULL, pName = NULL;
     BOOL  bNameFound = FALSE;   
