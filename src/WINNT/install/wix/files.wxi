@@ -3,7 +3,7 @@
   <?ifndef BinsOnly?>
     <Directory Id="$(var.PISystemFolder)" SourceName="System">
         <Component Win64="$(var.Win64)" Id="cmf_afslogon_DLL" Guid="$(var.cmf_afslogon_DLL_guid)">
-            <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
+            <File Id="fileafslogon_DLL" Name="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
             <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
             <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
             <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
@@ -22,8 +22,8 @@
         </Component>
     <?ifdef DebugSyms?>
         <Component Win64="$(var.Win64)" Id="cmp_ClientSystemDebug" Guid="$(var.cmp_ClientSystemDebug_guid)">
-			<File Id="fileafslogon_PDB" Name="afslogon.pdb" LongName="afslogon.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.pdb" />
-			<File Id="fileafscpcc_PDB" Name="afscpcc.pdb" LongName="afscpcc.pdb" DiskId="1" src="$(var.ClientDir)afscpcc.pdb" />
+			<File Id="fileafslogon_PDB" Name="afslogon.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.pdb" />
+			<File Id="fileafscpcc_PDB" Name="afscpcc.pdb" DiskId="1" src="$(var.ClientDir)afscpcc.pdb" />
         </Component>
     <?endif?>
     </Directory>
@@ -141,17 +141,11 @@
                 <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_1033_DLL" Guid="$(var.cmf_TaAfsServerManager_1033_DLL_guid)">
                     <File Id="fileTaAfsServerManager_1033_DLL" Name="tasm1033.dll" LongName="TaAfsServerManager_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager_1033.dll"/>
                 </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_afscreds_1033_DLL" Guid="$(var.cmf_afscreds_1033_DLL_guid)">
-                    <File Id="fileafscreds_1033_DLL" Name="acrd1033.dll" LongName="afscreds_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afscreds_1033.dll"/>
-                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afs_config_1033_DLL" Guid="$(var.cmf_afs_config_1033_DLL_guid)">
                     <File Id="fileafs_config_1033_DLL" Name="acfg1033.dll" LongName="afs_config_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config_1033.dll"/>
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_1033_DLL" Guid="$(var.cmf_afs_cpa_1033_DLL_guid)">
                     <File Id="fileafs_cpa_1033_DLL" Name="acpa1033.dll" LongName="afs_cpa_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_cpa_1033.dll"/>
-                </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
-                    <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                 </Component>
 
                 <Directory Id="dirCommon_en_US" Name="en_US" src="$(var.SrcDir)\WINNT\doc\help\en_US\">
@@ -835,6 +829,9 @@
 							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                         </File>
                     </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afscreds_1033_DLL" Guid="$(var.cmf_afscreds_1033_DLL_guid)">
+                        <File Id="fileafscreds_1033_DLL" Name="acrd1033.dll" LongName="afscreds_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afscreds_1033.dll"/>
+                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmp_credsStartup" Guid="$(var.cmp_credsStartup_guid)">
 						<Shortcut Id="scAfsCredsStart" Directory="StartupFolder" Name="AFSAuth.lnk" LongName="AFS Credentials.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" Target="[#fileafscreds_EXE]"/>
 						<Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="StartupShortcutInstalled" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
@@ -847,6 +844,9 @@
                                 </ProgId>
                             </Class>
                         </File>
+                    </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
+                        <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
