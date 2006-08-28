@@ -63,7 +63,7 @@ HINSTANCE g_hInstance;
 BOOL CAfsShlExt::InitInstance()
 {
 	// Load our translated resources
-	TaLocale_LoadCorrespondingModule (m_hInstance);
+	TaLocale_LoadCorrespondingModuleByName (m_hInstance, TEXT("afs_shl_ext.dll"));
 
 	// Register all OLE server (factories) as running.  This enables the
 	//  OLE libraries to create objects from other applications.
