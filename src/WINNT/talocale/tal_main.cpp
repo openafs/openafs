@@ -640,8 +640,9 @@ LPCSTRINGTEMPLATE TaLocale_GetStringResource (int ids, HINSTANCE *phInstFound)
     int iTable = (ids / 16) + 1;           // 1 = first string table
     int iIndex = ids - ((iTable-1) * 16);  // 0 = first string in the table
 
-    HINSTANCE hInstance;
-    for (size_t iModule = 0; !pst && TaLocale_EnumModule (iModule, &hInstance); ++iModule)
+    HINSTANCE hInstance = NULL;
+	size_t iModule = 0;
+    for (; !pst && TaLocale_EnumModule (iModule, &hInstance); ++iModule)
     {
         HRSRC hr;
         if ((hr = FindResourceEx (hInstance, RT_STRING, MAKEINTRESOURCE( iTable ), lang)) == NULL)
