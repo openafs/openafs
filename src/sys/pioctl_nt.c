@@ -154,6 +154,61 @@ IoctlDebug(void)
     return debug;
 }
 
+static DWORD 
+GetServiceStatus(
+    LPSTR lpszMachineName, 
+    LPSTR lpszServiceName,
+    DWORD *lpdwCurrentState) 
+{ 
+    DWORD           hr               = NOERROR; 
+    SC_HANDLE       schSCManager     = NULL; 
+    SC_HANDLE       schService       = NULL; 
+    DWORD           fdwDesiredAccess = 0; 
+    SERVICE_STATUS  ssServiceStatus  = {0}; 
+    BOOL            fRet             = FALSE; 
+
+    *lpdwCurrentState = 0; 
+ 
+    fdwDesiredAccess = GENERIC_READ; 
+ 
+    schSCManager = OpenSCManager(lpszMachineName,  
+                                 NULL,
+                                 fdwDesiredAccess); 
+ 
+    if(schSCManager == NULL) 
+    { 
+        hr = GetLastError();
+        goto cleanup; 
+    } 
+ 
+    schService = OpenService(schSCManager,
+                             lpszServiceName,
+                             fdwDesiredAccess); 
+ 
+    if(schService == NULL) 
+    { 
+        hr = GetLastError();
+        goto cleanup; 
+    } 
+ 
+    fRet = QueryServiceStatus(schService,
+                              &ssServiceStatus); 
+ 
+    if(fRet == FALSE) 
+    { 
+        hr = GetLastError(); 
+        goto cleanup; 
+    } 
+ 
+    *lpdwCurrentState = ssServiceStatus.dwCurrentState; 
+ 
+cleanup: 
+ 
+    CloseServiceHandle(schService); 
+    CloseServiceHandle(schSCManager); 
+ 
+    return(hr); 
+} 
 
 // krb5 functions
 DECL_FUNC_PTR(krb5_cc_default_name);
@@ -335,6 +390,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 #ifndef AFSIFS
     char *drivep;
     char netbiosName[MAX_NB_NAME_LENGTH];
+    DWORD CurrentState = 0;
+    char  HostName[64] = "";
 #endif
     char tbuffer[256]="";
     HANDLE fh;
@@ -349,6 +406,12 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD dwSize = sizeof(szUser);
 
 #ifndef AFSIFS
+    memset(HostName, '\0', sizeof(HostName));
+    gethostname(HostName, sizeof(HostName));
+    if (GetServiceStatus(HostName, TEXT("TransarcAFSDaemon"), &CurrentState) == NOERROR &&
+	CurrentState != SERVICE_RUNNING)
+	return -1;
+
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
