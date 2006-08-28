@@ -48,7 +48,11 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
-	$(DEL) *.res RC* RD* $(DLLFILE)
+	$(DEL) $(RESFILE)
+	$(DEL) RC* 
+	$(DEL) RD* 
+	$(DEL) $(DLLFILE) 
+	$(DEL) AFS_component_version_number.h
 
 ############################################################################
 #
