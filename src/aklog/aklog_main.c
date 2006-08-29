@@ -570,7 +570,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	status = get_credv5(context, name, primary_instance, realm_of_cell,
 			    &v5cred);
 
-	if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
+	if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) {
 	    if (try_secondary) {
 		if (dflag) {
 		    printf("Principal not found, trying alternate "
