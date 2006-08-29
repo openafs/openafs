@@ -1,4 +1,10 @@
-Since 1.4.2-rc1: (1.4.2-rc2 released 25 Aug 2006)
+Since 1.4.2-rc1: (1.4.2-rc2 released 28 Aug 2006)
+
+ * Allow the AFS Shell Extension to always find its resource library.
+
+ * Fix the code that writes the backconnectionhostnames value
+   to ensure that the data buffer is written with the correct 
+   length.
 
  * Do not panic if the maximum number of volume entries are in use
    and one of them can be recycled.
@@ -11,10 +17,6 @@ Since 1.4.2-beta3:  (1.4.2-rc1 released 22 Aug 2006)
 
  * do not generate MessageBox dialogs on network errors.  they 
    cause more trouble then they are worth.
-
- * Fix the code that writes the backconnectionhostnames value
-   to ensure that the data buffer is written with the correct 
-   length.
 
  * corrections to cm_buf_t handling to ensure that buffers are
    removed from queues before they are freed and that holds are
