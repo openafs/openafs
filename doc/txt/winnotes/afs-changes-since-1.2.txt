@@ -1,4 +1,10 @@
-Since 1.4.2-rc1: (1.4.2-rc2 released 28 Aug 2006)
+Since 1.4.2-rc1: (1.4.2-rc2 released 30 Aug 2006)
+
+ * Fix rx usage of WSAStartup/WSACleanup
+
+ * Correct afsauthent.dll export list.
+
+ * Fix renaming on Vista from Explorer.
 
  * Allow the AFS Shell Extension to always find its resource library.
 
