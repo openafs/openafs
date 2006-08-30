@@ -114,7 +114,7 @@ afsi_log(char *pattern, ...)
     if ( afsi_log_useTimestamp ) {
         GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
         GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
-        StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
+        StringCbPrintfA(u, sizeof(u), "%s %s: %s\r\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
