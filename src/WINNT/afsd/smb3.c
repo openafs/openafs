@@ -3950,8 +3950,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     osi_Log3(smb_logp, "...T2 search op %d, id %d, nextCookie 0x%x",
               p->opcode, dsp->cookie, nextCookie);
 
-    if (infoLevel > 0x104)
+    if (infoLevel > 0x104) {
+	osi_Log1(smb_logp, "Unsupported InfoLevel 0x%x", infoLevel);
+        smb_ReleaseDirSearch(dsp);
 	return CM_ERROR_INVAL;
+    }
 
     if (infoLevel >= 0x101)
         searchFlags &= ~4;	/* no resume keys */
