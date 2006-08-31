@@ -34,11 +34,12 @@ A. Creating the proper directory structure.
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
          i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
-         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60
+         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61
+         (client does not work)
       i386_linux22, i386_linux24, i386_linux26
       i386_umlinux22, i386_umlinux24
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36, i386_obsd37, i386_obsd38
+         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
@@ -179,8 +180,9 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client is very new and untested.  Do not trust it for
-   production work.
+   The FreeBSD client does not currently work.  The remaining problems
+   mostly have to do with locking, vnode refcounting, and packaging.  The
+   server should work.
 
    We recommend you build with --enable-namei-fileserver and
    --enable-largefile-fileserver options.
