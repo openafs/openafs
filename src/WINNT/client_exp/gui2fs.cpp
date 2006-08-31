@@ -25,19 +25,20 @@ extern "C" {
 #include "down_servers_dlg.h"
 
 extern "C" {
-#include <afs/param.h>
-#include <osi.h>
+#include <rx/rx_globals.h>
 #include "fs.h"
 #include "fs_utils.h"
 #include <afsint.h>
+#include <afs/cellconfig.h>
+#include <afs/vldbint.h>
+#include <afs/volser.h>
 #include <afs/auth.h>
 #include <WINNT\afsreg.h>
 #include <cm.h>
 }
 
-
 #define PCCHAR(str)		((char *)(const char *)(str))
-
+#define VL_NOENT                (363524L)
 
 #define	MAXHOSTS 13
 #define	OMAXHOSTS 8
@@ -50,23 +51,32 @@ extern "C" {
 #define MAXHOSTCHARS		64
 #define MAXHOSTSPERCELL		8
 
-struct afsconf_cell {
-	char name[MAXCELLCHARS];
-    short numServers;
-    short flags;
-    struct sockaddr_in hostAddr[MAXHOSTSPERCELL];
-    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];
-    char *linkedCell;
-};
-
 static char space[MAXSIZE];
 static char tspace[1024];
+
+static struct ubik_client *uclient;
+static int rxInitDone = 0;
+static char pn[] = "fs";
 
 // #define	LOGGING_ON		// Enable this to log certain pioctl calls
 
 #ifdef	LOGGING_ON
 static char *szLogFileName = "afsguilog.txt";
 #endif
+
+static int
+VLDBInit(int noAuthFlag, struct afsconf_cell *info)
+{
+    afs_int32 code;
+
+    code = ugen_ClientInit(noAuthFlag, (char *)AFSDIR_CLIENT_ETC_DIRPATH, 
+			   info->name, 0, &uclient, 
+                           NULL, pn, rxkad_clear,
+                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
+                           0, 0, USER_SERVICE_ID);
+    rxInitDone = 1;
+    return code;
+}
 
 FILE *OpenFile(char *file, char *rwp)
 {
@@ -125,14 +135,14 @@ void Flush(const CStringArray& files)
         if (code) {
             error = 1;
             if (errno == EMFILE)
-                ShowMessageBox(IDS_FLUSH_FAILED, MB_ICONEXCLAMATION, IDS_FLUSH_FAILED, files[i]);
+                ShowMessageBox(IDS_FLUSH_FAILED, MB_ICONERROR, IDS_FLUSH_FAILED, files[i]);
             else 
-                ShowMessageBox(IDS_FLUSH_ERROR, MB_ICONEXCLAMATION, IDS_FLUSH_ERROR, files[i], strerror(errno));
+                ShowMessageBox(IDS_FLUSH_ERROR, MB_ICONERROR, IDS_FLUSH_ERROR, files[i], strerror(errno));
         }
     }   
 
     if (!error)
-        ShowMessageBox(IDS_FLUSH_OK, MB_ICONEXCLAMATION, IDS_FLUSH_OK);
+        ShowMessageBox(IDS_FLUSH_OK, MB_ICONINFORMATION, IDS_FLUSH_OK);
 }       
 
 void FlushVolume(const CStringArray& files)
@@ -149,12 +159,12 @@ void FlushVolume(const CStringArray& files)
         code = pioctl(PCCHAR(files[i]), VIOC_FLUSHVOLUME, &blob, 0);
         if (code) {
             error = 1;
-            ShowMessageBox(IDS_FLUSH_VOLUME_ERROR, MB_ICONEXCLAMATION, IDS_FLUSH_VOLUME_ERROR, files[i], strerror(errno));
+            ShowMessageBox(IDS_FLUSH_VOLUME_ERROR, MB_ICONERROR, IDS_FLUSH_VOLUME_ERROR, files[i], strerror(errno));
         }
     }   
 
     if (!code)
-        ShowMessageBox(IDS_FLUSH_VOLUME_OK, MB_ICONEXCLAMATION, IDS_FLUSH_VOLUME_OK);
+        ShowMessageBox(IDS_FLUSH_VOLUME_OK, MB_ICONINFORMATION, IDS_FLUSH_VOLUME_OK);
 }       
 
 void WhichCell(CStringArray& files)
@@ -224,11 +234,11 @@ BOOL CheckVolumes()
     blob.out_size = 0;
     code = pioctl(0, VIOCCKBACK, &blob, 1);
     if (code) {
-        ShowMessageBox(IDS_CHECK_VOLUMES_ERROR, MB_ICONEXCLAMATION, IDS_CHECK_VOLUMES_ERROR, GetAfsError(errno, CString()));
+        ShowMessageBox(IDS_CHECK_VOLUMES_ERROR, MB_ICONERROR, IDS_CHECK_VOLUMES_ERROR, GetAfsError(errno, CString()));
         return FALSE;
     }
 
-    ShowMessageBox(IDS_CHECK_VOLUMES_OK, MB_OK, IDS_CHECK_VOLUMES_OK);
+    ShowMessageBox(IDS_CHECK_VOLUMES_OK, MB_OK|MB_ICONINFORMATION, IDS_CHECK_VOLUMES_OK);
 
     return TRUE;
 }
@@ -651,7 +661,7 @@ void CleanACL(CStringArray& names)
     struct ViceIoctl blob;
     int changes;
 
-    ShowMessageBox(IDS_CLEANACL_MSG, MB_OK, IDS_CLEANACL_MSG);
+    ShowMessageBox(IDS_CLEANACL_MSG, MB_OK|MB_ICONINFORMATION, IDS_CLEANACL_MSG);
 
     HOURGLASS hourglass;
 
@@ -662,13 +672,13 @@ void CleanACL(CStringArray& names)
 
         code = pioctl(PCCHAR(names[i]), VIOCGETAL, &blob, 1);
         if (code) {
-            ShowMessageBox(IDS_CLEANACL_ERROR, MB_ICONEXCLAMATION, 0, names[i], GetAfsError(errno));
+            ShowMessageBox(IDS_CLEANACL_ERROR, MB_ICONERROR, 0, names[i], GetAfsError(errno));
             continue;
         }
 
         ta = ParseAcl(space);
         if (ta->dfs) {
-            ShowMessageBox(IDS_CLEANACL_NOT_SUPPORTED, MB_ICONEXCLAMATION, IDS_CLEANACL_NOT_SUPPORTED, names[i]);
+            ShowMessageBox(IDS_CLEANACL_NOT_SUPPORTED, MB_ICONERROR, IDS_CLEANACL_NOT_SUPPORTED, names[i]);
             continue;
         }
 
@@ -684,11 +694,11 @@ void CleanACL(CStringArray& names)
         code = pioctl(PCCHAR(names[i]), VIOCSETAL, &blob, 1);
         if (code) {
             if (errno == EINVAL) {
-                ShowMessageBox(IDS_CLEANACL_INVALID_ARG, MB_ICONEXCLAMATION, IDS_CLEANACL_INVALID_ARG, names[i]);
+                ShowMessageBox(IDS_CLEANACL_INVALID_ARG, MB_ICONERROR, IDS_CLEANACL_INVALID_ARG, names[i]);
                 continue;
             }
             else {
-                ShowMessageBox(IDS_CLEANACL_ERROR, MB_ICONEXCLAMATION, 0, names[i], GetAfsError(errno));
+                ShowMessageBox(IDS_CLEANACL_ERROR, MB_ICONERROR, 0, names[i], GetAfsError(errno));
                 continue;
             }
         }
@@ -712,13 +722,13 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
 	
     code = pioctl(PCCHAR(strDir), VIOCGETAL, &blob, 1);
     if (code) {
-        ShowMessageBox(IDS_GETRIGHTS_ERROR, MB_ICONEXCLAMATION, IDS_GETRIGHTS_ERROR, strDir, GetAfsError(errno));
+        ShowMessageBox(IDS_GETRIGHTS_ERROR, MB_ICONERROR, IDS_GETRIGHTS_ERROR, strDir, GetAfsError(errno));
         return FALSE;
     }
 
     ta = ParseAcl(space);
     if (ta->dfs) {
-        ShowMessageBox(IDS_DFSACL_ERROR, MB_ICONEXCLAMATION, IDS_DFSACL_ERROR);
+        ShowMessageBox(IDS_DFSACL_ERROR, MB_ICONERROR, IDS_DFSACL_ERROR);
         return FALSE;
     }
 
@@ -878,9 +888,9 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
     code = pioctl(PCCHAR(strDir), VIOCSETAL, &blob, 1);
     if (code) {
         if (errno == EINVAL)
-            ShowMessageBox(IDS_SAVE_ACL_EINVAL_ERROR, MB_ICONEXCLAMATION, IDS_SAVE_ACL_EINVAL_ERROR, strDir);
+            ShowMessageBox(IDS_SAVE_ACL_EINVAL_ERROR, MB_ICONERROR, IDS_SAVE_ACL_EINVAL_ERROR, strDir);
         else
-            ShowMessageBox(IDS_SAVE_ACL_ERROR, MB_ICONEXCLAMATION, IDS_SAVE_ACL_ERROR, strDir, GetAfsError(errno, strDir));
+            ShowMessageBox(IDS_SAVE_ACL_ERROR, MB_ICONERROR, IDS_SAVE_ACL_ERROR, strDir, GetAfsError(errno, strDir));
     }       
 
     ZapAcl(pAcl);
@@ -904,7 +914,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
 	
     code = pioctl(PCCHAR(strToDir), VIOCGETAL, &blob, 1);
     if (code) {
-        ShowMessageBox(IDS_ACL_READ_ERROR, MB_ICONEXCLAMATION, IDS_ACL_READ_ERROR, strToDir, GetAfsError(errno, strToDir));
+        ShowMessageBox(IDS_ACL_READ_ERROR, MB_ICONERROR, IDS_ACL_READ_ERROR, strToDir, GetAfsError(errno, strToDir));
         return FALSE;
     }
 	
@@ -916,7 +926,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     CleanAcl(pToAcl);
 
     if (pToAcl->dfs) {
-        ShowMessageBox(IDS_NO_DFS_COPY_ACL, MB_ICONEXCLAMATION, IDS_NO_DFS_COPY_ACL, strToDir);
+        ShowMessageBox(IDS_NO_DFS_COPY_ACL, MB_ICONERROR, IDS_NO_DFS_COPY_ACL, strToDir);
         ZapAcl(pToAcl);
         return FALSE;
     }
@@ -945,15 +955,15 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     if (code) {
         ZapAcl(pToAcl);
         if (errno == EINVAL)
-            ShowMessageBox(IDS_COPY_ACL_EINVAL_ERROR, MB_ICONEXCLAMATION, IDS_COPY_ACL_EINVAL_ERROR, strToDir);
+            ShowMessageBox(IDS_COPY_ACL_EINVAL_ERROR, MB_ICONERROR, IDS_COPY_ACL_EINVAL_ERROR, strToDir);
         else 
-            ShowMessageBox(IDS_COPY_ACL_ERROR, MB_ICONEXCLAMATION, IDS_COPY_ACL_ERROR, strToDir, GetAfsError(errno, strToDir));
+            ShowMessageBox(IDS_COPY_ACL_ERROR, MB_ICONERROR, IDS_COPY_ACL_ERROR, strToDir, GetAfsError(errno, strToDir));
         return FALSE;
     }
 
     ZapAcl(pToAcl);
 
-    ShowMessageBox(IDS_COPY_ACL_OK, MB_OK, IDS_COPY_ACL_OK);
+    ShowMessageBox(IDS_COPY_ACL_OK, MB_OK|MB_ICONINFORMATION, IDS_COPY_ACL_OK);
 
     return TRUE;
 }
@@ -1294,6 +1304,7 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
     register char *cellName;
     char localCellName[128];
     struct afsconf_cell info;
+    struct vldbentry vldbEntry;
     struct ViceIoctl blob;
     char * parent;
     char path[1024] = "";
@@ -1320,11 +1331,11 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
 	    sprintf(path,"%sall\\%s", parent, &(PCCHAR(strDir)[strlen(parent)]));
 	    parent = Parent(path);
 	    if (!IsPathInAfs(parent)) {
-		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
+		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_MP_NOT_AFS_ERROR);
 		return FALSE;
 	    }
 	} else {
-	    ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
+	    ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_MP_NOT_AFS_ERROR);
 	    return FALSE;
 	}
     }
@@ -1334,7 +1345,7 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
 
     if ( IsFreelanceRoot(parent) ) {
 	if ( !IsAdmin() ) {
-	    ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	    ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	    return FALSE;
 	}
 
@@ -1355,6 +1366,20 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
     if (code) {
 	return FALSE;
     }
+
+#if 0
+    code = VLDBInit(1, &info);
+    if (code == 0) {
+	/* make the check.  Don't complain if there are problems with init */
+	code = ubik_VL_GetEntryByNameO(uclient, 0, PCCHAR(strVolName), &vldbEntry);
+	if (code == VL_NOENT) {
+	    ShowMessageBox(IDS_WARNING, MB_ICONWARNING, IDS_VOLUME_NOT_IN_CELL_WARNING, 
+			    PCCHAR(strVolName), cellName ? cellName : space);
+	}
+    }
+    if (rxInitDone) 
+        rx_Finalize();
+#endif
 
     if (bRW)	/* if -rw specified */
         strcpy(space, "%");
@@ -1380,7 +1405,7 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
     code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
 
     if (code) {
-        ShowMessageBox(IDS_MOUNT_POINT_ERROR, MB_ICONEXCLAMATION, IDS_MOUNT_POINT_ERROR, GetAfsError(errno, strDir));
+        ShowMessageBox(IDS_MOUNT_POINT_ERROR, MB_ICONERROR, IDS_MOUNT_POINT_ERROR, GetAfsError(errno, strDir));
         return FALSE;
     }
     
@@ -1460,7 +1485,7 @@ BOOL RemoveSymlink(const char * linkName)
     }
 
     if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
-	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
     }
 
@@ -1753,7 +1778,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
 
     code = pioctl(PCCHAR(volInfo.m_strFilePath), VIOCSETVOLSTAT, &blob, 1);
     if (code) {
-        ShowMessageBox(IDS_SET_QUOTA_ERROR, MB_ICONEXCLAMATION, IDS_SET_QUOTA_ERROR, GetAfsError(errno, volInfo.m_strName));
+        ShowMessageBox(IDS_SET_QUOTA_ERROR, MB_ICONERROR, IDS_SET_QUOTA_ERROR, GetAfsError(errno, volInfo.m_strName));
         return FALSE;
     }
 
@@ -1805,14 +1830,14 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
 
     code = pioctl(0, VIOCCKSERV, &blob, 1);
     if (code) {
-        ShowMessageBox(IDS_CHECK_SERVERS_ERROR, MB_ICONEXCLAMATION, IDS_CHECK_SERVERS_ERROR, GetAfsError(errno, CString()));
+        ShowMessageBox(IDS_CHECK_SERVERS_ERROR, MB_ICONERROR, IDS_CHECK_SERVERS_ERROR, GetAfsError(errno, CString()));
         return FALSE;
     }
 
     memcpy(&temp, space, sizeof(LONG));
 
     if (temp == 0) {
-        ShowMessageBox(IDS_ALL_SERVERS_RUNNING, MB_OK, IDS_ALL_SERVERS_RUNNING);
+        ShowMessageBox(IDS_ALL_SERVERS_RUNNING, MB_OK|MB_ICONINFORMATION, IDS_ALL_SERVERS_RUNNING);
         return TRUE;
     }
 
@@ -1873,7 +1898,7 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
             break;
         }
         else if (rc) {
-            ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR, MB_ICONEXCLAMATION, IDS_GET_TOKENS_UNEXPECTED_ERROR, rc);
+            ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR, MB_ICONERROR, IDS_GET_TOKENS_UNEXPECTED_ERROR, rc);
             return FALSE;
 //	    printf("Unexpected error, code %d\n", rc);
 //	    exit(1);
@@ -1881,7 +1906,7 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
         else {
             rc = ktc_GetToken(&serviceName, &token, sizeof(token), &clientName);
             if (rc) {
-                ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR2, MB_ICONEXCLAMATION, IDS_GET_TOKENS_UNEXPECTED_ERROR2, 
+                ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR2, MB_ICONERROR, IDS_GET_TOKENS_UNEXPECTED_ERROR2, 
                                 serviceName.name, serviceName.instance,	serviceName.cell, rc);
                 continue;
             }
@@ -1965,17 +1990,17 @@ UINT MakeSymbolicLink(const char *strName, const char *strDir)
 	    OutputDebugString(message);
 
 	    if (!IsPathInAfs(parent)) {
-		ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_LNK_NOT_AFS_ERROR);
+		ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_LNK_NOT_AFS_ERROR);
 		return TRUE;
 	    }
 	} else {
-	    ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_LNK_NOT_AFS_ERROR);
+	    ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_LNK_NOT_AFS_ERROR);
 	    return TRUE;
 	}
     }
 
     if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
-	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
     }
 

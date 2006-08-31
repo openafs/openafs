@@ -659,6 +659,8 @@ BEGIN
     IDS_CLEANACL_ERROR                    "Error Cleaning ACL(s)."
     IDS_MAKE_LNK_NOT_AFS_ERROR            "Symlinks must be created within the AFS file system."
     IDS_NOT_AFS_CLIENT_ADMIN_ERROR        "Must be AFS Client Administrators to modify the root.afs volume."
+    IDS_WARNING				  "Warning"
+    IDS_VOLUME_NOT_IN_CELL_WARNING	  "Volume %s does not exist in cell %s.\n"
 END
 
 STRINGTABLE DISCARDABLE 
