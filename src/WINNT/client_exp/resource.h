@@ -127,7 +127,9 @@
 #define IDS_CLEANACL_ERROR                     135
 #define IDS_MAKE_LNK_NOT_AFS_ERROR             136
 #define IDS_NOT_AFS_CLIENT_ADMIN_ERROR         137
-                                           
+#define IDS_WARNING			       138
+#define IDS_VOLUME_NOT_IN_CELL_WARNING         139
+
 #define IDM_AUTHENTICATION                    0
 #define IDM_ACL_SET                           1
 #define IDM_VOLUME_PROPERTIES                 2
