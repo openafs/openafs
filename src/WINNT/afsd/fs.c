@@ -23,8 +23,10 @@
 
 #include <osi.h>
 #include <afsint.h>
+#include <afs/cellconfig.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
+#include <afs/volser.h>
 #include <WINNT\afsreg.h>
 
 #include "fs.h"
@@ -46,9 +48,7 @@
 static char space[MAXSIZE];
 static char tspace[1024];
 
-#ifndef WIN32
 static struct ubik_client *uclient;
-#endif /* not WIN32 */
 
 static int GetClientAddrsCmd(struct cmd_syndesc *asp, char *arock);
 static int SetClientAddrsCmd(struct cmd_syndesc *asp, char *arock);
@@ -66,16 +66,6 @@ extern afs_int32 VL_GetEntryByNameO();
 
 static char pn[] = "fs";
 static int rxInitDone = 0;
-
-struct afsconf_cell {
-    char name[MAXCELLCHARS];
-    short numServers;
-    short flags;
-    struct sockaddr_in hostAddr[MAXCELLHOSTS];
-    char hostName[MAXCELLHOSTS][MAXHOSTCHARS];
-    char *linkedCell;
-};      
-
 
 /*
  * Character to use between name and rights in printed representation for
@@ -1475,6 +1465,7 @@ SetVolCmd(struct cmd_syndesc *as, char *arock) {
             *(input++) = '\0';
 	code = pioctl(ti->data,VIOCSETVOLSTAT, &blob, 1);
 	if (code) {
+	    Die(errno, ti->data);
 	    error = 1;
 	}
     }
@@ -1851,9 +1842,7 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 #endif
     char path[1024] = "";
     struct afsconf_cell info;
-#ifndef WIN32
     struct vldbentry vldbEntry;
-#endif
     struct ViceIoctl blob;
     char * parent;
 
@@ -1933,7 +1922,6 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
     if (code) {
 	return 1;
     }
-#ifndef WIN32
     if (!(as->parms[4].items)) {
       /* not fast, check which cell the mountpoint is being created in */
       code = 0;
@@ -1942,14 +1930,13 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 	code = VLDBInit(1, &info);
       if (code == 0) {
 	  /* make the check.  Don't complain if there are problems with init */
-	  code = ubik_Call(VL_GetEntryByNameO, uclient, 0, volName, &vldbEntry);
+	  code = ubik_VL_GetEntryByNameO(uclient, 0, volName, &vldbEntry);
 	  if (code == VL_NOENT) {
 	      fprintf(stderr,"%s: warning, volume %s does not exist in cell %s.\n",
 		      pn, volName, cellName ? cellName : space);
 	  }
       }
     }
-#endif /* not WIN32 */
 
     if (as->parms[3].items)	/* if -rw specified */
 	strcpy(space, "%");
@@ -2968,13 +2955,7 @@ GetCellName(char *cellNamep, struct afsconf_cell *infop)
     strcpy(infop->name, cellNamep);
     return 0;
 }
-
-static int
-VLDBInit(int noAuthFlag, struct afsconf_cell *infop)
-{
-    return 0;
-}
-#else /* not WIN32 */
+#else
 static int
 GetCellName(char *cellName, struct afsconf_cell *info)
 {
@@ -2998,7 +2979,7 @@ GetCellName(char *cellName, struct afsconf_cell *info)
 
     return 0;
 }
-
+#endif /* not WIN32 */
 
 static int
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
@@ -3013,7 +2994,6 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
     rxInitDone = 1;
     return code;
 }
-#endif /* not WIN32 */
 
 static struct ViceIoctl gblob;
 static int debug = 0;
@@ -4560,10 +4540,8 @@ main(int argc, char **argv)
 
     code = cmd_Dispatch(argc, argv);
 
-#ifndef WIN32
     if (rxInitDone) 
         rx_Finalize();
-#endif /* not WIN32 */
     
     return code;
 }
