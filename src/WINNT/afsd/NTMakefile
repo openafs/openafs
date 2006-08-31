@@ -330,6 +330,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsvldb.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsdes.lib \
