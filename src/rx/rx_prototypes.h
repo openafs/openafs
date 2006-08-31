@@ -346,7 +346,14 @@ extern void rxk_shutdownPorts(void);
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern osi_socket rxi_GetHostUDPSocket(struct sockaddr_storage *saddr,
 				       int salen);
-extern void osi_Panic();
+#if defined(KERNEL) && defined(AFS_LINUX26_ENV)
+#define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
+#undef osi_Assert
+#define osi_Assert(expr) \
+    do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
+#else
+extern void osi_Panic();      /* leave without args till stdarg rewrite */
+#endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(register struct rx_peer *pp);
 extern void shutdown_rxkernel(void);
@@ -578,7 +585,6 @@ extern pthread_mutex_t rx_if_mutex;
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern void osi_AssertFailU(const char *expr, const char *file, int line);
 extern int rx_getAllAddr(afs_int32 * buffer, int maxSize);
-extern void osi_Panic();	/* leave without args till stdarg rewrite */
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)
