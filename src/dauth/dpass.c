@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dauth/dpass.c,v 1.7 2003/07/15 23:14:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dauth/Attic/dpass.c,v 1.7 2003/07/15 23:14:59 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

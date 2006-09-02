@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/tape_hosts.c,v 1.7 2003/07/15 23:14:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/tape_hosts.c,v 1.7.2.1 2006/07/31 17:07:49 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -397,7 +397,7 @@ bc_UpdateHosts()
 
     /* fetch the version number */
     code =
-	ubik_Call(BUDB_GetTextVersion, uhptr->uh_client, 0, ctPtr->textType,
+	ubik_BUDB_GetTextVersion(uhptr->uh_client, 0, ctPtr->textType,
 		  &ctPtr->textVersion);
     if (code)
 	ERROR(code);

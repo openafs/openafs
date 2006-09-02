@@ -22,9 +22,18 @@ KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
 
-all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey
+all: \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libauth.krb.a \
+	depinstall \
+	copyauth \
+	setkey
 
-depinstall: ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/afs/auth.h
+depinstall: \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/ktc.h
 
 cellconfig.o: cellconfig.c ${INCLS}
 ktc.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
@@ -69,25 +78,14 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 #
 # Install targets
 #
-install:   ${DESTDIR}${libdir}/afs/libauth.a ${DESTDIR}${libdir}/afs/libauth.krb.a ${DESTDIR}${includedir}/afs/keys.h ${DESTDIR}${includedir}/afs/cellconfig.h ${DESTDIR}${includedir}/afs/auth.h ${DESTDIR}${sbindir}/copyauth 
-
-${DEST}/lib/afs/libauth.a: libauth.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libauth.krb.a: libauth.krb.a
-	${INSTALL} $? $@
-
-${DEST}/etc/copyauth: copyauth
-	${INSTALL} $? $@
-
-${DEST}/include/afs/keys.h: keys.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/cellconfig.h: cellconfig.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/auth.h: auth.h
-	${INSTALL} $? $@
+install: \
+	${DESTDIR}${libdir}/afs/libauth.a \
+	${DESTDIR}${libdir}/afs/libauth.krb.a \
+	${DESTDIR}${includedir}/afs/keys.h \
+	${DESTDIR}${includedir}/afs/cellconfig.h \
+	${DESTDIR}${includedir}/afs/auth.h \
+	${DESTDIR}${includedir}/afs/ktc.h \
+	${DESTDIR}${sbindir}/copyauth 
 
 #
 # Misc. targets
@@ -96,14 +94,20 @@ test:
 	cd test; $(MAKE)
 
 clean:
-	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core\
-	AFS_component_version_number.c
+	$(RM) -f *.o *.a \
+		copyauth setkey auth.h cellconfig.h acfg_errors.c \
+		ktc_errors.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+
 ${DESTDIR}${libdir}/afs/libauth.a: libauth.a
 	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/libauth.a: libauth.a
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libauth.a: libauth.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/afs/libauth.krb.a: libauth.krb.a
@@ -112,10 +116,16 @@ ${DESTDIR}${libdir}/afs/libauth.krb.a: libauth.krb.a
 ${TOP_LIBDIR}/libauth.krb.a: libauth.krb.a
 	${INSTALL} $? $@
 
+${DEST}/lib/afs/libauth.krb.a: libauth.krb.a
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/keys.h: keys.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/keys.h: keys.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/keys.h: keys.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/cellconfig.h: cellconfig.h
@@ -124,14 +134,42 @@ ${DESTDIR}${includedir}/afs/cellconfig.h: cellconfig.h
 ${TOP_INCDIR}/afs/cellconfig.h: cellconfig.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/cellconfig.h: cellconfig.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/auth.h: auth.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/auth.h: auth.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/auth.h: auth.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/ktc.h: ktc.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ktc.h: ktc.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ktc.h: ktc.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${sbindir}/copyauth: copyauth
 	${INSTALL} $? $@
 
-dest:   ${DEST}/lib/afs/libauth.a ${DEST}/lib/afs/libauth.krb.a ${DEST}/include/afs/keys.h ${DEST}/include/afs/cellconfig.h ${DEST}/include/afs/auth.h ${DEST}/etc/copyauth 
+${DEST}/etc/copyauth: copyauth
+	${INSTALL} $? $@
+
+
+
+
+dest: \
+	${DEST}/lib/afs/libauth.a \
+	${DEST}/lib/afs/libauth.krb.a \
+	${DEST}/include/afs/keys.h \
+	${DEST}/include/afs/cellconfig.h \
+	${DEST}/include/afs/auth.h \
+	${DEST}/include/afs/ktc.h \
+	${DEST}/etc/copyauth 
 

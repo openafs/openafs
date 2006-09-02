@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_file.c,v 1.10 2004/03/10 23:01:52 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_file.c,v 1.10.2.1 2006/06/23 14:21:12 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -48,7 +48,11 @@ osi_UFSOpen(afs_int32 ainode)
     }
     VOP_UNLOCK(vp, 0, curproc);
     afile->vnode = vp;
+#ifdef AFS_OBSD39_ENV
+    afile->size = VTOI(vp)->i_ffs1_size;
+#else
     afile->size = VTOI(vp)->i_ffs_size;
+#endif
     afile->offset = 0;
     afile->proc = NULL;
     afile->inum = ainode;	/* for hint validity checking */

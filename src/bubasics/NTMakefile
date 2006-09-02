@@ -46,12 +46,29 @@ $(LIBFILE): $(LIBOBJS)
 ############################################################################
 # rxgen on butc.xg and bumon.xg
 
-butc.h butc.xdr.c butc.ss.c butc.cs.c: butc.xg
-	$(RXGEN) $**
+butc.xdr.c: butc.xg butc.h
+	$(RXGEN) -c -o $@ butc.xg
 
-bumon.h bumon.xdr.c bumon.ss.c bumon.cs.c: bumon.xg
-	$(RXGEN) $**
+butc.ss.c: butc.xg butc.h
+	$(RXGEN) -S -o $@ butc.xg
 
+butc.cs.c: butc.xg butc.h
+	$(RXGEN) -C -o $@ butc.xg
+
+butc.h: butc.xg
+	$(RXGEN) -h -o $@ butc.xg
+
+bumon.xdr.c: bumon.xg bumon.h
+	$(RXGEN) -c -o $@ bumon.xg
+
+bumon.ss.c: bumon.xg bumon.h
+	$(RXGEN) -S -o $@ bumon.xg
+
+bumon.cs.c: bumon.xg bumon.h
+	$(RXGEN) -C -o $@ bumon.xg
+
+bumon.h: bumon.xg
+	$(RXGEN) -h -o $@ bumon.xg
 
 ############################################################################
 # compile_et on butm_errs.et and butc_errs.et 

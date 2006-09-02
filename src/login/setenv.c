@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/login/setenv.c,v 1.5 2003/07/15 23:15:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/login/Attic/setenv.c,v 1.5 2003/07/15 23:15:44 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

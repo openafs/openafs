@@ -15,6 +15,7 @@ CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
+RX=../rx
 VICED=../viced
 VLSERVER=../vlserver
 LWP=../lwp
@@ -42,12 +43,17 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
+RXOBJS = rx_pthread.o 
+
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
 all: fileserver
+
+rx_pthread.o: ${RX}/rx_pthread.c
+	${CCRULE} -DDPF_FSLOG
 
 viced.o: ${VICED}/viced.c
 	${CCRULE}

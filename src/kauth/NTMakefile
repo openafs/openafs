@@ -192,8 +192,17 @@ $(INCFILES):$$(@F)
 ############################################################################
 # rxgen on kauth.rg
 
-kauth.ss.c kauth.cs.c kauth.xdr.c kauth.h: kauth.rg
-	$(RXGEN) -x $**
+kauth.cs.c: kauth.rg kauth.h
+	$(RXGEN) -u -x -C -o $@ kauth.rg
+
+kauth.ss.c: kauth.rg kauth.h
+	$(RXGEN) -x -S -o $@ kauth.rg
+
+kauth.xdr.c: kauth.rg kauth.h
+	$(RXGEN) -x -c -o $@ kauth.rg
+
+kauth.h: kauth.rg
+	$(RXGEN) -u -x -h -o $@ kauth.rg
 
 ############################################################################
 # compile_et on kaerrors.c 

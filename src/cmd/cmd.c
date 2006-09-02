@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/cmd/cmd.c,v 1.11 2003/11/29 22:08:09 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/cmd/cmd.c,v 1.11.2.1 2006/06/30 19:45:48 shadow Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -163,6 +163,15 @@ PrintParmHelp(register struct cmd_parmdesc *aparm)
 	printf(" <arg>");
     else if (aparm->type == CMD_LIST)
 	printf(" <arg>+");
+}
+
+extern char *AFSVersion;
+
+static int
+VersionProc(register struct cmd_syndesc *as, char *arock)
+{
+    printf("%s\n", AFSVersion);
+    return 0;
 }
 
 void
@@ -658,6 +667,16 @@ cmd_Dispatch(int argc, char **argv)
 				  "search by help text");
 	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
 			"help string");
+	    ts = cmd_CreateSyntax("version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("-version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("-help", HelpProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("--version", VersionProc, (char *)0,
+				  (char *)CMD_HIDDEN);
+	    ts = cmd_CreateSyntax("--help", HelpProc, (char *)0,
+				  (char *)CMD_HIDDEN);
 	}
     }
 

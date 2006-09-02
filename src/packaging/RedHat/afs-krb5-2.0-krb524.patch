@@ -1,0 +1,31 @@
+--- afs-krb5/src/configure.in-orig	2003-03-16 20:13:34.000000000 -0500
++++ afs-krb5/src/configure.in	2005-09-14 17:20:46.000000000 -0400
+@@ -179,14 +197,20 @@
+ [	EXTRA_INC="$EXTRA_INC -I$with_krb5_obj/include -I$with_krb5_obj/include/krb5"
+ 	KADM_LIBS=`echo $KADM_LIBS | sed -e "s#-ldb#$with_krb5_obj/lib/libdb.a#"`])
+ dnl
+-dnl Sigh, why is this so complicated?  Right now, just assume that 
+-dnl the 524 library is always called krb524 and will be picked up by the
+-dnl Kerberos link line
+-dnl
+-dnl AC_CHECK_LIB(krb524, krb524_convert_princs, [KRB524LIB="-lkrb524"], [
+-dnl	AC_MSG_ERROR([Cannot find 524 library, exiting])
+-dnl ])
+-KRB524LIB=-lkrb524
++dnl The krb524 functions may be included in libkrb5 itself, or else in a 
++dnl separate library named libkrb524
++dnl
++ac_save_LIBS="$LIBS"
++KRB524LIB=
++AC_MSG_CHECKING([for krb524 library])
++AC_CHECK_FUNC(krb524_init_ets, have_krb524=yes, have_krb524=no)
++
++if test "$have_krb524" = no; then
++	LIBS="$LIBS -lkrb524"
++	AC_CHECK_LIB(krb524, krb524_init_ets, [KRB524LIB="-lkrb524"],
++			     [AC_MSG_ERROR([Unable to find krb524 library])])
++fi
++LIBS="$ac_save_LIBS"
+ 
+ dnl AC_CHECK_LIB(kdb5, krb5_db_fetch_mkey, [KD_LIBS="-lkdb5"],[
+ dnl 	AC_MSG_WARN([Cannot find Kerberos 5 DB library, will not be able to build DB utilities])

@@ -1314,7 +1314,7 @@ $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
-	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest
+	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest $(AFS_OS_CLEAN)
 
 
 ${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)

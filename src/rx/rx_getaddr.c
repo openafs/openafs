@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.7 2005/09/21 00:34:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.12 2006/06/15 15:13:33 shadow Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -140,7 +140,7 @@ rt_xaddrs(caddr_t cp, caddr_t cplim, struct rt_addrinfo *rtinfo)
 */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-rx_getAllAddr(afs_int32 buffer[], int maxSize)
+rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 {
     size_t needed;
     int mib[6];
@@ -189,9 +189,6 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
 	}
 	if ((ifm->ifm_flags & IFF_UP) == 0)
 	    continue;		/* not up */
-	if (ifm->ifm_flags & IFF_LOOPBACK) {
-	    continue;		/* skip aliased loopbacks as well. */
-	}
 	while (addrcount > 0) {
 	    struct sockaddr_in *a;
 
@@ -207,7 +204,13 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
 	    if (count >= maxSize)	/* no more space */
 		dpf(("Too many interfaces..ignoring 0x%x\n",
 		       a->sin_addr.s_addr));
-	    else
+	    else if (!loopbacks && a->sin_addr.s_addr == htonl(0x7f000001)) {
+		addrcount--;
+		continue;	/* skip loopback address as well. */
+	    } else if (loopbacks && ifm->ifm_flags & IFF_LOOPBACK) {
+		addrcount--;
+		continue;	/* skip aliased loopbacks as well. */
+	    } else
 		buffer[count++] = a->sin_addr.s_addr;
 	    addrcount--;
 	    ifam = (struct ifa_msghdr *)((char *)ifam + ifam->ifam_msglen);
@@ -230,7 +233,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     struct sockaddr_dl *sdl;
     struct rt_addrinfo info;
     char *buf, *lim, *next;
-    int count = 0, addrcount = 0;
+    int count = 0, addrcount = 0, i;
 
     mib[0] = CTL_NET;
     mib[1] = PF_ROUTE;
@@ -315,6 +318,16 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     free(buf);
     return count;
 }
+
+
+int
+rx_getAllAddr(afs_int32 buffer[], int maxSize)
+{
+    return rx_getAllAddr_internal(buffer, maxSize, 0);
+}
+/* this function returns the total number of interface addresses
+** the buffer has to be passed in by the caller
+*/
 #else
 static int
 rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
@@ -418,7 +431,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 #endif
 
 #if !defined(AFS_USERSPACE_IP_ADDR)
-    count = rx_getAllAddr_internal(addrBuffer, 1024, 1);
+    count = rx_getAllAddr_internal(addrBuffer, 1024, 0);
     for (i = 0; i < count; i++) {
 	maskBuffer[i] = htonl(0xffffffff);
 	mtuBuffer[i] = htonl(1500);

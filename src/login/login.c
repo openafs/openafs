@@ -40,7 +40,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/login/login.c,v 1.8 2003/07/15 23:15:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/login/Attic/login.c,v 1.8 2003/07/15 23:15:44 shadow Exp $");
 
 #include <unistd.h>
 #include <stdlib.h>

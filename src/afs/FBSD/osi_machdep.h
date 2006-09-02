@@ -25,8 +25,6 @@
 #include <sys/mutex.h>
 #endif
 
-extern struct simplelock afs_rxglobal_lock;
-
 /* 
  * Time related macros
  */
@@ -122,5 +120,7 @@ extern struct proc *afs_global_owner;
 #undef USERPRI
 #define USERPRI splx(splvar)
 #endif /* KERNEL */
+
+#define ifnet_flags(x) (x?(x)->if_flags:0)
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.40 2006/01/11 21:38:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.43 2006/08/13 16:50:43 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -463,6 +463,27 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     code = afs_lockctl(vcp, &flock, cmd, credp);
     AFS_GUNLOCK();
 
+#ifdef AFS_LINUX24_ENV
+    if (code == 0 && (cmd == F_SETLK || cmd == F_SETLKW)) {
+#ifdef AFS_LINUX26_ENV
+       struct file_lock flp2;
+       flp2 = *flp;
+       flp2.fl_flags &=~ FL_SLEEP;
+       code = posix_lock_file(fp, &flp2);
+#else
+       code = posix_lock_file(fp, flp, 0);
+#endif 
+       osi_Assert(code != -EAGAIN); /* there should be no conflicts */
+       if (code) {
+           struct AFS_FLOCK flock2;
+           flock2 = flock;
+           flock2.l_type = F_UNLCK;
+           AFS_GLOCK();
+           afs_lockctl(vcp, &flock2, F_SETLK, credp);
+           AFS_GUNLOCK();
+       }
+    }
+#endif
     /* Convert flock back to Linux's file_lock */
     flp->fl_type = flock.l_type;
     flp->fl_pid = flock.l_pid;
@@ -788,8 +809,9 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
-    if (vcp->states & CUnlinked)
-	(void) afs_InactiveVCache(vcp, NULL);
+    ObtainWriteLock(&vcp->lock, 537);
+    (void) afs_InactiveVCache(vcp, NULL);
+    ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
 
     iput(ip);

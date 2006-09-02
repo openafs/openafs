@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcmain.c,v 1.14.2.2 2004/10/18 17:43:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcmain.c,v 1.14.2.6 2006/07/01 05:04:12 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -106,6 +106,10 @@ afs_int32 statusSize;
 afs_int32 BufferSize;		/* Size in B stored for data */
 char *centralLogFile;
 afs_int32 lastLog;		/* Log last pass info */
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
@@ -115,8 +119,7 @@ osi_audit()
 }
 
 static afs_int32
-SafeATOL(anum)
-     register char *anum;
+SafeATOL(register char *anum)
 {
     register afs_int32 total;
     register int tc;
@@ -151,10 +154,8 @@ SafeATOL(anum)
  *	should deal with signed numbers. Should signal error if no digits
  *	seen.
  */
-atocl(numstring, crunit, number)
-     char *numstring;
-     char crunit;		/* Units to report number in */
-     afs_int32 *number;
+int
+atocl(char *numstring, char crunit, afs_int32 *number)
 {
     float total;
     afs_int32 runits;
@@ -251,8 +252,7 @@ atocl(numstring, crunit, number)
 
 /* replace last two ocurrences of / by _ */
 static
-stringReplace(name)
-     char *name;
+stringReplace(char *name)
 {
     char *pos;
     char buffer[256];
@@ -267,9 +267,7 @@ stringReplace(name)
 }
 
 static
-stringNowReplace(logFile, deviceName)
-     char *logFile, *deviceName;
-
+stringNowReplace(char *logFile, char *deviceName)
 {
     char *pos = 0;
     char storeDevice[256];
@@ -319,10 +317,7 @@ stringNowReplace(logFile, deviceName)
 
 #define	LINESIZE	256
 static afs_int32
-GetDeviceConfig(filename, config, portOffset)
-     char *filename;
-     struct tapeConfig *config;
-     afs_int32 portOffset;
+GetDeviceConfig(char *filename, struct tapeConfig *config, afs_int32 portOffset)
 {
     FILE *devFile = 0;
     char line[LINESIZE];
@@ -411,9 +406,7 @@ GetDeviceConfig(filename, config, portOffset)
 /* GetConfigParams
  */
 static afs_int32
-GetConfigParams(filename, port)
-     char *filename;
-     afs_int32 port;
+GetConfigParams(char *filename, afs_int32 port)
 {
     char paramFile[256];
     FILE *devFile = 0;
@@ -836,10 +829,8 @@ GetConfigParams(filename, port)
     return (code);
 }
 
-static
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+static int
+WorkerBee(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
@@ -857,6 +848,7 @@ WorkerBee(as, arock)
     PROCESS dbWatcherPid;
 #endif
     time_t t;
+    afs_uint32 host = htonl(INADDR_ANY);
 
     debugLevel = 0;
 
@@ -1039,8 +1031,28 @@ WorkerBee(as, arock)
 	autoQuery = 0;
 
     localauth = (as->parms[5].items ? 1 : 0);
+    rxBind = (as->parms[8].items ? 1 : 0);
 
-    code = rx_Init(htons(BC_TAPEPORT + portOffset));
+    if (rxBind) {
+        afs_int32 ccode;
+#ifndef AFS_NT40_ENV
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else 
+#endif	
+	{
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) 
+            host = SHostAddrs[0];
+    }
+
+    code = rx_InitHost(host, htons(BC_TAPEPORT + portOffset));
     if (code) {
 	TapeLog(0, 0, code, 0, "rx init failed on port %u\n",
 		BC_TAPEPORT + portOffset);
@@ -1080,7 +1092,7 @@ WorkerBee(as, arock)
     }
 
     service =
-	rx_NewService(0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
+	rx_NewServiceHost(host, 0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
     if (!service) {
 	TLog(0, "rx_NewService");
 	exit(1);
@@ -1144,9 +1156,8 @@ WorkerBee(as, arock)
 #include "AFS_component_version_number.c"
 #endif
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     register struct cmd_item *ti;
@@ -1183,6 +1194,8 @@ main(argc, argv)
 		"file to restore to");
     cmd_AddParm(ts, "-xbsaforcemultiple", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
 		"Force multiple XBSA server support");
+    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+		"bind Rx socket");
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {

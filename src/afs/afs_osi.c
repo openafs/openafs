@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.6 2006/02/15 20:55:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.7 2006/05/22 19:08:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -71,7 +71,6 @@ osi_Init(void)
     /* Linux initialization in osi directory. Should move the others. */
     mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
 #endif
-    /* afs_rxglobal_lock is initialized in rx_Init. */
 #endif /* AFS_GLOBAL_SUNLOCK */
 #endif /* AFS_HPUX_ENV */
 

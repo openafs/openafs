@@ -44,14 +44,15 @@ KDEFS_64 = -xarch=amd64 -xmodel=kernel
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sunx86_57 -sunx86_58 -sunx86_59>
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510>
 KOBJ = MODLOAD
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
 KOBJ = MODLOAD32 MODLOAD64
-
+<sun4x_510>
+KOBJ = MODLOAD64
 
 # This tells Makefile.common to use it's single directory build target.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sunx86_57 -sunx86_58 -sunx86_59>
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510>
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
 DESTDIRS = single_destdir

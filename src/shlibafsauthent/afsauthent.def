@@ -84,3 +84,5 @@ EXPORTS
 
 	DISK_function_names				@83 DATA
 	VOTE_function_names				@84 DATA
+	rx_Finalize					@85
+	pr_End						@86

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.9 2006/02/15 21:03:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.10 2006/08/11 21:43:38 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include "h/module.h" /* early to avoid printf->printk mapping */
@@ -137,7 +137,9 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
     astat->size = OSIFILE_INODE(afile)->i_size;
+#ifdef STRUCT_INODE_HAS_I_BLKSIZE
     astat->blksize = OSIFILE_INODE(afile)->i_blksize;
+#endif
 #if defined(AFS_LINUX26_ENV)
     astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
     astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;

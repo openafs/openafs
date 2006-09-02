@@ -1,4 +1,173 @@
-Since 1.4.1 rc10: 1.4.1 rc11 released (9 April 2006)
+Since 1.4.2-rc1: (1.4.2-rc2 released 30 Aug 2006)
+
+ * Fix rx usage of WSAStartup/WSACleanup
+
+ * Correct afsauthent.dll export list.
+
+ * Fix renaming on Vista from Explorer.
+
+ * Allow the AFS Shell Extension to always find its resource library.
+
+ * Fix the code that writes the backconnectionhostnames value
+   to ensure that the data buffer is written with the correct 
+   length.
+
+ * Do not panic if the maximum number of volume entries are in use
+   and one of them can be recycled.
+
+Since 1.4.2-beta3:  (1.4.2-rc1 released 22 Aug 2006)
+
+ * integrated logon could cause winlogin.exe to blue screen windows
+   if it was called with a domain that does not exist on the machine.
+   this is possible during a sysprep.
+
+ * do not generate MessageBox dialogs on network errors.  they 
+   cause more trouble then they are worth.
+
+ * corrections to cm_buf_t handling to ensure that buffers are
+   removed from queues before they are freed and that holds are
+   obtained on the next buffer in a chain before releasing the
+   current one.
+
+Since 1.4.2-beta2:
+ * Corrections to the Integrated Logon functionality that permits
+   Kerberos 5 TGTs to be communicated into the user session.  The
+   transfer is now more secure and succeeds when the user does not
+   have read permission to the %SystemRoot%\TEMP directory.
+
+ * NSIS installer updated to version 2.18
+
+ * WiX installer updated to version 2.0.4221.0
+
+Since 1.4.2-beta1: 
+ * move headers, libraries, and samples from OpenAFS\Client to 
+   OpenAFS\SDK
+
+ * remove the auto-registration of AFS IDs for foreign cells
+   from integrated logon.  this permits afslogon.dll to avoid 
+   initializing the RX library.  afslogon.dll is a network 
+   provider library and as such it is loaded into all applications
+   which perform a CreateProcessAsUser call.  Initializing the
+   RX library spawns background threads to listen for inbound
+   packets.  When the network provider is unloaded from the 
+   process, the RX library does not cleanup the threads.  If they
+   continue to execute after the library is unloaded, the process
+   will crash.
+
+ * prevent a crash when evaluating mountpoints to volumes that do not
+   exist
+
+ * "over quota" and "disk full" errors were not being reported to the 
+   caller.
+
+ * move help files to the proper location so they can be located by
+   the system tray tool and the control panel.
+
+ * Prevent a panic caused by cm_SyncOp returning unlocked buffers.
+
+ * Fix vlserver failover when mounting root.afs volume (Freelance
+   mode disabled)
+
+ * Allow Freelance Scache entries to be recycled
+
+Since 1.4.1d: 1.4.2-beta1 released 14 June 2006
+
+ * A deadlock was detected when performing "fs flushall" if the 
+   file server reports VNOVNODE.   The scp->createBufferLock is 
+   already held by the current thread and there is no mechanism 
+   to propagate the knowledge.  Therefore, an alternate mechanism 
+   for clearing the cache must be developed.  A new function 
+   cm_RecycleSCache(scp,flags) has been extracted from 
+   cm_GetNewSCache().  This function performs the task of recycling 
+   an cm_scache_t object.  When called from cm_GetNewSCache() with 
+   no flags the expectation is that there are no associated buffers 
+   that are queued to be read or written.  When called from 
+   cm_Analyze() with the CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS
+   flag, any queued buffers will be de-queued and marked as if 
+   the operations were performed so the data can be discarded.
+
+ * CM_ERROR codes were logged as "unknown" by cm_Analyze.
+
+ * In response to VNOVNODE, the parent is only discarded if the current
+   cm_scache_t is not a directory.
+
+ * In the Ioctl FlushFile and FlushVolume functions, there were no
+   checks to protect against flushing the Freelance SCache entries.
+
+ * In FlushFile, the wrong cm_scache_t object was being released.
+
+ * In cm_GetNewSCache, do not allow Freelance SCache entries to be
+   recycled.  Choose a new entry if cm_RecycleSCache fails.
+
+
+
+Since 1.4.1c:  1.4.1d (2 June 2006)
+
+ * Add a missing lock that was lost during the pullup
+   of patchs for 1.4.1c
+
+Since 1.4.1b:  1.4.1c (31 May 2006)
+ 
+ * Speed up the performance of the cache manager by not 
+   holding the smb_fid_t mutex across calls to cm_SyncOp 
+   and AFS RPCs.
+
+ * Ensure that all smb_fid_t flag references are protected.
+
+ * Remove a deadlock between smb_fid_t mutex and 
+   smb_rctLock introduced in 1.4.1.
+
+ * Fix aklog AFSID lookup to use not send the realm
+   name when the realm is the local realm for the 
+   cell.  The PT Server doesn't strip the realm 
+   name when it is the local realm.
+
+ * Treat "\\afs\*." as an alias for "\\afs\all" 
+
+ * Dynamically adjust the priority of server threads
+   based upon the age of the CIFS request that is 
+   being processed.  The priority is bumped one level
+   for every 15 seconds of processing time.
+
+ * smb_SendPacket cannot release a vcp since it doesn't
+   own the reference.
+
+ * The original openafs contribution mis-used the 
+   cm_GetCallback function.  This function should only
+   be called as a side effect of a call to
+   cm_SyncOp(CM_SCACHESYNC_NEEDCALLBACK).  The way it
+   was being called results in a FetchStatus RPC being 
+   performed even when the client already has a valid
+   callback and does so in a manner that destroys the
+   synchronization of the threads that are calling 
+   cm_SyncOp.  If nothing else this results in a 
+   significant performance penalty.
+
+Since 1.4.1a: 1.4.1b (16 May 2006)
+
+ * More changes to cleanup of smb_vc_t objects in
+   order to prevent race conditions.
+
+ * Reduce the amount of Power Management event logging
+   to afsd_init.log
+
+ * If the client detects that the IP address has 
+   changed, force the use of new RX connections.  This
+   enables the file server to recognize that the client
+   has moved.
+
+Since 1.4.1: 1.4.1a (1 May 2006)
+
+ * Remove a race condition and deadlock associated 
+   with cleanup of smb_vc_t objects.
+
+ * Fix the ANSI filename support.  One function that
+   required it was missing the translations.
+
+ * Fix the pthread library so that it can be loaded
+   and unloaded safely by an application.
+
+Since 1.4.1 rc10: 1.4.1 released (9 April 2006)
 
  * Add code to protect against an undercount of smb_vc_t 
    references in the smb_allVCsp list.  This is a temporary

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.2 2006/02/13 17:57:28 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.4 2006/06/20 20:35:01 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -59,6 +59,10 @@ struct ubik_dbase *KA_dbase;
 afs_int32 myHost = 0;
 afs_int32 verbose_track = 1;
 afs_int32 krb4_cross = 0;
+afs_int32 rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 struct afsconf_dir *KA_conf;	/* for getting cell info */
 
@@ -168,6 +172,7 @@ main(argc, argv)
     int level;			/* security level for Ubik */
     afs_int32 i;
     char clones[MAXHOSTSPERCELL];
+    afs_uint32 host = ntohl(INADDR_ANY);
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
@@ -203,7 +208,7 @@ main(argc, argv)
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
-	       "[-auditlog <log path>] "
+	       "[-auditlog <log path>] [-rxbind] "
 	       "[-localfiles <lclpath>] [-minhours <n>] [-servers <serverlist>] "
 	       "[-crossrealm]"
 	       /*" [-enable_peer_stats] [-enable_process_stats] " */
@@ -305,6 +310,8 @@ main(argc, argv)
 	    verbose_track = 0;
 	else if (IsArg("-crossrealm"))
 	    krb4_cross = 1;
+	else if (IsArg("-rxbind"))
+	    rxBind = 1;
 	else if (IsArg("-minhours")) {
 	    MinHours = atoi(argv[++a]);
 	} else if (IsArg("-enable_peer_stats")) {
@@ -377,6 +384,28 @@ main(argc, argv)
     ubik_CheckRXSecurityRock = (char *)KA_conf;
 
     ubik_nBuffers = 80;
+
+    if (rxBind) {
+	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else 
+#endif	
+	{
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) {
+            host = SHostAddrs[0];
+	    rx_InitHost(host, htons(AFSCONF_KAUTHPORT));
+	}
+    }
+
     if (servers)
 	code =
 	    ubik_ServerInit(myHost, htons(AFSCONF_KAUTHPORT), serverList,
@@ -397,8 +426,8 @@ main(argc, argv)
     rx_SetNoJumbo();
 
     tservice =
-	rx_NewService(0, KA_AUTHENTICATION_SERVICE, "AuthenticationService",
-		      sca, 1, KAA_ExecuteRequest);
+	rx_NewServiceHost(host, 0, KA_AUTHENTICATION_SERVICE, 
+			  "AuthenticationService", sca, 1, KAA_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ViceLog(0, ("Could not create Authentication rx service\n"));
 	exit(3);
@@ -406,8 +435,9 @@ main(argc, argv)
     rx_SetMinProcs(tservice, 1);
     rx_SetMaxProcs(tservice, 1);
 
+    
     tservice =
-	rx_NewService(0, KA_TICKET_GRANTING_SERVICE, "TicketGrantingService",
+	rx_NewServiceHost(host, 0, KA_TICKET_GRANTING_SERVICE, "TicketGrantingService",
 		      sca, 1, KAT_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ViceLog(0, ("Could not create Ticket Granting rx service\n"));
@@ -421,7 +451,7 @@ main(argc, argv)
     scm[RX_SCINDEX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_crypt, 0, kvno_admin_key, 0);
     tservice =
-	rx_NewService(0, KA_MAINTENANCE_SERVICE, "Maintenance", scm, 3,
+	rx_NewServiceHost(host, 0, KA_MAINTENANCE_SERVICE, "Maintenance", scm, 3,
 		      KAM_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ViceLog(0, ("Could not create Maintenance rx service\n"));
@@ -432,7 +462,7 @@ main(argc, argv)
     rx_SetStackSize(tservice, 10000);
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", scm, 3,
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", scm, 3,
 		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ViceLog(0, ("Could not create rpc stats rx service\n"));

@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# openafs-client	Start/Stop the OpenAFS Client
+#
+# chkconfig: 2345 50 50
+# description: OpenAFS is a distributed filesystem.
+#
+# $Revision: 1.1.2.1 $
+
+. /etc/init.d/functions
+[ -f /etc/sysconfig/openafs ] && . /etc/sysconfig/openafs
+
+
+start() {
+	echo -n $"Starting openafs-client: "
+	if [ -e /var/lock/subsys/openafs-client ] ; then
+		echo -n $"cannot start openafs-client: already running"
+		failure $"cannot start openafs-client: already running"
+		echo
+		return 1
+	fi
+	modprobe openafs
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ] ; then
+		echo -n $"failed to load openafs kernel module."
+		failure $"failed to load openafs kernel module."
+		echo
+		return $RETVAL
+	fi
+	/usr/vice/etc/afsd $AFSD_ARGS
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/openafs-client
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping openafs-client: "
+	if [ ! -e /var/lock/subsys/openafs-client ] ; then
+		echo -n $"cannot stop openafs-client: not running"
+		failure $"cannot stop openafs-client: not running"
+		echo
+		return 1
+	fi
+	umount /afs
+	RETVAL=$?
+	echo
+	if [ $RETVAL -eq 0 ] ; then
+		rm -f /var/lock/subsys/openafs-client
+		rmmod openafs
+	fi
+	return $RETVAL
+}
+
+rhstatus() {
+	status afsd
+}
+
+restart() {
+	stop || exit
+	start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  status)
+        rhstatus
+        ;;
+  condrestart)
+        [ -f /var/lock/subsys/openafs-client ] && restart || :
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+        exit 1
+esac

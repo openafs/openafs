@@ -22,15 +22,22 @@
 
 /* logging defines
  */
+#ifndef AFS_NT40_ENV
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h> /* for inet_ntoa() */
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
+
 extern int LogLevel;
 extern int mrafsStyleLogs;
 #ifndef AFS_NT40_ENV
 extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
-#include <arpa/inet.h> /* for inet_ntoa() */
 #endif
 extern void vFSLog(const char *format, va_list args);
 extern void SetLogThreadNumProgram(int (*func) () );
@@ -90,6 +97,7 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 
 /* Initialize the windows sockets before calling networking routines. */
      extern int afs_winsockInit(void);
+     extern void afs_winsockCleanup(void);
 
      struct timezone {
 	 int tz_minuteswest;	/* of Greenwich */

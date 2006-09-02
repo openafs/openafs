@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/kreltime.c,v 1.8.2.1 2006/03/20 13:28:38 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/kreltime.c,v 1.8.2.3 2006/07/31 21:12:59 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -114,10 +114,18 @@ Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
 int
 ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 {
-    struct tm *timePtr;
     time_t     tt = timeSecs;
+    struct tm *timePtr;
+#ifndef AFS_NT40_ENV
+    struct tm timeP;
 
+    timePtr = &timeP;
+
+    memset(&timePtr, 0, sizeof(timePtr));
+    localtime_r(&tt, &timePtr);
+#else
     timePtr = localtime(&tt);
+#endif
 
     /* copy the relevant fields */
     ktimePtr->sec = timePtr->tm_sec;

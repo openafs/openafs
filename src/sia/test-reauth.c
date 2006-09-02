@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sia/test-reauth.c,v 1.5 2003/07/15 23:16:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sia/Attic/test-reauth.c,v 1.5 2003/07/15 23:16:52 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>

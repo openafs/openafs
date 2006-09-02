@@ -78,9 +78,39 @@ EXPORTS
 	pioctl						@77
 	rx_Init						@78
 	ka_UserAuthenticateGeneral2			@79
-    pr_CreateUser                   @80
-    pr_SNameToId                    @81
-
+    	pr_CreateUser                   		@80
+    	pr_SNameToId                    		@81
 
 	DISK_function_names				@83 DATA
 	VOTE_function_names				@84 DATA
+
+        pr_End                                          @85
+        PR_INewEntry                                    @86
+        PR_WhereIsIt                                    @87
+        PR_DumpEntry                                    @88
+        PR_AddToGroup                                   @89
+        PR_NameToID                                     @90
+        PR_IDToName                                     @91
+        PR_Delete                                       @92
+        PR_RemoveFromGroup                              @93
+        PR_GetCPS                                       @94
+        PR_NewEntry                                     @95
+        PR_ListMax                                      @96
+        PR_SetMax                                       @97
+        PR_ListEntry                                    @98
+        PR_ChangeEntry                                  @99
+        PR_ListElements                                 @100
+        PR_IsAMemberOf                                  @101
+        PR_SetFieldsEntry                               @102
+        PR_ListOwned                                    @103
+        PR_GetCPS2                                      @104
+        PR_GetHostCPS                                   @105
+        PR_UpdateEntry                                  @106
+        PR_ListEntries                                  @107
+        PR_ListSuperGroups                              @108
+        ka_AuthSpecificServersConn                      @109
+        ka_KeyCheckSum                                  @110
+        rx_Finalize                                     @111
+        rx_InitHost                                     @112
+        VOTE_GetSyncSite                                @113
+        ubik_RefreshConn                                @114

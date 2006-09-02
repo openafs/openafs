@@ -360,6 +360,8 @@ extern afs_int32 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 			       long p8, long p9, long p10, long p11, long p12,
 			       long p13, long p14, long p15, long p16);
 
+extern struct rx_connection *ubik_RefreshConn(struct rx_connection *tc);
+
 /* ubik.c */
 extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);

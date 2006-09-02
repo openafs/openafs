@@ -121,6 +121,10 @@ case $system in
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
 		 fi
+               if test -f "$LINUX_KERNEL_PATH/include/linux/utsrelease.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 LINUX_VERSION="$linux_kvers"
+               else
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		  if test "x$linux_kvers" = "x"; then
@@ -143,6 +147,7 @@ case $system in
 		 else
                     enable_kernel_module="no"
                  fi
+               fi
 		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
@@ -556,6 +561,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
+
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
@@ -563,6 +569,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
+		 LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
@@ -574,7 +581,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
-	  	 LINUX_IOP_NAMEIDATA
+	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
+	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
+	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
@@ -591,7 +601,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_REFRIGERATOR
+		 LINUX_LINUX_KEYRING_SUPPORT
+		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
+                 LINUX_EXPORTS_SYS_CHDIR
+                 LINUX_EXPORTS_SYS_CLOSE
+                 LINUX_EXPORTS_SYS_OPEN
+                 LINUX_EXPORTS_SYS_WAIT4
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
@@ -605,9 +622,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                    LINUX_EXPORTS_KALLSYMS_SYMBOL
                    LINUX_EXPORTS_SYS_CALL_TABLE
                    LINUX_EXPORTS_IA32_SYS_CALL_TABLE
-                   LINUX_EXPORTS_SYS_CHDIR
-                   LINUX_EXPORTS_SYS_CLOSE
-                   LINUX_EXPORTS_SYS_WAIT4
                    if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
                          linux_syscall_method=none
                          if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
@@ -636,6 +650,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+		 fi
+		 if test "x$ac_cv_linux_exports_sys_open" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_SYS_OPEN, 1, [define if your linux kernel exports sys_open])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
@@ -747,6 +764,27 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
+		 fi
+		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
+		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
+		 fi
+		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
+		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
+		 fi
+		 if test "x$ac_cv_linux_func_refrigerator_takes_pf_freeze" = "xyes" ; then
+		  AC_DEFINE(LINUX_REFRIGERATOR_TAKES_PF_FREEZE, 1, [define if your refrigerator takes PF_FREEZE])
+		 fi
+		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_i_permission_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(IOP_PERMISSION_TAKES_NAMEIDATA, 1, [define if your iops.permission takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
+		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
 		 fi
                 :
 		fi
@@ -1008,7 +1046,8 @@ AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
-
+AC_CHECK_FUNCS(setvbuf)
+AC_FUNC_SETVBUF_REVERSED
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \

@@ -37,11 +37,30 @@ $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)  
 
 # use rxgen on afscbint.xg and afsint.xg
-afscbint.cs.c afscbint.ss.c afscbint.xdr.c afscbint.h : afscbint.xg common.xg
-	$(RXGEN) -x -y afscbint.xg
+afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
+	$(RXGEN) -x -C -o afscbint.cs.c afscbint.xg
 
-afsint.cs.c afsint.ss.c afsint.xdr.c afsint.h: afsint.xg common.xg
-	$(RXGEN) -x afsint.xg
+afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h
+	$(RXGEN) -x -S -o afscbint.ss.c afscbint.xg
+
+afscbint.xdr.c: common.xg afscbint.xg afsint.h afscbint.h
+	$(RXGEN) -x -y -c -o afscbint.xdr.c afscbint.xg
+
+afscbint.h: common.xg afscbint.xg
+	$(RXGEN) -x -h -o afscbint.h afscbint.xg
+
+afsint.cs.c: common.xg afsint.xg afsint.h
+	$(RXGEN) -x -C -o afsint.cs.c afsint.xg
+
+afsint.ss.c: common.xg afsint.xg afsint.h
+	$(RXGEN) -x -S -o afsint.ss.c afsint.xg
+
+afsint.xdr.c: common.xg afsint.xg
+	$(RXGEN) -x -c -o afsint.xdr.c afsint.xg
+
+afsint.h: common.xg afsint.xg
+	$(RXGEN) -x -h -o afsint.h afsint.xg
+
 
 # mtafsint.lib
 

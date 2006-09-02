@@ -16,7 +16,7 @@ B<rxdebug> S<<< B<-servers> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>]
 
 B<rxdebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-po> <I<IP port>>] >>> [B<-nod>]
     [B<-a>] [B<-r>] [B<-onlys>] [B<-onlyc>] S<<< [B<-onlyp> <I<show only port>>] >>>
-    S<<< [B<-onlyh> <I<show only host>>] >>> [-onlya <I<show only auth level>>]
+    S<<< [B<-onlyh> <I<show only host>>] >>> S<<< [B<-onlya> <I<show only auth level>>] >>>
     [B<-v>] [B<-noc>] [B<-pe>] [B<-h>]
 
 =for html

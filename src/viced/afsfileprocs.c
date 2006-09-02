@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.25 2006/04/07 05:36:59 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.33 2006/08/01 22:33:47 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -306,6 +306,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
     int retry_flag = 1;
     int code = 0;
     char hoststr[16], hoststr2[16];
+    struct ubik_client *uclient;
+
     if (!tconn) {
 	ViceLog(0, ("CallPreamble: unexpected null tconn!\n"));
 	return -1;
@@ -329,9 +331,20 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	/* Take down the old connection and re-read the key file */
 	ViceLog(0,
 		("CallPreamble: Couldn't get CPS. Reconnect to ptserver\n"));
+#ifdef AFS_PTHREAD_ENV
+	uclient = (struct ubik_client *)pthread_getspecific(viced_uclient_key);
+
+	/* Is it still necessary to drop this? We hit the net, we should... */
 	H_UNLOCK;
-	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+	if (uclient) 
+	    hpr_End(uclient);
+	code = hpr_Initialize(&uclient);
+
+	assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
+#else
+	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+#endif
 	if (code) {
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
@@ -655,10 +668,13 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 #endif /* AFS_PTHREAD_ENV */
     }
 
-    if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
-	ViceLog(0,
-		("CheckRights: len=%u, for host=0x%x\n",
-		 client->host->hcps.prlist_len, client->host->host));
+    if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {
+	char hoststr[16];
+	ViceLog(5,
+		("CheckRights: len=%u, for host=%s:%d\n",
+		 client->host->hcps.prlist_len, 
+		 afs_inet_ntoa_r(client->host->host, hoststr),
+		 ntohs(client->host->port)));
     } else
 	acl_CheckRights(ACL, &client->host->hcps, &hrights);
     H_UNLOCK;
@@ -1726,14 +1742,11 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
  * SAFS_ReleaseLock)
  */
 static afs_int32
-HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
+HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLockType LockingType)
 {
     int Time;			/* Used for time */
     int writeVnode = targetptr->changed_oldTime;	/* save original status */
 
-    /* Does the caller has Lock priviledges; root extends locks, however */
-    if (LockingType != LockExtend && !(rights & PRSFS_LOCK))
-	return (EACCES);
     targetptr->changed_oldTime = 1;	/* locking doesn't affect any time stamp */
     Time = FT_ApproxTime();
     switch (LockingType) {
@@ -1744,12 +1757,19 @@ HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
 		0;
 	Time += AFS_LOCKWAIT;
 	if (LockingType == LockRead) {
+	    if ( !(rights & PRSFS_LOCK) )
+		return(EACCES);
+ 
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
 		targetptr->disk.lock.lockTime = Time;
 	    } else
 		return (EAGAIN);
-	} else {
+	} else if (LockingType == LockWrite) {
+	    if ( !(rights & PRSFS_WRITE) && 
+		 !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
+		return(EACCES);
+
 	    if (targetptr->disk.lock.lockCount == 0) {
 		targetptr->disk.lock.lockCount = -1;
 		targetptr->disk.lock.lockTime = Time;
@@ -3179,6 +3199,10 @@ SRXAFS_StoreData(struct rx_call * acall, struct AFSFid * Fid,
 		 afs_uint32 Length, afs_uint32 FileLength,
 		 struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
+    if (FileLength > 0x7fffffff || Pos > 0x7fffffff || 
+	(0x7fffffff - Pos) < Length)
+        return EFBIG;
+
     return common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
 	                      OutStatus, Sync);
 }				/*SRXAFS_StoreData */
@@ -5120,7 +5144,7 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the particular type of set locking, type */
-    errorCode = HandleLocking(targetptr, rights, type);
+    errorCode = HandleLocking(targetptr, client, rights, type);
 
   Bad_SetLock:
     /* Write the all modified vnodes (parent, new files) and volume back */
@@ -5246,7 +5270,7 @@ SAFSS_ExtendLock(struct rx_call *acall, struct AFSFid *Fid,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the actual lock extension */
-    errorCode = HandleLocking(targetptr, rights, LockExtend);
+    errorCode = HandleLocking(targetptr, client, rights, LockExtend);
 
   Bad_ExtendLock:
     /* Put back file's vnode and volume */
@@ -5373,7 +5397,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
     SetVolumeSync(Sync, volptr);
 
     /* Handle the actual lock release */
-    if ((errorCode = HandleLocking(targetptr, rights, LockRelease)))
+    if ((errorCode = HandleLocking(targetptr, client, rights, LockRelease)))
 	goto Bad_ReleaseLock;
 
     /* if no more locks left, a callback would be triggered here */
@@ -5631,7 +5655,7 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 {				/*SRXAFS_XStatsVersion */
 
     struct client *t_client = NULL;	/* tmp ptr to client data */
-    struct rx_connection *tcon;
+    struct rx_connection *tcon = rx_ConnectionOf(a_call);
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -6163,7 +6187,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *) malloc(dataBytes);
-    dataBuffP[0] = CAPABILITY_ERRORTRANS;
+    dataBuffP[0] = CAPABILITY_ERRORTRANS | CAPABILITY_WRITELOCKACL;
     capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
@@ -6947,7 +6971,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
 	if (errorCode <= 0) {
 	    FDH_CLOSE(fdP);
-	    VTakeOffline(volptr);
 	    return EIO;
 	}
 	wlen = errorCode;

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.8 2006/02/13 18:39:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.9 2006/07/03 18:43:39 jaltman Exp $");
 
 /*
  * SOLARIS/osi_vnodeops.c
@@ -1698,11 +1698,13 @@ gafs_rename(aodp, aname1, andp, aname2, acred)
 	    struct vnode *vp = AFSTOV(avcp), *pvp = AFSTOV(andp);
 	    
 	    mutex_enter(&vp->v_lock);
-	    kmem_free(vp->v_path, strlen(vp->v_path) + 1);
-	    vp->v_path = NULL;
+	    if (vp->v_path != NULL) {
+		kmem_free(vp->v_path, strlen(vp->v_path) + 1);
+		vp->v_path = NULL;
+	    }
 	    mutex_exit(&vp->v_lock);
-	    VN_SETPATH(afs_globalVp, pvp, vp, aname2, strlen(aname2));
-	    
+	    vn_setpath(afs_globalVp, pvp, vp, aname2, strlen(aname2));
+
 	    AFS_RELE(avcp);
 	}
     }

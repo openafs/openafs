@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25 2003/11/23 04:53:44 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.4 2006/07/14 19:24:06 shadow Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -211,9 +211,13 @@ ReadShort(register struct iod *iodp, register unsigned short *sp)
 {
     register b1, b0;
     b1 = iod_getc(iodp);
+    if (b1 == EOF)
+	return 0;
     b0 = iod_getc(iodp);
+    if (b0 == EOF)
+	return 0;
     *sp = (b1 << 8) | b0;
-    return b0 != EOF;
+    return 1;
 }
 
 static int
@@ -221,24 +225,38 @@ ReadInt32(register struct iod *iodp, afs_uint32 * lp)
 {
     afs_uint32 register b3, b2, b1, b0;
     b3 = iod_getc(iodp);
+    if (b3 == EOF)
+	return 0;
     b2 = iod_getc(iodp);
+    if (b2 == EOF)
+	return 0;
     b1 = iod_getc(iodp);
+    if (b1 == EOF)
+	return 0;
     b0 = iod_getc(iodp);
+    if (b0 == EOF)
+	return 0;
     *lp = (((((b3 << 8) | b2) << 8) | b1) << 8) | b0;
-    return b0 != EOF;
+    return 1;
 }
 
 static void
 ReadString(register struct iod *iodp, register char *to, register int maxa)
 {
     register int c;
+    int first = 1;
+
+    *to = '\0';
+    if (maxa == 0)
+	return;
+
     while (maxa--) {
-	if ((*to++ = iod_getc(iodp)) == 0)
+	if ((*to++ = c = iod_getc(iodp)) == 0 || c == EOF)
 	    break;
     }
     if (to[-1]) {
 	while ((c = iod_getc(iodp)) && c != EOF);
-	to[-1] = 0;
+	to[-1] = '\0';
     }
 }
 
@@ -501,9 +519,10 @@ DumpByteString(register struct iod *iodp, char tag, register byte * bs,
 static int
 DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 {
-    int code = 0, lcode = 0, error = 0;
+    int code = 0, error = 0;
     afs_int32 pad = 0, offset;
     afs_sfsize_t n, nbytes, howMany, howBig;
+    afs_foff_t lcode = 0;
     byte *p;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
@@ -511,7 +530,12 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
+#ifdef AFS_LARGEFILE_ENV
+    struct statfs64 tstatfs;
+#else /* !AFS_LARGEFILE_ENV */
     struct statfs tstatfs;
+#endif /* !AFS_LARGEFILE_ENV */
+    int statfs_code;
 #endif
 
 #ifdef AFS_NT40_ENV
@@ -526,7 +550,15 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     /* Unfortunately in AIX valuable fields such as st_blksize are 
      * gone from the stat structure.
      */
-    fstatfs(handleP->fd_fd, &tstatfs);
+#ifdef AFS_LARGEFILE_ENV
+    statfs_code = fstatfs64(handleP->fd_fd, &tstatfs);
+#else /* !AFS_LARGEFILE_ENV */
+    statfs_code = fstatfs(handleP->fd_fd, &tstatfs);
+#endif /* !AFS_LARGEFILE_ENV */
+    if (statfs_code != 0) {
+        Log("DumpFile: fstatfs returned error code %d on descriptor %d\n", errno, handleP->fd_fd);
+	return VOLSERDUMPERROR;
+    }
     howMany = tstatfs.f_bsize;
 #else
     howMany = status.st_blksize;
@@ -552,9 +584,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	return VOLSERDUMPERROR;
     }
 
-    p = (unsigned char *)malloc(howMany);
+    p = (unsigned char *)malloc((size_t)howMany);
     if (!p) {
-	Log("1 Volser: DumpFile: no memory");
+	Log("1 Volser: DumpFile: not enough memory to allocate %u bytes\n", howMany);
 	return VOLSERDUMPERROR;
     }
 
@@ -563,7 +595,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    howMany = nbytes;
 
 	/* Read the data - unless we know we can't */
-	n = (lcode ? 0 : FDH_READ(handleP, p, howMany));
+	n = (lcode ? 0 : FDH_READ(handleP, p, (size_t)howMany));
 
 	/* If read any good data and we null padded previously, log the
 	 * amount that we had null padded.
@@ -597,7 +629,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    /* Now seek over the data we could not get. An error here means we
 	     * can't do the next read.
 	     */
-	    lcode = FDH_SEEK(handleP, ((size - nbytes) + howMany), SEEK_SET);
+	    lcode = FDH_SEEK(handleP, (size_t)((size - nbytes) + howMany), SEEK_SET);
 	    if (lcode != ((size - nbytes) + howMany)) {
 		if (lcode < 0) {
 		    Log("1 Volser: DumpFile: Error %d seeking in inode %s for vnode %d\n", errno, PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
@@ -611,7 +643,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	}
 
 	/* Now write the data out */
-	if (iod_Write(iodp, (char *)p, howMany) != howMany)
+	if (iod_Write(iodp, (char *)p, (size_t)howMany) != howMany)
 	    error = VOLSERDUMPERROR;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
@@ -955,8 +987,11 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
 	    Buf = (afs_int32 *) malloc(nVnodes * sizeof(afs_int32));
-	    if (Buf == NULL)
+	    if (Buf == NULL) {
+		STREAM_CLOSE(afile);
+		FDH_CLOSE(fdP);
 		return 1;
+	    }
 	    memset((char *)Buf, 0, nVnodes * sizeof(afs_int32));
 	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
 	    while (1) {
@@ -991,8 +1026,8 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     register Volume *vp;
     struct iod iod;
     register struct iod *iodp = &iod;
-    afs_int32 *b1 = 0, *b2 = 0;
-    int s1 = 0, s2 = 0, delo = 0, tdelo;
+    afs_int32 *b1 = NULL, *b2 = NULL;
+    int s1 = 0, s2 = 0, delo = incremental, tdelo;
     int tag;
 
     iod_Init(iodp, call);
@@ -1009,7 +1044,8 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     if (ReadVolumeHeader(iodp, &vol) == VOLSERREAD_DUMPERROR)
 	return VOLSERREAD_DUMPERROR;
 
-    delo = ProcessIndex(vp, vLarge, &b1, &s1, 0);
+    if (!delo)
+	delo = ProcessIndex(vp, vLarge, &b1, &s1, 0);
     if (!delo)
 	delo = ProcessIndex(vp, vSmall, &b2, &s2, 0);
     if (delo) {
@@ -1017,7 +1053,8 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 	    free((char *)b1);
 	if (b2)
 	    free((char *)b2);
-	b1 = b2 = 0;
+	b1 = b2 = NULL;
+	s1 = s2 = 0;
     }
 
     strncpy(vol.name, cookie->name, VOLSER_OLDMAXVOLNAME);
@@ -1035,11 +1072,11 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 	tag = iod_getc(iodp);
 	if (tag != D_VOLUMEHEADER)
 	    break;
+
 	if (ReadVolumeHeader(iodp, &vol) == VOLSERREAD_DUMPERROR) {
 	    error = VOLSERREAD_DUMPERROR;
 	    goto out;
 	}
-	tdelo = -1;
     }
     if (tag != D_DUMPEND || !ReadInt32(iodp, &endMagic)
 	|| endMagic != DUMPENDMAGIC) {
@@ -1056,8 +1093,13 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     }
 
     if (!delo) {
-	ProcessIndex(vp, vLarge, &b1, &s1, 1);
-	ProcessIndex(vp, vSmall, &b2, &s2, 1);
+	delo = ProcessIndex(vp, vLarge, &b1, &s1, 1);
+	if (!delo)
+	    ProcessIndex(vp, vSmall, &b2, &s2, 1);
+	if (delo) {
+	    error = VOLSERREAD_DUMPERROR;
+	    goto clean;
+	}
     }
 
   clean:
@@ -1104,7 +1146,8 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 	if (!ReadInt32(iodp, (afs_uint32 *) & vnodeNumber))
 	    break;
 
-	ReadInt32(iodp, &vnode->uniquifier);
+	if (!ReadInt32(iodp, &vnode->uniquifier))
+	    return VOLSERREAD_DUMPERROR;
 	while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
 	    haveStuff = 1;
 	    switch (tag) {
@@ -1114,36 +1157,45 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 	    case 'l':
 		{
 		    unsigned short tlc;
-		    ReadShort(iodp, &tlc);
+		    if (!ReadShort(iodp, &tlc))
+			return VOLSERREAD_DUMPERROR;
 		    vnode->linkCount = (signed int)tlc;
 		}
 		break;
 	    case 'v':
-		ReadInt32(iodp, &vnode->dataVersion);
+		if (!ReadInt32(iodp, &vnode->dataVersion))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'm':
-		ReadInt32(iodp, &vnode->unixModifyTime);
+		if (!ReadInt32(iodp, &vnode->unixModifyTime))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 's':
-		ReadInt32(iodp, &vnode->serverModifyTime);
+		if (!ReadInt32(iodp, &vnode->serverModifyTime))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'a':
-		ReadInt32(iodp, &vnode->author);
+		if (!ReadInt32(iodp, &vnode->author))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'o':
-		ReadInt32(iodp, &vnode->owner);
+		if (!ReadInt32(iodp, &vnode->owner))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'g':
-		ReadInt32(iodp, (afs_uint32 *) & vnode->group);
+		if (!ReadInt32(iodp, (afs_uint32 *) & vnode->group))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'b':{
 		    unsigned short modeBits;
-		    ReadShort(iodp, &modeBits);
+		    if (!ReadShort(iodp, &modeBits))
+			return VOLSERREAD_DUMPERROR;
 		    vnode->modeBits = (unsigned int)modeBits;
 		    break;
 		}
 	    case 'p':
-		ReadInt32(iodp, &vnode->parent);
+		if (!ReadInt32(iodp, &vnode->parent))
+		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'A':
 		ReadByteString(iodp, (byte *) VVnodeDiskACL(vnode),
@@ -1243,7 +1295,6 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
     }
     iod_ungetc(iodp, tag);
 
-
     return 0;
 }
 
@@ -1257,6 +1308,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 		 Error * status)
 {
     afs_int32 code;
+    afs_sfsize_t lcode;
     afs_fsize_t filesize;
     afs_fsize_t written = 0;
     register afs_uint32 size = 8192;
@@ -1302,11 +1354,11 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	    *status = 3;
 	    break;
 	}
-	code = FDH_WRITE(handleP, p, size);
-	if (code > 0)
-	    written += code;
-	if (code != size) {
-	    Log("1 Volser: WriteFile: Error creating file in volume; restore aborted\n");
+	lcode = FDH_WRITE(handleP, p, size);
+	if (lcode > 0)
+	    written += lcode;
+	if (lcode != size) {
+	    Log("1 Volser: WriteFile: Error writing (%d,%u) bytes to vnode %d; restore aborted\n", (int)(lcode>>32), (int)(lcode & 0xffffffff), vn);
 	    *status = 4;
 	    break;
 	}

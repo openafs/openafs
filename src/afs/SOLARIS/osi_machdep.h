@@ -69,7 +69,6 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
  */
 #include <sys/mutex.h>
 extern kmutex_t afs_global_lock;
-extern kmutex_t afs_rxglobal_lock;
 
 #define AFS_GLOCK()	mutex_enter(&afs_global_lock);
 #define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
