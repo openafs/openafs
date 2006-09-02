@@ -310,7 +310,7 @@ configureBackConnectionHostNames(void)
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;
-            dwSize += pName - pHostNames + 1;
+            dwSize = pName - pHostNames + 1;
             RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
 
             if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
