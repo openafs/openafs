@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.4 2006/03/23 16:45:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.15.2.5 2006/06/26 16:19:06 rra Exp $");
 
 
 #include <sys/types.h>
@@ -41,6 +41,7 @@ RCSID
 #include <rx/rx.h>
 #include <lock.h>
 #include <afs/afs_args.h>
+#include <afs/afsutil.h>
 
 extern struct hostent *hostutil_GetHostByName();
 

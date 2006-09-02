@@ -12,6 +12,9 @@
 /* define if your aops.writepage takes a struct writeback_control argument */
 #undef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
 
+/* define if target is big endian */
+#undef AUTOCONF_FOUND_BIGENDIAN
+
 /* define if you want to salvager to check bitmasks later */
 #undef BITMAP_LATER
 
@@ -46,6 +49,9 @@
 /* define if your linux kernel exports sys_close */
 #undef EXPORTED_SYS_CLOSE
 
+/* define if your linux kernel exports sys_open */
+#undef EXPORTED_SYS_OPEN
+
 /* define if your linux kernel exports sys_wait4 */
 #undef EXPORTED_SYS_WAIT4
 
@@ -54,6 +60,9 @@
 
 /* define if you want to want listvol switch */
 #undef FULL_LISTVOL_SWITCH
+
+/* define if your get_sb_nodev needs a struct vfsmount argument */
+#undef GET_SB_HAS_STRUCT_VFSMOUNT
 
 /* Define to 1 if you have the `add_error_table' function. */
 #undef HAVE_ADD_ERROR_TABLE
@@ -187,6 +196,9 @@
 
 /* Define to 1 if you have the `setprogname' function. */
 #undef HAVE_SETPROGNAME
+
+/* Define to 1 if you have the `setvbuf' function. */
+#undef HAVE_SETVBUF
 
 /* Define to 1 if you have the <siad.h> header file. */
 #undef HAVE_SIAD_H
@@ -331,11 +343,17 @@
 /* define if irix has memcpy and friends */
 #undef IRIX_HAS_MEM_FUNCS
 
+/* define if key_alloc takes a struct task * */
+#undef KEY_ALLOC_NEEDS_STRUCT_TASK
+
 /* define if your linux kernel uses SELinux features */
 #undef LINUX_KERNEL_IS_SELINUX
 
 /* define if your linux kernel uses 5 arguments for sock_create */
 #undef LINUX_KERNEL_SOCK_CREATE_V
+
+/* define if your kernel has keyring support */
+#undef LINUX_KEYRING_SUPPORT
 
 /* define if your refrigerator takes PF_FREEZE */
 #undef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
@@ -358,13 +376,21 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define to 1 if the C compiler supports function prototypes. */
+#undef PROTOTYPES
+
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
-/* The size of a `long', as computed by sizeof. */
+/* Define to 1 if the `setvbuf' function takes the buffering type as its
+   second argument and the buffer pointer as the third, as on System V before
+   release 3. */
+#undef SETVBUF_REVERSED
+
+/* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -442,9 +468,6 @@
 /* Version number of package */
 #undef VERSION
 
-/* define if target is big endian */
-#undef WORDS_BIGENDIAN
-
 /* define if your sops.write_inode returns non-void */
 #undef WRITE_INODE_NOT_VOID
 
@@ -469,10 +492,13 @@
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 #undef _POSIX_SOURCE
 
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
+
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define to `int' if <sys/types.h> does not define. */
@@ -486,15 +512,30 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_RES_SEARCH
 #undef HAVE_SOCKET
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
-#if ENDIANESS_IN_SYS_PARAM_H
-# ifndef KERNEL
-#  include <sys/types.h>
-#  include <sys/param.h>
-#  if BYTE_ORDER == BIG_ENDIAN
-#  define WORDS_BIGENDIAN 1
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if ENDIANESS_IN_SYS_PARAM_H
+#  ifndef KERNEL
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#   endif
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  else
+#   undef WORDS_BIGENDIAN
 #  endif
 # endif
+#else
+#if defined(__BIG_ENDIAN__)
+#define WORDS_BIGENDIAN 1
+#else
+#undef WORDS_BIGENDIAN
 #endif
+#endif
+
 #undef AFS_AFSDB_ENV
 #undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV

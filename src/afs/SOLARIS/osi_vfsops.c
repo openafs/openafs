@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18 2004/06/24 17:38:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18.2.1 2006/06/30 14:06:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -277,7 +277,6 @@ void (*ufs_itimes_nolockp) ();
 int (*afs_orig_ioctl) (), (*afs_orig_ioctl32) ();
 int (*afs_orig_setgroups) (), (*afs_orig_setgroups32) ();
 
-struct streamtab *udp_infop = 0;
 #ifndef AFS_SUN510_ENV
 struct ill_s *ill_g_headp = 0;
 #endif
@@ -296,6 +295,20 @@ int (*nfs_checkauth) ();
 #endif
 
 extern Afs_syscall();
+
+static void *
+do_mod_lookup(const char * mod, const char * sym)
+{
+    void * ptr;
+
+    ptr = modlookup(mod, sym);
+    if (ptr == NULL) {
+        afs_warn("modlookup failed for symbol '%s' in module '%s'\n",
+		 sym, mod);
+    }
+
+    return ptr;
+}
 
 #ifdef AFS_SUN510_ENV
 afsinit(int fstype, char *dummy)
@@ -318,64 +331,49 @@ afsinit(struct vfssw *vfsswp, int fstype)
     afs_orig_ioctl32 = sysent32[SYS_ioctl].sy_call;
     sysent32[SYS_setgroups].sy_callc = afs_xsetgroups;
     sysent32[SYS_ioctl].sy_call = afs_xioctl;
-#endif
+#endif /* AFS_SUN57_64BIT_ENV */
 
 #ifdef AFS_SUN510_ENV
     vfs_setfsops(fstype, afs_vfsops_template, &afs_vfsopsp);
     afsfstype = fstype;
     vn_make_ops("afs", afs_vnodeops_template, &afs_ops);
-#else
+#else /* !AFS_SUN510_ENV */
     vfsswp->vsw_vfsops = &Afs_vfsops;
     afsfstype = fstype;
-#endif
+#endif /* !AFS_SUN510_ENV */
 
 
-#if	!defined(AFS_NONFSTRANS)
-    nfs_rfsdisptab_v2 = (int (*)())modlookup("nfssrv", "rfsdisptab_v2");
-    if (!nfs_rfsdisptab_v2) {
-	afs_warn("warning : rfsdisptab_v2 NOT FOUND\n");
-    }
-    if (nfs_rfsdisptab_v2) {
-	nfs_acldisptab_v2 = (int (*)())modlookup("nfssrv", "acldisptab_v2");
-	if (!nfs_acldisptab_v2) {
-	    afs_warn("warning : acldisptab_v2 NOT FOUND\n");
-	} else {
+#if !defined(AFS_NONFSTRANS)
+    nfs_rfsdisptab_v2 = (int (*)()) do_mod_lookup("nfssrv", "rfsdisptab_v2");
+    if (nfs_rfsdisptab_v2 != NULL) {
+	nfs_acldisptab_v2 = (int (*)()) do_mod_lookup("nfssrv", "acldisptab_v2");
+	if (nfs_acldisptab_v2 != NULL) {
 	    afs_xlatorinit_v2(nfs_rfsdisptab_v2, nfs_acldisptab_v2);
 	}
     }
-    nfs_rfsdisptab_v3 = (int (*)())modlookup("nfssrv", "rfsdisptab_v3");
-    if (!nfs_rfsdisptab_v3) {
-	afs_warn("warning : rfsdisptab_v3 NOT FOUND\n");
-    }
-    if (nfs_rfsdisptab_v3) {
-	nfs_acldisptab_v3 = (int (*)())modlookup("nfssrv", "acldisptab_v3");
-	if (!nfs_acldisptab_v3) {
-	    afs_warn("warning : acldisptab_v3 NOT FOUND\n");
-	} else {
+    nfs_rfsdisptab_v3 = (int (*)()) do_mod_lookup("nfssrv", "rfsdisptab_v3");
+    if (nfs_rfsdisptab_v3 != NULL) {
+	nfs_acldisptab_v3 = (int (*)()) do_mod_lookup("nfssrv", "acldisptab_v3");
+	if (nfs_acldisptab_v3 != NULL) {
 	    afs_xlatorinit_v3(nfs_rfsdisptab_v3, nfs_acldisptab_v3);
 	}
     }
 
-    nfs_checkauth = (int (*)())modlookup("nfssrv", "checkauth");
-    if (!nfs_checkauth)
-	afs_warn("nfs_checkauth not initialised");
-#endif
-    ufs_iallocp = (int (*)())modlookup("ufs", "ufs_ialloc");
-    ufs_iupdatp = (void (*)())modlookup("ufs", "ufs_iupdat");
-    ufs_igetp = (int (*)())modlookup("ufs", "ufs_iget");
-    ufs_itimes_nolockp = (void (*)())modlookup("ufs", "ufs_itimes_nolock");
-    udp_infop = (struct streamtab *)modlookup("udp", "udpinfo");
-#ifdef AFS_SUN510_ENV
-    if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp
-	|| !udp_infop)
-	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
-#else
-    ill_g_headp = (struct ill_s *)modlookup("ip", "ill_g_head");
+    nfs_checkauth = (int (*)()) do_mod_lookup("nfssrv", "checkauth");
+#endif /* !AFS_NONFSTRANS */
 
-    if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp
-	|| !udp_infop || !ill_g_headp)
+    ufs_iallocp = (int (*)()) do_mod_lookup("ufs", "ufs_ialloc");
+    ufs_iupdatp = (void (*)()) do_mod_lookup("ufs", "ufs_iupdat");
+    ufs_igetp = (int (*)()) do_mod_lookup("ufs", "ufs_iget");
+    ufs_itimes_nolockp = (void (*)()) do_mod_lookup("ufs", "ufs_itimes_nolock");
+
+    if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp) {
 	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
-#endif
+    }
+
+#if !defined(AFS_SUN510_ENV)
+    ill_g_headp = (struct ill_s *) do_mod_lookup("ip", "ill_g_head");
+#endif /* !AFS_SUN510_ENV */
 
     afs_sinited = 1;
     return 0;

@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sia/siad.c,v 1.5 2003/07/15 23:16:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sia/Attic/siad.c,v 1.5 2003/07/15 23:16:51 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

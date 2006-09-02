@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/server.c,v 1.13 2004/06/23 14:27:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/server.c,v 1.13.2.2 2006/06/20 20:35:01 jaltman Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -68,6 +68,11 @@ int dirLevel[MAXENTRIES];
 char *whoami;
 
 static int Quit();
+
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 /* check whether caller is authorized to manage RX statistics */
 int
@@ -183,6 +188,7 @@ main(int argc, char *argv[])
 {
     struct rx_securityClass *securityObjects[3];
     struct rx_service *service;
+    afs_uint32 host = htonl(INADDR_ANY);
 
     int a = 0;
     rxkad_level level;
@@ -234,15 +240,20 @@ main(int argc, char *argv[])
 
     for (a = 1; a < argc; a++) {
 	if (argv[a][0] == '-') {	/* parse options */
-	    char arg[256];
-	    lcstring(arg, argv[a], sizeof(arg));
-	    newLevel = rxkad_StringToLevel(&argv[a][1]);
-	    if (newLevel != -1) {
-		level = newLevel;	/* set new level */
+	    if (strcmp(argv[a], "-rxbind") == 0) {
+		rxBind = 1;
 		continue;
+	    } else {
+		char arg[256];
+		lcstring(arg, argv[a], sizeof(arg));
+		newLevel = rxkad_StringToLevel(&argv[a][1]);
+		if (newLevel != -1) {
+		    level = newLevel;	/* set new level */
+		    continue;
+		}
 	    }
 	  usage:
-	    Quit("Usage: upserver [<directory>+] [-crypt <directory>+] [-clear <directory>+] [-auth <directory>+] [-help]\n");
+	    Quit("Usage: upserver [<directory>+] [-crypt <directory>+] [-clear <directory>+] [-auth <directory>+] [-rxbind] [-help]\n");
 	} else {
 	    int dirlen;
 	    if (nDirs >= sizeof(dirName) / sizeof(dirName[0]))
@@ -270,9 +281,28 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
+    if (rxBind) {
+	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+                                           ADDRSPERSITE, reason,
+                                           AFSDIR_SERVER_NETINFO_FILEPATH,
+                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else 
+#endif	
+	{
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) 
+            host = SHostAddrs[0];
+    }
+
     /* Initialize Rx, telling it port number this server will use for its
      * single service */
-    if (rx_Init(htons(AFSCONF_UPDATEPORT)) < 0)
+    if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 
     /* Create a single security object, in this case the null security object,
@@ -296,8 +326,8 @@ main(int argc, char *argv[])
      * which is called to decode requests is passed in here
      * (UPDATE_ExecuteRequest). */
     service =
-	rx_NewService(0, UPDATE_SERVICEID, "UPDATE", securityObjects, 3,
-		      UPDATE_ExecuteRequest);
+	rx_NewServiceHost(host, 0, UPDATE_SERVICEID, "UPDATE", securityObjects,
+			  3, UPDATE_ExecuteRequest);
     if (service == (struct rx_service *)0)
 	Quit("rx_NewService");
     rx_SetMaxProcs(service, 2);

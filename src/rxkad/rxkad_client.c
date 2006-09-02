@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18.2.4 2006/02/28 00:19:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18.2.5 2006/05/23 16:31:02 jaltman Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
@@ -181,7 +181,7 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     struct rx_securityClass *tsc;
     struct rxkad_cprivate *tcp;
     int code;
-    int size;
+    int size, psize;
 
     size = sizeof(struct rx_securityClass);
     tsc = (struct rx_securityClass *)rxi_Alloc(size);
@@ -189,15 +189,15 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     tsc->refCount = 1;		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
-    size = sizeof(struct rxkad_cprivate);
-    tcp = (struct rxkad_cprivate *)rxi_Alloc(size);
-    memset((void *)tcp, 0, size);
+    psize = PDATA_SIZE(ticketLen);
+    tcp = (struct rxkad_cprivate *)rxi_Alloc(psize);
+    memset((void *)tcp, 0, psize);
     tsc->privateData = (char *)tcp;
     tcp->type |= rxkad_client;
     tcp->level = level;
     code = fc_keysched(sessionkey, tcp->keysched);
     if (code) {
-	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tcp, psize);
 	rxi_Free(tsc, sizeof(struct rx_securityClass));
 	return 0;		/* bad key */
     }
@@ -205,7 +205,7 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     tcp->kvno = kvno;		/* key version number */
     tcp->ticketLen = ticketLen;	/* length of ticket */
     if (tcp->ticketLen > MAXKTCTICKETLEN) {
-	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tcp, psize);
 	rxi_Free(tsc, sizeof(struct rx_securityClass));
 	return 0;		/* bad key */
     }

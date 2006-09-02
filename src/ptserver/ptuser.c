@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.6 2005/07/11 19:28:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.8 2006/07/31 17:15:48 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -263,10 +263,10 @@ pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 
     stolower(name);
     if (*id) {
-	code = ubik_Call(PR_INewEntry, pruclient, 0, name, *id, 0);
+	code = ubik_PR_INewEntry(pruclient, 0, name, *id, 0);
 	return code;
     } else {
-	code = ubik_Call(PR_NewEntry, pruclient, 0, name, 0, 0, id);
+	code = ubik_PR_NewEntry(pruclient, 0, name, 0, 0, id);
 	return code;
     }
 
@@ -289,10 +289,10 @@ pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *i
     }
     flags |= PRGRP;
     if (*id) {
-	code = ubik_Call(PR_INewEntry, pruclient, 0, name, *id, oid);
+	code = ubik_PR_INewEntry(pruclient, 0, name, *id, oid);
 	return code;
     } else {
-	code = ubik_Call(PR_NewEntry, pruclient, 0, name, flags, oid, id);
+	code = ubik_PR_NewEntry(pruclient, 0, name, flags, oid, id);
 	return code;
     }
 }
@@ -309,7 +309,7 @@ pr_Delete(char *name)
 	return code;
     if (id == ANONYMOUSID)
 	return PRNOENT;
-    code = ubik_Call(PR_Delete, pruclient, 0, id);
+    code = ubik_PR_Delete(pruclient, 0, id);
     return code;
 }
 
@@ -318,7 +318,7 @@ pr_DeleteByID(afs_int32 id)
 {
     register afs_int32 code;
 
-    code = ubik_Call(PR_Delete, pruclient, 0, id);
+    code = ubik_PR_Delete(pruclient, 0, id);
     return code;
 }
 
@@ -345,7 +345,7 @@ pr_AddToGroup(char *user, char *group)
 	goto done;
     }
     code =
-	ubik_Call(PR_AddToGroup, pruclient, 0, lids.idlist_val[0],
+	ubik_PR_AddToGroup(pruclient, 0, lids.idlist_val[0],
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
@@ -378,7 +378,7 @@ pr_RemoveUserFromGroup(char *user, char *group)
 	goto done;
     }
     code =
-	ubik_Call(PR_RemoveFromGroup, pruclient, 0, lids.idlist_val[0],
+	ubik_PR_RemoveFromGroup(pruclient, 0, lids.idlist_val[0],
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
@@ -397,7 +397,7 @@ pr_NameToId(namelist *names, idlist *ids)
 
     for (i = 0; i < names->namelist_len; i++)
 	stolower(names->namelist_val[i]);
-    code = ubik_Call(PR_NameToID, pruclient, 0, names, ids);
+    code = ubik_PR_NameToID(pruclient, 0, names, ids);
     return code;
 }
 
@@ -414,7 +414,7 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
     lnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
     stolower(name);
     strncpy(lnames.namelist_val[0], name, PR_MAXNAMELEN);
-    code = ubik_Call(PR_NameToID, pruclient, 0, &lnames, &lids);
+    code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);
     if (lids.idlist_val) {
 	*id = *lids.idlist_val;
 	free(lids.idlist_val);
@@ -429,7 +429,7 @@ pr_IdToName(idlist *ids, namelist *names)
 {
     register afs_int32 code;
 
-    code = ubik_Call(PR_IDToName, pruclient, 0, ids, names);
+    code = ubik_PR_IDToName(pruclient, 0, ids, names);
     return code;
 }
 
@@ -445,7 +445,7 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
     *lids.idlist_val = id;
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
-    code = ubik_Call(PR_IDToName, pruclient, 0, &lids, &lnames);
+    code = ubik_PR_IDToName(pruclient, 0, &lids, &lnames);
     if (lnames.namelist_val) {
 	strncpy(name, lnames.namelist_val[0], PR_MAXNAMELEN);
 	free(lnames.namelist_val);
@@ -462,7 +462,7 @@ pr_GetCPS(afs_int32 id, prlist *CPS)
     afs_int32 over;
 
     over = 0;
-    code = ubik_Call(PR_GetCPS, pruclient, 0, id, CPS, &over);
+    code = ubik_PR_GetCPS(pruclient, 0, id, CPS, &over);
     if (code != PRSUCCESS)
 	return code;
     if (over) {
@@ -481,7 +481,7 @@ pr_GetCPS2(afs_int32 id, afs_int32 host, prlist *CPS)
     afs_int32 over;
 
     over = 0;
-    code = ubik_Call(PR_GetCPS2, pruclient, 0, id, host, CPS, &over);
+    code = ubik_PR_GetCPS2(pruclient, 0, id, host, CPS, &over);
     if (code != PRSUCCESS)
 	return code;
     if (over) {
@@ -500,7 +500,7 @@ pr_GetHostCPS(afs_int32 host, prlist *CPS)
     afs_int32 over;
 
     over = 0;
-    code = ubik_Call(PR_GetHostCPS, pruclient, 0, host, CPS, &over);
+    code = ubik_PR_GetHostCPS(pruclient, 0, host, CPS, &over);
     if (code != PRSUCCESS)
 	return code;
     if (over) {
@@ -537,7 +537,7 @@ pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 
     alist.prlist_len = 0;
     alist.prlist_val = 0;
-    code = ubik_Call(PR_ListOwned, pruclient, 0, oid, &alist, moreP);
+    code = ubik_PR_ListOwned(pruclient, 0, oid, &alist, moreP);
     if (code)
 	return code;
     if (*moreP == 1) {
@@ -565,7 +565,7 @@ pr_IDListMembers(afs_int32 gid, namelist *lnames)
 
     alist.prlist_len = 0;
     alist.prlist_val = 0;
-    code = ubik_Call(PR_ListElements, pruclient, 0, gid, &alist, &over);
+    code = ubik_PR_ListElements(pruclient, 0, gid, &alist, &over);
     if (code)
 	return code;
     if (over) {
@@ -586,7 +586,7 @@ pr_ListEntry(afs_int32 id, struct prcheckentry *aentry)
 {
     register afs_int32 code;
 
-    code = ubik_Call(PR_ListEntry, pruclient, 0, id, aentry);
+    code = ubik_PR_ListEntry(pruclient, 0, id, aentry);
     return code;
 }
 
@@ -603,7 +603,7 @@ pr_ListEntries(int flag, afs_int32 startindex, afs_int32 *nentries, struct prlis
     bulkentries.prentries_len = 0;
 
     code =
-	ubik_Call(PR_ListEntries, pruclient, 0, flag, startindex,
+	ubik_PR_ListEntries(pruclient, 0, flag, startindex,
 		  &bulkentries, nextstartindex);
     *nentries = bulkentries.prentries_len;
     *entries = bulkentries.prentries_val;
@@ -622,7 +622,8 @@ pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
 	return code;
     if (*id == ANONYMOUSID)
 	return PRNOENT;
-    code = ubik_Call(PR_ListEntry, pruclient, 0, *id, &aentry);
+    code = ubik_PR_ListEntry(pruclient, 0, *id, &aentry);
+      //code = ubik_PR_ListEntry(pruclient, 0, *id, &aentry);
     if (code)
 	return code;
     /* this should be done in one RPC, but I'm lazy. */
@@ -647,7 +648,7 @@ pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
 	return code;
     if (id == ANONYMOUSID)
 	return PRNOENT;
-    code = ubik_Call(PR_ListEntry, pruclient, 0, id, &aentry);
+    code = ubik_PR_ListEntry(pruclient, 0, id, &aentry);
     if (code)
 	return code;
     /* this should be done in one RPC, but I'm lazy. */
@@ -679,7 +680,7 @@ pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 	if (oid == ANONYMOUSID)
 	    return PRNOENT;
     }
-    code = ubik_Call(PR_ChangeEntry, pruclient, 0, id, newname, oid, newid);
+    code = ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid, newid);
     return code;
 }
 
@@ -707,7 +708,7 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
 	return code;
     }
     code =
-	ubik_Call(PR_IsAMemberOf, pruclient, 0, lids.idlist_val[0],
+	ubik_PR_IsAMemberOf(pruclient, 0, lids.idlist_val[0],
 		  lids.idlist_val[1], flag);
     if (lnames.namelist_val)
 	free(lnames.namelist_val);
@@ -721,7 +722,7 @@ pr_ListMaxUserId(afs_int32 *mid)
 {
     register afs_int32 code;
     afs_int32 gid;
-    code = ubik_Call(PR_ListMax, pruclient, 0, mid, &gid);
+    code = ubik_PR_ListMax(pruclient, 0, mid, &gid);
     return code;
 }
 
@@ -730,7 +731,7 @@ pr_SetMaxUserId(afs_int32 mid)
 {
     register afs_int32 code;
     afs_int32 flag = 0;
-    code = ubik_Call(PR_SetMax, pruclient, 0, mid, flag);
+    code = ubik_PR_SetMax(pruclient, 0, mid, flag);
     return code;
 }
 
@@ -739,7 +740,7 @@ pr_ListMaxGroupId(afs_int32 *mid)
 {
     register afs_int32 code;
     afs_int32 id;
-    code = ubik_Call(PR_ListMax, pruclient, 0, &id, mid);
+    code = ubik_PR_ListMax(pruclient, 0, &id, mid);
     return code;
 }
 
@@ -750,7 +751,7 @@ pr_SetMaxGroupId(afs_int32 mid)
     afs_int32 flag = 0;
 
     flag |= PRGRP;
-    code = ubik_Call(PR_SetMax, pruclient, 0, mid, flag);
+    code = ubik_PR_SetMax(pruclient, 0, mid, flag);
     return code;
 }
 
@@ -760,18 +761,7 @@ pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngrou
     register afs_int32 code;
 
     code =
-	ubik_Call(PR_SetFieldsEntry, pruclient, 0, id, mask, flags, ngroups,
+	ubik_PR_SetFieldsEntry(pruclient, 0, id, mask, flags, ngroups,
 		  nusers, 0, 0);
     return code;
-}
-
-int
-stolower(char *s)
-{
-    while (*s) {
-	if (isupper(*s))
-	    *s = tolower(*s);
-	s++;
-    }
-    return 0;
 }

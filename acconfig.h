@@ -8,15 +8,30 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_RES_SEARCH
 #undef HAVE_SOCKET
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
-#if ENDIANESS_IN_SYS_PARAM_H
-# ifndef KERNEL
-#  include <sys/types.h>
-#  include <sys/param.h>
-#  if BYTE_ORDER == BIG_ENDIAN
-#  define WORDS_BIGENDIAN 1
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if ENDIANESS_IN_SYS_PARAM_H
+#  ifndef KERNEL
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#   endif
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  else
+#   undef WORDS_BIGENDIAN
 #  endif
 # endif
+#else
+#if defined(__BIG_ENDIAN__)
+#define WORDS_BIGENDIAN 1
+#else
+#undef WORDS_BIGENDIAN
 #endif
+#endif
+
 #undef AFS_AFSDB_ENV
 #undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV

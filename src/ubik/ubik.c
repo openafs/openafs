@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubik.c,v 1.15 2004/08/08 23:57:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubik.c,v 1.15.2.1 2006/06/12 21:53:44 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -240,6 +240,8 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 	    ubik_sc[secIndex] = secClass;
 	}
     }
+    /* for backwards compat this should keep working as it does now 
+       and not host bind */
     code = rx_Init(myPort);
     if (code < 0)
 	return code;

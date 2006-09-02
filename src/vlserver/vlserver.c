@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.3 2006/02/22 04:09:32 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.6 2006/06/20 20:35:01 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -72,6 +72,10 @@ int LogLevel = 0;
 int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
 int rxMaxMTU = -1;
+afs_int32 rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 static void
 CheckSignal_Signal()
@@ -144,6 +148,7 @@ main(argc, argv)
     extern int rx_extraPackets;
     char commandLine[150];
     char clones[MAXHOSTSPERCELL];
+    afs_uint32 host = ntohl(INADDR_ANY);
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -179,8 +184,11 @@ main(argc, argv)
 	} else if (strcmp(argv[index], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
 
-	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
-	    if ((i + 1) >= argc) {
+	} else if (strcmp(argv[index], "-rxbind") == 0) {
+	    rxBind = 1;
+
+	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
+	    if ((index + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		return -1; 
 	    }
@@ -245,14 +253,14 @@ main(argc, argv)
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -323,6 +331,27 @@ main(argc, argv)
     if (noAuth)
 	afsconf_SetNoAuthFlag(tdir, 1);
 
+    if (rxBind) {
+	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+            AFSDIR_SERVER_NETINFO_FILEPATH) {
+            char reason[1024];
+            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+				  ADDRSPERSITE, reason,
+				  AFSDIR_SERVER_NETINFO_FILEPATH,
+				  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else 
+#endif	
+	{
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1) {
+            host = SHostAddrs[0];
+	    rx_InitHost(host, htons(AFSCONF_VLDBPORT));
+	}
+    }
+
     ubik_nBuffers = 512;
     ubik_CRXSecurityProc = afsconf_ClientAuth;
     ubik_CRXSecurityRock = (char *)tdir;
@@ -351,8 +380,9 @@ main(argc, argv)
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *)0;
     sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+
     tservice =
-	rx_NewService(0, USER_SERVICE_ID, "Vldb server", sc, 3,
+	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server", sc, 3,
 		      VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");
@@ -364,7 +394,7 @@ main(argc, argv)
     rx_SetMaxProcs(tservice, lwps);
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
 		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create rpc stats rx service\n");

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.3 2005/07/11 19:29:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.6 2006/07/31 16:36:32 shadow Exp $");
 
 #include <afs/stds.h>
 #if defined(AFS_LINUX24_ENV)
@@ -1243,7 +1243,7 @@ bc_VolRestoreCmd(as, arock)
 		       &destServ, destPartition, fromDate, newExt, oldFlag,
 		       /*parentDump */ 0, /*dumpLevel */ 0,
 		       bc_Restorer, ports, portCount,
-		       /*dumpSched */ 0, /*append */ 0, dontExecute);
+		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1406,7 +1406,7 @@ bc_DiskRestoreCmd(as, arock)
 		       &destServ, destPartition, fromDate, newExt, oldFlag,
 		       /*parentDump */ 0, /*dumpLevel */ 0,
 		       bc_Restorer, ports, portCount,
-		       /*dumpSched */ 0, /*append */ 0, dontExecute);
+		       /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1564,11 +1564,11 @@ bc_VolsetRestoreCmd(as, arock)
 
     /* Perform the call to start the restore */
     code = bc_StartDmpRst(bc_globalConfig, "disk", "restore", volsToRestore,
-			  /*destserver */ 0, /*destpartition */ 0, fromDate,
+			  /*destserver */ NULL, /*destpartition */ 0, fromDate,
 			  newExt, oldFlag,
 			  /*parentDump */ 0, /*dumpLevel */ 0,
 			  bc_Restorer, ports, portCount,
-			  /*dumpSched */ 0, /*append */ 0, dontExecute);
+			  /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	com_err(whoami, code, "; Failed to queue restore");
 
@@ -1962,9 +1962,9 @@ bc_DumpCmd(as, arock)
 	return (0);
 
     code = bc_StartDmpRst(bc_globalConfig, dumpPath, vsName, volsToDump,
-			  /*destServer */ 0, /*destPartition */ 0,
+			  /*destServer */ NULL, /*destPartition */ 0,
 			  /*fromDate */ 0,
-			  /*newExt */ 0, /*oldFlag */ 0,
+			  /*newExt */ NULL, /*oldFlag */ 0,
 			  parent, level, bc_Dumper, portp, /*portCount */ 1,
 			  baseds, doAppend, dontExecute);
     if (code)

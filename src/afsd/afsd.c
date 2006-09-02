@@ -58,7 +58,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.17 2006/03/23 15:40:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.18 2006/08/21 20:39:40 shadow Exp $");
 
 #define VFS 1
 
@@ -1666,12 +1666,19 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	    if (afsd_verbose)
 		printf("%s: cacheFiles autotuned to %d\n", rn, cacheFiles);
 	}
+#if 0
+       /* This actually needs to
+          1) use powers of 2
+          2) not second-guess when a chunksize comes from the command line
+          3) be less, um, small. 2^2?? 
+       */
 	/* Sanity check chunkSize */
 	i = max(cacheBlocks / 1000, cacheBlocks / cacheFiles);
 	chunkSize = min(chunkSize, i);
 	chunkSize = max(chunkSize, 2);
 	if (afsd_verbose)
 	    printf("%s: chunkSize autotuned to %d\n", rn, chunkSize);
+#endif
 
 	if (!sawDCacheSize) {
 	    dCacheSize = cacheFiles / 2;

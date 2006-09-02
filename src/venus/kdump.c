@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.5 2005/07/11 19:30:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.6 2006/08/02 19:07:05 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -288,7 +288,7 @@ typedef struct timeval {
     int tv_usec;
 } timeval_t;			/* Needed here since KERNEL defined. */
 #endif /*AFS_ALPHA_LINUX20_ENV */
-#if defined(AFSBIG_ENDIAN)
+#if defined(WORDS_BIGENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
 #else
 #define _LINUX_BYTEORDER_LITTLE_ENDIAN_H

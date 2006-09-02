@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/package/lex.l,v 1.4 2003/03/10 01:59:40 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/package/Attic/lex.l,v 1.4 2003/03/10 01:59:40 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

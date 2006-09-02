@@ -65,7 +65,7 @@
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS       2	/* Set to Userdisabled, allow sysctl to override */
+#define AFS_GCPAGS       1
 
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */

@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vnodeops.c,v 1.18.2.1 2005/01/31 04:18:25 shadow Exp $
+ * $Id: osi_vnodeops.c,v 1.18.2.2 2006/06/23 14:21:12 rees Exp $
  */
 
 /*
@@ -99,7 +99,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.18.2.1 2005/01/31 04:18:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.18.2.2 2006/06/23 14:21:12 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -933,7 +933,7 @@ afs_nbsd_lock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_lock: null vcache");
-    return lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
 		   ap->a_p);
 }
 
@@ -950,7 +950,7 @@ afs_nbsd_unlock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_unlock: null vcache");
-    return lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
 		   ap->a_p);
 }
 

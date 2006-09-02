@@ -24,7 +24,6 @@
 /* #include <sys/unix_defs.h> */
 
 #define getpid()		curproc
-extern struct simplelock afs_rxglobal_lock;
 
 /* 
  * Time related macros

@@ -81,6 +81,10 @@
 	multi_Finalize_Ignore;
 	add_to_error_table;
 	xdr_afsUUID;
+	xdr_afs_int32;
+	xdr_afs_uint32;
+	xdr_afs_int64;
+	xdr_afs_uint64;
 	rx_IncrementTimeAndCount;
 	rx_enable_stats;
 	rx_GetServerDebug;

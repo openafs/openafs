@@ -26,6 +26,8 @@
 #define getpid() current->pid
 #ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
 #define getppid() current->real_parent->pid
+#elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
+#define getppid() current->parent->pid
 #else
 #define getppid() current->p_opptr->pid
 #endif

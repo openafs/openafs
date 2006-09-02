@@ -103,8 +103,17 @@ $(OUT)\vlserver.res: AFS_component_version_number.h
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
 
-vldbint.ss.c vldbint.cs.c vldbint.xdr.c vldbint.h: vldbint.xg
-	$(RXGEN) -x $**
+vldbint.cs.c: vldbint.xg vldbint.h
+	$(RXGEN) -u -x -C -o $@ vldbint.xg
+
+vldbint.ss.c: vldbint.xg vldbint.h
+	$(RXGEN) -x -S -o $@ vldbint.xg
+
+vldbint.xdr.c: vldbint.xg vldbint.h
+	$(RXGEN) -x -c -o $@ vldbint.xg
+
+vldbint.h: vldbint.xg
+	$(RXGEN) -u -x -h -o $@ vldbint.xg
 	$(COPY) vldbint.h $(DESTDIR)\include\afs\vldbint.h
 
 ############################################################################
@@ -154,7 +163,7 @@ install_headers: $(INCFILES)
 # clean up
 
 clean::
-	$(DEL) vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h$$ 
+	$(DEL) vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h
 	$(DEL) vlserver.h vl_errors.c $(INCFILES)
 
 mkdir:

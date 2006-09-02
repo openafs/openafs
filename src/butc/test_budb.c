@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/test_budb.c,v 1.5 2003/07/15 23:14:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/test_budb.c,v 1.5.2.1 2006/07/31 17:07:50 shadow Exp $");
 
 #include <afs/auth.h>
 #include <afs/budb_client.h>
@@ -55,7 +55,7 @@ connect_buserver()
     }
 
     /* Get the versin */
-    code = ubik_Call(BUDB_T_GetVersion, udbHandle.uh_client, 0, &version);
+    code = ubik_BUDB_T_GetVersion(udbHandle.uh_client, 0, &version);
     if (code) {
 	printf("Error in ubik_Call to BUDB_T_GetVersion\n");
 	ERROR(code);
@@ -73,7 +73,7 @@ verifyDb()
     afs_int32 status, orphans, host;
 
     code =
-	ubik_Call(BUDB_DbVerify, udbHandle.uh_client, 0, &status, &orphans,
+	ubik_BUDB_DbVerify(udbHandle.uh_client, 0, &status, &orphans,
 		  &host);
     if (code) {
 	printf("Error in ubik_Call to BUDB_DbVerify\n");

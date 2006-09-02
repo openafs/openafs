@@ -56,7 +56,7 @@ extern char *prefix;
 extern int nincludes;
 extern char *OutFileFlag;
 extern char OutFile[];
-extern char Sflag, Cflag, hflag, cflag, kflag;
+extern char Sflag, Cflag, hflag, cflag, kflag, uflag;
 extern char zflag;
 extern char xflag;
 extern char yflag;

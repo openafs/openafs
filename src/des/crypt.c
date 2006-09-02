@@ -38,7 +38,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/crypt.c,v 1.13.2.1 2004/08/25 07:03:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/crypt.c,v 1.13.2.2 2006/07/25 14:46:18 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -963,6 +963,7 @@ setkey(key)
 }
 #endif
 
+#if 0
 /*
  * "encrypt" routine (for backwards compatibility)
  */
@@ -993,6 +994,7 @@ encrypt(block, flag)
     }
     return (0);
 }
+#endif
 
 #ifdef CRYPT_DEBUG
 STATIC

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.30 2005/11/29 07:01:50 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.35 2006/08/13 16:41:54 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -441,10 +441,6 @@ rx_InitHost(u_int host, u_int port)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
 #endif /* KERNEL && AFS_HPUX110_ENV */
-#else /* RX_ENABLE_LOCKS */
-#if defined(KERNEL) && defined(AFS_GLOBAL_SUNLOCK) && !defined(AFS_HPUX_ENV) && !defined(AFS_OBSD_ENV)
-    mutex_init(&afs_rxglobal_lock, "afs_rxglobal_lock", MUTEX_DEFAULT, NULL);
-#endif /* AFS_GLOBAL_SUNLOCK */
 #endif /* RX_ENABLE_LOCKS */
 
     rxi_nCalls = 0;
@@ -1259,9 +1255,10 @@ rxi_SetCallNumberVector(register struct rx_connection *aconn,
                          service name might be used for probing for
                          statistics) */
 struct rx_service *
-rx_NewService(u_short port, u_short serviceId, char *serviceName,
-	      struct rx_securityClass **securityObjects, int nSecurityObjects,
-	      afs_int32(*serviceProc) (struct rx_call * acall))
+rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId, 
+		  char *serviceName, struct rx_securityClass **securityObjects,
+		  int nSecurityObjects, 
+		  afs_int32(*serviceProc) (struct rx_call * acall))
 {
     osi_socket socket = OSI_NULLSOCKET;
     register struct rx_service *tservice;
@@ -1292,7 +1289,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
     for (i = 0; i < RX_MAX_SERVICES; i++) {
 	register struct rx_service *service = rx_services[i];
 	if (service) {
-	    if (port == service->servicePort) {
+	    if (port == service->servicePort && host == service->serviceHost) {
 		if (service->serviceId == serviceId) {
 		    /* The identical service has already been
 		     * installed; if the caller was intending to
@@ -1313,7 +1310,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    if (socket == OSI_NULLSOCKET) {
 		/* If we don't already have a socket (from another
 		 * service on same port) get a new one */
-		socket = rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
+		socket = rxi_GetHostUDPSocket(host, port);
 		if (socket == OSI_NULLSOCKET) {
 		    USERPRI;
 		    rxi_FreeService(tservice);
@@ -1322,6 +1319,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    }
 	    service = tservice;
 	    service->socket = socket;
+	    service->serviceHost = host;
 	    service->servicePort = port;
 	    service->serviceId = serviceId;
 	    service->serviceName = serviceName;
@@ -1343,6 +1341,14 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
     (osi_Msg "rx_NewService: cannot support > %d services\n",
      RX_MAX_SERVICES);
     return 0;
+}
+
+struct rx_service *
+rx_NewService(u_short port, u_short serviceId, char *serviceName,
+	      struct rx_securityClass **securityObjects, int nSecurityObjects,
+	      afs_int32(*serviceProc) (struct rx_call * acall))
+{
+    return rx_NewServiceHost(htonl(INADDR_ANY), port, serviceId, serviceName, securityObjects, nSecurityObjects, serviceProc);
 }
 
 /* Generic request processing loop. This routine should be called
@@ -2014,6 +2020,10 @@ rx_Finalize(void)
 #endif /* RX_ENABLE_LOCKS */
     }
     rxi_flushtrace();
+
+#ifdef AFS_NT40_ENV
+    afs_winsockCleanup();
+#endif
 
     rxinit_status = 1;
     UNLOCK_RX_INIT;
@@ -3554,6 +3564,9 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	if (serial
 	    && (tp->header.serial == serial || tp->firstSerial == serial))
 	    rxi_ComputePeerNetStats(call, tp, ap, np);
+	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
+	    newAckCount++;
+	}
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* XXX Hack. Because we have to release the global rx lock when sending
 	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
@@ -3564,9 +3577,6 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	 * set the ack bits in the packets and have rxi_Start remove the packets
 	 * when it's done transmitting.
 	 */
-	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
-	    newAckCount++;
-	}
 	if (call->flags & RX_CALL_TQ_BUSY) {
 #ifdef RX_ENABLE_LOCKS
 	    tp->flags |= RX_PKTFLAG_ACKED;
@@ -3700,10 +3710,11 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	 * be unable to accept packets of the size that prior AFS versions would
 	 * send without asking.  */
 	if (peer->maxMTU != tSize) {
+	    if (peer->maxMTU > tSize) /* possible cong., maxMTU decreased */
+		peer->congestSeq++;
 	    peer->maxMTU = tSize;
 	    peer->MTU = MIN(tSize, peer->MTU);
 	    call->MTU = MIN(call->MTU, tSize);
-	    peer->congestSeq++;
 	}
 
 	if (np->length == rx_AckDataSize(ap->nAcks) + 3 * sizeof(afs_int32)) {

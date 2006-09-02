@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/casestrcpy.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/casestrcpy.c,v 1.6.2.1 2006/07/31 17:15:48 shadow Exp $");
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -65,6 +65,28 @@ ucstring(char *d, char *s, int n)
 	    *(d - 1) = 0;	/* make sure null terminated */
     }
     return original_d;
+}
+
+int
+stolower(char *s)
+{
+  while (*s) {
+        if (isupper(*s))
+            *s = tolower(*s);
+        s++;
+    }
+    return 0;
+}
+
+int
+stoupper(char *s)
+{
+  while (*s) {
+        if (islower(*s))
+            *s = toupper(*s);
+        s++;
+    }
+    return 0;
 }
 
 /* strcompose - concatenate strings passed to it.

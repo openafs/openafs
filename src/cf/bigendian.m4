@@ -1,5 +1,5 @@
 dnl
-dnl $Id: bigendian.m4,v 1.3 2004/06/03 05:13:29 shadow Exp $
+dnl $Id: bigendian.m4,v 1.3.2.1 2006/08/02 19:07:03 shadow Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -45,7 +45,7 @@ AC_CACHE_CHECK(whether byte ordering is bigendian, openafs_cv_c_bigendian,[
   fi
 ])
 if test "$openafs_cv_c_bigendian" = "yes"; then
-  AC_DEFINE(WORDS_BIGENDIAN, 1, [define if target is big endian])dnl
+  AC_DEFINE(AUTOCONF_FOUND_BIGENDIAN, 1, [define if target is big endian])dnl
 fi
 if test "$openafs_cv_c_bigendian_compile" = "yes"; then
   AC_DEFINE(ENDIANESS_IN_SYS_PARAM_H, 1, [define if sys/param.h defines the endiness])dnl

@@ -136,9 +136,17 @@ $(OUT)\vos.res: AFS_component_version_number.h
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
 
-volint.h volint.cs.c volint.ss.c volint.xdr.c: volint.xg
-	$(RXGEN) -x $**
+volint.cs.c: volint.xg volint.h
+	$(RXGEN) -x -C -o $@ volint.xg
 
+volint.ss.c: volint.xg volint.h
+	$(RXGEN) -x -S -o $@ volint.xg
+
+volint.xdr.c: volint.xg volint.h
+	$(RXGEN) -x -c -o $@ volint.xg
+
+volint.h: volint.xg
+	$(RXGEN) -x -h -o $@ volint.xg
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET

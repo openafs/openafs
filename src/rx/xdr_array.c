@@ -31,7 +31,7 @@
 #include "rx.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9.2.2 2005/12/15 15:16:45 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9.2.3 2006/08/13 20:19:57 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -52,7 +52,9 @@ RCSID
 #define bzero(A,C) memset((A), 0, (C))
 #endif
 #else
+#ifndef AFS_DARWIN90_ENV
 #include <sys/systm.h>
+#endif
 #endif /* AFS_LINUX20_ENV */
 #else
 #include <stdio.h>

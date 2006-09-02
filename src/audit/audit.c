@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.8 2006/02/13 17:57:26 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.9 2006/07/31 18:15:34 shadow Exp $");
 
 #include <fcntl.h>
 #include <stdarg.h>
@@ -36,6 +36,16 @@ RCSID
 #include <sys/audit.h>
 #endif
 #include <afs/afsutil.h>
+
+/* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
+   Autoconf manual, memcpy is a generally portable fallback. */          
+#ifndef va_copy              
+# ifdef __va_copy
+#  define va_copy(d, s)         __va_copy((d), (s))             
+# else
+#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list)) 
+# endif
+#endif      
 
 char *bufferPtr;
 int bufferLen;
@@ -88,8 +98,9 @@ audmakebuf(char *audEvent, va_list vaList)
 	    bufferPtr += sizeof(vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = va_arg(vaList, va_list);
+	    va_copy(vaLst, vaList);
 	    audmakebuf(audEvent, vaLst);
+	    va_end(vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = (struct AFSFid *)va_arg(vaList, struct AFSFid *);
@@ -213,8 +224,9 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	    fprintf(out, "LONG %d ", vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = va_arg(vaList, va_list);
+	    va_copy(vaLst, vaList);
 	    printbuf(out, 1, "VALST", 0, vaLst);
+	    va_end(vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = va_arg(vaList, struct AFSFid *);

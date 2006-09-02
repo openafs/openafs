@@ -26,14 +26,16 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_globals.c,v 1.8.2.1 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_globals.c,v 1.8.2.2 2006/07/31 21:51:21 shadow Exp $");
 
 /* Enable data initialization when the header file is included */
 #define INIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllexport)
+#define EXT2 __declspec(dllexport)
 #else
 #define EXT
+#define EXT2 
 #endif
 
 #ifdef KERNEL

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.12 2006/01/17 17:09:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.14 2006/08/02 19:06:58 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -50,7 +50,6 @@ afs_uint32 rx_bindhost;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
-kmutex_t afs_rxglobal_lock;
 #endif
 
 #if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
@@ -2394,7 +2393,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp,
 			    (afs_int32) ((struct afs_hyper_t *)p1)->low);
 	} else if (t1 == ICL_TYPE_INT64) {
-#ifdef AFSLITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
@@ -2434,7 +2433,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp,
 			    (afs_int32) ((struct afs_hyper_t *)p2)->low);
 	} else if (t2 == ICL_TYPE_INT64) {
-#ifdef AFSLITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
@@ -2474,7 +2473,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp,
 			    (afs_int32) ((struct afs_hyper_t *)p3)->low);
 	} else if (t3 == ICL_TYPE_INT64) {
-#ifdef AFSLITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
@@ -2514,7 +2513,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp,
 			    (afs_int32) ((struct afs_hyper_t *)p4)->low);
 	} else if (t4 == ICL_TYPE_INT64) {
-#ifdef AFSLITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);

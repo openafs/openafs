@@ -213,24 +213,6 @@ sgiefs:
 vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
-tsalvaged: vol libafsrpc libafsauthent cmd util
-	set -x; \
-	if test "@DEMAND_ATTACH@" = "yes" ; then \
-		case ${SYS_NAME} in \
-		alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
-			${COMPILE_PART1} tsalvaged ${COMPILE_PART2} ;; \
-		*_darwin_[1-6][0-9]) \
-			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
-		*_darwin_*) \
-			${COMPILE_PART1} tsalvaged  ${COMPILE_PART2} ;; \
-		*) \
-			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
-		esac \
-	else \
-		echo skipping tsalvaged ; \
-	fi
-
-
 vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
@@ -349,6 +331,9 @@ aklog: comerr ptserver
 	else \
 		echo Skipping aklog for ${SYS_NAME} ; \
 	fi
+
+platform: 
+	${COMPILE_PART1} platform ${COMPILE_PART2}
 
 login: cmd comerr kauth rxkad pam sia tsm41 sgistuff aklog
 	set -x; \
@@ -583,15 +568,17 @@ jafs: libjafs
 jafsadm: libjafsadm
 
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
+	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -647,7 +634,6 @@ clean2:
 	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tvolser ${COMPILE_CLEAN}
-	-${COMPILE_PART1} tsalvaged ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsd ${COMPILE_CLEAN}
@@ -806,7 +792,6 @@ distclean: clean
 	src/tests/Makefile \
 	src/tests/run-tests \
 	src/tests/OpenAFS/Dirpath.pm \
-	src/tsalvaged/Makefile \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
 	src/tvolser/Makefile \

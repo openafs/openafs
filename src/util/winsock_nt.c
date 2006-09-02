@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/winsock_nt.c,v 1.5 2003/07/15 23:17:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/winsock_nt.c,v 1.5.2.2 2006/08/30 01:41:41 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -28,14 +28,9 @@ RCSID
 int
 afs_winsockInit(void)
 {
-    static int once = 1;
-
-    if (once) {
 	int code;
 	WSADATA data;
 	WORD sockVersion;
-
-	once = 0;
 
 	sockVersion = 2;
 	code = WSAStartup(sockVersion, &data);
@@ -44,8 +39,13 @@ afs_winsockInit(void)
 
 	if (data.wVersion != 2)
 	    return -1;
-    }
     return 0;
+}
+
+void
+afs_winsockCleanup(void)
+{
+    WSACleanup();
 }
 
 int

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.2 2004/12/07 16:37:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.3 2006/07/31 17:07:52 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -120,10 +120,10 @@ VLDB_CreateEntry(entryp)
 	code = nvlentry_to_ovlentry(entryp, &oentry);
 	if (code)
 	    return code;
-	code = ubik_Call(VL_CreateEntry, cstruct, 0, &oentry);
+	code = ubik_VL_CreateEntry(cstruct, 0, &oentry);
 	return code;
     }
-    code = ubik_Call(VL_CreateEntryN, cstruct, 0, entryp);
+    code = ubik_VL_CreateEntryN(cstruct, 0, entryp);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -145,12 +145,12 @@ VLDB_GetEntryByID(volid, voltype, entryp)
     if (newvlserver == 1) {
       tryold:
 	code =
-	    ubik_Call(VL_GetEntryByID, cstruct, 0, volid, voltype, &oentry);
+	    ubik_VL_GetEntryByID(cstruct, 0, volid, voltype, &oentry);
 	if (!code)
 	    ovlentry_to_nvlentry(&oentry, entryp);
 	return code;
     }
-    code = ubik_Call(VL_GetEntryByIDN, cstruct, 0, volid, voltype, entryp);
+    code = ubik_VL_GetEntryByIDN(cstruct, 0, volid, voltype, entryp);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -171,12 +171,12 @@ VLDB_GetEntryByName(namep, entryp)
 
     if (newvlserver == 1) {
       tryold:
-	code = ubik_Call(VL_GetEntryByNameO, cstruct, 0, namep, &oentry);
+	code = ubik_VL_GetEntryByNameO(cstruct, 0, namep, &oentry);
 	if (!code)
 	    ovlentry_to_nvlentry(&oentry, entryp);
 	return code;
     }
-    code = ubik_Call(VL_GetEntryByNameN, cstruct, 0, namep, entryp);
+    code = ubik_VL_GetEntryByNameN(cstruct, 0, namep, entryp);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -201,12 +201,12 @@ VLDB_ReplaceEntry(volid, voltype, entryp, releasetype)
 	if (code)
 	    return code;
 	code =
-	    ubik_Call(VL_ReplaceEntry, cstruct, 0, volid, voltype, &oentry,
+	    ubik_VL_ReplaceEntry(cstruct, 0, volid, voltype, &oentry,
 		      releasetype);
 	return code;
     }
     code =
-	ubik_Call(VL_ReplaceEntryN, cstruct, 0, volid, voltype, entryp,
+	ubik_VL_ReplaceEntryN(cstruct, 0, volid, voltype, entryp,
 		  releasetype);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
@@ -233,7 +233,7 @@ VLDB_ListAttributes(attrp, entriesp, blkentriesp)
       tryold:
 	memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
 	code =
-	    ubik_Call(VL_ListAttributes, cstruct, 0, attrp, entriesp,
+	    ubik_VL_ListAttributes(cstruct, 0, attrp, entriesp,
 		      &arrayEntries);
 	if (!code) {
 	    blkentriesp->nbulkentries_val =
@@ -248,7 +248,7 @@ VLDB_ListAttributes(attrp, entriesp, blkentriesp)
 	return code;
     }
     code =
-	ubik_Call(VL_ListAttributesN, cstruct, 0, attrp, entriesp,
+	ubik_VL_ListAttributesN(cstruct, 0, attrp, entriesp,
 		  blkentriesp);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
@@ -273,7 +273,7 @@ VLDB_ListAttributesN2(attrp, name, thisindex, nentriesp, blkentriesp,
     afs_int32 code;
 
     code =
-	ubik_Call(VL_ListAttributesN2, cstruct, 0, attrp, (name ? name : ""),
+	ubik_VL_ListAttributesN2(cstruct, 0, attrp, (name ? name : ""),
 		  thisindex, nentriesp, blkentriesp, nextindexp);
     return code;
 }
@@ -342,7 +342,7 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
     memset(&addrs, 0, sizeof(addrs));
     memset(&uuid, 0, sizeof(uuid));
     code =
-	ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid, &unique, &nentries,
+	ubik_VL_GetAddrsU(cstruct, 0, &attrs, &uuid, &unique, &nentries,
 		  &addrs);
     if (vlserverv4 == -1) {
 	if (code == RXGEN_OPCODE) {
@@ -375,35 +375,6 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
     }
     return code;
 }
-
-
-#ifdef	notdef
-afs_int32
-subik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
-	   p11, p12, p13, p14, p15, p16)
-     register struct ubik_client *aclient;
-     int (*aproc) ();
-     afs_int32 aflags;
-     afs_int32 p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14,
-	 p15, p16;
-{
-    struct vldbentry vldbentry;
-    register int code, (*nproc) ();
-
-    if (newvlserver == 1) {
-    }
-    code =
-	ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9,
-		  p10, p11, p12, p13, p14, p15, p16);
-    if (!newvlserver) {
-	if (code == RXGEN_OPCODE) {
-	    newvlserver = 1;	/* Doesn't support new interface */
-	} else if (!code) {
-	    newvlserver = 2;
-	}
-    }
-}
-#endif /* notdef */
 
 
 /*

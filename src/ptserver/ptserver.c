@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -112,7 +113,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.4 2006/02/22 04:09:30 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.7 2006/06/20 20:35:01 jaltman Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -167,6 +168,10 @@ char *pr_realmName;
 
 int restricted = 0;
 int rxMaxMTU = -1;
+int rxBind = 0;
+
+#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
+afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 static struct afsconf_cell info;
 
@@ -222,6 +227,7 @@ main(int argc, char **argv)
     int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
+    afs_uint32 host = htonl(INADDR_ANY);
 
     const char *pr_dbaseName;
     char *whoami = "ptserver";
@@ -305,6 +311,9 @@ main(int argc, char **argv)
 	else if (strncmp(arg, "-restricted", alen) == 0) {
 	    restricted = 1;
 	}
+	else if (strncmp(arg, "-rxbind", alen) == 0) {
+	    rxBind = 1;
+	}
 	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
@@ -374,16 +383,16 @@ main(int argc, char **argv)
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
-		   "[-restricted] [-rxmaxmtu <bytes>]"
+		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
-		   "[-p <number of processes>] [-rebuild] "
+		   "[-p <number of processes>] [-rebuild] [-rxbind] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>]"
+		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-groupdepth <depth>] " "[-help]\n");
 #endif
 #else
@@ -394,13 +403,13 @@ main(int argc, char **argv)
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>]"
+		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
 		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>]"
+		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
 #endif
 #endif
@@ -493,6 +502,28 @@ main(int argc, char **argv)
      * and the header are in separate Ubik buffers then 120 buffers may be
      * required. */
     ubik_nBuffers = 120 + /*fudge */ 40;
+
+    if (rxBind) {
+	afs_int32 ccode;
+#ifndef AFS_NT40_ENV
+	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+	    AFSDIR_SERVER_NETINFO_FILEPATH) {
+	    char reason[1024];
+	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+					   ADDRSPERSITE, reason,
+					   AFSDIR_SERVER_NETINFO_FILEPATH,
+					   AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	} else 
+#endif
+	{
+	    ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+	}
+	if (ccode == 1) {
+	    host = SHostAddrs[0];
+	    rx_InitHost(host, htons(AFSCONF_PROTPORT));
+	}
+    }
+
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
 			      pr_dbaseName, &dbase);
@@ -519,7 +550,7 @@ main(int argc, char **argv)
     }
 
     tservice =
-	rx_NewService(0, PRSRV, "Protection Server", sc, 3,
+	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", sc, 3,
 		      PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");
@@ -529,7 +560,7 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, lwps);
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
 		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");

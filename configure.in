@@ -1,5 +1,5 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.4.1)
+AM_INIT_AUTOMAKE(openafs,1.4.2fc2)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 AC_PROG_CC
@@ -53,8 +53,8 @@ src/kauth/Makefile \
 src/kauth/test/Makefile \
 src/libacl/Makefile \
 src/libacl/test/Makefile \
-src/libadmin/adminutil/Makefile \
 src/libadmin/Makefile \
+src/libadmin/adminutil/Makefile \
 src/libadmin/bos/Makefile \
 src/libadmin/cfg/Makefile \
 src/libadmin/cfg/test/Makefile \
@@ -82,6 +82,8 @@ src/package/Makefile \
 src/pam/Makefile \
 src/pinstall/Makefile \
 src/pinstall/test/Makefile \
+src/platform/Makefile \
+src/platform/${MKAFS_OSTYPE}/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
@@ -111,8 +113,8 @@ src/tviced/Makefile \
 src/tvolser/Makefile \
 src/ubik/Makefile \
 src/update/Makefile \
-src/usd/test/Makefile \
 src/usd/Makefile \
+src/usd/test/Makefile \
 src/uss/Makefile \
 src/util/Makefile \
 src/util/test/Makefile \

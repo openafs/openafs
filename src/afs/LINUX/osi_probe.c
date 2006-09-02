@@ -231,7 +231,9 @@ extern SYSCALLTYPE sys_call_table_emu[] __attribute__((weak));
 
 extern asmlinkage ssize_t sys_read(unsigned int fd, char __user * buf, size_t count) __attribute__((weak));
 extern asmlinkage long sys_close(unsigned int) __attribute__((weak));
+#if defined(EXPORTED_SYS_CHDIR)
 extern asmlinkage long sys_chdir(const char *) __attribute__((weak));
+#endif
 extern asmlinkage ssize_t sys_write(unsigned int, const char *, size_t) __attribute__((weak));
 #ifdef AFS_LINUX26_ENV
 extern asmlinkage long sys_wait4(pid_t, int *, int, struct rusage *) __attribute__((weak));
@@ -239,7 +241,9 @@ extern asmlinkage long sys_wait4(pid_t, int *, int, struct rusage *) __attribute
 extern asmlinkage long sys_wait4(pid_t, unsigned int *, int, struct rusage *) __attribute__((weak));
 #endif
 extern asmlinkage long sys_exit (int) __attribute__((weak));
+#if defined(EXPORTED_SYS_OPEN)
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
+#endif
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
 
 
@@ -300,14 +304,20 @@ typedef struct {
 /* On PPC64 and SPARC64, we need to omit the ones that might match both tables */
 static tryctl main_try[] = {
 #if !defined(AFS_PPC64_LINUX20_ENV) && !defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(EXPORTED_SYS_CHDIR)
     { "scan: close+chdir+write", __NR_close, &sys_close, __NR_chdir, &sys_chdir, __NR_write, &sys_write },
+#endif
 #endif
     { "scan: close+wait4",       __NR_close, &sys_close, __NR_wait4, &sys_wait4, -1,         0          },
 #if !defined(AFS_PPC64_LINUX20_ENV) && !defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(EXPORTED_SYS_CHDIR)
     { "scan: close+chdir",       __NR_close, &sys_close, __NR_chdir, &sys_chdir, -1,         0          },
 #endif
+#endif
     { "scan: close+ioctl",       __NR_close, &sys_close, __NR_ioctl, &sys_ioctl, -1,         0          },
+#if defined(EXPORTED_SYS_OPEN)
     { "scan: exit+open",         __NR_exit,  &sys_exit,  __NR_open,  &sys_open,  -1,         0          },
+#endif
     { 0 }
 };
 
@@ -590,8 +600,10 @@ static probectl main_probe = {
 
 /* syscall pairs/triplets to probe */
 static tryctl ia32_try[] = {
+#if defined(EXPORTED_SYS_CHDIR)
     { "scan: close+chdir+write", __NR_ia32_close, &sys_close, __NR_ia32_chdir, &sys_chdir,        __NR_ia32_write, &sys_write },
     { "scan: close+chdir",       __NR_ia32_close, &sys_close, __NR_ia32_chdir, &sys_chdir,        -1,              0          },
+#endif
     { 0 }
 };
 
@@ -643,7 +655,7 @@ static probectl ia32_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
 
@@ -782,7 +794,7 @@ static probectl sct32_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
     /* number and list of unimplemented system calls */
@@ -877,7 +889,7 @@ static probectl emu_probe = {
     0x3ffff,
     0x30000,
 #else
-    0, 0, 0, 0
+    0, 0, 0, 0,
 #endif
 
     /* number and list of unimplemented system calls */

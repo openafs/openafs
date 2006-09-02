@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.4 2005/11/01 16:45:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.6 2006/07/31 15:18:51 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -693,16 +693,24 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 		FDH_REALLYCLOSE(fdP);
 		return -1;
 	    }
+	} else {
+	    IHandle_t *th;
+	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
+	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %lld\n",
+		th->ih_dev, th->ih_vid, (int64_t) th->ih_ino);
+	    IH_RELEASE(th);
+	  
+	    /* If we're less than 0, someone presumably unlinked;
+	       don't bother setting count to 0, but we need to drop a lock */
+	    if (namei_SetLinkCount(fdP, ino, 0, 1) < 0) {
+		FDH_REALLYCLOSE(fdP);
+		return -1;
+	    }
 	}
 	if (count == 0) {
 	    IHandle_t *th;
 	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
-#if 0
-	    /* This triggers in the fileserver on the volume index vnodes */
-	    if (th->ih_refcnt > 1)
-		Log("Warning: Leaked ref on ihandle dev %d vid %d ino %lld\n",
-		    th->ih_dev, th->ih_vid, (int64_t) th->ih_ino);
-#endif
+
 	    namei_HandleToName(&name, th);
 	    IH_RELEASE(th);
 	    code = unlink(name.n_path);
@@ -1460,7 +1468,7 @@ convertVolumeInfo(fdr, fdw, vid)
 				 * the old RW volume around */
     p = strrchr(vd.name, '.');
     if (p && !strcmp(p, ".readonly")) {
-	bzero(p, 8);
+	memset(p, 0, 9);
     }
     if (write(fdw, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
@@ -1574,7 +1582,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
      * proceed.
      */
 
-    bzero(&t_ih, sizeof(t_ih));
+    memset(&t_ih, 0, sizeof(t_ih));
     t_ih.ih_dev = h->ih_dev;
     t_ih.ih_vid = h->ih_vid;
 

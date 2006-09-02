@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.3 2005/07/11 19:29:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.4 2006/07/01 05:04:12 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -54,9 +54,8 @@ extern struct deviceSyncNode *deviceLatch;
 /* PrintDumpLabel
  *	print out the tape (dump) label.
  */
-
-PrintDumpLabel(labelptr)
-     struct butm_tapeLabel *labelptr;
+void
+PrintDumpLabel(struct butm_tapeLabel *labelptr)
 {
     char tapeName[BU_MAXTAPELEN + 32];
     time_t t;
@@ -87,9 +86,8 @@ PrintDumpLabel(labelptr)
 /* PrintVolumeHeader
  *	print the contents of a volume header. 
  */
-static
-PrintVolumeHeader(volHeader)
-     struct volumeHeader *volHeader;
+static void
+PrintVolumeHeader(struct volumeHeader *volHeader)
 {
     time_t t;
 
@@ -115,8 +113,7 @@ PrintVolumeHeader(volHeader)
  */
 
 afs_int32
-Ask(st)
-     char *st;
+Ask(char *st)
 {
     int response;
 
@@ -152,14 +149,8 @@ Ask(st)
  */
 #define BIGCHUNK 102400
 
-static
-scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer,
-	    bytesRead)
-     afs_int32 taskId;
-     struct butm_tapeInfo *curTapePtr;
-     afs_int32 tapeVersion;
-     struct volumeHeader *volumeHeader, *volumeTrailer;
-     afs_uint32 *bytesRead;
+static int
+scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr, afs_int32 tapeVersion, struct volumeHeader *volumeHeader, struct volumeHeader *volumeTrailer, afs_uint32 *bytesRead)
 {
     afs_int32 headBytes, tailBytes;
     char *block = NULL;
@@ -290,8 +281,7 @@ scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer,
  */
 
 char *
-nextTapeLabel(prevTapeName)
-     char *prevTapeName;
+nextTapeLabel(char *prevTapeName)
 {
     char *prevdot;
     char *retval;
@@ -331,11 +321,8 @@ nextTapeLabel(prevTapeName)
 
 afs_int32 RcreateDump();
 
-static
-readDump(taskId, tapeInfoPtr, scanInfoPtr)
-     afs_uint32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct tapeScanInfo *scanInfoPtr;
+static int
+readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanInfo *scanInfoPtr)
 {
     int moreTapes = 1;
     afs_int32 nbytes, flags, seq;
@@ -577,10 +564,8 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
  * try to read that dump too.
  * The first tape label is the first dumpLabel.
  */
-readDumps(taskId, tapeInfoPtr, scanInfoPtr)
-     afs_uint32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct tapeScanInfo *scanInfoPtr;
+int
+readDumps(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanInfo *scanInfoPtr)
 {
     afs_int32 code, c;
 
@@ -611,13 +596,7 @@ readDumps(taskId, tapeInfoPtr, scanInfoPtr)
 }
 
 afs_int32
-getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     char *tname;
-     afs_int32 tapeId;
-     int prompt;
-     struct butm_tapeLabel *tapeLabelPtr;
+getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname, afs_int32 tapeId, int prompt, struct butm_tapeLabel *tapeLabelPtr)
 {
     afs_int32 code = 0;
     int tapecount = 1;
@@ -710,8 +689,8 @@ getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
  *	
  */
 
-ScanDumps(ptr)
-     struct scanTapeIf *ptr;
+int
+ScanDumps(struct scanTapeIf *ptr)
 {
     struct butm_tapeInfo curTapeInfo;
     struct tapeScanInfo tapeScanInfo;
@@ -778,9 +757,8 @@ ScanDumps(ptr)
  *	0 - not ok
  *	1 - ok
  */
-validatePath(labelptr, pathptr)
-     struct butm_tapeLabel *labelptr;
-     char *pathptr;
+int
+validatePath(struct butm_tapeLabel *labelptr, char *pathptr)
 {
     char *up, *tp;
     char tapeName[BU_MAXTAPELEN];
@@ -828,8 +806,7 @@ validatePath(labelptr, pathptr)
  */
 
 char *
-volumesetNamePtr(ptr)
-     char *ptr;
+volumesetNamePtr(char *ptr)
 {
     static char vsname[BU_MAXUNAMELEN];
     char *dotPtr;
@@ -850,8 +827,7 @@ volumesetNamePtr(ptr)
 }
 
 char *
-extractDumpName(ptr)
-     char *ptr;
+extractDumpName(char *ptr)
 {
     static char dname[BU_MAXTAPELEN];
     char *dotPtr;
@@ -882,8 +858,8 @@ extractDumpName(ptr)
  *	-1 - error, couldn't extract sequence number
  */
 
-extractTapeSeq(tapename)
-     char *tapename;
+int
+extractTapeSeq(char *tapename)
 {
     char *sptr;
 
@@ -899,8 +875,7 @@ extractTapeSeq(tapename)
  *   a database tape or not.
  */
 int
-databaseTape(tapeName)
-     char *tapeName;
+databaseTape(char *tapeName)
 {
     char *sptr;
     int c;
@@ -917,9 +892,7 @@ databaseTape(tapeName)
 }
 
 afs_int32
-RcreateDump(tapeScanInfoPtr, volHeaderPtr)
-     struct tapeScanInfo *tapeScanInfoPtr;
-     struct volumeHeader *volHeaderPtr;
+RcreateDump(struct tapeScanInfo *tapeScanInfoPtr, struct volumeHeader *volHeaderPtr)
 {
     afs_int32 code;
     struct butm_tapeLabel *dumpLabelPtr = &tapeScanInfoPtr->dumpLabel;

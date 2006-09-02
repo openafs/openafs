@@ -43,6 +43,7 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 
 #ifndef AFS_DARWIN80_ENV
 #define ifnet_mtu(x) (x)->if_mtu
+#define ifnet_flags(x) (x?(x)->if_flags:0)
 #define AFS_IFNET_T struct ifnet *
 #else
 #define AFS_IFNET_T ifnet_t
