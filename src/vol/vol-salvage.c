@@ -227,7 +227,7 @@ static char *TimeStamp(time_t clock, int precision);
 
 
 int debug;			/* -d flag */
-int Testing = 0;		/* -n flag */
+extern int Testing;		/* -n flag */
 int ListInodeOption;		/* -i flag */
 int ShowRootFiles;		/* -r flag */
 int RebuildDirs;		/* -sal flag */
@@ -1971,7 +1971,19 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 	if (Testing) {
 	    IH_INIT(VGLinkH, fileSysDevice, -1, -1);
 	} else {
+            int i, j;
+            struct ViceInodeInfo *ip;
 	    CreateLinkTable(isp, ino);
+	    fdP = IH_OPEN(VGLinkH);
+            /* Sync fake 1 link counts to the link table, now that it exists */
+            if (fdP) {
+            	namei_SetNonZLC(fdP, ino);
+            	for (i = 0; i < nVols; i++) {
+            		ip = allInodes + isp[i].index;
+                	for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++)
+            			namei_SetNonZLC(fdP, ip[j].inodeNumber);
+            	}
+	    }
 	}
     }
     if (fdP)

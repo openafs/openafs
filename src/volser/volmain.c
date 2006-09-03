@@ -95,7 +95,6 @@ int DoLogging = 0;
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
-int Testing = 0;		/* for ListViceInodes */
 int rxBind = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
