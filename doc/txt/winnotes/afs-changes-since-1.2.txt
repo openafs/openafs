@@ -1,3 +1,24 @@
+Since 1.5.7:
+
+ * Return Invalid Parameter error for unknown InfoLevels in 
+   SMB Tran2 Search Directory.
+
+ * Correctly use WSAStartup and WSACleanup within the RX library
+
+ * Check that afsd_service.exe is running before performing
+   a pioctl call.
+
+ * Force AFS Shell Extension to load resource DLL using 
+   afs_shl_ext.dll as a base name.
+
+ * (Wix) install afs_shl_ext_XXXX.dll and afs_creds_XXXX.dll in 
+   OpenAFS\Client\Program
+
+ * Fix SMB_SET_FILE_END_OF_FILE_LENGTH
+
+ * Do not panic if the maximum number of volume entries are in use
+   and one of them can be recycled.
+
 Since 1.5.6:
 
  * Fix the code that reads the backconnnectionhostnames value

@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.5.3 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.8 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -148,6 +148,7 @@ List of unfunded projects:
         WriteBulk       
         WriteBulkData
         Tran2::SessionSetup
+	Tran2::Directory Search InfoLevel 0x105 / 0x106
   19. StoreBehind mode is not implemented.  Or more correctly, all data is
       written directly to the server and is not cached.  Writes invalidate
       the local cache entries which are then read back from the server.
