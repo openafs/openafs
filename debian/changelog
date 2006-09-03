@@ -1,11 +1,11 @@
-openafs (1.4.2~fc1-1) unstable; urgency=low
+openafs (1.4.2~fc2-1) unstable; urgency=low
 
   * New upstream release candidate.
     - Supports new Linux kernel versions.  (Closes: #383028)
   * Translation updates:
     - German, thanks Henrik Kroeger.  (Closes: #384803)
 
- -- Russ Allbery <rra@debian.org>  Fri,  1 Sep 2006 23:56:55 -0700
+ -- Russ Allbery <rra@debian.org>  Sun,  3 Sep 2006 12:42:59 -0700
 
 openafs (1.4.1-4) unstable; urgency=low
 
