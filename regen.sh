@@ -1,3 +1,4 @@
+#!/bin/sh
 echo "Updating configuration..."
 echo "Running aclocal"
 aclocal -I src/cf
@@ -10,6 +11,9 @@ echo "Running autoheader"
 autoheader
 #echo "Running automake"
 #automake
+
+echo "Deleting autom4te.cache directory"
+rm -r autom4te.cache
 
 # Rebuild the man pages, to not require those building from source to have
 # pod2man available.
