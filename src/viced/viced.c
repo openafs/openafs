@@ -155,8 +155,6 @@ struct afsconf_dir *confDir;	/* Configuration dir object */
 
 int restartMode = RESTART_ORDINARY;
 
-int Testing = 0;		/* for ListViceInodes */
-
 /*
  * Home for the performance statistics.
  */
