@@ -135,7 +135,7 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 
 #define	ROOTINODE	2
 static char *partition;
-extern int Testing;
+int Testing=0;
 int pfd;
 
 #ifdef	AFS_AIX32_ENV
