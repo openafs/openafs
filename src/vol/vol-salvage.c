@@ -1458,11 +1458,20 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 	    fdP = IH_OPEN(VGLinkH);
             /* Sync fake 1 link counts to the link table, now that it exists */
             if (fdP) {
+#ifdef AFS_NT40_ENV
+            	nt_SetNonZLC(fdP, ino);
+#else
             	namei_SetNonZLC(fdP, ino);
+#endif
             	for (i = 0; i < nVols; i++) {
             		ip = allInodes + isp[i].index;
-                	for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++)
-            			namei_SetNonZLC(fdP, ip[j].inodeNumber);
+		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
+#ifdef AFS_NT40_ENV
+			         nt_SetNonZLC(fdP, ip[j].inodeNumber);
+#else
+			         namei_SetNonZLC(fdP, ip[j].inodeNumber);
+#endif
+		    }
             	}
 	    }
 	}
