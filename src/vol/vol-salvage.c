@@ -1849,7 +1849,7 @@ CreateLinkTable(register struct InodeSummary *isp, Inode ino)
 	Abort("Can't open link table for volume %u (error = %d)\n",
 	      isp->RWvolumeId, errno);
 
-    if (FDH_TRUNC(fdP, 0) < 0)
+    if (FDH_TRUNC(fdP, sizeof(version) + sizeof(short)) < 0)
 	Abort("Can't truncate link table for volume %u (error = %d)\n",
 	      isp->RWvolumeId, errno);
 
@@ -1977,19 +1977,10 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 	    fdP = IH_OPEN(VGLinkH);
             /* Sync fake 1 link counts to the link table, now that it exists */
             if (fdP) {
-#ifdef AFS_NT40_ENV
-            	nt_SetNonZLC(fdP, ino);
-#else
-            	namei_SetNonZLC(fdP, ino);
-#endif
             	for (i = 0; i < nVols; i++) {
             		ip = allInodes + isp[i].index;
 		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
-#ifdef AFS_NT40_ENV
-			         nt_SetNonZLC(fdP, ip[j].inodeNumber);
-#else
-			         namei_SetNonZLC(fdP, ip[j].inodeNumber);
-#endif
+				 namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
 		    }
             	}
 	    }

@@ -42,7 +42,7 @@ afs_sfsize_t namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf,
 extern int namei_dec(IHandle_t * h, Inode ino, int p1);
 extern int namei_inc(IHandle_t * h, Inode ino, int p1);
 extern int namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit);
-extern void namei_SetNonZLC(FdHandle_t * h, Inode ino);
+extern int namei_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked);
 extern int namei_ViceREADME(char *partition);
 #include "nfs.h"
 #include "viceinode.h"
