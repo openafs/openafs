@@ -41,6 +41,8 @@ RCSID
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL
 
+int Testing = 0;
+
 static void AddToZLCDeleteList(char dir, char *name);
 
 /* nt_unlink - unlink a case sensitive name.
@@ -837,12 +839,16 @@ nt_GetLCOffsetAndIndexFromIno(Inode ino, int *offset, int *index)
  * If lockit is set, lock the file and leave it locked upon a successful
  * return.
  */
-int
-nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
+static int
+nt_GetLinkCountInternal(FdHandle_t * h, Inode ino, int lockit, int fixup)
 {
     unsigned short row = 0;
-    int junk;
+    DWORD bytesRead, bytesWritten;
     int offset, index;
+
+    /* there's no linktable yet. the salvager will create one later */
+    if (h->fd_fd == INVALID_HANDLE_VALUE && fixup)
+       return 1;
 
     nt_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
@@ -854,10 +860,25 @@ nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
     if (!SetFilePointer(h->fd_fd, (LONG) offset, NULL, FILE_BEGIN))
 	goto bad_getLinkByte;
 
-    if (!ReadFile(h->fd_fd, (void *)&row, 2, &junk, NULL)) {
+    if (!ReadFile(h->fd_fd, (void *)&row, 2, &bytesRead, NULL)) 
 	goto bad_getLinkByte;
+    
+    if (bytesRead == 0 && fixup) { 
+	LARGE_INTEGER size;
+
+	if (!GetFileSizeEx(h->fd_fd, &size) || size.QuadPart >= offset+sizeof(row))
+	    goto bad_getLinkByte;
+	FDH_TRUNC(h, offset+sizeof(row));
+	row = 1 << index;
+      rewrite:
+	WriteFile(h->fd_fd, (char *)&row, sizeof(row), &bytesWritten, NULL);
     }
 
+    if (fixup && !((row >> index) & NT_TAGMASK)) {
+        row |= 1<<index;
+        goto rewrite;
+    }
+ 
     return (int)((row >> index) & NT_TAGMASK);
 
   bad_getLinkByte:
@@ -866,7 +887,17 @@ nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
     return -1;
 }
 
+int
+nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
+{
+    return nt_GetLinkCountInternal(h, ino, lockit, 0);
+}
 
+void
+nt_SetNonZLC(FdHandle_t * h, Inode ino) 
+{
+    (void)nt_GetLinkCountInternal(h, ino, 0, 1);
+}
 
 
 /* nt_SetLinkCount
@@ -878,7 +909,7 @@ nt_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked)
 {
     int offset, index;
     unsigned short row;
-    int junk;
+    DWORD bytesRead, bytesWritten;
     int code = -1;
 
     nt_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
@@ -896,16 +927,16 @@ nt_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked)
     }
 
 
-    if (!ReadFile(h->fd_fd, (void *)&row, 2, &junk, NULL)) {
+    if (!ReadFile(h->fd_fd, (void *)&row, 2, &bytesRead, NULL)) {
 	errno = nterr_nt2unix(GetLastError(), EBADF);
 	goto bad_SetLinkCount;
     }
-    if (junk == 0)
+    if (bytesRead == 0)
 	row = 0;
 
-    junk = 7 << index;
+    bytesRead = 7 << index;
     count <<= index;
-    row &= (unsigned short)~junk;
+    row &= (unsigned short)~bytesRead;
     row |= (unsigned short)count;
 
     if (!SetFilePointer(h->fd_fd, (LONG) offset, NULL, FILE_BEGIN)) {
@@ -913,7 +944,7 @@ nt_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked)
 	goto bad_SetLinkCount;
     }
 
-    if (!WriteFile(h->fd_fd, (void *)&row, 2, &junk, NULL)) {
+    if (!WriteFile(h->fd_fd, (void *)&row, 2, &bytesWritten, NULL)) {
 	errno = nterr_nt2unix(GetLastError(), EBADF);
 	goto bad_SetLinkCount;
     }
