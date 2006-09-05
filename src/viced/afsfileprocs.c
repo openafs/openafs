@@ -308,6 +308,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
     char hoststr[16], hoststr2[16];
     struct ubik_client *uclient;
 
+    *ahostp = NULL;
+
     if (!tconn) {
 	ViceLog(0, ("CallPreamble: unexpected null tconn!\n"));
 	return -1;
@@ -427,14 +429,19 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
     held = h_Held_r(thost);
     if (held)
 	h_Release_r(thost);
-    if (ahost != thost) {
+    if (ahost && ahost != thost) {
 	char hoststr[16], hoststr2[16];	
 	ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost %s:%d (%x)\n",
-		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
+		afs_inet_ntoa_r(ahost->host, hoststr), ntohs(ahost->port),
 		ahost, 
 		afs_inet_ntoa_r(thost->host, hoststr2), ntohs(thost->port),
 		thost));
 	h_Release_r(ahost);
+    } else if (!ahost) {
+	char hoststr[16];	
+	ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%x)\n",
+		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
+		thost));
     }
     H_UNLOCK;
     return (translate ? sys_error_to_et(ret) : ret);
