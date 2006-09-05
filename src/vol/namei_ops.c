@@ -151,8 +151,7 @@ typedef struct {
     int ogm_mode;
 } namei_ogm_t;
 
-int namei_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked);
-static int namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup);
+static int namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite);
 
 static int GetFreeTag(IHandle_t * ih, int vno);
 
@@ -865,13 +864,14 @@ namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
  * return.
  */
 static int
-namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup)
+namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite)
 {
     unsigned short row = 0;
     afs_foff_t offset;
     ssize_t rc;
     int index;
 
+    if (!VALID_INO(ino)) return 0;
     /* there's no linktable yet. the salvager will create one later */
     if (h->fd_fd == -1 && fixup)
        return 1;
@@ -890,13 +890,14 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup)
 	goto bad_getLinkByte;
 
     rc = read(h->fd_fd, (char *)&row, sizeof(row));
+    if ((rc == 0 || !((row >> index) & NAMEI_TAGMASK)) && fixup && nowrite)
+        return 1;
     if (rc == 0 && fixup) {
         struct stat st;
         if (fstat(h->fd_fd, &st) || st.st_size >= offset+sizeof(row))
 	   goto bad_getLinkByte;
         FDH_TRUNC(h, offset+sizeof(row));
         row = 1 << index;
-rewrite:
         rc = write(h->fd_fd, (char *)&row, sizeof(row));
     }
     if (rc != sizeof(row)) {
@@ -905,7 +906,11 @@ rewrite:
 
     if (fixup && !((row >> index) & NAMEI_TAGMASK)) {
         row |= 1<<index;
-        goto rewrite;
+        if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
+	    goto bad_getLinkByte;
+        rc = write(h->fd_fd, (char *)&row, sizeof(row));
+        if (rc != sizeof(row))
+	    goto bad_getLinkByte;
     }
  
     return (int)((row >> index) & NAMEI_TAGMASK);
@@ -923,13 +928,7 @@ rewrite:
 int
 namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit) 
 {
-    return namei_GetLinkCount2(h, ino, lockit, 0);
-}
-
-void
-namei_SetNonZLC(FdHandle_t * h, Inode ino) 
-{
-    (void)namei_GetLinkCount2(h, ino, 0, 1);
+    return namei_GetLinkCount2(h, ino, lockit, 0, 1);
 }
 
 /* Return a free column index for this vnode. */
@@ -1328,7 +1327,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 				   dp1->d_name);
 		linkHandle.fd_fd = afs_open(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 		info.linkCount =
-		    namei_GetLinkCount2(&linkHandle, (Inode) 0, 1, !Testing);
+		    namei_GetLinkCount2(&linkHandle, (Inode) 0, 1, 1, Testing);
 	    }
 	    if (judgeFun && !(*judgeFun) (&info, singleVolumeNumber, rock))
 		continue;
@@ -1380,7 +1379,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 				continue;
 			    info.linkCount =
 				namei_GetLinkCount2(&linkHandle,
-						   info.inodeNumber, 1, !Testing);
+						   info.inodeNumber, 1, 1, Testing);
 			    if (info.linkCount == 0) {
 #ifdef DELETE_ZLC
 				Log("Found 0 link count file %s/%s, deleting it.\n", path3, dp3->d_name);
