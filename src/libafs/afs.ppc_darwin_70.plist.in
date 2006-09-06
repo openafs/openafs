@@ -15,11 +15,11 @@
 	<key>CFBundlePackageType</key>
 	<string>KEXT</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.5.7</string>
+	<string>1.5.8</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.5.7</string>
+	<string>1.5.8</string>
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>com.apple.kernel.bsd</key>
