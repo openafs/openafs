@@ -1256,7 +1256,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
     long code;
     char tname[256];
     int sysNameIndex = 0;
-    cm_scache_t *scp = 0;
+    cm_scache_t *scp = NULL;
 
     if ( stricmp(namep,SMB_IOCTL_FILENAME_NOSLASH) == 0 ) {
         if (flags & CM_FLAG_CHECKPATH)
@@ -1275,7 +1275,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
             }
             if (scp) {
                 cm_ReleaseSCache(scp);
-                scp = 0;
+                scp = NULL;
             }
         } else {
             return cm_LookupInternal(dscp, namep, flags, userp, reqp, outpScpp);
@@ -1543,7 +1543,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     tscp = rootSCachep;
     cm_HoldSCache(tscp);
     symlinkCount = 0;
-    dirScp = 0;
+    dirScp = NULL;
 
     while (1) {
         tc = *tp++;
@@ -1578,34 +1578,42 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                  * is a symlink, we have more to do.
                  */
                 *cp++ = 0;	/* add null termination */
-                extraFlag = 0;
-                if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
-                    extraFlag = CM_FLAG_NOMOUNTCHASE;
-                code = cm_Lookup(tscp, component,
-                                  flags | extraFlag,
-                                  userp, reqp, &nscp);
-                if (code) {
-                    cm_ReleaseSCache(tscp);
-                    if (dirScp)
-                        cm_ReleaseSCache(dirScp);
-                    if (psp) 
-                        cm_FreeSpace(psp);
-                    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK)
-                        return CM_ERROR_NOSUCHPATH;
-                    else
-                        return code;
-                }
-                haveComponent = 0;	/* component done */
-                if (dirScp)
-                    cm_ReleaseSCache(dirScp);
-                dirScp = tscp;		/* for some symlinks */
-                tscp = nscp;	        /* already held */
-                nscp = 0;
-                if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
+		if (!strcmp(".",component)) {
                     code = 0;
                     if (dirScp) {
                         cm_ReleaseSCache(dirScp);
-                        dirScp = 0;
+                        dirScp = NULL;
+                    }
+                    break;
+		}
+		extraFlag = 0;
+		if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
+		    extraFlag = CM_FLAG_NOMOUNTCHASE;
+		code = cm_Lookup(tscp, component,
+				  flags | extraFlag,
+				  userp, reqp, &nscp);
+		if (code) {
+		    cm_ReleaseSCache(tscp);
+		    if (dirScp)
+			cm_ReleaseSCache(dirScp);
+		    if (psp) 
+			cm_FreeSpace(psp);
+		    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK)
+			return CM_ERROR_NOSUCHPATH;
+		    else
+			return code;
+		}	
+		haveComponent = 0;	/* component done */
+		if (dirScp)
+		    cm_ReleaseSCache(dirScp);
+		dirScp = tscp;		/* for some symlinks */
+		tscp = nscp;	        /* already held */
+		nscp = NULL;
+		if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
+                    code = 0;
+                    if (dirScp) {
+                        cm_ReleaseSCache(dirScp);
+                        dirScp = NULL;
                     }
                     break;
                 }
@@ -1620,10 +1628,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                 if (code) {
                     lock_ReleaseMutex(&tscp->mx);
                     cm_ReleaseSCache(tscp);
-                    tscp = 0;
+                    tscp = NULL;
                     if (dirScp) {
                         cm_ReleaseSCache(dirScp);
-                        dirScp = 0;
+                        dirScp = NULL;
                     }
                     break;
                 }
@@ -1632,10 +1640,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     lock_ReleaseMutex(&tscp->mx);
                     if (symlinkCount++ >= MAX_SYMLINK_COUNT) {
                         cm_ReleaseSCache(tscp);
-                        tscp = 0;
+                        tscp = NULL;
                         if (dirScp) {
                             cm_ReleaseSCache(dirScp);
-                            dirScp = 0;
+                            dirScp = NULL;
                         }
                         if (psp) 
                             cm_FreeSpace(psp);
@@ -1649,10 +1657,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     if (code) {
                         /* something went wrong */
                         cm_ReleaseSCache(tscp);
-                        tscp = 0;
+                        tscp = NULL;
                         if (dirScp) {
                             cm_ReleaseSCache(dirScp);
-                            dirScp = 0;
+                            dirScp = NULL;
                         }
                         break;
                     }
@@ -1671,7 +1679,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     tp = psp->data;
                     cm_ReleaseSCache(tscp);
                     tscp = linkScp;
-                    linkScp = 0;
+                    linkScp = NULL;
                     /* already held
                      * by AssembleLink
                      * now, if linkScp is null, that's
@@ -1684,7 +1692,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                      */
                     if (tscp == NULL) {
                         tscp = dirScp;
-                        dirScp = 0;
+                        dirScp = NULL;
                     }
                 } else {
                     /* not a symlink, we may be done */
@@ -1697,7 +1705,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                         }
                         if (dirScp) {
                             cm_ReleaseSCache(dirScp);
-                            dirScp = 0;
+                            dirScp = NULL;
                         }
                         code = 0;
                         break;
@@ -1705,7 +1713,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                 }
                 if (dirScp) {
                     cm_ReleaseSCache(dirScp);
-                    dirScp = 0;
+                    dirScp = NULL;
                 }
             } /* end of a component */
             else 
