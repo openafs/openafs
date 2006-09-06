@@ -1092,6 +1092,9 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
             return CM_ERROR_NOSUCHVOLUME;
         rock.fid = dscp->dotdotFid;
         goto haveFid;
+    } else if (strcmp(namep, ".") == 0) {
+	rock.fid = dscp->fid;
+	goto haveFid;
     }
 
     memset(&rock, 0, sizeof(rock));
