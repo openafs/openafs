@@ -62,8 +62,6 @@ static int MemDumpCmd(struct cmd_syndesc *asp, char *arock);
 static int CSCPolicyCmd(struct cmd_syndesc *asp, char *arock);
 static int MiniDumpCmd(struct cmd_syndesc *asp, char *arock);
 
-extern afs_int32 VL_GetEntryByNameO();
-
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
