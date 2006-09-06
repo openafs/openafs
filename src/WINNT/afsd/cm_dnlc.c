@@ -133,7 +133,10 @@ cm_dnlcEnter ( cm_scache_t *adp,
 
     if (!cm_useDnlc)
 	return ;
-  
+
+    if (!strcmp(aname,".") || !strcmp(aname,".."))
+	return ;
+
     if ( cm_debugDnlc ) 
 	osi_Log3(afsd_logp,"cm_dnlcEnter dir %x name %s scache %x", 
 	    adp, osi_LogSaveString(afsd_logp,aname), avc);
