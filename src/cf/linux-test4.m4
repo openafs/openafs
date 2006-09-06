@@ -614,12 +614,8 @@ AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
-#include <linux/keyctl.h>
-#include <asm/unistd.h>
-static int errno;
-static inline _syscall2(long, keyctl, int, option, void*, arg2);],
+#include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS
-keyctl(KEYCTL_JOIN_SESSION_KEYRING, NULL);
 request_key(NULL, NULL, NULL);
 #if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
 #error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"

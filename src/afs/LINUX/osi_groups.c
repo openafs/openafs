@@ -189,16 +189,60 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 }
 
 #ifdef LINUX_KEYRING_SUPPORT
-#include <asm/unistd.h>
-#include <linux/keyctl.h>
+static struct key_type *__key_type_keyring;
 
-static int errno;
-static inline _syscall2(long, keyctl, int, option, void*, arg2);
-
-static long
-__join_session_keyring(char *name)
+static int
+install_session_keyring(struct task_struct *task, struct key *keyring)
 {
-	return keyctl(KEYCTL_JOIN_SESSION_KEYRING, name);
+    struct key *old;
+    char desc[20];
+    unsigned long not_in_quota;
+    int code = -EINVAL;
+
+    if (!__key_type_keyring)
+	return code;
+
+    if (!keyring) {
+
+	/* create an empty session keyring */
+	not_in_quota = KEY_ALLOC_IN_QUOTA;
+	sprintf(desc, "_ses.%u", task->tgid);
+
+#ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
+	keyring = key_alloc(__key_type_keyring, desc,
+			    task->uid, task->gid, task,
+			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
+			    not_in_quota);
+#else
+	keyring = key_alloc(__key_type_keyring, desc,
+			    task->uid, task->gid,
+			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
+			    not_in_quota);
+#endif
+	if (IS_ERR(keyring)) {
+	    code = PTR_ERR(keyring);
+	    goto out;
+	}
+    }
+
+    code = key_instantiate_and_link(keyring, NULL, 0, NULL, NULL);
+    if (code < 0) {
+	key_put(keyring);
+	goto out;
+    }
+
+    /* install the keyring */
+    spin_lock_irq(&task->sighand->siglock);
+    old = task->signal->session_keyring;
+    smp_wmb();
+    task->signal->session_keyring = keyring;
+    spin_unlock_irq(&task->sighand->siglock);
+
+    if (old)
+	    key_put(old);
+
+out:
+    return code;
 }
 #endif /* LINUX_KEYRING_SUPPORT */
 
@@ -255,7 +299,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0) {
 
-	(void) __join_session_keyring(NULL);
+	(void) install_session_keyring(current, NULL);
 
 	if (current->signal->session_keyring) {
 	    struct key *key;
@@ -520,6 +564,12 @@ struct key_type key_type_afs_pag =
 
 void osi_keyring_init(void)
 {
+    struct task_struct *p;
+
+    p = find_task_by_pid(1);
+    if (p && p->user->session_keyring)
+	__key_type_keyring = p->user->session_keyring->type;
+
     register_key_type(&key_type_afs_pag);
 }
 
