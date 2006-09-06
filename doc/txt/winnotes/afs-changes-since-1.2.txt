@@ -1,5 +1,13 @@
 Since 1.5.7:
 
+ * better handling of dot directory
+
+ * fs sq adn fs mkm now behave as on UNIX
+
+ * add license to installers
+
+ * Return Invalid Parameter error for unknown InfoLevels in
+   SMB Tran2 Search Directory.
  * Return Invalid Parameter error for unknown InfoLevels in 
    SMB Tran2 Search Directory.
 
