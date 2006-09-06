@@ -102,7 +102,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 ;--------------------------------
 ;Modern UI Configuration
 
-  ;!define MUI_LICENSEPAGE
+  !define MUI_LICENSEPAGE
   !define MUI_CUSTOMPAGECOMMANDS
   !define MUI_WELCOMEPAGE
   !define MUI_COMPONENTSPAGE
@@ -117,6 +117,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   
   
   !insertmacro MUI_PAGE_WELCOME
+  !insertmacro MUI_PAGE_LICENSE "Licenses.rtf"
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   Page custom AFSPageGetCellServDB
@@ -125,7 +126,6 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
   
-  ;LicenseData "Licenses.rtf"
 ;--------------------------------
 ;Languages
 
