@@ -298,6 +298,8 @@
                 <ComponentRef Id="cmf_translate_et_EXE" />
                 <ComponentRef Id="cmf_rxdebug_EXE" />
                 <ComponentRef Id="cmf_backup_EXE" />
+                <ComponentRef Id="cmf_afs_shl_ext_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
                 <ComponentRef Id="rcm_BinsOnly_Parm" />
                 <?if $(env.CPU) = "i386"?>

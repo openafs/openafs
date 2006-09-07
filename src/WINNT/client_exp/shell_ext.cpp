@@ -120,9 +120,17 @@ END_DISPATCH_MAP()
 //  from VBA.  This IID must match the GUID that is attached to the 
 //  dispinterface in the .ODL file.
 
+#ifndef _WIN64
+// 32-bit
 // {DC515C27-6CAC-11D1-BAE7-00C04FD140D2}
 static const IID IID_IShellExt =
 { 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2 } };
+#else
+// 64-bit
+// {5f820ca1-3dde-11db-b2ce-001558092db5}
+static const IID IID_IShellExt =
+{ 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb5 } };
+#endif
 
 BEGIN_INTERFACE_MAP(CShellExt, CCmdTarget)
 	INTERFACE_PART(CShellExt, IID_IShellExt, Dispatch)
@@ -133,7 +141,13 @@ BEGIN_INTERFACE_MAP(CShellExt, CCmdTarget)
 	INTERFACE_PART(CShellExt, IID_IPersistFile , PersistFileExt)
 END_INTERFACE_MAP()
 
+#ifndef _WIN64
+    // 32-bit
 IMPLEMENT_OLECREATE(CShellExt, STR_EXT_TITLE, 0xdc515c27, 0x6cac, 0x11d1, 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2)
+#else
+    // 64-bit
+IMPLEMENT_OLECREATE(CShellExt, STR_EXT_TITLE, 0x5f820ca1, 0x3dde, 0x11db, 0xb2, 0xce, 0x0, 0x15, 0x58, 0x09, 0x2d, 0xb5)
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////////

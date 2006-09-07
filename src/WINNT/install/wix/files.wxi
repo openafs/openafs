@@ -836,9 +836,11 @@
 						<Shortcut Id="scAfsCredsStart" Directory="StartupFolder" Name="AFSAuth.lnk" LongName="AFS Credentials.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" Target="[#fileafscreds_EXE]"/>
 						<Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="StartupShortcutInstalled" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
                     </Component>
+  <?endif?>
+
                     <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_DLL" Guid="$(var.cmf_afs_shl_ext_DLL_guid)">
                         <File Id="fileafs_shl_ext_DLL" Name="afsshext.dll" LongName="afs_shl_ext.dll" KeyPath="yes" DiskId="1">
-                            <Class Id="DC515C27-6CAC-11D1-BAE7-00C04FD140D2" Advertise="no" Context="InprocServer32" Description="$(loc.StrShlExtDesc)" ThreadingModel="apartment">
+                            <Class Id="$(var.clsid_afs_shl_ext)" Advertise="no" Context="InprocServer32" Description="$(loc.StrShlExtDesc)" ThreadingModel="apartment">
                                 <ProgId Id="AfsClientContextMenu.1" Description="$(loc.StrShlExtDesc)">
                                     <ProgId Id="AfsClientContextMenu" />
                                 </ProgId>
@@ -848,6 +850,8 @@
                     <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
+
+  <?ifndef BinsOnly ?>
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
@@ -932,10 +936,10 @@
                         	<File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
 			<?endif?>
                         <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
+                        <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
   <?ifndef BinsOnly ?>
 			<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
                         <File Id="fileafscreds_PDB" Name="afscreds.pdb" LongName="afscreds.pdb" DiskId="1" />
-                        <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
                         <File Id="fileafsd_service_PDB" Name="afsd_svc.pdb" LongName="afsd_service.pdb" DiskId="1" />
   <?endif?>
                     </Component>
@@ -1389,15 +1393,12 @@
 
 	<!-- Shared assembly runtime for VS 2005 -->
 	<?if $(env.AFSVER_CL) = "1400"?>
-		<?if $(var.Platform) = "x64" ?>
-		    <?ifdef env.CommonProgramFiles6432?>
-		    	<?define CPF="$(env.CommonProgramFiles)"?>
-		    <?else?>
-		        <?define CPF="$(env.CommonProgramFiles(x86))"?>
-		    <?endif?>
-                <?else?>
-		    <?define CPF="$(env.CommonProgramFiles)"?>
-                <?endif?>
+		<?ifdef env.CommonProgramFiles6432?>
+		  <?define CPF="$(env.CommonProgramFiles(x86)"?>
+		<?else?>
+		  <?define CPF="$(env.CommonProgramFiles)"?>
+		<?endif?>
+
 		<?if $(var.Platform) = "x64" ?>
 			<?ifndef Debug?>
 				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86_x64.msm"/>
