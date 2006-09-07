@@ -64,7 +64,14 @@
     <Component Id="rcm_Client" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall2" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall" />
-        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_NoUninstall3" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext)}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_NoUninstall3" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client19" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client20" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client45" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client46" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client48" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client49" />
+
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Id="reg_Client2" KeyPath="yes" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client5" />
@@ -84,8 +91,6 @@
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client\Submounts" Action="createKey" Id="reg_Client53" />
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="AfscredsShortcutParams" Type="string" Value="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Id="reg_Client54" />
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="ShowTrayIcon" Type="integer" Value="1" Id="reg_Client18" />
-        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client19" />
-        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client20" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client21" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="AuthentProviderPath" Type="expandable" Value="[SystemFolder]afslogon.dll" Id="reg_Client22" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Id="reg_Client23" />
@@ -106,11 +111,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Client39" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Client42" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSClientDesc)" Id="reg_Client43" />
-        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client45" />
-        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client46" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client47" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client48" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client49" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Full_Client" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="HideDotFiles" Type="integer" Value="[HIDEDOTFILES]" Id="reg_Full_Client2" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Id="reg_Full_Client3" />
@@ -205,7 +206,7 @@
     <Component Id="rcm_Loopback" Guid="$(var.rcm_loopback_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="LoopbackInstalled" Type="integer" Value="1" Id="reg_Loopback1" KeyPath="yes" />
     </Component>
-<?else?>
+<?else?> <!-- bins only -->
     <Component Id="rcm_BinsOnly_Parm" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries" KeyPath="yes" Id="reg_Client_Bins2" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins" />
@@ -231,6 +232,15 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Client_Bins24" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Client_Bins26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Client_Bins27" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_Bins28" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_Bins29" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext)}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_Bins30" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins31" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins32" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins33" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins34" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins35" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins36" />
     </Component>
 <?endif?>
 </Include>

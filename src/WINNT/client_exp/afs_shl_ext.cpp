@@ -28,8 +28,19 @@ extern "C" {
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#ifndef _WIN64
+
+// 32-bit
 static const IID IID_IShellExt =
-{ 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2 } };
+    { 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2 } };
+
+#else
+
+// 64-bit
+static const IID IID_IShellExt =
+    { 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb5} };
+
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CAfsShlExt
@@ -155,7 +166,7 @@ STDAPI DllRegisterServer(void)
 	}
     
     /*
-    [HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32]
+    [HKEY_CLASSES_ROOT\CLSID\{$CLSID}\InprocServer32]
     @="Y:\\DEST\\root.client\\usr\\vice\\etc\\afs_shl_ext.dll"
     "ThreadingModel"="Apartment"
     */
@@ -181,10 +192,10 @@ STDAPI DllRegisterServer(void)
 	//If running on NT, register the extension as approved.
     /*
     [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
-    "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"="AFS Client Shell Extension"
+    "{$(CLSID)}"="AFS Client Shell Extension"
 
     [HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\AFS Client Shell Extension]
-    @="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+    @="{$(CLSID)}"
     */
 
     OSVERSIONINFO  osvi;
@@ -207,7 +218,7 @@ STDAPI DllRegisterServer(void)
     Register InfoTip
 
     [HKEY_CLASSES_ROOT\Folder\shellex\{00021500-0000-0000-C000-000000000046}]
-    @="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+    @="{$(CLSID)}"
     */
 
 	wsprintf(szSubKey, TEXT("Folder\\shellex\\{00021500-0000-0000-C000-000000000046}"));
