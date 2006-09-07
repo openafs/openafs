@@ -3361,9 +3361,6 @@ VCheckOffline(register Volume * vp)
 	VUpdateVolume_r(&error, vp, 0);
 	VCloseVolumeHandles_r(vp);
 
-	/* invalidate the volume header cache entry */
-	FreeVolumeHeader(vp);
-
 	if (LogLevel) {
 	    Log("VOffline: Volume %u (%s) is now offline", V_id(vp),
 		V_name(vp));
@@ -3372,12 +3369,16 @@ VCheckOffline(register Volume * vp)
 	    Log("\n");
 	}
 
+	/* invalidate the volume header cache entry */
+	FreeVolumeHeader(vp);
+
 	/* if nothing changed state to error or salvaging,
 	 * drop state to unattached */
 	if (!IsErrorState(V_attachState(vp))) {
 	    VChangeState_r(vp, VOL_STATE_UNATTACHED);
 	}
 	VCancelReservation_r(vp);
+	/* no usage of vp is safe beyond this point */
     }
     return ret;
 }
@@ -3397,7 +3398,6 @@ VCheckOffline(register Volume * vp)
 	V_inUse(vp) = 0;
 	VUpdateVolume_r(&error, vp, 0);
 	VCloseVolumeHandles_r(vp);
-	FreeVolumeHeader(vp);
 	if (LogLevel) {
 	    Log("VOffline: Volume %u (%s) is now offline", V_id(vp),
 		V_name(vp));
@@ -3405,6 +3405,7 @@ VCheckOffline(register Volume * vp)
 		Log(" (%s)", V_offlineMessage(vp));
 	    Log("\n");
 	}
+	FreeVolumeHeader(vp);
 #ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
 #else /* AFS_PTHREAD_ENV */
