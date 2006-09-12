@@ -113,7 +113,10 @@ case $system in
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
+		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/source"
+		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		     LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
+		   fi
 		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		     LINUX_KERNEL_PATH="/usr/src/linux-2.4"
 		   fi
