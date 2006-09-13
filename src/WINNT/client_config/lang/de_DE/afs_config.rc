@@ -52,9 +52,9 @@ BEGIN
     CONTROL         "&AFS-Token beim Anmelden bei Windows erhalten",
                     IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,
                     193,10
-    CONTROL         "Das Symbol für den AFS Client in der Menüleiste &anzeigen",
-                    IDC_TRAYICON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+//    CONTROL         "Das Symbol für den AFS Client in der Menüleiste &anzeigen",
+//                    IDC_TRAYICON,
+//                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
     LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Client-Service nicht aktiv ist.",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "Client-Status",IDC_STATIC,7,157,206,61
@@ -79,9 +79,9 @@ BEGIN
     CONTROL         "&AFS-Token beim Anmelden bei Windows erhalten",
                     IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,
                     193,10
-    CONTROL         "Das Symbol für den AFS Light in der Menüleiste &anzeigen",
-                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,
-                    193,10
+//    CONTROL         "Das Symbol für den AFS Light in der Menüleiste &anzeigen",
+//                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,
+//                    193,10
     LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Light mit keinem AFS-Gateway verbunden ist.",
                     IDC_WARN,13,114,219,17
 END

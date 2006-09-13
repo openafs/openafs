@@ -52,9 +52,9 @@ BEGIN
     CONTROL         "&Obtener señales de AFS al iniciar la sesión en Windows",
                     IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,
                     193,10
-    CONTROL         "&Mostrar el icono AFS Client en la barra de tareas",
-                    IDC_TRAYICON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+//    CONTROL         "&Mostrar el icono AFS Client en la barra de tareas",
+//                    IDC_TRAYICON,
+//                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
     LTEXT           "Nota: estos controles están inhabilitados porque el servicio de AFS Client no se está ejecutando. ",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "Estado de cliente",IDC_STATIC,7,157,206,61
@@ -78,9 +78,9 @@ BEGIN
     CONTROL         "&Obtener señales de AFS al iniciar la sesión en Windows",
                     IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,
                     219,10
-    CONTROL         "&Mostrar el icono AFS Light en la barra de tareas",
-                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,
-                    214,10
+//    CONTROL         "&Mostrar el icono AFS Light en la barra de tareas",
+//                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,
+//                    214,10
     LTEXT           "Nota: estos controles están inhabilitados porque el AFS Light no está conectado a una pasarela de AFS.",
                     IDC_WARN,13,114,219,17
 END

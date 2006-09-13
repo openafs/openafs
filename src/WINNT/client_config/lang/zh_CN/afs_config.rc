@@ -51,8 +51,8 @@ BEGIN
     EDITTEXT        IDC_CELL,62,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
     CONTROL         "登录到 Windows 时获得 AFS 令牌",IDC_LOGON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
-    CONTROL         "在任务栏中显示 AFS 客户机图标(&I)",IDC_TRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+//    CONTROL         "在任务栏中显示 AFS 客户机图标(&I)",IDC_TRAYICON,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
     LTEXT           "注意：由于没有运行 AFS 客户机服务，将禁用这些控制。",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "客户机状态",IDC_STATIC,7,157,206,61
@@ -75,8 +75,8 @@ BEGIN
                     WS_DISABLED | NOT WS_TABSTOP
     CONTROL         "登录到 Windows 时获得 AFS 令牌",IDC_LOGON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,73,193,10
-    CONTROL         "在任务栏中显示 AFS Light 图标(&H)",IDC_TRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
+//    CONTROL         "在任务栏中显示 AFS Light 图标(&H)",IDC_TRAYICON,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
     LTEXT           "注意：由于 AFS 客户机没有连接至 AFS 网关，将禁用这些控制。",
                     IDC_WARN,13,114,219,17
 END
