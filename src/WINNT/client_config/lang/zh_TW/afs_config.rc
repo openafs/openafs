@@ -51,8 +51,8 @@ BEGIN
     EDITTEXT        IDC_CELL,68,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
     CONTROL         "登入 Windows 時取得 AFS 記號(&O)",IDC_LOGON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
-    CONTROL         "在工作列顯示「AFS 用戶端」圖示(&H)  ",IDC_TRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+//    CONTROL         "在工作列顯示「AFS 用戶端」圖示(&H)  ",IDC_TRAYICON,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
     LTEXT           "附註：由於並未執行「AFS 用戶端」服務，因此控制都已停用。",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "用戶端狀態",IDC_STATIC,7,157,206,61
@@ -75,8 +75,8 @@ BEGIN
                     WS_DISABLED | NOT WS_TABSTOP
     CONTROL         "登入 Windows 時取得 AFS 記號(&O)",IDC_LOGON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,73,193,10
-    CONTROL         "在工作列顯示「AFS Light 」圖示(&H)",IDC_TRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
+//    CONTROL         "在工作列顯示「AFS Light 」圖示(&H)",IDC_TRAYICON,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
     LTEXT           "附註：由於「AFS Light 」並未連接至 AFS 閘道，因此停用這些控制。",
                     IDC_WARN,13,114,219,17
 END

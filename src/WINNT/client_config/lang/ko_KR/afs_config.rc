@@ -51,9 +51,9 @@ BEGIN
     EDITTEXT        IDC_CELL,59,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
     CONTROL         "Windows로 로그인할 때 AFS 토큰 확보(&O)",IDC_LOGON,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
-    CONTROL         "작업 표시줄에 AFS 클라이언트 아이콘 표시(&H)",
-                    IDC_TRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+//    CONTROL         "작업 표시줄에 AFS 클라이언트 아이콘 표시(&H)",
+//                    IDC_TRAYICON,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
     LTEXT           "주: 이 제어는 AFS 클라이언트 서비스가 실행 중이지 않으므로 사용할 수 없습니다.",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "클라이언트 상태",IDC_STATIC,7,157,206,61
@@ -76,8 +76,8 @@ BEGIN
                     WS_DISABLED | NOT WS_TABSTOP
     CONTROL         "Windows로 로그인할 때 AFS 토큰 확보(&O)",IDC_LOGON,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,193,10
-    CONTROL         "작업 표시줄에 AFS 라이트 아이콘 표시(&H)",IDC_TRAYICON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
+//    CONTROL         "작업 표시줄에 AFS 라이트 아이콘 표시(&H)",IDC_TRAYICON,
+//                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
     LTEXT           "주: 이 제어는 AFS 라이트가 AFS 게이트웨이에 접속되지 않았으므로 사용할 수 없습니다.",
                     IDC_WARN,13,114,219,17
 END
