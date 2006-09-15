@@ -7243,9 +7243,13 @@ init_sys_error_to_et(void)
     sys2et[ENAMETOOLONG] = UAENAMETOOLONG;
     sys2et[ENOLCK] = UAENOLCK;
     sys2et[ENOSYS] = UAENOSYS;
+#if (ENOTEMPTY != EEXIST)
     sys2et[ENOTEMPTY] = UAENOTEMPTY;
+#endif
     sys2et[ELOOP] = UAELOOP;
+#if (EWOULDBLOCK != EAGAIN)
     sys2et[EWOULDBLOCK] = UAEWOULDBLOCK;
+#endif
     sys2et[ENOMSG] = UAENOMSG;
     sys2et[EIDRM] = UAEIDRM;
     sys2et[ECHRNG] = UAECHRNG;
