@@ -122,7 +122,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_storage *saddr, int *slen,
     *alength -= resid;
     if (sa) {
 	*slen = sa->sa_len;
+#ifndef AFS_DARWIN80_ENV
 	FREE(sa, M_SONAME);
+#endif
     }
     return code;
 }
