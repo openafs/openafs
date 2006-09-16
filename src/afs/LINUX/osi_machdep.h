@@ -227,4 +227,66 @@ do { \
 #define AFS_ASSERT_GLOCK()
 #endif
 
+#ifdef AFS_AMD64_LINUX20_ENV
+/* RHEL5 beta's kernel doesn't define these. They aren't gonna change, so... */
+
+#ifndef __NR_ia32_afs_syscall
+#define __NR_ia32_afs_syscall 137
+#endif
+#ifndef __NR_ia32_setgroups
+#define __NR_ia32_setgroups 81
+#endif
+#ifndef __NR_ia32_setgroups32
+#define __NR_ia32_setgroups32 206
+#endif
+#ifndef __NR_ia32_close
+#define __NR_ia32_close 6
+#endif
+#ifndef __NR_ia32_chdir
+#define __NR_ia32_chdir 12
+#endif
+#ifndef __NR_ia32_break
+#define __NR_ia32_break 17
+#endif
+#ifndef __NR_ia32_stty
+#define __NR_ia32_stty 31
+#endif
+#ifndef __NR_ia32_gtty
+#define __NR_ia32_gtty 32
+#endif
+#ifndef __NR_ia32_ftime
+#define __NR_ia32_ftime 35
+#endif
+#ifndef __NR_ia32_prof
+#define __NR_ia32_prof 44
+#endif
+#ifndef __NR_ia32_lock
+#define __NR_ia32_lock 53
+#endif
+#ifndef __NR_ia32_mpx
+#define __NR_ia32_mpx 56
+#endif
+#ifndef __NR_ia32_exit
+#define __NR_ia32_exit 1
+#endif
+#ifndef __NR_ia32_mount
+#define __NR_ia32_mount 21
+#endif
+#ifndef __NR_ia32_read
+#define __NR_ia32_read 3
+#endif
+#ifndef __NR_ia32_write
+#define __NR_ia32_write 4
+#endif
+#ifndef __NR_ia32_open
+#define __NR_ia32_open 5
+#endif
+#ifndef __NR_ia32_close
+#define __NR_ia32_close 6
+#endif
+#ifndef __NR_ia32_unlink
+#define __NR_ia32_unlink 10
+#endif
+#endif
+
 #endif /* OSI_MACHDEP_H_ */
