@@ -27,9 +27,6 @@ RCSID
 #include <sys/file.h>
 #include <sys/param.h>
 #include <lock.h>
-#ifdef AFS_AIX_ENV
-#include <sys/lockf.h>
-#endif
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
 #include <unistd.h>
 #endif
@@ -68,6 +65,38 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 /*@=fcnmacros =macrofcndecl@*/
 
 /*@printflike@*/ extern void Log(const char *format, ...);
+
+#ifndef LOCK_SH
+#define   LOCK_SH   1    /* shared lock */
+#define   LOCK_EX   2    /* exclusive lock */
+#define   LOCK_NB   4    /* don't block when locking */
+#define   LOCK_UN   8    /* unlock */
+#endif
+
+#ifndef HAVE_FLOCK
+#include <fcntl.h>
+
+/*
+ * This function emulates a subset of flock()
+ */
+int 
+emul_flock(int fd, int cmd)
+{    struct flock f;
+
+    memset(&f, 0, sizeof (f));
+
+    if (cmd & LOCK_UN)
+        f.l_type = F_UNLCK;
+    if (cmd & LOCK_SH)
+        f.l_type = F_RDLCK;
+    if (cmd & LOCK_EX)
+        f.l_type = F_WRLCK;
+
+    return fcntl(fd, (cmd & LOCK_NB) ? F_SETLK : F_SETLKW, &f);
+}
+
+#define flock(f,c)      emul_flock(f,c)
+#endif
 
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 int Testing=0;
@@ -876,11 +905,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
     if (lockit) {
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	if (lockf(h->fd_fd, F_LOCK, 0) < 0)
-#else
 	if (flock(h->fd_fd, LOCK_EX) < 0)
-#endif
 	    return -1;
     }
 
@@ -915,11 +940,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
 
   bad_getLinkByte:
     if (lockit)
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	lockf(h->fd_fd, F_ULOCK, 0);
-#else
 	flock(h->fd_fd, LOCK_UN);
-#endif
     return -1;
 }
 
@@ -946,11 +967,7 @@ GetFreeTag(IHandle_t * ih, int vno)
 	return -1;
 
     /* Only one manipulates at a time. */
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    if (lockf(fdP->fd_fd, F_LOCK, 0) < 0) {
-#else
     if (flock(fdP->fd_fd, LOCK_EX) < 0) {
-#endif
 	FDH_REALLYCLOSE(fdP);
 	return -1;
     }
@@ -986,20 +1003,12 @@ GetFreeTag(IHandle_t * ih, int vno)
 	goto badGetFreeTag;
     }
     FDH_SYNC(fdP);
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
     FDH_REALLYCLOSE(fdP);
     return col;;
 
   badGetFreeTag:
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
     FDH_REALLYCLOSE(fdP);
     return -1;
 }
@@ -1022,11 +1031,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
     if (!locked) {
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	if (lockf(fdP->fd_fd, F_LOCK, 0) < 0) {
-#else
 	if (flock(fdP->fd_fd, LOCK_EX) < 0) {
-#endif
 	    return -1;
 	}
     }
@@ -1065,11 +1070,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
 
   bad_SetLinkCount:
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
 
     return code;
 }
