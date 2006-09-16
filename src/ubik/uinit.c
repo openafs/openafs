@@ -87,6 +87,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	}
 	code = afsconf_ClientAuth(tdir, &sc, &scIndex);	/* sets sc,scIndex */
 	if (code) {
+	    afsconf_Close(tdir);
 	    fprintf(stderr,
 		    "%s: Could not get security object for -localAuth\n",
 		    funcName);
@@ -96,6 +97,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	    afsconf_GetCellInfo(tdir, tdir->cellName, serviceid,
 				&info);
 	if (code) {
+	    afsconf_Close(tdir);
 	    fprintf(stderr,
 		    "%s: can't find cell %s's hosts in %s/%s\n",
 		    funcName, cellName, AFSDIR_SERVER_ETC_DIRPATH,

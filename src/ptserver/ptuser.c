@@ -71,7 +71,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc[3];
-    static struct afsconf_dir *tdir = (struct afsconf_dir *)0;	/* only do this once */
+    static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
     struct ktc_token ttoken;
@@ -109,6 +109,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 
         code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
         if (code) {
+	    afsconf_Close(tdir);
             fprintf(stderr,
                      "libprot: Could not get local cell. [%d]\n", code);
             return code;
@@ -117,16 +118,16 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
     }
 #endif /* defined(UKERNEL) */
 
-    if (tdir == 0 || strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
+    if (tdir == NULL || strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
 	/*
 	 * force re-evaluation.  we either don't have an afsconf_dir,
          * the directory has changed or the cell has changed.
 	 */
 	if (tdir && !gottdir) {
 	    afsconf_Close(tdir);
-            tdir = (struct afsconf_dir *)0;
+            tdir = (struct afsconf_dir *)NULL;
         }
-	pruclient = (struct ubik_client *)0;
+	pruclient = (struct ubik_client *)NULL;
         refresh = 1;
     }
 
@@ -153,6 +154,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 
 	code = afsconf_GetCellInfo(tdir, cell, "afsprot", &info);
 	if (code) {
+	    afsconf_Close(tdir);
 	    fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
 		    cell, confDir, AFSDIR_CELLSERVDB_FILE);
 	    return code;
@@ -163,11 +165,14 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
      * want, don't get a new one. Unless the security level is 2 in
      * which case we will get one (and re-read the key file).
      */
-    if (pruclient && (lastLevel == secLevel) && (secLevel != 2))
+    if (pruclient && (lastLevel == secLevel) && (secLevel != 2)) {
+	afsconf_Close(tdir);
 	return 0;
+    }
 
     code = rx_Init(0);
     if (code) {
+	afsconf_Close(tdir);
 	fprintf(stderr, "libprot:  Could not initialize rx.\n");
 	return code;
     }
@@ -216,6 +221,9 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 					      ttoken.ticket);
 	}
     }
+    afsconf_Close(tdir);
+    tdir = NULL;
+
     if (scIndex == 1)
 	return PRBADARG;
     if ((scIndex == 0) && (sc[0] == 0))
