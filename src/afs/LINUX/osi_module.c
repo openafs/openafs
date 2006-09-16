@@ -366,11 +366,9 @@ init_module(void)
 
     osi_Init();
 
-#ifndef LINUX_KEYRING_SUPPORT
     err = osi_syscall_init();
     if (err)
 	return err;
-#endif
     err = afs_init_inodecache();
     if (err)
 	return err;
