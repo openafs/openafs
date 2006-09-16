@@ -109,7 +109,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 
         code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
         if (code) {
-	    afsconf_Close(tdir);
             fprintf(stderr,
                      "libprot: Could not get local cell. [%d]\n", code);
             return code;
@@ -154,7 +153,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 
 	code = afsconf_GetCellInfo(tdir, cell, "afsprot", &info);
 	if (code) {
-	    afsconf_Close(tdir);
 	    fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
 		    cell, confDir, AFSDIR_CELLSERVDB_FILE);
 	    return code;
@@ -166,13 +164,11 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
      * which case we will get one (and re-read the key file).
      */
     if (pruclient && (lastLevel == secLevel) && (secLevel != 2)) {
-	afsconf_Close(tdir);
 	return 0;
     }
 
     code = rx_Init(0);
     if (code) {
-	afsconf_Close(tdir);
 	fprintf(stderr, "libprot:  Could not initialize rx.\n");
 	return code;
     }
@@ -221,8 +217,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 					      ttoken.ticket);
 	}
     }
-    afsconf_Close(tdir);
-    tdir = NULL;
 
     if (scIndex == 1)
 	return PRBADARG;
