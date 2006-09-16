@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preface id="HDRWQ1">
+  <title>About This Guide</title>
+
+  <para>This section describes the purpose, organization, and conventions of this document.</para>
+
+  <sect1 id="HDRPREFAUDPUR">
+    <title>Audience and Purpose</title>
+
+    <para>This guide describes concepts and procedures for accessing information stored in the AFS filespace. It is intended for AFS
+    users who are familiar with UNIX but not necessarily AFS.</para>
+
+    <para>The first chapter describes basic AFS concepts and guidelines for using it, and summarizes some of the differences between
+    the UNIX file system and AFS. The remaining chapters explain how to perform basic AFS functions, including logging in, changing
+    a password, listing information, protecting files, creating groups, and troubleshooting. Concepts important to a specific task
+    or group of related tasks are presented in context, just prior to the procedures. Many examples are provided.</para>
+
+    <para>Instructions generally include only the commands and command options necessary for a specific task. For a complete list of
+    AFS commands and description of all options available on every command, see the <emphasis>IBM AFS Administration
+    Reference</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="HDRPREFORGAN">
+    <title>Document Organization</title>
+
+    <para>This document is divided into the following chapters.</para>
+
+    <para><link linkend="HDRWQ2">An Introduction to AFS</link> introduces the basic concepts and functions of AFS. To use AFS
+    successfully, it is important to be familiar with the terms and concepts described in this chapter.</para>
+
+    <para><link linkend="HDRWQ20">Using AFS</link> describes how to use AFS's basic features: how to log in and authenticate, unlog,
+    log out, access AFS files and directories in AFS, and change your password.</para>
+
+    <para><link linkend="HDRWQ38">Displaying Information about AFS</link> describes how to display information about AFS volume
+    quota and location, file server machine status, and the foreign cells you can access.</para>
+
+    <para><link linkend="HDRWQ44">Protecting Your Directories and Files</link> describes how to protect your data using AFS access
+    control lists (ACLs).</para>
+
+    <para><link linkend="HDRWQ60">Using Groups</link> describes how to create and manage groups.</para>
+
+    <para><link linkend="HDRWQ76">Troubleshooting</link> outlines step-by-step diagnostic and corrective steps for specific
+    problems.</para>
+
+    <para><link linkend="HDRWQ80">Appendix A, Using the NFS/AFS Translator</link> describes how to use the NFS/AFS Translator to
+    access the AFS filespace from an NFS client machine.</para>
+
+    <para><link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online Help</link> describes AFS command syntax and how to
+    obtain online information about commands.</para>
+
+    <para><link linkend="HDRWQ90">Appendix C, Glossary</link> defines terms used in the <emphasis>IBM AFS User
+    Guide</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="HDRUSERFRONTHOWTO">
+    <title>How To Use This Document</title>
+
+    <para>Before you begin using AFS, read <link linkend="HDRWQ2">An Introduction to AFS</link>. Next, follow the procedures
+    outlined in <link linkend="HDRWQ20">Using AFS</link> to get started using AFS as an authenticated user. It describes how to
+    access files in the AFS filespace and how to end an AFS session. Consult the other chapters as you need to perform the tasks
+    they describe.</para>
+  </sect1>
+
+  <sect1 id="HDRPREFRELATE">
+    <title>Related Documents</title>
+
+    <para>The AFS Documentation Kit also includes the following documents:
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis>IBM AFS Administration Reference</emphasis> details the syntax of each AFS command and is intended for
+        the experienced AFS administrator, programmer, or user. For each AFS command, the <emphasis>IBM AFS Administration
+        Reference</emphasis> lists the command syntax, aliases and abbreviations, description, arguments, warnings, output,
+        examples, and related topics. Commands are organized alphabetically.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <emphasis>IBM AFS Administration Guide</emphasis> describes concepts and procedures necessary for administering an
+        AFS cell, as well as more extensive coverage of the topics in the <emphasis>IBM AFS User Guide</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> provides instructions for installing AFS server and client
+        machines.</para>
+      </listitem>
+    </itemizedlist>
+</para>
+  </sect1>
+
+  <sect1 id="HDRTYPO_CONV">
+    <title>Typographical Conventions</title>
+
+    <para>This document uses the following typographical conventions:
+
+    <itemizedlist>
+      <listitem>
+        <para>Command and option names appear in <emphasis role="bold">bold type</emphasis> in syntax definitions, examples, and
+        running text. Names of directories, files, machines, partitions, volumes, and users also appear in <emphasis
+        role="bold">bold type</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para>Variable information appears in <emphasis>italic type</emphasis>. This includes user-supplied information on command
+        lines and the parts of prompts that differ depending on who issues the command. New terms also appear in <emphasis>italic
+        type</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para>Examples of screen output and file contents appear in <computeroutput>monospace type</computeroutput>.</para>
+      </listitem>
+    </itemizedlist>
+</para>
+
+    <para>In addition, the following symbols appear in command syntax definitions, both in the documentation and in AFS online help
+    statements. When issuing a command, do not type these symbols.
+
+    <itemizedlist>
+      <listitem>
+        <para>Square brackets <emphasis role="bold">[ ]</emphasis> surround optional items.</para>
+      </listitem>
+
+      <listitem>
+        <para>Angle brackets <emphasis role="bold">&lt; &gt;</emphasis> surround user-supplied values in AFS commands.</para>
+      </listitem>
+
+      <listitem>
+        <para>A superscripted plus sign <emphasis role="bold">+</emphasis> follows an argument that accepts more than one
+        value.</para>
+      </listitem>
+
+      <listitem>
+        <para>The percent sign <computeroutput>%</computeroutput> represents the regular command shell prompt. Some operating
+        systems possibly use a different character for this prompt.</para>
+      </listitem>
+
+      <listitem>
+        <para>The number sign <computeroutput>#</computeroutput> represents the command shell prompt for the local superuser
+        <emphasis role="bold">root</emphasis>. Some operating systems possibly use a different character for this prompt.</para>
+      </listitem>
+
+      <listitem>
+        <para>The pipe symbol <emphasis role="bold">|</emphasis> in a command syntax statement separates mutually exclusive values
+        for an argument.</para>
+      </listitem>
+    </itemizedlist>
+</para>
+
+    <para>For additional information on AFS commands, including a description of command string components, acceptable abbreviations
+    and aliases, and how to get online help for commands, see <link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online
+    Help</link>.</para>
+  </sect1>
+</preface>

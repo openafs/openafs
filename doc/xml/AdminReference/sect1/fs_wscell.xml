@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_wscell1">
+  <refmeta>
+    <refentrytitle>fs wscell</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs wscell</refname>
+    <refpurpose>Returns the name of the cell to which a machine belongs</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs wscell</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs ws</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs wscell</emphasis> command returns the name of the local machine's home
+    cell.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays the contents of the local <replaceable>/usr/vice/etc/ThisCell</replaceable>
+    file, in the format</para>
+
+<programlisting>
+   This workstation belongs to cell '&amp;lt;cellname&amp;gt;'
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example results when the fs wscell is issued on a machine in
+      the State University cell:</para>
+
+<programlisting>
+   % fs wscell
+   This workstation belongs to cell 'stateu.edu'
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_whereis1">fs_whereis(1)</link>,
+        <link linkend="fs_whichcell1">fs_whichcell(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

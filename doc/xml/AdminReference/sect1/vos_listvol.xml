@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_listvol1">
+  <refmeta>
+    <refentrytitle>vos listvol</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos listvol</refname>
+    <refpurpose>Displays information from a volume header</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos listvol</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;] [<emphasis role="bold">-fast</emphasis>] [<emphasis role="bold">-long</emphasis>] [<emphasis role="bold">-quiet</emphasis>]
+        [<emphasis role="bold">-extended</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos listvo</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;] [<emphasis role="bold">-f</emphasis>]
+        [-lon] [<emphasis role="bold">-q</emphasis>] [<emphasis role="bold">-e</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-loc</emphasis>]
+        [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos listvol</emphasis> command formats and displays the following information
+    from the volume header of each specified volume: volume name, volume ID,
+    volume type, size, and status at the server. The actual information
+    displayed depends on the combination of arguments supplied when the
+    command is issued. To display volume header information for various
+    numbers of volumes, combine the command's arguments as indicated:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>For every volume on a file server machine, specify the machine's name with
+        the <emphasis role="bold">-server</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>For every volume at a particular site, combine the <emphasis role="bold">-server</emphasis> argument
+        with the <emphasis role="bold">-partition</emphasis> argument.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To display the Volume Location Database (VLDB) entry for one or more
+    volumes, use the <emphasis role="bold">vos listvldb</emphasis> command. To display both the VLDB entry
+    and the volume header for a single volume, use the <emphasis role="bold">vos examine</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine that houses volumes for which to
+          display the header. Provide the machine's IP address or its host name
+          (either fully qualified or using an unambiguous abbreviation). For
+          details, see <link linkend="vos1">vos(1)</link>.</para>
+
+          <para>This argument can be combined with the <emphasis role="bold">-partition</emphasis> argument, as well as
+          the <emphasis role="bold">-fast</emphasis>, <emphasis role="bold">-long</emphasis>, or <emphasis role="bold">-extended</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the partition (on the file server machine specified by the
+          <emphasis role="bold">-server</emphasis> argument) that houses volumes for which to display the
+          header. Provide the partition's complete name with preceding slash (for
+          example, <replaceable>/vicepa</replaceable>) or use one of the three acceptable abbreviated
+          forms. For details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fast</emphasis></term>
+        <listitem>
+          <para>Displays only the volume ID numbers of volumes stored at the site
+          specified by the <emphasis role="bold">-server</emphasis>, and optionally <emphasis role="bold">-partition</emphasis>, argument. Do
+          not combine this flag with the <emphasis role="bold">-extended</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-long</emphasis></term>
+        <listitem>
+          <para>Displays more detailed information about each volume stored at the site
+          specified by the <emphasis role="bold">-server</emphasis>, and optionally <emphasis role="bold">-partition</emphasis>, argument. The
+          information includes the volume IDs of all three volume types associated
+          with the volume, and the read/write volume's quota, creation date and
+          update date.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-quiet</emphasis></term>
+        <listitem>
+          <para>Suppresses the lines that summarize the number of volumes listed and their
+          status, which otherwise appear at the beginning and end of the output when
+          the output includes more than one volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-extended</emphasis></term>
+        <listitem>
+          <para>Displays extensive statistics about access patterns for each volume stored
+          at the site specified by the <emphasis role="bold">-server</emphasis>, and optionally <emphasis role="bold">-partition</emphasis>,
+          argument. The statistics include the number of reads and writes to files
+          in the volume, and how recently files and directories have been updated by
+          their owners or other users. Do not combine this flag with the <emphasis role="bold">-fast</emphasis>
+          flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output is ordered alphabetically by volume name and by default
+    provides the following information on a single line for each volume:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Name</para>
+
+      </listitem>
+      <listitem>
+        <para>Volume ID number</para>
+
+      </listitem>
+      <listitem>
+        <para>Type (the flag is <computeroutput>RW</computeroutput> for read/write, <computeroutput>RO</computeroutput> for read-only, <computeroutput>BK</computeroutput> for
+        backup)</para>
+
+      </listitem>
+      <listitem>
+        <para>Size in kilobytes (<computeroutput>1024</computeroutput> equals a megabyte)</para>
+
+      </listitem>
+      <listitem>
+        <para>Number of files in the volume, if the <emphasis role="bold">-extended</emphasis> flag is provided</para>
+
+      </listitem>
+      <listitem>
+        <para>Status on the file server machine, which is one of the following:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>On-line</term>
+            <listitem>
+              <para>The volume is completely accessible to Cache Managers.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Off-line</term>
+            <listitem>
+              <para>The volume is not accessible to Cache Managers, but does not seem to be
+              corrupted. This status appears while a volume is being dumped, for
+              example.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Off-line**needs salvage**</term>
+            <listitem>
+              <para>The volume is not accessible to Cache Managers, because it seems to be
+              corrupted. Use the <emphasis role="bold">bos salvage</emphasis> or <emphasis role="bold">salvager</emphasis> command to repair the
+              corruption.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </listitem>
+    </itemizedlist>
+    <para>If the following message appears instead of the previously listed
+    information, it indicates that a volume is not accessible to Cache
+    Managers or the <emphasis role="bold">vos</emphasis> command interpreter, for example because a clone is
+    being created.</para>
+
+<programlisting>
+   **** Volume &amp;lt;volume_ID&amp;gt; is busy ****
+
+</programlisting>
+      <para>If the following message appears instead of the previously listed
+      information, it indicates that the File Server is unable to attach the
+      volume, perhaps because it is seriously corrupted. The <replaceable>FileLog</replaceable> and
+      <replaceable>VolserLog</replaceable> log files in the <replaceable>/usr/afs/logs</replaceable> directory on the file
+      server machine possibly provide additional information; use the <emphasis role="bold">bos
+      getlog</emphasis> command to display them.</para>
+
+<programlisting>
+   **** Could not attach volume &amp;lt;volume_ID&amp;gt; ****
+
+</programlisting>
+        <para>The information about individual volumes is bracketed by summary
+        lines. The first line of output specifies the number of volumes in the
+        listing. The last line of output summarizes the number of volumes that are
+        online, offline, and busy. These lines do not appear if the <emphasis role="bold">-quiet</emphasis> flag
+        is used.</para>
+
+        <para>If the <emphasis role="bold">-fast</emphasis> flag is added, the output displays only the volume ID
+        number of each volume, arranged in increasing numerical order. The final
+        line (which summarizes the number of online, offline, and busy volumes) is
+        omitted.</para>
+
+        <para>If the <emphasis role="bold">-long</emphasis> flag is included, the output for each volume includes all
+        of the information in the default listing plus the following. Each item in
+        this list corresponds to a separate line of output:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The file server machine and partition that house the volume, as determined
+            by the command interpreter as the command runs, rather than derived from the
+            VLDB or the volume header.</para>
+
+          </listitem>
+          <listitem>
+            <para>The volume ID numbers associated with the various versions of the volume:
+            read/write (<computeroutput>RWrite</computeroutput>), read-only (<computeroutput>ROnly</computeroutput>), backup (<computeroutput>Backup</computeroutput>), and
+            ReleaseClone (<computeroutput>RClone</computeroutput>). One of them matches the volume ID number that
+            appears on the first line of the volume's output. If the value in the
+            <computeroutput>RWrite</computeroutput>, <computeroutput>ROnly</computeroutput>, or <computeroutput>Backup</computeroutput> field is <computeroutput>0</computeroutput> (zero), there is no volume
+            of that type. If there is currently no ReleaseClone, the <computeroutput>RClone</computeroutput> field
+            does not appear at all.</para>
+
+          </listitem>
+          <listitem>
+            <para>The maximum space quota allotted to the read/write copy of the volume,
+            expressed in kilobyte blocks in the <computeroutput>MaxQuota</computeroutput> field.</para>
+
+          </listitem>
+          <listitem>
+            <para>The date and time the volume was created, in the <computeroutput>Creation</computeroutput> field. If the
+            volume has been restored with the <emphasis role="bold">backup diskrestore</emphasis>, <emphasis role="bold">backup
+            volrestore</emphasis>, or <emphasis role="bold">vos restore</emphasis> command, this is the restore time.</para>
+
+          </listitem>
+          <listitem>
+            <para>The date and time when the contents of the volume last changed, in the
+            <computeroutput>Last Update</computeroutput> field. For read-only and backup volumes, it matches the
+            timestamp in the <computeroutput>Creation</computeroutput> field.</para>
+
+          </listitem>
+          <listitem>
+            <para>The number of times the volume has been accessed for a fetch or store
+            operation since the later of the two following times:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>12:00 a.m. on the day the command is issued</para>
+
+              </listitem>
+              <listitem>
+                <para>The last time the volume changed location</para>
+
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </itemizedlist>
+        <para>If the <emphasis role="bold">-extended</emphasis> flag is included, the output for each volume includes
+        all of the information reported with the <emphasis role="bold">-long</emphasis> flag, plus two tables of
+        statistics:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The table labeled <computeroutput>Raw Read/Write Stats</computeroutput> table summarizes the number of
+            times the volume has been accessed for reading or writing.</para>
+
+          </listitem>
+          <listitem>
+            <para>The table labeled <computeroutput>Writes Affecting Authorship</computeroutput> table contains
+            information on writes made to files and directories in the specified
+            volume.</para>
+
+          </listitem>
+        </itemizedlist>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example shows the output for the <replaceable>/vicepb</replaceable> partition on the
+        file server machine <computeroutput>fs2.abc.com</computeroutput> when no flags are provided:</para>
+
+<programlisting>
+   % vos listvol -server fs2.abc.com -partition b
+   Total number of volumes on server fs2.abc.com partition /vicepb : 66
+   sys                  1969534847 RW       1582 K On-line
+   sys.backup           1969535105 BK       1582 K On-line
+         .                   .     .         .   .    .
+         .                   .     .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+   user.pat.backup      1969534538 BK      17537 K On-line
+   Total volumes onLine 66 ; Total volumes offLine 0 ;  Total busy 0
+
+</programlisting>
+          <para>The following example shows the output when the <emphasis role="bold">-fast</emphasis> flag is added:</para>
+
+<programlisting>
+   % vos listvol -server fs2.abc.com -partition b -fast
+   Total number of volumes on server fs2.abc.com partition /vicepb : 66
+    1969516782
+    1969516784
+        .
+        .
+    1969535796
+
+</programlisting>
+            <para>The following example shows two volumes from the output that appears when
+            the <emphasis role="bold">-long</emphasis> flag is added:</para>
+
+<programlisting>
+   % vos listvol -server fs2.abc.com -partition b -long
+   Total number of volumes on server fs2.abc.com partition /vicepb: 66
+         .                   .      .         .   .    .
+         .                   .      .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538
+        MaxQuota      20000 K
+        Creation    Mon Jun 12 09:02:25 1989
+        Last Update Thu May 20 17:39:34 1999
+        1573 accesses in the past day (i.e., vnode references)
+   user.pat.backup      1969534538 BK      17537 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538
+        MaxQuota      20000 K
+        Creation    Tue Jun 13 04:37:59 1989
+        Last Update Wed May 19 06:37:59 1999
+        0 accesses in the past day (i.e., vnode references)
+          .                   .      .         .   .    .
+          .                   .      .         .   .    .
+   Total volumes onLine 66 ; Total volumes offLine 0 ; Total busy 0
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>None</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="backup_diskrestore8">backup_diskrestore(8)</link>,
+              <link linkend="backup_volrestore8">backup_volrestore(8)</link>,
+              <link linkend="bos_getlog8">bos_getlog(8)</link>,
+              <link linkend="bos_salvage8">bos_salvage(8)</link>,
+              <link linkend="salvager8">salvager(8)</link>,
+              <link linkend="vos1">vos(1)</link>,
+              <link linkend="vos_examine1">vos_examine(1)</link>,
+              <link linkend="vos_listvldb1">vos_listvldb(1)</link>,
+              <link linkend="vos_restore1">vos_restore(1)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

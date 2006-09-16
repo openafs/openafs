@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_dump8">
+  <refmeta>
+    <refentrytitle>fstrace dump</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace dump</refname>
+    <refpurpose>Dumps a trace log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace dump</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-follow</emphasis> &lt;<emphasis>log name</emphasis>&gt;]
+        [<emphasis role="bold">-file</emphasis> &lt;<emphasis>output filename</emphasis>&gt;] [<emphasis role="bold">-sleep</emphasis> &lt;<emphasis>seconds between reads</emphasis>&gt;]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace d</emphasis> [<emphasis role="bold">-se</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-fo</emphasis> &lt;<emphasis>log name</emphasis>&gt;]
+        [<emphasis role="bold">-fi</emphasis> &lt;<emphasis>output filename</emphasis>&gt;] [<emphasis role="bold">-sl</emphasis> &lt;<emphasis>seconds between reads</emphasis>&gt;]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace dump</emphasis> command displays the current contents of the <computeroutput>cmfx</computeroutput>
+    trace log on the standard output stream or writes it to the file named by
+    the <emphasis role="bold">-file</emphasis> argument.</para>
+
+    <para>To write the log continuously to the standard output stream or to a file,
+    use the <emphasis role="bold">-follow</emphasis> argument. By default, the log's contents are written
+    out every ten seconds and then automatically cleared. To change the
+    interval between writes, use the <emphasis role="bold">-sleep</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>This command produces output only if the <computeroutput>cm</computeroutput> event set is active. To
+    display or set the event set's state, use the <emphasis role="bold">fstrace lsset</emphasis> or
+    <emphasis role="bold">fstrace setset</emphasis> command respectively.</para>
+
+    <para>To make the output from this command maximally readable, the message
+    catalog file called <replaceable>afszcm.cat</replaceable> must reside in the local
+    <replaceable>/usr/vice/etc/C</replaceable> directory. If necessary, copy the file to that
+    directory from the AFS Binary Distribution before activating tracing.</para>
+
+    <para>When the <computeroutput>cm</computeroutput> event set is active, a defined amount of kernel memory (by
+    default, 60 KB) is allocated for the <computeroutput>cmfx</computeroutput> trace log. As described in
+    <link linkend="fstrace8">fstrace(8)</link>, when the buffer is full, messages are overwritten in a
+    circular fashion (new messages overwrite the oldest ones). To allocate
+    more kernel memory for the log, use the <emphasis role="bold">fstrace setlog</emphasis> command; to
+    display the log buffer's current size, use the <emphasis role="bold">fstrace lslog</emphasis> command
+    with the <emphasis role="bold">-long</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the event set for which to write out the associated trace log. The
+          only acceptable value is <computeroutput>cm</computeroutput> (for which the associated trace log is
+          <computeroutput>cmfx</computeroutput>). Provide either this argument or the <emphasis role="bold">-log</emphasis> argument, or omit
+          both to write out the <computeroutput>cmfx</computeroutput> log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-follow</emphasis> &lt;<emphasis>log name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the trace log to write out continuously at a specified interval (by
+          default, every ten seconds; use the <emphasis role="bold">-sleep</emphasis> argument to change the
+          interval). The log is cleared after each write operation.</para>
+
+          <para>The only acceptable value is <computeroutput>cmfx</computeroutput>. Provide either this argument or the
+          <emphasis role="bold">-set</emphasis> argument, or omit both to write out the <computeroutput>cmfx</computeroutput> log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>output filename</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the file to which to write the trace log's
+          contents. It can be in AFS or on the local disk. Partial pathnames are
+          interpreted relative to the current working directory. If this argument is
+          omitted, the trace log appears on the standard output stream.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-sleep</emphasis> &lt;<emphasis>seconds between reads</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of seconds between writes of the trace log's contents when
+          it is dumped continuously. Provide the <emphasis role="bold">-follow</emphasis> argument along with this
+          one. If this argument is omitted, the default interval is ten seconds.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output begins with a header specifying the date and time at which the
+    write operation began. If the <emphasis role="bold">-follow</emphasis> argument is not included, the
+    header also reports the number of logs being dumped; it is always <computeroutput>1</computeroutput>,
+    since there is only the <computeroutput>cmfx</computeroutput> trace log.  The format of the header is as
+    follows:</para>
+
+<programlisting>
+   AFS Trace Dump -
+     Date: I&amp;lt;starting_timestamp&amp;gt;
+   Found 1 logs.
+   Contents of log cmfx:
+
+</programlisting>
+      <para>Each subsequent message describes a Cache Manager operation in the
+      following format:</para>
+
+<programlisting>
+   time &amp;lt;timestamp&amp;gt;, pid &amp;lt;pid&amp;gt;:&amp;lt;event_message&amp;gt;
+
+</programlisting>
+        <para>where</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>&lt;timestamp&gt;</term>
+            <listitem>
+              <para>Specifies the time at which the Cache Manager performed the operation, as
+              the number of seconds since the dump began.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;pid&gt;</term>
+            <listitem>
+              <para>Specifies the process ID of the process or thread associated with the
+              message.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;event_message&gt;</term>
+            <listitem>
+              <para>Is the message itself. They are generally meaningful only to someone
+              familiar with the AFS source code.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para>In addition, every 1024 seconds the fstrace command interpreter writes a
+        message that records the current clock time, in the following format:</para>
+
+<programlisting>
+   time &amp;lt;timestamp&amp;gt;, pid &amp;lt;pid&amp;gt;: Current time: &amp;lt;unix_time&amp;gt;
+
+</programlisting>
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>&lt;timestamp&gt;</term>
+              <listitem>
+                <para>Is the number of seconds from the start of trace logging.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;pid&gt;</term>
+              <listitem>
+                <para>Is the process ID number.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;unix_time&gt;</term>
+              <listitem>
+                <para>Is the machine's clock time, represent in the standard UNIX time format as
+                the number of seconds since midnight on January 1, 1970.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>Use this message to determine the actual clock time associated with each
+          log message. Determine the actual time as follows:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>Locate the message of interest.</para>
+
+            </listitem>
+            <listitem>
+              <para>Search backward through the trace file for the closest current time
+              message.</para>
+
+            </listitem>
+            <listitem>
+              <para>If the current time message's timestamp is smaller than the log message's
+              timestamp, subtract former from the latter.  If the current time message's
+              timestamp is larger than the log message's timestamp, add 1024 to the
+              latter and subtract the former from the result.</para>
+
+            </listitem>
+            <listitem>
+              <para>Add the resulting number to the current time message's &lt;unix_time&gt; to
+              determine the log message's actual time.</para>
+
+              <para>If any of the data in the kernel trace buffer has been overwritten since
+              tracing was activated, the following message appears at the appropriate
+              place in the output:</para>
+
+<programlisting>
+   Log wrapped; data missing.
+
+</programlisting>
+                <para>To reduce the likelihood of overwriting, use the <emphasis role="bold">fstrace setlog</emphasis> command
+                to increase the kernel buffer's size. To display the current defined
+                buffer size, use the <emphasis role="bold">fstrace lslog</emphasis> command with the <emphasis role="bold">-long</emphasis> argument.</para>
+
+                <para>The following message at the end of the log dump indicates that it is
+                completed:</para>
+
+<programlisting>
+   AFS Trace Dump - Completed
+
+</programlisting>
+                </listitem>
+              </itemizedlist>
+            </refsect1>
+            <refsect1>
+              <title>Examples</title>
+              <para>The following command dumps the log associated with the cm event set to
+              the standard output stream.</para>
+
+<programlisting>
+   # fstrace dump -set cm
+   AFS Trace Dump -
+      Date: Tue Apr  7 10:54:57 1998
+   Found 1 logs.
+   time 32.965783, pid 0: Tue Apr  7 10:45:52 1998
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
+   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns 0x0)
+   time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024 (volume 0)
+   time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024 (volume 0)
+                                    .
+                                    .
+                                    .
+   time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs \
+        fid (756 4fb7e:588d240.2ff978a8.6)
+   time 71.440569, pid 33658: Returning code 2 from 19
+   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns 0x2)
+   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x0)
+   AFS Trace Dump - Completed
+
+</programlisting>
+                <para>The following command dumps the trace log associated with the cm event set
+                on the local machine to the file <computeroutput>cmfx.dump.file.1</computeroutput>, using the default
+                interval of 10 seconds between successive dumps:</para>
+
+<programlisting>
+   # fstrace dump -follow cmfx -file cmfx.dump.file.1
+
+</programlisting>
+                </refsect1>
+                <refsect1>
+                  <title>Privilege Required</title>
+                  <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+                </refsect1>
+                <refsect1>
+                  <title>See Also</title>
+                  <para><link linkend="afszcm_cat5">afszcm.cat(5)</link>,
+                  <link linkend="fstrace8">fstrace(8)</link>,
+                  <link linkend="fstrace_lslog8">fstrace_lslog(8)</link>,
+                  <link linkend="fstrace_setlog8">fstrace_setlog(8)</link>,
+                  <link linkend="fstrace_lsset8">fstrace_lsset(8)</link></para>
+
+                </refsect1>
+                <refsect1>
+                  <title>Copyright</title>
+                  <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                  <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                  converted from HTML to POD by software written by Chas Williams and Russ
+                  Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                </refsect1>
+              </refentry>

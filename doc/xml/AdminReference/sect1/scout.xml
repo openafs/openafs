@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="scout1">
+  <refmeta>
+    <refentrytitle>scout</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>scout</refname>
+    <refpurpose>Monitors the File Server process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">scout</emphasis> [<emphasis role="bold">initcmd</emphasis>] <emphasis role="bold">-server</emphasis> &lt;<emphasis>servers to monitor</emphasis>&gt;+
+          [<emphasis role="bold">-basename</emphasis> &lt;<emphasis>base server name</emphasis>&gt;]
+          [<emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;] [<emphasis role="bold">-host</emphasis>]
+          [<emphasis role="bold">-attention</emphasis> &lt;<emphasis>specify attention (highlighting) level</emphasis>&gt;+]
+          [<emphasis role="bold">-debug</emphasis> &lt;<emphasis>turn debugging output on to the named file</emphasis>&gt;]
+          [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">scout</emphasis> [<emphasis role="bold">i</emphasis>] <emphasis role="bold">-s</emphasis> &lt;<emphasis>servers to monitor</emphasis>&gt;+
+          [<emphasis role="bold">-b</emphasis> &lt;<emphasis>base server name</emphasis>&gt;] [<emphasis role="bold">-f</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;]
+          [<emphasis role="bold">-ho</emphasis>] [<emphasis role="bold">-a</emphasis> &lt;<emphasis>specify attention (highlighting) level</emphasis>&gt;+]
+          [<emphasis role="bold">-d</emphasis> &lt;<emphasis>turn debugging output on to the named file</emphasis>&gt;] [<emphasis role="bold">-he</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The scout command displays statistics gathered from the File Server
+    process running on each machine specified with the <emphasis role="bold">-server</emphasis>
+    argument. <link linkend="OUTPUT">OUTPUT</link> explains the meaning of the statistics and describes
+    how they appear in the command shell, which is preferably a window managed
+    by a window manager program.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The <emphasis role="bold">scout</emphasis> program must be able to access the curses graphics package,
+    which it uses to display statistics. Most UNIX distributions include
+    curses as a standard utility.</para>
+
+    <para>Both dumb terminals and windowing systems that emulate terminals can
+    display the <emphasis role="bold">scout</emphasis> program's statistics. The display makes use of
+    reverse video and cursor addressing, so the display environment must
+    support those features for it to look its best (most windowing systems do,
+    most dumb terminals do not). Also, set the TERM environment variable to
+    the correct terminal type, or one with characteristics similar to the
+    actual ones. For machines running the AIX operating system, the
+    recommended setting for TERM is <computeroutput>vt100</computeroutput>, as long as the terminal is
+    similar to that. For other operating systems, the wider range of
+    acceptable values includes <computeroutput>xterm</computeroutput>, <computeroutput>xterms</computeroutput>, <computeroutput>vt100</computeroutput>, <computeroutput>vt200</computeroutput>, and
+    <computeroutput>wyse85</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">initcmd</emphasis></term>
+        <listitem>
+          <para>Accommodates the command's use of the AFS command parser, and is optional.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>servers to monitor</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies each file server machine running a File Server process to
+          monitor. Provide each machine's fully qualified hostname unless the
+          <emphasis role="bold">-basename</emphasis> argument is used. In that case, specify only the unique
+          initial part of each machine name, omitting the domain name suffix (the
+          basename) common to all the names. It is also acceptable to use the
+          shortest abbreviated form of a host name that distinguishes it from other
+          machines, but successful resolution depends on the availability of a name
+          resolution service (such as the Domain Name Service or a local host table)
+          at the time the command is issued.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-basename</emphasis> &lt;<emphasis>base server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the basename (domain name) suffix common to all of the file
+          server machine names specified with the <emphasis role="bold">-server</emphasis> argument, and is
+          automatically appended to them. This argument is normally the name of the
+          cell to which the machines belong. Do not include the period that
+          separates this suffix from the distinguishing part of each file server
+          machine name, but do include any periods that occur within the suffix
+          itself.  For example, in the ABC Corporation cell, the proper value is
+          <computeroutput>abc.com</computeroutput> rather than <computeroutput>.abc.com</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates how often to probe the File Server processes. Specify a number
+          of seconds greater than <computeroutput>0</computeroutput> (zero). The default is 60 seconds.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-host</emphasis></term>
+        <listitem>
+          <para>Displays the name of the machine that is running the scout program, in the
+          banner line of the display screen.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-attention</emphasis> &lt;<emphasis>attention level</emphasis>&gt;+</term>
+        <listitem>
+          <para>Defines a list of entries, each of which pairs a statistic and a threshold
+          value. When the value of the statistic exceeds the indicated threshold
+          value, it is highlighted (in reverse video) in the display. List the pairs
+          in any order. The acceptable values are the following:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>conn &lt;<emphasis>connections</emphasis>&gt;</term>
+              <listitem>
+                <para>Indicates the number of open connections to client processes at which to
+                highlight the statistic.  The statistic returns to regular display when
+                the value goes back below the threshold. There is no default threshold.</para>
+
+                <para>An example of an acceptable value is conn 300.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>disk &lt;<emphasis>blocks_free</emphasis>&gt;</term>
+              <listitem>
+                <para>Indicates the number of remaining free kilobyte blocks at which to
+                highlight the statistic. The statistic returns to regular display when the
+                value again exceeds the threshold. There is no default threshold.</para>
+
+                <para>An example of an acceptable value is disk 5000.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>disk &lt;<emphasis>percent_full</emphasis>&gt;%</term>
+              <listitem>
+                <para>Indicates the percentage of disk usage at which to highlight the
+                statistic. The statistic returns to regular display when the value goes
+                back below the threshold. The default threshold is 95%. Acceptable values
+                are the integers in the range from <computeroutput>0</computeroutput> to <computeroutput>99</computeroutput>, followed by the percent
+                sign (<computeroutput>%</computeroutput>) to distinguish this type of value from the one described just
+                previously.</para>
+
+                <para>An example is disk 90%.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>fetch &lt;<emphasis>fetch RPCs</emphasis>&gt;</term>
+              <listitem>
+                <para>Indicates the cumulative number of fetch RPCs from client processes at
+                which to highlight the statistic. The statistic does not return to regular
+                display until the File Server process restarts, at which time the value
+                returns to zero.  There is no default threshold.</para>
+
+                <para>Example of a legal value: fetch 6000000</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>store &lt;<emphasis>store RPCs</emphasis>&gt;</term>
+              <listitem>
+                <para>Indicates the cumulative number of store RPCs from client processes at
+                which to highlight the statistic. The statistic does not return to regular
+                display until the File Server process restarts, at which time the value
+                returns to zero.  There is no default threshold.</para>
+
+                <para>Example of an acceptable value: store 200000</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>ws &lt;<emphasis>active client machines</emphasis>&gt;</term>
+              <listitem>
+                <para>Indicates the number of client machines with active open connections at
+                which to highlight the statistic. An active connection is defined as one
+                over which the File Server and client have communicated in the last 15
+                minutes. The statistic returns to regular display when the value goes back
+                below the threshold. There is no default threshold.</para>
+
+                <para>Example of an acceptable value: ws 65</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-debug</emphasis> &lt;<emphasis>debugging trace file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the file into which to write a debugging
+          trace. Partial pathnames are interpreted relative to the current working
+          directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The <emphasis role="bold">scout</emphasis> program can display statistics either in a dedicated window
+    or on a plain screen if a windowing environment is not available. For best
+    results, the window or screen needs the ability to print in reverse video.</para>
+
+    <para>The <emphasis role="bold">scout</emphasis> screen has three main parts: the banner line, the statistics
+    display region and the message/probe line.</para>
+
+    <refsect2>
+      <title>The Banner Line</title>
+      <para>By default, the string <computeroutput>Scout</computeroutput> appears in the banner line at the top of
+      the window or screen. Two optional arguments place additional information
+      in the banner line:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The <emphasis role="bold">-host</emphasis> flag displays the name of the machine where the <emphasis role="bold">scout</emphasis>
+          program is running. As mentioned previously, this is useful when running
+          the <emphasis role="bold">scout</emphasis> program on several machines but displaying the results on a
+          single machine.</para>
+
+          <para>For example, when the <emphasis role="bold">-host</emphasis> flag is included and the <emphasis role="bold">scout</emphasis> program
+          is running on the machine <computeroutput>client1.abc.com</computeroutput>, the banner line reads as
+          follows:</para>
+
+<programlisting>
+   [client1.abc.com] Scout
+
+</programlisting>
+          </listitem>
+          <listitem>
+            <para>The <emphasis role="bold">-basename</emphasis> argument displays the indicated basename on the banner
+            line. For example, including the argument <computeroutput>-basename abc.com</computeroutput> argument
+            results in the following banner line:</para>
+
+<programlisting>
+   Scout for abc.com
+
+</programlisting>
+            </listitem>
+          </itemizedlist>
+        </refsect2>
+        <refsect2>
+          <title>The Statistics Display Region</title>
+          <para>In this region, which occupies the majority of the window, the <emphasis role="bold">scout</emphasis>
+          process displays the statistics gathered for each File Server
+          process. Each process appears on its own line.</para>
+
+          <para>The region is divided into six columns, labeled as indicated and
+          displaying the following information:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>Conn</term>
+              <listitem>
+                <para>The first column displays the number of RPC connections open between the
+                File Server process and client machines.  This number equals or exceeds
+                the number in the <computeroutput>Ws</computeroutput> column (see the fourth entry below), because each
+                user on the machine can have several separate connections open at once,
+                and one client machine can handle several users.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>Fetch</term>
+              <listitem>
+                <para>The second column displays the number of fetch-type RPCs (fetch data,
+                fetch access list, and fetch status) that client machines have made to the
+                File Server process since the latter started.  This number is reset to
+                zero each time the File Server process restarts.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>Store</term>
+              <listitem>
+                <para>The third column displays the number of store-type RPCs (store data, store
+                access list, and store status) that client machines have made to the File
+                Server process since the latter started. This number is reset to zero each
+                time the File Server process restarts.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>Ws</term>
+              <listitem>
+                <para>The fourth column displays the number of client machines (<computeroutput>Ws</computeroutput> stands for
+                workstations) that have communicated with the File Server process within
+                the last 15 minutes. Such machines are termed <emphasis>active</emphasis>). This number is
+                likely to be smaller than the number in the first (<computeroutput>Conn</computeroutput>) column because
+                a single client machine can have several connections open to one File
+                Server.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>server name</term>
+              <listitem>
+                <para>The fifth, unlabeled, column displays the name of the file server machine
+                on which the File Server process is running. Names of 12 characters or
+                less are displayed in full; longer names are truncated and an asterisk
+                (<computeroutput>*</computeroutput>) appears as the last character in the name. Using the <emphasis role="bold">-basename</emphasis>
+                argument is a good way to avoid truncation, but only if all machine names
+                end in a common string.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>Disk attn</term>
+              <listitem>
+                <para>The sixth column displays the number of available kilobyte blocks on each
+                AFS disk partition on the file server machine.</para>
+
+                <para>The display for each partition has the following form:</para>
+
+<programlisting>
+   x:&amp;lt;free_blocks&amp;gt;
+
+</programlisting>
+                  <para>where <computeroutput>x</computeroutput> indicates the partition name. For example, <computeroutput>a:8949</computeroutput> specifies
+                  that the <replaceable>/vicepa</replaceable> partition has 8,949 1-KB blocks free. Available space
+                  can be displayed for up to 26 partitions. If the window is not wide enough
+                  for all partition entries to appear on a single line, the <emphasis role="bold">scout</emphasis> process
+                  automatically creates multiple lines, stacking the partition entries into
+                  sub-columns within the sixth column.</para>
+
+                  <para>The label on the <computeroutput>Disk attn</computeroutput> column indicates the threshold value at
+                  which entries in the column become highlighted. By default, the label is</para>
+
+<programlisting>
+   Disk attn: &amp;gt; 95% used
+
+</programlisting>
+                    <para>because by default the scout program highlights the entry for any
+                    partition that is over 95% full.</para>
+
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+              <para>For all columns except the fifth (file server machine name), the optional
+              <emphasis role="bold">-attention</emphasis> argument sets the value at which entries in the column are
+              highlighted to indicate that a certain value has been exceeded.  Only
+              values in the fifth and <computeroutput>Disk attn</computeroutput> columns ever become highlighted by
+              default.</para>
+
+              <para>If the scout program is unable to access or otherwise obtain information
+              about a partition, it generates a message similar to the following
+              example:</para>
+
+<programlisting>
+   Could not get information on server fs1.abc.com partition /vicepa
+
+</programlisting>
+              </refsect2>
+              <refsect2>
+                <title>The Message/Probe Line</title>
+                <para>The bottom line of the scout screen indicates how many times the <emphasis role="bold">scout</emphasis>
+                program has probed the File Server processes for statistics. The
+                statistics gathered in the latest probe appear in the statistics display
+                region. The <emphasis role="bold">-frequency</emphasis> argument overrides the default probe frequency
+                of 60 seconds.</para>
+
+              </refsect2>
+            </refsect1>
+            <refsect1>
+              <title>Examples</title>
+              <para>See the chapter on monitoring tools in the <emphasis>IBM AFS Administration
+              Guide</emphasis>, which illustrates the displays that result from different
+              combinations of options.</para>
+
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>None</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="afsmonitor1">afsmonitor(1)</link>,
+              <link linkend="fstrace8">fstrace(8)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

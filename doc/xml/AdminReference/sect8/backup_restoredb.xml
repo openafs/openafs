@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_restoredb8">
+  <refmeta>
+    <refentrytitle>backup restoredb</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup restoredb</refname>
+    <refpurpose>Restores a saved copy of the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup restoredb</emphasis> [<emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;] [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup res</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup restoredb</emphasis> command restores to the Backup Server machine's
+    local disk a version of the Backup Database previously written to tape by
+    using the <emphasis role="bold">backup savedb</emphasis> command.</para>
+
+    <para>(If the <computeroutput>FILE YES</computeroutput> instruction appears in the
+    <replaceable>/usr/afs/backup/CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file associated with the specified
+    port offset, then the <emphasis role="bold">backup restoredb</emphasis> command restores data from the
+    backup data file listed for that port offset in the Tape Coordinator's
+    <replaceable>/usr/afs/backup/tapeconfig</replaceable> file, instead of from tape. For the sake of
+    clarity, the following text refers to tapes only, but the Backup System
+    handles backup data files in much the same way.)</para>
+
+    <para>The most common reason to run this command is to replace a corrupted or
+    otherwise damaged Backup Database; use the <emphasis role="bold">backup dbverify</emphasis> command to
+    determine the database's status. The command can also be used to restore
+    records that were removed from the database when the <emphasis role="bold">-archive</emphasis> argument
+    was included on a previous <emphasis role="bold">backup savedb</emphasis> command.</para>
+
+    <para>The command completely overwrites the existing Backup Database records for
+    volume sets, Tape Coordinators, and the dump hierarchy with the
+    corresponding information from the saved version. It does not overwrite
+    existing dump records, but instead interleaves the records from the copy
+    being restored. If both the existing database (on the Backup Server
+    machine's disk) and the copy being restored include a record about the
+    same dump, the Backup System retains the one in the existing database.</para>
+
+    <para>The Tape Coordinator's default response to this command is to access the
+    first tape it needs by invoking the <computeroutput>MOUNT</computeroutput> instruction in the local
+    <replaceable>/usr/afs/backup/CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file, or by prompting the backup
+    operator to insert the tape if there is no <computeroutput>MOUNT</computeroutput> instruction. However,
+    if the <computeroutput>AUTOQUERY NO</computeroutput> instruction appears in the <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable>
+    file, or if the issuer of the <emphasis role="bold">butc</emphasis> command included the <emphasis role="bold">-noautoquery</emphasis>
+    flag, the Tape Coordinator instead expects the tape to be in the device
+    already. If it is not, or is the wrong tape, the Tape Coordinator invokes
+    the <computeroutput>MOUNT</computeroutput> instruction or prompts the operator. It also invokes the
+    <computeroutput>MOUNT</computeroutput> instruction or prompts for any additional tapes needed to
+    complete the restore operation; the backup operator must arrange to
+    provide them.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>If the database is corrupted, do not attempt to restore a saved database
+    on top of it. Instead, use the instructions for repairing a corrupted
+    database in the <emphasis>IBM AFS Administration Guide</emphasis> chapter about performing
+    backup operations.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the port offset number of the Tape Coordinator handling the
+          tapes for this operation.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the Backup Database being restored from the
+    Tape Coordinator with port offset 0:</para>
+
+<programlisting>
+   % backup restoredb
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+      machine where the Backup Server is running, or must be logged onto a
+      server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="butc5">butc(5)</link>,
+      <link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_dbverify8">backup_dbverify(8)</link>,
+      <link linkend="backup_savedb8">backup_savedb(8)</link>,
+      <link linkend="butc8">butc(8)</link></para>
+
+      <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

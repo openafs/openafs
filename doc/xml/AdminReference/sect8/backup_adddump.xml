@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_adddump8">
+  <refmeta>
+    <refentrytitle>backup adddump</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup adddump</refname>
+    <refpurpose>Defines a dump level in the dump hierarchy</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup adddump</emphasis> <emphasis role="bold">-dump</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;+
+        [<emphasis role="bold">-expires</emphasis> &lt;<emphasis>expiration date</emphasis>&gt;+]
+        [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup addd</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;+ [<emphasis role="bold">-e</emphasis> &lt;<emphasis>expiration date</emphasis>&gt;+]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup adddump</emphasis> command creates one or more dump levels in the dump
+    hierarchy stored in the Backup Database, and optionally assigns an
+    expiration date to each one. All of the dump levels in the Backup Database
+    collectively constitute the dump hierarchy.</para>
+
+    <para>Use the <emphasis role="bold">-expires</emphasis> argument to associate an expiration date with each
+    dump level. When the Backup System subsequently creates a dump at the dump
+    level, it uses the specified value to derive the dump's expiration date,
+    which it records on the label of the tape (or backup data file). The
+    Backup System refuses to overwrite a tape until after the latest
+    expiration date of any dump that the tape contains, unless the <emphasis role="bold">backup
+    labeltape</emphasis> command is used to relabel the tape. If a dump level does not
+    have an expiration date, the Backup System treats dumps created at the
+    level as expired as soon as it creates them.</para>
+
+    <para>(Note that the Backup System does not automatically remove a dump's record
+    from the Backup Database when the dump reaches its expiration date, but
+    only if the tape that contains the dump is recycled or relabeled. To
+    remove expired and other obsolete dump records, use the <emphasis role="bold">backup
+    deletedump</emphasis> command.)</para>
+
+    <para>Define either an absolute or relative expiration date:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>An absolute expiration date defines the month/day/year (and, optionally,
+        hour and minutes) at which a dump expires. If the expiration date predates
+        the dump creation time, the Backup System immediately treats the dump as
+        expired.</para>
+
+      </listitem>
+      <listitem>
+        <para>A relative date defines the number of years, months, or days (or a
+        combination of the three) after the dump's creation that it expires. When
+        the Backup System creates a dump at the dump level, it calculates an
+        actual expiration date by adding the relative date to the start time of
+        the dump operation.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dump</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each dump level to add to the dump hierarchy. Precede full dump
+          level names with a slash (for example, <computeroutput>/full</computeroutput>). Indicate an incremental
+          dump level by preceding it with an ordered list of the dump levels
+          directly above it in the hierarchy (its parent dump levels); use the slash
+          as a separator. The parent dump levels must already exist. For example,
+          the dump levels <computeroutput>/full</computeroutput> and <computeroutput>/full/incremental1</computeroutput> must exist when the
+          incremental dump level <computeroutput>/full/incremental1/incremental2</computeroutput> is created.</para>
+
+          <para>Dump level names can have any number of levels, but cannot exceed 256
+          characters in length, including the slashes. The maximum length for any
+          single level (the text between slashes) is 28 characters, not including
+          the preceding slash.</para>
+
+          <para>All alphanumeric characters are allowed in dump level names. Do not use
+          the period (<computeroutput>.</computeroutput>), however, because it is the separator between the volume
+          set name and dump level name in the dump name assigned automatically by
+          the <emphasis role="bold">backup dump</emphasis> command. It is best not to include other metacharacters
+          either; if using them, enclose them in double quotes (<computeroutput>" "</computeroutput>) when issuing
+          the <emphasis role="bold">backup adddump</emphasis> command outside interactive mode.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-expires</emphasis> &lt;<emphasis>expiration date</emphasis>&gt;+</term>
+        <listitem>
+          <para>Defines the absolute or relative expiration date to associate with each
+          dump level named by the <emphasis role="bold">-dump</emphasis> argument. Absolute expiration dates have
+          the following format:</para>
+
+<programlisting>
+   [at] {NEVER | &amp;lt;mm&amp;gt;/&amp;lt;dd&amp;gt;/&amp;lt;yyyy&amp;gt; [&amp;lt;hh&amp;gt;:&amp;lt;MM&amp;gt;] }
+
+</programlisting>
+            <para>where the optional word at is followed either by the string <computeroutput>NEVER</computeroutput>,
+            which indicates that dumps created at the dump level never expire, or by a
+            date value with a required portion (&lt;mm&gt; for month, &lt;dd&gt; for day, and
+            &lt;yyyy&gt; for year) and an optional portion (&lt;hh&gt; for hours and &lt;MM&gt; for
+            minutes).</para>
+
+            <para>Omit the <emphasis>hh:MM</emphasis> portion to use the default of midnight (00:00 hours), or
+            provide a value in 24-hour format (for example, <computeroutput>20:30</computeroutput> is 8:30 p.m.).
+            Valid values for the year range from <computeroutput>1970</computeroutput> to <computeroutput>2037</computeroutput>; higher values are
+            not valid because the latest possible date in the standard UNIX
+            representation is in February 2038. The command interpreter automatically
+            reduces later dates to the maximum value.</para>
+
+            <para>Relative expiration dates have the following format:</para>
+
+<programlisting>
+   [in] [&amp;lt;years&amp;gt;y] [&amp;lt;months&amp;gt;m] [&amp;lt;days&amp;gt;d]
+
+</programlisting>
+              <para>where the optional word in is followed by at least one of a number of
+              years (maximum <computeroutput>9999</computeroutput>) followed by the letter <computeroutput>y</computeroutput>, a number of months
+              (maximum <computeroutput>12</computeroutput>) followed by the letter <computeroutput>m</computeroutput>, or a number of days (maximum
+              <computeroutput>31</computeroutput>) followed by the letter <computeroutput>d</computeroutput>. If providing more than one of the
+              three, list them in the indicated order. If the date that results from
+              adding the relative expiration value to a dump's creation time is later
+              than the latest possible date in the UNIX time representation, the Backup
+              System automatically reduces it to that date.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-localauth</emphasis></term>
+            <listitem>
+              <para>Constructs a server ticket using a key from the local
+              <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+              it to the Backup Server, Volume Server and VL Server during mutual
+              authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+              more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+            <listitem>
+              <para>Names the cell in which to run the command. Do not combine this argument
+              with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-help</emphasis></term>
+            <listitem>
+              <para>Prints the online help for this command. All other valid options are
+              ignored.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following command defines a full dump called <computeroutput>/1999</computeroutput> with a relative
+        expiration date of one year:</para>
+
+<programlisting>
+   % backup adddump -dump /1999 -expires in 1y
+
+</programlisting>
+          <para>The following command defines an incremental dump called
+          <computeroutput>/sunday1/monday</computeroutput>1 with a relative expiration date of 13 days:</para>
+
+<programlisting>
+   % backup adddump -dump /sunday1/monday1 -expires in 13d
+
+</programlisting>
+            <para>The following command defines two dump incremental dump levels,
+            <computeroutput>/Monthly/Week1</computeroutput> and <computeroutput>/Monthly/Week2</computeroutput>. Their parent, the full dump level
+            <computeroutput>/Monthly</computeroutput>, must already exist. The expiration date for both levels is
+            12:00 a.m. on 1 January 2000.</para>
+
+<programlisting>
+   % backup adddump -dump /Monthly/Week1 /Monthly/Week2 -expires at 01/01/2000
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+              machine where the Backup Server is running, or must be logged onto a
+              server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+              included.</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="backup8">backup(8)</link>,
+              <link linkend="backup_deldump8">backup_deldump(8)</link>,
+              <link linkend="backup_deletedump8">backup_deletedump(8)</link>,
+              <link linkend="backup_listdumps8">backup_listdumps(8)</link>,
+              <link linkend="backup_setexp8">backup_setexp(8)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

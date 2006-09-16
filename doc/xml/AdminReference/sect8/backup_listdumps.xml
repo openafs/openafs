@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_listdumps8">
+  <refmeta>
+    <refentrytitle>backup listdumps</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup listdumps</refname>
+    <refpurpose>Displays the dump hierarchy from the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup listdumps</emphasis> [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup listd</emphasis> [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup listdumps</emphasis> command displays the dump hierarchy from the
+    Backup Database.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays the complete dump hierarchy and indicates the
+    relationship between full and incremental dump levels. Full dump levels
+    appear at the left margin. The hierarchy can include more than one full
+    dump level; each one defines a subhierarchy of dump levels that can be
+    used for dumping different volume sets.</para>
+
+    <para>Incremental dump levels appear below and indented to the right of their
+    parent dump levels, which can be either full or incremental. Since
+    multiple incremental dump levels can share the same parent, an incremental
+    dump level is not always directly below its parent; the amount of
+    indentation indicates the parent/child relationship.</para>
+
+    <para>If a dump level has an associated expiration date, it appears along with
+    the level name. Absolute expiration dates appear in the format</para>
+
+<programlisting>
+   &amp;lt;dump_level&amp;gt; expires at &amp;lt;day month date time year&amp;gt;
+
+</programlisting>
+      <para>and relative expiration dates in the format</para>
+
+<programlisting>
+   &amp;lt;dump_level&amp;gt; expires in {&amp;lt;years&amp;gt;y | &amp;lt;months&amp;gt;m | &amp;lt;days&amp;gt;d}
+
+</programlisting>
+        <para>to indicate the number of years, months, days, or combination of the three
+        after creation a dump expires when created at this level.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example depicts six dump hierarchies. The expiration date
+        for all incremental dump levels is 13 days so that the corresponding tapes
+        can be recycled two weeks after their creation. The expiration dates for
+        all full dump levels is 27 days so that the corresponding tapes can be
+        recycled four weeks after their creation.</para>
+
+<programlisting>
+   % backup listdumps
+   /week1  expires in  27d
+         /tuesday  expires in  13d
+                 /thursday  expires in  13d
+         /sunday  expires in  13d
+                /tuesday expires in  13d
+                        /thursday expires in  13d
+   /week3  expires in  27d
+         /tuesday  expires in  13d
+                 /thursday  expires in  13d
+         /sunday  expires in  13d
+                /tuesday  expires in  13d
+                        /thursday  expires in  13d
+   /sunday1  expires in  27d
+           /monday1  expires in  13d
+           /tuesday1  expires in  13d
+           /wednesday1  expires in  13d
+           /thursday1  expires in  13d
+           /friday1  expires in  13d
+   /sunday2  expires in  27d
+           /monday2  expires in  13d
+           /tuesday2  expires in  13d
+           /wednesday2  expires in  13d
+           /thursday2  expires in  13d
+           /friday2  expires in  13d
+   /sunday3  expires in  27d
+           /monday1  expires in  13d
+           /tuesday1  expires in  13d
+           /wednesday1  expires in  13d
+           /thursday1  expires in  13d
+           /friday1  expires in  13d
+   /sunday4  expires in  27d
+           /monday2  expires in  13d
+           /tuesday2  expires in  13d
+           /wednesday2  expires in  13d
+           /thursday2  expires in  13d
+           /friday2  expires in  13d
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+          machine where the Backup Server is running, or must be logged onto a
+          server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+          included.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="backup8">backup(8)</link>,
+          <link linkend="backup_adddump8">backup_adddump(8)</link>,
+          <link linkend="backup_deldump8">backup_deldump(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="salvager8">
+  <refmeta>
+    <refentrytitle>salvager</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>salvager</refname>
+    <refpurpose>Initializes the Salvager component of the fs process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">salvager</emphasis> [<emphasis>initcmd</emphasis>] [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>name of partition to salvage</emphasis>&gt;]
+        [<emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id to salvage</emphasis>&gt;] [<emphasis role="bold">-debug</emphasis>] [<emphasis role="bold">-nowrite</emphasis>]
+        [<emphasis role="bold">-inodes</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-oktozap</emphasis>] [<emphasis role="bold">-rootinodes</emphasis>]
+        [<emphasis role="bold">-salvagedirs</emphasis>] [<emphasis role="bold">-blockreads</emphasis>]
+        [<emphasis role="bold">-parallel</emphasis> &lt;<emphasis># of max parallel partition salvaging</emphasis>&gt;]
+        [<emphasis role="bold">-tmpdir</emphasis> &lt;<emphasis>name of dir to place tmp files</emphasis>&gt;]
+        [<emphasis role="bold">-showlog</emphasis>] [<emphasis role="bold">-showsuid</emphasis>] [<emphasis role="bold">-showmounts</emphasis>]
+        [<emphasis role="bold">-orphans</emphasis> (ignore | remove | attach)] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">salvager</emphasis> command initializes the Salvager component of the <computeroutput>fs</computeroutput>
+    process. In the conventional configuration, its binary file is located in
+    the <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The Salvager restores internal consistency to corrupted read/write volumes
+    on the local file server machine where possible. For read-only or backup
+    volumes, it inspects only the volume header:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If the volume header is corrupted, the Salvager removes the volume
+        completely and records the removal in its log file,
+        <replaceable>/usr/afs/logs/SalvageLog</replaceable>. Issue the <emphasis role="bold">vos release</emphasis> or <emphasis role="bold">vos backup</emphasis>
+        command to create the read-only or backup volume again.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the volume header is intact, the Salvager skips the volume (does not
+        check for corruption in the contents). However, if the File Server notices
+        corruption as it initializes, it sometimes refuses to attach the volume or
+        bring it online. In this case, it is simplest to remove the volume by
+        issuing the <emphasis role="bold">vos remove</emphasis> or <emphasis role="bold">vos zap</emphasis> command. Then issue the <emphasis role="bold">vos
+        release</emphasis> or <emphasis role="bold">vos backup</emphasis> command to create it again.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Unlike other server process initialization commands, the <emphasis role="bold">salvager</emphasis>
+    command is designed to be issued at the command shell prompt, as well as
+    being placed into a file server machine's <replaceable>/usr/afs/local/BosConfig</replaceable> file
+    with the <emphasis role="bold">bos create</emphasis> command. It is also possible to invoke the Salvager
+    remotely by issuing the <emphasis role="bold">bos salvage</emphasis> command.</para>
+
+    <para>Combine the command's options as indicated to salvage different numbers of
+    read/write volumes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To salvage all volumes on the file server machine, provide no arguments.
+        No volumes on the machine are accessible to Cache Managers during the
+        salvage, because the BOS Server stops the File Server and Volume Server
+        processes while the Salvager runs.</para>
+
+      </listitem>
+      <listitem>
+        <para>To salvage all of the volumes on one partition, provide the <emphasis role="bold">-partition</emphasis>
+        argument. As for a salvage of all volumes on the machine, no volumes on
+        the machine are accessible to Cache Managers during the salvage operation.</para>
+
+      </listitem>
+      <listitem>
+        <para>To salvage only one volume, combine the <emphasis role="bold">-partition</emphasis> and <emphasis role="bold">-volumeid</emphasis>
+        arguments. Only that volume is inaccessible to Cache Managers, because the
+        BOS Server does not shutdown the File Server and Volume Server processes.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The Salvager normally salvages only those read/write volumes that are
+    marked as having been active when a crash occurred. To have it salvage all
+    relevant read/write volumes, add the <emphasis role="bold">-force</emphasis> flag.</para>
+
+    <para>The Salvager normally creates new inodes as it repairs damage. If the
+    partition is so full that there is no room for new inodes, use the
+    <emphasis role="bold">-nowrite</emphasis> argument to bringing undamaged volumes online without
+    attempting to salvage damaged volumes. Then use the <emphasis role="bold">vos move</emphasis> command to
+    move one or more of the undamaged volumes to other partitions, freeing up
+    the space that the Salvager needs to create new inodes.</para>
+
+    <para>By default, multiple Salvager subprocesses run in parallel: one for each
+    partition up to four, and four subprocesses for four or more
+    partitions. To increase or decrease the number of subprocesses running in
+    parallel, provide a positive integer value for the <emphasis role="bold">-parallel</emphasis> argument.</para>
+
+    <para>If there is more than one server partition on a physical disk, the
+    Salvager by default salvages them serially to avoid the inefficiency of
+    constantly moving the disk head from one partition to another. However,
+    this strategy is often not ideal if the partitions are configured as
+    logical volumes that span multiple disks. To force the Salvager to salvage
+    logical volumes in parallel, provide the string <computeroutput>all</computeroutput> as the value for
+    the <emphasis role="bold">-parallel</emphasis> argument. Provide a positive integer to specify the
+    number of subprocesses to run in parallel (for example, <computeroutput>-parallel 5all</computeroutput>
+    for five subprocesses), or omit the integer to run up to four
+    subprocesses, depending on the number of logical volumes being salvaged.</para>
+
+    <para>The Salvager creates temporary files as it runs, by default writing them
+    to the partition it is salvaging. The number of files can be quite large,
+    and if the partition is too full to accommodate them, the Salvager
+    terminates without completing the salvage operation (it always removes the
+    temporary files before exiting). Other Salvager subprocesses running at
+    the same time continue until they finish salvaging all other partitions
+    where there is enough disk space for temporary files. To complete the
+    interrupted salvage, reissue the command against the appropriate
+    partitions, adding the <emphasis role="bold">-tmpdir</emphasis> argument to redirect the temporary files
+    to a local disk directory that has enough space.</para>
+
+    <para>The <emphasis role="bold">-orphans</emphasis> argument controls how the Salvager handles orphaned files
+    and directories that it finds on server partitions it is salvaging. An
+    <emphasis>orphaned</emphasis> element is completely inaccessible because it is not
+    referenced by the vnode of any directory that can act as its parent (is
+    higher in the filespace). Orphaned objects occupy space on the server
+    partition, but do not count against the volume's quota.</para>
+
+    <para>To generate a list of all mount points that reside in one or more volumes,
+    rather than actually salvaging them, include the <emphasis role="bold">-showmounts</emphasis> flag.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>[<emphasis>initcmd</emphasis>]</term>
+        <listitem>
+          <para>Accommodates the command's use of the AFS command parser, and is optional.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>name of partition to salvage</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the name of the partition to salvage. Specify the full partition
+          name using the form <replaceable>/vicep</replaceable><emphasis>x</emphasis><replaceable></replaceable> or <replaceable>/vicep</replaceable><emphasis>xx</emphasis><replaceable></replaceable>. Omit this argument to
+          salvage every partition on the file server machine.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id to salvage</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the volume ID of a specific read/write volume to salvage.  The
+          <emphasis role="bold">-partition</emphasis> argument must be provided along with this one and specify
+          the volume's actual site.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-debug</emphasis></term>
+        <listitem>
+          <para>Allows only one Salvager subprocess to run at a time, regardless of the
+          setting of the <emphasis role="bold">-parallel</emphasis> option. Include it when running the Salvager
+          in a debugger to make the trace easier to interpret.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-nowrite</emphasis></term>
+        <listitem>
+          <para>Brings all undamaged volumes online without attempting to salvage any
+          damaged volumes.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-inodes</emphasis></term>
+        <listitem>
+          <para>Records in the <replaceable>/usr/afs/logs/SalvageLog</replaceable> file a list of all AFS inodes
+          that the Salvager modified.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Inspects all volumes for corruption, not just those that are marked as
+          having been active when a crash occurred.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-oktozap</emphasis></term>
+        <listitem>
+          <para>Removes a volume that is so damaged that even issuing the <emphasis role="bold">vos zap</emphasis>
+          command with the <emphasis role="bold">-force</emphasis> flag is ineffective. Use this argument only in
+          consultation with AFS Development or Product Support. Combine it with the
+          <emphasis role="bold">-partition</emphasis> and <emphasis role="bold">-volumeid</emphasis> arguments to identify the volume to remove.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rootinodes</emphasis></term>
+        <listitem>
+          <para>Records in the <replaceable>/usr/afs/logs/SalvageLog</replaceable> file a list of all AFS inodes
+          owned by the local superuser <computeroutput>root</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-salvagedirs</emphasis></term>
+        <listitem>
+          <para>Salvages entire directory structures, even if they do not appear to be
+          damaged. By default, the Salvager salvages a directory only if it is
+          flagged as corrupted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-blockreads</emphasis></term>
+        <listitem>
+          <para>Forces the Salvager to read a partition one disk block (512 bytes) at a
+          time and to skip any blocks that are too badly damaged to be salvaged.
+          This allows it to salvage as many volumes as possible. By default, the
+          Salvager reads large disk blocks, which can cause it to exit prematurely
+          if it encounters disk errors. Use this flag if the partition to be
+          salvaged has disk errors.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-parallel</emphasis> &lt;<emphasis># of max parallel partition salvaging</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the maximum number of Salvager subprocesses to run in parallel.
+          Provide one of three values:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>An integer from the range <computeroutput>1</computeroutput> to <computeroutput>32</computeroutput>. A value of <computeroutput>1</computeroutput> means that a
+              single Salvager process salvages the partitions sequentially.</para>
+
+            </listitem>
+            <listitem>
+              <para>The string <computeroutput>all</computeroutput> to run up to four Salvager subprocesses in parallel on
+              partitions formatted as logical volumes that span multiple physical
+              disks. Use this value only with such logical volumes.</para>
+
+            </listitem>
+            <listitem>
+              <para>The string <computeroutput>all</computeroutput> followed immediately (with no intervening space) by an
+              integer from the range <computeroutput>1</computeroutput> to <computeroutput>32</computeroutput>, to run the specified number of
+              Salvager subprocesses in parallel on partitions formatted as logical
+              volumes. Use this value only with such logical volumes.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>The BOS Server never starts more Salvager subprocesses than there are
+          partitions, and always starts only one process to salvage a single
+          volume. If this argument is omitted, up to four Salvager subprocesses run
+          in parallel.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-tmpdir</emphasis> &lt;<emphasis>name of dir to place tmp files</emphasis>&gt;</term>
+        <listitem>
+          <para>Names a local disk directory in which the Salvager places the temporary
+          files it creates during a salvage operation, instead of writing them to
+          the partition being salvaged (the default). If the Salvager cannot write
+          to the specified directory, it attempts to write to the partition being
+          salvaged.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showlog</emphasis></term>
+        <listitem>
+          <para>Displays on the standard output stream all log data that is being written
+          to the <replaceable>/usr/afs/logs/SalvageLog</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showsuid</emphasis></term>
+        <listitem>
+          <para>Displays a list of the pathnames for all files that have the setuid or
+          setgid mode bit set.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showmounts</emphasis></term>
+        <listitem>
+          <para>Records in the <replaceable>/usr/afs/logs/SalvageLog</replaceable> file all mount points found in
+          each volume. The Salvager does not repair corruption in the volumes, if
+          any exists.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-orphans</emphasis> (ignore | remove | attach)</term>
+        <listitem>
+          <para>Controls how the Salvager handles orphaned files and directories.  Choose
+          one of the following three values:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>ignore</term>
+              <listitem>
+                <para>Leaves the orphaned objects on the disk, but prints a message to the
+                <replaceable>/usr/afs/logs/SalvageLog</replaceable> file reporting how many orphans were found and
+                the approximate number of kilobytes they are consuming. This is the
+                default if the <emphasis role="bold">-orphans</emphasis> argument is omitted.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>remove</term>
+              <listitem>
+                <para>Removes the orphaned objects, and prints a message to the
+                <replaceable>/usr/afs/logs/SalvageLog</replaceable> file reporting how many orphans were removed
+                and the approximate number of kilobytes they were consuming.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>attach</term>
+              <listitem>
+                <para>Attaches the orphaned objects by creating a reference to them in the vnode
+                of the volume's root directory. Since each object's actual name is now
+                lost, the Salvager assigns each one a name of the following form:</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term><computeroutput>__ORPHANFILE__.</computeroutput><emphasis>index</emphasis><computeroutput></computeroutput> for files.</term>
+                    <listitem>
+                      <para></para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term><computeroutput>__ORPHANDIR__.</computeroutput><emphasis>index</emphasis><computeroutput></computeroutput> for directories.</term>
+                    <listitem>
+                      <para></para>
+
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+                <para>where <emphasis>index</emphasis> is a two-digit number that uniquely identifies each
+                object. The orphans are charged against the volume's quota and appear in
+                the output of the <emphasis role="bold">ls</emphasis> command issued against the volume's root
+                directory.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command instructs the Salvager to attempt to salvage the
+    volume with volume ID 258347486 on <replaceable>/vicepg</replaceable> on the local machine.</para>
+
+<programlisting>
+   % /usr/afs/bin/salvager -partition /vicepg -volumeid 258347486
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>To issue the command at the shell prompt, the issuer must be logged in as
+      the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="SalvageLog5">SalvageLog(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link>,
+      <link linkend="bos_salvage8">bos_salvage(8)</link>,
+      <link linkend="vos_move1">vos_move(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

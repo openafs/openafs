@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kaserver8">
+  <refmeta>
+    <refentrytitle>kaserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kaserver</refname>
+    <refpurpose>Initializes the Authentication Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para><emphasis role="bold">kaserver</emphasis> [<emphasis role="bold">-noAuth</emphasis>] [<emphasis role="bold">-fastKeys</emphasis>] [<emphasis role="bold">-database</emphasis> &lt;<emphasis>dbpath</emphasis>&gt;]
+        [<emphasis role="bold">-localfiles</emphasis> &lt;<emphasis>lclpath</emphasis>&gt;] [<emphasis role="bold">-minhours</emphasis> &lt;<emphasis>n</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>serverlist</emphasis>&gt;] [<emphasis role="bold">-enable_peer_stats</emphasis>]
+        [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kaserver</emphasis> command initializes the Authentication Server, which runs
+    on every database server machine. In the conventional configuration, its
+    binary file is located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server
+    machine.</para>
+
+    <para>The <emphasis role="bold">kaserver</emphasis> command is not normally issued at the command shell prompt
+    but rather placed into a file server machine's <replaceable>/usr/afs/local/BosConfig</replaceable>
+    file with the <emphasis role="bold">bos create</emphasis> command. If it is ever issued at the command
+    shell prompt, the issuer must be logged onto a database server machine as
+    the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>As it initializes, the Authentication Server process creates the two files
+    that constitute the Authentication Database, <replaceable>kaserver.DB0</replaceable> and
+    <replaceable>kaserver.DBSYS1</replaceable>, in the <replaceable>/usr/afs/db</replaceable> directory if they do not already
+    exist. Use the commands in the <emphasis role="bold">kas</emphasis> suite to administer the database.</para>
+
+    <para>The Authentication Server is responsible for several aspects of AFS
+    security, including:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Maintenance of all AFS server encryption keys and user passwords in the
+        Authentication Database.</para>
+
+      </listitem>
+      <listitem>
+        <para>Creation of the tickets and tokens that users and servers use to establish
+        secure connections. Its Ticket Granting Service (TGS) component performs
+        this function.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The Authentication Server records a trace of its activity in the
+    <replaceable>/usr/afs/logs/AuthLog</replaceable> file. Use the <emphasis role="bold">bos getlog</emphasis> command to display
+    the contents of the file. Use the <emphasis role="bold">kdb</emphasis> command to read the protected
+    files associated with the <replaceable>AuthLog</replaceable> file, <replaceable>AuthLog.dir</replaceable> and
+    <replaceable>AuthLog.pag</replaceable>.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-noAuth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Thus, it
+          establishes an unauthenticated connection between the issuer and the
+          Authentication Server. It is useful only when authorization checking is
+          disabled on the database server machine. In normal circumstances, the
+          Authentication Server allows only authorized (privileged) users to issue
+          commands that affect or contact the Authentication Database and will
+          refuse to perform such an action even if the <emphasis role="bold">-noAuth</emphasis> flag is used.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fastKeys</emphasis></term>
+        <listitem>
+          <para>Is a test flag for use by the AFS Development staff; it serves no
+          functional purpose.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>dbpath</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of an alternate directory in which the
+          Authentication Database files reside. Provide the complete pathname,
+          ending in the base filename to which the <computeroutput>.DB0</computeroutput> and <computeroutput>.DBSYS1</computeroutput> extensions
+          are appended. For example, the appropriate value for the default database
+          files is <replaceable>/usr/afs/db/kaserver</replaceable>.</para>
+
+          <para>Provide the <emphasis role="bold">-localfiles</emphasis> argument along with this one; otherwise, the
+          <emphasis role="bold">-localfiles</emphasis> argument is also set to the value of this argument, which
+          is probably inappropriate.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localfiles</emphasis> &lt;<emphasis>lclpath</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of an alternate directory in which the auxiliary
+          Authentication Database file resides. Provide the complete pathname,
+          ending in the base filename to which the <computeroutput>auxdb</computeroutput> suffix is appended. For
+          example, the appropriate value for the default auxiliary database file is
+          <replaceable>/usr/afs/local/kaserver</replaceable>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-minhours</emphasis> &lt;<emphasis>n</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the minimum number of hours that must pass between password
+          changes made by any regular user. System administrators (with the <computeroutput>ADMIN</computeroutput>
+          flag in their Authentication Database entry) can change passwords as often
+          as desired. Setting a minimum time between password changes is not
+          recommended.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each database server machine running an Authentication Server with
+          which the local Authentication Server is to synchronize its copy of the
+          Authentication Database, rather than with the machines listed in the local
+          <replaceable>/usr/afs/etc/CellServDB</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. For each connection with a specific UDP port on another machine,
+          a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+          so on) sent or received. To display or otherwise access the records, use
+          the Rx Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. A separate record is kept for each type of RPC (FetchFile,
+          GetStatus, and so on) sent or received, aggregated over all connections to
+          other machines. To display or otherwise access the records, use the Rx
+          Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following <emphasis role="bold">bos create</emphasis> command creates a <computeroutput>kaserver</computeroutput> process on
+    <computeroutput>fs3.abc.com</computeroutput> (the command appears on two lines here only for
+    legibility):</para>
+
+<programlisting>
+   % bos create -server fs3.abc.com -instance kaserver \
+                -type simple -cmd /usr/afs/bin/kaserver
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="AuthLog5">AuthLog(5)</link>,
+      <link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="kaserver_DB05">kaserver.DB0(5)</link>,
+      <link linkend="kaserverauxdb5">kaserverauxdb(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link>,
+      <link linkend="kas8">kas(8)</link>,
+      <link linkend="kdb8">kdb(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

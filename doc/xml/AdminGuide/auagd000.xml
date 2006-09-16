@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
+        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY preface SYSTEM "auagd005.xml">
+<!ENTITY chapter1 SYSTEM "auagd006.xml">
+<!ENTITY chapter2 SYSTEM "auagd007.xml">
+<!ENTITY chapter3 SYSTEM "auagd008.xml">
+<!ENTITY chapter4 SYSTEM "auagd009.xml">
+<!ENTITY chapter5 SYSTEM "auagd010.xml">
+<!ENTITY chapter6 SYSTEM "auagd011.xml">
+<!ENTITY chapter7 SYSTEM "auagd012.xml">
+<!ENTITY chapter8 SYSTEM "auagd013.xml">
+<!ENTITY chapter9 SYSTEM "auagd014.xml">
+<!ENTITY chapter10 SYSTEM "auagd015.xml">
+<!ENTITY chapter11 SYSTEM "auagd016.xml">
+<!ENTITY chapter12 SYSTEM "auagd017.xml">
+<!ENTITY chapter13 SYSTEM "auagd018.xml">
+<!ENTITY chapter14 SYSTEM "auagd019.xml">
+<!ENTITY chapter15 SYSTEM "auagd020.xml">
+<!ENTITY chapter16 SYSTEM "auagd021.xml">
+<!ENTITY appendixA SYSTEM "auagd022.xml">
+<!ENTITY appendixB SYSTEM "auagd023.xml">
+<!ENTITY appendixC SYSTEM "auagd024.xml">
+<!ENTITY appendixD SYSTEM "auagd025.xml">
+<!ENTITY index SYSTEM "auagd026.xml">
+]>
+<book label="Version 3.6" fpi="Document Number GC09-4563-00">
+  <bookinfo>
+    <title>AFS Administration Guide</title>
+
+    <subtitle>Version 3.6</subtitle>
+
+    <pubsnumber>Document Number GC09-4563-00</pubsnumber>
+
+    <copyright>
+      <year>2000</year>
+
+      <holder>IBM Corporation. All Rights Reserved</holder>
+    </copyright>
+
+    <revhistory>
+      <revision>
+        <revnumber>3.6</revnumber>
+
+        <date>April 2000</date>
+
+        <revremark>First Edition</revremark>
+      </revision>
+    </revhistory>
+
+    <abstract>
+      <para>This edition applies to: <simplelist>
+          <member>IBM AFS for AIX, Version 3.6</member>
+          <member>IBM AFS for Digital Unix, Version 3.6</member>
+          <member>IBM AFS for HP-UX, Version 3.6</member>
+          <member>IBM AFS for Linux, Version 3.6</member>
+          <member>IBM AFS for SGI IRIX, Version 3.6</member>
+          <member>IBM AFS for Solaris, Version 3.6</member>
+        </simplelist></para>
+
+      <para>and to all subsequent releases and modifications until otherwise
+      indicated in new editions.This softcopy version is based on the printed
+      edition of this book. Some formatting amendments have been made to make
+      this information more suitable for softcopy.</para>
+    </abstract>
+  </bookinfo>
+
+  &preface;
+
+  <part>
+    <title>Concepts and Configuration Issues</title>
+
+    &chapter1;
+    &chapter2;
+  </part>
+
+  <part>
+    <title>Managing File Server Machines</title>
+
+    &chapter3;
+    &chapter4;
+    &chapter5;
+    &chapter6;
+    &chapter7; 
+    &chapter8;
+    &chapter9;
+  </part>
+
+  <part>
+    <title>Managing Client Machines</title>
+
+    &chapter10;
+    &chapter11;
+  </part>
+
+  <part>
+    <title>Managing Users and Groups</title>
+
+    &chapter12;
+    &chapter13;
+    &chapter14;
+    &chapter15;
+    &chapter16;
+  </part>
+
+  &appendixA;
+  &appendixB;
+  &appendixC;
+  &appendixD;
+  &index;
+</book>

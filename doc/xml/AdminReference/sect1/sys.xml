@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="sys1">
+  <refmeta>
+    <refentrytitle>sys</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>sys</refname>
+    <refpurpose>Reports the compile-time CPU/operating system type</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">sys</emphasis></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">sys</emphasis> command displays the string set at compile time that indicates
+    the local machine's CPU/operating system (OS) type, conventionally called
+    the <emphasis>sysname</emphasis>.  This string is the default for the value stored in kernel
+    memory.  The Cache Manager substitutes this string for the <emphasis>@sys</emphasis>
+    variable which can occur in AFS pathnames; the <emphasis>IBM AFS Quick Beginnings</emphasis>
+    and <emphasis>IBM AFS Administration Guide</emphasis> explain how using <emphasis>@sys</emphasis> can simplify
+    cell configuration.</para>
+
+    <para>To set a new value in kernel memory, use the <emphasis role="bold">fs sysname</emphasis> command.  To
+    view the current value set in the kernel, use either <emphasis role="bold">fs sysname</emphasis> or
+    <emphasis role="bold">livesys</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>You almost always want to use <emphasis role="bold">livesys</emphasis> rather than this command.  The
+    <emphasis role="bold">sys</emphasis> command displays a single value hard-coded at compile time.  It
+    does not query the Cache Manager for the current value and it does not
+    report sysname lists.  If you have changed the local system type with <emphasis role="bold">fs
+    sysname</emphasis>, or if you run a version of <emphasis role="bold">sys</emphasis> compiled differently than the
+    Cache Manager running on the system, the value retured will not match the
+    behavior of the Cache Manager.  The only reason to use <emphasis role="bold">sys</emphasis> is that
+    <emphasis role="bold">livesys</emphasis> wasn't available in older versions of AFS.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The machine's system type appears as a text string:</para>
+
+<programlisting>
+   I&amp;lt;system_type&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output produced on a Sun SPARCStation
+      running Solaris 5.7:</para>
+
+<programlisting>
+   % sys
+   sun4x_57
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_sysname1">fs_sysname(1)</link>,
+        <link linkend="livesys1">livesys(1)</link></para>
+
+        <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+        <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_delete1">
+  <refmeta>
+    <refentrytitle>pts delete</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts delete</refname>
+    <refpurpose>Deletes a Protection Database entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts delete</emphasis> <emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts d</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [-h]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts delete</emphasis> command removes each entry specified by the <emphasis role="bold">-nameorid</emphasis>
+    argument from the Protection Database. Deleting entries affects other
+    parts of the system in various ways:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Deleted users and groups still appear on access control lists (ACLs), but
+        are listed by AFS UID or GID rather than by name, because there is no
+        longer an associated name to which to translate the ID. To remove these
+        obsolete entries from ACLs, use the <emphasis role="bold">fs cleanacl</emphasis> command.</para>
+
+      </listitem>
+      <listitem>
+        <para>Deleting a user or machine's entry removes it from the membership list of
+        any group to which it belonged.</para>
+
+      </listitem>
+      <listitem>
+        <para>Deleting a group entry removes it from the membership list of any user or
+        machine entry that belonged to the group, and also increments the
+        group-creation quota of the group's creator by one, even if the creator no
+        longer owns the group.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To remove a user or machine from a group without actually deleting the
+    entry, use the <emphasis role="bold">pts removeuser</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or ID</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the name or AFS UID of each user, the name or AFS GID of each
+          group, or the IP address (complete or wildcard-style) or AFS UID of each
+          machine entry to delete. It is acceptable to mix users, machines, and
+          groups on the same command line, as well as names (IP addresses for
+          machines) and IDs. Precede the GID of each group with a hyphen to indicate
+          that it is negative.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example deletes the user entries <computeroutput>pat</computeroutput> and <computeroutput>terry</computeroutput>:</para>
+
+<programlisting>
+   % pts delete pat terry
+
+</programlisting>
+      <para>The following example deletes the Protection Database entry of the group
+      with AFS GID -215.</para>
+
+<programlisting>
+   % pts delete -215
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must belong to the system:administrators group to delete user
+        and machine entries. To delete group entries, the issuer must either own
+        the group or belong to the system:administrators group.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_cleanacl1">fs_cleanacl(1)</link>,
+        <link linkend="pts1">pts(1)</link>,
+        <link linkend="pts_removeuser1">pts_removeuser(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_uninstall8">
+  <refmeta>
+    <refentrytitle>bos uninstall</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos uninstall</refname>
+    <refpurpose>Reverts to the former version of a process's binary file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos uninstall</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;
+        <emphasis role="bold">-file</emphasis> &lt;<emphasis>files to uninstall</emphasis>&gt;+ [<emphasis role="bold">-dir</emphasis> &lt;<emphasis>destination dir</emphasis>&gt;]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos u</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-f</emphasis> &lt;<emphasis>files to uninstall</emphasis>&gt;+
+        [<emphasis role="bold">-d</emphasis> &lt;<emphasis>destination dir</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos uninstall</emphasis> command replaces each binary file specified by the
+    <emphasis role="bold">-file</emphasis> argument with its <computeroutput>.BAK</computeroutput> version on the server machine named by
+    the <emphasis role="bold">-server</emphasis> argument, which is normally the binary distribution machine
+    for its CPU/operating system type. It also changes the extension on the
+    current <computeroutput>.OLD</computeroutput> version (if any) to <computeroutput>.BAK</computeroutput>. Each binary file must reside
+    in the local <replaceable>/usr/afs/bin</replaceable> directory unless the <emphasis role="bold">-dir</emphasis> argument names
+    an alternate directory.</para>
+
+    <para>To start using the reverted binary immediately, issue the <emphasis role="bold">bos restart</emphasis>
+    command. Otherwise, the BOS Server automatically restarts the process at
+    the time defined in the <replaceable>/usr/afs/local/BosConfig</replaceable> file; use the <emphasis role="bold">bos
+    getrestart</emphasis> command to display the time and the <emphasis role="bold">bos setrestart</emphasis> time to
+    set it.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the binary distribution machine on which to revert to the
+          <computeroutput>.BAK</computeroutput> version of binaries. Identify the machine by IP address or its
+          host name (either fully-qualified or abbreviated unambiguously). For
+          details, see <link linkend="bos8">bos(8)</link>.</para>
+
+          <para>If the machine is not a binary distribution machine and is running an
+          <computeroutput>upclientbin</computeroutput> process, then the files are overwritten the next time the
+          <computeroutput>upclientbin</computeroutput> process fetches the corresponding file from the
+          distribution machine (by default within five minutes).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>files to uninstall</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each binary file to replace with its <computeroutput>.BAK</computeroutput> version.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dir</emphasis> &lt;<emphasis>destinatino dir</emphasis>&gt;</term>
+        <listitem>
+          <para>Provides the complete pathname of the local disk directory containing each
+          file named by the <emphasis role="bold">-file</emphasis> argument. It is necessary only if the binaries
+          are not in the <replaceable>/usr/afs/bin</replaceable> directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example command overwrites the <replaceable>/usr/afs/bin/kaserver</replaceable> file
+    on the machine <computeroutput>fs4.abc.com</computeroutput> with its <computeroutput>.BAK</computeroutput> version, and the current
+    <computeroutput>.BAK</computeroutput> version by the <computeroutput>.OLD</computeroutput> version.</para>
+
+<programlisting>
+   % bos uninstall -server fs4.abc.com -file kaserver
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+      machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+      machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_getrestart8">bos_getrestart(8)</link>,
+      <link linkend="bos_restart8">bos_restart(8)</link>,
+      <link linkend="bos_setrestart8">bos_setrestart(8)</link>,
+      <link linkend="upclient8">upclient(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

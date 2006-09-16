@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts1">
+  <refmeta>
+    <refentrytitle>pts</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts</refname>
+    <refpurpose>Introduction to the pts command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">pts</emphasis> command suite are the administrative interface
+    to the Protection Server, which runs on each database server machine in a
+    cell and maintains the Protection Database. The database stores the
+    information that AFS uses to augment and refine the standard UNIX scheme
+    for controlling access to files and directories.</para>
+
+    <para>Instead of relying only on the mode bits that define access rights for
+    individual files, AFS associates an access control list (ACL) with each
+    directory. The ACL lists users and groups and specifies which of seven
+    possible access permissions they have for the directory and the files it
+    contains. (It is still possible to set a directory or file's mode bits,
+    but AFS interprets them in its own way; see the chapter on protection in
+    the <emphasis>IBM AFS Administration Guide</emphasis> for details.)</para>
+
+    <para>AFS enables users to define groups in the Protection Database and place
+    them on ACLs to extend a set of rights to multiple users simultaneously.
+    Groups simplify administration by making it possible to add someone to
+    many ACLs by adding them to a group that already exists on those
+    ACLs. Machines can also be members of a group, so that users logged into
+    the machine automatically inherit the permissions granted to the group.</para>
+
+    <para>There are several categories of commands in the pts command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Commands to create and remove Protection Database entries: <emphasis role="bold">pts
+        creategroup</emphasis>, <emphasis role="bold">pts createuser</emphasis>, and <emphasis role="bold">pts delete</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer and display group membership: <emphasis role="bold">pts adduser</emphasis>, <emphasis role="bold">pts
+        listowned</emphasis>, <emphasis role="bold">pts membership</emphasis>, and <emphasis role="bold">pts removeuser</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer and display properties of user and group entries
+        other than membership: <emphasis role="bold">pts chown</emphasis>, <emphasis role="bold">pts examine</emphasis>, <emphasis role="bold">pts listentries</emphasis>,
+        <emphasis role="bold">pts rename</emphasis>, and <emphasis role="bold">pts setfields</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to set and examine the counters used when assigning IDs to users
+        and groups: <emphasis role="bold">pts listmax</emphasis> and <emphasis role="bold">pts setmax</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to obtain help: <emphasis role="bold">pts apropos</emphasis> and <emphasis role="bold">pts help</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following arguments and flags are available on many commands in the
+    <emphasis role="bold">pts</emphasis> suite. The reference page for each command also lists them, but
+    they are described here in greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. It is acceptable to abbreviate
+          the cell name to the shortest form that distinguishes it from the other
+          entries in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local machine. If
+          the <emphasis role="bold">-cell</emphasis> argument is omitted, the command interpreter determines the
+          name of the local cell by reading the following in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the AFSCELL environment variable.</para>
+
+            </listitem>
+            <listitem>
+              <para>The local <replaceable>/usr/vice/etc/ThisCell</replaceable> file.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution immediately.
+          Without it, the command halts as soon as the first error is
+          encountered. In either case, the <emphasis role="bold">pts</emphasis> command interpreter reports errors
+          at the command shell. This flag is especially useful if the issuer
+          provides many values for a command line argument; if one of them is
+          invalid, the command interpreter continues on to process the remaining
+          arguments.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Establishes an unauthenticated connection to the Protection Server, in
+          which the server treats the issuer as the unprivileged user
+          <computeroutput>anonymous</computeroutput>. It is useful only when authorization checking is disabled on
+          the server machine (during the installation of a file server machine or
+          when the <emphasis role="bold">bos setauth</emphasis> command has been used during other unusual
+          circumstances). In normal circumstances, the Protection Server allows only
+          privileged users to issue commands that change the Protection Database,
+          and refuses to perform such an action even if the <emphasis role="bold">-noauth</emphasis> flag is
+          provided.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>Members of the system:administrators group can issue all <emphasis role="bold">pts</emphasis> commands
+    on any entry in the Protection Database.</para>
+
+    <para>Users who do not belong to the system:administrators group can list
+    information about their own entry and any group entries they own. The
+    privacy flags set with the <emphasis role="bold">pts setfields</emphasis> command control access to
+    entries owned by other users.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="pts_adduser1">pts_adduser(1)</link>,
+    <link linkend="pts_apropos1">pts_apropos(1)</link>,
+    <link linkend="pts_chown1">pts_chown(1)</link>,
+    <link linkend="pts_creategroup1">pts_creategroup(1)</link>,
+    <link linkend="pts_createuser1">pts_createuser(1)</link>,
+    <link linkend="pts_delete1">pts_delete(1)</link>,
+    <link linkend="pts_examine1">pts_examine(1)</link>,
+    <link linkend="pts_help1">pts_help(1)</link>,
+    <link linkend="pts_listentries1">pts_listentries(1)</link>,
+    <link linkend="pts_listmax1">pts_listmax(1)</link>,
+    <link linkend="pts_listowned1">pts_listowned(1)</link>,
+    <link linkend="pts_membership1">pts_membership(1)</link>,
+    <link linkend="pts_removeuser1">pts_removeuser(1)</link>,
+    <link linkend="pts_rename1">pts_rename(1)</link>,
+    <link linkend="pts_setfields1">pts_setfields(1)</link>,
+    <link linkend="pts_setmax1">pts_setmax(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

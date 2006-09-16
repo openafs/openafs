@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_getrestart8">
+  <refmeta>
+    <refentrytitle>bos getrestart</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos getrestart</refname>
+    <refpurpose>Displays the automatic restart times for server processes</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos getrestart</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos getr</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The bos getrestart command displays two restart times from the
+    <replaceable>/usr/afs/local/BosConfig</replaceable> file on the server machine named by the
+    <emphasis role="bold">-server</emphasis> argument:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis>general restart</emphasis> time at which the BOS Server process automatically
+        restarts itself and all processes marked with status <computeroutput>Run</computeroutput> in the
+        <replaceable>BosConfig</replaceable> file. The default is Sunday at 4:00 a.m.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis>binary restart</emphasis> time at which the BOS Server automatically restarts
+        any process for which the time stamp on the binary file in the
+        <replaceable>/usr/afs/bin</replaceable> directory is later than the last restart time for the
+        process. The default is 5:00 a.m. Use the <emphasis role="bold">bos getdate</emphasis> command to list a
+        binary file's timestamp, and the <emphasis role="bold">-long</emphasis> flag to the <emphasis role="bold">bos status</emphasis>
+        command to display a process's most recent restart time.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Use the <emphasis role="bold">bos setrestart</emphasis> command to set the restart times.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine for which to display the restart
+          times. Identify the machine by IP address or its host name (either
+          fully-qualified or abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output consists of two lines:</para>
+
+<programlisting>
+   Server &amp;lt;machine_name&amp;gt; restarts at &amp;lt;time&amp;gt;
+   Server &amp;lt;machine_name&amp;gt; restarts for new binaries at &amp;lt;time&amp;gt;
+
+</programlisting>
+      <para>Possible values for &lt;time&gt; include:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><computeroutput>never</computeroutput>, indicating that the BOS Server never performs that type of
+          restart.</para>
+
+        </listitem>
+        <listitem>
+          <para><computeroutput>now</computeroutput>, indicating that the BOS Server performs that type of restart only
+          each time it restarts.</para>
+
+        </listitem>
+        <listitem>
+          <para>A specified day and time, indicating that the BOS Server performs that
+          type of restart once per week. Example: <computeroutput>sun 4:00 am</computeroutput>.</para>
+
+        </listitem>
+        <listitem>
+          <para>A specified time, indicating that the BOS Server performs that type of
+          restart once per day. Examples: <computeroutput>11:00 pm</computeroutput>, <computeroutput>3:00 am</computeroutput>.</para>
+
+        </listitem>
+      </itemizedlist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example displays the restart times for the machine
+      <computeroutput>db2.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % bos getrestart db2.abc.com
+   Server db2.abc.com restarts at sun 4:00 am
+   Server db2.abc.com restarts for new binaries at 2:15 am
+
+</programlisting>
+        <para>In the following example, the issuer abbreviates the machine name
+        <computeroutput>fs1.abc.com</computeroutput> to <computeroutput>fs1</computeroutput>, relying on the cell's name server to resolve the
+        name. The output echoes the abbreviated form.</para>
+
+<programlisting>
+   % bos getrestart fs1
+   Server fs1 restarts at sat 5:00 am
+   Server fs1 restarts for new binaries at 11:30 pm
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>None</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="BosConfig5">BosConfig(5)</link>,
+          <link linkend="KeyFile5">KeyFile(5)</link>,
+          <link linkend="bos8">bos(8)</link>,
+          <link linkend="bos_getdate8">bos_getdate(8)</link>,
+          <link linkend="bos_setrestart8">bos_setrestart(8)</link>,
+          <link linkend="bos_status8">bos_status(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

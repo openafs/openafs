@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="AuthLog_dir5">
+  <refmeta>
+    <refentrytitle>AuthLog.dir, AuthLog.pag</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>AuthLog.dir, AuthLog.pag</refname>
+    <refpurpose>Log of Authentication Server privileged operations</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>AuthLog.dir</replaceable> and <replaceable>AuthLog.pag</replaceable> files record a trace of privileged
+    operations performed by the Authentication Server (<emphasis role="bold">kaserver</emphasis> process) on
+    the local machine. If the files do not exist when the Authentication
+    Server starts, it creates them in the <replaceable>/usr/afs/logs</replaceable> directory as
+    necessary.</para>
+
+    <para>The files are in binary format. To display their contents, use the <emphasis role="bold">kdb</emphasis>
+    command, which requires being logged in to the local machine as the local
+    superuser <computeroutput>root</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The Authentication Server is possibly unable to create these files on some
+    operating systems that AFS otherwise supports, making the <emphasis role="bold">kdb</emphasis> command
+    inoperative. See the <emphasis>IBM AFS Release Notes</emphasis> for details.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="kaserver8">kaserver(8)</link>,
+    <link linkend="kdb8">kdb(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

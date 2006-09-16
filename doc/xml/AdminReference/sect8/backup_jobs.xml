@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_jobs8">
+  <refmeta>
+    <refentrytitle>backup jobs</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup jobs</refname>
+    <refpurpose>Lists pending and running operations in interactive mode</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">jobs</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">j</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup jobs</emphasis> command lists the job ID number and status of each
+    <emphasis role="bold">backup</emphasis> operation running or pending in the current interactive session.</para>
+
+    <para>This command can be issued in interactive mode only. If the issuer of the
+    <emphasis role="bold">backup interactive</emphasis> command included the <emphasis role="bold">-localauth</emphasis> flag, the
+    <emphasis role="bold">-cell</emphasis> argument, or both, those settings apply to this command also.</para>
+
+    <para>To terminate operations that appear in the output, issue the <emphasis role="bold">backup
+    kill</emphasis> command and identify the operation to cancel with the job ID number
+    from this command's output.</para>
+
+    <para>To check the status of a Tape Coordinator, rather than of a certain
+    operation, use the <emphasis role="bold">backup status</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output always includes the expiration date and time of the tokens that
+    the <emphasis role="bold">backup</emphasis> command interpreter is using during the current interactive
+    session, in the following format:</para>
+
+<programlisting>
+   &amp;lt;date&amp;gt;   &amp;lt;time&amp;gt;: TOKEN EXPIRATION
+
+</programlisting>
+      <para>If the execution date and time specified for a scheduled dump operation is
+      later than &lt;date time&gt;, then its individual line (as described in the
+      following paragraphs) appears below this line to indicate that the current
+      tokens will not be available to it.</para>
+
+      <para>If the issuer of the backup command included the <emphasis role="bold">-localauth</emphasis> flag when
+      entering interactive mode, the line instead reads as follows:</para>
+
+<programlisting>
+   :  TOKEN NEVER EXPIRES
+
+</programlisting>
+        <para>The entry for a scheduled dump operation has the following format:</para>
+
+<programlisting>
+   Job &amp;lt;job_ID&amp;gt;:  &amp;lt;timestamp&amp;gt;:  dump  &amp;lt;volume_set&amp;gt;  &amp;lt;dump_level&amp;gt;
+
+</programlisting>
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>&lt;job_ID&gt;</term>
+              <listitem>
+                <para>Is a job identification number assigned by the Backup System.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;timestamp&gt;</term>
+              <listitem>
+                <para>Indicates the date and time the dump operation is to begin, in the format
+                <emphasis>month</emphasis>/<emphasis>date</emphasis>/<emphasis>year</emphasis> <emphasis>hours</emphasis>:<emphasis>minutes</emphasis> (in 24-hour format)</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;volume_set&gt;</term>
+              <listitem>
+                <para>Indicates the volume set to dump.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;dump_level&gt;</term>
+              <listitem>
+                <para>Indicates the dump level at which to perform the dump operation.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>The line for a pending or running operation of any other type has the
+          following format:</para>
+
+<programlisting>
+   Job &amp;lt;job_ID&amp;gt;:  &amp;lt;operation&amp;gt;  &amp;lt;status&amp;gt;
+
+</programlisting>
+            <para>where</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>&lt;job_ID&gt;</term>
+                <listitem>
+                  <para>Is a job identification number assigned by the Backup System.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;operation&gt;</term>
+                <listitem>
+                  <para>Identifies the operation the Tape Coordinator is performing, which is
+                  initiated by the indicated command:</para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term>Dump (<emphasis>dump name</emphasis>)</term>
+                      <listitem>
+                        <para>Initiated by the backup dump command. The <emphasis>dump name</emphasis> has the following
+                        format:</para>
+
+<programlisting>
+    &amp;lt;volume_set_name&amp;gt;.&amp;lt;dump_level_name&amp;gt;
+
+</programlisting>
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>Restore</term>
+                        <listitem>
+                          <para>Initiated by the <emphasis role="bold">backup diskrestore</emphasis>, <emphasis role="bold">backup volrestore</emphasis>, or <emphasis role="bold">backup
+                          volsetrestore</emphasis> command.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>Labeltape (<emphasis>tape_label</emphasis>)</term>
+                        <listitem>
+                          <para>Initiated by the <emphasis role="bold">backup labeltape</emphasis>n command. The <emphasis>tape_label</emphasis> is the
+                          name specified by the <emphasis role="bold">backup labeltape</emphasis> command's <emphasis role="bold">-name</emphasis> or <emphasis role="bold">-pname</emphasis>
+                          argument.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>Scantape</term>
+                        <listitem>
+                          <para>Initiated by the <emphasis role="bold">backup scantape</emphasis> command.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>SaveDb</term>
+                        <listitem>
+                          <para>Initiated by the <emphasis role="bold">backup savedb</emphasis> command.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>RestoreDb</term>
+                        <listitem>
+                          <para>Initiated by the <emphasis role="bold">backup restoredb</emphasis> command.</para>
+
+                        </listitem>
+                      </varlistentry>
+                    </variablelist>
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;status&gt;</term>
+                  <listitem>
+                    <para>Indicates the job's current status in one of the following messages. If no
+                    message appears, the job is either still pending or has finished.</para>
+
+                    <variablelist>
+                      <varlistentry>
+                        <term><emphasis>number</emphasis> Kbytes, volume <emphasis>volume_name</emphasis></term>
+                        <listitem>
+                          <para>For a running dump operation, indicates the number of kilobytes copied to
+                          tape or a backup data file so far, and the volume currently being dumped.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term><emphasis>number</emphasis> Kbytes, restore.volume</term>
+                        <listitem>
+                          <para>For a running restore operation, indicates the number of kilobytes copied
+                          into AFS from a tape or a backup data file so far.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[abort requested]</term>
+                        <listitem>
+                          <para>The <emphasis role="bold">backup kill</emphasis> command was issued, but the termination signal has yet
+                          to reach the Tape Coordinator.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[abort sent]</term>
+                        <listitem>
+                          <para>The operation is canceled by the <emphasis role="bold">backup kill</emphasis> command.  Once the Backup
+                          System removes an operation from the queue or stops it from running, it no
+                          longer appears at all in the output from the command.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[butc contact lost]</term>
+                        <listitem>
+                          <para>The backup command interpreter cannot reach the Tape Coordinator. The
+                          message can mean either that the Tape Coordinator handling the operation
+                          was terminated or failed while the operation was running, or that the
+                          connection to the Tape Coordinator timed out.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[done]</term>
+                        <listitem>
+                          <para>The Tape Coordinator has finished the operation.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[drive wait]</term>
+                        <listitem>
+                          <para>The operation is waiting for the specified tape drive to become free.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>[operator wait]</term>
+                        <listitem>
+                          <para>The Tape Coordinator is waiting for the backup operator to insert a tape
+                          in the drive.</para>
+
+                        </listitem>
+                      </varlistentry>
+                    </variablelist>
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </refsect1>
+            <refsect1>
+              <title>Examples</title>
+              <para>The following example shows that two restore operations and one dump
+              operation are running (presumably on different Tape Coordinators) and that
+              the <emphasis role="bold">backup</emphasis> command interpreter's tokens expire on 22 April 1999 at
+              10:45 am:</para>
+
+<programlisting>
+   backup&amp;gt; jobs
+   Job 1: Restore, 1306 Kbytes, restore.volume
+   Job 2: Dump (user.sunday1), 34 Kbytes, volume user.pat.backup
+   Job 3: Restore, 2498 Kbytes, restore.volume
+          04/22/1999 10:45: TOKEN EXPIRATION
+
+</programlisting>
+              </refsect1>
+              <refsect1>
+                <title>Privilege Required</title>
+                <para>None. However, queuing any operation requires privilege, and it is
+                possible to issue this command only within the interactive session in
+                which the jobs are queued.</para>
+
+              </refsect1>
+              <refsect1>
+                <title>See Also</title>
+                <para><link linkend="backup8">backup(8)</link>,
+                <link linkend="backup_interactive8">backup_interactive(8)</link>,
+                <link linkend="backup_kill8">backup_kill(8)</link>,
+                <link linkend="backup_quit8">backup_quit(8)</link></para>
+
+              </refsect1>
+              <refsect1>
+                <title>Copyright</title>
+                <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                converted from HTML to POD by software written by Chas Williams and Russ
+                Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+              </refsect1>
+            </refentry>

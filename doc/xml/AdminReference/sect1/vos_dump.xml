@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_dump1">
+  <refmeta>
+    <refentrytitle>vos dump</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos dump</refname>
+    <refpurpose>Converts a volume into ASCII format and writes it to a file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos dump</emphasis> <emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-time</emphasis> &lt;<emphasis>dump from time</emphasis>&gt;]
+        [<emphasis role="bold">-file</emphasis> &lt;<emphasis>dump file</emphasis>&gt;] [<emphasis role="bold">-server</emphasis> &lt;<emphasis>server</emphasis>&gt;]
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos du</emphasis> <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-t</emphasis> &lt;<emphasis>dump from time</emphasis>&gt;]
+        [<emphasis role="bold">-f</emphasis> &lt;<emphasis>dump file</emphasis>&gt;] [<emphasis role="bold">-s</emphasis> &lt;<emphasis>server</emphasis>&gt;] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition</emphasis>&gt;]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos dump</emphasis> command converts the contents of the indicated volume,
+    which can be read/write, read-only or backup, into ASCII format. The
+    Volume Server writes the converted contents to the file named by the
+    <emphasis role="bold">-file</emphasis> argument, or to the standard output stream. In the latter case,
+    the output can be directed to a named pipe, which enables interoperation
+    with third-party backup utilities.</para>
+
+    <para>To dump the complete contents of a volume (create a <emphasis>full dump</emphasis>), omit
+    the <emphasis role="bold">-time</emphasis> argument or specify the value <computeroutput>0</computeroutput> (zero) for it. To create
+    an <emphasis>incremental dump</emphasis>, which includes only the files and directories in
+    the volume that have modification timestamps later than a certain time,
+    specify a date and time as the value for the <emphasis role="bold">-time</emphasis> argument.</para>
+
+    <para>By default, the vos command interpreter consults the Volume Location
+    Database (VLDB) to learn the volume's location, so the <emphasis role="bold">-server</emphasis> and
+    <emphasis role="bold">-partition</emphasis> arguments are not required. If the <emphasis role="bold">-id</emphasis> argument
+    identifies a read-only volume that resides at multiple sites, the command
+    dumps the version from just one of them (normally, the one listed first in
+    the volume's VLDB entry as reported by the <emphasis role="bold">vos examine</emphasis> or <emphasis role="bold">vos
+    listvldb</emphasis> command). To dump the read-only volume from a particular site,
+    use the <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis> arguments to specify the site. To
+    bypass the VLDB lookup entirely, provide a volume ID number (rather than a
+    volume name) as the value for the <emphasis role="bold">-id</emphasis> argument, together with the
+    <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis> arguments. This makes it possible to dump a
+    volume for which there is no VLDB entry.</para>
+
+    <para>During the dump operation, the volume is inaccessible both to Cache
+    Managers and to other volume operations. Dumping a volume does not
+    otherwise affect its status on the partition or its VLDB entry.</para>
+
+    <para>To restore a dumped volume back into AFS, use the <emphasis role="bold">vos restore</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Support for incremental dumps is provided to facilitate interoperation
+    with third-party backup utilities. The <emphasis role="bold">vos dump</emphasis> command does not
+    provide any of the administrative facilities of an actual backup system,
+    so the administrator must keep manual records of dump times and the
+    relationship between full and incremental dumps of a volume. For a
+    volume's contents to be consistent after restoration of incremental dumps,
+    there must be no gap between the time at which a prior dump of the volume
+    was created and the value of the <emphasis role="bold">-time</emphasis> argument to the <emphasis role="bold">vos dump</emphasis>
+    command that creates the incremental dump. More specifically, for a
+    read/write volume, the <emphasis role="bold">-time</emphasis> argument must specify the time that the
+    prior dump was performed, and for a read-only or backup volume it must
+    specify the time that the volume was last released (using the <emphasis role="bold">vos
+    release</emphasis> command) or cloned (using the <emphasis role="bold">vos backup</emphasis> or <emphasis role="bold">vos backupsys</emphasis>
+    command) prior to dumping it. The parent dump can be either a full dump or
+    another incremental dump.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies either the complete name or volume ID number of the read/write,
+          read-only, or backup volume to dump.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-time</emphasis> &lt;<emphasis>dump from time</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies whether the dump is full or incremental. Omit this argument to
+          create a full dump, or provide one of three acceptable values:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value <computeroutput>0</computeroutput> (zero) to create a full dump.</para>
+
+            </listitem>
+            <listitem>
+              <para>A date in the format <emphasis>mm</emphasis><emphasis role="bold">/</emphasis><emphasis>dd</emphasis><emphasis role="bold">/</emphasis><emphasis>yyyy</emphasis> (month, day and year) to
+              create an incremental dump that includes only files and directories with
+              modification timestamps later than midnight (12:00 a.m.) on the indicated
+              date. Valid values for the year range from <computeroutput>1970</computeroutput> to <computeroutput>2037</computeroutput>; higher
+              values are not valid because the latest possible date in the standard UNIX
+              representation is in 2038. The command interpreter automatically reduces
+              later dates to the maximum value. An example is <computeroutput>01/13/1999</computeroutput>.</para>
+
+            </listitem>
+            <listitem>
+              <para>A date and time in the format <emphasis role="bold">"</emphasis><emphasis>mm</emphasis><emphasis role="bold">/</emphasis><emphasis>dd</emphasis><emphasis role="bold">/</emphasis><emphasis>yyyy</emphasis>
+              <emphasis>hh</emphasis><emphasis role="bold">:</emphasis><emphasis>MM</emphasis><emphasis role="bold">"</emphasis> to create an incremental dump that includes only files
+              and directories with modification timestamps later than the specified date
+              and time. The date format is the same as for a date alone. Express the
+              time as hours and minutes (<emphasis>hh</emphasis>:<emphasis>MM</emphasis>) in 24-hour format (for example,
+              <emphasis role="bold">20:30</emphasis> is 8:30 p.m.). Surround the entire expression with double quotes
+              (<computeroutput>""</computeroutput>) because it contains a space.  An example is <computeroutput>"01/13/1999 22:30"</computeroutput>.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>dump file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the file to which to write the dump. The file
+          can be in AFS, but not in the volume being dumped. A partial pathname is
+          interpreted relative to the current working directory. If this argument is
+          omitted, the dump is directed to the standard output stream.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the file server machine on which the volume resides.  Provide
+          the <emphasis role="bold">-partition</emphasis> argument along with this one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the partition on which the volume resides. Provide the
+          <emphasis role="bold">-server</emphasis> argument along with this one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis></term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. Do not combine
+          this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command writes a full dump of the volume <computeroutput>user.terry</computeroutput> to
+    the file <replaceable>/afs/abc.com/common/dumps/terry.dump</replaceable>.</para>
+
+<programlisting>
+   % vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump
+
+</programlisting>
+      <para>The following command writes an incremental dump of the volume
+      <computeroutput>user.smith</computeroutput> to the file <computeroutput>smith.990131.dump</computeroutput> in the current working
+      directory. Only those files in the volume with modification time stamps
+      later than 6:00 p.m. on 31 January 1999 are included in the dump.</para>
+
+<programlisting>
+   % vos dump -id user.smith -time "01/31/1999 18:00" -file smith.990131.dump
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine specified with the <emphasis role="bold">-server</emphasis> argument and on each database server
+        machine. If the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be
+        logged on to a server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+        <para>If the <emphasis role="bold">-file</emphasis> argument is included, the issuer must also have permission
+        to insert and write in the directory that houses the file.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="vos1">vos(1)</link>,
+        <link linkend="vos_examine1">vos_examine(1)</link>,
+        <link linkend="vos_listvldb1">vos_listvldb(1)</link>,
+        <link linkend="vos_restore1">vos_restore(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

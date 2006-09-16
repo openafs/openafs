@@ -1,0 +1,1517 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>AFS Administration Guide</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="NEXT"
+TITLE="About This Guide"
+HREF="f24.html"></HEAD
+><BODY
+CLASS="book"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="AEN1"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="title"
+><A
+NAME="AEN2"
+>AFS Administration Guide</A
+></H1
+><H2
+CLASS="subtitle"
+>Version 3.6</H2
+><P
+CLASS="copyright"
+>Copyright &copy; 2000 IBM Corporation. All Rights Reserved</P
+><DIV
+><DIV
+CLASS="abstract"
+><A
+NAME="AEN14"
+></A
+><P
+>This edition applies to: <TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>IBM AFS for AIX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Digital Unix, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for HP-UX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Linux, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for SGI IRIX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Solaris, Version 3.6</TD
+></TR
+></TBODY
+></TABLE
+></P
+><P
+>and to all subsequent releases and modifications until otherwise
+      indicated in new editions.This softcopy version is based on the printed
+      edition of this book. Some formatting amendments have been made to make
+      this information more suitable for softcopy.</P
+></DIV
+></DIV
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="f24.html"
+>About This Guide</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="f24.html#HDRWQ1"
+>Audience and Purpose</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ2"
+>Document Organization</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ3"
+>How to Use This Document</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ4"
+>Related Documents</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRTYPO_CONV"
+>Typographical Conventions</A
+></DT
+></DL
+><BR></DD
+><DT
+>I. <A
+HREF="p128.html"
+>Concepts and Configuration Issues</A
+></DT
+><DD
+><DL
+><DT
+>1. <A
+HREF="c130.html"
+>An Overview of AFS Administration</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c130.html#HDRWQ6"
+>A Broad Overview of AFS</A
+></DT
+><DT
+><A
+HREF="c130.html#HDRWQ7"
+>More Detailed Discussions of Some Basic Concepts</A
+></DT
+><DT
+><A
+HREF="c130.html#HDRWQ17"
+>AFS Server Processes and the Cache Manager</A
+></DT
+></DL
+><BR></DD
+><DT
+>2. <A
+HREF="c667.html"
+>Issues in Cell Configuration and Administration</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c667.html#HDRWQ30"
+>Differences between AFS and UNIX: A Summary</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ34"
+>Choosing a Cell Name</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ36"
+>Participating in the AFS Global Namespace</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ41"
+>Configuring Your AFS Filespace</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ44"
+>Creating Volumes to Simplify Administration</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ51"
+>Configuring Server Machines</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ54"
+>Configuring Client Machines</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ57"
+>Configuring AFS User Accounts</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ61"
+>Using AFS Protection Groups</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ63"
+>Login and Authentication in AFS</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ71"
+>Security and Authorization in AFS</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ77"
+>Backing Up AFS Data</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ78"
+>Using UNIX Remote Services in the AFS Environment</A
+></DT
+><DT
+><A
+HREF="c667.html#HDRWQ79"
+>Accessing AFS through NFS</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>II. <A
+HREF="p3023.html"
+>Managing File Server Machines</A
+></DT
+><DD
+><DL
+><DT
+>3. <A
+HREF="c3025.html"
+>Administering Server Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c3025.html#HDRWQ81"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ83"
+>Local Disk Files on a Server Machine</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ90"
+>The Four Roles for File Server Machines</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ101"
+>Administering Database Server Machines</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ110"
+>Installing Server Process Software</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ118"
+>Maintaining the Server CellServDB File</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ123"
+>Managing Authentication and Authorization Requirements</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ130"
+>Adding or Removing Disks and Partitions</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ138"
+>Managing Server IP Addresses and VLDB Server Entries</A
+></DT
+><DT
+><A
+HREF="c3025.html#HDRWQ139"
+>Rebooting a Server Machine</A
+></DT
+></DL
+><BR></DD
+><DT
+>4. <A
+HREF="c6449.html"
+>Monitoring and Controlling Server Processes</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c6449.html#HDRWQ143"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ145"
+>Brief Descriptions of the AFS Server Processes</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ154"
+>Controlling and Checking Process Status</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ158"
+>Displaying Process Status and Information from the BosConfig File</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ161"
+>Creating and Removing Processes</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ164"
+>Stopping and Starting Processes Permanently</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ167"
+>Stopping and Starting Processes Temporarily</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ170"
+>Stopping and Immediately Restarting Processes</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ171"
+>Setting the BOS Server's Restart Times</A
+></DT
+><DT
+><A
+HREF="c6449.html#HDRWQ173"
+>Displaying Server Process Log Files</A
+></DT
+></DL
+><BR></DD
+><DT
+>5. <A
+HREF="c8420.html"
+>Managing Volumes</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8420.html#HDRWQ175"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ177"
+>About Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ185"
+>Creating Read/write Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ190"
+>About Clones and Cloning</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ192"
+>Replicating Volumes (Creating Read-only Volumes)</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ201"
+>Creating Backup Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ208"
+>Mounting Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ216"
+>Displaying Information About Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ226"
+>Moving Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ227"
+>Synchronizing the VLDB and Volume Headers</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ232"
+>Salvaging Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ234"
+>Setting and Displaying Volume Quota and Current Size</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ235"
+>Removing Volumes and their Mount Points</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ240"
+>Dumping and Restoring Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ245"
+>Renaming Volumes</A
+></DT
+><DT
+><A
+HREF="c8420.html#HDRWQ247"
+>Unlocking and Locking VLDB Entries</A
+></DT
+></DL
+><BR></DD
+><DT
+>6. <A
+HREF="c12776.html"
+>Configuring the AFS Backup System</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c12776.html#HDRWQ249"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ251"
+>Introduction to Backup System Features</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ257"
+>Overview of Backup System Configuration</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig File</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ260"
+>Granting Administrative Privilege to Backup Operators</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ261"
+>Configuring Tape Coordinator Machines and Tape Devices</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ265"
+>Defining and Displaying Volume Sets and Volume Entries</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ267"
+>Defining and Displaying the Dump Hierarchy</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ272"
+>Writing and Reading Tape Labels</A
+></DT
+><DT
+><A
+HREF="c12776.html#HDRWQ275"
+>Automating and Increasing the Efficiency of the Backup Process</A
+></DT
+></DL
+><BR></DD
+><DT
+>7. <A
+HREF="c15383.html"
+>Backing Up and Restoring AFS Data</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c15383.html#HDRWQ284"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c15383.html#HDRWQ286"
+>Using the Backup System's Interfaces</A
+></DT
+><DT
+><A
+HREF="c15383.html#HDRWQ296"
+>Backing Up Data</A
+></DT
+><DT
+><A
+HREF="c15383.html#HDRWQ302"
+>Displaying Backup Dump Records</A
+></DT
+><DT
+><A
+HREF="c15383.html#HDRWQ306"
+>Restoring and Recovering Data</A
+></DT
+><DT
+><A
+HREF="c15383.html#HDRWQ316"
+>Maintaining the Backup Database</A
+></DT
+></DL
+><BR></DD
+><DT
+>8. <A
+HREF="c18360.html"
+>Monitoring and Auditing AFS Performance</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c18360.html#HDRWQ324"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ326"
+>Using the scout Program</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ341"
+>Using the fstrace Command Suite</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ349"
+>Using the afsmonitor Program</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ351"
+>Configuring the afsmonitor Program</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ352"
+>Writing afsmonitor Statistics to a File</A
+></DT
+><DT
+><A
+HREF="c18360.html#Header_398"
+>To start the afsmonitor Program</A
+></DT
+><DT
+><A
+HREF="c18360.html#Header_399"
+>To stop the afsmonitor program</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ353"
+>The xstat Data Collection Facility</A
+></DT
+><DT
+><A
+HREF="c18360.html#HDRWQ354"
+>Auditing AFS Events on AIX File Servers</A
+></DT
+></DL
+><BR></DD
+><DT
+>9. <A
+HREF="c20494.html"
+>Managing Server Encryption Keys</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c20494.html#HDRWQ356"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c20494.html#HDRWQ358"
+>About Server Encryption Keys</A
+></DT
+><DT
+><A
+HREF="c20494.html#HDRWQ359"
+>Displaying Server Encryption Keys</A
+></DT
+><DT
+><A
+HREF="c20494.html#HDRWQ362"
+>Adding Server Encryption Keys</A
+></DT
+><DT
+><A
+HREF="c20494.html#HDRWQ368"
+>Removing Server Encryption Keys</A
+></DT
+><DT
+><A
+HREF="c20494.html#HDRWQ370"
+>Handling Server Encryption Key Emergencies</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>III. <A
+HREF="p21471.html"
+>Managing Client Machines</A
+></DT
+><DD
+><DL
+><DT
+>10. <A
+HREF="c21473.html"
+>Administering Client Machines and the Cache Manager</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c21473.html#HDRWQ388"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ390"
+>Overview of Cache Manager Customization</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ391"
+>Configuration and Cache-Related Files on the Local Disk</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ402"
+>Setting Other Cache Parameters with the afsd program</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ406"
+>Maintaining Knowledge of Database Server Machines</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ409"
+>Determining if a Client Can Run Setuid Programs</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ410"
+>Setting the File Server Probe Interval</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ411"
+>Setting a Client Machine's Cell Membership</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ412"
+>Forcing the Update of Cached Data</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ414"
+>Maintaining Server Preference Ranks</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ415"
+>Managing Multihomed Client Machines</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ416"
+>Controlling the Display of Warning and Informational Messages</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ417"
+>Displaying and Setting the System Type Name</A
+></DT
+><DT
+><A
+HREF="c21473.html#HDRWQ418"
+>Enabling Asynchronous Writes</A
+></DT
+></DL
+><BR></DD
+><DT
+>11. <A
+HREF="c23832.html"
+>Configuring Client Machines with the package Program</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c23832.html#HDRWQ420"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ422"
+>Using the package Program</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ423"
+>Package Overview</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ425"
+>The package Directory Structure</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ427"
+>Example Prototype and Library Files</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ429"
+>Package Configuration File Instruction Syntax</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ437"
+>Constructing Prototype and Library Files</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ438"
+>The Package Makefile File</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ445"
+>Modifying the Makefile</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ446"
+>Compiling Prototype Files</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ447"
+>Modifying Client Machines</A
+></DT
+><DT
+><A
+HREF="c23832.html#HDRWQ448"
+>Running the package program</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>IV. <A
+HREF="p24911.html"
+>Managing Users and Groups</A
+></DT
+><DD
+><DL
+><DT
+>12. <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss Command Suite</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c24913.html#HDRWQ450"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ452"
+>Overview of the uss Command Suite</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ455"
+>Creating Local Password File Entries with uss</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ459"
+>Converting Existing UNIX Accounts with uss</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ463"
+>Constructing a uss Template File</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ480"
+>Creating Individual Accounts with the uss add Command</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ486"
+>Deleting Individual Accounts with the uss delete Command</A
+></DT
+><DT
+><A
+HREF="c24913.html#HDRWQ488"
+>Creating and Deleting Multiple Accounts with the uss bulk Command</A
+></DT
+></DL
+><BR></DD
+><DT
+>13. <A
+HREF="c27596.html"
+>Administering User Accounts</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c27596.html#HDRWQ492"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ494"
+>The Components of an AFS User Account</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ495"
+>Creating Local Password File Entries</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ498"
+>Converting Existing UNIX Accounts</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ502"
+>Creating AFS User Accounts</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ515"
+>Improving Password and Authentication Security</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ516"
+>Changing AFS Passwords</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ517"
+>Displaying and Setting the Quota on User Volumes</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ518"
+>Changing Usernames</A
+></DT
+><DT
+><A
+HREF="c27596.html#HDRWQ524"
+>Removing a User Account</A
+></DT
+></DL
+><BR></DD
+><DT
+>14. <A
+HREF="c29323.html"
+>Administering the Protection Database</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c29323.html#HDRWQ532"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ534"
+>About the Protection Database</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ536"
+>Displaying Information from the Protection Database</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ542"
+>Creating User and Machine Entries</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ544"
+>Creating Groups</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ549"
+>Adding and Removing Group Members</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ552"
+>Deleting Protection Database Entries</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ554"
+>Changing a Group's Owner</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ556"
+>Changing a Protection Database Entry's Name</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ558"
+>Setting Group-Creation Quota</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ559"
+>Setting the Privacy Flags on Database Entries</A
+></DT
+><DT
+><A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID and GID Counters</A
+></DT
+></DL
+><BR></DD
+><DT
+>15. <A
+HREF="c31274.html"
+>Managing Access Control Lists</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c31274.html#HDRWQ563"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ565"
+>Protecting Data in AFS</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ573"
+>Setting ACL Entries</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ576"
+>Completely Replacing an ACL</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ577"
+>Copying ACLs Between Directories</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ579"
+>Removing Obsolete AFS IDs from ACLs</A
+></DT
+><DT
+><A
+HREF="c31274.html#HDRWQ580"
+>How AFS Interprets the UNIX Mode Bits</A
+></DT
+></DL
+><BR></DD
+><DT
+>16. <A
+HREF="c32432.html"
+>Managing Administrative Privilege</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c32432.html#HDRWQ582"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="c32432.html#HDRWQ584"
+>An Overview of Administrative Privilege</A
+></DT
+><DT
+><A
+HREF="c32432.html#HDRWQ586"
+>Administering the system:administrators Group</A
+></DT
+><DT
+><A
+HREF="c32432.html#HDRWQ589"
+>Granting Privilege for kas Commands: the ADMIN Flag</A
+></DT
+><DT
+><A
+HREF="c32432.html#HDRWQ592"
+>Administering the UserList File</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>A. <A
+HREF="a33047.html"
+>Managing the NFS/AFS Translator</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#HDRWQ596"
+>Summary of Instructions</A
+></DT
+><DT
+><A
+HREF="a33047.html#HDRWQ598"
+>Overview</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#HDRWQ599"
+>Enabling Unauthenticated or Authenticated AFS Access</A
+></DT
+><DT
+><A
+HREF="a33047.html#HDRWQ600"
+>Setting the AFSSERVER and AFSCONF Environment Variables</A
+></DT
+><DT
+><A
+HREF="a33047.html#HDRWQ602"
+>Delayed Writes for Files Saved on NFS Client Machines</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="a33047.html#HDRWQ603"
+>Configuring NFS/AFS Translator Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#Header_676"
+>Loading NFS and AFS Kernel Extensions</A
+></DT
+><DT
+><A
+HREF="a33047.html#HDRRMTSYS"
+>Configuring the Translator Machine to Accept AFS Commands</A
+></DT
+><DT
+><A
+HREF="a33047.html#HDRWQ604"
+>Controlling Optional Translator Features</A
+></DT
+><DT
+><A
+HREF="a33047.html#Header_679"
+>To configure an NFS/AFS translator machine</A
+></DT
+><DT
+><A
+HREF="a33047.html#Header_680"
+>To disable or enable Translator functionality, or set optional features</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="a33047.html#HDRWQ606"
+>Configuring NFS Client Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#Header_682"
+>To configure an NFS client machine to access AFS</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="a33047.html#HDRWQ610"
+>Configuring User Accounts</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#Header_684"
+>To configure a user account for issuing AFS commands</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="a33047.html#HDRWQ612"
+>Authenticating on Unsupported NFS Client Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33047.html#Header_686"
+>To authenticate using the knfs command</A
+></DT
+><DT
+><A
+HREF="a33047.html#Header_687"
+>To display tokens using the knfs command</A
+></DT
+><DT
+><A
+HREF="a33047.html#Header_688"
+>To discard tokens using the knfs command</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>B. <A
+HREF="a33826.html"
+>Using AFS Commands</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33826.html#HDRWQ613"
+>AFS Command Syntax</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a33826.html#Header_691"
+>Command Names</A
+></DT
+><DT
+><A
+HREF="a33826.html#Header_692"
+>Options</A
+></DT
+><DT
+><A
+HREF="a33826.html#Header_693"
+>Arguments</A
+></DT
+><DT
+><A
+HREF="a33826.html#Header_694"
+>Flags</A
+></DT
+><DT
+><A
+HREF="a33826.html#HDRCOMMAND-EX"
+>An Example Command</A
+></DT
+><DT
+><A
+HREF="a33826.html#HDRWQ614"
+>Rules for Entering AFS Commands</A
+></DT
+><DT
+><A
+HREF="a33826.html#HDRWQ615"
+>Rules for Using Abbreviations and Aliases</A
+></DT
+><DT
+><A
+HREF="a33826.html#HDRWQ616"
+>Displaying Online Help for AFS Commands</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>C. <A
+HREF="a34149.html"
+>The afsmonitor Program Statistics</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a34149.html#HDRWQ618"
+>The Cache Manager Statistics</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a34149.html#Header_708"
+>Performance Statistics Section (PerfStats_section)</A
+></DT
+><DT
+><A
+HREF="a34149.html#Header_709"
+>Server Up/Down Statistics Section (Server_UpDown_section)</A
+></DT
+><DT
+><A
+HREF="a34149.html#Header_710"
+>RPC Operation Measurements Section (RPCop_section)</A
+></DT
+><DT
+><A
+HREF="a34149.html#Header_711"
+>Authentication and Replicated File Access Section (Auth_Access_section)</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="a34149.html#HDRWQ619"
+>The File Server Statistics</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a34149.html#Header_713"
+>Performance Statistics Section (PerfStats_section)</A
+></DT
+><DT
+><A
+HREF="a34149.html#Header_714"
+>RPC Operations Section (RPCop_section)</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>D. <A
+HREF="a35965.html"
+>AIX Audit Events</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a35965.html#HDRWQ621"
+>Introduction</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ622"
+>Audit-Specific Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ627"
+>Volume Server Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ630"
+>Backup Server Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ633"
+>Protection Server Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ636"
+>Authentication Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ639"
+>File Server and Cache Manager Interface Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ642"
+>BOS Server Events</A
+></DT
+><DT
+><A
+HREF="a35965.html#HDRWQ645"
+>Volume Location Server Events</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="i37012.html"
+>Index</A
+></DT
+></DL
+><BR></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Tables</B
+></DT
+><DT
+>1. <A
+HREF="c667.html#TBLVOL-PREFIX"
+>Suggested volume prefixes</A
+></DT
+><DT
+>2. <A
+HREF="c667.html#TBLPREFIX-EXAMPLE"
+>Example volume-prefixing scheme</A
+></DT
+><DT
+>3. <A
+HREF="c24913.html#TBLWQ466"
+>Source for values of uss template variables</A
+></DT
+><DT
+>4. <A
+HREF="c24913.html#TBLWQ481"
+>Command-line argument sources for uss template variables</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Figures</B
+></DT
+><DT
+>1. <A
+HREF="c8420.html#FIGWQ191"
+>File Sharing Between the Read/write Source and a Clone Volume</A
+></DT
+><DT
+>2. <A
+HREF="c18360.html#FIGWQ337"
+>First example scout display</A
+></DT
+><DT
+>3. <A
+HREF="c18360.html#FIGWQ338"
+>Second example scout display</A
+></DT
+><DT
+>4. <A
+HREF="c18360.html#FIGWQ339"
+>Third example scout display</A
+></DT
+><DT
+>5. <A
+HREF="c18360.html#FIGWQ340"
+>Fourth example scout display</A
+></DT
+><DT
+>6. <A
+HREF="c18360.html#Figure_6"
+>The afsmonitor System Overview Screen</A
+></DT
+><DT
+>7. <A
+HREF="c18360.html#Figure_7"
+>The afsmonitor File Servers Screen</A
+></DT
+><DT
+>8. <A
+HREF="c18360.html#Figure_8"
+>The afsmonitor File Servers Screen Shifted One Page to the Right</A
+></DT
+><DT
+>9. <A
+HREF="c18360.html#Figure_9"
+>The afsmonitor Cache Managers Screen</A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="f24.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>About This Guide</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

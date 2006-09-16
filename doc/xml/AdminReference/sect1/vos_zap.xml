@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_zap1">
+  <refmeta>
+    <refentrytitle>vos zap</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos zap</refname>
+    <refpurpose>Removes a volume from its site without writing to the VLDB</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos zap</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;
+        <emphasis role="bold">-id</emphasis> &lt;<emphasis>volume ID</emphasis>&gt; [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-backup</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos z</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;
+        <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume ID</emphasis>&gt; [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-b</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos zap</emphasis> command removes the volume with the specified <emphasis>volume ID</emphasis>
+    from the site defined by the <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis> arguments,
+    without attempting to change the corresponding Volume Location Database
+    (VLDB) entry. If removing the volume can possibly result in incorrect data
+    in the VLDB, a warning message is displayed.</para>
+
+    <para>The <emphasis role="bold">-force</emphasis> flag removes a volume even if it cannot be "attached"
+    (brought online), which can happen either because the volume is extremely
+    damaged or because the Salvager functioned abnormally. Without this flag,
+    this command cannot remove volumes that are not attachable. See also
+    <link linkend="CAUTIONS">CAUTIONS</link>.</para>
+
+    <para>To remove the specified read/write volume's backup version at the same
+    time, include the <emphasis role="bold">-backup</emphasis> flag.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not use this command as the standard way to remove a volume, as it is
+    likely to put the VLDB out of sync with the volumes on servers. Use the
+    <emphasis role="bold">vos remove</emphasis> command instead.</para>
+
+    <para>This command is useful in situations where it is important to delete the
+    volume, but for some reason the VLDB is unreachable -- for example,
+    because s the Volume Location Server is unavailable. The issuer can remove
+    the VLDB entry later with the <emphasis role="bold">vos remove</emphasis> or <emphasis role="bold">vos delentry</emphasis> command, or
+    it is removed automatically when the <emphasis role="bold">vos syncserv</emphasis> and <emphasis role="bold">vos syncvldb</emphasis>
+    commands run.</para>
+
+    <para>To remove a read-only site defined in the VLDB by mistake, before a copy
+    actually exists at the site, use the <emphasis role="bold">vos remsite</emphasis> command. To remove an
+    entire VLDB entry without affecting volumes at their sites, use the <emphasis role="bold">vos
+    delentry</emphasis> command.</para>
+
+    <para>Do not use the <emphasis role="bold">-force</emphasis> flag if the volume is online, but only when
+    attempts to remove the volume with the <emphasis role="bold">vos remove</emphasis> or the <emphasis role="bold">vos zap</emphasis>
+    command have failed, or the volume definitely cannot be attached. After
+    using the <emphasis role="bold">-force</emphasis> flag, make sure that the volume's VLDB entry is also
+    removed (issue the <emphasis role="bold">vos delentry</emphasis> command if necessary).</para>
+
+    <para>Adding the <emphasis role="bold">-force</emphasis> flag makes the command take considerably longer --
+    about as long as a salvage of the relevant partition -- since the Volume
+    Server examines all inodes on the partition for traces of the volume.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine from which to remove the volume.
+          Provide the machine's IP address or its host name (either fully qualified
+          or using an unambiguous abbreviation). For details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the partition (on the file server machine specified by the
+          <emphasis role="bold">-server</emphasis> argument) from which to remove the volume. Provide the
+          partition's complete name with preceding slash (for example, <computeroutput>/vicepa</computeroutput>)
+          or use one of the three acceptable abbreviated forms. For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>volume ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the volume ID number of the volume to remove, which can be of
+          any of the three types. The volume name is not acceptable.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Removes the volume even though it cannot be attached (brought online). Use
+          only after the failure of previous attempts to remove the volume by using
+          the <emphasis role="bold">vos remove</emphasis> command or the <emphasis role="bold">vos zap</emphasis> command without this flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-backup</emphasis></term>
+        <listitem>
+          <para>Removes the backup version of the read/write volume specified by the
+          <emphasis role="bold">-id</emphasis> argument. Do not use this flag if the <emphasis role="bold">-id</emphasis> argument identifies a
+          read-only or backup volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example removes the volume with volume ID 536870988 from the
+    <replaceable>/vicepf</replaceable> partition of the file server machine <computeroutput>fs6.abc.com</computeroutput>, without
+    noting the change in the VLDB.</para>
+
+<programlisting>
+   % vos zap -server fs6.abc.com -partition f -id 536870988
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+      machine specified with the <emphasis role="bold">-server</emphasis> argument and on each database server
+      machine. If the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be
+      logged on to a server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_delentry1">vos_delentry(1)</link>,
+      <link linkend="vos_remove1">vos_remove(1)</link>,
+      <link linkend="vos_remsite1">vos_remsite(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

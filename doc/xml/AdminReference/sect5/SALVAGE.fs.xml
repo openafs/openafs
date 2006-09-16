@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="SALVAGE_fs5">
+  <refmeta>
+    <refentrytitle>SALVAGE.fs</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>SALVAGE.fs</refname>
+    <refpurpose>Triggers salvaging of AFS server partitions</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>SALVAGE.fs</replaceable> file, if present in a file server machine's
+    <replaceable>/usr/afs/local</replaceable> directory, indicates to the Basic OverSeer (BOS) Server
+    (<emphasis role="bold">bosserver</emphasis> process) that it must invoke the Salvager (<emphasis role="bold">salvager</emphasis>
+    process) during recovery from a failure of the File Server (<emphasis role="bold">fileserver</emphasis>
+    process).</para>
+
+    <para>The BOS Server creates the zero-length file each time it starts or
+    restarts the <computeroutput>fs</computeroutput> process. When the File Server exits normally (for
+    example, in response to the <emphasis role="bold">bos shutdown</emphasis> or <emphasis role="bold">bos stop</emphasis> command), the
+    BOS Server removes the file. However, if the File Server exits
+    unexpectedly, the file remains in the <replaceable>/usr/afs/local</replaceable> directory as a
+    signal that the BOS Server must invoke the Salvager process to repair any
+    file system inconsistencies possibly introduced during the failure, before
+    restarting the File Server and Volume Server processes.</para>
+
+    <para>Do not create or remove this file. To invoke the Salvager process
+    directly, use the <emphasis role="bold">bos salvage</emphasis> command or log onto the file server
+    machine as the local superuser <computeroutput>root</computeroutput> and issue the <emphasis role="bold">salvager</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_salvage8">bos_salvage(8)</link>,
+    <link linkend="bosserver8">bosserver(8)</link>,
+    <link linkend="fileserver8">fileserver(8)</link>,
+    <link linkend="salvager8">salvager(8)</link>,
+    <link linkend="volserver8">volserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

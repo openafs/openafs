@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bosserver8">
+  <refmeta>
+    <refentrytitle>bosserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bosserver</refname>
+    <refpurpose>Initializes the BOS Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bosserver</emphasis> [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-log</emphasis>] [<emphasis role="bold">-enable_peer_stats</emphasis>]
+        [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The bosserver command initializes the Basic OverSeer (BOS) Server
+    (<emphasis role="bold">bosserver</emphasis> process). In the conventional configuration, the binary file
+    is located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The BOS Server must run on every file server machine and helps to automate
+    file server administration by performing the following tasks:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Monitors the other AFS server processes on the local machine, to make sure
+        they are running correctly.</para>
+
+      </listitem>
+      <listitem>
+        <para>Automatically restarts failed processes, without contacting a human
+        operator. When restarting multiple server processes simultaneously, the
+        BOS Server takes interdependencies into account and initiates restarts in
+        the correct order.</para>
+
+      </listitem>
+      <listitem>
+        <para>Processes commands from the bos suite that administrators issue to verify
+        the status of server processes, install and start new processes, stop
+        processes either temporarily or permanently, and restart halted processes.</para>
+
+      </listitem>
+      <listitem>
+        <para>Manages system configuration information: the files that list the cell's
+        server encryption keys, database server machines, and users privileged to
+        issue commands from the <emphasis role="bold">bos</emphasis> and <emphasis role="bold">vos</emphasis> suites.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The BOS Server logs a default set of important events in the file
+    <replaceable>/usr/afs/logs/BosLog</replaceable>. To record the name of any user who performs a
+    privileged <emphasis role="bold">bos</emphasis> command (one that requires being listed in the
+    <replaceable>/usr/afs/etc/UserList</replaceable> file), add the <emphasis role="bold">-log</emphasis> flag. To display the
+    contents of the <emphasis role="bold">BosLog</emphasis> file, use the <emphasis role="bold">bos getlog</emphasis> command.</para>
+
+    <para>The first time that the BOS Server initializes on a server machine, it
+    creates several files and subdirectories in the local <replaceable>/usr/afs</replaceable>
+    directory, and sets their mode bits to protect them from unauthorized
+    access. Each time it restarts, it checks that the mode bits still comply
+    with the settings listed in the following chart. A question mark indicates
+    that the BOS Server initially turns off the bit (sets it to the hyphen),
+    but does not check it at restart.</para>
+
+    <para>If the mode bits do not comply, the BOS Server writes the following
+    warning to the <replaceable>BosLog</replaceable> file:</para>
+
+<programlisting>
+   Bosserver reports inappropriate access on server directories
+
+</programlisting>
+      <para>However, the BOS Server does not reset the mode bits, so the administrator
+      can set them to alternate values if desired (with the understanding that
+      the warning message then appears at startup).</para>
+
+      <para>This command does not use the syntax conventions of the AFS command
+      suites. Provide the command name and all option names in full.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Options</title>
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-noauth</emphasis></term>
+          <listitem>
+            <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer, which is
+            useful only when authorization checking is disabled on the server machine
+            (for instance, during the installation of a file server machine.)</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-log</emphasis></term>
+          <listitem>
+            <para>Records in the <replaceable>/usr/afs/logs/BosLog</replaceable> file the names of all users who
+            successfully issue a privileged <emphasis role="bold">bos</emphasis> command (one that requires being
+            listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file).</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+          <listitem>
+            <para>Activates the collection of Rx statistics and allocates memory for their
+            storage. For each connection with a specific UDP port on another machine,
+            a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+            so on) sent or received. To display or otherwise access the records, use
+            the Rx Monitoring API.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+          <listitem>
+            <para>Activates the collection of Rx statistics and allocates memory for their
+            storage. A separate record is kept for each type of RPC (FetchFile,
+            GetStatus, and so on) sent or received, aggregated over all connections to
+            other machines. To display or otherwise access the records, use the Rx
+            Monitoring API.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-help</emphasis></term>
+          <listitem>
+            <para>Prints the online help for this command. All other valid options are
+            ignored.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following command initializes the BOS Server and logs the names of
+      users who issue privileged <emphasis role="bold">bos</emphasis> commands.</para>
+
+<programlisting>
+   % bosserver -log &amp;
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer most be logged onto a file server machine as the local
+        superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="BosConfig5">BosConfig(5)</link>,
+        <link linkend="BosLog5">BosLog(5)</link>,
+        <link linkend="bos8">bos(8)</link>,
+        <link linkend="bos_create8">bos_create(8)</link>,
+        <link linkend="bos_exec8">bos_exec(8)</link>,
+        <link linkend="bos_getlog8">bos_getlog(8)</link>,
+        <link linkend="bos_getrestart8">bos_getrestart(8)</link>,
+        <link linkend="bos_restart8">bos_restart(8)</link>,
+        <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+        <link linkend="bos_start8">bos_start(8)</link>,
+        <link linkend="bos_startup8">bos_startup(8)</link>,
+        <link linkend="bos_status8">bos_status(8)</link>,
+        <link linkend="bos_stop8">bos_stop(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

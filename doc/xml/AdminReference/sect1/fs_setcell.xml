@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_setcell1">
+  <refmeta>
+    <refentrytitle>fs setcell</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs setcell</refname>
+    <refpurpose>Configures permissions for setuid programs from specified cells</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs setcell</emphasis> <emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+ [<emphasis role="bold">-suid</emphasis>] [<emphasis role="bold">-nosuid</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs setce</emphasis> <emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+ [<emphasis role="bold">-s</emphasis>] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs setcell</emphasis> command sets whether the Cache Manager allows programs
+    (and other executable files) from each cell named by the <emphasis role="bold">-cell</emphasis> argument
+    to run with setuid permission. By default, the Cache Manager allows
+    programs from its home cell to run with setuid permission, but not
+    programs from any foreign cells. A program belongs to the same cell as the
+    file server machine that houses the volume in which the program's binary
+    file resides, as specified in the file server machine's
+    <replaceable>/usr/afs/etc/ThisCell</replaceable> file. The Cache Manager determines its own home
+    cell by reading the <replaceable>/usr/vice/etc/ThisCell</replaceable> file at initialization.</para>
+
+    <para>To enable programs from each specified cell to run with setuid permission,
+    include the <emphasis role="bold">-suid</emphasis> flag. To prohibit programs from running with setuid
+    permission, include the <emphasis role="bold">-nosuid</emphasis> flag, or omit both flags.</para>
+
+    <para>The <emphasis role="bold">fs setcell</emphasis> command directly alters a cell's setuid status as
+    recorded in kernel memory, so rebooting the machine is unnecessary.
+    However, non-default settings do not persist across reboots of the machine
+    unless the appropriate <emphasis role="bold">fs setcell</emphasis> command appears in the machine's AFS
+    initialization file.</para>
+
+    <para>To display a cell's setuid status, issue the <emphasis role="bold">fs getcellstatus</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>AFS does not recognize effective UID: if a setuid program accesses AFS
+    files and directories, it does so using the current AFS identity of the
+    AFS user who initialized the program, not of the program's owner.  Only
+    the local file system recognizes effective UID.</para>
+
+    <para>Only members of the system:administrators group can turn on the setuid
+    mode bit on an AFS file or directory.</para>
+
+    <para>When the setuid mode bit is turned on, the UNIX <computeroutput>ls -l</computeroutput> command displays
+    the third user mode bit as an <computeroutput>s</computeroutput> instead of an <computeroutput>x</computeroutput>. However, the <computeroutput>s</computeroutput>
+    does not appear on an AFS file or directory unless setuid permission is
+    enabled for the cell in which the file resides.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each cell for which to set setuid status. Provide the fully
+          qualified domain name, or a shortened form that disambiguates it from the
+          other cells listed in the local <replaceable>/usr/vice/etc/CellServDB</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-suid</emphasis></term>
+        <listitem>
+          <para>Allows programs from each specified cell to run with setuid
+          privilege. Provide it or the <emphasis role="bold">-nosuid</emphasis> flag, or omit both flags to
+          disallow programs from running with setuid privilege.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-nosuid</emphasis></term>
+        <listitem>
+          <para>Prevents programs from each specified cell from running with setuid
+          privilege. Provide it or the <emphasis role="bold">-suid</emphasis> flag, or omit both flags to disallow
+          programs form running with setuid privilege.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command enables executable files from the State University
+    cell to run with setuid privilege on the local machine:</para>
+
+<programlisting>
+   % fs setcell -cell stateu.edu -suid
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the local superuser root.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_getcellstatus1">fs_getcellstatus(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

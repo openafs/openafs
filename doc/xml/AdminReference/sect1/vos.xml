@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos1">
+  <refmeta>
+    <refentrytitle>vos</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos</refname>
+    <refpurpose>Introduction to the vos command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">vos</emphasis> command suite are the administrative interface
+    to the Volume Server and Volume Location (VL) Server. System
+    administrators use <emphasis role="bold">vos</emphasis> commands to create, move, delete, replicate,
+    back up and examine volumes, among other operations. The VL Server
+    automatically records in the Volume Location Database (VLDB) changes in
+    volume status and location that result from <emphasis role="bold">vos</emphasis> commands.</para>
+
+    <para>The operations invoked by most <emphasis role="bold">vos</emphasis> commands are idempotent, meaning
+    that if an operation is interrupted by a network, server machine, or
+    process outage, then a subsequent attempt at the same operation continues
+    from the interruption point, rather than starting over at the beginning of
+    the operation. Before executing a command, the Volume and VL Servers check
+    the current state of the volumes and VLDB records to be altered by the
+    command. If they are already in the desired end state (or a consistent
+    intermediate state), there is no need to repeat the internal steps that
+    brought them there. Idempotency does not apply if the command issuer
+    explicitly interrupts the operation with the Ctrl-C command or another
+    interrupt signal. In that case, the volume is left locked and the
+    administrator must use the <emphasis role="bold">vos unlock</emphasis> command to unlock it before
+    proceeding.</para>
+
+    <para>It is important that the VLDB accurately indicate the status of the
+    volumes on file server machines at all times. <link linkend="vldb_DB05">vldb.DB0(5)</link> and
+    <link linkend="afs_volume_header5">afs_volume_header(5)</link> describe the information recorded in the VLDB and
+    volume headers, respectively. If a <emphasis role="bold">vos</emphasis> command changes volume status,
+    it automatically records the change in the corresponding VLDB entry. The
+    most common cause of discrepancies between the VLDB and volume status on
+    file server machines is interrupted operations; to restore consistency,
+    use the <emphasis role="bold">vos syncserv</emphasis> and <emphasis role="bold">vos syncvldb</emphasis> commands.</para>
+
+    <para>There are several categories of commands in the vos command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Commands to create, move, and rename volumes: <emphasis role="bold">vos backup</emphasis>, <emphasis role="bold">vos
+        backupsys</emphasis>, <emphasis role="bold">vos create</emphasis>, <emphasis role="bold">vos move</emphasis>, and <emphasis role="bold">vos rename</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to remove VLDB volume records or volumes or both: <emphasis role="bold">vos
+        delentry</emphasis>, <emphasis role="bold">vos remove</emphasis>, and <emphasis role="bold">vos zap</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to edit or display VLDB server entries: <emphasis role="bold">vos changeaddr</emphasis> and
+        <emphasis role="bold">vos listaddrs</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to create and restore dump files: <emphasis role="bold">vos dump</emphasis> and <emphasis role="bold">vos restore</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer replicated volumes: <emphasis role="bold">vos addsite</emphasis>, <emphasis role="bold">vos release</emphasis>,
+        and <emphasis role="bold">vos remsite</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to display VLDB records, volume headers, or both: <emphasis role="bold">vos examine</emphasis>,
+        <emphasis role="bold">vos listvldb</emphasis>, and <emphasis role="bold">vos listvol</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to display information about partitions that house volumes: <emphasis role="bold">vos
+        listpart</emphasis> and <emphasis role="bold">vos partinfo</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to restore consistency between the VLDB and volume headers: <emphasis role="bold">vos
+        syncserv</emphasis> and <emphasis role="bold">vos syncvldb</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to lock and unlock VLDB entries: <emphasis role="bold">vos lock</emphasis>, <emphasis role="bold">vos unlock</emphasis>, and
+        <emphasis role="bold">vos unlockvldb</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>A command to report Volume Server status: <emphasis role="bold">vos status</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to obtain help: <emphasis role="bold">vos apropos</emphasis> and <emphasis role="bold">vos help</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following arguments and flags are available on many commands in the
+    <emphasis role="bold">bos</emphasis> suite. The reference page for each command also lists them, but
+    they are described here in greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. It is acceptable to abbreviate
+          the cell name to the shortest form that distinguishes it from the other
+          entries in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local machine. If
+          the <emphasis role="bold">-cell</emphasis> argument is omitted, the command interpreter determines the
+          name of the local cell by reading the following in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the AFSCELL environment variable.</para>
+
+            </listitem>
+            <listitem>
+              <para>The local <replaceable>/usr/vice/etc/ThisCell</replaceable> file.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using the server encryption key with the
+          highest key version number in the local <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The
+          <emphasis role="bold">vos</emphasis> command interpreter presents the ticket, which never expires, to
+          the Volume Server and VL Server during mutual authentication.</para>
+
+          <para>Use this flag only when issuing a command on a server machine; client
+          machines do not usually have a <replaceable>/usr/afs/etc/KeyFile</replaceable> file.  The issuer
+          of a command that includes this flag must be logged on to the server
+          machine as the local superuser <computeroutput>root</computeroutput>. The flag is useful for commands
+          invoked by an unattended application program, such as a process controlled
+          by the UNIX <emphasis role="bold">cron</emphasis> utility or by a cron entry in the machine's
+          <replaceable>/usr/afs/local/BosConfig</replaceable> file. It is also useful if an administrator is
+          unable to authenticate to AFS but is logged in as the local superuser
+          <emphasis role="bold">root</emphasis>.</para>
+
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell. Also, do not combine the <emphasis role="bold">-localauth</emphasis> and
+          <emphasis role="bold">-noauth</emphasis> flags.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Establishes an unauthenticated connection to the Volume Server and VL
+          Server, in which the servers treat the issuer as the unprivileged user
+          <computeroutput>anonymous</computeroutput>. It is useful only when authorization checking is disabled on
+          the server machine (during the installation of a file server machine or
+          when the <emphasis role="bold">bos setauth</emphasis> command has been used during other unusual
+          circumstances). In normal circumstances, the servers allow only privileged
+          users to issue commands that change the status of a volume or VLDB record,
+          and refuses to perform such an action even if the <emphasis role="bold">-noauth</emphasis> flag is
+          provided. Do not combine the <emphasis role="bold">-noauth</emphasis> and <emphasis role="bold">-localauth</emphasis> flags.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the AFS server partition on a file server machine that houses,
+          or is to house, the volumes of interest, or about which to list
+          information. The <emphasis role="bold">vos</emphasis> command interpreter accepts any of the following
+          four name formats:</para>
+
+<programlisting>
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+</programlisting>
+            <para>After /vicepz (for which the index is 25) comes</para>
+
+<programlisting>
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+</programlisting>
+              <para>and so on through</para>
+
+<programlisting>
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+</programlisting>
+                <para>The <emphasis role="bold">-frompartition</emphasis> and <emphasis role="bold">-topartition</emphasis> arguments to the <emphasis role="bold">vos move</emphasis>
+                command also accept this notation.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+              <listitem>
+                <para>Identifies the file server machine that houses, or is to house, the
+                volumes or AFS server partitions of interest. Provide the machine's IP
+                address in dotted decimal format, its fully qualified host name (for
+                example, <computeroutput>fs1.abc.com</computeroutput>), or the shortest abbreviated form of its host
+                name that distinguishes it from other machines. Successful use of an
+                abbreviated form depends on the availability of a name resolution service
+                (such as the Domain Name Service or a local host table) at the time the
+                command is issued.</para>
+
+                <para>The <emphasis role="bold">-fromserver</emphasis> and <emphasis role="bold">-toserver</emphasis> arguments to the <emphasis role="bold">vos move</emphasis> command
+                also accept these name formats.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-verbose</emphasis></term>
+              <listitem>
+                <para>Produces on the standard output stream a detailed trace of the command's
+                execution. If this argument is omitted, only warnings and error messages
+                appear.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>To issue most vos commands, the issuer must be listed in the
+          <replaceable>/usr/afs/etc/UserList</replaceable> file on each server machine that houses or is to
+          house an affected volume, and on each database server machine. The most
+          predictable performance results if all database server and file server
+          machines in the cell share a common <replaceable>UserList</replaceable> file.  Alternatively, if
+          the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must be logged on to a
+          server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+          <para>To issue a vos command that only displays information, no privilege is
+          required.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="CellServDB5">CellServDB(5)</link>,
+          <link linkend="UserList5">UserList(5)</link>,
+          <link linkend="vos_addsite1">vos_addsite(1)</link>,
+          <link linkend="vos_apropos1">vos_apropos(1)</link>,
+          <link linkend="vos_backup1">vos_backup(1)</link>,
+          <link linkend="vos_backupsys1">vos_backupsys(1)</link>,
+          <link linkend="vos_changeaddr1">vos_changeaddr(1)</link>,
+          <link linkend="vos_create1">vos_create(1)</link>,
+          <link linkend="vos_delentry1">vos_delentry(1)</link>,
+          <link linkend="vos_dump1">vos_dump(1)</link>,
+          <link linkend="vos_examine1">vos_examine(1)</link>,
+          <link linkend="vos_help1">vos_help(1)</link>,
+          <link linkend="vos_listaddrs1">vos_listaddrs(1)</link>,
+          <link linkend="vos_listpart1">vos_listpart(1)</link>,
+          <link linkend="vos_listvldb1">vos_listvldb(1)</link>,
+          <link linkend="vos_listvol1">vos_listvol(1)</link>,
+          <link linkend="vos_lock1">vos_lock(1)</link>,
+          <link linkend="vos_move1">vos_move(1)</link>,
+          <link linkend="vos_partinfo1">vos_partinfo(1)</link>,
+          <link linkend="vos_release1">vos_release(1)</link>,
+          <link linkend="vos_remove1">vos_remove(1)</link>,
+          <link linkend="vos_remsite1">vos_remsite(1)</link>,
+          <link linkend="vos_rename1">vos_rename(1)</link>,
+          <link linkend="vos_restore1">vos_restore(1)</link>,
+          <link linkend="vos_status1">vos_status(1)</link>,
+          <link linkend="vos_syncserv1">vos_syncserv(1)</link>,
+          <link linkend="vos_syncvldb1">vos_syncvldb(1)</link>,
+          <link linkend="vos_unlock1">vos_unlock(1)</link>,
+          <link linkend="vos_unlockvldb1">vos_unlockvldb(1)</link>,
+          <link linkend="vos_zap1">vos_zap(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

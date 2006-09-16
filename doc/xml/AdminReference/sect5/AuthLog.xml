@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="AuthLog5">
+  <refmeta>
+    <refentrytitle>AuthLog</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>AuthLog</refname>
+    <refpurpose>Traces Authentication Server operations</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>AuthLog</replaceable> file records a trace of Authentication Server (<emphasis role="bold">kaserver</emphasis>
+    process) operations on the local machine and describes any error
+    conditions it encounters.</para>
+
+    <para>If the <replaceable>AuthLog</replaceable> file does not exist in the <replaceable>/usr/afs/logs</replaceable> directory
+    when the Authentication Server starts, the server process creates it and
+    writes initial start-up messages to it.  If there is an existing file, the
+    Authentication Server renames it to <replaceable>AuthLog.old</replaceable>, overwriting the
+    existing <replaceable>AuthLog.old</replaceable> file if it exists.</para>
+
+    <para>The file is in ASCII format. Administrators listed in the
+    <replaceable>/usr/afs/etc/UserList</replaceable> file can use the <emphasis role="bold">bos getlog</emphasis> command to display
+    its contents. Alternatively, log onto the server machine and use a text
+    editor or a file display command such as the UNIX <emphasis role="bold">cat</emphasis> command. By
+    default, the mode bits on the <replaceable>AuthLog</replaceable> file grant the required <computeroutput>r</computeroutput>
+    (read) permission to all users.</para>
+
+    <para>The Authentication Server records operations only as it completes them,
+    and cannot recover from failures by reviewing the file. The log contents
+    are useful for administrative evaluation of process failures and other
+    problems.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="UserList5">UserList(5)</link>,
+    <link linkend="bos_getlog8">bos_getlog(8)</link>,
+    <link linkend="kaserver8">kaserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

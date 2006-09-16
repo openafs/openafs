@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_rmmount1">
+  <refmeta>
+    <refentrytitle>fs rmmount</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs rmmount</refname>
+    <refpurpose>Removes a mount point</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs rmmount</emphasis> <emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt;+ [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs rm</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>directory</emphasis>&gt;+ [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The fs rmmount command removes the mount point named by the <emphasis role="bold">-dir</emphasis>
+    argument from the file system. The corresponding volume remains on its
+    host partition or partitions, but is inaccessible if there are no other
+    mount points for it.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the mount point to delete from the file system. The last element in
+          the pathname must be an actual name, not a shorthand notation such as
+          "dot" (<computeroutput>.</computeroutput>) or "dot dot" (<computeroutput>..</computeroutput>).</para>
+
+          <para>Specify the read/write path to the directory, to avoid the failure that
+          results from attempting to delete a mount point from a read-only
+          volume. By convention, the read/write path is indicated by placing a
+          period before the cell name at the pathname's second level (for example,
+          <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+          read-only paths through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference
+          page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command removes the mount points <replaceable>jones</replaceable> and <replaceable>terry</replaceable> from
+    the current working directory (the <replaceable>/afs/abc.com/usr</replaceable> directory).</para>
+
+<programlisting>
+   % fs rmmount jones terry
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>d</computeroutput> (delete) permission on the ACL of the
+      directory that houses each mount point.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_lsmount1">fs_lsmount(1)</link>,
+      <link linkend="fs_mkmount1">fs_mkmount(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

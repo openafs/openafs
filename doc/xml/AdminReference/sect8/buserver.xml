@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="buserver8">
+  <refmeta>
+    <refentrytitle>buserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>buserver</refname>
+    <refpurpose>Initializes the Backup Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">buserver</emphasis> [<emphasis role="bold">-database</emphasis> &lt;<emphasis>database directory</emphasis>&gt;]
+        [<emphasis role="bold">-cellservdb</emphasis> &lt;<emphasis>cell configuration directory</emphasis>&gt;] [<emphasis role="bold">-resetdb</emphasis>]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-smallht</emphasis>] [-servers &lt;<emphasis>list of ubik database servers</emphasis>&gt;+]
+        [<emphasis role="bold">-enable_peer_stats</emphasis>]  [-enable_process_stats] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">buserver</emphasis> command initializes the Backup Server, which runs on
+    database server machines and maintains the Backup Database. In the
+    conventional configuration, the binary file is located in the
+    <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The <emphasis role="bold">buserver</emphasis> command is not normally issued at the command shell
+    prompt, but rather placed into a database server machine's
+    <replaceable>/usr/afs/local/BosConfig</replaceable> file with the <emphasis role="bold">bos create</emphasis> command. If it is
+    ever issued at the command shell prompt, the issuer must be logged onto a
+    file server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>As it initializes, the Backup Server process creates the two files that
+    constitute the Backup Database, <replaceable>bdb.DB0</replaceable> and <replaceable>bdb.DBSYS1</replaceable>, in the
+    <replaceable>/usr/afs/db</replaceable> directory if they do not already exist. The Backup Database
+    houses information about volume sets and entries, the dump hierarchy, Tape
+    Coordinators, and previously performed dump sets. Use the commands in the
+    <emphasis role="bold">backup</emphasis> suite to administer the database.</para>
+
+    <para>The Backup Server records a trace of its activity in the
+    <replaceable>/usr/afs/logs/BackupLog</replaceable> file. Use the <emphasis role="bold">bos getlog</emphasis> command to display
+    the contents of the file.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The <emphasis role="bold">buserver</emphasis> process reserves port 7021 for its use. Unexpected
+    behavior can occur if another process tries to reserve this port while the
+    <emphasis role="bold">buserver</emphasis> process is running.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>database directory</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of an alternate directory for the Backup Database
+          files, ending in a final slash (<computeroutput>/</computeroutput>). If this argument is not provided,
+          the default is the <replaceable>/usr/afs/db</replaceable> directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cellservdb</emphasis> &lt;<emphasis>cell configuration directory</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the directory from which the Backup Server reads
+          in an alternate version of the <replaceable>CellServDB</replaceable> file. This argument is
+          mandatory for correct functioning when the Backup Server is running on a
+          subset of the cell's database server machines that is not a majority of
+          the machines listed in the standard <replaceable>/usr/afs/etc/CellServDB</replaceable> file (which
+          the Backup Server consults if this argument is not provided). It is not
+          appropriate in any other circumstances.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-resetdb</emphasis></term>
+        <listitem>
+          <para>Removes all of the information in the Backup Database files in the
+          <replaceable>/usr/afs/db</replaceable> directory, leaving zero-length versions of them.  The
+          backup operator must recreate the configuration entries in the database
+          (for volume sets, the dump hierarchy and so on) before performing backup
+          operations.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Establishes an unauthenticated connection between the issuer and the
+          Backup Server, in which the Backup Server treats the issuer as the
+          unprivileged user <computeroutput>anonymous</computeroutput>. It is useful only when authorization
+          checking is disabled on the database server machine. In normal
+          circumstances, the Backup Server allows only authorized (privileged) users
+          to issue commands that affect or contact the Backup Database, and refuses
+          to perform such an action even if the <emphasis role="bold">-noauth</emphasis> flag is used.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-smallht</emphasis></term>
+        <listitem>
+          <para>Directs the Backup Server to use smaller internal hash tables for the
+          Backup Database, which reduces memory requirements but can make data
+          access take longer.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>list of ubik database servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the database server machines on which to start the Backup
+          Server. Use this argument if running the Backup Server on a subset of the
+          database server machines that is not a majority of the machines listed in
+          the <replaceable>/usr/afs/etc/CellServDB</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. For each connection with a specific UDP port on another machine,
+          a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+          so on) sent or received. To display or otherwise access the records, use
+          the Rx Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. A separate record is kept for each type of RPC (FetchFile,
+          GetStatus, and so on) sent or received, aggregated over all connections to
+          other machines. To display or otherwise access the records, use the Rx
+          Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example <emphasis role="bold">bos create</emphasis> command creates a <computeroutput>buserver</computeroutput> process
+    on the file server machine <computeroutput>fs3.abc.com</computeroutput>. It appears here on two lines
+    only for legibility.</para>
+
+<programlisting>
+   % bos create -server fs3.abc.com -instance buserver \
+                -type simple -cmd /usr/afs/bin/buserver
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BackupLog5">BackupLog(5)</link>,
+      <link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="bdb_DB05">bdb.DB0(5)</link>,
+      <link linkend="backup8">backup(8)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

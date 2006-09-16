@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="translate_et1">
+  <refmeta>
+    <refentrytitle>translate_et</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>translate_et</refname>
+    <refpurpose>Translates numbered error codes into text messages</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">translate_et</emphasis> &lt;<emphasis>error number</emphasis>&gt;+</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">translate_et</emphasis> command translates each specified error number into a
+    text message.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>&lt;<emphasis>error number</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies each error number to translate.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command translates the error numbers 1 and 4:</para>
+
+<programlisting>
+   % translate_et 1 4
+   1 ().1 = Not owner
+   4 ().4 = Interrupted system call
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

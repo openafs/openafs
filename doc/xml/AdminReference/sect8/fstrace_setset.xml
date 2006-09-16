@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_setset8">
+  <refmeta>
+    <refentrytitle>fstrace setset</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace setset</refname>
+    <refpurpose>Sets the status of an event set</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace setset</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-active</emphasis>] [<emphasis role="bold">-inactive</emphasis>]
+        [<emphasis role="bold">-dormant</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs set</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-i</emphasis>] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace setset</emphasis> command sets the status of the <computeroutput>cm</computeroutput> kernel event
+    set on the local machine, which determines whether trace messages are
+    recorded in the log buffer in kernel memory.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the event set for which to set the status. The only acceptable value
+          <computeroutput>cm</computeroutput>, which is also the default if this argument is omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-active</emphasis></term>
+        <listitem>
+          <para>Enables tracing for the event set and allocates kernel memory for the
+          associated trace log buffer. Provide one of this flag, the <emphasis role="bold">-inactive</emphasis>
+          flag, or the <emphasis role="bold">-dormant</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-inactive</emphasis></term>
+        <listitem>
+          <para>Temporarily disables tracing for the event set, but does not change the
+          allocation of kernel memory for the associated trace log buffer.  Provide
+          one of this flag, the <emphasis role="bold">-active</emphasis> flag, or the <emphasis role="bold">-dormant</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dormant</emphasis></term>
+        <listitem>
+          <para>Disables tracing for the event set and frees the kernel memory previously
+          allocated for the associated trace log buffer. Provide one of this flag,
+          the <emphasis role="bold">-active</emphasis> flag, or the <emphasis role="bold">-inactive</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example sets the cm event set's status to inactive:</para>
+
+<programlisting>
+   # fstrace setset -set cm -inactive
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fstrace8">fstrace(8)</link>,
+      <link linkend="fstrace_lsset8">fstrace_lsset(8)</link>,
+      <link linkend="fstrace_setlog8">fstrace_setlog(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

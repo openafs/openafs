@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_remove1">
+  <refmeta>
+    <refentrytitle>vos remove</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos remove</refname>
+    <refpurpose>Removes a volume from a site</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos remove</emphasis> [<emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;]
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;]
+        <emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos remo</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt;] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;]
+        <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>]
+        [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos remove</emphasis> command removes the indicated volume from the partition
+    on which it resides. The Volume Location Database (VLDB) record is altered
+    appropriately, as described in the following paragraphs. Use this command
+    to remove any of the three types of volumes; the effect depends on the
+    type.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If the <emphasis role="bold">-id</emphasis> argument names the read/write volume (that is, specifies the
+        volume's base name), both it and the associated backup volume are removed
+        from the partition that houses them. The <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis>
+        arguments are optional, because there can be only one read/write
+        site. When the volume is removed, the site information is also removed
+        from the VLDB entry. The read/write and backup volume ID numbers no longer
+        appear in the output from the <emphasis role="bold">vos listvldb</emphasis> or <emphasis role="bold">vos examine</emphasis> commands,
+        but they are preserved internally. Read-only sites, if any, are not
+        affected, but cannot be changed unless a read/write site is again
+        defined. The site count reported by the <emphasis role="bold">vos examine</emphasis> and <emphasis role="bold">vos listvldb</emphasis>
+        commands as <computeroutput>number of sites</computeroutput> decrements by one. The entire VLDB entry is
+        removed if there are no read-only sites.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the <emphasis role="bold">-id</emphasis> argument names a read-only volume, it is removed from the
+        partition that houses it, and the corresponding site information is
+        removed from the VLDB entry. The site count reported by the <emphasis role="bold">vos examine</emphasis>
+        and <emphasis role="bold">vos listvldb</emphasis> commands as <computeroutput>number of sites</computeroutput> decrements by one for
+        each volume you remove. If there is more than one read-only site, the
+        <emphasis role="bold">-server</emphasis> argument (and optionally <emphasis role="bold">-partition</emphasis> argument) must be used
+        to specify the site from which to remove the volume. If there is only one
+        read-only site, the <emphasis role="bold">-id</emphasis> argument is sufficient; if there is also no
+        read/write volume in this case, the entire VLDB entry is removed.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the <emphasis role="bold">-id</emphasis> argument names a backup volume, it is removed from the
+        partition that houses it. The <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis> arguments are
+        optional, because there can be only one backup site. The backup volume ID
+        number no longer appears in the output from the <emphasis role="bold">vos listvldb</emphasis> command or
+        in the corresponding portion of the output from the <emphasis role="bold">vos examine</emphasis>
+        command, but is preserved internally.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>This command is the most appropriate one for removing volumes in almost
+    all cases. Other commands that remove only volumes or only VLDB entries
+    (such as the <emphasis role="bold">vos delentry</emphasis>, <emphasis role="bold">vos remsite</emphasis> and <emphasis role="bold">vos zap</emphasis> commands) by
+    definition can put the volumes and VLDB out of sync. Use them only in the
+    special circumstances mentioned on their reference pages. Like the <emphasis role="bold">vos
+    delentry</emphasis> command, this command can remove a VLDB entry when no
+    corresponding volumes exist on the file server machine. Like the <emphasis role="bold">vos
+    zap</emphasis> command, this command can remove a volume that does not have a VLDB
+    entry, as long as the volume is online, <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis>
+    arguments are provided, and the <emphasis role="bold">-id</emphasis> argument specifies the volume's ID
+    number.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine that houses the volume to remove. It is
+          necessary only when the <emphasis role="bold">-id</emphasis> argument names a read-only volume that
+          exists at multiple sites. Provide the machine's IP address or its host
+          name (either fully qualified or using an unambiguous abbreviation). For
+          details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the partition (on the file server machine specified by the
+          <emphasis role="bold">-server</emphasis> argument) that houses the volume to remove. Provide the
+          partition's complete name with preceding slash (for example, <computeroutput>/vicepa</computeroutput>)
+          or use one of the three acceptable abbreviated forms. For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+          <para>Including this argument is necessary only when the <emphasis role="bold">-id</emphasis> argument names a
+          read-only volume that exists at multiple sites. Provide the <emphasis role="bold">-server</emphasis>
+          argument along with this one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or id</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the volume to remove, either by its complete name or volume ID
+          number. If identifying a read-only or backup volume by name, include the
+          appropriate extension (<computeroutput>.readonly</computeroutput> or <computeroutput>.backup</computeroutput>).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example removes the read/write volume <computeroutput>user.terry</computeroutput> and its
+    backup version, if any.</para>
+
+<programlisting>
+   % vos remove  -id user.terry
+
+</programlisting>
+      <para>The following example removes the read-only volume <computeroutput>root.afs.readonly</computeroutput>
+      from one of its sites, the <replaceable>/vicepa</replaceable> partition on the file server machine
+      <computeroutput>fs1.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % vos remove fs1.abc.com  a  root.afs.readonly
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine specified with the <emphasis role="bold">-server</emphasis> argument and on each database server
+        machine. If the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be
+        logged on to a server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="vos1">vos(1)</link>,
+        <link linkend="vos_delentry1">vos_delentry(1)</link>,
+        <link linkend="vos_remsite1">vos_remsite(1)</link>,
+        <link linkend="vos_zap1">vos_zap(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

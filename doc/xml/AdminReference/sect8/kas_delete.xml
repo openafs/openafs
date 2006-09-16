@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_delete8">
+  <refmeta>
+    <refentrytitle>kas delete</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas delete</refname>
+    <refpurpose>Deletes an entry from the Authentication Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas delete</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt;
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas d</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>name of user</emphasis>&gt;
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">kas rm</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>name of user</emphasis>&gt;
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas delete</emphasis> command removes from the Authentication Database the
+    user entry named by the <emphasis role="bold">-name</emphasis> argument. The indicated user becomes
+    unable to log in, or the indicated server becomes unreachable (because the
+    Authentication Server's Ticket Granting Service module no longer has a key
+    with which to seal tickets for the server).</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the Authentication Database entry to delete.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the administrative user <computeroutput>admin</computeroutput> entering
+    interactive mode to delete three accounts.</para>
+
+<programlisting>
+   % kas
+   Password for admin:
+   ka&amp;gt; delete smith
+   ka&amp;gt; delete pat
+   ka&amp;gt; delete terry
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>ADMIN</computeroutput> flag set on his or her Authentication
+      Database entry.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link>,
+      <link linkend="kas_create8">kas_create(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

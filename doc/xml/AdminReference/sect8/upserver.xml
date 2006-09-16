@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="upserver8">
+  <refmeta>
+    <refentrytitle>upserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>upserver</refname>
+    <refpurpose>Initializes the server portion of the Update Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">upserver</emphasis> [&lt;<emphasis>directory</emphasis>&gt;+] [<emphasis role="bold">-crypt</emphasis> &lt;<emphasis>directory</emphasis>&gt;+]
+        [<emphasis role="bold">-clear</emphasis> &lt;<emphasis>directory</emphasis>&gt;+] [<emphasis role="bold">-auth</emphasis> &lt;<emphasis>directory</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">upserver</emphasis> command initializes the server portion of the Update
+    Server (the <computeroutput>upserver</computeroutput> process). In the conventional configuration, its
+    binary file is located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server
+    machine.</para>
+
+    <para>The <emphasis role="bold">upserver</emphasis> command is not normally issued at the command shell prompt
+    but rather placed into a file server machine's <replaceable>/usr/afs/local/BosConfig</replaceable>
+    file with the <emphasis role="bold">bos create</emphasis> command. If it is ever issued at the command
+    shell prompt, the issuer must be logged onto a database server machine as
+    the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>The <emphasis role="bold">upserver</emphasis> command specifies which of the directories on the local
+    disk are eligible for distribution in response to requests from the client
+    portion of the Update Server (the <emphasis role="bold">upclient</emphasis> process) running on other
+    machines. If no directories are specified, the <emphasis role="bold">upserver</emphasis> process
+    distributes the contents of any directory on its local disk.</para>
+
+    <para>The <emphasis role="bold">upserver</emphasis> process can distribute a directory's contents in encrypted
+    or unencrypted form. By default, it does not use encryption unless an
+    <emphasis role="bold">upclient</emphasis> process requests it (this default is equivalent to setting the
+    <emphasis role="bold">-clear</emphasis> flag). When the <emphasis role="bold">-crypt</emphasis> flag is provided, the <emphasis role="bold">upserver</emphasis>
+    process only fulfills requests for encrypted transfer.</para>
+
+    <para>The <emphasis role="bold">upclient</emphasis> and <emphasis role="bold">upserver</emphasis> processes always mutually authenticate,
+    whether or not the data they pass is encrypted; they use the key with the
+    highest key version number in the <replaceable>/usr/afs/etc/KeyFile</replaceable> file to
+    construct a server ticket for mutual authentication.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not use the Update Server to distribute the contents of the
+    <replaceable>/usr/afs/etc</replaceable> directory without the <emphasis role="bold">-crypt</emphasis> flag.  The contents of
+    this directory are sensitive.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>&lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each directory to distribute in unencrypted form (because they
+          appear before the first <emphasis role="bold">-crypt</emphasis> or <emphasis role="bold">-clear</emphasis> flag on the command
+          line). If this argument is omitted, all directories on the machine's local
+          disk are eligible for distribution.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-crypt</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Precedes a list of one or more directories that the <emphasis role="bold">upserver</emphasis> process
+          distributes only in encrypted form.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-clear</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Precedes a list of one or more directories that the <emphasis role="bold">upserver</emphasis> process
+          distributes in unencrypted form unless the <emphasis role="bold">upclient</emphasis> process requests
+          them in encrypted form. Use this argument only if a list of directories
+          headed by the <emphasis role="bold">-crypt</emphasis> flag precedes it on the command line.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-auth</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Precedes a list of one or more directories which the upserver process
+          distributes using a form of encryption that is intermediate in complexity
+          and security between the unencrypted and encrypted levels set by the
+          <emphasis role="bold">-clear</emphasis> and <emphasis role="bold">-crypt</emphasis> arguments. Do not use this argument, because the
+          <emphasis role="bold">upclient</emphasis> process does not have a corresponding argument that it can use
+          to request data transfer at this level.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example bos create command defines and starts an <emphasis role="bold">upserver</emphasis>
+    process on the host machine <computeroutput>fs1.abc.com</computeroutput>. The last parameter (enclosed
+    in quotes) instructs the <emphasis role="bold">upserver</emphasis> process to distribute the contents of
+    the <replaceable>/usr/afs/bin</replaceable> directory in unencrypted form and the contents of the
+    <replaceable>/usr/afs/etc</replaceable> directory in encrypted form.</para>
+
+<programlisting>
+   % bos create  -server fs1.abc.com -instance upserver -type simple \
+       -cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="upclient8">upclient(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

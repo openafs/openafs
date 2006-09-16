@@ -1,0 +1,3822 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>The afsmonitor Program Statistics</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Using AFS Commands"
+HREF="a33826.html"><LINK
+REL="NEXT"
+TITLE="AIX Audit Events"
+HREF="a35965.html"></HEAD
+><BODY
+CLASS="appendix"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="a33826.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="a35965.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="appendix"
+><H1
+><A
+NAME="HDRWQ617"
+></A
+>Appendix C. The afsmonitor Program Statistics</H1
+><P
+>This appendix lists the statistics you can gather with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsmonitor</B
+></SPAN
+> program, grouping
+  them by category and section, and briefly describing each field, group, and section. For instructions on using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsmonitor</B
+></SPAN
+> program, see <A
+HREF="c18360.html"
+>Monitoring and Auditing AFS Performance</A
+> </P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ618"
+>The Cache Manager Statistics</A
+></H1
+><P
+>Cache Manager statistics fields are classified into the following sections and groups: <UL
+><LI
+><P
+>PerfStats_section - Performance Statistics Section. <UL
+><LI
+><P
+>PerfStats_group - Performance Statistics Group.</P
+></LI
+><LI
+><P
+>misc_group - Miscellaneous Group.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>Server_UpDown_section - Server Up/Down Statistics Section. <UL
+><LI
+><P
+>FS_upDown_SC_group - File Server Up/Down Statistics in Same Cell Group.</P
+></LI
+><LI
+><P
+>FS_upDown_OC_group - File Server Up/Down Statistics in Other Cells Group.</P
+></LI
+><LI
+><P
+>VL_upDown_SC_group - VL Server Up/Down Statistics in Same Cell Group.</P
+></LI
+><LI
+><P
+>VL_upDown_OC_group - VL Server Up/Down Statistics in Other Cells Group.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>RPCop_section - RPC Operation Measurements Section. <UL
+><LI
+><P
+>FS_RPCopTimes_group - File Server RPC Operation Timings Group.</P
+></LI
+><LI
+><P
+>FS_RPCopErrors_group - File Server RPC Operation Errors Group.</P
+></LI
+><LI
+><P
+>FS_RPCopBytes_group - File Server RPC Transfer Timings Group.</P
+></LI
+><LI
+><P
+>CM_RPCopTimes_group - Cache Manager RPC Operation Timings Group.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>Auth_Access_section - Authentication and Replicated File Access Section. <UL
+><LI
+><P
+>Auth_Stats_group - Authentication Information for Cache Manager Group.</P
+></LI
+><LI
+><P
+>Access_Stats_group - Unreplicated File Access Group.</P
+></LI
+></UL
+></P
+></LI
+></UL
+></P
+><P
+>All Cache Manager variables categorized under these sections and groups names are listed below.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_708"
+>Performance Statistics Section (PerfStats_section)</A
+></H2
+><P
+>Performance Statistics Group (PerfStats_group) <UL
+><LI
+><P
+>dlocalAccesses: Number of data accesses to files within local cell.</P
+></LI
+><LI
+><P
+>vlocalAccesses: Number of stat accesses to files within local cell.</P
+></LI
+><LI
+><P
+>dremoteAccesses: Number of data accesses to files outside of local cell.</P
+></LI
+><LI
+><P
+>vremoteAccesses: Number of stat accesses to files outside of local cell.</P
+></LI
+><LI
+><P
+>cacheNumEntries: Number of cache entries.</P
+></LI
+><LI
+><P
+>cacheBlocksTotal: Number of (1K) blocks configured for cache.</P
+></LI
+><LI
+><P
+>cacheBlocksInUse: Number of cache blocks actively in use.</P
+></LI
+><LI
+><P
+>cacheBlocksOrig: Number of cache blocks at bootup.</P
+></LI
+><LI
+><P
+>cacheMaxDirtyChunks: Maximum number of dirty cache chunks tolerated.</P
+></LI
+><LI
+><P
+>cacheCurrDirtyChunks: Current number of dirty cache chunks.</P
+></LI
+><LI
+><P
+>dcacheHits: Number of data files found in local cache.</P
+></LI
+><LI
+><P
+>vcacheHits: Number of stat entries found in local cache.</P
+></LI
+><LI
+><P
+>dcacheMisses: Number of data files <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>not</B
+></SPAN
+> found in local cache.</P
+></LI
+><LI
+><P
+>vcacheMisses: Number of stat entries <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>not</B
+></SPAN
+> found in local cache.</P
+></LI
+><LI
+><P
+>cacheFlushes: Number of files flushed from cache.</P
+></LI
+><LI
+><P
+>cacheFilesReused: Number of cache files reused.</P
+></LI
+><LI
+><P
+>dcacheXAllocs: Additionally allocated dcaches.</P
+></LI
+><LI
+><P
+>vcacheXAllocs: Additionally allocated vcaches.</P
+></LI
+><LI
+><P
+>bufAlloced: Number of buffers allocated by AFS.</P
+></LI
+><LI
+><P
+>bufHits: Number of pages found on buffer cache.</P
+></LI
+><LI
+><P
+>bufMisses: Number of pages <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>not</B
+></SPAN
+> found on buffer cache.</P
+></LI
+><LI
+><P
+>bufFlushDirty: Number of cached dirty buffers flushed because all were busy.</P
+></LI
+><LI
+><P
+>LargeBlocksActive: Number of currently used large free pool entries.</P
+></LI
+><LI
+><P
+>LargeBlocksAlloced: Number of allocated large free pool entries.</P
+></LI
+><LI
+><P
+>SmallBlocksActive: Number of currently used small free pool entries.</P
+></LI
+><LI
+><P
+>SmallBlocksAlloced: Number of allocated used small free pool entries.</P
+></LI
+><LI
+><P
+>OutStandingMemUsage: Amount of allocated memory.</P
+></LI
+><LI
+><P
+>OutStandingAllocs: Outstanding osi_allocs (no osi_frees yet).</P
+></LI
+><LI
+><P
+>CallBackAlloced: Number of callback structures allocated.</P
+></LI
+><LI
+><P
+>CallBackFlushes: Number of callback flush operations performed.</P
+></LI
+><LI
+><P
+>srvRecords: Number of servers currently on record.</P
+></LI
+><LI
+><P
+>srvRecordsHWM: Server record high water mark.</P
+></LI
+><LI
+><P
+>srvNumBuckets: Number of server hash chain buckets.</P
+></LI
+><LI
+><P
+>srvMaxChainLength: Maximum server hash chain length.</P
+></LI
+><LI
+><P
+>srvMaxChainLengthHWM: Server hash chain high water mark.</P
+></LI
+><LI
+><P
+>sysName_ID: Sysname ID for host hardware.</P
+></LI
+></UL
+></P
+><P
+>Miscellaneous Group (misc_group) <UL
+><LI
+><P
+>numPerfCalls: Number of performance calls received.</P
+></LI
+><LI
+><P
+>epoch: Cache Manager epoch time.</P
+></LI
+><LI
+><P
+>numCellsVisible: Number of cells we know about.</P
+></LI
+><LI
+><P
+>numCellsContacted: Number of cells contacted.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_709"
+>Server Up/Down Statistics Section (Server_UpDown_section)</A
+></H2
+><P
+>File Server Up/Down Statistics in Same Cell Group (FS_upDown_SC_group) <DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>records</I
+></SPAN
+> referred to in this section are the internal records kept by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsmonitor</B
+></SPAN
+> program to track the processes from which data is being gathered.</P
+></BLOCKQUOTE
+></DIV
+> <UL
+><LI
+><P
+>fs_sc_numTtlRecords: Number of fileserver records, active or inactive.</P
+></LI
+><LI
+><P
+>fs_sc_numUpRecords: Number of (active) fileserver records currently marked up.</P
+></LI
+><LI
+><P
+>fs_sc_numDownRecords: Number of (active) fileserver records currently marked down.</P
+></LI
+><LI
+><P
+>fs_sc_sumOfRecordAges: Sum of fileserver record lifetimes.</P
+></LI
+><LI
+><P
+>fs_sc_ageOfYoungestRecord: Age of youngest fileserver record.</P
+></LI
+><LI
+><P
+>fs_sc_ageOfOldestRecord: Age of oldest fileserver record.</P
+></LI
+><LI
+><P
+>fs_sc_numDowntimeIncidents: Number of (completed) downtime incidents.</P
+></LI
+><LI
+><P
+>fs_sc_numRecordsNeverDown: Number of fileserver records never marked down.</P
+></LI
+><LI
+><P
+>fs_sc_maxDowntimesInARecord: Maximum downtimes seen by any fileserver record.</P
+></LI
+><LI
+><P
+>fs_sc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</P
+></LI
+><LI
+><P
+>fs_sc_shortestDowntime: Shortest downtime, in seconds.</P
+></LI
+><LI
+><P
+>fs_sc_longestDowntime: Longest downtime, in seconds.</P
+></LI
+><LI
+><P
+>fs_sc_down_0_10_min: Down time incidents: 0-10 minutes.</P
+></LI
+><LI
+><P
+>fs_sc_down_10_30_min: Down time incidents: 10-30 minutes.</P
+></LI
+><LI
+><P
+>fs_sc_down_half_1_hr: Down time incidents: 30-60 minutes.</P
+></LI
+><LI
+><P
+>fs_sc_down_1_2_hr: Down time incidents: 1-2 hours.</P
+></LI
+><LI
+><P
+>fs_sc_down_2_4_hr: Down time incidents: 2-4 hours.</P
+></LI
+><LI
+><P
+>fs_sc_down_4_8_hr: Down time incidents: 4-8 hours.</P
+></LI
+><LI
+><P
+>fs_sc_down_more_8_hr: Down time incidents: more than 8 hours.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_0: Down time incidents: 0 times.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_1: Down time incidents: 1 time.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_2_5: Down time incidents: 2-5 times.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_6_10: Down time incidents: 6-10 times.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_10_50: Down time incidents: 10-50 times.</P
+></LI
+><LI
+><P
+>fs_sc_downDst_more_50: Down time incidents: more than 50 times.</P
+></LI
+></UL
+></P
+><P
+>File Server Up/Down Statistics in Other Cells Group (FS_upDown_OC_group) <UL
+><LI
+><P
+>fs_oc_numTtlRecords: Number of fileserver records, active or inactive.</P
+></LI
+><LI
+><P
+>fs_oc_numUpRecords: Number of (active) fileserver records currently marked up.</P
+></LI
+><LI
+><P
+>fs_oc_numDownRecords: Number of (active) fileserver records currently marked down.</P
+></LI
+><LI
+><P
+>fs_oc_sumOfRecordAges: Sum of server record lifetimes.</P
+></LI
+><LI
+><P
+>fs_oc_ageOfYoungestRecord: Age of youngest fileserver record.</P
+></LI
+><LI
+><P
+>fs_oc_ageOfOldestRecord: Age of oldest fileserver record.</P
+></LI
+><LI
+><P
+>fs_oc_numDowntimeIncidents: Number of (completed) downtime incidents.</P
+></LI
+><LI
+><P
+>fs_oc_numRecordsNeverDown: Number of fileserver records never marked down.</P
+></LI
+><LI
+><P
+>fs_oc_maxDowntimesInARecord: Maximum downtimes seen by any fileserver.</P
+></LI
+><LI
+><P
+>fs_oc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</P
+></LI
+><LI
+><P
+>fs_oc_shortestDowntime: Shortest downtime, in seconds.</P
+></LI
+><LI
+><P
+>fs_oc_longestDowntime: Longest downtime, in seconds.</P
+></LI
+><LI
+><P
+>fs_oc_down_0_10_min: Down time incidents: 0-10 minutes.</P
+></LI
+><LI
+><P
+>fs_oc_down_10_30_min: Down time incidents: 10-30 minutes.</P
+></LI
+><LI
+><P
+>fs_oc_down_half_1_hr: Down time incidents: 30-60 minutes.</P
+></LI
+><LI
+><P
+>fs_oc_down_1_2_hr: Down time incidents: 1-2 hours.</P
+></LI
+><LI
+><P
+>fs_oc_down_2_4_hr: Down time incidents: 2-4 hours.</P
+></LI
+><LI
+><P
+>fs_oc_down_4_8_hr: Down time incidents: 4-8 hours.</P
+></LI
+><LI
+><P
+>fs_oc_down_more_8_hr: Down time incidents: more than 8 hours.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_0: Down time incidents: 0 times.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_1: Down time incidents: 1 time.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_2_5: Down time incidents: 2-5 times.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_6_10: Down time incidents: 6-10 times.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_10_50: Down time incidents: 10-50 times.</P
+></LI
+><LI
+><P
+>fs_oc_downDst_more_50: Down time incidents: more than 50 times.</P
+></LI
+></UL
+></P
+><P
+>VL Server Up/Down Statistics in Same Cell Group (VL_upDown_SC_group) <UL
+><LI
+><P
+>vl_sc_numTtlRecords: Number of vlserver records, active or inactive.</P
+></LI
+><LI
+><P
+>vl_sc_numUpRecords: Number of (active) vlserver records currently marked up.</P
+></LI
+><LI
+><P
+>vl_sc_numDownRecords: Number of (active) vlserver records currently marked down.</P
+></LI
+><LI
+><P
+>vl_sc_sumOfRecordAges: Sum of vlserver record lifetimes.</P
+></LI
+><LI
+><P
+>vl_sc_ageOfYoungestRecord: Age of youngest vlserver record.</P
+></LI
+><LI
+><P
+>vl_sc_ageOfOldestRecord: Age of oldest vlserver record.</P
+></LI
+><LI
+><P
+>vl_sc_numDowntimeIncidents: Number of (completed) downtime incidents.</P
+></LI
+><LI
+><P
+>vl_sc_numRecordsNeverDown: Number of vlserver records never marked down.</P
+></LI
+><LI
+><P
+>vl_sc_maxDowntimesInARecord: Maximum downtimes seen by any vlserver record.</P
+></LI
+><LI
+><P
+>vl_sc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</P
+></LI
+><LI
+><P
+>vl_sc_shortestDowntime: Shortest downtime, in seconds.</P
+></LI
+><LI
+><P
+>vl_sc_longestDowntime: Longest downtime, in seconds.</P
+></LI
+><LI
+><P
+>vl_sc_down_0_10_min: Down time incidents: 0-10 minutes.</P
+></LI
+><LI
+><P
+>vl_sc_down_10_30_min: Down time incidents: 10-30 minutes.</P
+></LI
+><LI
+><P
+>vl_sc_down_half_1_hr: Down time incidents: 30-60 minutes.</P
+></LI
+><LI
+><P
+>vl_sc_down_1_2_hr: Down time incidents: 1-2 hours.</P
+></LI
+><LI
+><P
+>vl_sc_down_2_4_hr: Down time incidents: 2-4 hours.</P
+></LI
+><LI
+><P
+>vl_sc_down_4_8_hr: Down time incidents: 4-8 hours.</P
+></LI
+><LI
+><P
+>vl_sc_down_more_8_hr: Down time incidents: more than 8 hours.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_0: Down time incidents: 0 times.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_1: Down time incidents: 1 time.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_2_5: Down time incidents: 2-5 times.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_6_10: Down time incidents: 6-10 times.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_10_50: Down time incidents: 10-50 times.</P
+></LI
+><LI
+><P
+>vl_sc_downDst_more_50: Down time incidents: more than 50 times.</P
+></LI
+></UL
+></P
+><P
+>VL Server Up/Down Statistics in Other Cells Group (VL_upDown_DC_group) <UL
+><LI
+><P
+>vl_oc_numTtlRecords: Number of vlserver records, active or inactive.</P
+></LI
+><LI
+><P
+>vl_oc_numUpRecords: Number of (active) vlserver records currently marked up.</P
+></LI
+><LI
+><P
+>vl_oc_numDownRecords: Number of (active) vlserver records currently marked down.</P
+></LI
+><LI
+><P
+>vl_oc_sumOfRecordAges: Sum of vlserver record lifetimes.</P
+></LI
+><LI
+><P
+>vl_oc_ageOfYoungestRecord: Age of youngest vlserver record.</P
+></LI
+><LI
+><P
+>vl_oc_ageOfOldestRecord: Age of oldest vlserver record.</P
+></LI
+><LI
+><P
+>vl_oc_numDowntimeIncidents: Number of (completed) downtime incidents.</P
+></LI
+><LI
+><P
+>vl_oc_numRecordsNeverDown: Number of vlserver records never marked down.</P
+></LI
+><LI
+><P
+>vl_oc_maxDowntimesInARecord: Maximum downtimes seen by any vlserver record.</P
+></LI
+><LI
+><P
+>vl_oc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</P
+></LI
+><LI
+><P
+>vl_oc_shortestDowntime: Shortest downtime, in seconds.</P
+></LI
+><LI
+><P
+>vl_oc_longestDowntime: Longest downtime, in seconds.</P
+></LI
+><LI
+><P
+>vl_oc_down_0_10_min: Down time incidents: 0-10 minutes.</P
+></LI
+><LI
+><P
+>vl_oc_down_10_30_min: Down time incidents: 10-30 minutes.</P
+></LI
+><LI
+><P
+>vl_oc_down_half_1_hr: Down time incidents: 30-60 minutes.</P
+></LI
+><LI
+><P
+>vl_oc_down_1_2_hr: Down time incidents: 1-2 hours.</P
+></LI
+><LI
+><P
+>vl_oc_down_2_4_hr: Down time incidents: 2-4 hours.</P
+></LI
+><LI
+><P
+>vl_oc_down_4_8_hr: Down time incidents: 4-8 hours.</P
+></LI
+><LI
+><P
+>vl_oc_down_more_8_hr: Down time incidents: more than 8 hours.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_0: Down time incidents: 0 times.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_1: Down time incidents: 1 time.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_2_5: Down time incidents: 2-5 times.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_6_10: Down time incidents: 6-10 times.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_10_50: Down time incidents: 10-50 times.</P
+></LI
+><LI
+><P
+>vl_oc_downDst_more_50: Down time incidents: more than 50 times.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_710"
+>RPC Operation Measurements Section (RPCop_section)</A
+></H2
+><P
+>File Server RPC Operation Timings Group (FS_RPCopTimes_group) <UL
+><LI
+><P
+>FetchData_ops: Number of FetchData operations executed.</P
+></LI
+><LI
+><P
+>FetchData_ops_ok: Number of successful FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_sum: Sum of timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_sqr: Sum of squares of sample timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_min: Minimum execution time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_max: Maximum execution time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchACL_ops: Number of FetchACL operations executed.</P
+></LI
+><LI
+><P
+>FetchACL_ops_ok: Number of successful FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_sum: Sum of timings for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_sqr: Sum of squares of sample timings for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_min: Minimum execution time observed for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_max: Maximum execution time observed for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchStatus_ops: Number of FetchStatus operations executed.</P
+></LI
+><LI
+><P
+>FetchStatus_ops_ok: Number of successful FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_sum: Sum of timings for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_sqr: Sum of squares of sample timings for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_min: Minimum execution time observed for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_max: Maximum execution time observed for FetchStatus operations.</P
+></LI
+><LI
+><P
+>StoreData_ops: Number of StoreData operations executed.</P
+></LI
+><LI
+><P
+>StoreData_ops_ok: Number of successful StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_sum: Sum of timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_sqr: Sum of squares of sample timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_min: Minimum execution time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_max: Maximum execution time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreACL_ops: Number of StoreACL operations executed.</P
+></LI
+><LI
+><P
+>StoreACL_ops_ok: Number of successful StoreACL operation.</P
+></LI
+><LI
+><P
+>StoreACL_sum: Sum of timings for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_sqr: Sum of squares of sample timings for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_min: Minimum execution time observed for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_max: Maximum execution time observed for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreStatus_ops: Number of StoreStatus operations executed.</P
+></LI
+><LI
+><P
+>StoreStatus_ops_ok: Number of successful StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_sum: Sum of timings for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_sqr: Sum of squares of sample timings for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_min: Minimum execution time observed for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_max: Maximum execution time observed for StoreStatus operations.</P
+></LI
+><LI
+><P
+>RemoveFile_ops: Number of RemoveFile operations executed.</P
+></LI
+><LI
+><P
+>RemoveFile_ops_ok: Number of successful RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_sum: Sum of timings for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_sqr: Sum of squares of sample timings for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_min: Minimum execution time observed for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_max: Maximum execution time observed for RemoveFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_ops: Number of CreateFile operations executed.</P
+></LI
+><LI
+><P
+>CreateFile_ops_ok: Number of successful CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_sum: Sum of timings for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_sqr: Sum of squares of sample timings for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_min: Minimum execution time observed for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_max: Maximum execution time observed for CreateFile operations.</P
+></LI
+><LI
+><P
+>Rename_ops: Number of Rename operations executed.</P
+></LI
+><LI
+><P
+>Rename_ops_ok: Number of successful Rename operations.</P
+></LI
+><LI
+><P
+>Rename_sum: Sum of timings for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_sqr: Sum of squares of sample timings for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_min: Minimum execution time observed for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_max: Maximum execution time observed for Rename operations.</P
+></LI
+><LI
+><P
+>Symlink_ops: Number of Symlink operations executed.</P
+></LI
+><LI
+><P
+>Symlink_ops_ok: Number of successful Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_sum: Sum of timings for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_sqr: Sum of squares of sample timings for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_min: Minimum execution time observed for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_max: Maximum execution time observed for Symlink operations.</P
+></LI
+><LI
+><P
+>Link_ops: Number of Link operations executed.</P
+></LI
+><LI
+><P
+>Link_ops_ok: Number of successful Link operations.</P
+></LI
+><LI
+><P
+>Link_sum: Sum of timings for Link operations.</P
+></LI
+><LI
+><P
+>Link_sqr: Sum of squares of sample timings for Link operations.</P
+></LI
+><LI
+><P
+>Link_min: Minimum execution time observed for Link operations.</P
+></LI
+><LI
+><P
+>Link_max: Maximum execution time observed for Link operations.</P
+></LI
+><LI
+><P
+>MakeDir_ops: Number of MakeDir operations executed.</P
+></LI
+><LI
+><P
+>MakeDir_ops_ok: Number of successful MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_sum: Sum of timings for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_sqr: Sum of squares of sample timings for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_min: Minimum execution time observed for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_max: Maximum execution time observed for MakeDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_ops: Number of RemoveDir operations executed.</P
+></LI
+><LI
+><P
+>RemoveDir_ops_ok: Number of successful RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_sum: Sum of timings for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_sqr: Sum of squares of sample timings for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_min: Minimum execution time observed for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_max: Maximum execution time observed for RemoveDir operations.</P
+></LI
+><LI
+><P
+>SetLock_ops: Number of SetLock operations executed.</P
+></LI
+><LI
+><P
+>SetLock_ops_ok: Number of successful SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_sum: Sum of timings for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_sqr: Sum of squares of sample timings for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_min: Minimum execution time observed for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_max: Maximum execution time observed for SetLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_ops: Number of ExtendLock operations executed.</P
+></LI
+><LI
+><P
+>ExtendLock_ops_ok: Number of successful ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_sum: Sum of timings for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_sqr: Sum of squares of sample timings for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_min: Minimum execution time observed for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_max: Maximum execution time observed for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_ops: Number of ReleaseLock operations executed.</P
+></LI
+><LI
+><P
+>ReleaseLock_ops_ok: Number of successful ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_sum: Sum of timings for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_sqr: Sum of squares of sample timings for StoreStatus operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_min: Minimum execution time observed for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_max: Maximum execution time observed for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>GetStatistics_ops: Number of GetStatistics operations executed.</P
+></LI
+><LI
+><P
+>GetStatistics_ops_ok: Number of successful GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_sum: Sum of timings for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_sqr: Sum of squares of sample timings for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_min: Minimum execution time observed for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_max: Maximum execution time observed for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_ops: Number of GiveUpCallbacks operations executed.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_ops_ok: Number of successful GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_sum: Sum of timings for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_sqr: Sum of squares of sample timings for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_min: Minimum execution time observed for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_max: Maximum execution time observed for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_ops: Number of GetVolumeInfo operations executed.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_ops_ok: Number of successful GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_sum: Sum of timings for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_sqr: Sum of squares of sample timings for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_min: Minimum execution time observed for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_max: Maximum execution time observed for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_ops: Number of GetVolumeStatus operations executed.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_ops_ok: Number of successful GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_sum: Sum of timings for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_sqr: Sum of squares of sample timings for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_min: Minimum execution time observed for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_max: Maximum execution time observed for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_ops: Number of SetVolumeStatus operations executed.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_ops_ok: Number of successful SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_sum: Sum of timings for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_sqr: Sum of squares of sample timings for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_min: Minimum execution time observed for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_max: Maximum execution time observed for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_ops: Number of GetRootVolume operations executed.</P
+></LI
+><LI
+><P
+>GetRootVolume_ops_ok: Number of successful GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_sum: Sum of timings for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_sqr: Sum of squares of sample timings for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_min: Minimum execution time observed for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_max: Maximum execution time observed for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>CheckToken_ops: Number of CheckToken operations executed.</P
+></LI
+><LI
+><P
+>CheckToken_ops_ok: Number of successful CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_sum: Sum of timings for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_sqr: Sum of squares of sample timings for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_min: Minimum execution time observed for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_max: Maximum execution time observed for CheckToken operations.</P
+></LI
+><LI
+><P
+>GetTime_ops: Number of GetTime operations executed.</P
+></LI
+><LI
+><P
+>GetTime_ops_ok: Number of successful GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_sum: Sum of timings for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_sqr: Sum of squares of sample timings for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_min: Minimum execution time observed for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_max: Maximum execution time observed for GetTime operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_ops: Number of NGetVolumeInfo operations executed.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_ops_ok: Number of successful NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_sum: Sum of timings for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_sqr: Sum of squares of sample timings for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_min: Minimum execution time observed for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_max: Maximum execution time observed for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>BulkStatus_ops: Number of BulkStatus operations executed.</P
+></LI
+><LI
+><P
+>BulkStatus_ops_ok: Number of successful BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_sum: Sum of timings for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_sqr: Sum of squares of sample timings for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_min: Minimum execution time observed for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_max: Maximum execution time observed for BulkStatus operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_ops: Number of XStatsVersion operations executed.</P
+></LI
+><LI
+><P
+>XStatsVersion_ops_ok: Number of successful XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_sum: Sum of timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_sqr: Sum of squares of sample timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_min: Minimum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_max: Maximum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>GetXStats_ops: Number of GetXStats operations executed.</P
+></LI
+><LI
+><P
+>GetXStats_ops_ok: Number of successful GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_sum: Sum of timings for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXstats_sqr: Sum of squares of sample timings for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_min: Minimum execution time observed for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_max: Maximum execution time observed for GetXStats operations.</P
+></LI
+></UL
+></P
+><P
+>File Server RPC Operation Errors Group (FS_RPCopErrors_group) <UL
+><LI
+><P
+>FetchData_srv_err: Number of server-down errors during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_net_err: Number of network errors during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_prot_err_err: Number of protection violations during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_vol_err: Number of volume related errors during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_busy_err: Number of volume busy conditions during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_other_err: Number of miscellaneous other errors during FetchData operations.</P
+></LI
+><LI
+><P
+>FetchACL_srv_err: Number of server-down errors during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_net_err: Number of network errors during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_prot_err: Number of protection violations during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_vol_err: Number of volume related errors during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_busy_err: Number of volume busy conditions encountered during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_other_err: Number of miscellaneous other errors during FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchStatus_srv_err: Number of server-down errors during FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_net_err: Number of network errors during FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_prot_err: Number of protection violations during FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_vol_err: Number of volume related errors during FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_busy_err: Number of volume busy conditions encountered during FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_other_err: Number of miscellaneous other errors during FetchStatus operations.</P
+></LI
+><LI
+><P
+>StoreData_srv_err: Number of server-down errors during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_net_err: Number of network errors during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_prot_err: Number of protection violations during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_vol_err: Number of volume related errors during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_busy_err: Number of volume busy conditions encountered during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_other_err: Number of miscellaneous other errors during StoreData operations.</P
+></LI
+><LI
+><P
+>StoreACL_srv_err: Number of server-down errors during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_net_err: Number of network errors during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_prot_err: Number of protection violations during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_vol_err: Number of volume related errors during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_busy_err: Number of volume busy conditions encountered during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_other_err: Number of miscellaneous other errors during StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreStatus_srv_err: Number of server-down errors during StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_net_err: Number of network errors during StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_prot_err: Number of protection violations during StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_vol_err: Number of volume related errors during StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_busy_err: Number of volume busy conditions encountered during StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_other_err: Number of miscellaneous other errors during StoreStatus operations.</P
+></LI
+><LI
+><P
+>RemoveFile_srv_err: Number of server-down errors during RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_net_err: Number of network errors during RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_prot_err: Number of protection violations during RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_vol_err: Number of volume related errors during RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_busy_err: Number of volume busy conditions encountered during RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_other_err: Number of miscellaneous other errors during RemoveFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_srv_err: Number of server-down errors during CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_net_err: Number of network errors during CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_prot_err: Number of protection violations during CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_vol_err: Number of volume related errors during CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_busy_err: Number of volume busy conditions encountered during CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_other_err: Number of miscellaneous other errors during CreateFile operations.</P
+></LI
+><LI
+><P
+>Rename_srv_err: Number of server-down errors during Rename operations.</P
+></LI
+><LI
+><P
+>Rename_net_err: Number of network errors during Rename operations.</P
+></LI
+><LI
+><P
+>Rename_prot_err: Number of protection violations during Rename operations.</P
+></LI
+><LI
+><P
+>Rename_vol_err: Number of volume related errors during Rename operations.</P
+></LI
+><LI
+><P
+>Rename_busy_err: Number of volume busy conditions encountered during Rename operations.</P
+></LI
+><LI
+><P
+>Rename_other_err: Number of miscellaneous other errors during Rename operations.</P
+></LI
+><LI
+><P
+>Symlink_srv_err: Number of server-down errors during Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_net_err: Number of network errors during Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_prot_err: Number of protection violations during Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_vol_err: Number of volume related errors during Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_busy_err: Number of volume busy conditions encountered during Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_other_err: Number of miscellaneous other errors during Symlink operations.</P
+></LI
+><LI
+><P
+>Link_srv_err: Number of server-down errors during Link operations.</P
+></LI
+><LI
+><P
+>Link_net_err: Number of network errors during Link operations.</P
+></LI
+><LI
+><P
+>Link_prot_err: Number of protection violations during Link operations.</P
+></LI
+><LI
+><P
+>Link_vol_err: Number of volume related errors during Link operations.</P
+></LI
+><LI
+><P
+>Link_busy_err: Number of volume busy conditions encountered during Link operations.</P
+></LI
+><LI
+><P
+>Link_other_err: Number of miscellaneous other errors during Link operations.</P
+></LI
+><LI
+><P
+>MakeDir_srv_err: Number of server-down errors during MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_net_err: Number of network errors during MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_prot_err: Number of protection violations during MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_vol_err: Number of volume related errors during MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_busy_err: Number of volume busy conditions encountered during MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_other_err: Number of miscellaneous other errors during MakeDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_srv_err: Number of server-down errors during RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_net_err: Number of network errors during RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_prot_err: Number of protection violations during RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_vol_err: Number of volume related errors during RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_busy_err: Number of volume busy conditions encountered during RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_other_err: Number of miscellaneous other errors during RemoveDir operations.</P
+></LI
+><LI
+><P
+>SetLock_srv_err: Number of server-down errors during SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_net_err: Number of network errors during SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_prot_err: Number of protection violations during SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_vol_err: Number of volume related errors during SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_busy_err: Number of volume busy conditions encountered during SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_other_err: Number of miscellaneous other errors during SetLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_srv_err: Number of server-down errors during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_net_err: Number of network errors during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_prot_err: Number of protection violations during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_vol_err: Number of volume related errors during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_busy_err: Number of volume busy conditions encountered during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_other_err: Number of miscellaneous other errors during ExtendLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_srv_err: Number of server-down errors during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_net_err: Number of network errors during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_prot_err: Number of protection violations during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_vol_err: Number of volume related errors during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_busy_err: Number of volume busy conditions encountered during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_other_err: Number of miscellaneous other errors during ReleaseLock operations.</P
+></LI
+><LI
+><P
+>GetStatistics_srv_err: Number of server-down errors during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_net_err: Number of network errors during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_prot_err: Number of protection violations during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_vol_err: Number of volume related errors during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_busy_err: Number of volume busy conditions encountered during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_other_err: Number of miscellaneous other errors during GetStatistics operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_srv_err: Number of server-down errors during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_net_err: Number of network errors during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_prot_err: Number of protection violations during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_vol_err: Number of volume related errors during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_busy_err: Number of volume busy conditions encountered during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_other_err: Number of miscellaneous other errors during GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_srv_err: Number of server-down errors during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_net_err: Number of network errors during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_prot_err: Number of protection violations during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_vol_err: Number of volume related errors during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_busy_err: Number of volume busy conditions encountered during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_other_err: Number of miscellaneous other errors during GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_srv_err: Number of server-down errors during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_net_err: Number of network errors during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_prot_err: Number of protection violations during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_vol_err: Number of volume related errors during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_busy_err: Number of volume busy conditions encountered during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_other_err: Number of miscellaneous other errors during GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_srv_err : Number of server-down errors during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_net_err: Number of network errors during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_prot_err: Number of protection violations during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_vol_err: Number of volume related errors during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_busy_err: Number of volume busy conditions encountered during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_other_err: Number of miscellaneous other errors during SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_srv_err: Number of server-down errors during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_net_err: Number of network errors during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_prot_err: Number of protection violations during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_vol_err: Number of volume related errors during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_busy_err: Number of volume busy conditions encountered during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_other_err: Number of miscellaneous other errors during GetRootVolume operations.</P
+></LI
+><LI
+><P
+>CheckToken_srv_err: Number of server-down errors during CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_net_err: Number of network errors during CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_prot_err: Number of protection violations during CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_vol_err: Number of volume related errors during CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_busy_err: Number of volume busy conditions encountered during CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_other_err: Number of miscellaneous other errors during CheckToken operations.</P
+></LI
+><LI
+><P
+>GetTime_srv_err: Number of server-down errors during GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_net_err: Number of network errors during GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_prot_err: Number of protection violations during GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_vol_err: Number of volume related errors during GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_busy_err: Number of volume busy conditions encountered during GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_other_err: Number of miscellaneous other errors during GetTime operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_srv_err: Number of server-down errors during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_net_err: Number of network errors during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_prot_err: Number of protection violations during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_vol_err: Number of volume related errors during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_busy_err: Number of volume busy conditions encountered during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_other_err: Number of miscellaneous other errors during NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>BulkStatus_srv_err: Number of server-down errors during BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_net_err: Number of network errors during BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_prot_err: Number of protection violations during BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_vol_err: Number of volume related errors during BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_busy_err: Number of volume busy conditions encountered during BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_other_err: Number of miscellaneous other errors during BulkStatus operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_srv_err: Number of server-down errors during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_net_err: Number of network errors during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_prot_err: Number of protection violations during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_vol_err: Number of volume related errors during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_busy_err: Number of volume busy conditions encountered during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_other_err: Number of miscellaneous other errors during XStatsVersion operations.</P
+></LI
+><LI
+><P
+>GetXStats_srv_err: Number of server-down errors during GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_net_err: Number of network errors during GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_prot_err: Number of protection violations during GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_vol_err: Number of volume related errors during GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_busy_err: Number of volume busy conditions encountered during GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_other_err: Number of miscellaneous other errors during GetXStats operations.</P
+></LI
+></UL
+></P
+><P
+>File Server RPC Transfer Timings Group (FS_RPCopBytes_group) <UL
+><LI
+><P
+>FetchData_xfers: Number of FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_ok: Number of successful FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_sum: Sum of timing values for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_sqr: Sum of squares of sample timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_min: Minimum transfer time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_max: Maximum transfer time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_sum: Sum of bytes transferred for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_min: Minimum byte transfer observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_max: Maximum byte transfer observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket0: Tally in bucket0 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket1: Tally in bucket1 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket2: Tally in bucket2 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket3: Tally in bucket3 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket4: Tally in bucket4 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket5: Tally in bucket5 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket6: Tally in bucket6 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket7: Tally in bucket7 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket8: Tally in bucket8 for FetchData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers: Number of StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_ok: Number of successful StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_sum: Sum of timing values for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_sqr: Sum of squares of sample timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_min: Minimum transfer time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_max: Maximum transfer time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_sum: Sum of bytes transferred for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_min: Minimum byte transfer observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_max: Maximum byte transfer observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket0: Tally in bucket0 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket1: Tally in bucket1 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket2: Tally in bucket2 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket3: Tally in bucket3 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket4: Tally in bucket4 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket5: Tally in bucket5 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket6: Tally in bucket6 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket7: Tally in bucket7 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket8: Tally in bucket8 for StoreData operations.</P
+></LI
+></UL
+></P
+><P
+>Cache Manager RPC Operation Timings Group (CM_RPCopTimes_group) <UL
+><LI
+><P
+>CallBack_ops: Number of CallBack operations executed.</P
+></LI
+><LI
+><P
+>CallBack_ops_ok: Number of successful CallBack operations.</P
+></LI
+><LI
+><P
+>CallBack_ops_sum: Sum of timings for CallBack operations.</P
+></LI
+><LI
+><P
+>CallBack_ops_min: Minimum execution time observed for CallBack operations.</P
+></LI
+><LI
+><P
+>CallBack_ops_max: Maximum execution time observed for CallBack operations.</P
+></LI
+><LI
+><P
+>CallBack_ops_sqr: Sum of the square of CallBack operations executed.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops: Number of InitCallBackState operations executed.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops_ok: Number of successful InitCallBackState operations.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops_sum: Sum of timings for InitCallBackState operations.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops_min: Minimum execution time observed for InitCallBackState operations.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops_max: Maximum execution time observed for InitCallBackState operations.</P
+></LI
+><LI
+><P
+>InitCallBackState_ops_sqr: Sum of squares of timings for InitCallBackState operations.</P
+></LI
+><LI
+><P
+>Probe_ops: Number of Probe operations executed.</P
+></LI
+><LI
+><P
+>Probe_ops_ok: Number of successful Probe operations.</P
+></LI
+><LI
+><P
+>Probe_ops_sum: Sum of timings for Probe operations.</P
+></LI
+><LI
+><P
+>Probe_ops_min: Minimum execution time observed for Probe operations.</P
+></LI
+><LI
+><P
+>Probe_ops_max: Maximum execution time observed for Probe operations.</P
+></LI
+><LI
+><P
+>Probe_ops_sqr: Sum of squares of timings for Probe operations.</P
+></LI
+><LI
+><P
+>GetLock_ops: Number of GetLock operations executed.</P
+></LI
+><LI
+><P
+>GetLock_ops_ok: Number of successful GetLock operations.</P
+></LI
+><LI
+><P
+>GetLock_ops_sum: Sum of timings for GetLock operations.</P
+></LI
+><LI
+><P
+>GetLock_ops_min: Minimum execution time observed for GetLock operations.</P
+></LI
+><LI
+><P
+>GetLock_ops_max: Maximum execution time observed for GetLock operations.</P
+></LI
+><LI
+><P
+>GetLock_ops_sqr: Sum of squares of timings for GetLock operations.</P
+></LI
+><LI
+><P
+>GetCE_ops: Number of GetCE operations executed.</P
+></LI
+><LI
+><P
+>GetCE_ops_ok: Number of successful GetCE operations.</P
+></LI
+><LI
+><P
+>GetCE_ops_sum: Sum of timings for GetCE operations.</P
+></LI
+><LI
+><P
+>GetCE_ops_min: Minimum execution time observed for GetCE operations.</P
+></LI
+><LI
+><P
+>GetCE_ops_max: Maximum execution time observed for GetCE operations.</P
+></LI
+><LI
+><P
+>GetCE_ops_sqr: Sum of squares of timings for GetCE operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops: Number of XStatsVersion operations executed.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops_ok: Number of successful XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops_sum: Sum of timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops_min: Minimum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops_max: Maximum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_CM_ops_sqr: Sum of squares of timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops: Number of GetXStats operations executed.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops_ok: Number of successful GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops_sum: Sum of timings for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops_min: Minimum execution time observed for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops_max: Maximum execution time observed for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_CM_ops_sqr: Sum of squares of timings for GetXStats operations.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_711"
+>Authentication and Replicated File Access Section (Auth_Access_section)</A
+></H2
+><P
+>Authentication Information for Cache Manager Group (Auth_Stats_group) <UL
+><LI
+><P
+>curr_PAGs: Current number of PAGs.</P
+></LI
+><LI
+><P
+>curr_Records: Current number of records in table.</P
+></LI
+><LI
+><P
+>curr_AuthRecords: Current number of of authenticated records (with valid ticket).</P
+></LI
+><LI
+><P
+>curr_UnauthRecords: Current number of of unauthenticated records (without any ticket at all).</P
+></LI
+><LI
+><P
+>curr_MaxRecordsInPAG: Maximum records for a single PAG.</P
+></LI
+><LI
+><P
+>curr_LongestChain: Length of longest current hash chain.</P
+></LI
+><LI
+><P
+>PAGCreations: Number of PAG creations.</P
+></LI
+><LI
+><P
+>TicketUpdates: Number of ticket additions/refreshes.</P
+></LI
+><LI
+><P
+>HWM_PAGS: High water mark - number of PAGs.</P
+></LI
+><LI
+><P
+>HWM_Records: High water mark - number of records.</P
+></LI
+><LI
+><P
+>HWM_MaxRecordsInPAG: High water mark - maximum records for a single PAG.</P
+></LI
+><LI
+><P
+>HWM_LongestChain: High water mark - longest hash chain.</P
+></LI
+></UL
+></P
+><P
+>Unreplicated File Access Group (Access_Stats_group) <UL
+><LI
+><P
+>unreplicatedRefs: Number of references to unreplicated data.</P
+></LI
+><LI
+><P
+>replicatedRefs: Number of references to replicated data.</P
+></LI
+><LI
+><P
+>numReplicasAccessed: Number of replicas accessed.</P
+></LI
+><LI
+><P
+>maxReplicasPerRef: Maximum number of replicas accessed per reference.</P
+></LI
+><LI
+><P
+>refFirstReplicaOK: Number of references satisfied by 1st replica.</P
+></LI
+></UL
+></P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ619"
+>The File Server Statistics</A
+></H1
+><P
+>File Server statistics are classified into the following sections and groups: <UL
+><LI
+><P
+>PerfStats_section: Performance Statistics Section. <UL
+><LI
+><P
+>VnodeCache_group: Vnode Cache Group.</P
+></LI
+><LI
+><P
+>Directory_group: Directory Package Group.</P
+></LI
+><LI
+><P
+>Rx_group: Rx Group.</P
+></LI
+><LI
+><P
+>HostModule_group: Host Module Fields Group.</P
+></LI
+><LI
+><P
+>misc_group: Miscellaneous Variables Group.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>RPCop_section: RPC Operations Section. <UL
+><LI
+><P
+>RPCopTimes_group: Individual RPC Operation Timings.</P
+></LI
+><LI
+><P
+>RPCopBytes_group: Byte Information for Certain RPC Operations.</P
+></LI
+></UL
+></P
+></LI
+></UL
+></P
+><P
+>All File Server variables categorized under the above sections and groups names are listed below.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_713"
+>Performance Statistics Section (PerfStats_section)</A
+></H2
+><P
+>Vnode Cache Group (VnodeCache_group) <UL
+><LI
+><P
+>vcache_L_Entries: Number of entries in LARGE vnode cache.</P
+></LI
+><LI
+><P
+>vcache_L_Allocs: Number of allocs (large).</P
+></LI
+><LI
+><P
+>vcache_L_Gets: Number of gets (large).</P
+></LI
+><LI
+><P
+>vcache_L_Reads: Number of reads (large).</P
+></LI
+><LI
+><P
+>vcache_L_Writes: Number of writes (large).</P
+></LI
+><LI
+><P
+>vcache_S_Entries: Number of entries in SMALL vnode cache.</P
+></LI
+><LI
+><P
+>vcache_S_Allocs: Number of allocs (small).</P
+></LI
+><LI
+><P
+>vcache_S_Gets: Number of gets (small).</P
+></LI
+><LI
+><P
+>vcache_S_Reads: Number of reads (small).</P
+></LI
+><LI
+><P
+>vcache_S_Writes: Number of writes (small).</P
+></LI
+><LI
+><P
+>vcache_H_Entries: Number of entries in HEADER vnode cache.</P
+></LI
+><LI
+><P
+>vcache_H_Gets: Number of gets (header)</P
+></LI
+><LI
+><P
+>vcache_H_Replacements: Number of replacements (header)</P
+></LI
+></UL
+></P
+><P
+>Directory Package Group (Directory_group) <UL
+><LI
+><P
+>dir_Buffers: Number of buffers in use.</P
+></LI
+><LI
+><P
+>dir_Calls: Number of read calls made.</P
+></LI
+><LI
+><P
+>dir_IOs: I/O operations performed.</P
+></LI
+></UL
+></P
+><P
+>Rx Group (Rx_group) <UL
+><LI
+><P
+>rx_packetRequests: Packet allocation requests.</P
+></LI
+><LI
+><P
+>rx_noPackets_RcvClass: Failed packet requests (receive class).</P
+></LI
+><LI
+><P
+>rx_noPackets_SendClass: Failed packet requests (send class).</P
+></LI
+><LI
+><P
+>rx_noPackets_SpecialClass: Failed packet requests (special class).</P
+></LI
+><LI
+><P
+>rx_socketGreedy: Did SO_GREEDY succeed?</P
+></LI
+><LI
+><P
+>rx_bogusPacketOnRead: Short packets received.</P
+></LI
+><LI
+><P
+>rx_bogusHost: Host address from bogus packets.</P
+></LI
+><LI
+><P
+>rx_noPacketOnRead: Read packets with no packet there.</P
+></LI
+><LI
+><P
+>rx_noPacketBuffersOnRead: Packets dropped due to buffer shortage.</P
+></LI
+><LI
+><P
+>rx_selects: Selects waiting on packet or timeout.</P
+></LI
+><LI
+><P
+>rx_sendSelects: Selects forced upon sends.</P
+></LI
+><LI
+><P
+>rx_packetsRead_RcvClass: Packets read (receive class).</P
+></LI
+><LI
+><P
+>rx_packetsRead_SendClass: Packets read (send class).</P
+></LI
+><LI
+><P
+>rx_packetsRead_SpecialClass: Packets read (special class).</P
+></LI
+><LI
+><P
+>rx_dataPacketsRead: Unique data packets read off wire.</P
+></LI
+><LI
+><P
+>rx_ackPacketsRead: ACK packets read.</P
+></LI
+><LI
+><P
+>rx_dupPacketsRead: Duplicate data packets read.</P
+></LI
+><LI
+><P
+>rx_spuriousPacketsRead: Inappropriate packets read.</P
+></LI
+><LI
+><P
+>rx_packetsSent_RcvClass: Packets sent (receive class).</P
+></LI
+><LI
+><P
+>rx_packetsSent_SendClass: Packets sent (send class).</P
+></LI
+><LI
+><P
+>rx_packetsSent_SpecialClass: Packets sent (special class).</P
+></LI
+><LI
+><P
+>rx_ackPacketsSent: ACK packets sent.</P
+></LI
+><LI
+><P
+>rx_pingPacketsSent: Ping packets sent.</P
+></LI
+><LI
+><P
+>rx_abortPacketsSent: Abort packets sent.</P
+></LI
+><LI
+><P
+>rx_busyPacketsSent: Busy packets sent.</P
+></LI
+><LI
+><P
+>rx_dataPacketsSent: Unique data packets sent.</P
+></LI
+><LI
+><P
+>rx_dataPacketsReSent: Retransmissions sent.</P
+></LI
+><LI
+><P
+>rx_dataPacketsPushed: Retransmissions pushed by NACK.</P
+></LI
+><LI
+><P
+>rx_ignoreAckedPacket: Packets with ACKed flag on rxi_Start.</P
+></LI
+><LI
+><P
+>rx_totalRtt_Sec and rx_totalRtt_Usec: Total round trip time (in seconds and milliseconds).</P
+></LI
+><LI
+><P
+>rx_minRtt_Sec and rx_minRtt_Usec: Minimum round trip time (in seconds and milliseconds).</P
+></LI
+><LI
+><P
+>rx_maxRtt_Sec and rx_maxRtt_Usec: Maximum round trip time (in seconds and milliseconds).</P
+></LI
+><LI
+><P
+>rx_nRttSamples: Round trip samples.</P
+></LI
+><LI
+><P
+>rx_nServerConns: Total server connections.</P
+></LI
+><LI
+><P
+>rx_nClientConns: Total client connections.</P
+></LI
+><LI
+><P
+>rx_nPeerStructs: Total peer structures.</P
+></LI
+><LI
+><P
+>rx_nCallStructs: Total call structures.</P
+></LI
+><LI
+><P
+>rx_nFreeCallStructs: Total free call structures.</P
+></LI
+></UL
+></P
+><P
+>Host Module Fields Group (HostModule_group) <UL
+><LI
+><P
+>host_NumHostEntries: Number of host entries.</P
+></LI
+><LI
+><P
+>host_HostBlocks: Blocks in use for hosts.</P
+></LI
+><LI
+><P
+>host_NonDeletedHosts: Non-deleted hosts.</P
+></LI
+><LI
+><P
+>host_HostsInSameNetOrSubnet: Hosts in same subnet as server.</P
+></LI
+><LI
+><P
+>host_HostsInDiffSubnet: Hosts in different subnet than server.</P
+></LI
+><LI
+><P
+>host_HostsInDiffNetwork: Hosts in different network than server.</P
+></LI
+><LI
+><P
+>host_NumClients: Number of client entries.</P
+></LI
+><LI
+><P
+>host_ClientBlocks: Blocks in use for clients.</P
+></LI
+></UL
+></P
+><P
+>Miscellaneous Variables Group (misc_group) <UL
+><LI
+><P
+>numPerfCalls: Number of performance calls received.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_714"
+>RPC Operations Section (RPCop_section)</A
+></H2
+><P
+>Individual RPC Operation Timings Group (RPCopTimes_group) <UL
+><LI
+><P
+>epoch: Time when data collection began.</P
+></LI
+><LI
+><P
+>FetchData_ops: Number of FetchData operations executed.</P
+></LI
+><LI
+><P
+>FetchData_ops_ok: Number of successful FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_sum: Sum of timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_sqr: Sum of squares of sample timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_min: Minimum execution time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_max: Maximum execution time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchACL_ops: Number of FetchACL operations executed.</P
+></LI
+><LI
+><P
+>FetchACL_ops_ok: Number of successful FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_sum: Sum of timings for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_sqr: Sum of squares of sample timings for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_min: Minimum execution time observed for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchACL_max: Maximum execution time observed for FetchACL operations.</P
+></LI
+><LI
+><P
+>FetchStatus_ops: Number of FetchStatus operations executed.</P
+></LI
+><LI
+><P
+>FetchStatus_ops_ok: Number of successful FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_sum: Sum of timings for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_sqr: Sum of squares of sample timings for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_min: Minimum execution time observed for FetchStatus operations.</P
+></LI
+><LI
+><P
+>FetchStatus_max: Maximum execution time observed for FetchStatus operations.</P
+></LI
+><LI
+><P
+>StoreData_ops: Number of StoreData operations executed.</P
+></LI
+><LI
+><P
+>StoreData_ops_ok: Number of successful StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_sum: Sum of timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_sqr: Sum of squares of sample timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_min: Minimum execution time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_max: Maximum execution time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreACL_ops: Number of StoreACL operations executed.</P
+></LI
+><LI
+><P
+>StoreACL_ops_ok: Number of successful StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_sum: Sum of timings for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_sqr: Sum of squares of sample timings for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_min: Minimum execution time observed for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreACL_max: Maximum execution time observed for StoreACL operations.</P
+></LI
+><LI
+><P
+>StoreStatus_ops: Number of StoreStatus operations executed.</P
+></LI
+><LI
+><P
+>StoreStatus_ops_ok: Number of successful StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_sum: Sum of timings for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_sqr: Sum of squares of sample timings for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_min: Minimum execution time observed for StoreStatus operations.</P
+></LI
+><LI
+><P
+>StoreStatus_max: Maximum execution time observed for StoreStatus operations.</P
+></LI
+><LI
+><P
+>RemoveFile_ops: Number of RemoveFile operations executed.</P
+></LI
+><LI
+><P
+>RemoveFile_ops_ok: Number of successful RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_sum: Sum of timings for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_sqr: Sum of squares of sample timings for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_min: Minimum execution time observed for RemoveFile operations.</P
+></LI
+><LI
+><P
+>RemoveFile_max: Maximum execution time observed for RemoveFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_ops: Number of CreateFile operations executed.</P
+></LI
+><LI
+><P
+>CreateFile_ops_ok: Number of successful CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_sum: Sum of timings for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_sqr: Sum of squares of sample timings for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_min: Minimum execution time observed for CreateFile operations.</P
+></LI
+><LI
+><P
+>CreateFile_max: Maximum execution time observed for CreateFile operations.</P
+></LI
+><LI
+><P
+>Rename_ops: Number of Rename operations executed.</P
+></LI
+><LI
+><P
+>Rename_ops_ok: Number of successful Rename operations.</P
+></LI
+><LI
+><P
+>Rename_sum: Sum of timings for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_sqr: Sum of squares of sample timings for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_min: Minimum execution time observed for Rename operations.</P
+></LI
+><LI
+><P
+>Rename_max: Maximum execution time observed for Rename operations.</P
+></LI
+><LI
+><P
+>Symlink_ops: Number of Symlink operations executed.</P
+></LI
+><LI
+><P
+>Symlink_ops_ok: Number of successful Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_sum: Sum of timings for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_sqr: Sum of squares of sample timings for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_min: Minimum execution time observed for Symlink operations.</P
+></LI
+><LI
+><P
+>Symlink_max: Maximum execution time observed for Symlink operations.</P
+></LI
+><LI
+><P
+>Link_ops: Number of Link operations executed.</P
+></LI
+><LI
+><P
+>Link_ops_ok: Number of successful Link operations.</P
+></LI
+><LI
+><P
+>Link_sum: Sum of timings for Link operations.</P
+></LI
+><LI
+><P
+>Link_sqr: Sum of squares of sample timings for Link operations.</P
+></LI
+><LI
+><P
+>Link_min: Minimum execution time observed for Link operations.</P
+></LI
+><LI
+><P
+>Link_max: Maximum execution time observed for Link operations.</P
+></LI
+><LI
+><P
+>MakeDir_ops: Number of MakeDir operations executed.</P
+></LI
+><LI
+><P
+>MakeDir_ops_ok: Number of successful MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_sum: Sum of timings for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_sqr: Sum of squares of sample timings for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_min: Minimum execution time observed for MakeDir operations.</P
+></LI
+><LI
+><P
+>MakeDir_max: Maximum execution time observed for MakeDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_ops: Number of RemoveDir operations executed.</P
+></LI
+><LI
+><P
+>RemoveDir_ops_ok: Number of successful RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_sum: Sum of timings for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_sqr: Sum of squares of sample timings for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_min: Minimum execution time observed for RemoveDir operations.</P
+></LI
+><LI
+><P
+>RemoveDir_max: Maximum execution time observed for RemoveDir operations.</P
+></LI
+><LI
+><P
+>SetLock_ops: Number of SetLock operations executed.</P
+></LI
+><LI
+><P
+>SetLock_ops_ok: Number of successful SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_sum: Sum of timings for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_sqr: Sum of squares of sample timings for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_min: Minimum execution time observed for SetLock operations.</P
+></LI
+><LI
+><P
+>SetLock_max: Maximum execution time observed for SetLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_ops: Number of ExtendLock operations executed.</P
+></LI
+><LI
+><P
+>ExtendLock_ops_ok: Number of successful ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_sum: Sum of timings for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_sqr: Sum of squares of sample timings for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_min: Minimum execution time observed for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ExtendLock_max: Maximum execution time observed for ExtendLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_ops: Number of ReleaseLock operations executed.</P
+></LI
+><LI
+><P
+>ReleaseLock_ops_ok: Number of successful ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_sum: Sum of timings for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_sqr: Sum of squares of sample timings for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_min: Minimum execution time observed for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>ReleaseLock_max: Maximum execution time observed for ReleaseLock operations.</P
+></LI
+><LI
+><P
+>GetStatistics_ops: Number of GetStatistics operations executed.</P
+></LI
+><LI
+><P
+>GetStatistics_ops_ok: Number of successful GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_sum: Sum of timings for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_sqr: Sum of squares of sample timings for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_min: Minimum execution time observed for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GetStatistics_max: Maximum execution time observed for GetStatistics operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_ops: Number of GiveUpCallbacks operations executed.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_ops_ok: Number of successful GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_sum: Sum of timings for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_sqr: Sum of squares of sample timings for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_min: Minimum execution time observed for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GiveUpCallbacks_max: Maximum execution time observed for GiveUpCallbacks operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_ops: Number of GetVolumeInfo operations executed.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_ops_ok: Number of successful GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_sum: Sum of timings for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_sqr: Sum of squares of sample timings for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_min: Minimum execution time observed for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeInfo_max: Maximum execution time observed for GetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_ops: Number of GetVolumeStatus operations executed.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_ops_ok: Number of successful GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_sum: Sum of timings for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_sqr: Sum of squares of sample timings for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_min: Minimum execution time observed for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetVolumeStatus_max: Maximum execution time observed for GetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_ops: Number of SetVolumeStatus operations executed.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_ops_ok: Number of successful SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_sum: Sum of timings for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_sqr: Sum of squares of sample timings for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_min: Minimum execution time observed for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>SetVolumeStatus_max: Maximum execution time observed for SetVolumeStatus operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_ops: Number of GetRootVolume operations executed.</P
+></LI
+><LI
+><P
+>GetRootVolume_ops_ok: Number of successful GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_sum: Sum of timings for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_sqr: Sum of squares of sample timings for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_min: Minimum execution time observed for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>GetRootVolume_max: Maximum execution time observed for GetRootVolume operations.</P
+></LI
+><LI
+><P
+>CheckToken_ops: Number of CheckToken operations executed.</P
+></LI
+><LI
+><P
+>CheckToken_ops_ok: Number of successful CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_sum: Sum of timings for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_sqr: Sum of squares of sample timings for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_min: Minimum execution time observed for CheckToken operations.</P
+></LI
+><LI
+><P
+>CheckToken_max: Maximum execution time observed for CheckToken operations.</P
+></LI
+><LI
+><P
+>GetTime_ops: Number of GetTime operations executed.</P
+></LI
+><LI
+><P
+>GetTime_ops_ok: Number of successful GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_sum: Sum of timings for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_sqr: Sum of squares of sample timings for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_min: Minimum execution time observed for GetTime operations.</P
+></LI
+><LI
+><P
+>GetTime_max: Maximum execution time observed for GetTime operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_ops: Number of NGetVolumeInfo operations executed.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_ops_ok: Number of successful NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_sum: Sum of timings for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_sqr: Sum of squares of sample timings for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_min: Minimum execution time observed for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>NGetVolumeInfo_max: Maximum execution time observed for NGetVolumeInfo operations.</P
+></LI
+><LI
+><P
+>BulkStatus_ops: Number of BulkStatus operations executed.</P
+></LI
+><LI
+><P
+>BulkStatus_ops_ok: Number of successful BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_sum: Sum of timings for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_sqr: Sum of squares of sample timings for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_min: Minimum execution time observed for BulkStatus operations.</P
+></LI
+><LI
+><P
+>BulkStatus_max: Maximum execution time observed for BulkStatus operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_ops: Number of XStatsVersion operations executed.</P
+></LI
+><LI
+><P
+>XStatsVersion_ops_ok: Number of successful XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_sum: Sum of timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_sqr: Sum of squares of sample timings for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_min: Minimum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>XStatsVersion_max: Maximum execution time observed for XStatsVersion operations.</P
+></LI
+><LI
+><P
+>GetXStats_ops: Number of GetXStats operations executed.</P
+></LI
+><LI
+><P
+>GetXStats_ops_ok: Number of successful GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_sum: Sum of timings for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_sqr: Sum of squares of sample timings for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_min: Minimum execution time observed for GetXStats operations.</P
+></LI
+><LI
+><P
+>GetXStats_max: Maximum execution time observed for GetXStats operations.</P
+></LI
+></UL
+></P
+><P
+>Byte Information for Certain RPC Operations Group (RPCopBytes_group) <UL
+><LI
+><P
+>FetchData_xfers: Number of FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_ok: Number of successful FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_sum: Sum of timing values for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_sqr: Sum of squares of sample timings for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_min: Minimum transfer time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_max: Maximum transfer time observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_sum: Sum of bytes transferred for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_min: Minimum byte transfer observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bytes_max: Maximum byte transfer observed for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket0: Tally in bucket0 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket1: Tally in bucket1 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket2: Tally in bucket2 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket3: Tally in bucket3 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket4: Tally in bucket4 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket5: Tally in bucket5 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket6: Tally in bucket6 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket7: Tally in bucket7 for FetchData operations.</P
+></LI
+><LI
+><P
+>FetchData_xfers_bucket8: Tally in bucket8 for FetchData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers: Number of StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_ok: Number of successful StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_sum: Sum of timing values for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_sqr: Sum of squares of sample timings for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_min: Minimum transfer time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_max: Maximum transfer time observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_sum: Sum of bytes transferred for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_min: Minimum byte transfer observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bytes_max: Maximum byte transfer observed for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket0: Tally in bucket0 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket1: Tally in bucket1 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket2: Tally in bucket2 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket3: Tally in bucket3 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket4: Tally in bucket4 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket5: Tally in bucket5 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket6: Tally in bucket6 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket7: Tally in bucket7 for StoreData operations.</P
+></LI
+><LI
+><P
+>StoreData_xfers_bucket8: Tally in bucket8 for StoreData operations.</P
+></LI
+></UL
+></P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="a33826.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="a35965.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using AFS Commands</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>AIX Audit Events</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

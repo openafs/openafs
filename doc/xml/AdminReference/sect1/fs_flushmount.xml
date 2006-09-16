@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_flushmount1">
+  <refmeta>
+    <refentrytitle>fs flushmount</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs flushmount</refname>
+    <refpurpose>Forces the Cache Manager to discard a mount point</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs flushmount</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs flushm</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs flushmount</emphasis> command removes from the cache all information
+    associated with each mount point named by the <emphasis role="bold">-path</emphasis> argument. The next
+    time an application accesses the mount point, the Cache Manager fetches
+    the most current version of it from the File Server. Data cached from the
+    associated volume is not affected.</para>
+
+    <para>The command's intended use is to discard information about mount points
+    that has become corrupted in the cache. (The Cache Manager periodically
+    refreshes cached mount points, but the only other way to discard them
+    immediately is to reinitialize the Cache Manager by rebooting the
+    machine.) Symptoms of a corrupted mount point included garbled output from
+    the <emphasis role="bold">fs lsmount</emphasis> command, and failed attempts to change directory to or
+    list the contents of a mount point.</para>
+
+    <para>To flush cached data rather than a mount point, use the <emphasis role="bold">fs flush</emphasis> or
+    <emphasis role="bold">fs flushvolume</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each mount point to flush from the cache. Partial pathnames are
+          interpreted relative to the current working directory, which is also the
+          default value if this argument is omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command flushes from the cache the mount point for user
+    <computeroutput>pat</computeroutput>'s home directory:</para>
+
+<programlisting>
+   % fs flushm /afs/abc.com/usr/pat
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+      directory of the volume that houses the file or directory named by the
+      <emphasis role="bold">-path</emphasis> argument, and on the ACL of each directory that precedes it in
+      the pathname.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_flush1">fs_flush(1)</link>,
+      <link linkend="fs_flushvolume1">fs_flushvolume(1)</link>,
+      <link linkend="fs_lsmount1">fs_lsmount(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

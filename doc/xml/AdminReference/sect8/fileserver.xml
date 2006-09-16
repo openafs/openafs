@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fileserver8">
+  <refmeta>
+    <refentrytitle>fileserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fileserver</refname>
+    <refpurpose>Initializes the File Server component of the fs process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fileserver</emphasis> [<emphasis role="bold">-d</emphasis> &lt;<emphasis>debug level</emphasis>&gt;] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;]
+        [<emphasis role="bold">-spare</emphasis> &lt;<emphasis>number of spare blocks</emphasis>&gt;]
+        [<emphasis role="bold">-pctspare</emphasis> &lt;<emphasis>percentage spare</emphasis>&gt;] [<emphasis role="bold">-b</emphasis> &lt;<emphasis>buffers</emphasis>&gt;]
+        [<emphasis role="bold">-l</emphasis> &lt;<emphasis>large vnodes</emphasis>&gt;] [<emphasis role="bold">-s</emphasis> &lt;<emphasis>small nodes</emphasis>&gt;]
+        [<emphasis role="bold">-vc</emphasis> &lt;<emphasis>volume cachesize</emphasis>&gt;] [<emphasis role="bold">-w</emphasis> &lt;<emphasis>call back wait interval</emphasis>&gt;]
+        [<emphasis role="bold">-cb</emphasis> &lt;<emphasis>number of call backs</emphasis>&gt;] [<emphasis role="bold">-banner</emphasis>] [<emphasis role="bold">-novbc</emphasis>]
+        [<emphasis role="bold">-implicit</emphasis> &lt;<emphasis>admin mode bits: rlidwka</emphasis>&gt;]
+        [<emphasis role="bold">-hr</emphasis> &lt;<emphasis>number of hours between refreshing the host cps</emphasis>&gt;]
+        [<emphasis role="bold">-busyat</emphasis> &lt;<emphasis>redirect clients when queue &gt; n</emphasis>&gt;]
+        [<emphasis role="bold">-rxpck</emphasis> &lt;<emphasis>number of rx extra packets</emphasis>&gt;]
+        [<emphasis role="bold">-rxdbg</emphasis>] [<emphasis role="bold">-rxdbge</emphasis>] [<emphasis role="bold">-m</emphasis> &lt;<emphasis>min percentage spare in partition</emphasis>&gt;]
+        [<emphasis role="bold">-lock</emphasis>] [<emphasis role="bold">-L</emphasis>] [<emphasis role="bold">-S</emphasis>] [<emphasis role="bold">-k</emphasis> &lt;<emphasis>stack size</emphasis>&gt;]
+        [<emphasis role="bold">-realm</emphasis> &lt;<emphasis>Kerberos realm name</emphasis>&gt;]
+        [<emphasis role="bold">-udpsize</emphasis> &lt;<emphasis>size of socket buffer in bytes</emphasis>&gt;]
+        [<emphasis role="bold">-enable_peer_stats</emphasis>] [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fileserver</emphasis> command initializes the File Server component of the
+    <computeroutput>fs</computeroutput> process. In the conventional configuration, its binary file is
+    located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The <emphasis role="bold">fileserver</emphasis> command is not normally issued at the command shell
+    prompt, but rather placed into a database server machine's
+    <replaceable>/usr/afs/local/BosConfig</replaceable> file with the <emphasis role="bold">bos create</emphasis> command. If it is
+    ever issued at the command shell prompt, the issuer must be logged onto a
+    file server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>The File Server creates the <replaceable>/usr/afs/logs/FileLog</replaceable> log file as it
+    initializes, if the file does not already exist. It does not write a
+    detailed trace by default, but use the <emphasis role="bold">-d</emphasis> option to increase the amount
+    of detail. Use the <emphasis role="bold">bos getlog</emphasis> command to display the contents of the
+    log file.</para>
+
+    <para>The command's arguments enable the administrator to control many aspects
+    of the File Server's performance, as detailed in <link linkend="OPTIONS">OPTIONS</link>.  By default
+    the <emphasis role="bold">fileserver</emphasis> command sets values for many arguments that are suitable
+    for a medium-sized file server machine. To set values suitable for a small
+    or large file server machine, use the <emphasis role="bold">-S</emphasis> or <emphasis role="bold">-L</emphasis> flag
+    respectively. The following list describes the parameters and
+    corresponding argument for which the <emphasis role="bold">fileserver</emphasis> command sets default
+    values, and the table below summarizes the setting for each of the three
+    machine sizes.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The maximum number of lightweight processes (LWPs) the File Server uses to
+        handle requests for data; corresponds to the <emphasis role="bold">-p</emphasis> argument. The File
+        Server always uses a minimum of 32 KB for these processes.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum number of directory blocks the File Server caches in memory;
+        corresponds to the <emphasis role="bold">-b</emphasis> argument. Each cached directory block (buffer)
+        consumes 2,092 bytes of memory.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum number of large vnodes the File Server caches in memory for
+        tracking directory elements; corresponds to the <emphasis role="bold">-l</emphasis> argument. Each large
+        vnode consumes 292 bytes of memory.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum number of small vnodes the File Server caches in memory for
+        tracking file elements; corresponds to the <emphasis role="bold">-s</emphasis> argument.  Each small
+        vnode consumes 100 bytes of memory.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum volume cache size, which determines how many volumes the File
+        Server can cache in memory before having to retrieve data from disk;
+        corresponds to the <emphasis role="bold">-vc</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum number of callback structures the File Server caches in
+        memory; corresponds to the <emphasis role="bold">-cb</emphasis> argument. Each callback structure
+        consumes 16 bytes of memory.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum number of Rx packets the File Server uses; corresponds to the
+        <emphasis role="bold">-rxpck</emphasis> argument. Each packet consumes 1544 bytes of memory.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The default values are:</para>
+
+<programlisting>
+  Parameter (Argument)               Small (-S)     Medium   Large (-L)
+  ---------------------------------------------------------------------
+  Number of LWPs (-p)                        6           9           12
+  Number of cached dir blocks (-b)          70          90          120
+  Number of cached large vnodes (-l)       200         400          600
+  Number of cached small vnodes (-s)       200         400          600
+  Maximum volume cache size (-vc)          200         400          600
+  Number of callbacks (-cb)             20,000      60,000       64,000
+  Number of Rx packets (-rxpck)            100         150          200
+
+</programlisting>
+      <para>To override any of the values, provide the indicated argument (which can
+      be combined with the <emphasis role="bold">-S</emphasis> or <emphasis role="bold">-L</emphasis> flag).</para>
+
+      <para>The amount of memory required for the File Server varies. The approximate
+      default memory usage is 751 KB when the <emphasis role="bold">-S</emphasis> flag is used (small
+      configuration), 1.1 MB when all defaults are used (medium configuration),
+      and 1.4 MB when the <emphasis role="bold">-L</emphasis> flag is used (large configuration). If
+      additional memory is available, increasing the value of the <emphasis role="bold">-cb</emphasis> and
+      <emphasis role="bold">-vc</emphasis> arguments can improve File Server performance most directly.</para>
+
+      <para>By default, the File Server allows a volume to exceed its quota by 1 MB
+      when an application is writing data to an existing file in a volume that
+      is full. The File Server still does not allow users to create new files in
+      a full volume. To change the default, use one of the following arguments:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Set the <emphasis role="bold">-spare</emphasis> argument to the number of extra kilobytes that the File
+          Server allows as overage. A value of <computeroutput>0</computeroutput> allows no overage.</para>
+
+        </listitem>
+        <listitem>
+          <para>Set the <emphasis role="bold">-pctspare</emphasis> argument to the percentage of the volume's quota the
+          File Server allows as overage.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>By default, the File Server implicitly grants the <computeroutput>a</computeroutput> (administer) and
+      <computeroutput>l</computeroutput> (lookup) permissions to system:administrators on the access control
+      list (ACL) of every directory in the volumes stored on its file server
+      machine. In other words, the group's members can exercise those two
+      permissions even when an entry for the group does not appear on an ACL. To
+      change the set of default permissions, use the <emphasis role="bold">-implicit</emphasis> argument.</para>
+
+      <para>The File Server maintains a <emphasis>host current protection subgroup</emphasis> (<emphasis>host
+      CPS</emphasis>) for each client machine from which it has received a data access
+      request. Like the CPS for a user, a host CPS lists all of the Protection
+      Database groups to which the machine belongs, and the File Server compares
+      the host CPS to a directory's ACL to determine in what manner users on the
+      machine are authorized to access the directory's contents. When the <emphasis role="bold">pts
+      adduser</emphasis> or <emphasis role="bold">pts removeuser</emphasis> command is used to change the groups to
+      which a machine belongs, the File Server must recompute the machine's host
+      CPS in order to notice the change. By default, the File Server contacts
+      the Protection Server every two hours to recompute host CPSs, implying
+      that it can take that long for changed group memberships to become
+      effective. To change this frequency, use the <emphasis role="bold">-hr</emphasis> argument.</para>
+
+      <para>The File Server generates the following message when a partition is nearly
+      full:</para>
+
+<programlisting>
+   No space left on device
+
+</programlisting>
+        <para>This command does not use the syntax conventions of the AFS command
+        suites. Provide the command name and all option names in full.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Cautions</title>
+        <para>Do not use the <emphasis role="bold">-k</emphasis> and -w arguments, which are intended for use by the
+        AFS Development group only. Changing them from their default values can
+        result in unpredictable File Server behavior.  In any case, on many
+        operating systems the File Server uses native threads rather than the LWP
+        threads, so using the <emphasis role="bold">-k</emphasis> argument to set the number of LWP threads has
+        no effect.</para>
+
+        <para>Do not specify both the <emphasis role="bold">-spare</emphasis> and <emphasis role="bold">-pctspare</emphasis> arguments. Doing so
+        causes the File Server to exit, leaving an error message in the
+        <replaceable>/usr/afs/logs/FileLog</replaceable> file.</para>
+
+        <para>Options that are available only on some system types, such as the <emphasis role="bold">-m</emphasis>
+        and <emphasis role="bold">-lock</emphasis> options, appear in the output generated by the <emphasis role="bold">-help</emphasis>
+        option only on the relevant system type.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Options</title>
+        <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">-d</emphasis> &lt;<emphasis>debug level</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the detail level for the debugging trace written to the
+              <replaceable>/usr/afs/logs/FileLog</replaceable> file. Provide one of the following values, each
+              of which produces an increasingly detailed trace: <computeroutput>0</computeroutput>, <computeroutput>1</computeroutput>, <computeroutput>5</computeroutput>, <computeroutput>25</computeroutput>,
+              and <computeroutput>125</computeroutput>. The default value of <computeroutput>0</computeroutput> produces only a few messages.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of threads to run. Provide a positive integer. The File
+              Server creates and uses five threads for special purposes, in addition to
+              the number specified (but if this argument specifies the maximum possible
+              number, the File Server automatically uses five of the threads for its own
+              purposes).</para>
+
+              <para>The maximum number of threads can differ in each release of AFS.  Consult
+              the <emphasis>IBM AFS Release Notes</emphasis> for the current release.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-spare</emphasis> &lt;<emphasis>number of spare blocks</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the number of additional kilobytes an application can store in a
+              volume after the quota is exceeded. Provide a positive integer; a value of
+              <computeroutput>0</computeroutput> prevents the volume from ever exceeding its quota. Do not combine
+              this argument with the <emphasis role="bold">-pctspare</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-pctspare</emphasis> &lt;<emphasis>percentage spare</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the amount by which the File Server allows a volume to exceed
+              its quota, as a percentage of the quota. Provide an integer between <computeroutput>0</computeroutput>
+              and <computeroutput>99</computeroutput>. A value of <computeroutput>0</computeroutput> prevents the volume from ever exceeding its
+              quota. Do not combine this argument with the <emphasis role="bold">-spare</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-b</emphasis> &lt;<emphasis>buffers</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of directory buffers. Provide a positive integer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-l</emphasis> &lt;<emphasis>large vnodes</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of large vnodes available in memory for caching directory
+              elements. Provide a positive integer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-s</emphasis> &lt;<emphasis>small nodes</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of small vnodes available in memory for caching file
+              elements. Provide a positive integer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-vc</emphasis> &lt;<emphasis>volume cachesize</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of volumes the File Server can cache in memory.  Provide a
+              positive integer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-w</emphasis> &lt;<emphasis>call back wait interval</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the interval at which the daemon spawned by the File Server performs
+              its maintenance tasks. Do not use this argument; changing the default
+              value can cause unpredictable behavior.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-cb</emphasis> &lt;<emphasis>number of callbacks</emphasis>&gt;</term>
+            <listitem>
+              <para>Sets the number of callbacks the File Server can track. Provide a positive
+              integer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-banner</emphasis></term>
+            <listitem>
+              <para>Prints the following banner to <replaceable>/dev/console</replaceable> about every 10 minutes.</para>
+
+<programlisting>
+   File Server is running at I&amp;lt;time&amp;gt;.
+
+</programlisting>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-novbc</emphasis></term>
+              <listitem>
+                <para>Prevents the File Server from breaking the callbacks that Cache Managers
+                hold on a volume that the File Server is reattaching after the volume was
+                offline (as a result of the <emphasis role="bold">vos restore</emphasis> command, for example). Use of
+                this flag is strongly discouraged.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-implicit</emphasis> &lt;<emphasis>admin mode bits</emphasis>&gt;</term>
+              <listitem>
+                <para>Defines the set of permissions granted by default to the
+                system:administrators group on the ACL of every directory in a volume
+                stored on the file server machine. Provide one or more of the standard
+                permission letters (<computeroutput>rlidwka</computeroutput>) and auxiliary permission letters
+                (<computeroutput>ABCDEFGH</computeroutput>), or one of the shorthand notations for groups of permissions
+                (<computeroutput>all</computeroutput>, <computeroutput>none</computeroutput>, <computeroutput>read</computeroutput>, and <computeroutput>write</computeroutput>). To review the meaning of the
+                permissions, see the <emphasis role="bold">fs setacl</emphasis> reference page.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-hr</emphasis> &lt;<emphasis>number of hours between refreshing the host cps</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies how often the File Server refreshes its knowledge of the
+                machines that belong to protection groups (refreshes the host CPSs for
+                machines). The File Server must update this information to enable users
+                from machines recently added to protection groups to access data for which
+                those machines now have the necessary ACL permissions.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-busyat</emphasis> &lt;<emphasis>redirect clients when queue &gt; n</emphasis>&gt;</term>
+              <listitem>
+                <para>Defines the number of incoming RPCs that can be waiting for a response
+                from the File Server before the File Server returns the error code
+                <computeroutput>VBUSY</computeroutput> to the Cache Manager that sent the latest RPC. In response, the
+                Cache Manager retransmits the RPC after a delay. This argument prevents
+                the accumulation of so many waiting RPCs that the File Server can never
+                process them all. Provide a positive integer.  The default value is
+                <computeroutput>600</computeroutput>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-rxpck</emphasis> &lt;<emphasis>number of rx extra packets</emphasis>&gt;</term>
+              <listitem>
+                <para>Controls the number of Rx packets the File Server uses to store data for
+                incoming RPCs that it is currently handling, that are waiting for a
+                response, and for replies that are not yet complete. Provide a positive
+                integer.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-rxdbg</emphasis></term>
+              <listitem>
+                <para>Writes a trace of the File Server's operations on Rx packets to the file
+                <replaceable>/usr/afs/logs/rx_dbg</replaceable>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><replaceable>-rxdbge</replaceable></term>
+              <listitem>
+                <para>Writes a trace of the File Server's operations on Rx events (such as
+                retransmissions) to the file <replaceable>/usr/afs/logs/rx_dbg</replaceable>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><replaceable>-m</replaceable> &lt;<emphasis>min percentage spare in partition</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the percentage of each AFS server partition that the AIX version
+                of the File Server creates as a reserve. Specify an integer value between
+                <computeroutput>0</computeroutput> and <computeroutput>30</computeroutput>; the default is 8%. A value of <computeroutput>0</computeroutput> means that the
+                partition can become completely full, which can have serious negative
+                consequences.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-lock</emphasis></term>
+              <listitem>
+                <para>Prevents any portion of the fileserver binary from being paged (swapped)
+                out of memory on a file server machine running the IRIX operating system.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-L</emphasis></term>
+              <listitem>
+                <para>Sets values for many arguments in a manner suitable for a large file
+                server machine. Combine this flag with any option except the <emphasis role="bold">-S</emphasis> flag;
+                omit both flags to set values suitable for a medium-sized file server
+                machine.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-S</emphasis></term>
+              <listitem>
+                <para>Sets values for many arguments in a manner suitable for a small file
+                server machine. Combine this flag with any option except the <emphasis role="bold">-L</emphasis> flag;
+                omit both flags to set values suitable for a medium-sized file server
+                machine.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-k</emphasis> &lt;<emphasis>stack size</emphasis>&gt;</term>
+              <listitem>
+                <para>Sets the LWP stack size in units of 1 kilobyte. Do not use this argument,
+                and in particular do not specify a value less than the default of <computeroutput>24</computeroutput>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-realm</emphasis> &lt;<emphasis>Kerberos realm name</emphasis>&gt;</term>
+              <listitem>
+                <para>Defines the Kerberos realm name for the File Server to use. If this
+                argument is not provided, it uses the realm name corresponding to the cell
+                listed in the local <replaceable>/usr/afs/etc/ThisCell</replaceable> file.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-udpsize</emphasis> &lt;<emphasis>size of socket buffer in bytes</emphasis>&gt;</term>
+              <listitem>
+                <para>Sets the size of the UDP buffer, which is 64 KB by default. Provide a
+                positive integer, preferably larger than the default.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+              <listitem>
+                <para>Activates the collection of Rx statistics and allocates memory for their
+                storage. For each connection with a specific UDP port on another machine,
+                a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+                so on) sent or received. To display or otherwise access the records, use
+                the Rx Monitoring API.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+              <listitem>
+                <para>Activates the collection of Rx statistics and allocates memory for their
+                storage. A separate record is kept for each type of RPC (FetchFile,
+                GetStatus, and so on) sent or received, aggregated over all connections to
+                other machines. To display or otherwise access the records, use the Rx
+                Monitoring API.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-help</emphasis></term>
+              <listitem>
+                <para>Prints the online help for this command. All other valid options are
+                ignored.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+        <refsect1>
+          <title>Examples</title>
+          <para>The following <emphasis role="bold">bos create</emphasis> command creates an fs process on the file
+          server machine <computeroutput>fs2.abc.com</computeroutput> that uses the large configuration size, and
+          allows volumes to exceed their quota by 10%. Type the command on a single
+          line:</para>
+
+<programlisting>
+   % bos create -server fs2.abc.com -instance fs -type fs \
+                -cmd "/usr/afs/bin/fileserver -pctspare 10 \
+                -L" /usr/afs/bin/volserver /usr/afs/bin/salvager
+
+</programlisting>
+          </refsect1>
+          <refsect1>
+            <title>Privilege Required</title>
+            <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+            machine to issue the command at a command shell prompt. It is conventional
+            instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+            command.</para>
+
+          </refsect1>
+          <refsect1>
+            <title>See Also</title>
+            <para><link linkend="BosConfig5">BosConfig(5)</link>,
+            <link linkend="FileLog5">FileLog(5)</link>,
+            <link linkend="bos_create8">bos_create(8)</link>,
+            <link linkend="bos_getlog8">bos_getlog(8)</link>,
+            <link linkend="fs_setacl1">fs_setacl(1)</link>,
+            <link linkend="salvager8">salvager(8)</link>,
+            <link linkend="volserver8">volserver(8)</link></para>
+
+          </refsect1>
+          <refsect1>
+            <title>Copyright</title>
+            <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+            <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+            converted from HTML to POD by software written by Chas Williams and Russ
+            Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+          </refsect1>
+        </refentry>

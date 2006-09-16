@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_setrestart8">
+  <refmeta>
+    <refentrytitle>bos setrestart</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos setrestart</refname>
+    <refpurpose>Sets when the BOS Server restarts processes</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos setrestart</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;
+        <emphasis role="bold">-time</emphasis> &lt;<emphasis>time to restart server</emphasis>&gt; [<emphasis role="bold">-general</emphasis>] [<emphasis role="bold">-newbinary</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos setr</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-t</emphasis> &lt;<emphasis>time to restart server</emphasis>&gt;
+        [<emphasis role="bold">-g</emphasis>] [<emphasis role="bold">-ne</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos setrestart</emphasis> command records in the <replaceable>/usr/afs/local/BosConfig</replaceable>
+    file the times at which the BOS Server running on the server machine named
+    by the <emphasis role="bold">-server</emphasis> argument performs two types of restarts:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>A <emphasis>general restart</emphasis>. By default, once per week the BOS Server restarts
+        itself and then any AFS process marked with the <computeroutput>Run</computeroutput> status flag in the
+        <replaceable>BosConfig</replaceable> file (equivalent in effect to issuing the <emphasis role="bold">bos restart</emphasis>
+        command with the <emphasis role="bold">-bosserver</emphasis> flag). The default setting is 4:00
+        a.m. each Sunday morning.</para>
+
+      </listitem>
+      <listitem>
+        <para>A <emphasis>binary restart</emphasis>. By default, once per day the BOS Server restarts any
+        currently running process for which the timestamp on the binary file in
+        the <replaceable>/usr/afs/bin</replaceable> directory is later than the time the process last
+        started or restarted. The default is 5:00 a.m. each day.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Restarting a process makes it unavailable for a period of time. The <emphasis role="bold">fs</emphasis>
+    process has potentially the longest outage, depending on how many volumes
+    the file server machine houses (the File Server and Volume Server reattach
+    each volume when they restart). The default settings are designed to
+    coincide with periods of low usage, so that the restarts disturb the
+    smallest possible number of users.</para>
+
+    <para>If the setting specified with the <emphasis role="bold">-time</emphasis> argument is within one hour of
+    the current time, the BOS Server does not restart any processes until the
+    next applicable opportunity (the next day for binary restarts, or the next
+    week for general restarts).</para>
+
+    <para>The command changes only one type of restart setting at a time; issue the
+    command twice to change both settings.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine on which to set a new restart time.  Identify
+          the machine by IP address or its host name (either fully-qualified or
+          abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-time</emphasis> &lt;<emphasis>time to restart server</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the restart time. By convention the general restart is defined
+          as weekly (specifies both a day and a time), and the binary restart is
+          defined as daily (specifies only a time). However, it is acceptable to
+          define a daily general restart or weekly binary restart.</para>
+
+          <para>There are four acceptable values for either type of restart setting:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The string <computeroutput>never</computeroutput>, which directs the BOS Server never to perform the
+              indicated type of restart.</para>
+
+            </listitem>
+            <listitem>
+              <para>The string <computeroutput>now</computeroutput>, which directs the BOS Server to perform the restart
+              immediately and never again.</para>
+
+            </listitem>
+            <listitem>
+              <para>A time of day (the conventional type of value for the binary restart
+              time). Separate the hours and minutes with a colon (<emphasis>hh:MM</emphasis>), an use
+              either 24-hour format, or a value in the range from <computeroutput>1:00</computeroutput> through
+              <computeroutput>12:59</computeroutput> with the addition of <computeroutput>am</computeroutput> or <computeroutput>pm</computeroutput>. For example, both <computeroutput>14:30</computeroutput>
+              and <computeroutput>"2:30 pm"</computeroutput> indicate 2:30 in the afternoon. Surround this parameter
+              with double quotes (<computeroutput>""</computeroutput>) if it contains a space.</para>
+
+            </listitem>
+            <listitem>
+              <para>A day of the week and time of day, separated by a space and surrounded
+              with double quotes (<computeroutput>""</computeroutput>). This is the conventional type of value for the
+              general restart. For the day, provide either the whole name or the first
+              three letters, all in lowercase letters (<computeroutput>sunday</computeroutput> or <computeroutput>sun</computeroutput>, <computeroutput>thursday</computeroutput>
+              or <computeroutput>thu</computeroutput>, and so on).  For the time, use the same format as when
+              specifying the time alone.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>If desired, precede a time or day and time definition with the string
+          <computeroutput>every</computeroutput> or <computeroutput>at</computeroutput>. These words do not change the meaning, but possibly
+          make the output of the <emphasis role="bold">bos getrestart</emphasis> command easier to understand.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-general</emphasis></term>
+        <listitem>
+          <para>Sets the general restart time.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-newbinary</emphasis></term>
+        <listitem>
+          <para>Sets the binary restart time.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command sets the general restart time on the machine
+    <computeroutput>fs4.abc.com</computeroutput> to Saturday at 3:30 am.</para>
+
+<programlisting>
+   % bos setrestart -server fs4.abc.com -time "sat 3:30" -general
+
+</programlisting>
+      <para>The following command sets the binary restart time on the machine
+      <computeroutput>fs6.abc.com</computeroutput> to 11:45 pm.</para>
+
+<programlisting>
+   % bos setrestart -server fs6.abc.com -time 23:45 -newbinary
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+        machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+        included.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="BosConfig5">BosConfig(5)</link>,
+        <link linkend="KeyFile5">KeyFile(5)</link>,
+        <link linkend="UserList5">UserList(5)</link>,
+        <link linkend="bos8">bos(8)</link>,
+        <link linkend="bos_getrestart8">bos_getrestart(8)</link>,
+        <link linkend="bos_restart8">bos_restart(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

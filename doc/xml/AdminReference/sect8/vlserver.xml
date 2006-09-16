@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vlserver8">
+  <refmeta>
+    <refentrytitle>vlserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vlserver</refname>
+    <refpurpose>Initializes the Volume Location Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vlserver</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>lwp processes</emphasis>&gt;] [<emphasis role="bold">-nojumbo</emphasis>]
+        [<emphasis role="bold">-enable_peer_stats</emphasis>] [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vlserver</emphasis> command initializes the Volume Location (VL) Server, which
+    runs on every database server machine. In the conventional configuration,
+    its binary file is located in the <replaceable>/usr/afs/bin</replaceable> directory on a file
+    server machine.</para>
+
+    <para>The <emphasis role="bold">vlserver</emphasis> command is not normally issued at the command shell prompt
+    but rather placed into a file server machine's <replaceable>/usr/afs/local/BosConfig</replaceable>
+    file with the <emphasis role="bold">bos create</emphasis> command. If it is ever issued at the command
+    shell prompt, the issuer must be logged onto a database server machine as
+    the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>As it initializes, the VL Server process creates the two files that
+    constitute the Volume Location Database (VLDB), <replaceable>vldb.DB0</replaceable> and
+    <replaceable>vldb.DBSYS1</replaceable>, in the <replaceable>/usr/afs/db</replaceable> directory if they do not already
+    exist. Use the commands in the <emphasis role="bold">vos</emphasis> suite to administer the database.</para>
+
+    <para>The VL Server maintains the record of volume locations in the Volume
+    Location Database (VLDB). When the Cache Manager fills a file request from
+    an application program, it first contacts the VL Server to learn which
+    file server machine currently houses the volume that contains the file.
+    The Cache Manager then requests the file from the File Server process
+    running on that file server machine.</para>
+
+    <para>The VL Server records a trace of its activity in the
+    <replaceable>/usr/afs/logs/VLLog</replaceable> file. Use the <emphasis role="bold">bos getlog</emphasis> command to display the
+    contents of the file. By default, it records on a minimal number of
+    messages. For instructions on increasing the amount of logging, see
+    <link linkend="VLLog5">VLLog(5)</link>.</para>
+
+    <para>By default, the VL Server runs nine lightweight processes (LWPs). To
+    change the number, use the <emphasis role="bold">-p</emphasis> argument.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-p</emphasis> &lt;<emphasis>lwp processes</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of server lightweight processes (LWPs) to run.  Provide an
+          integer between <computeroutput>4</computeroutput> and <computeroutput>16</computeroutput>. The default is <computeroutput>9</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-nojumbo</emphasis></term>
+        <listitem>
+          <para>Prohibits the server from sending or receiving jumbograms. A jumbogram is
+          a large-size packet composed of 2 to 4 normal Rx data packets that share
+          the same header. The VL Server uses jumbograms by default, but some
+          routers are not capable of properly breaking the jumbogram into smaller
+          packets and reassembling them.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. For each connection with a specific UDP port on another machine,
+          a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+          so on) sent or received. To display or otherwise access the records, use
+          the Rx Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. A separate record is kept for each type of RPC (FetchFile,
+          GetStatus, and so on) sent or received, aggregated over all connections to
+          other machines. To display or otherwise access the records, use the Rx
+          Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following <emphasis role="bold">bos create</emphasis> command creates a vlserver process on the
+    machine <computeroutput>fs2.abc.com</computeroutput> that uses six lightweight processes. Type the
+    command on a single line:</para>
+
+<programlisting>
+   % bos create -server fs2.abc.com -instance vlserver -type simple \
+                -cmd "/usr/afs/bin/vlserver -p 6"
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="VLLog5">VLLog(5)</link>,
+      <link linkend="vldb_DB05">vldb.DB0(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

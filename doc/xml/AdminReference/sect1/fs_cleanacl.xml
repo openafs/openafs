@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_cleanacl1">
+  <refmeta>
+    <refentrytitle>fs cleanacl</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs cleanacl</refname>
+    <refpurpose>Remove obsolete entries from an ACL</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs cleanacl</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs cl</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs cleanacl</emphasis> command removes from the access control list (ACL) of
+    each specified directory or file any entry that refers to a user or group
+    that no longer has a Protection Database entry. Such an entry appears on
+    the ACL as an AFS user ID number (UID) rather than a name, because without
+    a Protection Database entry, the File Server cannot translate the UID into
+    a name.</para>
+
+    <para>Cleaning access control lists in this way not only keeps them from
+    becoming crowded with irrelevant information, but also prevents the new
+    possessor of a recycled AFS UID from obtaining access intended for the
+    former possessor of the AFS UID. (Note that recycling UIDs is not
+    recommended in any case.)</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each directory for which to clean the ACL (specifying a filename
+          cleans its directory's ACL). If this argument is omitted, the current
+          working directory's ACL is cleaned.</para>
+
+          <para>Specify the read/write path to each directory, to avoid the failure that
+          results from attempting to change a read-only volume. By convention, the
+          read/write path is indicated by placing a period before the cell name at
+          the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For further
+          discussion of the concept of read/write and read-only paths through the
+          filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If there are no obsolete entries on the ACL, the following message
+    appears:</para>
+
+<programlisting>
+   Access list for &amp;lt;path&amp;gt; is fine.
+
+</programlisting>
+      <para>Otherwise, the output reports the resulting state of the ACL, following the
+      header</para>
+
+<programlisting>
+   Access list for &amp;lt;path&amp;gt; is now
+
+</programlisting>
+        <para>At the same time, the following error message appears for each file in the
+        cleaned directories:</para>
+
+<programlisting>
+   fs: '&amp;lt;filename&amp;gt;': Not a directory
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Examples</title>
+          <para>The following example illustrates the cleaning of the ACLs on the current
+          working directory and two of its subdirectories. Only the second
+          subdirectory had obsolete entries on it.</para>
+
+<programlisting>
+   % fs cleanacl -path . ./reports ./sources
+   Access list for . is fine.
+   Access list for ./reports is fine.
+   Access list for ./sources is now
+   Normal rights:
+      system:authuser rl
+      pat rlidwka
+
+</programlisting>
+          </refsect1>
+          <refsect1>
+            <title>Privilege Required</title>
+            <para>The issuer must have the <computeroutput>a</computeroutput> (administer) permission on each directory's
+            ACL (or the ACL of each file's parent directory); the directory's owner
+            and the members of the system:administrators group have the right
+            implicitly, even if it does not appear on the ACL.</para>
+
+          </refsect1>
+          <refsect1>
+            <title>See Also</title>
+            <para><link linkend="fs_listacl1">fs_listacl(1)</link>,
+            <link linkend="fs_mkmount1">fs_mkmount(1)</link></para>
+
+          </refsect1>
+          <refsect1>
+            <title>Copyright</title>
+            <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+            <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+            converted from HTML to POD by software written by Chas Williams and Russ
+            Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+          </refsect1>
+        </refentry>

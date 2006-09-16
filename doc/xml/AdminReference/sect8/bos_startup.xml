@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_startup8">
+  <refmeta>
+    <refentrytitle>bos startup</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos startup</refname>
+    <refpurpose>Starts a process without changing its status flag</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos startup</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-instance</emphasis> &lt;<emphasis>instances</emphasis>&gt;+]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos startu</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-i</emphasis> &lt;<emphasis>instances</emphasis>&gt;+]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos startup</emphasis> command starts, on the server machine named by the
+    <emphasis role="bold">-server</emphasis> argument, either:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>All AFS server processes not currently running but marked with the <computeroutput>Run</computeroutput>
+        status flag in the <replaceable>/usr/afs/local/BosConfig</replaceable> file.</para>
+
+      </listitem>
+      <listitem>
+        <para>Each process specified by <emphasis role="bold">-instance</emphasis> argument, even if its status flag
+        in the <emphasis role="bold">BosConfig</emphasis> file is <computeroutput>NotRun</computeroutput>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To start a process and set its <replaceable>BosConfig</replaceable> status flag to <computeroutput>Run</computeroutput>, use the
+    <emphasis role="bold">bos start</emphasis> command instead.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine on which to start processes. Identify the
+          machine by IP address or its host name (either fully-qualified or
+          abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-instance</emphasis> &lt;<emphasis>instances</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each process to start. Use the process name assigned with the
+          <emphasis role="bold">-instance</emphasis> argument to the <emphasis role="bold">bos create</emphasis> command. The output from the
+          <emphasis role="bold">bos status</emphasis> command lists the names.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command starts all processes marked with status flag <computeroutput>Run</computeroutput>
+    in the <replaceable>BosConfig</replaceable> file on the machine <computeroutput>fs3.abc.com</computeroutput> that are not
+    currently running.</para>
+
+<programlisting>
+   % bos startup fs3.abc.com
+
+</programlisting>
+      <para>The following command starts the <emphasis role="bold">buserver</emphasis>, <emphasis role="bold">kaserver</emphasis>, <emphasis role="bold">ptserver</emphasis>,
+      and <emphasis role="bold">vlserver</emphasis> processes running on the machine <computeroutput>db2.abc.com</computeroutput>, even if
+      their status flags in the <replaceable>BosConfig</replaceable> file are <computeroutput>NotRun</computeroutput>.</para>
+
+<programlisting>
+   % bos startup -server db2.abc.com \
+       -instance buserver kaserver ptserver vlserver
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+        machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+        included.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="BosConfig5">BosConfig(5)</link>,
+        <link linkend="KeyFile5">KeyFile(5)</link>,
+        <link linkend="UserList5">UserList(5)</link>,
+        <link linkend="bos8">bos(8)</link>,
+        <link linkend="bos_create8">bos_create(8)</link>,
+        <link linkend="bos_start8">bos_start(8)</link>,
+        <link linkend="bos_status8">bos_status(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

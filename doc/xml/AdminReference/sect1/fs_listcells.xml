@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_listcells1">
+  <refmeta>
+    <refentrytitle>fs listcells</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs listcells</refname>
+    <refpurpose>Displays the database server machines known to the Cache Manager</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs listcells</emphasis> [<emphasis role="bold">-numeric</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs listc</emphasis> [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs listcells</emphasis> command formats and displays the list of the database
+    server machines that the Cache Manager stores in kernel memory for its
+    home cell and foreign cells.</para>
+
+    <para>At each reboot of the client machine, the Cache Manager copies the
+    contents of <replaceable>/usr/vice/etc/CellServDB</replaceable> into kernel memory. To modify the
+    list between reboots, use the <emphasis role="bold">fs newcell</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-numeric</emphasis></term>
+        <listitem>
+          <para>Displays each database server machine's IP address rather than hostname.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output includes a line for each cell included in the Cache Manager's
+    kernel memory list, in the following format:</para>
+
+<programlisting>
+   Cell &amp;lt;cell&amp;gt; on hosts &amp;lt;database server machines&amp;gt;
+
+</programlisting>
+      <para>The Cache Manager stores IP addresses, but by default has them translated
+      to hostnames before reporting them, by passing them to the cell's name
+      service (such as the Domain Name Service or a local host table). The name
+      service sometimes returns hostnames in uppercase letters, or an IP address
+      if it cannot resolve a name.</para>
+
+      <para>Using the <emphasis role="bold">-numeric</emphasis> flag bypasses the translation to hostnames, which
+      can result in significantly faster production of output. The output
+      includes IP addresses only.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows output for several cells as illustrations of
+      the different formats for machine names:</para>
+
+<programlisting>
+   % fs listcells
+   Cell abc.com on hosts fs1.abc.com fs2.abc.com fs3.abc.com
+   Cell stateu.edu on hosts DB1.FS.STATEU.EDU
+      DB2.FS.STATEU.EDU DB3.FS.STATEU.EDU
+   Cell def.gov on hosts 138.255.0.2 sv3.def.gov
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="CellServDB5">CellServDB(5)</link>,
+        <link linkend="fs_newcell1">fs_newcell(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

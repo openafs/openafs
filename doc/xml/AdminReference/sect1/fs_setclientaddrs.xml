@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_setclientaddrs1">
+  <refmeta>
+    <refentrytitle>fs setclientaddrs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs setclientaddrs</refname>
+    <refpurpose>Sets the client interfaces to register with the File Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs setclientaddrs</emphasis> [<emphasis role="bold">-address</emphasis> &lt;<emphasis>client network interfaces</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs setcl</emphasis> [<emphasis role="bold">-a</emphasis> &lt;<emphasis>client network interfaces</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs sc</emphasis> [<emphasis role="bold">-a</emphasis> &lt;<emphasis>client network interfaces</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs setclientaddrs</emphasis> command defines the IP addresses of the
+    interfaces that the local Cache Manager registers with a File Server when
+    first establishing a connection to it.</para>
+
+    <para>The File Server uses the addresses when it initiates a remote procedure
+    call (RPC) to the Cache Manager (as opposed to responding to an RPC sent
+    by the Cache Manager). There are two common circumstances in which the
+    File Server initiates RPCs: when it breaks callbacks and when it pings the
+    client machine to verify that the Cache Manager is still accessible.</para>
+
+    <para>The list of interfaces specified with this command replaces the list that
+    the Cache Manager constructs and records in kernel memory as it
+    initializes. At that time, if the file <replaceable>/usr/vice/etc/NetInfo</replaceable> exists on
+    the client machine's local disk, the Cache Manager uses its contents as
+    the basis for the list of interfaces addresses. If the file does not
+    exist, the Cache Manager instead uses the network interfaces configured
+    with the operating system. It then removes from the list any address
+    included in the local <replaceable>/usr/vice/etc/NetRestrict</replaceable> file. It records the
+    final list in kernel memory. (An administrator must create the <replaceable>NetInfo</replaceable>
+    and <replaceable>NetRestrict</replaceable> files; there are no default versions of them.)</para>
+
+    <para>If an RPC to that interface fails, the File Server simultaneously sends
+    RPCs to all of the other interfaces in the list, to learn which of them
+    are still available. Whichever interface replies first is the one to which
+    the File Server then sends pings and RPCs to break callbacks.</para>
+
+    <para>To list the interfaces that the Cache Manager is currently registering
+    with File Servers, use the <emphasis role="bold">fs getclientaddrs</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The list specified with this command persists in kernel memory only until
+    the client machine reboots. To preserve it across reboots, either list the
+    interfaces in the local <replaceable>/usr/vice/etc/NetInfo</replaceable> file, or place the
+    appropriate <emphasis role="bold">fs setclientaddrs</emphasis> command in the machine's AFS
+    initialization script.</para>
+
+    <para>Changes made with this command do not propagate automatically to File
+    Servers to which the Cache Manager has already established a
+    connection. To force such File Servers to use the revised list, either
+    reboot each file server machine, or change the <replaceable>NetInfo</replaceable> file and reboot
+    the client machine.</para>
+
+    <para>The fs command interpreter verifies that each of the addresses specified
+    as a value for the <emphasis role="bold">-address</emphasis> argument is actually configured with the
+    operating system on the client machine. If it is not, the command fails
+    with an error message that marks the address as a <computeroutput>Nonexistent
+    interface</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-address</emphasis> &lt;<emphasis>client network interfaces</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies each IP address to place in the list of interfaces, in dotted
+          decimal format. Hostnames are not acceptable. Separate each address with
+          one or more spaces.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The message</para>
+
+<programlisting>
+   Adding &amp;lt;interface&amp;gt;
+
+</programlisting>
+      <para>confirms that each new interface was added to the Cache Manager's
+      list. The address appears in hexadecimal format to match the notation used
+      in the File Server log, <replaceable>/usr/afs/logs/FileLog</replaceable>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example sets the two interfaces that the Cache Manager
+      registers with File Servers.</para>
+
+<programlisting>
+   % fs setclientaddrs 191.255.105.68 191.255.108.84
+   Adding 0xbfff6944
+   Adding 0xbfff6c54
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser root.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="NetInfo5">NetInfo(5)</link>,
+        <link linkend="NetRestrict5">NetRestrict(5)</link>,
+        <link linkend="fileserver8">fileserver(8)</link>,
+        <link linkend="fs_getclientaddrs1">fs_getclientaddrs(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

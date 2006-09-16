@@ -1,0 +1,1533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ355">
+  <title>Managing Server Encryption Keys</title>
+
+  <para>This chapter explains how to maintain your cell's server encryption keys, which are vital for secure communications in
+  AFS.</para>
+
+  <sect1 id="HDRWQ356">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="70*" />
+
+        <colspec colwidth="30*" />
+
+        <tbody>
+          <row>
+            <entry>Add a new server encryption key</entry>
+
+            <entry><emphasis role="bold">bos addkey</emphasis> and <emphasis role="bold">kas setpassword</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Inspect key checksums in the Authentication Database</entry>
+
+            <entry><emphasis role="bold">kas examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Inspect key checksums in the <emphasis role="bold">KeyFile</emphasis></entry>
+
+            <entry><emphasis role="bold">bos listkeys</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Remove an old server encryption key</entry>
+
+            <entry><emphasis role="bold">bos removekey</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ358">
+    <title>About Server Encryption Keys</title>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>defined</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS</primary>
+
+      <secondary>server encryption key</secondary>
+
+      <see>server encryption key</see>
+    </indexterm>
+
+    <para>An encryption key is a string of octal numbers used to encrypt and decrypt packets of information. In AFS, a server
+    encryption key is the key used to protect information being transferred between AFS server processes and between them and their
+    clients. A server encryption key is essentially a password for a server process and like a user password is stored in the
+    Authentication Database.</para>
+
+    <para>Maintaining your cell's server encryption keys properly is the most basic way to protect the information in your AFS
+    filespace from access by unauthorized users.</para>
+
+    <sect2 id="Header_412">
+      <title>Keys and Mutual Authentication: A Review</title>
+
+      <indexterm>
+        <primary>mutual authentication</primary>
+
+        <secondary>server encryption key's role</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>server encryption key</primary>
+
+        <secondary>role in mutual authentication</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Ticket Granting Service</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>TGS</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>server ticket</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>session key</primary>
+      </indexterm>
+
+      <para>Server encryption keys play a central role in the mutual authentication between client and server processes in AFS. For
+      a more detailed description of mutual authentication, see <link linkend="HDRWQ75">A More Detailed Look at Mutual
+      Authentication</link>.</para>
+
+      <para>When a client wants to contact an AFS server, it first contacts the Ticket Granting Service (TGS) module of the
+      Authentication Server. After verifying the client's identity (based indirectly on the password of the human user whom the
+      client represents), the TGS gives the client a server ticket. This ticket is encrypted with the server's encryption key. (The
+      TGS also invents a second encryption key, called the session key, to be used only for a single episode of communication
+      between server and client. The server ticket and session key, together with other pieces of information, are collectively
+      referred to as a token.)</para>
+
+      <para>The client cannot read the server ticket or token because it does not know the server encryption key. However, the
+      client sends it to the AFS server along with service requests, because the ticket proves to the AFS server processes that it
+      has already authenticated with the TGS. AFS servers trust the TGS to grant tickets only to valid clients. The fact that the
+      client possesses a ticket encrypted with the server's encryption key proves to the server that the client is valid. On the
+      other hand, the client assumes that only a genuine AFS server knows the server encryption key needed to decrypt the ticket.
+      The server's ability to decrypt the ticket and understand its contents proves to the client that the server is
+      legitimate.</para>
+    </sect2>
+
+    <sect2 id="Header_413">
+      <title>Maintaining AFS Server Encryption Keys</title>
+
+      <para>As you maintain your cell's server encryption keys, keep the following in mind. <itemizedlist>
+          <listitem>
+            <para>Change the key frequently to enhance your cell's security. Changing the key at least once a month is strongly
+            recommended.</para>
+
+            <indexterm>
+              <primary>server encryption key</primary>
+
+              <secondary>changing frequently</secondary>
+            </indexterm>
+          </listitem>
+
+          <listitem>
+            <para>The AFS server encryption key currently in use is stored in two places. When you add a new key, you must make
+            changes in both places and make them in the correct order, as instructed in <link linkend="HDRWQ362">Adding Server
+            Encryption Keys</link>. Failure to follow the instructions can seriously impair cell functioning, as clients and servers
+            become unable to communicate. The two storage sites for the current server encryption key are the following:
+            <orderedlist>
+                <listitem>
+                  <para>The file <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> on the local disk of every file server
+                  machine. The file can list more than one key, each with an associated numerical identifier, the key version number
+                  or kvno. A client token records the key version number of the key used to seal it, and the server process
+                  retrieves the appropriate key from this file when the client presents the token.</para>
+
+                  <indexterm>
+                    <primary>key version number</primary>
+
+                    <secondary>defined</secondary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>kvno</primary>
+
+                    <secondary></secondary>
+
+                    <see>key version number</see>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>KeyFile file</primary>
+
+                    <secondary>storage site for server encryption keys</secondary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>files</primary>
+
+                    <secondary>/usr/afs/etc/KeyFile</secondary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>server encryption key</primary>
+
+                    <secondary>KeyFile file</secondary>
+                  </indexterm>
+                </listitem>
+
+                <listitem>
+                  <para>The <emphasis role="bold">afs</emphasis> entry in the Authentication Database. The current server encryption
+                  key is in the entry's password field, just like an individual user's scrambled password. The Authentication
+                  Server's Ticket Granting Service (TGS) uses this key to encrypt the tokens it gives to clients. There is only a
+                  single key in the entry, because the TGS never needs to read existing tokens, but only to generate new ones by
+                  using the current key.</para>
+
+                  <indexterm>
+                    <primary>server encryption key</primary>
+
+                    <secondary>Authentication Database</secondary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>Authentication Database</primary>
+
+                    <secondary>site for AFS server encryption key</secondary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>Authentication Database</primary>
+
+                    <secondary>afs entry</secondary>
+                  </indexterm>
+                </listitem>
+              </orderedlist></para>
+
+            <para>For instructions on creating the initial <emphasis role="bold">afs</emphasis> entry and <emphasis
+            role="bold">KeyFile</emphasis> files as you install your cell's first server machine, see the IBM AFS Quick
+            Beginnings.</para>
+          </listitem>
+
+          <listitem>
+            <para>At any specific time, the tokens that the Authentication Server's Ticket Granting Service gives to clients are
+            sealed with only one of the server encryption keys, namely the one stored in the <emphasis role="bold">afs</emphasis>
+            entry in the Authentication Database.</para>
+          </listitem>
+
+          <listitem>
+            <para>When you add a new server encryption key, you cannot immediately remove the former key from the <emphasis
+            role="bold">/usr/afs/etc/KeyFile</emphasis> file on the local disk of every AFS server machine. Any time that you add a
+            new key, it is likely that some clients still have valid, unexpired tokens sealed with the previous key. The more
+            frequently you change the server encryption key, the more such tickets there are likely to be. To be able to grant
+            service appropriately to clients with such tokens, an AFS server process must still be able to access the server
+            encryption key used to seal it.</para>
+
+            <para>You can safely delete an old server encryption key only when it is certain that no clients have tokens sealed with
+            that key. In general, wait a period of time at least as long as the maximum token lifetime in your cell. By default, the
+            maximum token lifetime for users is 25 hours (except for users whose Authentication Database entries were created by
+            using the 3.0 version of AFS, for whom the default is 100 hours). You can use the <emphasis
+            role="bold">-lifetime</emphasis> argument to the <emphasis role="bold">kas setfields</emphasis> command to change this
+            default.</para>
+
+            <para>Instructions for removing obsolete keys appear in <link linkend="HDRWQ368">Removing Server Encryption
+            Keys</link>.</para>
+          </listitem>
+
+          <listitem>
+            <para>You create a new AFS server encryption key in much the same way regular users change their passwords, by providing
+            a character string that is converted into an encryption key automatically. See <link linkend="HDRWQ362">Adding Server
+            Encryption Keys</link>.</para>
+
+            <indexterm>
+              <primary>server encryption key</primary>
+
+              <secondary>password-like nature</secondary>
+            </indexterm>
+          </listitem>
+
+          <listitem>
+            <para>In addition to using server encryption keys when communicating with clients, the server processes use them to
+            protect communications with other server processes. Therefore, all server machines in your cell must have the same
+            version of the <emphasis role="bold">KeyFile</emphasis> file. The easiest way to maintain consistency (if you run the
+            United States edition of AFS) is to use the Update Server to distribute the contents of the system control machine's
+            <emphasis role="bold">/usr/afs/etc</emphasis> directory to all of the other server machines. There are two implications:
+            <itemizedlist>
+                <listitem>
+                  <para>You must run the <emphasis role="bold">upserver</emphasis> process on the system control machine and an
+                  <emphasis role="bold">upclientetc</emphasis> process on all other server machines that references the system
+                  control machine. The IBM AFS Quick Beginnings explains how to install both processes. For instructions on
+                  verifying that the Update Server processes are running, see <link linkend="HDRWQ158">Displaying Process Status and
+                  Information from the BosConfig File</link>.</para>
+
+                  <indexterm>
+                    <primary>Update Server</primary>
+
+                    <secondary>distributor of KeyFile file</secondary>
+                  </indexterm>
+                </listitem>
+
+                <listitem>
+                  <para>Change the <emphasis role="bold">KeyFile</emphasis> file only on the system control machine (except in the
+                  types of emergencies discussed in <link linkend="HDRWQ370">Handling Server Encryption Key Emergencies</link>). Any
+                  changes you make on other server machines are overwritten the next time the <emphasis
+                  role="bold">upclientetc</emphasis> process retrieves the contents of the system control machine's <emphasis
+                  role="bold">/usr/afs/etc</emphasis> directory. By default, this happens every five minutes.</para>
+
+                  <indexterm>
+                    <primary>system control machine</primary>
+
+                    <secondary>source for common KeyFile file</secondary>
+                  </indexterm>
+                </listitem>
+              </itemizedlist></para>
+
+            <para>If you run the international edition of AFS, do not use the Update Server to distribute the contents of the
+            <emphasis role="bold">/usr/afs/etc</emphasis> directory, particularly the <emphasis role="bold">KeyFile</emphasis> file.
+            The data in the file is too sensitive for transfer in unencrypted form, and because of United States government exports
+            regulations the international edition of AFS does not include the necessary encryption routines in a form that the
+            Update Server can use. You must instead modify the file on each server machine individually, taking care to enter the
+            same key on every server machine.</para>
+          </listitem>
+
+          <listitem>
+            <para>Never edit the <emphasis role="bold">KeyFile</emphasis> directly with a text editor. Instead, always use the
+            appropriate <emphasis role="bold">bos</emphasis> commands as instructed in <link linkend="HDRWQ362">Adding Server
+            Encryption Keys</link> and <link linkend="HDRWQ368">Removing Server Encryption Keys</link>.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ359">
+    <title>Displaying Server Encryption Keys</title>
+
+    <para>To display the server encryption keys in the <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file on any file server
+    machine, use the <emphasis role="bold">bos listkeys</emphasis> command. Use the <emphasis role="bold">kas examine</emphasis>
+    command to display the key in the Authentication Database's <emphasis role="bold">afs</emphasis> entry.</para>
+
+    <indexterm>
+      <primary>checksum</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>checksum displayed</secondary>
+    </indexterm>
+
+    <para>By default the commands do not display the actual string of octal digits that constitute a key, but rather a checksum, a
+    decimal number derived by encrypting a constant with the key. This prevents unauthorized users from easily accessing the actual
+    key, which they can then use to falsify or eavesdrop on protected communications. The <emphasis role="bold">bos
+    listkeys</emphasis> and <emphasis role="bold">kas examine</emphasis> commands generate the same checksum for a given key, so
+    displaying checksums rather than actual keys is generally sufficient. If you suspect that the keys differ in a way that the
+    checksums are not revealing, then you are probably experiencing authentication problems throughout your cell. The easiest
+    solution is to create a new server encryption key following the instructions in <link linkend="HDRWQ362">Adding Server
+    Encryption Keys</link> or <link linkend="HDRWQ370">Handling Server Encryption Key Emergencies</link>. Another common reason to
+    issue the <emphasis role="bold">bos listkeys</emphasis> command is to display the key version numbers currently in use, in
+    preparation for choosing the next one; here, the checksum is sufficient because the key itself is irrelevant.</para>
+
+    <para>If it is important to display the actual octal digits, include the <emphasis role="bold">-showkey</emphasis> argument to
+    both the <emphasis role="bold">bos listkeys</emphasis> and <emphasis role="bold">kas examine</emphasis> commands.</para>
+
+    <indexterm>
+      <primary>KeyFile file</primary>
+
+      <secondary>displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>displaying from KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>server encryption keys in KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>bos listkeys</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>bos commands</primary>
+
+      <secondary>listkeys</secondary>
+    </indexterm>
+
+    <sect2 id="HDRWQ360">
+      <title>To display the KeyFile file</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you are authenticated as a user listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
+          file. If necessary, issue the <emphasis role="bold">bos listusers</emphasis> command, which is fully described in <link
+          linkend="HDRWQ593">To display the users in the UserList file</link>. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the contents of one machine's <emphasis
+          role="bold">/usr/afs/etc/KeyFile</emphasis> file. <programlisting>
+   % <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; [<emphasis role="bold">-showkey</emphasis>]
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">listk</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listkeys</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names a file server machine. In the normal case, it is acceptable to name any machine, because correct cell
+                  functioning requires that the <emphasis role="bold">KeyFile</emphasis> file be the same on all of them.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-showkey</emphasis></term>
+
+                <listitem>
+                  <para>Displays the octal digits that constitute each key.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+
+      <para>In the following example, the output displays a checksum for each server encryption key rather than the actual octal
+      digits. The penultimate line indicates when an administrator last changed the file, and the final line confirms that the
+      output is complete.</para>
+
+      <programlisting>
+   % <emphasis role="bold">bos listkeys fs1.abc.com</emphasis>
+   key 0 has cksum 972037177
+   key 1 has cksum 2825165022
+   Keys last changed on Wed Jan 13 11:20:29 1999. 
+   All done.
+</programlisting>
+
+      <indexterm>
+        <primary>Authentication Database</primary>
+
+        <secondary>server encryption key</secondary>
+
+        <tertiary>displaying</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>server encryption key from Authentication Database</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afs entry in Authentication Database</primary>
+
+        <secondary>displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>server encryption key</primary>
+
+        <secondary>displaying from Authentication Database</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>kas examine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>kas commands</primary>
+
+        <secondary>examine, to inspect afs key</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ361">
+      <title>To display the afs key from the Authentication Database</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">kas examine</emphasis> command to display the <emphasis role="bold">afs</emphasis>
+          entry in the Authentication Database.</para>
+
+          <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <emphasis role="bold">-admin</emphasis> argument to name an identity that has the
+          <computeroutput>ADMIN</computeroutput> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <emphasis role="bold">kas examine</emphasis> command as described in <link linkend="HDRWQ590">To check if the
+          ADMIN flag is set</link>.</para>
+
+          <programlisting>
+   % <emphasis role="bold">kas examine afs</emphasis> [<emphasis role="bold">-showkey</emphasis>]  \
+                 <emphasis role="bold">-admin</emphasis>  &lt;<replaceable>admin principal to use for authentication</replaceable>&gt;  
+   Administrator's (admin_user) password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">e</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">examine</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">afs</emphasis></term>
+
+                <listitem>
+                  <para>Designates the <emphasis role="bold">afs</emphasis> entry.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-showkey</emphasis></term>
+
+                <listitem>
+                  <para>Displays the octal digits that constitute the key.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-admin</emphasis></term>
+
+                <listitem>
+                  <para>Names an administrative account with the <computeroutput>ADMIN</computeroutput> flag on its Authentication
+                  Database entry, such as <emphasis role="bold">admin</emphasis>. The password prompt echoes it as admin_user. Enter
+                  the appropriate password as admin_password.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+
+      <para>In the following example, the <emphasis role="bold">admin</emphasis> user displays the <emphasis
+      role="bold">afs</emphasis> entry without using the <emphasis role="bold">-showkey</emphasis> flag. The second line shows the
+      key version number in parentheses and the key's checksum. The line that begins with the string <computeroutput>last
+      mod</computeroutput> reports the date on which the indicated administrator changed the key. There is no necessary relationship
+      between this date and the date reported by the <emphasis role="bold">bos listkeys</emphasis> command, because the latter date
+      changes for any type of change to the <emphasis role="bold">KeyFile</emphasis> file, not just a key addition. For a
+      description of the other lines in the output from the <emphasis role="bold">kas examine</emphasis> command, see its reference
+      page in the IBM AFS Administration Reference.</para>
+
+      <programlisting>
+   % <emphasis role="bold">kas examine afs  -admin admin</emphasis>
+   Administrator's (admin) password: &lt;<replaceable>admin_password</replaceable>&gt;
+   User data for afs
+    key (1) cksum is 2825165022, last cpw: no date
+    password will never expire.
+    An unlimited number of unsuccessful authentications is permitted.
+    entry expires on never. Max ticket lifetime 100.00 hours.
+    last mod on Wed Jan 13 11:21:36 1999 by admin
+    permit password reuse
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ362">
+    <title>Adding Server Encryption Keys</title>
+
+    <indexterm>
+      <primary>adding</primary>
+
+      <secondary>server encryption key to KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>defining</primary>
+
+      <secondary>server encryption key</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>server encryption key</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>adding to KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>KeyFile file</primary>
+
+      <secondary>adding server encryption key</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Authentication Database</primary>
+
+      <secondary>server encryption key</secondary>
+
+      <tertiary>setting</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>defining</primary>
+
+      <secondary>server encryption key in Authentication Database</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>afs entry in Authentication Database</primary>
+
+      <secondary>setting server encryption key</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>setting in Authentication Database</secondary>
+    </indexterm>
+
+    <para>As noted, AFS records server encryption keys in two separate places: <orderedlist>
+        <listitem>
+          <para>In the file <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> on the local disk of each server machine, for use
+          by the AFS server processes running on the machine</para>
+        </listitem>
+
+        <listitem>
+          <para>In the <emphasis role="bold">afs</emphasis> entry in the Authentication Database, for use by the Ticket Granting
+          Service (TGS) when creating tokens</para>
+        </listitem>
+      </orderedlist></para>
+
+    <para>To ensure that server processes and the TGS share the same AFS server encryption key, execute all the steps in this
+    section without interruption.</para>
+
+    <para>The following instructions include a step in which you restart the database server processes (the Authentication, Backup,
+    Protection, and Volume Location Server processes) on all database server machines. As a database server process starts, it reads
+    in the server encryption key that has the highest key version number in the <emphasis role="bold">KeyFile</emphasis> file and
+    uses it to protect the messages that it sends for synchronizing the database and maintaining quorum. It uses the same key
+    throughout its lifetime, which can be for an extended period, even if you remove the key from the <emphasis
+    role="bold">KeyFile</emphasis> file. However, if one of the peer database server processes restarts and the others do not,
+    quorum and database synchronization break down because the processes are no longer using the same key: the restarted process is
+    using the key that currently has the highest key version number, and the other processes are still using the key they read in
+    when they originally started. To avoid this problem, it is safest to restart all of the database server processes when adding a
+    new key.</para>
+
+    <para>After adding a new key, you can remove obsolete keys from the <emphasis role="bold">KeyFile</emphasis> file to prevent it
+    from becoming cluttered. However, you must take care not to remove keys that client or server processes are still using. For
+    discussion and instructions, see <link linkend="HDRWQ368">Removing Server Encryption Keys</link>.</para>
+
+    <sect2 id="HDRWQ363">
+      <title>To add a new server encryption key</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you are authenticated as a user listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
+          file. If necessary, issue the <emphasis role="bold">bos listusers</emphasis> command, which is fully described in <link
+          linkend="HDRWQ593">To display the users in the UserList file</link>. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ364" />Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
+          numbers that are already in use, as a first step in choosing the key version number for the new key. <programlisting>
+   % <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">listk</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listkeys</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names any file server machine.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ365" />Choose a key version number for the new key, based on the output from Step <link
+          linkend="LIWQ364">2</link> and the following requirements: <itemizedlist>
+              <listitem>
+                <para>A key version number must be an integer between 0 (zero) and 255 to comply with Kerberos standards. It is
+                simplest if you keep your key version numbers in sequence by choosing a key version number one greater than the
+                largest existing one.</para>
+              </listitem>
+
+              <listitem>
+                <para>Do not reuse a key version number currently found in the <emphasis role="bold">KeyFile</emphasis> file,
+                particularly if it is also the one in the Authentication Database <emphasis role="bold">afs</emphasis> entry. Client
+                processes possibly still have tickets sealed with the key that originally had that key version number, but the
+                server processes start using the new key marked with that key version number. Because the keys do not match, the
+                server processes refuse requests from clients who hold legitimate tokens.</para>
+              </listitem>
+            </itemizedlist></para>
+
+          <indexterm>
+            <primary>bos commands</primary>
+
+            <secondary>addkey</secondary>
+
+            <tertiary>basic instructions</tertiary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>bos addkey</secondary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ366" />Issue the <emphasis role="bold">bos addkey</emphasis> command to create a new AFS server
+          encryption key in the <emphasis role="bold">KeyFile</emphasis> file.</para>
+
+          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
+          machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
+          locate the system control machine</link>.)</para>
+
+          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
+          addkey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
+
+          <para>To avoid visible echoing of the string that corresponds to the new key, omit the <emphasis
+          role="bold">-key</emphasis> argument from the command line; instead enter the string at the prompts that appear when you
+          omit it, as shown in the following syntax specification.</para>
+
+          <programlisting>
+   % <emphasis role="bold">bos addkey  -server</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno</emphasis> &lt;<replaceable>key version number</replaceable>&gt;
+   input key: &lt;<replaceable>afs_password</replaceable>&gt;
+   Retype input key: &lt;<replaceable>afs_password</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">addk</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">addkey</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-server</emphasis></term>
+
+                <listitem>
+                  <para>Names the cell's system control machine if you are using the Update Server, or each server machine in turn
+                  if you are not.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-kvno</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the new key's key version number as an integer from the range 0 (zero) through 255.</para>
+
+                  <para>Remember the number. You need to use it again in Step <link linkend="LIWQ367">6</link>. If you are using the
+                  international edition of AFS, be sure to type the same number each time you issue this command.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">afs_password</emphasis></term>
+
+                <listitem>
+                  <para>Is a character string similar to a user password, of any length from one to about 1,000 characters. To
+                  improve security, include nonalphabetic characters and make the string as long as is practical (you need to type
+                  it only in this step and in Step <link linkend="LIWQ367">6</link>). If you are using the international edition of
+                  AFS, be sure to type the same string each time you issue this command.</para>
+
+                  <para>Do not enter an octal string directly. The BOS Server scrambles the character string into an octal string
+                  appropriate for use as an encryption key before recording it in the <emphasis role="bold">KeyFile</emphasis>
+                  file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para>If you are using the Update Server, wait for a few minutes while the Update Server distributes the new <emphasis
+          role="bold">KeyFile</emphasis> file to all server machines. The maximum necessary waiting period is the largest value
+          provided for the <emphasis role="bold">-t</emphasis> argument to the <emphasis role="bold">upclientetc</emphasis>
+          process's initialization command used on any of the server machines; the default time is five minutes.</para>
+
+          <para>To be certain that all machines have the same <emphasis role="bold">KeyFile</emphasis> file, issue the <emphasis
+          role="bold">bos listkeys</emphasis> command for every file server machine and verify that the checksum for the new key is
+          the same on all machines.</para>
+
+          <programlisting>
+   % <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting>
+
+          <para>If you are not using the Update Server, try to complete Step <link linkend="LIWQ366">4</link> within five
+          minutes.</para>
+
+          <indexterm>
+            <primary>kas commands</primary>
+
+            <secondary>setpassword</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>kas setpassword</secondary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ367" />Issue the <emphasis role="bold">kas setpassword</emphasis> command to enter the same key in
+          the <emphasis role="bold">afs</emphasis> entry in the Authentication Database.</para>
+
+          <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <emphasis role="bold">-admin</emphasis> argument to name an identity that has the
+          <computeroutput>ADMIN</computeroutput> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <emphasis role="bold">kas examine</emphasis> command as described in <link linkend="HDRWQ590">To check if the
+          ADMIN flag is set</link>.</para>
+
+          <programlisting>
+   % <emphasis role="bold">kas setpassword -name afs -kvno</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  \
+                     <emphasis role="bold">-admin</emphasis>  &lt;<replaceable>admin principal to use for authentication</replaceable>&gt;  
+   Administrator's (admin_user) password: &lt;<replaceable>admin_password</replaceable>&gt;
+   new_password: afs_password
+   Verifying, please re-enter new_password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">sp</emphasis></term>
+
+                <listitem>
+                  <para>Is an acceptable alias for <emphasis role="bold">setpassword</emphasis> (<emphasis
+                  role="bold">setp</emphasis> is the shortest acceptable abbreviation).</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-name afs</emphasis></term>
+
+                <listitem>
+                  <para>Creates the new key in the <emphasis role="bold">afs</emphasis> entry.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-kvno</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the same key version number as in Step <link linkend="LIWQ366">4</link>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-admin</emphasis></term>
+
+                <listitem>
+                  <para>Names an administrative account with the <computeroutput>ADMIN</computeroutput> flag on its Authentication
+                  Database entry, such as <emphasis role="bold">admin</emphasis>. The password prompt echoes it as admin_user. Enter
+                  the appropriate password as admin_password.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">afs_password</emphasis></term>
+
+                <listitem>
+                  <para>Is the same character string you entered in Step <link linkend="LIWQ366">4</link>.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional.)</emphasis> If you want to verify that the keys you just created in the <emphasis
+          role="bold">KeyFile</emphasis> file and the Authentication Database <emphasis role="bold">afs</emphasis> entry are
+          identical and have the same key version number, follow the instructions in <link linkend="HDRWQ359">Displaying Server
+          Encryption Keys</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command to restart the database server processes on all
+          database server machines. This forces them to start using the key in the <emphasis role="bold">KeyFile</emphasis> file
+          that currently has the highest key version number.</para>
+
+          <para>Repeat this command in quick succession for each database server machine, starting with the machine that has the
+          lowest IP address.</para>
+
+          <programlisting>
+   % <emphasis role="bold">bos restart</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver kaserver ptserver vlserver</emphasis>
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">res</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">restart</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names each database server machine in turn.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">buserver kaserver ptserver vlserver</emphasis></term>
+
+                <listitem>
+                  <para>Designates the Backup Server, Authentication Server, Protection Server, and Volume Location (VL) Server,
+                  respectively.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ368">
+    <title>Removing Server Encryption Keys</title>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>server encryption key from KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>removing from KeyFile file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>KeyFile file</primary>
+
+      <secondary>removing server encryption key</secondary>
+    </indexterm>
+
+    <para>You can periodically remove old keys from the <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file to keep it to a
+    reasonable size. To avoid disturbing cell functioning, do not remove an old key until all tokens sealed with the key and held by
+    users or client processes have expired. After adding a new key, wait to remove old keys at least as long as the longest token
+    lifetime you use in your cell. For Authentication Database user entries created under AFS version 3.1 or higher, the default
+    token lifetime is 25 hours; for entries created under AFS version 3.0, it is 100 hours.</para>
+
+    <para>There is no command for removing the key from the <emphasis role="bold">afs</emphasis> entry in the Authentication
+    Database, because the key field in that entry must never be empty. Use the <emphasis role="bold">kas setpassword</emphasis>
+    command to replace the <emphasis role="bold">afs</emphasis> key, but only as part of the complete procedure detailed in <link
+    linkend="HDRWQ363">To add a new server encryption key</link>.</para>
+
+    <para>Never remove from the <emphasis role="bold">KeyFile</emphasis> file the key that is currently in the <emphasis
+    role="bold">afs</emphasis> entry in the Authentication Database. AFS server processes become unable to decrypt the tickets that
+    clients present to them.</para>
+
+    <sect2 id="HDRWQ369">
+      <title>To remove a key from the KeyFile file</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you are authenticated as a user listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
+          file. If necessary, issue the <emphasis role="bold">bos listusers</emphasis> command, which is fully described in <link
+          linkend="HDRWQ593">To display the users in the UserList file</link>. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version number of each key you
+          want to remove. The output also reveals whether it has been at least 25 hours since a new key was placed in the <emphasis
+          role="bold">KeyFile</emphasis> file. For complete instructions for the <emphasis role="bold">bos listkeys</emphasis>
+          command, see <link linkend="HDRWQ360">To display the KeyFile file</link>. <programlisting>
+   % <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">kas examine</emphasis> command to verify that the key currently in the
+          Authentication Database's <emphasis role="bold">afs</emphasis> entry does not have the same key version number as any of
+          the keys you are removing from the <emphasis role="bold">KeyFile</emphasis> file. For detailed instructions for the
+          <emphasis role="bold">kas examine</emphasis> command, see <link linkend="HDRWQ361">To display the afs key from the
+          Authentication Database</link>. <programlisting>
+   % <emphasis role="bold">kas examine afs  -admin</emphasis> &lt;<replaceable>admin principal to use for authentication</replaceable>&gt;  
+   Administrator's (admin_user) password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting></para>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>bos removekey</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>bos commands</primary>
+
+            <secondary>removekey</secondary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos removekey</emphasis> command to remove one or more server encryption keys from
+          the <emphasis role="bold">KeyFile</emphasis> file.</para>
+
+          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
+          machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
+          locate the system control machine</link>.)</para>
+
+          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
+          removekey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
+
+          <programlisting>
+   % <emphasis role="bold">bos removekey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>key version number</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">removek</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">removekey</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names the cell's system control machine if you are using the Update Server, or each server machine in turn
+                  if you are not.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">key version number</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the key version number of each key to remove.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ370">
+    <title>Handling Server Encryption Key Emergencies</title>
+
+    <indexterm>
+      <primary>emergency</primary>
+
+      <secondary>server encryption keys mismatched</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>server encryption key</primary>
+
+      <secondary>emergency need to replace</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mutual authentication</primary>
+
+      <secondary>failure due to mismatched keys</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Ubik</primary>
+
+      <secondary>failure due to mismatched server encryption keys</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>handling</primary>
+
+      <secondary>server encryption key emergency</secondary>
+    </indexterm>
+
+    <para>In rare circumstances, the AFS server processes can become unable to decrypt the server tickets that clients or peer
+    server processes are presenting. Activity in your cell can come to a halt, because the server processes believe that the tickets
+    are forged or expired, and refuse to execute any actions. This can happen on one machine or several; the effect is more serious
+    when more machines are involved.</para>
+
+    <para>One common cause of server encryption key problems is that the client's ticket is encrypted with a key that the server
+    process does not know. Usually this means that the <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> on the server machine
+    does not include the key in the <emphasis role="bold">afs</emphasis> Authentication Database entry, which the Authentication
+    Server's Ticket Granting Service (TGS) module is using to encrypt server tickets.</para>
+
+    <para>Another possibility is that the <emphasis role="bold">KeyFile</emphasis> files on different machines do not contain the
+    same keys. In this case, communications among server processes themselves become impossible. For instance, AFS's replicated
+    database mechanism (Ubik) breaks down if the instances of a database server process on the different database server machines
+    are not using the same key.</para>
+
+    <para>The appearance of the following error message when you direct a <emphasis role="bold">bos</emphasis> command to a file
+    server machine in the local cell is one possible symptom of server encryption key mismatch. (Note, however, that you can also
+    get this message if you forget to include the <emphasis role="bold">-cell</emphasis> argument when directing the <emphasis
+    role="bold">bos</emphasis> command to a file server machine in a foreign cell.)</para>
+
+    <programlisting>
+   bos: failed to contact host's bosserver (security object was passed a bad ticket).
+</programlisting>
+
+    <para>The solution to server encryption key emergencies is to put a new AFS server encryption key in both the Authentication
+    Database and the <emphasis role="bold">KeyFile</emphasis> file on every server machine, so that the TGS and all server processes
+    again share the same key.</para>
+
+    <para>Handling key emergencies requires some unusual actions. The reasons for these actions are explained in the following
+    sections; the actual procedures appear in the subsequent instructions.</para>
+
+    <sect2 id="HDRWQ371">
+      <title>Prevent Mutual Authentication</title>
+
+      <para>It is necessary to prevent the server processes from trying to mutually authenticate with you as you deal with a key
+      emergency, because they possibly cannot decrypt your token. When you do not mutually authenticate, the server processes assign
+      you the identity <emphasis role="bold">anonymous</emphasis>. To prevent mutual authentication, use the <emphasis
+      role="bold">unlog</emphasis> command to discard your tokens and include the <emphasis role="bold">-noauth</emphasis> flag on
+      every command where it is available.</para>
+    </sect2>
+
+    <sect2 id="Header_423">
+      <title>Disable Authorization Checking by Hand</title>
+
+      <para>Because the server processes recognize you as the user <emphasis role="bold">anonymous</emphasis> when you do not
+      mutually authenticate, you must turn off authorization checking. Only with authorization checking disabled do the server
+      processes allow the <emphasis role="bold">anonymous</emphasis> user to perform privileged actions such as key creation.</para>
+
+      <para>In an emergency, disable authorization checking by creating the file <emphasis
+      role="bold">/usr/afs/local/NoAuth</emphasis> by hand. In normal circumstances, use the <emphasis role="bold">bos
+      setauth</emphasis> command instead.</para>
+    </sect2>
+
+    <sect2 id="Header_424">
+      <title>Work Quickly on Each Machine</title>
+
+      <para>Disabling authorization checking is a serious security exposure, because server processes on the affected machine
+      perform any action for anyone. Disable authorization checking only for as long as necessary, completing all steps in an
+      uninterrupted session and as quickly as possible.</para>
+    </sect2>
+
+    <sect2 id="Header_425">
+      <title>Work at the Console</title>
+
+      <para>Working at the console of each server machine on which you disable authorization checking ensures that no one else logs
+      onto the console while you are working there. It does not prevent others from connecting to the machine remotely (using the
+      <emphasis role="bold">telnet</emphasis> program, for example), which is why it is important to work quickly. The only way to
+      ensure complete security is to disable network traffic, which is not a viable option in many environments. You can improve
+      security in general by limiting the number of people who can connect remotely to your server machines at any time, as
+      recommended in <link linkend="HDRWQ74">Improving Security in Your Cell</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ372">
+      <title>Change Individual KeyFile Files</title>
+
+      <para>If you use the Update Server to distribute the contents of the <emphasis role="bold">/usr/afs/etc</emphasis> directory,
+      an emergency is the only time when it is appropriate to change the <emphasis role="bold">KeyFile</emphasis> file on individual
+      machines instead. Updating each machine's file is necessary because mismatched keys can prevent the system control machine's
+      <emphasis role="bold">upserver</emphasis> process from mutually authenticating with <emphasis
+      role="bold">upclientetc</emphasis> processes on other server machines, in which case the <emphasis
+      role="bold">upserver</emphasis> process refuses to distribute its <emphasis role="bold">KeyFile</emphasis> file to
+      them.</para>
+
+      <para>Even if it appears that the Update Server is working correctly, the only way to verify that is to change the key on the
+      system control machine and wait the standard delay period to see if the <emphasis role="bold">upclientetc</emphasis> processes
+      retrieve the key. During an emergency, it does not usually make sense to wait the standard delay period. It is more efficient
+      simply to update the file on each server machine separately. Also, even if the Update Server can distribute the file
+      correctly, other processes can have trouble because of mismatched keys. The following instructions add the new key file on the
+      system control machine first. If the Update Server is working, then it is distributing the same change as you are making on
+      each server machine individually.</para>
+
+      <para>If your cell does not use the Update Server, or uses the international edition of AFS, you always change keys on server
+      machines individually. The following instructions are also appropriate for you.</para>
+    </sect2>
+
+    <sect2 id="Header_427">
+      <title>Two Component Procedures</title>
+
+      <para>There are two subprocedures used frequently in the following instructions: disabling authorization checking and
+      reenabling it. For the sake of clarity, the procedures are detailed here; the instructions refer to them as necessary.</para>
+
+      <sect3 id="HDRWQ373">
+        <title>Disabling Authorization Checking in an Emergency</title>
+
+        <orderedlist>
+          <listitem>
+            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
+            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+
+            <indexterm>
+              <primary>NoAuth file</primary>
+
+              <secondary>creating in emergencies</secondary>
+            </indexterm>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LIWQ374" />Create the file <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> to disable
+            authorization checking. <programlisting>
+   # <emphasis role="bold">touch /usr/afs/local/NoAuth</emphasis>
+</programlisting></para>
+
+            <indexterm>
+              <primary>unlog command</primary>
+
+              <secondary>when handling key emergency</secondary>
+            </indexterm>
+          </listitem>
+
+          <listitem>
+            <para>Discard your tokens, in case they were sealed with an incompatible key, which can prevent some commands from
+            executing. <programlisting>
+   # <emphasis role="bold">unlog</emphasis>
+</programlisting></para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+
+      <sect3 id="HDRWQ375">
+        <title>Reenabling Authorization Checking in an Emergency</title>
+
+        <orderedlist>
+          <listitem>
+            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
+            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Remove the <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> file. <programlisting>
+   # <emphasis role="bold">rm /usr/afs/local/NoAuth</emphasis>
+</programlisting></para>
+
+            <indexterm>
+              <primary>klog command</primary>
+
+              <secondary>when handling key emergency</secondary>
+            </indexterm>
+          </listitem>
+
+          <listitem>
+            <para>Authenticate as an administrative identity that belongs to the <emphasis
+            role="bold">system:administrators</emphasis> group and is listed in the <emphasis
+            role="bold">/usr/afs/etc/UserList</emphasis> file. <programlisting>
+   # <emphasis role="bold">klog</emphasis> &lt;<replaceable>admin_user</replaceable>&gt;
+   Password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>If appropriate, log out from the console (or close the remote connection you are using), after issuing the
+            <emphasis role="bold">unlog</emphasis> command to destroy your tokens.</para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+    </sect2>
+
+    <sect2 id="Header_430">
+      <title>To create a new server encryption key in emergencies</title>
+
+      <orderedlist>
+        <listitem>
+          <para><anchor id="LIWQ376" /><emphasis role="bold">On the system control machine</emphasis>, disable authorization
+          checking as instructed in <link linkend="HDRWQ373">Disabling Authorization Checking in an Emergency</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ377" />Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
+          numbers already in use in the <emphasis role="bold">KeyFile</emphasis> file, as a first step in choosing the new key's key
+          version number. <programlisting>
+   # <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">listk</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listkeys</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Specifies a file server machine.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-noauth</emphasis></term>
+
+                <listitem>
+                  <para>Bypasses mutual authentication with the BOS Server. Include it in case the key emergency is preventing
+                  successful mutual authentication.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ378" />Choose a key version number for the new key, based on what you learned in Step <link
+          linkend="LIWQ377">2</link> plus the following requirements: <itemizedlist>
+              <listitem>
+                <para>It is best to keep your key version numbers in sequence by choosing a key version number one greater than the
+                largest existing one.</para>
+              </listitem>
+
+              <listitem>
+                <para>Key version numbers must be integers between 0 and 255 to comply with Kerberos standards.</para>
+              </listitem>
+
+              <listitem>
+                <para>Do not reuse a key version number currently listed in the <emphasis role="bold">KeyFile</emphasis>
+                file.</para>
+              </listitem>
+            </itemizedlist></para>
+
+          <indexterm>
+            <primary>bos commands</primary>
+
+            <secondary>addkey</secondary>
+
+            <tertiary>when handling key emergency</tertiary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ379" /><emphasis role="bold">On the system control machine</emphasis>, issue the <emphasis
+          role="bold">bos addkey</emphasis> command to create a new AFS server encryption key in the <emphasis
+          role="bold">KeyFile</emphasis> file. <programlisting>
+   # <emphasis role="bold">bos addkey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno</emphasis> &lt;<replaceable>key version number</replaceable>&gt; <emphasis
+                role="bold">-noauth</emphasis>
+   input key: &lt;<replaceable>afs_password</replaceable>&gt;
+   Retype input key: &lt;<replaceable>afs_password</replaceable>&gt;
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">addk</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">addkey</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names the file server machine on which to define the new key in the <emphasis role="bold">KeyFile</emphasis>
+                  file.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-kvno</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the key version number you chose in Step <link linkend="LIWQ378">3</link>, an integer in the range
+                  0 (zero) through 255. You must specify the same number in Steps <link linkend="LIWQ382">7</link>, <link
+                  linkend="LIWQ383">8</link>, and <link linkend="LIWQ386">13</link>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-noauth</emphasis></term>
+
+                <listitem>
+                  <para>Bypasses mutual authentication with the BOS Server. Include it in case the key emergency is preventing
+                  successful mutual authentication.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">afs_password</emphasis></term>
+
+                <listitem>
+                  <para>Is a character string similar to a user password, of any length from one to about 1,000 characters. To
+                  improve security, make the string as long as is practical, and include nonalphabetic characters.</para>
+
+                  <para>Do not type an octal string directly. The BOS Server scrambles the character string into an octal string
+                  appropriate for use as an encryption key before recording it in the <emphasis role="bold">KeyFile</emphasis>
+                  file.</para>
+
+                  <para>Remember the string. You need to use it again in Steps <link linkend="LIWQ382">7</link>, <link
+                  linkend="LIWQ383">8</link>, and <link linkend="LIWQ386">13</link>.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ380" /><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
+          the system control machine), disable authorization checking as instructed in <link linkend="HDRWQ373">Disabling
+          Authorization Checking in an Emergency</link>. Do not repeat the procedure on the system control machine, if it is a
+          database server machine, because you already disabled authorization checking in Step <link linkend="LIWQ376">1</link>. (If
+          you need to learn which machines are database server machines, use the <emphasis role="bold">bos listhosts</emphasis>
+          command as described in <link linkend="HDRWQ95">To locate database server machines</link>.)</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ381" />Wait at least 90 seconds after finishing Step <link linkend="LIWQ380">5</link>, to allow each
+          of the database server processes (the Authentication, Backup, Protection and Volume Location Servers) to finish electing a
+          new sync site. Then issue the <emphasis role="bold">udebug</emphasis> command to verify that the election worked properly.
+          Issue the following commands, substituting each database server machine's name for server machine in turn. Include the
+          system control machine if it is a database server machine. <programlisting>
+   # <emphasis role="bold">udebug</emphasis> &lt;<replaceable>server machine</replaceable>&gt; <emphasis role="bold">buserver</emphasis>
+   # <emphasis role="bold">udebug</emphasis> &lt;<replaceable>server machine</replaceable>&gt; <emphasis role="bold">kaserver</emphasis>
+   # <emphasis role="bold">udebug</emphasis> &lt;<replaceable>server machine</replaceable>&gt; <emphasis role="bold">ptserver</emphasis>
+   # <emphasis role="bold">udebug</emphasis> &lt;<replaceable>server machine</replaceable>&gt; <emphasis role="bold">vlserver</emphasis>
+</programlisting></para>
+
+          <para>For each process, the output from all of the database server machines must agree on which one is the sync site for
+          the process. It is not, however, necessary that the same machine serves as the sync site for each of the four processes.
+          For each process, the output from only one machine must include the following string:</para>
+
+          <programlisting>
+   I am sync site ...
+</programlisting>
+
+          <para>The output on the other machines instead includes the following line</para>
+
+          <programlisting>
+   I am not sync site
+</programlisting>
+
+          <para>and a subsequent line that begins with the string <computeroutput>Sync host</computeroutput> and specifies the IP
+          address of the machine claiming to be the sync site.</para>
+
+          <para>If the output does not meet these requirements or seems abnormal in another way, contact AFS Product Support for
+          assistance.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ382" /><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
+          the system control machine), issue the <emphasis role="bold">bos addkey</emphasis> command described in Step <link
+          linkend="LIWQ379">4</link>. Be sure to use the same values for afs_password and kvno as you used in that step.</para>
+
+          <indexterm>
+            <primary>kas commands</primary>
+
+            <secondary>setpassword , when handling key emergency</secondary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ383" />Issue the <emphasis role="bold">kas setpassword</emphasis> command to define the new key in
+          the Authentication Database's <emphasis role="bold">afs</emphasis> entry. It must match the key you created in Step <link
+          linkend="LIWQ379">4</link> and Step <link linkend="LIWQ382">7</link>. <programlisting>
+   # <emphasis role="bold">kas setpassword  -name afs</emphasis>  <emphasis role="bold">-kvno</emphasis> &lt;<replaceable>key version number</replaceable>&gt; <emphasis
+                role="bold">-noauth</emphasis>
+   new_password: &lt;<replaceable>afs_password</replaceable>&gt;
+   Verifying, please re-enter new_password: &lt;<replaceable>afs_password</replaceable>&gt;
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">sp</emphasis></term>
+
+                <listitem>
+                  <para>Is an acceptable alias for <emphasis role="bold">setpassword</emphasis> (<emphasis
+                  role="bold">setp</emphasis> is the shortest acceptable abbreviation).</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-kvno</emphasis></term>
+
+                <listitem>
+                  <para>Is the same key version number you specified in Step <link linkend="LIWQ379">4</link>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">afs_password</emphasis></term>
+
+                <listitem>
+                  <para>Is the same character string you specified as afs_password in Step <link linkend="LIWQ379">4</link>. It does
+                  not echo visibly.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ384" /><emphasis role="bold">On every database server machine in your cell</emphasis> (including the
+          system control machine if it is a database server machine), reenable authorization checking as instructed in <link
+          linkend="HDRWQ375">Reenabling Authorization Checking in an Emergency</link>. If the system control machine is not a
+          database server machine, do not perform this procedure until Step <link linkend="LIWQ385">11</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Repeat Step <link linkend="LIWQ381">6</link> to verify that each database server process has properly elected a sync
+          site after being restarted in Step <link linkend="LIWQ384">9</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ385" /><emphasis role="bold">On the system control machine</emphasis> (if it is not a database
+          server machine), reenable authorization checking as instructed in <link linkend="HDRWQ375">Reenabling Authorization
+          Checking in an Emergency</link>. If it is a database server machine, you already performed the procedure in Step <link
+          linkend="LIWQ384">9</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">On all remaining (simple) file server machines</emphasis>, disable authorization checking as
+          instructed in <link linkend="HDRWQ373">Disabling Authorization Checking in an Emergency</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ386" /><emphasis role="bold">On all remaining (simple) file server machines</emphasis>, issue the
+          <emphasis role="bold">bos addkey</emphasis> command described in Step <link linkend="LIWQ379">4</link>. Be sure to use the
+          same values for afs_password and kvno as you used in that step.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">On all remaining (simple) file server machines</emphasis>, reenable authorization checking as
+          instructed in <link linkend="HDRWQ375">Reenabling Authorization Checking in an Emergency</link>.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</chapter>

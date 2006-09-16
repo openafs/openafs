@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="NetInfo5">
+  <refmeta>
+    <refentrytitle>NetInfo</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>NetInfo</refname>
+    <refpurpose>Defines machine interfaces to register with AFS servers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>There are two <replaceable>NetInfo</replaceable> files, one for an AFS client and one for an AFS
+    File Server or database server.  The AFS client <replaceable>NetInfo</replaceable> file specifies
+    the IP addresses that the client should register with the File Servers it
+    connects to.  The server <replaceable>NetInfo</replaceable> file specifies what interfaces should
+    be registered with AFS Database Servers or used to talk to other database
+    servers.</para>
+
+    <refsect2>
+      <title>Client NetInfo</title>
+      <para>The client <replaceable>NetInfo</replaceable> file lists the IP addresses of one or more of the
+      local machine's network interfaces. If it exists in the <replaceable>/usr/vice/etc</replaceable>
+      directory when the Cache Manager initializes, the Cache Manager uses its
+      contents as the basis for a list of local interfaces. Otherwise, the Cache
+      Manager uses the list of interfaces configured with the operating
+      system. It then removes from the list any addresses that appear in the
+      <replaceable>/usr/vice/etc/NetRestrict</replaceable> file, if it exists. The Cache Manager records
+      the resulting list in kernel memory. The first time it establishes a
+      connection to a File Server, it registers the list with the File Server.</para>
+
+      <para>The File Server uses the addresses when it initiates a remote procedure
+      call (RPC) to the Cache Manager (as opposed to responding to an RPC sent
+      by the Cache Manager). There are two common circumstances in which the
+      File Server initiates RPCs: when it breaks callbacks and when it pings the
+      client machine to verify that the Cache Manager is still accessible.</para>
+
+      <para>The <replaceable>NetInfo</replaceable> file is in ASCII format. One of the machine's IP addresses
+      appears on each line, in dotted decimal format. The File Server initially
+      uses the address that appears first in the list. The order of the
+      remaining addresses is not significant: if an RPC to the first interface
+      fails, the File Server simultaneously sends RPCs to all of the other
+      interfaces in the list.  Whichever interface replies first is the one to
+      which the File Server then sends pings and RPCs to break callbacks.</para>
+
+      <para>To prohibit the Cache Manager absolutely from using one or more addresses,
+      list them in the <replaceable>NetRestrict</replaceable> file. To display the addresses the Cache
+      Manager is currently registering with File Servers, use the <emphasis role="bold">fs
+      getclientaddrs</emphasis> command. To replace the current list of interfaces with a
+      new one between reboots of the client machine, use the <emphasis role="bold">fs
+      setclientaddrs</emphasis> command.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>Server NetInfo</title>
+      <para>The server <replaceable>NetInfo</replaceable> file, if present in the <replaceable>/usr/afs/local</replaceable> directory,
+      defines the following:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>On a file server machine, the local interfaces that the File Server
+          (<emphasis role="bold">fileserver</emphasis> process) can register in the Volume Location Database
+          (VLDB) at initialization time.</para>
+
+        </listitem>
+        <listitem>
+          <para>On a database server machine, the local interfaces that the Ubik database
+          synchronization library uses when communicating with the database server
+          processes running on other database server machines.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>If the <replaceable>NetInfo</replaceable> file exists when the File Server initializes, the File
+      Server uses its contents as the basis for a list of interfaces to register
+      in the VLDB. Otherwise, it uses the list of network interfaces configured
+      with the operating system. It then removes from the list any addresses
+      that appear in the <replaceable>/usr/afs/local/NetRestrict</replaceable> file, if it exists. The
+      File Server records the resulting list in the <replaceable>/usr/afs/local/sysid</replaceable> file
+      and registers the interfaces in the VLDB. The database server processes
+      use a similar procedure when initializing, to determine which interfaces
+      to use for communication with the peer processes on other database
+      machines in the cell.</para>
+
+      <para>The <replaceable>NetInfo</replaceable> file is in ASCII format. One of the machine's IP addresses
+      appears on each line, in dotted decimal format. The order of the addresses
+      is not significant.</para>
+
+      <para>To display the File Server interface addresses registered in the VLDB, use
+      the <emphasis role="bold">vos listaddrs</emphasis> command.</para>
+
+    </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="sysid5">sysid(5)</link>,
+    <link linkend="vldb_DB05">vldb.DB0(5)</link>,
+    <link linkend="fileserver8">fileserver(8)</link>,
+    <link linkend="fs_getclientaddrs1">fs_getclientaddrs(1)</link>,
+    <link linkend="fs_setclientaddrs1">fs_setclientaddrs(1)</link>,
+    <link linkend="vos_listaddrs1">vos_listaddrs(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

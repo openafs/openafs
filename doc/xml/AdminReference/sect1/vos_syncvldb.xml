@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_syncvldb1">
+  <refmeta>
+    <refentrytitle>vos syncvldb</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos syncvldb</refname>
+    <refpurpose>Verifies VLDB entries for volumes residing at specified site</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos syncvldb</emphasis> [<emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;]
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;] [<emphasis role="bold">-volume</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos syncv</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt;] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;]
+        [<emphasis role="bold">-vo</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>]
+        [<emphasis role="bold">-ve</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos syncvldb</emphasis> command verifies that the status of the volumes housed
+    either on all partitions on the file server machine specified by the
+    <emphasis role="bold">-server</emphasis> argument, or on the single partition specified by the
+    <emphasis role="bold">-server</emphasis> and <emphasis role="bold">-partition</emphasis> arguments, is recorded correctly in the
+    VLDB. If the <emphasis role="bold">-volume</emphasis> argument is included to indicate a single volume,
+    the command compares only its status on the file server machine with its
+    VLDB entry.</para>
+
+    <para>If the <emphasis role="bold">-volume</emphasis> argument is not included, the command interpreter
+    obtains from the Volume Server a list of the volumes that reside on each
+    partition, then changes information in the VLDB as necessary to reflect
+    their state on the partition. For example, it creates or updates a VLDB
+    entry when it finds a volume for which the VLDB entry is missing or
+    incomplete. However, if there is already a VLDB entry that defines a
+    different location for the volume, or there are irreconcilable conflicts
+    with other VLDB entries, it instead writes a message about the conflict to
+    the standard error stream. The command never removes volumes from the file
+    server machine.</para>
+
+    <para>To achieve complete VLDB consistency, run this command on all file server
+    machines in the cell, and then run the <emphasis role="bold">vos syncserv</emphasis> command on all file
+    server machines in the cell.</para>
+
+    <para>Using the <emphasis role="bold">-volume</emphasis> argument basically combines the effects of this
+    command with those of the <emphasis role="bold">vos syncserv</emphasis> command, for a single
+    volume. The command not only verifies that the VLDB entry is correct for
+    the specified volume type (read/write, backup, or read-only), but also
+    checks that any related volume types mentioned in the VLDB entry actually
+    exist at the site listed in the entry. It is not necessary to provide the
+    <emphasis role="bold">-server</emphasis> argument (and optionally, <emphasis role="bold">-partition</emphasis> argument); if one or
+    both is provided, the results are reliable only if they specify the actual
+    location of the volume indicated by the <emphasis role="bold">-volume</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine housing the volumes for which to verify
+          VLDB entries. Provide the machine's IP address or its host name (either
+          fully qualified or using an unambiguous abbreviation). For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the partition housing the volumes for which to verify VLDB
+          entries. Provide the <emphasis role="bold">-server</emphasis> argument along with this one. Provide the
+          partition's complete name with preceding slash (for example, <computeroutput>/vicepa</computeroutput>)
+          or use one of the three acceptable abbreviated forms. For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-volume</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the name or volume ID number of a single volume for which to
+          verify the VLDB entry. This argument can be combined with the <emphasis role="bold">-server</emphasis>
+          (and optionally, the <emphasis role="bold">-partition</emphasis>) argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example command verifies the VLDB entry for each volume
+    stored on the file server machine <computeroutput>fs4.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % vos syncvldb fs4.abc.com
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+      machine specified with the <emphasis role="bold">-server</emphasis> argument and on each database server
+      machine. If the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be
+      logged on to a server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_syncserv1">vos_syncserv(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

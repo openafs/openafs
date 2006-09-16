@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_listhosts8">
+  <refmeta>
+    <refentrytitle>backup listhosts</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup listhosts</refname>
+    <refpurpose>Lists Tape Coordinators registered in the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup listhosts</emphasis> [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup listh</emphasis> [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup listhosts</emphasis> command displays the Backup Database record of the
+    port offset numbers defined for Tape Coordinator machines. A Tape
+    Coordinator must have an entry in the list to be available for backup
+    operations.</para>
+
+    <para>The existence of an entry does not necessarily indicate that the Tape
+    Coordinator process (<emphasis role="bold">butc</emphasis>) is currently running at that port offset. To
+    check, issue the <emphasis role="bold">backup status</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>After a <computeroutput>Tape hosts:</computeroutput> header, the output reports two things about each
+    Tape Coordinator currently defined in the Backup Database:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The hostname of the machine housing the Tape Coordinator. The format of
+        this name depends on the hostname format used when the <emphasis role="bold">backup addhost</emphasis>
+        command was issued.</para>
+
+      </listitem>
+      <listitem>
+        <para>The Tape Coordinator's port offset number.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The Tape Coordinators appear in the order in which they were added to the
+    Backup Database.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the result of the command in the ABC
+    Corporation cell:</para>
+
+<programlisting>
+   % backup listhosts
+   Tape hosts:
+       Host backup1.abc.com, port offset 0
+       Host backup1.abc.com, port offset 1
+       Host backup3.abc.com, port offset 4
+       Host backup2.abc.com, port offset 3
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+      machine where the Backup Server is running, or must be logged onto a
+      server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_addhost8">backup_addhost(8)</link>,
+      <link linkend="backup_delhost8">backup_delhost(8)</link>,
+      <link linkend="backup_status8">backup_status(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

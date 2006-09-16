@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="ThisCell5">
+  <refmeta>
+    <refentrytitle>ThisCell</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>ThisCell</refname>
+    <refpurpose>Defines the local cell name</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>ThisCell</replaceable> file defines the local cell name.  There are two versions
+    of this file, one for a AFS client and one for an AFS server.</para>
+
+    <refsect2>
+      <title>Client ThisCell</title>
+      <para>The client version of the <replaceable>ThisCell</replaceable> file defines the complete Internet
+      domain-style name (for example, <computeroutput>abc.com</computeroutput>) of the cell to which the local
+      client machine belongs. It must reside in the <replaceable>/usr/vice/etc</replaceable> directory
+      on every AFS client machine. To change a client machine's cell membership,
+      edit the file and reboot the machine.</para>
+
+      <para>The file is in ASCII format and contains a character string on a single
+      line. The <emphasis>IBM AFS Quick Beginnings</emphasis> instructs the administrator to
+      create it during the installation of each client machine.</para>
+
+      <para>The client machine's cell membership determines three defaults important
+      to its functioning:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The cell in which the machine's users authenticate by default.  The effect
+          is two-fold:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The AFS-modified login utilities and the klog command interpreter contact
+              an Authentication Server in the cell named in the <replaceable>ThisCell</replaceable> file (unless
+              <emphasis role="bold">-cell</emphasis> argument to the <emphasis role="bold">klog</emphasis> command specifies an alternate cell).</para>
+
+            </listitem>
+            <listitem>
+              <para>The command interpreters combine the cell name with the password that the
+              user provides, generating an encryption key from the combination. For
+              authentication to succeed, both the cell name and password must match the
+              ones used to generate the user's encryption key stored in the
+              Authentication Database.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>The cell the Cache Manager considers its local, or home, cell. By default,
+          the Cache Manager allows programs that reside in its home cell to run with
+          setuid permission, but not programs from foreign cells. For more details,
+          see the <emphasis role="bold">fs getcellstatus</emphasis> and <emphasis role="bold">fs setcell</emphasis> reference pages.</para>
+
+        </listitem>
+        <listitem>
+          <para>Which AFS server processes the local AFS command interpreters contact by
+          default as they execute commands issued on the machine.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>The client version of the <replaceable>ThisCell</replaceable> file is distinct from the server
+      version, which resides in the <replaceable>/usr/afs/etc</replaceable> directory on each AFS server
+      machine. If a server machine also runs as a client, it is acceptable for
+      the server and client versions of the file on the same machine to name
+      different cells. However, the behavior that results from this
+      configuration can be more confusing than useful.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>Server ThisCell</title>
+      <para>The server version of the <replaceable>ThisCell</replaceable> file defines the complete Internet
+      domain-style name (for example, <computeroutput>abc.com</computeroutput>) of the cell to which the
+      server machine belongs. It must reside in the <replaceable>/usr/afs/etc</replaceable> directory on
+      every AFS server machine.</para>
+
+      <para>The file is in ASCII format and contains a character string on a single
+      line. The initial version of the file is created with the <emphasis role="bold">bos
+      setcellname</emphasis> command during the installation of the cell's first file
+      server machine, and the <emphasis>IBM AFS Quick Beginnings</emphasis> includes instructions
+      for copying it over to additional server machine during their
+      installation.</para>
+
+      <para>The only reason to edit the file is as part of changing the cell's name,
+      which is strongly discouraged because of the large number of configuration
+      changes involved. In particular, changing the cell name requires
+      rebuilding the entire Authentication Database, because the Authentication
+      Server combines the cell name it finds in this file with each user and
+      server password and converts the combination into an encryption key before
+      recording it in the Database.</para>
+
+    </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_setcellname8">bos_setcellname(8)</link>,
+    <link linkend="fs_getcellstatus1">fs_getcellstatus(1)</link>,
+    <link linkend="fs_setcell1">fs_setcell(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

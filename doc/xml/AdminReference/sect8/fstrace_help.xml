@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_help8">
+  <refmeta>
+    <refentrytitle>fstrace help</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace help</refname>
+    <refpurpose>Displays help for fstrace commands</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace help</emphasis> [<emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace h</emphasis> [<emphasis role="bold">-t</emphasis> &lt;<emphasis>help string</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace help</emphasis> command displays the complete online help entry (short
+    description and syntax statement) for each command operation code
+    specified by the <emphasis role="bold">-topic</emphasis> argument. If the <emphasis role="bold">-topic</emphasis> argument is omitted,
+    the output includes the first line (name and short description) of the
+    online help entry for every <emphasis role="bold">fstrace</emphasis> command.</para>
+
+    <para>To list every fstrace command whose name or short description includes a
+    specified keyword, use the <emphasis role="bold">fstrace apropos</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt;+</term>
+        <listitem>
+          <para>Indicates each command for which to display the complete online help
+          entry. Omit the <emphasis role="bold">fstrace</emphasis> part of the command name, providing only the
+          operation code (for example, specify <emphasis role="bold">clear</emphasis>, not <emphasis role="bold">fstrace clear</emphasis>). If
+          this argument is omitted, the output briefly describes every <emphasis role="bold">fstrace</emphasis>
+          command.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The online help entry for each <emphasis role="bold">fstrace</emphasis> command consists of two or three
+    lines:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The first line names the command and briefly describes its function.</para>
+
+      </listitem>
+      <listitem>
+        <para>The second line lists aliases for the command, if any.</para>
+
+      </listitem>
+      <listitem>
+        <para>The final line, which begins with the string <computeroutput>Usage</computeroutput>, lists the command's
+        options in the prescribed order. Online help entries use the same symbols
+        (for example, brackets) as the reference pages in this document.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays the online help entry for the <emphasis role="bold">fstrace
+    setset</emphasis> command:</para>
+
+<programlisting>
+   % fstrace help -topic setset
+   fstrace setset: set state of event sets
+   Usage: fstrace setset [-set &amp;lt;set_name&amp;gt;+] [-active] [-inactive]
+   [-dormant] [-help]
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fstrace8">fstrace(8)</link>,
+      <link linkend="fstrace_apropos8">fstrace_apropos(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

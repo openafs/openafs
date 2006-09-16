@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="volserver8">
+  <refmeta>
+    <refentrytitle>volserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>volserver</refname>
+    <refpurpose>Initializes the Volume Server component of the fs process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">volserver</emphasis> [<emphasis role="bold">-log</emphasis>] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;]
+        [<emphasis role="bold">-udpsize</emphasis> &lt;<emphasis>size of socket buffer in bytes</emphasis>&gt;]
+        [<emphasis role="bold">-enable_peer_stats</emphasis>] [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">volserver</emphasis> command initializes the Volume Server component of the
+    <computeroutput>fs</computeroutput> process. In the conventional configuration, its binary file is
+    located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The <emphasis role="bold">volserver</emphasis> command is not normally issued at the command shell
+    prompt but rather placed into a file server machine's
+    <replaceable>/usr/afs/local/BosConfig</replaceable> file with the <emphasis role="bold">bos create</emphasis> command. If it is
+    ever issued at the command shell prompt, the issuer must be logged onto a
+    database server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>The Volume Server records a trace of its activity in the
+    <replaceable>/usr/afs/logs/VolserLog</replaceable> file. Use the <emphasis role="bold">bos getlog</emphasis> command to display
+    the contents of the file.</para>
+
+    <para>The Volume Server processes the <emphasis role="bold">vos</emphasis> commands that administrators use to
+    create, delete, move, and replicate volumes, as well as prepare them for
+    archiving to tape or other media.</para>
+
+    <para>By default, the VL Server runs nine lightweight processes (LWPs). To
+    change the number, use the <emphasis role="bold">-p</emphasis> argument.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-log</emphasis></term>
+        <listitem>
+          <para>Records in the /usr/afs/logs/VolserLog file the names of all users who
+          successfully initiate a <emphasis role="bold">vos</emphasis> command. The Volume Server also records any
+          file removals that result from issuing the <emphasis role="bold">vos release</emphasis> command with the
+          <emphasis role="bold">-f</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of server lightweight processes (LWPs) to run.  Provide an
+          integer between <computeroutput>4</computeroutput> and <computeroutput>16</computeroutput>. The default is <computeroutput>9</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-udpsize</emphasis> &lt;<emphasis>size of socket buffer</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the size of the UDP buffer in bytes, which is 64 KB by
+          default. Provide a positive integer, preferably larger than the default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. For each connection with a specific UDP port on another machine,
+          a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+          so on) sent or received. To display or otherwise access the records, use
+          the Rx Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. A separate record is kept for each type of RPC (FetchFile,
+          GetStatus, and so on) sent or received, aggregated over all connections to
+          other machines. To display or otherwise access the records, use the Rx
+          Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following <emphasis role="bold">bos create</emphasis> command creates a <computeroutput>volserver</computeroutput> process on the
+    machine <computeroutput>fs2.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % bos create -server fs2.abc.com -instance volserver -type simple \
+                 -cmd /usr/afs/bin/volserver
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="VolserLog5">VolserLog(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link>,
+      <link linkend="vos1">vos(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

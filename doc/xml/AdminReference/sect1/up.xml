@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="up1">
+  <refmeta>
+    <refentrytitle>up</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>up</refname>
+    <refpurpose>Recursively copy directories, preserving AFS metadata</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">up</emphasis> [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-1</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-x</emphasis>]
+        &lt;<emphasis>source directory</emphasis>&gt; &lt;<emphasis>destination directory</emphasis>&gt;</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">up</emphasis> command recursively copies the files and subdirectories in a
+    specified source directory to a specified destination directory.  The
+    command interpreter changes the destination directory and the files and
+    subdirectories in it in the following ways:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>It copies the source directory's access control list (ACL) to the
+        destination directory and its subdirectories, overwriting any existing
+        ACLs.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the issuer is logged on as the local superuser root and has AFS tokens
+        as a member of the group system:administrators, then the source
+        directory's owner (as reported by the <computeroutput>ls -ld</computeroutput> command) becomes the owner
+        of the destination directory and all files and subdirectories in
+        it. Otherwise, the issuer's user name is recorded as the owner.</para>
+
+      </listitem>
+      <listitem>
+        <para>If a file or directory exists in both the source and destination
+        directories, the source version overwrites the destination version. The
+        overwrite operation fails if the first (user) <computeroutput>w</computeroutput> (write) mode bit is
+        turned off on the version in the destination directory, unless the <emphasis role="bold">-f</emphasis>
+        flag is provided.</para>
+
+      </listitem>
+      <listitem>
+        <para>The modification timestamp on a file (as displayed by the <computeroutput>ls -l</computeroutput>
+        command) in the source directory overwrites the timestamp on a file of the
+        same name in the destination directory, but the timestamp on an existing
+        subdirectory in the destination directory remains unchanged. If the
+        command creates a new subdirectory in the destination directory, the new
+        subdirectory's timestamp is set to the time of the copy operation, rather
+        than to the timestamp that the subdirectory has in the source directory.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The up command is idempotent, meaning that if its execution is interrupted
+    by a network, server machine, or process outage, then a subsequent reissue
+    of the same command continues from the interruption point, rather than
+    starting over at the beginning. This saves time and reduces network
+    traffic in comparison to the UNIX commands that provide similar
+    functionality.</para>
+
+    <para>The <emphasis role="bold">up</emphasis> command returns a status code of <computeroutput>0</computeroutput> (zero) only if it
+    succeeds. Otherwise, it returns a status code of <computeroutput>1</computeroutput> (one).</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-v</emphasis></term>
+        <listitem>
+          <para>Prints a detailed trace to the standard output stream as the command runs.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-1</emphasis></term>
+        <listitem>
+          <para>Copies only the files in the top level source directory to the destination
+          directory, rather than copying recursively through subdirectories. The
+          source directory's ACL still overwrites the destination directory's. (This
+          is the number one, not the letter <computeroutput>l</computeroutput>.)</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-f</emphasis></term>
+        <listitem>
+          <para>Overwrites existing directories, subdirectories, and files even if the
+          first (user) <computeroutput>w</computeroutput> (write) mode bit is turned off on the version in the
+          destination directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-r</emphasis></term>
+        <listitem>
+          <para>Creates a backup copy of all files overwritten in the destination
+          directory and its subdirectories, by adding a <computeroutput>.old</computeroutput> extension to each
+          filename.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-x</emphasis></term>
+        <listitem>
+          <para>Sets the modification timestamp on each file to the time of the copying
+          operation.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis>source directory</emphasis></term>
+        <listitem>
+          <para>Names the directory to copy recursively.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis>destination directory</emphasis></term>
+        <listitem>
+          <para>Names the directory to which to copy. It does not have to exist already.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command copies the contents of the directory <replaceable>dir1</replaceable> to
+    directory <replaceable>dir2</replaceable>:</para>
+
+<programlisting>
+   % up dir1 dir2
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>a</computeroutput> (administer) permission on the ACL of both
+      the source and destination directories.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

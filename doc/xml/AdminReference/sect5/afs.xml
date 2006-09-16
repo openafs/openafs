@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afs5">
+  <refmeta>
+    <refentrytitle>afs</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afs</refname>
+    <refpurpose>Introduction to AFS files</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>A number of files must reside on the local disk of AFS server and client
+    machines. They belong to the following general categories:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>Configuration files</emphasis> define configuration parameters for specific server
+        and kernel processes such as the Backup System Tape Coordinator or the
+        Cache Manager.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Administrative files</emphasis> list information used in administration of server
+        machines, such as a list of privileged users or server encryption keys.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Cache-related files</emphasis> contain cached data or information about cached
+        data, on client machines.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Log files</emphasis> contain tracing messages about the operation of a specific
+        process.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Database files</emphasis> contain database records used to administer the AFS
+        cell.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Controller files</emphasis> control the behavior of a process.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>Volume header files</emphasis> represent AFS volumes on server partitions.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>For a description of the format and contents of each file, see its
+    reference page.</para>
+
+    <para>Note for Windows users: Some files described in this document possibly do
+    not exist on machines that run a Windows operating system. Also, Windows
+    uses a backslash (<computeroutput>\</computeroutput>) rather than a forward slash (<computeroutput>/</computeroutput>) to separate the
+    elements in a pathname.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para>Configuration files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="BosConfig5">BosConfig(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="CellServDB5">CellServDB(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="NetInfo5">NetInfo(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="NetRestrict5">NetRestrict(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="ThisCell5">ThisCell(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="butc5">butc(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="cacheinfo5">cacheinfo(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="package5">package(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="sysid5">sysid(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="tapeconfig5">tapeconfig(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="uss5">uss(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="uss_bulk5">uss_bulk(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Administrative files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="KeyFile5">KeyFile(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="UserList5">UserList(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Cache-related files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="afs_cache5">afs_cache(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Log files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="AuthLog5">AuthLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="BackupLog5">BackupLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="BosLog5">BosLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="FileLog5">FileLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="SalvageLog5">SalvageLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="VLLog5">VLLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="VolserLog5">VolserLog(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="butc5">butc(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="fms_log5">fms.log(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Database files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="bdb_DB05">bdb.DB0(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="kaserver_DB05">kaserver.DB0(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="kaserverauxdb5">kaserverauxdb(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="prdb_DB05">prdb.DB0(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="vldb_DB05">vldb.DB0(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Controller files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="FORCESALVAGE5">FORCESALVAGE(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="NoAuth5">NoAuth(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="SALVAGE_fs5">SALVAGE.fs(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><link linkend="salvage_lock5">salvage.lock(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Volume header files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><link linkend="afs_volume_header5">afs_volume_header(5)</link></term>
+        <listitem>
+          <para></para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="NoAuth5">
+  <refmeta>
+    <refentrytitle>NoAuth</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>NoAuth</refname>
+    <refpurpose>Disables authorization checking</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>NoAuth</replaceable> file, if present in a server machine's <replaceable>/usr/afs/local</replaceable>
+    directory, indicates to the AFS server processes running on the machine
+    that it is not necessary to perform authorization checking. They perform
+    any action for any user who logs into the machine's local file system or
+    issues a remote command that affects the machine's AFS server functioning,
+    such as commands from the AFS command suites. Because failure to check
+    authorization exposes the machine's AFS server functionality to attack,
+    there are normally only two circumstances in which the file is present:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>During installation of the machine, as instructed in the <emphasis>IBM AFS Quick
+        Beginnings</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>During correction of a server encryption key emergency, as discussed in
+        the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>In all other circumstances, the absence of the file means that the AFS
+    server processes perform authorization checking, verifying that the issuer
+    of a command has the required privilege.</para>
+
+    <para>Create the file in one of the following ways:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>By issuing the bosserver initialization command with the <emphasis role="bold">-noauth</emphasis> flag,
+        if the Basic OverSeer (BOS) Server is not already running.</para>
+
+      </listitem>
+      <listitem>
+        <para>By issuing the <emphasis role="bold">bos setauth</emphasis> command with off as the value for the
+        <emphasis role="bold">-authrequired</emphasis> argument, if the BOS Server is already running.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To remove the file, issue the <emphasis role="bold">bos setauth</emphasis> command with <computeroutput>on</computeroutput> as the
+    value for the <emphasis role="bold">-authrequired</emphasis> argument.</para>
+
+    <para>The file's contents, if any, are ignored; an empty (zero-length) file is
+    effective.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_setauth8">bos_setauth(8)</link>,
+    <link linkend="bosserver8">bosserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

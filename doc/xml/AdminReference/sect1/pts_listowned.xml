@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_listowned1">
+  <refmeta>
+    <refentrytitle>pts listowned</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts listowned</refname>
+    <refpurpose>Show the Protection Database groups owned by a user or group</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts listowned</emphasis> <emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [-cell &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts listo</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [-c &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts listowned</emphasis> command lists the groups owned by each user or group
+    specified by the <emphasis role="bold">-nameorid</emphasis> argument.</para>
+
+    <para>To list any <emphasis>orphaned group</emphasis>s, whose owners have themselves been deleted
+    from the Protection Database, provide a value of <computeroutput>0</computeroutput> (zero) for the
+    <emphasis role="bold">-nameorid</emphasis> argument. To change the owner to a user or group that still
+    exists, use the <emphasis role="bold">pts chown</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the name or AFS UID of each user, or the name or AFS GID of each
+          group, for which to display the list of owned groups. It is acceptable to
+          mix users and groups on the same command line, as well as names and
+          IDs. Precede the GID of each group with a hyphen to indicate that it is
+          negative.</para>
+
+          <para>A value of 0 (zero) lists group entries for groups whose owners no longer
+          have entries in the Protection Database.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first line of the output indicates the name and AFS UID or AFS GID of
+    each user or group for which ownership information is requested, in the
+    following format:</para>
+
+<programlisting>
+   Groups owned by &amp;lt;name&amp;gt; (id: &amp;lt;ID&amp;gt;) are:
+
+</programlisting>
+      <para>A list of groups follows. The list does not include groups owned by groups
+      that the user or group owns, or to which the user or group belongs. If the
+      user or group does not own any groups, only the header line appears.</para>
+
+      <para>The following error message appears if the issuer is not privileged to
+      view ownership information. By default, for both user and group entries
+      the second privacy flag is the hyphen, which denies permission to anyone
+      other than the user (for a user entry) and the members of the
+      system:administrators group.</para>
+
+<programlisting>
+   pts: Permission denied so failed to get owner list for &amp;lt;name&amp;gt; (id: &amp;lt;ID&amp;gt;)
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example lists the groups owned by user terry and shows that
+        the group <computeroutput>terry:friends</computeroutput> does not own any groups:</para>
+
+<programlisting>
+   % pts listowned terry terry:friends
+   Groups owned by terry (id: 1045) are:
+     terry:friends
+     terry:project1
+     terry:project2
+   Groups owned by terry:friends (id: -673) are:
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The required privilege depends on the setting of the second privacy flag
+          in the Protection Database entry of each user or group indicated by the
+          <emphasis role="bold">-nameorid</emphasis> argument (use the <emphasis role="bold">pts examine</emphasis> command to display the
+          flags):</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>If it is the hyphen and the <emphasis role="bold">-nameorid</emphasis> argument specifies a group, only
+              the members of the system:administrators group and the owner of a group
+              can list the groups it owns.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is the hyphen and the <emphasis role="bold">-nameorid</emphasis> argument specifies a user, only
+              the members of the system:administrators group and the associated user can
+              list the groups he or she owns.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is uppercase letter <computeroutput>O</computeroutput>, anyone who can access the cell's database
+              server machines can list the groups owned by this user or group.</para>
+
+            </listitem>
+          </itemizedlist>
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="pts1">pts(1)</link>,
+          <link linkend="pts_chown1">pts_chown(1)</link>,
+          <link linkend="pts_examine1">pts_examine(1)</link>,
+          <link linkend="pts_setfields1">pts_setfields(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_examine1">
+  <refmeta>
+    <refentrytitle>vos examine</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos examine</refname>
+    <refpurpose>Shows volume header and VLDB entry information for a volume</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos examine</emphasis> <emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-extended</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos e</emphasis> <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-e</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">vos volinfo</emphasis> <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-e</emphasis>] [-c &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">vos v</emphasis> <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-e</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos examine</emphasis> command formats and displays information from the
+    Volume Location Database (VLDB) entry and the volume header of the volume
+    specified by the <emphasis role="bold">-id</emphasis> argument.</para>
+
+    <para>To display the volume header only, use the <emphasis role="bold">vos listvol</emphasis> command. To
+    display information from the VLDB only, use the <emphasis role="bold">vos listvldb</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies either the complete name or volume ID number of the volume,
+          which can be read/write, read-only, or backup.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-extended</emphasis></term>
+        <listitem>
+          <para>Display statistics about read and write operations on files and
+          directories in the volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first seven lines of the output show information from the volume
+    header and the remaining lines come from the VLDB. Each item in the
+    following list corresponds to a line of output derived from the volume
+    header.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Basic information about the specified volume (displayed on a single
+        line):</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Name</para>
+
+          </listitem>
+          <listitem>
+            <para>Volume ID number</para>
+
+          </listitem>
+          <listitem>
+            <para>Type (the flag is <computeroutput>RW</computeroutput> for read/write, <computeroutput>RO</computeroutput> for read-only, <computeroutput>BK</computeroutput> for
+            backup)</para>
+
+          </listitem>
+          <listitem>
+            <para>Size in kilobytes (<computeroutput>1024</computeroutput> equals a megabyte)</para>
+
+          </listitem>
+          <listitem>
+            <para>Number of files in the volume, if the <emphasis role="bold">-extended</emphasis> flag is provided</para>
+
+          </listitem>
+          <listitem>
+            <para>Status on the file server machine, which is one of the following:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>On-line</term>
+                <listitem>
+                  <para>The volume is completely accessible to Cache Managers.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Off-line</term>
+                <listitem>
+                  <para>The volume is not accessible to Cache Managers, but does not seem to be
+                  corrupted. This status appears while a volume is being dumped, for
+                  example.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Off-line**needs salvage**</term>
+                <listitem>
+                  <para>The volume is not accessible to Cache Managers, because it seems to be
+                  corrupted. Use the <emphasis role="bold">bos salvage</emphasis> or <emphasis role="bold">salvager</emphasis> command to repair the
+                  corruption.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>The file server machine and partition that house the volume, as determined
+        by the command interpreter as the command runs, rather than derived from
+        the VLDB or the volume header.</para>
+
+      </listitem>
+      <listitem>
+        <para>The volume ID numbers associated with the various versions of the volume:
+        read/write (<computeroutput>RWrite</computeroutput>), read-only (<computeroutput>ROnly</computeroutput>), backup (<computeroutput>Backup</computeroutput>), and
+        ReleaseClone (<computeroutput>RClone</computeroutput>). One of them matches the volume ID number that
+        appears on the first line of the volume's output. If the value in the
+        <computeroutput>RWrite</computeroutput>, <computeroutput>ROnly</computeroutput>, or <computeroutput>Backup</computeroutput> field is <computeroutput>0</computeroutput> (zero), there is no volume
+        of that type. If there is currently no ReleaseClone, the <computeroutput>RClone</computeroutput> field
+        does not appear at all.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum space quota allotted to the read/write copy of the volume,
+        expressed in kilobyte blocks in the <computeroutput>MaxQuota</computeroutput> field.</para>
+
+      </listitem>
+      <listitem>
+        <para>The date and time the volume was created, in the <computeroutput>Creation</computeroutput> field. If the
+        volume has been restored with the <emphasis role="bold">backup diskrestore</emphasis>, <emphasis role="bold">backup
+        volrestore</emphasis>, or <emphasis role="bold">vos restore</emphasis> command, this is the restore time.</para>
+
+      </listitem>
+      <listitem>
+        <para>The date and time when the contents of the volume last changed, in the
+        <computeroutput>Last Update</computeroutput> field. For read-only and backup volumes, it matches the
+        timestamp in the <computeroutput>Creation</computeroutput> field.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of times the volume has been accessed for a fetch or store
+        operation since the later of the two following times:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>12:00 a.m. on the day the command is issued</para>
+
+          </listitem>
+          <listitem>
+            <para>The last time the volume changed location</para>
+
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </itemizedlist>
+    <para>When the <emphasis role="bold">-extended</emphasis> flag is included, two tables appear next:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The table labeled <computeroutput>Raw Read/Write Stats</computeroutput> contains information on the
+        number of reads (fetches) and writes (stores) made on the specified
+        volume.</para>
+
+      </listitem>
+      <listitem>
+        <para>The table labeled <computeroutput>Writes Affecting Authorship</computeroutput> contains information on
+        writes made to files and directories in the specified volume.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If the following message appears instead of the previously listed
+    information, it indicates that a volume is not accessible to Cache
+    Managers or the <emphasis role="bold">vos</emphasis> command interpreter, for example because a clone is
+    being created.</para>
+
+<programlisting>
+   **** Volume &amp;lt;volume_ID&amp;gt; is busy ****
+
+</programlisting>
+      <para>If the following message appears instead of the previously listed
+      information, it indicates that the File Server is unable to attach the
+      volume, perhaps because it is seriously corrupted. The <replaceable>FileLog</replaceable> and
+      <replaceable>VolserLog</replaceable> log files in the <replaceable>/usr/afs/logs</replaceable> directory on the file
+      server machine possibly provide additional information; use the <emphasis role="bold">bos
+      getlog</emphasis> command to display them.</para>
+
+<programlisting>
+   **** Could not attach volume &amp;lt;volume_ID&amp;gt; ****
+
+</programlisting>
+        <para>Following a blank line, information from the VLDB entry appears.  Each
+        item in this list corresponds to a separate line in the output:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The base (read/write) volume name. The read-only and backup versions have
+            the same name with a <computeroutput>.readonly</computeroutput> and <computeroutput>.backup</computeroutput> extension, respectively.</para>
+
+          </listitem>
+          <listitem>
+            <para>The volume ID numbers allocated to the versions of the volume that
+            actually exist, in fields labeled <computeroutput>RWrite</computeroutput> for the read/write, <computeroutput>ROnly</computeroutput>
+            for the read-only, <computeroutput>Backup</computeroutput> for the backup, and <computeroutput>RClone</computeroutput> for the
+            ReleaseClone. (If a field does not appear, the corresponding version of
+            the volume does not exist.) The appearance of the <computeroutput>RClone</computeroutput> field normally
+            indicates that a release operation did not complete successfully; the
+            <computeroutput>Old release</computeroutput> and <computeroutput>New release</computeroutput> flags often also appear on one or more
+            of the site definition lines described just following.</para>
+
+          </listitem>
+          <listitem>
+            <para>The number of sites that house a read/write or read-only copy of the
+            volume, following the string <computeroutput>number of sites -&gt;</computeroutput>.</para>
+
+          </listitem>
+          <listitem>
+            <para>A line for each site that houses a read/write or read-only copy of the
+            volume, specifying the file server machine, partition, and type of volume
+            (<computeroutput>RW</computeroutput> for read/write or <computeroutput>RO</computeroutput> for read-only). If a backup version exists,
+            it is understood to share the read/write site.  Several flags can appear
+            with a site definition:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>Not released</term>
+                <listitem>
+                  <para>Indicates that the vos release command has not been issued since the <emphasis role="bold">vos
+                  addsite</emphasis> command was used to define the read-only site.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Old release</term>
+                <listitem>
+                  <para>Indicates that a vos release command did not complete successfully,
+                  leaving the previous, obsolete version of the volume at this site.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>New release</term>
+                <listitem>
+                  <para>Indicates that a vos release command did not complete successfully, but
+                  that this site did receive the correct new version of the volume.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+          <listitem>
+            <para>If the VLDB entry is locked, the string <computeroutput>Volume is currently LOCKED</computeroutput>.</para>
+
+          </listitem>
+        </itemizedlist>
+        <para>For further discussion of the <computeroutput>New release</computeroutput> and <computeroutput>Old release</computeroutput> flags, see
+        <link linkend="vos_release1">vos_release(1)</link>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example shows output for the ABC Corporation volume called
+        <computeroutput>usr</computeroutput> with two read-only replication sites (this volume is mounted at the
+        <replaceable>/afs/abc.com/usr</replaceable> directory). For the sake of illustration, the output
+        shows the volume as locked.</para>
+
+<programlisting>
+   % vos examine usr
+   usr                           536870981 RW   3459 K On-line
+        fs2.abc.com /vicepb
+        RWrite 5360870981   ROnly 536870982   Backup 536870983
+        MaxQuota      40000 K
+        Creation    Mon Jun 12 15:22:06 1989
+        Last Update Fri Jun 16 09:34:35 1989
+        5719 accesses in the past day (i.e., vnode references)
+        RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
+        number of sites -&amp;gt; 3
+           server fs1.abc.com partition /vicepa RO Site
+           server fs3.abc.com partition /vicepa RO Site
+           server fs2.abc.com partition /vicepb RW Site
+        Volume is currently LOCKED
+
+</programlisting>
+          <para>The following example shows the output for the volume <computeroutput>user.terry</computeroutput> using
+          the <emphasis role="bold">-extended</emphasis> flag. The volume has no read-only replication sites.</para>
+
+<programlisting>
+   % vos examine -id user.terry -extended
+   user.terry         354287190 RW    2302 K used 119 files On-line
+       fs4.abc.com /vicepc
+       RWrite 354287190 ROnly          0 Backup 354287192
+       MaxQuota       5000 K
+       Creation    Wed Nov 25 17:38:57 1992
+       Last Update Tue Dec 15 10:46:20 1992
+       598 accesses in the past day (i.e., vnode references)
+                         Raw Read/Write Stats
+             |-------------------------------------------|
+             |    Same Network     |    Diff Network     |
+             |----------|----------|----------|----------|
+             |  Total   |   Auth   |   Total  |   Auth   |
+             |----------|----------|----------|----------|
+   Reads     |       55 |       55 |       38 |       38 |
+   Writes    |       95 |       95 |        0 |        0 |
+             |-------------------------------------------|
+                      Writes Affecting Authorship
+             |-------------------------------------------|
+             |   File Authorship   | Directory Authorship|
+             |----------|----------|----------|----------|
+             |   Same   |   Diff   |    Same  |   Diff   |
+             |----------|----------|----------|----------|
+   0-60 sec  |       38 |        0 |       21 |        1 |
+   1-10 min  |        2 |        0 |        7 |        0 |
+   10min-1hr |        0 |        0 |        1 |        0 |
+   1hr-1day  |        1 |        0 |        5 |        1 |
+   1day-1wk  |        0 |        0 |        0 |        0 |
+   &amp;gt; 1wk     |        0 |        0 |        0 |        0 |
+             |-------------------------------------------|
+       RWrite: 354287190    Backup: 354287192
+       number of sites -&amp;gt; 1
+          server fs4.abc.com partition /vicepc RW Site
+
+</programlisting>
+          </refsect1>
+          <refsect1>
+            <title>Privilege Required</title>
+            <para>None</para>
+
+          </refsect1>
+          <refsect1>
+            <title>See Also</title>
+            <para><link linkend="backup_diskrestore8">backup_diskrestore(8)</link>,
+            <link linkend="backup_volrestore8">backup_volrestore(8)</link>,
+            <link linkend="bos_getlog8">bos_getlog(8)</link>,
+            <link linkend="bos_salvage8">bos_salvage(8)</link>,
+            <link linkend="salvager8">salvager(8)</link>,
+            <link linkend="vos1">vos(1)</link>,
+            <link linkend="vos_listvol1">vos_listvol(1)</link>,
+            <link linkend="vos_listvldb1">vos_listvldb(1)</link>,
+            <link linkend="vos_release1">vos_release(1)</link>,
+            <link linkend="vos_restore1">vos_restore(1)</link></para>
+
+          </refsect1>
+          <refsect1>
+            <title>Copyright</title>
+            <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+            <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+            converted from HTML to POD by software written by Chas Williams and Russ
+            Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+          </refsect1>
+        </refentry>

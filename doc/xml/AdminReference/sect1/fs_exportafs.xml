@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_exportafs1">
+  <refmeta>
+    <refentrytitle>fs exportafs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs exportafs</refname>
+    <refpurpose>Configures export of AFS to clients of other file systems</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs exportafs</emphasis> <emphasis role="bold">-type</emphasis> &lt;<emphasis>exporter name</emphasis>&gt;
+        [<emphasis role="bold">-start</emphasis> &lt;<emphasis>start/stop translator (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-convert</emphasis> &lt;<emphasis>convert from afs to unix mode (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-uidcheck</emphasis> &lt;<emphasis>run on strict 'uid check' mode (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-submounts</emphasis> &lt;<emphasis>allow nfs mounts to subdirs of /afs/.. (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs exp</emphasis> <emphasis role="bold">-t</emphasis> &lt;<emphasis>exporter name</emphasis>&gt;
+        [<emphasis role="bold">-st</emphasis> &lt;<emphasis>start/stop translator (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>convert from afs to unix mode (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-u</emphasis> &lt;<emphasis>run on strict 'uid check' mode (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-su</emphasis> &lt;<emphasis>allow nfs mounts to subdirs of /afs/.. (on | off)</emphasis>&gt;]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs exportafs</emphasis> command sets (if the <emphasis role="bold">-start</emphasis> argument is provided)
+    or reports (if it is omitted) whether the machine can reexport the AFS
+    filespace to clients of a non-AFS file system. To control certain features
+    of the translation protocol, use the following arguments:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To control whether the UNIX group and other mode bits on an AFS file or
+        directory are set to match the owner mode bits when it is exported to the
+        non-AFS file system, use the <emphasis role="bold">-convert</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>To control whether tokens can be placed in a credential structure
+        identified by a UID that differs from the local UID of the entity that is
+        placing the tokens in the structure, use the <emphasis role="bold">-uidcheck</emphasis> argument. The
+        most common use is to control whether issuers of the <emphasis role="bold">knfs</emphasis> command can
+        specify a value for its <emphasis role="bold">-id</emphasis> argument that does not match their local
+        UID on the NFS/AFS translator machine.</para>
+
+      </listitem>
+      <listitem>
+        <para>To control whether users can create mounts in the non-AFS filespace to an
+        AFS directory other than <replaceable>/afs</replaceable>, use the <emphasis role="bold">-submounts</emphasis> argument.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-type</emphasis> &lt;<emphasis>exporter name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the alternate file system to which to reexport the AFS
+          filespace. The only acceptable value is <computeroutput>nfs</computeroutput>, in lowercase letters only.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-start</emphasis> on
+        =item <emphasis role="bold">-start</emphasis> off</term>
+        <listitem>
+          <para>Enables the local machine to reexport the AFS filespace if the value is
+          <computeroutput>on</computeroutput>, or disables it if the value is <computeroutput>off</computeroutput>. Omit this argument to report
+          the current setting for all of the configurable parameters.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-convert</emphasis> on
+        =item <emphasis role="bold">-convert</emphasis> off</term>
+        <listitem>
+          <para>Controls the setting of the UNIX group and other mode bits on AFS files
+          and directories exported to the non-AFS file system. If the value is
+          <computeroutput>on</computeroutput>, they are set to match the <emphasis role="bold">owner</emphasis> mode bits. If the value is
+          <computeroutput>off</computeroutput>, the bits are not changed. If this argument is omitted, the default
+          value is <computeroutput>on</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-uidcheck</emphasis> on
+        =item <emphasis role="bold">-uidcheck</emphasis> off</term>
+        <listitem>
+          <para>Controls whether tokens can be placed in a credential structure identified
+          by a UID that differs from the local UID of the entity that is placing the
+          tokens in the structure.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>If the value is on, the UID that identifies the credential structure must
+              match the local UID.</para>
+
+              <para>With respect to the <emphasis role="bold">knfs</emphasis> command, this value means that the value of
+              <emphasis role="bold">-id</emphasis> argument must match the issuer's local UID on the translator
+              machine. In practice, this setting makes it pointless to include the
+              <emphasis role="bold">-id</emphasis> argument to the <emphasis role="bold">knfs</emphasis> command, because the only acceptable value
+              (the issuer's local UID) is already used when the <emphasis role="bold">-id</emphasis> argument is
+              omitted.</para>
+
+              <para>Enabling UID checking also makes it impossible to issue the <emphasis role="bold">klog</emphasis> and
+              <emphasis role="bold">pagsh</emphasis> commands on a client machine of the non-AFS file system even
+              though it is a system type supported by AFS. For an explanation, see
+              <link linkend="klog1">klog(1)</link>.</para>
+
+            </listitem>
+            <listitem>
+              <para>If the value is off (the default), tokens can be assigned to a local UID
+              in the non-AFS file system that does not match the local UID of the entity
+              assigning the tokens.</para>
+
+              <para>With respect to the <emphasis role="bold">knfs</emphasis> command, it means that the issuer can use the
+              <emphasis role="bold">-id</emphasis> argument to assign tokens to a local UID on the NFS client machine
+              that does not match his or her local UID on the translator machine. (An
+              example is assigning tokens to the MFS client machine's local superuser
+              <computeroutput>root</computeroutput>.) This setting allows more than one issuer of the <emphasis role="bold">knfs</emphasis> command
+              to make tokens available to the same user on the NFS client machine. Each
+              time a different user issues the <emphasis role="bold">knfs</emphasis> command with the same value for
+              the <emphasis role="bold">-id</emphasis> argument, that user's tokens overwrite the existing ones. This
+              can result in unpredictable access for the user on the NFS client machine.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-submounts</emphasis> on
+        =item <emphasis role="bold">-submounts</emphasis> off</term>
+        <listitem>
+          <para>Controls whether a user of the non-AFS filesystem can mount any directory
+          in the AFS filespace other than the top-level <replaceable>/afs</replaceable> directory. If the
+          value is <computeroutput>on</computeroutput>, such submounts are allowed. If the value is <computeroutput>off</computeroutput>, only
+          mounts of the <replaceable>/afs</replaceable> directory are allowed. If this argument is omitted,
+          the default value is <computeroutput>off</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If the machine is not even configured as a server of the non-AFS file
+    system, the following message appears:</para>
+
+<programlisting>
+   Sorry, the &amp;lt;file_system&amp;gt;-exporter type is currently not supported on
+   this AFS client
+
+</programlisting>
+      <para>If the machine is configured as a server of the non-AFS file system but is
+      not currently enabled to reexport AFS to it (because the <emphasis role="bold">-start</emphasis>
+      argument to this command is not set to <computeroutput>on</computeroutput>), the message is as follows:</para>
+
+<programlisting>
+   '&amp;lt;file_system&amp;gt;' translator is disabled
+
+</programlisting>
+        <para>If the machine is enabled to reexport AFS, the following message precedes
+        messages that report the settings of the other parameters.</para>
+
+<programlisting>
+   '&amp;lt;file_system&amp;gt;' translator is enabled with the following options:
+
+</programlisting>
+          <para>The following messages indicate that the <emphasis role="bold">-convert</emphasis> argument is set to
+          <computeroutput>on</computeroutput> or <computeroutput>off</computeroutput> respectively:</para>
+
+<programlisting>
+   Running in convert owner mode bits to world/other mode
+   Running in strict unix mode
+
+</programlisting>
+            <para>The following messages indicate that the <emphasis role="bold">-uidcheck</emphasis> argument is set to
+            <computeroutput>on</computeroutput> or <computeroutput>off</computeroutput> respectively:</para>
+
+<programlisting>
+   Running in strict 'passwd sync' mode
+   Running in no 'passwd sync' mode
+
+</programlisting>
+              <para>The following messages indicate that the <emphasis role="bold">-submounts</emphasis> argument is set to
+              <computeroutput>on</computeroutput> or <computeroutput>off</computeroutput> respectively:</para>
+
+<programlisting>
+   Allow mounts of /afs/.. subdirs
+   Only mounts to /afs allowed
+
+</programlisting>
+              </refsect1>
+              <refsect1>
+                <title>Examples</title>
+                <para>The following example shows that the local machine can export AFS to NFS
+                client machines.</para>
+
+<programlisting>
+   % fs exportafs nfs
+   'nfs' translator is enabled with the following options:
+        Running in convert owner mode bits to world/other mode
+        Running in no 'passwd sync' mode
+        Only mounts to /afs allowed
+
+</programlisting>
+                  <para>The following example enables the machine as an NFS server and converts
+                  the UNIX group and other mode bits on exported AFS directories and files
+                  to match the UNIX owner mode bits.</para>
+
+<programlisting>
+   % fs exportafs -type nfs -start on -convert on
+
+</programlisting>
+                    <para>The following example disables the machine from reexporting AFS to NFS
+                    client machines:</para>
+
+<programlisting>
+   % fs exportafs -type nfs -start off
+
+</programlisting>
+                    </refsect1>
+                    <refsect1>
+                      <title>Privilege Required</title>
+                      <para>The issuer must be logged in as the local superuser root.</para>
+
+                    </refsect1>
+                    <refsect1>
+                      <title>See Also</title>
+                      <para><link linkend="klog1">klog(1)</link>,
+                      <link linkend="knfs1">knfs(1)</link></para>
+
+                    </refsect1>
+                    <refsect1>
+                      <title>Copyright</title>
+                      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                      converted from HTML to POD by software written by Chas Williams and Russ
+                      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                    </refsect1>
+                  </refentry>

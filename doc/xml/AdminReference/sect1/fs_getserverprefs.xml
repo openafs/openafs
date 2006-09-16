@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_getserverprefs1">
+  <refmeta>
+    <refentrytitle>fs getserverprefs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs getserverprefs</refname>
+    <refpurpose>Displays preference ranks for file servers or VL servers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs getserverprefs</emphasis> [<emphasis role="bold">-file</emphasis> &lt;<emphasis>output to named file</emphasis>&gt;]
+        [<emphasis role="bold">-numeric</emphasis>] [<emphasis role="bold">-vlservers</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs gets</emphasis> [<emphasis role="bold">-f</emphasis> &lt;<emphasis>output to named file</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs gp</emphasis> [<emphasis role="bold">-f</emphasis> &lt;<emphasis>output to named file</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs getserverprefs</emphasis> command displays preference ranks for file server
+    machine interfaces (file server machines run the <emphasis role="bold">fs</emphasis> process) or, if the
+    <emphasis role="bold">-vlserver</emphasis> flag is provided, for Volume Location (VL) Server machines
+    (which run the <emphasis role="bold">vlserver</emphasis> process). For file server machines, the Cache
+    Manager tracks up to 15 interfaces per machine and assigns a separate rank
+    to each interface. The ranks indicate the order in which the local Cache
+    Manager attempts to contact the interfaces of machines that are housing a
+    volume when it needs to fetch data from the volume. For VL Server
+    machines, the ranks indicate the order in which the Cache Manager attempts
+    to contact a cell's VL Servers when requesting VLDB information. For both
+    types of rank, lower integer values are more preferred.</para>
+
+    <para>The Cache Manager stores ranks in kernel memory. Once set, a rank persists
+    until the machine reboots, or until the <emphasis role="bold">fs setserverprefs</emphasis> command is
+    used to change it. The reference page for the <emphasis role="bold">fs setserverprefs</emphasis> command
+    explains how the Cache Manager sets default ranks, and how to use that
+    command to change the default values.</para>
+
+    <para>Default VL Server ranks range from 10,000 to 10,126, and the Cache Manager
+    assigns them to every machine listed in its copy of the
+    <replaceable>/usr/vice/etc/CellServDB</replaceable> file. When the Cache Manager needs to fetch
+    VLDB information from a cell, it compares the ranks for the VL Server
+    machines belonging to that cell, and attempts to contact the VL Server
+    with the lowest integer rank. If the Cache Manager cannot reach the VL
+    Server (because of server process, machine or network outage), it tries to
+    contact the VL Server with the next lowest integer rank, and so on. If all
+    of a cell's VL Server machines are unavailable, the Cache Manager cannot
+    fetch data from the cell.</para>
+
+    <para>Default file server ranks range from 5,000 to 40,000, excluding the range
+    used for VL Servers (10,000 to 10,126); the maximum possible rank is
+    65,534. When the Cache Manager needs to fetch data from a volume, it
+    compares the ranks for the interfaces of machines that house the volume,
+    and attempts to contact the interface that has the lowest integer rank. If
+    it cannot reach the <emphasis role="bold">fileserver</emphasis> process via that interface (because of
+    server process, machine or network outage), it tries to contact the
+    interface with the next lowest integer rank, and so on. If it cannot reach
+    any of the interfaces for machines that house the volume, it cannot fetch
+    data from the volume.</para>
+
+    <para>For both file server machines and VL Server machines, it is possible for a
+    machine or interface in a foreign cell to have the same rank as a machine
+    or interface in the local cell. This does not present a problem, because
+    the Cache Manager only ever compares ranks for machines belonging to one
+    cell at a time.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>output file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the full pathname of a file to which to write the preference
+          ranks. If the specified file already exists, the command overwrites its
+          contents. If the pathname is invalid, the command fails. If this argument
+          is not provided, the preference ranks appear on the standard output
+          stream.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-numeric</emphasis></term>
+        <listitem>
+          <para>Displays the IP addresses of file server machine interfaces or VL Server
+          machines, rather than their hostnames. If this argument is not provided,
+          the <emphasis role="bold">fs</emphasis> command interpreter has the IP addresses translated to hostnames
+          such as <computeroutput>fs1.abc.com</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-vlservers</emphasis></term>
+        <listitem>
+          <para>Displays preference ranks for VL Server machines rather than file server
+          machine interfaces.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output consists of a separate line for each file server machine
+    interface or VL Server machine, pairing the machine's hostname or IP
+    address with its rank. The Cache Manager stores IP addresses in its kernel
+    list of ranks, but the command by default identifies interfaces by
+    hostname, by calling a translation routine that refers to either the
+    cell's name service (such as the Domain Name Server) or the local host
+    table. If an IP address appears in the output, it is because the
+    translation attempt failed. To bypass the translation step and display IP
+    addresses rather than hostnames, include the <emphasis role="bold">-numeric</emphasis> flag. This can
+    significantly speed the production of output.</para>
+
+    <para>By default, the command writes to the standard output stream. Use the
+    <emphasis role="bold">-file</emphasis> argument to write the output to a file instead.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example displays the local Cache Manager's preference ranks
+    for file server machines. The local machine belongs to the AFS cell named
+    <emphasis role="bold">abc.com</emphasis>, and in this example the ranks of file server machines in its
+    local cell are lower than the ranks of file server machines from the
+    foreign cell, <computeroutput>def.com</computeroutput>. It is not possible to translate the IP addresses
+    of two machines on the 138.255 network.</para>
+
+<programlisting>
+   % fs getserverprefs
+   fs2.abc.com           20007
+   fs3.abc.com           30002
+   fs1.abc.com           20011
+   fs4.abc.com           30010
+   server1.def.com       40002
+   138.255.33.34         40000
+   server6.def.com       40012
+   138.255.33.37         40005
+
+</programlisting>
+      <para>The following example shows hows the output displays IP addresses when the
+      <emphasis role="bold">-numeric</emphasis> flag is included, and illustrates how network proximity
+      determines default ranks (as described on the <emphasis role="bold">fs setserverprefs</emphasis>
+      reference page). The local machine has IP address 192.12.107.210, and the
+      two file server machines on its subnetwork have ranks of 20,007 and
+      20,011. The two file server machines on a different subnetwork of the
+      local machine's network have higher ranks, 30,002 and 30,010, whereas the
+      ranks of the remaining machines range from 40,000 to 40,012 because they
+      are in a completely different network.</para>
+
+<programlisting>
+   % fs getserverprefs -numeric
+   192.12.107.214          20007
+   192.12.105.99           30002
+   192.12.107.212          20011
+   192.12.105.100          30010
+   138.255.33.41           40002
+   138.255.33.34           40000
+   138.255.33.36           40012
+   138.255.33.37           40005
+
+</programlisting>
+        <para>The example shows how the <emphasis role="bold">-vlservers</emphasis> flag displays preference ranks for
+        VL Server machines:</para>
+
+<programlisting>
+   % fs getserverprefs -vlservers
+   fs2.abc.com            10052
+   fs3.abc.com            10113
+   fs1.abc.com            10005
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>None</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="fs_setserverprefs1">fs_setserverprefs(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

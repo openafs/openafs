@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="voldump8">
+  <refmeta>
+    <refentrytitle>voldump</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>voldump</refname>
+    <refpurpose>Dump an AFS volume without using the Volume Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">voldump</emphasis> <emphasis role="bold">-part</emphasis> &lt;<emphasis>partition</emphasis>&gt; <emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id</emphasis>&gt;
+        [<emphasis role="bold">-file</emphasis> &lt;<emphasis>dump file</emphasis>&gt;] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">voldump</emphasis> <emphasis role="bold">-p</emphasis> &lt;<emphasis>partition</emphasis>&gt; <emphasis role="bold">-vo</emphasis> &lt;<emphasis>volume id</emphasis>&gt;
+        [<emphasis role="bold">-f</emphasis> &lt;<emphasis>dump file</emphasis>&gt;] [<emphasis role="bold">-ve</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para><emphasis role="bold">voldump</emphasis> dumps an AFS volume in the format used by <emphasis role="bold">vos dump</emphasis> without
+    using the Volume Server.  It must be run on the file server machine and
+    usually must be run as the superuser <computeroutput>root</computeroutput> to have permissions to read
+    the file server data.  It's primary use is to recover data from a file
+    server machine where the Volume Server cannot be started for some reason.</para>
+
+    <para>The dump output will go to standard output, or to a file if <emphasis role="bold">-file</emphasis> is
+    specified.  <emphasis role="bold">vos restore</emphasis> can be used to load the resulting dump into a
+    new AFS volume.  <emphasis role="bold">voldump</emphasis> always does a full dump.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Normally, use <emphasis role="bold">vos dump</emphasis> instead of this command.  <emphasis role="bold">voldump</emphasis> is a tool
+    of last resort to try to extract data from the raw data structures stored
+    on the file server machine and is not as regularly tested or used as the
+    normal <emphasis role="bold">vos dump</emphasis> implementation.</para>
+
+    <para>If the AFS volume being dumped changes while <emphasis role="bold">voldump</emphasis> is running, the
+    results may be inconsistent.  If the File Server and Volume Server are
+    running, stop them with <emphasis role="bold">bos shutdown</emphasis> or a similar method before running
+    this command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-part</emphasis> &lt;<emphasis>partition</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the partition on which the volume to be dumped is located.
+          <emphasis role="bold">voldump</emphasis> does not take the normal full range of ways of specifying a
+          partition.  Instead, <emphasis>partition</emphasis> must be either a single letter between
+          <computeroutput>a</computeroutput> and <computeroutput>z</computeroutput>, corresponding to <replaceable>/vicepa</replaceable> through <replaceable>/vicepz</replaceable>, or the full
+          path to the file server partition.  <computeroutput>aa</computeroutput> is not recognized; use
+          <replaceable>/vicepaa</replaceable> instead.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the ID of the volume to dump.  The volume must be specified by
+          numeric ID, not by name.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>dump file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the output file for the dump.  If this option is not given, the
+          volume will be dumped to standard output.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Asks for a verbose trace of the dump process.  This trace information will
+          be sent to standard error.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command dumps the volume 1936964939 on the <replaceable>/vicepb</replaceable>
+    partition to the file <replaceable>/tmp/volume.dump</replaceable>:</para>
+
+<programlisting>
+    % voldump -part /vicepb -volumeid 1936964939 -file /tmp/volume.dump
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have read access to the file server data stored in the
+      specified partition.  Usually, this means that the issuer must be the
+      local superuser <computeroutput>root</computeroutput> on the file server machine.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+      <link linkend="volserver8">volserver(8)</link>,
+      <link linkend="vos_dump1">vos_dump(1)</link>,
+      <link linkend="vos_restore1">vos_restore(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>Copyright 2005 Russ Allbery &lt;rra@stanford.edu&gt;</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  This
+      man page was written by Russ Allbery for OpenAFS.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_getdate8">
+  <refmeta>
+    <refentrytitle>bos getdate</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos getdate</refname>
+    <refpurpose>Displays the time stamps on an AFS binary file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos getdate</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-file</emphasis> &lt;<emphasis>files to check</emphasis>&gt;+
+        [<emphasis role="bold">-dir</emphasis> &lt;<emphasis>destination dir</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos getd</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-f</emphasis> &lt;<emphasis>files to check</emphasis>&gt;+
+        [<emphasis role="bold">-d</emphasis> &lt;<emphasis>destination dir</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos getdate</emphasis> command displays the time stamps on the current
+    version,<computeroutput> .BAK</computeroutput> version (if any) and <computeroutput>.OLD</computeroutput> version (if any) of each
+    binary file named by the <emphasis role="bold">-file</emphasis> argument. (The BOS Server automatically
+    creates <computeroutput>.BAK</computeroutput> and <computeroutput>.OLD</computeroutput> versions when new binaries are installed with
+    the <emphasis role="bold">bos install</emphasis> command.) The files must reside in the <replaceable>/usr/afs/bin</replaceable>
+    directory on the server machine named by the <emphasis role="bold">-server</emphasis> argument unless
+    the <emphasis role="bold">-dir</emphasis> argument indicates an alternate directory.</para>
+
+    <para>To revert to the <computeroutput>.BAK</computeroutput> version of a binary, use the <emphasis role="bold">bos uninstall</emphasis>
+    command. To remove obsolete binary files from the <replaceable>/usr/afs/bin</replaceable>
+    directory, use the <emphasis role="bold">bos prune</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine from which to list binary files.  Identify
+          the machine by IP address or its host name (either fully-qualified or
+          abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+          <para>All server machines of the same AFS system type show the same timestamps
+          if the binaries were installed properly on the binary distribution machine
+          for this machine's system type, and if all other machines of that type are
+          running the appropriate <computeroutput>upclientbin</computeroutput> process.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>files to check</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each binary file to list.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dir</emphasis> &lt;<emphasis>destination dir</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the complete pathname of the local disk directory containing
+          each file named by the <emphasis role="bold">-file</emphasis> argument. It is necessary only if the
+          files are not in the <replaceable>/usr/afs/bin</replaceable> directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>For each file specified with the -file argument, the output displays the
+    time stamp on the current (unmarked), <computeroutput>.BAK</computeroutput>, and <computeroutput>.OLD</computeroutput> version. The
+    output explicitly reports that a version does not exist, rather than
+    simply omitting it.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command examines the time stamps on the files with basename
+    <computeroutput>kaserver</computeroutput> on the machine <computeroutput>fs2.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % bos getdate -server fs2.abc.com -file kaserver
+   File /usr/afs/bin/kaserver dated Mon Jan 4 10:00:36 1999.
+   .BAK file dated Wed Dec 9 18:55:04 1998, no .OLD file.
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_install8">bos_install(8)</link>,
+      <link linkend="bos_prune8">bos_prune(8)</link>,
+      <link linkend="bos_uninstall8">bos_uninstall(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_kill8">
+  <refmeta>
+    <refentrytitle>backup kill</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup kill</refname>
+    <refpurpose>Terminates a pending or running operation</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kill</emphasis> <emphasis role="bold">-id</emphasis> &lt;<emphasis>job ID or dump set name</emphasis>&gt; [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">k -i</emphasis> &lt;<emphasis>job ID or dump set name</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup kill</emphasis> command dequeues a Backup System operation that is
+    pending, or terminates an operation that is running, in the current
+    interactive session. It is available only in interactive mode.  If the
+    issuer of the <emphasis role="bold">backup interactive</emphasis> command included the <emphasis role="bold">-localauth</emphasis>
+    flag, the <emphasis role="bold">-cell</emphasis> argument, or both, then those settings apply to this
+    command also.</para>
+
+    <para>To terminate a dump operation, specify either the dump name
+    (<emphasis>volume_set_name</emphasis>.<emphasis>dump_level_name</emphasis>) or its job ID number, which
+    appears in the output from the <emphasis role="bold">backup jobs</emphasis> command. To terminate any
+    other type of operation, provide the job ID number.</para>
+
+    <para>The effect of terminating an operation depends on the type and current
+    state of the operation:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If an operation is still pending, the Tape Coordinator removes it from the
+        queue with no other lasting effects.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the Tape Coordinator is unable to process the termination signal before
+        an operation completes, it simply confirms the operation's completion. The
+        operator must take the action necessary to undo the effects of the
+        incorrect operation.</para>
+
+      </listitem>
+      <listitem>
+        <para>If a tape labeling operation is running, the effect depends on when the
+        Tape Coordinator receives the termination signal. The labeling operation
+        is atomic, so it either completes or does not begin at all.  Use the
+        <emphasis role="bold">backup readlabel</emphasis> command to determine if the labeling operation
+        completed, and reissue the <emphasis role="bold">backup labeltape</emphasis> command to overwrite the
+        incorrect label if necessary.</para>
+
+      </listitem>
+      <listitem>
+        <para>If a tape scanning operation is running, it terminates with no other
+        effects unless the <emphasis role="bold">-dbadd</emphasis> flag was included on the <emphasis role="bold">backup</emphasis>
+        command. In that case, the Backup System possibly has already written new
+        Backup Database records to represent dumps on the scanned tape. If
+        planning to restart the scanning operation, first locate and remove the
+        records created during the terminated operation: a repeated <emphasis role="bold">backup
+        scantape</emphasis> operation exits automatically when it finds that a record that
+        it needs to create already exists.</para>
+
+      </listitem>
+      <listitem>
+        <para>If a dump operation is running, all of the volumes written to the tape or
+        backup data file before the termination signal is received are complete
+        and usable. If the operation is restarted, the Backup System performs all
+        the dumps again from scratch, and assigns a new dump ID number. If writing
+        the new dumps to the same tape or file, the operator must relabel it first
+        if the interrupted dump is not expired. If writing the new dump to a
+        different tape or file, the operator can remove the dump record associated
+        with the interrupted dump to free up space in the database.</para>
+
+      </listitem>
+      <listitem>
+        <para>If a restore operation is running, completely restored volumes are online
+        and usable. However, it is unlikely that many volumes are completely
+        restored, given that complete restoration usually requires data from
+        multiple tapes. If the termination signal comes before the Backup System
+        has accessed all of the necessary tapes, each volume is only partially
+        written and is never brought online. It is best to restart the restore
+        operation from scratch to avoid possible inconsistencies. See also
+        <link linkend="CAUTIONS">CAUTIONS</link>.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>It is best not to issue the <emphasis role="bold">backup kill</emphasis> command against restore
+    operations. If the termination signal interrupts a restore operation as
+    the Backup System is overwriting an existing volume, it is possible to
+    lose the volume entirely (that is, to lose both the contents of the volume
+    as it was before the restore and any data that was restored before the
+    termination signal arrived). The data being restored still exists on the
+    tape, but some data can be lost permanently.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>job ID or dump set name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the backup operation to terminate. Provide one of two types of
+          values:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The operation's job ID number, as displayed in the output of the <emphasis role="bold">backup
+              jobs</emphasis> command.</para>
+
+            </listitem>
+            <listitem>
+              <para>For a dump operation, either the job ID number or a dump name of the form
+              <emphasis>volume_set_name</emphasis>.<emphasis>dump_level_name</emphasis>, where <emphasis>volume_set_name</emphasis> is the
+              name of the volume set being dumped and <emphasis>dump_level_name</emphasis> is the last
+              element in the dump level pathname at which the volume set is being
+              dumped. The dump name appears in the output of the <emphasis role="bold">backup jobs</emphasis> command
+              along with the job ID number.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command terminates the operation with job ID 5:</para>
+
+<programlisting>
+   backup&amp;gt; kill 5
+
+</programlisting>
+      <para>The following command terminates the dump operation called
+      <computeroutput>user.sunday1</computeroutput>:</para>
+
+<programlisting>
+   backup&amp;gt; kill user.sunday1
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must have the privilege required to initiate the operation
+        being cancelled. Because this command can be issued only within the
+        interactive session during which the operation was initiated, the required
+        privilege is essentially guaranteed.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="backup8">backup(8)</link>,
+        <link linkend="backup_interactive8">backup_interactive(8)</link>,
+        <link linkend="backup_jobs8">backup_jobs(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

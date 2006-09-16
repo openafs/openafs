@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
+        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY preface SYSTEM "preface.xml">
+
+<!ENTITY afs1 SYSTEM "sect1/afs.xml">
+<!ENTITY afsmonitor1 SYSTEM "sect1/afsmonitor.xml">
+<!ENTITY cmdebug1 SYSTEM "sect1/cmdebug.xml">
+<!ENTITY dlog1 SYSTEM "sect1/dlog.xml">
+<!ENTITY dpass1 SYSTEM "sect1/dpass.xml">
+<!ENTITY fs1 SYSTEM "sect1/fs.xml">
+<!ENTITY fs_apropos1 SYSTEM "sect1/fs_apropos.xml">
+<!ENTITY fs_checkservers1 SYSTEM "sect1/fs_checkservers.xml">
+<!ENTITY fs_checkvolumes1 SYSTEM "sect1/fs_checkvolumes.xml">
+<!ENTITY fs_cleanacl1 SYSTEM "sect1/fs_cleanacl.xml">
+<!ENTITY fs_copyacl1 SYSTEM "sect1/fs_copyacl.xml">
+<!ENTITY fs_diskfree1 SYSTEM "sect1/fs_diskfree.xml">
+<!ENTITY fs_examine1 SYSTEM "sect1/fs_examine.xml">
+<!ENTITY fs_exportafs1 SYSTEM "sect1/fs_exportafs.xml">
+<!ENTITY fs_flush1 SYSTEM "sect1/fs_flush.xml">
+<!ENTITY fs_flushmount1 SYSTEM "sect1/fs_flushmount.xml">
+<!ENTITY fs_flushvolume1 SYSTEM "sect1/fs_flushvolume.xml">
+<!ENTITY fs_getcacheparms1 SYSTEM "sect1/fs_getcacheparms.xml">
+<!ENTITY fs_getcellstatus1 SYSTEM "sect1/fs_getcellstatus.xml">
+<!ENTITY fs_getclientaddrs1 SYSTEM "sect1/fs_getclientaddrs.xml">
+<!ENTITY fs_getserverprefs1 SYSTEM "sect1/fs_getserverprefs.xml">
+<!ENTITY fs_help1 SYSTEM "sect1/fs_help.xml">
+<!ENTITY fs_listacl1 SYSTEM "sect1/fs_listacl.xml">
+<!ENTITY fs_listcells1 SYSTEM "sect1/fs_listcells.xml">
+<!ENTITY fs_listquota1 SYSTEM "sect1/fs_listquota.xml">
+<!ENTITY fs_lsmount1 SYSTEM "sect1/fs_lsmount.xml">
+<!ENTITY fs_messages1 SYSTEM "sect1/fs_messages.xml">
+<!ENTITY fs_mkmount1 SYSTEM "sect1/fs_mkmount.xml">
+<!ENTITY fs_newcell1 SYSTEM "sect1/fs_newcell.xml">
+<!ENTITY fs_quota1 SYSTEM "sect1/fs_quota.xml">
+<!ENTITY fs_rmmount1 SYSTEM "sect1/fs_rmmount.xml">
+<!ENTITY fs_setacl1 SYSTEM "sect1/fs_setacl.xml">
+<!ENTITY fs_setcachesize1 SYSTEM "sect1/fs_setcachesize.xml">
+<!ENTITY fs_setcell1 SYSTEM "sect1/fs_setcell.xml">
+<!ENTITY fs_setclientaddrs1 SYSTEM "sect1/fs_setclientaddrs.xml">
+<!ENTITY fs_setquota1 SYSTEM "sect1/fs_setquota.xml">
+<!ENTITY fs_setserverprefs1 SYSTEM "sect1/fs_setserverprefs.xml">
+<!ENTITY fs_setvol1 SYSTEM "sect1/fs_setvol.xml">
+<!ENTITY fs_storebehind1 SYSTEM "sect1/fs_storebehind.xml">
+<!ENTITY fs_sysname1 SYSTEM "sect1/fs_sysname.xml">
+<!ENTITY fs_whereis1 SYSTEM "sect1/fs_whereis.xml">
+<!ENTITY fs_whichcell1 SYSTEM "sect1/fs_whichcell.xml">
+<!ENTITY fs_wscell1 SYSTEM "sect1/fs_wscell.xml">
+<!ENTITY klog1 SYSTEM "sect1/klog.xml">
+<!ENTITY knfs1 SYSTEM "sect1/knfs.xml">
+<!ENTITY kpasswd1 SYSTEM "sect1/kpasswd.xml">
+<!ENTITY livesys1 SYSTEM "sect1/livesys.xml">
+<!ENTITY package_test1 SYSTEM "sect1/package_test.xml">
+<!ENTITY pagsh1 SYSTEM "sect1/pagsh.xml">
+<!ENTITY pts1 SYSTEM "sect1/pts.xml">
+<!ENTITY pts_adduser1 SYSTEM "sect1/pts_adduser.xml">
+<!ENTITY pts_apropos1 SYSTEM "sect1/pts_apropos.xml">
+<!ENTITY pts_chown1 SYSTEM "sect1/pts_chown.xml">
+<!ENTITY pts_creategroup1 SYSTEM "sect1/pts_creategroup.xml">
+<!ENTITY pts_createuser1 SYSTEM "sect1/pts_createuser.xml">
+<!ENTITY pts_delete1 SYSTEM "sect1/pts_delete.xml">
+<!ENTITY pts_examine1 SYSTEM "sect1/pts_examine.xml">
+<!ENTITY pts_help1 SYSTEM "sect1/pts_help.xml">
+<!ENTITY pts_listentries1 SYSTEM "sect1/pts_listentries.xml">
+<!ENTITY pts_listmax1 SYSTEM "sect1/pts_listmax.xml">
+<!ENTITY pts_listowned1 SYSTEM "sect1/pts_listowned.xml">
+<!ENTITY pts_membership1 SYSTEM "sect1/pts_membership.xml">
+<!ENTITY pts_removeuser1 SYSTEM "sect1/pts_removeuser.xml">
+<!ENTITY pts_rename1 SYSTEM "sect1/pts_rename.xml">
+<!ENTITY pts_setfields1 SYSTEM "sect1/pts_setfields.xml">
+<!ENTITY pts_setmax1 SYSTEM "sect1/pts_setmax.xml">
+<!ENTITY rxdebug1 SYSTEM "sect1/rxdebug.xml">
+<!ENTITY rxgen1 SYSTEM "sect1/rxgen.xml">
+<!ENTITY scout1 SYSTEM "sect1/scout.xml">
+<!ENTITY sys1 SYSTEM "sect1/sys.xml">
+<!ENTITY tokens1 SYSTEM "sect1/tokens.xml">
+<!ENTITY translate_et1 SYSTEM "sect1/translate_et.xml">
+<!ENTITY udebug1 SYSTEM "sect1/udebug.xml">
+<!ENTITY unlog1 SYSTEM "sect1/unlog.xml">
+<!ENTITY up1 SYSTEM "sect1/up.xml">
+<!ENTITY vos1 SYSTEM "sect1/vos.xml">
+<!ENTITY vos_addsite1 SYSTEM "sect1/vos_addsite.xml">
+<!ENTITY vos_apropos1 SYSTEM "sect1/vos_apropos.xml">
+<!ENTITY vos_backup1 SYSTEM "sect1/vos_backup.xml">
+<!ENTITY vos_backupsys1 SYSTEM "sect1/vos_backupsys.xml">
+<!ENTITY vos_changeaddr1 SYSTEM "sect1/vos_changeaddr.xml">
+<!ENTITY vos_create1 SYSTEM "sect1/vos_create.xml">
+<!ENTITY vos_delentry1 SYSTEM "sect1/vos_delentry.xml">
+<!ENTITY vos_dump1 SYSTEM "sect1/vos_dump.xml">
+<!ENTITY vos_examine1 SYSTEM "sect1/vos_examine.xml">
+<!ENTITY vos_help1 SYSTEM "sect1/vos_help.xml">
+<!ENTITY vos_listaddrs1 SYSTEM "sect1/vos_listaddrs.xml">
+<!ENTITY vos_listpart1 SYSTEM "sect1/vos_listpart.xml">
+<!ENTITY vos_listvldb1 SYSTEM "sect1/vos_listvldb.xml">
+<!ENTITY vos_listvol1 SYSTEM "sect1/vos_listvol.xml">
+<!ENTITY vos_lock1 SYSTEM "sect1/vos_lock.xml">
+<!ENTITY vos_move1 SYSTEM "sect1/vos_move.xml">
+<!ENTITY vos_partinfo1 SYSTEM "sect1/vos_partinfo.xml">
+<!ENTITY vos_release1 SYSTEM "sect1/vos_release.xml">
+<!ENTITY vos_remove1 SYSTEM "sect1/vos_remove.xml">
+<!ENTITY vos_remsite1 SYSTEM "sect1/vos_remsite.xml">
+<!ENTITY vos_rename1 SYSTEM "sect1/vos_rename.xml">
+<!ENTITY vos_restore1 SYSTEM "sect1/vos_restore.xml">
+<!ENTITY vos_status1 SYSTEM "sect1/vos_status.xml">
+<!ENTITY vos_syncserv1 SYSTEM "sect1/vos_syncserv.xml">
+<!ENTITY vos_syncvldb1 SYSTEM "sect1/vos_syncvldb.xml">
+<!ENTITY vos_unlock1 SYSTEM "sect1/vos_unlock.xml">
+<!ENTITY vos_unlockvldb1 SYSTEM "sect1/vos_unlockvldb.xml">
+<!ENTITY vos_zap1 SYSTEM "sect1/vos_zap.xml">
+<!ENTITY xstat_cm_test1 SYSTEM "sect1/xstat_cm_test.xml">
+<!ENTITY xstat_fs_test1 SYSTEM "sect1/xstat_fs_test.xml">
+
+<!ENTITY AuthLog.dir5 SYSTEM "sect5/AuthLog.dir.xml">
+<!ENTITY AuthLog5 SYSTEM "sect5/AuthLog.xml">
+<!ENTITY BackupLog5 SYSTEM "sect5/BackupLog.xml">
+<!ENTITY BosConfig5 SYSTEM "sect5/BosConfig.xml">
+<!ENTITY BosLog5 SYSTEM "sect5/BosLog.xml">
+<!ENTITY CellServDB5 SYSTEM "sect5/CellServDB.xml">
+<!ENTITY FORCESALVAGE5 SYSTEM "sect5/FORCESALVAGE.xml">
+<!ENTITY FileLog5 SYSTEM "sect5/FileLog.xml">
+<!ENTITY KeyFile5 SYSTEM "sect5/KeyFile.xml">
+<!ENTITY NetInfo5 SYSTEM "sect5/NetInfo.xml">
+<!ENTITY NetRestrict5 SYSTEM "sect5/NetRestrict.xml">
+<!ENTITY NoAuth5 SYSTEM "sect5/NoAuth.xml">
+<!ENTITY SALVAGE.fs5 SYSTEM "sect5/SALVAGE.fs.xml">
+<!ENTITY SalvageLog5 SYSTEM "sect5/SalvageLog.xml">
+<!ENTITY ThisCell5 SYSTEM "sect5/ThisCell.xml">
+<!ENTITY UserList5 SYSTEM "sect5/UserList.xml">
+<!ENTITY VLLog5 SYSTEM "sect5/VLLog.xml">
+<!ENTITY VolserLog5 SYSTEM "sect5/VolserLog.xml">
+<!ENTITY afs5 SYSTEM "sect5/afs.xml">
+<!ENTITY afs_cache5 SYSTEM "sect5/afs_cache.xml">
+<!ENTITY afs_volume_header5 SYSTEM "sect5/afs_volume_header.xml">
+<!ENTITY afsmonitor5 SYSTEM "sect5/afsmonitor.xml">
+<!ENTITY afszcm.cat5 SYSTEM "sect5/afszcm.cat.xml">
+<!ENTITY bdb.DB05 SYSTEM "sect5/bdb.DB0.xml">
+<!ENTITY butc5 SYSTEM "sect5/butc.xml">
+<!ENTITY butc_logs5 SYSTEM "sect5/butc_logs.xml">
+<!ENTITY cacheinfo5 SYSTEM "sect5/cacheinfo.xml">
+<!ENTITY fms.log5 SYSTEM "sect5/fms.log.xml">
+<!ENTITY kaserver.DB05 SYSTEM "sect5/kaserver.DB0.xml">
+<!ENTITY kaserverauxdb5 SYSTEM "sect5/kaserverauxdb.xml">
+<!ENTITY package5 SYSTEM "sect5/package.xml">
+<!ENTITY prdb.DB05 SYSTEM "sect5/prdb.DB0.xml">
+<!ENTITY salvage.lock5 SYSTEM "sect5/salvage.lock.xml">
+<!ENTITY sysid5 SYSTEM "sect5/sysid.xml">
+<!ENTITY tapeconfig5 SYSTEM "sect5/tapeconfig.xml">
+<!ENTITY uss5 SYSTEM "sect5/uss.xml">
+<!ENTITY uss_bulk5 SYSTEM "sect5/uss_bulk.xml">
+<!ENTITY vldb.DB05 SYSTEM "sect5/vldb.DB0.xml">
+
+<!ENTITY afsd8 SYSTEM "sect8/afsd.xml">
+<!ENTITY backup8 SYSTEM "sect8/backup.xml">
+<!ENTITY backup_adddump8 SYSTEM "sect8/backup_adddump.xml">
+<!ENTITY backup_addhost8 SYSTEM "sect8/backup_addhost.xml">
+<!ENTITY backup_addvolentry8 SYSTEM "sect8/backup_addvolentry.xml">
+<!ENTITY backup_addvolset8 SYSTEM "sect8/backup_addvolset.xml">
+<!ENTITY backup_apropos8 SYSTEM "sect8/backup_apropos.xml">
+<!ENTITY backup_dbverify8 SYSTEM "sect8/backup_dbverify.xml">
+<!ENTITY backup_deldump8 SYSTEM "sect8/backup_deldump.xml">
+<!ENTITY backup_deletedump8 SYSTEM "sect8/backup_deletedump.xml">
+<!ENTITY backup_delhost8 SYSTEM "sect8/backup_delhost.xml">
+<!ENTITY backup_delvolentry8 SYSTEM "sect8/backup_delvolentry.xml">
+<!ENTITY backup_delvolset8 SYSTEM "sect8/backup_delvolset.xml">
+<!ENTITY backup_diskrestore8 SYSTEM "sect8/backup_diskrestore.xml">
+<!ENTITY backup_dump8 SYSTEM "sect8/backup_dump.xml">
+<!ENTITY backup_dumpinfo8 SYSTEM "sect8/backup_dumpinfo.xml">
+<!ENTITY backup_help8 SYSTEM "sect8/backup_help.xml">
+<!ENTITY backup_interactive8 SYSTEM "sect8/backup_interactive.xml">
+<!ENTITY backup_jobs8 SYSTEM "sect8/backup_jobs.xml">
+<!ENTITY backup_kill8 SYSTEM "sect8/backup_kill.xml">
+<!ENTITY backup_labeltape8 SYSTEM "sect8/backup_labeltape.xml">
+<!ENTITY backup_listdumps8 SYSTEM "sect8/backup_listdumps.xml">
+<!ENTITY backup_listhosts8 SYSTEM "sect8/backup_listhosts.xml">
+<!ENTITY backup_listvolsets8 SYSTEM "sect8/backup_listvolsets.xml">
+<!ENTITY backup_quit8 SYSTEM "sect8/backup_quit.xml">
+<!ENTITY backup_readlabel8 SYSTEM "sect8/backup_readlabel.xml">
+<!ENTITY backup_restoredb8 SYSTEM "sect8/backup_restoredb.xml">
+<!ENTITY backup_savedb8 SYSTEM "sect8/backup_savedb.xml">
+<!ENTITY backup_scantape8 SYSTEM "sect8/backup_scantape.xml">
+<!ENTITY backup_setexp8 SYSTEM "sect8/backup_setexp.xml">
+<!ENTITY backup_status8 SYSTEM "sect8/backup_status.xml">
+<!ENTITY backup_volinfo8 SYSTEM "sect8/backup_volinfo.xml">
+<!ENTITY backup_volrestore8 SYSTEM "sect8/backup_volrestore.xml">
+<!ENTITY backup_volsetrestore8 SYSTEM "sect8/backup_volsetrestore.xml">
+<!ENTITY bos8 SYSTEM "sect8/bos.xml">
+<!ENTITY bos_addhost8 SYSTEM "sect8/bos_addhost.xml">
+<!ENTITY bos_addkey8 SYSTEM "sect8/bos_addkey.xml">
+<!ENTITY bos_adduser8 SYSTEM "sect8/bos_adduser.xml">
+<!ENTITY bos_apropos8 SYSTEM "sect8/bos_apropos.xml">
+<!ENTITY bos_create8 SYSTEM "sect8/bos_create.xml">
+<!ENTITY bos_delete8 SYSTEM "sect8/bos_delete.xml">
+<!ENTITY bos_exec8 SYSTEM "sect8/bos_exec.xml">
+<!ENTITY bos_getdate8 SYSTEM "sect8/bos_getdate.xml">
+<!ENTITY bos_getlog8 SYSTEM "sect8/bos_getlog.xml">
+<!ENTITY bos_getrestart8 SYSTEM "sect8/bos_getrestart.xml">
+<!ENTITY bos_help8 SYSTEM "sect8/bos_help.xml">
+<!ENTITY bos_install8 SYSTEM "sect8/bos_install.xml">
+<!ENTITY bos_listhosts8 SYSTEM "sect8/bos_listhosts.xml">
+<!ENTITY bos_listkeys8 SYSTEM "sect8/bos_listkeys.xml">
+<!ENTITY bos_listusers8 SYSTEM "sect8/bos_listusers.xml">
+<!ENTITY bos_prune8 SYSTEM "sect8/bos_prune.xml">
+<!ENTITY bos_removehost8 SYSTEM "sect8/bos_removehost.xml">
+<!ENTITY bos_removekey8 SYSTEM "sect8/bos_removekey.xml">
+<!ENTITY bos_removeuser8 SYSTEM "sect8/bos_removeuser.xml">
+<!ENTITY bos_restart8 SYSTEM "sect8/bos_restart.xml">
+<!ENTITY bos_salvage8 SYSTEM "sect8/bos_salvage.xml">
+<!ENTITY bos_setauth8 SYSTEM "sect8/bos_setauth.xml">
+<!ENTITY bos_setcellname8 SYSTEM "sect8/bos_setcellname.xml">
+<!ENTITY bos_setrestart8 SYSTEM "sect8/bos_setrestart.xml">
+<!ENTITY bos_shutdown8 SYSTEM "sect8/bos_shutdown.xml">
+<!ENTITY bos_start8 SYSTEM "sect8/bos_start.xml">
+<!ENTITY bos_startup8 SYSTEM "sect8/bos_startup.xml">
+<!ENTITY bos_status8 SYSTEM "sect8/bos_status.xml">
+<!ENTITY bos_stop8 SYSTEM "sect8/bos_stop.xml">
+<!ENTITY bos_uninstall8 SYSTEM "sect8/bos_uninstall.xml">
+<!ENTITY bosserver8 SYSTEM "sect8/bosserver.xml">
+<!ENTITY buserver8 SYSTEM "sect8/buserver.xml">
+<!ENTITY butc8 SYSTEM "sect8/butc.xml">
+<!ENTITY fileserver8 SYSTEM "sect8/fileserver.xml">
+<!ENTITY fms8 SYSTEM "sect8/fms.xml">
+<!ENTITY fstrace8 SYSTEM "sect8/fstrace.xml">
+<!ENTITY fstrace_apropos8 SYSTEM "sect8/fstrace_apropos.xml">
+<!ENTITY fstrace_clear8 SYSTEM "sect8/fstrace_clear.xml">
+<!ENTITY fstrace_dump8 SYSTEM "sect8/fstrace_dump.xml">
+<!ENTITY fstrace_help8 SYSTEM "sect8/fstrace_help.xml">
+<!ENTITY fstrace_lslog8 SYSTEM "sect8/fstrace_lslog.xml">
+<!ENTITY fstrace_lsset8 SYSTEM "sect8/fstrace_lsset.xml">
+<!ENTITY fstrace_setlog8 SYSTEM "sect8/fstrace_setlog.xml">
+<!ENTITY fstrace_setset8 SYSTEM "sect8/fstrace_setset.xml">
+<!ENTITY kadb_check8 SYSTEM "sect8/kadb_check.xml">
+<!ENTITY kas8 SYSTEM "sect8/kas.xml">
+<!ENTITY kas_apropos8 SYSTEM "sect8/kas_apropos.xml">
+<!ENTITY kas_create8 SYSTEM "sect8/kas_create.xml">
+<!ENTITY kas_delete8 SYSTEM "sect8/kas_delete.xml">
+<!ENTITY kas_examine8 SYSTEM "sect8/kas_examine.xml">
+<!ENTITY kas_forgetticket8 SYSTEM "sect8/kas_forgetticket.xml">
+<!ENTITY kas_help8 SYSTEM "sect8/kas_help.xml">
+<!ENTITY kas_interactive8 SYSTEM "sect8/kas_interactive.xml">
+<!ENTITY kas_list8 SYSTEM "sect8/kas_list.xml">
+<!ENTITY kas_listtickets8 SYSTEM "sect8/kas_listtickets.xml">
+<!ENTITY kas_noauthentication8 SYSTEM "sect8/kas_noauthentication.xml">
+<!ENTITY kas_quit8 SYSTEM "sect8/kas_quit.xml">
+<!ENTITY kas_setfields8 SYSTEM "sect8/kas_setfields.xml">
+<!ENTITY kas_setpassword8 SYSTEM "sect8/kas_setpassword.xml">
+<!ENTITY kas_statistics8 SYSTEM "sect8/kas_statistics.xml">
+<!ENTITY kas_stringtokey8 SYSTEM "sect8/kas_stringtokey.xml">
+<!ENTITY kas_unlock8 SYSTEM "sect8/kas_unlock.xml">
+<!ENTITY kaserver8 SYSTEM "sect8/kaserver.xml">
+<!ENTITY kdb8 SYSTEM "sect8/kdb.xml">
+<!ENTITY kpwvalid8 SYSTEM "sect8/kpwvalid.xml">
+<!ENTITY package8 SYSTEM "sect8/package.xml">
+<!ENTITY prdb_check8 SYSTEM "sect8/prdb_check.xml">
+<!ENTITY ptserver8 SYSTEM "sect8/ptserver.xml">
+<!ENTITY salvager8 SYSTEM "sect8/salvager.xml">
+<!ENTITY upclient8 SYSTEM "sect8/upclient.xml">
+<!ENTITY upserver8 SYSTEM "sect8/upserver.xml">
+<!ENTITY uss8 SYSTEM "sect8/uss.xml">
+<!ENTITY uss_add8 SYSTEM "sect8/uss_add.xml">
+<!ENTITY uss_apropos8 SYSTEM "sect8/uss_apropos.xml">
+<!ENTITY uss_bulk8 SYSTEM "sect8/uss_bulk.xml">
+<!ENTITY uss_delete8 SYSTEM "sect8/uss_delete.xml">
+<!ENTITY uss_help8 SYSTEM "sect8/uss_help.xml">
+<!ENTITY vldb_check8 SYSTEM "sect8/vldb_check.xml">
+<!ENTITY vlserver8 SYSTEM "sect8/vlserver.xml">
+<!ENTITY voldump8 SYSTEM "sect8/voldump.xml">
+<!ENTITY volinfo8 SYSTEM "sect8/volinfo.xml">
+<!ENTITY volserver8 SYSTEM "sect8/volserver.xml">
+<!ENTITY xfs_size_check8 SYSTEM "sect8/xfs_size_check.xml">
+]>
+<book label="Version 3.6" fpi="Document Number GC09-4562-00">
+  <bookinfo>
+    <title>AFS Administration Reference</title>
+
+    <subtitle>Version 3.6</subtitle>
+
+    <pubsnumber>Document Number GC09-4563-00</pubsnumber>
+
+    <copyright>
+      <year>2000</year>
+
+      <holder>IBM Corporation. All Rights Reserved</holder>
+    </copyright>
+
+    <revhistory>
+      <revision>
+        <revnumber>3.6</revnumber>
+
+        <date>April 2000</date>
+
+        <revremark>First Edition</revremark>
+      </revision>
+    </revhistory>
+
+    <abstract>
+      <para>This edition applies to: <simplelist>
+          <member>IBM AFS for AIX, Version 3.6</member>
+          <member>IBM AFS for Digital Unix, Version 3.6</member>
+          <member>IBM AFS for HP-UX, Version 3.6</member>
+          <member>IBM AFS for Linux, Version 3.6</member>
+          <member>IBM AFS for SGI IRIX, Version 3.6</member>
+          <member>IBM AFS for Solaris, Version 3.6</member>
+        </simplelist></para>
+
+      <para>and to all subsequent releases and modifications until otherwise
+      indicated in new editions.This softcopy version is based on the printed
+      edition of this book. Some formatting amendments have been made to make
+      this information more suitable for softcopy.</para>
+    </abstract>
+  </bookinfo>
+
+  &preface;
+
+  <reference>
+    <title>AFS Commands</title>
+    &afs1;
+    &afsmonitor1;
+    &cmdebug1;
+    &dlog1;
+    &dpass1;
+    &fs1;
+    &fs_apropos1;
+    &fs_checkservers1;
+    &fs_checkvolumes1;
+    &fs_cleanacl1;
+    &fs_copyacl1;
+    &fs_diskfree1;
+    &fs_examine1;
+    &fs_exportafs1;
+    &fs_flush1;
+    &fs_flushmount1;
+    &fs_flushvolume1;
+    &fs_getcacheparms1;
+    &fs_getcellstatus1;
+    &fs_getclientaddrs1;
+    &fs_getserverprefs1;
+    &fs_help1;
+    &fs_listacl1;
+    &fs_listcells1;
+    &fs_listquota1;
+    &fs_lsmount1;
+    &fs_messages1;
+    &fs_mkmount1;
+    &fs_newcell1;
+    &fs_quota1;
+    &fs_rmmount1;
+    &fs_setacl1;
+    &fs_setcachesize1;
+    &fs_setcell1;
+    &fs_setclientaddrs1;
+    &fs_setquota1;
+    &fs_setserverprefs1;
+    &fs_setvol1;
+    &fs_storebehind1;
+    &fs_sysname1;
+    &fs_whereis1;
+    &fs_whichcell1;
+    &fs_wscell1;
+    &klog1;
+    &knfs1;
+    &kpasswd1;
+    &livesys1;
+    &package_test1;
+    &pagsh1;
+    &pts1;
+    &pts_adduser1;
+    &pts_apropos1;
+    &pts_chown1;
+    &pts_creategroup1;
+    &pts_createuser1;
+    &pts_delete1;
+    &pts_examine1;
+    &pts_help1;
+    &pts_listentries1;
+    &pts_listmax1;
+    &pts_listowned1;
+    &pts_membership1;
+    &pts_removeuser1;
+    &pts_rename1;
+    &pts_setfields1;
+    &pts_setmax1;
+    &rxdebug1;
+    &rxgen1;
+    &scout1;
+    &sys1;
+    &tokens1;
+    &translate_et1;
+    &udebug1;
+    &unlog1;
+    &up1;
+    &vos1;
+    &vos_addsite1;
+    &vos_apropos1;
+    &vos_backup1;
+    &vos_backupsys1;
+    &vos_changeaddr1;
+    &vos_create1;
+    &vos_delentry1;
+    &vos_dump1;
+    &vos_examine1;
+    &vos_help1;
+    &vos_listaddrs1;
+    &vos_listpart1;
+    &vos_listvldb1;
+    &vos_listvol1;
+    &vos_lock1;
+    &vos_move1;
+    &vos_partinfo1;
+    &vos_release1;
+    &vos_remove1;
+    &vos_remsite1;
+    &vos_rename1;
+    &vos_restore1;
+    &vos_status1;
+    &vos_syncserv1;
+    &vos_syncvldb1;
+    &vos_unlock1;
+    &vos_unlockvldb1;
+    &vos_zap1;
+    &xstat_cm_test1;
+    &xstat_fs_test1;
+  </reference>
+
+  <reference>
+    <title>AFS System Files</title>
+    &afs5;
+    &AuthLog.dir5;
+    &AuthLog5;
+    &BackupLog5;
+    &BosConfig5;
+    &BosLog5;
+    &CellServDB5;
+    &FORCESALVAGE5;
+    &FileLog5;
+    &KeyFile5;
+    &NetInfo5;
+    &NetRestrict5;
+    &NoAuth5;
+    &SALVAGE.fs5;
+    &SalvageLog5;
+    &ThisCell5;
+    &UserList5;
+    &VLLog5;
+    &VolserLog5;
+    &afs_cache5;
+    &afs_volume_header5;
+    &afsmonitor5;
+    &afszcm.cat5;
+    &bdb.DB05;
+    &butc5;
+    &butc_logs5;
+    &cacheinfo5;
+    &fms.log5;
+    &kaserver.DB05;
+    &kaserverauxdb5;
+    &package5;
+    &prdb.DB05;
+    &salvage.lock5;
+    &sysid5;
+    &tapeconfig5;
+    &uss5;
+    &uss_bulk5;
+    &vldb.DB05;
+  </reference>
+
+  <reference>
+    <title>AFS System Commands</title>
+    &afsd8;
+    &backup8;
+    &backup_adddump8;
+    &backup_addhost8;
+    &backup_addvolentry8;
+    &backup_addvolset8;
+    &backup_apropos8;
+    &backup_dbverify8;
+    &backup_deldump8;
+    &backup_deletedump8;
+    &backup_delhost8;
+    &backup_delvolentry8;
+    &backup_delvolset8;
+    &backup_diskrestore8;
+    &backup_dump8;
+    &backup_dumpinfo8;
+    &backup_help8;
+    &backup_interactive8;
+    &backup_jobs8;
+    &backup_kill8;
+    &backup_labeltape8;
+    &backup_listdumps8;
+    &backup_listhosts8;
+    &backup_listvolsets8;
+    &backup_quit8;
+    &backup_readlabel8;
+    &backup_restoredb8;
+    &backup_savedb8;
+    &backup_scantape8;
+    &backup_setexp8;
+    &backup_status8;
+    &backup_volinfo8;
+    &backup_volrestore8;
+    &backup_volsetrestore8;
+    &bos8;
+    &bos_addhost8;
+    &bos_addkey8;
+    &bos_adduser8;
+    &bos_apropos8;
+    &bos_create8;
+    &bos_delete8;
+    &bos_exec8;
+    &bos_getdate8;
+    &bos_getlog8;
+    &bos_getrestart8;
+    &bos_help8;
+    &bos_install8;
+    &bos_listhosts8;
+    &bos_listkeys8;
+    &bos_listusers8;
+    &bos_prune8;
+    &bos_removehost8;
+    &bos_removekey8;
+    &bos_removeuser8;
+    &bos_restart8;
+    &bos_salvage8;
+    &bos_setauth8;
+    &bos_setcellname8;
+    &bos_setrestart8;
+    &bos_shutdown8;
+    &bos_start8;
+    &bos_startup8;
+    &bos_status8;
+    &bos_stop8;
+    &bos_uninstall8;
+    &bosserver8;
+    &buserver8;
+    &butc8;
+    &fileserver8;
+    &fms8;
+    &fstrace8;
+    &fstrace_apropos8;
+    &fstrace_clear8;
+    &fstrace_dump8;
+    &fstrace_help8;
+    &fstrace_lslog8;
+    &fstrace_lsset8;
+    &fstrace_setlog8;
+    &fstrace_setset8;
+    &kadb_check8;
+    &kas8;
+    &kas_apropos8;
+    &kas_create8;
+    &kas_delete8;
+    &kas_examine8;
+    &kas_forgetticket8;
+    &kas_help8;
+    &kas_interactive8;
+    &kas_list8;
+    &kas_listtickets8;
+    &kas_noauthentication8;
+    &kas_quit8;
+    &kas_setfields8;
+    &kas_setpassword8;
+    &kas_statistics8;
+    &kas_stringtokey8;
+    &kas_unlock8;
+    &kaserver8;
+    &kdb8;
+    &kpwvalid8;
+    &package8;
+    &prdb_check8;
+    &ptserver8;
+    &salvager8;
+    &upclient8;
+    &upserver8;
+    &uss8;
+    &uss_add8;
+    &uss_apropos8;
+    &uss_bulk8;
+    &uss_delete8;
+    &uss_help8;
+    &vldb_check8;
+    &vlserver8;
+    &voldump8;
+    &volinfo8;
+    &volserver8;
+    &xfs_size_check8;
+  </reference>
+
+<!--  &index; -->
+</book>
+
+
+
+
+
+
+
+
+
+

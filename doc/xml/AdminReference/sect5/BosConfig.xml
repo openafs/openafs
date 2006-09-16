@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="BosConfig5">
+  <refmeta>
+    <refentrytitle>BosConfig</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>BosConfig</refname>
+    <refpurpose>Defines server processes for the BOS Server to monitor</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>BosConfig</replaceable> file lists the processes that the Basic OverSeer (BOS)
+    Server monitors on its server machine, and thus defines which AFS server
+    processes run on the machine. It specifies how the BOS Server reacts when
+    a process fails, and also defines the times at which the BOS Server
+    automatically restarts processes as part of performance maintenance.  The
+    file must reside in the <replaceable>/usr/afs/local</replaceable> directory on each AFS server
+    machine.</para>
+
+    <para>A server process entry in the <replaceable>BosConfig</replaceable> file records the following
+    information:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis>entry type</emphasis>, which is one of the following:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>cron</term>
+            <listitem>
+              <para>Designates a server process that runs periodically instead of
+              continuously. The BOS Server starts a cron process only at specified
+              times, not whenever it fails. All standard AFS process entries except
+              <computeroutput>fs</computeroutput> are simple (there are no standard cron processes).</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>fs</term>
+            <listitem>
+              <para>Designates a group of interdependent server processes. If one of the
+              processes fails, the BOS Server must coordinate its restart with the
+              restart of the other processes in the group, possibly by stopping them
+              first.</para>
+
+              <para>There is only one standard entry of this type, for which the conventional
+              name is <computeroutput>fs</computeroutput>. It combines three server processes: the File Server
+              (<emphasis role="bold">fileserver</emphasis> process), the Volume Server (<emphasis role="bold">volserver</emphasis> process), and the
+              Salvager (<emphasis role="bold">salvager</emphasis> process). These processes all operate on the same
+              data--the AFS data stored on an AFS server machine's <replaceable>/vicep</replaceable> partitions
+              and mounted in the AFS filespace--but in different ways. Grouping the
+              processes prevents them from attempting to access the same data
+              simultaneously, which can cause corruption.</para>
+
+              <para>During normal operation, the Salvager process is not active. If the File
+              Server process fails, however, the BOS Server stops the Volume Server
+              process and runs the Salvager process to correct any corruption that
+              resulted from the failure. (The administrator can also issue the <emphasis role="bold">bos
+              salvage</emphasis> command to invoke the Salvager process.) If the Volume Server
+              fails, the BOS Server can restart it without stopping the File Server or
+              running the Salvager.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>simple</term>
+            <listitem>
+              <para>Designates a server process that runs independently of any other on the
+              server machine. If a simple process fails, the BOS Server does not have to
+              coordinate its restart with any other process.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </listitem>
+      <listitem>
+        <para>The <emphasis>entry name</emphasis>. The conventional name for an entry in the <replaceable>BosConfig</replaceable>
+        file and the associated process matches the binary filename. When issuing
+        any <emphasis role="bold">bos</emphasis> command that takes the <emphasis role="bold">-instance</emphasis> argument, identify each
+        process by the name used in the <replaceable>BosConfig</replaceable> file. For a list of the
+        names, see the <emphasis role="bold">bos create</emphasis> reference page.</para>
+
+      </listitem>
+      <listitem>
+        <para>The process's <emphasis>status flag</emphasis>, which determines whether the BOS Server
+        attempts to start the process in two cases: each time the BOS Server
+        itself restarts, and when the process fails. The <replaceable>BosConfig</replaceable> file
+        currently uses a binary notation to indicate whether the BOS Server
+        attempts to restart the process as necessary or does not monitor it at
+        all. For the sake of clarity, the AFS documentation refers to the flags as
+        <computeroutput>Run</computeroutput> and <computeroutput>NotRun</computeroutput> instead.  Only a system administrator, not the BOS
+        Server, can change the flag.</para>
+
+      </listitem>
+      <listitem>
+        <para>One or more <emphasis>command parameters</emphasis> which the BOS Server invokes to start
+        the process or processes associated with the entry:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>A <computeroutput>cron</computeroutput> entry has two command parameters, the first the complete
+            pathname to the program, and the second the time at which the BOS Server
+            invokes the program.</para>
+
+          </listitem>
+          <listitem>
+            <para>The <computeroutput>fs</computeroutput> entry has three command parameters, each the complete pathname
+            to the <emphasis role="bold">fileserver</emphasis>, <emphasis role="bold">volserver</emphasis>, and <emphasis role="bold">salvager</emphasis> programs, in that
+            order.</para>
+
+          </listitem>
+          <listitem>
+            <para>A <computeroutput>simple</computeroutput> entry has only one command parameter, the complete pathname to
+            the program.</para>
+
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </itemizedlist>
+    <para>In addition to server process entries, the <replaceable>BosConfig</replaceable> file specifies the
+    times at which the BOS Server performs two types of automatic process
+    restarts:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis>general restart</emphasis> time at which the BOS Server restarts itself and
+        then each process for which the entry in the <replaceable>BosConfig</replaceable> file has status
+        flag <computeroutput>Run</computeroutput>. The default setting is Sunday at 4:00 a.m.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis>binary restart</emphasis> time at which the BOS Server restarts any server
+        process for which the time stamp on the binary file in the <replaceable>/usr/afs/bin</replaceable>
+        directory is later than the last restart time for the process. The default
+        is 5:00 a.m.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Although the <replaceable>BosConfig</replaceable> file is in ASCII format, do not use a text
+    editor to alter it. Its format is subject to change and incorrectly
+    formatted entries can prevent server startup in ways that are difficult to
+    diagnose. Instead always use the appropriate commands from the <emphasis role="bold">bos</emphasis>
+    command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">bos create</emphasis> command to create an entry in the file and start the
+        associated process.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos delete</emphasis> command to remove an entry from the file after the <emphasis role="bold">bos
+        stop</emphasis> command is used to stop the associated process.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos getrestart</emphasis> command to display the times at which the BOS Server
+        performs automatic restarts.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos setrestart</emphasis> command to set the times at which the BOS Server
+        performs automatic process restarts.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos start</emphasis> command to change an entry's status flag to <computeroutput>Run</computeroutput> and
+        start the associated process.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos status</emphasis> command to display all processes listed in the file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos stop</emphasis> command to change an entry's status flag to <computeroutput>NotRun</computeroutput> and
+        stop the associated process.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>There are also bos commands that start and stop processes without changing
+    entries in the <replaceable>BosConfig</replaceable> file. The BOS Server reads the <replaceable>BosConfig</replaceable>
+    file only when it starts, transferring the information into its
+    memory. Thus a process's status as represented in the BOS Server's memory
+    can diverge from its status in the <replaceable>BosConfig</replaceable> file. The following
+    commands change a process's status in the BOS Server's memory only:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">bos restart</emphasis> command restarts a specified set of processes, all
+        processes, or all processes other than the BOS Server.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos shutdown</emphasis> command stops a process.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos startup</emphasis> command starts a process.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_create8">bos_create(8)</link>,
+    <link linkend="bos_delete8">bos_delete(8)</link>,
+    <link linkend="bos_getrestart8">bos_getrestart(8)</link>,
+    <link linkend="bos_restart8">bos_restart(8)</link>,
+    <link linkend="bos_setrestart8">bos_setrestart(8)</link>,
+    <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+    <link linkend="bos_start8">bos_start(8)</link>,
+    <link linkend="bos_startup8">bos_startup(8)</link>,
+    <link linkend="bos_status8">bos_status(8)</link>,
+    <link linkend="bos_stop8">bos_stop(8)</link>,
+    <link linkend="bos_salvage8">bos_salvage(8)</link>,
+    <link linkend="fileserver8">fileserver(8)</link>,
+    <link linkend="salvager8">salvager(8)</link>,
+    <link linkend="volserver8">volserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

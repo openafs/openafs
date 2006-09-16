@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="rxdebug1">
+  <refmeta>
+    <refentrytitle>rxdebug</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>rxdebug</refname>
+    <refpurpose>Provides debugging trace of Rx activity</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">rxdebug</emphasis> <emphasis role="bold">-servers</emphasis> &lt;<emphasis>server machine</emphasis>&gt; [<emphasis role="bold">-port</emphasis> &lt;<emphasis>IP port</emphasis>&gt;]
+        [<emphasis role="bold">-nodally</emphasis>] [<emphasis role="bold">-allconnections</emphasis>] [<emphasis role="bold">-rxstats</emphasis>] [<emphasis role="bold">-onlyserver</emphasis>]
+        [<emphasis role="bold">-onlyclient</emphasis>] [<emphasis role="bold">-onlyport</emphasis> &lt;<emphasis>show only port</emphasis>&gt;]
+        [<emphasis role="bold">-onlyhost</emphasis> &lt;<emphasis>show only host</emphasis>&gt;]
+        [<emphasis role="bold">-onlyauth</emphasis> &lt;<emphasis>show only auth level</emphasis>&gt;] [<emphasis role="bold">-version</emphasis>]
+        [<emphasis role="bold">-noconns</emphasis>] [<emphasis role="bold">-peers</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">rxdebug</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>server machine</emphasis>&gt; [<emphasis role="bold">-po</emphasis> &lt;<emphasis>IP port</emphasis>&gt;] [<emphasis role="bold">-nod</emphasis>]
+        [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-onlys</emphasis>] [<emphasis role="bold">-onlyc</emphasis>] [<emphasis role="bold">-onlyp</emphasis> &lt;<emphasis>show only port</emphasis>&gt;]
+        [<emphasis role="bold">-onlyh</emphasis> &lt;<emphasis>show only host</emphasis>&gt;] [-onlya &lt;<emphasis>show only auth level</emphasis>&gt;]
+        [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-noc</emphasis>] [<emphasis role="bold">-pe</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">rxdebug</emphasis> command provides a trace of Rx activity for the server or
+    client machine named by the <emphasis role="bold">-servers</emphasis> argument. Rx is AFS's proprietary
+    remote procedure call (RPC) protocol, so this command enables the issuer
+    to check the status of communication between the Cache Manager or an AFS
+    server process (as specified with the <emphasis role="bold">-port</emphasis> argument) on the machine
+    and one or more processes on other machines.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>server machine</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the machine that is running the Cache Manager or server process
+          for which to trace Rx activity. Provide the machine's IP address in dotted
+          decimal format, its fully qualified host name (for example,
+          <computeroutput>fs1.abc.com</computeroutput>), or the shortest abbreviated form of its host name that
+          distinguishes it from other machines. Successful use of an abbreviated
+          form depends on the availability of a name resolution service (such as the
+          Domain Name Service or a local host table) at the time the command is
+          issued.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-port</emphasis> &lt;<emphasis>IP port</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the process for which to trace Rx activity. Omit this argument
+          to specify the File Server (<emphasis role="bold">fileserver</emphasis> process), or provide one of the
+          following values:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><computeroutput>7000</computeroutput> for the File Server (<emphasis role="bold">fileserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7001</computeroutput> for the Cache Manager (specifically, its callback interface)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7002</computeroutput> for the Protection Server (<emphasis role="bold">ptserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7003</computeroutput> for the Volume Location (VL) Server (<emphasis role="bold">vlserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7004</computeroutput> for the Authentication Server (<emphasis role="bold">kaserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7005</computeroutput> for the Volume Server (<emphasis role="bold">volserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7007</computeroutput> for the BOS Server (<emphasis role="bold">bosserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7008</computeroutput> for the Update Server (<emphasis role="bold">upserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7009</computeroutput> for the NFS/AFS Translator's <emphasis role="bold">rmtsysd</emphasis> daemon</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><computeroutput>7021</computeroutput> for the Backup Server (<emphasis role="bold">buserver</emphasis> process)</term>
+              <listitem>
+                <para></para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>Finally, specify <computeroutput>7025</computeroutput> through <computeroutput>65535</computeroutput> for the Backup Tape Coordinator
+          (<emphasis role="bold">butc</emphasis> process) that has the port offset number derived by subtracting
+          7025 from this value.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-nodally</emphasis></term>
+        <listitem>
+          <para>Produces output only for connections that are not in dally mode.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-allconnections</emphasis></term>
+        <listitem>
+          <para>Produces output for all connections, even inactive ones. By default, the
+          output includes information only for connections that are active or in
+          dally mode when the <emphasis role="bold">rxdebug</emphasis> command is issued.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rxstats</emphasis></term>
+        <listitem>
+          <para>Produces detailed statistics about Rx history and performance (for
+          example, counts of the number of packets of various types the process has
+          read and sent, calculations of average and minimum roundtrip time, and so
+          on).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onlyserver</emphasis></term>
+        <listitem>
+          <para>Produces output only for connections in which the process designated by
+          the <emphasis role="bold">-port</emphasis> argument is acting as the server.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onlyclient</emphasis></term>
+        <listitem>
+          <para>Produces output only for connections in which the process designated by
+          the <emphasis role="bold">-port</emphasis> argument is acting as the client.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onlyport</emphasis> &lt;<emphasis>port</emphasis>&gt;</term>
+        <listitem>
+          <para>Produces output only for connections between the process designated by the
+          <emphasis role="bold">-port</emphasis> argument and the specified port on any another machine. Use the
+          same port identifiers as for the <emphasis role="bold">-port</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onlyhost</emphasis> &lt;<emphasis>host</emphasis>&gt;</term>
+        <listitem>
+          <para>Produces output only for connections between the process designated by the
+          <emphasis role="bold">-port</emphasis> argument and any process on the specified machine. To identify
+          the machine, use the same notation as for the <emphasis role="bold">-servers</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onlyauth</emphasis></term>
+        <listitem>
+          <para>Produces output only for connections that are using the specified
+          authentication level. Provide one of the following values:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>auth</term>
+              <listitem>
+                <para>Cconnections at authentication level rxkad_auth</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>clear</term>
+              <listitem>
+                <para>Connections at authentication level rxkad_clear</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>crypt</term>
+              <listitem>
+                <para>Connections at authentication level rxkad_crypt</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>none</term>
+              <listitem>
+                <para>Unauthenticated connections (equivalents are <computeroutput>null</computeroutput>, <computeroutput>noauth</computeroutput>, and
+                <computeroutput>unauth</computeroutput>)</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-version</emphasis></term>
+        <listitem>
+          <para>Reports the AFS build level of the binary file for the process designated
+          by the <emphasis role="bold">-port</emphasis> argument (or of the kernel extensions file for port 7001,
+          the Cache Manager's callback interface). Any other options combined with
+          this one are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noconns</emphasis></term>
+        <listitem>
+          <para>Produces only the standard statistics that begin the output produced by
+          every option (other than <emphasis role="bold">-version</emphasis>), without reporting on any
+          connections. Any other options combined with this one are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-peers</emphasis></term>
+        <listitem>
+          <para>Outputs information from the <emphasis>peer structure</emphasis> maintained for each port on
+          another machine to which the process designated by the <emphasis role="bold">-port</emphasis> argument
+          has a connection. There is information about roundtrip time and numbers of
+          packets sent and received, for example.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If any options other than <emphasis role="bold">-version</emphasis> or <emphasis role="bold">-help</emphasis> are provided, the output
+    written to the standard output stream begins with basic statistics about
+    packet usage and availability, how many calls are waiting for a thread,
+    how many threads are free, and so on (this is the only information
+    provided by the <emphasis role="bold">-noconns</emphasis> flag). Adding other options produces
+    additional information as described in <link linkend="OPTIONS">OPTIONS</link>. The output is intended
+    for debugging purposes and is meaningful to someone familiar with the
+    implementation of Rx.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>None.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="afsd8">afsd(8)</link>,
+    <link linkend="bosserver8">bosserver(8)</link>,
+    <link linkend="buserver8">buserver(8)</link>,
+    <link linkend="butc8">butc(8)</link>,
+    <link linkend="fileserver8">fileserver(8)</link>,
+    <link linkend="kaserver8">kaserver(8)</link>,
+    <link linkend="ptserver8">ptserver(8)</link>,
+    <link linkend="upclient8">upclient(8)</link>,
+    <link linkend="upserver8">upserver(8)</link>,
+    <link linkend="vlserver8">vlserver(8)</link>,
+    <link linkend="volserver8">volserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

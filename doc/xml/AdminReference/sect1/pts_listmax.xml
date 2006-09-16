@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_listmax1">
+  <refmeta>
+    <refentrytitle>pts listmax</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts listmax</refname>
+    <refpurpose>Displays the max user id and max group id counters</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts listmax</emphasis> [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts listm</emphasis> [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts listmax</emphasis> command displays the values of the <computeroutput>max user id</computeroutput> and
+    <computeroutput>max group id</computeroutput> counters, which the Protection Server uses to track the
+    AFS user IDs (AFS UIDs) it allocates to new users or machines, and the AFS
+    group IDs (AFS GIDs) it allocates to new groups, respectively. When an
+    administrator next issues the <emphasis role="bold">pts createuser</emphasis> command and does not
+    include the <emphasis role="bold">-id</emphasis> argument, the new user or machine receives an AFS UID
+    one greater than the <computeroutput>max user id</computeroutput> counter, and when a user issues the
+    <emphasis role="bold">pts creategroup</emphasis> command and does not include the <emphasis role="bold">-id</emphasis> argument, the
+    new group receives an AFS UID one less (more negative) than the <computeroutput>max
+    group id</computeroutput> counter.</para>
+
+    <para>To reset one or both counters, members of the system:administrators group
+    can issue the <emphasis role="bold">pts setmax</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The command displays the counters in the following format:</para>
+
+<programlisting>
+   Max user id is &amp;lt;user_counter&amp;gt; and max group id is &amp;lt;group_counter&amp;gt;.
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example displays the output of this command:</para>
+
+<programlisting>
+   % pts listmax
+   Max user name is 1271 and max group id is -382.
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="pts1">pts(1)</link>,
+        <link linkend="pts_setmax1">pts_setmax(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

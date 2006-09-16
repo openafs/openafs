@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_clear8">
+  <refmeta>
+    <refentrytitle>fstrace clear</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace clear</refname>
+    <refpurpose>Clears the trace log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace clear</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;+]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace c</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-l</emphasis> &lt;<emphasis>log name</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace clear</emphasis> command erases the contents of the trace log from
+    kernel memory, but leaves kernel memory allocated for the log.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the event set for which to clear the associated trace log.  The only
+          acceptable value is <computeroutput>cm</computeroutput> (for which the associated trace log is
+          <computeroutput>cmfx</computeroutput>). Provide either this argument or the <emphasis role="bold">-log</emphasis> argument, or omit
+          both to clear the <computeroutput>cmfx</computeroutput> log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the trace log to clear. The only acceptable value is
+          <computeroutput>cmfx</computeroutput>. Provide either this argument or the <emphasis role="bold">-set</emphasis> argument, or omit
+          both to clear the <computeroutput>cmfx</computeroutput> log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command clears the <computeroutput>cmfx</computeroutput> trace log on the local machine:</para>
+
+<programlisting>
+   # fstrace clear
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fstrace8">fstrace(8)</link>,
+      <link linkend="fstrace_lslog8">fstrace_lslog(8)</link>,
+      <link linkend="fstrace_lsset8">fstrace_lsset(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

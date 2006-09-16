@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_getclientaddrs1">
+  <refmeta>
+    <refentrytitle>fs getclientaddrs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs getclientaddrs</refname>
+    <refpurpose>Displays the client interfaces to register</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs getclientaddrs</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs gc</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs getcl</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs getclientaddrs</emphasis> command displays the IP addresses of the
+    interfaces that the local Cache Manager registers with a File Server when
+    first establishing a connection to it.</para>
+
+    <para>The File Server uses the addresses when it initiates a remote procedure
+    call (RPC) to the Cache Manager (as opposed to responding to an RPC sent
+    by the Cache Manager). There are two common circumstances in which the
+    File Server initiates RPCs: when it breaks callbacks and when it pings the
+    client machine to verify that the Cache Manager is still accessible.</para>
+
+    <para>If an RPC to that interface fails, the File Server simultaneously sends
+    RPCs to all of the other interfaces in the list, to learn which of them
+    are still available. Whichever interface replies first is the one to which
+    the File Server then sends pings and RPCs to break callbacks.</para>
+
+    <para><link linkend="fs_setclientaddrs1">fs_setclientaddrs(1)</link> explains how the Cache Manager constructs the list
+    automatically in kernel memory as it initializes, and how to use that
+    command to alter the kernel list after initialization.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The File Server uses the list of interfaces displayed by this command only
+    when selecting an alternative interface after a failed attempt to break a
+    callback or ping the Cache Manager. When responding to the Cache Manager's
+    request for file system data, the File Server replies to the interface
+    which the Cache Manager used when sending the request. If the File
+    Server's reply to a data request fails, the file server machine's network
+    routing configuration determines which alternate network routes to the
+    client machine are available for resending the reply.</para>
+
+    <para>The displayed list applies to all File Servers to which the Cache Manager
+    connects in the future. It is not practical to register different sets of
+    addresses with different File Servers, because it requires using the <emphasis role="bold">fs
+    setclientaddrs</emphasis> command to change the list and then rebooting each
+    relevant File Server immediately.</para>
+
+    <para>The displayed list is not necessarily governing the behavior of a given
+    File Server, if an administrator has issued the <emphasis role="bold">fs setclientaddrs</emphasis>
+    command since the Cache Manager first contacted that File Server. It
+    determines only which addresses the Cache Manager registers when
+    connecting to File Servers in the future.</para>
+
+    <para>The list of interfaces does not influence the Cache Manager's choice of
+    interface when establishing a connection to a File Server.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays the IP address of each interface that the Cache
+    Manager is currently registering with File Server processes that it
+    contacts, with one address per line. The File Server initially uses the
+    first address for breaking callbacks and pinging the Cache Manager, but
+    the ordering of the other interfaces is not meaningful.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example displays the two interfaces that the Cache Manager
+    is registering with File Servers.</para>
+
+<programlisting>
+   % fs getclientaddrs
+   192.12.105.68
+   192.12.108.84
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fileserver8">fileserver(8)</link>,
+      <link linkend="fs_setclientaddrs1">fs_setclientaddrs(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

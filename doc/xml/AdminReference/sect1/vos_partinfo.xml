@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_partinfo1">
+  <refmeta>
+    <refentrytitle>vos partinfo</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos partinfo</refname>
+    <refpurpose>Reports the available and total space on a partition</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos partinfo</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos p</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The vos partinfo command reports the amount of space available and total
+    size on either all of the partitions on the indicated file server machine
+    (if the <emphasis role="bold">-partition</emphasis> argument is omitted) or the specified partition on
+    that file server machine. The Volume Location Database (VLDB) is not
+    consulted.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine for which to display partition
+          information. Provide the machine's IP address or its host name (either
+          fully qualified or using an unambiguous abbreviation). For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies which partition on the file server machine specified by the
+          <emphasis role="bold">-server</emphasis> argument for which to display information. Provide the
+          partition's complete name with preceding slash (for example, <computeroutput>/vicepa</computeroutput>)
+          or use one of the three acceptable abbreviated forms. For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The partition-related statistics in this command's output do not always
+    agree with the corresponding values in the output of the standard UNIX
+    <emphasis role="bold">df</emphasis> command. The statistics reported by this command can be up to five
+    minutes old, because the Cache Manager polls the File Server for partition
+    information at that frequency. Also, on some operating systems, the <emphasis role="bold">df</emphasis>
+    command's report of partition size includes reserved space not included in
+    this command's calculation, and so is likely to be about 10% larger.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports the amount of space available and total space for each
+    specified partition.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays all partitions on the file server machine
+    <computeroutput>fs2.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % vos partinfo fs2.abc.com
+   Free space on partition /vicepa: 27301 K blocks out of total 549197
+   Free space on partition /vicepb: 13646 K blocks out of total 69194
+   Free space on partition /vicepc: 31798 K blocks out of total 320315
+   Free space on partition /vicepd: 33302 K blocks out of total 494954
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_listpart1">vos_listpart(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

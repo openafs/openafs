@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="package8">
+  <refmeta>
+    <refentrytitle>package</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>package</refname>
+    <refpurpose>Configures files and directories on the local disk</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">package</emphasis> [<emphasis>initcmd</emphasis>] [<emphasis role="bold">-config</emphasis> &lt;<emphasis>base name of configuration file</emphasis>&gt;]
+        [<emphasis role="bold">-fullconfig</emphasis> &lt;<emphasis>full name of configuration file, or stdin</emphasis>&gt;]
+        [<emphasis role="bold">-overwrite</emphasis>] [<emphasis role="bold">-noaction</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-silent</emphasis>]
+        [<emphasis role="bold">-rebootfiles</emphasis>] [<emphasis role="bold">-debug</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">package</emphasis> [<emphasis role="bold">i</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>base name of configuration file</emphasis>&gt;]
+        [<emphasis role="bold">-f</emphasis> &lt;<emphasis>full name of configuration file, or stdin</emphasis>&gt;]
+        [<emphasis role="bold">-o</emphasis>] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-s</emphasis>] [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">package</emphasis> command configures the machine's local disk to comply with
+    the instructions in the configuration file named by the <emphasis role="bold">-config</emphasis> or
+    <emphasis role="bold">-fullconfig</emphasis> argument.</para>
+
+    <para>By default, the package command alters any existing local disk element
+    whose contents or configuration does not match the element defined in the
+    configuration file. For example, if a configuration file <computeroutput>D</computeroutput> instruction
+    defines a directory that has the same name as a symbolic link on the local
+    disk, the <emphasis role="bold">package</emphasis> command replaces the symbolic link with the
+    directory. The <computeroutput>F</computeroutput> and <computeroutput>L</computeroutput> instructions include an optional
+    <emphasis>update_code</emphasis> field that alters this behavior.</para>
+
+    <para>Also by default, the package command takes no action on elements on the
+    local disk that are not mentioned in the configuration file. Use the <computeroutput>D</computeroutput>
+    instruction's <computeroutput>R</computeroutput> update code to remove files from the disk directory
+    that are not mentioned in the configuration file.</para>
+
+    <para>Before running the package command, the administrator must create the
+    template file and other files on the local disk. For instructions, see the
+    <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+    <para>It is not possible to configure a remote client machine's disk using this
+    command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The package command interpreter exits without executing any instruction if
+    there are any syntax errors or incorrect values in the configuration file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>[<emphasis>initcmd</emphasis>]</term>
+        <listitem>
+          <para>Accommodates the command's use of the AFS command parser, and is optional.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-config</emphasis> &lt;<emphasis>base name of configuration file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the configuration file to use, ending in the
+          file's base name, which omits the suffix that indicates the machine
+          type. The <emphasis role="bold">package</emphasis> command determines the machine's system type name and
+          automatically appends it to the base name. An example of the proper value
+          for this argument is <computeroutput>staff</computeroutput> rather than <computeroutput>staff.rs_aix42</computeroutput>. Partial
+          pathnames are interpreted relative to the current working directory.</para>
+
+          <para>Provide this argument or the <emphasis role="bold">-fullconfig</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fullconfig</emphasis> &lt;<emphasis>full name of configuration file, or stdin</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the configuration file to use. Two types of values are
+          acceptable:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The full pathname of the configuration file to use, complete with an
+              extension indicating the machine type (examples: <computeroutput>staff.rs_aix42</computeroutput>,
+              <computeroutput>admin.sun4x_56</computeroutput>).</para>
+
+            </listitem>
+            <listitem>
+              <para>The string <computeroutput>stdin</computeroutput> to indicate that the issuer is providing configuration
+              information via the standard input stream, either by piping in the
+              contents of a file, or by typing configuration lines at the shell.  In the
+              latter case, type Ctrl-D to conclude the input.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>Provide this argument or the <emphasis role="bold">-config</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-overwrite</emphasis></term>
+        <listitem>
+          <para>Overwrites elements on the local disk with the source version indicated in
+          the configuration file, even if the owner write (<computeroutput>w</computeroutput>) mode bit is turned
+          on the disk element. Files protected by the <computeroutput>I</computeroutput> update code on an <computeroutput>F</computeroutput>
+          line in the configuration file are not overwritten.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noaction</emphasis></term>
+        <listitem>
+          <para>Checks the sequence of operations to be performed when the command
+          actually runs and reports any problems that the <emphasis role="bold">package</emphasis> command
+          interpreter expects to encounter. No elements on the local disk or in AFS
+          are changed. If the <emphasis role="bold">-verbose</emphasis> flag is also provided, the trace includes
+          all actions to be performed as well as anticipated errors.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-silent</emphasis></term>
+        <listitem>
+          <para>Suppresses some of the trace messages sent to the standard output stream
+          by default. The output still reports major problems.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rebootfiles</emphasis></term>
+        <listitem>
+          <para>Prevents overwriting of any file marked with the <computeroutput>Q</computeroutput> update code on an
+          <computeroutput>F</computeroutput> line in the configuration file. This effectively prevents the machine
+          from rebooting automatically again when the <emphasis role="bold">package</emphasis> command is invoked
+          in the machine's AFS initialization file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-debug</emphasis></term>
+        <listitem>
+          <para>Enables debugging output, which is directed to the standard output stream
+          by default. By default, no debugging output is produced.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>This command is usually invoked in a client machine's AFS initialization
+    file (<replaceable>/etc/rc</replaceable> or equivalent), rather than issued at the command shell
+    prompt.</para>
+
+    <para>The following command invokes the version of the staff configuration file
+    appropriate for this machine's system type, and produces verbose output.</para>
+
+<programlisting>
+   # /etc/package -c staff -v
+
+</programlisting>
+      <para>The following example uses the configuration file whose basename is
+      defined in the <replaceable>/.package</replaceable> file on the local machine. This method enables
+      the administrator to use the same <emphasis role="bold">package</emphasis> command in every machine's
+      AFS initialization file but still customize configuration by putting the
+      appropriate basename in the <replaceable>/.package</replaceable> file.</para>
+
+<programlisting>
+   # /etc/package -c `cat /.package` -v
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="package5">package(5)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

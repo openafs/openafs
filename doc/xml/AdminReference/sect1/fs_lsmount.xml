@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_lsmount1">
+  <refmeta>
+    <refentrytitle>fs lsmount</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs lsmount</refname>
+    <refpurpose>Reports the volume for which a directory is the mount point.</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs lsmount</emphasis> <emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt;+ [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs ls -d</emphasis> &lt;<emphasis>directory</emphasis>&gt;+ [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs lsmount</emphasis> command reports the volume for which each specified
+    directory is a mount point, or indicates with an error message that a
+    directory is not a mount point or is not in AFS.</para>
+
+    <para>To create a mount point, use the <emphasis role="bold">fs mkmount</emphasis> command. To remove one, use
+    the <emphasis role="bold">fs rmmount</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the directory that serves as a mount point for a volume. The last
+          element in the pathname provided must be an actual name, not a shorthand
+          notation such as one or two periods (<computeroutput>.</computeroutput> or <computeroutput>..</computeroutput>).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options
+          are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If the specified directory is a mount point, the output is of the
+    following form:</para>
+
+<programlisting>
+   '&amp;lt;directory&amp;gt;' is a mount point for volume '&amp;lt;volume name&amp;gt;'
+
+</programlisting>
+      <para>where</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>A number sign (<computeroutput>#</computeroutput>) precedes the &lt;volume name&gt; string for a regular mount
+          point.</para>
+
+        </listitem>
+        <listitem>
+          <para>A percent sign (<computeroutput>%</computeroutput>) precedes the &lt;volume name&gt; string for a read/write
+          mount point.</para>
+
+        </listitem>
+        <listitem>
+          <para>A cell name and colon (<computeroutput>:</computeroutput>) follow the number or percent sign and precede
+          the &lt;volume name&gt; string for a cellular mount point.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>The <emphasis role="bold">fs mkmount</emphasis> reference page explains how the Cache Manager interprets
+      each of the three types of mount points.</para>
+
+      <para>If the directory is a symbolic link to a mount point, the output is of the
+      form:</para>
+
+<programlisting>
+   '&amp;lt;directory&amp;gt;' is a symbolic link, leading to a mount point for volume
+   '&amp;lt;volume name&amp;gt;'
+
+</programlisting>
+        <para>If the directory is not a mount point or is not in AFS, the output reads:</para>
+
+<programlisting>
+   '&amp;lt;directory&amp;gt;' is not a mount point.
+
+</programlisting>
+          <para>If the output is garbled, it is possible that the mount point has become
+          corrupted in the local AFS client cache. Use the <emphasis role="bold">fs flushmount</emphasis> command
+          to discard it, which forces the Cache Manager to refetch the mount point.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>Examples</title>
+          <para>The following example shows the mount point for the home directory of user
+          <computeroutput>smith</computeroutput>:</para>
+
+<programlisting>
+   % fs lsmount /afs/abc.com/usr/smith
+   '/afs/abc.com/usr/smith' is a mount point for volume '#user.smith'
+
+</programlisting>
+            <para>The following example shows both the regular and read/write mount points
+            for the ABC Corporation cell's <computeroutput>root.cell</computeroutput> volume.</para>
+
+<programlisting>
+   % fs lsmount /afs/abc.com
+   '/afs/abc.com' is a mount point for volume '#root.cell'
+
+</programlisting>
+<programlisting>
+   % fs lsmount /afs/.abc.com
+   '/afs/.abc.com' is a mount point for volume '%root.cell'
+
+</programlisting>
+                <para>The following example shows a cellular mount point: the State University
+                cell's <computeroutput>root.cell</computeroutput> volume as mounted in the ABC Corporation cell's tree.</para>
+
+<programlisting>
+   % fs lsmount /afs/stateu.edu
+   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+
+</programlisting>
+                </refsect1>
+                <refsect1>
+                  <title>Privilege Required</title>
+                  <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+                  directory of the volume that houses the file or directory named by the
+                  <emphasis role="bold">-dir</emphasis> argument, and on the ACL of each directory that precedes it in the
+                  pathname.</para>
+
+                </refsect1>
+                <refsect1>
+                  <title>See Also</title>
+                  <para><link linkend="fs_flushmount1">fs_flushmount(1)</link>,
+                  <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+                  <link linkend="fs_rmmount1">fs_rmmount(1)</link></para>
+
+                </refsect1>
+                <refsect1>
+                  <title>Copyright</title>
+                  <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                  <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                  converted from HTML to POD by software written by Chas Williams and Russ
+                  Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                </refsect1>
+              </refentry>

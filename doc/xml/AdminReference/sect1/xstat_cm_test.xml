@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="xstat_cm_test1">
+  <refmeta>
+    <refentrytitle>xstat_cm_test</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>xstat_cm_test</refname>
+    <refpurpose>Displays data collections from the Cache Manager</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">xstat_cm_test</emphasis> [<emphasis>initcmd</emphasis>]
+        <emphasis role="bold">-cmname</emphasis> &lt;<emphasis>cache manager name(s) to monitor</emphasis>&gt;+
+        <emphasis role="bold">-collID</emphasis> &lt;<emphasis>collection(s) to fetch</emphasis>&gt;+ [<emphasis role="bold">-onceonly</emphasis>]
+        [<emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;]
+        [<emphasis role="bold">-period</emphasis> &lt;<emphasis>data collection time, in minutes</emphasis>&gt;] [<emphasis role="bold">-debug</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">xstat_cm_test</emphasis> [<emphasis>i</emphasis>] <emphasis role="bold">-cm</emphasis> &lt;<emphasis>cache manager name(s) to monitor</emphasis>&gt;+
+        <emphasis role="bold">-co</emphasis> &lt;<emphasis>collection(s) to fetch</emphasis>&gt;+ [<emphasis role="bold">-o</emphasis>]
+        [<emphasis role="bold">-f</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>data collection time, in minutes</emphasis>&gt;] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">xstat_cm_test</emphasis> command tests the routines in the <replaceable>libxstat_cm.a</replaceable>
+    library and displays the data collections associated with the Cache
+    Manager. The command executes in the foreground.</para>
+
+    <para>The command produces a large volume of output; to save it for later
+    analysis, direct it to a file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis>initcmd</emphasis></term>
+        <listitem>
+          <para>Accommodates the command's use of the AFS command parser, and is optional.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cmname</emphasis> &lt;<emphasis>cache manager name to monitor</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the fully qualified hostname of each client machine for which to
+          monitor the Cache Manager.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-collID</emphasis> &lt;<emphasis>collection to fetch</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies each data collection to return, which defines the type and
+          amount of data the command interpreter gathers about the Cache Manager.
+          Data is returned in a predefined data structure.</para>
+
+          <para>There are three acceptable values:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>0</term>
+              <listitem>
+                <para>Provides profiling information about the numbers of times different
+                internal Cache Manager routines were called since the Cache Manager
+                started.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>1</term>
+              <listitem>
+                <para>Reports various internal performance statistics related to the Cache
+                Manager (for example, statistics about how effectively the cache is being
+                used and the quantity of intracell and intercell data access).</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>2</term>
+              <listitem>
+                <para>Reports all of the internal performance statistics provided by the <computeroutput>1</computeroutput>
+                setting, plus some additional, detailed performance figures (for example,
+                statistics about the number of RPCs sent by the Cache Manager and how long
+                they take to complete, and statistics regarding authentication, access,
+                and PAG information associated with data access).</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-onceonly</emphasis></term>
+        <listitem>
+          <para>Gathers statistics just one time. Omit this flag to have the command
+          continue to probe the Cache Manager for statistics at the frequency
+          specified by the <emphasis role="bold">-frequency</emphasis> argument; in this case press Ctrl-C to stop
+          the probes.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the frequency in seconds at which the program initiates probes to the
+          Cache Manager. The default is 30 seconds.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-period</emphasis> &lt;<emphasis>data collection time</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of minutes the program runs; at the end of this period of
+          time, the program exits. The default is 10 minutes.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-debug</emphasis></term>
+        <listitem>
+          <para>Displays a trace on the standard output stream as the command runs.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="xstat_fs_test1">xstat_fs_test(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

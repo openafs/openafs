@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_prune8">
+  <refmeta>
+    <refentrytitle>bos prune</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos prune</refname>
+    <refpurpose>Removes obsolete files from /usr/afs/bin and /usr/afs/logs</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos prune</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-bak</emphasis>] [<emphasis role="bold">-old</emphasis>] [<emphasis role="bold">-core</emphasis>]
+        [<emphasis role="bold">-all</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos p</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-b</emphasis>] [<emphasis role="bold">-o</emphasis>] [<emphasis role="bold">-co</emphasis>] [<emphasis role="bold">-a</emphasis>]
+        [<emphasis role="bold">-ce</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos prune</emphasis> command removes files from the local disk of the server
+    machine named by the <emphasis role="bold">-server</emphasis> argument, as specified by one or more of
+    the following flags provided on the command line:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">-bak</emphasis> flag removes all files from the <replaceable>/usr/afs/bin</replaceable> directory that
+        have a <computeroutput>.BAK</computeroutput> extension.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">-old</emphasis> flag removes all files from the <replaceable>/usr/afs/bin</replaceable> directory that
+        have a <computeroutput>.OLD</computeroutput> extension.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">-core</emphasis> flag removes all files from the <replaceable>/usr/afs/logs</replaceable> directory
+        that have a <computeroutput>core.</computeroutput> prefix.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">-all</emphasis> flag removes all three types of files at once.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>(If none of these flags are included, the command appears to succeed, but
+    removes no files at all.)</para>
+
+    <para>To display the timestamp on the current, <computeroutput>.BAK</computeroutput>, and <computeroutput>.OLD</computeroutput> versions of
+    one or more files, use the <emphasis role="bold">bos getdate</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine from which to remove files. Identify the
+          machine by IP address or its host name (either fully-qualified or
+          abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-bak</emphasis></term>
+        <listitem>
+          <para>Removes all files from the <replaceable>/usr/afs/bin</replaceable> directory that have a <computeroutput>.BAK</computeroutput>
+          extension. Do not combine this flag and the <emphasis role="bold">-all</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-old</emphasis></term>
+        <listitem>
+          <para>Removes all files from the <replaceable>/usr/afs/bin</replaceable> directory that have a <computeroutput>.OLD</computeroutput>
+          extension. Do not combine this flag and the <emphasis role="bold">-all</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-core</emphasis></term>
+        <listitem>
+          <para>Removes all files from the <replaceable>/usr/afs/logs</replaceable> directory that have a <computeroutput>core.</computeroutput>
+          prefix. Do not combine this flag and the <emphasis role="bold">-all</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-all</emphasis></term>
+        <listitem>
+          <para>Combines the effect of the <emphasis role="bold">-bak</emphasis>, <emphasis role="bold">-old</emphasis>, and <emphasis role="bold">-core</emphasis> flags. Do not
+          combine this flag with any of those three.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example removes all files from the <replaceable>/usr/afs/bin</replaceable> directory
+    on the machine <computeroutput>fs3.abc.com</computeroutput> that have a <computeroutput>.BAK</computeroutput> or <computeroutput>.OLD</computeroutput> extension.</para>
+
+<programlisting>
+   % bos prune -server fs3.abc.com -bak -old
+
+</programlisting>
+      <para>The following example removes all files from the <replaceable>/usr/afs/bin</replaceable> directory
+      on the machine <computeroutput>db2.abc.com</computeroutput> that have a <computeroutput>.BAK</computeroutput> or <computeroutput>.OLD</computeroutput> extension,
+      and all files from the <replaceable>/usr/afs/logs</replaceable> directory that have a <computeroutput>core.</computeroutput>
+      prefix.</para>
+
+<programlisting>
+   % bos prune -server db2.abc.com -all
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+        machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+        included.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="KeyFile5">KeyFile(5)</link>,
+        <link linkend="UserList5">UserList(5)</link>,
+        <link linkend="bos8">bos(8)</link>,
+        <link linkend="bos_getdate8">bos_getdate(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_getcellstatus1">
+  <refmeta>
+    <refentrytitle>fs getcellstatus</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs getcellstatus</refname>
+    <refpurpose>Reports whether setuid programs are honored in a cell</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs getcellstatus</emphasis> <emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+ [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs getce</emphasis> <emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+ [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs getcellstatus</emphasis> command reports whether the Cache Manager allows
+    programs fetched from each specified cell to run with setuid
+    permission. To set a cell's setuid status, use the <emphasis role="bold">fs setcell</emphasis> command;
+    <link linkend="fs_setcell1">fs_setcell(1)</link> fully describes how AFS treats setuid programs.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each cell for which to report setuid status. Provide the fully
+          qualified domain name, or a shortened form that disambiguates it from the
+          other cells listed in the local <replaceable>/usr/vice/etc/CellServDB</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports one of the following two values as appropriate:</para>
+
+<programlisting>
+   Cell &amp;lt;cell&amp;gt; status: setuid allowed
+   Cell &amp;lt;cell&amp;gt; status: no setuid allowed
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example indicates that programs from the cell <computeroutput>abc.com</computeroutput> are
+      not allowed to run with setuid permission.</para>
+
+<programlisting>
+   % fs getcellstatus abc.com
+   Cell abc.com status: no setuid allowed
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="CellServDB5">CellServDB(5)</link>,
+        <link linkend="fs_setcell1">fs_setcell(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

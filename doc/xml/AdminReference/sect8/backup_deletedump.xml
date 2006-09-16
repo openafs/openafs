@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_deletedump8">
+  <refmeta>
+    <refentrytitle>backup deletedump</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup deletedump</refname>
+    <refpurpose>Deletes one or more dump records from the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup deletedump</emphasis> [<emphasis role="bold">-dumpid</emphasis> &lt;<emphasis>dump id</emphasis>&gt;+] [<emphasis role="bold">-from</emphasis> &lt;<emphasis>date time</emphasis>&gt;+]
+        [<emphasis role="bold">-to</emphasis> &lt;<emphasis>date time</emphasis>&gt;+] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup dele</emphasis> [<emphasis role="bold">-d</emphasis> &lt;<emphasis>dump id</emphasis>&gt;+] [<emphasis role="bold">-f</emphasis> &lt;<emphasis>date time</emphasis>&gt;+]
+        [-t &lt;<emphasis>date time</emphasis>&gt;+] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup deletedump</emphasis> command deletes one or more dump records from the
+    Backup Database. Either use the <emphasis role="bold">-dumpid</emphasis> argument to specify the dump ID
+    number of one or more dumps, or use the <emphasis role="bold">-from</emphasis> and <emphasis role="bold">-to</emphasis> arguments to
+    delete the records for all regular dumps created during the time period
+    bracketed by the specified values.</para>
+
+    <para>Use this command to remove dump records that are incorrect (possibly
+    because a dump operation was interrupted or failed), or that correspond to
+    dumps that are expired or otherwise no longer needed.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The only way to remove the dump record for an appended dump is to remove
+    the record for its initial dump, and doing so removes the records for all
+    of the initial dump's associated appended dumps.</para>
+
+    <para>The only way to remove the record for a Backup Database dump (created with
+    the <emphasis role="bold">backup savedb</emphasis> command) is to specify its dump ID number with the
+    <emphasis role="bold">-dumpid</emphasis> argument. Using the <emphasis role="bold">-from</emphasis> and <emphasis role="bold">-to</emphasis> arguments never removes
+    database dump records.</para>
+
+    <para>Removing records of a dump makes it impossible to restore data from the
+    corresponding tapes or from any dump that refers to the deleted dump as
+    its parent, directly or indirectly. That is, restore operations must begin
+    with the full dump and continue with each incremental dump in order. If
+    the records for a specific dump are removed, it is not possible to restore
+    data from later incremental dumps unless the deleted records are restored
+    by running the <emphasis role="bold">backup scantape</emphasis> command with the <emphasis role="bold">-dbadd</emphasis> flag.</para>
+
+    <para>If a dump set contains any dumps that were created outside the time range
+    specified by the <emphasis role="bold">-from</emphasis> and <emphasis role="bold">-to</emphasis> arguments, the command does not
+    delete any of the records associated with the dump set, even if some of
+    them represent dumps created during the time range.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dumpid</emphasis> &lt;<emphasis>dump id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the dump ID of each dump record to delete. The corresponding
+          dumps must be initial dumps; it is not possible to delete appended dump
+          records directly, but only by deleting the record of their associated
+          initial dump. Using this argument is the only way to delete records of
+          Backup Database dumps (created with the <emphasis role="bold">backup savedb</emphasis> command).</para>
+
+          <para>Provide either this argument or the <emphasis role="bold">-to</emphasis> (and optionally <emphasis role="bold">-from</emphasis>)
+          argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-from</emphasis> &lt;<emphasis>date time</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the beginning of a range of dates; the record for any dump
+          created during the indicated period of time is deleted.</para>
+
+          <para>Omit this argument to indicate the default of midnight (00:00 hours) on 1
+          January 1970 (UNIX time zero), or provide a date value in the format
+          <emphasis>mm/dd/yyyy</emphasis> [<emphasis>hh:MM</emphasis>]. The month (<emphasis>mm</emphasis>), day (<emphasis>dd</emphasis>), and year
+          (<emphasis>yyyy</emphasis>) are required. The hour and minutes (<emphasis>hh:MM</emphasis>) are optional, but
+          if provided must be in 24-hour format (for example, the value <computeroutput>14:36</computeroutput>
+          represents 2:36 p.m.). If omitted, the time defaults to midnight (00:00
+          hours).</para>
+
+          <para>The <emphasis role="bold">-to</emphasis> argument must be provided along with this one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-to</emphasis> &lt;<emphasis>date time</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the end of a range of dates; the record of any dump created
+          during the range is deleted from the Backup Database.</para>
+
+          <para>Provide either the value <computeroutput>NOW</computeroutput> to indicate the current date and time, or
+          a date value in the same format as for the <emphasis role="bold">-from</emphasis> argument. Valid values
+          for the year (<emphasis>yyyy</emphasis>) range from <computeroutput>1970</computeroutput> to <computeroutput>2037</computeroutput>; higher values are
+          not valid because the latest possible date in the standard UNIX
+          representation is in February 2038. The command interpreter automatically
+          reduces any later date to the maximum value.</para>
+
+          <para>If the time portion (<emphasis>hh:MM</emphasis>) is omitted, it defaults to 59 seconds after
+          midnight (00:00:59 hours). Similarly, the <emphasis role="bold">backup</emphasis> command interpreter
+          automatically adds 59 seconds to any time value provided. In both cases,
+          adding 59 seconds compensates for how the Backup Database and <emphasis role="bold">backup
+          dumpinfo</emphasis> command represent dump creation times in hours and minutes
+          only. For example, the Database records a creation timestamp of <computeroutput>20:55</computeroutput>
+          for any dump operation that begins between 20:55:00 and 20:55:59.
+          Automatically adding 59 seconds to a time thus includes the records for
+          all dumps created during that minute.</para>
+
+          <para>Provide either this argument, or the <emphasis role="bold">-dumpid</emphasis> argument.  This argument
+          is required if the <emphasis role="bold">-from</emphasis> argument is provided.</para>
+
+          <para><emphasis role="bold">Caution:</emphasis> Specifying the value <computeroutput>NOW</computeroutput> for this argument when the
+          <emphasis role="bold">-from</emphasis> argument is omitted deletes all dump records from the Backup
+          Database (except for Backup Database dump records created with the
+          <emphasis role="bold">backup savedb</emphasis> command).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>At the conclusion of processing, the output lists the dump IDs of all dump
+    records deleted in the following format:</para>
+
+<programlisting>
+   The following dumps were deleted:
+        dump ID 1
+        dump ID 2
+        etc.
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following command deletes the dump record with dump ID 653777462, and
+      for any appended dumps associated with it:</para>
+
+<programlisting>
+   % backup deletedump -dumpid 653777462
+   The following dumps were deleted:
+        653777462
+
+</programlisting>
+        <para>The following command deletes the Backup Database record of all dumps
+        created between midnight on 1 January 1997 and 23:59:59 hours on 31
+        December 1997:</para>
+
+<programlisting>
+   % backup deletedump -from 01/01/1997 -to 12/31/1997
+   The following dumps were deleted:
+        598324045
+        598346873
+           ...
+           ...
+        653777523
+        653779648
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+          machine where the Backup Server is running, or must be logged onto a
+          server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+          included.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="backup8">backup(8)</link>,
+          <link linkend="backup_dumpinfo8">backup_dumpinfo(8)</link>,
+          <link linkend="backup_scantape8">backup_scantape(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

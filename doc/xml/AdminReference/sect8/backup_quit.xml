@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_quit8">
+  <refmeta>
+    <refentrytitle>backup quit</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup quit</refname>
+    <refpurpose>Leaves interactive mode</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">quit</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">q</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup quit</emphasis> command exits interactive mode, returning the issuer to
+    the regular shell prompt at which the <emphasis role="bold">backup</emphasis> or <emphasis role="bold">backup interactive</emphasis>
+    command was issued to enter interactive mode. The command has no effect
+    when issued outside interactive mode. Issuing the Ctrl-D command also
+    exits interactive mode.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>To exit interactive mode, all jobs must be completed. Use the <emphasis role="bold">backup
+    jobs</emphasis> command to list any jobs currently pending or executing, and the
+    <emphasis role="bold">backup kill</emphasis> command to terminate them as necessary.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command exits interactive mode:</para>
+
+<programlisting>
+   backup&amp;gt; quit
+   %
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_interactive8">backup_interactive(8)</link>,
+      <link linkend="backup_jobs8">backup_jobs(8)</link>,
+      <link linkend="backup_kill8">backup_kill(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_listusers8">
+  <refmeta>
+    <refentrytitle>bos listusers</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos listusers</refname>
+    <refpurpose>Lists the privileged users from the UserList file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos listusers</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos listu</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos listusers</emphasis> command lists the user names from the
+    <replaceable>/usr/afs/etc/UserList</replaceable> file on the file server machine named by the
+    <emphasis role="bold">-server</emphasis> argument. The users are authorized to issue privileged <emphasis role="bold">bos</emphasis>
+    and <emphasis role="bold">vos</emphasis> commands.</para>
+
+    <para>To edit the list of users, use the <emphasis role="bold">bos adduser</emphasis> and <emphasis role="bold">bos removeuser</emphasis>
+    commands.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine from which to display the UserList
+          file. Identify the machine by IP address or its host name (either
+          fully-qualified or abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+          <para>For consistent performance in the cell, the output must be the same on
+          every server machine. The <emphasis role="bold">bos adduser</emphasis> reference page explains how to
+          keep the machines synchronized.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output lists the user name of each user entitled to issue privileged
+    <emphasis role="bold">bos</emphasis> and <emphasis role="bold">vos</emphasis> commands.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example lists the users from UserList file on the machine
+    <computeroutput>fs4.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % bos listusers fs4.abc.com
+   SUsers are: pat smith jones terry
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_adduser8">bos_adduser(8)</link>,
+      <link linkend="bos_removeuser8">bos_removeuser(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

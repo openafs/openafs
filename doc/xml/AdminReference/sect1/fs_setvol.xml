@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_setvol1">
+  <refmeta>
+    <refentrytitle>fs setvol</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs setvol</refname>
+    <refpurpose>Set quota and messages for a volume containing a file or directory</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs setvol</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+]
+        [<emphasis role="bold">-max</emphasis> &lt;<emphasis>disk space quota in 1K units</emphasis>&gt;]
+        [<emphasis role="bold">-offlinemsg</emphasis> &lt;<emphasis>offline message</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs setv</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+]
+        [<emphasis role="bold">-ma</emphasis> &lt;<emphasis>disk space quota in 1K units</emphasis>&gt;]
+        [<emphasis role="bold">-o</emphasis> &lt;<emphasis>offline message</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs sv</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+]
+        [<emphasis role="bold">-ma</emphasis> &lt;<emphasis>disk space quota in 1K units</emphasis>&gt;]
+        [<emphasis role="bold">-o</emphasis> &lt;<emphasis>offline message</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs setvol</emphasis> command sets the quota (maximum possible size) of the
+    read/write volume that contains each directory or file named by the
+    <emphasis role="bold">-path</emphasis> argument. To associate a message with the volume which then
+    appears in the output of the <emphasis role="bold">fs examine</emphasis> command, include the
+    <emphasis role="bold">-offlinemsg</emphasis> argument.</para>
+
+    <para>To display all of the settings made with this command, use the <emphasis role="bold">fs
+    examine</emphasis> command. The <emphasis role="bold">fs listquota</emphasis> command reports a fileset's quota,
+    and the <emphasis role="bold">fs quota</emphasis> command the percent of quota used.</para>
+
+    <para>To set quota on one volume at a time, use the <emphasis role="bold">fs setquota</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each file or directory for which to set the host volume's quota and
+          offline message. Partial pathnames are interpreted relative to the current
+          working directory, which is also the default value if this argument is
+          omitted.</para>
+
+          <para>Specify the read/write path to the file or directory, to avoid the failure
+          that results from attempting to change a read-only volume. By convention,
+          the read/write path is indicated by placing a period before the cell name
+          at the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For
+          further discussion of the concept of read/write and read-only paths
+          through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-max</emphasis> &lt;<emphasis>disk space quota in 1K units</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the maximum amount of file server disk space the volume can
+          occupy. Provide a positive integer to indicate the number of one-kilobyte
+          blocks (<computeroutput>1024</computeroutput> is one megabyte). A value of <computeroutput>0</computeroutput> sets an unlimited quota,
+          but the size of the disk partition that houses the volume places an
+          absolute limit on the volume's size.</para>
+
+          <para>If the <emphasis role="bold">-path</emphasis> argument is omitted (so that the command sets the quota of
+          the volume housing the current working directory), the <emphasis role="bold">-max</emphasis> switch must
+          be provided.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-offlinemsg</emphasis></term>
+        <listitem>
+          <para>Associates a message with the volume which then appears in the output of
+          the <emphasis role="bold">fs examine</emphasis> command. Its intended use is to explain why the volume
+          is currently offline.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command imposes a 6500 kilobyte quota on the volumes mounted
+    at the home directories <replaceable>/afs/abc.com/usr/smith</replaceable> and
+    <replaceable>/afs/abc.com/usr/pat</replaceable>:</para>
+
+<programlisting>
+   % cd /afs/abc.com/usr
+   % fs setvol -path smith pat -max 6500B&amp;lt;&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must belong to the system:administrators group.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_examine1">fs_examine(1)</link>,
+      <link linkend="fs_listquota1">fs_listquota(1)</link>,
+      <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+      <link linkend="fs_quota1">fs_quota(1)</link>,
+      <link linkend="fs_setquota1">fs_setquota(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

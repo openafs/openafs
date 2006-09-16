@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_sysname1">
+  <refmeta>
+    <refentrytitle>fs sysname</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs sysname</refname>
+    <refpurpose>Reports or sets the CPU/operating system type</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs sysname</emphasis> [<emphasis role="bold">-newsys</emphasis> &lt;<emphasis>new sysname</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs sy</emphasis> [<emphasis role="bold">-n</emphasis> &lt;<emphasis>new sysname</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs sysname</emphasis> command sets or displays the local machine's
+    CPU/operating system type as recorded in kernel memory. The Cache Manager
+    substitutes the string for the <emphasis>@sys</emphasis> variable which can occur in AFS
+    pathnames; the <emphasis>IBM AFS Quick Beginnings</emphasis> and <emphasis>IBM AFS Administration
+    Guide</emphasis> explain how using <emphasis>@sys</emphasis> can simplify cell configuration. It is
+    best to use it sparingly, however, because it can make the effect of
+    changing directories unpredictable.</para>
+
+    <para>The command always applies to the local machine only. If issued on an NFS
+    client machine accessing AFS via the NFS/AFS Translator, the string is set
+    or reported for the NFS client machine. The Cache Manager on the AFS
+    client machine serving as the NFS client's NFS/AFS translator machine
+    stores the value in its kernel memory, and so can provide the NFS client
+    with the proper version of program binaries when the user issues commands
+    for which the pathname to the binaries includes <emphasis>@sys</emphasis>. There is a
+    separate record for each user logged into the NFS client, which implies
+    that if a user adopts a new identity (UNIX UID) during a login session on
+    the NFS client -- perhaps by using the UNIX <emphasis role="bold">su</emphasis> command -- he or she
+    must verify that the correct string is set for the new identity also.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-newsys</emphasis> &lt;<emphasis>new sysname</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the CPU/operating system indicator string for the local machine. If
+          this argument is omitted, the output displays the current setting
+          instead. AFS uses a standardized set of strings; consult the <emphasis>IBM AFS
+          Quick Beginnings</emphasis> or <emphasis>AFS Release Notes</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>When the <emphasis role="bold">-newsys</emphasis> argument is omitted, the output reports the machine's
+    system type in the following format:</para>
+
+<programlisting>
+   Current sysname is '&amp;lt;system_type&amp;gt;'
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output produced on a Sun SPARCStation
+      running Solaris 5.7:</para>
+
+<programlisting>
+   % fs sysname
+   Current sysname is 'sun4x_57'
+
+</programlisting>
+        <para>The following command defines a machine to be a IBM RS/6000 running AIX
+        4.2:</para>
+
+<programlisting>
+   % fs sysname -newsys rs_aix42
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>To display the current setting, no privilege is required. To include the
+          <emphasis role="bold">-newsys</emphasis> argument on an AFS client machine, the issuer must be logged in
+          as the local superuser <computeroutput>root</computeroutput>.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="fs_exportafs1">fs_exportafs(1)</link>,
+          <link linkend="sys1">sys(1)</link></para>
+
+          <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+          <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

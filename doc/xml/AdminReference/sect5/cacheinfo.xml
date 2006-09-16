@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="cacheinfo5">
+  <refmeta>
+    <refentrytitle>cacheinfo</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cacheinfo</refname>
+    <refpurpose>Defines configuration parameters for the Cache Manager</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>cacheinfo</replaceable> file defines configuration parameters for the Cache
+    Manager, which reads the file as it initializes.</para>
+
+    <para>The file contains a single line of ASCII text and must reside in the
+    <replaceable>/usr/vice/etc</replaceable> directory. Use a text editor to create it during initial
+    configuration of the client machine; the required format is as follows:</para>
+
+<programlisting>
+   &amp;lt;mount&amp;gt;:&amp;lt;cache&amp;gt;:&amp;lt;size&amp;gt;
+
+</programlisting>
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>&lt;mount&gt;</term>
+          <listitem>
+            <para>Names the local disk directory at which the Cache Manager mounts the AFS
+            namespace. It must exist before the <emphasis role="bold">afsd</emphasis> program runs. The conventional
+            value is <replaceable>/afs</replaceable>. Using any other value prevents traversal of pathnames
+            that begin with <replaceable>/afs</replaceable> (such as pathnames to files in foreign cells that
+            do use the conventional name).  The <emphasis role="bold">-mountdir</emphasis> argument to the <emphasis role="bold">afsd</emphasis>
+            command overrides this value.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lt;cache&gt;</term>
+          <listitem>
+            <para>Names the local disk directory to use as a cache. It must exist before the
+            <emphasis role="bold">afsd</emphasis> program runs. The standard value is <replaceable>/usr/vice/cache</replaceable>, but it is
+            acceptable to substitute a directory on a partition with more available
+            space. Although the Cache Manager ignores this field when configuring a
+            memory cache, a value must always appear in it. The <emphasis role="bold">-cachedir</emphasis> argument
+            to the <emphasis role="bold">afsd</emphasis> command overrides this value.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lt;size&gt;</term>
+          <listitem>
+            <para>Specifies the cache size as a number of 1-kilobyte blocks. Larger caches
+            generally yield better performance, but a disk cache must not exceed 90%
+            of the space available on the cache partition (85% for AIX systems), and a
+            memory cache must use no more than 25% of available machine memory.</para>
+
+            <para>The <emphasis role="bold">-blocks</emphasis> argument to the afsd command overrides this value. To reset
+            cache size without rebooting on a machine that uses disk caching, use the
+            <emphasis role="bold">fs setcachesize</emphasis> command. To display the current size of a disk or
+            memory cache between reboots, use the <emphasis role="bold">fs getcacheparms</emphasis> command.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example cacheinfo file mounts the AFS namespace at <replaceable>/afs</replaceable>,
+      establishes a disk cache in the <replaceable>/usr/vice/cache</replaceable> directory, and defines
+      cache size as 50,000 1-kilobyte blocks.</para>
+
+<programlisting>
+   /afs:/usr/vice/cache:50000
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="afsd8">afsd(8)</link>,
+        <link linkend="fs_getcacheparms1">fs_getcacheparms(1)</link>,
+        <link linkend="fs_setcachesize1">fs_setcachesize(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

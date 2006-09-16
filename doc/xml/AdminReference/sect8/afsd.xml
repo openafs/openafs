@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afsd8">
+  <refmeta>
+    <refentrytitle>afsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afsd</refname>
+    <refpurpose>Initializes the Cache Manager and starts related daemons</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">afsd</emphasis> [<emphasis role="bold">-blocks</emphasis> &lt;<emphasis>1024 byte blocks in cache</emphasis>&gt;]
+         [<emphasis role="bold">-files</emphasis> &lt;<emphasis>files in cache</emphasis>&gt;]
+         [<emphasis role="bold">-rootvol</emphasis> &lt;<emphasis>name of AFS root volume</emphasis>&gt;]
+         [<emphasis role="bold">-stat</emphasis> &lt;<emphasis>number of stat entries</emphasis>&gt;]
+         [<emphasis role="bold">-memcache</emphasis>] [<emphasis role="bold">-cachedir</emphasis> &lt;<emphasis>cache directory</emphasis>&gt;]
+         [<emphasis role="bold">-mountdir</emphasis> &lt;<emphasis>mount location</emphasis>&gt;]
+         [<emphasis role="bold">-daemons</emphasis> &lt;<emphasis>number of daemons to use</emphasis>&gt;]
+         [<emphasis role="bold">-nosettime</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-rmtsys</emphasis>] [<emphasis role="bold">-debug</emphasis>]
+         [<emphasis role="bold">-chunksize</emphasis> &lt;<emphasis>log(2) of chunk size</emphasis>&gt;]
+         [<emphasis role="bold">-dcache</emphasis> &lt;<emphasis>number of dcache entries</emphasis>&gt;]
+         [<emphasis role="bold">-volumes</emphasis> &lt;<emphasis>number of volume entries</emphasis>&gt;]
+         [<emphasis role="bold">-biods</emphasis> &lt;<emphasis>number of bkg I/O daemons (aix vm)</emphasis>&gt;]
+         [<emphasis role="bold">-prealloc</emphasis> &lt;<emphasis>number of 'small' preallocated blocks</emphasis>&gt;]
+         [<emphasis role="bold">-confdir</emphasis> &lt;<emphasis>configuration directory</emphasis>&gt;]
+         [<emphasis role="bold">-logfile</emphasis> &lt;<emphasis>Place to keep the CM log</emphasis>&gt;]
+         [<emphasis role="bold">-waitclose</emphasis>] [<emphasis role="bold">-shutdown</emphasis>] [<emphasis role="bold">-enable_peer_stats</emphasis>]
+         [<emphasis role="bold">-enable_process_stats</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">afsd</emphasis> command initializes the Cache Manager on an AFS client machine
+    by transferring AFS-related configuration information into kernel memory
+    and starting several daemons. More specifically, the <emphasis role="bold">afsd</emphasis> command
+    performs the following actions:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Sets a field in kernel memory that defines the machine's cell
+        membership. Some Cache Manager-internal operations and system calls
+        consult this field to learn which cell to execute in. (The AFS command
+        interpreters refer to the <replaceable>/usr/vice/etc/ThisCell</replaceable> file instead.) This
+        information is transferred into the kernel from the
+        <replaceable>/usr/vice/etc/ThisCell</replaceable> file and cannot be changed until the <emphasis role="bold">afsd</emphasis>
+        program runs again.</para>
+
+      </listitem>
+      <listitem>
+        <para>Places in kernel memory the names and Internet addresses of the database
+        server machines in the local cell and (optionally) foreign cells. The
+        appearance of a cell's database server machines in this list enables the
+        Cache Manager to contact them and to access files in the cell. Omission of
+        a cell from this list, or incorrect information about its database server
+        machines, prevents the Cache Manager from accessing files in it.</para>
+
+        <para>The list of database server machines is transferred into the kernel from
+        the <replaceable>/usr/vice/etc/CellServDB</replaceable> file. After initialization, use the <emphasis role="bold">fs
+        newcell</emphasis> command to change the kernel-resident list without having to
+        reboot.</para>
+
+      </listitem>
+      <listitem>
+        <para>Mounts the root of the AFS filespace on a directory on the machine's local
+        disk, according to either the first field in the
+        <replaceable>/usr/vice/etc/cacheinfo</replaceable> file (the default) or the <emphasis role="bold">afsd</emphasis> command's
+        <emphasis role="bold">-mountdir</emphasis> argument. The conventional value is <replaceable>/afs</replaceable>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Determines which volume to mount at the root of the AFS file tree.  The
+        default is the volume <computeroutput>root.afs</computeroutput>; use the <emphasis role="bold">-rootvol</emphasis> argument to
+        override it. Although the base (read/write) form of the volume name is the
+        appropriate value, the Cache Manager has a bias for accessing the
+        read-only version of the volume (by convention, <computeroutput>root.afs.readonly</computeroutput>) if
+        it is available.</para>
+
+      </listitem>
+      <listitem>
+        <para>Configures the cache on disk (the default) or in machine memory if the
+        <emphasis role="bold">-memcache</emphasis> argument is provided. In the latter case, the <emphasis role="bold">afsd</emphasis> program
+        allocates space in machine memory for caching, and the Cache Manager uses
+        no disk space for caching even if the machine has a disk.</para>
+
+      </listitem>
+      <listitem>
+        <para>Defines the name of the local disk directory devoted to caching, when the
+        <emphasis role="bold">-memcache</emphasis> argument is not used. If necessary, the <emphasis role="bold">afsd</emphasis> program
+        creates the directory (its parent directory must already exist). It does
+        not remove the directory that formerly served this function, if one
+        exists.</para>
+
+        <para>The second field in the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file is the source for
+        this name, and the standard value is the <replaceable>/usr/vice/cache</replaceable> directory. Use
+        the <emphasis role="bold">-cachedir</emphasis> argument to override the value in the <emphasis role="bold">cacheinfo</emphasis> file.</para>
+
+      </listitem>
+      <listitem>
+        <para>Sets the size of the cache. The default source for the value is the third
+        field in the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file, which specifies a number of
+        kilobytes.</para>
+
+        <para>For a memory cache, the following arguments to the afsd command override
+        the value in the <emphasis role="bold">cacheinfo</emphasis> file:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The <emphasis role="bold">-blocks</emphasis> argument, to specify a different number of kilobyte blocks.</para>
+
+          </listitem>
+          <listitem>
+            <para>The <emphasis role="bold">-dcache</emphasis> and <emphasis role="bold">-chunksize</emphasis> arguments together, to set both the
+            number of dcache entries and the chunk size (see below for definition of
+            these parameters). In this case, the <emphasis role="bold">afsd</emphasis> program derives cache size by
+            multiplying the two values. Using this combination is not recommended, as
+            it requires the issuer to perform the calculation beforehand to determine
+            the resulting cache size.</para>
+
+          </listitem>
+          <listitem>
+            <para>The <emphasis role="bold">-dcache</emphasis> argument by itself. In this case, the <emphasis role="bold">afsd</emphasis> program
+            derives cache size by multiplying the value specified by the <emphasis role="bold">-dcache</emphasis>
+            argument by the default memory cache chunk size of eight kilobytes. Using
+            this argument is not recommended, as it requires the issuer to perform the
+            calculation beforehand to determine the resulting cache size.</para>
+
+          </listitem>
+        </itemizedlist>
+        <para>For satisfactory memory cache performance, the specified value must leave
+        enough memory free to accommodate all other processes and commands that
+        can run on the machine. If the value exceeds the amount of memory
+        available, the <emphasis role="bold">afsd</emphasis> program exits without initializing the Cache
+        Manager and produces the following message on the standard output stream:</para>
+
+<programlisting>
+   afsd: memCache allocation failure at &amp;lt;number&amp;gt; KB
+
+</programlisting>
+          <para>where &lt;number&gt; is how many kilobytes were allocated just before the
+          failure.</para>
+
+          <para>For a disk cache, use the <emphasis role="bold">-blocks</emphasis> argument to the <emphasis role="bold">afsd</emphasis> command to
+          override the value in the <emphasis role="bold">cacheinfo</emphasis> file. The value specified in either
+          way sets an absolute upper limit on cache size; values provided for other
+          arguments (such as <emphasis role="bold">-dcache</emphasis> and <emphasis role="bold">-chunksize</emphasis>) never result in a larger
+          cache. The <emphasis role="bold">afsd</emphasis> program rejects any setting larger than 95% of the
+          partition size, and exits after generating an error message on the
+          standard output stream, because the cache implementation itself requires a
+          small amount of disk space and overfilling the partition can cause the
+          client machine to panic.</para>
+
+          <para>To change the size of a disk cache after initialization without rebooting,
+          use the <emphasis role="bold">fs setcachesize</emphasis> command; the setting persists until the <emphasis role="bold">afsd</emphasis>
+          command runs again or the <emphasis role="bold">fs setcachesize</emphasis> command is reissued. The <emphasis role="bold">fs
+          setcachesize</emphasis> command does not work for memory caches.</para>
+
+        </listitem>
+        <listitem>
+          <para>Sets the size of each cache <emphasis>chunk</emphasis>, and by implication the amount of
+          data that the Cache Manager requests at a time from the File Server (how
+          much data per fetch RPC, since AFS uses partial file transfer).</para>
+
+          <para>For a disk cache, a chunk is a <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file and this parameter
+          sets the maximum size to which each one can expand; the default is 64
+          KB. For a memory cache, each chunk is a collection of contiguous memory
+          blocks; the default is size is 8 KB.</para>
+
+          <para>To override the default chunk size for either type of cache, use the
+          <emphasis role="bold">-chunksize</emphasis> argument to provide an integer to be used as an exponent of
+          two; see <link linkend="OPTIONS">OPTIONS</link> for details. For a memory cache, if total cache size
+          divided by chunk size leaves a remainder, the <emphasis role="bold">afsd</emphasis> program rounds down
+          the number of dcache entries, resulting in a slightly smaller cache.</para>
+
+        </listitem>
+        <listitem>
+          <para>Sets the number of chunks in the cache. For a memory cache, the number of
+          chunks is equal to the cache size divided by the chunk size.  For a disk
+          cache, the number of chunks (<replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files) is set to the largest
+          of the following unless the <emphasis role="bold">-files</emphasis> argument is used to set the value
+          explicitly:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>100</para>
+
+            </listitem>
+            <listitem>
+              <para>1.5 times the result of dividing cache size by chunk size
+              (<emphasis>cachesize</emphasis>/<emphasis>chunksize</emphasis> * 1.5)</para>
+
+            </listitem>
+            <listitem>
+              <para>The result of dividing cachesize by 10 KB (<emphasis>cachesize</emphasis>/10240)</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>Sets the number of <emphasis>dcache entries</emphasis> allocated in machine memory for
+          storing information about the chunks in the cache.</para>
+
+          <para>For a disk cache, the <replaceable>/usr/vice/cache/CacheItems</replaceable> file contains one
+          entry for each <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file. By default, one half the number of
+          these entries (but not more that 2,000) are duplicated as dcache entries
+          in machine memory for quicker access.</para>
+
+          <para>For a memory cache, there is no <replaceable>CacheItems</replaceable> file so all information
+          about cache chunks must be in memory as dcache entries.  Thus, there is no
+          default number of dcache entries for a memory cache; instead, the <emphasis role="bold">afsd</emphasis>
+          program derives it by dividing the cache size by the chunk size.</para>
+
+          <para>To set the number of dcache entries, use the <emphasis role="bold">-dcache</emphasis> argument; the
+          specified value can exceed the default limit of 2,000. Using this argument
+          is not recommended for either type of cache. Increasing the number of
+          dcache entries for a disk cache sometimes improves performance (because
+          more entries are retrieved from memory rather than from disk), but only
+          marginally. Using this argument for a memory cache requires the issuer to
+          calculate the cache size by multiplying this value by the chunk size.</para>
+
+        </listitem>
+        <listitem>
+          <para>Sets the number of <emphasis>stat</emphasis> entries available in machine memory for caching
+          status information about cached AFS files. The default is 300; use the
+          <emphasis role="bold">-stat</emphasis> argument to override the default.</para>
+
+        </listitem>
+        <listitem>
+          <para>Randomly selects a file server machine in the local cell as the source for
+          the correct time. Every five minutes thereafter, the local clock is
+          adjusted (if necessary) to match the file server machine's clock.</para>
+
+          <para>Use the <emphasis role="bold">-nosettime</emphasis> flag to prevent the afsd command from selecting a
+          time standard. This is recommended only on file server machines that are
+          also acting as clients. File server machines maintain the correct time
+          using the Network Time Protocol Daemon instead.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>In addition to setting cache configuration parameters, the <emphasis role="bold">afsd</emphasis> program
+      starts the following daemons. (On most system types, these daemons appear
+      as nameless entries in the output of the UNIX <emphasis role="bold">ps</emphasis> command.)</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>One <emphasis>callback</emphasis> daemon, which handles callbacks. It also responds to the
+          File Server's periodic probes, which check that the client machine is
+          still alive.</para>
+
+        </listitem>
+        <listitem>
+          <para>One <emphasis>maintenance</emphasis> daemon, which performs the following tasks:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>Garbage collects obsolete data (for example, expired tokens) from kernel
+              memory.</para>
+
+            </listitem>
+            <listitem>
+              <para>Synchronizes files.</para>
+
+            </listitem>
+            <listitem>
+              <para>Refreshes information from read-only volumes once per hour.</para>
+
+            </listitem>
+            <listitem>
+              <para>Does delayed writes for NFS clients if the machine is running the NFS/AFS
+              Translator.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>One <emphasis>cache-truncation</emphasis> daemon, which flushes the cache when free space is
+          required, by writing cached data and status information to the File
+          Server.</para>
+
+        </listitem>
+        <listitem>
+          <para>One <emphasis>server connection</emphasis> daemon, which sends a probe to the File Server
+          every few minutes to check that it is still accessible. It also
+          synchronizes the machine's clock with the clock on a randomly-chosen file
+          server machine, unless the <emphasis role="bold">-nosettime</emphasis> flag is used. There is always one
+          server connection daemon.</para>
+
+        </listitem>
+        <listitem>
+          <para>One or more <emphasis>background</emphasis> daemons that improve performance by pre-fetching
+          files and performing background (delayed) writes of saved data into AFS.</para>
+
+          <para>The default number of background daemons is two, enough to service at
+          least five simultaneous users of the machine. To increase the number, use
+          the <emphasis role="bold">-daemons</emphasis> argument. A value greater than six is not generally
+          necessary.</para>
+
+        </listitem>
+        <listitem>
+          <para>On some system types, one <emphasis>Rx listener</emphasis> daemon, which listens for
+          incoming RPCs.</para>
+
+        </listitem>
+        <listitem>
+          <para>On some system types, one <emphasis>Rx event</emphasis> daemon, which reviews the Rx
+          system's queue of tasks and performs them as appropriate. Most items in
+          the queue are retransmissions of failed packets.</para>
+
+        </listitem>
+        <listitem>
+          <para>On machines that run AIX with virtual memory (VM) integration, one or more
+          <emphasis>VM</emphasis> daemons (sometimes called <emphasis>I/O</emphasis> daemons, which transfer data
+          between disk and machine memory. The number of them depends on the setting
+          of the <emphasis role="bold">-biods</emphasis> and <emphasis role="bold">-daemons</emphasis> arguments:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>If the <emphasis role="bold">-biods</emphasis> argument is used, it sets the number of VM daemons.</para>
+
+            </listitem>
+            <listitem>
+              <para>If only the <emphasis role="bold">-daemons</emphasis> argument is used, the number of VM daemons is
+              twice the number of background daemons.</para>
+
+            </listitem>
+            <listitem>
+              <para>If neither argument is used, there are five VM daemons.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+      <para>This command does not use the syntax conventions of the AFS command
+      suites. Provide the command name and all option names in full.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Cautions</title>
+      <para>Do not use the <emphasis role="bold">-shutdown</emphasis> parameter. It does not shutdown the Cache
+      Manager effectively. Instead, halt Cache Manager activity by using the
+      standard UNIX <emphasis role="bold">umount</emphasis> command to unmount the AFS root directory (by
+      convention, <replaceable>/afs</replaceable>). The machine must then be rebooted to reinitialize
+      the Cache Manager.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Options</title>
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-blocks</emphasis> &lt;<emphasis>blocks in cache</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of kilobyte blocks to be made available for caching
+            in the machine's cache directory (for a disk cache) or memory (for a
+            memory cache), overriding the default defined in the third field of the
+            <replaceable>/usr/vice/etc/cacheinfo</replaceable> file. For a disk cache, the value cannot exceed
+            95% of the space available in the cache partition. If using a memory
+            cache, do not combine this argument with the <emphasis role="bold">-dcache</emphasis> argument, since
+            doing so can possibly result in a chunk size that is not an exponent of 2.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-files</emphasis> &lt;<emphasis>files in cache</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files to create in the cache
+            directory for a disk cache, overriding the default that is calculated as
+            described in <link linkend="DESCRIPTION">DESCRIPTION</link>. Each <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file accommodates a
+            chunk of data, and can grow to a maximum size of 64 KB by default. Do not
+            combine this argument with the <emphasis role="bold">-memcache</emphasis> argument.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-rootvol</emphasis> &lt;<emphasis>name of AFS root volume</emphasis>&gt;</term>
+          <listitem>
+            <para>Names the read/write volume corresponding to the root directory for the
+            AFS file tree (which is usually the <replaceable>/afs</replaceable> directory). This value
+            overrides the default of the <computeroutput>root.afs</computeroutput> volume.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-stat</emphasis> &lt;<emphasis>number of stat entries</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of entries to allocate in the machine's memory for
+            recording status information about the AFS files in the cache. This value
+            overrides the default of <computeroutput>300</computeroutput>.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-memcache</emphasis></term>
+          <listitem>
+            <para>Initializes a memory cache rather than a disk cache. Do not combine this
+            flag with the <emphasis role="bold">-files</emphasis> argument.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-cachedir</emphasis> &lt;<emphasis>cache directory</emphasis>&gt;</term>
+          <listitem>
+            <para>Names the local disk directory to be used as the cache. This value
+            overrides the default defined in the second field of the
+            <replaceable>/usr/vice/etc/cacheinfo</replaceable> file.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-mountdir</emphasis> &lt;<emphasis>mount location</emphasis>&gt;</term>
+          <listitem>
+            <para>Names the local disk directory on which to mount the root of the AFS
+            filespace. This value overrides the default defined in the first field of
+            the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file. If a value other than the <replaceable>/afs</replaceable>
+            directory is used, the machine cannot access the filespace of cells that
+            do use that value.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-daemons</emphasis> &lt;<emphasis>number of daemons to use</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of background daemons to run on the machine.  These
+            daemons improve efficiency by doing prefetching and background writing of
+            saved data. This value overrides the default of <computeroutput>2</computeroutput>, which is adequate
+            for a machine serving up to five users. Values greater than <computeroutput>6</computeroutput> are not
+            generally more effective than <computeroutput>6</computeroutput>.</para>
+
+            <para>Note: On AIX machines with integrated virtual memory (VM), the number of
+            VM daemons is set to twice the value of this argument, if it is provided
+            and the <emphasis role="bold">-biods</emphasis> argument is not. If both arguments are omitted, there
+            are five VM daemons.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-nosettime</emphasis></term>
+          <listitem>
+            <para>Prevents the Cache Manager from synchronizing its clock with the clock on
+            a server machine selected at random, by checking the time on the server
+            machine every five minutes. Use this flag only on a machine that is
+            already using another time synchronization protocol (for example, a server
+            machine that is running the <emphasis role="bold">runntp</emphasis> process).</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-verbose</emphasis></term>
+          <listitem>
+            <para>Generates a detailed trace of the <emphasis role="bold">afsd</emphasis> program's actions on the
+            standard output stream.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-rmtsys</emphasis></term>
+          <listitem>
+            <para>Initializes an additional daemon to execute AFS-specific system calls on
+            behalf of NFS client machines. Use this flag only if the machine is an
+            NFS/AFS translator machine serving users of NFS client machines who
+            execute AFS commands.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-debug</emphasis></term>
+          <listitem>
+            <para>Generates a highly detailed trace of the <emphasis role="bold">afsd</emphasis> program's actions on the
+            standard output stream. The information is useful mostly for debugging
+            purposes.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-chunksize</emphasis> &lt;<emphasis>chunk size</emphasis>&gt;</term>
+          <listitem>
+            <para>Sets the size of each cache chunk. The integer provided, which must be
+            from the range <computeroutput>0</computeroutput> to <computeroutput>30</computeroutput>, is used as an exponent on the number 2. It
+            overrides the default of 16 for a disk cache (2^16 is 64 KB) and 13 for a
+            memory cache (2^13 is 8 KB). A value of <computeroutput>0</computeroutput> or less, or greater than
+            <computeroutput>30</computeroutput>, sets chunk size to the appropriate default. Values less than <computeroutput>10</computeroutput>
+            (which sets chunk size to a 1 KB) are not recommended.  Combining this
+            argument with the <emphasis role="bold">-dcache</emphasis> argument is not recommended because it
+            requires that the issuer calculate the cache size that results.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-dcache</emphasis> &lt;<emphasis>number of dcache entries</emphasis>&gt;</term>
+          <listitem>
+            <para>Sets the number of dcache entries in memory, which are used to store
+            information about cache chunks. For a disk cache, this overrides the
+            default, which is 50% of the number of <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files (cache
+            chunks). For a memory cache, this argument effectively sets the number of
+            cache chunks, but its use is not recommended, because it requires the
+            issuer to calculate the resulting total cache size (derived by multiplying
+            this value by the chunk size). Do not combine this argument with the
+            <emphasis role="bold">-blocks</emphasis> argument, since doing so can possibly result in a chunk size
+            that is not an exponent of 2.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-volumes</emphasis> &lt;<emphasis>number of volume entries</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of memory structures to allocate for storing volume
+            location information. The default value is <computeroutput>50</computeroutput>.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-biods</emphasis> &lt;<emphasis>number of I/O daemons</emphasis>&gt;</term>
+          <listitem>
+            <para>Sets the number of VM daemons dedicated to performing I/O operations on a
+            machine running a version of AIX with virtual memory (VM) integration.  If
+            both this argument and the <emphasis role="bold">-daemons</emphasis> argument are omitted, the default
+            is five. If this argument is omitted but the <emphasis role="bold">-daemons</emphasis> argument is
+            provided, the number of VM daemons is set to twice the value of the
+            <emphasis role="bold">-daemons</emphasis> argument.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-prealloc</emphasis> &lt;<emphasis>number of preallocated blocks</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the number of pieces of memory to preallocate for the Cache
+            Manager's internal use. The default initial value is <computeroutput>400</computeroutput>, but the Cache
+            Manager dynamically allocates more memory as it needs it.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-confdir</emphasis> &lt;<emphasis>configuration directory</emphasis>&gt;</term>
+          <listitem>
+            <para>Names a directory other than the <replaceable>/usr/vice/etc</replaceable> directory from which to
+            fetch the <replaceable>cacheinfo</replaceable>, <replaceable>ThisCell</replaceable>, and <replaceable>CellServDB</replaceable> configuration
+            files.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-logfile</emphasis> &lt;<emphasis>log file location</emphasis>&gt;</term>
+          <listitem>
+            <para>Is obsolete and has no real effect. It specifies an alternate file in
+            which to record a type of trace that the Cache Manager no longer
+            generates; the default value is <replaceable>/usr/vice/etc/AFSLog</replaceable>.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-waitclose</emphasis></term>
+          <listitem>
+            <para>Has no effect on the operation of the Cache Manager. The behavior it
+            affected in previous versions of the Cache Manager, to perform synchronous
+            writes to the File Server, is now the default behavior. To perform
+            asynchronous writes in certain cases, use the <emphasis role="bold">fs storebehind</emphasis> command.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-shutdown</emphasis></term>
+          <listitem>
+            <para>Shuts down the Cache Manager, but not in the most effective possible
+            way. Do not use this flag.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+          <listitem>
+            <para>Activates the collection of Rx statistics and allocates memory for their
+            storage. For each connection with a specific UDP port on another machine,
+            a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+            so on) sent or received. To display or otherwise access the records, use
+            the Rx Monitoring API.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+          <listitem>
+            <para>Activates the collection of Rx statistics and allocates memory for their
+            storage. A separate record is kept for each type of RPC (FetchFile,
+            GetStatus, and so on) sent or received, aggregated over all connections to
+            other machines. To display or otherwise access the records, use the Rx
+            Monitoring API.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><emphasis role="bold">-help</emphasis></term>
+          <listitem>
+            <para>Prints the online help for this command. All other valid options are
+            ignored.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The <emphasis role="bold">afsd</emphasis> command is normally included in the machine's AFS
+      initialization file, rather than typed at the command shell prompt. For
+      most disk caches, the appropriate form is</para>
+
+<programlisting>
+   /usr/vice/etc/afsd
+
+</programlisting>
+        <para>The following command is appropriate when enabling a machine to act as an
+        NFS/AFS Translator machine serving more than five users.</para>
+
+<programlisting>
+   /usr/vice/etc/afsd -daemons 4 -rmtsys
+
+</programlisting>
+          <para>The following command initializes a memory cache and sets chunk size to 16
+          KB (2^14).</para>
+
+<programlisting>
+   /usr/vice/etc/afsd -memcache -chunksize 14
+
+</programlisting>
+          </refsect1>
+          <refsect1>
+            <title>Privilege Required</title>
+            <para>The issuer must be logged in as the local superuser root.</para>
+
+          </refsect1>
+          <refsect1>
+            <title>See Also</title>
+            <para><link linkend="afs_cache5">afs_cache(5)</link>,
+            <link linkend="CellServDB5">CellServDB(5)</link>,
+            <link linkend="cacheinfo5">cacheinfo(5)</link></para>
+
+          </refsect1>
+          <refsect1>
+            <title>Copyright</title>
+            <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+            <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+            converted from HTML to POD by software written by Chas Williams and Russ
+            Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+          </refsect1>
+        </refentry>

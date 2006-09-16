@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss8">
+  <refmeta>
+    <refentrytitle>uss</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss</refname>
+    <refpurpose>Introduction to the uss command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">uss</emphasis> command suite help administrators to create AFS
+    user accounts more easily and efficiently. If <emphasis role="bold">uss</emphasis> commands are not
+    used, creating an account requires issuing at least six separate commands
+    to five different AFS servers.</para>
+
+    <para>There are three main commands in the suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">uss add</emphasis> command creates a single complete user account, based on
+        command line arguments and instructions in a template file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">uss bulk</emphasis> command creates multiple complete accounts at once, based
+        on command line arguments, instructions in a template file and a bulk
+        input file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">uss delete</emphasis> command removes most parts of a user account.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To obtain help, issue the <emphasis role="bold">uss apropos</emphasis> and <emphasis role="bold">uss help</emphasis> commands.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following arguments and flags are available on many commands in the
+    <emphasis role="bold">uss</emphasis> suite. The reference page for each command also lists them, but
+    they are described here in greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the AFS user name under which to establish a connection to the
+          AFS server processes that administer the various parts of a user
+          account. If it is omitted, the connection is established under the
+          issuer's effective user ID (his or her identity in the local file
+          system). Even when this argument is included, UNIX commands that run
+          during the <emphasis role="bold">uss</emphasis> operation (for instance, the UNIX <replaceable>/etc/chown</replaceable> command)
+          run under the effective user ID.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. It is acceptable to abbreviate
+          the cell name to the shortest form that distinguishes it from the other
+          entries in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local machine. If
+          the <emphasis role="bold">-cell</emphasis> argument is omitted, the command interpreter determines the
+          name of the local cell by reading the following in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the AFSCELL environment variable.</para>
+
+            </listitem>
+            <listitem>
+              <para>The local <replaceable>/usr/vice/etc/ThisCell</replaceable> file.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dryrun</emphasis></term>
+        <listitem>
+          <para>Reports actions that the command interpreter needs to perform when
+          executing the <emphasis role="bold">uss</emphasis> operation, without actually performing them. Include
+          this flag to verify that the command produces the desired account
+          configuration. Combine it with the <emphasis role="bold">-verbose</emphasis> flag to yield even more
+          detailed information. Note that the output does not necessarily reveal all
+          possible problems that can prevent successful execution of the command,
+          especially those that result from transient server or network outages.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-skipauth</emphasis></term>
+        <listitem>
+          <para>Bypasses mutual authentication with the AFS Authentication Server,
+          allowing a site that uses Kerberos instead of the AFS Authentication
+          Server to substitute that form of authentication.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer of a <emphasis role="bold">uss</emphasis> command must have all the rights required for
+    performing the equivalent actions individually. See each <emphasis role="bold">uss</emphasis> command's
+    reference page.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="uss5">uss(5)</link>,
+    <link linkend="uss_bulk5">uss_bulk(5)</link>,
+    <link linkend="uss_add8">uss_add(8)</link>,
+    <link linkend="uss_apropos8">uss_apropos(8)</link>,
+    <link linkend="uss_bulk8">uss_bulk(8)</link>,
+    <link linkend="uss_delete8">uss_delete(8)</link>,
+    <link linkend="uss_help8">uss_help(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

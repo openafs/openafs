@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="unlog1">
+  <refmeta>
+    <refentrytitle>unlog</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>unlog</refname>
+    <refpurpose>Discards all of the issuer's tokens</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">unlog</emphasis> [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">unlog</emphasis> [<emphasis role="bold">-c </emphasis>&lt;<emphasis>cell name</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">unlog</emphasis> command by default discards all tokens that the issuer
+    currently holds. To discard tokens for certain cells only, name them with
+    the <emphasis role="bold">-cell</emphasis> argument.</para>
+
+    <para>Since a token pertains to one client machine only, destroying tokens on
+    one machine has no effect on tokens on another machine.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Specifying one or more cell names can cause a brief authentication outage
+    during which the issuer has no valid tokens in any cell. This is because
+    the command actually discards all tokens and then restores the ones for
+    cells not named by the <emphasis role="bold">-cell</emphasis> argument. The outage can sometimes
+    interrupt the operation of jobs that require authentication.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies each cell for to discard the token. If this argument is omitted,
+          the Cache Manager discards all tokens. Provide the fully qualified domain
+          name, or a shortened form, in which case successful resolution depends on
+          the availability of a name resolution service (such as the Domain Name
+          Service or a local host table) at the time the command is issued.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command discards all tokens.</para>
+
+<programlisting>
+   % unlog
+
+</programlisting>
+      <para>The following command discards only the tokens for the <computeroutput>abc.com</computeroutput> and
+      <computeroutput>stateu.edu</computeroutput> cells.</para>
+
+<programlisting>
+   % unlog -cell abc.com stateu
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="klog1">klog(1)</link>,
+        <link linkend="tokens1">tokens(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

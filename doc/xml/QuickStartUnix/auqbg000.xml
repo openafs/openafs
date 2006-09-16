@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY preface SYSTEM "auqbg003.xml">
+<!ENTITY chapter1 SYSTEM "auqbg004.xml">
+<!ENTITY chapter2 SYSTEM "auqbg005.xml">
+<!ENTITY chapter3 SYSTEM "auqbg006.xml">
+<!ENTITY chapter4 SYSTEM "auqbg007.xml">
+<!ENTITY appendixA SYSTEM "auqbg008.xml">
+<!ENTITY index SYSTEM "auqbg009.xml">
+]>
+
+<book>
+  <bookinfo>
+    <title>AFS Quick Beginnings</title>
+
+    <subtitle>Version 3.6</subtitle>
+
+    <pubsnumber>Document Number SC09-4560-00</pubsnumber>
+
+    <copyright>
+      <year>2000</year>
+
+      <holder>IBM Corporation. All Rights Reserved</holder>
+    </copyright>
+
+    <revhistory>
+      <revision>
+        <revnumber>3.6</revnumber>
+
+        <date>April 2000</date>
+
+        <revremark>First Edition</revremark>
+      </revision>
+    </revhistory>
+
+    <abstract>
+      <para>This edition applies to: <simplelist>
+          <member>IBM AFS for AIX, Version 3.6</member>
+
+          <member>IBM AFS for Digital Unix, Version 3.6</member>
+
+          <member>IBM AFS for HP-UX, Version 3.6</member>
+
+          <member>IBM AFS for Linux, Version 3.6</member>
+
+          <member>IBM AFS for SGI IRIX, Version 3.6</member>
+
+          <member>IBM AFS for Solaris, Version 3.6</member>
+        </simplelist></para>
+
+      <para>and to all subsequent releases and modifications until otherwise
+      indicated in new editions.This softcopy version is based on the printed
+      edition of this book. Some formatting amendments have been made to make
+      this information more suitable for softcopy.</para>
+    </abstract>
+  </bookinfo>
+
+  &preface;
+  &chapter1;
+  &chapter2;
+  &chapter3;
+  &chapter4;
+  &appendixA;
+  &index;
+</book>

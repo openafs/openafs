@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appendix id="HDRWQ163">
+  <title>Appendix A. Building AFS from Source Code</title>
+
+  <para>This chapter describes how to build AFS from source code. <indexterm>
+      <primary>storing</primary>
+
+      <secondary>AFS source in volume</secondary>
+    </indexterm> <indexterm>
+      <primary>creating</primary>
+
+      <secondary>volume</secondary>
+
+      <tertiary>for AFS source</tertiary>
+    </indexterm> <indexterm>
+      <primary>volume</primary>
+
+      <secondary>for AFS source</secondary>
+    </indexterm> <indexterm>
+      <primary>source (AFS)</primary>
+
+      <secondary>storing in AFS volume</secondary>
+    </indexterm> <indexterm>
+      <primary>files</primary>
+
+      <secondary>AFS source</secondary>
+    </indexterm></para>
+
+  <sect1 id="HDRWQ164">
+    <title>Loading the Source Files</title>
+
+    <para>Working on an AFS client machine, perform these steps to load the AFS source tree from the AFS Source Distribution.
+    <orderedlist>
+        <indexterm>
+          <primary>commands</primary>
+
+          <secondary>vos create</secondary>
+
+          <tertiary>src.afs volume</tertiary>
+        </indexterm>
+
+        <indexterm>
+          <primary>vos commands</primary>
+
+          <secondary>create</secondary>
+
+          <tertiary>src.afs volume</tertiary>
+        </indexterm>
+
+        <indexterm>
+          <primary>src.afs volume</primary>
+        </indexterm>
+
+        <indexterm>
+          <primary>volume</primary>
+
+          <secondary>creating</secondary>
+
+          <tertiary>src.afs</tertiary>
+        </indexterm>
+
+        <indexterm>
+          <primary>creating</primary>
+
+          <secondary>src.afs volume</secondary>
+        </indexterm>
+
+        <listitem>
+          <para>Create and mount a volume for housing the AFS source tree. These instructions name the volume <emphasis
+          role="bold">src.afs</emphasis> and mount it at the <emphasis
+          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs/src</emphasis> directory.</para>
+
+          <para>Setting the <emphasis role="bold">-maxquota</emphasis> argument to <emphasis role="bold">0</emphasis> (zero) sets an
+          unlimited quota on the volume, which enables you to copy all of the files into the volume without exceeding its quota. If
+          you wish, you can set the volume's quota to a finite value after you complete the copying operation. At that point, use
+          the <emphasis role="bold">vos examine</emphasis> command to determine how much space the volume is occupying. Then issue
+          the <emphasis role="bold">fs setquota</emphasis> command to set a quota that is slightly larger.</para>
+
+          <programlisting>
+   # <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
+              role="bold">src.afs -maxquota 0</emphasis> 
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable>
+   # <emphasis role="bold">mkdir afs</emphasis>
+   # <emphasis role="bold">fs mkmount afs/src src.afs</emphasis>
+   # <emphasis role="bold">vos release root.cell</emphasis>
+   # <emphasis role="bold">fs checkvolumes</emphasis>
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the CD-ROM that contains the AFS source files.
+          For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating system documentation.
+          <indexterm>
+              <primary>copying</primary>
+
+              <secondary>source files from CD-ROM</secondary>
+            </indexterm> <indexterm>
+              <primary>CD-ROM</primary>
+
+              <secondary>copying source files from</secondary>
+            </indexterm></para>
+        </listitem>
+
+        <listitem>
+          <para>Copy the source files from the CD-ROM into the newly created volume. <programlisting>
+   # <emphasis role="bold">cd /cdrom/src</emphasis>
+   # <emphasis role="bold">cp -rp  *  /afs/.</emphasis><replaceable>cellname</replaceable>/<emphasis role="bold">afs/src</emphasis>
+</programlisting></para>
+        </listitem>
+      </orderedlist></para>
+
+    <indexterm>
+      <primary>source (AFS)</primary>
+
+      <secondary>compiling</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>compiling AFS from source</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>building</primary>
+
+      <secondary>AFS from source</secondary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ165">
+    <title>Compiling AFS Binaries Using the washtool Program</title>
+
+    <para>The AFS distribution includes the <emphasis role="bold">washtool</emphasis> program for managing a hierarchy of software
+    development projects. The program builds project trees for program editing, compilation, and installation. <orderedlist>
+        <listitem>
+          <para>Create a subdirectory under the <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
+          role="bold">/afs</emphasis> directory for each system type for which you will build AFS binaries. Creating and mounting a
+          volume for each system type is recommended, but you can also simply use the <emphasis role="bold">mkdir</emphasis>
+          command. If you create a new volume, grant it an unlimited quota to avoid running out of space during the build process.
+          <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis>    
+</programlisting></para>
+
+          <para>If creating a new volume:</para>
+
+          <programlisting>
+   # <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <replaceable>sysname</replaceable> <emphasis
+              role="bold">-maxquota 0</emphasis>
+   # <emphasis role="bold">fs mkmount</emphasis> <replaceable>sysname</replaceable> <replaceable>sysname</replaceable>    
+</programlisting>
+
+          <para>If not creating a new volume:</para>
+
+          <programlisting>
+   # <emphasis role="bold">mkdir</emphasis> <replaceable>sysname</replaceable>
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>In the directory for each system type, create subdirectories called <emphasis role="bold">dest</emphasis>, <emphasis
+          role="bold">dest/bin</emphasis>, and <emphasis role="bold">obj</emphasis>. If you plan to use the
+          <emphasis>@sys</emphasis> variable in pathnames that refer to these directories, then you must use the conventional system
+          names listed in the <emphasis>IBM AFS Release Notes</emphasis>. <programlisting>
+   # <emphasis role="bold">cd</emphasis> <replaceable>sysname</replaceable>
+   # <emphasis role="bold">mkdir dest</emphasis> 
+   # <emphasis role="bold">mkdir dest/bin</emphasis> 
+   # <emphasis role="bold">mkdir obj</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Create the indicated directories and symbolic links in the <emphasis
+          role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis> directory.
+          <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis>
+   # <emphasis role="bold">ln -s  @sys/dest  dest</emphasis>
+   # <emphasis role="bold">ln -s  @sys/obj  obj</emphasis>
+   # <emphasis role="bold">ln -s  .  PARENT</emphasis>
+   # <emphasis role="bold">ln -s  src/Makefile  Makefile</emphasis>   
+</programlisting></para>
+
+          <para>The following is an example directory listing for the <emphasis
+          role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis> directory after
+          completing the preceding steps. It includes two example system types.</para>
+
+          <programlisting>
+   lrwxr-xr-x admin   12 Jun 18 11:26 Makefile-&gt;src/Makefile
+   lrwxr-xr-x admin    1 Jun 18 11:26 PARENT -&gt; .
+   lrwxr-xr-x admin    9 Jun 18 11:25 dest -&gt; @sys/dest
+   lrwxr-xr-x admin    8 Jun 18 11:25 obj -&gt; @sys/obj
+   drwxrwxrwx admin 4096 Jun 18 11:24 rcs
+   drwxrwxrwx admin 2048 Jun 18 11:27 rs_aix42
+   drwxrwxrwx admin 2048 Jun 18 11:10 src
+   drwxrwxrwx admin 2048 Jun 18 11:27 sun4x_56
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> By default, the build procedure writes its results into a destination
+          directory for each system type called <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
+          role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest</emphasis>. To write the results
+          to a different destination directory, create a link from the <emphasis role="bold">dest</emphasis> directory to it.
+          <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs/</emphasis><replaceable>sysname</replaceable>
+   # <emphasis role="bold">ln -s</emphasis> <replaceable>full_path_of_alternate_directory</replaceable> <emphasis role="bold">dest</emphasis>
+</programlisting> <indexterm>
+              <primary>commands</primary>
+
+              <secondary>washtool</secondary>
+            </indexterm> <indexterm>
+              <primary>washtool command</primary>
+            </indexterm></para>
+        </listitem>
+
+        <listitem>
+          <para>For each system type you plan to build, copy the binary for the <emphasis role="bold">washtool</emphasis> program to
+          the directory specified in the AFS <emphasis role="bold">Makefile</emphasis>, which is <emphasis
+          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+          role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>. If you prefer to
+          store the program in a different directory, you can use the WASHTOOL variable on the <emphasis role="bold">make</emphasis>
+          command line as described in Step <link linkend="LIWQ166">6</link>.</para>
+
+          <para>If there is a volume that houses the AFS binaries for each system type (as recommended), the conventional location
+          for the <emphasis role="bold">washtool</emphasis> binary is the <emphasis
+          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+          role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws/bin</emphasis> directory. Use
+          the following instruction to copy it.</para>
+
+          <programlisting>
+   # <emphasis role="bold">cd  /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+              role="bold">/usr/afsws/bin</emphasis>
+   # <emphasis role="bold">cp  washtool</emphasis>  <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
+              role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>   
+</programlisting>
+
+          <para>Otherwise, mount the (binary) AFS CD-ROM for this system type on the local <emphasis role="bold">/cdrom</emphasis>
+          directory, and copy the <emphasis role="bold">washtool</emphasis> binary directly from it.</para>
+
+          <programlisting>
+   # <emphasis role="bold">cd  /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/bin</emphasis>
+   # <emphasis role="bold">cp  washtool</emphasis>  <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
+              role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>
+</programlisting>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>make</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>make command</primary>
+          </indexterm>
+
+          <indexterm>
+            <primary>variables</primary>
+
+            <secondary>WASHTOOL</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>variables</primary>
+
+            <secondary>SYS_NAME for washtool command</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>SYS_NAME variable for washtool command</primary>
+          </indexterm>
+
+          <indexterm>
+            <primary>WASHTOOL variable</primary>
+          </indexterm>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ166" />Working in the <emphasis
+          role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis> directory on a
+          machine of the system type for which you are building AFS, issue the <emphasis role="bold">make install</emphasis>
+          command. Set the SYS_NAME variable to the appropriate system type name.</para>
+
+          <para>If the <emphasis role="bold">washtool</emphasis> binary is not in the conventional directory (<emphasis
+          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+          role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>), set the
+          WASHTOOL variable to the alternate full pathname of the binary.</para>
+
+          <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis>
+   # <emphasis role="bold">make SYS_NAME=</emphasis><replaceable>sysname</replaceable> [<emphasis role="bold">WASHTOOL=</emphasis><replaceable>alternate_washtool_directory</replaceable>] <emphasis
+              role="bold">install</emphasis>
+</programlisting>
+        </listitem>
+      </orderedlist></para>
+  </sect1>
+</appendix>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="upclient8">
+  <refmeta>
+    <refentrytitle>upclient</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>upclient</refname>
+    <refpurpose>Initializes the client portion of the Update Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">upclient</emphasis> &lt;<emphasis>hostname</emphasis>&gt; [<emphasis role="bold">-crypt</emphasis>] [<emphasis role="bold">-clear</emphasis>] [<emphasis role="bold">-t</emphasis> &lt;<emphasis>retry time</emphasis>&gt;]
+        [<emphasis role="bold">-verbose</emphasis>]* &lt;<emphasis>dir</emphasis>&gt;+ [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The upclient command initializes the client portion of the Update
+    Server. In the conventional configuration, its binary file is located in
+    the <replaceable>/usr/afs/bin</replaceable> directory on a file server machine.</para>
+
+    <para>The upclient command is not normally issued at the command shell prompt
+    but rather placed into a file server machine's <replaceable>/usr/afs/local/BosConfig</replaceable>
+    file with the <emphasis role="bold">bos create</emphasis> command. If it is ever issued at the command
+    shell prompt, the issuer must be logged onto a database server machine as
+    the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>The upclient process periodically checks that all files in each local
+    directory named by the <emphasis>dir</emphasis> argument match the files in the
+    corresponding directory on the source machine named by the <emphasis>hostname</emphasis>
+    argument. If a file does not match, the <emphasis role="bold">upclient</emphasis> process requests the
+    source copy from the <emphasis role="bold">upserver</emphasis> process running on the source machine.</para>
+
+    <para>By default, the <emphasis role="bold">upclient</emphasis> process requests that the <emphasis role="bold">upserver</emphasis> process
+    encrypt the data before transferring it.  Use the <emphasis role="bold">-clear</emphasis> flag to
+    request unencrypted transfer if appropriate. (The <emphasis role="bold">-crypt</emphasis> flag
+    explicitly sets the default.)</para>
+
+    <para>In the conventional configuration, separate instances of the <emphasis role="bold">upclient</emphasis>
+    process request data from the <replaceable>/usr/afs/bin</replaceable> and <replaceable>/usr/afs/etc</replaceable>
+    directories, except on machines for which the system control machine is
+    also the binary distribution machine for the machine's system type. The
+    conventional names for the separate instances are <computeroutput>upclientbin</computeroutput> and
+    <computeroutput>upclientetc</computeroutput> respectively.</para>
+
+    <para>The <emphasis role="bold">upclient</emphasis> and <emphasis role="bold">upserver</emphasis> processes always mutually authenticate,
+    whether or not the data they pass is encrypted; they use the key with the
+    highest key version number in the <replaceable>/usr/afs/etc/KeyFile</replaceable> file to
+    construct a server ticket for mutual authentication.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not use the Update Server to distribute the contents of the
+    <replaceable>/usr/afs/etc</replaceable> directory using the <emphasis role="bold">-clear</emphasis> option.  The contents of
+    this directory are sensitive.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>&lt;<emphasis>hostname</emphasis>&gt;</term>
+        <listitem>
+          <para>Names either the cell's system control machine (if the requested directory
+          is <replaceable>/usr/afs/etc</replaceable>), or the binary distribution machine for the local
+          machine's CPU and operating system type (if the requested directory is
+          <replaceable>/usr/afs/bin</replaceable>).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-crypt</emphasis></term>
+        <listitem>
+          <para>Requests the transfer of data from the upserver process in encrypted
+          form. This is the default; this flag just sets the default explicitly.
+          Do not use this flag with the <emphasis role="bold">-clear</emphasis> flag.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-clear</emphasis></term>
+        <listitem>
+          <para>Requests transfer of data from the <emphasis role="bold">upserver</emphasis> process in unencrypted
+          form. Provide this flag or the <emphasis role="bold">-crypt</emphasis> flag, but not both.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-t</emphasis> &lt;<emphasis>retry time</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies how often to check for changes in each specified directory, as a
+          number of seconds. If this argument is omitted, the default is <computeroutput>300</computeroutput> (5
+          minutes). This argument determines the maximum amount of time it takes for
+          a change made on the source machine to propagate to this machine.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis>*</term>
+        <listitem>
+          <para>Writes a trace of the upclient process's operations on the standard output
+          stream, which usually corresponds to the machine console. Provide one,
+          two, or three instances of the flag; each additional instance generates
+          increasingly numerous and detailed messages.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>&lt;<emphasis>dir</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each directory to check for modified files. The conventional choices
+          are the following:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><replaceable>/usr/afs/bin</replaceable>, in which case the recommended name for the process
+              (assigned with the <emphasis role="bold">-instance</emphasis> argument to the <emphasis role="bold">bos create</emphasis> command) is
+              <computeroutput>upclientbin</computeroutput>. The <emphasis>hostname</emphasis> is the binary distribution machine for the
+              local machine's system type. You may wish to use the <emphasis role="bold">-clear</emphasis> flag for
+              the <replaceable>/usr/afs/bin</replaceable> directory, since binaries are not particularly
+              sensitive and encrypting them takes system resources.</para>
+
+            </listitem>
+            <listitem>
+              <para><replaceable>/usr/afs/etc</replaceable>, in which case the recommended name for the process
+              (assigned with the <emphasis role="bold">-instance</emphasis> argument to the <emphasis role="bold">bos create</emphasis> command) is
+              <computeroutput>upclientetc</computeroutput>. The <emphasis>hostname</emphasis> is the cell's system control machine. Use
+              the <emphasis role="bold">-crypt</emphasis> flag for the <replaceable>/usr/afs/etc</replaceable> directory, since it contains
+              the <replaceable>KeyFile</replaceable> file and other data vital to cell security.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following bos create command creates an <computeroutput>upclientbin</computeroutput> process on the
+    machine <computeroutput>fs4.abc.com</computeroutput> that refers to the machine <computeroutput>fs1.abc.com</computeroutput> as the
+    source for the <replaceable>/usr/afs/bin</replaceable> directory (thus <computeroutput>fs1.abc.com</computeroutput> is the
+    binary distribution machine for machines of <computeroutput>fs4.abc.com</computeroutput>'s type). The
+    files in the <replaceable>/usr/afs/bin</replaceable> directory are distributed every 120 seconds.
+    The command requests transfer in unencrypted form.</para>
+
+<programlisting>
+   % bos create  -server fs4.abc.com -instance upclientbin -type simple \
+                 -cmd "/usr/afs/bin/upclient fs1.abc.com -clear \
+                 -t 120 /usr/afs/bin"
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="upserver8">upserver(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

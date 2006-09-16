@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss_bulk8">
+  <refmeta>
+    <refentrytitle>uss bulk</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss bulk</refname>
+    <refpurpose>Executes multiple uss commands listed in a file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">uss bulk</emphasis> <emphasis role="bold">-file</emphasis> &lt;<emphasis>bulk input file</emphasis>&gt;
+        [<emphasis role="bold">-template</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;] [<emphasis role="bold">-verbose</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;] [<emphasis role="bold">-dryrun</emphasis>]
+        [<emphasis role="bold">-skipauth</emphasis>] [<emphasis role="bold">-overwrite</emphasis>]
+        [<emphasis role="bold">-pwexpires</emphasis> &lt;<emphasis>password expires in [0..254] days (0 =</emphasis> never)&gt;&gt;]
+        [<emphasis role="bold">-pipe</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">uss b</emphasis> <emphasis role="bold">-f</emphasis> &lt;<emphasis>bulk input file</emphasis>&gt; [<emphasis role="bold">-t</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;]
+        [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-s</emphasis>]
+        [<emphasis role="bold">-o</emphasis>] [<emphasis role="bold">-pw</emphasis> &lt;<emphasis>password expires in [0..254] days (0 =</emphasis> never)&gt;&gt;]
+        [<emphasis role="bold">-pi</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">uss bulk</emphasis> command executes the uss commands listed in the <emphasis>bulk
+    input file</emphasis> specified with the <emphasis role="bold">-file</emphasis> argument. If the bulk input file
+    includes <emphasis role="bold">add</emphasis> instructions that reference a template file, then the
+    <emphasis role="bold">-template</emphasis> argument is required.</para>
+
+    <para>To create a single account, use the <emphasis role="bold">uss add</emphasis> command. To delete one or
+    more accounts, use the <emphasis role="bold">uss delete</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>bulk input file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the bulk input file. Partial pathnames are
+          interpreted relative to the current working directory. For details on the
+          file's format, see <link linkend="uss_bulk5">uss_bulk(5)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-template</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the template file for any uss add commands that
+          appear in the bulk input file. Partial pathnames are interpreted relative
+          to the current working directory. For details on the file's format, see
+          <link linkend="uss5">uss(5)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the cell in which to run the command. For more details, see
+          <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the AFS user name under which to establish authenticated
+          connections to the AFS server processes that maintain the various
+          components of a user account. For more details, see <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dryrun</emphasis></term>
+        <listitem>
+          <para>Reports actions that the command interpreter needs to perform while
+          executing the command, without actually performing them. For more details,
+          see <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-skipauth</emphasis></term>
+        <listitem>
+          <para>Prevents authentication with the AFS Authentication Server, allowing a
+          site using Kerberos to substitute that form of authentication.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-overwrite</emphasis></term>
+        <listitem>
+          <para>Overwrites any directories, files and links that exist in the file system
+          and for which there are also <computeroutput>D</computeroutput>, <computeroutput>E</computeroutput>, <computeroutput>F</computeroutput>, <computeroutput>L</computeroutput>, or <computeroutput>S</computeroutput> instructions
+          in a template file referenced by an <computeroutput>add</computeroutput> instruction in the bulk input
+          file. If this flag is omitted, the command interpreter prompts, once for
+          each <computeroutput>add</computeroutput> instruction in the bulk input file, for confirmation that it
+          should overwrite such elements. Do not include this flag if the bulk input
+          file does not contain <computeroutput>add</computeroutput> instructions.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pwexpires</emphasis> &lt;<emphasis>password expiration</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of days after a user's password is changed that it remains
+          valid, for each user named by an <computeroutput>add</computeroutput> instruction in the bulk input
+          file. Provide an integer from the range <computeroutput>1</computeroutput> through <computeroutput>254</computeroutput> to specify the
+          number of days until expiration, or the value <computeroutput>0</computeroutput> to indicate that the
+          password never expires (the default).</para>
+
+          <para>When the password becomes invalid (expires), the user is unable to
+          authenticate, but has 30 more days in which to issue the <emphasis role="bold">kpasswd</emphasis>
+          command to change the password (after that, only an administrator can
+          change it).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pipe</emphasis></term>
+        <listitem>
+          <para>Suppresses the Authentication Server's prompt for the password of the
+          issuer or the user named by the <emphasis role="bold">-admin</emphasis> argument (the Authentication
+          Server always separately authenticates the creator of an entry in the
+          Authentication Database). Instead, the command interpreter accepts the
+          password via the standard input stream, as piped in from another
+          program. This enables the <emphasis role="bold">uss bulk</emphasis> command to run as part of unattended
+          batch jobs.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example command executes the instructions in the bulk input
+    file called <replaceable>new_students</replaceable>, which includes <computeroutput>add</computeroutput> instructions that refer
+    to the template file <replaceable>student.template</replaceable>. Both files reside in the current
+    working directory.</para>
+
+<programlisting>
+   % uss bulk new_students student.template
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer (or the user named by the <emphasis role="bold">-admin</emphasis> argument) must have the
+      privileges necessary to run the commands that correspond to instructions
+      in the bulk input file.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="uss5">uss(5)</link>,
+      <link linkend="uss_bulk5">uss_bulk(5)</link>,
+      <link linkend="uss8">uss(8)</link>,
+      <link linkend="uss_add8">uss_add(8)</link>,
+      <link linkend="uss_delete8">uss_delete(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

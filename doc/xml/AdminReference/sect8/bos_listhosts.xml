@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_listhosts8">
+  <refmeta>
+    <refentrytitle>bos listhosts</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos listhosts</refname>
+    <refpurpose>Displays the contents of the CellServDB file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos listhosts</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos listh</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>]  [-h]</para>
+
+    <para><emphasis role="bold">bos getcell</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos getc</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [-h]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos listhosts</emphasis> command formats and displays the list of a cell's
+    database server machines from the <replaceable>/usr/afs/etc/CellServDB</replaceable> file on the
+    server machine named by the <emphasis role="bold">-server</emphasis> argument.</para>
+
+    <para>To alter the list of machines, use the <emphasis role="bold">bos addhost</emphasis> and <emphasis role="bold">bos
+    removehost</emphasis> commands.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine from which to display the
+          <replaceable>/usr/afs/etc/CellServDB</replaceable> file. Identify the machine by IP address or its
+          host name (either fully-qualified or abbreviated unambiguously). For
+          details, see <link linkend="bos8">bos(8)</link>.</para>
+
+          <para>For consistent performance in the cell, the output must be the same on
+          every server machine. The <emphasis role="bold">bos addhost</emphasis> reference page explains how to
+          keep the machines synchronized.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first line of the output names the cell to which the server machine
+    belongs. Each of the following lines names a database server machine for
+    that cell.</para>
+
+    <para>The <computeroutput>Host</computeroutput> number assigned to each database server machine is for
+    server-internal use only and is not the same as, nor necessarily related
+    to, the machine's IP address. The BOS Server assigned it as part of
+    performing the <emphasis role="bold">bos addhost</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays the database server machines listed in the
+    <replaceable>/usr/afs/etc/CellServDB</replaceable> file on the machine <computeroutput>fs7.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % bos listhosts fs7.abc.com
+   Cell name is abc.com
+       Host 1 is db1.abc.com
+       Host 2 is db2.abc.com
+       Host 3 is db3.abc.com
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_addhost8">bos_addhost(8)</link>,
+      <link linkend="bos_removehost8">bos_removehost(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

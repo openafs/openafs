@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_messages1">
+  <refmeta>
+    <refentrytitle>fs messages</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs messages</refname>
+    <refpurpose>Sets whether the Cache Manager writes log messages</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs messages</emphasis> [<emphasis role="bold">-show</emphasis> (user|console|all|none)] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs me</emphasis> [<emphasis role="bold">-s</emphasis> (user|console|all|none)] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs messages</emphasis> command controls whether the Cache Manager displays
+    status and warning messages on user screens, the client machine console,
+    on both, or on neither.</para>
+
+    <para>There are two types of Cache Manager messages:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>User messages provide user-level status and warning information, and the
+        Cache Manager directs them to user screens.</para>
+
+      </listitem>
+      <listitem>
+        <para>Console messages provide system-level status and warning information, and
+        the Cache Manager directs them to the client machine's designated console.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Disabling messaging completely is not recommended, because the messages
+    provide useful status and warning information.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-show</emphasis> (user|console|all|none)</term>
+        <listitem>
+          <para>Specifies the types of messages to display. Choose one of the following
+          values:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>user</term>
+              <listitem>
+                <para>Send user messages to user screens.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>console</term>
+              <listitem>
+                <para>Send console messages to the console.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>all</term>
+              <listitem>
+                <para>Send user messages to user screens and console messages to the console
+                (the default if the <emphasis role="bold">-show</emphasis> argument is omitted).</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>none</term>
+              <listitem>
+                <para>Do not send any messages to user screens or the console.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command instructs the Cache Manager to display both types of
+    messages:</para>
+
+<programlisting>
+   % fs messages -show all
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the local superuser root.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="afsd8">afsd(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

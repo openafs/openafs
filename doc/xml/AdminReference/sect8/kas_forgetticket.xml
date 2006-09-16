@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_forgetticket8">
+  <refmeta>
+    <refentrytitle>kas forgetticket</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas forgetticket</refname>
+    <refpurpose>Discards all tickets for the issuer</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas forgetticket</emphasis> [<emphasis role="bold">-all</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas f</emphasis> [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas forgetticket</emphasis> command discards all of the issuer's tickets
+    stored in the local machine's kernel memory. This includes the AFS server
+    ticket from each cell in which the user has authenticated, and any tickets
+    that the user have acquired during the current <emphasis role="bold">kas</emphasis> session (either when
+    entering the session or by using the <emphasis role="bold">kas getticket</emphasis> command).</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-all</emphasis></term>
+        <listitem>
+          <para>Discards all tickets. This argument explicitly invokes the command's
+          default behavior.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command discards all of the issuer's tickets.</para>
+
+<programlisting>
+   % kas forgetticket
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None, and no password is required.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_delvolentry8">
+  <refmeta>
+    <refentrytitle>backup delvolentry</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup delvolentry</refname>
+    <refpurpose>Deletes a volume entry from a volume set</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup delvolentry</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>volume set name</emphasis>&gt;
+        <emphasis role="bold">-entry</emphasis> &lt;<emphasis>volume set index</emphasis>&gt; [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup delvole</emphasis> <emphasis role="bold">-n</emphasis> &lt;<emphasis>volume set name</emphasis>&gt; <emphasis role="bold">-e</emphasis> &lt;<emphasis>volume set index</emphasis>&gt;
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup delvolentry</emphasis> command deletes the indicated volume entry from
+    the volume set specified with the <emphasis role="bold">-name</emphasis> argument.  Use the <emphasis role="bold">-entry</emphasis>
+    argument to identify the volume entry by its index number. To display the
+    index numbers, use the <emphasis role="bold">backup listvolsets</emphasis> command.</para>
+
+    <para>If there are any remaining volume entries with index numbers higher than
+    the deleted entry, their indexes are automatically decremented to
+    eliminate any gaps in the indexing sequence.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Deleting volume entries from a temporary volume set is possible only
+    within the interactive session in which the volume set was created.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>volume set name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the volume set from which to delete a volume entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-entry</emphasis> &lt;<emphasis>volume set index</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the index number of the volume entry to delete. Use the <emphasis role="bold">backup
+          listvolsets</emphasis> command to display the index numbers for a volume set's
+          volume entries.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command deletes the fourth volume entry from the volume set
+    called <computeroutput>sys</computeroutput>:</para>
+
+<programlisting>
+   % backup delvolentry -name sys -entry 4
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+      machine where the Backup Server is running, or must be logged onto a
+      server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_addvolentry8">backup_addvolentry(8)</link>,
+      <link linkend="backup_addvolset8">backup_addvolset(8)</link>,
+      <link linkend="backup_delvolset8">backup_delvolset(8)</link>,
+      <link linkend="backup_listvolsets8">backup_listvolsets(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

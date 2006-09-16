@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kadb_check8">
+  <refmeta>
+    <refentrytitle>kadb_check</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kadb_check</refname>
+    <refpurpose>Checks the integrity of the Authentication Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kadb_check</emphasis> <emphasis role="bold">-database</emphasis> &lt;<emphasis>kadb file</emphasis>&gt; [<emphasis role="bold">-uheader</emphasis>] [<emphasis role="bold">-kheader</emphasis>]
+        [<emphasis role="bold">-entries</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-rebuild</emphasis> &lt;<emphasis>out file</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kadb_check</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>kadb file</emphasis>&gt; [<emphasis role="bold">-u</emphasis>] [<emphasis role="bold">-k</emphasis>] [<emphasis role="bold">-e</emphasis>] [<emphasis role="bold">-v</emphasis>]
+        [<emphasis role="bold">-r</emphasis> &lt;<emphasis>out file</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kadb_check</emphasis> command checks the integrity of the Protection Database,
+    reporting any errors or corruption it finds. If there are problems, do not
+    issue any <emphasis role="bold">kas</emphasis> commands until the database is repaired.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The results can be unpredictable if the Authentication Server makes
+    changes to the Authentication Database while this command is running. Use
+    the <emphasis role="bold">bos shutdown</emphasis> command to shutdown the local <emphasis role="bold">kaserver</emphasis> process
+    before running this command, or before creating a second copy of the
+    <replaceable>kaserver.DB0</replaceable> file (with a different name) on which to run the command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>kadb file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the Authentication Database (copy of the <replaceable>kaserver.DB0</replaceable> file) to
+          check. If the current working directory is not the location of the file,
+          provide a pathname, either full or relative to the current working
+          directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-uheader</emphasis></term>
+        <listitem>
+          <para>Displays information which Ubik maintains in the database's header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-kheader</emphasis></term>
+        <listitem>
+          <para>Displays information which the Authentication Server maintains in the
+          database's header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-entries</emphasis></term>
+        <listitem>
+          <para>Outputs every entry in the database, providing information similar to that
+          returned by the <emphasis role="bold">kas examine</emphasis> command.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Reports additional information about the database, including the number of
+          free (allocated but unused) entries in the database.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rebuild</emphasis> &lt;<emphasis>out file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the file in which to record a list of <emphasis role="bold">kas</emphasis> commands which, if
+          issued in the command shell, recreate the current state of the database
+          being verified. Partial pathnames are interpreted relative to the current
+          working directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If there are errors in the database, the output always reports them on the
+    standard error stream. If any options other than <emphasis role="bold">-database</emphasis> or <emphasis role="bold">-help</emphasis>
+    are provided, the output written to the standard output stream includes
+    additional information as described for each option in <link linkend="OPTIONS">OPTIONS</link>.  The
+    output is intended for debugging purposes and is meaningful to someone
+    familiar with the internal structure of the Authentication Database.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="kaserver_DB05">kaserver.DB0(5)</link>,
+    <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+    <link linkend="kas_examine8">kas_examine(8)</link>,
+    <link linkend="kaserver8">kaserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

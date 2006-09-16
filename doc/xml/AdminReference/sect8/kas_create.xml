@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_create8">
+  <refmeta>
+    <refentrytitle>kas create</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas create</refname>
+    <refpurpose>Creates an entry in the Authentication Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas create</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt;
+        [<emphasis role="bold">-initial_password</emphasis> &lt;<emphasis>initial password</emphasis>&gt;]
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas c</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>name of user</emphasis>&gt; [<emphasis role="bold">-i</emphasis> &lt;<emphasis>initial password</emphasis>&gt;]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas create</emphasis> command creates an entry in the Authentication Database
+    for the user named by the <emphasis role="bold">-name</emphasis> argument.</para>
+
+    <para>To avoid having the account's initial password echo visibly at the shell
+    prompt, omit the <emphasis role="bold">-initial_password</emphasis> argument; the command interpreter
+    prompts for the password and does not echo it visibly.  Whether or not
+    <emphasis role="bold">-initial_password</emphasis> is omitted, the Authentication Server converts the
+    password into a form suitable for use as an encryption key, and records it
+    in the entry's key field.</para>
+
+    <para>To alter settings in an Authentication Database entry, use the <emphasis role="bold">kas
+    setfields</emphasis> command. To examine an entry, use the <emphasis role="bold">kas examine</emphasis>
+    command. To list every entry in the database, use the <emphasis role="bold">kas list</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the new Authentication Database entry. Because it is the name under
+          which the user logs in, it must obey the restrictions that many operating
+          systems impose on user names (usually, to contain no more than eight
+          lowercase letters).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-initial_password</emphasis> &lt;<emphasis>initial password</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the user's password; provide a character string that can include
+          uppercase and lowercase letters, numerals and punctuation. The
+          Authentication Server scrambles the string into an octal string suitable
+          for use as an encryption key before placing it in the entry's key
+          field. If this argument is omitted, the command interpreter prompts for
+          the string and does not echo it visibly.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details,
+          see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the prompts that appear when an administrator
+    logged in as <computeroutput>admin</computeroutput> creates an Authentication Database entry for the
+    user <computeroutput>smith</computeroutput>, and does not include either the <emphasis role="bold">-initial_password</emphasis> or
+    <emphasis role="bold">-password_for_admin</emphasis> arguments.</para>
+
+<programlisting>
+   % kas create smith
+   Password for admin:
+   initial_password:
+   Verifying, please re-enter initial_password:
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>ADMIN</computeroutput> flag set on his or her Authentication
+      Database entry.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link>,
+      <link linkend="kas_examine8">kas_examine(8)</link>,
+      <link linkend="kas_list8">kas_list(8)</link>,
+      <link linkend="kas_setfields8">kas_setfields(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

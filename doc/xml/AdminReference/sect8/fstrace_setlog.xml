@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_setlog8">
+  <refmeta>
+    <refentrytitle>fstrace setlog</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace setlog</refname>
+    <refpurpose>Sets the size of a trace log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace setlog</emphasis> [<emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;+]
+        <emphasis role="bold">-buffersize</emphasis> &lt;<emphasis>1-kilobyte units</emphasis>&gt; [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace setl</emphasis> [<emphasis role="bold">-l</emphasis> &lt;<emphasis>log name</emphasis>&gt;+] <emphasis role="bold">-b</emphasis> &lt;<emphasis>1-kilobyte units</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace sl</emphasis> [<emphasis role="bold">-l</emphasis> &lt;<emphasis>log name</emphasis>&gt;+] <emphasis role="bold">-b</emphasis> &lt;<emphasis>1-kilobyte units</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace setlog</emphasis> command defines the number of kilobytes of kernel
+    memory allocated for the <computeroutput>cmfx</computeroutput> trace log. If kernel memory is currently
+    allocated, the command clears the current log and creates a new log buffer
+    of the specified size.</para>
+
+    <para>To display the current defined size of the log buffer, issue the <emphasis role="bold">fstrace
+    lslog</emphasis> command with the <emphasis role="bold">-long</emphasis> argument. To control whether the
+    indicated amount of space is actually allocated, use the <emphasis role="bold">fstrace setset</emphasis>
+    command to set the status of the <computeroutput>cm</computeroutput> event set; to display the event
+    set's status, use the <emphasis role="bold">fstrace lsset</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names trace log for which to set the size. The only acceptable
+          value is <computeroutput>cmfx</computeroutput>, which is also the default if this argument is
+          omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-buffersize</emphasis> &lt;<emphasis>1-kilobyte units</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the number of 1-kilobyte blocks of kernel memory to allocate for
+          the trace log.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command allocated 80 KB of kernel memory for the <computeroutput>cmfx</computeroutput>
+    trace log:</para>
+
+<programlisting>
+   # fstrace setlog -log cmfx -buffersize 80
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fstrace8">fstrace(8)</link>,
+      <link linkend="fstrace_lslog8">fstrace_lslog(8)</link>,
+      <link linkend="fstrace_lsset8">fstrace_lsset(8)</link>,
+      <link linkend="fstrace_setset8">fstrace_setset(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

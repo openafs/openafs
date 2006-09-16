@@ -1,0 +1,3561 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appendix id="HDRWQ617">
+  <title>The afsmonitor Program Statistics</title>
+
+  <para>This appendix lists the statistics you can gather with the <emphasis role="bold">afsmonitor</emphasis> program, grouping
+  them by category and section, and briefly describing each field, group, and section. For instructions on using the <emphasis
+  role="bold">afsmonitor</emphasis> program, see <link linkend="HDRWQ323">Monitoring and Auditing AFS Performance</link> <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>available statistics</secondary>
+    </indexterm></para>
+
+  <sect1 id="HDRWQ618">
+    <title>The Cache Manager Statistics</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>Cache Manager statistics</secondary>
+    </indexterm>
+
+    <para>Cache Manager statistics fields are classified into the following sections and groups: <itemizedlist>
+        <listitem>
+          <para>PerfStats_section - Performance Statistics Section. <itemizedlist>
+              <listitem>
+                <para>PerfStats_group - Performance Statistics Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>misc_group - Miscellaneous Group.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Server_UpDown_section - Server Up/Down Statistics Section. <itemizedlist>
+              <listitem>
+                <para>FS_upDown_SC_group - File Server Up/Down Statistics in Same Cell Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>FS_upDown_OC_group - File Server Up/Down Statistics in Other Cells Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>VL_upDown_SC_group - VL Server Up/Down Statistics in Same Cell Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>VL_upDown_OC_group - VL Server Up/Down Statistics in Other Cells Group.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>RPCop_section - RPC Operation Measurements Section. <itemizedlist>
+              <listitem>
+                <para>FS_RPCopTimes_group - File Server RPC Operation Timings Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>FS_RPCopErrors_group - File Server RPC Operation Errors Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>FS_RPCopBytes_group - File Server RPC Transfer Timings Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>CM_RPCopTimes_group - Cache Manager RPC Operation Timings Group.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Auth_Access_section - Authentication and Replicated File Access Section. <itemizedlist>
+              <listitem>
+                <para>Auth_Stats_group - Authentication Information for Cache Manager Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>Access_Stats_group - Unreplicated File Access Group.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>All Cache Manager variables categorized under these sections and groups names are listed below.</para>
+
+    <sect2 id="Header_708">
+      <title>Performance Statistics Section (PerfStats_section)</title>
+
+      <para>Performance Statistics Group (PerfStats_group) <itemizedlist>
+          <listitem>
+            <para>dlocalAccesses: Number of data accesses to files within local cell.</para>
+          </listitem>
+
+          <listitem>
+            <para>vlocalAccesses: Number of stat accesses to files within local cell.</para>
+          </listitem>
+
+          <listitem>
+            <para>dremoteAccesses: Number of data accesses to files outside of local cell.</para>
+          </listitem>
+
+          <listitem>
+            <para>vremoteAccesses: Number of stat accesses to files outside of local cell.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheNumEntries: Number of cache entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheBlocksTotal: Number of (1K) blocks configured for cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheBlocksInUse: Number of cache blocks actively in use.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheBlocksOrig: Number of cache blocks at bootup.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheMaxDirtyChunks: Maximum number of dirty cache chunks tolerated.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheCurrDirtyChunks: Current number of dirty cache chunks.</para>
+          </listitem>
+
+          <listitem>
+            <para>dcacheHits: Number of data files found in local cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcacheHits: Number of stat entries found in local cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>dcacheMisses: Number of data files <emphasis role="bold">not</emphasis> found in local cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcacheMisses: Number of stat entries <emphasis role="bold">not</emphasis> found in local cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheFlushes: Number of files flushed from cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>cacheFilesReused: Number of cache files reused.</para>
+          </listitem>
+
+          <listitem>
+            <para>dcacheXAllocs: Additionally allocated dcaches.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcacheXAllocs: Additionally allocated vcaches.</para>
+          </listitem>
+
+          <listitem>
+            <para>bufAlloced: Number of buffers allocated by AFS.</para>
+          </listitem>
+
+          <listitem>
+            <para>bufHits: Number of pages found on buffer cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>bufMisses: Number of pages <emphasis role="bold">not</emphasis> found on buffer cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>bufFlushDirty: Number of cached dirty buffers flushed because all were busy.</para>
+          </listitem>
+
+          <listitem>
+            <para>LargeBlocksActive: Number of currently used large free pool entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>LargeBlocksAlloced: Number of allocated large free pool entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>SmallBlocksActive: Number of currently used small free pool entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>SmallBlocksAlloced: Number of allocated used small free pool entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>OutStandingMemUsage: Amount of allocated memory.</para>
+          </listitem>
+
+          <listitem>
+            <para>OutStandingAllocs: Outstanding osi_allocs (no osi_frees yet).</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBackAlloced: Number of callback structures allocated.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBackFlushes: Number of callback flush operations performed.</para>
+          </listitem>
+
+          <listitem>
+            <para>srvRecords: Number of servers currently on record.</para>
+          </listitem>
+
+          <listitem>
+            <para>srvRecordsHWM: Server record high water mark.</para>
+          </listitem>
+
+          <listitem>
+            <para>srvNumBuckets: Number of server hash chain buckets.</para>
+          </listitem>
+
+          <listitem>
+            <para>srvMaxChainLength: Maximum server hash chain length.</para>
+          </listitem>
+
+          <listitem>
+            <para>srvMaxChainLengthHWM: Server hash chain high water mark.</para>
+          </listitem>
+
+          <listitem>
+            <para>sysName_ID: Sysname ID for host hardware.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Miscellaneous Group (misc_group) <itemizedlist>
+          <listitem>
+            <para>numPerfCalls: Number of performance calls received.</para>
+          </listitem>
+
+          <listitem>
+            <para>epoch: Cache Manager epoch time.</para>
+          </listitem>
+
+          <listitem>
+            <para>numCellsVisible: Number of cells we know about.</para>
+          </listitem>
+
+          <listitem>
+            <para>numCellsContacted: Number of cells contacted.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="Header_709">
+      <title>Server Up/Down Statistics Section (Server_UpDown_section)</title>
+
+      <para>File Server Up/Down Statistics in Same Cell Group (FS_upDown_SC_group) <note>
+          <para>The <emphasis>records</emphasis> referred to in this section are the internal records kept by the <emphasis
+          role="bold">afsmonitor</emphasis> program to track the processes from which data is being gathered.</para>
+        </note> <itemizedlist>
+          <listitem>
+            <para>fs_sc_numTtlRecords: Number of fileserver records, active or inactive.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_numUpRecords: Number of (active) fileserver records currently marked up.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_numDownRecords: Number of (active) fileserver records currently marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_sumOfRecordAges: Sum of fileserver record lifetimes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_ageOfYoungestRecord: Age of youngest fileserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_ageOfOldestRecord: Age of oldest fileserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_numDowntimeIncidents: Number of (completed) downtime incidents.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_numRecordsNeverDown: Number of fileserver records never marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_maxDowntimesInARecord: Maximum downtimes seen by any fileserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_shortestDowntime: Shortest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_longestDowntime: Longest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_0_10_min: Down time incidents: 0-10 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_10_30_min: Down time incidents: 10-30 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_half_1_hr: Down time incidents: 30-60 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_1_2_hr: Down time incidents: 1-2 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_2_4_hr: Down time incidents: 2-4 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_4_8_hr: Down time incidents: 4-8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_down_more_8_hr: Down time incidents: more than 8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_0: Down time incidents: 0 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_1: Down time incidents: 1 time.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_2_5: Down time incidents: 2-5 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_6_10: Down time incidents: 6-10 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_10_50: Down time incidents: 10-50 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_sc_downDst_more_50: Down time incidents: more than 50 times.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>File Server Up/Down Statistics in Other Cells Group (FS_upDown_OC_group) <itemizedlist>
+          <listitem>
+            <para>fs_oc_numTtlRecords: Number of fileserver records, active or inactive.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_numUpRecords: Number of (active) fileserver records currently marked up.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_numDownRecords: Number of (active) fileserver records currently marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_sumOfRecordAges: Sum of server record lifetimes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_ageOfYoungestRecord: Age of youngest fileserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_ageOfOldestRecord: Age of oldest fileserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_numDowntimeIncidents: Number of (completed) downtime incidents.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_numRecordsNeverDown: Number of fileserver records never marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_maxDowntimesInARecord: Maximum downtimes seen by any fileserver.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_shortestDowntime: Shortest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_longestDowntime: Longest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_0_10_min: Down time incidents: 0-10 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_10_30_min: Down time incidents: 10-30 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_half_1_hr: Down time incidents: 30-60 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_1_2_hr: Down time incidents: 1-2 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_2_4_hr: Down time incidents: 2-4 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_4_8_hr: Down time incidents: 4-8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_down_more_8_hr: Down time incidents: more than 8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_0: Down time incidents: 0 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_1: Down time incidents: 1 time.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_2_5: Down time incidents: 2-5 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_6_10: Down time incidents: 6-10 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_10_50: Down time incidents: 10-50 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>fs_oc_downDst_more_50: Down time incidents: more than 50 times.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>VL Server Up/Down Statistics in Same Cell Group (VL_upDown_SC_group) <itemizedlist>
+          <listitem>
+            <para>vl_sc_numTtlRecords: Number of vlserver records, active or inactive.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_numUpRecords: Number of (active) vlserver records currently marked up.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_numDownRecords: Number of (active) vlserver records currently marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_sumOfRecordAges: Sum of vlserver record lifetimes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_ageOfYoungestRecord: Age of youngest vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_ageOfOldestRecord: Age of oldest vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_numDowntimeIncidents: Number of (completed) downtime incidents.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_numRecordsNeverDown: Number of vlserver records never marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_maxDowntimesInARecord: Maximum downtimes seen by any vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_shortestDowntime: Shortest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_longestDowntime: Longest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_0_10_min: Down time incidents: 0-10 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_10_30_min: Down time incidents: 10-30 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_half_1_hr: Down time incidents: 30-60 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_1_2_hr: Down time incidents: 1-2 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_2_4_hr: Down time incidents: 2-4 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_4_8_hr: Down time incidents: 4-8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_down_more_8_hr: Down time incidents: more than 8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_0: Down time incidents: 0 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_1: Down time incidents: 1 time.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_2_5: Down time incidents: 2-5 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_6_10: Down time incidents: 6-10 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_10_50: Down time incidents: 10-50 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_sc_downDst_more_50: Down time incidents: more than 50 times.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>VL Server Up/Down Statistics in Other Cells Group (VL_upDown_DC_group) <itemizedlist>
+          <listitem>
+            <para>vl_oc_numTtlRecords: Number of vlserver records, active or inactive.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_numUpRecords: Number of (active) vlserver records currently marked up.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_numDownRecords: Number of (active) vlserver records currently marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_sumOfRecordAges: Sum of vlserver record lifetimes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_ageOfYoungestRecord: Age of youngest vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_ageOfOldestRecord: Age of oldest vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_numDowntimeIncidents: Number of (completed) downtime incidents.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_numRecordsNeverDown: Number of vlserver records never marked down.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_maxDowntimesInARecord: Maximum downtimes seen by any vlserver record.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_sumOfDowntimes: Sum of all (completed) downtimes, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_shortestDowntime: Shortest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_longestDowntime: Longest downtime, in seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_0_10_min: Down time incidents: 0-10 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_10_30_min: Down time incidents: 10-30 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_half_1_hr: Down time incidents: 30-60 minutes.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_1_2_hr: Down time incidents: 1-2 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_2_4_hr: Down time incidents: 2-4 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_4_8_hr: Down time incidents: 4-8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_down_more_8_hr: Down time incidents: more than 8 hours.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_0: Down time incidents: 0 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_1: Down time incidents: 1 time.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_2_5: Down time incidents: 2-5 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_6_10: Down time incidents: 6-10 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_10_50: Down time incidents: 10-50 times.</para>
+          </listitem>
+
+          <listitem>
+            <para>vl_oc_downDst_more_50: Down time incidents: more than 50 times.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="Header_710">
+      <title>RPC Operation Measurements Section (RPCop_section)</title>
+
+      <para>File Server RPC Operation Timings Group (FS_RPCopTimes_group) <itemizedlist>
+          <listitem>
+            <para>FetchData_ops: Number of FetchData operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_ops_ok: Number of successful FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_sum: Sum of timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_sqr: Sum of squares of sample timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_min: Minimum execution time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_max: Maximum execution time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_ops: Number of FetchACL operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_ops_ok: Number of successful FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_sum: Sum of timings for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_sqr: Sum of squares of sample timings for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_min: Minimum execution time observed for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_max: Maximum execution time observed for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_ops: Number of FetchStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_ops_ok: Number of successful FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_sum: Sum of timings for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_sqr: Sum of squares of sample timings for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_min: Minimum execution time observed for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_max: Maximum execution time observed for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_ops: Number of StoreData operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_ops_ok: Number of successful StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_sum: Sum of timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_sqr: Sum of squares of sample timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_min: Minimum execution time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_max: Maximum execution time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_ops: Number of StoreACL operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_ops_ok: Number of successful StoreACL operation.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_sum: Sum of timings for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_sqr: Sum of squares of sample timings for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_min: Minimum execution time observed for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_max: Maximum execution time observed for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_ops: Number of StoreStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_ops_ok: Number of successful StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_sum: Sum of timings for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_sqr: Sum of squares of sample timings for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_min: Minimum execution time observed for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_max: Maximum execution time observed for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_ops: Number of RemoveFile operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_ops_ok: Number of successful RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_sum: Sum of timings for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_sqr: Sum of squares of sample timings for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_min: Minimum execution time observed for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_max: Maximum execution time observed for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_ops: Number of CreateFile operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_ops_ok: Number of successful CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_sum: Sum of timings for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_sqr: Sum of squares of sample timings for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_min: Minimum execution time observed for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_max: Maximum execution time observed for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_ops: Number of Rename operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_ops_ok: Number of successful Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_sum: Sum of timings for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_sqr: Sum of squares of sample timings for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_min: Minimum execution time observed for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_max: Maximum execution time observed for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_ops: Number of Symlink operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_ops_ok: Number of successful Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_sum: Sum of timings for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_sqr: Sum of squares of sample timings for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_min: Minimum execution time observed for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_max: Maximum execution time observed for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_ops: Number of Link operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_ops_ok: Number of successful Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_sum: Sum of timings for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_sqr: Sum of squares of sample timings for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_min: Minimum execution time observed for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_max: Maximum execution time observed for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_ops: Number of MakeDir operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_ops_ok: Number of successful MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_sum: Sum of timings for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_sqr: Sum of squares of sample timings for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_min: Minimum execution time observed for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_max: Maximum execution time observed for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_ops: Number of RemoveDir operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_ops_ok: Number of successful RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_sum: Sum of timings for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_sqr: Sum of squares of sample timings for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_min: Minimum execution time observed for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_max: Maximum execution time observed for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_ops: Number of SetLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_ops_ok: Number of successful SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_sum: Sum of timings for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_sqr: Sum of squares of sample timings for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_min: Minimum execution time observed for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_max: Maximum execution time observed for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_ops: Number of ExtendLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_ops_ok: Number of successful ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_sum: Sum of timings for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_sqr: Sum of squares of sample timings for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_min: Minimum execution time observed for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_max: Maximum execution time observed for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_ops: Number of ReleaseLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_ops_ok: Number of successful ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_sum: Sum of timings for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_sqr: Sum of squares of sample timings for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_min: Minimum execution time observed for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_max: Maximum execution time observed for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_ops: Number of GetStatistics operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_ops_ok: Number of successful GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_sum: Sum of timings for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_sqr: Sum of squares of sample timings for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_min: Minimum execution time observed for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_max: Maximum execution time observed for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_ops: Number of GiveUpCallbacks operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_ops_ok: Number of successful GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_sum: Sum of timings for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_sqr: Sum of squares of sample timings for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_min: Minimum execution time observed for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_max: Maximum execution time observed for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_ops: Number of GetVolumeInfo operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_ops_ok: Number of successful GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_sum: Sum of timings for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_sqr: Sum of squares of sample timings for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_min: Minimum execution time observed for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_max: Maximum execution time observed for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_ops: Number of GetVolumeStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_ops_ok: Number of successful GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_sum: Sum of timings for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_sqr: Sum of squares of sample timings for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_min: Minimum execution time observed for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_max: Maximum execution time observed for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_ops: Number of SetVolumeStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_ops_ok: Number of successful SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_sum: Sum of timings for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_sqr: Sum of squares of sample timings for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_min: Minimum execution time observed for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_max: Maximum execution time observed for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_ops: Number of GetRootVolume operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_ops_ok: Number of successful GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_sum: Sum of timings for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_sqr: Sum of squares of sample timings for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_min: Minimum execution time observed for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_max: Maximum execution time observed for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_ops: Number of CheckToken operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_ops_ok: Number of successful CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_sum: Sum of timings for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_sqr: Sum of squares of sample timings for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_min: Minimum execution time observed for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_max: Maximum execution time observed for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_ops: Number of GetTime operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_ops_ok: Number of successful GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_sum: Sum of timings for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_sqr: Sum of squares of sample timings for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_min: Minimum execution time observed for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_max: Maximum execution time observed for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_ops: Number of NGetVolumeInfo operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_ops_ok: Number of successful NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_sum: Sum of timings for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_sqr: Sum of squares of sample timings for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_min: Minimum execution time observed for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_max: Maximum execution time observed for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_ops: Number of BulkStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_ops_ok: Number of successful BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_sum: Sum of timings for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_sqr: Sum of squares of sample timings for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_min: Minimum execution time observed for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_max: Maximum execution time observed for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_ops: Number of XStatsVersion operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_ops_ok: Number of successful XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_sum: Sum of timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_sqr: Sum of squares of sample timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_min: Minimum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_max: Maximum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_ops: Number of GetXStats operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_ops_ok: Number of successful GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_sum: Sum of timings for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXstats_sqr: Sum of squares of sample timings for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_min: Minimum execution time observed for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_max: Maximum execution time observed for GetXStats operations.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>File Server RPC Operation Errors Group (FS_RPCopErrors_group) <itemizedlist>
+          <listitem>
+            <para>FetchData_srv_err: Number of server-down errors during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_net_err: Number of network errors during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_prot_err_err: Number of protection violations during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_vol_err: Number of volume related errors during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_busy_err: Number of volume busy conditions during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_other_err: Number of miscellaneous other errors during FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_srv_err: Number of server-down errors during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_net_err: Number of network errors during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_prot_err: Number of protection violations during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_vol_err: Number of volume related errors during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_busy_err: Number of volume busy conditions encountered during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_other_err: Number of miscellaneous other errors during FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_srv_err: Number of server-down errors during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_net_err: Number of network errors during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_prot_err: Number of protection violations during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_vol_err: Number of volume related errors during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_busy_err: Number of volume busy conditions encountered during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_other_err: Number of miscellaneous other errors during FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_srv_err: Number of server-down errors during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_net_err: Number of network errors during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_prot_err: Number of protection violations during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_vol_err: Number of volume related errors during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_busy_err: Number of volume busy conditions encountered during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_other_err: Number of miscellaneous other errors during StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_srv_err: Number of server-down errors during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_net_err: Number of network errors during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_prot_err: Number of protection violations during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_vol_err: Number of volume related errors during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_busy_err: Number of volume busy conditions encountered during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_other_err: Number of miscellaneous other errors during StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_srv_err: Number of server-down errors during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_net_err: Number of network errors during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_prot_err: Number of protection violations during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_vol_err: Number of volume related errors during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_busy_err: Number of volume busy conditions encountered during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_other_err: Number of miscellaneous other errors during StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_srv_err: Number of server-down errors during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_net_err: Number of network errors during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_prot_err: Number of protection violations during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_vol_err: Number of volume related errors during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_busy_err: Number of volume busy conditions encountered during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_other_err: Number of miscellaneous other errors during RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_srv_err: Number of server-down errors during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_net_err: Number of network errors during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_prot_err: Number of protection violations during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_vol_err: Number of volume related errors during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_busy_err: Number of volume busy conditions encountered during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_other_err: Number of miscellaneous other errors during CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_srv_err: Number of server-down errors during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_net_err: Number of network errors during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_prot_err: Number of protection violations during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_vol_err: Number of volume related errors during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_busy_err: Number of volume busy conditions encountered during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_other_err: Number of miscellaneous other errors during Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_srv_err: Number of server-down errors during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_net_err: Number of network errors during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_prot_err: Number of protection violations during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_vol_err: Number of volume related errors during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_busy_err: Number of volume busy conditions encountered during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_other_err: Number of miscellaneous other errors during Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_srv_err: Number of server-down errors during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_net_err: Number of network errors during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_prot_err: Number of protection violations during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_vol_err: Number of volume related errors during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_busy_err: Number of volume busy conditions encountered during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_other_err: Number of miscellaneous other errors during Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_srv_err: Number of server-down errors during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_net_err: Number of network errors during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_prot_err: Number of protection violations during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_vol_err: Number of volume related errors during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_busy_err: Number of volume busy conditions encountered during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_other_err: Number of miscellaneous other errors during MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_srv_err: Number of server-down errors during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_net_err: Number of network errors during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_prot_err: Number of protection violations during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_vol_err: Number of volume related errors during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_busy_err: Number of volume busy conditions encountered during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_other_err: Number of miscellaneous other errors during RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_srv_err: Number of server-down errors during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_net_err: Number of network errors during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_prot_err: Number of protection violations during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_vol_err: Number of volume related errors during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_busy_err: Number of volume busy conditions encountered during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_other_err: Number of miscellaneous other errors during SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_srv_err: Number of server-down errors during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_net_err: Number of network errors during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_prot_err: Number of protection violations during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_vol_err: Number of volume related errors during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_busy_err: Number of volume busy conditions encountered during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_other_err: Number of miscellaneous other errors during ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_srv_err: Number of server-down errors during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_net_err: Number of network errors during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_prot_err: Number of protection violations during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_vol_err: Number of volume related errors during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_busy_err: Number of volume busy conditions encountered during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_other_err: Number of miscellaneous other errors during ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_srv_err: Number of server-down errors during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_net_err: Number of network errors during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_prot_err: Number of protection violations during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_vol_err: Number of volume related errors during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_busy_err: Number of volume busy conditions encountered during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_other_err: Number of miscellaneous other errors during GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_srv_err: Number of server-down errors during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_net_err: Number of network errors during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_prot_err: Number of protection violations during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_vol_err: Number of volume related errors during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_busy_err: Number of volume busy conditions encountered during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_other_err: Number of miscellaneous other errors during GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_srv_err: Number of server-down errors during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_net_err: Number of network errors during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_prot_err: Number of protection violations during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_vol_err: Number of volume related errors during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_busy_err: Number of volume busy conditions encountered during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_other_err: Number of miscellaneous other errors during GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_srv_err: Number of server-down errors during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_net_err: Number of network errors during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_prot_err: Number of protection violations during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_vol_err: Number of volume related errors during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_busy_err: Number of volume busy conditions encountered during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_other_err: Number of miscellaneous other errors during GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_srv_err : Number of server-down errors during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_net_err: Number of network errors during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_prot_err: Number of protection violations during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_vol_err: Number of volume related errors during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_busy_err: Number of volume busy conditions encountered during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_other_err: Number of miscellaneous other errors during SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_srv_err: Number of server-down errors during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_net_err: Number of network errors during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_prot_err: Number of protection violations during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_vol_err: Number of volume related errors during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_busy_err: Number of volume busy conditions encountered during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_other_err: Number of miscellaneous other errors during GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_srv_err: Number of server-down errors during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_net_err: Number of network errors during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_prot_err: Number of protection violations during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_vol_err: Number of volume related errors during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_busy_err: Number of volume busy conditions encountered during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_other_err: Number of miscellaneous other errors during CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_srv_err: Number of server-down errors during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_net_err: Number of network errors during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_prot_err: Number of protection violations during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_vol_err: Number of volume related errors during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_busy_err: Number of volume busy conditions encountered during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_other_err: Number of miscellaneous other errors during GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_srv_err: Number of server-down errors during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_net_err: Number of network errors during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_prot_err: Number of protection violations during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_vol_err: Number of volume related errors during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_busy_err: Number of volume busy conditions encountered during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_other_err: Number of miscellaneous other errors during NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_srv_err: Number of server-down errors during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_net_err: Number of network errors during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_prot_err: Number of protection violations during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_vol_err: Number of volume related errors during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_busy_err: Number of volume busy conditions encountered during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_other_err: Number of miscellaneous other errors during BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_srv_err: Number of server-down errors during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_net_err: Number of network errors during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_prot_err: Number of protection violations during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_vol_err: Number of volume related errors during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_busy_err: Number of volume busy conditions encountered during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_other_err: Number of miscellaneous other errors during XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_srv_err: Number of server-down errors during GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_net_err: Number of network errors during GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_prot_err: Number of protection violations during GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_vol_err: Number of volume related errors during GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_busy_err: Number of volume busy conditions encountered during GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_other_err: Number of miscellaneous other errors during GetXStats operations.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>File Server RPC Transfer Timings Group (FS_RPCopBytes_group) <itemizedlist>
+          <listitem>
+            <para>FetchData_xfers: Number of FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_ok: Number of successful FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_sum: Sum of timing values for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_sqr: Sum of squares of sample timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_min: Minimum transfer time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_max: Maximum transfer time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_sum: Sum of bytes transferred for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_min: Minimum byte transfer observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_max: Maximum byte transfer observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket0: Tally in bucket0 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket1: Tally in bucket1 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket2: Tally in bucket2 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket3: Tally in bucket3 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket4: Tally in bucket4 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket5: Tally in bucket5 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket6: Tally in bucket6 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket7: Tally in bucket7 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket8: Tally in bucket8 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers: Number of StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_ok: Number of successful StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_sum: Sum of timing values for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_sqr: Sum of squares of sample timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_min: Minimum transfer time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_max: Maximum transfer time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_sum: Sum of bytes transferred for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_min: Minimum byte transfer observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_max: Maximum byte transfer observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket0: Tally in bucket0 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket1: Tally in bucket1 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket2: Tally in bucket2 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket3: Tally in bucket3 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket4: Tally in bucket4 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket5: Tally in bucket5 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket6: Tally in bucket6 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket7: Tally in bucket7 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket8: Tally in bucket8 for StoreData operations.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Cache Manager RPC Operation Timings Group (CM_RPCopTimes_group) <itemizedlist>
+          <listitem>
+            <para>CallBack_ops: Number of CallBack operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBack_ops_ok: Number of successful CallBack operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBack_ops_sum: Sum of timings for CallBack operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBack_ops_min: Minimum execution time observed for CallBack operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBack_ops_max: Maximum execution time observed for CallBack operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CallBack_ops_sqr: Sum of the square of CallBack operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops: Number of InitCallBackState operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops_ok: Number of successful InitCallBackState operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops_sum: Sum of timings for InitCallBackState operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops_min: Minimum execution time observed for InitCallBackState operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops_max: Maximum execution time observed for InitCallBackState operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>InitCallBackState_ops_sqr: Sum of squares of timings for InitCallBackState operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops: Number of Probe operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops_ok: Number of successful Probe operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops_sum: Sum of timings for Probe operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops_min: Minimum execution time observed for Probe operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops_max: Maximum execution time observed for Probe operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Probe_ops_sqr: Sum of squares of timings for Probe operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops: Number of GetLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops_ok: Number of successful GetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops_sum: Sum of timings for GetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops_min: Minimum execution time observed for GetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops_max: Maximum execution time observed for GetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetLock_ops_sqr: Sum of squares of timings for GetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops: Number of GetCE operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops_ok: Number of successful GetCE operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops_sum: Sum of timings for GetCE operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops_min: Minimum execution time observed for GetCE operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops_max: Maximum execution time observed for GetCE operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetCE_ops_sqr: Sum of squares of timings for GetCE operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops: Number of XStatsVersion operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops_ok: Number of successful XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops_sum: Sum of timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops_min: Minimum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops_max: Maximum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_CM_ops_sqr: Sum of squares of timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops: Number of GetXStats operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops_ok: Number of successful GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops_sum: Sum of timings for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops_min: Minimum execution time observed for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops_max: Maximum execution time observed for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_CM_ops_sqr: Sum of squares of timings for GetXStats operations.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="Header_711">
+      <title>Authentication and Replicated File Access Section (Auth_Access_section)</title>
+
+      <para>Authentication Information for Cache Manager Group (Auth_Stats_group) <itemizedlist>
+          <listitem>
+            <para>curr_PAGs: Current number of PAGs.</para>
+          </listitem>
+
+          <listitem>
+            <para>curr_Records: Current number of records in table.</para>
+          </listitem>
+
+          <listitem>
+            <para>curr_AuthRecords: Current number of of authenticated records (with valid ticket).</para>
+          </listitem>
+
+          <listitem>
+            <para>curr_UnauthRecords: Current number of of unauthenticated records (without any ticket at all).</para>
+          </listitem>
+
+          <listitem>
+            <para>curr_MaxRecordsInPAG: Maximum records for a single PAG.</para>
+          </listitem>
+
+          <listitem>
+            <para>curr_LongestChain: Length of longest current hash chain.</para>
+          </listitem>
+
+          <listitem>
+            <para>PAGCreations: Number of PAG creations.</para>
+          </listitem>
+
+          <listitem>
+            <para>TicketUpdates: Number of ticket additions/refreshes.</para>
+          </listitem>
+
+          <listitem>
+            <para>HWM_PAGS: High water mark - number of PAGs.</para>
+          </listitem>
+
+          <listitem>
+            <para>HWM_Records: High water mark - number of records.</para>
+          </listitem>
+
+          <listitem>
+            <para>HWM_MaxRecordsInPAG: High water mark - maximum records for a single PAG.</para>
+          </listitem>
+
+          <listitem>
+            <para>HWM_LongestChain: High water mark - longest hash chain.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Unreplicated File Access Group (Access_Stats_group) <itemizedlist>
+          <listitem>
+            <para>unreplicatedRefs: Number of references to unreplicated data.</para>
+          </listitem>
+
+          <listitem>
+            <para>replicatedRefs: Number of references to replicated data.</para>
+          </listitem>
+
+          <listitem>
+            <para>numReplicasAccessed: Number of replicas accessed.</para>
+          </listitem>
+
+          <listitem>
+            <para>maxReplicasPerRef: Maximum number of replicas accessed per reference.</para>
+          </listitem>
+
+          <listitem>
+            <para>refFirstReplicaOK: Number of references satisfied by 1st replica.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ619">
+    <title>The File Server Statistics</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>file server statistics</secondary>
+    </indexterm>
+
+    <para>File Server statistics are classified into the following sections and groups: <itemizedlist>
+        <listitem>
+          <para>PerfStats_section: Performance Statistics Section. <itemizedlist>
+              <listitem>
+                <para>VnodeCache_group: Vnode Cache Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>Directory_group: Directory Package Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>Rx_group: Rx Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>HostModule_group: Host Module Fields Group.</para>
+              </listitem>
+
+              <listitem>
+                <para>misc_group: Miscellaneous Variables Group.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>RPCop_section: RPC Operations Section. <itemizedlist>
+              <listitem>
+                <para>RPCopTimes_group: Individual RPC Operation Timings.</para>
+              </listitem>
+
+              <listitem>
+                <para>RPCopBytes_group: Byte Information for Certain RPC Operations.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>All File Server variables categorized under the above sections and groups names are listed below.</para>
+
+    <sect2 id="Header_713">
+      <title>Performance Statistics Section (PerfStats_section)</title>
+
+      <para>Vnode Cache Group (VnodeCache_group) <itemizedlist>
+          <listitem>
+            <para>vcache_L_Entries: Number of entries in LARGE vnode cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_L_Allocs: Number of allocs (large).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_L_Gets: Number of gets (large).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_L_Reads: Number of reads (large).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_L_Writes: Number of writes (large).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_S_Entries: Number of entries in SMALL vnode cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_S_Allocs: Number of allocs (small).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_S_Gets: Number of gets (small).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_S_Reads: Number of reads (small).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_S_Writes: Number of writes (small).</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_H_Entries: Number of entries in HEADER vnode cache.</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_H_Gets: Number of gets (header)</para>
+          </listitem>
+
+          <listitem>
+            <para>vcache_H_Replacements: Number of replacements (header)</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Directory Package Group (Directory_group) <itemizedlist>
+          <listitem>
+            <para>dir_Buffers: Number of buffers in use.</para>
+          </listitem>
+
+          <listitem>
+            <para>dir_Calls: Number of read calls made.</para>
+          </listitem>
+
+          <listitem>
+            <para>dir_IOs: I/O operations performed.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Rx Group (Rx_group) <itemizedlist>
+          <listitem>
+            <para>rx_packetRequests: Packet allocation requests.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_noPackets_RcvClass: Failed packet requests (receive class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_noPackets_SendClass: Failed packet requests (send class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_noPackets_SpecialClass: Failed packet requests (special class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_socketGreedy: Did SO_GREEDY succeed?</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_bogusPacketOnRead: Short packets received.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_bogusHost: Host address from bogus packets.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_noPacketOnRead: Read packets with no packet there.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_noPacketBuffersOnRead: Packets dropped due to buffer shortage.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_selects: Selects waiting on packet or timeout.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_sendSelects: Selects forced upon sends.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsRead_RcvClass: Packets read (receive class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsRead_SendClass: Packets read (send class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsRead_SpecialClass: Packets read (special class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_dataPacketsRead: Unique data packets read off wire.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_ackPacketsRead: ACK packets read.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_dupPacketsRead: Duplicate data packets read.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_spuriousPacketsRead: Inappropriate packets read.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsSent_RcvClass: Packets sent (receive class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsSent_SendClass: Packets sent (send class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_packetsSent_SpecialClass: Packets sent (special class).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_ackPacketsSent: ACK packets sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_pingPacketsSent: Ping packets sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_abortPacketsSent: Abort packets sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_busyPacketsSent: Busy packets sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_dataPacketsSent: Unique data packets sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_dataPacketsReSent: Retransmissions sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_dataPacketsPushed: Retransmissions pushed by NACK.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_ignoreAckedPacket: Packets with ACKed flag on rxi_Start.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_totalRtt_Sec and rx_totalRtt_Usec: Total round trip time (in seconds and milliseconds).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_minRtt_Sec and rx_minRtt_Usec: Minimum round trip time (in seconds and milliseconds).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_maxRtt_Sec and rx_maxRtt_Usec: Maximum round trip time (in seconds and milliseconds).</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nRttSamples: Round trip samples.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nServerConns: Total server connections.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nClientConns: Total client connections.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nPeerStructs: Total peer structures.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nCallStructs: Total call structures.</para>
+          </listitem>
+
+          <listitem>
+            <para>rx_nFreeCallStructs: Total free call structures.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Host Module Fields Group (HostModule_group) <itemizedlist>
+          <listitem>
+            <para>host_NumHostEntries: Number of host entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_HostBlocks: Blocks in use for hosts.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_NonDeletedHosts: Non-deleted hosts.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_HostsInSameNetOrSubnet: Hosts in same subnet as server.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_HostsInDiffSubnet: Hosts in different subnet than server.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_HostsInDiffNetwork: Hosts in different network than server.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_NumClients: Number of client entries.</para>
+          </listitem>
+
+          <listitem>
+            <para>host_ClientBlocks: Blocks in use for clients.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Miscellaneous Variables Group (misc_group) <itemizedlist>
+          <listitem>
+            <para>numPerfCalls: Number of performance calls received.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="Header_714">
+      <title>RPC Operations Section (RPCop_section)</title>
+
+      <para>Individual RPC Operation Timings Group (RPCopTimes_group) <itemizedlist>
+          <listitem>
+            <para>epoch: Time when data collection began.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_ops: Number of FetchData operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_ops_ok: Number of successful FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_sum: Sum of timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_sqr: Sum of squares of sample timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_min: Minimum execution time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_max: Maximum execution time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_ops: Number of FetchACL operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_ops_ok: Number of successful FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_sum: Sum of timings for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_sqr: Sum of squares of sample timings for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_min: Minimum execution time observed for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchACL_max: Maximum execution time observed for FetchACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_ops: Number of FetchStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_ops_ok: Number of successful FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_sum: Sum of timings for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_sqr: Sum of squares of sample timings for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_min: Minimum execution time observed for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchStatus_max: Maximum execution time observed for FetchStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_ops: Number of StoreData operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_ops_ok: Number of successful StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_sum: Sum of timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_sqr: Sum of squares of sample timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_min: Minimum execution time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_max: Maximum execution time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_ops: Number of StoreACL operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_ops_ok: Number of successful StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_sum: Sum of timings for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_sqr: Sum of squares of sample timings for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_min: Minimum execution time observed for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreACL_max: Maximum execution time observed for StoreACL operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_ops: Number of StoreStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_ops_ok: Number of successful StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_sum: Sum of timings for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_sqr: Sum of squares of sample timings for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_min: Minimum execution time observed for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreStatus_max: Maximum execution time observed for StoreStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_ops: Number of RemoveFile operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_ops_ok: Number of successful RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_sum: Sum of timings for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_sqr: Sum of squares of sample timings for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_min: Minimum execution time observed for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveFile_max: Maximum execution time observed for RemoveFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_ops: Number of CreateFile operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_ops_ok: Number of successful CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_sum: Sum of timings for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_sqr: Sum of squares of sample timings for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_min: Minimum execution time observed for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CreateFile_max: Maximum execution time observed for CreateFile operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_ops: Number of Rename operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_ops_ok: Number of successful Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_sum: Sum of timings for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_sqr: Sum of squares of sample timings for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_min: Minimum execution time observed for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Rename_max: Maximum execution time observed for Rename operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_ops: Number of Symlink operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_ops_ok: Number of successful Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_sum: Sum of timings for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_sqr: Sum of squares of sample timings for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_min: Minimum execution time observed for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Symlink_max: Maximum execution time observed for Symlink operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_ops: Number of Link operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_ops_ok: Number of successful Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_sum: Sum of timings for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_sqr: Sum of squares of sample timings for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_min: Minimum execution time observed for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>Link_max: Maximum execution time observed for Link operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_ops: Number of MakeDir operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_ops_ok: Number of successful MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_sum: Sum of timings for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_sqr: Sum of squares of sample timings for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_min: Minimum execution time observed for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>MakeDir_max: Maximum execution time observed for MakeDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_ops: Number of RemoveDir operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_ops_ok: Number of successful RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_sum: Sum of timings for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_sqr: Sum of squares of sample timings for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_min: Minimum execution time observed for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>RemoveDir_max: Maximum execution time observed for RemoveDir operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_ops: Number of SetLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_ops_ok: Number of successful SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_sum: Sum of timings for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_sqr: Sum of squares of sample timings for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_min: Minimum execution time observed for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetLock_max: Maximum execution time observed for SetLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_ops: Number of ExtendLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_ops_ok: Number of successful ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_sum: Sum of timings for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_sqr: Sum of squares of sample timings for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_min: Minimum execution time observed for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ExtendLock_max: Maximum execution time observed for ExtendLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_ops: Number of ReleaseLock operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_ops_ok: Number of successful ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_sum: Sum of timings for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_sqr: Sum of squares of sample timings for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_min: Minimum execution time observed for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>ReleaseLock_max: Maximum execution time observed for ReleaseLock operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_ops: Number of GetStatistics operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_ops_ok: Number of successful GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_sum: Sum of timings for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_sqr: Sum of squares of sample timings for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_min: Minimum execution time observed for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetStatistics_max: Maximum execution time observed for GetStatistics operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_ops: Number of GiveUpCallbacks operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_ops_ok: Number of successful GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_sum: Sum of timings for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_sqr: Sum of squares of sample timings for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_min: Minimum execution time observed for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GiveUpCallbacks_max: Maximum execution time observed for GiveUpCallbacks operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_ops: Number of GetVolumeInfo operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_ops_ok: Number of successful GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_sum: Sum of timings for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_sqr: Sum of squares of sample timings for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_min: Minimum execution time observed for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeInfo_max: Maximum execution time observed for GetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_ops: Number of GetVolumeStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_ops_ok: Number of successful GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_sum: Sum of timings for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_sqr: Sum of squares of sample timings for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_min: Minimum execution time observed for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetVolumeStatus_max: Maximum execution time observed for GetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_ops: Number of SetVolumeStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_ops_ok: Number of successful SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_sum: Sum of timings for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_sqr: Sum of squares of sample timings for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_min: Minimum execution time observed for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>SetVolumeStatus_max: Maximum execution time observed for SetVolumeStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_ops: Number of GetRootVolume operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_ops_ok: Number of successful GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_sum: Sum of timings for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_sqr: Sum of squares of sample timings for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_min: Minimum execution time observed for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetRootVolume_max: Maximum execution time observed for GetRootVolume operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_ops: Number of CheckToken operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_ops_ok: Number of successful CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_sum: Sum of timings for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_sqr: Sum of squares of sample timings for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_min: Minimum execution time observed for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>CheckToken_max: Maximum execution time observed for CheckToken operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_ops: Number of GetTime operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_ops_ok: Number of successful GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_sum: Sum of timings for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_sqr: Sum of squares of sample timings for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_min: Minimum execution time observed for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetTime_max: Maximum execution time observed for GetTime operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_ops: Number of NGetVolumeInfo operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_ops_ok: Number of successful NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_sum: Sum of timings for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_sqr: Sum of squares of sample timings for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_min: Minimum execution time observed for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>NGetVolumeInfo_max: Maximum execution time observed for NGetVolumeInfo operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_ops: Number of BulkStatus operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_ops_ok: Number of successful BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_sum: Sum of timings for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_sqr: Sum of squares of sample timings for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_min: Minimum execution time observed for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>BulkStatus_max: Maximum execution time observed for BulkStatus operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_ops: Number of XStatsVersion operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_ops_ok: Number of successful XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_sum: Sum of timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_sqr: Sum of squares of sample timings for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_min: Minimum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>XStatsVersion_max: Maximum execution time observed for XStatsVersion operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_ops: Number of GetXStats operations executed.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_ops_ok: Number of successful GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_sum: Sum of timings for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_sqr: Sum of squares of sample timings for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_min: Minimum execution time observed for GetXStats operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>GetXStats_max: Maximum execution time observed for GetXStats operations.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Byte Information for Certain RPC Operations Group (RPCopBytes_group) <itemizedlist>
+          <listitem>
+            <para>FetchData_xfers: Number of FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_ok: Number of successful FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_sum: Sum of timing values for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_sqr: Sum of squares of sample timings for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_min: Minimum transfer time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_max: Maximum transfer time observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_sum: Sum of bytes transferred for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_min: Minimum byte transfer observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bytes_max: Maximum byte transfer observed for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket0: Tally in bucket0 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket1: Tally in bucket1 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket2: Tally in bucket2 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket3: Tally in bucket3 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket4: Tally in bucket4 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket5: Tally in bucket5 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket6: Tally in bucket6 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket7: Tally in bucket7 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>FetchData_xfers_bucket8: Tally in bucket8 for FetchData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers: Number of StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_ok: Number of successful StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_sum: Sum of timing values for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_sqr: Sum of squares of sample timings for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_min: Minimum transfer time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_max: Maximum transfer time observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_sum: Sum of bytes transferred for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_min: Minimum byte transfer observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bytes_max: Maximum byte transfer observed for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket0: Tally in bucket0 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket1: Tally in bucket1 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket2: Tally in bucket2 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket3: Tally in bucket3 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket4: Tally in bucket4 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket5: Tally in bucket5 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket6: Tally in bucket6 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket7: Tally in bucket7 for StoreData operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>StoreData_xfers_bucket8: Tally in bucket8 for StoreData operations.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+  </sect1>
+</appendix>

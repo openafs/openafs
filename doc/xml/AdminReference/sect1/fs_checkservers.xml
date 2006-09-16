@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_checkservers1">
+  <refmeta>
+    <refentrytitle>fs checkservers</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs checkservers</refname>
+    <refpurpose>Displays the status of server machines</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs checkservers</emphasis> [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell to check</emphasis>&gt;] [<emphasis role="bold">-all</emphasis>] [<emphasis role="bold">-fast</emphasis>]
+        [<emphasis role="bold">-interval</emphasis> &lt;<emphasis>seconds between probes</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs checks</emphasis> [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell to check</emphasis>&gt;] [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-f</emphasis>]
+        [<emphasis role="bold">-i</emphasis> &lt;<emphasis>seconds between probes</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs checkservers</emphasis> command reports whether certain AFS server machines
+    are accessible from the local client machine. The machines belong to one
+    of two classes, and the Cache Manager maintains a list of them in kernel
+    memory:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The database server machines in every cell listed in the local
+        <replaceable>/usr/vice/etc/CellServDB file</replaceable>, plus any machines added to the memory
+        list by the <emphasis role="bold">fs newcell</emphasis> command since the last reboot.</para>
+
+      </listitem>
+      <listitem>
+        <para>All file server machines the Cache Manager has recently contacted, and
+        which it probably needs to contact again soon. In most cases, the Cache
+        Manager holds a callback on a file or volume fetched from the machine.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If the Cache Manager is unable to contact the vlserver process on a
+    database server machine or the <emphasis role="bold">fileserver</emphasis> process on a file server
+    machine, it marks the machine as inaccessible. (Actually, if a file server
+    machine is multihomed, the Cache Manager attempts to contact all of the
+    machine's interfaces, and only marks the machine as down if the
+    <emphasis role="bold">fileserver</emphasis> fails to reply via any of them.) The Cache Manager then
+    periodically (by default, every three minutes) sends a probe to each
+    marked machine, to see if it is still inaccessible. If a previously
+    inaccessible machine responds, the Cache Manager marks it as accessible
+    and no longer sends the periodic probes to it.</para>
+
+    <para>The <emphasis role="bold">fs checkservers</emphasis> command updates the list of inaccessible machines
+    by having the Cache Manager probe a specified set of them:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>By default, only machines that are marked inaccessible and belong to the
+        local cell (the cell listed in the local <replaceable>/usr/vice/etc/ThisCell</replaceable>
+        file).</para>
+
+      </listitem>
+      <listitem>
+        <para>If the <emphasis role="bold">-cell</emphasis> argument is included, only machines that are marked
+        inaccessible and belong to the specified cell.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the <emphasis role="bold">-all</emphasis> flag is included, all machines marked inaccessible.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If the <emphasis role="bold">-fast</emphasis> flag is included, the Cache Manager does not probe any
+    machines, but instead reports the results of the most recent previous
+    probe.</para>
+
+    <para>To set the interval between probes rather than produce a list of
+    inaccessible machines, use the <emphasis role="bold">-interval</emphasis> argument. The non-default
+    setting persists until the machine reboots; to preserve it across reboots,
+    put the appropriate <emphasis role="bold">fs checkservers</emphasis> command in the machine's AFS
+    initialization files.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The command can take quite a while to complete, if a number of machines do
+    not respond to the Cache Manager's probe. The Cache Manager probes
+    machines sequentially and waits a standard timeout period before marking
+    the machine as unresponsive, to allow for slow network communication. To
+    make the command shell prompt return quickly, put the command in the
+    background. It is harmless to interrupt the command by typing Ctrl-C or
+    another interrupt signal.</para>
+
+    <para>Note that the Cache Manager probes only server machines marked
+    inaccessible in its memory list. A server machine's absence from the
+    output does not necessarily mean that it is functioning, because it
+    possibly is not included in the memory list at all (if, for example, the
+    Cache Manager has not contacted it recently). For the same reason, the
+    output is likely to vary on different client machines.</para>
+
+    <para>Unlike most <emphasis role="bold">fs</emphasis> commands, the fs checkservers command does not refer to
+    the AFSCELL environment variable.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell to check</emphasis>&gt;</term>
+        <listitem>
+          <para>Names each cell in which to probe server machines marked as
+          inaccessible. Provide the fully qualified domain name, or a shortened form
+          that disambiguates it from the other cells listed in the local
+          <replaceable>/usr/vice/etc/CellServDB</replaceable> file. Combine this argument with the <emphasis role="bold">-fast</emphasis>
+          flag if desired, but not with the <emphasis role="bold">-all</emphasis> flag. Omit both this argument
+          and the <emphasis role="bold">-all</emphasis> flag to probe machines in the local cell only.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-all</emphasis></term>
+        <listitem>
+          <para>Probes all machines in the Cache Manager's memory list that are marked
+          inaccessible. Combine this argument with the <emphasis role="bold">-fast</emphasis> flag if desired, but
+          not with the <emphasis role="bold">-cell</emphasis> argument. Omit both this flag and the <emphasis role="bold">-cell</emphasis>
+          argument to probe machines in the local cell only.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fast</emphasis></term>
+        <listitem>
+          <para>Displays the Cache Manager's current list of machines that are
+          inaccessible, rather than sending new probes. The output can as old as the
+          current setting of the probe interval (by default three minutes, and
+          maximum ten minutes).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-interval</emphasis> &lt;<emphasis>seconds between probes</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets or reports the number of seconds between the Cache Manager's probes
+          to machines in the memory list that are marked inaccessible:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>To set the interval, specify a value from the range between 1 and <computeroutput>600</computeroutput>
+              (10 minutes); the default is <computeroutput>180</computeroutput> (three minutes). The issuer must be
+              logged in as the local superuser <computeroutput>root</computeroutput>. The altered setting persists
+              until again changed with this command, or until the machine reboots, at
+              which time the setting returns to the default.</para>
+
+            </listitem>
+            <listitem>
+              <para>Provide a value of <computeroutput>0</computeroutput> (zero) to display the current interval setting. No
+              privilege is required. Do not combine this argument with any other.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If there are no machines marked as inaccessible, or if all of them now
+    respond to the Cache Manager's probe, the output is:</para>
+
+<programlisting>
+   All servers are running.
+
+</programlisting>
+      <para>Note that this message does not mean that all server machines in each
+      relevant cell are running. The output indicates the status of only those
+      machines that the Cache Manager probes.</para>
+
+      <para>If a machine fails to respond to the probe within the timeout period, the
+      output begins with the string</para>
+
+<programlisting>
+   These servers unavailable due to network or server problems:
+
+</programlisting>
+        <para>and lists the hostname of each machine on its own line. The Cache Manager
+        stores machine records by Internet address, so the format of each hostname
+        (uppercase or lowercase letters, or an Internet address in dotted decimal
+        format) depends on how the local cell's name service translates it at the
+        time the command is issued. If a server machine is multihomed, the output
+        lists only one of its interfaces (usually, the currently most preferred
+        one).</para>
+
+        <para>If the <emphasis role="bold">-interval</emphasis> argument is provided with a value between <computeroutput>1</computeroutput> and
+        <computeroutput>600</computeroutput>, there is no output. If the value is <computeroutput>0</computeroutput>, the output reports the
+        probe interval as follows:</para>
+
+<programlisting>
+   The current down server probe interval is &amp;lt;interval&amp;gt; secs
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Examples</title>
+          <para>The following command displays the Cache Manager's current list of
+          unresponsive machines in the local cell, rather than probing them
+          again. The output indicates that if there were any machines marked
+          inaccessible, they all responded to the previous probe.</para>
+
+<programlisting>
+   % fs checkservers -fast
+   All servers are running.
+
+</programlisting>
+            <para>The following example probes machines in the Cache Manager's memory list
+            that belong to the <computeroutput>stateu.edu</computeroutput> cell:</para>
+
+<programlisting>
+   % fs checkservers -cell stateu.edu
+   All servers are running.
+
+</programlisting>
+              <para>The following example probes all server machines in the Cache Manager's
+              memory list. It reports that two machines did not respond to the probe.</para>
+
+<programlisting>
+   % fs checkservers -all
+   These servers unavailable due to network or server problems:
+   fs1.abc.com SV3.STATE.EDU.
+
+</programlisting>
+              </refsect1>
+              <refsect1>
+                <title>Privilege Required</title>
+                <para>To set the probe interval, the issuer must be logged in as the local
+                superuser <computeroutput>root</computeroutput>. Otherwise, no privilege is required.</para>
+
+              </refsect1>
+              <refsect1>
+                <title>See Also</title>
+                <para><link linkend="CellServDB5">CellServDB(5)</link>,
+                <link linkend="ThisCell5">ThisCell(5)</link>,
+                <link linkend="fs_newcell1">fs_newcell(1)</link></para>
+
+              </refsect1>
+              <refsect1>
+                <title>Copyright</title>
+                <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                converted from HTML to POD by software written by Chas Williams and Russ
+                Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+              </refsect1>
+            </refentry>

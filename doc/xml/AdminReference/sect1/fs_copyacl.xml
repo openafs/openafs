@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_copyacl1">
+  <refmeta>
+    <refentrytitle>fs copyacl</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs copyacl</refname>
+    <refpurpose>Copies an ACL from a directory to one or more other directories</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs copyacl</emphasis> <emphasis role="bold">-fromdir</emphasis> &lt;<emphasis>source directory (or DFS file)</emphasis>&gt;
+        <emphasis role="bold">-todir</emphasis> &lt;<emphasis>destination directory (or DFS file)</emphasis>&gt;+
+        [<emphasis role="bold">-clear</emphasis>] [<emphasis role="bold">-id</emphasis>] [<emphasis role="bold">-if</emphasis>] [-help]</para>
+
+    <para><emphasis role="bold">fs co</emphasis> <emphasis role="bold">-f</emphasis> &lt;<emphasis>source directory (or DFS file)</emphasis>&gt;
+        <emphasis role="bold">-t</emphasis> &lt;<emphasis>destination directory (or DFS file)</emphasis>&gt;+
+        [<emphasis role="bold">-c</emphasis>] [<emphasis role="bold">-id</emphasis>] [<emphasis role="bold">-if</emphasis>] [-h]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The fs copyacl command copies the access control list (ACL) from a source
+    directory to each specified destination directory. The source directory's
+    ACL is unchanged, and changes to the destination directory's ACL obey the
+    following rules:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If an entry on the source ACL does not already exist on the destination
+        ACL, it is added.</para>
+
+      </listitem>
+      <listitem>
+        <para>If an entry exists on both the source and destination ACLs, the
+        permissions from the source ACL entry replace the current permissions on
+        the destination ACL entry.</para>
+
+      </listitem>
+      <listitem>
+        <para>If an entry on the destination ACL has no corresponding entry on the
+        source ACL, it is removed if the <emphasis role="bold">-clear</emphasis> flag is included and is
+        unchanged otherwise. In other words, if the <emphasis role="bold">-clear</emphasis> flag is provided,
+        the source ACL completely replaces the destination ACL.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>When using this command to copy ACLs between objects in DFS filespace
+    accessed via the AFS/DFS Migration Toolkit Protocol Translator, it is
+    possible to specify files, as well as directories, with the <emphasis role="bold">-fromdir</emphasis>
+    and <emphasis role="bold">-todir</emphasis> arguments. For more information on copying ACLs between DFS
+    directories and files, refer to the <emphasis>IBM AFS/DFS Migration Toolkit
+    Administration Guide and Reference</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not copy ACLs between AFS and DFS files or directories. The ACL formats
+    are incompatible.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-fromdir</emphasis> &lt;<emphasis>source directory</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the source directory from which to copy the ACL.  (Specifying an
+          AFS file copies its directory's ACL, but specifying a DFS file copies its
+          own ACL.) A partial pathname is interpreted relative to the current
+          working directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-todir</emphasis> &lt;<emphasis>destination directory</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies each directory for which to alter the ACL to match the source
+          ACL. (Specifying an AFS file halts the command with an error, but
+          specifying a DFS file alters the file's ACL). A partial pathname is
+          interpreted relative to the current working directory.</para>
+
+          <para>Specify the read/write path to each directory (or DFS file), to avoid the
+          failure that results from attempting to change a read-only volume. By
+          convention, the read/write path is indicated by placing a period before
+          the cell name at the pathname's second level (for example,
+          <computeroutput>/afs/.abc.com</computeroutput>). For further discussion of the concept of read/write and
+          read-only paths through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference
+          page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-clear</emphasis></term>
+        <listitem>
+          <para>Replaces the ACL of each destination directory with the source ACL.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis></term>
+        <listitem>
+          <para>Modifies the Initial Container ACL of each DFS directory named by the
+          <emphasis role="bold">-todir</emphasis> argument, rather than the regular Object ACL. This argument is
+          supported only when both the source and each destination directory reside
+          in DFS and are accessed via the AFS/DFS Migration Toolkit Protocol
+          Translator.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-if</emphasis></term>
+        <listitem>
+          <para>Modifies the Initial Object ACL of each DFS directory named by the
+          <emphasis role="bold">-todir</emphasis> argument, rather than the regular Object ACL. This argument is
+          supported only when both the source and each destination directory reside
+          in DFS and are accessed via the AFS/DFS Migration Toolkit Protocol
+          Translator.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example command copies the current working directory's ACL
+    to its subdirectory called <replaceable>reports</replaceable>. Note that the source directory's
+    ACL is unaffected. Entries on the <replaceable>reports</replaceable> directory's that are not on
+    the source ACL of the current directory remain unaffected as well, because
+    the <emphasis role="bold">-clear</emphasis> flag is not used.</para>
+
+<programlisting>
+   % fs listacl . reports
+   Access list for . is
+   Normal rights:
+      pat rlidwka
+      smith rlidwk
+   Access list for reports is
+   Normal rights:
+      pat rl
+      pat:friends rl
+   Negative rights
+      jones rlidwka
+
+</programlisting>
+<programlisting>
+   % fs copyacl -fromdir . -todir reports
+
+</programlisting>
+<programlisting>
+   % fs listacl . reports
+   Access list for . is
+   Normal rights:
+      pat rlidwka
+      smith rlidwk
+   Access list for reports is
+   Normal rights:
+      pat rlidwka
+      pat:friends rl
+      smith rlidwk
+   Negative rights
+      jones rlidwka
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>To copy an ACL between AFS objects, the issuer must have the <computeroutput>l</computeroutput> (lookup)
+          permission on the source directory's ACL and the <computeroutput>a</computeroutput> (administer)
+          permission on each destination directory's ACL. If the <emphasis role="bold">-fromdir</emphasis>
+          argument names a file rather than a directory, the issuer must have both
+          the <computeroutput>l</computeroutput> and <computeroutput>r</computeroutput> (read) permissions on the ACL of the file's directory.</para>
+
+          <para>To copy an ACL between DFS objects, the issuer must have the r permission
+          on the source directory or file's ACL and the <computeroutput>c</computeroutput> (control) permission on
+          each destination directory or file's ACL.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="fs_listacl1">fs_listacl(1)</link>,
+          <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+          <link linkend="fs_setacl1">fs_setacl(1)</link></para>
+
+          <para><emphasis>IBM AFS/DFS Migration Toolkit Administration Guide and Reference</emphasis></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_setquota1">
+  <refmeta>
+    <refentrytitle>fs setquota</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs setquota</refname>
+    <refpurpose>Sets the quota for the volume containing a file or directory</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs setquota</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;]
+        <emphasis role="bold">-max</emphasis> &lt;<emphasis>max quota in kbytes</emphasis>&gt; [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs setq</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;] <emphasis role="bold">-m</emphasis> &lt;<emphasis>max quota in kbytes</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs sq</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;] <emphasis role="bold">-m</emphasis> &lt;<emphasis>max quota in kbytes</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs setquota</emphasis> command sets the quota (maximum possible size) of the
+    read/write volume that contains the directory or file named by the
+    <emphasis role="bold">-path</emphasis> argument.</para>
+
+    <para>To set the quota on multiple volumes at the same time, use the <emphasis role="bold">fs
+    setvol</emphasis> command.</para>
+
+    <para>To display a volume's quota, use the <emphasis role="bold">fs examine</emphasis>, <emphasis role="bold">fs listquota</emphasis>, or
+    <emphasis role="bold">fs quota</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the directory or file for which to set the host volume's
+          quota. Partial pathnames are interpreted relative to the current working
+          directory, which is also the default value if this argument is omitted.</para>
+
+          <para>Specify the read/write path to the file or directory, to avoid the failure
+          that results from attempting to change a read-only volume. By convention,
+          the read/write path is indicated by placing a period before the cell name
+          at the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For
+          further discussion of the concept of read/write and read-only paths
+          through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-max</emphasis> &lt;<emphasis>max quota in kbytes</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the maximum amount of file server disk space the volume can
+          occupy. Specify the number of one-kilobyte blocks as a positive integer
+          (<computeroutput>1024</computeroutput> is one megabyte). A value of <computeroutput>0</computeroutput> sets an unlimited quota, but
+          the size of the disk partition that houses the volume places an absolute
+          limit on the volume's size.</para>
+
+          <para>If the <emphasis role="bold">-path</emphasis> argument is omitted (to set the quota of the volume
+          housing the current working directory), the <emphasis role="bold">-max</emphasis> switch must be
+          included with this argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command imposes a maximum quota of 3000 kilobytes on the
+    volume that houses the <replaceable>/afs/abc.com/usr/smith</replaceable> directory:</para>
+
+<programlisting>
+   % fs setquota -path /afs/abc.com/usr/smith -max 3000
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must belong to the system:administrators group.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_examine1">fs_examine(1)</link>,
+      <link linkend="fs_listquota1">fs_listquota(1)</link>,
+      <link linkend="fs_quota1">fs_quota(1)</link>,
+      <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+      <link linkend="fs_setvol1">fs_setvol(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

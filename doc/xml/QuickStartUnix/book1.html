@@ -1,0 +1,981 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>AFS Quick Beginnings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="NEXT"
+TITLE="About This Guide"
+HREF="f24.html"></HEAD
+><BODY
+CLASS="book"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="AEN1"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="title"
+><A
+NAME="AEN2"
+>AFS Quick Beginnings</A
+></H1
+><H2
+CLASS="subtitle"
+>Version 3.6</H2
+><P
+CLASS="copyright"
+>Copyright &copy; 2000 IBM Corporation. All Rights Reserved</P
+><DIV
+><DIV
+CLASS="abstract"
+><A
+NAME="AEN14"
+></A
+><P
+>This edition applies to: <TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>IBM AFS for AIX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Digital Unix, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for HP-UX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Linux, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for SGI IRIX, Version 3.6</TD
+></TR
+><TR
+><TD
+>IBM AFS for Solaris, Version 3.6</TD
+></TR
+></TBODY
+></TABLE
+></P
+><P
+>and to all subsequent releases and modifications until otherwise
+      indicated in new editions.This softcopy version is based on the printed
+      edition of this book. Some formatting amendments have been made to make
+      this information more suitable for softcopy.</P
+></DIV
+></DIV
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="f24.html"
+>About This Guide</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="f24.html#HDRWQ2"
+>Audience and Purpose</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ3"
+>Organization of the Document</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ4"
+>How to Use This Document</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRWQ5"
+>Related Documents</A
+></DT
+><DT
+><A
+HREF="f24.html#HDRTYPO_CONV"
+>Typographical Conventions</A
+></DT
+></DL
+><BR></DD
+><DT
+>1. <A
+HREF="c104.html"
+>Installation Overview</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c104.html#HDRWQ7"
+>The Procedures Described in this Guide</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c104.html#Header_9"
+>Required Initial Procedures</A
+></DT
+><DT
+><A
+HREF="c104.html#Header_12"
+>As-needed Procedures</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c104.html#HDRWQ8"
+>Recommended Reading List</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ9"
+>Requirements</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c104.html#Header_20"
+>Login Identity</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ10"
+>General Requirements</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ11"
+>File Server Machine Requirements</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ12"
+>Client Machine Requirements</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c104.html#HDRWQ13"
+>Supported System Types</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ14"
+>About Upgrading the Operating System</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ15"
+>The AFS Binary Distribution</A
+></DT
+><DT
+><A
+HREF="c104.html#HDRWQ16"
+>How to Continue</A
+></DT
+></DL
+><BR></DD
+><DT
+>2. <A
+HREF="c371.html"
+>Installing the First AFS Machine</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#Header_29"
+>Requirements and Configuration Decisions</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ18"
+>Overview: Installing Server Functionality</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ19"
+>Choosing the First AFS Machine</A
+></DT
+><DT
+><A
+HREF="c371.html#Header_32"
+>Creating AFS Directories</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ20"
+>Performing Platform-Specific Procedures</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ21"
+>Getting Started on AIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ22"
+>Loading AFS into the AIX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ23"
+>Configuring Server Partitions on AIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ24"
+>Replacing the fsck Program Helper on AIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ25"
+>Enabling AFS Login on AIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ26"
+>Getting Started on Digital UNIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ27a"
+>Loading AFS into the Digital UNIX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ27"
+>Building AFS into the Digital UNIX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ28"
+>Configuring Server Partitions on Digital UNIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ29"
+>Replacing the fsck Program on Digital UNIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ30"
+>Enabling AFS Login on Digital UNIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ31"
+>Getting Started on HP-UX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ32"
+>Building AFS into the HP-UX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ33"
+>Configuring Server Partitions on HP-UX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ34"
+>Configuring the AFS-modified fsck Program on HP-UX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ35"
+>Enabling AFS Login on HP-UX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ36"
+>Getting Started on IRIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ37"
+>Loading AFS into the IRIX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ38"
+>Building AFS into the IRIX Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ39"
+>Configuring Server Partitions on IRIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ40"
+>Enabling AFS Login on IRIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ41"
+>Getting Started on Linux Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ42"
+>Loading AFS into the Linux Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ43"
+>Configuring Server Partitions on Linux Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ44"
+>Enabling AFS Login on Linux Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ45"
+>Getting Started on Solaris Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ46"
+>Loading AFS into the Solaris Kernel</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ47"
+>Configuring the AFS-modified fsck Program on Solaris Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ48"
+>Configuring Server Partitions on Solaris Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ49"
+>Enabling AFS Login and Editing the File Systems Clean-up Script on Solaris Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ50"
+>Starting the BOS Server</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ51"
+>Defining Cell Name and Membership for Server Processes</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ52"
+>Starting the Database Server Processes</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ53"
+>Initializing Cell Security</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ60"
+>Starting the File Server, Volume Server, and Salvager</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ61"
+>Starting the Server Portion of the Update Server</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ62"
+>Starting the Controller for NTPD</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ63"
+>Overview: Installing Client Functionality</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ64"
+>Copying Client Files to the Local Disk</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ65"
+>Defining Cell Membership for Client Processes</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ66"
+>Creating the Client CellServDB File</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ67"
+>Configuring the Cache</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ68"
+>Configuring a Disk Cache</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ69"
+>Configuring a Memory Cache</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ70"
+>Configuring the Cache Manager</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ71"
+>Overview: Completing the Installation of the First AFS Machine</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ72"
+>Verifying the AFS Initialization Script</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ73"
+>Activating the AFS Initialization Script</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ74"
+>Activating the Script on AIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ75"
+>Activating the Script on Digital UNIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ76"
+>Activating the Script on HP-UX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ77"
+>Activating the Script on IRIX Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ78"
+>Activating the Script on Linux Systems</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ79"
+>Activating the Script on Solaris Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ80"
+>Configuring the Top Levels of the AFS Filespace</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ83"
+>Storing AFS Binaries in AFS</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ87"
+>Storing AFS Documents in AFS</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ88"
+>Storing System Binaries in AFS</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ91"
+>Enabling Access to Foreign Cells</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ93"
+>Improving Cell Security</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c371.html#HDRWQ94"
+>Controlling root Access</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ95"
+>Controlling System Administrator Access</A
+></DT
+><DT
+><A
+HREF="c371.html#HDRWQ96"
+>Protecting Sensitive AFS Directories</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c371.html#HDRWQ98"
+>Removing Client Functionality</A
+></DT
+></DL
+><BR></DD
+><DT
+>3. <A
+HREF="c5467.html"
+>Installing Additional Server Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c5467.html#HDRWQ100"
+>Installing an Additional File Server Machine</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c5467.html#Header_99"
+>Creating AFS Directories and Performing Platform-Specific Procedures</A
+></DT
+><DT
+><A
+HREF="c5467.html#HDRWQ108"
+>Starting Server Programs</A
+></DT
+><DT
+><A
+HREF="c5467.html#HDRWQ111"
+>Installing Client Functionality</A
+></DT
+><DT
+><A
+HREF="c5467.html#HDRWQ112"
+>Completing the Installation</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c5467.html#HDRWQ114"
+>Installing Database Server Functionality</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c5467.html#Header_110"
+>Summary of Procedures</A
+></DT
+><DT
+><A
+HREF="c5467.html#Header_111"
+>Instructions</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c5467.html#HDRWQ125"
+>Removing Database Server Functionality</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c5467.html#Header_113"
+>Summary of Procedures</A
+></DT
+><DT
+><A
+HREF="c5467.html#Header_114"
+>Instructions</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>4. <A
+HREF="c8044.html"
+>Installing Additional Client Machines</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_116"
+>Summary of Procedures</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ134"
+>Creating AFS Directories on the Local Disk</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ135"
+>Performing Platform-Specific Procedures</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ136"
+>Getting Started on AIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_120"
+>Loading AFS into the AIX Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#Header_121"
+>Enabling AFS Login on AIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ137"
+>Getting Started on Digital UNIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_123"
+>Building AFS into the Digital UNIX Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#Header_124"
+>Enabling AFS Login on Digital UNIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ138"
+>Getting Started on HP-UX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_126"
+>Building AFS into the HP-UX Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#Header_127"
+>Enabling AFS Login on HP-UX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ139"
+>Getting Started on IRIX Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#HDRWQ140"
+>Loading AFS into the IRIX Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ141"
+>Building AFS into the IRIX Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ142"
+>Enabling AFS Login on IRIX Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ143"
+>Getting Started on Linux Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_133"
+>Loading AFS into the Linux Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#Header_134"
+>Enabling AFS Login on Linux Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ144"
+>Getting Started on Solaris Systems</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#Header_136"
+>Loading AFS into the Solaris Kernel</A
+></DT
+><DT
+><A
+HREF="c8044.html#Header_137"
+>Enabling AFS Login on Solaris Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ145"
+>Loading and Creating Client Files</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ146"
+>Configuring the Cache</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#HDRWQ147"
+>Configuring a Disk Cache</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ148"
+>Configuring a Memory Cache</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ149"
+>Configuring the Cache Manager</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ150"
+>Starting the Cache Manager and Installing the AFS Initialization Script</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#HDRWQ151"
+>Running the Script on AIX Systems</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ152"
+>Running the Script on Digital UNIX Systems</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ153"
+>Running the Script on HP-UX Systems</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ154"
+>Running the Script on IRIX Systems</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ155"
+>Running the Script on Linux Systems</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ156"
+>Running the Script on Solaris Systems</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="c8044.html#HDRWQ157"
+>Setting Up Volumes and Loading Binaries into AFS</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c8044.html#HDRWQ158"
+>Linking /usr/afsws on an Existing System Type</A
+></DT
+><DT
+><A
+HREF="c8044.html#HDRWQ159"
+>Creating Binary Volumes for a New System Type</A
+></DT
+></DL
+><BR></DD
+></DL
+><BR></DD
+><DT
+>A. <A
+HREF="a10401.html"
+>Appendix A. Building AFS from Source Code</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="a10401.html#HDRWQ164"
+>Loading the Source Files</A
+></DT
+><DT
+><A
+HREF="a10401.html#HDRWQ165"
+>Compiling AFS Binaries Using the washtool Program</A
+></DT
+></DL
+><BR></DD
+><DT
+><A
+HREF="i10650.html"
+>Index</A
+></DT
+></DL
+><BR></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="f24.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>About This Guide</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

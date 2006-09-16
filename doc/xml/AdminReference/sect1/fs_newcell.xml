@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_newcell1">
+  <refmeta>
+    <refentrytitle>fs newcell</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs newcell</refname>
+    <refpurpose>Changes the kernel-resident list of a cell's database servers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs newcell</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>cell name</emphasis>&gt; -servers &lt;<emphasis>primary servers</emphasis>&gt;+
+        [<emphasis role="bold">-linkedcell</emphasis> &lt;<emphasis>linked cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs n</emphasis> <emphasis role="bold">-n</emphasis> &lt;<emphasis>cell name</emphasis>&gt; <emphasis role="bold">-s</emphasis> &lt;<emphasis>primary servers</emphasis>&gt;+
+        [<emphasis role="bold">-l</emphasis> &lt;<emphasis>linked cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs newcell</emphasis> command removes the Cache Manager's kernel-resident list
+    of database server machines for the cell specified by the <emphasis role="bold">-name</emphasis>
+    argument and replaces it with the database server machines named by the
+    <emphasis role="bold">-servers</emphasis> argument.</para>
+
+    <para>Each time the machine reboots, the Cache Manager constructs the kernel
+    list of cells and database server machines by reading the local
+    <replaceable>/usr/vice/etc/CellServDB</replaceable> file. This command does not change the
+    <replaceable>CellServDB</replaceable> file, so any changes made with it persist only until the
+    next reboot, unless the issuer also edits the file. The output of the <emphasis role="bold">fs
+    listcells</emphasis> command reflects changes made with this command, because that
+    command consults the kernel-resident list rather than the <replaceable>CellServDB</replaceable>
+    file.</para>
+
+    <para>This command can introduce a completely new cell into the kernel-resident
+    list, but cannot make a cell inaccessible (it is not possible to remove a
+    cell's entry from the kernel-resident list by providing no values for the
+    <emphasis role="bold">-server</emphasis> argument). To make a cell inaccessible, remove its entry from
+    the <replaceable>CellServDB</replaceable> file and reboot the machine.</para>
+
+    <para>If the <emphasis role="bold">-name</emphasis> argument names a DCE cell, then the <emphasis role="bold">-servers</emphasis> argument
+    names DFS Fileset Location (FL) Server machines. The <emphasis role="bold">-linkedcell</emphasis>
+    argument specifies the name of the AFS cell to link to a DCE cell for the
+    purpose of DFS fileset location.  Refer to the <emphasis>IBM AFS/DFS Migration
+    Toolkit Administration Guide and Reference</emphasis> for more information on
+    linking AFS clients to DCE cells using this command or by editing the
+    <replaceable>/usr/vice/etc/CellServDB</replaceable> file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Some commands, such as the <emphasis role="bold">klog</emphasis> command, work correctly only when the
+    information is accurate for a cell in both the <replaceable>CellServDB</replaceable> file and the
+    kernel-resident list.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the fully-qualified cell name of the AFS or DCE cell.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>primary servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the fully-qualified hostnames of all AFS database server
+          machines or DFS Fileset Location (FL) Server machines for the cell named
+          by the <emphasis role="bold">-name</emphasis> argument. If FL Server machines are specified, the local
+          machine must be running the AFS/DFS Migration Toolkit Protocol Translator.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-linkedcell</emphasis> &lt;<emphasis>linked cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the name of the AFS cell to link to a DCE cell for the purpose
+          of DFS fileset location.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example changes the machine's kernel-resident list of
+    database server machines for the ABC Corporation cell to include the
+    machines <computeroutput>db1.abc.com</computeroutput> and <computeroutput>db2.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % fs newcell -name abc.com -servers db1.abc.com db2.abc.com
+
+</programlisting>
+      <para>The following example links the DCE cell <computeroutput>dce.abc.com</computeroutput> to the AFS cell
+      <computeroutput>abc.com</computeroutput>. The AFS client contacts the Fileset Location (FL) servers
+      <computeroutput>db1.dce.abc.com</computeroutput> and <computeroutput>db2.dce.abc.com</computeroutput> for fileset location information
+      as it interprets a DFS pathname.</para>
+
+<programlisting>
+   % fs newcell -name dce.abc.com \
+       -servers db1.dce.abc.com db2.dce.abc.com \
+       -linkedcell abc.com
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser root.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="CellServDB5">CellServDB(5)</link>,
+        <link linkend="fs_listcells1">fs_listcells(1)</link></para>
+
+        <para><emphasis>IBM AFS/DFS Migration Toolkit Administration Guide and Reference</emphasis></para>
+
+        <para><emphasis>IBM AFS/DFS Migration Toolkit Administration Installation and
+        Configuration Guide</emphasis></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

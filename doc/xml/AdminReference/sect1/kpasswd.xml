@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kpasswd1">
+  <refmeta>
+    <refentrytitle>kpasswd</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kpasswd</refname>
+    <refpurpose>Changes the issuer's password in the Authentication Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kpasswd</emphasis> [<emphasis role="bold">-x</emphasis>] [<emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;]
+        [<emphasis role="bold">-password</emphasis> &lt;<emphasis>user's password</emphasis>&gt;]
+        [<emphasis role="bold">-newpassword</emphasis> &lt;<emphasis>user's new password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+] [<emphasis role="bold">-pipe</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kpasswd</emphasis> [<emphasis role="bold">-x</emphasis>] [<emphasis role="bold">-pr</emphasis> &lt;<emphasis>user name</emphasis>&gt;] [<emphasis role="bold">-pa</emphasis> &lt;<emphasis>user's password</emphasis>&gt;]
+        [<emphasis role="bold">-n</emphasis> &lt;<emphasis>user's new password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+] [<emphasis role="bold">-pi</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kpasswd</emphasis> command changes the password recorded in an Authentication
+    Database entry. By default, the command interpreter changes the password
+    for the AFS user name that matches the issuer's local identity (UNIX
+    UID). To specify an alternate user, include the <emphasis role="bold">-principal</emphasis>
+    argument. The user named by the <emphasis role="bold">-principal</emphasis> argument does not have to
+    appear in the local password file (the <replaceable>/etc/passwd</replaceable> file or equivalent).</para>
+
+    <para>By default, the command interpreter sends the password change request to
+    the Authentication Server running on one of the database server machines
+    listed for the local cell in the <replaceable>/usr/afs/etc/CellServDB</replaceable> file on the
+    local disk; it chooses the machine at random. It consults the
+    <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the local disk to learn the local cell
+    name. To specify an alternate cell, include the <emphasis role="bold">-cell</emphasis> argument.</para>
+
+    <para>Unlike the UNIX <emphasis role="bold">passwd</emphasis> command, the <emphasis role="bold">kpasswd</emphasis> command does not
+    restrict passwords to eight characters or less; it accepts passwords of
+    virtually any length. All AFS commands that require passwords (including
+    the <emphasis role="bold">klog</emphasis>, <emphasis role="bold">kpasswd</emphasis>, and AFS-modified login utilities, and the
+    commands in the <emphasis role="bold">kas</emphasis> suite) accept passwords longer than eight
+    characters, but some other applications and operating system utilities do
+    not. Selecting an AFS password of eight characters or less enables the
+    user to maintain matching AFS and UNIX passwords.</para>
+
+    <para>The command interpreter makes the following checks:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If the program <emphasis role="bold">kpwvalid</emphasis> exists in the same directory as the <emphasis role="bold">kpasswd</emphasis>
+        command, the command interpreter pass the new password to it for
+        verification. For details, see <link linkend="kpwvalid8">kpwvalid(8)</link>.</para>
+
+      </listitem>
+      <listitem>
+        <para>If the <emphasis role="bold">-reuse</emphasis> argument to the kas setfields command has been used to
+        prohibit reuse of previous passwords, the command interpreter verifies
+        that the password is not too similar too any of the user's previous 20
+        passwords. It generates the following error message at the shell:</para>
+
+<programlisting>
+   Password was not changed because it seems like a reused password
+
+</programlisting>
+          <para>To prevent a user from subverting this restriction by changing the
+          password twenty times in quick succession (manually or by running a
+          script), use the <emphasis role="bold">-minhours</emphasis> argument on the <emphasis role="bold">kaserver</emphasis> initialization
+          command. The following error message appears if a user attempts to change
+          a password before the minimum time has passed:</para>
+
+<programlisting>
+   Password was not changed because you changed it too
+   recently; see your systems administrator
+
+</programlisting>
+          </listitem>
+        </itemizedlist>
+      </refsect1>
+      <refsect1>
+        <title>Options</title>
+        <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">-x</emphasis></term>
+            <listitem>
+              <para>Appears only for backwards compatibility.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;</term>
+            <listitem>
+              <para>Names the Authentication Database entry for which to change the
+              password. If this argument is omitted, the database entry with the same
+              name as the issuer's local identity (UNIX UID) is changed.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-password</emphasis> &lt;<emphasis>user's password</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the current password. Omit this argument to have the command
+              interpreter prompt for the password, which does not echo visibly:</para>
+
+<programlisting>
+   Old password: current_password
+
+</programlisting>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-newpassword</emphasis> &lt;<emphasis>user's new password</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the new password, which the <emphasis role="bold">kpasswd</emphasis> command interpreter
+                converts into an encryption key (string of octal numbers) before sending
+                it to the Authentication Server for storage in the user's Authentication
+                Database entry.</para>
+
+                <para>Omit this argument to have the command interpreter prompt for the
+                password, which does not echo visibly:</para>
+
+<programlisting>
+   New password (RETURN to abort): &amp;lt;new_password&amp;gt;
+   Retype new password: &amp;lt;new_password&amp;gt;
+
+</programlisting>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+                <listitem>
+                  <para>Specifies the cell in which to change the password, by directing the
+                  command to that cell's Authentication Servers. The issuer can abbreviate
+                  the cell name to the shortest form that distinguishes it from the other
+                  cells listed in the local <replaceable>/usr/vice/etc/CellServDB</replaceable> file.</para>
+
+                  <para>By default, the command is executed in the local cell, as defined</para>
+
+                  <itemizedlist>
+                    <listitem>
+                      <para>First, by the value of the environment variable AFSCELL.</para>
+
+                    </listitem>
+                    <listitem>
+                      <para>Second, in the <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the client machine on
+                      which the command is issued.</para>
+
+                    </listitem>
+                  </itemizedlist>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;</term>
+                <listitem>
+                  <para>Establishes a connection with the Authentication Server running on each
+                  specified machine, rather than with all of the database server machines
+                  listed for the relevant cell in the local copy of the
+                  <replaceable>/usr/vice/etc/CellServDB</replaceable> file. The <emphasis role="bold">kpasswd</emphasis> command interpreter then
+                  sends the password-changing request to one machine chosen at random from
+                  the set.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><emphasis role="bold">-pipe</emphasis></term>
+                <listitem>
+                  <para>Suppresses all output to the standard output stream or standard error
+                  stream. The <emphasis role="bold">kpasswd</emphasis> command interpreter expects to receive all
+                  necessary arguments, each on a separate line, from the standard input
+                  stream. Do not use this argument, which is provided for use by application
+                  programs rather than human users.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><emphasis role="bold">-help</emphasis></term>
+                <listitem>
+                  <para>Prints the online help for this command. All other valid options are
+                  ignored.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </refsect1>
+          <refsect1>
+            <title>Examples</title>
+            <para>The following example shows user pat changing her password in the ABC
+            Corporation cell.</para>
+
+<programlisting>
+   % kpasswd
+   Changing password for 'pat' in cell 'abc.com'.
+   Old password:
+   New password (RETURN to abort):
+   Verifying, please re-enter new_password:
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>None</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="kas_setfields8">kas_setfields(8)</link>,
+              <link linkend="kas_setpassword8">kas_setpassword(8)</link>,
+              <link linkend="klog1">klog(1)</link>,
+              <link linkend="kpwvalid8">kpwvalid(8)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

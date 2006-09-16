@@ -1,0 +1,558 @@
+#!/usr/bin/perl
+    eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
+        if $running_under_some_shell;
+
+# Pod::RefEntry -- Convert POD data to DocBook RefEntry
+#
+# Copyright 2005, 2006 by Chas Williams <chas@cmf.nrl.navy.mil>
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the same terms as Perl itself.
+#
+# based on:
+#
+# Pod::PlainText -- Convert POD data to formatted ASCII text.
+# $Id$
+#
+# Copyright 1999-2000 by Russ Allbery <rra@stanford.edu>
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the same terms as Perl itself.
+
+package Pod::RefEntry;
+
+require 5.005;
+
+use Carp qw(carp);
+use Pod::Select ();
+
+use strict;
+use vars qw(@ISA %ESCAPES $VERSION);
+
+# We inherit from Pod::Select instead of Pod::Parser so that we can be used
+# by Pod::Usage.
+@ISA = qw(Pod::Select);
+
+$VERSION = '0.06';
+
+# This table is taken near verbatim from Pod::PlainText in Pod::Parser,
+# which got it near verbatim from the original Pod::Text.  It is therefore
+# credited to Tom Christiansen, and I'm glad I didn't have to write it.  :)
+%ESCAPES = (
+    'amp'       =>    '&amp;',      # ampersand
+    'lt'        =>    '&lt;',      # left chevron, less-than
+    'gt'        =>    '&gt;',      # right chevron, greater-than
+    'quot'      =>    '"',      # double quote
+);
+
+# Initialize the object.  Must be sure to call our parent initializer.
+sub initialize {
+    my $self = shift;
+
+    $$self{hlevel}   = 0  unless defined $$self{hlevel};
+    $$self{ltype}    = 0  unless defined $$self{ltype};
+    $$self{lopen}    = 0  unless defined $$self{lopen};
+    $$self{indent}   = 2  unless defined $$self{indent};
+    $$self{width}    = 76 unless defined $$self{width};
+    $$self{refnamediv} = 0;
+
+    $$self{LSTATE}   = [];
+    $$self{MARGIN}   = 0;               # Current left margin in spaces.
+
+    $self->SUPER::initialize;
+}
+
+sub begin_pod {
+    my $self = shift;
+
+    $self->output ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+}
+
+sub end_pod {
+    my $self = shift;
+    my $i;
+
+    for($i = 4; $i > 0; --$i) {
+	if ($$self{hlevel} >= $i) {
+	    $self->{MARGIN} -= 2;
+            #$self->output ("</refsection>\n");
+            $self->output (sprintf "</refsect%d>\n", $i);
+	};
+    };
+
+    $self->{MARGIN} -= 2;
+    $self->output ("</refentry>\n");
+}
+
+# Called for each command paragraph.  Gets the command, the associated
+# paragraph, the line number, and a Pod::Paragraph object.  Just dispatches
+# the command to a method named the same as the command.  =cut is handled
+# internally by Pod::Parser.
+sub command {
+    my $self = shift;
+    my $command = shift;
+    return if $command eq 'pod';
+    return if ($$self{EXCLUDE} && $command ne 'end');
+    $self->item ("\n") if defined $$self{ITEM};
+    $command = 'cmd_' . $command;
+    $self->$command (@_);
+}
+
+# Called for a verbatim paragraph.  Gets the paragraph, the line number, and
+# a Pod::Paragraph object.  Just output it verbatim, but with tabs converted
+# to spaces.
+sub verbatim {
+    my $self = shift;
+    return if $$self{EXCLUDE};
+    $self->item if defined $$self{ITEM};
+    local $_ = shift;
+    return if /^\s*$/;
+    $$self{MARGIN} += 2;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+    s/&/&amp;/g;
+    my $saved = $$self{MARGIN};
+    $$self{MARGIN} = 0;
+    $self->output ("<programlisting>\n");
+    $self->output ($_);
+    $self->output ("</programlisting>\n");
+    $$self{MARGIN} = $saved;
+}
+
+sub escapes {
+    (undef, local $_) = @_;
+    s/(&)/\&amp;/g;
+    s/(<)/\&lt;/g;
+    s/(>)/\&gt;/g;
+    $_;
+}
+
+# Called for interior sequences.  Gets a Pod::InteriorSequence object
+# and is expected to return the resulting text.
+sub sequence {
+    my ($self, $seq) = @_;
+
+    my $cmd_name = $seq->cmd_name;
+
+    $seq->left_delimiter( '' );
+    $seq->right_delimiter( '' );
+    $seq->cmd_name( '' );
+    $_ = $seq->raw_text;
+
+    if ($cmd_name eq 'B') {
+	$_ = sprintf "<emphasis role=\"bold\">%s</emphasis>", $_;
+    } elsif ($cmd_name eq 'C') {
+	$_ = sprintf "<computeroutput>%s</computeroutput>", $_;
+    } elsif ($cmd_name eq 'F') {
+	$_ = sprintf "<replaceable>%s</replaceable>", $_;
+    } elsif ($cmd_name eq 'I') {
+	$_ = sprintf "<emphasis>%s</emphasis>", $_;
+    } elsif ($cmd_name eq 'S') {
+	# perhaps translate ' ' to &nbsp;
+	$_ = sprintf "%s", $_;
+    } elsif ($cmd_name eq 'L') {
+	$_ = $self->seq_l ($seq);
+    } elsif ($cmd_name eq 'E') {
+	if (defined $ESCAPES{$_}) {
+            $_ = $ESCAPES{$_} if defined $ESCAPES{$_};
+	} else {
+            carp "Unknown escape: E<$_>";
+	}
+    } else {
+	carp "\nUnknown sequence $cmd_name<$_>\n";
+    }
+
+    my $parent = $seq->nested;
+    if (defined $parent) {
+
+        if ($parent->cmd_name eq 'B') {
+	    $_ = sprintf "</emphasis>%s<emphasis role=\"bold\">", $_;
+	} elsif ($parent->cmd_name eq 'C') {
+	    $_ = sprintf "</computeroutput>%s<computeroutput>", $_;
+	} elsif ($parent->cmd_name eq 'F') {
+	    $_ = sprintf "</replaceable>%s<replaceable>", $_;
+	} elsif ($parent->cmd_name eq 'I') {
+	    $_ = sprintf "</emphasis>%s<emphasis>", $_;
+	}
+    }
+
+    return $_;
+}
+
+# Called for a regular text block.  Gets the paragraph, the line number, and
+# a Pod::Paragraph object.  Perform parse_text and output the results.
+sub textblock {
+    my $self = shift;
+    return if $$self{EXCLUDE};
+    $self->output ($_[0]), return if $$self{VERBATIM};
+    local $_ = shift;
+    my $line = shift;
+    my $name;
+    my $purpose;
+
+#    /<http:.*>/ && do {
+#        s/<http:([^>]+)\>/<ulink url=\"http:\1\">http:\1<\/ulink>/;
+#    };
+#
+#    /<.*@.*>/ && do {
+#        s/<([^>]+@[^>]+)>/<email>\1<\/email>/g;
+#    };
+
+    $_ = $self->parse_text(
+	{ -expand_text => q(escapes),
+	  -expand_seq => q(sequence) },
+					$_, $line ) -> raw_text();
+
+    if (defined $$self{ITEM}) {
+        $self->item ($_ . "\n");
+    } elsif ($self->{refnamediv}) {
+	($name, $purpose) = /(.+)\s+\-\s+(.+)/;
+	my $id = $name;
+	$id =~ s/,.*$//;		# only reference by first entry?
+	$id =~ s/[ \.,\(\)]/_/g;
+	if (defined $$self{section}) {
+	    $id = sprintf "%s%d", $id, $$self{section};
+	}
+	$self->output ("<refentry id=\"$id\">\n");
+	$self->{MARGIN} += 2;
+	if (defined $$self{section}) {
+	    $self->output ("<refmeta>\n");
+	    $self->{MARGIN} += 2;
+	    $self->output (sprintf "<refentrytitle>%s</refentrytitle>\n",  $name);
+	    $self->output (sprintf "<manvolnum>%d</manvolnum>\n",  $$self{section});
+	    $self->{MARGIN} -= 2;
+	    $self->output ("</refmeta>\n");
+	}
+	$self->output ("<refnamediv>\n");
+	$self->{MARGIN} += 2;
+	$self->output ("<refname>$name</refname>\n");
+	$self->output ("<refpurpose>$purpose</refpurpose>\n");
+	$self->{MARGIN} -= 2;
+	$self->output ("</refnamediv>\n");
+	$self->{refnamediv} = 0;
+    } else {
+	s/\n+$//;
+	$self->output ("<para>" . $_ . "<\/para>" . "\n\n");
+    }
+}
+
+# Level headings.
+sub cmd_head {
+    my $self = shift;
+    local $_ = shift;
+    my $line = shift;
+    my $level = $self->{level};
+    my $i;
+
+    for($i = 4; $i > 0; --$i) {
+	if ($level <= $i) {
+	    if ($$self{hlevel} >= $i) {
+		$$self{MARGIN} -= 2;
+		#$self->output (sprintf "</refsection>\n", $i);
+		$self->output (sprintf "</refsect%d>\n", $i);
+	    }
+	}
+    }
+
+    # special, output next <para> as <refnamediv>
+    if ($level == 1 && $_ =~ /NAME/) {
+	$self->{refnamediv} = 1;
+	return;
+    }
+
+    #$self->output (sprintf "<refsection>\n", $level);
+    $self->output (sprintf "<refsect%d>\n", $level);
+    $$self{MARGIN} += 2;
+    s/\s+$//;
+    $_ = $self->parse_text(
+	{ -expand_text => q(escapes),
+	  -expand_seq => q(sequence) },
+					$_, $line ) -> raw_text();
+    if (/^[A-Z ]+$/) {
+	s/(\w+)/\u\L$1/g if $level == 1;	# kill capitalization
+    }
+    $self->output ("<title>" . $_ . "<\/title>" . "\n");
+    $$self{hlevel} = $level;
+}
+
+# First level heading.
+sub cmd_head1 {
+    my $self = shift;
+    $self->{level} = 1;
+    $self->cmd_head (@_);
+}
+
+# Second level heading.
+sub cmd_head2 {
+    my $self = shift;
+    $self->{level} = 2;
+    $self->cmd_head (@_);
+}
+
+# Third level heading.
+sub cmd_head3 {
+    my $self = shift;
+    $self->{level} = 3;
+    $self->cmd_head (@_);
+}
+
+sub cmd_head4 {
+    my $self = shift;
+    # <refsect4> doesnt exist -- we would use <refsection>
+    # when it becomes available in 4.4
+    printf STDERR "=head4 being rendered as <refsect3>\n";
+    $self->{level} = 3;
+    $self->cmd_head (@_);
+}
+
+# Start a list.
+sub cmd_over {
+    my $self = shift;
+    local $_ = shift;
+    unless (/^[-+]?\d+\s+$/) { $_ = $$self{indent} }
+    push (@{ $$self{LSTATE} }, $$self{lopen});
+    push (@{ $$self{LSTATE} }, $$self{ltype});
+    undef $self->{ltype};
+    $$self{lopen} = 0;
+}
+
+# End a list.
+sub cmd_back {
+    my $self = shift;
+    if ($self->{ltype} == 2) {
+	$self->{MARGIN} -= 2;
+        $self->output ("</listitem>\n");
+	$self->{MARGIN} -= 2;
+	$self->output ("</orderedlist>\n");
+    } elsif ($self->{ltype} == 1) {
+	$self->{MARGIN} -= 2;
+        $self->output ("</listitem>\n");
+	$self->{MARGIN} -= 2;
+	$self->output ("</itemizedlist>\n");
+    } else {
+	$self->{MARGIN} -= 2;
+        $self->output ("</listitem>\n");
+	$self->{MARGIN} -= 2;
+        $self->output ("</varlistentry>\n");
+	$self->{MARGIN} -= 2;
+	$self->output ("</variablelist>\n");
+    }
+    $$self{ltype} = pop @{ $$self{LSTATE} };
+    $$self{lopen} = pop @{ $$self{LSTATE} };
+    unless (defined $$self{LSTATE}) {
+        carp "Unmatched =back";
+        $$self{MARGIN} = $$self{indent};
+    }
+}
+
+# An individual list item.
+sub cmd_item {
+    my $self = shift;
+    if (defined $$self{ITEM}) { $self->item }
+    local $_ = shift;
+    my $line = shift;
+    s/\s+$//;
+    $$self{ITEM} = $self->parse_text(
+	{ -expand_text => q(escapes),
+	  -expand_seq => q(sequence) },
+					$_, $line ) -> raw_text();
+}
+
+# Begin a block for a particular translator.  Setting VERBATIM triggers
+# special handling in textblock().
+sub cmd_begin {
+    my $self = shift;
+    local $_ = shift;
+    my ($kind) = /^(\S+)/ or return;
+    if ($kind eq 'text') {
+        $$self{VERBATIM} = 1;
+    } else {
+        $$self{EXCLUDE} = 1;
+    }
+}
+
+# End a block for a particular translator.  We assume that all =begin/=end
+# pairs are properly closed.
+sub cmd_end {
+    my $self = shift;
+    $$self{EXCLUDE} = 0;
+    $$self{VERBATIM} = 0;
+}    
+
+# One paragraph for a particular translator.  Ignore it unless it's intended
+# for text, in which case we treat it as a verbatim text block.
+sub cmd_for {
+    my $self = shift;
+    local $_ = shift;
+    my $line = shift;
+    return unless s/^text\b[ \t]*\n?//;
+    $self->verbatim ($_, $line);
+}
+
+# The complicated one.  Handle links.  Since this is plain text, we can't
+# actually make any real links, so this is all to figure out what text we
+# print out.
+sub seq_l {
+    my ($self, $seq) = @_;
+
+    s/>$//;	# remove trailing >
+
+    # Smash whitespace in case we were split across multiple lines.
+    s/\s+/ /g;
+
+    # If we were given any explicit text, just output it.
+    if (/^([^|]+)\|/) { return $1 }
+
+    # Okay, leading and trailing whitespace isn't important; get rid of it.
+    s/^\s+//;
+    s/\s+$//;
+
+    # Default to using the whole content of the link entry as a section
+    # name.  Note that L<manpage/> forces a manpage interpretation, as does
+    # something looking like L<manpage(section)>.  The latter is an
+    # enhancement over the original Pod::Text.
+    my ($manpage, $section) = ('', $_);
+    if (/^(?:https?|ftp|news):/) {
+        # a URL
+        return $_;
+    } elsif (/^"\s*(.*?)\s*"$/) {
+        $section = '"' . $1 . '"';
+    } elsif (m/^[-:.\w]+(?:\(\S+\))?$/) {
+        ($manpage, $section) = ($_, '');
+    } elsif (m%/%) {
+        ($manpage, $section) = split (/\s*\/\s*/, $_, 2);
+    }
+
+    $seq->cmd_name("");
+
+    # Now build the actual output text.
+    if (length $section) {
+        $section =~ s/^\"\s*//;
+        $section =~ s/\s*\"$//;
+        $_ = $section;
+        $_ .= " in $manpage" if length $manpage;
+    }
+    if (length $manpage) {
+	my $linkend = $manpage;
+	$linkend =~ s/[\(\)]//g;
+	$linkend =~ s/[ ,\.]/_/g;	# this needs to match <refentry id=
+	$seq->prepend("<link linkend=\"$linkend\">");
+	$seq->append("</link>");
+	return $seq;
+    } else {
+	return $_;
+    }
+}
+
+# This method is called whenever an =item command is complete (in other
+# words, we've seen its associated paragraph or know for certain that it
+# doesn't have one).  It gets the paragraph associated with the item as an
+# argument.  If that argument is empty, just output the item tag; if it
+# contains a newline, output the item tag followed by the newline.
+# Otherwise, see if there's enough room for us to output the item tag in the
+# margin of the text or if we have to put it on a separate line.
+sub item {
+    my $self = shift;
+    local $_ = shift;
+    my $tag = $$self{ITEM};
+    unless (defined $tag) {
+        carp "item called without tag";
+        return;
+    }
+    undef $$self{ITEM};
+    if ($$self{lopen}) {
+        if ($self->{ltype} == 1 || $self->{ltype} == 2) {
+	    $self->{MARGIN} -= 2;
+	    $self->output ("</listitem>\n");
+        } else {
+	    $self->{MARGIN} -= 2;
+	    $self->output ("</listitem>\n");
+	    $self->{MARGIN} -= 2;
+	    $self->output ("</varlistentry>\n");
+       }
+    }
+    my $output = $_;
+    $output =~ s/\n*$/\n/;
+    if (!defined $self->{ltype}) {
+	    if ($tag =~ /[0-9]+\./) {
+		$self->{ltype} = 2;
+		$self->output ("<orderedlist>\n");
+	    } elsif ($tag =~ /^\*$/) {
+		$self->{ltype} = 1;
+		$self->output ("<itemizedlist>\n");
+	    } else {
+		$self->{ltype} = 0;
+		$self->output ("<variablelist>\n");
+	    }
+	    $self->{MARGIN} += 2;
+    }
+    if ($self->{ltype} == 1 || $self->{ltype} == 2) {
+	$self->output ("<listitem>\n");
+	$self->{MARGIN} += 2;
+	s/\n+$//;
+	$self->output ("<para>" . $_ . "<\/para>" . "\n\n");
+    } else {
+	$self->output ("<varlistentry>\n");
+	$self->{MARGIN} += 2;
+	$self->output ("<term>" . $tag . "</term>" . "\n");
+	$self->output ("<listitem>\n");
+	$self->{MARGIN} += 2;
+	s/\n+$//;
+	$self->output ("<para>" . $_ . "<\/para>" . "\n\n");
+    }
+    $$self{lopen} = 1;
+}
+
+# Output text to the output device.
+sub output {
+    my $self = shift;
+    local $_ = shift;
+    s/^(\s*\S+)/(' ' x $$self{MARGIN}) . $1/gme;
+    print { $self->output_handle } $_;
+}
+
+1;
+
+
+# pod2refentry -- Convert POD data to DocBook RefEntry
+#
+# Copyright 2005, 2006 by Chas Williams <chas@cmf.nrl.navy.mil>
+#
+# This program is free software; you may redistribute it and/or modify it
+# under the same terms as Perl itself.
+#
+# based on:
+#
+# pod2text -- Convert POD data to formatted ASCII text.
+#
+# Copyright 1999, 2000, 2001 by Russ Allbery <rra@stanford.edu>
+#
+# This program is free software; you may redistribute it and/or modify it
+# under the same terms as Perl itself.
+
+package main;
+
+require 5.004;
+
+use Getopt::Long qw(GetOptions);
+use Pod::Usage qw(pod2usage);
+
+use strict;
+
+# Silence -w warnings.
+use vars qw($running_under_some_shell);
+
+# Insert -- into @ARGV before any single dash argument to hide it from
+# Getopt::Long; we want to interpret it as meaning stdin (which Pod::Parser
+# does correctly).
+my $stdin;
+@ARGV = map { $_ eq '-' && !$stdin++ ? ('--', $_) : $_ } @ARGV;
+
+# Parse our options.
+my %options;
+GetOptions (\%options, 'help|h', 'indent|i=i', 'section|s=i' ) or exit 1;
+pod2usage (1) if $options{help};
+
+# Initialize and run the formatter.
+my $parser = Pod::RefEntry->new (%options);
+$parser->parse_from_file (@ARGV);

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_listacl1">
+  <refmeta>
+    <refentrytitle>fs listacl</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs listacl</refname>
+    <refpurpose>Displays ACLs</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs listacl</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-id</emphasis>] [<emphasis role="bold">-if</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs la</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-id</emphasis>] [<emphasis role="bold">-if</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs lista</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-id</emphasis>] [<emphasis role="bold">-if</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs listacl</emphasis> command displays the access control list (ACL)
+    associated with each specified file, directory, or symbolic link. The
+    specified element can reside in the DFS filespace if the issuer is using
+    the AFS/DFS Migration Toolkit Protocol Translator to access DFS data (and
+    DFS does implement per-file ACLs). To display the ACL of the current
+    working directory, omit the <emphasis role="bold">-path</emphasis> argument.</para>
+
+    <para>To alter an ACL, use the fs setacl command. To copy an ACL from one
+    directory to another, use the <emphasis role="bold">fs copyacl</emphasis> command. To remove obsolete
+    entries from an ACL, use the <emphasis role="bold">fs cleanacl</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Placing a user or group on the <computeroutput>Negative rights</computeroutput> section of the ACL does
+    not guarantee denial of permissions, if the <computeroutput>Normal rights</computeroutput> section
+    grants the permissions to members of the system:anyuser group. In that
+    case, the user needs only to issue the <emphasis role="bold">unlog</emphasis> command to obtain the
+    permissions granted to the system:anyuser group.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each directory or file for which to display the ACL. For AFS files,
+          the output displays the ACL from the file's parent directory; DFS files do
+          have their own ACL. Incomplete pathnames are interpreted relative to the
+          current working directory, which is also the default value if this
+          argument is omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis></term>
+        <listitem>
+          <para>Displays the Initial Container ACL of each DFS directory. This argument is
+          supported only on DFS directories accessed via the AFS/DFS Migration
+          Toolkit Protocol Translator.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-if</emphasis></term>
+        <listitem>
+          <para>Displays the Initial Object ACL of each DFS directory. This argument is
+          supported only on DFS directories accessed via the AFS/DFS Migration
+          Toolkit Protocol Translator.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first line of the output for each file, directory, or symbolic link
+    reads as follows:</para>
+
+<programlisting>
+   Access list for &amp;lt;directory&amp;gt; is
+
+</programlisting>
+      <para>If the issuer used shorthand notation in the pathname, such as the period
+      (<computeroutput>.</computeroutput>) to represent the current current directory, that notation sometimes
+      appears instead of the full pathname of the directory.</para>
+
+      <para>Next, the <computeroutput>Normal rights</computeroutput> header precedes a list of users and groups who
+      are granted the indicated permissions, with one pairing of user or group
+      and permissions on each line. If negative permissions have been assigned
+      to any user or group, those entries follow a <computeroutput>Negative rights</computeroutput>
+      header. The format of negative entries is the same as those on the
+      <computeroutput>Normal rights</computeroutput> section of the ACL, but the user or group is denied
+      rather than granted the indicated permissions.</para>
+
+      <para>AFS does not implement per-file ACLs, so for a file the command displays
+      the ACL on its directory. The output for a symbolic link displays the ACL
+      that applies to its target file or directory, rather than the ACL on the
+      directory that houses the symbolic link.</para>
+
+      <para>The permissions for AFS enable the possessor to perform the indicated
+      action:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>a (administer)</term>
+          <listitem>
+            <para>Change the entries on the ACL.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>d (delete)</term>
+          <listitem>
+            <para>Remove files and subdirectories from the directory or move them to other
+            directories.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>i (insert)</term>
+          <listitem>
+            <para>Add files or subdirectories to the directory by copying, moving or
+            creating.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>k (lock)</term>
+          <listitem>
+            <para>Set read locks or write locks on the files in the directory.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>l (lookup)</term>
+          <listitem>
+            <para>List the files and subdirectories in the directory, stat the directory
+            itself, and issue the <emphasis role="bold">fs listacl</emphasis> command to examine the directory's
+            ACL.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>r (read)</term>
+          <listitem>
+            <para>Read the contents of files in the directory; issue the <computeroutput>ls -l</computeroutput> command to
+            stat the elements in the directory.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>w (write)</term>
+          <listitem>
+            <para>Modify the contents of files in the directory, and issue the UNIX <emphasis role="bold">chmod</emphasis>
+            command to change their mode bits</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>A, B, C, D, E, F, G, H</term>
+          <listitem>
+            <para>Have no default meaning to the AFS server processes, but are made
+            available for applications to use in controlling access to the directory's
+            contents in additional ways. The letters must be uppercase.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>For DFS files and directories, the permissions are similar, except that
+      the DFS <computeroutput>x</computeroutput> (execute) permission replaces the AFS <computeroutput>l</computeroutput> (lookup)
+      permission, DFS <computeroutput>c</computeroutput> (control) replaces AFS <computeroutput>a</computeroutput> (administer), and there
+      is no DFS equivalent to the AFS <computeroutput>k</computeroutput> (lock) permission. The meanings of
+      the various permissions also differ slightly, and DFS does not implement
+      negative permissions. For a complete description of DFS permissions, see
+      the DFS documentation and the <emphasis>IBM AFS/DFS Migration Toolkit
+      Administration Guide and Reference</emphasis>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following command displays the ACL on the home directory of the user
+      <computeroutput>pat</computeroutput> (the current working directory), and on its <computeroutput>private</computeroutput>
+      subdirectory.</para>
+
+<programlisting>
+   % fs listacl -path . private
+   Access list for . is
+   Normal rights:
+      system:authuser rl
+      pat rlidwka
+      pat:friends rlid
+   Negative rights:
+      smith rlidwka
+   Access list for private is
+   Normal rights:
+      pat rlidwka
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>If the <emphasis role="bold">-path</emphasis> argument names an AFS directory, the issuer must have the
+        <computeroutput>l</computeroutput> (lookup) permission on its ACL and the ACL for every directory that
+        precedes it in the pathname.</para>
+
+        <para>If the <emphasis role="bold">-path</emphasis> argument names an AFS file, the issuer must have the <computeroutput>l</computeroutput>
+        (lookup) and <computeroutput>r</computeroutput> (read) permissions on the ACL of the file's directory,
+        and the <emphasis role="bold">l</emphasis> permission on the ACL of each directory that precedes it in
+        the pathname.</para>
+
+        <para>If the <emphasis role="bold">-path</emphasis> argument names a DFS directory or file, the issuer must
+        have the <computeroutput>x</computeroutput> (execute) permission on its ACL and on the ACL of each
+        directory that precedes it in the pathname.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_cleanacl1">fs_cleanacl(1)</link>,
+        <link linkend="fs_copyacl1">fs_copyacl(1)</link>,
+        <link linkend="fs_setacl1">fs_setacl(1)</link></para>
+
+        <para><emphasis>IBM AFS/DFS Migration Toolkit Administration Guide and Reference</emphasis></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

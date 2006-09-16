@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_membership1">
+  <refmeta>
+    <refentrytitle>pts membership</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts membership</refname>
+    <refpurpose>Displays the membership list for a user or group</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts membership</emphasis> <emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts m</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts groups</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [-c &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts g</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts membership</emphasis> command lists the groups to which each user or
+    machine specified by the <emphasis role="bold">-nameorid</emphasis> argument belongs, or lists the users
+    and machines that belong to each group specified by the <emphasis role="bold">-nameorid</emphasis>
+    argument.</para>
+
+    <para>It is not possible to list the members of the system:anyuser or
+    system:authuser groups, and they do not appear in the list of groups to
+    which a user belongs.</para>
+
+    <para>To add users or machine to groups, use the pts adduser command; to remove
+    them, use the <emphasis role="bold">pts removeuser</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the name or AFS UID of each user entry, the IP address (complete
+          or wildcard-style) or AFS UID of each machine entry, or the name or AFS
+          GID of each group, for which to list group membership. It is acceptable to
+          mix users, machines, and groups on the same command line, as well as names
+          and IDs. Precede the GID of each group with a hyphen to indicate that it
+          is negative.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>For each user and machine, the output begins with the following header
+    line, followed by a list of the groups to which the user or machine
+    belongs:</para>
+
+<programlisting>
+   Groups &amp;lt;name&amp;gt; (id: &amp;lt;AFS UID&amp;gt;) is a member of:
+
+</programlisting>
+      <para>For each group, the output begins with the following header line, followed
+      by a list of the users and machines who belong to the group:</para>
+
+<programlisting>
+   Members of &amp;lt;group_name&amp;gt; (id: &amp;lt;AFS GID&amp;gt;) are:
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example lists the groups to which the user <computeroutput>pat</computeroutput> belongs
+        and the members of the group <computeroutput>smith:friends</computeroutput>.  Note that third privacy
+        flag for the <computeroutput>pat</computeroutput> entry was changed from the default hyphen to enable a
+        non-administrative user to obtain this listing.</para>
+
+<programlisting>
+   % pts membership pat smith:friends
+   Groups pat (id: 1144) is a member of:
+     smith:friends
+     staff
+     johnson:project-team
+   Members of smith:friends (id: -562) are:
+     pat
+     terry
+     jones
+     richard
+     thompson
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The required privilege depends on the setting of the third privacy flag in
+          the Protection Database entry of each user or group indicated by the
+          <emphasis role="bold">-nameorid</emphasis> argument (use the <emphasis role="bold">pts examine</emphasis> command to display the
+          flags):</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>If it is the hyphen and the <emphasis role="bold">-nameorid</emphasis> argument specifies a user, only
+              the associated user and members of the system:administrators group can
+              list the groups to which the user belongs.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is the hyphen and the <emphasis role="bold">-nameorid</emphasis> argument specifies a machine,
+              only the members of the system:administrators group can list the groups to
+              which the machine belongs.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is the hyphen and the <emphasis role="bold">-nameorid</emphasis> argument specifies a group, only
+              the owner of the group and members of the system:administrators group can
+              list the members of the group.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is lowercase <computeroutput>m</computeroutput> and the <emphasis role="bold">-nameorid</emphasis> argument specifies a user or
+              machine entry, the meaning is equivalent to the hyphen.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is lowercase <computeroutput>m</computeroutput> and the <emphasis role="bold">-nameorid</emphasis> argument specifies a group,
+              members of the group can also list the other members.</para>
+
+            </listitem>
+            <listitem>
+              <para>If it is uppercase <computeroutput>M</computeroutput>, anyone who can access the cell's database server
+              machines can list group memberships.</para>
+
+            </listitem>
+          </itemizedlist>
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="pts1">pts(1)</link>,
+          <link linkend="pts_adduser1">pts_adduser(1)</link>,
+          <link linkend="pts_examine1">pts_examine(1)</link>,
+          <link linkend="pts_removeuser1">pts_removeuser(1)</link>,
+          <link linkend="pts_setfields1">pts_setfields(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

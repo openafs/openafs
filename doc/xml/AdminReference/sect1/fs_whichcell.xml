@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_whichcell1">
+  <refmeta>
+    <refentrytitle>fs whichcell</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs whichcell</refname>
+    <refpurpose>Returns the cell to which a file or directory belongs</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs whichcell</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs whi </emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs whichcell</emphasis> command returns the name of the cell in which the
+    volume that houses each indicated directory or file resides.</para>
+
+    <para>To display the file server machine on which the volume housing a directory
+    or file resides, use the <emphasis role="bold">fs whichcell</emphasis> command. To display the cell
+    membership of the local machine, use the <emphasis role="bold">fs wscell</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> <emphasis>Idir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each AFS file or directory for which to return the cell
+          membership. Partial pathnames are interpreted relative to the current
+          working directory, which is also the default value if this argument is
+          omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output includes a line for each directory or file, naming the cell to
+    which the volume that houses the directory or file resides.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows that the current working directory resides in
+    a volume in the ABC Corporation cell:</para>
+
+<programlisting>
+   % fs whichcell
+   File . lives in cell 'abc.com'
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_wscell1">fs_wscell(1)</link>,
+      <link linkend="fs_whereis1">fs_whereis(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

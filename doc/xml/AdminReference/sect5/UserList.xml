@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="UserList5">
+  <refmeta>
+    <refentrytitle>UserList</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>UserList</refname>
+    <refpurpose>Defines privileged administrators</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>UserList</replaceable> file lists the AFS usernames of the system administrators
+    authorized to issue privileged <emphasis role="bold">bos</emphasis>, <emphasis role="bold">vos</emphasis>, and <emphasis role="bold">backup</emphasis> commands that
+    affect the local server machine or the volumes housed on it. It must
+    reside in the <replaceable>/usr/afs/etc</replaceable> directory on every server machine.</para>
+
+    <para>Although the <replaceable>UserList</replaceable> file is in ASCII format, do not use a text editor
+    to alter it. Instead always use the appropriate commands from the <emphasis role="bold">bos</emphasis>
+    command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">bos adduser</emphasis> command to add a user to the file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos listusers</emphasis> command to display the contents of the file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos removeuser</emphasis> command to remove a user from the file.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Although it is theoretically possible to list different administrators in
+    the <replaceable>UserList</replaceable> files on different server machines, doing so can cause
+    unanticipated authorization failures and is not recommended. In cells that
+    use the Update Server to distribute the contents of the <replaceable>/usr/afs/etc</replaceable>
+    directory, it is customary to edit only the copy of the file stored on the
+    system control machine. Otherwise, edit the file on each server machine
+    individually.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_adduser8">bos_adduser(8)</link>,
+    <link linkend="bos_listusers8">bos_listusers(8)</link>,
+    <link linkend="bos_removeuser8">bos_removeuser(8)</link>,
+    <link linkend="upclient8">upclient(8)</link>,
+    <link linkend="upserver8">upserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_mkmount1">
+  <refmeta>
+    <refentrytitle>fs mkmount</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs mkmount</refname>
+    <refpurpose>Creates a mount point for a volume</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs mkmount</emphasis> <emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt; <emphasis role="bold">-vol</emphasis> &lt;<emphasis>volume name</emphasis>&gt;
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-rw</emphasis>] [<emphasis role="bold">-fast</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs mk</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>directory</emphasis>&gt; <emphasis role="bold">-v</emphasis> &lt;<emphasis>volume name</emphasis>&gt;
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs mkmount</emphasis> command creates a mount point for the volume named by
+    the <emphasis role="bold">-vol</emphasis> argument at the location in the AFS file space specified by
+    the <emphasis role="bold">-dir</emphasis> argument. The mount point looks like a standard directory
+    element, and serves as the volume's root directory, but is actually a
+    special file system object that refers to an AFS volume. When the Cache
+    Manager first encounters a given mount point during pathname traversal, it
+    contacts the VL Server to learn which file server machines house the
+    indicated volume, then fetches a copy of the volume's root directory from
+    the appropriate file server machine.</para>
+
+    <para>It is possible, although not recommended, to create more than one mount
+    point to a volume. The Cache Manager can become confused if a volume is
+    mounted in two places along the same path through the filespace.</para>
+
+    <para>The Cache Manager observes three basic rules as it traverses the AFS
+    filespace and encounters mount points:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>Rule 1: Access Backup and Read-only Volumes When Specified</term>
+        <listitem>
+          <para>When the Cache Manager encounters a mount point that specifies a volume
+          with either a <computeroutput>.readonly</computeroutput> or a <computeroutput>.backup</computeroutput> extension, it accesses that
+          type of volume only. If a mount point does not have either a <computeroutput>.backup</computeroutput> or
+          <computeroutput>.readonly</computeroutput> extension, the Cache Manager uses Rules 2 and 3.</para>
+
+          <para>For example, the Cache Manager never accesses the read/write version of a
+          volume if the mount point names the backup version. If the specified
+          version is inaccessible, the Cache Manager reports an error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Rule 2: Follow the Read-only Path When Possible</term>
+        <listitem>
+          <para>If a mount point resides in a read-only volume and the volume that it
+          references is replicated, the Cache Manager attempts to access a read-only
+          copy of the volume; if the referenced volume is not replicated, the Cache
+          Manager accesses the read/write copy. The Cache Manager is thus said to
+          prefer a <emphasis>read-only path</emphasis> through the filespace, accessing read-only
+          volumes when they are available.</para>
+
+          <para>The Cache Manager starts on the read-only path in the first place because
+          it always accesses a read-only copy of the <emphasis role="bold">root.afs</emphasis> volume if it
+          exists; the volume is mounted at the root of a cell's AFS filespace (named
+          <replaceable>/afs</replaceable> by convention). That is, if the <computeroutput>root.afs</computeroutput> volume is replicated,
+          the Cache Manager attempts to access a read-only copy of it rather than
+          the read/write copy. This rule then keeps the Cache Manager on a read-only
+          path as long as each successive volume is replicated. The implication is
+          that both the <computeroutput>root.afs</computeroutput> and <computeroutput>root.cell</computeroutput> volumes must be replicated for
+          the Cache Manager to access replicated volumes mounted below them in the
+          AFS filespace. The volumes are conventionally mounted at the <replaceable>/afs</replaceable> and
+          <replaceable>/afs/</replaceable><emphasis>cellname</emphasis><replaceable></replaceable> directories, respectively.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Rule 3: Once on a Read/write Path, Stay There</term>
+        <listitem>
+          <para>If a mount point resides in a read/write volume and the volume name does
+          not have a <computeroutput>.readonly</computeroutput> or a <computeroutput>.backup</computeroutput> extension, the Cache Manager
+          attempts to access only the a read/write version of the volume. The access
+          attempt fails with an error if the read/write version is inaccessible,
+          even if a read-only version is accessible. In this situation the Cache
+          Manager is said to be on a <emphasis>read/write path</emphasis> and cannot switch back to
+          the read-only path unless mount point explicitly names a volume with a
+          <computeroutput>.readonly</computeroutput> extension. (Cellular mount points are an important exception
+          to this rule, as explained in the following discussion.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>There are three types of mount points, each appropriate for a different
+    purpose because of the manner in which the Cache Manager interprets them.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>When the Cache Manager crosses a <emphasis>regular</emphasis> mount point, it obeys all
+        three of the mount point traversal rules previously described. To create a
+        regular mount point, include only the required <emphasis role="bold">-dir</emphasis> and <emphasis role="bold">-vol</emphasis>
+        arguments to the <emphasis role="bold">fs mkmount</emphasis> command.</para>
+
+      </listitem>
+      <listitem>
+        <para>When the Cache Manager crosses a <emphasis>read/write</emphasis> mount point, it attempts to
+        access only the volume version named in the mount point. If the volume
+        name is the base (read/write) form, without a <computeroutput>.readonly</computeroutput> or <computeroutput>.backup</computeroutput>
+        extension, the Cache Manager accesses the read/write version of the
+        volume, even if it is replicated. In other words, the Cache Manager
+        disregards the second mount point traversal rule when crossing a
+        read/write mount point: it switches to the read/write path through the
+        filespace.</para>
+
+        <para>To create a read/write mount point, include the <emphasis role="bold">-rw</emphasis> flag on the <emphasis role="bold">fs
+        mkmount</emphasis> command. It is conventional to create only one read/write mount
+        point in a cell's filespace, using it to mount the cell's <computeroutput>root.cell</computeroutput>
+        volume just below the AFS filespace root (by convention,
+        <replaceable>/afs/.</replaceable><emphasis>cellname</emphasis><replaceable></replaceable>). See the <emphasis>IBM AFS Quick Beginnings</emphasis> for
+        instructions and the chapter about volume management in the <emphasis>IBM AFS
+        Administration Guide</emphasis> for further discussion.</para>
+
+        <para>Creating a read/write mount point for a read-only or backup volume is
+        acceptable, but unnecessary. The first rule of mount point traversal
+        already specifies that the Cache Manager accesses them if the volume name
+        in a regular mount point has a <computeroutput>.readonly</computeroutput> or <computeroutput>.backup</computeroutput> extension.</para>
+
+      </listitem>
+      <listitem>
+        <para>When the Cache Manager crosses a <emphasis>cellular</emphasis> mount point, it accesses the
+        indicated volume in the specified cell, which is normally a foreign
+        cell. (If the mount point does not name a cell along with the volume, the
+        Cache Manager accesses the volume in the cell where the mount point
+        resides.) The Cache Manager disregards the third mount point traversal
+        rule when crossing a regular cellular mount point: it accesses a read-only
+        version of the volume if it is replicated, even if the volume that houses
+        the mount point is read/write. Switching to the read-only path in this way
+        is designed to avoid imposing undue load on the file server machines in
+        foreign cells.</para>
+
+        <para>To create a regular cellular mount point, include the <emphasis role="bold">-cell</emphasis> argument on
+        the <emphasis role="bold">fs mkmount</emphasis> command. It is conventional to create cellular mount
+        points only at the second level in a cell's filespace, using them to mount
+        foreign cells' <emphasis role="bold">root.cell</emphasis> volumes just below the AFS filespace root (by
+        convention, at <replaceable>/afs/</replaceable><emphasis>foreign_cellname</emphasis><replaceable></replaceable>). The mount point enables local
+        users to access the foreign cell's filespace, assuming they have the
+        necessary permissions on the ACL of the volume's root directory and that
+        there is an entry for the foreign cell in each local client machine's
+        <replaceable>/usr/vice/etc/CellServDB</replaceable> file. In the output of the <emphasis role="bold">fs lsmount</emphasis>
+        command, the cell name and a colon (<computeroutput>:</computeroutput>) appear between the initial
+        number sign and the volume name in a regular cellular mount point name.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dir</emphasis> &lt;<emphasis>directory</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the directory to create as a mount point. The directory must not
+          already exist. Relative pathnames are interpreted with respect to the
+          current working directory.</para>
+
+          <para>Specify the read/write path to the directory, to avoid the failure that
+          results from attempting to create a new mount point in a read-only
+          volume. By convention, the read/write path is indicated by placing a
+          period before the cell name at the pathname's second level (for example,
+          <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+          read-only paths through the filespace, see <link linkend="DESCRIPTION">DESCRIPTION</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-vol</emphasis> &lt;<emphasis>volume name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the name or volume ID number of the volume to mount. If
+          appropriate, add the <computeroutput>.readonly</computeroutput> or <computeroutput>.backup</computeroutput> extension to the name, or
+          specify the appropriate volume ID number.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which the volume resides (creates a cellular mount
+          point). Provide the fully qualified domain name, or a shortened form that
+          disambiguates it from the other cells listed in the local
+          <replaceable>/usr/vice/etc/CellServDB</replaceable> file.</para>
+
+          <para>If this argument is omitted, no cell indicator appears in the mount
+          point. When the Cache Manager interprets it, it assumes that the volume
+          named in the mount point resides in the same cell as the volume that
+          houses the mount point.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rw</emphasis></term>
+        <listitem>
+          <para>Creates a read/write mount point. Omit this flag to create a regular mount
+          point.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fast</emphasis></term>
+        <listitem>
+          <para>Prevents the Volume Location (VL) Server from checking that the volume has
+          a VLDB entry and printing a warning message if it does not. Whether or not
+          this flag is included, the File Server creates the mount point even when
+          the volume has no VLDB entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command creates a regular mount point, mounting the volume
+    <computeroutput>user.smith</computeroutput> at <replaceable>/afs/abc.com/usr/smith</replaceable>:</para>
+
+<programlisting>
+   % cd /afs/abc.com/usr
+   % fs mkmount -dir smith -vol user.smith
+
+</programlisting>
+      <para>The following commands create a read/write mount point and a regular mount
+      point for the ABC Corporation cell's <computeroutput>root.cell</computeroutput> volume in that cell's
+      file tree. The second command follows the convention of putting a period
+      at the beginning of the read/write mount point's name.</para>
+
+<programlisting>
+   % fs mkmount -dir /afs/abc.com -vol root.cell
+   % fs mkmount -dir /afs/.abc.com -vol root.cell -rw
+
+</programlisting>
+        <para>The following command mounts the State University cell's <computeroutput>root.cell</computeroutput>
+        volume in the ABC Corporation cell's file tree, creating a regular
+        cellular mount point called <replaceable>/afs/stateu.edu</replaceable>. When a ABC Corporation
+        Cache Manager encounters this mount point, it crosses into the State
+        University cell on a read-only path.</para>
+
+<programlisting>
+   % fs mkmount -dir /afs/stateu.edu -vol root.cell -c stateu.edu
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must have the <computeroutput>i</computeroutput> (insert) and <computeroutput>a</computeroutput> (administer) permissions
+          on the ACL of the directory that is to house the mount point.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="CellServDB5">CellServDB(5)</link>,
+          <link linkend="fs_lsmount1">fs_lsmount(1)</link>,
+          <link linkend="fs_rmmount1">fs_rmmount(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

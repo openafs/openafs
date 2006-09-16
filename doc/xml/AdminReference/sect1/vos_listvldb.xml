@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_listvldb1">
+  <refmeta>
+    <refentrytitle>vos listvldb</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos listvldb</refname>
+    <refpurpose>Displays a volume's VLDB entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos listvldb</emphasis> [<emphasis role="bold">-name</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;]
+        [<emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;] [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;]
+        [<emphasis role="bold">-locked</emphasis>] [<emphasis role="bold">-quiet</emphasis>] [<emphasis role="bold">-nosort</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos listvl</emphasis> [<emphasis role="bold">-na</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;] [<emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>partition name</emphasis>&gt;] [<emphasis role="bold">-lock</emphasis>] [<emphasis role="bold">-q</emphasis>] [<emphasis role="bold">-nos</emphasis>]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noa</emphasis>] [<emphasis role="bold">-loca</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos listvldb</emphasis> command formats and displays information from the
+    Volume Location Database (VLDB) entry for each volume specified.  The
+    output depends on the combination of options supplied on the command
+    line. Combine options as indicated to display the desired type of VLDB
+    entries:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Every entry in the VLDB: provide no options.</para>
+
+      </listitem>
+      <listitem>
+        <para>Every VLDB entry that mentions a certain file server machine as the site
+        for a volume: specify the machine's name as the <emphasis role="bold">-server</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>Every VLDB entry that mentions a certain partition on any file server
+        machine as the site for a volume: specify the partition name as the
+        <emphasis role="bold">-partition</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>Every VLDB entry that mentions a certain partition on a certain file
+        server machine as the site for a volume: combine the <emphasis role="bold">-server</emphasis> and
+        <emphasis role="bold">-partition</emphasis> arguments.</para>
+
+      </listitem>
+      <listitem>
+        <para>A single VLDB entry: specify a volume name or ID number with the <emphasis role="bold">-name</emphasis>
+        argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>The VLDB entry only for the volumes with locked VLDB entries found at a
+        certain site: combine the <emphasis role="bold">-locked</emphasis> flag with any of arguments that
+        define sites.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies either the complete name or volume ID number of a volume of any
+          of the three types.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the file server machine listed as a site in each VLDB entry to
+          display. Provide the machine's IP address or its host name (either fully
+          qualified or using an unambiguous abbreviation). For details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+          <para>This argument can be combined with the <emphasis role="bold">-partition</emphasis> argument, the
+          <emphasis role="bold">-locked</emphasis> flag, or both.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>partition name</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the partition (on the file server machine specified by the
+          <emphasis role="bold">-server</emphasis> argument) listed as a site in each VLDB entry to
+          display. Provide the partition's complete name with preceding slash (for
+          example, <computeroutput>/vicepa</computeroutput>) or use one of the three acceptable abbreviated
+          forms. For details, see <link linkend="vos1">vos(1)</link>.</para>
+
+          <para>This argument can be combined with the <emphasis role="bold">-server</emphasis> argument, the <emphasis role="bold">-locked</emphasis>
+          flag, or both.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-locked</emphasis></term>
+        <listitem>
+          <para>Displays only locked VLDB entries. This flag can be combined with the
+          <emphasis role="bold">-server</emphasis> argument, the <emphasis role="bold">-partition</emphasis> argument, or both.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-quiet</emphasis></term>
+        <listitem>
+          <para>Suppresses the lines that summarize the number of volumes listed and their
+          status, which otherwise appear at the beginning and end of the output when
+          the output includes more than one volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-nosort</emphasis></term>
+        <listitem>
+          <para>Suppresses the default sorting of volume entries alphabetically by volume
+          name.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If the output includes more than one VLDB entry, by default the first line
+    reports which file server machine, partition, or both, houses the
+    volumes. The final line of output reports the total number of entries
+    displayed. Including the <emphasis role="bold">-quiet</emphasis> flag suppresses these lines.</para>
+
+    <para>By default, volumes are sorted alphabetically by volume name.  Including
+    the <emphasis role="bold">-nosort</emphasis> flag skips the sorting step, which can speed up the
+    production of output if there are a large number of entries.</para>
+
+    <para>The VLDB entry for each volume includes the following information:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The base (read/write) volume name. The read-only and backup versions have
+        the same name with a <computeroutput>.readonly</computeroutput> and <computeroutput>.backup</computeroutput> extension, respectively.</para>
+
+      </listitem>
+      <listitem>
+        <para>The volume ID numbers allocated to the versions of the volume that
+        actually exist, in fields labeled <computeroutput>RWrite</computeroutput> for the read/write, <computeroutput>ROnly</computeroutput>
+        for the read-only, <computeroutput>Backup</computeroutput> for the backup, and <computeroutput>RClone</computeroutput> for the
+        ReleaseClone. (If a field does not appear, the corresponding version of
+        the volume does not exist.) The appearance of the <computeroutput>RClone</computeroutput> field normally
+        indicates that a release operation did not complete successfully; the
+        <computeroutput>Old release</computeroutput> and <computeroutput>New release</computeroutput> flags often also appear on one or more
+        of the site definition lines described just following.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of sites that house a read/write or read-only copy of the
+        volume, following the string <computeroutput>number of sites -&gt;</computeroutput>.</para>
+
+      </listitem>
+      <listitem>
+        <para>A line for each site that houses a read/write or read-only copy of the
+        volume, specifying the file server machine, partition, and type of volume
+        (<computeroutput>RW</computeroutput> for read/write or <computeroutput>RO</computeroutput> for read-only). If a backup version exists,
+        it is understood to share the read/write site.  Several flags can appear
+        with a site definition:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>Not released</term>
+            <listitem>
+              <para>Indicates that the vos release command has not been issued since the <emphasis role="bold">vos
+              addsite</emphasis> command was used to define the read-only site.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Old release</term>
+            <listitem>
+              <para>Indicates that a vos release command did not complete successfully,
+              leaving the previous, obsolete version of the volume at this site.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>New release</term>
+            <listitem>
+              <para>Indicates that a vos release command did not complete successfully, but
+              that this site did receive the correct new version of the volume.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </listitem>
+      <listitem>
+        <para>If the VLDB entry is locked, the string <computeroutput>Volume is currently LOCKED</computeroutput>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>For further discussion of the <computeroutput>New release</computeroutput> and <computeroutput>Old release</computeroutput> flags, see
+    <link linkend="vos_release1">vos_release(1)</link>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays VLDB information for the ABC Corporation
+    volume called <computeroutput>usr</computeroutput>, which has two read-only replication sites:</para>
+
+<programlisting>
+   % vos listvldb -name usr
+   usr
+    RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
+    number of sites -&amp;gt; 3
+       server fs1.abc.com partition /vicepa RO Site
+       server fs3.abc.com partition /vicepa RO Site
+       server fs2.abc.com partition /vicepb RW Site
+
+</programlisting>
+      <para>The following example shows entries for two of the volumes that reside on
+      the file server machine <computeroutput>fs4.abc.com</computeroutput>. The first VLDB entry is currently
+      locked. There are 508 entries that mention the machine as a volume site.</para>
+
+<programlisting>
+   % vos listvldb -server fs4.abc.com
+   VLDB entries for server fs4.abc.com
+       .       .           .        .
+       .       .           .        .
+   user.smith
+    RWrite: 278541326   ROnly: 278541327   Backup: 278542328
+    number of sites -&amp;gt; 1
+      server fs4.abc.com partition /vicepg RW Site
+    Volume is currently LOCKED
+      user.terry
+    RWrite 354287190   ROnly 354287191   Backup 354287192
+    number of sites -&amp;gt; 1
+      server fs4.abc.com partition /vicepc RW Site
+      .       .           .        .
+      .       .           .        .
+   Total entries: 508
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="vos1">vos(1)</link>,
+        <link linkend="vos_examine1">vos_examine(1)</link>,
+        <link linkend="vos_listvol1">vos_listvol(1)</link>,
+        <link linkend="vos_lock1">vos_lock(1)</link>,
+        <link linkend="vos_unlock1">vos_unlock(1)</link>,
+        <link linkend="vos_unlockvldb1">vos_unlockvldb(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

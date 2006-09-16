@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preface id="Header_2">
+  <title>About This Manual</title>
+
+  <para>This chapter describes the purpose, organization, and conventions of this document.</para>
+
+  <sect1 id="HDRWQ1">
+    <title>Audience and Purpose</title>
+
+    <para>This reference manual details the syntax of each AFS<superscript><superscript>(R)</superscript></superscript> command and
+    is intended for the experienced AFS administrator, programmer, or user.</para>
+
+    <para>In general, this document does not explain when to use a command or its place in the sequence of commands that make up a
+    complete procedure. For that type of information, refer to the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="HDRWQ2">
+    <title>Organization</title>
+
+    <para>This document presents AFS files and commands in separate sections, with the files or commands in alphabetical
+    order.</para>
+
+    <para>The following sections of each reference page provide the indicated type of information:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Purpose</emphasis> briefly describes the command's function.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Synopsis</emphasis> displays the complete syntax statement for a command, which specifies the
+        required order for all options, using the same notation as the AFS online help. If abbreviating the command name a nd option
+        names is acceptable, as it is for most commands, a second statement specifies the shortest acceptable abbreviation of each
+        name. If the command has an alias, it also appears in this section.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Description</emphasis> describes the file or command's function in detail.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Cautions</emphasis> describes restrictions, requirements, and potential complications in use of
+        the command. It appears only when necessary.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Options</emphasis> describes the function and required form of each argument and flag.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Output</emphasis> describes any output the command writes to the standard output stream. This
+        section does not appear if the command does not produce output or if the only output is a message confirming the command's
+        success.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Examples</emphasis> provides one or more sample commands and resulting output.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Privilege Required</emphasis> lists each privilege required to perform the command.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Related Information</emphasis> lists related commands and files, if any.</para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+
+  <sect1 id="HDRWQ3">
+    <title>How to Use This Document</title>
+
+    <para>Refer to this document when you need detailed information about a specific command. For a description of all the steps in
+    a procedure, refer to the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="HDRWQ4">
+    <title>Related Documents</title>
+
+    <para>The following documents are included in the AFS documentation set.</para>
+
+    <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+    <para>This guide describes the concepts and procedures that a system administrator must know to manage an AFS cell. It assumes
+    familiarity with UNIX, but requires no previous knowledge of AFS.</para>
+
+    <para>The first chapters of the <emphasis>IBM AFS Administration Guide</emphasis> present basic concepts and guidelines.
+    Understanding them is crucial to successful administration of an AFS cell. The remaining chapters in the guide provide
+    step-by-step instructions for specific administrative tasks, along with discussions of the concepts important to that particular
+    task.</para>
+
+    <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+    <para>This guide provides instructions for installing AFS server and client machines. It is assumed that the installer is an
+    experienced UNIX<superscript><superscript>(R)</superscript></superscript> system administrator.</para>
+
+    <para>For predictable performance, machines must be installed and configured in accordance with the instructions in this
+    guide.</para>
+
+    <para><emphasis>IBM AFS Release Notes</emphasis></para>
+
+    <para>This document provides information specific to each release of AFS, such as a list of new features and commands, a list of
+    requirements and limitations, and instructions for upgrading server and client machines.</para>
+
+    <para><emphasis>IBM AFS User Guide</emphasis></para>
+
+    <para>This guide presents the basic concepts and procedures necessary for using AFS effectively. It assumes that the reader has
+    some experience with UNIX, but does not require familiarity with networking or AFS.</para>
+
+    <para>The guide explains how to perform basic functions, including authenticating, changing a password, protecting AFS data,
+    creating groups, and troubleshooting. It provides illustrative examples for each function and describes some of the differences
+    between the UNIX file system and AFS.</para>
+  </sect1>
+
+  <sect1 id="HDRTYPO_CONV">
+    <title>Typographical Conventions</title>
+
+    <para>This document uses the following typographical conventions:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Command and option names appear in <emphasis role="bold">bold type</emphasis> in syntax definitions, examples, and
+        running text. Names of directories, files, machines, partitions, volumes, and users also appear in <emphasis
+        role="bold">bold type</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para>Variable information appears in <emphasis>italic type</emphasis>. This includes user-supplied information on command
+        lines and the parts of prompts that differ depending on who issues the command. New terms also appear in <emphasis>italic
+        type</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para>Examples of screen output and file contents appear in <computeroutput>monospace type</computeroutput>.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>In addition, the following symbols appear in command syntax definitions, both in the documentation and in AFS online help
+    statements. When issuing a command, do not type these symbols.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Square brackets <emphasis role="bold">[ ]</emphasis> surround optional items.</para>
+      </listitem>
+
+      <listitem>
+        <para>Angle brackets <emphasis role="bold">&lt; &gt;</emphasis> surround user-supplied values in AFS commands.</para>
+      </listitem>
+
+      <listitem>
+        <para>A superscripted plus sign <emphasis role="bold">+</emphasis> follows an argument that accepts more than one
+        value.</para>
+      </listitem>
+
+      <listitem>
+        <para>The percent sign <computeroutput>%</computeroutput> represents the regular command shell prompt. Some operating
+        systems possibly use a different character for this prompt.</para>
+      </listitem>
+
+      <listitem>
+        <para>The number sign <computeroutput>#</computeroutput> represents the command shell prompt for the local superuser
+        <emphasis role="bold">root</emphasis>. Some operating systems possibly use a different character for this prompt.</para>
+      </listitem>
+
+      <listitem>
+        <para>The pipe symbol <emphasis role="bold">|</emphasis> in a command syntax statement separates mutually exclusive values
+        for an argument.</para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</preface>

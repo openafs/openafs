@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_listaddrs1">
+  <refmeta>
+    <refentrytitle>vos listaddrs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos listaddrs</refname>
+    <refpurpose>Displays all VLDB server entries</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos listaddrs</emphasis> [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>]
+        [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos lista</emphasis> [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos listaddrs</emphasis> command displays all of the server entries from the
+    Volume Location Database (VLDB). An entry is created as the File Server
+    initializes and registers the contents of its <replaceable>/usr/afs/local/sysid</replaceable> file
+    in the VLDB.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. Do not combine
+          this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays all server entries from the VLDB, each on its own
+    line. If a file server machine is multihomed, all of its registered
+    addresses appear on the line. The first one is the one reported as a
+    volume's site in the output from the <emphasis role="bold">vos examine</emphasis> and <emphasis role="bold">vos listvldb</emphasis>
+    commands.</para>
+
+    <para>The VLDB records IP addresses, and the command interpreter has the local
+    name service (either a process like the Domain Name Service or a local
+    host table) translate them to hostnames before displaying them. If an IP
+    address appears in the output, it is not possible to translate it.</para>
+
+    <para>The existence of an entry does not necessarily indicate that the machine
+    that is still an active file server machine. To remove obsolete server
+    entries, use the <emphasis role="bold">vos changeaddr</emphasis> command with the <emphasis role="bold">-remove</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays the VLDB server entries in the ABC
+    Corporation cell:</para>
+
+<programlisting>
+   % vos listaddrs
+   sv5.abc.com
+   sv1.abc.com
+   sv2.abc.com  afs2.abc.com
+   sv6.abc.com
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="sysid5">sysid(5)</link>,
+      <link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_changeaddr1">vos_changeaddr(1)</link>,
+      <link linkend="vos_examine1">vos_examine(1)</link>,
+      <link linkend="vos_listvldb1">vos_listvldb(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_listquota1">
+  <refmeta>
+    <refentrytitle>fs listquota</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs listquota</refname>
+    <refpurpose>Displays quota information for a volume</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs listquota</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs listq</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs lq</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs listquota</emphasis> command displays information about the volume
+    containing each specified directory or file (its name, quota, and amount
+    of disk space used), along with an indicator of the percentage of space
+    used on the host partition.</para>
+
+    <para>To display more information about the host partition, use the <emphasis role="bold">fs
+    examine</emphasis> command.</para>
+
+    <para>To set volume quota, use the <emphasis role="bold">fs setquota</emphasis> or <emphasis role="bold">fs setvol</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names a file or directory that resides in the volume about which to
+          produce output. Partial pathnames are interpreted relative to the current
+          working directory, which is also the default value if this argument is
+          omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays information about the volume that houses each
+    specified directory or file, in a tabular format that uses the following
+    headers:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>Volume Name</term>
+        <listitem>
+          <para>The name of the volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Quota</term>
+        <listitem>
+          <para>The volume's quota in kilobytes, or the string <computeroutput>no limit</computeroutput> to indicate an
+          unlimited quota.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Used</term>
+        <listitem>
+          <para>The number of kilobytes of quota used.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>% Used</term>
+        <listitem>
+          <para>The percentage of the volume's quota that is used (the <computeroutput>Used</computeroutput> statistic
+          divided by the <computeroutput>Quota</computeroutput> statistic, times 100).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Partition</term>
+        <listitem>
+          <para>The percentage of space used on the partition that houses the
+          volume. Although not directly related to how much of the user's quota is
+          used, it is reported because a full partition can cause writing of data
+          back to the volume to fail even when the volume has not reached its quota.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the output for the volume <computeroutput>user.smith</computeroutput>:</para>
+
+<programlisting>
+   % fs listquota -path /afs/abc.com/usr/smith
+   Volume Name     Quota    Used    % Used   Partition
+   user.smith      15000    5071       34%         86%
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+      directory of the volume that houses the file or directory named by the
+      <emphasis role="bold">-path</emphasis> argument, and on the ACL of each directory that precedes it in
+      the pathname.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_diskfree1">fs_diskfree(1)</link>,
+      <link linkend="fs_examine1">fs_examine(1)</link>,
+      <link linkend="fs_quota1">fs_quota(1)</link>,
+      <link linkend="fs_setquota1">fs_setquota(1)</link>,
+      <link linkend="fs_setvol1">fs_setvol(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

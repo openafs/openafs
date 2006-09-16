@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_lock1">
+  <refmeta>
+    <refentrytitle>vos lock</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos lock</refname>
+    <refpurpose>Locks a VLDB volume entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos lock</emphasis> <emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos lo</emphasis> <emphasis role="bold">-i</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos lock</emphasis> command locks the Volume Location Database (VLDB) entry
+    for the indicated volume, blocking any operation that requires a write to
+    that entry. The lock applies to all of the volume versions associated with
+    the entry, not just the one specified with the <emphasis role="bold">-id</emphasis> argument.</para>
+
+    <para>To unlock a single VLDB entry, use the <emphasis role="bold">vos unlock</emphasis> command. To unlock
+    several entries, or all locked entries in the VLDB, use the <emphasis role="bold">vos
+    unlockvldb</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not use this command in normal circumstances. It is useful for
+    guaranteeing that the volume stays unchanged when there is reason to
+    believe that volume operations cannot properly lock VLDB volume entries as
+    they normally do to synchronize with one another.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>volume name or ID</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies either the complete name or volume ID number of a volume of the
+          any of the three types.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command locks the VLDB entry for <computeroutput>user.terry</computeroutput>.</para>
+
+<programlisting>
+   % vos lock user.terry
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+      machine specified with the <emphasis role="bold">-server</emphasis> argument and on each database server
+      machine. If the <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be
+      logged on to a server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_unlock1">vos_unlock(1)</link>,
+      <link linkend="vos_unlockvldb1">vos_unlockvldb(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

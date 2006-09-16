@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="ptserver8">
+  <refmeta>
+    <refentrytitle>ptserver</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>ptserver</refname>
+    <refpurpose>Initializes the Protection Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">ptserver</emphasis> [<emphasis role="bold">-database</emphasis> &lt;<emphasis>db path</emphasis>&gt;] [<emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;]
+        [<emphasis role="bold">-rebuildDB</emphasis>] [<emphasis role="bold">-enable_peer_stats</emphasis>] [<emphasis role="bold">-enable_process_stats</emphasis>]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">ptserver</emphasis> command initializes the Protection Server, which must run
+    on every database server machine. In the conventional configuration, its
+    binary file is located in the <replaceable>/usr/afs/bin</replaceable> directory on a file server
+    machine.</para>
+
+    <para>The ptserver command is not normally issued at the command shell prompt,
+    but rather placed into a database server machine's
+    <replaceable>/usr/afs/local/BosConfig</replaceable> file with the <emphasis role="bold">bos create</emphasis> command. If it is
+    ever issued at the command shell prompt, the issuer must be logged onto a
+    file server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>The Protection Server performs the following tasks:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Maintains the Protection Database, which contains entries for every user
+        and group in the cell. Use the <emphasis role="bold">pts</emphasis> commands to administer the database.</para>
+
+      </listitem>
+      <listitem>
+        <para>Allocates AFS IDs for new user, machine and group entries and maps each ID
+        to the corresponding name.</para>
+
+      </listitem>
+      <listitem>
+        <para>Generates a current protection subgroup (CPS) at the File Server's
+        request. The CPS lists all groups to which a user or machine belongs.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name and all option names in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>db path</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of an alternate directory in which the Protection
+          Database files reside. Provide the complete pathname, ending in the base
+          filename to which the <computeroutput>.DB0</computeroutput> and <computeroutput>.DBSYS1</computeroutput> extensions are appended. For
+          example, the appropriate value for the default database files is
+          <replaceable>/usr/afs/db/prdb</replaceable>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-p</emphasis> &lt;<emphasis>number of processes</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of server lightweight processes (LWPs) to run.  Provide a
+          positive integer from the range <computeroutput>3</computeroutput> to <computeroutput>16</computeroutput>. The default value is <computeroutput>3</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-rebuildDB</emphasis></term>
+        <listitem>
+          <para>Rebuilds the Protection Database at the beginning of Protection Server
+          initialization. Use this argument only in consultation with AFS
+          Development or Product Support.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_peer_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. For each connection with a specific UDP port on another machine,
+          a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+          so on) sent or received. To display or otherwise access the records, use
+          the Rx Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-enable_process_stats</emphasis></term>
+        <listitem>
+          <para>Activates the collection of Rx statistics and allocates memory for their
+          storage. A separate record is kept for each type of RPC (FetchFile,
+          GetStatus, and so on) sent or received, aggregated over all connections to
+          other machines. To display or otherwise access the records, use the Rx
+          Monitoring API.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following <emphasis role="bold">bos create</emphasis> command creates a <computeroutput>ptserver</computeroutput> process on the
+    machine <computeroutput>fs3.abc.com</computeroutput>. The command appears here on multiple lines only
+    for legibility.</para>
+
+<programlisting>
+   % bos create -server fs3.abc.com -instance ptserver \
+                -type simple -cmd /usr/afs/bin/ptserver
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be logged in as the superuser <computeroutput>root</computeroutput> on a file server
+      machine to issue the command at a command shell prompt. It is conventional
+      instead to create and start the process by issuing the <emphasis role="bold">bos create</emphasis>
+      command.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="prdb_DB05">prdb.DB0(5)</link>,
+      <link linkend="bos_create8">bos_create(8)</link>,
+      <link linkend="bos_getlog8">bos_getlog(8)</link>,
+      <link linkend="pts1">pts(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

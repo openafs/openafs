@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_restart8">
+  <refmeta>
+    <refentrytitle>bos restart</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos restart</refname>
+    <refpurpose>Restarts a server process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos restart</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-instance</emphasis> &lt;<emphasis>instances</emphasis>&gt;+]
+        [<emphasis role="bold">-bosserver</emphasis>] [<emphasis role="bold">-all</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>]
+        [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos res</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-i</emphasis> &lt;<emphasis>instances</emphasis>&gt;+] [<emphasis role="bold">-b</emphasis>]
+        [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos restart</emphasis> command stops and immediately restarts server processes
+    on the server machine named by the <emphasis role="bold">-server</emphasis> argument. Indicate which
+    process or processes to restart by providing one of the following
+    arguments:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">-instance</emphasis> argument names each AFS server process to stop and
+        restart immediately, regardless of its status flag in the
+        <replaceable>/usr/afs/local/BosConfig</replaceable> file. Do not include <emphasis role="bold">bosserver</emphasis> in the list
+        of processes; use the <emphasis role="bold">-bosserver</emphasis> flag instead.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">-bosserver</emphasis> flag stops all AFS server processes running on the
+        machine, including the BOS Server. A new BOS Server starts immediately,
+        and it starts a new instance of each process that is marked with the
+        <computeroutput>Run</computeroutput> status flag in the <replaceable>BosConfig</replaceable> file.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">-all</emphasis> flag stops all AFS server processes running on the machine,
+        except the BOS Server, and immediately restarts the processes that are
+        marked with the <computeroutput>Run</computeroutput> status flag in the <replaceable>BosConfig</replaceable> file.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>This command does not change a process's status flag in the <replaceable>BosConfig</replaceable>
+    file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine on which to restart each process.  Identify
+          the machine by IP address or its host name (either fully-qualified or
+          abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-instance</emphasis> &lt;<emphasis>instances</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each process to stop and then restart immediately regardless of its
+          status flag setting. Use the process name assigned with the <emphasis role="bold">-instance</emphasis>
+          argument to the <emphasis role="bold">bos create</emphasis> command. The output from the <emphasis role="bold">bos status</emphasis>
+          command lists the names. Provide this flag or one of the <emphasis role="bold">-bosserver</emphasis> or
+          <emphasis role="bold">-all</emphasis> options, but do not combine them.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-bosserver</emphasis></term>
+        <listitem>
+          <para>Stops all AFS server processes running on the machine, including the BOS
+          Server. A new BOS Server instance immediately starts, and starts all
+          processes marked with the <computeroutput>Run</computeroutput> status flag in the <replaceable>BosConfig</replaceable>
+          file. Provide this flag or one of the <emphasis role="bold">-instance</emphasis> or <emphasis role="bold">-all</emphasis> options, but
+          do not combine them.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-all</emphasis></term>
+        <listitem>
+          <para>Stops all AFS server processes running on the machine other than the BOS
+          Server, and immediately restarts the processes marked with the <emphasis role="bold">Run</emphasis>
+          status flag in the <replaceable>BosConfig</replaceable> file. Provide this flag or one of the
+          <emphasis role="bold">-instance</emphasis> or <emphasis role="bold">-bosserver</emphasis> options, but do not combine them.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command stops and restarts all processes running on the
+    machine <computeroutput>fs3.abc.com</computeroutput>, including the BOS Server.</para>
+
+<programlisting>
+   % bos restart -server fs3.abc.com -bosserver
+
+</programlisting>
+      <para>The following command stops and restarts all processes running on the
+      machine <computeroutput>fs5.abc.com</computeroutput>, excluding the BOS Server.</para>
+
+<programlisting>
+   % bos restart -server fs5.abc.com -all
+
+</programlisting>
+        <para>The following command stops and restarts the Protection Server and Volume
+        Location (VL) Server processes on the machine <computeroutput>db3.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % bos restart -server db3.abc.com -instance ptserver vlserver
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+          machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+          machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+          included.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="BosConfig5">BosConfig(5)</link>,
+          <link linkend="KeyFile5">KeyFile(5)</link>,
+          <link linkend="UserList5">UserList(5)</link>,
+          <link linkend="bos8">bos(8)</link>,
+          <link linkend="bos_create8">bos_create(8)</link>,
+          <link linkend="bos_status8">bos_status(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

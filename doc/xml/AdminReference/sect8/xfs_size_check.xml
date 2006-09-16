@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="xfs_size_check8">
+  <refmeta>
+    <refentrytitle>xfs_size_check</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>xfs_size_check</refname>
+    <refpurpose>Verifies proper IRIX inode configuration</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">xfs_size_check</emphasis></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">xfs_size_check</emphasis> command, when run on a file server machine that runs
+    IRIX version 6.2 or higher and uses XFS-formatted partitions as server
+    partitions (conventionally mounted at <replaceable>/vicep</replaceable> directories), verifies
+    that each partition uses 512-byte inodes. AFS stores information in the
+    inodes on server partitions, and the 256-byte inode size that XFS uses by
+    default is not large enough.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>This command is available on in the AFS distribution for IRIX system types
+    that can use XFS-formatted partitions as server partitions.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If all server partitions are properly configured, the command produces no
+    output. Otherwise, it prints the following header:</para>
+
+<programlisting>
+   Need to remake the following partitions:
+
+</programlisting>
+      <para>and then the following message for each partition on which to run the IRIX
+      <emphasis role="bold">mkfs</emphasis> command with the indicated options:</para>
+
+<programlisting>
+   &amp;lt;device&amp;gt;: mkfs -t xfs -i size=512 -l size=4000b &amp;lt;device&amp;gt;
+
+</programlisting>
+        <para>where &lt;device&gt; is in a format like <computeroutput>/dev/dsk/dks0d0s0</computeroutput> for a single disk
+        partition or <computeroutput>/dev/xlv/xlv0</computeroutput> for a logical volume.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

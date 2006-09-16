@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_volinfo8">
+  <refmeta>
+    <refentrytitle>backup volinfo</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup volinfo</refname>
+    <refpurpose>Displays a volume's dump history from the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup volinfo</emphasis> <emphasis role="bold">-volume</emphasis> &lt;<emphasis>volume name</emphasis>&gt; [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup voli</emphasis> <emphasis role="bold">-v</emphasis> &lt;<emphasis>volume name</emphasis>&gt; [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup volinfo</emphasis> command displays a dump history of the specified
+    volume, reporting information such as the date on which the volume was
+    dumped and the tapes that contain it. Include the <computeroutput>.backup</computeroutput> extension on
+    the volume name if the backup version of the volume was dumped.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-volume</emphasis> &lt;<emphasis>volume name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the volume for which to display the dump history. Include the
+          <computeroutput>.backup</computeroutput> or <computeroutput>.readonly</computeroutput> extension if the backup or read-only version of
+          the volume was dumped.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output includes a line for each Backup Database dump record that
+    mentions the specified volume, order from most to least recent. The output
+    for each record appears in a table with six columns:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>dumpID</term>
+        <listitem>
+          <para>The dump ID of the dump that includes the volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>lvl</term>
+        <listitem>
+          <para>The depth in the dump hierarchy of the dump level at which the volume was
+          dumped. A value of <computeroutput>0</computeroutput> indicates a full dump. A value of <computeroutput>1</computeroutput> or greater
+          indicates an incremental dump made at the specified depth in the dump
+          hierarchy.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>parentid</term>
+        <listitem>
+          <para>The dump ID of the dump's parent dump. A value of <computeroutput>0</computeroutput> indicates a full
+          dump, which has no parent; in this case, the value in the <computeroutput>lvl</computeroutput> column is
+          also <computeroutput>0</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>creation date</term>
+        <listitem>
+          <para>The date and time at which the Backup System started the dump operation
+          that created the dump.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>clone date</term>
+        <listitem>
+          <para>For a backup or read-only volume, the time at which it was cloned from its
+          read/write source. For a read/write volume, the same as the value in the
+          <computeroutput>creation date</computeroutput> field.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>tape name</term>
+        <listitem>
+          <para>The name of the tape containing the dump: either the permanent tape name,
+          or an AFS tape name in the format
+          <emphasis>volume_set_name</emphasis>.<emphasis>dump_level_name</emphasis>.<emphasis>tape_index</emphasis> where
+          <emphasis>volume_set_name</emphasis> is the name of the volume set associated with the
+          initial dump in the dump set of which this tape is a part;
+          <emphasis>dump_level_name</emphasis> is the name of the dump level at which the initial dump
+          was backed up; <emphasis>tape_index</emphasis> is the ordinal of the tape in the dump
+          set. Either type of name can be followed by a dump ID in parentheses; if
+          it appears, it is the dump ID of the initial dump in the dump set to which
+          this appended dump belongs.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows part of the dump history of the Backup volume
+    <computeroutput>user.smith.backup</computeroutput>:</para>
+
+<programlisting>
+   % backup volinfo -volume user.smith.backup
+   DumpID    lvl parentID  creation date    clone date       tape name
+   924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6
+       .     .      .         .       .       .      .         .
+       .     .      .         .       .       .      .         .
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_dumpinfo8">backup_dumpinfo(8)</link>,
+      <link linkend="backup_volrestore8">backup_volrestore(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

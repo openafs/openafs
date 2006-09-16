@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_rename1">
+  <refmeta>
+    <refentrytitle>pts rename</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts rename</refname>
+    <refpurpose>Changes the name of a Protection Database entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts rename</emphasis> <emphasis role="bold">-oldname</emphasis> &lt;<emphasis>old name</emphasis>&gt; <emphasis role="bold">-newname</emphasis> &lt;<emphasis>new name</emphasis>&gt;
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]  [<emphasis role="bold">-noauth</emphasis>]  [<emphasis role="bold">-force</emphasis>]  [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts ren</emphasis> <emphasis role="bold">-o</emphasis> &lt;<emphasis>old name</emphasis>&gt; <emphasis role="bold">-ne</emphasis> &lt;<emphasis>new name</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts rename</emphasis> command changes the name of the user, machine, or group
+    entry specified by the <emphasis role="bold">-oldname</emphasis> argument to the name specified by the
+    <emphasis role="bold">-newname</emphasis> argument. It is not possible to change a user or machine
+    entry's name to look like a regular group entry's name (have a colon in
+    it).</para>
+
+    <para>Members of the system:administrators group can change a regular group name
+    into a prefix-less name and vice versa. When changing a prefix-less group
+    name into a regular group name or a regular group name to another regular
+    group name, the owner field of the new name (the part before the colon)
+    must correctly reflect the group's owner.</para>
+
+    <para>Changing a regular group's owner with the <emphasis role="bold">pts chown</emphasis> command
+    automatically changes the owner field (the part before the colon) of the
+    group's name, but does not change the owner field of any groups owned by
+    the group. Use this command to rename those groups to a form that
+    accurately reflects their ownership.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>By convention, many aspects of an AFS user account have the same name as
+    the user's Protection Database entry, including the Authentication
+    Database entry, volume, and mount point. When using this command to change
+    a user name, also change the names of all related entities to maintain
+    consistency. For instructions, see the chapter on user accounts in the
+    <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-oldname</emphasis> &lt;<emphasis>old name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the current full name of the entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-newname</emphasis> &lt;<emphasis>new name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the new full name for the entry. For regular groups, the owner
+          field (the part before the colon) of the new name must reflect the actual
+          ownership of the group.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example changes the name of the group staff, owned by the
+    privileged user <computeroutput>admin</computeroutput>, to <computeroutput>admin:staff</computeroutput>:</para>
+
+<programlisting>
+   % pts rename -oldname staff -newname admin:staff
+
+</programlisting>
+      <para>The following example changes the name of the group <computeroutput>admin:finance</computeroutput> to
+      the group <computeroutput>finance</computeroutput>. The issuer must belong to the system:administrators
+      group.</para>
+
+<programlisting>
+   % pts rename -oldname admin:finance -newname finance
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>To change a regular group name to a prefix-less name or vice versa, or to
+        change a user or machine entry's name, the issuer must belong to the
+        system:administrators group.</para>
+
+        <para>To change a group name to a new name of the same type (regular or
+        prefix-less), the issuer must own the group or belong to the
+        system:administrators group.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="pts1">pts(1)</link>,
+        <link linkend="pts_chown1">pts_chown(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

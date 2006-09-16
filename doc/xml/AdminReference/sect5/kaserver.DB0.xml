@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kaserver_DB05">
+  <refmeta>
+    <refentrytitle>kaserver.DB0, kaserver.DBSYS1</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kaserver.DB0, kaserver.DBSYS1</refname>
+    <refpurpose>The Authentication Database and associated log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>kaserver.DB0</replaceable> file contains the Authentication Database, which
+    records server encryption keys and an encrypted form of all user
+    passwords. The Authentication Server (<emphasis role="bold">kaserver</emphasis> process) uses the
+    information in the database to enable secured communications between AFS
+    server and client processes.</para>
+
+    <para>The <replaceable>kaserver.DBSYS1</replaceable> file is a log file in which the Authentication
+    Server logs each database operation before performing it. When an
+    operation is interrupted, the Authentication Server replays the log to
+    complete the operation.</para>
+
+    <para>Both files are in binary format and reside in the <replaceable>/usr/afs/db</replaceable> directory
+    on each of the cell's database server machines. When the Authentication
+    Server starts or restarts on a given machine, it establishes a connection
+    with its peers and verifies that its copy of the database matches the copy
+    on the other database server machines. If not, the Authentication Servers
+    call on AFS's distributed database technology, Ubik, to distribute to all
+    of the machines the copy of the database with the highest version number.</para>
+
+    <para>Always use the commands in the kas suite to administer the Authentication
+    Database. It is advisable to create an archive copy of the database on a
+    regular basis, using a tool such as the UNIX <emphasis role="bold">tar</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="kadb_check8">kadb_check(8)</link>,
+    <link linkend="kas8">kas(8)</link>,
+    <link linkend="kaserver8">kaserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

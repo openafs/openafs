@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_setcellname8">
+  <refmeta>
+    <refentrytitle>bos setcellname</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos setcellname</refname>
+    <refpurpose>Sets the cell's name in ThisCell and CellServDB</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos setcellname</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-name</emphasis> &lt;<emphasis>cell name</emphasis>&gt;
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos setc</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-n</emphasis> &lt;<emphasis>cell name</emphasis>&gt;
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [-h]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos setcellname</emphasis> command establishes the cell's name and makes the
+    server machine named by the <emphasis role="bold">-server</emphasis> argument a member of it, by
+    recording the value of the <emphasis role="bold">-name</emphasis> argument in two files which it creates
+    on the local disk:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><replaceable>/usr/afs/etc/ThisCell</replaceable></para>
+
+      </listitem>
+      <listitem>
+        <para><replaceable>/usr/afs/etc/CellServDB</replaceable>. The cell name appears on the first line in the
+        file, preceded by the required <computeroutput>&gt;</computeroutput> symbol.  The machine name
+        specified with the <emphasis role="bold">-server</emphasis> argument appears on the second line along
+        with its IP address as obtained from the cell's naming service. The
+        machine is thus designated as the cell's first database server machine.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Issue this command only when the installing the cell's first AFS server
+    machine. The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to copy over the
+    <replaceable>ThisCell</replaceable> and <replaceable>CellServDB</replaceable> files from this or another appropriate
+    machine during installation of additional server machines.</para>
+
+    <para>Be sure to choose a satisfactory cell name when issuing this command,
+    because changing a cell's name is very complicated; for one thing, it
+    requires changing every password in the Authentication Database.  Consult
+    the <emphasis>IBM AFS Administration Guide</emphasis> for advice on choosing a cell name.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine on which to set the cell name in the
+          <replaceable>ThisCell</replaceable> and <replaceable>CellServDB</replaceable> file. It is always the first machine
+          installed in a cell. Identify the machine by IP address or its host name
+          (either fully-qualified or abbreviated unambiguously).  For details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Defines the cell name, using standard Internet domain name format (the
+          actual domain name is usually appropriate). Examples are <computeroutput>abc.com</computeroutput> for
+          the ABC Corporation and <computeroutput>stateu.edu</computeroutput> for the State University. It must
+          match the value of the <emphasis role="bold">-cell</emphasis> argument, if that is provided.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command defines the cell name <computeroutput>abc.com</computeroutput> in the <replaceable>ThisCell</replaceable>
+    and <replaceable>CellServDB</replaceable> files on the machine <computeroutput>fs1.abc.com</computeroutput> as it is installed
+    as the cell's first server machine.</para>
+
+<programlisting>
+   % bos setcellname -server fs1.abc.com -name abc.com
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>Authorization checking is normally turned off during installation, which
+      is the only recommended time to use this command; in this case no
+      privilege is required. If authorization checking is turned on, the issuer
+      must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the machine named
+      by the <emphasis role="bold">-server</emphasis> argument, or must be logged in as the local superuser
+      <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="ThisCell5">ThisCell(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="bos8">bos(8)</link></para>
+
+      <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+      <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_setauth8">
+  <refmeta>
+    <refentrytitle>bos setauth</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos setauth</refname>
+    <refpurpose>Sets authorization checking requirements for all server processes</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos setauth</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-authrequired</emphasis> (on | off)
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos seta</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine name</emphasis>&gt; <emphasis role="bold">-a</emphasis> (on | off)
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos setauth</emphasis> command enables or disables authorization checking on
+    the server machine named by the <emphasis role="bold">-server</emphasis> argument. When authorization
+    checking is enabled (the normal case), the AFS server processes running on
+    the machine verify that the issuer of a command meets its privilege
+    requirements. When authorization checking is disabled, server processes
+    perform any action for anyone, including the unprivileged user
+    <computeroutput>anonymous</computeroutput>; this security exposure precludes disabling of authorization
+    checking except during installation or emergencies.</para>
+
+    <para>To indicate to the server processes that authorization checking is
+    disabled, the BOS Server creates the zero-length file
+    <replaceable>/usr/afs/local/NoAuth</replaceable> on its local disk. All AFS server processes
+    constantly monitor for the <replaceable>NoAuth</replaceable> file's presence and do not check for
+    authorization when it is present. The BOS Server removes the file when
+    this command is used to reenable authorization checking.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Do not create the <replaceable>NoAuth</replaceable> file directly, except when directed by
+    instructions for dealing with emergencies (doing so requires being logged
+    in as the local superuser <computeroutput>root</computeroutput>). Use this command instead.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine on which to enable or disable authorization
+          checking. Identify the machine by IP address or its host name (either
+          fully-qualified or abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-authrequired</emphasis> (on | off)</term>
+        <listitem>
+          <para>Enables authorization checking if the value is <computeroutput>on</computeroutput>, or disables it if
+          the value is <computeroutput>off</computeroutput>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example disables authorization checking on the machine
+    <computeroutput>fs7.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % bos setauth -server fs7.abc.com -authrequired off
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+      machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+      machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="NoAuth5">NoAuth(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="bos8">bos(8)</link>,
+      <link linkend="bos_restart8">bos_restart(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

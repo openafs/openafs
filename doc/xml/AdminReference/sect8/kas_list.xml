@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_list8">
+  <refmeta>
+    <refentrytitle>kas list</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas list</refname>
+    <refpurpose>Displays all entries in the Authentication Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas list</emphasis> [<emphasis role="bold">-long</emphasis>] [<emphasis role="bold">-showadmin</emphasis>] [<emphasis role="bold">-showkey</emphasis>]
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas ls</emphasis> [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-showa</emphasis>] [<emphasis role="bold">-showk</emphasis>]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-se</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas list</emphasis> command either displays all entries from the
+    Authentication Database by name, or displays the full database entry for a
+    defined set of entries, as determined by the flag provided:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To display every entry in the Authentication Database in full, include the
+        <emphasis role="bold">-long</emphasis> flag.</para>
+
+      </listitem>
+      <listitem>
+        <para>To display only those entries in full that have the <computeroutput>ADMIN</computeroutput> flag set,
+        include the <emphasis role="bold">-showadmin</emphasis> flag.</para>
+
+      </listitem>
+      <listitem>
+        <para>To list only the name of each Authentication Database entry, omit both the
+        <emphasis role="bold">-long</emphasis> and <emphasis role="bold">-showadmin</emphasis> flags.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>By default, full entries include a checksum for the encryption key, rather
+    than the actual octal digits that constitute the key. To display the octal
+    digits, include the <emphasis role="bold">-showkey</emphasis> flag with the <emphasis role="bold">-long</emphasis> or <emphasis role="bold">-showadmin</emphasis>
+    flag.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-long</emphasis></term>
+        <listitem>
+          <para>Displays every Authentication Database entry in full. Provide this flag or
+          the <emphasis role="bold">-showadmin</emphasis> flag, or omit both to display just the name of every
+          database entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showadmin</emphasis></term>
+        <listitem>
+          <para>Displays in full only the Authentication Database entries that have the
+          <computeroutput>ADMIN</computeroutput> flag set. Provide this flag or the <emphasis role="bold">-long</emphasis> flag, or omit both to
+          display just the name of every database entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showkey</emphasis></term>
+        <listitem>
+          <para>Displays the octal digits that constitute the key in each full
+          entry. Provide either the <emphasis role="bold">-long</emphasis> or <emphasis role="bold">-showadmin</emphasis> flag along with this
+          one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If neither the <emphasis role="bold">-long</emphasis> or <emphasis role="bold">-showadmin</emphasis> flag is provided, the output
+    lists the name of each entry in the Authentication Database on its own
+    line.</para>
+
+    <para>If the <emphasis role="bold">-long</emphasis> flag is included, the output includes every Authentication
+    Database entry in full. If the <emphasis role="bold">-showadmin</emphasis> flag is included, the output
+    includes in full only the Authentication Database entries that have the
+    <computeroutput>ADMIN</computeroutput> flag set. If the <emphasis role="bold">-showkey</emphasis> is provided along with either one,
+    the output includes the octal digits that constitute the encryption key in
+    each entry.</para>
+
+    <para>A full Authentication Database entry includes the same information
+    displayed by the <emphasis role="bold">kas examine</emphasis> command; for details, see that command's
+    reference page.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer must have the <computeroutput>ADMIN</computeroutput> flag set on his or her Authentication
+    Database entry.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="kas8">kas(8)</link>,
+    <link linkend="kas_examine8">kas_examine(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

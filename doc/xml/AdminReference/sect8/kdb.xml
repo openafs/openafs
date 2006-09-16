@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kdb8">
+  <refmeta>
+    <refentrytitle>kdb</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kdb</refname>
+    <refpurpose>Displays log or privileged actions performed by the Authentication Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kdb</emphasis> [<emphasis role="bold">-dbmfile</emphasis> &lt;<emphasis>dbmfile to use (default /usr/afs/logs/AuthLog)</emphasis>&gt;]
+        [<emphasis role="bold">-key</emphasis> &lt;<emphasis>extract entries that match specified key</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kdb</emphasis> command displays the contents of the <replaceable>AuthLog.dir</replaceable> and
+    <replaceable>AuthLog.pag</replaceable> files associated with the <replaceable>AuthLog</replaceable> file that resides on
+    the local disk, by default in the <replaceable>/usr/afs/logs</replaceable> directory. The files
+    must exist in that directory, which normally implies that the
+    Authentication Server is running on the machine. The files contain
+    information on privileged actions performed by the Authentication Server.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>It is possible that on some operating systems that AFS otherwise supports,
+    the Authentication Server cannot create the <replaceable>/usr/afs/logs/AuthLog.dir</replaceable>
+    and <replaceable>/usr/afs/logs/AuthLog.pag</replaceable> files, making this command
+    inoperative. See the <emphasis>IBM AFS Release Notes</emphasis> for details.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-dbmfile</emphasis> &lt;<emphasis>dbmfile to use</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname of the file to display. Provide either a complete
+          pathname, a pathname relative to the <replaceable>/usr/afs/logs</replaceable> directory, or a
+          filename only, in which case the file must reside in the <replaceable>/usr/afs/logs</replaceable>
+          directory. Omit this argument to display information from the
+          <replaceable>AuthLog.dir</replaceable> and <replaceable>AuthLog.pag</replaceable> files in the <replaceable>/usr/afs/logs</replaceable> directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-key</emphasis> &lt;<emphasis>extract entries that match specified key</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies each entry to be displayed from the indicated file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first line of output indicates the location of the files from which
+    the subsequent information is derived:</para>
+
+<programlisting>
+   Printing all entries found in &amp;lt;file_location&amp;gt;
+
+</programlisting>
+      <para>Each entry then includes the following two fields, separated by a colon:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>user/server</term>
+          <listitem>
+            <para>Identifies the user requesting the corresponding service and the server
+            that performed that service. In cases where no user is directly involved,
+            only the server appears; in cases where no server is directly involved,
+            only the user appears.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>service</term>
+          <listitem>
+            <para>Identifies one of the following actions or services performed by the user
+            or server process.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><computeroutput>auth</computeroutput>: Obtained a ticket-granting ticket.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>chp</computeroutput>: Changed a user password.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>cruser</computeroutput>: Created a user entry in the Authentication Database.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>delu</computeroutput>: Deleted a user entry from the Authentication Database.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>gtck</computeroutput>: Obtained a ticket other than a ticket-granting ticket.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>setf</computeroutput>: Set fields in an Authentication Database entry.</para>
+
+              </listitem>
+              <listitem>
+                <para><computeroutput>unlok</computeroutput>: Unlocked an Authentication Database entry.</para>
+
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>The final line of output sums the number of entries.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output of the <emphasis role="bold">kdb</emphasis> command in the ABC
+      Corporation cell (<computeroutput>abc.com</computeroutput>):</para>
+
+<programlisting>
+   % kdb
+   Printing all entries found in /usr/afs/logs/AuthLog
+   admin,krbtgt.ABC.COM:auth
+   admin,afs:gtck
+   admin:cruser
+   admin:delu
+   4 entries were found
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="AuthLog_dir5">AuthLog.dir(5)</link>,
+        <link linkend="bos_getlog8">bos_getlog(8)</link>,
+        <link linkend="kaserver8">kaserver(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

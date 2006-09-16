@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_statistics8">
+  <refmeta>
+    <refentrytitle>kas statistics</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas statistics</refname>
+    <refpurpose>Displays statistics from an Authentication Server process</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas statistics</emphasis>
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas sta</emphasis> [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;]  [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas statistics</emphasis> command displays statistics from the Authentication
+    Server running on one of the cell's database server machines. Use the
+    <emphasis role="bold">-servers</emphasis> argument to name a specific machine, or the command
+    interpreter chooses one at random from all the database server machines
+    with which it has established connections.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The <emphasis role="bold">-servers</emphasis> argument is not available in interactive mode, making it
+    impossible to specify a certain machine.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The information in the output includes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The number of allocation and freeing operations the Authentication Server
+        has performed, and how many password change requests it has processed.</para>
+
+      </listitem>
+      <listitem>
+        <para>An indication of its hash table use.</para>
+
+      </listitem>
+      <listitem>
+        <para>The server machine's IP address in hexadecimal and the date when the
+        current instance of the Authentication Server started.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of requests and aborted requests for various services:
+        authentication, ticket granting, password setting, entry listing, and so
+        on.</para>
+
+      </listitem>
+      <listitem>
+        <para>The amount of CPU time that the Authentication Server has used to process
+        requests since it started. The amount is not accurate on all system types,
+        however.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of entries in the Authentication Database that are marked with
+        the <computeroutput>ADMIN</computeroutput> flag.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>In the following example, an administrator using the admin account gathers
+    statistics from the Authentication Server running on the machine
+    <computeroutput>fs1.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % kas statistics -servers fs1.abc.com
+   56 allocs, 46 frees, 0 password changes
+   Hash table utilization = 0.100000%
+   From host bfff21a7 started at Tue Mar 23 12:42:02 1999:
+     of 88 requests for Authenticate, 18 were aborted.
+     of 14 requests for GetTicket, 0 were aborted.
+     of 4 requests for CreateUser, 1 were aborted.
+     of 12 requests for SetFields, 4 were aborted.
+     of 3 requests for DeleteUser, 0 were aborted.
+     of 23 requests for GetEntry, 4 were aborted.
+     of 18 requests for ListEntry, 0 were aborted.
+     of 2 requests for GetStats, 1 were aborted.
+     of 2 requests for GetRandomKey, 0 were aborted.
+   Used 6.015 seconds of CPU time.
+   3 admin accounts
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>ADMIN</computeroutput> flag set on his or her Authentication
+      Database entry.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

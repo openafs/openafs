@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afsmonitor5">
+  <refmeta>
+    <refentrytitle>afsmonitor</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afsmonitor</refname>
+    <refpurpose>Provides instructions for the afsmonitor command</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The afsmonitor configuration file determines which machines the
+    <emphasis role="bold">afsmonitor</emphasis> command probes for File Server or Cache Manager statistics
+    and which statistics it gathers. Use the <emphasis role="bold">-config</emphasis> argument to the
+    <emphasis role="bold">afsmonitor</emphasis> command to identify the configuration file to use.</para>
+
+    <para>The instructions that can appear in the configuration file are as follows:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>cm &lt;<emphasis>host name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names a client machine for which to display Cache Manager statistics. The
+          order of <computeroutput>cm</computeroutput> lines in the file determines the order in which client
+          machines appear from top to bottom on the <computeroutput>System Overview</computeroutput> and <computeroutput>Cache
+          Managers</computeroutput> output screens.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>fs &lt;<emphasis>host name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names a file server machine for which to display File Server
+          statistics. The order of <computeroutput>fs</computeroutput> lines in the file determines the order in
+          which file server machines appear from top to bottom on the <computeroutput>System
+          Overview</computeroutput> and <computeroutput>File Servers</computeroutput> output screens.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>thresh (fs | cm) &lt;<emphasis>field</emphasis>&gt; &lt;<emphasis>thresh</emphasis>&gt; [&lt;<emphasis>cmd</emphasis>&gt;] [&lt;<emphasis>arg</emphasis>&gt; ...]</term>
+        <listitem>
+          <para>Assigns the threshold value <emphasis>thresh</emphasis> to the statistic <emphasis>field</emphasis>, for
+          either a File Server statistic (<computeroutput>fs</computeroutput>) or a Cache Manager statistic
+          (<computeroutput>cm</computeroutput>). The optional <emphasis>cmd</emphasis> field names a binary or script to execute
+          each time the value of the statistic changes from being below <emphasis>thresh</emphasis> to
+          being at or above <emphasis>thresh</emphasis>. A change between two values that both exceed
+          <emphasis>thresh</emphasis> does not retrigger the binary or script. The optional <emphasis>arg</emphasis>
+          fields are additional values that the <emphasis role="bold">afsmonitor</emphasis> program passes as
+          arguments to the <emphasis>cmd</emphasis> command. If any of them include one or more
+          spaces, enclose the entire field in double quotes.</para>
+
+          <para>The <emphasis role="bold">afsmonitor</emphasis> program passes the following parameters to the <emphasis>cmd</emphasis>:</para>
+
+<programlisting>
+    &amp;lt;hostname&amp;gt; (fs|cm) &amp;lt;field&amp;gt; &amp;lt;thresh&amp;gt; &amp;lt;actual&amp;gt; [&amp;lt;arg&amp;gt; ...]
+
+</programlisting>
+            <para>The parameters <computeroutput>fs</computeroutput>, <computeroutput>cm</computeroutput>, &lt;field&gt;, &lt;thresh&gt;, and &lt;arg&gt; correspond to
+            the values with the same name on the thresh line. The &lt;hostname&gt; parameter
+            identifies the file server or client machine where the statistic has
+            crossed the threshold, and the &lt;actual&gt; parameter is the actual value of
+            &lt;field&gt; that exceeds the threshold value.</para>
+
+            <para>Use the <computeroutput>thresh</computeroutput> line to set either a global threshold, which applies to
+            all file server machines listed on <computeroutput>fs</computeroutput> lines or client machines listed
+            on <computeroutput>cm</computeroutput> lines in the configuration file, or a machine-specific threshold,
+            which applies to only one file server or client machine.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>To set a global threshold, place the thresh line before any of the <computeroutput>fs</computeroutput>
+                or <computeroutput>cm</computeroutput> lines in the file.</para>
+
+              </listitem>
+              <listitem>
+                <para>To set a machine-specific threshold, place the thresh line below the
+                corresponding <computeroutput>fs</computeroutput> or <computeroutput>cm</computeroutput> line, and above any other <computeroutput>fs</computeroutput> or <computeroutput>cm</computeroutput>
+                lines. A machine-specific threshold value always overrides the
+                corresponding global threshold, if set. Do not place a <computeroutput>thresh fs</computeroutput> line
+                directly after a <computeroutput>cm</computeroutput> line or a <computeroutput>thresh cm</computeroutput> line directly after a <computeroutput>fs</computeroutput>
+                line.</para>
+
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>show (fs | cm) <emphasis>field/group/section</emphasis></term>
+          <listitem>
+            <para>Specifies which individual statistic, group of statistics, or section of
+            statistics to display on the <computeroutput>File Servers</computeroutput> screen (<computeroutput>fs</computeroutput>) or <computeroutput>Cache
+            Managers</computeroutput> screen (<computeroutput>cm</computeroutput>) and the order in which to display them. The
+            appendix of <emphasis role="bold">afsmonitor</emphasis> statistics in the <emphasis>IBM AFS Administration
+            Guide</emphasis> specifies the group and section to which each statistic
+            belongs. Include as many <computeroutput>show</computeroutput> lines as necessary to customize the
+            screen display as desired, and place them anywhere in the file. The
+            top-to-bottom order of the <computeroutput>show</computeroutput> lines in the configuration file
+            determines the left-to-right order in which the statistics appear on the
+            corresponding screen.</para>
+
+            <para>If there are no <computeroutput>show</computeroutput> lines in the configuration file, then the screens
+            display all statistics for both Cache Managers and File
+            Servers. Similarly, if there are no <computeroutput>show fs</computeroutput> lines, the <computeroutput>File Servers</computeroutput>
+            screen displays all file server statistics, and if there are no <computeroutput>show cm</computeroutput>
+            lines, the <computeroutput>Cache Managers</computeroutput> screen displays all client statistics.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term># <emphasis>comments</emphasis></term>
+          <listitem>
+            <para>Precedes a line of text that the afsmonitor program ignores because of the
+            initial number (<computeroutput>#</computeroutput>) sign, which must appear in the very first column of
+            the line.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>For a list of the values that can appear in the <emphasis>field/group/section</emphasis>
+      field of a <computeroutput>show</computeroutput> instruction, see the <emphasis role="bold">afsmonitor</emphasis> statistics appendix
+      to the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="afsmonitor1">afsmonitor(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

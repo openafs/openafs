@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="prdb_check8">
+  <refmeta>
+    <refentrytitle>prdb_check</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>prdb_check</refname>
+    <refpurpose>Checks the integrity of the Protection Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">prdb_check</emphasis> <emphasis role="bold">-database</emphasis> &lt;<emphasis>ptdb file</emphasis>&gt; [<emphasis role="bold">-uheader</emphasis>] [<emphasis role="bold">-pheader</emphasis>]
+        [<emphasis role="bold">-entries</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">prdb_check</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>ptdb file</emphasis>&gt; [<emphasis role="bold">-u</emphasis>] [<emphasis role="bold">-p</emphasis>] [<emphasis role="bold">-e</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">prdb_check</emphasis> command checks the integrity of the Protection Database,
+    reporting any errors or corruption it finds. If there are problems, do not
+    issue any <emphasis role="bold">pts</emphasis> commands until the database is repaired.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The results can be unpredictable if the Protection Server makes changes to
+    the Protection Database while this command is running. Use the <emphasis role="bold">bos
+    shutdown</emphasis> command to shutdown the local <emphasis role="bold">ptserver</emphasis> process before running
+    this command, or before creating a second copy of the <replaceable>prdb.DB0</replaceable> file
+    (with a different name) on which to run the command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>ptdb file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the Protection Database (copy of the <replaceable>prdb.DB0</replaceable> file) to check. If
+          the current working directory is not the location of the file, provide a
+          pathname, either full or relative to the current working directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-uheader</emphasis></term>
+        <listitem>
+          <para>Displays information which Ubik maintains in the database's header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pheader</emphasis></term>
+        <listitem>
+          <para>Displays information which the Protection Server maintains in the
+          database's header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-entries</emphasis></term>
+        <listitem>
+          <para>Outputs every entry in the database. Some of the information is similar to
+          that returned by the <emphasis role="bold">pts examine</emphasis> command.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Reports additional information about the database, including the number of
+          entries in the database and a trace of the internal database structures
+          the command is verifying.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If there are errors in the database, the output always reports them on the
+    standard error stream. If any options other than <emphasis role="bold">-database</emphasis> or <emphasis role="bold">-help</emphasis>
+    are provided, the output written to the standard output stream includes
+    additional information as described for each option in <link linkend="OPTIONS">OPTIONS</link>.  The
+    output is intended for debugging purposes and is meaningful to someone
+    familiar with the internal structure of the Protection Database.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="prdb_DB05">prdb.DB0(5)</link>,
+    <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+    <link linkend="pts_examine1">pts_examine(1)</link>,
+    <link linkend="ptserver8">ptserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

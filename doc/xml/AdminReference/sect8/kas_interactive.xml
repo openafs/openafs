@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_interactive8">
+  <refmeta>
+    <refentrytitle>kas interactive</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas interactive</refname>
+    <refpurpose>Enters interactive mode</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas interactive</emphasis>
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas i</emphasis> [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas interactive</emphasis> command establishes an interactive session for the
+    issuer of the command. By default, the command interpreter establishes an
+    authenticated connection for the user logged into the local file system
+    with all of the Authentication Servers listed in the local
+    <replaceable>/usr/vice/etc/CellServDB</replaceable> file for the cell named in the local
+    <replaceable>/usr/vice/etc/ThisCell</replaceable> file. To specify an alternate identity, cell
+    name, or list of Authentication Servers, include the <emphasis role="bold">-admin_username</emphasis>,
+    <emphasis role="bold">-cell</emphasis>, or <emphasis role="bold">-servers</emphasis> arguments respectively. Interactive mode lasts
+    for six hours unless the maximum ticket lifetime for the issuer or the
+    Authentication Server's Ticket Granting Service is shorter.</para>
+
+    <para>There are two other ways to enter interactive mode, in addition to the
+    <emphasis role="bold">kas interactive</emphasis> command:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Type the kas command at the shell prompt without any operation code. If
+        appropriate, include one or more of the <emphasis role="bold">-admin_username</emphasis>,
+        <emphasis role="bold">-password_for_admin</emphasis>, <emphasis role="bold">-cell</emphasis>, and <emphasis role="bold">-servers</emphasis> arguments.</para>
+
+      </listitem>
+      <listitem>
+        <para>Type the kas command followed by a user name and cell name, separated by
+        an <computeroutput>@</computeroutput> sign (for example: <emphasis role="bold">kas admin@abc.com</emphasis>), to establish a
+        connection under the specified identity with the Authentication Servers
+        listed in the local <replaceable>/usr/vice/etc/CellServDB</replaceable> file for the indicated
+        cell. If appropriate, provide the <emphasis role="bold">-servers</emphasis> argument to specify an
+        alternate list of Authentication Server machines that belong to the
+        indicated cell.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>There are several consequences of entering interactive mode:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <computeroutput>ka&gt;</computeroutput> prompt replaces the system (shell) prompt. When typing
+        commands at this prompt, provide only the operation code (omit the command
+        suite name, <emphasis role="bold">kas</emphasis>).</para>
+
+      </listitem>
+      <listitem>
+        <para>The command interpreter does not prompt for the issuer's password.</para>
+
+        <para>The issuer's identity and password, the relevant cell, and the set of
+        Authentication Server machines specified when entering interactive mode
+        apply to all commands issued during the session. They cannot be changed
+        without leaving the session, except by using the <emphasis role="bold">kas noauthentication</emphasis>
+        command to replace the current authenticated connections with
+        unauthenticated ones. The <emphasis role="bold">-admin_username</emphasis>, <emphasis role="bold">-password_for_admin</emphasis>,
+        <emphasis role="bold">-cell</emphasis>, and <emphasis role="bold">-servers</emphasis> arguments are ignored if provided on a command
+        issued during interactive mode.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>To establish an unauthenticated connection to the Authentication Server,
+    include the <emphasis role="bold">-noauth</emphasis> flag or provide an incorrect password.  Unless
+    authorization checking is disabled on each Authentication Server machine
+    involved, however, it is not possible to perform any privileged operations
+    within such a session.</para>
+
+    <para>To end the current authenticated connection and establish an
+    unauthenticated one, issue the <emphasis role="bold">kas noauthentication</emphasis> command. To leave
+    interactive mode and return to the regular shell prompt, issue the <emphasis role="bold">kas
+    quit</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows a user entering interactive mode as the
+    privileged user <computeroutput>admin</computeroutput>.</para>
+
+<programlisting>
+   % kas interactive admin
+   Password for admin: I&amp;lt;admin_password&amp;gt;
+   ka&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link>,
+      <link linkend="kas_noauthentication8">kas_noauthentication(8)</link>,
+      <link linkend="kas_quit8">kas_quit(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afszcm_cat5">
+  <refmeta>
+    <refentrytitle>afszcm.cat</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afszcm.cat</refname>
+    <refpurpose>Error message catalog for debugging the Cache Manager</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>afszcm.cat</replaceable> file is a message catalog for the Cache Manager. The
+    <emphasis role="bold">fstrace dump</emphasis> command interpreter uses it in conjunction with the
+    standard UNIX catalog utilities to translate Cache Manager operation codes
+    into character strings as it writes traces in the <emphasis role="bold">fstrace</emphasis> trace log,
+    which makes the log more readable.</para>
+
+    <para>The conventional location for the file is the <replaceable>/usr/vice/etc/C/</replaceable>
+    directory. It can be placed in another directory if the NLSPATH and LANG
+    environment variables are set appropriately.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="afsd8">afsd(8)</link>,
+    <link linkend="fstrace_dump8">fstrace_dump(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

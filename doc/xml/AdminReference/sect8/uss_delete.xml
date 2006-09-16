@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss_delete8">
+  <refmeta>
+    <refentrytitle>uss delete</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss delete</refname>
+    <refpurpose>Deletes a user account</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">uss delete</emphasis> <emphasis role="bold">-user</emphasis> &lt;<emphasis>login name</emphasis>&gt;
+        [<emphasis role="bold">-mountpoint</emphasis> &lt;<emphasis>mountpoint for user's volume</emphasis>&gt;]
+        [<emphasis role="bold">-savevolume</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;] [<emphasis role="bold">-dryrun</emphasis>]
+        [<emphasis role="bold">-skipauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">uss d</emphasis> <emphasis role="bold">-u</emphasis> &lt;<emphasis>login name</emphasis>&gt; [<emphasis role="bold">-m</emphasis> &lt;<emphasis>mountpoint for user's volume</emphasis>&gt;]
+        [<emphasis role="bold">-sa</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-sk</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">uss delete</emphasis> command removes the Authentication Database and
+    Protection Database entries for the user named by <emphasis role="bold">-user</emphasis> argument. In
+    addition, it can remove the user's home volume and associated VLDB entry,
+    a mount point for the volume or both, depending on whether the
+    <emphasis role="bold">-mountpoint</emphasis> and <emphasis role="bold">-savevolume</emphasis> options are provided.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To remove both the volume and mount point, use the <emphasis role="bold">-mountpoint</emphasis> argument
+        to name the user's home directory. It is best to create a tape backup of a
+        volume before deleting it. Note that other mount points for the volume are
+        not removed, if they exist.</para>
+
+      </listitem>
+      <listitem>
+        <para>To remove the mount point only, provide both the <emphasis role="bold">-mountpoint</emphasis> and
+        <emphasis role="bold">-savevolume</emphasis> options.</para>
+
+      </listitem>
+      <listitem>
+        <para>To preserve both the volume and mount point, omit the <emphasis role="bold">-mountpoint</emphasis>
+        argument (or both it and the <emphasis role="bold">-savevolume</emphasis> flag).</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-user</emphasis> &lt;<emphasis>login name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the entry to delete from the Protection and Authentication
+          Databases.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-mountpoint</emphasis> &lt;<emphasis>mountpoint for the user's volume</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the pathname to the user's home directory, which is deleted from
+          the filespace. By default, the volume referenced by the mount point is
+          also removed from the file server machine that houses it, along with its
+          Volume Location Database (VLDB) entry. To retain the volume and VLDB
+          entry, include the <emphasis role="bold">-savevolume</emphasis> flag. Partial pathnames are interpreted
+          relative to the current working directory.</para>
+
+          <para>Specify the read/write path to the mount point, to avoid the failure that
+          results from attempting to remove a mount point from a read-only
+          volume. By convention, the read/write path is indicated by placing a
+          period before the cell name at the pathname's second level (for example,
+          <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+          read-only paths through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference
+          page.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-savevolume</emphasis></term>
+        <listitem>
+          <para>Preserves the user's volume and VLDB entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the cell in which to run the command. For more details, see
+          <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the AFS user name under which to establish authenticated
+          connections to the AFS server processes that maintain the various
+          components of a user account. For more details, see <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-dryrun</emphasis></term>
+        <listitem>
+          <para>Reports actions that the command interpreter needs to perform while
+          executing the command, without actually performing them. For more details,
+          see <link linkend="uss8">uss(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-skipauth</emphasis></term>
+        <listitem>
+          <para>Prevents authentication with the AFS Authentication Server, allowing a
+          site using Kerberos to substitute that form of authentication.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command removes smith's user account from the <computeroutput>abc.com</computeroutput>
+    cell. The <emphasis role="bold">-savevolume</emphasis> argument retains the <computeroutput>user.smith</computeroutput> volume on its
+    file server machine.</para>
+
+<programlisting>
+   % uss delete smith -mountpoint /afs/abc.com/usr/smith -savevolume
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer (or the user named by <emphasis role="bold">-admin</emphasis> argument) must belong to the
+      system:administrators group in the Protection Database, must have the
+      <computeroutput>ADMIN</computeroutput> flag turned on in his or her Authentication Database entry, and
+      must have at least <computeroutput>a</computeroutput> (administer) and <computeroutput>d</computeroutput> (delete) permissions on the
+      access control list (ACL) of the mount point's parent directory. If the
+      <emphasis role="bold">-savevolume</emphasis> flag is not included, the issuer must also be listed in the
+      <replaceable>/usr/afs/etc/UserList</replaceable> file.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="UserList5">UserList(5)</link>,
+      <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+      <link linkend="uss8">uss(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos8">
+  <refmeta>
+    <refentrytitle>bos</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos</refname>
+    <refpurpose>Introduction to the bos command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">bos</emphasis> command suite are the administrative interface
+    to the Basic OverSeer (BOS) Server, which runs on every file server
+    machine to monitor the other server processes on it. If a process fails,
+    the BOS Server can restart it automatically, taking into account
+    interdependencies between it and other processes. The BOS Server frees
+    system administrators from constantly monitoring the status of server
+    machines and processes.</para>
+
+    <para>There are several categories of commands in the <emphasis role="bold">bos</emphasis> command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Commands to administer server process binary files: <emphasis role="bold">bos getdate</emphasis>, <emphasis role="bold">bos
+        install</emphasis>, <emphasis role="bold">bos prune</emphasis>, and <emphasis role="bold">bos uninstall</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to maintain system configuration files: <emphasis role="bold">bos addhost</emphasis>, <emphasis role="bold">bos
+        addkey</emphasis>, <emphasis role="bold">bos adduser</emphasis>, <emphasis role="bold">bos listhosts</emphasis>, <emphasis role="bold">bos listkeys</emphasis>, <emphasis role="bold">bos
+        listusers</emphasis>, <emphasis role="bold">bos removehost</emphasis>, <emphasis role="bold">bos removekey</emphasis>, <emphasis role="bold">bos removeuser</emphasis>, and
+        <emphasis role="bold">bos setcellname</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to start and stop processes: <emphasis role="bold">bos create</emphasis>, <emphasis role="bold">bos delete</emphasis>, <emphasis role="bold">bos
+        restart</emphasis>, <emphasis role="bold">bos shutdown</emphasis>, <emphasis role="bold">bos start</emphasis>, <emphasis role="bold">bos startup</emphasis>, and <emphasis role="bold">bos stop</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to set and verify server process and server machine status: <emphasis role="bold">bos
+        getlog</emphasis>, <emphasis role="bold">bos getrestart</emphasis>, <emphasis role="bold">bos setauth</emphasis>, <emphasis role="bold">bos setrestart</emphasis>, and <emphasis role="bold">bos
+        status</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>A command to restore file system consistency: <emphasis role="bold">bos salvage</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to obtain help: <emphasis role="bold">bos apropos</emphasis> and <emphasis role="bold">bos help</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The BOS Server and the <emphasis role="bold">bos</emphasis> commands use and maintain the following
+    configuration and log files:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <replaceable>/usr/afs/etc/CellServDB</replaceable> file lists the local cell's database server
+        machines. These machines run the Authentication, Backup, Protection and
+        Volume Location (VL) Server processes, which maintain databases of
+        administrative information. The database server processes consult the file
+        to learn about their peers, whereas the other server processes consult it
+        to learn where to access database information as needed. To administer the
+        <replaceable>CellServDB</replaceable> file, use the following commands: <emphasis role="bold">bos addhost</emphasis>, <emphasis role="bold">bos
+        listhosts</emphasis>, <emphasis role="bold">bos removehost</emphasis>, and <emphasis role="bold">bos setcellname</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <replaceable>/usr/afs/etc/KeyFile</replaceable> file lists the server encryption keys that the
+        server processes use to decrypt tickets presented by client processes and
+        one another. To administer the <replaceable>KeyFile</replaceable> file, use the following
+        commands: <emphasis role="bold">bos addkey</emphasis>, <emphasis role="bold">bos listkeys</emphasis>, and <emphasis role="bold">bos removekey</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <replaceable>/usr/afs/etc/ThisCell</replaceable> file defines the cell to which the server
+        machine belongs for the purposes of server-to-server communication.
+        Administer it with the <emphasis role="bold">bos setcellname</emphasis> command. There is also a
+        <replaceable>/usr/vice/etc/ThisCell</replaceable> file that defines the machine's cell membership
+        with respect to the AFS command suites and Cache Manager access to AFS
+        data.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <replaceable>/usr/afs/etc/UserList</replaceable> file lists the user name of each
+        administrator authorized to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis role="bold">vos</emphasis>
+        commands. To administer the <replaceable>UserList</replaceable> file, use the following commands:
+        <emphasis role="bold">bos adduser</emphasis>, <emphasis role="bold">bos listusers</emphasis>, and <emphasis role="bold">bos removeuser</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <replaceable>/usr/afs/local/BosConfig</replaceable> file defines which AFS server processes
+        run on the server machine, and whether the BOS Server restarts them
+        automatically if they fail. It also defines when all processes restart
+        automatically (by default once per week), and when the BOS Server restarts
+        processes that have new binary files (by default once per day). To
+        administer the <replaceable>BosConfig</replaceable> file, use the following commands: <emphasis role="bold">bos
+        create</emphasis>, <emphasis role="bold">bos delete</emphasis>, <emphasis role="bold">bos getrestart</emphasis>, <emphasis role="bold">bos setrestart</emphasis>, <emphasis role="bold">bos
+        start</emphasis>, and <emphasis role="bold">bos stop</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <replaceable>/usr/afs/log/BosLog</replaceable> file records important operations the BOS
+        Server performs and error conditions it encounters.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>For more details, see the reference page for each file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following arguments and flags are available on many commands in the
+    <emphasis role="bold">bos</emphasis> suite. The reference page for each command also lists them, but
+    they are described here in greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. It is acceptable to abbreviate
+          the cell name to the shortest form that distinguishes it from the other
+          entries in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local machine. If
+          the <emphasis role="bold">-cell</emphasis> argument is omitted, the command interpreter determines the
+          name of the local cell by reading the following in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the AFSCELL environment variable.</para>
+
+            </listitem>
+            <listitem>
+              <para>The local <replaceable>/usr/vice/etc/ThisCell</replaceable> file.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using the server encryption key with the
+          highest key version number in the local <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The
+          <emphasis role="bold">bos</emphasis> command interpreter presents the ticket, which never expires, to
+          the BOS Server during mutual authentication.</para>
+
+          <para>Use this flag only when issuing a command on a server machine; client
+          machines do not usually have a <replaceable>/usr/afs/etc/KeyFile</replaceable> file.  The issuer
+          of a command that includes this flag must be logged on to the server
+          machine as the local superuser <computeroutput>root</computeroutput>. The flag is useful for commands
+          invoked by an unattended application program, such as a process controlled
+          by the UNIX <emphasis role="bold">cron</emphasis> utility or by a cron entry in the machine's
+          <replaceable>/usr/afs/local/BosConfig</replaceable> file. It is also useful if an administrator is
+          unable to authenticate to AFS but is logged in as the local superuser
+          <computeroutput>root</computeroutput>.</para>
+
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell. Also, do not combine the <emphasis role="bold">-localauth</emphasis> and
+          <emphasis role="bold">-noauth</emphasis> flags.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Establishes an unauthenticated connection to the BOS Server, in which the
+          BOS Server treats the issuer as the unprivileged user <computeroutput>anonymous</computeroutput>. It is
+          useful only when authorization checking is disabled on the server machine
+          (during the installation of a file server machine or when the <emphasis role="bold">bos
+          setauth</emphasis> command has been used during other unusual circumstances). In
+          normal circumstances, the BOS Server allows only privileged users to issue
+          commands that change the status of a server or configuration file, and
+          refuses to perform such an action even if the <emphasis role="bold">-noauth</emphasis> flag is
+          provided. Do not combine the <emphasis role="bold">-noauth</emphasis> and <emphasis role="bold">-localauth</emphasis> flags.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the AFS server machine on which to run the command.  Identify
+          the machine by its IP address in dotted decimal format, its
+          fully-qualified host name (for example, <computeroutput>fs1.abc.com</computeroutput>), or by an
+          abbreviated form of its host name that distinguishes it from other
+          machines. Successful use of an abbreviated form depends on the
+          availability of a name service (such as the Domain Name Service or a local
+          host table) at the time the command is issued.</para>
+
+          <para>For the commands that alter the administrative files shared by all server
+          machines in the cell (the <emphasis role="bold">bos addhost</emphasis>, <emphasis role="bold">bos addkey</emphasis>, <emphasis role="bold">bos adduser</emphasis>,
+          <emphasis role="bold">bos removehost</emphasis>, <emphasis role="bold">bos removekey</emphasis>, and <emphasis role="bold">bos removeuser</emphasis> commands), the
+          appropriate machine depends on whether the cell uses the United States or
+          international version of AFS:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>If the cell (as recommended) uses the Update Server to distribute the
+              contents of the <replaceable>/usr/afs/etc</replaceable> directory, provide the name of the system
+              control machine. After issuing the command, allow up to five minutes for
+              the Update Server to distribute the changed file to the other AFS server
+              machines in the cell. If the specified machine is not the system control
+              machine but is running an <emphasis role="bold">upclient</emphasis> process that refers to the system
+              control machine, then the change will be overwritten when the process next
+              brings over the relevant file from the system control machine.</para>
+
+            </listitem>
+            <listitem>
+              <para>Otherwise, repeatedly issue the command, naming each of the cell's server
+              machines in turn. To avoid possible inconsistency problems, finish issuing
+              the commands within a fairly short time.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>To issue any bos command that changes a configuration file or alters
+    process status, the issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable>
+    file on the server machine named by the <emphasis role="bold">-server</emphasis>
+    argument. Alternatively, if the <emphasis role="bold">-localauth</emphasis> flag is included the issuer
+    must be logged on as the local superuser <computeroutput>root</computeroutput>.</para>
+
+    <para>To issue a bos command that only displays information (other than the
+    <emphasis role="bold">bos listkeys</emphasis> command), no privilege is required.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="BosConfig5">BosConfig(5)</link>,
+    <link linkend="CellServDB5">CellServDB(5)</link>,
+    <link linkend="KeyFile5">KeyFile(5)</link>,
+    <link linkend="ThisCell5">ThisCell(5)</link>,
+    <link linkend="UserList5">UserList(5)</link>,
+    <link linkend="bos_addhost8">bos_addhost(8)</link>,
+    <link linkend="bos_addkey8">bos_addkey(8)</link>,
+    <link linkend="bos_adduser8">bos_adduser(8)</link>,
+    <link linkend="bos_apropos8">bos_apropos(8)</link>,
+    <link linkend="bos_create8">bos_create(8)</link>,
+    <link linkend="bos_delete8">bos_delete(8)</link>,
+    <link linkend="bos_exec8">bos_exec(8)</link>,
+    <link linkend="bos_getdate8">bos_getdate(8)</link>,
+    <link linkend="bos_getlog8">bos_getlog(8)</link>,
+    <link linkend="bos_getrestart8">bos_getrestart(8)</link>,
+    <link linkend="bos_help8">bos_help(8)</link>,
+    <link linkend="bos_install8">bos_install(8)</link>,
+    <link linkend="bos_listhosts8">bos_listhosts(8)</link>,
+    <link linkend="bos_listkeys8">bos_listkeys(8)</link>,
+    <link linkend="bos_listusers8">bos_listusers(8)</link>,
+    <link linkend="bos_prune8">bos_prune(8)</link>,
+    <link linkend="bos_removehost8">bos_removehost(8)</link>,
+    <link linkend="bos_removekey8">bos_removekey(8)</link>,
+    <link linkend="bos_removeuser8">bos_removeuser(8)</link>,
+    <link linkend="bos_restart8">bos_restart(8)</link>,
+    <link linkend="bos_salvage8">bos_salvage(8)</link>,
+    <link linkend="bos_setauth8">bos_setauth(8)</link>,
+    <link linkend="bos_setcellname8">bos_setcellname(8)</link>,
+    <link linkend="bos_setrestart8">bos_setrestart(8)</link>,
+    <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+    <link linkend="bos_start8">bos_start(8)</link>,
+    <link linkend="bos_startup8">bos_startup(8)</link>,
+    <link linkend="bos_status8">bos_status(8)</link>,
+    <link linkend="bos_stop8">bos_stop(8)</link>,
+    <link linkend="bos_uninstall8">bos_uninstall(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

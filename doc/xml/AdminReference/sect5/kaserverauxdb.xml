@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kaserverauxdb5">
+  <refmeta>
+    <refentrytitle>kaserverauxdb</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kaserverauxdb</refname>
+    <refpurpose>Records failed authentication attempts</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The file <replaceable>kaserverauxdb</replaceable> records failed authentication attempts for the
+    local Authentication Server. The server creates it automatically in the
+    <replaceable>/usr/afs/local</replaceable> directory by default; use the <emphasis role="bold">-localfiles</emphasis> argument to
+    the <emphasis role="bold">kaserver</emphasis> command to specify an alternate directory.</para>
+
+    <para>The <replaceable>kaserverauxdb</replaceable> file is an internal database used by the
+    Authentication Server to prevent access by users who have exceeded the
+    limit on failed authentication attempts defined in their Authentication
+    Database entry. The Authentication Server refuses further attempts to
+    authenticate to an account listed in the database until either an AFS
+    system administrator issues the <emphasis role="bold">kas unlock</emphasis> command to unlock the
+    account, or the timeout period defined in the user's Authentication
+    Database entry passes.</para>
+
+    <para>The <replaceable>kaserverauxdb</replaceable> file is in binary format, so its contents are not
+    directly accessible. However, the output from the <emphasis role="bold">kas examine</emphasis> command
+    reports an account's maximum number of failed attempts, the lockout time,
+    and whether the account is currently locked.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="kaserver_DB05">kaserver.DB0(5)</link>,
+    <link linkend="kas_examine8">kas_examine(8)</link>,
+    <link linkend="kas_unlock8">kas_unlock(8)</link>,
+    <link linkend="kaserver8">kaserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

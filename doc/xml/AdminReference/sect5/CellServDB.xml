@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="CellServDB5">
+  <refmeta>
+    <refentrytitle>CellServDB</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>CellServDB</refname>
+    <refpurpose>Lists the database server machines in AFS cells</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>There are two versions of the <replaceable>CellServDB</replaceable> file, both of which have the
+    same format.  One version is used by an AFS client and lists all of the
+    database server machines in the local cell and any foreign cell that is to
+    be accessible from the local client machine.  The other version is used on
+    servers and lists only the database servers in the local cell.</para>
+
+    <refsect2>
+      <title>Client CellServDB</title>
+      <para>The client version of the CellServDB file lists the database server
+      machines in the local cell and any foreign cell that is to be accessible
+      from the local client machine. Database server machines run the
+      Authentication Server, Backup Server, Protection Server, and Volume
+      Location (VL) Server (the <emphasis role="bold">kaserver</emphasis>, <emphasis role="bold">buserver</emphasis>, <emphasis role="bold">ptserver</emphasis>, and
+      <emphasis role="bold">vlserver</emphasis>) processes, which maintain the cell's administrative AFS
+      databases.</para>
+
+      <para>The Cache Manager and other processes running on a client machine use the
+      list of a cell's database server machines when performing several common
+      functions, including:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Fetching files. The Cache Manager contacts the VL Server to learn
+          the location of the volume containing a requested file or directory.</para>
+
+        </listitem>
+        <listitem>
+          <para>Authenticating users. Client-side authentication programs (such as an
+          AFS-modified login utility or the <emphasis role="bold">klog</emphasis> command interpreter) contact the
+          Authentication Server to obtain a server ticket, which the AFS server
+          processes accept as proof that the user is authenticated.</para>
+
+        </listitem>
+        <listitem>
+          <para>Creating protection groups. The <emphasis role="bold">pts</emphasis> command interpreter contacts the
+          Protection Server when users create protection groups or request
+          information from the Protection Database.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>The Cache Manager reads the CellServDB file into kernel memory as it
+      initializes, and not again until the machine next reboots. To enable users
+      on the local machine to continue accessing the cell correctly, update the
+      file whenever a database server machine is added to or removed from a
+      cell. To update the kernel-resident list of database server machines
+      without rebooting, use the <emphasis role="bold">fs newcell</emphasis> command.</para>
+
+      <para>The <replaceable>CellServDB</replaceable> file is in ASCII format and must reside in the
+      <replaceable>/usr/vice/etc</replaceable> directory on each AFS client machine. Use a text editor
+      to create and maintain it.</para>
+
+      <para>The client version of the <replaceable>CellServDB</replaceable> file is distinct from the server
+      version, which resides in the <replaceable>/usr/afs/etc</replaceable> directory on each AFS server
+      machine. The client version lists the database server machines in every
+      AFS cell that the cell administrator wants the machine's users to be able
+      to access, whereas the server version lists only the local cell's database
+      server machines.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>Server CellServDB</title>
+      <para>The server version of the <replaceable>CellServDB</replaceable> file lists the local cell's
+      database server machines. These machines run the Authentication Server,
+      Backup Server, Protection Server, and Volume Location (VL) Server (the
+      <emphasis role="bold">kaserver</emphasis>, <emphasis role="bold">buserver</emphasis>, <emphasis role="bold">ptserver</emphasis>, and <emphasis role="bold">vlserver</emphasis>) processes, which
+      maintain the cell's administrative AFS databases. The initial version of
+      the file is created with the <emphasis role="bold">bos setcellname</emphasis> command during the
+      installation of the cell's server machine, which is automatically recorded
+      as the cell's first database server machine. When adding or removing
+      database server machines, be sure to update this file appropriately. It
+      must reside in the <replaceable>/usr/afs/etc</replaceable> directory on each AFS server machine.</para>
+
+      <para>The database server processes consult the <replaceable>CellServDB</replaceable> file to learn
+      about their peers, with which they must maintain constant connections in
+      order to coordinate replication of changes across the multiple copies of
+      each database. The other AFS server processes consult the file to learn
+      which machines to contact for information from the databases when they
+      need it.</para>
+
+      <para>Although the server <replaceable>CellServDB</replaceable> file is in ASCII format, do not use a
+      text editor to alter it. Instead always use the appropriate commands from
+      the <emphasis role="bold">bos</emphasis> command suite:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The <emphasis role="bold">bos addhost</emphasis> command to add a machine to the file.</para>
+
+        </listitem>
+        <listitem>
+          <para>The <emphasis role="bold">bos listhosts</emphasis> command to display the list of machines from the
+          file.</para>
+
+        </listitem>
+        <listitem>
+          <para>The <emphasis role="bold">bos removehost</emphasis> command to remove a machine from the file.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>In cells that use the Update Server to distribute the contents of the
+      <replaceable>/usr/afs/etc</replaceable> directory, it is customary to edit only the copy of the
+      file stored on the system control machine. Otherwise, edit the file on
+      each server machine individually. For instructions on adding and removing
+      database server machine, see the <emphasis>IBM AFS Quick Beginnings</emphasis> chapter on
+      installing additional server machines.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>CellServDB Format</title>
+      <para>Both <replaceable>CellServDB</replaceable> files have the same format:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The first line begins at the left margin with the greater-than character
+          (<computeroutput>&gt;</computeroutput>), followed immediately by the cell's name without an intervening
+          space. Optionally, a comment can follow any number of spaces and a number
+          sign (<computeroutput>#</computeroutput>), perhaps to identify the organization associated with the
+          cell.</para>
+
+        </listitem>
+        <listitem>
+          <para>Each subsequent line in the entry identifies one of the cell's database
+          server machines, with the indicated information in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The database server machine's IP address in dotted-decimal format.</para>
+
+            </listitem>
+            <listitem>
+              <para>One or more spaces.</para>
+
+            </listitem>
+            <listitem>
+              <para>A number sign (#), followed by the machine's fully qualified hostname
+              without an intervening space. This number sign does not indicate that the
+              hostname is a comment. It is a required field.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+      <para>No extra blank lines or newline characters are allowed in the file, even
+      after the last entry. Their presence can prevent the Cache Manager from
+      reading the file into kernel memory, resulting in an error message.</para>
+
+      <para>grand.central.org maintains a list of the database server machines in all
+      cells that have registered themselves as receptive to access from foreign
+      cells. When a cell's administrators change its database server machines,
+      it is customary to register the change with grand.central.org for
+      inclusion in this file. The file conforms to the required <replaceable>CellServDB</replaceable>
+      format, and so is a suitable basis for the <replaceable>CellServDB</replaceable> file on a client
+      machine.  You can download this file from http://grand.central.org/.</para>
+
+    </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows entries for two cells in a client
+    <replaceable>CellServDB</replaceable> file and illustrates the required format.</para>
+
+<programlisting>
+   &amp;gt;abc.com        # ABC Corporation
+   192.12.105.2	        #db1.abc.com
+   192.12.105.3	        #db2.abc.com
+   192.12.107.3	        #db3.abc.com
+   &amp;gt;test.abc.com   # ABC Corporation Test Cell
+   192.12.108.57        #testdb1.abc.com
+   192.12.108.55        #testdb2.abc.com
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="bos_addhost8">bos_addhost(8)</link>,
+      <link linkend="bos_listhosts8">bos_listhosts(8)</link>,
+      <link linkend="bos_removehost8">bos_removehost(8)</link>,
+      <link linkend="bos_setcellname8">bos_setcellname(8)</link>,
+      <link linkend="buserver8">buserver(8)</link>,
+      <link linkend="fs_newcell1">fs_newcell(1)</link>,
+      <link linkend="kaserver8">kaserver(8)</link>,
+      <link linkend="klog1">klog(1)</link>,
+      <link linkend="ptserver8">ptserver(8)</link>,
+      <link linkend="vlserver8">vlserver(8)</link>,
+      <link linkend="upclient8">upclient(8)</link>,
+      <link linkend="upserver8">upserver(8)</link></para>
+
+      <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

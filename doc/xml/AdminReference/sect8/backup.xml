@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup8">
+  <refmeta>
+    <refentrytitle>backup</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup</refname>
+    <refpurpose>Introduction to the backup command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">backup</emphasis> command suite are the administrative
+    interface to the AFS Backup System. There are several categories of
+    commands in the suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Commands to copy data from AFS volumes to tape or a backup data file, and
+        to restore it to the file system: <emphasis role="bold">backup diskrestore</emphasis>, <emphasis role="bold">backup dump</emphasis>,
+        <emphasis role="bold">backup volrestore</emphasis>, and <emphasis role="bold">backup volsetrestore</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer the records in the Backup Database: <emphasis role="bold">backup
+        adddump</emphasis>, <emphasis role="bold">backup addhost</emphasis>, <emphasis role="bold">backup addvolentry</emphasis>, <emphasis role="bold">backup addvolset</emphasis>,
+        <emphasis role="bold">backup deldump</emphasis>, <emphasis role="bold">backup deletedump</emphasis>, <emphasis role="bold">backup delhost</emphasis>, <emphasis role="bold">backup
+        delvolentry</emphasis>, <emphasis role="bold">backup delvolset</emphasis>, <emphasis role="bold">backup dumpinfo</emphasis>, <emphasis role="bold">backup
+        listdumps</emphasis>, <emphasis role="bold">backup listhosts</emphasis>, <emphasis role="bold">backup listvolsets</emphasis>, <emphasis role="bold">backup
+        scantape</emphasis>, <emphasis role="bold">backup setexp</emphasis>, and <emphasis role="bold">backup volinfo</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to write and read tape labels: <emphasis role="bold">backup labeltape</emphasis> and <emphasis role="bold">backup
+        readlabel</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to list and change the status of backup operations and the
+        machines performing them: <emphasis role="bold">backup jobs</emphasis>, <emphasis role="bold">backup kill</emphasis>, and <emphasis role="bold">backup
+        status</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to enter and leave interactive mode: <emphasis role="bold">backup interactive</emphasis> and
+        <emphasis role="bold">backup quit</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to check for and repair corruption in the Backup Database:
+        <emphasis role="bold">backup dbverify</emphasis>, <emphasis role="bold">backup restoredb</emphasis>, and <emphasis role="bold">backup savedb</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to obtain help: <emphasis role="bold">backup apropos</emphasis> and <emphasis role="bold">backup help</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The backup command interpreter interacts with two other processes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The Backup Server (<emphasis role="bold">buserver</emphasis>) process. It maintains the Backup Database,
+        which stores most of the administrative information used by the Backup
+        System. In the standard configuration, the Backup Server runs on each
+        database server machine in the cell, and uses AFS's distributed database
+        technology, Ubik, to synchronize its copy of the database with the copies
+        on the other database server machines.</para>
+
+      </listitem>
+      <listitem>
+        <para>The Backup Tape Coordinator (<emphasis role="bold">butc</emphasis>) process. A separate instance of the
+        process controls each tape device or backup data file used to dump or
+        restore data. The Tape Coordinator runs on a Tape Coordinator machine,
+        which is an AFS server or client machine that has one or more tape devices
+        attached, or has sufficient disk space to accommodate one or more backup
+        data files on its local disk.</para>
+
+        <para>Each Tape Coordinator must be registered in the Backup Database and in the
+        <replaceable>/usr/afs/backup/tapeconfig</replaceable> configuration file on the Tape Coordinator
+        machine's local disk, and information in the two places must be consistent
+        for proper Backup System performance. The optional
+        <replaceable>/usr/afs/backup/CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> for each Tape Coordinator records
+        information used to automate its operation.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>In addition to the standard command line interface, the <emphasis role="bold">backup</emphasis> command
+    suite provides an <emphasis>interactive</emphasis> interface, which has several useful
+    features described in <link linkend="backup_interactive8">backup_interactive(8)</link>.  Three of the commands in
+    the suite are available only in interactive mode: <emphasis role="bold">backup jobs</emphasis>, <emphasis role="bold">backup
+    kill</emphasis>, and <emphasis role="bold">backup quit</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following options are available on many commands in the <emphasis role="bold">backup</emphasis>
+    suite. The reference page for each command also lists them, but they are
+    described here in greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. It is acceptable to abbreviate
+          the cell name to the shortest form that distinguishes it from the other
+          entries in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local machine. If
+          the <emphasis role="bold">-cell</emphasis> argument is omitted, the command interpreter determines the
+          name of the local cell by reading the following in order:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the AFSCELL environment variable.</para>
+
+            </listitem>
+            <listitem>
+              <para>The local <replaceable>/usr/vice/etc/ThisCell</replaceable> file.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell.</para>
+
+          <para>The <emphasis role="bold">-cell</emphasis> argument is not available on commands issued in interactive
+          mode. The cell defined when the <emphasis role="bold">backup</emphasis> command interpreter enters
+          interactive mode applies to all commands issued during the interactive
+          session.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using the server encryption key with the
+          highest key version number in the local <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The
+          <emphasis role="bold">backup</emphasis> command interpreter presents the ticket, which never expires, to
+          the Backup Server, Volume Server and Volume Location (VL) Server during
+          mutual authentication.</para>
+
+          <para>Use this flag only when issuing a command on a server machine; client
+          machines do not usually have a <replaceable>/usr/afs/etc/KeyFile</replaceable> file.  The issuer
+          of a command that includes this flag must be logged on to the server
+          machine as the local superuser <computeroutput>root</computeroutput>. The flag is useful for commands
+          invoked by an unattended application program, such as a process controlled
+          by the UNIX <emphasis role="bold">cron</emphasis> utility or by a cron entry in the machine's
+          <replaceable>/usr/afs/local/BosConfig</replaceable> file. It is also useful if an administrator is
+          unable to authenticate to AFS but is logged in as the local superuser
+          <computeroutput>root</computeroutput>.</para>
+
+          <para>Do not combine the <emphasis role="bold">-cell</emphasis> and <emphasis role="bold">-localauth</emphasis> options. A command on which
+          the <emphasis role="bold">-localauth</emphasis> flag is included always runs in the local cell (as
+          defined in the server machine's local <replaceable>/usr/afs/etc/ThisCell</replaceable> file),
+          whereas a command on which the <emphasis role="bold">-cell</emphasis> argument is included runs in the
+          specified foreign cell.</para>
+
+          <para>The <emphasis role="bold">-localauth</emphasis> argument is not available on commands issued in
+          interactive mode. The local identity and AFS tokens with which the
+          <emphasis role="bold">backup</emphasis> command interpreter enters interactive mode apply to all
+          commands issued during the interactive session.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the port offset number of the Tape Coordinator that is to
+          execute the <emphasis role="bold">backup</emphasis> command. The port offset number uniquely identifies
+          a pairing of a Tape Coordinator (<emphasis role="bold">butc</emphasis>) process and tape device or
+          backup data file.</para>
+
+          <para>The backup command interpreter and Tape Coordinator process communicate
+          via a UDP socket, or port. Before issuing a <emphasis role="bold">backup</emphasis> command that
+          involves reading or writing a tape, the backup operator must start a
+          <emphasis role="bold">butc</emphasis> process that controls the appropriate tape device and listens for
+          requests sent to its port number. If a Backup System machine has multiple
+          tape devices attached, they can perform backup operations simultaneously
+          because each device has its own associated <emphasis role="bold">butc</emphasis> process and port offset
+          number.</para>
+
+          <para>The Backup System associates a tape capacity and file mark size with each
+          port offset (as defined in the <replaceable>tapeconfig</replaceable> file). For a compressing tape
+          device, the capacity and file mark values differ for compression and
+          non-compression modes, so the two modes have distinct port offset numbers.</para>
+
+          <para>The Backup Database can store up to 58,511 port offsets, so the legal
+          values for this argument are the integers <computeroutput>0</computeroutput> through <computeroutput>58510</computeroutput>. If the
+          issuer omits the argument, it defaults to <computeroutput>0</computeroutput>. (The limit of 58,511 port
+          offsets results from the fact that UDP socket numbers are identified by a
+          16-bit integer, and the lowest socket number used by the Backup System is
+          7025. The largest number that a 16-bit integer can represent is
+          65,535. Subtracting 7,025 yields 58,510. The addition of port offset 0
+          (zero) increases the maximum to 58,511.)</para>
+
+          <para>Although it is possible to define up to 58,511 port offset numbers for a
+          cell, it is not possible to run 58,511 tape devices simultaneously, due to
+          the following limits:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The maximum number of dump or restore operations that can run
+              simultaneously is 64.</para>
+
+            </listitem>
+            <listitem>
+              <para>The maximum number of tape devices that can work together on a restore
+              operation is 128 (that is the maximum number of values that can be
+              provided for the <emphasis role="bold">-portoffset</emphasis> argument to the <emphasis role="bold">backup diskrestore</emphasis>,
+              <emphasis role="bold">backup volrestore</emphasis>, or <emphasis role="bold">backup volsetrestore</emphasis> command).</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>The Backup System does not reserve UDP sockets. If another application is
+          already using the Tape Coordinator's socket when it tries to start, the
+          <emphasis role="bold">butc</emphasis> process fails and the following error message appears at the shell
+          prompt:</para>
+
+<programlisting>
+   bind: Address already in use
+   rxi_GetUDPSocket: bind failed
+
+</programlisting>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>To issue any backup command that accesses the Backup Database only, the
+      issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+      machine where the Backup Server is running. To issue any <emphasis role="bold">backup</emphasis> command
+      that accesses volume data, the issuer must appear in the <replaceable>UserList</replaceable> file
+      on every Backup Server machine, every Volume Location (VL) Server machine,
+      and every file server machine that houses affected volumes. By convention,
+      a common <replaceable>UserList</replaceable> file is distributed to all database server and file
+      server machines in the cell. See the chapter on privileged users in the
+      <emphasis>IBM AFS Administration Guide</emphasis> for more information on this type of
+      privilege.</para>
+
+      <para>If the <emphasis role="bold">-localauth</emphasis> flag is included, the user must instead be logged on
+      as the local superuser <computeroutput>root</computeroutput> on the server machine where the <emphasis role="bold">backup</emphasis>
+      command is issued.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="BosConfig5">BosConfig(5)</link>,
+      <link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="KeyFile5">KeyFile(5)</link>,
+      <link linkend="ThisCell5">ThisCell(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="butc5">butc(5)</link>,
+      <link linkend="tapeconfig5">tapeconfig(5)</link>,
+      <link linkend="backup_adddump8">backup_adddump(8)</link>,
+      <link linkend="backup_addhost8">backup_addhost(8)</link>,
+      <link linkend="backup_addvolentry8">backup_addvolentry(8)</link>,
+      <link linkend="backup_addvolset8">backup_addvolset(8)</link>,
+      <link linkend="backup_dbverify8">backup_dbverify(8)</link>,
+      <link linkend="backup_deldump8">backup_deldump(8)</link>,
+      <link linkend="backup_deletedump8">backup_deletedump(8)</link>,
+      <link linkend="backup_delhost8">backup_delhost(8)</link>,
+      <link linkend="backup_delvolentry8">backup_delvolentry(8)</link>,
+      <link linkend="backup_delvolset8">backup_delvolset(8)</link>,
+      <link linkend="backup_diskrestore8">backup_diskrestore(8)</link>,
+      <link linkend="backup_dump8">backup_dump(8)</link>,
+      <link linkend="backup_dumpinfo8">backup_dumpinfo(8)</link>,
+      <link linkend="backup_help8">backup_help(8)</link>,
+      <link linkend="backup_interactive8">backup_interactive(8)</link>,
+      <link linkend="backup_jobs8">backup_jobs(8)</link>,
+      <link linkend="backup_kill8">backup_kill(8)</link>,
+      <link linkend="backup_labeltape8">backup_labeltape(8)</link>,
+      <link linkend="backup_listdumps8">backup_listdumps(8)</link>,
+      <link linkend="backup_listhosts8">backup_listhosts(8)</link>,
+      <link linkend="backup_listvolsets8">backup_listvolsets(8)</link>,
+      <link linkend="backup_quit8">backup_quit(8)</link>,
+      <link linkend="backup_readlabel8">backup_readlabel(8)</link>,
+      <link linkend="backup_restoredb8">backup_restoredb(8)</link>,
+      <link linkend="backup_savedb8">backup_savedb(8)</link>,
+      <link linkend="backup_scantape8">backup_scantape(8)</link>,
+      <link linkend="backup_setexp8">backup_setexp(8)</link>,
+      <link linkend="backup_status8">backup_status(8)</link>,
+      <link linkend="backup_volinfo8">backup_volinfo(8)</link>,
+      <link linkend="backup_volrestore8">backup_volrestore(8)</link>,
+      <link linkend="backup_volsetrestore8">backup_volsetrestore(8)</link>,
+      <link linkend="buserver8">buserver(8)</link>,
+      <link linkend="butc8">butc(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

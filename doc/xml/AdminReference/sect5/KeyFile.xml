@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="KeyFile5">
+  <refmeta>
+    <refentrytitle>KeyFile</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>KeyFile</refname>
+    <refpurpose>Defines AFS server encryption keys</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>KeyFile</replaceable> file defines the server encryption keys that the AFS server
+    processes running on the machine use to decrypt the tickets presented by
+    clients during the mutual authentication process. AFS server processes
+    perform privileged actions only for clients that possess a ticket
+    encrypted with one of the keys from the file. The file must reside in the
+    <replaceable>/usr/afs/etc</replaceable> directory on every server machine. For more detailed
+    information on mutual authentication and server encryption keys, see the
+    <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+    <para>Each key has a corresponding a key version number that distinguishes it
+    from the other keys. The tickets that clients present are also marked with
+    a key version number to tell the server process which key to use to
+    decrypt it. The <replaceable>KeyFile</replaceable> file must always include a key with the same
+    key version number and contents as the key currently listed for the <computeroutput>afs</computeroutput>
+    entry in the Authentication Database.</para>
+
+    <para>The <replaceable>KeyFile</replaceable> file is in binary format, so always use the appropriate
+    commands from the <emphasis role="bold">bos</emphasis> command suite to administer it:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">bos addkey</emphasis> command to define a new key.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos listkeys</emphasis> command to display the keys.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <emphasis role="bold">bos removekey</emphasis> command to remove a key from the file.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>In cells that use the Update Server to distribute the contents of the
+    <replaceable>/usr/afs/etc</replaceable> directory, it is customary to edit only the copy of the
+    file stored on the system control machine. Otherwise, edit the file on
+    each server machine individually.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="bos_addkey8">bos_addkey(8)</link>,
+    <link linkend="bos_listkeys8">bos_listkeys(8)</link>,
+    <link linkend="bos_removekey8">bos_removekey(8)</link>,
+    <link linkend="kas_setpassword8">kas_setpassword(8)</link>,
+    <link linkend="upclient8">upclient(8)</link>,
+    <link linkend="upserver8">upserver(8)</link></para>
+
+    <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

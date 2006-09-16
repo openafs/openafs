@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_quit8">
+  <refmeta>
+    <refentrytitle>kas quit</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas quit</refname>
+    <refpurpose>Leaves interactive mode</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">quit</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">q</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas quit</emphasis> command ends interactive mode, severing the authenticated
+    connection to one or more Authentication Server processes and returning
+    the issuer to the normal shell prompt.</para>
+
+    <para>This command is operative only during interactive mode, so omit the <emphasis role="bold">kas</emphasis>
+    command suite name from the command line.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example demonstrates how the normal command shell prompt
+    returns when the issuer leaves interactive mode.</para>
+
+<programlisting>
+   ka&amp;gt; quit
+   %
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None, and no password is required.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="kas8">kas(8)</link>,
+      <link linkend="kas_interactive8">kas_interactive(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

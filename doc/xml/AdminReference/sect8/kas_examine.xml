@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_examine8">
+  <refmeta>
+    <refentrytitle>kas examine</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas examine</refname>
+    <refpurpose>Displays information from an Authentication Database entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas examine</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt; [<emphasis role="bold">-showkey</emphasis>]
+        [<emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas e</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>name of user</emphasis>&gt; [<emphasis role="bold">-sh</emphasis>]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>admin principal to use for authentication</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>admin password</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-se</emphasis> &lt;<emphasis>explicit list of authentication servers</emphasis>&gt;+] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas examine</emphasis> command formats and displays information from the
+    Authentication Database entry of the user named by the <emphasis role="bold">-name</emphasis> argument.</para>
+
+    <para>To alter the settings displayed with this command, issue the <emphasis role="bold">kas
+    setfields</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Displaying actual keys on the standard output stream by including the
+    <emphasis role="bold">-showkey</emphasis> flag constitutes a security exposure. For most purposes, it is
+    sufficient to display a checksum.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>name of user</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the Authentication Database entry from which to display information.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showkey</emphasis></term>
+        <listitem>
+          <para>Displays the octal digits that constitute the key. The issuer must have
+          the <computeroutput>ADMIN</computeroutput> flag on his or her Authentication Database entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-admin_username</emphasis> &lt;<emphasis>admin principal</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user identity under which to authenticate with the
+          Authentication Server for execution of the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password_for_admin</emphasis> &lt;<emphasis>admin password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password of the command's issuer. If it is omitted (as
+          recommended), the <emphasis role="bold">kas</emphasis> command interpreter prompts for it and does not
+          echo it visibly. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names each machine running an Authentication Server with which to
+          establish a connection. For more details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. For more
+          details, see <link linkend="kas8">kas(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output includes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The entry name, following the string <computeroutput>User data for</computeroutput>.</para>
+
+      </listitem>
+      <listitem>
+        <para>One or more status flags in parentheses; they appear only if an
+        administrator has used the <emphasis role="bold">kas setfields</emphasis> command to change them from
+        their default values. A plus sign (<computeroutput>+</computeroutput>) separates the flags if there is
+        more than one. The nondefault values that can appear, and their meanings,
+        are as follows:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>ADMIN</term>
+            <listitem>
+              <para>Enables the user to issue privileged <emphasis role="bold">kas</emphasis> commands (default is
+              <computeroutput>NOADMIN</computeroutput>).</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>NOTGS</term>
+            <listitem>
+              <para>Prevents the user from obtaining tickets from the Authentication Server's
+              Ticket Granting Service (default is <computeroutput>TGS</computeroutput>).</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>NOSEAL</term>
+            <listitem>
+              <para>Prevents the Ticket Granting Service from using the entry's key field as
+              an encryption key (default is <computeroutput>SEAL</computeroutput>).</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>NOCPW</term>
+            <listitem>
+              <para>Prevents the user from changing his or her password (default is <computeroutput>CPW</computeroutput>).</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </listitem>
+      <listitem>
+        <para>The key version number, in parentheses, following the word <computeroutput>key</computeroutput>, then
+        one of the following.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>A checksum equivalent of the key, following the string <computeroutput>cksum is</computeroutput>, if the
+            <emphasis role="bold">-showkey</emphasis> flag is not included. The checksum is a decimal number derived
+            by encrypting a constant with the key. In the case of the <computeroutput>afs</computeroutput> entry,
+            this number must match the checksum with the corresponding key version
+            number in the output of the <emphasis role="bold">bos listkeys</emphasis> command; if not, follow the
+            instructions in the <emphasis>IBM AFS Administration Guide</emphasis> for creating a new
+            server encryption key.</para>
+
+          </listitem>
+          <listitem>
+            <para>The actual key, following a colon, if the <emphasis role="bold">-showkey</emphasis> flag is
+            included. The key consists of eight octal numbers, each represented as a
+            backslash followed by three decimal digits.</para>
+
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>The date the user last changed his or her own password, following the
+        string <computeroutput>last cpw</computeroutput> (which stands for "last change of password").</para>
+
+      </listitem>
+      <listitem>
+        <para>The string <computeroutput>password will never expire</computeroutput> indicates that the associated
+        password never expires; the string <computeroutput>password will expire</computeroutput> is followed by
+        the password's expiration date. After the indicated date, the user cannot
+        authenticate, but has 30 days after it in which to use the <emphasis role="bold">kpasswd</emphasis> or
+        <emphasis role="bold">kas setpassword</emphasis> command to set a new password. After 30 days, only an
+        administrator (one whose account is marked with the <computeroutput>ADMIN</computeroutput> flag) can
+        change the password by using the <emphasis role="bold">kas setpassword</emphasis> command. To set the
+        password expiration date, use the <emphasis role="bold">kas setfields</emphasis> command's <emphasis role="bold">-pwexpires</emphasis>
+        argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of times the user can fail to provide the correct password
+        before the account locks, followed by the string <computeroutput>consecutive
+        unsuccessful authentications are permitted</computeroutput>, or the string <computeroutput>An unlimited
+        number of unsuccessful authentications is permitted</computeroutput> to indicate that
+        there is no limit. To set the limit, use the <emphasis role="bold">kas setfields</emphasis> command's
+        <emphasis role="bold">-attempts</emphasis> argument. To unlock a locked account, use the <emphasis role="bold">kas unlock</emphasis>
+        command. The <emphasis role="bold">kas setfields</emphasis> reference page discusses how the
+        implementation of the lockout feature interacts with this setting.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of minutes for which the Authentication Server refuses the
+        user's login attempts after the limit on consecutive unsuccessful
+        authentication attempts is exceeded, following the string <computeroutput>The lock time
+        for this user is</computeroutput>. Use the <emphasis role="bold">kas</emphasis> command's <emphasis role="bold">-locktime</emphasis> argument to set
+        the lockout time. This line appears only if a limit on the number of
+        unsuccessful authentication attempts has been set with the the <emphasis role="bold">kas
+        setfields</emphasis> command's <emphasis role="bold">-attempts</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>An indication of whether the Authentication Server is currently refusing
+        the user's login attempts. The string <computeroutput>User is not locked</computeroutput> indicates that
+        authentication can succeed, whereas the string <computeroutput>User is locked until</computeroutput>
+        <emphasis>time</emphasis> indicates that the user cannot authenticate until the indicated
+        time. Use the <emphasis role="bold">kas unlock</emphasis> command to enable a user to attempt
+        authentication. This line appears only if a limit on the number of
+        unsuccessful authentication attempts has been set with the <emphasis role="bold">kas
+        setfields</emphasis> command's <emphasis role="bold">-attempts</emphasis> argument.</para>
+
+      </listitem>
+      <listitem>
+        <para>The date on which the Authentication Server entry expires, or the string
+        <computeroutput>entry never expires</computeroutput> to indicate that the entry does not expire. A user
+        becomes unable to authenticate when his or her entry expires. Use the
+        <emphasis role="bold">kas setfields</emphasis> command's <emphasis role="bold">-expiration</emphasis> argument to set the expiration
+        date.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum possible lifetime of the tokens that the Authentication Server
+        grants the user. This value interacts with several others to determine the
+        actual lifetime of the token, as described in <link linkend="klog1">klog(1)</link>.  Use the <emphasis role="bold">kas
+        setfields</emphasis> command's <emphasis role="bold">-lifetime</emphasis> argument to set this value.</para>
+
+      </listitem>
+      <listitem>
+        <para>The date on which the entry was last modified, following the string <computeroutput>last
+        mod on</computeroutput> and the user name of the administrator who modified it. The date
+        on which a user changed his or her own password is recorded on the second
+        line of output as <computeroutput>last cpw</computeroutput> instead.</para>
+
+      </listitem>
+      <listitem>
+        <para>An indication of whether the user can reuse one of his or her last twenty
+        passwords when issuing the <emphasis role="bold">kpasswd</emphasis>, <emphasis role="bold">kas setpassword</emphasis>, or <emphasis role="bold">kas
+        setkey</emphasis> commands. Use the <emphasis role="bold">kas setfields</emphasis> command's <emphasis role="bold">-reuse</emphasis> argument to
+        set this restriction.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example command shows the user smith displaying her own
+    Authentication Database entry. Note the <computeroutput>ADMIN</computeroutput> flag, which shows that
+    <computeroutput>smith</computeroutput> is privileged.</para>
+
+<programlisting>
+   % kas examine smith
+   Password for smith:
+   User data for smith (ADMIN)
+    key (0) cksum is 3414844392,  last cpw: Thu Mar 25 16:05:44 1999
+    password will expire:  Fri Apr 30 20:44:36 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is not locked.
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Tue Jan 5 08:22:29 1999 by admin
+    permit password reuse
+
+</programlisting>
+      <para>In the following example, the user <computeroutput>pat</computeroutput> examines his Authentication
+      Database entry to determine when the account lockout currently in effect
+      will end.</para>
+
+<programlisting>
+   % kas examine pat
+   Password for pat:
+   User data for pat
+    key (0) cksum is 73829292912,  last cpw: Wed Apr 7 11:23:01 1999
+    password will expire:  Fri  Jun 11 11:23:01 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is locked until Tue Sep 21 12:25:07 1999
+    entry expires on never. Max ticket lifetime 100.00 hours.
+    last mod on Thu Feb 4 08:22:29 1999 by admin
+    permit password reuse
+
+</programlisting>
+        <para>In the following example, an administrator logged in as <computeroutput>admin</computeroutput> uses the
+        <emphasis role="bold">-showkey</emphasis> flag to display the octal digits that constitute the key in
+        the <computeroutput>afs</computeroutput> entry.</para>
+
+<programlisting>
+   % kas examine -name afs -showkey
+   Password for admin: I&amp;lt;admin_password&amp;gt;
+   User data for afs
+    key (12): \357\253\304\352\234\236\253\352, last cpw: no date
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Thu Mar 25 14:53:29 1999 by admin
+    permit password reuse
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>A user can examine his or her own entry. To examine others' entries or to
+          include the <emphasis role="bold">-showkey</emphasis> flag, the issuer must have the <computeroutput>ADMIN</computeroutput> flag set
+          in his or her Authentication Database entry.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="bos_addkey8">bos_addkey(8)</link>,
+          <link linkend="bos_listkeys8">bos_listkeys(8)</link>,
+          <link linkend="bos_setauth8">bos_setauth(8)</link>,
+          <link linkend="kas8">kas(8)</link>,
+          <link linkend="kas_setfields8">kas_setfields(8)</link>,
+          <link linkend="kas_setpassword8">kas_setpassword(8)</link>,
+          <link linkend="kas_unlock8">kas_unlock(8)</link>,
+          <link linkend="klog1">klog(1)</link>,
+          <link linkend="kpasswd1">kpasswd(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pagsh1">
+  <refmeta>
+    <refentrytitle>pagsh</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pagsh</refname>
+    <refpurpose>Creates a new PAG</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pagsh</emphasis></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pagsh</emphasis> command creates a new command shell (owned by the issuer of
+    the command) and associates a new <emphasis>process authentication group</emphasis> (PAG)
+    with the shell and the user. A PAG is a number guaranteed to identify the
+    issuer of commands in the new shell uniquely to the local Cache
+    Manager. The PAG is used, instead of the issuer's UNIX UID, to identify
+    the issuer in the credential structure that the Cache Manager creates to
+    track each user.</para>
+
+    <para>Any tokens acquired subsequently (presumably for other cells) become
+    associated with the PAG, rather than with the user's UNIX UID.  This
+    method for distinguishing users has two advantages.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>It means that processes spawned by the user inherit the PAG and so share
+        the token; thus they gain access to AFS as the authenticated user.  In
+        many environments, for example, printer and other daemons run under
+        identities (such as the local superuser <computeroutput>root</computeroutput>) that the AFS server
+        processes recognize only as <computeroutput>anonymous</computeroutput>. Unless PAGs are used, such
+        daemons cannot access files in directories whose access control lists
+        (ACLs) do not extend permissions to the system:anyuser group.</para>
+
+      </listitem>
+      <listitem>
+        <para>It closes a potential security loophole: UNIX allows anyone already logged
+        in as the local superuser <computeroutput>root</computeroutput> on a machine to assume any other
+        identity by issuing the UNIX <emphasis role="bold">su</emphasis> command. If the credential structure is
+        identified by a UNIX UID rather than a PAG, then the local superuser
+        <computeroutput>root</computeroutput> can assume a UNIX UID and use any tokens associated with that
+        UID. Use of a PAG as an identifier eliminates that possibility.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Each PAG created uses two of the memory slots that the kernel uses to
+    record the UNIX groups associated with a user. If none of these slots are
+    available, the <emphasis role="bold">pagsh</emphasis> command fails. This is not a problem with most
+    operating systems, which make at least 16 slots available per user.</para>
+
+    <para>In cells that do not use an AFS-modified login utility, use this command
+    to obtain a PAG before issuing the <emphasis role="bold">klog</emphasis> command (or include the
+    <emphasis role="bold">-setpag</emphasis> argument to the <emphasis role="bold">klog</emphasis> command). If a PAG is not acquired, the
+    Cache Manager stores the token in a credential structure identified by
+    local UID rather than PAG. This creates the potential security exposure
+    described in <link linkend="DESCRIPTION">DESCRIPTION</link>.</para>
+
+    <para>If users of NFS client machines for which AFS is supported are to issue
+    this command as part of authenticating with AFS, do not use the <emphasis role="bold">fs
+    exportafs</emphasis> command's <emphasis role="bold">-uidcheck on</emphasis> argument to enable UID checking on
+    NFS/AFS Translator machines. Enabling UID checking prevents this command
+    from succeeding. See <link linkend="klog1">klog(1)</link>.</para>
+
+    <para>If UID checking is not enabled on Translator machines, then by default it
+    is possible to issue this command on a properly configured NFS client
+    machine that is accessing AFS via the NFS/AFS Translator, assuming that
+    the NFS client machine is a supported system type. The <emphasis role="bold">pagsh</emphasis> binary
+    accessed by the NFS client must be owned by, and grant setuid privilege
+    to, the local superuser <computeroutput>root</computeroutput>. The complete set of mode bits must be
+    <computeroutput>-rwsr-xr-x</computeroutput>. This is not a requirement when the command is issued on AFS
+    client machines.</para>
+
+    <para>However, if the translator machine's administrator has enabled UID
+    checking by including the <emphasis role="bold">-uidcheck on</emphasis> argument to the <emphasis role="bold">fs exportafs</emphasis>
+    command, the command fails with an error message similar to the following:</para>
+
+<programlisting>
+   Warning: Remote setpag to &amp;lt;translator_machine&amp;gt; has failed (err=8). . .
+   setpag: Exec format error
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>In the following example, the issuer invokes the C shell instead of the
+      default Bourne shell:</para>
+
+<programlisting>
+   # pagsh -c /bin/csh
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_exportafs1">fs_exportafs(1)</link>,
+        <link linkend="klog1">klog(1)</link>,
+        <link linkend="tokens1">tokens(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

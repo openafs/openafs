@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss_apropos8">
+  <refmeta>
+    <refentrytitle>uss apropos</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss apropos</refname>
+    <refpurpose>Displays each help entry containing a keyword string.</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">uss apropos</emphasis> <emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt; [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">uss ap</emphasis> <emphasis role="bold">-t</emphasis> &lt;<emphasis>help string</emphasis>&gt; [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">uss apropos</emphasis> command displays the first line of the online help
+    entry for any <emphasis role="bold">uss</emphasis> command that has in its name or short description the
+    string specified by the <emphasis role="bold">-topic</emphasis> argument.</para>
+
+    <para>To display the syntax for a command, use the <emphasis role="bold">uss help</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the keyword string to match, in lowercase letters only.  If the
+          string is more than a single word, surround it with double quotes (<computeroutput>""</computeroutput>)
+          or other delimiters.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The first line of a command's online help entry names it and briefly
+    describes its function. This command displays the first line for any
+    <emphasis role="bold">uss</emphasis> command where the string specified by the <emphasis role="bold">-topic</emphasis> argument is
+    part of the command name or first line.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command lists all uss commands that include the word
+    <computeroutput>create</computeroutput> in their names or short descriptions:</para>
+
+<programlisting>
+   % uss apropos create
+   add: create a new user
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="uss8">uss(8)</link>,
+      <link linkend="uss_help8">uss_help(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

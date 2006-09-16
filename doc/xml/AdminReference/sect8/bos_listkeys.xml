@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_listkeys8">
+  <refmeta>
+    <refentrytitle>bos listkeys</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos listkeys</refname>
+    <refpurpose>Displays the server encryption keys from the KeyFile file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos listkeys</emphasis> <emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-showkey</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos listk</emphasis> <emphasis role="bold">-se</emphasis> &lt;<emphasis>machine name</emphasis>&gt; [<emphasis role="bold">-sh</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">bos listkeys</emphasis> command formats and displays the list of server
+    encryption keys from the <replaceable>/usr/afs/etc/KeyFile</replaceable> file on the server
+    machine named by the <emphasis role="bold">-server</emphasis> argument.</para>
+
+    <para>To edit the list of keys, use the <emphasis role="bold">bos addkey</emphasis> and <emphasis role="bold">bos removekey</emphasis>
+    commands.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Displaying actual keys on the standard output stream (by including the
+    <emphasis role="bold">-showkey</emphasis> flag) is a security exposure. Displaying a checksum is
+    sufficient for most purposes.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine from which to display the KeyFile
+          file. Identify the machine by IP address or its host name (either
+          fully-qualified or abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+          <para>For consistent performance in the cell, the output must be the same on
+          every server machine. The <emphasis role="bold">bos addkey</emphasis> reference page explains how to
+          keep the machines synchronized.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-showkey</emphasis></term>
+        <listitem>
+          <para>Displays the octal digits that constitute each key.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command interpreter presents the
+          ticket to the BOS Server during mutual authentication. Do not combine this
+          flag with the <emphasis role="bold">-cell</emphasis> or <emphasis role="bold">-noauth</emphasis> options. For more details, see
+          <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output includes one line for each server encryption key listed in the
+    <replaceable>KeyFile</replaceable> file, identified by its key version number.</para>
+
+    <para>If the <emphasis role="bold">-showkey</emphasis> flag is included, the output displays the actual string
+    of eight octal numbers that constitute the key. Each octal number is a
+    backslash and three decimal digits.</para>
+
+    <para>If the <emphasis role="bold">-showkey</emphasis> flag is not included, the output represents each key as
+    a checksum, which is a decimal number derived by encrypting a constant
+    with the key.</para>
+
+    <para>Following the list of keys or checksums, the string <computeroutput>Keys last changed</computeroutput>
+    indicates when a key was last added to the <replaceable>KeyFile</replaceable> file. The words
+    <computeroutput>All done</computeroutput> indicate the end of the output.</para>
+
+    <para>For mutual authentication to work properly, the output from the command
+    <computeroutput>kas examine afs</computeroutput> must match the key or checksum with the same key
+    version number in the output from this command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the checksums for the keys stored in the
+    <replaceable>KeyFile</replaceable> file on the machine <computeroutput>fs3.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % bos listkeys fs3.abc.com
+   key 1 has cksum 972037177
+   key 3 has cksum 2825175022
+   key 4 has cksum 260617746
+   key 6 has cksum 4178774593
+   Keys last changed on Mon Apr 12 11:24:46 1999.
+   All done.
+
+</programlisting>
+      <para>The following example shows the actual keys from the <replaceable>KeyFile</replaceable> file on
+      the machine <computeroutput>fs6.abc.com</computeroutput>.</para>
+
+<programlisting>
+   % bos listkeys fs6.abc.com -showkey
+   key 0 is '\040\205\211\241\345\002\023\211'
+   key 1 is '\343\315\307\227\255\320\135\244'
+   key 2 is '\310\310\255\253\326\236\261\211'
+   Keys last changed on Wed Mar 31 11:24:46 1999.
+   All done.
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the
+        machine named by the <emphasis role="bold">-server</emphasis> argument, or must be logged onto a server
+        machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+        included.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="KeyFile5">KeyFile(5)</link>,
+        <link linkend="UserList5">UserList(5)</link>,
+        <link linkend="bos_addkey8">bos_addkey(8)</link>,
+        <link linkend="bos_removekey8">bos_removekey(8)</link>,
+        <link linkend="bos_setauth8">bos_setauth(8)</link>,
+        <link linkend="kas_examine8">kas_examine(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

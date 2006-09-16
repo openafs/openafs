@@ -1,0 +1,8913 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Configuring the AFS Backup System</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Managing File Server Machines"
+HREF="p3023.html"><LINK
+REL="PREVIOUS"
+TITLE="Managing Volumes"
+HREF="c8420.html"><LINK
+REL="NEXT"
+TITLE="Backing Up and Restoring AFS Data"
+HREF="c15383.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c8420.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c15383.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="HDRWQ248"
+></A
+>Chapter 6. Configuring the AFS Backup System</H1
+><P
+>The AFS Backup System helps you to create backup copies of data from AFS volumes and to restore data to the file system if
+  it is lost or corrupted. This chapter explains how to configure the Backup System. For instructions on backing up and restoring
+  data and displaying dump records, see <A
+HREF="c15383.html"
+>Backing Up and Restoring AFS Data</A
+>.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ249"
+>Summary of Instructions</A
+></H1
+><P
+>This chapter explains how to perform the following tasks by using the indicated commands:</P
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN12783"
+></A
+><TABLE
+BORDER="0"
+FRAME="void"
+CLASS="CALSTABLE"
+><COL
+WIDTH="70*"><COL
+WIDTH="30*"><TBODY
+><TR
+><TD
+>Determine tape capacity and filemark size</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Define Tape Coordinator entry in Backup Database</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Remove Tape Coordinator entry from Backup Database</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delhost</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display Tape Coordinator entries from Backup Database</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listhosts</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create volume set</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolset</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Add volume entry to volume set</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolentry</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>List volume sets and entries</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listvolsets</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete volume set from Backup Database</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolset</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete volume entry from volume set</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolentry</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Define dump level</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup adddump</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change expiration date on existing dump level</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup setexp</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete dump level from dump hierarchy</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup deldump</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display dump hierarchy</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listdumps</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Label tape</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Read label on tape</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel</B
+></SPAN
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ251"
+>Introduction to Backup System Features</A
+></H1
+><P
+>The AFS Backup System is highly flexible, enabling you to control most aspects of the backup process, including how often
+    backups are performed, which volumes are backed up, and whether to dump all of the data in a volume or just the data that has
+    changed since the last dump operation. You can also take advantage of several features that automate much of the backup
+    process.</P
+><P
+>To administer and use the Backup System most efficiently, it helps to be familiar with its basic features, which are
+    described in the following sections. For pointers to instructions for implementing the features as you configure the Backup
+    System in your cell, see <A
+HREF="c12776.html#HDRWQ257"
+>Overview of Backup System Configuration</A
+>.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ252"
+>Volume Sets and Volume Entries</A
+></H2
+><P
+>When you back up AFS data, you specify which data to include in terms of complete volumes rather than individual files.
+      More precisely, you define groups of volumes called <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>volume sets</I
+></SPAN
+>, each of which includes one or more
+      volumes that you want to back up in a single operation. You must include a volume in a volume set to back it up, because the
+      command that backs up data (the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> command) does not accept individual volume
+      names.</P
+><P
+>A volume set consists of one or more <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>volume entries</I
+></SPAN
+>, each of which specifies which volumes to back
+      up based on their location (file server machine and partition) and volume name. You can use a wildcard notation to include all
+      volumes that share a location, a common character string in their names, or both.</P
+><P
+>For instructions on creating and removing volume sets and volume entries, see <A
+HREF="c12776.html#HDRWQ265"
+>Defining and
+      Displaying Volume Sets and Volume Entries</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_274"
+>Dumps and Dump Sets</A
+></H2
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump</I
+></SPAN
+> is the collection of data that results from backing up a volume set. A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>full
+      dump</I
+></SPAN
+> includes all of the data in every volume in the volume set, as it exists at the time of the dump operation. An
+      <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>incremental dump</I
+></SPAN
+> includes only some of the data from the volumes in the volume set, namely those files
+      and directory structures that have changed since a specified previous dump operation was performed. The previous dump is
+      referred to as the incremental dump's <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>parent dump</I
+></SPAN
+>, and it can be either a full dump or an incremental
+      dump itself.</P
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump set</I
+></SPAN
+> is a collection of one or more dumps stored together on one or more tapes. The first
+      dump in the dump set is the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>initial dump</I
+></SPAN
+>, and any subsequent dump added onto the end of an existing dump
+      set is an <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>appended dump</I
+></SPAN
+>. Appending dumps is always optional, but maximizes use of a tape's capacity. In
+      contrast, creating only initial dumps can result in many partially filled tapes, because an initial dump must always start on
+      a new tape, but does not necessarily extend to the end of the tape. Appended dumps do not have to be related to one another or
+      to the initial dump (they do not have to be dumps of the same or related volume sets), but well-planned appending can reduce
+      the number of times you have to change tapes during a restore operation. For example, it can make sense to append incremental
+      dumps of a volume set together in a single dump set.</P
+><P
+>All the records for a dump set are indexed together in the Backup Database based on the initial dump (for more on the
+      Backup Database, see <A
+HREF="c12776.html#HDRWQ256"
+>The Backup Database and Backup Server Process</A
+>). To delete the database
+      record of an appended dump, you must delete the initial dump record, and doing so deletes the records for all dumps in the
+      dump set. Similarly, you cannot recycle just one tape in a dump set without deleting the database records of all tapes in the
+      dump set.</P
+><P
+>For instructions on creating an initial dump, see <A
+HREF="c15383.html#HDRWQ296"
+>Backing Up Data</A
+>, and to learn how to
+      append dumps, see <A
+HREF="c15383.html#HDRWQ299"
+>Appending Dumps to an Existing Dump Set</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_275"
+>Dump Hierarchies, Dump Levels and Expiration Dates</A
+></H2
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump hierarchy</I
+></SPAN
+> is a logical structure that defines the relationship between full and incremental
+      dumps; that is, it defines which dump serves as the parent for an incremental dump. Each individual component of a hierarchy
+      is a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump level</I
+></SPAN
+>. When you create a dump by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+>
+      command, you specify a volume set name and a dump level name. The Backup System uses the dump level to determine whether the
+      dump is full or incremental, and if incremental, which dump level to use as the parent.</P
+><P
+>You can associate an <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>expiration date</I
+></SPAN
+> with a dump level, to define when a dump created at that level
+      expires. The Backup System refuses to overwrite a tape until all dumps in the dump set to which the tape belongs have expired,
+      so assigning expiration dates automatically determines how you recycle tapes. You can define an expiration date either in
+      absolute terms (for example, 13 January 2000) or relative terms (for example, 30 days from when the dump is created). You can
+      also change the expiration date associated with a dump level (but not with an actual dump that has already been created at
+      that level).</P
+><P
+>For instructions on creating dump hierarchies, assigning expiration dates, and establishing a tape recycling schedule,
+      see <A
+HREF="c12776.html#HDRWQ267"
+>Defining and Displaying the Dump Hierarchy</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ253"
+>Dump Names and Tape Names</A
+></H2
+><P
+>When you create a dump, the Backup System creates a Backup Database record for it, assigning a name comprising the
+      volume set name and the last element in the dump level pathname:</P
+><PRE
+CLASS="programlisting"
+>&#13;   volume_set_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>dump_level_name
+</PRE
+><P
+>For example, a dump of the volume set <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user</B
+></SPAN
+> at the dump level <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday/friday</B
+></SPAN
+> is called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user.friday</B
+></SPAN
+>. The Backup System also assigns a
+      unique <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump ID</I
+></SPAN
+> number to the dump to distinguish it from other dumps with the same name that possibly
+      exist.</P
+><P
+>The Backup System assigns a similar <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>AFS tape name</I
+></SPAN
+> to each tape that contains a dump set, reflecting
+      the volume set and dump level of the dump set's initial dump, plus a numerical index of the tape's position in the dump set,
+      and a unique dump ID number:</P
+><PRE
+CLASS="programlisting"
+>&#13;   volume_set_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>dump_level_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>tape_index (dump ID)
+</PRE
+><P
+>For example, the second tape in a dump set whose initial dump is of the volume set <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uservol</B
+></SPAN
+> at the dump level <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday/friday</B
+></SPAN
+> has AFS tape name like
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uservol.friday.2</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>914382400</B
+></SPAN
+>).</P
+><P
+>In addition to its AFS tape name, a tape can have an optional <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>permanent name</I
+></SPAN
+> that you assign.
+      Unlike the AFS tape name, the permanent name does not have to indicate the volume set and dump level of the initial (or any
+      other) dump, and so does not change depending on the contents of the tape. The Backup System does not require a certain format
+      for permanent names, so you need to make sure that each tape's name is unique. If a tape has a permanent name, the Backup
+      System uses it rather than the AFS tape name when referring to the tape in prompts and the output from most <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> commands, but still tracks the AFS tape name internally.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ254"
+>Tape Labels, Dump Labels, and EOF Markers</A
+></H2
+><P
+>Every tape used in the Backup System has a magnetic label at the beginning that records the tape's name, capacity, and
+      other information. You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command to write a label, or the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> command creates one automatically if you use an unlabeled tape. The label records
+      the following information: <UL
+><LI
+><P
+>The tape's permanent name, which you can assign by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument to
+            the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command. It can be any string of up to 32 characters. If you do
+            not assign a permanent name, the Backup System records the value <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+> when you
+            use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command to assign an AFS tape name, or when you use the
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> command to write a dump to the tape.</P
+></LI
+><LI
+><P
+>The tape's AFS <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>tape name</I
+></SPAN
+>, which can be one of three types of values: <UL
+><LI
+><P
+>A name that reflects the volume set and dump level of the dump set's initial dump and the tape's place in
+                  the sequence of tapes for the dump set, as described in <A
+HREF="c12776.html#HDRWQ253"
+>Dump Names and Tape Names</A
+>.
+                  If the tape does not have a permanent name, you can assign the AFS tape name by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command.</P
+></LI
+><LI
+><P
+>The value <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>, which results when you assign a permanent name, or
+                  provide no value for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument.</P
+></LI
+><LI
+><P
+>No AFS tape name at all, indicating that you have never labeled the tape or written a dump to it.</P
+></LI
+></UL
+></P
+><P
+>If a tape does not already have an actual AFS tape name when you write a dump to it, the Backup System constructs
+            and records the appropriate AFS tape name. If the tape does have an AFS tape name and you are writing an initial dump,
+            then the name must correctly reflect the dump's volume set and dump level.</P
+></LI
+><LI
+><P
+>The capacity, or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>size</I
+></SPAN
+>, of the tape, followed by a letter that indicates the unit of measure
+            (<SAMP
+CLASS="computeroutput"
+>k</SAMP
+> or <SAMP
+CLASS="computeroutput"
+>K</SAMP
+> for kilobytes,
+            <SAMP
+CLASS="computeroutput"
+>m</SAMP
+> or <SAMP
+CLASS="computeroutput"
+>M</SAMP
+> for megabytes,
+            <SAMP
+CLASS="computeroutput"
+>g</SAMP
+> or <SAMP
+CLASS="computeroutput"
+>G</SAMP
+> for gigabytes, or
+            <SAMP
+CLASS="computeroutput"
+>t</SAMP
+> or <SAMP
+CLASS="computeroutput"
+>T</SAMP
+> for terabytes). The tape's manufacturer
+            determines the tape's capacity. For further discussion of how the Backup System uses the value in the capacity field,
+            see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig File</A
+>.</P
+></LI
+></UL
+></P
+><P
+>For information about labeling tapes, see <A
+HREF="c12776.html#HDRWQ272"
+>Writing and Reading Tape Labels</A
+>.</P
+><P
+>In addition to the tape label, the Backup System writes a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dump label</I
+></SPAN
+> on the tape for every appended
+      dump (the tape label and dump label are the same for the initial dump). A dump label records the following information:
+      <UL
+><LI
+><P
+>The name of the tape containing the dump</P
+></LI
+><LI
+><P
+>The date and time that the dump operation began</P
+></LI
+><LI
+><P
+>The cell to which the volumes in the dump belong</P
+></LI
+><LI
+><P
+>The dump's size in kilobytes</P
+></LI
+><LI
+><P
+>The dump's dump level</P
+></LI
+><LI
+><P
+>The dump's dump ID</P
+></LI
+></UL
+></P
+><P
+>The Backup System writes a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>filemark</I
+></SPAN
+> (also called an End-of-File or EOF marker) between the data
+      from each volume in a dump. The tape device's manufacturer determines the filemark size, which is typically between 2 KB and 2
+      MB; in general, the larger the usual capacity of the tapes that the device uses, the larger the filemark size. If a dump
+      contains a small amount of data from each of a large number of volumes, as incremental dumps often do, then the filemark size
+      can significantly affect how much volume data fits on the tape. To enable the Backup System to factor in filemark size as it
+      writes a dump, you can record the filemark size in a configuration file; see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the
+      tapeconfig File</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ255"
+>Tape Coordinator Machines, Port Offsets, and Backup Data Files</A
+></H2
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Tape Coordinator machine</I
+></SPAN
+> is a machine that drives one or more attached tape devices used for
+      backup operations. It must run the AFS client software (the Cache Manager) but reside in a physically secure location to
+      prevent unauthorized access to its console. Before backup operations can run on a Tape Coordinator machine, each tape device
+      on the machine must be registered in the Backup Database, and certain files and directories must exist on the machine's local
+      disk; for instructions, see <A
+HREF="c12776.html#HDRWQ262"
+>To configure a Tape Coordinator machine</A
+>.</P
+><P
+>Each tape device on a Tape Coordinator machine listens for backup requests on a different UNIX port. You pick the port
+      indirectly by assigning a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>port offset number</I
+></SPAN
+> to the tape device. The Backup System sets the device's
+      actual port by adding the port offset to a base port number that it determines internally. For instructions on assigning port
+      offset numbers, see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig File</A
+>.</P
+><P
+>For a tape device to perform backup operations, a Backup Tape Coordinator (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+>)
+      process dedicated to the device must be running actively on the Tape Coordinator machine. You then direct backup requests to
+      the device's Tape Coordinator by specifying its port offset number with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-portoffset</B
+></SPAN
+>
+      argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command.</P
+><P
+>In addition to writing backup data to tape, you can direct it to a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>backup data file</I
+></SPAN
+> on the local
+      disk of a Tape Coordinator machine. You can then to transfer the data to a data-archiving system, such as a hierarchical
+      storage management (HSM) system, that you use in conjunction with AFS and the Backup System. A backup data file has a port
+      offset like a tape device. For instructions on configuring backup data files, see <A
+HREF="c12776.html#HDRWQ282"
+>Dumping Data to a
+      Backup Data File</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ256"
+>The Backup Database and Backup Server Process</A
+></H2
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Backup Database</I
+></SPAN
+> is a replicated administrative database maintained by the Backup Server process
+      on the cell's database server machines. Like the other AFS database server processes, the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Backup Server</I
+></SPAN
+>
+      uses the Ubik utility to keep the various copies of the database synchronized (for a discussion of Ubik, see <A
+HREF="c667.html#HDRWQ52"
+>Replicating the AFS Administrative Databases</A
+>).</P
+><P
+>The Backup Database records the following information: <UL
+><LI
+><P
+>The Tape Coordinator machine's hostname and the port offset number for each tape device used for backup
+            operations</P
+></LI
+><LI
+><P
+>The dump hierarchy, which consists of its component dump levels and their associated expiration dates</P
+></LI
+><LI
+><P
+>The volume sets and their component volume entries</P
+></LI
+><LI
+><P
+>A record for each dump, which includes the name of each tape it appears on, a list of the volumes from which data
+            is included, the dump level, the expiration date, and the dump ID of the initial dump with which the dump is
+            associated</P
+></LI
+><LI
+><P
+>A record for each tape that houses dumped data</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_280"
+>Interfaces to the Backup System</A
+></H2
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> suite of commands is the administrative interface to the Backup System. You
+      can issue the commands in a command shell (or invoke them in a shell script) on any AFS client or server machine from which
+      you can access the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> binary. In the conventional configuration, the binary resides on
+      the local disk.</P
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command suite provides an <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>interactive mode</I
+></SPAN
+>, in which
+      you can issue multiple commands over a persistent connection to the Backup Server and the Volume Location (VL) Server.
+      Interactive mode has several convenient features, including the following: <UL
+><LI
+><P
+>You need to type only the operation code, omitting the initial <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+            string.</P
+></LI
+><LI
+><P
+>If you assume another AFS identity or specify a foreign cell as you enter interactive mode, it applies to all
+            subsequent commands.</P
+></LI
+><LI
+><P
+>You do not need to enclose shell metacharacters in double quotes.</P
+></LI
+><LI
+><P
+>You can track current and pending operations with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) jobs</B
+></SPAN
+> command,
+            which is available only in this mode.</P
+></LI
+><LI
+><P
+>You can cancel current and pending operations with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) kill</B
+></SPAN
+> command,
+            which is available only in this mode.</P
+></LI
+></UL
+></P
+><P
+>Before issuing a command that requires reading or writing a tape (or backup data file), you must also open a connection
+      to the Tape Coordinator machine that is attached to the relevant tape device (or that has the backup data file on its local
+      disk), and issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command to initialize the Tape Coordinator process. The process
+      must continue to run and the connection remain open as long as you need to use the tape device or file for backup
+      operations.</P
+><P
+>For further discussion and instructions, see <A
+HREF="c15383.html#HDRWQ286"
+>Using the Backup System's
+      Interfaces</A
+>.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ257"
+>Overview of Backup System Configuration</A
+></H1
+><P
+>Before you can use the Backup System to back up and restore data, you must configure several of its basic components. The
+    indicated sections of this chapter explain how to perform the following configuration tasks: <UL
+><LI
+><P
+>Determining a tape's capacity and a tape device's filemark size, and recording them in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file (see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig
+          File</A
+>)</P
+></LI
+><LI
+><P
+>Determining how to grant administrative privilege to backup operators (see <A
+HREF="c12776.html#HDRWQ260"
+>Granting
+          Administrative Privilege to Backup Operators</A
+>)</P
+></LI
+><LI
+><P
+>Configuring Tape Coordinator machines, tape devices, and backup data files (see <A
+HREF="c12776.html#HDRWQ261"
+>Configuring
+          Tape Coordinator Machines and Tape Devices</A
+>)</P
+></LI
+><LI
+><P
+>Defining volume sets and volume entries (see <A
+HREF="c12776.html#HDRWQ265"
+>Defining and Displaying Volume Sets and Volume
+          Entries</A
+>)</P
+></LI
+><LI
+><P
+>Defining dump levels to create a dump hierarchy (see <A
+HREF="c12776.html#HDRWQ267"
+>Defining and Displaying the Dump
+          Hierarchy</A
+>)</P
+></LI
+><LI
+><P
+>Labeling tapes (see <A
+HREF="c12776.html#HDRWQ272"
+>Writing and Reading Tape Labels</A
+>)</P
+></LI
+><LI
+><P
+>Creating a device configuration file to automate the backup process (see <A
+HREF="c12776.html#HDRWQ275"
+>Automating and
+          Increasing the Efficiency of the Backup Process</A
+>)</P
+></LI
+></UL
+></P
+><P
+>If you have already configured all of the components required for performing a backup dump or restore operation, you can
+    proceed to the instructions in <A
+HREF="c15383.html#HDRWQ296"
+>Backing Up Data</A
+> and <A
+HREF="c15383.html#HDRWQ306"
+>Restoring and
+    Recovering Data</A
+>.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ258"
+>Configuring the tapeconfig File</A
+></H1
+><P
+>Several factors interact to determine how much data the Tape Coordinator can fit on a tape: <UL
+><LI
+><P
+>The tape's capacity (size), as set by the tape manufacturer.</P
+></LI
+><LI
+><P
+>The tape device's filemark size, as set by the tape device's manufacturer. Recall from <A
+HREF="c12776.html#HDRWQ254"
+>Tape
+          Labels, Dump Labels, and EOF Markers</A
+> that the Tape Coordinator writes a filemark between the data from each volume
+          in a dump. If a dump contains a small amount of data from each of a large number of volumes, as incremental dumps often
+          do, then the filemark size can significantly affect how much volume data fits on the tape.</P
+></LI
+><LI
+><P
+>Whether or not you use the tape device's compression mode.</P
+></LI
+></UL
+></P
+><P
+>(The amount of data that can fit in a backup data file is determined by amount of space available on the partition, and
+    the operating system's maximum file size. The Tape Coordinator does not write filemarks when writing to a backup data file. For
+    further information about configuring a Tape Coordinator to write to a backup data file, see <A
+HREF="c12776.html#HDRWQ282"
+>Dumping
+    Data to a Backup Data File</A
+>.)</P
+><P
+>As the Tape Coordinator (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+>) process initializes, it reads the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file on its local disk to learn the tape capacity and filemark size (for a
+    tape device) or the file size (for a backup data file) to use for dump operations. When you begin a dump operation, the Tape
+    Coordinator also reads the tape or backup data file's label to see if you have recorded a different tape capacity or file size.
+    If you have, the value on the label overrides the default value from the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+>
+    file.</P
+><P
+>As the Tape Coordinator writes data to a tape during a dump operation, it uses the capacity and filemark information to
+    track how much tape it has used and how much remains before the physical end-of-tape (EOT). Shortly before reaching EOT, the
+    Tape Coordinator stops writing and requests a new tape. Similarly, it uses a backup data file's size to know when it is about to
+    exhaust the space in the file. If the Tape Coordinator reaches the EOT unexpectedly, it recovers by obtaining a new tape and
+    writing to it the entire contents of the volume it was writing when it reached EOT. The interrupted volume remains on the first
+    tape, but is never used.</P
+><P
+>Many tape devices use tapes that can accommodate multiple gigabytes, or even multiple terabytes, of backup data,
+    especially if you use the device's compression mode. When writing to such devices and tapes, allowing the Tape Coordinator to
+    hit the EOT unexpectedly is generally recommended. The devices write data so quickly that it usually does not take much extra
+    time to rewrite the interrupted volume on the new tape. Similarly, they compress data so well that the data abandoned on the
+    first tape from the interrupted volume does not constitute a waste of much tape.</P
+><P
+>When writing to tapes that accommodate a smaller amount of data (say, less than two GB), it is better to avoid having the
+    Tape Coordinator hit EOT unexpectedly. AFS supports volumes up to 2 GB in size, so an interrupted volume can in fact take up
+    most of the tape. For such tapes, recording accurate values for tape capacity and filemark size, if possible, helps to maximize
+    both use of tape and the efficiency of dump operations. The following discussion of the fields in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file explains how to determine the appropriate values.</P
+><P
+>Use a text editor to create an entry in a Tape Coordinator's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file for each
+    tape device or backup data file that it uses. Each device or file's entry is on its own line and has the following
+    format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   [capacity   filemark_size]    device_name    port_offset
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>capacity</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the capacity of the tapes used with a tape device, or the amount of data to write into a backup data
+            file. Specify an integer value followed by a letter that indicates units, with no intervening space. The letter
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>k</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>K</B
+></SPAN
+> indicates kilobytes, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+> indicates megabytes, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>g</B
+></SPAN
+>
+            or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>G</B
+></SPAN
+> indicates gigabytes, and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>t</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>T</B
+></SPAN
+> indicates terabytes. If the units letter is omitted, the default is kilobytes.</P
+><P
+>To determine the capacity of a tape under two GB in size that you are going to use in regular (noncompression)
+            mode, you can either use the value that the tape's manufacturer specifies on the tape's packaging or use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command to calculate the capacity, as described later in this section. To avoid having the
+            Tape Coordinator reach the EOT unexpectedly, it is best to record in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+>
+            file or on the label a capacity that is about 10% smaller than the actual capacity of the tape. To calculate the
+            appropriate value for a small tape used in compression mode, one method is to multiply the tape capacity (as recorded by
+            the manufacturer) by the device's compression ratio.</P
+><P
+>For tapes that hold multiple gigabytes or terabytes of data, or if using a tape drive's compression mode, the
+            recommended configuration is to record a value quite a bit (for instance, two times) larger than the maximum amount you
+            believe can fit on the tape. It is not generally worthwhile to run the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command on
+            large tapes, even in noncompression mode. The command definitely does not yield accurate results in compression mode.
+            The Tape Coordinator is likely to reach the EOT unexpectedly, but compression mode fits so much data on the tape that
+            the data abandoned from an interrupted volume does not represent much of the tape's capacity.</P
+><P
+>For a backup data file, record a value slightly smaller than the amount of space available on the partition, and
+            definitely smaller than the operating system's maximum file size. It is also best to limit the ability of other
+            processes to write to the partition, to prevent them from using up the space in the partition.</P
+><P
+>If this field is empty, the Tape Coordinator uses the maximum acceptable value (2048 GB or 2 TB). Either leave
+            both this field and the filemark_size field empty, or provide a value in both of them.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>filemark_size</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the tape device's filemark size, which usually falls between 2 KB and 2 MB. Use the same notation as for
+            the capacity field, but note that if you omit the units letter, the default unit is bytes rather than kilobytes.</P
+><P
+>For a tape device in regular (noncompression) mode, you can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command
+            to determine filemark size, or use the value reported by the device's manufacturer. To help the Tape Coordinator avoid
+            reaching EOT unexpectedly, increase the value by about 10% when recording it in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file.</P
+><P
+>The recommended value for a tape device in compression mode is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero). The
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command does not yield accurate results in compression mode, so you cannot use it
+            to determine the filemark size.</P
+><P
+>The recommended value for a backup data file is also <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero). The Tape
+            Coordinator does not use filemarks when writing to a file, but a value must appear in this field nevertheless if there
+            is also a value in the capacity field.</P
+><P
+>If this field is empty, the Tape Coordinator uses the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero). Either
+            leave both this field and the capacity field empty, or provide a value in both of them.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>device_name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the complete pathname of the tape device or backup data file. The format of tape device names depends on
+            the operating system, but on UNIX systems, device names generally begin with the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+>. For a backup data file, this field defines the complete pathname, but for suggestions on
+            how to name a backup data file, see <A
+HREF="c12776.html#HDRWQ282"
+>Dumping Data to a Backup Data File</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>port_offset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the port offset number for a specific tape device or backup data file. Each tape device listens for
+            backup requests on a different UNIX port. You pick the port indirectly by recording a value in this field. The Backup
+            System sets the device's actual port by adding the port offset to a base port number that it determines
+            internally.</P
+><P
+>Legal values are the integers <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>58510</B
+></SPAN
+>
+            (the Backup System can track a maximum of 58,511 port offset numbers). Each value must be unique among the cell's Tape
+            Coordinators, but you do not have to assign port offset numbers sequentially, and you can associate any number of them
+            with a single machine or even tape device. For example, if you plan to use a device in both compression and
+            noncompression mode, assign it two different port offsets with appropriate tape capacity and filemark values for the
+            different modes.</P
+><P
+>Assign port offset <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) to the Tape Coordinator for the tape device or backup
+            data file that you use most often for backup operations; doing so enables you to omit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-portoffset</B
+></SPAN
+> argument from the largest possible number of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+            commands.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>The following example <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file includes entries for two tape devices, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt0h</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt1h</B
+></SPAN
+>. Each one uses tapes with a capacity of 2 GB
+    and has a filemark size of 1 MB. Their port offset numbers are <SAMP
+CLASS="computeroutput"
+>0</SAMP
+> and
+    <SAMP
+CLASS="computeroutput"
+>1</SAMP
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   2g 1m /dev/rmt0h 0
+   2G 1M /dev/rmt1h 1
+</PRE
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command reports the capacity of the tape you have inserted and the tape device's
+    filemark size, both on the standard output stream (stdout) and in its <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms.log</B
+></SPAN
+> file, which it
+    writes in the current working directory. The command interpreter must write data to the entire tape, so running the command can
+    take from several hours to more than a day, depending on the size of the tape.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ259"
+>To run the fms command on a noncompressing tape device</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>If an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms.log</B
+></SPAN
+> file does not already exist in the current directory, verify that you
+          can insert and write to files in the current directory. If the log file already exists, you must be able to write to the
+          file.</P
+></LI
+><LI
+><P
+>Insert a tape into the drive. Running the command completely overwrites the tape, so use a blank tape or one that
+          you want to recycle.</P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape special file</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+></DT
+><DD
+><P
+>Must be typed in full.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tape special file</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the tape device's UNIX device name, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt0h</B
+></SPAN
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+><P
+>The following example output reports that the tape in the device with device name <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt0h</B
+></SPAN
+> has a capacity of 2136604672 bytes (about 2 GB), and that the device's filemark size is
+      1910205 bytes (close to 2 MB).</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms /dev/rmt0h</B
+></SPAN
+>
+   wrote block: 130408
+   Finished data capacity test - rewinding
+   wrote 1109 blocks, 1109 file marks
+   Finished file mark test
+   Tape capacity is 2136604672 bytes
+   File marks are 1910205 bytes
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ260"
+>Granting Administrative Privilege to Backup Operators</A
+></H1
+><P
+>Each person who issues the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> commands in
+    your cell must be listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+> file on every database server machine
+    that stores the Backup Database and Volume Location Database (VLDB), and every machine that houses a volume included in a volume
+    set. By convention, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UserList</B
+></SPAN
+> file is the same on every server machine in the cell; the
+    instructions in this document assume that your cell is configured in this way. To edit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UserList</B
+></SPAN
+> file, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos adduser</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos
+    removeuser</B
+></SPAN
+> commands as described in <A
+HREF="c32432.html#HDRWQ592"
+>Administering the UserList File</A
+>.</P
+><P
+>In addition to being listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UserList</B
+></SPAN
+> file, backup operators who issue the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command must be able to write to the files stored in each Tape Coordinator machine's local
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory, which are protected by UNIX mode bits. Before configuring your
+    cell's first Tape Coordinator machine, decide which local user and group to designate as the owner of the directory and the
+    files in it. Among the possible ownership options are the following: <UL
+><LI
+><P
+>The local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>. With this option, the issuer of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command must log onto the local file system as the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>. If the Tape Coordinator is also a server machine, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-localauth</B
+></SPAN
+> flag is used on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command to construct a server
+          ticket from the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/KeyFile</B
+></SPAN
+> file. On non-server machine, the issuer must
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command to authenticate as an AFS administrator while logged in as
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>A single AFS administrator. Logging in and authenticating are a single step if an AFS-modified login utility is
+          used. The administrator is the only user who can start the Tape Coordinator.</P
+></LI
+><LI
+><P
+>An administrative account for which several operators know the password. This allows them all to start the Tape
+          Coordinator.</P
+></LI
+></UL
+></P
+><P
+>Another option is to define a group in the local group file (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/group</B
+></SPAN
+> or equivalent) to
+    which all backup operators belong. Then turn on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>w</B
+></SPAN
+> mode bit (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>write</B
+></SPAN
+> permission) in the group mode bits rather than the user mode bits of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory and files in it. An advantage over the methods listed previously is that each
+    operator can retain an individual administrative account for finer granularity in auditing.</P
+><P
+>For instructions on implementing your choice of protection methods, see <A
+HREF="c12776.html#HDRWQ261"
+>Configuring Tape
+    Coordinator Machines and Tape Devices</A
+>.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ261"
+>Configuring Tape Coordinator Machines and Tape Devices</A
+></H1
+><P
+>This section explains how to configure a machine as a Tape Coordinator machine, and how to configure or remove the Tape
+    Coordinator associated with a single tape device or backup data file.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>When configuring a tape device attached to an AIX system, you must set the device's tape block size to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) to indicate variable block size. If you do not, it is possible that devices attached to
+      machines of other system types cannot read the tapes made on the AIX system. Use the AIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smit</B
+></SPAN
+>
+      program to verify or change the value of the tape block size for a tape device, as instructed in Sep <A
+HREF="c12776.html#LIWQ263"
+>3</A
+>.</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ262"
+>To configure a Tape Coordinator machine</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ263"
+></A
+>Install one or more tape devices on the Tape Coordinator machine according to the
+          manufacturer's instructions. The Backup System can track a maximum of 58,511 tape devices or backup data files per
+          cell.</P
+><P
+>If the Tape Coordinator machine is an AIX system, issue the following command to change the tape device's tape block
+          size to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero), which indicates variable block size. Repeat for each tape
+          device.</P
+><PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chdev -l '</B
+></SPAN
+>device_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>' -a block_size='0'</B
+></SPAN
+>
+</PRE
+><P
+>where device_name is the tape device's device name (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt0h</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>Verify that the binary files for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+>,
+          and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fms</B
+></SPAN
+> commands are available on the local disk. If the machine is an AFS client, the
+          conventional location is the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afsws/etc</B
+></SPAN
+> directory. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls /usr/afsws/etc</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Create the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs</B
+></SPAN
+> directory. (If the Tape Coordinator machine is also configured
+          as a file server machine, this directory already exists.) Then create the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+>
+          directory. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>mkdir /usr/afs</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>mkdir /usr/afs/backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Use a text editor to create the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file. Include a single
+          line for each tape device or backup data file, specifying the following information in the indicated order. For syntax
+          details and suggestions on the values to use in each field, see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig
+          File</A
+>. <UL
+><LI
+><P
+>The capacity of tapes to be used in the device, or the size of the backup data file</P
+></LI
+><LI
+><P
+>The device's filemark size</P
+></LI
+><LI
+><P
+>The device's device name, starting with the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+></P
+></LI
+><LI
+><P
+>The device's port offset number</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>Decide which user and group are to own the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file, based on the suggestions in <A
+HREF="c12776.html#HDRWQ260"
+>Granting
+          Administrative Privilege to Backup Operators</A
+>. Correct the UNIX mode bits on the directory and file, if necessary.
+          <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> admin_owner <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> admin_owner <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chgrp</B
+></SPAN
+> admin_group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chgrp</B
+></SPAN
+> admin_group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chmod 774 /usr/afs/backup</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chmod 664 /usr/afs/backup/tapeconfig</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LICONFTC-ADDHOST"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+> command to create a Tape
+          Coordinator entry in the Backup Database. Repeat the command for each Tape Coordinator. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape machine name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addh</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addhost</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tape machine name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the Tape Coordinator machine's fully qualified hostname.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TC port offset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the tape device's port offset number. Provide the same value as you specified for the device in
+                  the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file. You must provide this argument unless the default value of 0
+                  (zero) is appropriate.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_287"
+>To configure an additional Tape Coordinator on an existing Tape Coordinator machine</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Install the tape device on the Tape Coordinator machine according to the manufacturer's instructions.</P
+><P
+>If the Tape Coordinator machine is an AIX system, issue the following command to change the tape device's tape block
+          size to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero), which indicates variable block size.</P
+><PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chdev -l '</B
+></SPAN
+>device_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>' -a block_size='0'</B
+></SPAN
+>
+</PRE
+></LI
+><LI
+><P
+>Choose the port offset number to assign to the tape device. If necessary, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+          listhosts</B
+></SPAN
+> command to display the port offset numbers that are already used; for a discussion of the output, see
+          <A
+HREF="c12776.html#HDRWQ264"
+>To display the list of configured Tape Coordinators</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listhosts</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listh</B
+></SPAN
+> is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listhosts</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>Use a text editor to add one or more entries for the device to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file. Specify the following information in the indicated order. For
+          syntax details and suggestions on the values to use in each field, see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig
+          File</A
+>. <UL
+><LI
+><P
+>The capacity of tapes to be used in the device, or the size of the backup data file</P
+></LI
+><LI
+><P
+>The device's filemark size</P
+></LI
+><LI
+><P
+>The device's device name, starting with the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+></P
+></LI
+><LI
+><P
+>The device's port offset number</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+> command to create an entry in the Backup Database for the
+          Tape Coordinator. For complete syntax, see Step <A
+HREF="c12776.html#LICONFTC-ADDHOST"
+>8</A
+> in <A
+HREF="c12776.html#HDRWQ262"
+>To
+          configure a Tape Coordinator machine</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape machine name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;]
+</PRE
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_288"
+>To unconfigure a Tape Coordinator</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Using a text editor, remove each of the Tape Coordinator's entries from the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file.</P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delhost</B
+></SPAN
+> command to delete the Tape Coordinator's Backup Database
+          entry. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delhost</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape machine name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delh</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delhost</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tape machine name</B
+></SPAN
+></DT
+><DD
+><P
+>Is the complete Internet host name of the Tape Coordinator machine.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TC port offset</B
+></SPAN
+></DT
+><DD
+><P
+>Is the same port offset number removed from the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file. You must
+                  provide this argument unless the default value of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) is appropriate.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ264"
+>To display the list of configured Tape Coordinators</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listhosts</B
+></SPAN
+> command to list the Tape Coordinators and port offset
+          numbers currently configured in the Backup Database. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listhosts</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listh</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listhosts</B
+></SPAN
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+><P
+>The output lists each Tape Coordinator machine and the port offset numbers currently allocated to it in the Backup
+      Database. The appearance of a port offset number does not imply that the associated Tape Coordinator is actually running.
+      Machine names appear in the format in which they were specified with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addhost</B
+></SPAN
+>
+      command.</P
+><P
+>The following example output lists the Tape Coordinators currently defined in the Backup Database of the ABC Corporation
+      cell:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listhosts</B
+></SPAN
+>
+   Tape hosts:
+       Host backup1.abc.com, port offset 0
+       Host backup1.abc.com, port offset 2
+       Host backup2.abc.com, port offset 1
+       Host backup2.abc.com, port offset 3
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ265"
+>Defining and Displaying Volume Sets and Volume Entries</A
+></H1
+><P
+>The Backup System handles data at the level of volumes rather than individual files. You must define groups of volumes
+    called <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>volume sets</I
+></SPAN
+> before performing backup operations, by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+    addvolset</B
+></SPAN
+> command. A volume set name can be up to 31 characters long and can include any character other than the
+    period (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>), but avoid using metacharacters that have special meanings to the shell.</P
+><P
+>After creating a volume set, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolentry</B
+></SPAN
+> command to place one or more
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>volume entries</I
+></SPAN
+> in it. They define the volumes that belong to it in terms of their location (file server
+    machine and partition) and name. Use the command's required <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> argument to designate the
+    file server machine that houses the volumes of interest and its required <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> argument to
+    designate the partition. Two types of values are acceptable: <UL
+><LI
+><P
+>The fully qualified hostname of one machine or full name of one partition (such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepm</B
+></SPAN
+>)</P
+></LI
+><LI
+><P
+>The regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> (period and asterisk), which matches every machine name
+          or partition name in the VLDB</P
+></LI
+></UL
+></P
+><P
+>For the volume name (the required <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volume</B
+></SPAN
+> argument), specify a combination of
+    alphanumeric characters and one or more metacharacters to specify part or all of the volume name with a wildcard. You can use
+    any of the following metacharacters in the volume name field: <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+></DT
+><DD
+><P
+>The period matches any single character.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>*</B
+></SPAN
+></DT
+><DD
+><P
+>The asterisk matches zero or more instances of the preceding character. Combine it with any other alphanumeric
+            character or metacharacter.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[ ]</B
+></SPAN
+></DT
+><DD
+><P
+>Square brackets around a list of characters match a single instance of any of the characters, but no other
+            characters; for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[abc]</B
+></SPAN
+> matches a single <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> or
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>b</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>c</B
+></SPAN
+>, but not <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+> or
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>A</B
+></SPAN
+>. You can combine this expression with the asterisk.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>^</B
+></SPAN
+></DT
+><DD
+><P
+>The caret, when used as the first character in a square-bracketed set, designates a match with any single
+            character other than the characters that follow it; for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[^a]</B
+></SPAN
+> matches any
+            single character except lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+>. You can combine this expression with the
+            asterisk.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\</B
+></SPAN
+></DT
+><DD
+><P
+>A backslash preceding any of the metacharacters in this list makes it match its literal value only. For example,
+            the expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\.</B
+></SPAN
+> (backslash and period) matches a single period, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\*</B
+></SPAN
+> matches a single asterisk, and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\\</B
+></SPAN
+> matches a single backslash.
+            You can combine such expressions with the asterisk (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\.*</B
+></SPAN
+> matches any number
+            of periods).</P
+></DD
+></DL
+></DIV
+></P
+><P
+>Perhaps the most common regular expression is the period followed by an asterisk (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+>).
+    This expression matches any string of any length, because the period matches any character and the asterisk means any number of
+    that character. As mentioned, it is the only acceptable regular expression in the file server and partition fields of a volume
+    entry. In the volume name field, it can stand alone (in which case it matches every volume listed in the VLDB), or can combine
+    with alphanumeric characters. For example, the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user.*\.backup</B
+></SPAN
+> matches any volume name
+    that begins with the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user</B
+></SPAN
+> and ends with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.backup</B
+></SPAN
+>.</P
+><P
+>Issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolentry</B
+></SPAN
+> command in interactive mode is simplest. If you issue it
+    at the shell prompt, you must surround any string that includes a regular expression with double quotes (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>"
+    "</B
+></SPAN
+>) so that the shell passes them uninterpreted to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command interpreter
+    rather than resolving them.</P
+><P
+>To define various combinations of volumes, provide the following types of values for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+    addvolentry</B
+></SPAN
+> command's three arguments. The list uses the notation appropriate for interactive mode; if you issue the
+    command at the shell prompt instead, place double quotes around any string that includes a regular expression. To create a
+    volume entry that includes: <UL
+><LI
+><P
+>All volumes listed in the VLDB, use the regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for all three
+          arguments (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server .* -partition .* -volume .*</B
+></SPAN
+>)</P
+></LI
+><LI
+><P
+>Every volume on a specific file server machine, specify its fully qualified hostname as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> argument and use the regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> and -<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume</B
+></SPAN
+> arguments (for example: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server fs1.abc.com -partition .* -volume .*</B
+></SPAN
+>)</P
+></LI
+><LI
+><P
+>All volumes that reside on a partition with the same name on various file server machines, specify the complete
+          partition name as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> argument and use the regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volume</B
+></SPAN
+>
+          arguments (for example: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server .* -partition /vicepd -volume .*</B
+></SPAN
+>)</P
+></LI
+><LI
+><P
+>Every volume with a common string in its name, use the regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> arguments, and provide a
+          combination of alphanumeric characters and metacharacters as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volume</B
+></SPAN
+> argument (for
+          example: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server .* -partition .* -volume .*\.backup</B
+></SPAN
+> includes all volumes whose names end
+          in the string <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.backup</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>All volumes on one partition, specify the machine's fully qualified hostname as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> argument and the full partition name as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+>
+          argument, and use the regular expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volume</B
+></SPAN
+> argument (for example: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server fs2.abc.com -partition /vicepb -volume
+          .*</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>A single volume, specify its complete name as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volume</B
+></SPAN
+> argument. To bypass the
+          potentially time-consuming search through the VLDB for matching entries, you can specify an actual machine and partition
+          name for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> arguments
+          respectively. However, if it is possible that you need to move the volume in future, it is best to use the regular
+          expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> for the machine and partition name.</P
+></LI
+></UL
+></P
+><P
+>As you create volume sets, define groups of volumes you want to dump to the same tape at the same time (for example,
+    weekly or daily) and in the same manner (fully or incrementally). In general, a volume set that includes volumes with similar
+    contents (as indicated by similar names) is more useful than one that includes volumes that share a common location, especially
+    if you often move volumes for load-balancing or space reasons. Most often, then, it is appropriate to use the regular expression
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> (period followed by a backslash) for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> and
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> arguments to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolentry</B
+></SPAN
+> command.</P
+><P
+>It is generally more efficient to include a limited number of volumes in a volume entry. Dumps of a volume set that
+    includes a large number of volume can take a long time to complete, increasing the possibility that the operation fails due to a
+    service interruption or outage.</P
+><P
+>To remove a volume entry from a volume set, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolentry</B
+></SPAN
+> command. To remove
+    a volume set and all of its component volume entries from the Backup Database, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+    delvolset</B
+></SPAN
+> command. To display the volume entries in a volume set, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+    listvolsets</B
+></SPAN
+> command.</P
+><P
+>By default, a Backup Database record is created for the new volume set. Sometimes it is convenient to create volume sets
+    without recording them permanently in the Backup Database, for example when using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+    volsetrestore</B
+></SPAN
+> command to restore a group of volumes that were not necessarily backed up together (for further
+    discussion, see <A
+HREF="c15383.html#HDRWQ312"
+>Using the backup volsetrestore Command</A
+>). To create a
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>temporary</I
+></SPAN
+> volume set, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-temporary</B
+></SPAN
+> flag to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolset</B
+></SPAN
+> command. A temporary volume set exists only during the lifetime of the current
+    interactive session, so the flag is effective only when used during an interactive session (opened by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup (interactive)</B
+></SPAN
+> command). You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolset</B
+></SPAN
+> command
+    to delete a temporary volume set before the interactive session ends, if you wish, but as noted it is automatically deleted when
+    you end the session. One advantage of temporary volume sets is that the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolset</B
+></SPAN
+>
+    command, and any <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolentry</B
+></SPAN
+> commands subsequently used to add volume entries to it,
+    complete more quickly than for regular volume sets, because you are not creating any Backup Database records.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_291"
+>To create a volume set</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode. If you are going to define volume entries right away with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+          addvolentry</B
+></SPAN
+> command, this eliminates the need to surround metacharacter expressions with double quotes. You
+          must enter interactive mode if creating a temporary volume set. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) addvolset</B
+></SPAN
+> command to create the volume set. You must then issue
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) addvolentry</B
+></SPAN
+> command to define volume entries in it. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62;  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvolset</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62; [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-temporary</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvols</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvolset</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume set name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the volume set. The name can include no more than 31 characters, cannot include periods, and must be
+                  unique within the Backup Database. (A temporary volume set can have the same name as an existing permanent volume
+                  set, but this is not recommended because of the confusion it can cause.)</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-temporary</B
+></SPAN
+></DT
+><DD
+><P
+>Creates a temporary volume set, which exists only during the current interactive session.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_292"
+>To add a volume entry to a volume set</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode if you have not already. This makes it simpler to use metacharacter expressions, because you do not need
+          to surround them with double quotes. If you are adding entries to a temporary volume set, you must already have entered
+          interactive mode before creating the volume set. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) addvolentry</B
+></SPAN
+> command to define volume entries in an existing
+          volume set. The Backup System assigns each volume entry an index within the volume set, starting with 1 (one).
+          <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvolentry  -name</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62;  \
+                        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;  \
+                        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>partition name</VAR
+>&#62;  \
+                        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volumes</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume name (regular expression)</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvole</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addvolentry</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the volume set to which to add the volume entry. It must already exist (use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup addvolset</B
+></SPAN
+> command to create it).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+></DT
+><DD
+><P
+>Defines the set of one or more file server machines that house the volumes in the volume entry. Provide
+                  either one fully-qualified hostname (such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs1.abc.com</B
+></SPAN
+>) or the metacharacter
+                  expression <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> (period and asterisk), which matches all machine names in the
+                  VLDB.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-partition</B
+></SPAN
+></DT
+><DD
+><P
+>Defines the set of one or more partitions that house the volumes in the volume entry. Provide either one
+                  complete partition name (such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepa</B
+></SPAN
+>) or the metacharacter expression
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.*</B
+></SPAN
+> (period and asterisk), which matches all partition names.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-volumes</B
+></SPAN
+></DT
+><DD
+><P
+>Defines the set of one or more volumes included in the volume entry, identifying them by name. This argument
+                  can include a combination of alphanumeric characters and one or more of the metacharacter expressions discussed in
+                  the introductory material in this section.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ266"
+>To display volume sets and volume entries</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listvolsets</B
+></SPAN
+> command to display the volume entries in a specific
+          volume set or all of them. If you are displaying a temporary volume set, you must still be in the interactive session in
+          which you created it. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listvolsets</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listv</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listvolsets</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume set name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the volume set to display. Omit this argument to display all defined volume sets.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>The output from the command uses the wildcard notation used when the volume entries were created. The string
+          <SAMP
+CLASS="computeroutput"
+>(temporary)</SAMP
+> marks a temporary volume set. The following example displays all three of the
+          volume sets defined in a cell's Backup Database, plus a temporary volume set <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat+jones</B
+></SPAN
+>
+          created during the current interactive session:</P
+><PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listv</B
+></SPAN
+>
+   Volume set pat+jones (temporary):
+     Entry 1: server fs1.abc.com, partition /vicepe, volumes: user.pat.backup
+     Entry 2: server fs5.abc.com, partition /viceph, volumes: user.jones.backup
+   Volume set user:
+     Entry 1: server .*, partition .*, volumes: user.*\.backup
+   Volume set sun:
+     Entry 1: server .*, partition .*, volumes: sun4x_55\..*
+     Entry 2: server .*, partition .*, volumes: sun4x_56\..*
+   Volume set rs:
+     Entry 1: server .*, partition .*, volumes: rs_aix42\..*
+</PRE
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_294"
+>To delete a volume set</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolset</B
+></SPAN
+> command to delete one or more volume sets and all of the
+          component volume entries in them. If you are deleting a temporary volume set, you must still be in the interactive session
+          in which you created it. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup delvolset</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delvols</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delvolset</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume set name</B
+></SPAN
+></DT
+><DD
+><P
+>Names each volume set to delete.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_295"
+>To delete a volume entry from a volume set</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>If the volume set includes more than one volume entry, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup)
+          listvolsets</B
+></SPAN
+> command to display the index number associated with each one (if there is only one volume entry,
+          its index is 1). For a more detailed description of the command's output, see <A
+HREF="c12776.html#HDRWQ266"
+>To display volume
+          sets and volume entries</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listvolsets</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listv</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listvolsets</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume set name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the volume set for which to display volume entries.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) delvolentry</B
+></SPAN
+> command to delete the volume entry. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delvolentry</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume set name</VAR
+>&#62;  &#60;<VAR
+CLASS="replaceable"
+>volume entry index</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delvole</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delvolentry</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume set name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the volume set from which to delete a volume entry.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume entry index</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the index number of the volume entry to delete.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ267"
+>Defining and Displaying the Dump Hierarchy</A
+></H1
+><P
+>A dump hierarchy is a logical structure in the Backup Database that defines the relationship between full and incremental
+    dumps; that is, it defines which dump serves as the parent for an incremental dump. Each individual component of a hierarchy is
+    a dump level.</P
+><P
+>As you define dump levels with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup adddump</B
+></SPAN
+> command, keep the following rules and
+    suggestions in mind: <UL
+><LI
+><P
+>Each full dump level is the top level of a hierarchy. You can create as many hierarchies as you need to dump
+          different volume sets on different schedules.</P
+></LI
+><LI
+><P
+>The name of a full dump level consists of an initial slash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>), followed by a
+          string of up to 28 alphanumeric characters.</P
+></LI
+><LI
+><P
+>The name of an incremental dump level resembles a pathname, starting with the name of a full dump level, then the
+          first incremental level, and so on, down to the final incremental level. Precede each level name with a slash to separate
+          it from the preceding level. Like the full level, each component level in the name can have up to 28 alphanumeric
+          characters, not including the slash.</P
+></LI
+><LI
+><P
+>A hierarchy can have any have any number of levels, but the maximum length of a complete dump level name is 256
+          characters, including the slashes.</P
+></LI
+><LI
+><P
+>Before defining a given incremental level, you must define all of the levels above it in the hierarchy.</P
+></LI
+><LI
+><P
+>Do not use the period (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>) in dump level names. The Backup System uses the period as
+          the separator between a dump's volume set name and dump level name when it creates the dump name and AFS tape name. Any
+          other alphanumeric and punctuation characters are allowed, but it is best to avoid metacharacters. If you include a
+          metacharacter, you must precede it with a backslash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\</B
+></SPAN
+>) or surround the entire dump level
+          name with double quotes (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>" "</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>Naming dump levels for days or other actual time points reminds you when to perform dumps, and makes it easier to
+          track the relationship between dumps performed at different levels. However, the names have no meaning to the Backup
+          System: it does not automatically create dumps according to the names, and does not prevent you from, for example, using
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday</B
+></SPAN
+> level when creating a dump on a Tuesday.</P
+></LI
+><LI
+><P
+>It is best not to use the same name for more than one component level in a hierarchy, because it means the resulting
+          dump name no longer indicates which level was used. For example, if you name a dump level <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/full/incr/incr</B
+></SPAN
+>, then the dump name and AFS tape name that result from dumping a volume set at the
+          first incremental level (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/full/incr</B
+></SPAN
+>) look the same as the names that result from dumping
+          at the second incremental level (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/full/incr/incr</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>Individual levels in different hierarchies can have the same name, but the complete pathnames must be unique. For
+          example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1/monday</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday2/monday</B
+></SPAN
+> share the
+          same name at the final level, but are unique because they have different names at the full level (belong to different
+          hierarchies). However, using the same name in multiple hierarchies means that dump and AFS tape names do not unambiguously
+          indicate which hierarchy was used.</P
+></LI
+></UL
+></P
+><P
+>The following example shows three hierarchies. Each begins with a full dump at the top: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sunday1</B
+></SPAN
+> for the first hierarchy, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sunday2</B
+></SPAN
+> for the second hierarchy, and
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sunday_bin</B
+></SPAN
+> for the third hierarchy. In all three hierarchies, each of the other dump levels is
+    an incremental level.</P
+><PRE
+CLASS="programlisting"
+>&#13;   /sunday1
+           /monday
+           /tuesday
+           /wednesday
+           /thursday
+           /friday
+   /sunday2
+           /monday
+                  /tuesday
+                          /wednesday
+                                    /thursday
+                                             /friday
+    /sunday_bin
+               /monday
+                      /wednesday
+                                /friday
+</PRE
+><P
+>In the first hierarchy, each incremental dump level refers to the full level <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1</B
+></SPAN
+> as
+    its parent. When (for example) you dump a volume set at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1/wednesday</B
+></SPAN
+> level, it
+    includes data that has changed since the volume set was dumped at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1</B
+></SPAN
+> level.</P
+><P
+>In contrast, each incremental dump level in the second hierarchy refers to the immediately preceding dump level as its
+    parent. When you dump a volume set at the corresponding level in the second hierarchy (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday2/monday/tuesday/wednesday</B
+></SPAN
+>), the dump includes only data that has changed since the volume set was
+    dumped at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday2/monday/tuesday</B
+></SPAN
+> level (presumably the day before). Assuming you create
+    dumps on the indicated days, an incremental dump made using this hierarchy contains less data than an incremental dump made at
+    the corresponding level in the first hierarchy.</P
+><P
+>The third hierarchy is more appropriate for dumping volumes for which a daily backup is excessive because the data does
+    not change often (for example, system binaries).</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ268"
+>Creating a Tape Recycling Schedule</A
+></H2
+><P
+>If your cell is like most cells, you have a limited amount of room for storing backup tapes and a limited budget for new
+      tapes. The easiest solution is to recycle tapes by overwriting them when you no longer need the backup data on them. The
+      Backup System helps you implement a recycling schedule by enabling you to associate an expiration date with each dump level.
+      The expiration date defines when a dump created at that level expires. Until that time the Backup System refuses to overwrite
+      a tape that contains the dump. Thus, assigning expiration dates automatically determines how you recycle tapes.</P
+><P
+>When designing a tape-recycling schedule, you must decide how far in the past and to what level of precision you want to
+      guarantee access to backed up data. For instance, if you decide to guarantee that you can restore a user's home volume to its
+      state on any given day in the last two weeks, you cannot recycle the tape that contains a given daily dump for at least two
+      weeks after you create it. Similarly, if you decide to guarantee that you can restore home volumes to their state at the
+      beginning of any given week in the last month, you cannot recycle the tapes in a dump set containing a weekly dump for at
+      least four weeks. The following example dump hierarchy implements this recycling schedule by setting the expiration date for
+      each daily incremental dump to 13 days and the expiration date of the weekly full dumps to 27 days.</P
+><P
+>The tapes used to store dumps created at the daily incremental levels in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1</B
+></SPAN
+>
+      hierarchy expire just in time to be recycled for daily dumps in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday3</B
+></SPAN
+> hierarchy (and
+      vice versa), and there is a similar relationship between the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday2</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday4</B
+></SPAN
+> hierarchies. Similarly, the tape that houses a full dump at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/sunday1</B
+></SPAN
+> level expires just in time to be used for a full dump on the first Sunday of the following
+      month.</P
+><PRE
+CLASS="programlisting"
+>&#13;   /sunday1   expires in 27d
+           /monday1  expires in 13d
+           /tuesday1  expires in 13d
+           /wednesday1  expires in 13d
+           /thursday1  expires in 13d
+           /friday1  expires in 13d
+   /sunday2   expires in 27d
+           /monday2  expires in 13d
+           /tuesday2  expires in 13d
+           /wednesday2  expires in 13d
+           /thursday2  expires in 13d
+           /friday2  expires in 13d
+   /sunday3   expires in 27d
+           /monday1  expires in 13d
+           /tuesday1  expires in 13d
+           /wednesday1  expires in 13d
+           /thursday1  expires in 13d
+           /friday1  expires in 13d
+   /sunday4   expires in 27d
+           /monday2  expires in 13d
+           /tuesday2  expires in 13d
+           /wednesday2  expires in 13d
+           /thursday2  expires in 13d
+           /friday2  expires in 13d
+</PRE
+><P
+>If you use appended dumps in your cell, keep in mind that all dumps in a dump set are subject to the latest (furthest
+      into the future) expiration date associated with any of the constituent dumps. You cannot recycle any of the tapes that
+      contain a dump set until all of the dumps have reached their expiration date. See also <A
+HREF="c15383.html#HDRWQ299"
+>Appending
+      Dumps to an Existing Dump Set</A
+>.</P
+><P
+>Most tape manufacturers recommend that you write to a tape a limited number of times, and it is best not to exceed this
+      limit when recycling tapes. To help you track tape usage, the Backup System records a
+      <SAMP
+CLASS="computeroutput"
+>useCount</SAMP
+> counter on the tape's label. It increments the counter each time the tape's label is
+      rewritten (each time you use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      dump</B
+></SPAN
+> command). To display the <SAMP
+CLASS="computeroutput"
+>useCount</SAMP
+> counter, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup scantape</B
+></SPAN
+> command or include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+> options when you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dumpinfo</B
+></SPAN
+> command. For instructions see <A
+HREF="c12776.html#HDRWQ272"
+>Writing and Reading Tape
+      Labels</A
+> or <A
+HREF="c15383.html#HDRWQ302"
+>Displaying Backup Dump Records</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ269"
+>Archiving Tapes</A
+></H2
+><P
+>Even if you make extensive use of tape recycling, there is probably some backup data that you need to archive for a long
+      (or even an indefinite) period of time. You can use the Backup System to archive data on a regular schedule, and you can also
+      choose to archive data on tapes that you previously expected to recycle.</P
+><P
+>If you want to archive data on a regular basis, you can create date-specific dump levels in the dump hierarchy. For
+      example, if you decide to archive a full dump of all data in your cell at the beginning of each quarter in the year 2000, you
+      can define the following levels in the dump hierarchy:</P
+><PRE
+CLASS="programlisting"
+>&#13;   /1Q2000
+   /2Q2000
+   /3Q2000
+   /4Q2000
+</PRE
+><P
+>If you decide to archive data that is on tapes you previously planned to recycle, you must gather all of the tapes that
+      contain the relevant dumps, both full and incremental. To avoid accidental erasure, it is best to set the switch on the tapes
+      that makes them read-only, before placing them in your archive storage area. If the tapes also contain a large amount of
+      extraneous data that you do not want to archive, you can restore just the relevant data into a new temporary volume, and back
+      up that volume to the smallest number of tapes possible. One reason to keep a dump set small is to minimize the amount of
+      irrelevant data in a dump set you end up needing to archive.</P
+><P
+>If you do not expect to restore archived data to the file system, you can consider using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup deletedump</B
+></SPAN
+> command to remove the associated dump records from the Backup Database, which helps
+      keep it to an efficient size. If you ever need to restore the data, you can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dbadd</B
+></SPAN
+>
+      flag to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup scantape</B
+></SPAN
+> command to reinsert the dump records into the database. For
+      instructions, see <A
+HREF="c15383.html#HDRWQ305"
+>To scan the contents of a tape</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ270"
+>Defining Expiration Dates</A
+></H2
+><P
+>To associate an expiration date with a dump level as you create it, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+>
+      argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup adddump</B
+></SPAN
+> command. To change an existing dump level's expiration date,
+      use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup setexp</B
+></SPAN
+> command.
+      (Note that it is not possible to change the expiration date of an actual dump that has already been created at that level).
+      With both commands, you can define an expiration date either in absolute terms (for example, 13 January 2000) or relative
+      terms (for example, 30 days from when the dump is created). <UL
+><LI
+><P
+>To define an absolute expiration date, provide a value for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> argument
+            with the following format: <PRE
+CLASS="programlisting"
+>&#13;   [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>at</B
+></SPAN
+>] mm<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>dd<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>yyyy [hh<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>MM]
+</PRE
+></P
+><P
+>where mm indicates the month, dd the day, and yyyy the year when the dump expires. Valid values for the year fall
+            in the range <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1970</B
+></SPAN
+> through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>2037</B
+></SPAN
+> (the latest possible
+            date that the UNIX time representation can express is in early 2038). If you provide a time, it must be in 24-hour
+            format with hh the hours and MM the minutes (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>21:50</B
+></SPAN
+> is 9:50 p.m.). If you
+            omit the time, the default is 00:00 hours (12:00 midnight) on the indicated date.</P
+></LI
+><LI
+><P
+>To define a relative expiration date, provide a value for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> argument
+            with the following format: <PRE
+CLASS="programlisting"
+>&#13;   [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>in</B
+></SPAN
+>] [years<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>y</B
+></SPAN
+>] [months<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+>] [days<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where each of years, months, and days is an integer. Provide at least one of them together with the corresponding
+            units letter (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>y</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+>, or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+> respectively), with no intervening space. If you provide more than one of the three, list them
+            in the indicated order.</P
+><P
+>The Backup System calculates a dump's actual expiration date by adding the indicated relative value to the start
+            time of the dump operation. For example, it assigns an expiration date 1 year, 6 months, and 2 days in the future to a
+            dump created at a dump level with associated expiration date <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>in 1y 6m 2d</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>To indicate that a dump backed up at the corresponding dump level never expires, provide the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NEVER</B
+></SPAN
+> instead of a date and time. To recycle tapes that contain dumps created at such a level,
+            you must use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel</B
+></SPAN
+> command to overwrite the tape's label.</P
+></LI
+></UL
+></P
+><P
+>If you omit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      adddump</B
+></SPAN
+> command, then the expiration date is set to UNIX time zero (00:00 hours on 1 January 1970). The Backup
+      System considers dumps created at such a dump level to expire at their creation time. If no dumps in a dump set have an
+      expiration date, then the Backup System does not impose any restriction on recycling the tapes that contain the dump set. If
+      you need to prevent premature recycling of the tapes that contain the dump set, you must use a manual tracking system.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_300"
+>To add a dump level to the dump hierarchy</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup adddump</B
+></SPAN
+> command to define one or more dump levels. If you are
+          defining an incremental level, then all of the parent levels that precede it in its pathname must either already exist or
+          precede it on the command line. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>adddump -dump</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>dump level name</VAR
+>&#62;+ [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>expiration date</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addd</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>adddump</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dump</B
+></SPAN
+></DT
+><DD
+><P
+>Names each dump level to added. If you specify more than one dump level name, you must include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dump</B
+></SPAN
+> switch.</P
+><P
+>Provide the entire pathname of the dump level, preceding each level in the pathname with a slash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>). Each component level can be up to 28 characters in length, and the pathname can include
+                  up to 256 characters including the slashes.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the expiration date associated with each dump level. Specify either a relative or absolute expiration
+                  date, as described in <A
+HREF="c12776.html#HDRWQ270"
+>Defining Expiration Dates</A
+>, or omit this argument to assign
+                  no expiration date to the dump levels.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>A plus sign follows this argument in the command's syntax statement because it accepts a multiword value
+                    which does not need to be enclosed in double quotes or other delimiters, not because it accepts multiple dates.
+                    Provide only one date (and optionally, time) definition to be associated with each dump level specified by the
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dump</B
+></SPAN
+> argument.</P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_301"
+>To change a dump level's expiration date</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) setexp</B
+></SPAN
+> command to change the expiration date associated with one
+          or more dump levels. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setexp -dump</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>dump level name</VAR
+>&#62;+ [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>expiration date</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>se</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setexp</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dump</B
+></SPAN
+></DT
+><DD
+><P
+>Names each existing dump level for which to change the expiration date.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-expires</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the expiration date associated with each dump level. Specify either a relative or absolute expiration
+                  date, as described in <A
+HREF="c12776.html#HDRWQ270"
+>Defining Expiration Dates</A
+>; omit this argument to remove the
+                  expiration date currently associated with each dump level.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>A plus sign follows this argument in the command's syntax statement because it accepts a multiword value
+                    which does not need to be enclosed in double quotes or other delimiters, not because it accepts multiple dates.
+                    Provide only one date (and optionally, time) definition to be associated with each dump level specified by the
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dump</B
+></SPAN
+> argument.</P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_302"
+>To delete a dump level from the dump hierarchy</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) deldump</B
+></SPAN
+> command to delete the dump level. Note that the command
+          automatically removes all incremental dump levels for which the specified level serves as parent, either directly or
+          indirectly. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>deldump</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>dump level name</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>deld</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>deldump</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dump level name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the complete pathname of the dump level to delete.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ271"
+>To display the dump hierarchy</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listdumps</B
+></SPAN
+> command to display the dump hierarchy. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listdumps</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listd</B
+></SPAN
+> is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listdumps</B
+></SPAN
+>.</P
+><P
+>The output from this command displays the dump hierarchy, reporting the expiration date associated with each dump
+          level, as in the following example.</P
+><PRE
+CLASS="programlisting"
+>&#13;    % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup listdumps</B
+></SPAN
+>
+   /week1  expires in  27d
+         /tuesday  expires in  13d
+                 /thursday  expires in  13d
+         /sunday  expires in  13d
+                /tuesday expires in  13d
+                        /thursday expires in  13d
+   /week3  expires in  27d
+         /tuesday  expires in  13d
+                 /thursday  expires in  13d
+         /sunday  expires in  13d
+                /tuesday  expires in  13d
+                        /thursday  expires in  13d
+   sunday1   expires in  27d
+          /monday1  expires in  13d
+          /tuesday1  expires in  13d 
+          /wednesday1  expires in  13d
+          /thursday1  expires in  13d
+          /friday1  expires in  13d
+   sunday2   expires in  27d
+          /monday2  expires in  13d
+          /tuesday2  expires in  13d
+          /wednesday2  expires in  13d
+          /thursday2  expires in  13d
+          /friday2  expires in  13d
+   sunday3   expires in  27d
+          /monday1  expires in  13d
+          /tuesday1  expires in  13d 
+          /wednesday1  expires in  13d
+          /thursday1  expires in  13d
+          /friday1  expires in  13d
+   sunday4   expires in  27d
+          /monday2  expires in  13d
+          /tuesday2  expires in  13d
+          /wednesday2  expires in  13d
+          /thursday2  expires in  13d
+          /friday2  expires in  13d
+</PRE
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ272"
+>Writing and Reading Tape Labels</A
+></H1
+><P
+>As described in <A
+HREF="c12776.html#HDRWQ253"
+>Dump Names and Tape Names</A
+> and <A
+HREF="c12776.html#HDRWQ254"
+>Tape Labels, Dump
+    Labels, and EOF Markers</A
+>, you can assign either a permanent name or an AFS tape name to a tape that you use in the Backup
+    System. The names are recorded on the tape's magnetic label, along with an indication of the tape's capacity (size).</P
+><P
+>You can assign either a permanent name or an AFS tape name, but not both. In general, assigning permanent names rather
+    than AFS tape names simplifies the backup process, because the Backup System does not dictate the format of permanent names. If
+    a tape does not have a permanent name, then by default the Backup System accepts only three strictly defined values in the AFS
+    tape name field, and refuses to write a dump to a tape with an inappropriate AFS tape name. The acceptable values are a name
+    that matches the volume set and dump level of the initial dump, the value <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>, and no
+    value in the field at all.</P
+><P
+>If a tape has a permanent name, the Backup System does not check the AFS tape name, and as part of the dump operation
+    constructs the appropriate AFS tape name itself and records it on the label. This means that if you assign a permanent name, the
+    Backup System assigns an AFS tape name itself and the tape has both types of name. In contrast, if a tape has an AFS tape name
+    but not a permanent name, you cannot assign a permanent name without first erasing the AFS tape name.</P
+><P
+>(You can also suppress the Backup System's check of a tape's AFS tape name, even it does not have a permanent name, by
+    assigning the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NAME_CHECK</B
+></SPAN
+> instruction in the
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>device configuration file</I
+></SPAN
+>. See <A
+HREF="c12776.html#HDRWQ280"
+>Eliminating the AFS Tape Name Check</A
+>.)</P
+><P
+>Because the Backup System accepts unlabeled tapes, you do not have to label a tape before using it for the first time.
+    After the first use, there are a couple of cases in which you must relabel a tape in order to write a dump to it: <UL
+><LI
+><P
+>The tape does not have a permanent name, and the AFS tape name on it does not match the new initial dump set you
+          want to create (the volume set and dump level names are different, or the index is incorrect).</P
+></LI
+><LI
+><P
+>You want to recycle a tape before all of the dumps on it have expired. The Backup System does not overwrite a tape
+          with any unexpired dumps. Keep in mind, though, that if you relabel the tape to making recycling possible, you erase all
+          the dump records for the tape from the Backup Database, which makes it impossible to restore any data from the
+          tape.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>Labeling a tape that contains dump data makes it impossible to use that data in a restore operation, because the
+      labeling operation removes the dump's records from the Backup Database. If you want to record a permanent name on a tape
+      label, you must do it before dumping any data to the tape.</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_305"
+>Recording a Name on the Label</A
+></H2
+><P
+>To write a permanent name on a tape's label, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument to specify a
+      string of up to 32 characters. Check that no other tape used with the Backup System in your cell already has the permanent
+      name you are assigning, because the Backup System does not prevent you from assigning the same name to multiple tapes. The
+      Backup System overwrites the existing AFS tape name, if any, with the value <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>.
+      When a tape has a permanent name, the Backup System uses it instead of the AFS tape name in most prompts and when referring to
+      the tape in output from <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> commands. The permanent name persists until you again include
+      the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command,
+      regardless of the tape's contents and of how often you recycle the tape or use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      labeltape</B
+></SPAN
+> command without the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument.</P
+><P
+>To write an AFS tape name on the label, provide a value for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument that
+      matches the volume set name and the final element in the dump level pathname of the initial dump that you plan to write to the
+      tape, and an index that indicates the tape's place in the sequence of tapes for the dump set. The format is as follows:</P
+><PRE
+CLASS="programlisting"
+>&#13;   volume_set_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>dump_level_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>tape_index
+</PRE
+><P
+>If you omit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument, the Backup System sets the AFS tape name to
+      <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>. The Backup System automatically constructs and records the appropriate name
+      when you later write an initial dump to the tape by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup savedb</B
+></SPAN
+> command.</P
+><P
+>You cannot use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument if the tape already has a permanent name. To erase a
+      tape's permanent name, provide a null value to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument by issuing the following
+      command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape -pname ""</B
+></SPAN
+>
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_306"
+>Recording a Capacity on the Label</A
+></H2
+><P
+>To record the tape's capacity on the label, specify a number of kilobytes as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-size</B
+></SPAN
+>
+      argument. If you omit this argument the first time you label a tape, the Backup System records the default tape capacity
+      associated with the specified port offset in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file on the Tape
+      Coordinator machine. If the tape's capacity is different (in particular, larger) than the capacity recorded in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file, it is best to record a capacity on the label before using the tape. Once set, the
+      value in the label's capacity field persists until you again use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-size</B
+></SPAN
+> argument to the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command. For a discussion of the appropriate capacity to record for tapes,
+      see <A
+HREF="c12776.html#HDRWQ258"
+>Configuring the tapeconfig File</A
+>.</P
+><P
+>To read a tape's label, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel</B
+></SPAN
+> command.</P
+><P
+>Most tapes also come with an adhesive label you can apply to the exterior casing. To help you easily identify a tape,
+      record at least the tape's permanent and AFS tape names on the adhesive label. Depending on the recycling scheme you use, it
+      can be useful to record other information, such as the dump ID, dump creation date, and expiration date of each dump you write
+      to the tape.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ273"
+>To label a tape</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If the Tape Coordinator for the tape device that is to perform the operation is not already running, open a
+          connection to the appropriate Tape Coordinator machine and issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command, for
+          which complete instructions appear in <A
+HREF="c15383.html#HDRWQ292"
+>To start a Tape Coordinator process</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>port offset</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+>]
+</PRE
+></P
+></LI
+><LI
+><P
+>Place the tape in the device.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode, if you want to label multiple tapes or issue additional commands after labeling the tape. The
+          interactive prompt appears in the following step. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) labeltape</B
+></SPAN
+> command to label the tape. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>labeltape</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape name, defaults to NULL</VAR
+>&#62;]  \
+      [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-size</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape size in Kbytes, defaults to size in tapeconfig</VAR
+>&#62;]  \
+      [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-portoffset</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>permanent tape name</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>la</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>labeltape</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the AFS tape name to record on the label. Include this argument or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+> argument, but not both. If you omit this argument, the AFS tape name is set to
+                  &#60;<VAR
+CLASS="replaceable"
+>NULL</VAR
+>&#62;. If you provide it, it must have the following format. <PRE
+CLASS="programlisting"
+>&#13;volume_set_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>dump_level_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>tape_index
+</PRE
+></P
+><P
+>for the tape to be acceptable for use in a future <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> operation.
+                  The volume_set_name must match the volume set name of the initial dump to be written to the tape, dump_level_name
+                  must match the last element of the dump level pathname at which the volume set is to be dumped, and tape_index
+                  must correctly indicate the tape's place in the sequence of tapes that house the dump set; indexing begins with
+                  the number 1 (one).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-size</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the tape capacity to record on the label. If you are labeling the tape for the first time, you
+                  need to include this argument only if the tape's capacity differs from the capacity associated with the specified
+                  port offset in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file on the Tape Coordinator
+                  machine.</P
+><P
+>If you provide a value, it is an integer value followed by a letter that indicates units, with no
+                  intervening space. A unit value of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>k</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>K</B
+></SPAN
+>
+                  indicates kilobytes, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+> indicates megabytes,
+                  and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>g</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>G</B
+></SPAN
+> indicates gigabytes. If you omit the
+                  units letter, the default is kilobytes.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-portoffset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the port offset number of the Tape Coordinator handling the tape or backup data file for this
+                  operation. You must provide this argument unless the default value of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) is
+                  appropriate.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pname</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the permanent name to record on the label. It can be up to 32 characters in length, and include
+                  any alphanumeric characters. Avoid metacharacters that have a special meaning to the shell, to avoid having to
+                  mark them as literal in commands issued at the shell prompt.</P
+><P
+>Include this argument or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+> argument, but not both. When you provide
+                  this argument, the AFS tape name is set to <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>. If you omit this
+                  argument, any existing permanent name is retained.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>If you did not include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+> flag when you issued the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command, or if the device's device configuration file includes the instruction <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY YES</B
+></SPAN
+>, then the Tape Coordinator prompts you to place the tape in the device's drive. You
+          have already done so, but you must now press <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+> to indicate that the tape is
+          ready for labeling.</P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ274"
+>To read the label on a tape</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If the Tape Coordinator for the tape device that is to perform the operation is not already running, open a
+          connection to the appropriate Tape Coordinator machine and issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command, for
+          which complete instructions appear in <A
+HREF="c15383.html#HDRWQ292"
+>To start a Tape Coordinator process</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>port offset</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+>]
+</PRE
+></P
+></LI
+><LI
+><P
+>Place the tape in the device.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode, if you want to label multiple tapes or issue additional commands after labeling the tape. The
+          interactive prompt appears in the following step. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) readlabel</B
+></SPAN
+> command to read the label on the tape.
+          <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>readlabel</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rea</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>readlabel</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TC port offset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the port offset number of Tape Coordinator handling the tape or backup data file for this
+                  operation. You must provide this argument unless the default value of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) is
+                  appropriate.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>If you did not include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+> flag when you issued the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command, or the device's device configuration file includes the instruction <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY YES</B
+></SPAN
+> instruction, then the Tape Coordinator prompts you to place the tape in the device's
+          drive. You have already done so, but you must now press <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+> to indicate that
+          the tape is ready for reading.</P
+></LI
+></OL
+><P
+>Information from the tape label appears both in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command window and in the
+      Tape Coordinator window. The output in the command window has the following format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Tape read was labelled: tape_name (initial_dump_ID)
+        size: size KBytes
+</PRE
+><P
+>where tape_name is the tape's permanent name (if it has one) or AFS tape name, initial_dump_ID is the dump ID of the
+      initial dump on the tape, and size is the capacity recorded on the label, in kilobytes.</P
+><P
+>The information in the Tape Coordinator window is more extensive. The tape's permanent name appears in the
+      <SAMP
+CLASS="computeroutput"
+>tape name</SAMP
+> field and its AFS tape name in the <SAMP
+CLASS="computeroutput"
+>AFS tape name</SAMP
+>
+      field. If either name is undefined, a value of <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+> appears in the field instead. The
+      capacity recorded on the label appears in the <SAMP
+CLASS="computeroutput"
+>size</SAMP
+> field. Other fields in the output report
+      the creation time, dump level name, and dump ID of the initial dump on the tape
+      (<SAMP
+CLASS="computeroutput"
+>creationTime</SAMP
+>, <SAMP
+CLASS="computeroutput"
+>dump path</SAMP
+>, and <SAMP
+CLASS="computeroutput"
+>dump
+      id</SAMP
+> respectively). The <SAMP
+CLASS="computeroutput"
+>cell</SAMP
+> field reports the cell in which the dump
+      operation was performed, and the <SAMP
+CLASS="computeroutput"
+>useCount</SAMP
+> field reports the number of times the tape has been
+      relabeled, either with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command or during a dump operation. For further
+      details, see the command's reference page in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+>.</P
+><P
+>If the tape has no label, or if the drive is empty, the following message appears at the command shell:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Failed to read tape label.
+</PRE
+><P
+>The following example illustrates the output in the command shell for a tape in the device with port offset 1:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel 1</B
+></SPAN
+>
+   Tape read was labelled: monthly_guest (917860000)
+        size: 2150000 KBytes
+</PRE
+><P
+>The following output appears in the Tape Coordinator window at the same time:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Tape label
+   ----------
+   tape name = monthly_guest
+   AFS tape name = guests.monthly.3
+   creationTime =  Mon Feb  1 04:06:40 1999
+   cell = abc.com
+   size = 2150000 Kbytes
+   dump path = /monthly
+   dump id = 917860000
+   useCount = 44
+   -- End of tape label --
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ275"
+>Automating and Increasing the Efficiency of the Backup Process</A
+></H1
+><P
+>The Backup System includes several optional features to help you automate the backup process in your cell and make it more
+    efficient. By combining several of the features, you can dump volume data to tape with minimal human intervention in most cases.
+    To take advantage of many of the features, you create a device configuration file in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory for each tape device that participates in automated operations. For general
+    instructions on creating the device configuration file, see <A
+HREF="c12776.html#HDRWQ276"
+>Creating a Device Configuration
+    File</A
+>. The following list refers you to sections that describe each feature in greater detail. <UL
+><LI
+><P
+>You can use tape stackers and jukeboxes to perform backup operations. These are tape drives with an attached unit
+          that stores several tapes and can physically insert and remove them from the tape reader (tape drive) without human
+          intervention, meaning that no operator has to be present even for backup operations that require several tapes. To use a
+          stacker or jukebox with the Backup System, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instructions in its device configuration file. See <A
+HREF="c12776.html#HDRWQ277"
+>Invoking a
+          Device's Tape Mounting and Unmounting Routines</A
+>.</P
+></LI
+><LI
+><P
+>You can suppress the Tape Coordinator's default prompt for the initial tape that it needs for a backup operation,
+          again eliminating the need for a human operator to be present when a backup operation begins. (You must still insert the
+          correct tape in the drive at some point before the operation begins.) To suppress the initial prompt, include the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+> flag on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command, or assign the
+          value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY</B
+></SPAN
+> instruction in the device
+          configuration file. See <A
+HREF="c12776.html#HDRWQ278"
+>Eliminating the Search or Prompt for the Initial Tape</A
+>.</P
+></LI
+><LI
+><P
+>You can suppress the prompts that the Tape Coordinator otherwise generates when it encounters several types of
+          errors. When you use this feature, the Tape Coordinator instead responds to the errors in a default manner, which
+          generally allows the operation to continue without human intervention. To suppress prompts about error conditions, assign
+          the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ASK</B
+></SPAN
+> instruction in the device
+          configuration file. See <A
+HREF="c12776.html#HDRWQ279"
+>Enabling Default Responses to Error Conditions</A
+>.</P
+></LI
+><LI
+><P
+>You can suppress the Backup System's default verification that the AFS tape name on a tape that has no permanent
+          name matches the name derived from the volume set and dump level names of the initial dump the Backup System is writing to
+          the tape. This enables you to recycle a tape without first relabeling it, as long as all dumps on it are expired. To
+          suppress name checking, assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NAME_CHECK</B
+></SPAN
+> instruction in the device configuration file. See <A
+HREF="c12776.html#HDRWQ280"
+>Eliminating
+          the AFS Tape Name Check</A
+>.</P
+></LI
+><LI
+><P
+>You can promote tape streaming (the most efficient way for a tape device to operate) by setting the size of the
+          memory buffer the Tape Coordinator uses when transferring volume data between the file system and the device. To set the
+          buffer size, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>BUFFERSIZE</B
+></SPAN
+> instruction in the device configuration file. See
+          <A
+HREF="c12776.html#HDRWQ281"
+>Setting the Memory Buffer Size to Promote Tape Streaming</A
+>.</P
+></LI
+><LI
+><P
+>You can write dumps to a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>backup data file</I
+></SPAN
+> on the local disk of the Tape Coordinator machine,
+          rather than to tape. You can then transfer the backup data file to a data-archiving system, such as a hierarchical storage
+          management (HSM) system, that you use in conjunction with AFS and the Backup System. Writing a dump to a file is usually
+          more efficient that issuing the equivalent <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos dump</B
+></SPAN
+> commands individually. To write dumps
+          to a file, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE</B
+></SPAN
+> instruction in the device configuration file. See <A
+HREF="c12776.html#HDRWQ282"
+>Dumping Data to a Backup Data File</A
+>.</P
+></LI
+></UL
+></P
+><P
+>There are two additional ways to increase backup automation and efficiency that do not involve the device configuration
+    file: <UL
+><LI
+><P
+>You can schedule one or more <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> commands to run at specified times. This
+          enables you to create backups at times of low system usage, without requiring a human operator to be present. You can
+          schedule a single dump operation for a future time, or multiple operations to run at various future times. See <A
+HREF="c15383.html#HDRWQ300"
+>Scheduling Dumps</A
+>.</P
+></LI
+><LI
+><P
+>You can append dumps to a tape that already has other dumps on it. This enables you to use as much of a tape's
+          capacity as possible. The appended dumps do not have be related in any way to one another or to the initial dump on the
+          tape, but grouping dumps appropriately can reduce the number of necessary tape changes during a restore operation. To
+          append a dump, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-append</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+          dump</B
+></SPAN
+> command. See <A
+HREF="c15383.html#HDRWQ299"
+>Appending Dumps to an Existing Dump Set</A
+>.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ276"
+>Creating a Device Configuration File</A
+></H2
+><P
+>To use many of the features that automate backup operations, create a configuration file for each tape device in the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory on the local disk of the Tape Coordinator machine that drives the
+      device. The filename has the following form:</P
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_</B
+></SPAN
+>device_name</P
+><P
+>where device_name represents the name of the tape device or backup data file (see <A
+HREF="c12776.html#HDRWQ282"
+>Dumping Data
+      to a Backup Data File</A
+> to learn about writing dumps to a file rather than to tape).</P
+><P
+>For a tape device, construct the device_name portion of the name by stripping off the initial <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+> string with which all UNIX device names conventionally begin, and replacing any other slashes in
+      the name with underscores. For example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_rmt_4m</B
+></SPAN
+> is the appropriate filename for a device
+      called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/rmt/4m</B
+></SPAN
+>.</P
+><P
+>For a backup data file, construct the device_name portion by stripping off the initial slash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>) and replacing any other slashes (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>) in the name with underscores.
+      For example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_var_tmp_FILE</B
+></SPAN
+> is the appropriate filename for a backup data file called
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/var/tmp/FILE</B
+></SPAN
+>.</P
+><P
+>Creating a device configuration file is optional. If you do not want to take advantage of any of the features that the
+      file provides, you do not have to create it.</P
+><P
+>You can include one of each of the following instructions in any order in a device configuration file. All are optional.
+      Place each instruction on its own line, but do not include any newline (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+>)
+      characters within an instruction. <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT and UNMOUNT</B
+></SPAN
+></DT
+><DD
+><P
+>Identify a script of routines for mounting and unmounting tapes in a tape stacker or jukebox's drive as needed.
+              See <A
+HREF="c12776.html#HDRWQ277"
+>Invoking a Device's Tape Mounting and Unmounting Routines</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY</B
+></SPAN
+></DT
+><DD
+><P
+>Controls whether the Tape Coordinator prompts for the first tape it needs for a backup operation. See <A
+HREF="c12776.html#HDRWQ278"
+>Eliminating the Search or Prompt for the Initial Tape</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ASK</B
+></SPAN
+></DT
+><DD
+><P
+>Controls whether the Tape Coordinator asks you how to respond to certain error conditions. See <A
+HREF="c12776.html#HDRWQ279"
+>Enabling Default Responses to Error Conditions</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NAME_CHECK</B
+></SPAN
+></DT
+><DD
+><P
+>Controls whether the Tape Coordinator verifies that an AFS tape name matches the initial dump you are writing to
+              the tape. See <A
+HREF="c12776.html#HDRWQ280"
+>Eliminating the AFS Tape Name Check</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>BUFFERSIZE</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the size of the memory buffer the Tape Coordinator uses when transferring data between a tape device and a
+              volume. See <A
+HREF="c12776.html#HDRWQ281"
+>Setting the Memory Buffer Size to Promote Tape Streaming</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE</B
+></SPAN
+></DT
+><DD
+><P
+>Controls whether the Tape Coordinator writes dumps to, and restores data from, a tape device or a backup data
+              file. See <A
+HREF="c12776.html#HDRWQ282"
+>Dumping Data to a Backup Data File</A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ277"
+>Invoking a Device's Tape Mounting and Unmounting Routines</A
+></H2
+><P
+>A tape stacker or jukebox helps you automate backup operations because it can switch between multiple tapes during an
+      operation without human intervention. To take advantage of this feature, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+>
+      and optionally <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instructions in the device configuration file that you write for the
+      stacker or jukebox. The instructions share the same syntax:</P
+><PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> filename
+   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> filename
+</PRE
+><P
+>where filename is the pathname on the local disk of a script or program you have written that invokes the routines
+      defined by the device's manufacturer for mounting or unmounting a tape in the device's tape drive. (For convenience, the
+      following discussion uses the term <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>script</I
+></SPAN
+> to refers to both scripts and programs.) The script usually
+      also contains additional logic that handles error conditions or modifies the script's behavior depending on which backup
+      operation is being performed.</P
+><P
+>You can refer to different scripts with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instructions, or to a single script that invokes both mounting and unmounting routines. The
+      scripts inherit the local identity and AFS tokens associated with to the issuer of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+>
+      command.</P
+><P
+>You need to include a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction in the device configuration file for all tape
+      devices, but the need for an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instruction depends on the tape-handling routines that
+      the device's manufacturer provides. Some devices, usually stackers, have only a single routine for mounting tapes, which also
+      automatically unmounts a tape whose presence prevents insertion of the required new tape. In this case, an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instruction is not necessary. For devices that have separate mounting and unmounting routines,
+      you must include an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instruction to remove a tape when the Tape Coordinator is
+      finished with it; otherwise, subsequent attempts to run the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction fail with an
+      error.</P
+><P
+>When the device configuration file includes a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction, you must stock the
+      stacker or jukebox with the necessary tapes before running a backup operation. Many jukeboxes are able to search for the
+      required tape by reading external labels (such as barcodes) on the tapes, but many stackers can only switch between tapes in
+      sequence and sometimes only in one direction. In the latter case, you must also stock the tapes in the correct order.</P
+><P
+>To obtain a list of the tapes required for a restore operation so that you can prestock them in the tape device, include
+      the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-n</B
+></SPAN
+> flag on the appropriate <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup diskrestore</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup volrestore</B
+></SPAN
+>, or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      volsetrestore</B
+></SPAN
+>). For a dump operation, it is generally sufficient to stock the device with more tapes than the
+      operation is likely to require. You can prelabel the tapes with permanent names or AFS tape names, or not prelabel them at
+      all. If you prelabel the tapes for a dump operation with AFS tape names, then it is simplest to load them into the stacker in
+      sequential order by tape index. But it is probably simpler still to prelabel tapes with permanent tape names or use unlabeled
+      tapes, in which case the Backup System generates and applies the appropriately indexed AFS tape name itself during the dump
+      operation.</P
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="Header_312"
+>How the Tape Coordinator Uses the MOUNT and UNMOUNT Instructions</A
+></H3
+><P
+>When you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command to initialize the Tape Coordinator for a given tape
+        device, the Tape Coordinator looks for the device configuration file called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/CFG_</B
+></SPAN
+>device_name on its local disk, where device_name has the format described in
+        <A
+HREF="c12776.html#HDRWQ276"
+>Creating a Device Configuration File</A
+>. If the file exists and contains a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction, then whenever the Tape Coordinator needs a tape, it executes the script named by
+        the instruction's filename argument.</P
+><P
+>If the device configuration file does not exist, or does not include a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+>
+        instruction, then whenever the Tape Coordinator needs a tape, it generates a prompt in its window instructing the operator
+        to insert the necessary tape. The operator must insert the tape and press <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+>
+        before the Tape Coordinator continues the backup operation.</P
+><P
+>Note, however, that you can modify the Tape Coordinator's behavior with respect to the first tape needed for an
+        operation, by setting the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY</B
+></SPAN
+> instruction in the device configuration file to
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, or including the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+> flag to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+> command. In this case, the Tape Coordinator does not execute the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction or prompt for a tape at the start of an operation, because it expects to find the
+        required first tape in the drive. See <A
+HREF="c12776.html#HDRWQ278"
+>Eliminating the Search or Prompt for the Initial
+        Tape</A
+>.</P
+><P
+>If there is an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instruction in the device configuration file, then whenever
+        the Tape Coordinator closes the tape device, it executes the script named by the instruction's filename argument. It
+        executes the script only once, and regardless of whether the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>close</B
+></SPAN
+> operation on the device
+        succeeded or not. If the device configuration file does not include an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> instruction,
+        then the Tape Coordinator takes no action.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="Header_313"
+>The Available Parameters and Required Exit Codes</A
+></H3
+><P
+>When the Tape Coordinator executes the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> script, it passes in five parameters,
+        ordered as follows. You can use the parameters in your script to refine its response to varying circumstances that can arise
+        during a backup operation. <OL
+TYPE="1"
+><LI
+><P
+>The tape device or backup data file's pathname, as recorded in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file.</P
+></LI
+><LI
+><P
+>The tape operation, which (except for the exceptions noted in the following list) matches the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command operation code used to initiate the operation: <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>appenddump</B
+></SPAN
+> (when a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> command
+                    includes the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-append</B
+></SPAN
+> flag)</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dump</B
+></SPAN
+> (when a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> command does
+                    not include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-append</B
+></SPAN
+> flag)</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>labeltape</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>readlabel</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>restore</B
+></SPAN
+> (for a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup diskrestore</B
+></SPAN
+>,
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup volrestore</B
+></SPAN
+>, or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup volsetrestore</B
+></SPAN
+>
+                    command)</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>restoredb</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>savedb</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>scantape</B
+></SPAN
+></P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>The number of times the Tape Coordinator has attempted to open the tape device or backup data file. If the open
+              attempt returns an error, the Tape Coordinator increments this value by one and again invokes the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction.</P
+></LI
+><LI
+><P
+>The tape name. For some operations, the Tape Coordinator passes the string
+              <SAMP
+CLASS="computeroutput"
+>none</SAMP
+>, because it does not know the tape name (when running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup scantape</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup readlabel</B
+></SPAN
+>, for example), or because
+              the tape does not necessarily have a name (when running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command,
+              for example).</P
+></LI
+><LI
+><P
+>The tape ID recorded in the Backup Database. As with the tape name, the Backup System passes the string
+              <SAMP
+CLASS="computeroutput"
+>none</SAMP
+> for operations where it does not know the tape ID or the tape does not
+              necessarily have an ID.</P
+></LI
+></OL
+></P
+><P
+>Your <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> script must return one of the following exit codes to tell the Tape
+        Coordinator whether or not it mounted the tape successfully: <UL
+><LI
+><P
+>Code <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) indicates a successful mount, and the Tape Coordinator continues
+              the backup operation. If the script or program called by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction does
+              not return this exit code, the Tape Coordinator never calls the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+>
+              instruction.</P
+></LI
+><LI
+><P
+>Code <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+> indicates that mount attempt failed. The Tape Coordinator terminates the
+              backup operation.</P
+></LI
+><LI
+><P
+>Any other code indicates that the script was unable to access the correct tape. The Tape Coordinator prompts the
+              operator to insert it.</P
+></LI
+></UL
+></P
+><P
+>When the Tape Coordinator executes the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>UNMOUNT</B
+></SPAN
+> script, it passes in two parameters in
+        the following order. <OL
+TYPE="1"
+><LI
+><P
+>The tape device's pathname (as specified in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+>
+              file)</P
+></LI
+><LI
+><P
+>The tape operation, which is always <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>unmount</B
+></SPAN
+>.</P
+></LI
+></OL
+></P
+><P
+>The following example script uses two of the parameters passed to it by the Backup System:
+        <SAMP
+CLASS="computeroutput"
+>tries</SAMP
+> and <SAMP
+CLASS="computeroutput"
+>operation</SAMP
+>. It follows the recommended practice
+        of exiting if the value of the <SAMP
+CLASS="computeroutput"
+>tries</SAMP
+> parameter exceeds one, because that implies that the
+        stacker is out of tapes.</P
+><P
+>For a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup savedb</B
+></SPAN
+> operation, the
+        routine calls the example <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>stackerCmd_NextTape</B
+></SPAN
+> function provided by the stacker's
+        manufacturer. Note that the final lines in the file return the exit code that prompts the operator to insert a tape; these
+        lines are invoked when either the stacker cannot load a tape or a the operation being performed is not one of those
+        explicitly mentioned in the file (is a restore operation, for example).</P
+><PRE
+CLASS="programlisting"
+>&#13;   #! /bin/csh -f
+   set devicefile = $1
+   set operation = $2
+   set tries = $3
+   set tapename = $4
+   set tapeid = $5
+   set exit_continue = 0
+   set exit_abort = 1
+   set exit_interactive = 2
+   #--------------------------------------------
+   if (${tries} &#62; 1) then
+      echo "Too many tries"
+      exit ${exit_interactive}
+   endif
+   if (${operation} == "unmount") then
+      echo "UnMount: Will leave tape in drive"
+      exit ${exit_continue}
+   endif
+   if ((${operation} == "dump")     |\
+       (${operation} == "appenddump")     |\
+       (${operation} == "savedb"))  then
+       stackerCmd_NextTape ${devicefile}
+       if (${status} != 0)exit${exit_interactive}
+       echo "Will continue"
+       exit ${exit_continue}
+   endif
+   if ((${operation} == "labeltape")    |\
+       (${operation} == "readlabel")) then
+      echo "Will continue"
+      exit ${exit_continue}
+   endif
+   echo "Prompt for tape"
+   exit ${exit_interactive}
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ278"
+>Eliminating the Search or Prompt for the Initial Tape</A
+></H2
+><P
+>By default, the Tape Coordinator obtains the first tape it needs for a backup operation by reading the device
+      configuration file for the appropriate tape device. If there is a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction in the
+      file, the Tape Coordinator executes the referenced script. If the device configuration file does not exist or does not have a
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction in it, the Tape Coordinator prompts you to insert the correct tape and
+      press <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+>.</P
+><P
+>If you know in advance that an operation requires a tape, you can increase efficiency by placing the required tape in
+      the drive before issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command and telling the Tape Coordinator's to skip its
+      initial tape-acquisition steps. This both enables the operation to begin more quickly and eliminates that need for you to be
+      present to insert a tape.</P
+><P
+>There are two ways to bypass the Tape Coordinator's initial tape-acquisition steps: <OL
+TYPE="1"
+><LI
+><P
+>Include the instruction <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>AUTOQUERY NO</B
+></SPAN
+> in the device configuration file</P
+></LI
+><LI
+><P
+>Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-noautoquery</B
+></SPAN
+> flag to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>butc</B
+></SPAN
+>
+            command</P
+></LI
+></OL
+></P
+><P
+>To avoid any error conditions that require operator attention, be sure that the tape you are placing in the drive does
+      not contain any unexpired dumps and is not write protected. If there is no permanent name on the tape's label and you are
+      creating an initial dump, make sure that the AFS tape name either matches the volume set and dump set names or is
+      <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+>. Alternatively, suppress the Tape Coordinator's name verification step by
+      assigning the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NAME_CHECK</B
+></SPAN
+> instruction in the
+      device configuration file, as described in <A
+HREF="c12776.html#HDRWQ280"
+>Eliminating the AFS Tape Name Check</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ279"
+>Enabling Default Responses to Error Conditions</A
+></H2
+><P
+>By default, the Tape Coordinator asks you how to respond when it encounters certain error conditions. To suppress the
+      prompts and cause the Tape Coordinator to handle the errors in a predetermined manner, include the instruction <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ASK NO</B
+></SPAN
+> in the device configuration file. If you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+>,
+      or omit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ASK</B
+></SPAN
+> instruction completely, the Tape Coordinator prompts you for direction when
+      it encounters one of the errors.</P
+><P
+>The following list describes the error conditions and the Tape Coordinator's response to them. <UL
+><LI
+><P
+>The Backup System is unable to dump a volume while running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+>
+            command. When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, the Tape Coordinator omits the volume from the
+            dump and continues the operation. When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+>, it prompts to ask if
+            you want to try to dump the volume again immediately, to omit the volume from the dump but continue the operation, or to
+            terminate the operation.</P
+></LI
+><LI
+><P
+>The Backup System is unable to restore a volume while running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+            diskrestore</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup volrestore</B
+></SPAN
+>, or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+            volsetrestore</B
+></SPAN
+> command. When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, the Tape Coordinator
+            continues the operation, omitting the problematic volume but restoring the remaining ones. When you assign the value
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+>, it prompts to ask if you want to omit the volume and continue the operation, or to
+            terminate the operation.</P
+></LI
+><LI
+><P
+>The Backup System cannot determine if the dump set includes any more tapes while running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup scantape</B
+></SPAN
+> command (the command's reference page in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration
+            Reference</I
+></SPAN
+> discusses possible reasons for this problem). When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, the Tape Coordinator proceeds as though there are more tapes and invokes the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> script named in the device configuration file, or prompts the operator to insert the next
+            tape. When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+>, it prompts to ask if there are more tapes to
+            scan.</P
+></LI
+><LI
+><P
+>The Backup System determines that the tape contains an unexpired dump while running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command. When you assign the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, it
+            terminates the operation without relabeling the tape. With a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+> value, the Tape
+            Coordinator prompts to ask if you want to relabel the tape anyway.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ280"
+>Eliminating the AFS Tape Name Check</A
+></H2
+><P
+>If a tape does not have a permanent name and you are writing an initial dump to it, then by default the Backup System
+      verifies that the tape's AFS tape name is acceptable. It accepts three types of values: <UL
+><LI
+><P
+>A name that reflects the volume set and dump level of the initial dump and the tape's place in the sequence of
+            tapes for the dump set, as described in <A
+HREF="c12776.html#HDRWQ253"
+>Dump Names and Tape Names</A
+>. If the tape does not
+            already have a permanent name, you can assign the AFS tape name by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+>
+            argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command.</P
+></LI
+><LI
+><P
+>A <SAMP
+CLASS="computeroutput"
+>&#60;NULL&#62;</SAMP
+> value, which results when you assign a permanent name, or provide
+            no value for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup labeltape</B
+></SPAN
+> command's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+>
+            argument.</P
+></LI
+><LI
+><P
+>No AFS tape name at all, indicating that you have never labeled the tape or written a dump to it.</P
+></LI
+></UL
+></P
+><P
+>To bypass the name check, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NAME_CHECK NO</B
+></SPAN
+> instruction in the device
+      configuration file. This enables you to recycle a tape without first relabeling it, as long as all dumps on it are expired.
+      (If a tape has unexpired dumps on it but you want to recycle it anyway, you must use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      labeltape</B
+></SPAN
+> command to relabel it first. For this to work, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ASK NO</B
+></SPAN
+> instruction
+      cannot appear in the device configuration file.)</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ281"
+>Setting the Memory Buffer Size to Promote Tape Streaming</A
+></H2
+><P
+>By default, the Tape Coordinator uses a 16-KB memory buffer during dump operations. As it receives volume data from the
+      Volume Server, the Tape Coordinator gathers 16 KB of data in the buffer before transferring the entire 16 KB to the tape
+      device. Similarly, during a restore operation the Tape Coordinator by default buffers 32 KB of data from the tape device
+      before transferring the entire 32 KB to the Volume Server for restoration into the file system. Buffering makes the volume of
+      data flowing to and from a tape device more even and so promotes tape streaming, which is the most efficient way for a tape
+      device to operate.</P
+><P
+>In a normal network configuration, the default buffer sizes are usually large enough to promote tape streaming. If the
+      network between the Tape Coordinator machine and file server machines is slow, it can help to increase the buffer size.</P
+><P
+>To determine if altering the buffer size is helpful for your configuration, observe the tape device in operation to see
+      if it is streaming, or consult the manufacturer. To set the buffer size, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>BUFFERSIZE</B
+></SPAN
+> instruction in the device configuration file. It takes an integer value, and optionally
+      units, in the following format:</P
+><PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>BUFFERSIZE</B
+></SPAN
+> size[{<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>k</B
+></SPAN
+> | <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>K</B
+></SPAN
+> | <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> | <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+> | <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>g</B
+></SPAN
+> | <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>G</B
+></SPAN
+>}]
+</PRE
+><P
+>where size specifies the amount of memory the Tape Coordinator allocates to use as a buffer during both dump and restore
+      operations. The default unit is bytes, but use <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>k</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>K</B
+></SPAN
+> to
+      specify kilobytes, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+> for megabytes, and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>g</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>G</B
+></SPAN
+> for gigabytes. There is no space between the size value and the
+      units letter.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ282"
+>Dumping Data to a Backup Data File</A
+></H2
+><P
+>You can write dumps to a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>backup data file</I
+></SPAN
+> rather than to tape. This is useful if, for example, you
+      want to transfer the data to a data-archiving system, such as a hierarchical storage management (HSM) system, that you use in
+      conjunction with AFS and the Backup System. You can restore data from a backup data file into the file system as well. Using a
+      backup data file is usually more efficient than issuing the equivalent <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos dump</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos restore</B
+></SPAN
+> commands individually for multiple volumes.</P
+><P
+>Writing to a backup data file is simplest if it is on the local disk of the Tape Coordinator machine, but you can also
+      write the file to an NFS-mounted partition that resides on a remote machine. It is even acceptable to write to a file in AFS,
+      provided that the access control list (ACL) on its parent directory grants the necessary permissions, but it is somewhat
+      circular to back up AFS data into AFS itself.</P
+><P
+>If the backup data file does not already exist when the Tape Coordinator attempts to write a dump to it, the Tape
+      Coordinator creates it. For a restore operation to succeed, the file must exist and contain volume data previously written to
+      it during a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dump</B
+></SPAN
+> operation.</P
+><P
+>When writing to a backup data file, the Tape Coordinator writes data at 16 KB offsets. If a given block of data (such as
+      the marker that signals the beginning or end of a volume) does not fill the entire 16 KB, the Tape Coordinator still skips to
+      the next offset before writing the next block. In the output of a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup dumpinfo</B
+></SPAN
+> command
+      issued with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> option, the value in the <SAMP
+CLASS="computeroutput"
+>Pos</SAMP
+> column is
+      the ordinal of the 16-KB offset at which the volume data begins, and so is not generally only one higher than the position
+      number on the previous line, as it is for dumps to tape.</P
+><P
+>Before writing to a backup data file, you need to configure the file as though it were a tape device.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>A file pathname, rather than a tape device name, must appear in the third field of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file when the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE YES</B
+></SPAN
+> instruction
+        appears in the device configuration file, and vice versa. If the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file instead
+        refers to a tape device, dump operations appear to succeed but are inoperative. You cannot restore data that you accidently
+        dumped to a tape device while the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE</B
+></SPAN
+> instruction was set to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>YES</B
+></SPAN
+>. In the same way, if the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE</B
+></SPAN
+> instruction is set to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NO</B
+></SPAN
+>, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> entry must refer to an actual tape device.</P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_319"
+>To configure a backup data file</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you are authenticated as a user listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+>
+          file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>. Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+> command to enter
+          interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Choose the port offset number to assign to the file. If necessary, display previously assigned port offsets by
+          issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) listhosts</B
+></SPAN
+> command, which is fully described in <A
+HREF="c12776.html#HDRWQ264"
+>To display the list of configured Tape Coordinators</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listhosts</B
+></SPAN
+>
+</PRE
+></P
+><P
+>As for a tape device, acceptable values are the integers <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>58510</B
+></SPAN
+> (the Backup System can track a maximum of 58,511 port offset numbers). Each port offset must
+          be unique in the cell, but you can associate any number them with a single Tape Coordinator machine. You do not have to
+          assign port offset numbers sequentially.</P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(backup) addhost</B
+></SPAN
+> command to register the backup data file's port offset
+          in the Backup Database. <PRE
+CLASS="programlisting"
+>&#13;   backup&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addhost</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>tape machine name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>TC port offset</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addh</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>addhost</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tape machine name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the fully qualified hostname of the Tape Coordinator machine you invoke to write to the backup
+                  data file.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TC port offset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the file's port offset number. You must provide this argument unless the default value of
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) is appropriate.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+><A
+NAME="LITAPECONFIG-FILE"
+></A
+>Using a text editor, create an entry for the backup data file in the local
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup/tapeconfig</B
+></SPAN
+> file, using the standard syntax: <PRE
+CLASS="programlisting"
+>&#13;   [capacity  filemark_size]  device_name   port_offset
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>capacity</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the amount of space on the partition that houses the backup data file that you want to make
+                  available for the file. To avoid the complications that arise from filling up the partition, it is best to provide
+                  a value somewhat smaller than the actual amount of space you expect to be available when the dump operation runs,
+                  and never larger than the maximum file size allowed by the operating system.</P
+><P
+>Specify a numerical value followed by a letter that indicates units, with no intervening space. The letter
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>k</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>K</B
+></SPAN
+> indicates kilobytes, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+> indicates megabytes, and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>g</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>G</B
+></SPAN
+> indicates gigabytes. If you omit the units letter,
+                  the default is kilobytes. If you leave this field empty, the Tape Coordinator uses the maximum acceptable value
+                  (2048 GB or 2 TB). Also leave the filemark_size field empty in that case.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>filemark_size</B
+></SPAN
+></DT
+><DD
+><P
+>Specify the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) or leave both this field and the capacity field
+                  empty. In the latter case, the Tape Coordinator also uses the value zero.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>device_name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the complete pathname of the backup data file. Rather than specifying an actual file pathname,
+                  however, the recommended configuration is to create a symbolic link in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev</B
+></SPAN
+>
+                  directory that points to the actual file pathname, and record the symbolic link in this field. This configuration
+                  provides these advantages: <UL
+><LI
+><P
+>It makes the device_name portion of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_</B
+></SPAN
+>device_name, of the
+                        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TE_</B
+></SPAN
+>device_name, and of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>TL_</B
+></SPAN
+>device_name
+                        filenames as short as possible. Because the symbolic link is in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev</B
+></SPAN
+>
+                        directory as though it is a tape device, you strip off the entire <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+>
+                        prefix when forming the filename, instead of just the initial slash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>).
+                        If, for example, the symbolic link is called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/FILE</B
+></SPAN
+>, the device
+                        configuration file's name is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_FILE</B
+></SPAN
+>, whereas if the actual pathname
+                        /<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>var/tmp/FILE</B
+></SPAN
+> appears in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+>
+                        file, the configuration file's name must be <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_var_tmp_FILE</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>It provides for a more graceful, and potentially automated, recovery if the Tape Coordinator cannot
+                        write a complete dump into the backup data file (for example, because the partition housing the backup data
+                        file becomes full). The Tape Coordinator's reaction to this problem is to invoke the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> script, or to prompt you if the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+>
+                        instruction does not appear in the configuration file. <UL
+><LI
+><P
+>If there is a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> script, you can prepare for this situation
+                              by adding a subroutine to the script that changes the symbolic link to point to another backup data
+                              file on a partition where there is space available.</P
+></LI
+><LI
+><P
+>If there is no <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction, the prompt enables you
+                              manually to change the symbolic link to point to another backup data file and then press &#60;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Return</B
+></SPAN
+>&#62; to signal that the Tape Coordinator can continue the
+                              operation.</P
+></LI
+></UL
+></P
+><P
+>If this field names the actual file, there is no way to recover from exhausting the space on the
+                        partition. You cannot change the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file in the middle of an
+                        operation.</P
+></LI
+></UL
+></P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>port_offset</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the port offset number that you chose for the backup data file.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>Create the device configuration file <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_</B
+></SPAN
+>device_name in the Tape Coordinator
+          machine's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/backup</B
+></SPAN
+> directory. Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>FILE
+          YES</B
+></SPAN
+> instruction in the file.</P
+><P
+>Construct the device_name portion of the name based on the device name you recorded in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file in Step <A
+HREF="c12776.html#LITAPECONFIG-FILE"
+>6</A
+>. If, as recommended, you
+          recorded a symbolic link name, strip off the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/</B
+></SPAN
+> string and replace any other slashes
+          (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>) in the name with underscores (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>_</B
+></SPAN
+>). For example,
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_FILE</B
+></SPAN
+> is the appropriate name if the symbolic link is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev/FILE</B
+></SPAN
+>. If you recorded the name of an actual file, then strip off the initial slash only and
+          replace any other slashes in the name with underscores. For a backup data file called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/var/tmp/FILE</B
+></SPAN
+>, the appropriate device configuration filename is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CFG_var_tmp_FILE</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>If you chose in Step <A
+HREF="c12776.html#LITAPECONFIG-FILE"
+>6</A
+> to record a symbolic link name in the device_name
+          field of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> entry, then you must do one of the following: <UL
+><LI
+><P
+>Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ln -s</B
+></SPAN
+> command to create the appropriate symbolic link in the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/dev</B
+></SPAN
+> directory</P
+></LI
+><LI
+><P
+>Write a script that initializes the backup data file in this way, and include a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>MOUNT</B
+></SPAN
+> instruction in the device configuration file to invoke the script. An example script
+                appears following these instructions.</P
+></LI
+></UL
+></P
+></LI
+></OL
+><P
+>You do not need to create the backup data file itself, because the Tape Coordinator does so if the file does not exist
+      when the dump operation begins.</P
+><P
+>The following example script illustrates how you can automatically create a symbolic link to the backup data file during
+      the preparation phase for writing to the file. When the Tape Coordinator is executing a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup
+      dump</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup restore</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup savedb</B
+></SPAN
+>, or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>backup restoredb</B
+></SPAN
+> operation, the routine invokes the UNIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ln -s</B
+></SPAN
+> command
+      to create a symbolic link from the backup data file named in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file to the
+      actual file to use (this is the recommended method). It uses the values of the <SAMP
+CLASS="computeroutput"
+>tapename</SAMP
+> and
+      <SAMP
+CLASS="computeroutput"
+>tapeid</SAMP
+> parameters passed to it by the Backup System when constructing the filename.</P
+><P
+>The routine makes use of two other parameters as well: <SAMP
+CLASS="computeroutput"
+>tries</SAMP
+> and
+      <SAMP
+CLASS="computeroutput"
+>operation</SAMP
+>. The <SAMP
+CLASS="computeroutput"
+>tries</SAMP
+> parameter tracks how many times the
+      Tape Coordinator has attempted to access the file. A value greater than one indicates that the Tape Coordinator cannot access
+      it, and the routine returns exit code 2 (<SAMP
+CLASS="computeroutput"
+>exit_interactive</SAMP
+>), which results in a prompt for the
+      operator to load a tape. The operator can use this opportunity to change the name of the backup data file specified in the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tapeconfig</B
+></SPAN
+> file.</P
+><PRE
+CLASS="programlisting"
+>&#13;   #! /bin/csh -f
+   set devicefile = $1
+   set operation = $2
+   set tries = $3
+   set tapename = $4
+   set tapeid = $5
+   set exit_continue = 0
+   set exit_abort = 1
+   set exit_interactive = 2
+   #--------------------------------------------
+   if (${tries} &#62; 1) then
+      echo "Too many tries"
+      exit ${exit_interactive}
+   endif
+   if (${operation} == "labeltape") then
+      echo "Won't label a tape/file"
+      exit ${exit_abort}
+   endif
+   if ((${operation} == "dump")   |\
+       (${operation} == "appenddump")   |\
+       (${operation} == "restore")   |\
+       (${operation} == "savedb")    |\
+       (${operation} == "restoredb")) then
+      /bin/rm -f ${devicefile}
+      /bin/ln -s /hsm/${tapename}_${tapeid} ${devicefile}
+      if (${status} != 0) exit ${exit_abort}
+   endif
+   exit ${exit_continue}
+</PRE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c8420.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c15383.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Managing Volumes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="p3023.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Backing Up and Restoring AFS Data</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_diskfree1">
+  <refmeta>
+    <refentrytitle>fs diskfree</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs diskfree</refname>
+    <refpurpose>Shows data about the partition housing a directory or file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs diskfree</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs df</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs di</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs diskfree</emphasis> command formats and displays information about the
+    partition that houses the volume containing the specified directory or
+    file, including its size and how much space is currently used.</para>
+
+    <para>To display information about the volume itself, use the <emphasis role="bold">fs examine</emphasis>
+    command. The <emphasis role="bold">fs examine</emphasis> and <emphasis role="bold">fs quota</emphasis> commands also display
+    information about a volume.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The partition-related statistics in this command's output do not always
+    agree with the corresponding values in the output of the standard UNIX
+    <emphasis role="bold">df</emphasis> command. The statistics reported by this command can be up to five
+    minutes old, because the Cache Manager polls the File Server for partition
+    information at that frequency. Also, on some operating systems, the <emphasis role="bold">df</emphasis>
+    command's report of partition size includes reserved space not included in
+    this command's calculation, and so is likely to be about 10% larger.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names a file or directory that resides on the partition about which to
+          produce output. Partial pathnames are interpreted relative to the current
+          working directory, which is also the default value if this argument is
+          omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports the following information about the volume and
+    partition that houses each file or directory:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>Volume Name</term>
+        <listitem>
+          <para>The name of the volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>kbytes</term>
+        <listitem>
+          <para>The partition's total size in kilobytes.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>used</term>
+        <listitem>
+          <para>The number of kilobytes used on the partition.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>avail</term>
+        <listitem>
+          <para>The number of kilobytes available on the partition.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>%used</term>
+        <listitem>
+          <para>The percentage of the partition's total space that is used (the <computeroutput>used</computeroutput>
+          statistic divided by the <computeroutput>kbytes</computeroutput> statistic, times 100).</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>If the <computeroutput>%used</computeroutput> statistic is greater than 90%, it is marked with the
+    string <computeroutput>&lt;&lt;WARNING</computeroutput> at the right margin.</para>
+
+    <para>If the volume is a read-only volume, the output includes information about
+    only one of the partitions that houses it, generally the one on the file
+    server machine with the lowest preference rank. To verify which machine
+    the output is referring to, use the <emphasis role="bold">vos listvldb</emphasis> command to list the
+    volume's locations, and the <emphasis role="bold">vos partinfo</emphasis> command to display the size of
+    each one.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example shows the output for the partitions housing the
+    volumes <computeroutput>user.smith</computeroutput> and <computeroutput>sun4x_56.bin</computeroutput>:</para>
+
+<programlisting>
+   % fs diskfree -path /afs/abc.com/usr/smith /afs/abc.com/sun4x_56/bin
+   Volume Name     kbytes  used     avail     %used
+   user.smith     4177920 3841258  336662       92% &amp;lt;&amp;lt;WARNING
+   sun4x_56.bin   4423680 3174500 1249180       72%
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+      directory of the volume that houses the file or directory named by the
+      <emphasis role="bold">-path</emphasis> argument, and on the ACL of each directory that precedes it in
+      the pathname.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="fs_examine1">fs_examine(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

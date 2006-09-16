@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_delhost8">
+  <refmeta>
+    <refentrytitle>backup delhost</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup delhost</refname>
+    <refpurpose>Deletes a Tape Coordinator entry from the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup delhost</emphasis> <emphasis role="bold">-tapehost</emphasis> &lt;<emphasis>tape machine name</emphasis>&gt;
+        [<emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;] [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup delh</emphasis> <emphasis role="bold">-t</emphasis> &lt;<emphasis>tape machine name</emphasis>&gt; [<emphasis role="bold">-p</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup delhost</emphasis> command deletes the indicated Tape Coordinator entry
+    from the Backup Database. It is then impossible to submit backup
+    operations to that Tape Coordinator, even if it is still running. To keep
+    configuration information consistent, also remove the corresponding entry
+    from the <replaceable>/usr/afs/backup/tapeconfig</replaceable> file on the Tape Coordinator
+    machine.</para>
+
+    <para>To list the Tape Coordinator machines and port offsets defined in the
+    Backup Database, issue the <emphasis role="bold">backup listhosts</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-tapehost</emphasis> &lt;<emphasis>tape machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the hostname of the machine housing the Tape Coordinator to
+          delete.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the port offset number of the Tape Coordinator to delete.  If
+          omitted, it defaults to <computeroutput>0</computeroutput>. If provided, it is an integer between <computeroutput>0</computeroutput>
+          (zero) and <computeroutput>58510</computeroutput>, and must match the port offset number assigned to the
+          same combination of Tape Coordinator and tape device or file in the
+          <replaceable>/usr/afs/backup/tapeconfig</replaceable> file on the Tape Coordinator machine
+          indicated by the <emphasis role="bold">-tapehost</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command deletes the Backup Database entry for the Tape
+    Coordinator with port offset 2 on the Tape Coordinator machine
+    <computeroutput>backup3.abc.com</computeroutput>:</para>
+
+<programlisting>
+   % backup delhost -tapehost backup3.abc.com -portoffset 2
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+      machine where the Backup Server is running, or must be logged onto a
+      server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+      included.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="backup8">backup(8)</link>,
+      <link linkend="backup_addhost8">backup_addhost(8)</link>,
+      <link linkend="backup_listhosts8">backup_listhosts(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

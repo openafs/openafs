@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_examine1">
+  <refmeta>
+    <refentrytitle>pts examine</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts examine</refname>
+    <refpurpose>Displays a Protection Database entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts examine</emphasis> <emphasis role="bold">-nameorid</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts e</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts check</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts che</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user or group name or id</emphasis>&gt;+ [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts examine</emphasis> command displays information from the Protection
+    Database entry of each user, machine or group specified by the
+    <emphasis role="bold">-nameorid</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>-nameorid &lt;<emphasis>user or group name or id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the name or AFS UID of each user, the name or AFS GID of each
+          group, or the IP address (complete or wildcard-style) or AFS UID of each
+          machine for which to display the Protection Database entry. It is
+          acceptable to mix users, machines, and groups on the same command line, as
+          well as names (IP addresses for machines) and IDs. Precede the GID of each
+          group with a hyphen to indicate that it is negative.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output for each entry consists of two lines that include the following
+    fields:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>Name</term>
+        <listitem>
+          <para>The contents of this field depend on the type of entry:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>For a user entry, it is the username that the user types when
+              authenticating with AFS.</para>
+
+            </listitem>
+            <listitem>
+              <para>For a machine entry, it is either the IP address of a single machine in
+              dotted decimal format, or a wildcard notation that represents a group of
+              machines on the same network. See the <emphasis role="bold">pts createuser</emphasis> reference page for
+              an explanation of the wildcard notation.</para>
+
+            </listitem>
+            <listitem>
+              <para>For a group entry, it is one of two types of group name. If the name has a
+              colon between the two parts, it represents a regular group and the part
+              before the prefix reflects the group's owner. A prefix-less group does not
+              have the owner field or the colon. For more details on group names, see
+              the <emphasis role="bold">pts creategroup</emphasis> reference page.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>id</term>
+        <listitem>
+          <para>A unique number that the AFS server processes use to identify AFS users,
+          machines and groups. AFS UIDs for user and machine entries are positive
+          integers, and AFS GIDs for group entries are negative integers. AFS UIDs
+          and GIDs are similar in function to the UIDs and GIDs used in local file
+          systems such as UFS, but apply only to AFS operations.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>owner</term>
+        <listitem>
+          <para>The user or group that owns the entry and thus can administer it (change
+          the values in most of the fields displayed in the output of this command),
+          or delete it entirely. The Protection Server automatically records the
+          system:administrators group in this field for user and machine entries at
+          creation time.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>creator</term>
+        <listitem>
+          <para>The user who issued the <emphasis role="bold">pts createuser</emphasis> or <emphasis role="bold">pts creategroup</emphasis> command to
+          create the entry. This field serves as an audit trail, and cannot be
+          changed.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>membership</term>
+        <listitem>
+          <para>An integer that for users and machines represents the number of groups to
+          which the user or machine belongs. For groups, it represents the number of
+          group members.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>flags</term>
+        <listitem>
+          <para>A string of five characters, referred to as <emphasis>privacy flags</emphasis>, which
+          indicate who can display or administer certain aspects of the entry.</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>s</term>
+              <listitem>
+                <para>Controls who can issue the <emphasis role="bold">pts examine</emphasis> command to display the entry.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>o</term>
+              <listitem>
+                <para>Controls who can issue the <emphasis role="bold">pts listowned</emphasis> command to display the groups
+                that a user or group owns.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>m</term>
+              <listitem>
+                <para>Controls who can issue the <emphasis role="bold">pts membership</emphasis> command to display the groups
+                a user or machine belongs to, or which users or machines belong to a
+                group.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>a</term>
+              <listitem>
+                <para>Controls who can issue the <emphasis role="bold">pts adduser</emphasis> command to add a user or machine
+                to a group. It is meaningful only for groups, but a value must always be
+                set for it even on user and machine entries.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>r</term>
+              <listitem>
+                <para>Controls who can issue the <emphasis role="bold">pts removeuser</emphasis> command to remove a user or
+                machine from a group. It is meaningful only for groups, but a value must
+                always be set for it even on user and machine entries.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>Each flag can take three possible types of values to enable a different
+          set of users to issue the corresponding command:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>A hyphen (-) designates the members of the system:administrators group and
+              the entry's owner. For user entries, it designates the user in addition.</para>
+
+            </listitem>
+            <listitem>
+              <para>The lowercase version of the letter applies meaningfully to groups only,
+              and designates members of the group in addition to the individuals
+              designated by the hyphen.</para>
+
+            </listitem>
+            <listitem>
+              <para>The uppercase version of the letter designates everyone.</para>
+
+            </listitem>
+          </itemizedlist>
+          <para>For example, the flags <computeroutput>SOmar</computeroutput> on a group entry indicate that anyone can
+          examine the group's entry and display the groups that it owns, and that
+          only the group's members can display, add, or remove its members.</para>
+
+          <para>The default privacy flags for user and machine entries are <computeroutput>S----</computeroutput>,
+          meaning that anyone can display the entry. The ability to perform any
+          other functions is restricted to members of the system:administrators
+          group and the entry's owner (as well as the user for a user entry).</para>
+
+          <para>The default privacy flags for group entries are <computeroutput>S-M--</computeroutput>, meaning that all
+          users can display the entry and the members of the group, but only the
+          entry owner and members of the system:administrators group can perform
+          other functions.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>group quota</term>
+        <listitem>
+          <para>The number of additional groups the user is allowed to create. The <emphasis role="bold">pts
+          createuser</emphasis> command sets it to 20 for both users and machines, but it has
+          no meaningful interpretation for a machine, because it is not possible to
+          authenticate as a machine. Similarly, it has no meaning in group entries
+          and the <emphasis role="bold">pts creategroup</emphasis> command sets it to 0 (zero); do not change this
+          value.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example displays the user entry for <computeroutput>terry</computeroutput> and the machine
+    entry <computeroutput>158.12.105.44</computeroutput>.</para>
+
+<programlisting>
+   % pts examine terry 158.12.105.44
+   Name: terry, id: 1045, owner: system:administrators, creator: admin,
+     membership: 9, flags: S----, group quota: 15.
+   Name: 158.12.105.44, id: 5151, owner: system:administrators,
+     creator: byu, membership: 1, flags: S----, group quota: 20.
+
+</programlisting>
+      <para>The following example displays the entries for the AFS groups with GIDs
+      -673 and -674.</para>
+
+<programlisting>
+   % pts examine -673 -674
+   Name: terry:friends, id: -673, owner: terry, creator: terry,
+     membership: 5, flags: S-M--, group quota: 0.
+   Name: smith:colleagues, id: -674, owner: smith, creator: smith,
+     membership: 14, flags: SOM--, group quota: 0.
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The required privilege depends on the setting of the first privacy flag in
+        the Protection Database entry of each entry specified by the <emphasis role="bold">-nameorid</emphasis>
+        argument:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>If it is lowercase <computeroutput>s</computeroutput>, members of the system:administrators group and
+            the user associated with a user entry can examine it, and only members of
+            the system:administrators group can examine a machine or group entry.</para>
+
+          </listitem>
+          <listitem>
+            <para>If it is uppercase <computeroutput>S</computeroutput>, anyone who can access the cell's database server
+            machines can examine the entry.</para>
+
+          </listitem>
+        </itemizedlist>
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="pts1">pts(1)</link>,
+        <link linkend="pts_adduser1">pts_adduser(1)</link>,
+        <link linkend="pts_chown1">pts_chown(1)</link>,
+        <link linkend="pts_creategroup1">pts_creategroup(1)</link>,
+        <link linkend="pts_createuser1">pts_createuser(1)</link>,
+        <link linkend="pts_listowned1">pts_listowned(1)</link>,
+        <link linkend="pts_membership1">pts_membership(1)</link>,
+        <link linkend="pts_removeuser1">pts_removeuser(1)</link>,
+        <link linkend="pts_rename1">pts_rename(1)</link>,
+        <link linkend="pts_setfields1">pts_setfields(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

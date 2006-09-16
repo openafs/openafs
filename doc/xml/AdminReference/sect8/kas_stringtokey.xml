@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_stringtokey8">
+  <refmeta>
+    <refentrytitle>kas stringtokey</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas stringtokey</refname>
+    <refpurpose>Converts a character string into an octal key</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas stringtokey</emphasis> <emphasis role="bold">-string</emphasis> &lt;<emphasis>password string</emphasis>&gt;
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas str</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>password string</emphasis>&gt; [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas stringtokey</emphasis> command converts the character string specified
+    with the <emphasis role="bold">-string</emphasis> argument into an octal string suitable for use as an
+    encryption key.</para>
+
+    <para>The <emphasis role="bold">kas</emphasis> command interpreter generates the octal key by using an
+    encryption algorithm on the combination of the specified string and the
+    name of the local cell (as recorded in the local <replaceable>/usr/vice/etc/ThisCell</replaceable>
+    file). Use the <emphasis role="bold">-cell</emphasis> argument to convert a string into a key
+    appropriate for a cell other than the local one.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>This command writes the key to the standard output stream, on which it can
+    possibly be intercepted by third parties. It is not very secure to use the
+    key in an actual Authentication Database entry.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-string</emphasis> &lt;<emphasis>password string</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the character string to convert into an octal key.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the complete Internet domain name of the cell to combine with
+          the password string while generating the key. If this argument is omitted,
+          the <emphasis role="bold">kas</emphasis> command interpreter determines the name of the local cell by
+          consulting:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>First, the value of the environment variable AFSCELL.</para>
+
+            </listitem>
+            <listitem>
+              <para>Second, the cellname in the <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the local
+              machine.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output is of the following form:</para>
+
+<programlisting>
+   Converting I&amp;lt;password string&amp;gt; in realm 'I&amp;lt;cell_name&amp;gt;' yields key='I&amp;lt;key&amp;gt;'.
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the octal key equivalent of the string
+      <computeroutput>new_pswd</computeroutput> in the ABC Corporation cell.</para>
+
+<programlisting>
+   % kas stringtokey new_pswd
+   Converting new_pswd in realm 'ABC.COM' yields
+       key='\346\307\364\320\263\233\342\354'.
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None, and no password is required.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="ThisCell5">ThisCell(5)</link>,
+        <link linkend="kas8">kas(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

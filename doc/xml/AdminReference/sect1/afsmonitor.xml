@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afsmonitor1">
+  <refmeta>
+    <refentrytitle>afsmonitor</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afsmonitor</refname>
+    <refpurpose>Monitors File Servers and Cache Managers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">afsmonitor</emphasis> [<emphasis role="bold">initcmd</emphasis>] [-config &lt;<emphasis>configuration file</emphasis>&gt;]
+        [<emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;]
+        [<emphasis role="bold">-output</emphasis> &lt;<emphasis>storage file name</emphasis>&gt;] [<emphasis role="bold">-detailed</emphasis>]
+        [<emphasis role="bold">-debug</emphasis> &lt;<emphasis>debug output file</emphasis>&gt;]
+        [<emphasis role="bold">-fshosts</emphasis> &lt;<emphasis>list of file servers to monitor</emphasis>&gt;+]
+        [<emphasis role="bold">-cmhosts</emphasis> &lt;<emphasis>list of cache managers to monitor</emphasis>&gt;+]
+        [<emphasis role="bold">-buffers</emphasis> &lt;<emphasis>number of buffer slots</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">afsmonitor</emphasis> [<emphasis role="bold">i</emphasis>]  [-co &lt;<emphasis>configuration file</emphasis>&gt;]
+        [<emphasis role="bold">-fr</emphasis> &lt;<emphasis>poll frequency, in seconds</emphasis>&gt;]
+        [<emphasis role="bold">-o</emphasis> &lt;<emphasis>storage file name</emphasis>&gt;] [<emphasis role="bold">-det</emphasis>]
+        [<emphasis role="bold">-deb</emphasis> &lt;<emphasis>debug output file</emphasis>&gt;]
+        [<emphasis role="bold">-fs</emphasis> &lt;<emphasis>list of file servers to monitor</emphasis>&gt;+]
+        [<emphasis role="bold">-cm</emphasis> &lt;<emphasis>list of cache managers to monitor</emphasis>&gt;+]
+        [<emphasis role="bold">-b</emphasis> &lt;<emphasis>number of buffer slots</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The afsmonitor command initializes a program that gathers and displays
+    statistics about specified File Server and Cache Manager operations. It
+    allows the issuer to monitor, from a single location, a wide range of File
+    Server and Cache Manager operations on any number of machines in both
+    local and foreign cells.</para>
+
+    <para>There are 271 available File Server statistics and 571 available Cache
+    Manager statistics, listed in the appendix about <emphasis role="bold">afsmonitor</emphasis> statistics
+    in the <emphasis>IBM AFS Administration Guide</emphasis>. By default, the command displays
+    all of the relevant statistics for the file server machines named by the
+    <emphasis role="bold">-fshosts</emphasis> argument and the client machines named by the <emphasis role="bold">-cmhosts</emphasis>
+    argument. To limit the display to only the statistics of interest, list
+    them in the configuration file specified by the <emphasis role="bold">-config</emphasis> argument. In
+    addition, use the configuration file for the following purposes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To set threshold values for any monitored statistic. When the value of a
+        statistic exceeds the threshold, the <emphasis role="bold">afsmonitor</emphasis> command displays it in
+        reverse video. There are no default threshold values.</para>
+
+      </listitem>
+      <listitem>
+        <para>To invoke a program or script automatically when a statistic exceeds its
+        threshold. The AFS distribution does not include any such scripts.</para>
+
+      </listitem>
+      <listitem>
+        <para>To list the file server and client machines to monitor, instead of using
+        the <emphasis role="bold">-fshosts</emphasis> and <emphasis role="bold">-cmhosts</emphasis> arguments.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>For a description of the configuration file, see <link linkend="afsmonitor5">afsmonitor(5)</link>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The following software must be accessible to a machine where the
+    <emphasis role="bold">afsmonitor</emphasis> program is running:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The AFS xstat libraries, which the afsmonitor program uses to gather data.</para>
+
+      </listitem>
+      <listitem>
+        <para>The curses graphics package, which most UNIX distributions provide as a
+        standard utility.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The <emphasis role="bold">afsmonitor</emphasis> screens format successfully both on so-called dumb
+    terminals and in windowing systems that emulate terminals. For the output
+    to looks its best, the display environment needs to support reverse video
+    and cursor addressing. Set the TERM environment variable to the correct
+    terminal type, or to a value that has characteristics similar to the
+    actual terminal type. The display window or terminal must be at least 80
+    columns wide and 12 lines long.</para>
+
+    <para>The <emphasis role="bold">afsmonitor</emphasis> program must run in the foreground, and in its own
+    separate, dedicated window or terminal. The window or terminal is
+    unavailable for any other activity as long as the <emphasis role="bold">afsmonitor</emphasis> program is
+    running. Any number of instances of the <emphasis role="bold">afsmonitor</emphasis> program can run on a
+    single machine, as long as each instance runs in its own dedicated window
+    or terminal. Note that it can take up to three minutes to start an
+    additional instance.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">initcmd</emphasis></term>
+        <listitem>
+          <para>Accommodates the command's use of the AFS command parser, and is optional.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-config</emphasis> &lt;<emphasis>file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the configuration file which lists the machines to monitor,
+          statistics to display, and threshold values, if any. A partial pathname is
+          interpreted relative to the current working directory. Provide this
+          argument if not providing the <emphasis role="bold">-fshosts</emphasis> argument, <emphasis role="bold">-cmhosts</emphasis> argument,
+          or neither. For instructions on creating this file, see the preceding
+          <emphasis role="bold">DESCRIPTION</emphasis> section, and the section on the <emphasis role="bold">afsmonitor</emphasis> program in
+          the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-frequency</emphasis> &lt;<emphasis>poll frequency</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies in seconds how often the afsmonitor program probes the File
+          Servers and Cache Managers. Valid values range from <computeroutput>1</computeroutput> to <computeroutput>86400</computeroutput>
+          (which is 24 hours); the default value is <computeroutput>60</computeroutput>. This frequency applies to
+          both File Servers and Cache Managers, but the <emphasis role="bold">afsmonitor</emphasis> program
+          initiates the two types of probes, and processes their results,
+          separately. The actual interval between probes to a host is the probe
+          frequency plus the time required for all hosts to respond.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-output</emphasis> &lt;<emphasis>file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the file to which the afsmonitor program writes all of the
+          statistics that it collects. By default, no output file is created. See
+          the section on the <emphasis role="bold">afsmonitor</emphasis> command in the <emphasis>IBM AFS Administration
+          Guide</emphasis> for information on this file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-detailed</emphasis></term>
+        <listitem>
+          <para>Formats the information in the output file named by <emphasis role="bold">-output</emphasis> argument in
+          a maximally readable format. Provide the <emphasis role="bold">-output</emphasis> argument along with
+          this one.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fshosts</emphasis> &lt;<emphasis>host</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names one or more machines from which to gather File Server
+          statistics. For each machine, provide either a fully qualified host name,
+          or an unambiguous abbreviation (the ability to resolve an abbreviation
+          depends on the state of the cell's name service at the time the command is
+          issued). This argument can be combined with the <emphasis role="bold">-cmhosts</emphasis> argument, but
+          not with the <emphasis role="bold">-config</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cmhosts</emphasis> &lt;<emphasis>host</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names one or more machines from which to gather Cache Manager
+          statistics. For each machine, provide either a fully qualified host name,
+          or an unambiguous abbreviation (the ability to resolve an abbreviation
+          depends on the state of the cell's name service at the time the command is
+          issued). This argument can be combined with the <emphasis role="bold">-fshosts</emphasis> argument, but
+          not with the <emphasis role="bold">-config</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-buffers</emphasis> &lt;<emphasis>slots</emphasis>&gt;</term>
+        <listitem>
+          <para>Is nonoperational and provided to accommodate potential future
+          enhancements to the program.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The afsmonitor program displays its data on three screens:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>System Overview</term>
+        <listitem>
+          <para>This screen appears automatically when the <emphasis role="bold">afsmonitor</emphasis> program
+          initializes. It summarizes separately for File Servers and Cache Managers
+          the number of machines being monitored and how many of them have <emphasis>alerts</emphasis>
+          (statistics that have exceeded their thresholds). It then lists the
+          hostname and number of alerts for each machine being monitored, indicating
+          if appropriate that a process failed to respond to the last probe.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>File Server</term>
+        <listitem>
+          <para>This screen displays File Server statistics for each file server machine
+          being monitored. It highlights statistics that have exceeded their
+          thresholds, and identifies machines that failed to respond to the last
+          probe.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Cache Managers</term>
+        <listitem>
+          <para>This screen displays Cache Manager statistics for each client machine
+          being monitored. It highlights statistics that have exceeded their
+          thresholds, and identifies machines that failed to respond to the last
+          probe.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Fields at the corners of every screen display the following information:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>In the top left corner, the program name and version number.</para>
+
+      </listitem>
+      <listitem>
+        <para>In the top right corner, the screen name, current and total page numbers,
+        and current and total column numbers. The page number (for example, <computeroutput>p. 1
+        of 3</computeroutput>) indicates the index of the current page and the total number of
+        (vertical) pages over which data is displayed. The column number (for
+        example, <computeroutput>c. 1 of 235</computeroutput>) indicates the index of the current leftmost
+        column and the total number of columns in which data appears. (The symbol
+        <computeroutput>&gt;&gt;&gt;</computeroutput> indicates that there is additional data to the right; the
+        symbol <computeroutput>&lt;&lt;&lt;</computeroutput> indicates that there is additional data to the
+        left.)</para>
+
+      </listitem>
+      <listitem>
+        <para>In the bottom left corner, a list of the available commands. Enter the
+        first letter in the command name to run that command. Only the currently
+        possible options appear; for example, if there is only one page of data,
+        the <computeroutput>next</computeroutput> and <computeroutput>prev</computeroutput> commands, which scroll the screen up and down
+        respectively, do not appear. For descriptions of the commands, see the
+        following section about navigating the display screens.</para>
+
+      </listitem>
+      <listitem>
+        <para>In the bottom right corner, the <computeroutput>probes</computeroutput> field reports how many times the
+        program has probed File Servers (<computeroutput>fs</computeroutput>), Cache Managers (<computeroutput>cm</computeroutput>), or
+        both. The counts for File Servers and Cache Managers can differ. The
+        <computeroutput>freq</computeroutput> field reports how often the program sends probes.</para>
+
+      </listitem>
+    </itemizedlist>
+    <refsect2>
+      <title>Navigating the afsmonitor Display Screens</title>
+      <para>As noted, the lower left hand corner of every display screen displays the
+      names of the commands currently available for moving to alternate screens,
+      which can either be a different type or display more statistics or
+      machines of the current type. To execute a command, press the lowercase
+      version of the first letter in its name. Some commands also have an
+      uppercase version that has a somewhat different effect, as indicated in
+      the following list.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><computeroutput>cm</computeroutput></term>
+          <listitem>
+            <para>Switches to the <computeroutput>Cache Managers</computeroutput> screen. Available only on the <computeroutput>System
+            Overview</computeroutput> and <computeroutput>File Servers</computeroutput> screens.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>fs</computeroutput></term>
+          <listitem>
+            <para>Switches to the <computeroutput>File Servers</computeroutput> screen. Available only on the <computeroutput>System
+            Overview</computeroutput> and the <computeroutput>Cache Managers</computeroutput> screens.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>left</computeroutput></term>
+          <listitem>
+            <para>Scrolls horizontally to the left, to access the data columns situated to
+            the left of the current set. Available when the <computeroutput>&lt;&lt;&lt;</computeroutput> symbol
+            appears at the top left of the screen. Press uppercase <computeroutput>L</computeroutput> to scroll
+            horizontally all the way to the left (to display the first set of data
+            columns).</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>next</computeroutput></term>
+          <listitem>
+            <para>Scrolls down vertically to the next page of machine names.  Available when
+            there are two or more pages of machines and the final page is not
+            currently displayed. Press uppercase <computeroutput>N</computeroutput> to scroll to the final page.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>oview</computeroutput></term>
+          <listitem>
+            <para>Switches to the <computeroutput>System Overview</computeroutput> screen. Available only on the <computeroutput>Cache
+            Managers</computeroutput> and <computeroutput>File Servers</computeroutput> screens.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>prev</computeroutput></term>
+          <listitem>
+            <para>Scrolls up vertically to the previous page of machine names.  Available
+            when there are two or more pages of machines and the first page is not
+            currently displayed. Press uppercase <computeroutput>N</computeroutput> to scroll to the first page.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><computeroutput>right</computeroutput></term>
+          <listitem>
+            <para>Scrolls horizontally to the right, to access the data columns situated to
+            the right of the current set. This command is available when the <computeroutput>&gt;&gt;&gt;</computeroutput> symbol appears at the upper right of the screen. Press uppercase <computeroutput>R</computeroutput>
+            to scroll horizontally all the way to the right (to display the final set
+            of data columns).</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect2>
+    <refsect2>
+      <title>The System Overview Screen</title>
+      <para>The <computeroutput>System Overview</computeroutput> screen appears automatically as the <emphasis role="bold">afsmonitor</emphasis>
+      program initializes. This screen displays the status of as many File
+      Server and Cache Manager processes as can fit in the current window;
+      scroll down to access additional information.</para>
+
+      <para>The information on this screen is split into File Server information on
+      the left and Cache Manager information on the right. The header for each
+      grouping reports two pieces of information:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The number of machines on which the program is monitoring the indicated
+          process.</para>
+
+        </listitem>
+        <listitem>
+          <para>The number of alerts and the number of machines affected by them (an
+          <emphasis>alert</emphasis> means that a statistic has exceeded its threshold or a process
+          failed to respond to the last probe).</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>A list of the machines being monitored follows. If there are any alerts on
+      a machine, the number of them appears in square brackets to the left of
+      the hostname. If a process failed to respond to the last probe, the
+      letters <computeroutput>PF</computeroutput> (probe failure) appear in square brackets to the left of the
+      hostname.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>The File Servers Screen</title>
+      <para>The <computeroutput>File Servers</computeroutput> screen displays the values collected at the most
+      recent probe for File Server statistics.</para>
+
+      <para>A summary line at the top of the screen (just below the standard program
+      version and screen title blocks) specifies the number of monitored File
+      Servers, the number of alerts, and the number of machines affected by the
+      alerts.</para>
+
+      <para>The first column always displays the hostnames of the machines running the
+      monitored File Servers.</para>
+
+      <para>To the right of the hostname column appear as many columns of statistics
+      as can fit within the current width of the display screen or window; each
+      column requires space for 10 characters. The name of the statistic appears
+      at the top of each column. If the File Server on a machine did not respond
+      to the most recent probe, a pair of dashes (<computeroutput>--</computeroutput>) appears in each
+      column. If a value exceeds its configured threshold, it is highlighted in
+      reverse video. If a value is too large to fit into the allotted column
+      width, it overflows into the next row in the same column.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>The Cache Managers Screen</title>
+      <para>The <computeroutput>Cache Managers</computeroutput> screen displays the values collected at the most
+      recent probe for Cache Manager statistics.</para>
+
+      <para>A summary line at the top of the screen (just below the standard program
+      version and screen title blocks) specifies the number of monitored Cache
+      Managers, the number of alerts, and the number of machines affected by the
+      alerts.</para>
+
+      <para>The first column always displays the hostnames of the machines running the
+      monitored Cache Managers.</para>
+
+      <para>To the right of the hostname column appear as many columns of statistics
+      as can fit within the current width of the display screen or window; each
+      column requires space for 10 characters. The name of the statistic appears
+      at the top of each column. If the Cache Manager on a machine did not
+      respond to the most recent probe, a pair of dashes (<computeroutput>--</computeroutput>) appears in each
+      column. If a value exceeds its configured threshold, it is highlighted in
+      reverse video. If a value is too large to fit into the allotted column
+      width, it overflows into the next row in the same column.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>Writing to an Output File</title>
+      <para>Include the <emphasis role="bold">-output</emphasis> argument to name the file into which the
+      <emphasis role="bold">afsmonitor</emphasis> program writes all of the statistics it collects.  The
+      output file can be useful for tracking performance over long periods of
+      time, and enables the administrator to apply post-processing techniques
+      that reveal system trends. The AFS distribution does not include any
+      post-processing programs.</para>
+
+      <para>The output file is in ASCII format and records the same information as the
+      <computeroutput>File Server</computeroutput> and <computeroutput>Cache Manager</computeroutput> display screens.  Each line in the
+      file uses the following format to record the time at which the
+      <emphasis role="bold">afsmonitor</emphasis> program gathered the indicated statistic from the Cache
+      Manager (<computeroutput>CM</computeroutput>) or File Server (<computeroutput>FS</computeroutput>) running on the machine called
+      <emphasis>host_name</emphasis>. If a probe failed, the error code <computeroutput>-1</computeroutput> appears in the
+      <emphasis>statistic</emphasis> field.</para>
+
+<programlisting>
+   &amp;lt;time&amp;gt;  &amp;lt;host_name&amp;gt;  CM|FS   &amp;lt;statistic&amp;gt;
+
+</programlisting>
+        <para>If the administrator usually reviews the output file manually, rather than
+        using it as input to an automated analysis program or script, including
+        the <emphasis role="bold">-detail</emphasis> flag formats the data in a more easily readable form.</para>
+
+      </refsect2>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>For examples of commands, display screens, and configuration files, see
+      the section about the <emphasis role="bold">afsmonitor</emphasis> program in the <emphasis>IBM AFS
+      Administration Guide</emphasis>.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="afsmonitor5">afsmonitor(5)</link>
+      <link linkend="fstrace8">fstrace(8)</link>,
+      <link linkend="scout1">scout(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

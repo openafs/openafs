@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="sysid5">
+  <refmeta>
+    <refentrytitle>sysid</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>sysid</refname>
+    <refpurpose>Lists file server machine interface addresses registered in VLDB</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>sysid</replaceable> file records the network interface addresses that the File
+    Server (<emphasis role="bold">fileserver</emphasis> process) registers in the Volume Location Database
+    (VLDB) for the local file server machine.</para>
+
+    <para>Each time the File Server restarts, it builds a list of interfaces on the
+    local machine by reading the <replaceable>/usr/afs/local/NetInfo</replaceable> file, if it
+    exists. If the file does not exist, the File Server uses the list of
+    network interfaces configured with the operating system. It then removes
+    from the list any addresses that appear in the
+    <replaceable>/usr/afs/local/NetRestrict</replaceable> file, if it exists. The File Server records
+    the resulting list in the binary-format <replaceable>sysid</replaceable> file and registers the
+    interfaces in the VLDB.</para>
+
+    <para>When the Cache Manager requests volume location information, the Volume
+    Location (VL) Server provides all of the interfaces registered for each
+    server machine that houses the volume. This enables the Cache Manager to
+    make use of multiple addresses when accessing AFS data stored on a
+    multihomed file server machine.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The <replaceable>sysid</replaceable> file is unique to each file server machine, and must not be
+    copied from one machine to another. If it is a common practice in the cell
+    to copy the contents of the <replaceable>/usr/afs/local</replaceable> directory from an existing
+    file server machine to a newly installed one, be sure to remove the
+    <replaceable>sysid</replaceable> file from the new machine before starting the <computeroutput>fs</computeroutput> trio of
+    processes, which includes the <emphasis role="bold">fileserver</emphasis> process.</para>
+
+    <para>Some versions of AFS limit how many of a file server machine's interface
+    addresses that can be registered. Consult the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="NetInfo5">NetInfo(5)</link>,
+    <link linkend="NetRestrict5">NetRestrict(5)</link>,
+    <link linkend="vldb_DB05">vldb.DB0(5)</link>,
+    <link linkend="fileserver8">fileserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

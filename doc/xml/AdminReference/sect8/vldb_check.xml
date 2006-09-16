@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vldb_check8">
+  <refmeta>
+    <refentrytitle>vldb_check</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vldb_check</refname>
+    <refpurpose>Checks the integrity of the VLDB</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vldb_check</emphasis> <emphasis role="bold">-database</emphasis> &lt;<emphasis>vldb file</emphasis>&gt; [<emphasis role="bold">-uheader</emphasis>] [<emphasis role="bold">-vheader</emphasis>]
+        [<emphasis role="bold">-servers</emphasis>] [<emphasis role="bold">-entries</emphasis>] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vldb_check</emphasis> <emphasis role="bold">-d</emphasis> &lt;<emphasis>vldb file</emphasis>&gt; [<emphasis role="bold">-u</emphasis>] [<emphasis role="bold">-vh</emphasis>] [<emphasis role="bold">-s</emphasis>] [<emphasis role="bold">-e</emphasis>]
+        [<emphasis role="bold">-ve</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vldb_check</emphasis> command checks the integrity of the Volume Location
+    Database (VLDB), reporting any errors or corruption it finds.  If there
+    are problems, do not issue any <emphasis role="bold">vos</emphasis> commands until the database is
+    repaired.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The results can be unpredictable if the Volume Location (VL) Server makes
+    changes to the VLDB while this command is running. Use the <emphasis role="bold">bos shutdown</emphasis>
+    command to shutdown the local <emphasis role="bold">vlserver</emphasis> process before running this
+    command, or before creating a second copy of the <replaceable>vldb.DB0</replaceable> file (with a
+    different name) on which to run the command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-database</emphasis> &lt;<emphasis>vldb file</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the VLDB (copy of the <replaceable>vldb.DB0</replaceable> file) to check. If the current
+          working directory is not the location of the file, provide a pathname,
+          either full or relative to the current working directory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-uheader</emphasis></term>
+        <listitem>
+          <para>Displays information which Ubik maintains in the database's header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pheader</emphasis></term>
+        <listitem>
+          <para>Displays information which the VL Server maintains in the database's
+          header.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>authentication servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Outputs the server entries from the VLDB, which list the IP addresses
+          registered for each file server machine in the cell.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-entries</emphasis></term>
+        <listitem>
+          <para>Outputs every volume entry in the database. The information includes the
+          volume's name and the volume ID number for each of its versions.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Reports additional information about the database, including the number of
+          entries for each type of volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If there are errors in the database, the output always reports them on the
+    standard error stream. If any options other than <emphasis role="bold">-database</emphasis> or <emphasis role="bold">-help</emphasis>
+    are provided, the output written to the standard output stream includes
+    additional information as described for each option in <link linkend="OPTIONS">OPTIONS</link>.  The
+    output is intended for debugging purposes and is meaningful to someone
+    familiar with the internal structure of the VLDB.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="vldb_DB05">vldb.DB0(5)</link>,
+    <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+    <link linkend="vlserver8">vlserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

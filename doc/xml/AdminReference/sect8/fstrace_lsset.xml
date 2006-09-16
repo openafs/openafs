@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_lsset8">
+  <refmeta>
+    <refentrytitle>fstrace lsset</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace lsset</refname>
+    <refpurpose>Reports the status of an event set</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace lsset</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace lss</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace lsset</emphasis> command displays a list of the available event sets
+    and reports their current status (active, inactive, or dormant).</para>
+
+    <para>To change an event set's status, use the <emphasis role="bold">fstrace setset</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the event set for which to display the status. The only acceptable
+          value is <computeroutput>cm</computeroutput>, which is also the default if this argument is omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output lists the available event sets and the status of each, in the
+    following format:</para>
+
+<programlisting>
+   Available sets:
+   cm (active | inactive | dormant)
+
+</programlisting>
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>active</term>
+          <listitem>
+            <para>Indicates that tracing is enabled for the event set, and kernel memory
+            allocated for the corresponding trace log.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>inactive</term>
+          <listitem>
+            <para>Indicates that tracing is temporarily disabled for the event set, but
+            kernel memory still allocated for the corresponding trace log.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>dormant</term>
+          <listitem>
+            <para>Indicates that tracing is disabled for the event set, and no kernel memory
+            allocated for the corresponding trace log.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example displays the available event set and its status:</para>
+
+<programlisting>
+   # fstrace lsset
+   Available sets:
+   cm active
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fstrace8">fstrace(8)</link>,
+        <link linkend="fstrace_setset8">fstrace_setset(8)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

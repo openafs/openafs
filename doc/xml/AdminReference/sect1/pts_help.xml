@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_help1">
+  <refmeta>
+    <refentrytitle>pts help</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts help</refname>
+    <refpurpose>Displays help for pts commands</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts help</emphasis> [<emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts h</emphasis> [<emphasis role="bold">-t</emphasis> &lt;<emphasis>help string</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts help</emphasis> command displays the complete online help entry (short
+    description and syntax statement) for each command operation code
+    specified by the <emphasis role="bold">-topic</emphasis> argument. If the <emphasis role="bold">-topic</emphasis> argument is omitted,
+    the output includes the first line (name and short description) of the
+    online help entry for every <emphasis role="bold">pts</emphasis> command.</para>
+
+    <para>To list every pts command whose name or short description includes a
+    specified keyword, use the <emphasis role="bold">pts apropos</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-topic</emphasis> &lt;<emphasis>help string</emphasis>&gt;+</term>
+        <listitem>
+          <para>Indicates each command for which to display the complete online help
+          entry. Omit the <emphasis role="bold">pts</emphasis> part of the command name, providing only the
+          operation code (for example, specify <computeroutput>membership</computeroutput>, not <computeroutput>pts
+          membership</computeroutput>). If this argument is omitted, the output briefly describes
+          every <emphasis role="bold">pts</emphasis> command.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The online help entry for each <emphasis role="bold">pts</emphasis> command consists of the following
+    two or three lines:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The first line names the command and briefly describes its function.</para>
+
+      </listitem>
+      <listitem>
+        <para>The second line lists aliases for the command, if any.</para>
+
+      </listitem>
+      <listitem>
+        <para>The final line, which begins with the string <computeroutput>Usage</computeroutput>, lists the command's
+        options in the prescribed order. Online help entries use the same symbols
+        (for example, brackets) as the reference pages in this document.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command displays the online help entry for the <emphasis role="bold">pts
+    membership</emphasis> command:</para>
+
+<programlisting>
+   % pts help membership
+   pts membership:  list membership of a user or group
+   aliases: groups
+   Usage: pts membership -nameorid &amp;lt;user or group name or id&amp;gt;+
+   [-cell &amp;lt;cell name&amp;gt;] [-noauth] [-force] [-help]
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="pts1">pts(1)</link>,
+      <link linkend="pts_apropos1">pts_apropos(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_createuser1">
+  <refmeta>
+    <refentrytitle>pts createuser</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts createuser</refname>
+    <refpurpose>Creates a user or machine entry in the Protection Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts createuser</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>user name</emphasis>&gt;+ [<emphasis role="bold">-id</emphasis> &lt;<emphasis>user id</emphasis>&gt;+]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts createu</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user name</emphasis>&gt;+ [<emphasis role="bold">-i</emphasis> &lt;<emphasis>user id</emphasis>&gt;+]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts cu</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>user name</emphasis>&gt;+ [<emphasis role="bold">-i</emphasis> &lt;<emphasis>user id</emphasis>&gt;+]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts createuser</emphasis> command creates an entry in the Protection Database
+    for each user or machine specified by the <emphasis role="bold">-name</emphasis> argument. A user entry
+    name becomes the user's AFS username (the one to provide when
+    authenticating with the AFS Authentication Server).  A machine entry's
+    name is the machine's IP address or a wildcard notation that represents a
+    range of consecutive IP addresses (a group of machines on the same
+    network). It is not possible to authenticate as a machine, but a group to
+    which a machine entry belongs can appear on a directory's access control
+    list (ACL), thereby granting the indicated permissions to any user logged
+    on to the machine.</para>
+
+    <para>AFS user IDs (AFS UIDs) are positive integers and by default the
+    Protection Server assigns an AFS UID that is one greater than the current
+    value of the <computeroutput>max user id</computeroutput> counter in the Protection Database,
+    incrementing the counter by one for each user. To assign a specific AFS
+    UID, use the <emphasis role="bold">-id</emphasis> argument. If any of the specified AFS UIDs is greater
+    than the current value of the <computeroutput>max user id</computeroutput> counter, the counter is reset
+    to that value. It is acceptable to specify an AFS UID smaller than the
+    current value of the counter, but the creation operation fails if an
+    existing user or machine entry already has it. To display or set the value
+    of the <computeroutput>max user id</computeroutput> counter, use the <emphasis role="bold">pts listmax</emphasis> or <emphasis role="bold">pts setmax</emphasis>
+    command, respectively.</para>
+
+    <para>The issuer of the <emphasis role="bold">pts createuser</emphasis> command is recorded as the entry's
+    creator and the group system:administrators as its owner.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The Protection Server reserves AFS UID 0 (zero) and returns an error if
+    the <emphasis role="bold">-id</emphasis> argument has that value.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>user name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies either a username for a user entry, or an IP address (complete
+          or wildcarded) for a machine entry:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>A username can include up to 63 numbers and lowercase letters, but it is
+              best to make it shorter than eight characters, because many application
+              programs cannot handle longer names. Also, it is best not to include shell
+              metacharacters or other punctuation marks. In particular, the colon (<computeroutput>:</computeroutput>)
+              and at-sign (<computeroutput>@</computeroutput>) characters are not acceptable. The period is generally
+              used only in special administrative names, to separate the username and an
+              <emphasis>instance</emphasis>, as in the example <computeroutput>pat.admin</computeroutput>.</para>
+
+            </listitem>
+            <listitem>
+              <para>A machine identifier is its IP address in dotted decimal notation (for
+              example, 192.12.108.240), or a wildcard notation that represents a set of
+              IP addresses (a group of machines on the same network). The following are
+              acceptable wildcard formats. The letters <computeroutput>W</computeroutput>, <computeroutput>X</computeroutput>, <computeroutput>Y</computeroutput> and <computeroutput>Z</computeroutput> each
+              represent an actual number from the range 1 through 255.</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>W.X.Y.Z represents a single machine, for example <computeroutput>192.12.108.240</computeroutput>.</para>
+
+                </listitem>
+                <listitem>
+                  <para>W.X.Y.0 matches all machines whose IP addresses start with the first three
+                  numbers. For example, <computeroutput>192.12.108.0</computeroutput> matches both <computeroutput>192.12.108.119</computeroutput> and
+                  <computeroutput>192.12.108.120</computeroutput>, but does not match <computeroutput>192.12.105.144</computeroutput>.</para>
+
+                </listitem>
+                <listitem>
+                  <para>W.X.0.0 matches all machines whose IP addresses start with the first two
+                  numbers. For example, the address <computeroutput>192.12.0.0</computeroutput> matches both
+                  <computeroutput>192.12.106.23</computeroutput> and <computeroutput>192.12.108.120</computeroutput>, but does not match <computeroutput>192.5.30.95</computeroutput>.</para>
+
+                </listitem>
+                <listitem>
+                  <para>W.0.0.0 matches all machines whose IP addresses start with the first
+                  number in the specified address. For example, the address <computeroutput>192.0.0.0</computeroutput>
+                  matches both <computeroutput>192.5.30.95</computeroutput> and <computeroutput>192.12.108.120</computeroutput>, but does not match
+                  <computeroutput>138.255.63.52</computeroutput>.</para>
+
+                </listitem>
+              </itemizedlist>
+              <para>Do not define a machine entry with the name <computeroutput>0.0.0.0</computeroutput> to match every
+              machine. The system:anyuser group is equivalent.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>user id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies an AFS UID for each user or machine entry, rather than allowing
+          the Protection Server to assign it. Provide a positive integer.</para>
+
+          <para>If this argument is used and the <emphasis role="bold">-name</emphasis> argument names multiple new
+          entries, it is best to provide an equivalent number of AFS UIDs.  The
+          first UID is assigned to the first entry, the second to the second entry,
+          and so on. If there are fewer UIDs than entries, the Protection Server
+          assigns UIDs to the unmatched entries based on the <computeroutput>max user id</computeroutput>
+          counter. If there are more UIDs than entries, the excess UIDs are
+          ignored. If any of the UIDs is greater than the current value of the <computeroutput>max
+          user id</computeroutput> counter, the counter is reset to that value.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The command generates the following string to confirm creation of each
+    user:</para>
+
+<programlisting>
+   User &amp;lt;name&amp;gt; has id &amp;lt;id&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example creates a Protection Database entry for the user
+      <computeroutput>johnson</computeroutput>.</para>
+
+<programlisting>
+   % pts createuser -name johnson
+
+</programlisting>
+        <para>The following example creates three wildcarded machine entries in the ABC
+        Corporation cell. The three entries encompass all of the machines on the
+        company's networks without including machines on other networks:</para>
+
+<programlisting>
+   % pts createuser -name 138.255.0.0 192.12.105.0 192.12.106.0
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must belong to the system:administrators group.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="pts1">pts(1)</link>,
+          <link linkend="pts_listmax1">pts_listmax(1)</link>,
+          <link linkend="pts_setmax1">pts_setmax(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

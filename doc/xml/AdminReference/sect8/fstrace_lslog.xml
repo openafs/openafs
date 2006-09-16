@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fstrace_lslog8">
+  <refmeta>
+    <refentrytitle>fstrace lslog</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fstrace lslog</refname>
+    <refpurpose>Displays information about a log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fstrace lslog</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;]
+        [<emphasis role="bold">-long</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fstrace lsl</emphasis> [<emphasis role="bold">-s</emphasis> &lt;<emphasis>set name</emphasis>&gt;+] [<emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;] [<emphasis role="bold">-lon</emphasis>]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fstrace lslog</emphasis> command reports whether the <computeroutput>cmfx</computeroutput> log is available
+    for use. If the <emphasis role="bold">-long</emphasis> argument is included, the output reports the
+    log's defined size, and whether that amount of space is currently
+    allocated in kernel memory or not.</para>
+
+    <para>To change the <computeroutput>cmfx</computeroutput> trace log's size, use the <emphasis role="bold">fstrace setlog</emphasis>
+    command. To display or set whether space is allocated for it in kernel
+    memory, use the <emphasis role="bold">fstrace lsset</emphasis> or <emphasis role="bold">fstrace setset</emphasis> command to display
+    or set the state of the corresponding <computeroutput>cm</computeroutput> event set, respectively.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-set</emphasis> &lt;<emphasis>set name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names the event set for which to display information about the
+          corresponding trace log. The only acceptable value is <computeroutput>cm</computeroutput> (for which the
+          associated trace log is <computeroutput>cmfx</computeroutput>). Provide either this argument or the
+          <emphasis role="bold">-log</emphasis> argument, or omit both to display information about the <computeroutput>cmfx</computeroutput>
+          log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-log</emphasis> &lt;<emphasis>log name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the trace log about which to report. The only acceptable value is
+          <computeroutput>cmfx</computeroutput>. Provide either this argument or the <emphasis role="bold">-set</emphasis> argument, or omit
+          both to report on the <computeroutput>cmfx</computeroutput> log by default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-long</emphasis></term>
+        <listitem>
+          <para>Reports the defined size of the log in kilobyte units and whether that
+          amount of space is currently allocated in kernel memory.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>By default, the <emphasis role="bold">fstrace lslog</emphasis> command displays only the name of the
+    available log, <computeroutput>cmfx</computeroutput>, in the following format:</para>
+
+<programlisting>
+   Available logs:
+   cmfx
+
+</programlisting>
+      <para>When the <emphasis role="bold">-long</emphasis> flag is included, the output also reports the defined
+      size of the log in kilobytes, and whether or not that amount of space is
+      currently allocated in kernel memory, in the following format:</para>
+
+<programlisting>
+   Available logs:
+   cmfx : &amp;lt;log_size&amp;gt; kbytes (allocated | unallocated)
+
+</programlisting>
+        <para>The <computeroutput>allocated</computeroutput> state indicates that the indicated number of kilobytes is
+        reserved for the <computeroutput>cmfx</computeroutput> trace log in kernel memory. The <computeroutput>cm</computeroutput> event set's
+        state is either <computeroutput>active</computeroutput> or <computeroutput>inactive</computeroutput>, as reported by the <emphasis role="bold">fstrace
+        lsset</emphasis> command, and set by the <emphasis role="bold">fstrace setset</emphasis> command's <emphasis role="bold">-active</emphasis> or
+        <emphasis role="bold">-inactive</emphasis> flags respectively.</para>
+
+        <para>The <computeroutput>unallocated</computeroutput> state indicates that no kernel memory is currently
+        reserved for the <computeroutput>cmfx</computeroutput> trace log. The <emphasis role="bold">cm</emphasis> event set's state is
+        <computeroutput>dormant</computeroutput>, as reported by the <emphasis role="bold">fstrace lsset</emphasis> command and set by the
+        <emphasis role="bold">fstrace setset</emphasis> command's <emphasis role="bold">-dormant</emphasis> flag. If the event set's state is
+        later changed to active or inactive, the number of kilobytes indicated as
+        &lt;log_size&gt; are again allocated in kernel memory.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example uses the -long flag to display information
+        about the <computeroutput>cmfx</computeroutput> log:</para>
+
+<programlisting>
+   # fstrace lslog -log cmfx -long
+   Available logs:
+   cmfx : 60 kbytes (allocated)
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="fstrace8">fstrace(8)</link>,
+          <link linkend="fstrace_lsset8">fstrace_lsset(8)</link>,
+          <link linkend="fstrace_setlog8">fstrace_setlog(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_quota1">
+  <refmeta>
+    <refentrytitle>fs quota</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs quota</refname>
+    <refpurpose>Displays the quota used in the volume containing a directory or file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs quota</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs q</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs quota</emphasis> command displays the percent of quota consumed in the
+    volume that contains each specified directory or file.</para>
+
+    <para>To display more detailed information about the volume and the partition it
+    resides on, use the <emphasis role="bold">fs examine</emphasis> and <emphasis role="bold">fs listquota</emphasis> commands.</para>
+
+    <para>To set volume quota, use the <emphasis role="bold">fs setquota</emphasis> or <emphasis role="bold">fs setvol</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;</term>
+        <listitem>
+          <para>Names each file or directory for which to display the quota consumed in
+          its parent volume. Partial pathnames are interpreted relative to the
+          current working directory, which is also the default value if this
+          argument is omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports the percent of volume quota used, in the following
+    format:</para>
+
+<programlisting>
+   &amp;lt;percent&amp;gt;% of quota used.
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following command lists the percent quota used of the volume housing
+      the current working directory:</para>
+
+<programlisting>
+   % fs quota
+   17% of quota used.
+
+</programlisting>
+        <para>The following command lists the percent quota used of both the volume
+        housing the current working directory's parent directory and the volume
+        housing the directory <replaceable>/afs/abc.com/usr/smith</replaceable>:</para>
+
+<programlisting>
+   % fs quota -path .. /afs/abc.com/usr/smith
+   43% of quota used.
+   92% of quota used.
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+          directory of the volume that houses the file or directory named by the
+          <emphasis role="bold">-path</emphasis> argument, and on the ACL of each directory that precedes it in
+          the pathname.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="fs_examine1">fs_examine(1)</link>,
+          <link linkend="fs_listquota1">fs_listquota(1)</link>,
+          <link linkend="fs_setquota1">fs_setquota(1)</link>,
+          <link linkend="fs_setvol1">fs_setvol(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

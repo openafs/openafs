@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_chown1">
+  <refmeta>
+    <refentrytitle>pts chown</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts chown</refname>
+    <refpurpose>Changes the owner of a Protection Database entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts chown</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>group name</emphasis>&gt; <emphasis role="bold">-owner</emphasis> &lt;<emphasis>new owner</emphasis>&gt;
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts cho</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>group name</emphasis>&gt; <emphasis role="bold">-o</emphasis> &lt;<emphasis>new owner</emphasis>&gt;
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts chown</emphasis> command designates the user or group named by the
+    <emphasis role="bold">-owner</emphasis> argument as the owner of the group named by the <emphasis role="bold">-name</emphasis>
+    argument, and records the new owner in the owner field of the group's
+    Protection Database entry.</para>
+
+    <para>In the case of regular groups, this command automatically changes the
+    group name's owner prefix (the part of the group name before the colon) to
+    match the new owner. If the new owner is itself a group, then only its
+    owner prefix, not its complete name, becomes the owner prefix in the new
+    name. The change to the owner prefix does not propagate to any groups
+    owned by the group, however. To make the owner prefix of such group-owned
+    groups reflect the new owning group, use the <emphasis role="bold">pts rename</emphasis> command.</para>
+
+    <para>It is not possible to change a user or machine entry's owner from the
+    default set at creation time, the system:administrators group.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>While designating a machine as a group's owner does not cause an error, it
+    is not recommended. The Protection Server does not extend the usual
+    privileges of group ownership to users logged onto the machine.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>group name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the current name of the group to which to assign a new owner.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-owner</emphasis> &lt;<emphasis>new owner</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the user or group to become the group's owner.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. For more details, see
+          <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity anonymous to the issuer. For more
+          details, see <link linkend="pts1">pts(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-force</emphasis></term>
+        <listitem>
+          <para>Enables the command to continue executing as far as possible when errors
+          or other problems occur, rather than halting execution at the first error.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example changes the owner of the group <computeroutput>terry:friends</computeroutput> from
+    the user <computeroutput>terry</computeroutput> to the user <computeroutput>pat</computeroutput>. A side effect is that the group name
+    changes to <computeroutput>pat:friends</computeroutput>.</para>
+
+<programlisting>
+   % pts chown -name terry:friends -owner pat
+
+</programlisting>
+      <para>The following example changes the owner of the group <computeroutput>terry:friends</computeroutput> from
+      the user <computeroutput>terry</computeroutput> to the group <computeroutput>pat:buddies</computeroutput>. A side effect is that the
+      group name changes to <computeroutput>pat:friends</computeroutput>.</para>
+
+<programlisting>
+   % pts chown -name terry:friends -owner pat:buddies
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must belong to the system:administrators group or currently own
+        the group.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="pts1">pts(1)</link>,
+        <link linkend="pts_rename1">pts_rename(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

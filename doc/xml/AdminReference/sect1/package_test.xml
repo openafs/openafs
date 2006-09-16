@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="package_test1">
+  <refmeta>
+    <refentrytitle>package_test</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>package_test</refname>
+    <refpurpose>Tests the validity of a package configuration file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">package_test</emphasis> &lt;<emphasis>config file</emphasis>&gt;</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">package_test</emphasis> command tests the validity of a <emphasis role="bold">package</emphasis>
+    configuration file created when a prototype file is compiled. The command
+    interpreter prints error messages on the standard output stream.</para>
+
+    <para>This command does not use the syntax conventions of the AFS command
+    suites. Provide the command name in full.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term>&lt;<emphasis>config file</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the package configuration file to validate.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following example tests the validity of the package configuration file
+    <computeroutput>staff.sun4x_56</computeroutput>.</para>
+
+<programlisting>
+   % package_test staff.sun4x_56
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>None</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="package5">package(5)</link>,
+      <link linkend="package8">package(8)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

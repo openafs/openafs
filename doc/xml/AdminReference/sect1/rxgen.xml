@@ -1,0 +1,1874 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="rxgen1">
+  <refmeta>
+    <refentrytitle>rxgen</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>rxgen</refname>
+    <refpurpose>Stub generator for the Rx remote procedure call package</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">rxgen</emphasis> [<emphasis role="bold">-h</emphasis> | <emphasis role="bold">-c</emphasis> | <emphasis role="bold">-C</emphasis> | <emphasis role="bold">-S</emphasis> | <emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-dkpR</emphasis>]
+        [<emphasis role="bold">-I</emphasis> <emphasis>dir</emphasis>] [<emphasis role="bold">-P</emphasis> <emphasis>prefix</emphasis>] [<emphasis role="bold">-o</emphasis> <emphasis>outfile</emphasis>] [<emphasis>infile</emphasis>]</para>
+
+    <para><emphasis role="bold">rxgen</emphasis> <emphasis role="bold">-s</emphasis> <emphasis>transport</emphasis> [<emphasis role="bold">-o</emphasis> <emphasis>outfile</emphasis>] [<emphasis>infile</emphasis>]</para>
+
+    <para><emphasis role="bold">rxgen</emphasis> <emphasis role="bold">-l</emphasis> [<emphasis role="bold">-o</emphasis> <emphasis>outfile</emphasis>] [<emphasis>infile</emphasis>]</para>
+
+    <para><emphasis role="bold">rxgen</emphasis> <emphasis role="bold">-m</emphasis> [<emphasis role="bold">-o</emphasis> <emphasis>outfile</emphasis>] [<emphasis>infile</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para><emphasis role="bold">rxgen</emphasis> is a tool that generates C code to implement the Rx RPC protocol;
+    it takes as input a description of an application interface similar to C
+    and produces a number of server and/or client stub routines to be linked
+    with RPC-based programs.  These stubs allow programs to invoke remote
+    procedures through local procedure calls.  <emphasis role="bold">rxgen</emphasis> is an extension of
+    Sun's <emphasis role="bold">rpcgen</emphasis> (version 3.9) and retains full <emphasis role="bold">rpcgen</emphasis> functionality (at
+    least as of that version).  Please refer to rpcgen(1) for more details on
+    the Sun's RPC specific flags, and to the RPC programming guide regarding
+    the RPC language along with useful examples.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para><emphasis role="bold">rxgen</emphasis> operates in several different modes.  The generated output files
+    can be produced individually (using one of <emphasis role="bold">-h</emphasis>, <emphasis role="bold">-c</emphasis>, <emphasis role="bold">-C</emphasis>, or <emphasis role="bold">-S</emphasis>)
+    or collectively.  All output files are created when the default is used
+    (i.e., no options), or the output is limited to the server stubs (<emphasis role="bold">-C</emphasis>
+    and <emphasis role="bold">-S</emphasis>) when the <emphasis role="bold">-r</emphasis> flag is used.  The following describes the types
+    of generated output files (for simplicity, <emphasis>filename</emphasis> refers to the main
+    output filename):</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-h</emphasis></term>
+        <listitem>
+          <para>Generate C data definitions (a header file) from standard RPCL definitions
+          (default extension: <emphasis>filename</emphasis>.h).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-c</emphasis></term>
+        <listitem>
+          <para>Compile the XDR routines required to serialize the protocol described by
+          RPCL.  Generate XDR routines for all declarations (default extension:
+          <emphasis>filename</emphasis>.xdr.c).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-C</emphasis></term>
+        <listitem>
+          <para>Generate all the client-side stub routines (default extension:
+          <emphasis>filename</emphasis>.cs.c).  Calling a routine in this file will cause the
+          arguments to be packed up and sent via Rx (or R).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-S</emphasis></term>
+        <listitem>
+          <para>Generate all the server-side stub routines (default extension:
+          <emphasis>filename</emphasis>.ss.c).  Arguments are unpacked, and the corresponding server
+          routine is called.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-r</emphasis></term>
+        <listitem>
+          <para>Generate the two default extension files produced by the <emphasis role="bold">-C</emphasis> and <emphasis role="bold">-S</emphasis>
+          options.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>The following options can be used on any combination of <emphasis role="bold">rxgen</emphasis> calls:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-R</emphasis></term>
+        <listitem>
+          <para>Generate code for the older \R protocol, as opposed to Rx, which is the
+          default.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-k</emphasis></term>
+        <listitem>
+          <para>Must be specified when the generated code is intended to be used by the
+          kernel; special "includes" and other specifics are produced when the
+          target output is for the kernel.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-p</emphasis></term>
+        <listitem>
+          <para>Package combination flag: when multiple packages are included within a
+          single specification file, a single Execute Request routine will be used
+          for all of them as a result of this flag.  The default is to generate
+          individual Execute Request stubs for each package.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-I</emphasis> <emphasis>dir</emphasis></term>
+        <listitem>
+          <para>Similar to the <emphasis role="bold">-I</emphasis> flag in the C compiler (<emphasis role="bold">cc</emphasis>). This flag is passed
+          to the pre-processor (<emphasis role="bold">cpp</emphasis>) so that directory <emphasis>dir</emphasis> is searched before
+          the standard lookup list for #include files.  As expected, multiple <emphasis role="bold">-I</emphasis>
+          flags can be used simultaneously.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-P</emphasis> <emphasis>prefix</emphasis></term>
+        <listitem>
+          <para>The <emphasis>prefix</emphasis> string following this switch is prepended to all generated
+          output files; useful when multiple runs want to produce different versions
+          of the same interface (say, kernel and non-kernel versions).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-d</emphasis></term>
+        <listitem>
+          <para>Debugging mode; only needed when <emphasis role="bold">rxgen</emphasis> is to be debugged (say, via
+          <emphasis role="bold">dbx</emphasis>).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-o</emphasis> <emphasis>outfile</emphasis></term>
+        <listitem>
+          <para>Specify the name of the output file.  If none is specified, the standard
+          output is used (<emphasis role="bold">-c</emphasis>, <emphasis role="bold">-h</emphasis>, <emphasis role="bold">-C</emphasis>, and <emphasis role="bold">-S</emphasis> modes only).  Note that if
+          an output file is specified in a multi-output file option (such as the
+          default, or with option <emphasis role="bold">-r</emphasis>), then the <emphasis>outfile</emphasis> replaces the name
+          generated by default (which is based on the configuration's main file
+          name).</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>The <emphasis role="bold">-s</emphasis>, <emphasis role="bold">-l</emphasis>, and <emphasis role="bold">-m</emphasis> options are present only for <emphasis role="bold">rpcgen</emphasis>
+    support.  See rpcgen(1) for information on their use.</para>
+
+  </refsect1>
+  <refsect1>
+    <title><emphasis role="bold">rxgen</emphasis> SYNTAX SUMMARY</title>
+<programlisting>
+    Specification file:
+
+</programlisting>
+<programlisting>
+        &amp;lt;Package description option&amp;gt; |
+        &amp;lt;Prefix description option&amp;gt; |
+        &amp;lt;StartingOpcode description option&amp;gt; |
+        &amp;lt;SplitPrefix description option&amp;gt; |
+        &amp;lt;Procedure description option&amp;gt; |
+        &amp;lt;RPCL language description option&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;Package description option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "package" &amp;lt;Package_ident&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;Prefix description option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "prefix" &amp;lt;Prefix_ident&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;StartingOpcode description option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "startingopcode" &amp;lt;constant&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;SplitPrefix description option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "splitprefix" &amp;lt;split options&amp;gt; ";"
+
+</programlisting>
+<programlisting>
+    &amp;lt;Split options&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "IN =" &amp;lt;Start_prefix_ident&amp;gt; "|"
+        "OUT =" &amp;lt;End_prefix_ident&amp;gt; "|"
+        &amp;lt;Split options&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;Procedure description option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        ["proc"] [&amp;lt;Procedure_ident&amp;gt;] [&amp;lt;ServerStub_ident&amp;gt;]
+            &amp;lt;Argument list&amp;gt; ["split" | "multi"]
+            ["=" &amp;lt;Opcode_ident&amp;gt;] ";"
+
+</programlisting>
+<programlisting>
+    &amp;lt;Argument list&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "(" &amp;lt;Argument definition&amp;gt; &amp;lt;Comma_joined argument&amp;gt; ")"
+
+</programlisting>
+<programlisting>
+    &amp;lt;Argument definition&amp;gt;:
+
+</programlisting>
+<programlisting>
+        &amp;lt;Direction option&amp;gt; &amp;lt;Standard RPCL type decl&amp;gt; &amp;lt;Arg_ident&amp;gt;
+            ["&amp;lt;" &amp;lt;Max_size&amp;gt; "&amp;gt;" | "[" &amp;lt;Max_size&amp;gt; "]"] | NULL
+
+</programlisting>
+<programlisting>
+    &amp;lt;Comma_joined argument&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "," &amp;lt;Argument definition&amp;gt; | NULL
+
+</programlisting>
+<programlisting>
+    &amp;lt;Direction option&amp;gt;:
+
+</programlisting>
+<programlisting>
+        "IN" | "OUT" | "INOUT" | NULL
+
+</programlisting>
+<programlisting>
+    &amp;lt;Max_size&amp;gt;:
+
+</programlisting>
+<programlisting>
+        &amp;lt;constant&amp;gt; | NULL
+
+</programlisting>
+<programlisting>
+    &amp;lt;Package_ident&amp;gt;:
+    &amp;lt;Prefix_ident&amp;gt;:
+    &amp;lt;String_ident&amp;gt;:
+    &amp;lt;Start_prefix_ident&amp;gt;:
+    &amp;lt;End_prefix_ident&amp;gt;:
+    &amp;lt;Procedure_ident&amp;gt;:
+    &amp;lt;ServerStub_ident&amp;gt;:
+    &amp;lt;Arg_ident&amp;gt;:
+    &amp;lt;Opcode_ident&amp;gt;:
+
+</programlisting>
+<programlisting>
+        &amp;lt;identifier&amp;gt;
+
+</programlisting>
+<programlisting>
+    &amp;lt;RPCL language description option&amp;gt;:
+    &amp;lt;Standard RPCL type decl&amp;gt;:
+
+</programlisting>
+<programlisting>
+        Sun's RPCL language syntax (see rpcgen(1))
+
+</programlisting>
+                                                          </refsect1>
+                                                          <refsect1>
+                                                            <title><emphasis role="bold">rxgen</emphasis> COMMANDS</title>
+                                                            <refsect2>
+                                                              <title>Comments and Preprocessing</title>
+                                                              <para>The input interface may contain preprocessor directives which are passed
+                                                              through the C preprocessor (i.e. <computeroutput>cpp</computeroutput>).  Since the preprocessor runs on
+                                                              all input files before they are actually interpreted by <emphasis role="bold">rxgen</emphasis>, all
+                                                              <emphasis role="bold">cpp</emphasis> directives (#include, #ifdefs, #defines, etc.) are legal and
+                                                              welcomed within an <emphasis role="bold">rxgen</emphasis> input file.  Of course, none of these
+                                                              preprocessor directives will be included in any of the generated files.
+                                                              To facilitate distinctions between the different types of output files,
+                                                              <emphasis role="bold">rxgen</emphasis> defines certain special <emphasis role="bold">cpp</emphasis> symbols for use by the <emphasis role="bold">rxgen</emphasis>
+                                                              programmer.  These are RPC_HDR (defined when compiling into header,
+                                                              <emphasis>filename</emphasis>.h, files), RPC_XDR (defined when compiling into xdr,
+                                                              <emphasis>filename</emphasis>.xdr.c, files), RPC_CLIENT (defined when compiling into client
+                                                              stubs, <emphasis>filename</emphasis>.cs.c, files), and RPC_SERVER (defined when compiling
+                                                              into server stubs, <emphasis>filename</emphasis>.ss.c, files).</para>
+
+                                                              <para>In addition, <emphasis role="bold">rxgen</emphasis> does a little preprocessing of its own.  Any line
+                                                              beginning with <computeroutput>%</computeroutput> is passed directly into the output file, uninterpreted
+                                                              by <emphasis role="bold">rxgen</emphasis>.  For a more heavy en masse dumping of uninterpreted code, it
+                                                              would be adviced to include all such code in an <computeroutput>#include</computeroutput> file and pass
+                                                              it in preceded by <computeroutput>%</computeroutput>.  The input interface may also contain any C-style
+                                                              comments which are, of course, ignored. Interpretation is token-based,
+                                                              thus special line-orientation of separate statements is not necessary.
+                                                              <emphasis role="bold">rxgen</emphasis> also provides a quite rich and helpful set of error reports,
+                                                              identifying them by exact line location and error type.  Also, <emphasis role="bold">rxgen</emphasis>
+                                                              will automatically generate #include lines for standard include files,
+                                                              such as <replaceable>rx/xdr.h</replaceable> and <replaceable>rx/rx.h</replaceable>, along with the generated header file
+                                                              from this interface.</para>
+
+                                                            </refsect2>
+                                                            <refsect2>
+                                                              <title>Prefixing stub procedures</title>
+                                                              <para>The <emphasis>package</emphasis> statement tells <emphasis role="bold">rxgen</emphasis> the name of the interface package.
+                                                              It is used for prefixing the naming of all generated stub routines and the
+                                                              execute request procedure.  For example:</para>
+
+<programlisting>
+    package AFS_
+
+</programlisting>
+                                                                <para>causes the execute request procedure to be named AFS_ExecuteRequest
+                                                                (Warning: in the older version an additional <computeroutput>_</computeroutput> was appended after the
+                                                                package name to the ExecuteRequest name; thus make sure you don't have an
+                                                                ExecuteRequest interface routine) and a given stub routine, say Fetch, to
+                                                                be actually named AFS_Fetch.  Multiple package statements (current maximum
+                                                                size is 10) per configuration are permitted and are useful when multiple
+                                                                sets of interfaces are implemented (see the example at the end).  Note
+                                                                that in such cases, use of the <emphasis role="bold">-p</emphasis> flag results in the generation of
+                                                                just one ExecuteRequest procedure which recognizes the multiple interfaces
+                                                                and whose name is prefixed by the first package statement.  In the default
+                                                                case, independent ExecuteRequest procedures will be created for each
+                                                                packaged group of remote procedure calls.</para>
+
+                                                                <para>The <emphasis>prefix</emphasis> statement supplies a name to prepend to all calls to remote
+                                                                procedure names in the ExecuteRequest stub routine.  It is useful when the
+                                                                server makes RPC calls to other servers (say, for debugging purposes).
+                                                                For example:</para>
+
+<programlisting>
+    prefix S
+
+</programlisting>
+                                                                  <para>causes the name <computeroutput>S</computeroutput> to be prepended to the name of all routines called
+                                                                  from the server stubs.  The server can then call the original name and get
+                                                                  the client stubs.</para>
+
+                                                                </refsect2>
+                                                                <refsect2>
+                                                                  <title><emphasis role="bold">rxgen</emphasis> procedure declaration</title>
+                                                                  <para>The <emphasis>proc</emphasis> statement is the most common (and meaningful) in the <emphasis role="bold">rxgen</emphasis>
+                                                                  interface.  Its syntax description is:</para>
+
+<programlisting>
+        [proc] [&amp;lt;proc_name&amp;gt;] [&amp;lt;server_stub&amp;gt;] (&amp;lt;arg&amp;gt;, ..., &amp;lt;arg&amp;gt;)
+            [split | multi] [= &amp;lt;opcode&amp;gt;] ;
+
+</programlisting>
+                                                                    <para>where:</para>
+
+                                                                    <itemizedlist>
+                                                                      <listitem>
+                                                                        <para><computeroutput>proc</computeroutput> is an optional prefix of the procedure statement. This is just a
+                                                                        stylistic item and not a required procedure delimiter.</para>
+
+                                                                      </listitem>
+                                                                      <listitem>
+                                                                        <para>&lt;proc_name&gt; is the name of the procedure.  Note that even the name of the
+                                                                        procedure is optional.  This only makes sense when the name of the given
+                                                                        procedure is identical to the name of the last <emphasis>package</emphasis> statement (i.e.,
+                                                                        <computeroutput>package RCallBack</computeroutput> and the declaration of the <computeroutput>RCallBack</computeroutput> procedure).</para>
+
+                                                                      </listitem>
+                                                                      <listitem>
+                                                                        <para>&lt;server_stub&gt;, if present, causes the ExecuteRequest procedure to call
+                                                                        that stub instead of the automatically generated stub when a call with
+                                                                        that opcode is decoded.</para>
+
+                                                                      </listitem>
+                                                                      <listitem>
+                                                                        <para>&lt;opcode&gt; is a constant or symbol that is the opcode for that procedure.
+                                                                        One might use the preprocessor features (i.e., #define), the <emphasis>const</emphasis>
+                                                                        RPC-language feature, or the old good constants as opcodes. Some further
+                                                                        evaluation/processing of opcodes is done.  Particularly, checks for
+                                                                        duplicate and non-existent opcodes are performed, along with checks for
+                                                                        "holes" (i.e., gaps in consecutive opcodes) in the opcode sequences.  For
+                                                                        example, we use the fact that when "holes" in opcodes exist, the
+                                                                        ExecuteRequest procedure uses the <emphasis>case</emphasis> statement rather than the faster
+                                                                        (and smaller, codewise) indexed array method.</para>
+
+                                                                        <para>Also, <emphasis role="bold">rxgen</emphasis> defines (i.e., appends to the header file) three valuable
+                                                                        macros for each package group: &lt;package-name&gt;LOWEST_OPCODE,
+                                                                        &lt;package-name&gt;HIGHEST_OPCODE, and &lt;package-name&gt;NUMBER_OPCODES.  These may
+                                                                        be useful to the <emphasis role="bold">rxgen</emphasis> programmer.  Also, notice that the <emphasis>opcode</emphasis>
+                                                                        statement is an optional feature, and can be omitted.  In such cases,
+                                                                        automatic opcode numbers are generated sequentially, starting from 0.</para>
+
+                                                                        <para>One can change the initial opcode number by using the <emphasis>startingopcode</emphasis>
+                                                                        (for lack of a better name) <emphasis role="bold">rxgen</emphasis> command.  Its syntax is:</para>
+
+<programlisting>
+    startingopcode &amp;lt;constant&amp;gt;
+
+</programlisting>
+                                                                          <para>where &lt;constant&gt; must be reasonable!  Note that one can not mix
+                                                                          procedures, some with opcodes and some without, nor allow opcodes after
+                                                                          the specification of the <emphasis>startingopcode</emphasis> statement.  <emphasis role="bold">rxgen</emphasis> will
+                                                                          complain in all such cases.</para>
+
+                                                                        </listitem>
+                                                                        <listitem>
+                                                                          <para>The <emphasis>argument</emphasis> entry represents a given parameter of the procedure.  Its
+                                                                          syntax is:</para>
+
+<programlisting>
+    [IN | INOUT | OUT | &amp;lt;null&amp;gt;] &amp;lt;type_decl&amp;gt; &amp;lt;arg_name&amp;gt;
+        [&amp;lt;max&amp;gt;|&amp;lt;&amp;gt;|[max]|[]]
+
+</programlisting>
+                                                                            <para>If the type is an indirect type (i.e., is followed by *), it is assumed
+                                                                            that the pointer should be followed one level and the data pointed to is
+                                                                            to be transmitted. This should normally be used for all structures/arrays
+                                                                            and out parameters.  A noticeable exception is when explicit
+                                                                            array/structure maximum size is given; since no array-of-pointer
+                                                                            declarations are allowed one should use typedefs to achieve the similar
+                                                                            effect.  The parameters could be input parameters (preceded by IN), output
+                                                                            parameters (preceded by OUT), or input/output parameters (preceded by
+                                                                            INOUT).  If not specified, then the direction of the previous parameter in
+                                                                            the procedure is used.  (Note: the first parameter must be preceded by the
+                                                                            directional primitive!)</para>
+
+                                                                          </listitem>
+                                                                          <listitem>
+                                                                            <para><computeroutput>split</computeroutput> is a hack to handle stub routines that do things such as file
+                                                                            transfers or any other operation that has to exchange information (e.g.,
+                                                                            length of a file) before the call returns its output parameters.  Because
+                                                                            of the particular handshake that is involved when doing remote file
+                                                                            transfer, we currently break all such calls into two client-side stub
+                                                                            routines.  The first (with the default prefix of <computeroutput>Begin</computeroutput>) is used to pass
+                                                                            all IN and INOUT parameters to the server side.  The second (with the
+                                                                            default prefix of <computeroutput>End</computeroutput>) is used to get back the INOUT and OUT parameters
+                                                                            from the server.  Between the two calls, the user is supposed to do the
+                                                                            appropriate calls for the file transfer. For example, the following
+                                                                            procedure declaration in package AFS_</para>
+
+<programlisting>
+    Fetch (IN a, b,INOUT c, OUT d) split = FETCHOPCODE;
+
+</programlisting>
+                                                                              <para>will roughly generate the two independent client stub routines:</para>
+
+<programlisting>
+    BeginAFS_Fetch (IN a, b, c)
+
+</programlisting>
+                                                                                <para>and</para>
+
+<programlisting>
+    EndAFS_Fetch(OUT c, d)
+
+</programlisting>
+                                                                                  <para>The <emphasis>splitprefix</emphasis> statement is used to change the default prefix names
+                                                                                  used by the two client-side stub generated routines when dealing with file
+                                                                                  transfer-related procedure calls.  For example:</para>
+
+<programlisting>
+    splitprefix IN=Before_ OUT=After_
+
+</programlisting>
+                                                                                    <para>will cause the naming of the two client stubs for a file transfer-related
+                                                                                    routine, say Fetch(), to be Before_AFS_Fetch() and After_AFS_Fetch(),
+                                                                                    respectively.</para>
+
+                                                                                  </listitem>
+                                                                                  <listitem>
+                                                                                    <para>The <computeroutput>multi</computeroutput> option is nearly identical to the <computeroutput>split</computeroutput> feature described
+                                                                                    above.  The only significant visible difference is that along with the two
+                                                                                    client stubs, the standard client stub is also generated.  Since the
+                                                                                    intention is to handle the multi-Rx calls, we need the whole standard
+                                                                                    procedure stub in the cases where no multi-Rx call of the procedure is
+                                                                                    performed.  A side effect of the <computeroutput>multi</computeroutput> option is the generation of a
+                                                                                    special macro (i.e., <computeroutput>multi_&lt;Procedure-name&gt;</computeroutput> which passes back as
+                                                                                    arguments the <computeroutput>Begin</computeroutput> and <computeroutput>End</computeroutput> stubs in the header output file. This
+                                                                                    macro is used directly by the Rx code when a multi-Rx call of this
+                                                                                    procedure is performed.</para>
+
+                                                                                  </listitem>
+                                                                                </itemizedlist>
+                                                                              </refsect2>
+                                                                              <refsect2>
+                                                                                <title>OBSOLETE <emphasis role="bold">rxgen</emphasis> FEATURES</title>
+                                                                                <para>Although the following rxgen commands are still in effect, they will soon
+                                                                                be removed since there are better alternatives. DO NOT USE THEM!</para>
+
+                                                                                <para>The <emphasis>special</emphasis> statement is a temporary hack used to handle certain
+                                                                                inefficiencies of standard xdr routines to handle some user-customized
+                                                                                declarations.  In particular, this applies to a string pointer specified
+                                                                                as part of a declaration.  For example,</para>
+
+<programlisting>
+    special struct BBS SeqBody;
+
+</programlisting>
+                                                                                  <para>tells <emphasis role="bold">rxgen</emphasis> that the entry <computeroutput>SeqBody</computeroutput> in the user-defined BBS xdr
+                                                                                  routine is a string (note that more than one string can be "special" per
+                                                                                  structure -- multiple ones are separated by commas); it will thus allocate
+                                                                                  and de-allocate space properly in the server-generated stubs that contain
+                                                                                  this structure as an IN or INOUT parameter.</para>
+
+                                                                                  <para>A better alternative to <emphasis>special</emphasis> is the <emphasis>customized</emphasis> statement, which
+                                                                                  is simply the <computeroutput>customized</computeroutput> token followed by the regular declaration of a
+                                                                                  struct based on the RPCL rules. In this case, the declaration will be
+                                                                                  included in the generated header file (<emphasis role="bold">-h</emphasis> option) but no xdr routine
+                                                                                  will be generated for this structure -- the user will supply this.  All
+                                                                                  pointer entries in this structure will be remembered so when the structure
+                                                                                  is used as an IN or INOUT in the server stub, no core leaks will occur.
+                                                                                  For example, consider</para>
+
+<programlisting>
+    customized struct CBS {
+        long Seqlen;
+        char *SeqBody;
+    }
+
+</programlisting>
+                                                                                    <para>The <computeroutput>xdr_CBS</computeroutput> routine would be provided by the user where during the
+                                                                                    DECODE xdr opcode, appropriate space for the <computeroutput>SeqBody</computeroutput> string is
+                                                                                    allocated.  Similarly, that space is freed during the FREE xdr opcode.</para>
+
+                                                                                    <para>Note: Old style "Array parameter specifications" are not supported any
+                                                                                    more.</para>
+
+                                                                                  </refsect2>
+                                                                                </refsect1>
+                                                                                <refsect1>
+                                                                                  <title>Examples</title>
+                                                                                  <para>In case there are some requirements not available by the current RPC
+                                                                                  language, one can customize some XDR routines by leaving those data types
+                                                                                  undefined. For every data type that is undefined, it will be assumed that
+                                                                                  a routine exists with the name <computeroutput>xdr_</computeroutput> prepended to it.  A selected set of
+                                                                                  <emphasis role="bold">rxgen</emphasis> features is presented below, but for a more comprehensive one
+                                                                                  (unions, complex examples, etc) please refer to the <emphasis>rpcgen Programming
+                                                                                  Guide</emphasis> and <emphasis>eXternal Data Representation: Sun Technical Notes</emphasis>.</para>
+
+                                                                                  <refsect2>
+                                                                                    <title>Typedefs</title>
+                                                                                    <para>The RPC typedef statement is identical to the C typedef (i.e. <computeroutput>typedef
+                                                                                    &lt;declaration&gt;</computeroutput>).  By default, most user declarations (i.e. structs,
+                                                                                    unions, etc) are automatically typedef'ed by <emphasis role="bold">rxgen</emphasis>.  Since it makes
+                                                                                    parsing simpler, its usage is recommended by <emphasis role="bold">rxgen</emphasis> scripts.</para>
+
+                                                                                  </refsect2>
+                                                                                  <refsect2>
+                                                                                    <title>Strings</title>
+                                                                                    <para>The C <computeroutput>char *</computeroutput> string convention is kind of ambiguous, since it is
+                                                                                    usually intended to mean a null-terminated string of characters, but it
+                                                                                    could also represent a pointer to a single character, a pointer to an
+                                                                                    array of characters, etc.  In the RPC language, a null-terminated string
+                                                                                    is unambiguously called a "string".  Examples,</para>
+
+<programlisting>
+    string bigname&amp;lt;&amp;gt;;
+    string name&amp;lt;MAXNAMELEN&amp;gt;;
+    typedef string volname&amp;lt;MAXVOLNAME&amp;gt;;
+
+</programlisting>
+                                                                                      <para>Notice that the maximum size of string can be arbitrary (like <computeroutput>bigname</computeroutput>
+                                                                                      above) or, preferably, or specified in angle brackets (i.e. <computeroutput>name</computeroutput> and
+                                                                                      <computeroutput>volname</computeroutput> above).  In practice, one should always use only bounded
+                                                                                      strings in interfaces.  A sample calling proc using the declarations above
+                                                                                      would be:</para>
+
+<programlisting>
+    GetEntryByName (IN volname name, 
+        OUT struct vldbentry *entry) = VL_GETENTRYBYNAME;
+
+</programlisting>
+                                                                                        <para>or, of course,</para>
+
+<programlisting>
+    GetEntryByName (IN string volname&amp;lt;MAXVOLNAME&amp;gt;,
+        OUT struct vldbentry *entry) = VL_GETENTRYBYNAME;
+
+</programlisting>
+                                                                                          <para>It is very important for the user to understand when the string parameters
+                                                                                          should be allocated and/or freed by the his/her client and/or server
+                                                                                          programs. A short analysis on string parameters handling follows (note
+                                                                                          that a similar method is used for the handling of variable length arrays
+                                                                                          as it will be shown later on):</para>
+
+                                                                                          <itemizedlist>
+                                                                                            <listitem>
+                                                                                              <para>In the client side: IN and INOUT string parameters are the programmer's
+                                                                                              responsibility and should be allocated (static or via malloc) before
+                                                                                              calling the rpc and freed (if malloc was used) after the rpc's return in
+                                                                                              the user's client program; of course, for INOUT parameters, the returned
+                                                                                              string can't be bigger than the malloced input string.</para>
+
+                                                                                              <para>OUT string parameters are automatically malloced (based on the length of
+                                                                                              the returned string and not the maxsize) by the <emphasis role="bold">rxgen</emphasis> client stubs (in
+                                                                                              <emphasis>filename</emphasis>.cs.c) and must be freed by the client program; admittedly,
+                                                                                              this could be somewhat confusing since the user needs to free something
+                                                                                              that he/she didn't allocate.}</para>
+
+                                                                                            </listitem>
+                                                                                            <listitem>
+                                                                                              <para>In the server side: IN and INOUT string parameters are automatically
+                                                                                              malloced (based on the size of incoming strings) by the rxgen server stubs
+                                                                                              (in <emphasis>filename</emphasis>.ss.c) before they are passed to the user's server
+                                                                                              procedure; that space is automatically freed just before the rxgen server
+                                                                                              stub returns; therefore the user need not do anything special for IN and
+                                                                                              INOUT string parameters.</para>
+
+                                                                                              <para>OUT string parameters must be malloced by the user's server procedure
+                                                                                              (i.e. null pointer is passed to it by the rxgen server stub) and it is
+                                                                                              automatically freed at the end of the <emphasis role="bold">rxgen</emphasis> server stub.  Like in the
+                                                                                              client side, the OUT parameters are somewhat unorthodox (i.e. the server
+                                                                                              routine must malloc a string without ever freeing it itself; this is done
+                                                                                              by the <emphasis role="bold">rxgen</emphasis> server stub).</para>
+
+                                                                                            </listitem>
+                                                                                          </itemizedlist>
+                                                                                          <para>Note that for INOUT and OUT string parameters, in both the client and
+                                                                                          server sides their arguments must be char of pointers (i.e. char **).</para>
+
+                                                                                        </refsect2>
+                                                                                        <refsect2>
+                                                                                          <title>Pointers</title>
+                                                                                          <para>Pointer declarations in RPC are also exactly as they are in C
+                                                                                          (i.e. <computeroutput>struct single_vldbentry *vldblist;</computeroutput>).  Of course, one can't send
+                                                                                          pointers over the network, but one can use XDR pointers for sending
+                                                                                          recursive data types such as lists and trees (an example of a linked list
+                                                                                          will be demonstrated shortly).</para>
+
+                                                                                        </refsect2>
+                                                                                        <refsect2>
+                                                                                          <title>Arrays</title>
+                                                                                          <para>Fixed arrays are just like standard C array declarations (i.e. <computeroutput>struct
+                                                                                          UpdateEntry entries[20]</computeroutput>) without any side effect problems in
+                                                                                          <emphasis role="bold">rxgen</emphasis>. Since variable-length arrays have no explicit syntax in C, the
+                                                                                          angle-brackets are used for it and the array declarations are actually
+                                                                                          compiled into "struct"s. For example, declarations such as:</para>
+
+<programlisting>
+    const   MAXBULKSIZE     = 10000;
+    const   MAXENTRIES      = 100;
+    opaque  bulk&amp;lt;MAXBULKSIZE&amp;gt;;           /* At most 10000 items */
+    int     hosts&amp;lt;&amp;gt;;                     /* any number of items */
+    typedef vldbentry blkentries&amp;lt;100&amp;gt;;   /* Preferable array decl */
+
+</programlisting>
+                                                                                            <para>are compiled into the following structs:</para>
+
+<programlisting>
+    struct {
+        u_int   bulk_len;       /* no of items */
+        char    *bulk_val;      /* pointer to array */
+    } bulk;
+
+</programlisting>
+                                                                                              <para>for the <computeroutput>bulk</computeroutput> array, and similarly for the <computeroutput>blkentries&lt;100&gt;</computeroutput> array,</para>
+
+<programlisting>
+    struct {
+        u_int      blkentries_len;   /* no of items in array */
+        vldbentry  *blkentries_val;  /* pointer to array */
+    } blkentries;
+
+</programlisting>
+                                                                                                <para>Therefore the user should be aware of the "magically" generated structure
+                                                                                                entries such as the number of items in the array (&lt;array_name&gt;_len) and
+                                                                                                the pointer to the array (&lt;array_name&gt;_val) since some of the entries will
+                                                                                                have to be filled in from the client/server programs.  A sample proc would
+                                                                                                be:</para>
+
+<programlisting>
+    typedef vldbentry blkentries&amp;lt;MAXENTRIES&amp;gt;;
+    proc GetBlk (OUT blkentries *vlentries) = VL_GETBLK;
+
+</programlisting>
+                                                                                                  <para>or, more directly,</para>
+
+<programlisting>
+    GetBlk(OUT vldbentry vlentries&amp;lt;MAXENTRIES&amp;gt;) = VL_GETBLK;
+
+</programlisting>
+                                                                                                    <para>Note that although the latest method is preferable since one does not have
+                                                                                                    to first use the typedef statement (and admittedly, programmers prefer
+                                                                                                    avoiding typedefs), one should realize that <emphasis role="bold">rxgen</emphasis> does the structure
+                                                                                                    expansion and the xdr creation implicitly; therefore the user should be
+                                                                                                    aware of the <computeroutput>vldbentries_val</computeroutput> and <computeroutput>vldbentries_len</computeroutput> fields as before
+                                                                                                    (see following examples).</para>
+
+                                                                                                    <refsect3>
+                                                                                                      <title>Array example I (least desirable)</title>
+                                                                                                      <para>Procedure declaration in the interface configuration:</para>
+
+<programlisting>
+    proc ListAttributes (IN vldblistbyattributes *attributes, 
+                 INOUT blkentries *vldbentries) = VL_LISTATTRIBUTES;
+
+</programlisting>
+                                                                                                        <para>Sample CLIENT code:</para>
+
+<programlisting>
+    blkentries entries, *pnt;
+    entries.blkentries_len = 10;   /* max # returned entries */
+    entries.blkentries_val = (vldbentry *)malloc(LEN);
+                                   /* It must be set */
+
+</programlisting>
+<programlisting>
+    code = VL_ListAttributes(&amp;attributes, &amp;entries);
+    if (!code) {
+        pnt = entries.blkentries_val;
+        for (i=0; i &amp;lt; entries.blkentries_len; i++, pnt++)
+                display_vldbentry(pnt);
+        /* Make sure you free the allocated space */
+        free((char *)entries.blkentries_val);   
+    }
+
+</programlisting>
+                                                                                                            <para>Sample SERVER code:</para>
+
+<programlisting>
+    VL_ListAttributes(attributes, entries)
+    {
+        vldbentry *singleentry = entries-&amp;gt;blkentries_val;
+        entries-&amp;gt;blkentries_len = 0;
+
+</programlisting>
+<programlisting>
+        while (copy_to_vldbentry(&amp;vlentry, singleentry))
+            singleentry++, vldbentries-&amp;gt;entries_len++;
+    }
+
+</programlisting>
+                                                                                                                <para>Although this method for variable-size arrays works fine, there are some
+                                                                                                                major drawbacks.  The array parameter (i.e. vldbentries above) must be
+                                                                                                                declared as INOUT since we need to pass the max length of the expected
+                                                                                                                returned array; more importantly, a big (depending on the value of
+                                                                                                                <computeroutput>_len</computeroutput>) chunk of junk code is going to be transferred to the server as
+                                                                                                                result of the IN(out) side-effect of the array.  It's an easy and
+                                                                                                                convenient method if the returned array size can be predicted from the
+                                                                                                                start and when the size is quite high.  This method is included as an
+                                                                                                                example of erroneous use (and abuse) of <emphasis role="bold">rxgen</emphasis> and should not be used.</para>
+
+                                                                                                              </refsect3>
+                                                                                                              <refsect3>
+                                                                                                                <title>Array example II (Desirable method)</title>
+                                                                                                                <para>Procedure declaration in the interface configuration (using Example I
+                                                                                                                above):</para>
+
+<programlisting>
+    proc ListAttributes (IN vldblistbyattributes *attributes, 
+        OUT blkentries *vldbentries) = VL_LISTATTRIBUTES;
+
+</programlisting>
+                                                                                                                  <para>Sample CLIENT code:</para>
+
+<programlisting>
+    blkentries entries, *pnt;
+
+</programlisting>
+<programlisting>
+    code = VL_ListAttributes(&amp;attributes, &amp;entries);
+    if (!code) {
+        pnt = entries.blkentries_val;
+        for (i=0; i &amp;lt; entries.blkentries_len; i++, pnt++)
+                display_vldbentry(pnt);
+        /* Make sure you free the allocated space (by rxgen) */
+        free((char *)entries.blkentries_val);   
+    }
+
+</programlisting>
+                                                                                                                      <para>Sample SERVER code:</para>
+
+<programlisting>
+    VL_ListAttributes(attributes, entries)
+    {
+        vldbentry *singleentry;
+        entries-&amp;gt;blkentries_len = 0;
+        singleentry = entries-&amp;gt;blkentries_val
+            = (vldbentry *)malloc(MAXENTRIES * sizeof(vldbentry));
+
+</programlisting>
+<programlisting>
+        while (copy_to_vldbentry(&amp;vlentry, singleentry))
+                singleentry++, vldbentries-&amp;gt;entries_len++;
+    }
+
+</programlisting>
+                                                                                                                          <para>This is the best (and simplest) way of using variable-size arrays as an
+                                                                                                                          output parameter.  It is the responsibility of the server-side stub to
+                                                                                                                          malloc() the adequate space which is automatically freed by the <emphasis role="bold">rxgen</emphasis>
+                                                                                                                          stub; the client side should free the space allocated by the
+                                                                                                                          <emphasis role="bold">rxgen</emphasis>-calling stub.</para>
+
+                                                                                                                        </refsect3>
+                                                                                                                        <refsect3>
+                                                                                                                          <title>Array example III (Linked Lists)</title>
+                                                                                                                          <para>Considering the following 3 declarations (could have applied some
+                                                                                                                          optimizations) in the configuration file:</para>
+
+<programlisting>
+    typedef struct single_vldbentry *vldblist;
+    struct single_vldbentry {
+        vldbentry vlentry;
+        vldblist  next_vldb;
+    };
+
+</programlisting>
+<programlisting>
+    struct vldb_list {
+        vldblist node;
+    };
+
+</programlisting>
+                                                                                                                              <para>and the rxgen procedure declaration:</para>
+
+<programlisting>
+    LinkedList (IN vldblistbyattributes *attributes, 
+        OUT vldb_list *linkedentries) = VL_LINKEDLIST;
+
+</programlisting>
+                                                                                                                                <para>Sample CLIENT code:</para>
+
+<programlisting>
+    vldb_list       linkedvldbs;
+    vldblist        vllist, vllist1;
+
+</programlisting>
+<programlisting>
+    bzero(&amp;linkedvldbs, sizeof(vldb_list));
+    code = VL_LinkedList(&amp;attributes, &amp;nentries, &amp;linkedvldbs);
+    if (!code) {
+        printf("We got %d vldb entries\n", nentries);
+        for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
+            vllist1 = vllist-&amp;gt;next_vldb;
+            display_entry(&amp;vllist-&amp;gt;vlentry);
+            free((char *)vllist);
+        }
+    }
+
+</programlisting>
+                                                                                                                                    <para>Sample SERVER code:</para>
+
+<programlisting>
+    VL_LinkedList(rxcall, attributes, nentries, linkedvldbs);
+    {
+        vldblist vllist, *vllistptr = &amp;linkedvldbs-&amp;gt;node;
+        while (...) {
+            vllist = *vllistptr
+                = (single_vldbentry *)malloc (sizeof (single_vldbentry));
+            copy_to_vldbentry(&amp;tentry, &amp;vllist-&amp;gt;vlentry);
+            nentries++;     
+            vllistptr = &amp;vllist-&amp;gt;next_vldb;
+        };
+        *vllistptr = NULL;
+    }
+
+</programlisting>
+                                                                                                                                      <para>Using a linked list offers many advantages: Nothing is passed to the
+                                                                                                                                      server (the parameter is OUT), no additional overhead is involved, and the
+                                                                                                                                      caller doesn't have to explicitly prepare for an arbitrary return size.  A
+                                                                                                                                      drawback is that the caller has the responsibility of malloc() (on the
+                                                                                                                                      server) and free (on the client) of each entry (to avoid unwanted
+                                                                                                                                      core-leaks).  Another drawback is that since it's a recursive call, the C
+                                                                                                                                      stack will grow linearly with respect to the number of nodes in the list
+                                                                                                                                      (so it's wise to increase the Rx LWP stack if huge amounts of data are
+                                                                                                                                      expected back -- default stack size is 4K).  The advantages should
+                                                                                                                                      outweight the disadvantages here.</para>
+
+                                                                                                                                      <para>It's important to pay attention to the comments of the three array
+                                                                                                                                      examples above particularly when they're references to when the user
+                                                                                                                                      should allocate/free space for the variable length arrays.  The mechanism
+                                                                                                                                      is very similar to the handling of strings thus you might need to review
+                                                                                                                                      the strings section above; note that the linked lists are handled somewhat
+                                                                                                                                      differently...</para>
+
+                                                                                                                                    </refsect3>
+                                                                                                                                  </refsect2>
+                                                                                                                                  <refsect2>
+                                                                                                                                    <title>Miscellaneous examples</title>
+                                                                                                                                    <para>Below is an abbreviated version of a random interface file which shows
+                                                                                                                                    some of the common cases.</para>
+
+<programlisting>
+    /* Declaration of all structures used by the R.xg script interface */
+
+</programlisting>
+<programlisting>
+    struct AFSFid {
+        unsigned long Volume;
+        unsigned long Vnode;
+        unsigned long Unique;
+    };
+
+</programlisting>
+<programlisting>
+    typedef long ViceDataType;
+
+</programlisting>
+<programlisting>
+    /* Note that TEST would be equivalent to "HEADER" only during the 
+       processing of the header, *.h, file */
+
+</programlisting>
+<programlisting>
+    #ifdef RPC_HDR
+    #define TEST "HEADER"
+    #else
+    #define TEST "REST"
+    #endif
+
+</programlisting>
+<programlisting>
+    /* This is the standard *.xg specification file */
+
+</programlisting>
+<programlisting>
+    package AFS_
+    splitprefix IN=BEFORE_ OUT=AFTER_;
+    Prefix Test
+
+</programlisting>
+<programlisting>
+    proc Remove(IN struct AFSFid *Did, IN string volname&amp;lt;64&amp;gt;,
+        OUT struct AFSStatus *Status) = AFS_REMOVE;
+
+</programlisting>
+<programlisting>
+    DisconnectFS AUX_disconnectFS() = AFS_DISCONNECTFS;
+
+</programlisting>
+<programlisting>
+    proc GetVolumeInfo(IN string Vid, 
+        OUT struct VolumeInfo *Info) = AFS_GETVOLUMEINFO;
+
+</programlisting>
+<programlisting>
+    /* You could have more than an interface per configuration */
+
+</programlisting>
+<programlisting>
+    package VOTE_
+
+</programlisting>
+<programlisting>
+    /* Using the "multi" feature; thus VOTE_Beacon can be called as an 
+       multi-Rx call or as a regular call */
+
+</programlisting>
+<programlisting>
+    Beacon (IN long state, long voteStart, 
+        net_version *version, net_tid *tid) 
+        multi = VOTE_BEACON;
+
+</programlisting>
+<programlisting>
+    package DISK_
+
+</programlisting>
+<programlisting>
+    /* Using the "split" feature */
+
+</programlisting>
+<programlisting>
+    SendFile (IN long file, long offset, 
+        long length, net_version *version) 
+        split = DISK_SENDFILE;
+
+</programlisting>
+                                                                                                                                                                    </refsect2>
+                                                                                                                                                                    <refsect2>
+                                                                                                                                                                      <title>Output of an actual interface configuration</title>
+                                                                                                                                                                      <para>We'll demonstrate some of the actual output generated by <emphasis role="bold">rxgen</emphasis> by
+                                                                                                                                                                      following an abbreviated actual interface configuration.</para>
+
+                                                                                                                                                                      <refsect3>
+                                                                                                                                                                        <title>Configuration file</title>
+                                                                                                                                                                        <para>Contents of the interface configuration file (<replaceable>vldbint.xg</replaceable>):</para>
+
+<programlisting>
+    package VL_
+    #include "vl_opcodes.h"   /* The opcodes are included here */
+    %#include "vl_opcodes.h"  /* directly to other places */
+
+</programlisting>
+<programlisting>
+    /* Current limitations on parameters that affect other packages
+       (i.e. volume) */
+
+</programlisting>
+<programlisting>
+    const   MAXNAMELEN      =       65;
+    const   MAXNSERVERS     =       8;
+    const   MAXTYPES        =       3;
+
+</programlisting>
+<programlisting>
+    /* External (visible) representation of an individual vldb entry */
+
+</programlisting>
+<programlisting>
+    struct vldbentry {
+        char    name[MAXNAMELEN];       
+        long    volumeType;             
+        long    nServers;               
+        long    serverNumber[MAXNSERVERS];
+        long    serverPartition[MAXNSERVERS];
+        long    serverFlags[MAXNSERVERS];
+        u_long  volumeId[MAXTYPES];     
+        long    flags;                  
+    };
+
+</programlisting>
+<programlisting>
+    typedef struct single_vldbentry  *vldblist;
+    struct single_vldbentry {
+        vldbentry VldbEntry;
+        vldblist next_vldb;
+    };
+
+</programlisting>
+<programlisting>
+    struct vldb_list {
+        vldblist node;
+    };
+
+</programlisting>
+<programlisting>
+    /* vldb interface calls */
+
+</programlisting>
+<programlisting>
+    CreateEntry     (IN long Volid, 
+                    vldbentry *newentry) = VLCREATEENTRY;
+
+</programlisting>
+<programlisting>
+    GetEntryByName  (IN string volumename&amp;lt;MAXNAMELEN&amp;gt;, 
+                    OUT vldbentry *entry) = VLGETENTRYBYNAME;
+
+</programlisting>
+<programlisting>
+    GetNewVolumeId  (IN long bumpcount,
+                    OUT long *newvolumid) = VLGETNEWVOLUMEID;
+
+</programlisting>
+<programlisting>
+    ReplaceEntry    (IN long Volid, 
+                    long voltype,
+                    vldbentry *newentry,
+                    long ReleaseType) multi = VLREPLACEENTRY;
+
+</programlisting>
+<programlisting>
+    ListAttributes  (IN VldbListByAttributes *attributes, 
+                    OUT long *nentries, 
+                    OUT vldbentry bulkentries&amp;lt;MAXVLDBLEN&amp;gt;) 
+                    = VLLISTATTRIBUTES;
+
+</programlisting>
+<programlisting>
+    LinkedList      (IN VldbListByAttributes *attributes, 
+                    OUT long *nentries, 
+                    OUT vldb_list *linkedentries) = VLLINKEDLIST;
+
+</programlisting>
+                                                                                                                                                                                                    <para>We'll concentrate only on the Rx generated code since the R generated code
+                                                                                                                                                                                                    (<emphasis role="bold">-R</emphasis> option) will soon be obsolete.  For a detailed description on the
+                                                                                                                                                                                                    Rx-related calls inside the generated stubs (i.e., rx_NewCall(),
+                                                                                                                                                                                                    rx_EndCall()), along with details on what happens inside certain calls
+                                                                                                                                                                                                    (like xdrrx_create()) please refer to the Rx documentation. Typing <computeroutput>rxgen
+                                                                                                                                                                                                    vldbint.xg</computeroutput> will result in the creation of four files: <replaceable>vldbint.h</replaceable>,
+                                                                                                                                                                                                    <replaceable>vldbint.xdr.c</replaceable>, <replaceable>vldbint.cs.c</replaceable> and <replaceable>vldbint.ss.c</replaceable>.  A closer look at
+                                                                                                                                                                                                    these files follows.</para>
+
+                                                                                                                                                                                                  </refsect3>
+                                                                                                                                                                                                  <refsect3>
+                                                                                                                                                                                                    <title>Header file (<replaceable>vldbint.h</replaceable>)</title>
+<programlisting>
+    /* Machine generated file -- Do NOT edit */
+
+</programlisting>
+<programlisting>
+    #include "vl_opcodes.h"  /* directly to other places */
+    #define MAXNAMELEN 65
+    #define MAXNSERVERS 8
+    #define MAXTYPES 3
+
+</programlisting>
+<programlisting>
+    struct vldbentry {
+        char name[MAXNAMELEN];
+        long volumeType;
+        long nServers;
+        long serverNumber[MAXNSERVERS];
+        long serverPartition[MAXNSERVERS];
+        long serverFlags[MAXNSERVERS];
+        u_long volumeId[MAXTYPES];
+        long flags;
+    };
+    typedef struct vldbentry vldbentry;
+    bool_t xdr_vldbentry();
+
+</programlisting>
+<programlisting>
+    typedef struct single_vldbentry *vldblist;
+    bool_t xdr_vldblist();
+
+</programlisting>
+<programlisting>
+    struct single_vldbentry {
+        vldbentry VldbEntry;
+        vldblist next_vldb;
+    };
+    typedef struct single_vldbentry single_vldbentry;
+    bool_t xdr_single_vldbentry();
+
+</programlisting>
+<programlisting>
+    struct vldb_list {
+        vldblist node;
+    };
+    typedef struct vldb_list vldb_list;
+    bool_t xdr_vldb_list();
+
+</programlisting>
+<programlisting>
+    #include &amp;lt;rx/rx_multi.h&amp;gt;
+    #define multi_VL_ReplaceEntry(Volid, voltype, newentry, ReleaseType) \
+        multi_Body(StartVL_ReplaceEntry(multi_call, Volid, voltype,
+                   newentry, ReleaseType), EndVL_ReplaceEntry(multi_call))
+
+</programlisting>
+<programlisting>
+    typedef struct bulkentries {
+        u_int bulkentries_len;
+        vldbentry *bulkentries_val;
+    } bulkentries;
+    bool_t xdr_bulkentries();
+
+</programlisting>
+<programlisting>
+    /* Opcode-related useful stats for package: VL_ */
+    #define VL_LOWEST_OPCODE        501
+    #define VL_HIGHEST_OPCODE       506
+    #define VL_NUMBER_OPCODES       6
+
+</programlisting>
+                                                                                                                                                                                                                      <para>Notice that all structures are automatically typedef'ed and all <computeroutput>const</computeroutput>s
+                                                                                                                                                                                                                      are converted to <computeroutput>#define</computeroutput>s. Some data structures, such as bulkentries,
+                                                                                                                                                                                                                      are taken from procedure params (from ListAttributes proc). Thus, this
+                                                                                                                                                                                                                      should be kept in mind when creating stubs piecemeal with <emphasis role="bold">rxgen</emphasis> (i.e.,
+                                                                                                                                                                                                                      using the <emphasis role="bold">-c</emphasis>, <emphasis role="bold">-h</emphasis>, <emphasis role="bold">-C</emphasis>, or <emphasis role="bold">-S</emphasis> flags).  Also, one of the side
+                                                                                                                                                                                                                      effects of the <computeroutput>multi</computeroutput> option (in <computeroutput>ReplaceEntry</computeroutput> proc) is the generation
+                                                                                                                                                                                                                      of the <computeroutput>multi_VL_ReplaceEntry</computeroutput> above.</para>
+
+                                                                                                                                                                                                                    </refsect3>
+                                                                                                                                                                                                                    <refsect3>
+                                                                                                                                                                                                                      <title>XDR routines for structures (vldbint.xdr.c)</title>
+<programlisting>
+    /* Machine generated file -- Do NOT edit */
+
+</programlisting>
+<programlisting>
+    #include &amp;lt;rx/xdr.h&amp;gt;
+    #include "vldbint.h"
+
+</programlisting>
+<programlisting>
+    #include "vl_opcodes.h"  /* directly to other places */
+
+</programlisting>
+<programlisting>
+    bool_t
+    xdr_vldbentry(xdrs, objp)
+        XDR *xdrs;
+        vldbentry *objp;
+    {
+        if (!xdr_vector(xdrs, (char *)objp-&amp;gt;name, MAXNAMELEN,
+                        sizeof(char), xdr_char))
+            return (FALSE);
+        if (!xdr_long(xdrs, &amp;objp-&amp;gt;volumeType))
+            return (FALSE);
+        if (!xdr_long(xdrs, &amp;objp-&amp;gt;nServers))
+            return (FALSE);
+        if (!xdr_vector(xdrs, (char *)objp-&amp;gt;serverNumber, MAXNSERVERS,
+                        sizeof(long), xdr_long))
+            return (FALSE);
+        if (!xdr_vector(xdrs, (char *)objp-&amp;gt;serverPartition,
+                        MAXNSERVERS, sizeof(long), xdr_long))
+            return (FALSE);
+        if (!xdr_vector(xdrs, (char *)objp-&amp;gt;serverFlags, MAXNSERVERS,
+                        sizeof(long), xdr_long))
+            return (FALSE);
+        if (!xdr_vector(xdrs, (char *)objp-&amp;gt;volumeId, MAXTYPES,
+                        sizeof(u_long), xdr_u_long))
+            return (FALSE);
+        if (!xdr_long(xdrs, &amp;objp-&amp;gt;flags))
+            return (FALSE);
+        return (TRUE);
+    }
+
+</programlisting>
+<programlisting>
+    bool_t
+    xdr_vldblist(xdrs, objp)
+        XDR *xdrs;
+        vldblist *objp;
+    {
+        if (!xdr_pointer(xdrs, (char **)objp,
+                         sizeof(struct single_vldbentry), 
+                         xdr_single_vldbentry))
+            return (FALSE);
+        return (TRUE);
+    }
+
+</programlisting>
+<programlisting>
+    bool_t
+    xdr_single_vldbentry(xdrs, objp)
+        XDR *xdrs;
+        single_vldbentry *objp;
+    {
+        if (!xdr_vldbentry(xdrs, &amp;objp-&amp;gt;VldbEntry))
+            return (FALSE);
+        if (!xdr_vldblist(xdrs, &amp;objp-&amp;gt;next_vldb))
+            return (FALSE);
+        return (TRUE);
+    }
+
+</programlisting>
+<programlisting>
+    bool_t
+    xdr_vldb_list(xdrs, objp)
+        XDR *xdrs;
+        vldb_list *objp;
+    {
+        if (!xdr_vldblist(xdrs, &amp;objp-&amp;gt;node))
+            return (FALSE);
+        return (TRUE);
+    }
+
+</programlisting>
+<programlisting>
+    bool_t
+    xdr_bulkentries(xdrs, objp)
+        XDR *xdrs;
+        bulkentries *objp;
+    {
+        if (!xdr_array(xdrs, (char **)&amp;objp-&amp;gt;bulkentries_val,
+                       (u_int *)&amp;objp-&amp;gt;bulkentries_len, MAXVLDBLEN,
+                       sizeof(vldbentry), xdr_vldbentry))
+            return (FALSE);
+        return (TRUE);
+    }
+
+</programlisting>
+                                                                                                                                                                                                                                      <para>Note that the xdr_bulkentries() is automatically generated as a side
+                                                                                                                                                                                                                                      effect of a procedure parameter declaration.  Thus, if identical multiple
+                                                                                                                                                                                                                                      type parameter declarations are used, then multiply-defined xdr_* stubs
+                                                                                                                                                                                                                                      will be created!  We felt this was a better alternative to having the
+                                                                                                                                                                                                                                      <emphasis role="bold">rxgen</emphasis> programmer deal with types such as bulkentries_1,
+                                                                                                                                                                                                                                      bulkentries_2...</para>
+
+                                                                                                                                                                                                                                    </refsect3>
+                                                                                                                                                                                                                                    <refsect3>
+                                                                                                                                                                                                                                      <title>Client-Side stub routines (vldbint.cs.c)</title>
+<programlisting>
+    /* Machine generated file -- Do NOT edit */
+
+</programlisting>
+<programlisting>
+    #include &amp;lt;rx/xdr.h&amp;gt;
+    #include &amp;lt;rx/rx.h&amp;gt;
+    #include &amp;lt;afs/rxgen_consts.h&amp;gt;
+    #include "vldbint.h"
+
+</programlisting>
+<programlisting>
+    #include "vl_opcodes.h"  /* directly to other places */
+
+</programlisting>
+<programlisting>
+    int VL_CreateEntry(z_conn, Volid, newentry)
+        register struct rx_connection *z_conn;
+        long Volid;
+        vldbentry * newentry;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 501;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_long(&amp;z_xdrs, &amp;Volid))
+             || (!xdr_vldbentry(&amp;z_xdrs, newentry))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+<programlisting>
+    int VL_GetEntryByName(z_conn, volumename, entry)
+        register struct rx_connection *z_conn;
+        char * volumename;
+        vldbentry * entry;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 504;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_string(&amp;z_xdrs, &amp;volumename, 65))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        /* Un-marshal the reply arguments */
+        z_xdrs.x_op = XDR_DECODE;
+        if ((!xdr_vldbentry(&amp;z_xdrs, entry))) {
+                z_result = RXGEN_CC_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+<programlisting>
+    int VL_GetNewVolumeId(z_conn, bumpcount, newvolumid)
+        register struct rx_connection *z_conn;
+        long bumpcount;
+        long * newvolumid;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 505;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_long(&amp;z_xdrs, &amp;bumpcount))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        /* Un-marshal the reply arguments */
+        z_xdrs.x_op = XDR_DECODE;
+        if ((!xdr_long(&amp;z_xdrs, newvolumid))) {
+                z_result = RXGEN_CC_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+<programlisting>
+    int VL_ReplaceEntry(z_conn, Volid, voltype, newentry, ReleaseType)
+        register struct rx_connection *z_conn;
+        long Volid, voltype, ReleaseType;
+        vldbentry * newentry;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 506;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_long(&amp;z_xdrs, &amp;Volid))
+             || (!xdr_long(&amp;z_xdrs, &amp;voltype))
+             || (!xdr_vldbentry(&amp;z_xdrs, newentry))
+             || (!xdr_long(&amp;z_xdrs, &amp;ReleaseType))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+<programlisting>
+    int StartVL_ReplaceEntry(z_call, Volid, voltype, newentry, ReleaseType)
+        register struct rx_call *z_call;
+        long Volid, voltype, ReleaseType;
+        vldbentry * newentry;
+    {
+        static int z_op = 506;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_long(&amp;z_xdrs, &amp;Volid))
+             || (!xdr_long(&amp;z_xdrs, &amp;voltype))
+             || (!xdr_vldbentry(&amp;z_xdrs, newentry))
+             || (!xdr_long(&amp;z_xdrs, &amp;ReleaseType))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    int EndVL_ReplaceEntry(z_call)
+        register struct rx_call *z_call;
+    {
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    int VL_ListAttributes(z_conn, attributes, nentries, bulkentries_1)
+        register struct rx_connection *z_conn;
+        VldbListByAttributes * attributes;
+        long * nentries;
+        bulkentries * bulkentries_1;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 511;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_VldbListByAttributes(&amp;z_xdrs, attributes))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        /* Un-marshal the reply arguments */
+        z_xdrs.x_op = XDR_DECODE;
+        if ((!xdr_long(&amp;z_xdrs, nentries))
+             || (!xdr_bulkentries(&amp;z_xdrs, bulkentries_1))) {
+                z_result = RXGEN_CC_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+<programlisting>
+    int VL_LinkedList(z_conn, attributes, nentries, linkedentries)
+        register struct rx_connection *z_conn;
+        VldbListByAttributes * attributes;
+        long * nentries;
+        vldb_list * linkedentries;
+    {
+        struct rx_call *z_call = rx_NewCall(z_conn);
+        static int z_op = 512;
+        int z_result;
+        XDR z_xdrs;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_ENCODE);
+
+</programlisting>
+<programlisting>
+        /* Marshal the arguments */
+        if ((!xdr_int(&amp;z_xdrs, &amp;z_op))
+             || (!xdr_VldbListByAttributes(&amp;z_xdrs, attributes))) {
+                z_result = RXGEN_CC_MARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        /* Un-marshal the reply arguments */
+        z_xdrs.x_op = XDR_DECODE;
+        if ((!xdr_long(&amp;z_xdrs, nentries))
+             || (!xdr_vldb_list(&amp;z_xdrs, linkedentries))) {
+                z_result = RXGEN_CC_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = RXGEN_SUCCESS;
+    fail:
+        return rx_EndCall(z_call, z_result);
+    }
+
+</programlisting>
+                                                                                                                                                                                                                                                                                                                <para>Notice the side effect of the <computeroutput>multi</computeroutput> feature (three different modules
+                                                                                                                                                                                                                                                                                                                for <computeroutput>ReplaceEntry</computeroutput> proc).</para>
+
+                                                                                                                                                                                                                                                                                                              </refsect3>
+                                                                                                                                                                                                                                                                                                              <refsect3>
+                                                                                                                                                                                                                                                                                                                <title>Server-Side stub routines (vldbint.ss.c)</title>
+<programlisting>
+    /* Machine generated file -- Do NOT edit */
+
+</programlisting>
+<programlisting>
+    #include &amp;lt;rx/xdr.h&amp;gt;
+    #include &amp;lt;rx/rx.h&amp;gt;
+    #include &amp;lt;afs/rxgen_consts.h&amp;gt;
+    #include "vldbint.h"
+
+</programlisting>
+<programlisting>
+    #include "vl_opcodes.h"  /* directly to other places */
+
+</programlisting>
+<programlisting>
+    long _VL_CreateEntry(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        long Volid;
+        vldbentry newentry;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_long(z_xdrs, &amp;Volid))
+             || (!xdr_vldbentry(z_xdrs, &amp;newentry))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_CreateEntry(z_call, Volid, &amp;newentry);
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_GetEntryByName(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        char *volumename = (char *)0;
+        vldbentry entry;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_string(z_xdrs, &amp;volumename, 65))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_GetEntryByName(z_call, &amp;volumename, &amp;entry);
+        z_xdrs-&amp;gt;x_op = XDR_ENCODE;
+        if ((!xdr_vldbentry(z_xdrs, &amp;entry)))
+                z_result = RXGEN_SS_MARSHAL;
+    fail:
+        z_xdrs-&amp;gt;x_op = XDR_FREE;
+        if (!xdr_string(z_xdrs, &amp;volumename, 65)) goto fail1;
+        return z_result;
+    fail1:
+        return RXGEN_SS_XDRFREE;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_GetNewVolumeId(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        long bumpcount;
+        long newvolumid;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_long(z_xdrs, &amp;bumpcount))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_GetNewVolumeId(z_call, bumpcount, &amp;newvolumid);
+        z_xdrs-&amp;gt;x_op = XDR_ENCODE;
+        if ((!xdr_long(z_xdrs, &amp;newvolumid)))
+                z_result = RXGEN_SS_MARSHAL;
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_ReplaceEntry(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        long Volid, voltype, ReleaseType;
+        vldbentry newentry;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_long(z_xdrs, &amp;Volid))
+             || (!xdr_long(z_xdrs, &amp;voltype))
+             || (!xdr_vldbentry(z_xdrs, &amp;newentry))
+             || (!xdr_long(z_xdrs, &amp;ReleaseType))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_ReplaceEntry(z_call, Volid, voltype, &amp;newentry,
+                                   ReleaseType);
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_ListAttributes(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        VldbListByAttributes attributes;
+        long nentries;
+        bulkentries bulkentries_1;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_VldbListByAttributes(z_xdrs, &amp;attributes))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_ListAttributes(z_call, &amp;attributes, &amp;nentries,
+                                     &amp;bulkentries_1);
+        z_xdrs-&amp;gt;x_op = XDR_ENCODE;
+        if ((!xdr_long(z_xdrs, &amp;nentries))
+             || (!xdr_bulkentries(z_xdrs, &amp;bulkentries_1)))
+                z_result = RXGEN_SS_MARSHAL;
+    fail:
+        z_xdrs-&amp;gt;x_op = XDR_FREE;
+        if (!xdr_bulkentries(z_xdrs, &amp;bulkentries_1)) goto fail1;
+        return z_result;
+    fail1:
+        return RXGEN_SS_XDRFREE;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_LinkedList(z_call, z_xdrs)
+        struct rx_call *z_call;
+        XDR *z_xdrs;
+    {
+        long z_result;
+        VldbListByAttributes attributes;
+        long nentries;
+        vldb_list linkedentries;
+
+</programlisting>
+<programlisting>
+        if ((!xdr_VldbListByAttributes(z_xdrs, &amp;attributes))) {
+                z_result = RXGEN_SS_UNMARSHAL;
+                goto fail;
+        }
+
+</programlisting>
+<programlisting>
+        z_result = VL_LinkedList(z_call, &amp;attributes, &amp;nentries,
+                                 &amp;linkedentries);
+        z_xdrs-&amp;gt;x_op = XDR_ENCODE;
+        if ((!xdr_long(z_xdrs, &amp;nentries))
+             || (!xdr_vldb_list(z_xdrs, &amp;linkedentries)))
+                z_result = RXGEN_SS_MARSHAL;
+    fail:
+        return z_result;
+    }
+
+</programlisting>
+<programlisting>
+    long _VL_CreateEntry();
+    long _VL_GetEntryByName();
+    long _VL_GetNewVolumeId();
+    long _VL_ReplaceEntry();
+    long _VL_ListAttributes();
+    long _VL_LinkedList();
+
+</programlisting>
+<programlisting>
+    static long (*StubProcsArray0[])() = {_VL_CreateEntry,
+        _VL_GetEntryByName, _VL_GetNewVolumeId, _VL_ReplaceEntry,
+        _VL_ListAttributes, _VL_LinkedList};
+
+</programlisting>
+<programlisting>
+    VL_ExecuteRequest(z_call)
+        register struct rx_call *z_call;
+    {
+        int op;
+        XDR z_xdrs;
+        long z_result;
+
+</programlisting>
+<programlisting>
+        xdrrx_create(&amp;z_xdrs, z_call, XDR_DECODE);
+        if (!xdr_int(&amp;z_xdrs, &amp;op))
+            z_result = RXGEN_DECODE;
+        else if (op &amp;lt; VL_LOWEST_OPCODE || op &amp;gt; VL_HIGHEST_OPCODE)
+            z_result = RXGEN_OPCODE;
+        else
+            z_result = (*StubProcsArray0[op - VL_LOWEST_OPCODE])
+                (z_call, &amp;z_xdrs);
+        return z_result;
+    }
+
+</programlisting>
+                                                                                                                                                                                                                                                                                                                                                                  <para>If there were gaps in the procedures' opcode sequence the code for
+                                                                                                                                                                                                                                                                                                                                                                  VL_ExecuteRequest() routine would be have been drastically different (it
+                                                                                                                                                                                                                                                                                                                                                                  would have been a case statement for each procedure).</para>
+
+                                                                                                                                                                                                                                                                                                                                                                </refsect3>
+                                                                                                                                                                                                                                                                                                                                                              </refsect2>
+                                                                                                                                                                                                                                                                                                                                                            </refsect1>
+                                                                                                                                                                                                                                                                                                                                                            <refsect1>
+                                                                                                                                                                                                                                                                                                                                                              <title>Notes</title>
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis role="bold">rxgen</emphasis> is implemented from Sun's <emphasis role="bold">rpcgen</emphasis> utility.  All of the standard
+                                                                                                                                                                                                                                                                                                                                                              <emphasis role="bold">rpcgen</emphasis>'s functionality is fully maintained.  Note that some active
+                                                                                                                                                                                                                                                                                                                                                              <emphasis role="bold">rpcgen</emphasis> options that don't apply to <emphasis role="bold">rxgen</emphasis>'s purpose aren't referenced
+                                                                                                                                                                                                                                                                                                                                                              here (i.e., <emphasis role="bold">-s</emphasis>, <emphasis role="bold">-l</emphasis>, <emphasis role="bold">-m</emphasis> options) and the interested reader should
+                                                                                                                                                                                                                                                                                                                                                              refer to rpcgen(1) for details.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para>When the <computeroutput>%#include &lt;include file</computeroutput>&gt; feature is used make sure that you
+                                                                                                                                                                                                                                                                                                                                                              don't have any <emphasis role="bold">rxgen</emphasis> language features (i.e. %#defines) since you'll
+                                                                                                                                                                                                                                                                                                                                                              get syntax errors during compilations..</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para>Since this is an ongoing project many of the above may change/disappear
+                                                                                                                                                                                                                                                                                                                                                              without a major warning.</para>
+
+                                                                                                                                                                                                                                                                                                                                                            </refsect1>
+                                                                                                                                                                                                                                                                                                                                                            <refsect1>
+                                                                                                                                                                                                                                                                                                                                                              <title>See Also</title>
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>Rxgen Syntax Summary</emphasis>: Summary description of rxgen's grammar.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>Rpcgen Programming Guide</emphasis>: Sun's RPC protocol compiler.  <emphasis role="bold">rxgen</emphasis> was
+                                                                                                                                                                                                                                                                                                                                                              implemented as an extension to that compiler.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>External Data Representation: Sun Technical Notes</emphasis>: Detailed examples in
+                                                                                                                                                                                                                                                                                                                                                              using XDR.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>RPCL Syntax Summary</emphasis>: Summary of Sun's Remote Procedure Call Language.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>Rx</emphasis>: An extended Remote Procedure Call Protocol.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para><emphasis>rgen</emphasis>: An earlier version of a similar stub generator used for the R RPC
+                                                                                                                                                                                                                                                                                                                                                              protocol.</para>
+
+                                                                                                                                                                                                                                                                                                                                                            </refsect1>
+                                                                                                                                                                                                                                                                                                                                                            <refsect1>
+                                                                                                                                                                                                                                                                                                                                                              <title>Copyright</title>
+                                                                                                                                                                                                                                                                                                                                                              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                                                                                                                                                                                                                                                                                                                                                              <para>This documentation is covered by the IBM Public License Version 1.0.  It
+                                                                                                                                                                                                                                                                                                                                                              was converted from the original TeX <emphasis role="bold">rxgen</emphasis> manual to POD by Russ
+                                                                                                                                                                                                                                                                                                                                                              Allbery.</para>
+
+                                                                                                                                                                                                                                                                                                                                                            </refsect1>
+                                                                                                                                                                                                                                                                                                                                                          </refentry>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afs_cache5">
+  <refmeta>
+    <refentrytitle>afs_cache</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>afs_cache</refname>
+    <refpurpose>Format of data stored in an AFS client disk cache</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The disk cache on a client machine is composed of multiple <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files
+    that contain the data, a <replaceable>CacheItems</replaceable> file that records index information
+    for all of the <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files, and a <replaceable>VolumeItems</replaceable> file that records the
+    mapping between volume name and mount point for volumes.</para>
+
+    <para>When it initializes, the Cache Manager creates the cache files in the
+    configured cache location.  The standard directory name is
+    <replaceable>/usr/vice/cache</replaceable>, but it is acceptable to use a directory on a partition
+    with more available space. To designate a different directory, change the
+    value in the second field of the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file before
+    issuing the <emphasis role="bold">afsd</emphasis> command, or include the <emphasis role="bold">-cachedir</emphasis> argument to the
+    <emphasis role="bold">afsd</emphasis> command.</para>
+
+    <refsect2>
+      <title><replaceable>CacheItems</replaceable></title>
+      <para>The CacheItems file records information about each file in the disk cache
+      on a client machine (each <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file). The information includes the
+      file ID number and associated volume version number of the AFS file
+      currently stored in the <emphasis role="bold">V</emphasis><emphasis>n</emphasis> file, which enables the Cache Manager to
+      determine which <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file contains the AFS data it needs to present to
+      an application.</para>
+
+      <para>As it initializes, the Cache Manager creates the binary-format
+      <replaceable>CacheItems</replaceable> file in the same local disk cache directory as the <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable>
+      files that the <replaceable>CacheItems</replaceable> file describes, and it must always remain
+      there.</para>
+
+    </refsect2>
+    <refsect2>
+      <title><replaceable>VolumeItems</replaceable></title>
+      <para>The <replaceable>VolumeItems</replaceable> file records the mapping between volume name and mount
+      point for each volume that the Cache Manager has accessed since it
+      initialized on a client machine using a disk cache. The Cache Manager uses
+      the mappings to respond correctly to queries about the current working
+      directory, which can come from the operating system or commands such as
+      the UNIX <emphasis role="bold">pwd</emphasis> command.</para>
+
+      <para>As it initializes, the Cache Manager creates the binary-format
+      <replaceable>VolumeItems</replaceable> file in the local disk cache directory, and it must always
+      remain there.</para>
+
+    </refsect2>
+    <refsect2>
+      <title><replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable></title>
+      <para>A <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file can store a chunk of cached AFS data on a client machine
+      that is using a disk cache. As the Cache Manager initializes, it verifies
+      that the local disk cache directory houses a number of <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files
+      equal to the largest of the following:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>100</para>
+
+        </listitem>
+        <listitem>
+          <para>One and a half times the result of dividing the cache size by the chunk
+          size (cachesize/chunksize * 1.5).</para>
+
+        </listitem>
+        <listitem>
+          <para>The result of dividing the cache size by 10 MB (10,240).</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>The Cache Manager determines the cache size from the <emphasis role="bold">-blocks</emphasis> argument
+      to the <emphasis role="bold">afsd</emphasis> command, or if the argument is not included, from the third
+      field of the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file.  The default chunk size is
+      64 KB; use the <emphasis role="bold">-chunksize</emphasis> argument to the <emphasis role="bold">afsd</emphasis> command to override
+      it. To override the default number of chunks resulting from the
+      calculation, include the <emphasis role="bold">-files</emphasis> argument to the <emphasis role="bold">afsd</emphasis>
+      command. <link linkend="afsd8">afsd(8)</link> describes the restrictions on acceptable values for
+      each of the arguments.</para>
+
+      <para>If the disk cache directory houses fewer <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files than necessary,
+      the Cache Manager creates new ones, assigning each a unique integer <emphasis>n</emphasis>
+      that distinguishes it from the other files; the integers start with 1 and
+      increment by one for each <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file created. The Cache Manager removes
+      files if there are more than necessary. The Cache Manager also adds and
+      removes <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files in response to the <emphasis role="bold">fs setcachesize</emphasis> command,
+      which can be used to alter the cache size between reboots.</para>
+
+      <para><replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files expand and contract to accommodate the size of the AFS
+      directory listing or file they temporarily house. As mentioned, by default
+      each <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file holds up to 64 KB (65,536 bytes) of a cached AFS
+      element. AFS elements larger than 64 KB are divided among multiple
+      <emphasis role="bold">V</emphasis><emphasis>n</emphasis> files. If an element is smaller than 64 KB, the <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file
+      expands only to the required size. A <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file accommodates only a
+      single element, so if there many small cached elements, it is possible to
+      exhaust the available <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files without reaching the maximum cache
+      size.</para>
+
+    </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Editing or removing the <replaceable>CacheItems</replaceable> or <replaceable>VolumeItems</replaceable> files or a
+    <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> file can cause a kernel panic. If the contents of <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files
+    seem out of date, clear the files by using the <emphasis role="bold">fs flush</emphasis> or <emphasis role="bold">fs
+    flushvolume</emphasis> command. If any of the cache files are accidentally modified
+    or deleted, rebooting the machine usually restores normal performance.</para>
+
+    <para>To alter cache size (and thus the number of <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files) between
+    reboots, use the <emphasis role="bold">fs setcachesize</emphasis> command. Alternatively, alter the
+    value of the <emphasis role="bold">-blocks</emphasis>, <emphasis role="bold">-files</emphasis> or <emphasis role="bold">-chunksize</emphasis> arguments to the
+    <emphasis role="bold">afsd</emphasis> command invoked in the machine's AFS initialization file, and
+    reboot. To refresh the contents of one or more <replaceable>V</replaceable><emphasis>n</emphasis><replaceable></replaceable> files, use the
+    <emphasis role="bold">fs flush</emphasis> or <emphasis role="bold">fs flushvolume</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="cacheinfo5">cacheinfo(5)</link>,
+    <link linkend="afsd8">afsd(8)</link>,
+    <link linkend="fs_checkvolumes1">fs_checkvolumes(1)</link>,
+    <link linkend="fs_flush1">fs_flush(1)</link>,
+    <link linkend="fs_flushvolume1">fs_flushvolume(1)</link>,
+    <link linkend="fs_setcachesize1">fs_setcachesize(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

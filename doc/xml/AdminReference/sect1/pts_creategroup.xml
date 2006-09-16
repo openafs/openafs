@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pts_creategroup1">
+  <refmeta>
+    <refentrytitle>pts creategroup</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>pts creategroup</refname>
+    <refpurpose>Creates an (empty) Protection Database group entry</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">pts creategroup</emphasis> <emphasis role="bold">-name</emphasis> &lt;<emphasis>group name</emphasis>&gt;+
+        [<emphasis role="bold">-owner</emphasis> &lt;<emphasis>owner of the group</emphasis>&gt;]
+        [<emphasis role="bold">-id</emphasis> &lt;<emphasis>id (negated) for the group</emphasis>&gt;+] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-force</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">pts createg</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>group name</emphasis>&gt;+  [<emphasis role="bold">-o</emphasis> &lt;<emphasis>owner of the group</emphasis>&gt;]
+        [<emphasis role="bold">-i</emphasis> &lt;<emphasis>id (negated) for the group</emphasis>&gt;+] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">pts cg</emphasis> <emphasis role="bold">-na</emphasis> &lt;<emphasis>group name</emphasis>&gt;+ [<emphasis role="bold">-o</emphasis> &lt;<emphasis>owner of the group</emphasis>&gt;]
+        [<emphasis role="bold">-i</emphasis> &lt;<emphasis>id (negated) for the group</emphasis>&gt;+] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-f</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">pts creategroup</emphasis> command creates an entry in the Protection Database
+    for each group specified by the <emphasis role="bold">-name</emphasis> argument. The entry records the
+    issuer of the command as the group's creator, and as the group's owner
+    unless the <emphasis role="bold">-owner</emphasis> argument names an alternate user or group as the
+    owner.</para>
+
+    <para>There are two types of groups:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>regular</emphasis>, the names of which have two parts separated by a colon. The
+        part before the colon names the group's owner.  Any user can create such
+        groups.</para>
+
+      </listitem>
+      <listitem>
+        <para><emphasis>prefix-less</emphasis>, which do not have an owner prefix. Only members of the
+        system:administrators group can create prefix-less groups.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>Creating a group lowers the issuer's group-creation quota by one. This is
+    true even if the <emphasis role="bold">-owner</emphasis> argument is used to assign ownership to an
+    alternate user or group. To display a user's group-creation quota, use the
+    <emphasis role="bold">pts examine</emphasis> command; to set it, use the <emphasis role="bold">pts setfields</emphasis> command.</para>
+
+    <para>AFS group ID (AFS GID) numbers are negative integers and by default the
+    Protection Server assigns a GID that is one less (more negative) than the
+    current value of the <computeroutput>max group id</computeroutput> counter in the Protection Database,
+    decrementing the counter by one for each group. Members of the
+    system:administrators group can use the <emphasis role="bold">-id</emphasis> argument to assign specific
+    AFS GID numbers. If any of the specified GIDs is lower (more negative)
+    than the current value of the <computeroutput>max group id</computeroutput> counter, the counter is
+    reset to that value. It is acceptable to specify a GID greater (less
+    negative) than the current value of the counter, but the creation
+    operation fails if an existing group already has it. To display or set the
+    value of the <computeroutput>max group id</computeroutput> counter, use the <emphasis role="bold">pts listmax</emphasis> or <emphasis role="bold">pts
+    setmax</emphasis> command, respectively.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The command generates the following string to confirm creation of each
+    group:</para>
+
+<programlisting>
+   group &amp;lt;name&amp;gt; has id &amp;lt;AFS GID&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Cautions</title>
+      <para>Although using the <emphasis role="bold">-owner</emphasis> argument to designate a machine entry as a
+      group's owner does not generate an error, it is not recommended. The
+      Protection Server does not extend the usual privileges of group ownership
+      to users logged onto the machine.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Options</title>
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>group name</emphasis>&gt;</term>
+          <listitem>
+            <para>Specifies the name of each group to create. Provide a string of up to 63
+            characters, which can include lowercase (but not uppercase) letters,
+            numbers, and punctuation marks. A regular name includes a single colon
+            (<computeroutput>:</computeroutput>) to separate the two parts of the name; the colon cannot appear in a
+            prefix-less group name.</para>
+
+            <para>A regular group's name must have the following format:</para>
+
+<programlisting>
+   &amp;lt;owner_name&amp;gt;:&amp;lt;group_name&amp;gt;
+
+</programlisting>
+              <para>and the &lt;owner_name&gt; field must reflect the actual owner of the group, as
+              follows:</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>If the optional <emphasis role="bold">-owner</emphasis> argument is not included, the field must match
+                  the AFS username under which the issuer is currently authenticated.</para>
+
+                </listitem>
+                <listitem>
+                  <para>If the <emphasis role="bold">-owner</emphasis> argument names an alternate AFS user, the field must
+                  match that AFS username.</para>
+
+                </listitem>
+                <listitem>
+                  <para>If the <emphasis role="bold">-owner</emphasis> argument names another regular group, the field must
+                  match the owning group's owner field (the part of its name before the
+                  colon). If the <emphasis role="bold">-owner</emphasis> argument names a prefix-less group, the field
+                  must match the owning group's complete name.</para>
+
+                </listitem>
+              </itemizedlist>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-owner</emphasis> &lt;<emphasis>owner of the group</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies a user or group as the owner for each group, rather than the
+              issuer of the command. Provide either an AFS username or the name of a
+              regular or prefix-less group. An owning group must already have at least
+              one member. This requirement prevents assignment of self-ownership to a
+              group during its creation; use the <emphasis role="bold">pts chown</emphasis> command after issuing this
+              command, if desired.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>id for the group</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies a negative integer AFS GID number for each group, rather than
+              allowing the Protection Server to assign it. Precede the integer with a
+              hyphen (<computeroutput>-</computeroutput>) to indicate that it is negative.</para>
+
+              <para>If this argument is used and the <emphasis role="bold">-name</emphasis> argument names multiple new
+              groups, it is best to provide an equivalent number of AFS GIDs. The first
+              GID is assigned to the first group, the second to the second group, and so
+              on. If there are fewer GIDs than groups, the Protection Server assigns
+              GIDs to the unmatched groups based on the <computeroutput>max group id</computeroutput> counter. If
+              there are more GIDs than groups, the excess GIDs are ignored. If any of
+              the GIDs is lower (more negative) than the current value of the <computeroutput>max
+              group id</computeroutput> counter, the counter is reset to that value.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+            <listitem>
+              <para>Names the cell in which to run the command. For more details, see
+              <link linkend="pts1">pts(1)</link>.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-noauth</emphasis></term>
+            <listitem>
+              <para>Assigns the unprivileged identity anonymous to the issuer. For more
+              details, see <link linkend="pts1">pts(1)</link>.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-force</emphasis></term>
+            <listitem>
+              <para>Enables the command to continue executing as far as possible when errors
+              or other problems occur, rather than halting execution at the first error.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-help</emphasis></term>
+            <listitem>
+              <para>Prints the online help for this command. All other valid options are
+              ignored.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>In the following example, the user pat creates groups called
+        <computeroutput>pat:friends</computeroutput> and <computeroutput>pat:colleagues</computeroutput>.</para>
+
+<programlisting>
+   % pts creategroup -name pat:friends pat:colleagues
+
+</programlisting>
+          <para>The following example shows a member of the system:administrators group
+          creating the prefix-less group <computeroutput>staff</computeroutput> and assigning its ownership to the
+          system:administrators group rather than to herself.</para>
+
+<programlisting>
+   % pts creategroup -name staff -owner system:administrators
+
+</programlisting>
+            <para>In the following example, the user pat creates a group called
+            <computeroutput>smith:team-members</computeroutput>, which is allowed because the <emphasis role="bold">-owner</emphasis> argument
+            specifies the required value (<computeroutput>smith</computeroutput>).</para>
+
+<programlisting>
+   % pts creategroup -name smith:team-members -owner smith
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>The issuer must belong to the system:administrators group to create
+              prefix-less groups or include the <emphasis role="bold">-id</emphasis> argument.</para>
+
+              <para>To create a regular group, the issuer must</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>Be authenticated. The command fails if the <emphasis role="bold">-noauth</emphasis> flag is provided.</para>
+
+                </listitem>
+                <listitem>
+                  <para>Have a group-creation quota greater than zero. The <emphasis role="bold">pts examine</emphasis> command
+                  displays this quota.</para>
+
+                </listitem>
+              </itemizedlist>
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="pts1">pts(1)</link>,
+              <link linkend="pts_examine1">pts_examine(1)</link>,
+              <link linkend="pts_listmax1">pts_listmax(1)</link>,
+              <link linkend="pts_setfields1">pts_setfields(1)</link>,
+              <link linkend="pts_setmax1">pts_setmax(1)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

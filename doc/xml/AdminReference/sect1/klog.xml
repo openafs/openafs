@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="klog1">
+  <refmeta>
+    <refentrytitle>klog</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>klog</refname>
+    <refpurpose>Authenticates with the Authentication Server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">klog</emphasis> [<emphasis role="bold">-x</emphasis>] [<emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;]
+        [-password &lt;<emphasis>user's password</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+]
+        [<emphasis role="bold">-pipe</emphasis>] [<emphasis role="bold">-silent</emphasis>]
+        [<emphasis role="bold">-lifetime</emphasis> &lt;<emphasis>ticket lifetime in hh[:mm[:ss]]</emphasis>&gt;]
+        [<emphasis role="bold">-setpag</emphasis>] [<emphasis role="bold">-tmp</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">klog</emphasis> [<emphasis role="bold">-x</emphasis>] [<emphasis role="bold">-pr</emphasis> &lt;<emphasis>user name</emphasis>&gt;] [<emphasis role="bold">-pa</emphasis> &lt;<emphasis>user's password</emphasis>&gt;]
+        [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]  [<emphasis role="bold">-s</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+]
+        [<emphasis role="bold">-pi</emphasis>] [<emphasis role="bold">-si</emphasis>] [<emphasis role="bold">-l</emphasis> &lt;<emphasis>ticket lifetime in hh[:mm[:ss]]</emphasis>&gt;]
+        [<emphasis role="bold">-se</emphasis>] [<emphasis role="bold">-t</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">klog</emphasis> command obtains an AFS token from the Authentication
+    Server. The Cache Manager on the local machine stores the token in a
+    credential structure in kernel memory and uses it when obtaining
+    authenticated access to the AFS filespace. This command does not affect
+    the issuer's identity (UNIX UID) in the local file system.</para>
+
+    <para>By default, the command interpreter obtains a token for the AFS user name
+    that matches the issuer's identity in the local file system. To specify an
+    alternate user, include the <emphasis role="bold">-principal</emphasis> argument.  The user named by the
+    <emphasis role="bold">-principal</emphasis> argument does not have to appear in the local password file
+    (the <replaceable>/etc/passwd</replaceable> file or equivalent).</para>
+
+    <para>By default, the command interpreter obtains a token for the local cell, as
+    defined by the AFSCELL environment variable set in the command shell or by
+    the <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the local machine. To specify an
+    alternate cell, include the <emphasis role="bold">-cell</emphasis> argument. The command interpreter
+    contacts an Authentication Server chosen at random from the cell's entry
+    in the local <replaceable>/usr/afs/etc/CellServDB</replaceable> file, unless the <emphasis role="bold">-servers</emphasis>
+    argument is used to name one or more database server machines.</para>
+
+    <para>A user can have tokens in multiple cells simultaneously, but only one
+    token per cell per connection to the client machine. If the user's
+    credential structure already contains a token for the requested cell, the
+    token resulting from this command replaces it.</para>
+
+    <para>Sites that employ standard Kerberos authentication instead of the AFS
+    Authentication Server must use the Kerberos version of this command,
+    <emphasis role="bold">klog.krb</emphasis>, on all client machines. It automatically places the issuer's
+    Kerberos tickets in the file named by the KRBTKFILE environment variable,
+    which the <emphasis role="bold">pagsh.krb</emphasis> command defines automatically as <replaceable>/tmp/tktp</replaceable><emphasis>X</emphasis><replaceable></replaceable>
+    where <emphasis>X</emphasis> is the number of the user's PAG.</para>
+
+    <para>The lifetime of the token resulting from this command is the smallest of
+    the following.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The lifetime specified by the issuer with the <emphasis role="bold">-lifetime</emphasis> argument. If
+        the issuer does not include this argument, the value defaults to 720 hours
+        (30 days).</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum ticket lifetime recorded for the afs entry in the
+        Authentication Database. The default is 100 hours.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum ticket lifetime recorded in the specified user's
+        Authentication Database entry. The default is 25 hours for user entries
+        created by an Authentication Server running AFS 3.1 or later.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum ticket lifetime recorded in the krbtgt.<emphasis>CELLNAME</emphasis> entry in
+        the Authentication Database; this entry corresponds to the ticket-granting
+        ticket used internally in generating the token. The default is 720 hours
+        (30 days).</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The output from the kas examine command displays an Authentication
+    Database entry's maximum ticket lifetime as <computeroutput>Max ticket
+    lifetime</computeroutput>. Administrators can display any entry, and users can display
+    their own entries.</para>
+
+    <para>If none of the defaults have been changed, the token lifetime is 25 hours
+    for user accounts created by an Authentication Server running AFS 3.1 or
+    higher. The maximum lifetime for any token is 720 hours (30 days), and the
+    minimum is 5 minutes.</para>
+
+    <para>Between the minimum and maximum values, the Authentication Server uses a
+    defined set of values, according to the following rules. Requested
+    lifetimes between 5 minutes and 10 hours 40 minutes are granted at 5
+    minute intervals, rounding up. For example, if the issuer requests a
+    lifetime of 12 minutes, the token's actual lifetime is 15 minutes.</para>
+
+    <para>For token lifetimes greater than 10 hours 40 minutes, consult the
+    following table, which presents all the possible times in units of
+    <emphasis>hours</emphasis><emphasis role="bold">:</emphasis><emphasis>minutes</emphasis><emphasis role="bold">:</emphasis><emphasis>seconds</emphasis>.  The number in parentheses is an
+    approximation of the corresponding time in days and hours (as indicated by
+    the <computeroutput>d</computeroutput> and <computeroutput>h</computeroutput> letters). For example, <computeroutput>282:22:17</computeroutput> means 282 hours, 22
+    minutes, and 17 seconds, which translates to approximately 11 days and 18
+    hours (<computeroutput>11d 18h</computeroutput>). The Authentication Server rounds up a requested
+    lifetime to the next highest possible lifetime.</para>
+
+<programlisting>
+   11:24:15 (0d 11h)    46:26:01 (1d 22h)  189:03:38 (7d 21h)
+   12:11:34 (0d 12h)    49:38:40 (2d 01h)  202:08:00 (8d 10h)
+   13:02:09 (0d 13h)    53:04:37 (2d 05h)  216:06:35 (9d 00h)
+   13:56:14 (0d 13h)    56:44:49 (2d 08h)  231:03:09 (9d 15h)
+   14:54:03 (0d 14h)    60:40:15 (2d 12h)  247:01:43 (10d 07h)
+   15:55:52 (0d 15h)    64:51:57 (2d 16h)  264:06:34 (11d 00h)
+   17:01:58 (0d 17h)    69:21:04 (2d 21h)  282:22:17 (11d 18h)
+   18:12:38 (0d 18h)    74:08:46 (3d 02h)  301:53:45 (12d 13h)
+   19:28:11 (0d 19h)    79:16:23 (3d 07h)  322:46:13 (13d 10h)
+   20:48:57 (0d 20h)    84:45:16 (3d 12h)  345:05:18 (14d 09h)
+   22:15:19 (0d 22h)    90:36:53 (3d 18h)  368:56:58 (15d 08h)
+   23:47:38 (0d 23h)    96:52:49 (4d 00h)  394:27:37 (16d 10h)
+   25:26:21 (1d 01h)   103:34:45 (4d 07h)  421:44:07 (17d 13h)
+   27:11:54 (1d 03h)   110:44:28 (4d 14h)  450:53:46 (18d 18h)
+   29:04:44 (1d 05h)   118:23:54 (4d 22h)  482:04:24 (20d 02h)
+   31:05:22 (1d 07h)   126:35:05 (5d 06h)  515:24:22 (21d 11h)
+   33:14:21 (1d 09h)   135:20:15 (5d 15h)  551:02:38 (22d 23h)
+   35:32:15 (1d 11h)   144:41:44 (6d 00h)  589:08:45 (24d 13h)
+   37:59:41 (1d 13h)   154:42:01 (6d 10h)  629:52:56 (26d 05h)
+   40:37:19 (1d 16h)   165:23:50 (6d 21h)  673:26:07 (28d 01h)
+   43:25:50 (1d 19h)   176:50:01 (7d 08h)
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Cautions</title>
+      <para>By default, this command does not create a new process authentication
+      group (PAG); see the description of the <emphasis role="bold">pagsh</emphasis> command to learn about
+      PAGs. If a cell does not use an AFS-modified login utility, users must
+      include <emphasis role="bold">-setpag</emphasis> option to this command, or issue the <emphasis role="bold">pagsh</emphasis> command
+      before this one, to have their tokens stored in a credential structure
+      that is identified by PAG rather than by local UID.</para>
+
+      <para>When a credential structure is identified by local UID, the potential
+      security exposure is that the local superuser <computeroutput>root</computeroutput> can use the UNIX
+      <emphasis role="bold">su</emphasis> command to assume any other identity and automatically inherit the
+      tokens associated with that UID. Identifying the credential structure by
+      PAG eliminates this exposure.</para>
+
+      <para>If the <emphasis role="bold">-password</emphasis> argument is used, the specified password cannot begin
+      with a hyphen, because it is interpreted as another option name.  Use of
+      the <emphasis role="bold">-password</emphasis> argument is not recommended in any case.</para>
+
+      <para>By default, it is possible to issue this command on a properly configured
+      NFS client machine that is accessing AFS via the NFS/AFS Translator,
+      assuming that the NFS client machine is a supported system type. However,
+      if the translator machine's administrator has enabled UID checking by
+      including the <emphasis role="bold">-uidcheck on</emphasis> argument to the <emphasis role="bold">fs exportafs</emphasis> command, the
+      command fails with an error message similar to the following:</para>
+
+<programlisting>
+   Warning: Remote pioctl to &amp;lt;translator_machine&amp;gt; has failed (err=8). . .
+   Unable to authenticate to AFS because a pioctl failed.
+
+</programlisting>
+        <para>Enabling UID checking means that the credential structure in which tokens
+        are stored on the translator machine must be identified by a UID that
+        matches the local UID of the process that is placing the tokens in the
+        credential structure. After the <emphasis role="bold">klog</emphasis> command interpreter obtains the
+        token on the NFS client, it passes it to the remote executor daemon on the
+        translator machine, which makes the system call that stores the token in a
+        credential structure on the translator machine. The remote executor
+        generally runs as the local superuser <computeroutput>root</computeroutput>, so in most cases its local
+        UID (normally zero) does not match the local UID of the user who issued
+        the <emphasis role="bold">klog</emphasis> command on the NFS client machine.</para>
+
+        <para>Issuing the <emphasis role="bold">klog</emphasis> command on an NFS client machine creates a security
+        exposure: the command interpreter passes the token across the network to
+        the remote executor daemon in clear text mode.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Options</title>
+        <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">-x</emphasis></term>
+            <listitem>
+              <para>Appears only for backwards compatibility. Its former function is now the
+              default behavior of this command.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the user name to authenticate. If this argument is omitted, the
+              Authentication Server attempts to authenticate the user logged into the
+              local system.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-password</emphasis> &lt;<emphasis>user's password</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the issuer's password (or that of the alternate user identified
+              by the <emphasis role="bold">-principal</emphasis> argument). Omit this argument to have the command
+              interpreter prompt for the password, in which case it does not echo
+              visibly in the command shell.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the cell for which to obtain a token. The command is directed to
+              that cell's Authentication Servers. During a single login session on a
+              given machine, a user can be authenticated in multiple cells
+              simultaneously, but can have only one token at a time for each of them
+              (that is, can only authenticate under one identity per cell per session on
+              a machine). It is acceptable to abbreviate the cell name to the shortest
+              form that distinguishes it from the other cells listed in the
+              <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the client machine on which the
+              command is issued.</para>
+
+              <para>If this argument is omitted, the command is executed in the local cell, as
+              defined</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>First, by the value of the environment variable AFSCELL.</para>
+
+                </listitem>
+                <listitem>
+                  <para>Second, in the <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the client machine on
+                  which the command is issued.</para>
+
+                </listitem>
+              </itemizedlist>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+</term>
+            <listitem>
+              <para>Establishes a connection with the Authentication Server running on each
+              specified database server machine. The command interpreter then chooses
+              one of these at random to execute the command. It is best to provide
+              fully-qualified hostnames, but abbreviated forms are possibly acceptable
+              depending on the state of the cell's name server at the time the command
+              is issued. This option is useful for testing specific servers if problems
+              are encountered.</para>
+
+              <para>If this argument is omitted, the command interpreter establishes a
+              connection with each machine listed for the indicated cell in the local
+              copy of the <replaceable>/usr/vice/etc/CellServDB</replaceable> file, and then chooses one of them
+              at random for command execution.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-pipe</emphasis></term>
+            <listitem>
+              <para>Suppresses all output to the standard output stream, including prompts and
+              error messages. The <emphasis role="bold">klog</emphasis> command interpreter expects to receive the
+              password from the standard input stream. Do not use this argument; it is
+              designed for use by application programs rather than human users.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-silent</emphasis></term>
+            <listitem>
+              <para>Suppresses some of the trace messages that the klog command produces on
+              the standard output stream by default. It still reports on major problems
+              encountered.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-lifetime</emphasis> &lt;<emphasis>ticket lifetime</emphasis></term>
+            <listitem>
+              <para>Requests a specific lifetime for the token. Provide a number of hours and
+              optionally minutes and seconds in the format <emphasis>hh</emphasis>[<emphasis role="bold">:</emphasis><emphasis>mm</emphasis>[<emphasis role="bold">:</emphasis><emphasis>ss</emphasis>]].
+              The value is used in calculating the token lifetime as described in
+              <link linkend="DESCRIPTION">DESCRIPTION</link>.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-setpag</emphasis></term>
+            <listitem>
+              <para>Creates a process authentication group (PAG) prior to requesting
+              authentication. The token is associated with the newly created PAG.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-tmp</emphasis></term>
+            <listitem>
+              <para>Creates a Kerberos-style ticket file in the <replaceable>/tmp</replaceable> directory of the local
+              machine. The file is called <replaceable>tkt.</replaceable><emphasis>AFS_UID</emphasis><replaceable></replaceable> where <emphasis>AFS_UID</emphasis> is the AFS
+              UID of the issuer.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-help</emphasis></term>
+            <listitem>
+              <para>Prints the online help for this command. All other valid options are
+              ignored.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect1>
+      <refsect1>
+        <title>Output</title>
+        <para>The following message indicates that the limit on consecutive
+        authentication failures has been exceeded. An administrator can use the
+        <emphasis role="bold">kas unlock</emphasis> command to unlock the account, or the issuer can wait until
+        the lockout time for the account has passed. (The time is set with the
+        <emphasis role="bold">-locktime</emphasis> argument to the <emphasis role="bold">kas setfields</emphasis> command and displayed in the
+        output from the <emphasis role="bold">kas examine</emphasis> command).</para>
+
+<programlisting>
+   Unable to authenticate to AFS because ID is locked - see your system admin
+
+</programlisting>
+          <para>If the <emphasis role="bold">-tmp</emphasis> flag is included, the following message confirms that a
+          Kerberos-style ticket file was created:</para>
+
+<programlisting>
+   Wrote ticket file to /tmp
+
+</programlisting>
+          </refsect1>
+          <refsect1>
+            <title>Examples</title>
+            <para>Most often, this command is issued without arguments. The appropriate
+            password is for the person currently logged into the local system. The
+            ticket's lifetime is calculated as described in <link linkend="DESCRIPTION">DESCRIPTION</link> (if no
+            defaults have been changed, it is 25 hours for a user whose Authentication
+            Database entry was created in AFS 3.1 or later).</para>
+
+<programlisting>
+   % klog
+   Password:
+
+</programlisting>
+              <para>The following example authenticates the user as admin in the ABC
+              Corporation's test cell:</para>
+
+<programlisting>
+   % klog -principal admin -cell test.abc.com
+   Password:
+
+</programlisting>
+                <para>In the following, the issuer requests a ticket lifetime of 104 hours 30
+                minutes (4 days 8 hours 30 minutes). Presuming that this lifetime is
+                allowed by the maximum ticket lifetimes and other factors described in
+                <link linkend="DESCRIPTION">DESCRIPTION</link>, the token's lifetime is 110:44:28, which is the next
+                largest possible value.</para>
+
+<programlisting>
+   % klog -lifetime 104:30
+   Password:
+
+</programlisting>
+                </refsect1>
+                <refsect1>
+                  <title>Privilege Required</title>
+                  <para>None</para>
+
+                </refsect1>
+                <refsect1>
+                  <title>See Also</title>
+                  <para><link linkend="fs_exportafs1">fs_exportafs(1)</link>,
+                  <link linkend="kas_examine8">kas_examine(8)</link>,
+                  <link linkend="kas_setfields8">kas_setfields(8)</link>,
+                  <link linkend="kas_unlock8">kas_unlock(8)</link>,
+                  <link linkend="kaserver8">kaserver(8)</link>,
+                  <link linkend="pagsh1">pagsh(1)</link>,
+                  <link linkend="tokens1">tokens(1)</link></para>
+
+                </refsect1>
+                <refsect1>
+                  <title>Copyright</title>
+                  <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                  <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                  converted from HTML to POD by software written by Chas Williams and Russ
+                  Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                </refsect1>
+              </refentry>

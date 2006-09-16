@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_setcachesize1">
+  <refmeta>
+    <refentrytitle>fs setcachesize</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs setcachesize</refname>
+    <refpurpose>Sets the size of the disk cache</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs setcachesize</emphasis> [<emphasis role="bold">-blocks</emphasis> &lt;<emphasis>size in 1K byte blocks (0 =</emphasis> reset)&gt;&gt;]
+        [<emphasis role="bold">-reset</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs setca</emphasis> [<emphasis role="bold">-b</emphasis> &lt;<emphasis>size in 1K byte blocks (0 =</emphasis> reset)&gt;&gt;]
+        [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs cachesize</emphasis> [<emphasis role="bold">-b</emphasis> &lt;<emphasis>size in 1K byte blocks (0 =</emphasis> reset)&gt;&gt;]
+        [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs ca</emphasis> [<emphasis role="bold">-b</emphasis> &lt;<emphasis>size in 1K byte blocks (0 =</emphasis> reset)&gt;&gt;]
+        [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs setcachesize</emphasis> command changes the number of kilobyte blocks of
+    local disk space available to the Cache Manager for its data cache, on
+    machines that use a disk cache. The command is not operative on machines
+    that use a memory cache.</para>
+
+    <para>To return the cache size to the default value specified in the third field
+    of the local <replaceable>/usr/vice/etc/cacheinfo</replaceable> file, provide a value of <computeroutput>0</computeroutput> to
+    the <emphasis role="bold">-blocks</emphasis> argument.</para>
+
+    <para>To return the cache size to the value set when the machine was last
+    rebooted, use the <emphasis role="bold">-reset</emphasis> flag instead of the <emphasis role="bold">-blocks</emphasis> argument. This
+    is normally the amount specified in the <replaceable>cacheinfo</replaceable> file, unless the
+    <emphasis role="bold">-blocks</emphasis> argument was included on the <emphasis role="bold">afsd</emphasis> command to override the
+    <emphasis role="bold">cacheinfo</emphasis> value.</para>
+
+    <para>To display the current cache size and amount of cache in use, for both
+    disk and memory caches, use the <emphasis role="bold">fs getcacheparms</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>This command is not operative on machines using a memory cache, and
+    results in an error message. To change memory cache size, edit the
+    <emphasis role="bold">cacheinfo</emphasis> file and reboot, or reboot and provide the <emphasis role="bold">-blocks</emphasis>
+    argument to the <emphasis role="bold">afsd</emphasis> command.</para>
+
+    <para>On machines using a disk cache, do not set the cache size to exceed 85% to
+    90% of the actual disk space available for the cache directory. The cache
+    implementation itself requires a small amount of space on the partition.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-blocks</emphasis> &lt;<emphasis>size in 1K byte blocks</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the number of one-kilobyte blocks of disk space available for
+          the Cache Manager to devote to the cache. Provide a value of <computeroutput>0</computeroutput> to set
+          cache size to the default specified in the <replaceable>cacheinfo</replaceable> file.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-reset</emphasis></term>
+        <listitem>
+          <para>Returns the cache size to the value set when the machine was last
+          booted. This agrees with the value in the <replaceable>cacheinfo</replaceable> file unless the
+          <emphasis role="bold">-blocks</emphasis> argument was used on the <emphasis role="bold">afsd</emphasis> command.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command sets the disk cache size to 25000 kilobyte blocks.</para>
+
+<programlisting>
+   % fs setcachesize -blocks 25000
+
+</programlisting>
+      <para>Both of the following commands reset the disk cache size to the value in
+      the <replaceable>cacheinfo</replaceable> file, assuming that the <emphasis role="bold">-blocks</emphasis> argument to the
+      <emphasis role="bold">afsd</emphasis> command was not used.</para>
+
+<programlisting>
+   % fs setcachesize -blocks 0
+   % fs setcachesize -reset
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must be logged in as the local superuser root.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="cacheinfo5">cacheinfo(5)</link>,
+        <link linkend="afsd8">afsd(8)</link>,
+        <link linkend="fs_getcacheparms1">fs_getcacheparms(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

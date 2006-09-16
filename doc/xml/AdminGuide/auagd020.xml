@@ -1,0 +1,1704 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ562">
+  <title>Managing Access Control Lists</title>
+
+  <para>To control access to a directory and all of the files in it, AFS associates an <emphasis>access control list</emphasis>
+  (<emphasis>ACL</emphasis>) with it, rather than the mode bits that the UNIX file system (UFS) associates with individual files or
+  directories. AFS ACLs provide more refined access control because there are seven access permissions rather than UFS's three, and
+  there is room for approximately 20 user or group entries on an ACL, rather than just the three UFS entries (<emphasis
+  role="bold">owner</emphasis>, <emphasis role="bold">group</emphasis>, and <emphasis role="bold">other</emphasis>).</para>
+
+  <sect1 id="HDRWQ563">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="57*" />
+
+        <colspec colwidth="43*" />
+
+        <tbody>
+          <row>
+            <entry>Examine access control list</entry>
+
+            <entry><emphasis role="bold">fs listacl</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Edit ACL's normal permissions section</entry>
+
+            <entry><emphasis role="bold">fs setacl</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Edit ACL's negative permissions section</entry>
+
+            <entry><emphasis role="bold">fs setacl</emphasis> with <emphasis role="bold">-negative</emphasis> flag</entry>
+          </row>
+
+          <row>
+            <entry>Replace an ACL</entry>
+
+            <entry><emphasis role="bold">fs setacl</emphasis> with <emphasis role="bold">-clear</emphasis> flag</entry>
+          </row>
+
+          <row>
+            <entry>Copy an ACL</entry>
+
+            <entry><emphasis role="bold">fs copyacl</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Remove obsolete AFS UIDs</entry>
+
+            <entry><emphasis role="bold">fs cleanacl</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ565">
+    <title>Protecting Data in AFS</title>
+
+    <indexterm>
+      <primary>protection of file data</primary>
+
+      <secondary>see also: <emphasis>ACL</emphasis></secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>protection of file data</primary>
+
+      <secondary>AFS compared to UFS<emphasis>ACL</emphasis></secondary>
+    </indexterm>
+
+    <para>This section describes the main differences between the AFS and UFS file protection systems, discusses the implications of
+    directory-level protections, and describes the seven access permissions.</para>
+
+    <sect2 id="HDRWQ566">
+      <title>Differences Between UFS and AFS Data Protection</title>
+
+      <indexterm>
+        <primary>UFS</primary>
+
+        <secondary>file protection compared to AFS</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>protection of file data</primary>
+
+        <secondary>AFS compared to UFS<emphasis>ACL</emphasis></secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>compared to UNIX protection</secondary>
+      </indexterm>
+
+      <para>The UFS mode bits data protection system and the AFS ACL system differ in the following ways: <itemizedlist>
+          <listitem>
+            <para>Protection at the file level (UFS) versus the directory level (AFS)</para>
+
+            <para>UFS associates a set of nine mode bits with each file element, three (<emphasis role="bold">rwx</emphasis>) for
+            each of the element's owner, owning group, and all other users. A similar set of mode bits on the file's directory
+            applies to the file only in an oblique way.</para>
+
+            <para>An AFS ACL instead protects all files in a directory in the same way. If a certain file is more sensitive than
+            others, store it in a directory with a more restrictive ACL.</para>
+
+            <para>Defining access at the directory level has important consequences: <indexterm>
+                <primary>directory-level data protection</primary>
+
+                <secondary>implications</secondary>
+              </indexterm> <itemizedlist>
+                <listitem>
+                  <para>The permissions on a directory's ACL apply to all of the files in the directory. When you move a file to a
+                  different directory, you effectively change the access permissions that apply to it to those on its new
+                  directory's ACL. Changing a directory's ACL changes the protection on all the files in it.</para>
+                </listitem>
+
+                <listitem>
+                  <para>When you create a subdirectory, its initial ACL is created as a copy of its parent directory's ACL. You can
+                  then change the subdirectory's ACL independently. However, the parent directory's ACL continues to control access
+                  to the subdirectory in the following way: the parent directory's ACL must grant the <emphasis
+                  role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permission to a user (or a group the user
+                  belongs to) in order for the user to access the subdirectory at all.</para>
+
+                  <para>In general, then, it is best to assign fairly liberal access permissions to high-level directories
+                  (including user home directories). In particular, it often makes sense to grant at least the <emphasis
+                  role="bold">l</emphasis> permission to the <emphasis role="bold">system:anyuser</emphasis> or <emphasis
+                  role="bold">system:authuser</emphasis> group on high-level directories. For further discussion, see <link
+                  linkend="HDRWQ571">Using Groups on ACLs</link>.</para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>How the mode bits are interpreted</para>
+
+            <para>Mode bits are the only file-protection system in UFS. AFS allows you to set the UNIX mode bits on a file in
+            addition to the ACL on its directory, but it interprets them differently. See <link linkend="HDRWQ580">How AFS
+            Interprets the UNIX Mode Bits</link>.</para>
+          </listitem>
+
+          <listitem>
+            <para>Three access permissions (UFS) versus seven (AFS)</para>
+
+            <para>UFS defines three access permissions in the form of mode bits: <emphasis role="bold">r</emphasis> (<emphasis
+            role="bold">read</emphasis>), <emphasis role="bold">w</emphasis> (<emphasis role="bold">write</emphasis>), and <emphasis
+            role="bold">x</emphasis> (<emphasis role="bold">execute</emphasis>). AFS defines seven permissions, which makes access
+            control more precise. For detailed descriptions, see <link linkend="HDRWQ567">The AFS ACL Permissions</link>.
+            <simplelist>
+                <member><emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>)</member>
+
+                <member><emphasis role="bold">d</emphasis> (<emphasis role="bold">delete</emphasis>)</member>
+
+                <member><emphasis role="bold">i</emphasis> (<emphasis role="bold">insert</emphasis>)</member>
+
+                <member><emphasis role="bold">k</emphasis> (<emphasis role="bold">lock</emphasis>)</member>
+
+                <member><emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>)</member>
+
+                <member><emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>)</member>
+
+                <member><emphasis role="bold">w</emphasis> (<emphasis role="bold">write</emphasis>)</member>
+              </simplelist></para>
+          </listitem>
+
+          <listitem>
+            <para>Three defined users and groups (UFS) versus many (AFS)</para>
+
+            <para>UFS controls access for one user and two groups by providing a set of mode bits for each: the user who owns the
+            file or directory, a single defined group, and everyone who has an account on the system.</para>
+
+            <para>AFS, in contrast, allows you to place many entries (individual users or groups) on an ACL, granting a different
+            set of access permissions to each one. The number of possible entries is about 20, and depends on how much space each
+            entry occupies in the memory allocated for the ACL itself.</para>
+
+            <para>AFS defines two system groups, <emphasis role="bold">system:anyuser</emphasis> and <emphasis
+            role="bold">system:authuser</emphasis>, which represent all users and all authenticated users, respectively; for further
+            discussion, see <link linkend="HDRWQ571">Using Groups on ACLs</link>. In addition, users can define their own groups in
+            the Protection Database, consisting of individual users or machine IP addresses. Users who have the <emphasis
+            role="bold">a</emphasis> permission on an ACL can create entries for the system groups as well as groups defined by
+            themselves or other users. For information on defining groups, see <link linkend="HDRWQ531">Administering the Protection
+            Database</link>.</para>
+
+            <para>When a user requests access to a file or directory, the File Server sums together all of the permissions that the
+            relevant ACL extends to the user and to groups to which the user belongs. Placing group entries on ACLs therefore can
+            control access for many more users than the ACL can accommodate as individual entries.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ567">
+      <title>The AFS ACL Permissions</title>
+
+      <indexterm>
+        <primary>access</primary>
+
+        <secondary>permissions on ACL (see entries: <emphasis>permissions on ACL</emphasis>, <emphasis>ACL</emphasis>)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>permissions on ACL</primary>
+
+        <secondary>defined</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>permissions defined</secondary>
+      </indexterm>
+
+      <para>Functionally, the seven standard ACL permissions fall into two groups: one that applies to the directory itself and one
+      that applies to the files it contains.</para>
+
+      <sect3 id="HDRWQ568">
+        <title>The Four Directory Permissions</title>
+
+        <para>The four permissions in this group are meaningful with respect to the directory itself. For example, the <emphasis
+        role="bold">i</emphasis> (<emphasis role="bold">insert</emphasis>) permission does not control addition of data to a file,
+        but rather creation of a new file or subdirectory. <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">The l (lookup) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission functions as something of a gate keeper for access to the directory and its files, because a
+                user must have it in order to exercise any other permissions. In particular, a user must have this permission to
+                access anything in the directory's subdirectories, even if the ACL on a subdirectory grants extensive permissions.
+                <indexterm>
+                    <primary>lookup ACL permission</primary>
+
+                    <secondary></secondary>
+
+                    <see>l ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>l ACL permission</primary>
+                  </indexterm></para>
+
+                <para>This permission enables a user to issue the following commands: <itemizedlist>
+                    <listitem>
+                      <para>The <emphasis role="bold">ls</emphasis> command to list the names of the files and subdirectories in the
+                      directory</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>The <emphasis role="bold">ls -ld</emphasis> command to obtain complete status information for the
+                      directory element itself</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>The <emphasis role="bold">fs listacl</emphasis> command to examine the directory's ACL</para>
+                    </listitem>
+                  </itemizedlist></para>
+
+                <para>This permission does not enable a user to read the contents of a file in the directory, to issue the <emphasis
+                role="bold">ls -l</emphasis> command on a file in the directory, or to issue the <emphasis role="bold">fs
+                listacl</emphasis> command with the filename as the <emphasis role="bold">-path</emphasis> argument. Those
+                operations require the <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) permission which
+                is described in <link linkend="HDRWQ569">The Three File Permissions</link>.</para>
+
+                <para>Similarly, this permission does not enable a user to issue the <emphasis role="bold">ls</emphasis>, <emphasis
+                role="bold">ls -l</emphasis>, <emphasis role="bold">ls -ld</emphasis>, or <emphasis role="bold">fs
+                listacl</emphasis> commands against a subdirectory of the directory. Those operations require the <emphasis
+                role="bold">l</emphasis> permission on the ACL of the subdirectory itself.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">The i (insert) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables a user to add new files to the directory, either by creating or copying, and to create
+                new subdirectories. It does not extend into any subdirectories, which are protected by their own ACLs. <indexterm>
+                    <primary>insert ACL permission</primary>
+
+                    <secondary></secondary>
+
+                    <see>i ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>i ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">The d (delete) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables a user to remove files and subdirectories from the directory or move them into other
+                directories (assuming that the user has the <emphasis role="bold">i</emphasis> permission on the ACL of the other
+                directories). <indexterm>
+                    <primary>delete ACL permission</primary>
+
+                    <secondary></secondary>
+
+                    <see>d ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>d ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">The a (administer) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables a user to change the directory's ACL. Members of the <emphasis
+                role="bold">system:administrators</emphasis> group implicitly have this permission on every directory (that is, even
+                if that group does not appear on the ACL). Similarly, the owner of a directory implicitly has this permission on its
+                ACL and those of all directories below it that he or she owns. <indexterm>
+                    <primary>administer ACL permission</primary>
+
+                    <secondary></secondary>
+
+                    <see>a ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>a ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+          </variablelist></para>
+      </sect3>
+
+      <sect3 id="HDRWQ569">
+        <title>The Three File Permissions</title>
+
+        <para>The three permissions in this group are meaningful with respect to files in a directory, rather than the directory
+        itself or its subdirectories. <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">The r (read) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables a user to read the contents of files in the directory and to issue the <emphasis
+                role="bold">ls -l</emphasis> command to stat the file elements. <indexterm>
+                    <primary>read</primary>
+
+                    <secondary>ACL permission</secondary>
+
+                    <see>r ACL permission)</see>
+                  </indexterm> <indexterm>
+                    <primary>r ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">The w (write) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables a user to modify the contents of files in the directory and to issue the <emphasis
+                role="bold">chmod</emphasis> command to change their UNIX mode bits. <indexterm>
+                    <primary>write</primary>
+
+                    <secondary>ACL permission</secondary>
+
+                    <see>write ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>w ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">The k (lock) permission</emphasis></term>
+
+              <listitem>
+                <para>This permission enables the user to run programs that issue system calls to lock files in the directory.
+                <indexterm>
+                    <primary>lock ACL permission</primary>
+
+                    <secondary></secondary>
+
+                    <see>k ACL permission</see>
+                  </indexterm> <indexterm>
+                    <primary>k ACL permission</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+          </variablelist></para>
+      </sect3>
+
+      <sect3 id="Header_635">
+        <title>The Eight Auxiliary Permissions</title>
+
+        <indexterm>
+          <primary>undefined ACL permissions</primary>
+        </indexterm>
+
+        <indexterm>
+          <primary>auxiliary ACL permissions</primary>
+        </indexterm>
+
+        <indexterm>
+          <primary>ACL</primary>
+
+          <secondary>auxiliary permissions</secondary>
+        </indexterm>
+
+        <para>AFS provides eight additional permissions that do not have a defined meaning, denoted by the uppercase letters
+        <emphasis role="bold">A</emphasis>, <emphasis role="bold">B</emphasis>, <emphasis role="bold">C</emphasis>, <emphasis
+        role="bold">D</emphasis>, <emphasis role="bold">E</emphasis>, <emphasis role="bold">F</emphasis>, <emphasis
+        role="bold">G</emphasis>, and <emphasis role="bold">H</emphasis>.</para>
+
+        <para>You can write application programs that assign a meaning to one or more of the permissions, and then place them on
+        ACLs to control file access by those programs. For example, you can modify a print program to recognize and interpret the
+        permissions, and then place them on directories that house files that the program accesses. Use the <emphasis role="bold">fs
+        listacl</emphasis> and <emphasis role="bold">fs setacl</emphasis> commands to display and set the auxiliary permissions on
+        ACLs just like the standard seven.</para>
+      </sect3>
+
+      <sect3 id="Header_636">
+        <title>Shorthand Notation for Sets of Permissions</title>
+
+        <indexterm>
+          <primary>ACL</primary>
+
+          <secondary>shorthand notation for grouping permissions</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>shorthand notation</primary>
+
+          <secondary>ACL permissions</secondary>
+        </indexterm>
+
+        <para>You can combine the seven permissions in any way in an ACL entry, but certain combinations are more useful than
+        others. Four of the more common combinations have corresponding shorthand forms. When using the <emphasis role="bold">fs
+        setacl</emphasis> command to define ACL entries, you can provide either one or more of the individual letters that represent
+        the permissions, or one of the following shorthand forms: <variablelist>
+            <indexterm>
+              <primary>all shorthand for ACL permissions</primary>
+            </indexterm>
+
+            <varlistentry>
+              <term><emphasis role="bold">all</emphasis></term>
+
+              <listitem>
+                <para>Represents all seven standard permissions (<emphasis role="bold">rlidwka</emphasis>). <indexterm>
+                    <primary>none shorthand for ACL permissions</primary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">none</emphasis></term>
+
+              <listitem>
+                <para>Removes the entry from the ACL, leaving the user or group with no permissions. <indexterm>
+                    <primary>read</primary>
+
+                    <secondary>shorthand for ACL permissions</secondary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">read</emphasis></term>
+
+              <listitem>
+                <para>Represents the <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) and <emphasis
+                role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permissions. <indexterm>
+                    <primary>write</primary>
+
+                    <secondary>shorthand for ACL permissions</secondary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">write</emphasis></term>
+
+              <listitem>
+                <para>Represents all permissions except <emphasis role="bold">a</emphasis> (<emphasis
+                role="bold">administer</emphasis>): <emphasis role="bold">rlidwk</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist></para>
+      </sect3>
+    </sect2>
+
+    <sect2 id="HDRWQ570">
+      <title>Using Normal and Negative Permissions</title>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>normal vs. negative permissions</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>normal ACL permissions</primary>
+
+        <secondary>defined</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>negative ACL permissions</primary>
+
+        <secondary>defined</secondary>
+      </indexterm>
+
+      <para>ACLs enable you both to grant and to deny access to a directory and the files in it. To grant access, use the <emphasis
+      role="bold">fs setacl</emphasis> command to create an ACL entry that associates a set of permissions with a user or group, as
+      described in <link linkend="HDRWQ573">Setting ACL Entries</link>. When you use the <emphasis role="bold">fs listacl</emphasis>
+      command to display an ACL (as described in <link linkend="HDRWQ572">Displaying ACLs</link>), such entries appear underneath
+      the following header, which uses the term <emphasis>rights</emphasis> to refer to permissions:</para>
+
+      <programlisting>
+   Normal rights
+</programlisting>
+
+      <para>There are two ways to deny access: <orderedlist>
+          <listitem>
+            <para>The recommended method is simply to omit an entry for the user or group from the ACL, or to omit the appropriate
+            permissions from the entry. Use the <emphasis role="bold">fs setacl</emphasis> command to remove or edit an existing
+            entry, using the instructions in <link linkend="HDRWQ574">To add, remove, or edit normal ACL permissions</link>. In most
+            circumstances, this method is enough to prevent access of certain kinds or by certain users. You must take care,
+            however, not to grant the undesired permissions to any groups to which such users belong.</para>
+          </listitem>
+
+          <listitem>
+            <para>The more explicit method for denying access is to use the <emphasis role="bold">-negative</emphasis> flag to the
+            <emphasis role="bold">fs setacl</emphasis> command to create an entry that associates <emphasis>negative
+            permissions</emphasis> with the user or group; for instructions, see <link linkend="HDRWQ575">To add, remove, or edit
+            negative ACL permissions</link>. The output from the <emphasis role="bold">fs listacl</emphasis> command lists negative
+            entries underneath the following header: <programlisting>
+   Negative rights
+</programlisting></para>
+
+            <para>When determining what type of access to grant to a user, the File Server first compiles a set of permissions by
+            examining all of the entries in the <computeroutput>Normal rights</computeroutput> section of the ACL. It then subtracts
+            any permissions associated with the user (or with groups to which the user belongs) on the <computeroutput>Negative
+            rights</computeroutput> section of the ACL. Therefore, negative permissions always cancel out normal permissions.</para>
+
+            <para>Using negative permissions reverses the usual semantics of the <emphasis role="bold">fs setacl</emphasis> command,
+            introducing the potential for confusion. In particular, combining the <emphasis role="bold">none</emphasis> shorthand
+            and the <emphasis role="bold">-negative</emphasis> flag constitutes a double negative: by removing an entry from the
+            <computeroutput>Negative rights</computeroutput> section of the ACL, you enable a user once again to obtain permissions
+            via entries in the <computeroutput>Normal rights</computeroutput> section. Combining the <emphasis
+            role="bold">all</emphasis> shorthand with the <emphasis role="bold">-negative</emphasis> flag explicitly denies all
+            permissions.</para>
+
+            <para>Note also that it is pointless to create an entry in the <computeroutput>Negative rights</computeroutput> section
+            if an entry in the <computeroutput>Normal rights</computeroutput> section grants the denied permissions to the <emphasis
+            role="bold">system:anyuser</emphasis> group. In this case, users can obtain the permissions simply by using the
+            <emphasis role="bold">unlog</emphasis> command to discard their tokens. When they do so, the File Server recognizes them
+            as the <emphasis role="bold">anonymous</emphasis> user, who belongs to the <emphasis
+            role="bold">system:anyuser</emphasis> group but does not match the entries on the <computeroutput>Negative
+            rights</computeroutput> section of the ACL.</para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ571">
+      <title>Using Groups on ACLs</title>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>ACL entry, usefulness of</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>group entries, usefulness</secondary>
+      </indexterm>
+
+      <para>As previously mentioned, placing a group entry on an ACL enables you to control access for many users at once. You can
+      grant a new user access to many files and directories simply by adding the user to a group that appears on the relevant ACLs.
+      You can also create groups of machines, in which case any user logged on to the machine obtains the access that is granted to
+      the group. On directories where they have the <emphasis role="bold">a</emphasis> permission on the ACL, users can define their
+      own groups and can create ACL entries for any groups, not just groups that they create or own themselves. For instructions on
+      creating groups of users or machines, and a discussion of the most effective ways to use different types of groups, see <link
+      linkend="HDRWQ531">Administering the Protection Database</link>. <indexterm>
+          <primary>system groups</primary>
+
+          <secondary>using on ACLs</secondary>
+        </indexterm> <indexterm>
+          <primary>group</primary>
+
+          <secondary>system-defined on ACLs</secondary>
+        </indexterm> <indexterm>
+          <primary>ACL</primary>
+
+          <secondary>system groups on</secondary>
+        </indexterm> <indexterm>
+          <primary>system:anyuser group</primary>
+
+          <secondary>using on ACLs</secondary>
+        </indexterm> <indexterm>
+          <primary>system:authuser group</primary>
+
+          <secondary>using on ACLs</secondary>
+        </indexterm></para>
+
+      <para>AFS also defines the following two system groups, which can be very useful on ACLs because they potentially represent a
+      large group of people. For more information about these groups, see <link linkend="HDRWQ535">The System Groups</link>.
+      <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">system:anyuser</emphasis></term>
+
+            <listitem>
+              <para>Includes anyone who can access the cell's file tree, including users who have logged in as the local superuser
+              <emphasis role="bold">root</emphasis>, have connected to a local machine from somewhere outside the cell, and AFS
+              users who belong to a foreign cell. This group includes users who do not have tokens that are valid for the local AFS
+              servers; the servers recognize them as the user <emphasis role="bold">anonymous</emphasis>.</para>
+
+              <para>Note that creating an ACL entry for this group is the only way to extend access to AFS users from foreign cells,
+              unless you create local authentication accounts for them. <indexterm>
+                  <primary>ACL</primary>
+
+                  <secondary>foreign users on</secondary>
+                </indexterm></para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">system:authuser</emphasis></term>
+
+            <listitem>
+              <para>Includes all users who have a valid AFS token obtained from the local cell's authentication service.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>It is particularly useful to grant the <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>)
+      permission to the <emphasis role="bold">system:anyuser</emphasis> group on the ACL of most directories in the file system,
+      especially at the upper levels. This permission enables users only to learn the names of files and subdirectories in a
+      directory, but without it they cannot traverse their way through the directories in the path to a target file.</para>
+
+      <para>A slightly more restrictive alternative is to grant the <emphasis role="bold">l</emphasis> permission to the <emphasis
+      role="bold">system:authuser</emphasis> group. If that is still not restrictive enough, you can grant the <emphasis
+      role="bold">l</emphasis> to specific users or groups, which cannot exceed about 20 in number on a given ACL.</para>
+
+      <para>Another reason to grant certain permissions to the <emphasis role="bold">system:anyuser</emphasis> group is to enable
+      the correct operation of processes that provide services such as printing and mail delivery. For example, in addition to the
+      <emphasis role="bold">l</emphasis> permission, a print process possibly needs the <emphasis role="bold">r</emphasis>
+      (<emphasis role="bold">read</emphasis>) permission in order to access the contents of files, and a mail delivery process
+      possibly requires the <emphasis role="bold">i</emphasis> (<emphasis role="bold">insert</emphasis>) permission to deliver new
+      pieces of mail.</para>
+
+      <para>The ACL on the root directory of every newly created volume grants all permissions to the <emphasis
+      role="bold">system:administrators</emphasis> group. You can remove this entry if you wish, but members of the <emphasis
+      role="bold">system:administrators</emphasis> group always implicitly have the <emphasis role="bold">a</emphasis> (<emphasis
+      role="bold">administer</emphasis>), and by default also the <emphasis role="bold">l</emphasis>, permission on every
+      directory's ACL. The <emphasis role="bold">a</emphasis> permission enables them to grant themselves other permissions
+      explicitly when necessary. To learn about changing this default set of permissions, see <link linkend="HDRWQ586">Administering
+      the system:administrators Group</link>.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ572">
+    <title>Displaying ACLs</title>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>ACL entries</secondary>
+    </indexterm>
+
+    <para>To display the ACL associated with a file, directory or symbolic link, issue the <emphasis role="bold">fs
+    listacl</emphasis> command. The output for a symbolic link displays the ACL that applies to its target file or directory, rather
+    than the ACL on the directory that houses the symbolic link.</para>
+
+    <para><emphasis role="bold">Note for AFS/DFS Migration Toolkit users:</emphasis> If the machine on which you issue the <emphasis
+    role="bold">fs listacl</emphasis> command is configured to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit,
+    you can use the command to display the ACL on DFS files and directories. To display a DFS directory's Initial Container and
+    Initial Object ACL instead of the regular one, include the <emphasis role="bold">fs listacl</emphasis> command's <emphasis
+    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>IBM AFS/DFS
+    Migration Toolkit Administration Guide and Reference</emphasis>. The <emphasis role="bold">fs</emphasis> command interpreter
+    ignores the <emphasis role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags if you include them when
+    displaying an AFS ACL. <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>listacl</secondary>
+      </indexterm><indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs listacl</secondary>
+      </indexterm></para>
+
+    <sect2 id="Header_640">
+      <title>To display an ACL</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs listacl</emphasis> command. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;+]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">la</emphasis></term>
+
+              <listitem>
+                <para>Is an acceptable alias for <emphasis role="bold">listacl</emphasis> (and <emphasis
+                role="bold">lista</emphasis> is the shortest acceptable abbreviation).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">dir/file path</emphasis></term>
+
+              <listitem>
+                <para>Names one or more files or directories for which to display the ACL. For files, the output displays the ACL
+                for its directory. If you omit this argument, the output is for the current working directory. Partial pathnames are
+                interpreted relative to the current working directory. You can also use the following notation on its own or as part
+                of a pathname: <variablelist>
+                    <varlistentry>
+                      <term><emphasis role="bold">.</emphasis></term>
+
+                      <listitem>
+                        <para>(A single period). Specifies the current working directory.</para>
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term><emphasis role="bold">..</emphasis></term>
+
+                      <listitem>
+                        <para>(Two periods). Specifies the current working directory's parent directory.</para>
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term><emphasis role="bold">*</emphasis></term>
+
+                      <listitem>
+                        <para>(The asterisk). Specifies each file and subdirectory in the current working directory. The ACL
+                        displayed for a file is always the same as for its directory, but the ACL for each subdirectory can
+                        differ.</para>
+                      </listitem>
+                    </varlistentry>
+                  </variablelist></para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The following error message indicates that you do not have the permissions needed to display an ACL. To specify a
+      directory name as the dir/file path argument, you must have the <emphasis role="bold">l</emphasis> (<emphasis
+      role="bold">lookup</emphasis>) permission on the ACL. To specify a filename, you must also have the <emphasis
+      role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) permission on its directory's ACL.</para>
+
+      <programlisting>
+   fs: You don't have the required access permissions on 'dir/file path'
+</programlisting>
+
+      <para>Members of the <emphasis role="bold">system:administrators</emphasis> group and the directory's owner (as reported by
+      the <emphasis role="bold">ls -ld</emphasis> command) implicitly have the <emphasis role="bold">a</emphasis> (<emphasis
+      role="bold">administer</emphasis>) permission on every directory's ACL, and can use the <emphasis role="bold">fs
+      setacl</emphasis> command to grant themselves the required permissions; for instructions, see <link linkend="HDRWQ573">Setting
+      ACL Entries</link>.</para>
+
+      <para>The output for each file or directory specified as dir/file path begins with the following header to identify it:</para>
+
+      <programlisting>
+   Access list for  dir/file path is
+</programlisting>
+
+      <para>The <computeroutput>Normal rights</computeroutput> header appears on the next line, followed by lines that each pair a
+      user or group name and a set of permissions. The permissions appear as the single letters defined in <link
+      linkend="HDRWQ567">The AFS ACL Permissions</link>, and always in the order <emphasis role="bold">rlidwka</emphasis>. If there
+      are any negative permissions, the <computeroutput>Negative rights</computeroutput> header appears next, followed by pairs of
+      negative permissions.</para>
+
+      <para>The following example displays the ACL on user <emphasis role="bold">terry</emphasis>'s home directory in the ABC
+      Corporation cell:</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs la /afs/abc.com/usr/terry</emphasis>
+   Access list for /afs/abc.com/usr/terry is
+   Normal permissions:
+      system:authuser rl
+      pat rlw
+      terry rlidwka
+   Negative permissions:
+      terry:other-dept rl
+      jones rl
+</programlisting>
+
+      <para>where <emphasis role="bold">pat</emphasis>, <emphasis role="bold">terry</emphasis>, and <emphasis
+      role="bold">jones</emphasis> are individual users, <emphasis role="bold">system:authuser</emphasis> is a system group, and
+      <emphasis role="bold">terry:other-dept</emphasis> is a group that <emphasis role="bold">terry</emphasis> owns. The list of
+      normal permissions grants all permissions to <emphasis role="bold">terry</emphasis>, the <emphasis role="bold">r</emphasis>
+      (<emphasis role="bold">read</emphasis>), <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>), and
+      <emphasis role="bold">w</emphasis> (<emphasis role="bold">write</emphasis>) permissions to <emphasis
+      role="bold">pat</emphasis>, and the <emphasis role="bold">r</emphasis> and <emphasis role="bold">l</emphasis> permissions to
+      the members of the <emphasis role="bold">system:authuser</emphasis> group.</para>
+
+      <para>The list of negative permissions denies the <emphasis role="bold">r</emphasis> and <emphasis role="bold">l</emphasis>
+      permissions to <emphasis role="bold">jones</emphasis> and the members of the <emphasis role="bold">terry:other-dept</emphasis>
+      group. These entries effectively prevent them from accessing <emphasis role="bold">terry</emphasis>'s home directory in any
+      way, because they cancel out the <emphasis role="bold">r</emphasis> and <emphasis role="bold">l</emphasis> permissions
+      extended to the <emphasis role="bold">system:authuser</emphasis> group, which is the only entry on the <computeroutput>Normal
+      rights</computeroutput> section of the ACL that possibly applies to them.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ573">
+    <title>Setting ACL Entries</title>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>setting entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>editing entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>adding entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>removing entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>changing</primary>
+
+      <secondary>ACL entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>setting</primary>
+
+      <secondary>ACL entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>file access by setting ACL</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>ACL entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>adding</primary>
+
+      <secondary>ACL entry</secondary>
+
+      <tertiary>normal permissions</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>ACL entry</secondary>
+    </indexterm>
+
+    <para>To add, remove, or edit ACL entries, use the <emphasis role="bold">fs setacl</emphasis> command. By default, the command
+    manipulates entries on the normal permissions section of the ACL. To manipulate entries on the negative permissions section,
+    include the <emphasis role="bold">-negative</emphasis> flag.</para>
+
+    <para>You must have the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission on an ACL to
+    edit it. The owner of a directory (as reported by the <emphasis role="bold">ls -ld</emphasis>) command and members of the
+    <emphasis role="bold">system:administrators</emphasis> group always implicitly have it on every ACL. By default, members of the
+    <emphasis role="bold">system:administrators</emphasis> group also implicitly have the <emphasis role="bold">l</emphasis>
+    (<emphasis role="bold">lookup</emphasis>) permission.</para>
+
+    <para><emphasis role="bold">Note for AFS/DFS Migration Toolkit users:</emphasis> If the machine on which you issue the <emphasis
+    role="bold">fs setacl</emphasis> command is configured to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit,
+    you can use the command to set the ACL on DFS files and directories. To set a DFS directory's Initial Container and Initial
+    Object ACL instead of the regular one, include the <emphasis role="bold">fs setacl</emphasis> command's <emphasis
+    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>IBM AFS/DFS
+    Migration Toolkit Administration Guide and Reference</emphasis>. The <emphasis role="bold">fs</emphasis> command interpreter
+    ignores the <emphasis role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags if you include them when setting
+    an AFS ACL. <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>setacl</secondary>
+      </indexterm><indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs setacl</secondary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ574">
+      <title>To add, remove, or edit normal ACL permissions</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission
+          on each directory for which you are editing the ACL. If necessary, issue the <emphasis role="bold">fs listacl</emphasis>
+          command, which is fully described in <link linkend="HDRWQ572">Displaying ACLs</link>. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs setacl</emphasis> command to edit entries in the normal permissions section of
+          the ACL. To remove an entry, specify the <emphasis role="bold">none</emphasis> shorthand as the permissions. If an ACL
+          entry already exists, the permissions you specify completely replace those in the existing entry. <programlisting>
+   % <emphasis role="bold">fs setacl  -dir</emphasis> &lt;<replaceable>directory</replaceable>&gt;+ <emphasis role="bold">-acl</emphasis> &lt;<replaceable>access list entries</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">sa</emphasis></term>
+
+              <listitem>
+                <para>Is an acceptable alias for <emphasis role="bold">setacl</emphasis> (and <emphasis role="bold">seta</emphasis>
+                is the shortest acceptable abbreviation).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-dir</emphasis></term>
+
+              <listitem>
+                <para>Names one or more directories to which to apply the ACL entries defined by the <emphasis
+                role="bold">-acl</emphasis> argument. Partial pathnames are interpreted relative to the current working
+                directory.</para>
+
+                <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
+                read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
+                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
+                Point Traversal</link>.</para>
+
+                <para>You can also use the following notation on its own or as part of a pathname:</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term><emphasis role="bold">.</emphasis></term>
+
+                    <listitem>
+                      <para>(A single period). If used by itself, sets the ACL on the current working directory.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term><emphasis role="bold">..</emphasis></term>
+
+                    <listitem>
+                      <para>(Two periods). If used by itself, sets the ACL on the current working directory's parent
+                      directory.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term><emphasis role="bold">*</emphasis></term>
+
+                    <listitem>
+                      <para>(The asterisk). Sets the ACL on each of the subdirectories in the current working directory. You must
+                      precede it with the <emphasis role="bold">-dir</emphasis> switch, since it potentially designates multiple
+                      directories. The <emphasis role="bold">fs</emphasis> command interpreter generates the following error message
+                      for each file in the directory: <programlisting>
+   fs: 'filename': Not a directory
+</programlisting></para>
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+
+                <para>If you specify only one directory or file name, you can omit the <emphasis role="bold">-dir</emphasis> and
+                <emphasis role="bold">-acl</emphasis> switches.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-acl</emphasis></term>
+
+              <listitem>
+                <para>Specifies one or more ACL entries, each of which pairs a user or group name and a set of permissions. Separate
+                the pairs, and the two parts of each pair, with one or more spaces.</para>
+
+                <para>To define the permissions, provide either:</para>
+
+                <itemizedlist>
+                  <listitem>
+                    <para>One or more of the letters that represent the standard or auxiliary permissions (<emphasis
+                    role="bold">rlidwka</emphasis> and <emphasis role="bold">ABCDEFGH</emphasis>), in any order</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>One of the four shorthand notations: <itemizedlist>
+                        <listitem>
+                          <para><emphasis role="bold">all</emphasis> (equals <emphasis role="bold">rlidwka</emphasis>)</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">none</emphasis> (removes the entry)</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">read</emphasis> (equals <emphasis role="bold">rl</emphasis>)</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">write</emphasis> (equals <emphasis role="bold">rlidwk</emphasis>)</para>
+                        </listitem>
+                      </itemizedlist></para>
+                  </listitem>
+                </itemizedlist>
+
+                <para>For a more detailed description of the permissions and shorthand notations, see <link linkend="HDRWQ567">The
+                AFS ACL Permissions</link>.</para>
+
+                <para>On a single command line, you can combine user and group entries. You can also use individual letters in some
+                pairs and the shorthand notations in other pairs, but cannot combine letters and shorthand notation within a single
+                pair.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>Either of the following examples grants user <emphasis role="bold">pat</emphasis> the <emphasis role="bold">r</emphasis>
+      (<emphasis role="bold">read</emphasis>) and <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>)
+      permissions on the ACL of the <emphasis role="bold">notes</emphasis> subdirectory in the issuer's home directory. They
+      illustrate how it is possible to omit the <emphasis role="bold">-dir</emphasis> and <emphasis role="bold">-acl</emphasis>
+      switches when you name only one directory.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs sa ~/notes pat rl</emphasis>
+   % <emphasis role="bold">fs sa ~/notes pat read</emphasis>
+</programlisting>
+
+      <para>The following example edits the ACL for the current working directory. It removes the entry for the <emphasis
+      role="bold">system:anyuser</emphasis> group, and adds two entries: one grants all permissions except <emphasis
+      role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) to the members of the <emphasis
+      role="bold">terry:colleagues</emphasis> group and the other grants the <emphasis role="bold">r</emphasis> (<emphasis
+      role="bold">read</emphasis>) and <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permissions to
+      the <emphasis role="bold">system:authuser</emphasis> group. The command appears on two lines here only for legibility.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs  sa  -dir . -acl  system:anyuser  none  terry:colleagues  write  \
+           system:authuser  rl</emphasis>
+</programlisting>
+
+      <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>setacl</secondary>
+
+        <tertiary>with -negative flag</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs setacl</secondary>
+
+        <tertiary>with -negative flag</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>ACL entry in negative permissions section</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>adding</primary>
+
+        <secondary>ACL entry</secondary>
+
+        <tertiary>negative permissions</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>denying</primary>
+
+        <secondary>file access with negative ACL entry</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ575">
+      <title>To add, remove, or edit negative ACL permissions</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission
+          on each directory for which you are editing the ACL. If necessary, issue the <emphasis role="bold">fs listacl</emphasis>
+          command, which is fully described in <link linkend="HDRWQ572">Displaying ACLs</link>. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs setacl</emphasis> command with the <emphasis role="bold">-negative</emphasis>
+          flag to edit entries in the negative permissions section of the ACL. To remove an entry, specify the <emphasis
+          role="bold">none</emphasis> shorthand as the permissions. If an ACL entry already exists for a user or group, the
+          permissions you specify completely replace those in the existing entry. <programlisting>
+   % <emphasis role="bold">fs setacl -dir</emphasis> &lt;<replaceable>directory</replaceable>&gt;+ <emphasis role="bold">-acl</emphasis> &lt;<replaceable>access list entries</replaceable>&gt;+  <emphasis
+                role="bold">-negative</emphasis> 
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">sa</emphasis></term>
+
+              <listitem>
+                <para>Is an acceptable alias for <emphasis role="bold">setacl</emphasis> (and <emphasis role="bold">seta</emphasis>
+                is the shortest acceptable abbreviation).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-dir</emphasis></term>
+
+              <listitem>
+                <para>Names one or more directories to which to apply the negative ACL entries defined by the <emphasis
+                role="bold">-acl</emphasis> argument. Specify the read/write path to each directory, to avoid the failure that
+                results when you attempt to change a read-only volume. For a detailed description of acceptable values, see <link
+                linkend="HDRWQ574">To add, remove, or edit normal ACL permissions</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-acl</emphasis></term>
+
+              <listitem>
+                <para>Specifies one or more ACL entries, each of which pairs a user or group name and a set of permissions. Separate
+                the pairs, and the two parts of each pair, with one or more spaces. For a detailed description of acceptable values,
+                see <link linkend="HDRWQ574">To add, remove, or edit normal ACL permissions</link>. Keep in mind that the usual
+                meaning of each permission is reversed.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-negative</emphasis></term>
+
+              <listitem>
+                <para>Places the entries defined by the <emphasis role="bold">-acl</emphasis> argument on the negative permissions
+                section of the ACL for each directory named by the <emphasis role="bold">-dir</emphasis> argument.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example denies user <emphasis role="bold">pat</emphasis> the <emphasis role="bold">w</emphasis> (<emphasis
+      role="bold">write</emphasis>) and <emphasis role="bold">d</emphasis> (<emphasis role="bold">delete</emphasis>) permissions for
+      the <emphasis role="bold">project</emphasis> subdirectory of the current working directory.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs sa project pat wd -neg</emphasis>
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ576">
+    <title>Completely Replacing an ACL</title>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>replacing all entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>clearing</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>replacing</primary>
+
+      <secondary>all entries on ACL</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>erasing</primary>
+
+      <secondary>all ACL entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>clearing</primary>
+
+      <secondary>all ACL entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>all ACL entries</secondary>
+    </indexterm>
+
+    <para>It is sometimes simplest to clear an ACL completely before defining new permissions on it, for instance if the mix of
+    normal and negative permissions makes it difficult to understand how their interaction affects a user's access to the directory.
+    To clear an ACL completely while you define new entries, include the <emphasis role="bold">-clear</emphasis> flag on the
+    <emphasis role="bold">fs setacl</emphasis> command. When you include this flag, you can create entries on either the normal
+    permissions or the negative permissions section of the ACL, but not on both at once.</para>
+
+    <para>Remember to create an entry that grants appropriate permissions to the directory's owner. The owner implicitly has the
+    <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission required to replace a deleted entry,
+    but the effects of a missing ACL entry (particularly the lack of the <emphasis role="bold">lookup</emphasis> permission) can be
+    so confusing that it becomes difficult for the owner to realize that the missing entry is causing the problems. <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>setacl</secondary>
+
+        <tertiary>with -clear flag</tertiary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs setacl</secondary>
+
+        <tertiary>with -clear flag</tertiary>
+      </indexterm></para>
+
+    <sect2 id="Header_645">
+      <title>To replace an ACL completely</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission
+          on each directory for which you are editing the ACL. If necessary, issue the <emphasis role="bold">fs listacl</emphasis>
+          command, which is fully described in <link linkend="HDRWQ572">Displaying ACLs</link>. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs setacl</emphasis> command with the <emphasis role="bold">-clear</emphasis> flag
+          to clear the ACL completely before setting either normal or negative permissions. Because you need to grant the owner of
+          the directory all permissions, it is better in most cases to set normal permissions at this point. <programlisting>
+   % <emphasis role="bold">fs setacl -dir</emphasis> &lt;<replaceable>directory</replaceable>&gt;+ <emphasis role="bold">-acl</emphasis> &lt;<replaceable>access list entries</replaceable>&gt;+ <emphasis
+                role="bold">-clear</emphasis>  \
+               [<emphasis role="bold">-negative</emphasis>] 
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">sa</emphasis></term>
+
+              <listitem>
+                <para>Is an acceptable alias for <emphasis role="bold">setacl</emphasis> (and <emphasis role="bold">seta</emphasis>
+                is the shortest acceptable abbreviation).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-dir</emphasis></term>
+
+              <listitem>
+                <para>Names one or more directories to which to apply the negative ACL entries defined by the <emphasis
+                role="bold">-acl</emphasis> argument. Specify the read/write path to each directory, to avoid the failure that
+                results when you attempt to change a read-only volume. For a detailed description of acceptable values, see <link
+                linkend="HDRWQ574">To add, remove, or edit normal ACL permissions</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-acl</emphasis></term>
+
+              <listitem>
+                <para>Specifies one or more ACL entries, each of which pairs a user or group name and a set of permissions. Separate
+                the pairs, and the two parts of each pair, with one or more spaces. Remember to grant all permissions to the owner
+                of the directory. For a detailed description of acceptable values, see <link linkend="HDRWQ574">To add, remove, or
+                edit normal ACL permissions</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-clear</emphasis></term>
+
+              <listitem>
+                <para>Removes all entries from each ACL before creating the entries indicated by the <emphasis
+                role="bold">-acl</emphasis> argument.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-negative</emphasis></term>
+
+              <listitem>
+                <para>Places the entries defined by the <emphasis role="bold">-acl</emphasis> argument on the negative permissions
+                section of each ACL.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ577">
+    <title>Copying ACLs Between Directories</title>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>copying between directories</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>ACL as copy of another</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>copying</primary>
+
+      <secondary>ACL between directories</secondary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">fs copyacl</emphasis> command copies a source directory's ACL to one or more destination
+    directories. It does not affect the source ACL at all, but changes each destination ACL as follows: <itemizedlist>
+        <listitem>
+          <para>If an entry on the source ACL does not exist on the destination ACL, the command copies it to the destination
+          ACL.</para>
+        </listitem>
+
+        <listitem>
+          <para>If an entry on the destination ACL does not also exist on the source ACL, the command does not remove it unless you
+          include the <emphasis role="bold">-clear</emphasis> flag to overwrite the destination ACL completely.</para>
+        </listitem>
+
+        <listitem>
+          <para>If an entry is on both ACLs, the command changes the permissions on the destination ACL entry to match the source
+          ACL entry.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para><emphasis role="bold">Note for AFS/DFS Migration Toolkit users:</emphasis> If the machine is configured to enable AFS
+    users to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit, then you can use the <emphasis role="bold">fs
+    copyacl</emphasis> command to copy ACLs between DFS files and directories also. The command includes <emphasis
+    role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags for altering a DFS directory's Initial Container and
+    Initial Object ACLs as well as its regular ACL; see the <emphasis>IBM AFS/DFS Migration Toolkit Administration Guide and
+    Reference</emphasis>. You cannot copy ACLs between AFS and DFS directories, because they use different ACL formats. The
+    <emphasis role="bold">fs</emphasis> command interpreter ignores the <emphasis role="bold">-id</emphasis> and <emphasis
+    role="bold">-if</emphasis> flags if you include them when copying AFS ACLs. <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>copyacl</secondary>
+      </indexterm><indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs copyacl</secondary>
+      </indexterm></para>
+
+    <sect2 id="Header_647">
+      <title>To copy an ACL between directories</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have the <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permission on
+          the source ACL and the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission on each
+          destination ACL. To identify the source directory by naming a file in it, you must also have the <emphasis
+          role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) permission on the source ACL. If necessary, issue the
+          <emphasis role="bold">fs listacl</emphasis> command, which is fully described in <link linkend="HDRWQ572">Displaying
+          ACLs</link>. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ578" />Issue the <emphasis role="bold">fs copyacl</emphasis> command to copy a source ACL to the ACL
+          on one or more destination directories. (The command appears here on two lines only for legibility.) <programlisting>
+   % <emphasis role="bold">fs copyacl -fromdir</emphasis> &lt;<replaceable>source directory</replaceable>&gt; <emphasis role="bold">-todir</emphasis> &lt;<replaceable>destination directory</replaceable>&gt;+  \
+                [<emphasis role="bold">-clear</emphasis>]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">co</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation for <emphasis role="bold">copyacl</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-fromdir</emphasis></term>
+
+              <listitem>
+                <para>Names the source directory from which to copy the ACL. Partial pathnames are interpreted relative to the
+                current working directory. If this argument names a file, the ACL is copied from its directory.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-todir</emphasis></term>
+
+              <listitem>
+                <para>Names each destination directory to which to copy the source ACL. Partial pathnames are interpreted relative
+                to the current working directory. Filenames are not acceptable.</para>
+
+                <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
+                read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
+                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
+                Point Traversal</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-clear</emphasis></term>
+
+              <listitem>
+                <para>Completely overwrites each destination directory's ACL with the source ACL.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example copies the ACL from the current working directory's <emphasis role="bold">notes</emphasis>
+      subdirectory to the <emphasis role="bold">plans</emphasis> subdirectory. The issuer does not include the <emphasis
+      role="bold">-clear</emphasis> flag, so the entry for user <emphasis role="bold">pat</emphasis> remains on the <emphasis
+      role="bold">plans</emphasis> directory's ACL although there is no corresponding entry on the <emphasis
+      role="bold">notes</emphasis> directory's ACL.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs la notes plans</emphasis>
+   Access list for notes is
+   Normal permissions:
+      terry rlidwka
+      smith rl
+      jones rl
+   Access list for plans is
+   Normal permissions:
+      terry rlidwk
+      pat rlidwk
+   % <emphasis role="bold">fs copyacl notes plans</emphasis>
+   % <emphasis role="bold">fs la notes plans</emphasis>
+   Access list for notes is
+   Normal permissions:
+      terry rlidwka
+      smith rl
+      jones rl
+   Access list for plans is
+   Normal permissions:
+      terry rlidwka
+      pat rlidwk
+      smith rl
+      jones rl
+</programlisting>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>removing obsolete AFS IDs</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>obsolete AFS IDs from ACL</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS UID</primary>
+
+        <secondary>removing obsolete from ACL</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS GID</primary>
+
+        <secondary>removing obsolete from ACL</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ACL</primary>
+
+        <secondary>cleaning</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ579">
+    <title>Removing Obsolete AFS IDs from ACLs</title>
+
+    <para>When you remove a user or group entry from the Protection Database, the <emphasis role="bold">fs listacl</emphasis>
+    command displays the user's AFS UID (or group's AFS GID) in ACL entries, rather than the name. In the following example, user
+    <emphasis role="bold">terry</emphasis> has an ACL entry for the group <emphasis role="bold">terry:friends</emphasis> (AFS GID
+    -567) on her home directory in the ABC Corporation cell, and then removes the group from the Protection Database.</para>
+
+    <programlisting>
+   % <emphasis role="bold">fs listacl /afs/abc.com/usr/terry</emphasis>
+   Access list for /afs/abc.com/usr/terry is
+   Normal permissions:
+     terry:friends rlik
+     system:anyuser l
+     terry rlidwka
+   % <emphasis role="bold">pts delete terry:friends</emphasis>
+   % <emphasis role="bold">fs listacl /afs/abc.com/usr/terry</emphasis>
+   Access list for /afs/abc.com/usr/terry is
+   Normal permissions:
+     -567 rlik
+     system:anyuser l
+     terry rlidwka
+</programlisting>
+
+    <para>Leaving AFS IDs on ACLs serves no function, because the ID no longer corresponds to an active user or group. Furthermore,
+    if the ID is ever assigned to a new user or group, then the new possessor of the ID gains access that the owner of the directory
+    actually intended for the previous possessor. (Reusing AFS IDs is not recommended precisely for this reason.)</para>
+
+    <para>To remove obsolete AFS UIDs from ACLs, use the <emphasis role="bold">fs cleanacl</emphasis> command. <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs cleanacl</secondary>
+      </indexterm> <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>cleanacl</secondary>
+      </indexterm></para>
+
+    <sect2 id="Header_649">
+      <title>To clean obsolete AFS IDs from an ACL</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission
+          on each directory for which you are cleaning the ACL. If necessary, issue the <emphasis role="bold">fs listacl</emphasis>
+          command, which is fully described in <link linkend="HDRWQ572">Displaying ACLs</link>. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs cleanacl</emphasis> command to remove entries for obsolete AFS IDs.
+          <programlisting>
+   % <emphasis role="bold">fs cleanacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;+]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">cl</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">cleanacl</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">dir/file path</emphasis></term>
+
+              <listitem>
+                <para>Names each directory for which to clean the ACL. If this argument names a file, its directory's ACL is
+                cleaned. Omit this argument to clean the current working directory's ACL.</para>
+
+                <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
+                read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
+                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
+                Point Traversal</link>.</para>
+
+                <para>You can also use the following notation on its own or as part of a pathname:</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term><emphasis role="bold">.</emphasis></term>
+
+                    <listitem>
+                      <para>(A single period). If used by itself, cleans the current working directory's ACL.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term><emphasis role="bold">..</emphasis></term>
+
+                    <listitem>
+                      <para>(Two periods). If used by itself, cleans the ACL on the current working directory's parent
+                      directory.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term><emphasis role="bold">*</emphasis></term>
+
+                    <listitem>
+                      <para>(The asterisk). Cleans the ACL of each of the subdirectories in the current working directory. However,
+                      if you use the asterisk and there are obsolete AFS IDs on any directory's ACL, the following error message
+                      appears for every file in the directory: <programlisting>
+   fs: 'filename': Not a directory
+</programlisting></para>
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>If there are obsolete AFS IDs on a directory, the command interpreter displays its cleaned ACL under the following
+      header.</para>
+
+      <programlisting>
+   Access list for directory is now
+</programlisting>
+
+      <para>If a directory's ACL has no obsolete AFS IDs on it, the following message appears for each.</para>
+
+      <programlisting>
+   Access list for directory is fine.
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ580">
+    <title>How AFS Interprets the UNIX Mode Bits</title>
+
+    <indexterm>
+      <primary>UNIX</primary>
+
+      <secondary>mode bits, interpretation in AFS</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>UFS</primary>
+
+      <secondary>mode bits, interpretation in AFS</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mode bits (UNIX)</primary>
+
+      <secondary>interpretation in AFS</secondary>
+    </indexterm>
+
+    <para>Although AFS uses ACLs to protect file data rather than the mode bits that UFS uses, it does not ignore the mode bits
+    entirely. When you issue the <emphasis role="bold">chmod</emphasis> command on an AFS file or directory, AFS changes the bits
+    appropriately. To change a file's mode bits, you must have the AFS <emphasis role="bold">w</emphasis> (<emphasis
+    role="bold">write</emphasis>) permission on the ACL of the file's directory. To change a directory's mode bits, you must have
+    the <emphasis role="bold">d</emphasis> (<emphasis role="bold">delete</emphasis>), <emphasis role="bold">i</emphasis> (<emphasis
+    role="bold">insert</emphasis>), and <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permissions on
+    its ACL.</para>
+
+    <para>AFS also uses the UNIX mode bits as follows:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>It uses the initial bit to determine the element's type. This is the bit that appears first in the output from the
+        <emphasis role="bold">ls -l</emphasis> command and shows the hyphen (<emphasis role="bold">-</emphasis>) for a file or the
+        letter <emphasis role="bold">d</emphasis> for a directory.</para>
+      </listitem>
+
+      <listitem>
+        <para>It does not use any of the mode bits on a directory.</para>
+      </listitem>
+
+      <listitem>
+        <para>For a file, the first (owner) set of bits interacts with the ACL entries that apply to the file in the following way:
+        <itemizedlist>
+            <listitem>
+              <para>If the first <emphasis role="bold">r</emphasis> mode bit is not set, no one (including the owner) can read the
+              file, no matter what permissions they have on the ACL. If the bit is set, users also need the <emphasis
+              role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) and <emphasis role="bold">l</emphasis> permissions on
+              the ACL of the file's directory to read the file.</para>
+            </listitem>
+
+            <listitem>
+              <para>If the first <emphasis role="bold">w</emphasis> mode bit is not set, no one (including the owner) can modify the
+              file. If the <emphasis role="bold">w</emphasis> bit is set, users also need the <emphasis role="bold">w</emphasis> and
+              <emphasis role="bold">l</emphasis> permissions on the ACL of the file's directory to modify the file.</para>
+            </listitem>
+
+            <listitem>
+              <para>There is no ACL permission directly corresponding to the <emphasis role="bold">x</emphasis> mode bit, but to
+              execute a file stored in AFS, the user must also have the <emphasis role="bold">r</emphasis> and <emphasis
+              role="bold">l</emphasis> permissions on the ACL of the file's directory.</para>
+            </listitem>
+          </itemizedlist></para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

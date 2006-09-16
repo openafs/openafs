@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="livesys1">
+  <refmeta>
+    <refentrytitle>livesys</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>livesys</refname>
+    <refpurpose>Reports the configured CPU/operating system type</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">livesys</emphasis></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">livesys</emphasis> command displays the string stored in kernel memory that
+    indicates the local machine's CPU/operating system (OS) type,
+    conventionally called the <emphasis>sysname</emphasis>.  The Cache Manager substitutes this
+    string for the <emphasis>@sys</emphasis> variable which can occur in AFS pathnames; the
+    <emphasis>IBM AFS Quick Beginnings</emphasis> and <emphasis>IBM AFS Administration Guide</emphasis> explain
+    how using <emphasis>@sys</emphasis> can simplify cell configuration.</para>
+
+    <para>To set a new value in kernel memory, use the <emphasis role="bold">fs sysname</emphasis> command, which
+    can also be used to view the current value.  If a sysname list was set
+    using <emphasis role="bold">fs sysname</emphasis>, only the first value in the list will be reported by
+    <emphasis role="bold">livesys</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>To see the full sysname list, use <emphasis role="bold">fs sysname</emphasis> rather than this command.
+    <emphasis role="bold">livesys</emphasis> is mostly useful for scripts that need to know the primary
+    sysname for the local system (to create directories that will later be
+    addressed using <emphasis>@sys</emphasis>, for example).</para>
+
+    <para><emphasis role="bold">livesys</emphasis> first appeared in OpenAFS 1.2.2.  Scripts that need to support
+    older versions of AFS should parse the output of <emphasis role="bold">fs sysname</emphasis> or use
+    <emphasis role="bold">sys</emphasis>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The machine's system type appears as a text string:</para>
+
+<programlisting>
+   I&amp;lt;system_type&amp;gt;
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output produced on a Linux system with a
+      2.6 kernel:</para>
+
+<programlisting>
+   % livesys
+   i386_linux26
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_sysname1">fs_sysname(1)</link>,
+        <link linkend="sys1">sys(1)</link></para>
+
+        <para><emphasis>IBM AFS Quick Beginnings</emphasis></para>
+
+        <para><emphasis>IBM AFS Administration Guide</emphasis></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>Copyright 2005 Russ Allbery &lt;rra@stanford.edu&gt;</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It
+        was written by Russ Allbery based on the <emphasis role="bold">sys</emphasis> man page.</para>
+
+      </refsect1>
+    </refentry>

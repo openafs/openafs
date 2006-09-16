@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="kas_listtickets8">
+  <refmeta>
+    <refentrytitle>kas listtickets</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>kas listtickets</refname>
+    <refpurpose>Displays all of the issuer's tickets (tokens)</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">kas listtickets</emphasis> [<emphasis role="bold">-name</emphasis> &lt;<emphasis>name of server</emphasis>&gt;] [<emphasis role="bold">-long</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">kas listt</emphasis> [<emphasis role="bold">-n</emphasis> &lt;<emphasis>name of server</emphasis>&gt;] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">kas listtickets</emphasis> command displays the associated user ID (AFS UID),
+    cell name, and expiration date of some or all of the issuer's tickets
+    (tokens), depending on which options are provided:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To display all tokens, provide neither the <emphasis role="bold">-name</emphasis> argument nor <emphasis role="bold">-long</emphasis>
+        flag. The output is similar to that of the <emphasis role="bold">tokens</emphasis> command.</para>
+
+      </listitem>
+      <listitem>
+        <para>To display a single token, provide the <emphasis role="bold">-name</emphasis> argument to specify name
+        of the Authentication Database entry for the entity that accepts the
+        token. All AFS server processes accept tokens sealed with the key from the
+        <computeroutput>afs</computeroutput> entry.</para>
+
+      </listitem>
+      <listitem>
+        <para>To display in addition the octal numbers that constitute the token and
+        session key, provide the <emphasis role="bold">-long</emphasis> flag.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-name</emphasis> &lt;<emphasis>name of server</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the Authentication Database entry of the entity (usually a server
+          process) that accepts the token to display.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-long</emphasis></term>
+        <listitem>
+          <para>Displays the octal numbers that constitute the session key and ticket.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports the AFS UID of the user who owns the token, the service
+    (usually, <computeroutput>afs</computeroutput>) and cell for which it is valid, and its expiration date,
+    using the following format. If the message does not specify a cell, the
+    ticket is for the local cell.</para>
+
+<programlisting>
+   User's (AFS ID &amp;lt;AFS UID&amp;gt;) tokens for &amp;lt;service&amp;gt;[@&amp;lt;cellname&amp;gt;] \
+       [Expires &amp;lt;date&amp;gt;]
+
+</programlisting>
+      <para>If the <emphasis role="bold">-long</emphasis> flag is provided, the output also includes the octal
+      numbers making up the session key and token, along with the key version
+      number and the number of bytes in the token (if the number of bytes is not
+      56, there is an error).</para>
+
+      <para>If the marker <computeroutput>[&gt;&gt; POSTDATED &lt;]</computeroutput> appears instead of an expiration
+      date, the ticket does not become valid until the indicated time. (Only
+      internal calls can create a postdated ticket; there is no standard
+      interface that allows users to do this.)</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following two examples are for a user with AFS UID 1020 in the
+      <computeroutput>abc.com</computeroutput> cell and AFS UID 35 in the <computeroutput>test.abc.com</computeroutput> cell. He is working
+      on a machine in the first cell and is authenticated in both cells.</para>
+
+<programlisting>
+   % kas listtickets
+   User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
+   User's (AFS ID 35@test.abc.com) tokens for afs@test.abc.com \
+             [Expires Wed Mar 31 13:54:26 1999]
+
+</programlisting>
+<programlisting>
+   % kas listtickets -name afs -long
+   User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
+   SessionKey: \375\205\351\227\032\310\263\013
+   Ticket: (kvno = 0, len = 56): \033\005\221\156\203\278\312\058\016\133...
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>None, and no password is required.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="kas8">kas(8)</link>,
+          <link linkend="tokens1">tokens(1)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

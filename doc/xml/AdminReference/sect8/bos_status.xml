@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bos_status8">
+  <refmeta>
+    <refentrytitle>bos status</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bos status</refname>
+    <refpurpose>Displays the status of server processes</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">bos status -server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;  [-instance &lt;<emphasis>server process name</emphasis>&gt;+]
+    [<emphasis role="bold">-long</emphasis>]  [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]  [<emphasis role="bold">-noauth</emphasis>]  [<emphasis role="bold">-localauth</emphasis>]  [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">bos stat -s</emphasis> &lt;<emphasis>machine name</emphasis>&gt;  [-i &lt;<emphasis>server process name</emphasis>&gt;+]
+    [<emphasis role="bold">-lon</emphasis>]  [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]  [<emphasis role="bold">-n</emphasis>]  [<emphasis role="bold">-loc</emphasis>]  [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The bos status command reports the status of processes on the
+    server machine named by the <emphasis role="bold">-server</emphasis> argument, either</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>All of the AFS server processes listed in the
+        <replaceable>/usr/afs/local/BosConfig</replaceable> file</para>
+
+      </listitem>
+      <listitem>
+        <para>Only these processes named by the -instance argument</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>machine name</emphasis>&gt;</term>
+        <listitem>
+          <para>Indicates the server machine for which to report server process
+          status. Identify the machine by IP address or its host name (either
+          fully-qualified or abbreviated unambiguously). For details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-instance</term>
+        <listitem>
+          <para>Names each process for which to report status. Use the process name
+          assigned with the <emphasis role="bold">-instance</emphasis> argument to the <emphasis role="bold">bos</emphasis>
+          command. The output from the <emphasis role="bold">bos status</emphasis> command lists the
+          names.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-long</term>
+        <listitem>
+          <para>Produces more detailed status information.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this
+          argument with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the
+          issuer. Do not combine this flag with the <emphasis role="bold">-localauth</emphasis>
+          flag. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">bos</emphasis> command
+          interpreter presents the ticket to the BOS Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> or
+          <emphasis role="bold">-noauth</emphasis> options. For more details, see <link linkend="bos8">bos(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options
+          are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output for a process includes at least one line, which reports one of
+    the following as the process's current status:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><computeroutput>currently running normally</computeroutput>. The process's status
+        flag in the <emphasis role="bold">BosConfig</emphasis> file is <computeroutput>Run</computeroutput>. For
+        <emphasis role="bold">cron</emphasis> entries, this message indicates only that the command is
+        scheduled to run, not necessarily that it was executing when the <emphasis role="bold">bos
+        status</emphasis> command was issued.</para>
+
+      </listitem>
+      <listitem>
+        <para><computeroutput>disabled</computeroutput>. The process is not running, and its
+        <emphasis role="bold">BosConfig</emphasis> status flag is <computeroutput>NotRun</computeroutput>.</para>
+
+      </listitem>
+      <listitem>
+        <para><computeroutput>temporarily disabled</computeroutput>. The process is not running
+        although its status flag in the <emphasis role="bold">BosConfig</emphasis> file is
+        <computeroutput>Run</computeroutput>. Either an administrator used the <emphasis role="bold">bos
+        shutdown</emphasis> command to stop it, or the</para>
+
+      </listitem>
+      <listitem>
+        <para>BOS Server stopped trying to restart it after numerous failed
+        attempts. In the second case, the auxiliary message is <computeroutput>stopped for
+        too many errors</computeroutput>.</para>
+
+      </listitem>
+      <listitem>
+        <para><computeroutput>temporarily enabled</computeroutput>. The process is running although its
+        status flag in the <emphasis role="bold">BosConfig</emphasis> file is <computeroutput>NotRun</computeroutput>. An
+        administrator has used the <emphasis role="bold">bos startup</emphasis> command to start it.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If one of the following special circumstances applies to the process, the
+    indicated message appears in its entry:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><computeroutput>has core file</computeroutput>. The process failed and created a core
+        file in the <replaceable>/usr/afs/logs</replaceable> directory. If the BOS Server was
+        able to restart the process after the failure, the primary status is
+        <computeroutput>currently running normally</computeroutput>.</para>
+
+      </listitem>
+      <listitem>
+        <para><computeroutput>stopped for too many  errors</computeroutput>. The reason for the primary
+        status <computeroutput>temporarily  disabled</computeroutput> is that the BOS Server's attempts
+        to restart the process all failed.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The entry for the fs process always includes a second line to
+    report the process's <computeroutput>Auxiliary status</computeroutput>, which is one of the
+    following:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><computeroutput>file server running</computeroutput>. The File Server and Volume Server
+        components of the File Server process are running normally.</para>
+
+      </listitem>
+      <listitem>
+        <para><computeroutput>salvaging file system</computeroutput>. The Salvager is running, so the
+        File Server and Volume Server are temporarily disabled. The BOS Server
+        restarts them as soon as the Salvager is finished.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The entry for a cron process includes an <computeroutput>Auxiliary
+    status</computeroutput> that reports when the command will next execute.</para>
+
+    <para>If the -long flag is used, each entry includes the following
+    additional information:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The process's type (<computeroutput>simple</computeroutput>, <computeroutput>fs</computeroutput>, or
+        <computeroutput>cron</computeroutput>).</para>
+
+      </listitem>
+      <listitem>
+        <para>The day and time the process last started or restarted.</para>
+
+      </listitem>
+      <listitem>
+        <para>The number of <computeroutput>proc starts</computeroutput>, which is how many times the BOS
+        Server has started or restarted the process since it started itself.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <computeroutput>Last exit</computeroutput> time when the process (or one of the component
+        processes in the <emphasis role="bold">fs</emphasis> process) last terminated. This line does
+        not appear if the process has not terminated since the BOS Server
+        started.</para>
+
+      </listitem>
+      <listitem>
+        <para>The <computeroutput>Last error exit</computeroutput> time when the process (or one of the
+        component processes in the <emphasis role="bold">fs</emphasis> process) last failed due to an
+        error. A further explanation such as <computeroutput>due to shutdown request</computeroutput>
+        sometimes appears. This line does not appear if the process has not
+        failed since the BOS Server started.</para>
+
+      </listitem>
+      <listitem>
+        <para>Each command that the BOS Server invokes to start the process, as
+        specified by the <emphasis role="bold">-cmd</emphasis> argument to the <emphasis role="bold">bos create</emphasis>
+        command.</para>
+
+      </listitem>
+      <listitem>
+        <para>The pathname of the notifier program that the BOS Server invokes when the
+        process terminates (if any), as specified by the <emphasis role="bold">-notifier</emphasis> argument
+        to the <emphasis role="bold">bos create</emphasis> command.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If the -long flag is provided and the BOS Server discovers that
+    the mode bits on files and subdirectories in the local <replaceable>/usr/afs</replaceable>
+    directory differ from the expected values, it prints the following warning
+    message:</para>
+
+<programlisting>
+   Bosserver reports inappropriate access on server directories
+
+</programlisting>
+      <para>The following chart summarizes the expected mode bit settings. A
+      question mark indicates that the BOS Server does not check that bit.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example command displays the status of processes on the
+      machine <emphasis role="bold">fs3.abc.com</emphasis>:</para>
+
+<programlisting>
+   % bos status fs3.abc.com
+   Instance buserver, currently running normally.
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, currently running normally.
+   Instance fs, has core file, currently running normally.
+       Auxiliary status is: file server running.
+   Instance upserver, currently running normally.
+   Instance runntp, currently running normally.
+
+</programlisting>
+        <para>The following example command displays a detailed status report for the
+        <emphasis role="bold">fs</emphasis> and <emphasis role="bold">ptserver</emphasis> processes on the machine
+        <emphasis role="bold">fs1.abc.com</emphasis>.</para>
+
+<programlisting>
+   % bos status -server fs1.abc.com -instance fs ptserver -long
+   Instance fs, (type is fs), currently running normally.
+      Auxiliary status is: file server running.
+      Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)
+      Last exit at Wed Jan 7 5:34:49 1998
+      Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown
+          request
+      Command 1 is '/usr/afs/bin/fileserver'
+      Command 2 is '/usr/afs/bin/volserver'
+      Command 3 is '/usr/afs/bin/salvager'
+   Instance ptserver, (type is simple) currently running normally.
+      Process last started at Tue Jan 6 8:29:19 1998 (1 proc starts)
+      Command 1 is '/usr/afs/bin/ptserver'
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>None</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="BosConfig5">BosConfig(5)</link>,
+          <link linkend="KeyFile5">KeyFile(5)</link>,
+          <link linkend="bos8">bos(8)</link>,
+          <link linkend="bos_create8">bos_create(8)</link>,
+          <link linkend="bos_shutdown8">bos_shutdown(8)</link>,
+          <link linkend="bos_startup8">bos_startup(8)</link>,
+          <link linkend="bos_status8">bos_status(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+          converted from HTML to POD by software written by Chas Williams and Russ
+          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+        </refsect1>
+      </refentry>

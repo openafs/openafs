@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="vos_changeaddr1">
+  <refmeta>
+    <refentrytitle>vos changeaddr</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>vos changeaddr</refname>
+    <refpurpose>Changes or removes a file server machine's entry in the VLDB</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">vos changeaddr</emphasis> <emphasis role="bold">-oldaddr</emphasis> &lt;<emphasis>original IP address</emphasis>&gt;
+        [<emphasis role="bold">-newaddr</emphasis> &lt;<emphasis>new IP address</emphasis>&gt;] [<emphasis role="bold">-remove</emphasis>]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-noauth</emphasis>] [<emphasis role="bold">-localauth</emphasis>]
+        [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">vos ch</emphasis> <emphasis role="bold">-o</emphasis> &lt;<emphasis>original IP address</emphasis>&gt; [<emphasis role="bold">-ne</emphasis> &lt;<emphasis>new IP address</emphasis>&gt;]
+        [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-no</emphasis>] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">vos changeaddr</emphasis> command removes a server entry from the Volume
+    Location Database (VLDB) when the <emphasis role="bold">-remove</emphasis> flag is combined with the
+    <emphasis role="bold">-oldaddr</emphasis> argument. There must be no VLDB entries that list the machine
+    as a site for any version of a volume (if necessary, use the <emphasis role="bold">vos move</emphasis>
+    or <emphasis role="bold">vos remove</emphasis> command to more or remove volumes). It is appropriate to
+    remove a VLDB server entry when removing the corresponding file server
+    machine from service; this is the only recommended use of the command.</para>
+
+    <para>To display all VLDB server entries, use the <emphasis role="bold">vos listaddrs</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>Combining the command's <emphasis role="bold">-oldaddr</emphasis> and <emphasis role="bold">-newaddr</emphasis> arguments is no longer
+    the appropriate way to change the IP address registered for a file server
+    machine. Furthermore, if a machine is multihomed and its server entry
+    includes several addresses, then the address specified with the
+    <emphasis role="bold">-newaddr</emphasis> argument replaces all of the addresses currently listed in the
+    server entry that includes the address specified by the <emphasis role="bold">-oldaddr</emphasis>
+    argument. This effectively makes the machine single-homed with respect to
+    AFS operations, which is probably not the desired result.</para>
+
+    <para>The recommended method for changing the IP addresses in a server entry is
+    instead to restart the <computeroutput>fs</computeroutput> process group (which includes the File
+    Server) after using the utilities provided by the operating system to
+    reconfigure the machine's network interfaces. For a description of how the
+    File Server constructs and registers a list of its network interfaces in
+    the VLDB, see <link linkend="sysid5">sysid(5)</link>.</para>
+
+    <para>If, counter to recommended usage, the command is used to change the IP
+    address in a server entry, it does not also change the names of machine
+    entries in the Protection Database. Operations fail when they refer to a
+    protection group that has an obsolete IP address in it. Use the <emphasis role="bold">pts
+    rename</emphasis> command to change the names of machine entries that correspond to
+    the addresses changed with this command. Changing the address of a
+    database server machine also requires updating the client and server
+    versions of the <replaceable>CellServDB</replaceable> file on every machine.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-oldaddr</emphasis> &lt;<emphasis>original IP address</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the IP address currently registered for the file server machine
+          in the VLDB server entry. If there are multiple addresses registered for a
+          multihomed machine, use any of them to identify the server entry.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-newaddr</emphasis> &lt;<emphasis>new IP address</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the new IP address that replaces all currently registered
+          addresses.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-remove</emphasis></term>
+        <listitem>
+          <para>Removes from the VLDB the server entry that includes the address specified
+          by the <emphasis role="bold">-oldaddr</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-noauth</emphasis></term>
+        <listitem>
+          <para>Assigns the unprivileged identity <computeroutput>anonymous</computeroutput> to the issuer. Do not
+          combine this flag with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see
+          <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">vos</emphasis> command interpreter presents it
+          to the Volume Server and Volume Location Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument or
+          <emphasis role="bold">-noauth</emphasis> flag. For more details, see <link linkend="vos1">vos(1)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Produces on the standard output stream a detailed trace of the command's
+          execution. If this argument is omitted, only warnings and error messages
+          appear.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>The following command removes the VLDB server entry that includes the IP
+    address <computeroutput>192.12.107.214</computeroutput>.</para>
+
+<programlisting>
+   % vos changeaddr -oldaddr 192.12.107.214 -remove
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Privilege Required</title>
+      <para>Issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on the machine
+      specified with the <emphasis role="bold">-oldaddr</emphasis> argument and on each database server
+      machine.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>See Also</title>
+      <para><link linkend="CellServDB5">CellServDB(5)</link>,
+      <link linkend="UserList5">UserList(5)</link>,
+      <link linkend="sysid5">sysid(5)</link>,
+      <link linkend="fileserver8">fileserver(8)</link>,
+      <link linkend="pts_rename1">pts_rename(1)</link>,
+      <link linkend="vos1">vos(1)</link>,
+      <link linkend="vos_listaddrs1">vos_listaddrs(1)</link></para>
+
+    </refsect1>
+    <refsect1>
+      <title>Copyright</title>
+      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+      converted from HTML to POD by software written by Chas Williams and Russ
+      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+    </refsect1>
+  </refentry>

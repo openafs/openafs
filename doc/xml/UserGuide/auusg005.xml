@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ20">
+  <title>Using AFS</title>
+
+  <para>This chapter explains how to perform four basic AFS tasks: logging in and authenticating with AFS, ending an AFS session,
+  accessing the AFS filespace, and changing your password.</para>
+
+  <sect1 id="HDRWQ21">
+    <title>Logging in and Authenticating with AFS</title>
+
+    <para>To access the AFS filespace as an authenticated user, you must both log into an AFS client machine's local (UNIX) file
+    system and authenticate with AFS. When you log in, you establish your local system identity. When you authenticate, you prove
+    your identity to AFS and obtain a token, which your Cache Manager uses to prove your authenticated status to the AFS server
+    processes it contacts on your behalf. Users who are not authenticated (who do not have a token) have limited access to AFS
+    directories and files.</para>
+
+    <sect2 id="HDRWQ22">
+      <title>Logging In</title>
+
+      <indexterm><primary>logging in</primary></indexterm>
+
+      <indexterm><primary>login utility</primary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>login</secondary></indexterm>
+
+      <para>On machines that use an AFS-modified login utility, you log in and authenticate in one step. On machines that do not use
+      an AFS-modified login utility, you log in and authenticate in separate steps. To determine which type of login utility your
+      machine uses, you can check for AFS tokens after logging in, or ask your system administrator, who can also tell you about any
+      differences between your login procedure and the two methods described here.</para>
+    </sect2>
+
+    <sect2 id="Header_33">
+      <title>To Log In Using an AFS-modified Login Utility</title>
+
+      <para>Provide your username at the <computeroutput>login:</computeroutput> prompt that appears when you establish a new
+      connection to a machine. Then provide your password at the <computeroutput>Password:</computeroutput> prompt as shown in the
+      following example. (Your password does not echo visibly on the screen.)</para>
+
+      <programlisting>
+   login: <replaceable>username</replaceable>
+   Password: <replaceable>password</replaceable>
+</programlisting>
+
+      <para>If you are not sure which type of login utility is running on your machine, it is best to issue the <emphasis
+      role="bold">tokens</emphasis> command to check if you are authenticated; for instructions, see <link linkend="HDRWQ30">To
+      Display Your Tokens</link>. If you do not have tokens, issue the <emphasis role="bold">klog</emphasis> command as described in
+      <link linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ23">
+      <title>To Log In Using a Two-Step Login Procedure</title>
+
+      <para>If your machine does not use an AFS-modified login utility, you must perform a two-step procedure:
+
+      <orderedlist>
+        <listitem>
+          <para>Log in to your client machine's local file system by providing a user name and password at the <emphasis
+          role="bold">login</emphasis> program's prompts.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">klog</emphasis> command to authenticate with AFS. Include the command's <emphasis
+          role="bold">-setpag</emphasis> argument to associate your token with a special identification number called a
+          <emphasis>PAG</emphasis> (for <emphasis>process authentication group</emphasis>). For a description of PAGs, see <link
+          linkend="HDRWQ25">Protecting Your Tokens with a PAG</link>. <programlisting>
+  
+   % <emphasis role="bold">klog -setpag</emphasis>
+   Password: <replaceable>your_AFS_password</replaceable>
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+</para>
+
+      <note>
+        <para>If your machine uses a two-step login procedure, you can choose to use different passwords for logging in and
+        authenticating. It is simplest to use the same one for both, though. Talk with your system administrator.</para>
+      </note>
+    </sect2>
+
+    <sect2 id="HDRWQ24">
+      <title>Authenticating with AFS</title>
+
+      <para>To work most effectively in the AFS filespace, you must authenticate with AFS. When you do, your Cache Manager is given
+      a token as proof of your authenticated status. It uses your token when requesting services from AFS servers, which accept the
+      token as proof of your authenticated status. If you do not have a token, AFS servers consider you to be the <emphasis
+      role="bold">anonymous</emphasis> user and your access to AFS filespace is limited: you have only the ACL permissions granted
+      to the <emphasis role="bold">system:anyuser</emphasis> group. <indexterm><primary>authentication</primary><secondary>tokens as proof</secondary></indexterm> <indexterm><primary>tokens</primary><secondary>as proof of authentication</secondary></indexterm> <indexterm><primary>Cache Manager</primary><secondary>tokens, use of</secondary></indexterm></para>
+
+      <para>You can obtain new tokens (reauthenticate) at any time, even after using an AFS-modified login utility, which logs you
+      in and authenticates you in one step. Issue the <emphasis role="bold">klog</emphasis> command as described in <link
+      linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
+
+      <sect3 id="HDRWQ25">
+        <title>Protecting Your Tokens with a PAG</title>
+
+        <para>To make your access to AFS as secure as possible, it is best to associate your tokens with a unique identification
+        number called a <emphasis>PAG</emphasis> (for <emphasis>process authentication group</emphasis>). <indexterm><primary>PAG</primary></indexterm>
+        <indexterm><primary>process authentication group (PAG)</primary></indexterm> <indexterm><primary>setpag argument to klog command</primary></indexterm> AFS-modified login utilities automatically create a PAG and associate the new
+        token with it. To create a PAG when you use the two-step login procedure, include the <emphasis role="bold">klog</emphasis>
+        command's <emphasis role="bold">-setpag</emphasis> flag. If you do not use this flag, your tokens are associated with your
+        UNIX UID number instead. This type of association has two potential drawbacks:
+
+        <itemizedlist>
+          <listitem>
+            <para>Anyone who can assume your local UNIX identity can use your tokens. The local superuser <emphasis
+            role="bold">root</emphasis> can always use the UNIX <emphasis role="bold">su</emphasis> command to assume your UNIX UID,
+            even without knowing your password.</para>
+          </listitem>
+
+          <listitem>
+            <para>In some environments, certain programs cannot use your tokens even when it is appropriate for them to do so. For
+            example, printing commands such as <emphasis role="bold">lp</emphasis> or <emphasis role="bold">lpr</emphasis> possibly
+            cannot access the files you want to print, because they cannot use your tokens.</para>
+          </listitem>
+        </itemizedlist>
+</para>
+      </sect3>
+
+      <sect3 id="HDRWQ26">
+        <title>Obtaining Tokens For Foreign Cells</title>
+
+        <indexterm><primary>authentication</primary><secondary>in a foreign cell</secondary></indexterm>
+
+        <para>A token is valid only in one cell (the cell whose AFS authentication service issued it). The AFS server processes in
+        any other cell consider you to be the <emphasis role="bold">anonymous</emphasis> user unless you have an account in the cell
+        and authenticate with its AFS authentication service.</para>
+
+        <para>To obtain tokens in a foreign cell, use the <emphasis role="bold">-cell</emphasis> argument to the <emphasis
+        role="bold">klog</emphasis> command. You can have tokens for your home cell and one or more foreign cells at the same
+        time.</para>
+      </sect3>
+
+      <sect3 id="HDRWQ27">
+        <title>The One-Token-Per-Cell Rule</title>
+
+        <para>You can have only one token per cell for each PAG you have obtained on a client machine. If you already have a token
+        for a particular cell and issue the <emphasis role="bold">klog</emphasis> command, the new token overwrites the existing
+        one. Getting a new token is useful if your current token is almost expired but you want to continue accessing AFS files. For
+        a discussion of token expiration, see <link linkend="HDRWQ28">Token Lifetime</link>.</para>
+
+        <para>To obtain a second token for the same cell, you must either login on a different machine or establish another separate
+        connection to the machine where you already have a token (by using the <emphasis role="bold">telnet</emphasis> utility, for
+        example). You get a new PAG for each separate machine or connection, and can use the associated tokens only while working on
+        that machine or connection.</para>
+      </sect3>
+
+      <sect3 id="Header_39">
+        <title>Obtaining Tokens as Another User</title>
+
+        <indexterm><primary>authentication</primary><secondary>as another user</secondary></indexterm>
+
+        <para>You can authenticate as another username if you know the associated password. (It is, of course, unethical to use
+        someone else's tokens without permission.) If you use the <emphasis role="bold">klog</emphasis> command to authenticate as
+        another AFS username, you retain your own local (UNIX) identity, but the AFS server processes recognize you as the other
+        user. The new token replaces any token you already have for the relevant cell (for the reason described in <link
+        linkend="HDRWQ27">The One-Token-Per-Cell Rule</link>).</para>
+      </sect3>
+
+      <sect3 id="HDRWQ28">
+        <title>Token Lifetime</title>
+
+        <indexterm><primary>tokens</primary><secondary>lifetime</secondary></indexterm>
+
+        <indexterm><primary>lifetime of tokens</primary></indexterm>
+
+        <para>Tokens have a limited lifetime. To determine when your tokens expire, issue the <emphasis
+        role="bold">tokens</emphasis> command as described in <link linkend="HDRWQ30">To Display Your Tokens</link>. If you are ever
+        unable to access AFS in a way that you normally can, issuing the <emphasis role="bold">tokens</emphasis> command tells you
+        whether an expired token is a possible reason.</para>
+
+        <para>Your cell's administrators set the default lifetime of your token. The AFS authentication service never grants a token
+        lifetime longer than the default, but you can request a token with a shorter lifetime. See the <emphasis
+        role="bold">klog</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis> to learn how to use
+        its <emphasis role="bold">-lifetime</emphasis> argument for this purpose.</para>
+      </sect3>
+
+      <sect3 id="Header_41">
+        <title>Authenticating for DFS Access</title>
+
+        <indexterm><primary>commands</primary><secondary>dlog</secondary></indexterm>
+
+        <indexterm><primary>commands</primary><secondary>dpass</secondary></indexterm>
+
+        <indexterm><primary>dlog command</primary></indexterm>
+
+        <indexterm><primary>dpass command</primary></indexterm>
+
+        <indexterm><primary>authentication</primary><secondary>with DCE for DFS access</secondary></indexterm>
+
+        <para>If your machine is configured to access a DCE cell's DFS filespace by means of the AFS/DFS Migration Toolkit, you can
+        use the <emphasis role="bold">dlog</emphasis> command to authenticate with DCE. The <emphasis role="bold">dlog</emphasis>
+        command has no effect on your ability to access AFS filespace.</para>
+
+        <para>If your system administrator has converted your AFS account to a DCE account and you are not sure of your DCE
+        password, use the <emphasis role="bold">dpass</emphasis> command to display it. You must be authenticated as the AFS user
+        whose AFS account was converted to a DCE account, and be able to provide the correct AFS password. Like the <emphasis
+        role="bold">dlog</emphasis> command, the <emphasis role="bold">dpass</emphasis> command has no functionality with respect to
+        AFS.</para>
+
+        <para>For more information on using the <emphasis role="bold">dlog</emphasis> and <emphasis role="bold">dpass</emphasis>
+        commands, see your system administrator.</para>
+      </sect3>
+    </sect2>
+
+    <sect2 id="HDRWQ29">
+      <title>To Authenticate with AFS</title>
+
+      <indexterm><primary>klog command</primary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>klog</secondary></indexterm>
+
+      <indexterm><primary>tokens</primary><secondary>getting</secondary></indexterm>
+
+      <para>If your machine is not using an AFS-modified login utility, you must authenticate after login by issuing the <emphasis
+      role="bold">klog</emphasis> command. You can also issue this command at any time to obtain a token with a later expiration
+      date than your current token.</para>
+
+      <programlisting>
+   % <emphasis role="bold">klog</emphasis> [<emphasis role="bold">-setpag</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;]
+   Password: <replaceable>your_AFS_password</replaceable>
+</programlisting>
+
+      <para>where
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-setpag</emphasis></term>
+
+          <listitem>
+            <para>Associates the resulting tokens with a PAG (see <link linkend="HDRWQ25">Protecting Your Tokens with a PAG</link>).
+            Include this flag the first time you obtain a token for a particular cell during a login session or connection. Do not
+            include it when refreshing the token for a cell during the same session.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-cell</emphasis></term>
+
+          <listitem>
+            <para>Names the cell for which to obtain the token. You must have an account in the cell.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+</para>
+
+      <para>Your password does not echo visibly appear on the screen. When the command shell prompt returns, you are an
+      authenticated AFS user. You can use the <emphasis role="bold">tokens</emphasis> command to verify that you are authenticated,
+      as described in the following section.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ30">
+      <title>To Display Your Tokens</title>
+
+      <indexterm><primary>checking</primary><secondary>tokens</secondary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>tokens</secondary></indexterm>
+
+      <indexterm><primary>tokens</primary><secondary>command</secondary></indexterm>
+
+      <indexterm><primary>tokens</primary><secondary>displaying</secondary></indexterm>
+
+      <indexterm><primary>displaying</primary><secondary>tokens</secondary></indexterm>
+
+      <para>Use the <emphasis role="bold">tokens</emphasis> command to display your tokens.</para>
+
+      <programlisting>
+   % <emphasis role="bold">tokens</emphasis>
+</programlisting>
+
+      <para>The following output indicates that you have no tokens:</para>
+
+      <programlisting>
+   Tokens held by the Cache Manager:
+       --End of list--
+</programlisting>
+
+      <para>If you have one or more tokens, the output looks something like the following example, in which the tokens for AFS UID
+      1022 in the <emphasis role="bold">abc.com</emphasis> cell expire on August 3 at 2:35 p.m. The tokens for AFS UID 9554 in the
+      <emphasis role="bold">stateu.edu</emphasis> cell expire on August 4 at 1:02 a.m.</para>
+
+      <programlisting>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 1022) tokens for afs@abc.com [Expires Aug   3 14:35]
+   User's (AFS ID 9554) tokens for afs@stateu.edu [Expires Aug   4  1:02] 
+      --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_44">
+      <title>Example: Authenticating in the Local Cell</title>
+
+      <indexterm><primary>examples</primary><secondary>authenticating</secondary></indexterm>
+
+      <para>Suppose that user <emphasis role="bold">terry</emphasis> cannot save a file. He uses the <emphasis
+      role="bold">tokens</emphasis> command and finds that his tokens have expired. He reauthenticates in his local cell under his
+      current identity by issuing the following command:</para>
+
+      <programlisting>
+   % <emphasis role="bold">klog</emphasis>
+   Password:  <replaceable>terry's_password</replaceable>
+</programlisting>
+
+      <para>The he issues the <emphasis role="bold">tokens</emphasis> command to make sure he is authenticated.</para>
+
+      <programlisting>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 4562) tokens for afs@abc.com [Expires Jun 22 14:35]
+      --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_45">
+      <title>Example: Authenticating as a Another User</title>
+
+      <indexterm><primary>examples</primary><secondary>authenticating as another user</secondary></indexterm>
+
+      <para>Now <emphasis role="bold">terry</emphasis> authenticates in his local cell as another user, <emphasis
+      role="bold">pat</emphasis>. The new token replaces <emphasis role="bold">terry</emphasis>'s existing token, because the Cache
+      Manager can store only one token per cell per login session on a machine.</para>
+
+      <programlisting>
+   % <emphasis role="bold">klog pat</emphasis>
+   Password: <replaceable>pat's_password</replaceable>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 4278) tokens for afs@abc.com [Expires Jun 23 9:46]
+      --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_46">
+      <title>Example: Authenticating in a Foreign Cell</title>
+
+      <indexterm><primary>examples</primary><secondary>authenticating in a foreign cell</secondary></indexterm>
+
+      <para>Now <emphasis role="bold">terry</emphasis> authenticates in the <emphasis role="bold">stateu.edu</emphasis> cell where
+      his account is called <emphasis role="bold">ts09</emphasis>.</para>
+
+      <programlisting>
+   % <emphasis role="bold">klog  ts09 -cell stateu.edu</emphasis>
+   Password: <replaceable>ts09's_password</replaceable>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 4562) tokens for afs@abc.com [Expires Jun 22 14:35]
+   User's (AFS ID 8346) tokens for afs@stateu.edu [Expires Jun 23  1:02]
+       --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ31">
+      <title>Limits on Failed Authentication Attempts</title>
+
+      <indexterm><primary>authentication</primary><secondary>limits on consecutive failed attempts</secondary></indexterm>
+
+      <para>Your system administrator can choose to limit the number of times that you fail to provide the correct password when
+      authenticating with AFS (using either an AFS-modified login utility or the <emphasis role="bold">klog</emphasis> command). If
+      you exceed the limit, the AFS authentication service refuses further authentication attempts for a period of time set by your
+      system administrator. The purpose of this limit is to prevent unauthorized users from breaking into your account by trying a
+      series of passwords.</para>
+
+      <para>To determine if your user account is subject to this limit, ask your system administrator or issue the <emphasis
+      role="bold">kas examine</emphasis> command as described in <link linkend="HDRWQ32">To Display Your Failed Authentication Limit
+      and Lockout Time</link>.</para>
+
+      <para>The following message indicates that you have exceeded the limit on failed authentication attempts.</para>
+
+      <programlisting>
+   Unable to authenticate to AFS because ID is locked - see your system admin
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ32">
+      <title>To Display Your Failed Authentication Limit and Lockout Time</title>
+
+      <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
+
+      <indexterm><primary>limits on authentication attempts</primary></indexterm>
+
+      <indexterm><primary>users</primary><secondary>account lockout time</secondary></indexterm>
+
+      <para>Issue the <emphasis role="bold">kas examine</emphasis> command to determine if there is a limit on the number of
+      unsuccessful authentication attempts for your user account and any associated lockout time. You can examine only your own
+      account. The fourth line of the output reports the maximum number of times you can provide an incorrect password before being
+      locked out of your account. The <computeroutput>lock time</computeroutput> field on the next line reports how long the AFS
+      authentication service refuses authentication attempts after the limit is exceeded.</para>
+
+      <programlisting>
+   % <emphasis role="bold">kas examine</emphasis> <replaceable>your_username</replaceable>
+   Password for <replaceable>your_username</replaceable>: <replaceable>your_AFS_password</replaceable>
+</programlisting>
+
+      <para>The following example displays the output for the user <emphasis role="bold">pat</emphasis>, who is allowed nine failed
+      authentication attempts. The lockout time is 25.5 minutes.</para>
+
+      <programlisting>
+   User data for pat
+    key (15) cksum is 3414844392,  last cpw: Thu Oct 21 16:05:44 1999
+    password will expire:  Fri Nov 26 20:44:36 1999
+    9 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is not locked.
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Wed Aug 18 08:22:29 1999 by admin
+    permit password reuse
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ33">
+    <title>Exiting an AFS Session</title>
+
+    <indexterm><primary>tokens</primary><secondary>destroying</secondary></indexterm>
+
+    <indexterm><primary>unauthenticating</primary></indexterm>
+
+    <indexterm><primary>exiting an AFS session</primary></indexterm>
+
+    <indexterm><primary>logging out</primary></indexterm>
+
+    <indexterm><primary>quitting an AFS session</primary></indexterm>
+
+    <para>Because logging in and authenticating with AFS are distinct operations, you must both logout and unauthenticate (issue the
+    <emphasis role="bold">unlog</emphasis> command to discard your tokens) when exiting an AFS session. Simply logging out does not
+    necessarily destroy your tokens.</para>
+
+    <para>You can use the <emphasis role="bold">unlog</emphasis> command any time you want to unauthenticate, not just when logging
+    out. For instance, it is a good practice to unauthenticate before leaving your machine unattended, to prevent other users from
+    using your tokens during your absence. When you return to your machine, issue the <emphasis role="bold">klog</emphasis> command
+    to reauthenticate, as described in <link linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
+
+    <para>Do not issue the <emphasis role="bold">unlog</emphasis> command when you are running jobs that take a long time to
+    complete, even if you are logging out. Such processes must have a token during the entire time they need authenticated access to
+    AFS.</para>
+
+    <para>If you have tokens from multiple cells and want to discard only some of them, include the <emphasis
+    role="bold">unlog</emphasis> command's <emphasis role="bold">-cell</emphasis> argument.</para>
+
+    <sect2 id="Header_50">
+      <title>To Discard Tokens</title>
+
+      <indexterm><primary>commands</primary><secondary>unlog</secondary></indexterm>
+
+      <indexterm><primary>unlog command</primary></indexterm>
+
+      <para>Issue the <emphasis role="bold">unlog</emphasis> command to discard your tokens:</para>
+
+      <programlisting>
+   % <emphasis role="bold">unlog -cell</emphasis>  &lt;<replaceable>cell name</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>Omit the <emphasis role="bold">-cell</emphasis> argument to discard all of your tokens, or use it to name each cell for
+      which to discard tokens. It is best to provide the full name of each cell (such as <emphasis role="bold">stateu.edu</emphasis>
+      or <emphasis role="bold">abc.com</emphasis>).</para>
+
+      <para>You can issue the <emphasis role="bold">tokens</emphasis> command to verify that your tokens were destroyed, as in the
+      following example.</para>
+
+      <programlisting>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+      --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_51">
+      <title>Example: Unauthenticating from a Specific Cell</title>
+
+      <indexterm><primary>examples</primary><secondary>unauthenticating from selected cells</secondary></indexterm>
+
+      <para>In the following example, a user has tokens in both the <emphasis role="bold">accounting</emphasis> and <emphasis
+      role="bold">marketing</emphasis> cells at her company. She discards the token for the <emphasis
+      role="bold">acctg.abc.com</emphasis> cell but keeps the token for the <emphasis role="bold">mktg.abc.com</emphasis>
+      cell.</para>
+
+      <programlisting>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 35) tokens for afs@acctg.abc.com [Expires Nov 10 22:30]
+   User's (AFS ID 674) tokens for afs@mktg.abc.com [Expires Nov 10 18:44]
+      --End of list--
+   % <emphasis role="bold">unlog -cell acctg.abc.com</emphasis>
+   % <emphasis role="bold">tokens</emphasis>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 674) tokens for afs@mktg.abc.com [Expires Nov 10 18:44]
+      --End of list--
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_52">
+      <title>To Log Out</title>
+
+      <para>After you have unauthenticated, log out by issuing the command appropriate for your machine type, which is possibly one
+      of the following.</para>
+
+      <programlisting>
+   % <emphasis role="bold">logout</emphasis>
+</programlisting>
+
+      <para>or</para>
+
+      <programlisting>
+   % <emphasis role="bold">exit</emphasis>
+</programlisting>
+
+      <para>or</para>
+
+      <programlisting>
+   % &lt;<emphasis role="bold">Ctrl-d</emphasis>&gt;
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ34">
+    <title>Accessing the AFS Filespace</title>
+
+    <indexterm><primary>files</primary><secondary>accessing AFS</secondary></indexterm>
+
+    <indexterm><primary>directories</primary><secondary>accessing AFS</secondary></indexterm>
+
+    <para>While you are logged in and authenticated, you can access files in AFS just as you do in the UNIX file system. The only
+    difference is that you can access potentially many more files. Just as in the UNIX file system, you can only access those files
+    for which you have permission. AFS uses access control lists (ACLs) to control access, as described in <link
+    linkend="HDRWQ44">Protecting Your Directories and Files</link>.</para>
+
+    <sect2 id="Header_54">
+      <title>AFS Pathnames</title>
+
+      <indexterm><primary>pathnames</primary></indexterm>
+
+      <para>AFS pathnames look very similar to UNIX file system names. The main difference is that every AFS pathname begins with
+      the AFS root directory, which is called <emphasis role="bold">/afs</emphasis> by convention. Having <emphasis
+      role="bold">/afs</emphasis> at the top of every AFS cell's filespace links together their filespaces into a global filespace.
+      <indexterm><primary>AFS</primary><secondary>accessing filespace</secondary></indexterm> <indexterm><primary>access to AFS filespace</primary><secondary>format of pathnames</secondary></indexterm> <indexterm><primary>afs (/afs) directory</primary><secondary>as root of AFS filespace</secondary></indexterm> <indexterm><primary>format of AFS pathnames</primary></indexterm></para>
+
+      <para><emphasis role="bold">Note for Windows users:</emphasis> Windows uses a backslash (&nbsp;<emphasis
+      role="bold">\</emphasis>&nbsp;) rather than a forward slash (&nbsp;<emphasis role="bold">/</emphasis>&nbsp;) to separate the
+      elements in a pathname. Otherwise, your access to AFS filespace is much the same as for users working on UNIX machines.</para>
+
+      <para>The second element in AFS pathnames is generally a cell's name. For example, the ABC Corporation cell is called
+      <emphasis role="bold">abc.com</emphasis> and the pathname of every file in its filespace begins with the string <emphasis
+      role="bold">/afs/abc.com</emphasis>. Some cells also create a directory at the second level with a shortened name (such as
+      <emphasis role="bold">abc</emphasis> for <emphasis role="bold">abc.com</emphasis> or <emphasis role="bold">stateu</emphasis>
+      for <emphasis role="bold">stateu.edu</emphasis>), to reduce the amount of typing necessary. Your system administrator can tell
+      you if your cell's filespace includes shortened names like this. The rest of the pathname depends on how the cell's
+      administrators organized its filespace.</para>
+
+      <para>To access directories and files in AFS you must both specify the correct pathname and have the required permissions on
+      the ACL that protects the directory and the files in it.</para>
+    </sect2>
+
+    <sect2 id="Header_55">
+      <title>Example: Displaying the Contents of Another User's Directory</title>
+
+      <para>The user <emphasis role="bold">terry</emphasis> wants to look for a file belonging to another user, <emphasis
+      role="bold">pat</emphasis>. He issues the <emphasis role="bold">ls</emphasis> command on the appropriate pathname.</para>
+
+      <programlisting>
+   % <emphasis role="bold">ls /afs/abc.com/usr/pat/public</emphasis>
+   doc/                    directions/
+   guide/                  jokes/
+   library/
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ35">
+      <title>Accessing Foreign Cells</title>
+
+      <indexterm><primary>foreign cells</primary><secondary>accessing</secondary></indexterm>
+
+      <indexterm><primary>system:anyuser group</primary><secondary>controlling access by foreign users</secondary></indexterm>
+
+      <para>You can access files not only in your own cell, but in any AFS cell that you can reach via the network, regardless of
+      geographical location. There are two additional requirements:
+
+      <itemizedlist>
+        <listitem>
+          <para>Your Cache Manager's list of foreign cells must include the cell you want to access. Only the local superuser
+          <emphasis role="bold">root</emphasis> can edit the list of cells, but anyone can display it. See <link
+          linkend="HDRWQ42">Determining Access to Foreign Cells</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The ACL on the directory that houses the file, and on every parent directory in the pathname, must grant you the
+          necessary permissions. The simplest way for the directory's owner to extend permission to foreign users is to put an entry
+          for the <emphasis role="bold">system:anyuser</emphasis> group on the ACL.</para>
+
+          <para>The alternative is for the foreign cell's administrator to create an account for you, essentially making you a local
+          user in the cell. The directory's owner creates an ACL entry for you as for any other local user. To authenticate in the
+          foreign cell, issue the <emphasis role="bold">klog</emphasis> command with the <emphasis role="bold">-cell</emphasis>
+          argument.</para>
+        </listitem>
+      </itemizedlist>
+</para>
+
+      <para>For further discussion of directory and file protection, see <link linkend="HDRWQ44">Protecting Your Directories and
+      Files</link>.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ36">
+    <title>Changing Your Password</title>
+
+    <para>In cells that use an AFS-modified login utility, the password is the same for both logging in and authenticating with AFS.
+    In this case, you use a single command, <emphasis role="bold">kpasswd</emphasis>, to change the password.</para>
+
+    <para>If your machine does not use an AFS-modified login utility, there are separate passwords for logging into the local file
+    system and authenticating with AFS. (The two passwords can be the same or different, at your discretion.) In this case, use the
+    <emphasis role="bold">kpasswd</emphasis> command to change your AFS password and the UNIX <emphasis
+    role="bold">passwd</emphasis> command to change your UNIX password.</para>
+
+    <para>Your system administrator can improve cell security by configuring several features that guide your choice of password.
+    Keep them in mind when you issue the <emphasis role="bold">kpasswd</emphasis> command:
+
+    <itemizedlist>
+      <listitem>
+        <para>Limiting the amount of time your password is valid. This improves your cell's security by limiting the amount of time
+        an unauthorized user has to try to guess your password. Your system administrator needs to tell you when your password is
+        due to expire so that you can change it in time. The administrator can configure the AFS-modified login utility to report
+        this information automatically each time you log in. You can also use the <emphasis role="bold">kas examine</emphasis>
+        command to display the password expiration date, as instructed in <link linkend="HDRWQ37">To Display Password Expiration
+        Date and Reuse Policy</link>.</para>
+
+        <para>You can change your password prior to the expiration date, but your system administrator can choose to set a minimum
+        time between password changes. The following message indicates that the minimum time has not yet passed.</para>
+
+        <programlisting>
+   kpasswd:  password was not changed because you changed it too 
+   recently; see your system administrator
+</programlisting>
+      </listitem>
+
+      <listitem>
+        <para>Enforcing password quality standards, such as a minimum length or inclusion of nonalphabetic characters. The
+        administrator needs to tell you about such requirements so that you do not waste time picking unacceptable passwords.</para>
+      </listitem>
+
+      <listitem>
+        <para>Rejecting a password that is too similar to the last 20 passwords you used. You can use the <emphasis role="bold">kas
+        examine</emphasis> command to check whether this policy applies to you, as instructed in <link linkend="HDRWQ37">To Display
+        Password Expiration Date and Reuse Policy</link>. The following message indicates that the password you have chosen is too
+        similar to a previous password. <programlisting>
+   kpasswd:  Password was not changed because it seems like a reused password
+</programlisting></para>
+      </listitem>
+    </itemizedlist>
+</para>
+
+    <sect2 id="HDRWQ37">
+      <title>To Display Password Expiration Date and Reuse Policy</title>
+
+      <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
+
+      <indexterm><primary>password</primary><secondary>expiration date, displaying</secondary></indexterm>
+
+      <indexterm><primary>password</primary><secondary>reuse policy, displaying</secondary></indexterm>
+
+      <indexterm><primary>displaying</primary><secondary>password expiration date</secondary></indexterm>
+
+      <indexterm><primary>displaying</primary><secondary>password reuse policy</secondary></indexterm>
+
+      <para>Issue the <emphasis role="bold">kas examine</emphasis> command to display your password expiration date and reuse
+      policy. You can examine only your own account. The third line of the output reports your password's expiration date. The last
+      line reports the password reuse policy that applies to you.</para>
+
+      <programlisting>
+   % <emphasis role="bold">kas examine</emphasis> <replaceable>your_username</replaceable>
+   Password for <replaceable>your_username</replaceable>: <replaceable>your_AFS_password</replaceable>
+</programlisting>
+
+      <para>The following example displays the output for the user <emphasis role="bold">pat</emphasis>.</para>
+
+      <programlisting>
+   User data for pat
+    key (15) cksum is 3414844392,  last cpw: Thu Oct 21 16:05:44 1999
+    password will expire:  Fri Nov 26 20:44:36 1999
+    9 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is not locked.
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Wed Aug 18 08:22:29 1999 by admin
+    don't permit password reuse
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_59">
+      <title>To Change Your AFS Password</title>
+
+      <indexterm><primary>password</primary><secondary>changing AFS</secondary></indexterm>
+
+      <indexterm><primary>changing</primary><secondary>AFS password</secondary></indexterm>
+
+      <indexterm><primary>commands</primary><secondary>kpasswd</secondary></indexterm>
+
+      <indexterm><primary>kpasswd command</primary></indexterm>
+
+      <para>Issue the <emphasis role="bold">kpasswd</emphasis> command, which prompts you to provide your old and new passwords and
+      to confirm the new password. The passwords do not echo visibly on the screen.</para>
+
+      <programlisting>
+   % <emphasis role="bold">kpasswd</emphasis>
+   Old password: <replaceable>current_password</replaceable>
+   New password (RETURN to abort): <replaceable>new_password</replaceable>
+   Retype new password: <replaceable>new_password</replaceable>
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_60">
+      <title>To Change Your UNIX Password</title>
+
+      <para><indexterm><primary>commands</primary><secondary>passwd</secondary></indexterm> <indexterm><primary>passwd</primary><secondary>command</secondary></indexterm> <indexterm><primary>password</primary><secondary>changing UNIX</secondary></indexterm> <indexterm><primary>changing</primary><secondary>UNIX password</secondary></indexterm> Issue the UNIX <emphasis
+      role="bold">passwd</emphasis> command, which prompts you to provide your old and new passwords and to confirm the new
+      password. The passwords do not echo visibly on the screen. On many machines, the <emphasis role="bold">passwd</emphasis>
+      resides in the <emphasis role="bold">/bin</emphasis> directory, and you possibly need to type the complete pathname.</para>
+
+      <programlisting>
+   % <emphasis role="bold">passwd</emphasis>
+   Changing password for <replaceable>username</replaceable>.
+   Old password: <replaceable>current_password</replaceable>
+   New password: <replaceable>new_password</replaceable>
+   Retype new passwd: <replaceable>new_password</replaceable>
+</programlisting>
+    </sect2>
+  </sect1>
+</chapter>

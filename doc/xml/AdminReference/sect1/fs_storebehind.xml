@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_storebehind1">
+  <refmeta>
+    <refentrytitle>fs storebehind</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs storebehind</refname>
+    <refpurpose>Enables asynchronous writes to the file server</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs storebehind</emphasis> [<emphasis role="bold">-kbytes</emphasis> &lt;<emphasis>asynchrony for specified names</emphasis>&gt;]
+        [<emphasis role="bold">-files</emphasis> &lt;<emphasis>specific pathnames</emphasis>&gt;+]
+        [<emphasis role="bold">-allfiles</emphasis> &lt;<emphasis>new default (KB)</emphasis>&gt;] [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs st</emphasis> [<emphasis role="bold">-k</emphasis> &lt;<emphasis>asynchrony for specified names</emphasis>&gt;]
+        [<emphasis role="bold">-f</emphasis> &lt;<emphasis>specific pathnames</emphasis>&gt;+]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>new default (KB)</emphasis>&gt;] [<emphasis role="bold">-v</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs storebehind</emphasis> command enables the Cache Manager to perform a
+    delayed asynchronous write to the File Server when an application closes a
+    file. By default, the Cache Manager writes all data to the File Server
+    immediately and synchronously when an application program closes a file --
+    that is, the close() system call does not return until the Cache Manager
+    has actually transferred the final chunk of the file to the File
+    Server. This command specifies the number of kilobytes of a file that can
+    still remain to be written to the File Server when the Cache Manager
+    returns control to the application. It is useful if users working on the
+    machine commonly work with very large files, but also introduces the
+    complications discussed in the <link linkend="CAUTIONS">CAUTIONS</link>.</para>
+
+    <para>Set either or both of the following in a single command:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To set a value that applies to all AFS files manipulated by applications
+        running on the machine, use the <emphasis role="bold">-allfiles</emphasis> argument. This value is
+        termed the <emphasis>default store asynchrony</emphasis> for the machine, and persists until
+        the machine reboots. If it is not set, the default value is zero,
+        indicating that the Cache Manager performs synchronous writes.</para>
+
+        <para>As an example, the following setting means that when an application closes
+        a file, the Cache Manager can return control to the application as soon as
+        no more than 10 kilobytes of the file remain to be written to the File
+        Server.</para>
+
+<programlisting>
+   -allfiles 10
+
+</programlisting>
+        </listitem>
+        <listitem>
+          <para>To set a value that applies to one or more individual files, and overrides
+          the value of the <emphasis role="bold">-allfiles</emphasis> argument for them, combine the <emphasis role="bold">-kbytes</emphasis>
+          and <emphasis role="bold">-files</emphasis> arguments. The setting persists as long as there is an entry
+          for the file in the kernel table that the Cache Manager uses to track
+          certain information about files. In general, such an entry persists at
+          least until an application closes the file or exits, but the Cache Manager
+          is free to recycle the entry if the file is inactive and it needs to free
+          up slots in the table. To increase the certainty that there is an entry
+          for the file in the table, issue the <emphasis role="bold">fs storebehind</emphasis> command shortly
+          before closing the file.</para>
+
+          <para>As an example, the following setting means that when an application closes
+          either of the files <emphasis role="bold">bigfile</emphasis> and <emphasis role="bold">biggerfile</emphasis>, the Cache Manager can
+          return control to the application as soon as no more than a megabyte of
+          the file remains to be written to the File Server.</para>
+
+<programlisting>
+   -kbytes 1024 -files bigfile biggerfile
+
+</programlisting>
+            <para>Note that once an explicit value has been set for a file, the only way to
+            make it subject to the default store asynchrony once again is to set
+            <emphasis role="bold">-kbytes</emphasis> to that value. In other words, there is no combination of
+            arguments that automatically makes a file subject to the default store
+            asynchrony once another value has been set for the file.</para>
+
+          </listitem>
+        </itemizedlist>
+        <para>To display the settings that currently apply to individual files or to all
+        files, provide the command's arguments in certain combinations as
+        specified in <link linkend="OUTPUT">OUTPUT</link>.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Cautions</title>
+        <para>For the following reasons, use of this command is not recommended in most
+        cases.</para>
+
+        <para>In normal circumstances, an asynchronous setting results in the Cache
+        Manager returning control to applications earlier than it otherwise does,
+        but this is not guaranteed.</para>
+
+        <para>If a delayed write fails, there is no way to notify the application, since
+        the close() system call has already returned with a code indicating
+        success.</para>
+
+        <para>Writing asynchronously increases the possibility that the user will not
+        notice if a write operation makes the volume that houses the file exceed
+        its quota. As always, the portion of the file that exceeds the volume's
+        quota is lost, which prompts a message such as the following:</para>
+
+<programlisting>
+   No space left on device
+
+</programlisting>
+          <para>To avoid losing data, it is advisable to verify that the volume housing
+          the file has space available for the amount of data anticipated to be
+          written.</para>
+
+        </refsect1>
+        <refsect1>
+          <title>Options</title>
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">-kbytes</emphasis> &lt;<emphasis>asynchrony for specified names</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the number of kilobytes of data from each file named by the
+                <emphasis role="bold">-files</emphasis> argument that can remain to be written to the file server when
+                the Cache Manager returns control to an application program that closed
+                the file. The <emphasis role="bold">-files</emphasis> argument is required along with this
+                argument. Provide an integer from the range <computeroutput>0</computeroutput> (which reinstates the
+                Cache Manager's default behavior or writing synchronously) to the maximum
+                AFS file size.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-files</emphasis> &lt;<emphasis>specific pathnames</emphasis>&gt;+</term>
+              <listitem>
+                <para>Names each file to which the value set with the <emphasis role="bold">-kbytes</emphasis> argument
+                applies. The setting persists as long as there is an entry for the file in
+                the kernel table that the Cache Manager uses to track certain information
+                about files. Because closing a file generally erases the entry, when
+                reopening a file the only way to guarantee that the setting still applies
+                is to reissue the command. If this argument is provided without the
+                <emphasis role="bold">-kbytes</emphasis> argument, the command reports the current setting for the
+                specified files, and the default store asynchrony.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-allfiles</emphasis> &lt;<emphasis>new default (KB)</emphasis>&gt;</term>
+              <listitem>
+                <para>Sets the default store asynchrony for the local machine, which is the
+                number of kilobytes of data that can remain to be written to the file
+                server when the Cache Manager returns control to the application program
+                that closed a file. The value applies to all AFS files manipulated by
+                applications running on the machine, except those for which settings have
+                been made with the <emphasis role="bold">-kbytes</emphasis> and <emphasis role="bold">-files</emphasis> arguments. Provide an integer
+                from the range <computeroutput>0</computeroutput> (which indicates the default of synchronous writes) to
+                the maximum AFS file size.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-verbose</emphasis></term>
+              <listitem>
+                <para>Produces output confirming the settings made with the accompanying
+                <emphasis role="bold">-kbytes</emphasis> and <emphasis role="bold">-files</emphasis> arguments, the <emphasis role="bold">-allfiles</emphasis> argument, or all
+                three. If provided by itself, reports the current default store
+                asynchrony.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-help</emphasis></term>
+              <listitem>
+                <para>Prints the online help for this command. All other valid options are
+                ignored.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+        <refsect1>
+          <title>Output</title>
+          <para>If none of the command's options are included, or if only the <emphasis role="bold">-verbose</emphasis>
+          flag is included, the following message reports the default store
+          asynchrony (the setting that applies to all files manipulated by
+          applications running on the local machine and for which not more specific
+          asynchrony is set).</para>
+
+<programlisting>
+   Default store asynchrony is &amp;lt;x&amp;gt; kbytes.
+
+</programlisting>
+            <para>A value of <computeroutput>0</computeroutput> (zero) indicates synchronous writes and is the default if
+            no one has included the <emphasis role="bold">-allfiles</emphasis> argument on this command since the
+            machine last rebooted.</para>
+
+            <para>If the <emphasis role="bold">-files</emphasis> argument is provided without the <emphasis role="bold">-kbytes</emphasis> argument, the
+            output reports the value that applies to each specified file along with
+            the default store asynchrony. If a particular value has previously been
+            set for a file, the following message reports it:</para>
+
+<programlisting>
+   Will store up to &amp;lt;y&amp;gt; kbytes of &amp;lt;file&amp;gt; asynchronously.
+   Default store asynchrony is &amp;lt;x&amp;gt; kbytes.
+
+</programlisting>
+              <para>If the default store asynchrony applies to a file because no explicit
+              <emphasis role="bold">-kbytes</emphasis> value has been set for it, the message is instead as follows:</para>
+
+<programlisting>
+   Will store &amp;lt;file&amp;gt; according to default.
+   Default store asynchrony is &amp;lt;x&amp;gt; kbytes.
+
+</programlisting>
+                <para>If the <emphasis role="bold">-verbose</emphasis> flag is combined with arguments that set values
+                (<emphasis role="bold">-files</emphasis> and <emphasis role="bold">-kbytes</emphasis>, or <emphasis role="bold">-allfiles</emphasis>, or all three), there is a
+                message that confirms immediately that the setting has taken effect. When
+                included without other arguments or flags, the <emphasis role="bold">-verbose</emphasis> flag reports
+                the default store asynchrony only.</para>
+
+              </refsect1>
+              <refsect1>
+                <title>Examples</title>
+                <para>The following command enables the Cache Manager to return control to the
+                application program that closed the file <replaceable>test.data</replaceable> when 100 kilobytes
+                still remain to be written to the File Server. The <emphasis role="bold">-verbose</emphasis> flag
+                produces output that confirms the new setting, and that the default store
+                asynchrony is zero.</para>
+
+<programlisting>
+   % fs storebehind -kbytes 100 -files test.data -verbose
+   Will store up to 100 kbytes of test.data asynchronously.
+   Default store asynchrony is 0 kbytes.
+
+</programlisting>
+                </refsect1>
+                <refsect1>
+                  <title>Privilege Required</title>
+                  <para>To include the <emphasis role="bold">-allfiles</emphasis> argument, the issuer must be logged in as the
+                  local superuser <computeroutput>root</computeroutput>.</para>
+
+                  <para>To include the <emphasis role="bold">-kbytes</emphasis> and <emphasis role="bold">-files</emphasis> arguments, the issuer must either
+                  be logged in as the local superuser <computeroutput>root</computeroutput> or have the <computeroutput>w</computeroutput> (write)
+                  permission on the ACL of each file's directory.</para>
+
+                  <para>To view the current settings (by including no arguments, the <emphasis role="bold">-file</emphasis>
+                  argument alone, or the <emphasis role="bold">-verbose</emphasis> argument alone), no privilege is
+                  required.</para>
+
+                </refsect1>
+                <refsect1>
+                  <title>See Also</title>
+                  <para><link linkend="afsd8">afsd(8)</link></para>
+
+                </refsect1>
+                <refsect1>
+                  <title>Copyright</title>
+                  <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                  <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                  converted from HTML to POD by software written by Chas Williams and Russ
+                  Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                </refsect1>
+              </refentry>

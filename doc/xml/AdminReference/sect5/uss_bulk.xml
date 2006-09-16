@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss_bulk5">
+  <refmeta>
+    <refentrytitle>uss_bulk</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss_bulk</refname>
+    <refpurpose>Provides instructions for the uss bulk command</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The uss bulk input file lists instructions for the <emphasis role="bold">uss</emphasis> command
+    interpreter to execute when running the <emphasis role="bold">uss bulk</emphasis> command. If the file
+    includes <computeroutput>add</computeroutput> instructions that reference a <emphasis role="bold">uss</emphasis> template file, then
+    the template file must also exist.</para>
+
+    <refsect2>
+      <title>Summary of Bulk Input File Instructions</title>
+      <para>The bulk input file can include the following instructions, each on its
+      own line. A more detailed description of each instruction's syntax follows
+      this list.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>add</term>
+          <listitem>
+            <para>Creates a user account. Equivalent to the <emphasis role="bold">uss add</emphasis> command.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>delete</term>
+          <listitem>
+            <para>Deletes a user account. Equivalent to the <emphasis role="bold">uss delete</emphasis> command.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>delvolume</term>
+          <listitem>
+            <para>Removes the volume and VLDB entry for each account referenced by a
+            <computeroutput>delete</computeroutput> instruction that follows this instruction in the bulk input
+            file.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>exec</term>
+          <listitem>
+            <para>Executes a command.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>savevolume</term>
+          <listitem>
+            <para>Preserves the volume and VLDB entry for each account referenced by a
+            <computeroutput>delete</computeroutput> instruction that follows this instruction in the bulk input
+            file.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect2>
+    <refsect2>
+      <title>The add Instruction for Creating an Account</title>
+      <para>The <computeroutput>add</computeroutput> instruction creates a user account. Each instance in the bulk
+      input file is equivalent in effect to a <emphasis role="bold">uss add</emphasis> command issued on the
+      command line. The order of the instruction's fields matches the order of
+      arguments to the <emphasis role="bold">uss add</emphasis> command, although some arguments do not have a
+      corresponding field. Like the <emphasis role="bold">uss add</emphasis> command's arguments, many of the
+      fields correspond to (provide a value for) a variable in the <emphasis role="bold">uss</emphasis>
+      template file, as indicated in the following description of each field.</para>
+
+      <para>The instruction's syntax is as follows. It appears on multiple lines here
+      only for the sake of legibility -- each <computeroutput>add</computeroutput> instruction must appear on
+      a single line in the bulk input file.</para>
+
+<programlisting>
+   add &amp;lt;username&amp;gt;[:&amp;lt;full_name&amp;gt;][:&amp;lt;password&amp;gt;][:&amp;lt;expires&amp;gt;]
+       [:&amp;lt;file_server&amp;gt;][:&amp;lt;partition&amp;gt;][:&amp;lt;mount_point&amp;gt;][:&amp;lt;uid&amp;gt;]
+       [:&amp;lt;var1&amp;gt;][:&amp;lt;var2&amp;gt;][:&amp;lt;var3&amp;gt;][:&amp;lt;var4&amp;gt;][:&amp;lt;var5&amp;gt;][:&amp;lt;var6&amp;gt;][:&amp;lt;var7&amp;gt;]
+       [:&amp;lt;var8&amp;gt;][:&amp;lt;var9&amp;gt;][:]
+
+</programlisting>
+        <para>To omit a value for a field (presumably because it is optional or the
+        template specifies a constant value for it), type nothing between the two
+        colons that surround it. After the last argument provided, end the line
+        with either a colon and carriage return, or a carriage return alone.</para>
+
+        <para>The meaning of, and acceptable values for, each field are as follows.</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>&lt;username&gt;</term>
+            <listitem>
+              <para>Names the user's Authentication Database and Protection Database
+              entries. It can include up to eight alphanumeric characters, but not the
+              <computeroutput>:</computeroutput> (colon), <computeroutput>.</computeroutput> (period), or <computeroutput>@</computeroutput> (at-sign) characters. Because it
+              becomes the username (the name under which a user logs in), it is best not
+              to include shell metacharacters and to obey the restrictions that many
+              operating systems impose on usernames (usually, to contain no more than
+              eight lowercase letters).</para>
+
+              <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-user</emphasis>. Corresponding
+              variable in the template file: $USER.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;full_name&gt;</term>
+            <listitem>
+              <para>Specifies the user's full name. Do not surround it with double quotes
+              (<computeroutput>""</computeroutput>), even if it contains spaces. If not provided, it defaults to the
+              username in the &lt;username&gt; field.</para>
+
+              <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-realname</emphasis>.
+              Corresponding variable in the template file: $NAME. Many operating systems
+              include a field for the full name in a user's entry in the local password
+              file (<replaceable>/etc/passwd</replaceable> or equivalent), and this variable can be used to pass
+              a value to be used in that field.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;password&gt;</term>
+            <listitem>
+              <para>Specifies the user's initial password. Although the AFS commands that
+              handle passwords accept strings of virtually unlimited length, it is best
+              to use a password of eight characters or less, which is the maximum length
+              that many applications and utilities accept. If not provided, this
+              argument defaults to the string <computeroutput>changeme</computeroutput>.</para>
+
+              <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-pass</emphasis>. Corresponding
+              variable in the template file: none.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;expires&gt;</term>
+            <listitem>
+              <para>Sets the number of days after a user's password is changed that it remains
+              valid. Provide an integer from the range <computeroutput>1</computeroutput> through <computeroutput>254</computeroutput> to specify
+              the number of days until expiration, or the value <computeroutput>0</computeroutput> to indicate that
+              the password never expires (the default).</para>
+
+              <para>When the password becomes invalid (expires), the user is unable to
+              authenticate, but has 30 more days in which to issue the <emphasis role="bold">kpasswd</emphasis>
+              command to change the password (after that, only an administrator can
+              change it).</para>
+
+              <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-pwexpires</emphasis>.
+              Corresponding variable in the template file: $PWEXPIRES.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;file_server&gt;</term>
+            <listitem>
+              <para>Names the file server machine on which to create the new user's volume. It
+              is best to provide a fully-qualified hostname (for example,
+              <computeroutput>fs1.abc.com</computeroutput>), but an abbreviated form is acceptable provided that the
+              cell's naming service is available to resolve it at the time the volume is
+              created.</para>
+
+              <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-server</emphasis>.
+              Corresponding variable in the template file: $SERVER.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;partition&gt;</term>
+            <listitem>
+              <para>Specifies the partition on which to create the user's volume; it must
+              reside on the file server machine named in the &lt;file_server&gt;
+              field. Identify the partition by its complete name (for example,
+              <replaceable>/vicepa</replaceable>, or use one of the following abbreviations:</para>
+
+<programlisting>
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+</programlisting>
+                <para>After <replaceable>/vicepz</replaceable> (for which the index is 25) comes</para>
+
+<programlisting>
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+</programlisting>
+                  <para>and so on through</para>
+
+<programlisting>
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+</programlisting>
+                    <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-partition</emphasis>.
+                    Corresponding variable in template: $PART.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;mount_point&gt;</term>
+                  <listitem>
+                    <para>Specifies the complete pathname for the user's home directory.</para>
+
+                    <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-mount</emphasis>.</para>
+
+                    <para>Corresponding variable in template: $MTPT, but in the template file's <computeroutput>V</computeroutput>
+                    instruction only. Occurrences of the $MTPT variable in template
+                    instructions that follow the <computeroutput>V</computeroutput> instruction take their value from the
+                    <computeroutput>V</computeroutput> instruction's &lt;mount_point&gt; field. Thus the value of this command
+                    line argument becomes the value for the $MTPT variable in instructions
+                    that follow the <computeroutput>V</computeroutput> instruction only if the string $MTPT appears alone in
+                    the <computeroutput>V</computeroutput> instruction's &lt;mount_point&gt; field.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;uid&gt;</term>
+                  <listitem>
+                    <para>Specifies a positive integer other than <computeroutput>0</computeroutput> (zero) to assign as the
+                    user's AFS UID. If this argument is omitted, the Protection Server assigns
+                    an AFS UID that is one greater than the current value of the <computeroutput>max user
+                    id</computeroutput> counter (use the <emphasis role="bold">pts listmax</emphasis> command to display the counter). If
+                    including this argument, first use the <emphasis role="bold">pts examine</emphasis> command to verify
+                    that no existing account already has the desired AFS UID; if one does, the
+                    account-creation process terminates with an error.</para>
+
+                    <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-uid</emphasis>. Corresponding
+                    variable in template: $UID.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;var1&gt; through &lt;var9&gt;</term>
+                  <listitem>
+                    <para>Specifies values for each of the number variables $1 through $9 that can
+                    appear in the template file. The number variables allow the administrator
+                    to provide values for variables other than the set defined by the <emphasis role="bold">uss</emphasis>
+                    command suite.</para>
+
+                    <para>Corresponding argument to the <emphasis role="bold">uss add</emphasis> command: <emphasis role="bold">-var</emphasis>. Corresponding
+                    variables in template: $1 through $9.</para>
+
+                    <para>If providing a value in any of the fields, then in every field that
+                    precedes it either provide an actual value or indicate an empty field by
+                    putting nothing between two colons. It is acceptable, but not necessary,
+                    to indicate empty fields by putting colons after the last field that
+                    contains an actual value.</para>
+
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </refsect2>
+            <refsect2>
+              <title>The delete Instruction for Deleting an Account</title>
+              <para>The <computeroutput>delete</computeroutput> instruction deletes a user account from the system. Each
+              instance in the bulk input file is equivalent in effect to a <emphasis role="bold">uss delete</emphasis>
+              command issued on the command line. The order of the instruction's fields
+              matches the order of arguments to the <emphasis role="bold">uss delete</emphasis> command:</para>
+
+<programlisting>
+   delete &amp;lt;username&amp;gt;:&amp;lt;mount_point&amp;gt;[:( savevolume | delvolume )][:]
+
+</programlisting>
+                <para>where</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term>&lt;username&gt;</term>
+                    <listitem>
+                      <para>Names the entry to delete from the Protection and Authentication
+                      Databases.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;mount_point&gt;</term>
+                    <listitem>
+                      <para>Specifies the complete pathname to the user's home directory, which is
+                      deleted from the filespace. By default, the volume mounted there is also
+                      deleted from the file server machine where it resides, as is its record
+                      from the Volume Location Database (VLDB). To prevent deletion, include the
+                      <computeroutput>savevolume</computeroutput> string in the instruction's third field, or precede this
+                      <computeroutput>delete</computeroutput> instruction with a <computeroutput>savevolume</computeroutput> instruction. Partial pathnames
+                      are interpreted relative to the current working directory.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>savevolume</term>
+                    <listitem>
+                      <para>Retains the volume on its file server machine, and the corresponding entry
+                      in the VLDB. Provide this value or <computeroutput>delvolume</computeroutput> in the third field, or
+                      omit both values to treat the volume according to the prevailing default,
+                      which is set by a preceding <computeroutput>savevolume</computeroutput> or <computeroutput>delvolume</computeroutput> instruction in
+                      the bulk input file.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>delvolume</term>
+                    <listitem>
+                      <para>Removes the volume from its file server machine, and the corresponding
+                      entry from the VLDB. Provide this value or <computeroutput>savevolume</computeroutput> in the third
+                      field, or omit both values to treat the volume according to the prevailing
+                      default, which is set by a preceding <computeroutput>savevolume</computeroutput> or <computeroutput>delvolume</computeroutput>
+                      instruction in the bulk input file.</para>
+
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+                <para>After the last argument provided, end the line with either a colon and
+                carriage return or a carriage return alone.</para>
+
+              </refsect2>
+              <refsect2>
+                <title>The exec Instruction for Executing a Command</title>
+                <para>The <computeroutput>exec</computeroutput> instruction executes the specified command, which can be a
+                UNIX shell script or command, a program, or an AFS command. The <emphasis role="bold">uss</emphasis>
+                command interpreter must have the necessary privileges in AFS and the
+                local file system; it assumes the AFS and local identities of the issuer
+                of the <emphasis role="bold">uss bulk</emphasis> command.</para>
+
+                <para>The instruction's syntax is as follows:</para>
+
+<programlisting>
+   exec &amp;lt;command&amp;gt;
+
+</programlisting>
+                </refsect2>
+                <refsect2>
+                  <title>The delvolume and savevolume Instructions</title>
+                  <para>The <computeroutput>savevolume</computeroutput> and <computeroutput>delvolume</computeroutput> instructions determine the default
+                  treatment of volumes referenced by the <computeroutput>delete</computeroutput> instructions that follow
+                  them in the bulk input file. Their syntax is as follows:</para>
+
+<programlisting>
+   savevolume
+   delvolume
+
+</programlisting>
+                    <para>The <computeroutput>savevolume</computeroutput> instruction prevents the removal of the volume and VLDB
+                    entry for all <computeroutput>delete</computeroutput> instruction that follow it in the bulk input file,
+                    and the <computeroutput>delvolume</computeroutput> instruction removes the volume and VLDB entry for all
+                    subsequent <computeroutput>delete</computeroutput> instructions.  Either setting persists until its
+                    opposite appears in the file, or until the end of the bulk file.</para>
+
+                    <para>If neither line appears in the bulk input file, the default is to remove
+                    the volume and the VLDB entry; <computeroutput>delete</computeroutput> instructions that appear before
+                    the first <computeroutput>savevolume</computeroutput> instruction are also subject to this default. If a
+                    <computeroutput>delete</computeroutput> instruction's third field specifies either <computeroutput>savevolume</computeroutput> or
+                    <computeroutput>delvolume</computeroutput>, that setting overrides the default.</para>
+
+                  </refsect2>
+                </refsect1>
+                <refsect1>
+                  <title>Examples</title>
+                  <para>The following example add instruction creates an authentication-only
+                  account. The user's initial password is <computeroutput>changeme</computeroutput> (the default).</para>
+
+<programlisting>
+   add anderson
+
+</programlisting>
+                    <para>The following example add instructions refer to the indicated <computeroutput>V</computeroutput>
+                    instruction in a template file (which must appear on a single line in the
+                    template file).</para>
+
+<programlisting>
+   add smith:John Smith:::fs1:a:::::marketing
+   add jones:Pat Jones:::fs3:c:::::finance
+   V user.$USER $SERVER.abc.com /vicep$PART 2000 \
+       /afs/abc.com/usr/$3/$USER $UID $USER all
+
+</programlisting>
+                      <para>The first add instruction creates an account called <computeroutput>smith</computeroutput> in the
+                      Protection and Authentication Databases, with an initial password
+                      <computeroutput>changeme</computeroutput> and a value for $UID provided by the Protection Server. The
+                      volume <computeroutput>user.smith</computeroutput> resides on partition <replaceable>/vicepa</replaceable> of file server
+                      machine <computeroutput>fs1.abc.com</computeroutput> and is mounted at
+                      <replaceable>/afs/abc.com/usr/marketing/smith</replaceable>. He owns his home directory and has
+                      all access permissions on its root directory's access control list
+                      (ACL). The account for <computeroutput>jones</computeroutput> is similar, except that the volume resides
+                      on partition <replaceable>/vicepc</replaceable> of file server machine <computeroutput>fs3.abc.com</computeroutput> and is
+                      mounted at <replaceable>/afs/abc.com/usr/finance/jones</replaceable>.</para>
+
+                      <para>Notice that the fields corresponding to the volume mount point, UID, $1
+                      variable, and $2 variable are empty (between <computeroutput>a</computeroutput> and <computeroutput>marketing</computeroutput> on the
+                      first example line), because their corresponding variables do not appear
+                      in the template file. The initial password field is also empty.</para>
+
+                      <para>The following add instructions are equivalent in effect to the preceding
+                      example, but explicitly indicate empty fields for all of the number
+                      variables that don't have a value:</para>
+
+<programlisting>
+   add smith:John Smith:::fs1:a:::::marketing::::::
+   add jones:Pat Jones:::fs3:c:::::finance::::::
+
+</programlisting>
+                        <para>The following example shows a complete bulk file containing a set of
+                        <computeroutput>delete</computeroutput> instructions combined with a <computeroutput>savevolume</computeroutput> instruction. Because
+                        the <computeroutput>delete</computeroutput> instruction for users <computeroutput>smith</computeroutput>, <computeroutput>pat</computeroutput>, and <computeroutput>rogers</computeroutput> appear
+                        before the <computeroutput>savevolume</computeroutput> instruction and the third field is blank in each,
+                        the corresponding home volumes are removed. The volume for user <computeroutput>terry</computeroutput>
+                        is retained because the default established by the <computeroutput>savevolume</computeroutput>
+                        instruction applies to it, but user <computeroutput>johnson</computeroutput>'s volume is removed because
+                        the third field of her <computeroutput>delete</computeroutput> instruction overrides the current
+                        default.</para>
+
+<programlisting>
+   delete smith:/afs/abc.com/usr/smith
+   delete pat:/afs/abc.com/usr/pat
+   delete rogers:/afs/abc.com/usr/rogers
+   savevolume
+   delete terry:/afs/abc.com/usr/terry
+   delete johnson:/afs/abc.com/usr/johnson:delvolume
+
+</programlisting>
+                          <para>The following example exec instruction appears between sets of <computeroutput>add</computeroutput> and
+                          <computeroutput>delete</computeroutput> instructions in a bulk input file.  A message appears in the
+                          command shell where the <emphasis role="bold">uss bulk</emphasis> command is issued, to indicate when
+                          the additions are finished and the deletions beginning.</para>
+
+<programlisting>
+   exec echo "Additions completed; beginning deletions..."
+
+</programlisting>
+                          </refsect1>
+                          <refsect1>
+                            <title>See Also</title>
+                            <para><link linkend="uss5">uss(5)</link>,
+                            <link linkend="uss_add8">uss_add(8)</link>,
+                            <link linkend="uss_bulk8">uss_bulk(8)</link>,
+                            <link linkend="uss_delete8">uss_delete(8)</link></para>
+
+                          </refsect1>
+                          <refsect1>
+                            <title>Copyright</title>
+                            <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                            <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                            converted from HTML to POD by software written by Chas Williams and Russ
+                            Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                          </refsect1>
+                        </refentry>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="salvage_lock5">
+  <refmeta>
+    <refentrytitle>salvage.lock</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>salvage.lock</refname>
+    <refpurpose>Prevents multiple simultaneous salvage operations on a partition</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>salvage.lock</replaceable> file guarantees that only one Salvager (<emphasis role="bold">salvager</emphasis>
+    process) runs at a time on a file server machine (the single process can
+    fork multiple subprocesses to salvage multiple partitions in parallel). As
+    the Salvager initializes, it creates the empty (zero-length) file in the
+    <replaceable>/usr/afs/local</replaceable> directory and invokes the <emphasis role="bold">flock</emphasis> system call on it. It
+    removes the file when it completes the salvage operation. Because the
+    Salvager must lock the file to run, only one Salvager can run at a time.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="salvager8">salvager(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

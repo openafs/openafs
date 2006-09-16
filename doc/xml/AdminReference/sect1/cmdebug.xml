@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="cmdebug1">
+  <refmeta>
+    <refentrytitle>cmdebug</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cmdebug</refname>
+    <refpurpose>Reports the status of a host Cache Manager</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">cmdebug</emphasis> <emphasis role="bold">-servers</emphasis> &lt;<emphasis>machine</emphasis>&gt; [<emphasis role="bold">-port</emphasis> &lt;<emphasis>IP port</emphasis>&gt;]
+        [<emphasis role="bold">-long</emphasis>] [<emphasis role="bold">-refcounts</emphasis>] [<emphasis role="bold">-callbacks</emphasis>] [<emphasis role="bold">-addrs</emphasis>] [<emphasis role="bold">-cache</emphasis>]</para>
+
+    <para><emphasis role="bold">cmdebug</emphasis> <emphasis role="bold">-s</emphasis> &lt;<emphasis>machine</emphasis>&gt; [<emphasis role="bold">-p</emphasis> &lt;<emphasis>IP port</emphasis>&gt;] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-r</emphasis>] [<emphasis role="bold">-c</emphasis>]
+        [<emphasis role="bold">-a</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">cmdebug</emphasis> command displays information about the Cache Manager and
+    client cache status on an AFS client machine.  By default, it displays all
+    locked cache entries, but other information can be requested via various
+    options.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>machine</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the client machine for which to display Cache Manager status.
+          Provide the machine's IP address in dotted decimal format, its fully
+          qualified host name (for example, <emphasis role="bold">fs1.abc.com</emphasis>), or the shortest
+          abbreviated form of its host name that distinguishes it from other
+          machines. Successful use of an abbreviated form depends on the
+          availability of a name resolution service (such as the Domain Name Service
+          or a local host table) at the time the command is issued.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-port</emphasis> &lt;<emphasis>IP port</emphasis>&gt;</term>
+        <listitem>
+          <para>Identifies the port on which to contact the Cache Manager.  By default,
+          the standard port 7001 is used, so this option is very rarely needed.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-long</emphasis></term>
+        <listitem>
+          <para>Reports on all lock statuses and all cache entries, rather than only
+          locked cache entries.  Do not use this option with <emphasis role="bold">-refcounts</emphasis>,
+          <emphasis role="bold">-callbacks</emphasis>, <emphasis role="bold">-addrs</emphasis>, or <emphasis role="bold">-cache</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-refcounts</emphasis></term>
+        <listitem>
+          <para>Reports only those cache entries with non-zero reference counts.  Do not
+          use this option with <emphasis role="bold">-long</emphasis>, <emphasis role="bold">-callbacks</emphasis>, <emphasis role="bold">-addrs</emphasis>, or <emphasis role="bold">-cache</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-callbacks</emphasis></term>
+        <listitem>
+          <para>Reports only those cache entries with callbacks.  Do not use this option
+          with <emphasis role="bold">-long</emphasis>, <emphasis role="bold">-refcounts</emphasis>, <emphasis role="bold">-addrs</emphasis>, or <emphasis role="bold">-cache</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-addrs</emphasis></term>
+        <listitem>
+          <para>Rather than showing any cache entries, displays the interfaces the Cache
+          Manager answers on, including their netmasks and MTUs.  This is useful for
+          analyzing clients that are multihomed and identifying problems with
+          netmasks or MTU settings.  Do not use this option with <emphasis role="bold">-long</emphasis>,
+          <emphasis role="bold">-refcounts</emphasis>, <emphasis role="bold">-callbacks</emphasis>, or <emphasis role="bold">-cache</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cache</emphasis></term>
+        <listitem>
+          <para>Rather than showing any cache entries, displays the cache configuration
+          for the client machine.  The information displayed is essentially the
+          information that can be configured via parameters to <emphasis role="bold">afsd</emphasis>.  Do not use
+          this option with <emphasis role="bold">-long</emphasis>, <emphasis role="bold">-refcounts</emphasis>, <emphasis role="bold">-callbacks</emphasis>, or <emphasis role="bold">-addrs</emphasis>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Examples</title>
+    <para>Displays all of the locked cache entries on <computeroutput>client1</computeroutput>:</para>
+
+<programlisting>
+    % cmdebug client1
+
+</programlisting>
+      <para>Displays the cache configuration for <computeroutput>client1.abc.com</computeroutput>:</para>
+
+<programlisting>
+    % cmdebug client1.abc.com -cache
+
+</programlisting>
+        <para>Displays all cache entries for <computeroutput>client2.abc.com</computeroutput>:</para>
+
+<programlisting>
+    % cmdebug client2.abc.com -long
+
+</programlisting>
+        </refsect1>
+        <refsect1>
+          <title>Privilege Required</title>
+          <para>None</para>
+
+        </refsect1>
+        <refsect1>
+          <title>See Also</title>
+          <para><link linkend="afsd8">afsd(8)</link></para>
+
+        </refsect1>
+        <refsect1>
+          <title>Copyright</title>
+          <para>Copyright 2005 Russ Allbery &lt;rra@stanford.edu&gt;</para>
+
+          <para>This documentation is covered by the IBM Public License Version 1.0.  This
+          man page was written by Russ Allbery for OpenAFS.</para>
+
+        </refsect1>
+      </refentry>

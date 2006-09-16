@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_dumpinfo8">
+  <refmeta>
+    <refentrytitle>backup dumpinfo</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup dumpinfo</refname>
+    <refpurpose>Displays a dump record from the Backup Database</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup dumpinfo</emphasis> [<emphasis role="bold">-ndumps</emphasis> &lt;<emphasis>number of dumps</emphasis>&gt;] [<emphasis role="bold">-id</emphasis> &lt;<emphasis>dump id</emphasis>&gt;]
+        [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-localauth</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup dumpi</emphasis> [<emphasis role="bold">-n</emphasis> &lt;<emphasis>no. of dumps</emphasis>&gt;] [-i &lt;<emphasis>dump id</emphasis>&gt;] [<emphasis role="bold">-v</emphasis>]
+        [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup dumpinfo</emphasis> command formats and displays the Backup Database
+    record for the specified dumps. To specify how many of the most recent
+    dumps to display, starting with the newest one and going back in time, use
+    the <emphasis role="bold">-ndumps</emphasis> argument. To display more detailed information about a
+    single dump, use the <emphasis role="bold">-id</emphasis> argument. To display the records for the 10
+    most recent dumps, omit both the <emphasis role="bold">-ndumps</emphasis> and <emphasis role="bold">-id</emphasis> arguments.</para>
+
+    <para>The <emphasis role="bold">-verbose</emphasis> flag produces very detailed information that is useful
+    mostly for debugging purposes. It can be combined only with the <emphasis role="bold">-id</emphasis>
+    argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-ndumps</emphasis> &lt;<emphasis>number of dumps</emphasis>&gt;</term>
+        <listitem>
+          <para>Displays the Backup Database record for each of the specified number of
+          dumps that were most recently performed. If the database contains fewer
+          dumps than are requested, the output includes the records for all existing
+          dumps. Do not combine this argument with the <emphasis role="bold">-id</emphasis> or <emphasis role="bold">-verbose</emphasis>
+          options; omit all options to display the records for the last 10 dumps.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-id</emphasis> &lt;<emphasis>dump id</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the dump ID number of a single dump for which to display the
+          Backup Database record. Precede the <emphasis>dump id</emphasis> value with the <emphasis role="bold">-id</emphasis>
+          switch; otherwise, the command interpreter interprets it as the value of
+          the <emphasis role="bold">-ndumps</emphasis> argument. Combine this argument with the <emphasis role="bold">-verbose</emphasis> flag,
+          but not with the <emphasis role="bold">-ndumps</emphasis> argument; omit all options to display the
+          records for the last 10 dumps.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-verbose</emphasis></term>
+        <listitem>
+          <para>Provides more detailed information about the dump specified with the
+          <emphasis role="bold">-id</emphasis> argument, which must be provided along with it. Do not combine this
+          flag with the <emphasis role="bold">-ndumps</emphasis> argument.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-localauth</emphasis></term>
+        <listitem>
+          <para>Constructs a server ticket using a key from the local
+          <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+          it to the Backup Server, Volume Server and VL Server during mutual
+          authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+          more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the cell in which to run the command. Do not combine this argument
+          with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If the <emphasis role="bold">-ndumps</emphasis> argument is provided, the output presents the following
+    information in table form, with a separate line for each dump:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>dumpid</term>
+        <listitem>
+          <para>The dump ID number.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>parentid</term>
+        <listitem>
+          <para>The dump ID number of the dump's parent dump. A value of <computeroutput>0</computeroutput> (zero)
+          identifies a full dump.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>lv</term>
+        <listitem>
+          <para>The depth in the dump hierarchy of the dump level used to create the
+          dump. A value of <computeroutput>0</computeroutput> (zero) identifies a full dump, in which case the
+          value in the <computeroutput>parentid</computeroutput> field is also <computeroutput>0</computeroutput>. A value of <computeroutput>1</computeroutput> or greater
+          indicates an incremental dump made at the corresponding level in the dump
+          hierarchy.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>created</term>
+        <listitem>
+          <para>The date and time at which the Backup System started the dump operation
+          that created the dump.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>nt</term>
+        <listitem>
+          <para>The number of tapes that contain the data in the dump. A value of <computeroutput>0</computeroutput>
+          (zero) indicates that the dump operation was terminated or failed. Use the
+          <emphasis role="bold">backup deletedump</emphasis> command to remove such entries.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>nvols</term>
+        <listitem>
+          <para>The number of volumes from which the dump includes data. If a volume spans
+          tapes, it is counted twice. A value of <computeroutput>0</computeroutput> (zero) indicates that the dump
+          operation was terminated or failed; the value in the <computeroutput>nt</computeroutput> field is also
+          <computeroutput>0</computeroutput> in this case.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>dump name</term>
+        <listitem>
+          <para>The dump name in the form</para>
+
+<programlisting>
+   &amp;lt;volume_set_name&amp;gt;.&amp;lt;dump_level_name&amp;gt; (&amp;lt;initial_dump_ID&amp;gt;)
+
+</programlisting>
+            <para>where &lt;volume_set_name&gt; is the name of the volume set, and
+            &lt;dump_level_name&gt; is the last element in the dump level pathname at which
+            the volume set was dumped.</para>
+
+            <para>The &lt;initial_dump_ID&gt;, if displayed, is the dump ID of the initial dump in
+            the dump set to which this dump belongs. If there is no value in
+            parentheses, the dump is the initial dump in a dump set that has no
+            appended dumps.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>If the <emphasis role="bold">-id</emphasis> argument is provided alone, the first line of output begins
+      with the string <computeroutput>Dump</computeroutput> and reports information for the entire dump in the
+      following fields:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>id</term>
+          <listitem>
+            <para>The dump ID number.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>level</term>
+          <listitem>
+            <para>The depth in the dump hierarchy of the dump level used to create the
+            dump. A value of <computeroutput>0</computeroutput> (zero) identifies a full dump. A value of <computeroutput>1</computeroutput> (one)
+            or greater indicates an incremental dump made at the specified level in
+            the dump hierarchy.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>volumes</term>
+          <listitem>
+            <para>The number of volumes for which the dump includes data.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>created</term>
+          <listitem>
+            <para>The date and time at which the dump operation began.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>If an XBSA server was the backup medium for the dump (rather than a tape
+      device or backup data file), the following line appears next:</para>
+
+<programlisting>
+   Backup Service: &amp;lt;XBSA_program&amp;gt;: Server: &amp;lt;hostname&amp;gt;
+
+</programlisting>
+        <para>where &lt;XBSA_program&gt; is the name of the XBSA-compliant program and
+        &lt;hostname&gt; is the name of the machine on which the program runs.</para>
+
+        <para>Next the output includes an entry for each tape that houses volume data
+        from the dump. Following the string <computeroutput>Tape</computeroutput>, the first two lines of each
+        entry report information about that tape in the following fields:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>name</term>
+            <listitem>
+              <para>The tape's permanent name if it has one, or its AFS tape name otherwise,
+              and its tape ID number in parentheses.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>nVolumes</term>
+            <listitem>
+              <para>The number of volumes for which this tape includes dump data.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>created</term>
+            <listitem>
+              <para>The date and time at which the Tape Coordinator began writing data to this
+              tape.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para>Following another blank line, the tape-specific information concludes with
+        a table that includes a line for each volume dump on the tape. The
+        information appears in columns with the following headings:</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>Pos</term>
+            <listitem>
+              <para>The relative position of each volume in this tape or file. On a tape, the
+              counter begins at position 2 (the tape label occupies position 1), and
+              increments by one for each volume. For volumes in a backup data file, the
+              position numbers start with 1 and do not usually increment only by one,
+              because each is the ordinal of the 16 KB offset in the file at which the
+              volume's data begins. The difference between the position numbers
+              therefore indicates how many 16 KB blocks each volume's data occupies. For
+              example, if the second volume is at position 5 and the third volume in the
+              list is at position 9, that means that the dump of the second volume
+              occupies 64 KB (four 16-KB blocks) of space in the file.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Clone time</term>
+            <listitem>
+              <para>For a backup or read-only volume, the time at which it was cloned from its
+              read/write source. For a Read/Write volume, it is the same as the dump
+              creation date reported on the first line of the output.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Nbytes</term>
+            <listitem>
+              <para>The number of bytes of data in the dump of the volume.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Volume</term>
+            <listitem>
+              <para>The volume name, complete with <computeroutput>.backup</computeroutput> or <computeroutput>.readonly</computeroutput> extension if
+              appropriate.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para>If both the <emphasis role="bold">-id</emphasis> and <emphasis role="bold">-verbose</emphasis> options are provided, the output is
+        divided into several sections:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The first section, headed by the underlined string <computeroutput>Dump</computeroutput>, includes
+            information about the entire dump. The fields labeled <computeroutput>id</computeroutput>, <computeroutput>level</computeroutput>,
+            <computeroutput>created</computeroutput>, and <computeroutput>nVolumes</computeroutput> report the same values (though in a different
+            order) as appear on the first line of output when the <emphasis role="bold">-id</emphasis> argument is
+            provided by itself.  Other fields of potential interest to the backup
+            operator are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>Group id</term>
+                <listitem>
+                  <para>The dump's <emphasis>group ID number</emphasis>, which is recorded in the dump's Backup
+                  Database record if the <computeroutput>GROUPID</computeroutput> instruction appears in the Tape
+                  Coordinator's <replaceable>/usr/afs/backup/CFG_</replaceable><emphasis>tcid</emphasis><replaceable></replaceable> file when the dump is
+                  created.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>maxTapes</term>
+                <listitem>
+                  <para>The number of tapes that contain the dump set to which this dump belongs.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>Start Tape Seq</term>
+                <listitem>
+                  <para>The ordinal of the tape on which this dump begins in the set of tapes that
+                  contain the dump set.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+          <listitem>
+            <para>For each tape that contains data from this dump, there follows a section
+            headed by the underlined string <computeroutput>Tape</computeroutput>. The fields labeled <computeroutput>name</computeroutput>,
+            <computeroutput>written</computeroutput>, and <computeroutput>nVolumes</computeroutput> report the same values (though in a different
+            order) as appear on the second and third lines of output when the <emphasis role="bold">-id</emphasis>
+            argument is provided by itself. Other fields of potential interest to the
+            backup operator are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>expires</term>
+                <listitem>
+                  <para>The date and time when this tape can be recycled, because all dumps it
+                  contains have expired.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>nMBytes Data and nBytes Data</term>
+                <listitem>
+                  <para>Summed together, these fields represent the total amount of dumped data
+                  actually from volumes (as opposed to labels, filemarks, and other
+                  markers).</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>KBytes Tape Used</term>
+                <listitem>
+                  <para>The number of kilobytes of tape (or disk space, for a backup data file)
+                  used to store the dump data. It is generally larger than the sum of the
+                  values in the <computeroutput>nMBytes Data</computeroutput> and <computeroutput>nBytes Data</computeroutput> fields, because it
+                  includes the space required for the label, file marks and other markers,
+                  and because the Backup System writes data at 16 KB offsets, even if the
+                  data in a given block doesn't fill the entire 16 KB.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+          <listitem>
+            <para>For each volume on a given tape, there follows a section headed by the
+            underlined string <computeroutput>Volume</computeroutput>. The fields labeled <computeroutput>name</computeroutput>, <computeroutput>position</computeroutput>,
+            <computeroutput>clone</computeroutput>, and <computeroutput>nBytes</computeroutput> report the same values (though in a different
+            order) as appear in the table that lists the volumes in each tape when the
+            <emphasis role="bold">-id</emphasis> argument is provided by itself. Other fields of potential interest
+            to the backup operator are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>id</term>
+                <listitem>
+                  <para>The volume ID.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>tape</term>
+                <listitem>
+                  <para>The name of the tape containing this volume data.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </itemizedlist>
+      </refsect1>
+      <refsect1>
+        <title>Examples</title>
+        <para>The following example displays information about the last five dumps:</para>
+
+<programlisting>
+   % backup dumpinfo -ndumps 5
+      dumpid   parentid lv created          nt nvols dump name
+   924424000          0 0  04/18/1999 04:26  1    22 usr.sun (924424000)
+   924685000  924424000 1  04/21/1999 04:56  1    62 usr.wed (924424000)
+   924773000  924424000 1  04/22/1999 05:23  1    46 usr.thu (924424000)
+   924860000  924424000 1  04/23/1999 05:33  1    58 usr.fri (924424000)
+   925033000          0 0  04/25/1999 05:36  2    73 sys.week
+
+</programlisting>
+          <para>The following example displays a more detailed record for a single dump.</para>
+
+<programlisting>
+   % backup dumpinfo -id 922097346
+   Dump: id 922097346, level 0, volumes 1, created Mon Mar 22 05:09:06 1999
+   Tape: name monday.user.backup (922097346)
+   nVolumes 1, created 03/22/1999 05:09
+    Pos       Clone time   Nbytes Volume
+      1 03/22/1999 04:43 27787914 user.pat.backup
+
+</programlisting>
+            <para>The following example displays even more detailed information about the
+            dump displayed in the previous example (dump ID 922097346). This example
+            includes only one exemplar of each type of section (<computeroutput>Dump</computeroutput>, <computeroutput>Tape</computeroutput>, and
+            <computeroutput>Volume</computeroutput>):</para>
+
+<programlisting>
+   % backup dumpinfo -id 922097346 -verbose
+   Dump
+   ----
+   id = 922097346
+   Initial id = 0
+   Appended id = 922099568
+   parent = 0
+   level = 0
+   flags = 0x0
+   volumeSet = user
+   dump path = /monday1
+   name = user.monday1
+   created = Mon Mar 22 05:09:06 1999
+   nVolumes = 1
+   id  = 0
+   tapeServer =
+   format= user.monday1.%d
+   maxTapes = 1
+   Start Tape Seq = 1
+   name = pat
+   instance =
+   cell =
+   Tape
+   ----
+   tape name = monday.user.backup
+   AFS tape name = user.monday1.1
+   flags = 0x20
+   written = Mon Mar 22 05:09:06 1999
+   expires = NEVER
+   kBytes Tape Used = 121
+   nMBytes Data = 0
+   nBytes  Data = 19092
+   nFiles = 0
+   nVolumes = 1
+   seq = 1
+   tapeid = 0
+   useCount = 1
+   dump = 922097346
+   Volume
+   ------
+   name = user.pat.backup
+   flags = 0x18
+   id = 536871640
+   server =
+   partition = 0
+   nFrags = 1
+   position = 2
+   clone = Mon Mar 22 04:43:06 1999
+   startByte = 0
+   nBytes = 19092
+   seq = 0
+   dump = 922097346
+   tape = user.monday1.1
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+              machine where the Backup Server is running, or must be logged onto a
+              server machine as the local superuser <computeroutput>root</computeroutput> if the <emphasis role="bold">-localauth</emphasis> flag is
+              included.</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="butc5">butc(5)</link>,
+              <link linkend="backup8">backup(8)</link>,
+              <link linkend="backup_deletedump8">backup_deletedump(8)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

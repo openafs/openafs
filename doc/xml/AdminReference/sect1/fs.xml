@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs1">
+  <refmeta>
+    <refentrytitle>fs</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs</refname>
+    <refpurpose>Introduction to the fs command suite</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The commands in the <emphasis role="bold">fs</emphasis> command suite constitute the main administrative
+    interface to the Cache Manager on an AFS client machine, which is
+    responsible for fetching AFS data from file server machines on behalf of
+    applications running on the client machine.</para>
+
+    <para>There are several categories of commands in the <emphasis role="bold">fs</emphasis> command suite:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Commands to set and report how the Cache Manager interacts with server
+        machines: <emphasis role="bold">fs checkservers</emphasis>, <emphasis role="bold">fs getcellstatus</emphasis>, <emphasis role="bold">fs getserverprefs</emphasis>,
+        <emphasis role="bold">fs listcells</emphasis>, <emphasis role="bold">fs newcell</emphasis>, <emphasis role="bold">fs setcell</emphasis>, <emphasis role="bold">fs setserverprefs</emphasis>, <emphasis role="bold">fs
+        sysname</emphasis>, and <emphasis role="bold">fs wscell</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer access control lists (ACLs): <emphasis role="bold">fs cleanacl</emphasis>, <emphasis role="bold">fs
+        copyacl</emphasis>, <emphasis role="bold">fs listacl</emphasis>, and <emphasis role="bold">fs setacl</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer server machines, volumes or partitions that house a
+        given file or directory: <emphasis role="bold">fs diskfree</emphasis>, <emphasis role="bold">fs examine</emphasis>, <emphasis role="bold">fs listquota</emphasis>,
+        <emphasis role="bold">fs quota</emphasis>, <emphasis role="bold">fs setquota</emphasis>, <emphasis role="bold">fs setvol</emphasis>, <emphasis role="bold">fs whereis</emphasis>, and <emphasis role="bold">fs
+        whichcell</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer the local client cache and related information:
+        <emphasis role="bold">fs checkvolumes</emphasis>, <emphasis role="bold">fs flush</emphasis>, <emphasis role="bold">fs flushvolume</emphasis>, <emphasis role="bold">fs getcacheparms</emphasis>,
+        and <emphasis role="bold">fs setcachesize</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to administer volume mount points: <emphasis role="bold">fs lsmount</emphasis>, <emphasis role="bold">fs mkmount</emphasis>,
+        and <emphasis role="bold">fs rmmount</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to control monitoring and tracing: <emphasis role="bold">fs debug</emphasis>, and <emphasis role="bold">fs
+        messages</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>A command to administer the Cache Manager's interaction with other
+        file systems: <emphasis role="bold">fs exportafs</emphasis>.</para>
+
+      </listitem>
+      <listitem>
+        <para>Commands to obtain help: <emphasis role="bold">fs apropos</emphasis> and <emphasis role="bold">fs help</emphasis>.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>The Cache Manager and the fs commands use and maintain the following
+    configuration files:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><replaceable>/usr/vice/etc/CellServDB</replaceable></term>
+        <listitem>
+          <para>Lists the database server machines in the local cell and any foreign cell
+          to which the administrator wishes to enable AFS access for users working
+          on the machine. The database server machines run the Authentication,
+          Backup, Protection and Volume Location (VL) Server processes, which
+          maintain databases of administrative information. For users to access a
+          cell, its <computeroutput>root.cell</computeroutput> volume must also be mounted in the local cell's AFS
+          file tree.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><replaceable>/usr/vice/etc/ThisCell</replaceable></term>
+        <listitem>
+          <para>Defines the machine's cell membership with respect to the AFS command
+          suites and Cache Manager access to AFS data.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><replaceable>/usr/vice/etc/cacheinfo</replaceable></term>
+        <listitem>
+          <para>Defines configuration parameters for the cache, including its size and
+          whether it is in memory or on disk.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>In addition, the Cache Manager automatically creates files on the cache
+    partition (by default, <replaceable>/usr/vice/cache</replaceable> for caching and tracking files
+    fetched from file server machines.</para>
+
+    <para>For more details, see the reference page for each file.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <para>The following flag is available on every command in the fs suite. The
+    reference page for each command also lists it, but it is described here in
+    greater detail.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints a command's online help message on the standard output stream. Do
+          not combine this flag with any of the command's other options; when it is
+          provided, the command interpreter ignores all other options, and only
+          prints the help message.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The privileges required for fs commands vary more than for other command
+    suites. Pay special attention to the PRIVILEGE REQUIRED section of each
+    command description.</para>
+
+    <para>The various types of necessary privilege include:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Having permissions on a directory's ACL. For example, creating and
+        removing mount points requires <computeroutput>a</computeroutput> (administer), <computeroutput>i</computeroutput> (insert), and <computeroutput>d</computeroutput>
+        (delete) permissions on the ACL of the directory in which the mount point
+        resides.</para>
+
+      </listitem>
+      <listitem>
+        <para>Being logged onto the machine as the local superuser <computeroutput>root</computeroutput>. This is
+        necessary when issuing commands that affect Cache Manager configuration.</para>
+
+      </listitem>
+      <listitem>
+        <para>Belonging to the system:administrators group in the Protection Database.</para>
+
+      </listitem>
+      <listitem>
+        <para>No privilege. Many <emphasis role="bold">fs</emphasis> commands simply list information.</para>
+
+      </listitem>
+    </itemizedlist>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="afs_cache5">afs_cache(5)</link>,
+    <link linkend="CellServDB5">CellServDB(5)</link>,
+    <link linkend="ThisCell5">ThisCell(5)</link>
+    <link linkend="cacheinfo5">cacheinfo(5)</link>,
+    <link linkend="fs_apropos1">fs_apropos(1)</link>,
+    <link linkend="fs_checkservers1">fs_checkservers(1)</link>,
+    <link linkend="fs_checkvolumes1">fs_checkvolumes(1)</link>,
+    <link linkend="fs_cleanacl1">fs_cleanacl(1)</link>,
+    <link linkend="fs_copyacl1">fs_copyacl(1)</link>,
+    <link linkend="fs_diskfree1">fs_diskfree(1)</link>,
+    <link linkend="fs_examine1">fs_examine(1)</link>,
+    <link linkend="fs_exportafs1">fs_exportafs(1)</link>,
+    <link linkend="fs_flush1">fs_flush(1)</link>,
+    <link linkend="fs_flushmount1">fs_flushmount(1)</link>,
+    <link linkend="fs_flushvolume1">fs_flushvolume(1)</link>,
+    <link linkend="fs_getcacheparms1">fs_getcacheparms(1)</link>,
+    <link linkend="fs_getcellstatus1">fs_getcellstatus(1)</link>,
+    <link linkend="fs_getclientaddrs1">fs_getclientaddrs(1)</link>,
+    <link linkend="fs_getserverprefs1">fs_getserverprefs(1)</link>,
+    <link linkend="fs_help1">fs_help(1)</link>,
+    <link linkend="fs_listacl1">fs_listacl(1)</link>,
+    <link linkend="fs_listcells1">fs_listcells(1)</link>,
+    <link linkend="fs_listquota1">fs_listquota(1)</link>,
+    <link linkend="fs_lsmount1">fs_lsmount(1)</link>,
+    <link linkend="fs_messages1">fs_messages(1)</link>,
+    <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+    <link linkend="fs_newcell1">fs_newcell(1)</link>,
+    <link linkend="fs_quota1">fs_quota(1)</link>,
+    <link linkend="fs_rmmount1">fs_rmmount(1)</link>,
+    <link linkend="fs_setacl1">fs_setacl(1)</link>,
+    <link linkend="fs_setcachesize1">fs_setcachesize(1)</link>,
+    <link linkend="fs_setcell1">fs_setcell(1)</link>,
+    <link linkend="fs_setclientaddrs1">fs_setclientaddrs(1)</link>,
+    <link linkend="fs_setquota1">fs_setquota(1)</link>,
+    <link linkend="fs_setserverprefs1">fs_setserverprefs(1)</link>,
+    <link linkend="fs_setvol1">fs_setvol(1)</link>,
+    <link linkend="fs_storebehind1">fs_storebehind(1)</link>,
+    <link linkend="fs_sysname1">fs_sysname(1)</link>,
+    <link linkend="fs_whereis1">fs_whereis(1)</link>,
+    <link linkend="fs_whichcell1">fs_whichcell(1)</link>,
+    <link linkend="fs_wscell1">fs_wscell(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

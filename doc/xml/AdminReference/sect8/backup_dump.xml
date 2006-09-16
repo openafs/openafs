@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="backup_dump8">
+  <refmeta>
+    <refentrytitle>backup dump</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>backup dump</refname>
+    <refpurpose>Creates a dump (dumps a volume set at a particular dump level)</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">backup dump</emphasis> [<emphasis role="bold">-volumeset</emphasis> &lt;<emphasis>volume set name</emphasis>&gt;]
+        [<emphasis role="bold">-dump</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;] [<emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;]
+        [<emphasis role="bold">-at</emphasis> &lt;<emphasis>date/time to start dump</emphasis>&gt;+] [<emphasis role="bold">-append</emphasis>] [<emphasis role="bold">-n</emphasis>]
+        [<emphasis role="bold">-file</emphasis> &lt;<emphasis>load file</emphasis>&gt;] [<emphasis role="bold">-localauth</emphasis>] [-<emphasis role="bold">cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">backup dump</emphasis> [<emphasis role="bold">-v</emphasis> &lt;<emphasis>volume set name</emphasis>&gt;] [<emphasis role="bold">-d</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;]
+        [<emphasis role="bold">-p</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;] [<emphasis role="bold">-at</emphasis> &lt;<emphasis>Date/time to start dump</emphasis>&gt;+]
+        [<emphasis role="bold">-ap</emphasis>] [<emphasis role="bold">-n</emphasis>] [<emphasis role="bold">-f</emphasis> &lt;<emphasis>load file</emphasis>&gt;] [<emphasis role="bold">-l</emphasis>] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">backup dump</emphasis> command either dumps the volume set specified by the
+    <emphasis role="bold">-volumeset</emphasis> argument at the dump level specified by the <emphasis role="bold">-dump</emphasis>
+    argument and creates a Backup Database dump record about it, or executes
+    the dump instructions listed in the file named by the <emphasis role="bold">-file</emphasis>
+    argument. The Tape Coordinator indicated by the <emphasis role="bold">-portoffset</emphasis> argument
+    (or on each command in the file) executes the operation.</para>
+
+    <para>(If the <computeroutput>FILE YES</computeroutput> instruction appears in the
+    <replaceable>/usr/afs/backup/CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file on the Tape Coordinator machine
+    associated with the specified port offset, then the Backup System dumps
+    data to the backup data file listed for that port offset in the Tape
+    Coordinator's <replaceable>/usr/afs/backup/tapeconfig</replaceable> file, rather than to tape. For
+    the sake of clarity, the following text refers to tapes only, but the
+    Backup System handles backup data files in much the same way.)</para>
+
+    <para>The term <emphasis>dumping</emphasis> refers to copying a collection of data to tape or a
+    backup data file, and the resulting collection is termed a <emphasis>dump</emphasis>. The
+    set of tapes that contain one or more dumps is called a <emphasis>dump set</emphasis>. The
+    first dump in a dump set is its <emphasis>initial dump</emphasis>, and any dumps
+    subsequently added to the dump set (by use of the <emphasis role="bold">-append</emphasis> argument) are
+    <emphasis>appended dumps</emphasis>.  Creating appended dumps is optional, and appended
+    dumps can be of different volume sets, and at different dump levels, than
+    the initial dump.</para>
+
+    <para>A <emphasis>full dump</emphasis>, created at a full dump level in the dump hierarchy,
+    contains all of the data that existed at the time of the dump in the
+    volumes belonging to the volume set. An <emphasis>incremental dump</emphasis>, created at an
+    incremental dump level, contains only data that has changed since the
+    volume set was dumped at the incremental level's <emphasis>parent dump level</emphasis> (the
+    dump level immediately above the incremental level in the hierarchy),
+    which can be a full or incremental level. More specifically, an
+    incremental dump includes only the files and directories that have
+    modification timestamps later than the <emphasis>clone date</emphasis> of the volume
+    included at the parent dump level. For backup and read-only volumes, the
+    clone date is the time at which the volume was cloned from its read/write
+    source before being included in the parent dump; for read/write volumes,
+    it represents the time at which the volume was locked for inclusion in the
+    parent dump. The clone date appears in the <emphasis>clone date</emphasis> field of the
+    output from the <emphasis role="bold">backup volinfo</emphasis> command. As an example, an incremental
+    dump at the <computeroutput>/full/week1/thursday</computeroutput> level includes only files and
+    directories that have changed since the volume set was dumped at the
+    <computeroutput>/full/week1</computeroutput> level.</para>
+
+    <refsect2>
+      <title>Initiating different types of dump operations</title>
+      <para>To initiate a dump operation that is to start as soon as the relevant Tape
+      Coordinator is available, provide only the <emphasis role="bold">-volumeset</emphasis>, <emphasis role="bold">-dump</emphasis>,
+      <emphasis role="bold">-portoffset</emphasis>, and optionally <emphasis role="bold">-append</emphasis> options. To schedule a single
+      <emphasis role="bold">backup dump</emphasis> command to execute in the future, also include the <emphasis role="bold">-at</emphasis>
+      argument to specify the start time.</para>
+
+      <para>To append a dump to an existing dump set, include the <emphasis role="bold">-append</emphasis> flag. The
+      Backup System imposes the following conditions on appended dumps:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>If writing to tape, the Tape Coordinator checks that it is the final one
+          in a dump set for which there are complete and valid tape and dump records
+          in the Backup Database. If not, it rejects the tape and requests an
+          acceptable one. The operator can use the <emphasis role="bold">-dbadd</emphasis> argument to the
+          <emphasis role="bold">backup scantape</emphasis> command to insert the necessary records into the
+          database.</para>
+
+        </listitem>
+        <listitem>
+          <para>The most recent dump on the tape or in the backup data file must have
+          completed successfully.</para>
+
+        </listitem>
+        <listitem>
+          <para>The dump set must begin with an initial dump that is recorded in the
+          Backup Database. If there are no dumps on the tape, then the Backup System
+          treats the dump operation as an initial dump and imposes the relevant
+          requirements (for example, checks the AFS tape name if appropriate).</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>To schedule multiple dump operations, list the operations in the file
+      named by the <emphasis role="bold">-file</emphasis> argument. Optionally include the <emphasis role="bold">-at</emphasis> argument to
+      specify when the <emphasis role="bold">backup</emphasis> command interpreter reads the file; otherwise
+      it reads it immediately. Do not combine the <emphasis role="bold">-file</emphasis> argument with the
+      command's first three arguments or the <emphasis role="bold">-append</emphasis> or <emphasis role="bold">-n</emphasis> flags. The
+      commands in the file can include any of the <emphasis role="bold">backup dump</emphasis> command's
+      arguments, including the <emphasis role="bold">-at</emphasis> argument to schedule them to run even
+      later in the future.</para>
+
+      <para>To generate a list of the volumes included in a dump, without actually
+      dumping them, combine the <emphasis role="bold">-n</emphasis> flag with the options to be used on the
+      actual command.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>How the Backup System executes a dump operation</title>
+      <para>Before beginning a dump operation, the Backup System verifies that there
+      is a Backup Database entry for the volume set, dump level, and port
+      offset. If the command is correctly formed and issued in interactive mode,
+      it is assigned a job number and added to the jobs list. List jobs in
+      interactive mode by using the <emphasis role="bold">backup jobs</emphasis> command; terminate them with
+      the <emphasis role="bold">backup kill</emphasis> command.</para>
+
+      <para>After obtaining the list of volumes to dump from the Volume Location (VL)
+      Server, the Backup System sorts the list by site (server and
+      partition). It groups volumes from the same site together in the dump to
+      minimize the number of times the operator must change tapes during restore
+      operations.</para>
+
+      <para>The dependence of an incremental dump on its parent means that a valid
+      parent dump must already exist for the Backup System to create its child
+      incremental dump. If the Backup System does not find a record of a dump
+      created at the immediate parent dump level, it looks in the Backup
+      Database for a dump created at one level higher in the hierarchy, and so
+      on, up to the full dump level if necessary. It creates an incremental dump
+      at the level one below the lowest valid parent dump set that it finds. If
+      it fails to find even a full dump, it dumps the volume set at the full
+      dump level.</para>
+
+      <para>If the Backup System is unable to access a volume during a dump operation,
+      it skips the volume and dumps the remaining volumes from the volume
+      set. Possible reasons a volume is inaccessible include server machine or
+      process outages, or that the volume was moved between the time the Volume
+      Location (VL) Server generated the list of sites for the volume in the
+      volume set and the time the Backup System actually attempts to dump the
+      data in it. After the first dumping pass, the Backup System attempts to
+      dump each volume it skipped. If it still cannot dump a volume and the
+      <computeroutput>ASK NO</computeroutput> instruction does not appear in the <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file,
+      it queries the operator as to whether it needs to attempt to dump the
+      volume again, omit the volume from the dump, or halt the dump operation
+      altogether. When prompted, the operator can attempt to solve whatever
+      problem prevented the Backup System from accessing the volumes. If the
+      <computeroutput>ASK NO</computeroutput> instruction appears in the <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file, the
+      Backup System omits the volume from the dump.</para>
+
+      <para>Before scheduling a dump operation, the Backup System verifies that the
+      date specified by the <emphasis role="bold">-at</emphasis> argument is in the future, and checks the
+      validity of the volume set, dump level and port offset as for a regular
+      dump operation. It checks the validity of the parameters again just before
+      actually running the scheduled operation.</para>
+
+      <para>Before writing an initial dump to a tape that does not have a permanent
+      name on the label, the Backup System checks that the AFS tape name on the
+      label is acceptable. If desired, disable name checking by including the
+      <computeroutput>NAME_CHECK NO</computeroutput> instruction in the <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file.</para>
+
+      <para>If AFS tape name checking is enabled, the Backup System accepts the
+      following three types of values for the AFS tape name. If the name on the
+      label does not conform, the Backup System obtains a tape with an
+      acceptable label by invoking the <computeroutput>MOUNT</computeroutput> instruction in the
+      <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file or prompting the operator.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>A name of the form <emphasis>volume_set_name.dump_level_name.tape_index</emphasis>, where
+          <emphasis>volume_set_name</emphasis> matches the value of the <emphasis role="bold">-volumeset</emphasis> argument,
+          <emphasis>dump_level_name</emphasis> matches the last element in the pathname value of the
+          <emphasis role="bold">-dump</emphasis> argument, and <emphasis>tape_index</emphasis> reflects the tape's place in a
+          multitape dump set. As an example, the first tape in a dump set for which
+          the initial dump is of volume set <computeroutput>user</computeroutput> at the dump level
+          <computeroutput>/sunday2/monday</computeroutput> has AFS tape name <computeroutput>user.monday.1</computeroutput>. If the label
+          records this type of AFS tape name, the Backup System retains the AFS tape
+          name and writes the dump to the tape.</para>
+
+        </listitem>
+        <listitem>
+          <para>The string <computeroutput>&lt;NULL&gt;</computeroutput>, which usually indicates that a backup operator
+          has used the <emphasis role="bold">backup labeltape</emphasis> command to write a label on the tape, but
+          did not include the <emphasis role="bold">-name</emphasis> argument to assign an AFS tape
+          name. Presumably, the operator did include the <emphasis role="bold">-pname</emphasis> argument to
+          assign a permanent name. If the label records a <computeroutput>&lt;NULL&gt;</computeroutput> value, the
+          Backup System constructs and records on the label the appropriate AFS tape
+          name, and writes the dump on the tape.</para>
+
+        </listitem>
+        <listitem>
+          <para>No value at all, because the tape has never been labeled or used in the
+          Backup System. As when the AFS tape name is <computeroutput>&lt;NULL&gt;</computeroutput>, the Backup
+          System constructs and records on the label the appropriate AFS tape name,
+          and writes the dump on the tape.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>To determine how much data it can write to a tape, the Tape Coordinator
+      reads the capacity recorded on the tape's label (placed there by including
+      the <emphasis role="bold">-size</emphasis> argument to the <emphasis role="bold">backup labeltape</emphasis> command). If the label's
+      capacity field is empty, the Tape Coordinator uses the capacity recorded
+      for the specified port offset in the local <replaceable>tapeconfig</replaceable> file. If the
+      capacity field in the <replaceable>tapeconfig</replaceable> file is also empty, the Tape
+      Coordinator uses the maximum capacity of 2 TB.</para>
+
+      <para>During a dump operation, the Tape Coordinator tracks how much data it has
+      written and stops shortly before it reaches what it believes is the tape's
+      capacity. If it is in the middle of writing the data for a volume when it
+      reaches that point, it writes a special marker that indicates an
+      interrupted volume and continues writing the volume on the next tape. It
+      can split a volume this way during both an initial and an appended dump,
+      and the fact that the volume resides on multiple tapes is automatically
+      recorded in the Backup Database.</para>
+
+      <para>If the tape is actually larger than the expected capacity, then the Tape
+      Coordinator simply does not use the excess tape. If the tape is smaller
+      than the expected capacity, the Tape Coordinator can reach the end-of-tape
+      (EOT) unexpectedly while it is writing data. If the Tape Coordinator is in
+      the middle of the writing data from a volume, it obtains a new tape and
+      rewrites the entire contents of the interrupted volume to it. The data
+      from the volume that was written to the previous tape remains there, but
+      is never used.</para>
+
+      <para>The Backup System allows recycling of tapes (writing a new dump set over
+      an old dump set that is no longer needed), but imposes the following
+      conditions:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>All dumps in the old dump set must be expired. The Backup System always
+          checks expiration dates, even when name checking is disabled.</para>
+
+        </listitem>
+        <listitem>
+          <para>If the tape to be recycled does not have a permanent name and name
+          checking is enabled, then the AFS tape name derived from the new initial
+          dump's volume set name and dump level name must match the AFS tape name
+          already recorded on the label.</para>
+
+        </listitem>
+        <listitem>
+          <para>The tape cannot already have data on it that belongs to the dump currently
+          being performed, because that implies that the operator or automated tape
+          device has not removed the previous tape from the drive, or has mistakenly
+          reinserted it. The Tape Coordinator generates the following message and
+          attempts to obtain another tape:</para>
+
+<programlisting>
+   Can't overwrite tape containing the dump in progress
+
+</programlisting>
+          </listitem>
+          <listitem>
+            <para>The tape cannot contain data from a parent dump of the current
+            (incremental) dump, because overwriting a parent dump makes it impossible
+            to restore data from the current dump. The Tape Coordinator generates the
+            following message and attempts to obtain another tape:</para>
+
+<programlisting>
+   Can't overwrite the parent dump I&amp;lt;parent_name&amp;gt; (I&amp;lt;parent_dump_ID&amp;gt;)
+
+</programlisting>
+            </listitem>
+          </itemizedlist>
+          <para>To recycle a tape before all dumps on it have expired or if the AFS tape
+          name is wrong, use the <emphasis role="bold">backup labeltape</emphasis> command to overwrite the tape's
+          label and remove all associated tape and dump records from the Backup
+          Database.</para>
+
+          <para>The Tape Coordinator's default response to this command is to access the
+          first tape by invoking the <computeroutput>MOUNT</computeroutput> instruction in the
+          <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file, or by prompting the backup operator to insert
+          the tape if there is no <computeroutput>MOUNT</computeroutput> instruction.  However, if the <computeroutput>AUTOQUERY
+          NO</computeroutput> instruction appears in the <replaceable>CFG_</replaceable><emphasis>device_name</emphasis><replaceable></replaceable> file, or if the
+          issuer of the <emphasis role="bold">butc</emphasis> command included the <emphasis role="bold">-noautoquery</emphasis> flag, the Tape
+          Coordinator instead expects the tape to be in the device already. If it is
+          not, the Tape Coordinator invokes the <computeroutput>MOUNT</computeroutput> instruction or prompts the
+          operator. It also invokes the <computeroutput>MOUNT</computeroutput> instruction or prompts for any
+          additional tapes needed to complete the dump operation; the issuer must
+          arrange to provide them.</para>
+
+        </refsect2>
+      </refsect1>
+      <refsect1>
+        <title>Cautions</title>
+        <para>If a dump operation is interrupted or fails for any reason, data from all
+        volumes written to tape before the interrupt are valid can be used in a
+        restore operation. The Backup Database includes an entry for the failed
+        dump and for each volume that was successfully dumped. See the <emphasis>IBM AFS
+        Administration Guide</emphasis> for information on dealing with interrupted dumps.</para>
+
+        <para>If dumping to tape rather than a backup data file, it is best to use only
+        compatible tape devices (ones that can read the same type of tape).  Using
+        compatible devices greatly simplifies restore operations. The
+        <emphasis role="bold">-portoffset</emphasis> argument to the <emphasis role="bold">backup diskrestore</emphasis> and <emphasis role="bold">backup
+        volsetrestore</emphasis> commands accepts multiple port offset numbers, but the
+        Backup System uses the first listed port offset when restoring all full
+        dumps, the second port offset when restoring all level 1 dumps, and so
+        on. At the very least, use compatible tape devices to perform dumps at
+        each level. If compatible tape devices are not used, the <emphasis role="bold">backup
+        volrestore</emphasis> command must be used to restore one volume at a time.</para>
+
+        <para>Valid (unexpired) administrative tokens must be available to the <emphasis role="bold">backup</emphasis>
+        command interpreter both when it reads the file named by the <emphasis role="bold">-file</emphasis>
+        argument and when it runs each operation listed in the file. Presumably,
+        the issuer is scheduling dumps for times when no human operator is
+        present, and so must arrange for valid tokens to be available on the local
+        machine. One option is to issue all commands (or run all scripts) on file
+        server machines and use the <emphasis role="bold">-localauth</emphasis> flag on the <emphasis role="bold">backup</emphasis> and <emphasis role="bold">vos</emphasis>
+        commands. To protect against improper access to the machine or the tokens,
+        the machine must be physically secure (perhaps even more protected than a
+        Tape Coordinator machine monitored by a human operator during
+        operation). Also, if an unattended dump requires multiple tapes, the
+        operator must properly configure a tape stacker or jukebox and the device
+        configuration file.</para>
+
+        <para>When the command is issued in regular (non-interactive) mode, the command
+        shell prompt does not return until the dump operation completes. To avoid
+        having to open additional connections, issue the command in interactive
+        mode, especially when including the <emphasis role="bold">-at</emphasis> argument to schedule dump
+        operations.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>Options</title>
+        <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">-volumeset</emphasis> &lt;<emphasis>volume set name</emphasis>&gt;</term>
+            <listitem>
+              <para>Names the volume set to dump. The <emphasis role="bold">-dump</emphasis> argument must be provided along
+              with this one; do not combine them with the <emphasis role="bold">-file</emphasis> argument. If using a
+              temporary volume set, the <emphasis role="bold">vos dump</emphasis> command must be issued within the
+              interactive session in which the <emphasis role="bold">backup addvolset</emphasis> command was issued
+              with the <emphasis role="bold">-temporary</emphasis> flag.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-dump</emphasis> &lt;<emphasis>dump level name</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the complete pathname of the dump level at which to dump the
+              volume set. The <emphasis role="bold">-volumeset</emphasis> argument must be provided along with this
+              one; do not combine them with the <emphasis role="bold">-file</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the port offset number of the Tape Coordinator handling the
+              tapes for this operation. It must be provided unless the default value of
+              0 (zero) is appropriate; do not combine it with the <emphasis role="bold">-file</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-at</emphasis> &lt;<emphasis>date/time to start dump</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the date and time in the future at which to run the command, or
+              to read the file named by the <emphasis role="bold">-file</emphasis> argument. Provide a value in the
+              format <emphasis>mm/dd/yyyy</emphasis> [<emphasis>hh:MM</emphasis>], where the month (<emphasis>mm</emphasis>), day (<emphasis>dd</emphasis>), and
+              year (<emphasis>yyyy</emphasis>) are required. Valid values for the year range from <computeroutput>1970</computeroutput>
+              to <computeroutput>2037</computeroutput>; higher values are not valid because the latest possible date
+              in the standard UNIX representation is in February 2038. The Backup System
+              automatically reduces any later date to the maximum value.</para>
+
+              <para>The hour and minutes (<emphasis>hh:MM</emphasis>) are optional, but if provided must be in
+              24-hour format (for example, the value <computeroutput>14:36</computeroutput> represents 2:36 p.m.). If
+              omitted, the time defaults to midnight (00:00 hours).</para>
+
+              <para>As an example, the value 04/23/1999 20:20 schedules the command for 8:20
+              p.m. on 23 April 1999.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-append</emphasis></term>
+            <listitem>
+              <para>Appends the dump onto the end of a tape that already contains data from
+              another dump. However, if the tape is not in fact part of an existing dump
+              set, the Backup System creates a new dump set using the parameters of this
+              dump. If the tape is not the last tape in the dump set, the Tape
+              Coordinator prompts for insertion of the appropriate tape. Do not combine
+              this argument with the <emphasis role="bold">-file</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-n</emphasis></term>
+            <listitem>
+              <para>Displays the names of volumes to be included in the indicated dump,
+              without actually performing the dump operation. Do not combine this
+              argument with the <emphasis role="bold">-file</emphasis> argument.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">-file</emphasis> &lt;<emphasis>load file</emphasis>&gt;</term>
+            <listitem>
+              <para>Specifies the local disk or AFS pathname of a file containing <emphasis role="bold">backup</emphasis>
+              commands. The Backup System reads the file immediately, or at the time
+              specified by the <emphasis role="bold">-at</emphasis> argument if it is provided. A partial pathname is
+              interpreted relative to the current working directory.</para>
+
+              <para>Place each <emphasis role="bold">backup dump</emphasis> command on its own line in the indicated file,
+              using the same syntax as for the command line, but without the word
+              <emphasis role="bold">backup</emphasis> at the start of the line. Each command must include a value for
+              the <emphasis role="bold">-volumeset</emphasis> and <emphasis role="bold">-dump</emphasis> arguments, and for the <emphasis role="bold">-portoffset</emphasis>
+              argument unless the default value of 0 is appropriate. Commands in the
+              file can also include any of the <emphasis role="bold">backup dump</emphasis> command's optional
+              options. In the following example file, the first command runs as soon as
+              the Backup System reads the file, whereas the other commands are
+              themselves scheduled; the specified date and time must be later than the
+              date and time at which the Backup System reads the file.</para>
+
+<programlisting>
+   dump user /sunday1/wednesday -port 1
+   dump sun4x_56 /sunday1/friday -port 2 -at 04/08/1999
+   dump sun4x_55 /sunday1/friday -port 2 -at 04/08/1999 02:00 -append
+
+</programlisting>
+                <para>Do not combine this argument with the <emphasis role="bold">-volumeset</emphasis>, <emphasis role="bold">-dump</emphasis>,
+                <emphasis role="bold">-portoffset</emphasis>, <emphasis role="bold">-append</emphasis>, or <emphasis role="bold">-n</emphasis> options.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-localauth</emphasis></term>
+              <listitem>
+                <para>Constructs a server ticket using a key from the local
+                <replaceable>/usr/afs/etc/KeyFile</replaceable> file. The <emphasis role="bold">backup</emphasis> command interpreter presents
+                it to the Backup Server, Volume Server and VL Server during mutual
+                authentication. Do not combine this flag with the <emphasis role="bold">-cell</emphasis> argument. For
+                more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+              <listitem>
+                <para>Names the cell in which to run the command. Do not combine this argument
+                with the <emphasis role="bold">-localauth</emphasis> flag. For more details, see <link linkend="backup8">backup(8)</link>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-help</emphasis></term>
+              <listitem>
+                <para>Prints the online help for this command. All other valid options are
+                ignored.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+        <refsect1>
+          <title>Output</title>
+          <para>The command interpreter first generates a list of the volumes to be
+          included in the dump by matching the entries in the volume set against the
+          volumes listed in the Volume Location Database (VLDB). It prints the list
+          following the header:</para>
+
+<programlisting>
+   Preparing to dump the following volumes:
+
+</programlisting>
+            <para>The following message then indicates that the command interpreter has
+            passed the dump request to the appropriate Tape Coordinator for
+            processing:</para>
+
+<programlisting>
+   Starting dump.
+
+</programlisting>
+              <para>If the issuer includes the <emphasis role="bold">-n</emphasis> flag, the output is of the following
+              form:</para>
+
+<programlisting>
+   Starting dump of volume set '&amp;lt;volume set&amp;gt;' (dump set '&amp;lt;dump level&amp;gt;')
+   Total number of volumes : &amp;lt;number dumped&amp;gt;
+   Would have dumped the following volumes:
+   &amp;lt;list_of_volumes&amp;gt;
+
+</programlisting>
+                <para>where <emphasis>list_of_volumes</emphasis> identifies each volume by name and volume ID
+                number.</para>
+
+                <para>If the Tape Coordinator is unable to access a volume, it prints an error
+                message in its window and records the error in its log and error files.</para>
+
+              </refsect1>
+              <refsect1>
+                <title>Examples</title>
+                <para>The following command dumps the volumes in the volume set called <computeroutput>user</computeroutput>
+                at the dump level <computeroutput>/full/sunday2/monday</computeroutput>. The issuer places the necessary
+                tapes in the device with port offset 5.</para>
+
+<programlisting>
+   % backup dump -volumeset user -dump /full/sunday2/monday -portoffset 5
+   Preparing to dump the following volumes:
+   user.jones.backup   387623900
+   user.pat.backup     486219245
+   user.smith.backup   597315841
+          .                .
+          .                .
+   Starting dump.
+
+</programlisting>
+                  <para>The following command displays the list of volumes to be dumped when the
+                  user dumps the <computeroutput>sys_sun</computeroutput> volume set at the <computeroutput>/full</computeroutput> dump level.</para>
+
+<programlisting>
+   % backup dump -volumeset sys_sun -dump /full -n
+   Starting dump of volume set 'sys_sun' (dump set '/full')
+   Total number of volumes: 24
+   Would have dumped the following volumes:
+   sun4x_56      124857238
+   sun4x_56.bin  124857241
+       .            .
+       .            .
+   sun4x_55      124857997
+       .            .
+       .            .
+
+</programlisting>
+                    <para>The following command schedules a dump of the volumes in the volume set
+                    <computeroutput>user</computeroutput> at the dump level <computeroutput>/sunday2/monday1</computeroutput> for 11:00 p.m. on 14 June
+                    1999. The appropriate Tape Coordinator has port offset 0 (zero), so that
+                    argument is omitted.</para>
+
+<programlisting>
+   % backup dump -volumeset user -dump /sunday2/monday1 -at 06/14/1999 23:00
+
+</programlisting>
+                    </refsect1>
+                    <refsect1>
+                      <title>Privilege Required</title>
+                      <para>The issuer must be listed in the <replaceable>/usr/afs/etc/UserList</replaceable> file on every
+                      machine where the Backup Server or Volume Location (VL) Server is running,
+                      and on every file server machine that houses an affected volume. If the
+                      <emphasis role="bold">-localauth</emphasis> flag is included, the issuer must instead be logged on to a
+                      server machine as the local superuser <computeroutput>root</computeroutput>.</para>
+
+                    </refsect1>
+                    <refsect1>
+                      <title>See Also</title>
+                      <para><link linkend="butc5">butc(5)</link>,
+                      <link linkend="backup8">backup(8)</link>,
+                      <link linkend="backup_adddump8">backup_adddump(8)</link>,
+                      <link linkend="backup_addvolentry8">backup_addvolentry(8)</link>,
+                      <link linkend="backup_addvolset8">backup_addvolset(8)</link>,
+                      <link linkend="backup_diskrestore8">backup_diskrestore(8)</link>,
+                      <link linkend="backup_labeltape8">backup_labeltape(8)</link>,
+                      <link linkend="backup_volrestore8">backup_volrestore(8)</link>,
+                      <link linkend="butc8">butc(8)</link></para>
+
+                    </refsect1>
+                    <refsect1>
+                      <title>Copyright</title>
+                      <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                      <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                      converted from HTML to POD by software written by Chas Williams and Russ
+                      Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                    </refsect1>
+                  </refentry>

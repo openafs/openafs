@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_examine1">
+  <refmeta>
+    <refentrytitle>fs examine</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs examine</refname>
+    <refpurpose>Shows data about the volume containing a directory or file</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs examine</emphasis> [<emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs exa</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs listvol</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs listv</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+    <para><emphasis role="bold">fs lv</emphasis> [<emphasis role="bold">-p</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The fs examine command displays information about the volume containing
+    each specified directory or file, including its volume ID number, quota
+    and the percentage of its quota that is used.</para>
+
+    <para>This command provides the most information about a volume, but the <emphasis role="bold">fs
+    listquota</emphasis> command displays similar information in tabular format, and the
+    <emphasis role="bold">fs quota</emphasis> command reports only the percentage of quota used.</para>
+
+    <para>To set volume quota, use the <emphasis role="bold">fs setquota</emphasis> or <emphasis role="bold">fs setvol</emphasis> command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Cautions</title>
+    <para>The partition-related statistics in this command's output do not always
+    agree with the corresponding values in the output of the standard UNIX
+    <emphasis role="bold">df</emphasis> command. The statistics reported by this command can be up to five
+    minutes old, because the Cache Manager polls the File Server for partition
+    information at that frequency. Also, on some operating systems, the <emphasis role="bold">df</emphasis>
+    command's report of partition size includes reserved space not included in
+    this command's calculation, and so is likely to be about 10% larger.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-path</emphasis> &lt;<emphasis>dir/file path</emphasis>&gt;+</term>
+        <listitem>
+          <para>Names a file or directory that resides in the volume about which to
+          produce output. Partial pathnames are interpreted relative to the current
+          working directory, which is also the default value if this argument is
+          omitted.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output displays information about the volume that houses each
+    specified directory or file, in the following format</para>
+
+<programlisting>
+   Volume status for vid = I&amp;lt;volume ID&amp;gt; named I&amp;lt;volume name&amp;gt;
+   Current offline message is I&amp;lt;message&amp;gt;
+   Current disk quota is I&amp;lt;quota in kilobytes&amp;gt;
+   Current blocks used are I&amp;lt;volume size in kilobytes&amp;gt;
+   The partition has I&amp;lt;available partition&amp;gt; blocks available out of
+      I&amp;lt;partition size&amp;gt;
+
+</programlisting>
+      <para>where the first line specifies the volume's ID number and name.  The
+      <computeroutput>Current offline message</computeroutput> line appears only if an administrator has
+      included the <emphasis role="bold">-offlinemsg</emphasis> argument to the <emphasis role="bold">fs setvol</emphasis> command. The
+      remaining lines report, respectively,</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The volume's quota in kilobytes, or the string <computeroutput>unlimited</computeroutput> to indicate an
+          unlimited quota.</para>
+
+        </listitem>
+        <listitem>
+          <para>The volume's current size in kilobytes.</para>
+
+        </listitem>
+        <listitem>
+          <para>The number of blocks available and total size of the host partition, both
+          in kilobytes.</para>
+
+        </listitem>
+      </itemizedlist>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output for the volume <computeroutput>user.smith</computeroutput> and
+      the partition housing it:</para>
+
+<programlisting>
+   % fs examine -path /afs/abc.com/usr/smith
+   Volume status for vid = 50489902 named user.smith
+   Current maximum quota is 15000
+   Current blocks used are 5073
+   The partition has 336662 blocks available out of 4177920
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>The issuer must have the <computeroutput>l</computeroutput> (lookup) permission on the ACL of the root
+        directory of the volume that houses the file or directory named by the
+        <emphasis role="bold">-path</emphasis> argument, and on the ACL of each directory that precedes it in
+        the pathname.</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_listquota1">fs_listquota(1)</link>,
+        <link linkend="fs_quota1">fs_quota(1)</link>,
+        <link linkend="fs_setquota1">fs_setquota(1)</link>,
+        <link linkend="fs_setvol1">fs_setvol(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

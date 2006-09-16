@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="bdb_DB05">
+  <refmeta>
+    <refentrytitle>bdb.DB0, bdb.DBSYS1</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>bdb.DB0, bdb.DBSYS1</refname>
+    <refpurpose>Contain the Backup Database and associated log</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The <replaceable>bdb.DB0</replaceable> file contains the Backup Database, which records
+    configuration information used by the AFS Backup System along with
+    cross-indexed records of the tapes created and volumes dumped using the
+    Backup System commands.</para>
+
+    <para>The <replaceable>bdb.DBSYS1</replaceable> file is a log file in which the Backup Server
+    (<emphasis role="bold">buserver</emphasis> process) logs each database operation before performing
+    it. When an operation is interrupted, the Backup Server replays the log to
+    complete the operation.</para>
+
+    <para>Both files are in binary format and reside in the <replaceable>/usr/afs/db</replaceable> directory
+    on each database server machine that runs the Backup Server.  When the
+    Backup Server starts or restarts on a given machine, it establishes a
+    connection with its peers and verifies that its copy of the <replaceable>bdb.DB0</replaceable>
+    file matches the copy on the other database server machines. If not, the
+    Backup Servers use AFS's distributed database technology, Ubik, to
+    distribute to all of the machines the copy of the database with the
+    highest version number.</para>
+
+    <para>Use the commands in the backup suite to administer the Backup Database. It
+    is advisable to create a backup copy of the <replaceable>bdb.DB0</replaceable> file on tape on a
+    regular basis, using the UNIX <emphasis role="bold">tar</emphasis> command or another local disk backup
+    utility.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="backup8">backup(8)</link>,
+    <link linkend="backup_savedb8">backup_savedb(8)</link>,
+    <link linkend="buserver8">buserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

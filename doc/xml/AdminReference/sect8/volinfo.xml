@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="volinfo8">
+  <refmeta>
+    <refentrytitle>volinfo</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>volinfo</refname>
+    <refpurpose>Produces detailed statistics about AFS volume headers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">volinfo</emphasis> [<emphasis role="bold">-online</emphasis>] [<emphasis role="bold">-vnode</emphasis>] [<emphasis role="bold">-date</emphasis>] [<emphasis role="bold">-inode</emphasis>] [<emphasis role="bold">-itime</emphasis>]
+        [<emphasis role="bold">-part</emphasis> &lt;<emphasis>AFS partition name (default current partition)</emphasis>&gt;+]
+        [<emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id</emphasis>&gt;+] [<emphasis role="bold">-header</emphasis>] [<emphasis role="bold">-sizeOnly</emphasis>]
+        [<emphasis role="bold">-fixheader</emphasis>] [<emphasis role="bold">-saveinodes</emphasis>] [<emphasis role="bold">-orphaned</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">volinfo</emphasis> command displays detailed statistics about one or more
+    volume headers and the partition that houses them. The command must be
+    issued on a file server machine and by default produces output for every
+    volume on every AFS server partition on the machine. To display output for
+    the volumes on one partition only, include the <emphasis role="bold">-part</emphasis> argument. To
+    display output for one volume only, include the <emphasis role="bold">-volumeid</emphasis> argument.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-online</emphasis></term>
+        <listitem>
+          <para>Is nonoperational.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-vnode</emphasis></term>
+        <listitem>
+          <para>Displays a table for each volume which lists the large (directory) and
+          small (file) vnodes in it, in addition to the default output.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-date</emphasis></term>
+        <listitem>
+          <para>When combined with the <emphasis role="bold">-vnode</emphasis> flag, adds the <computeroutput>ServerModTime</computeroutput> field to
+          each vnode entry in the large vnode and small vnode tables, reporting its
+          most recent modification time.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-inode</emphasis></term>
+        <listitem>
+          <para>When combined with the <emphasis role="bold">-vnode</emphasis> flag, adds the <computeroutput>inode</computeroutput> field to each
+          vnode entry in the large vnode and small vnode tables, reporting the
+          associated inode number.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-itime</emphasis></term>
+        <listitem>
+          <para>When combined with the <emphasis role="bold">-vnode</emphasis> flag, displays a change, modification,
+          and access timestamp for each of the large vnode and small vnode tables.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-part</emphasis> &lt;<emphasis>partition name</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the partition that houses each volume for which to produce
+          output. Use the format <replaceable>/vicep</replaceable><emphasis>xx</emphasis><replaceable></replaceable>, where <emphasis>xx</emphasis> is one or two lowercase
+          letters. This argument can be omitted if the current working directory is
+          the mount location for an AFS server partition; it is not the mount
+          location for an AFS server partition, the command produces output for
+          every volume on all local AFS server partitions.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-volumeid</emphasis> &lt;<emphasis>volume id</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies the ID number of one volume for which to produce output.  The
+          <emphasis role="bold">-part</emphasis> argument must be provided along with this one unless the current
+          working directory is the mount location for the AFS server partition that
+          houses the volume.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-header</emphasis></term>
+        <listitem>
+          <para>Displays statistics about the volume header of each volume, in addition to
+          the default output.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-sizeOnly</emphasis></term>
+        <listitem>
+          <para>Displays a single line of output for each volume, reporting the size of
+          various structures associated with it. The default output is suppressed
+          and any flags that modify it (such as <emphasis role="bold">-vnode</emphasis>) are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-fixheader</emphasis></term>
+        <listitem>
+          <para>Repairs damaged inodes in each volume if possible. If there are any, it
+          reports the action it is taking to repair them. Otherwise, it produces no
+          output in addition to the default output.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-saveinodes</emphasis></term>
+        <listitem>
+          <para>Creates a file in the current working directory for each inode in each
+          volume. Each file is called <replaceable>TmpInode.</replaceable><emphasis>vnode_number</emphasis><replaceable></replaceable> and contains the
+          inode's contents. The default output is suppressed and any flags that
+          modify it (such as <emphasis role="bold">-vnode</emphasis>) are ignored.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-orphaned</emphasis></term>
+        <listitem>
+          <para>Displays a large vnode and small vnode table for each volume, which lists
+          only orphaned vnodes (vnodes that have no parent). If there are none, the
+          tables are empty (only the headers appear).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>By default, the command produces several line of statistics for each
+    volume. Adding other options produces or substitutes additional
+    information as described in <link linkend="OPTIONS">OPTIONS</link>.  The output is intended for
+    debugging purposes and is meaningful to someone familiar with the internal
+    structure of volume headers.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Privilege Required</title>
+    <para>The issuer must be logged in as the local superuser <computeroutput>root</computeroutput>.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="vldb_DB05">vldb.DB0(5)</link>,
+    <link linkend="volserver8">volserver(8)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

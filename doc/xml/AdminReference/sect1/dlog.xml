@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="dlog1">
+  <refmeta>
+    <refentrytitle>dlog</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>dlog</refname>
+    <refpurpose>Authenticates to the DCE Security Service</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">dlog</emphasis> [<emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;] [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-password</emphasis> &lt;<emphasis>user's password</emphasis>&gt;]
+        [<emphasis role="bold">-servers</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+]
+        [<emphasis role="bold">-lifetime</emphasis> &lt;<emphasis>ticket lifetime in hh[:mm[:ss]]</emphasis>&gt;]
+        [<emphasis role="bold">-setpag</emphasis>] [<emphasis role="bold">-pipe</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">dlog</emphasis> [<emphasis role="bold">-pr</emphasis> &lt;<emphasis>user name</emphasis>&gt;] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-pw</emphasis> &lt;<emphasis>user's password</emphasis>&gt;]
+        [<emphasis role="bold">-ser</emphasis> &lt;<emphasis>explicit list of servers</emphasis>&gt;+]
+        [<emphasis role="bold">-l</emphasis> &lt;<emphasis>ticket lifetime in hh[:mm[:ss]]</emphasis>&gt;]
+        [<emphasis role="bold">-set</emphasis>] [<emphasis role="bold">-pi</emphasis>] [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">dlog</emphasis> command obtains DCE credentials for the issuer from the DCE
+    Security Service in the cell named by the <emphasis role="bold">-cell</emphasis> argument, and stores
+    them on the AFS client machine on which the user issues the command. The
+    AFS/DFS Migration Toolkit Protocol Translator processes running on
+    machines in the DCE cell accept the credentials, which enables the user to
+    access the DCE cell's filespace from the AFS client. The user's identity
+    in the local file system is unchanged.</para>
+
+    <para>If the issuer does not provide the <emphasis role="bold">-principal</emphasis> argument, the <emphasis role="bold">dlog</emphasis>
+    command interpreter uses the user name under which the issuer is logged
+    into the local file system. Provide the DCE password for the appropriate
+    user name. As with the <emphasis role="bold">klog</emphasis> command, the password does not cross the
+    network in clear text (unless the issuer is logged into the AFS client
+    from a remote machine).</para>
+
+    <para>The credentials are valid for a lifetime equivalent to the smallest of the
+    following, all but the last of which is defined by the DCE cell's Security
+    Server:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The maximum certificate lifetime for the issuer's DCE account.</para>
+
+      </listitem>
+      <listitem>
+        <para>The maximum certificate lifetime for the AFS principal's DCE account.</para>
+
+      </listitem>
+      <listitem>
+        <para>The registry-wide maximum certificate lifetime.</para>
+
+      </listitem>
+      <listitem>
+        <para>The registry-wide default certificate lifetime.</para>
+
+      </listitem>
+      <listitem>
+        <para>The lifetime requested using the <emphasis role="bold">-lifetime</emphasis> argument.</para>
+
+      </listitem>
+    </itemizedlist>
+    <para>If the previous maximum certificate lifetime values are set to
+    <computeroutput>default-policy</computeroutput>, the maximum possible ticket lifetime is defined by the
+    default certificate lifetime. Refer to the DCE vendor's administration
+    guide for more information before setting any of these values.</para>
+
+    <para>The AFS Cache Manager stores the ticket in a credential structure
+    associated with the name of the issuer (or the user named by the
+    <emphasis role="bold">-principal</emphasis> argument. If the user already has a ticket for the DCE cell,
+    the ticket resulting from this command replaces it in the credential
+    structure.</para>
+
+    <para>The AFS tokens command displays the ticket obtained by the <emphasis role="bold">dlog</emphasis> command
+    for the server principal <computeroutput>afs</computeroutput>, regardless of the principal to which it
+    is actually granted. Note that the <emphasis role="bold">tokens</emphasis> command does not distinguish
+    tickets for a DFSTM File Server from tickets for an AFS File Server.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-principal</emphasis> &lt;<emphasis>user name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the DCE user name for which to obtain DCE credentials. If this
+          option is omitted, the <emphasis role="bold">dlog</emphasis> command interpreter uses the name under
+          which the issuer is logged into the local file system.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the DCE cell in which to authenticate. During a single login
+          session on a given machine, a user can authenticate in multiple cells
+          simultaneously, but can have only one ticket at a time for each cell (that
+          is, it is possible to authenticate under only one identity per cell per
+          machine). It is legal to abbreviate the cell name to the shortest form
+          that distinguishes it from the other cells listed in the
+          <replaceable>/usr/vice/etc/CellServDB</replaceable> file on the local client machine.</para>
+
+          <para>If the issuer does not provide the <emphasis role="bold">-cell</emphasis> argument, the <emphasis role="bold">dlog</emphasis> command
+          attempts to authenticate with the DCE Security Server for the cell defined
+          by</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>The value of the environment variable AFSCELL on the local AFS client
+              machine, if defined. The issuer can set the AFSCELL environment variable
+              to name the desired DCE cell.</para>
+
+            </listitem>
+            <listitem>
+              <para>The cell name in the <replaceable>/usr/vice/etc/ThisCell</replaceable> file on the local AFS
+              client machine. The machine's administrator can place the desired DCE
+              cell's name in the file.</para>
+
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-password</emphasis> &lt;<emphasis>user's password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the password for the issuer (or for the user named by the
+          <emphasis role="bold">-principal</emphasis> argument). Using this argument is not recommended, because
+          it makes the password visible on the command line.  If this argument is
+          omitted, the command prompts for the password and does not echo it
+          visibly.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-servers</emphasis> &lt;<emphasis>list of servers</emphasis>&gt;+</term>
+        <listitem>
+          <para>Specifies a list of DFS database server machines running the Translator
+          Server through which the AFS client machine can attempt to
+          authenticate. Specify each server by hostname, shortened machine name, or
+          IP address. If this argument is omitted, the <emphasis role="bold">dlog</emphasis> command interpreter
+          randomly selects a machine from the list of DFS Fileset Location (FL)
+          Servers in the <replaceable>/usr/vice/etc/CellServDB</replaceable> file for the DCE cell specified
+          by the <emphasis role="bold">-cell</emphasis> argument. This argument is useful for testing when
+          authentication seems to be failing on certain server machines.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-lifetime</emphasis> &lt;<emphasis>ticket lifetime</emphasis>&gt;</term>
+        <listitem>
+          <para>Requests a ticket lifetime using the format <emphasis>hh</emphasis><emphasis role="bold">:</emphasis><emphasis>mm</emphasis>[<emphasis role="bold">:</emphasis><emphasis>ss</emphasis>]
+          (hours, minutes, and optionally a number seconds between 00 and 59).  For
+          example, the value <computeroutput>168:30</computeroutput> requests a ticket lifetime of 7 days and 30
+          minutes, and <computeroutput>96:00</computeroutput> requests a lifetime of 4 days. Acceptable values
+          range from <computeroutput>00:05</computeroutput> (5 minutes) to <computeroutput>720:00</computeroutput> (30 days). If this argument
+          is not provided and no other determinants of ticket lifetime have been
+          changed from their defaults, ticket lifetime is 10 hours.</para>
+
+          <para>The requested lifetime must be smaller than any of the DCE cell's
+          determinants for ticket lifetime; see the discussion in the preceding
+          <emphasis role="bold">Description</emphasis> section.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-setpag</emphasis></term>
+        <listitem>
+          <para>Creates a process authentication group (PAG) in which the newly created
+          ticket is placed. If this flag is omitted, the ticket is instead
+          associated with the issuers' local user ID (UID).</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pipe</emphasis></term>
+        <listitem>
+          <para>Suppresses any prompts that the command interpreter otherwise produces,
+          including the prompt for the issuer's password. Instead, the command
+          interpreter accepts the password via the standard input stream.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>If the dlog command interpreter cannot contact a Translator
+    Server, it produces a message similar to the following:</para>
+
+<programlisting>
+   dlog: server or network not responding -- failed to contact
+   authentication service
+
+</programlisting>
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following command authenticates the issuer as cell_admin in the
+      <computeroutput>dce.abc.com</computeroutput> cell.</para>
+
+<programlisting>
+   % dlog -principal cell_admin -cell dce.abc.com
+   Password: &amp;lt;cell_admin's password&amp;gt;
+
+</programlisting>
+        <para>In the following example, the issuer authenticates as cell_admin to the
+        <computeroutput>dce.abc.com</computeroutput> cell and request a ticket lifetime of 100 hours. The
+        <emphasis role="bold">tokens</emphasis> command confirms that the user obtained DCE credentials as the
+        user <computeroutput>cell_admin</computeroutput>: the AFS ID is equivalent to the UNIX ID of <computeroutput>1</computeroutput>
+        assigned to <computeroutput>cell_admin</computeroutput> in <computeroutput>dce.abc.com</computeroutput> cell's DCE registry.</para>
+
+<programlisting>
+   % dlog -principal cell_admin -cell dce.abc.com -lifetime 100
+   Password: &amp;lt;cell_admin's password&amp;gt;
+
+</programlisting>
+<programlisting>
+   % tokens
+   Tokens held by the Cache Manager:
+
+</programlisting>
+<programlisting>
+   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
+   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
+
+</programlisting>
+<programlisting>
+      --End of list--
+
+</programlisting>
+              </refsect1>
+              <refsect1>
+                <title>Privilege Required</title>
+                <para>None</para>
+
+              </refsect1>
+              <refsect1>
+                <title>See Also</title>
+                <para><link linkend="dpass1">dpass(1)</link>,
+                <link linkend="klog1">klog(1)</link>,
+                <link linkend="tokens1">tokens(1)</link>,
+                <link linkend="unlog1">unlog(1)</link></para>
+
+              </refsect1>
+              <refsect1>
+                <title>Copyright</title>
+                <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                converted from HTML to POD by software written by Chas Williams and Russ
+                Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+              </refsect1>
+            </refentry>

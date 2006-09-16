@@ -1,0 +1,954 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="package5">
+  <refmeta>
+    <refentrytitle>package</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>package</refname>
+    <refpurpose>Provides instructions for the package command</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The package configuration file defines the file system elements that the
+    <emphasis role="bold">package</emphasis> command creates or alters on the local disk of an AFS client
+    machine it is configuring. Use the <emphasis role="bold">-config</emphasis> or <emphasis role="bold">-fullconfig</emphasis> argument
+    to the <emphasis role="bold">package</emphasis> command to identify the configuration file to use.</para>
+
+    <refsect2>
+      <title>Summary of Configuration File Instructions</title>
+      <para>The configuration file can include one or more instances of each of the
+      following instructions, each on its own line. A more detailed description
+      of each instruction's syntax follows this list.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>B</term>
+          <listitem>
+            <para>Defines a block special device, such as a disk, which deals with input in
+            units of multi-byte command blocks.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>C</term>
+          <listitem>
+            <para>Defines a character special device, such as a terminal or tty, which deals
+            with input in single character units.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>D</term>
+          <listitem>
+            <para>Creates a directory.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>F</term>
+          <listitem>
+            <para>Creates or alters a file to match the contents of a specified source file.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>L</term>
+          <listitem>
+            <para>Creates a symbolic link.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>S</term>
+          <listitem>
+            <para>Defines a socket, which is a communications device for UDP and TCP/IP
+            connections.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>%define</term>
+          <listitem>
+            <para>Defines a variable or declares a string as defined.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>%ifdef</term>
+          <listitem>
+            <para>Specifies an action to perform if a certain string is declared or defined.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>%ifndef</term>
+          <listitem>
+            <para>Specifies an action to perform if a certain string is not declared or
+            defined.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>%include</term>
+          <listitem>
+            <para>Includes a library file.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>%undef</term>
+          <listitem>
+            <para>Declares a string not to be defined, or a variable no longer to have a
+            value.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect2>
+    <refsect2>
+      <title>The B and C Instructions for Defining Special Devices</title>
+      <para>The <computeroutput>B</computeroutput> instruction in a package configuration file defines a block
+      special device, such as a disk, that deals with input in units of
+      multi-byte command blocks. The <computeroutput>C</computeroutput> instruction defines a character
+      special device, such as a terminal or tty, that deals with input in single
+      character units. They share a common syntax:</para>
+
+<programlisting>
+   (B | C) &amp;lt;device&amp;gt; &amp;lt;major&amp;gt; &amp;lt;minor&amp;gt; &amp;lt;owner&amp;gt; &amp;lt;group&amp;gt; &amp;lt;mode&amp;gt;
+
+</programlisting>
+        <para>where</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>B</term>
+            <listitem>
+              <para>Indicates the definition of a block special device. It must be a capital
+              letter.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>C</term>
+            <listitem>
+              <para>Indicates the definition of character special device. It must be a capital
+              letter.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;device&gt;</term>
+            <listitem>
+              <para>Names the special device to define. To learn the name format appropriate
+              to the machine's system type, consult the hardware or operating system
+              documentation.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;major&gt;</term>
+            <listitem>
+              <para>Specifies the device's major device number in decimal format.  To learn
+              the correct value for the machine's system type, consult the hardware or
+              operating system documentation.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;minor&gt;</term>
+            <listitem>
+              <para>Specifies the device's minor device number in one of hexadecimal, octal,
+              or decimal format. Precede a hexadecimal number with the string <computeroutput>0x</computeroutput>
+              (zero and the letter <computeroutput>x</computeroutput>) or an octal number with a <computeroutput>0</computeroutput> (zero). A number
+              without either prefix is interpreted as a decimal. To learn the correct
+              value for the machine's system type, consult the hardware or operating
+              system documentation.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;owner&gt;</term>
+            <listitem>
+              <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+              the device's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;group&gt;</term>
+            <listitem>
+              <para>Specifies the group name or UNIX group ID (GID) of the group to be
+              designated the device's group in the output from the UNIX <computeroutput>ls -lg</computeroutput>
+              command.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;mode&gt;</term>
+            <listitem>
+              <para>Defines the device's UNIX mode bits. Acceptable values are the standard
+              three- or four-digit numbers corresponding to combinations of
+              permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+              <computeroutput>rw-r--r--</computeroutput>.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect2>
+      <refsect2>
+        <title>The D Instruction for Creating a Directory</title>
+        <para>The <computeroutput>D</computeroutput> instruction in a package configuration file creates a directory
+        on the local disk. If a symbolic link, file, or other element on the local
+        disk has the same name, it is replaced with a directory. If the directory
+        already exists, its owner, group, and mode bits are changed if necessary
+        to conform with the instruction. The instruction has the following syntax:</para>
+
+<programlisting>
+   D[I&amp;lt;update_code&amp;gt;] &amp;lt;directory&amp;gt; &amp;lt;owner&amp;gt; &amp;lt;group&amp;gt; &amp;lt;mode&amp;gt;
+
+</programlisting>
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>D</term>
+              <listitem>
+                <para>Indicates the creation of a directory. It must be a capital letter.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;update_code&gt;</term>
+              <listitem>
+                <para>Modulates the directory creation instruction. It is optional and follows
+                the letter <computeroutput>D</computeroutput> directly, without an intervening space.  Choose one of the
+                two acceptable values:</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term>X</term>
+                    <listitem>
+                      <para>Indicates that the directory is a lost+found directory (used by the
+                      <emphasis role="bold">fsck</emphasis> program).</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>R</term>
+                    <listitem>
+                      <para>Removes any subdirectory (along its contents) or file that exists in the
+                      existing directory on the local disk but for which an instruction does not
+                      appear in the configuration file.</para>
+
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;directory&gt;</term>
+              <listitem>
+                <para>Specifies the full pathname of the directory to create.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;owner&gt;</term>
+              <listitem>
+                <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                the directory's owner in the output from the UNIX <computeroutput>ls -ld</computeroutput> command.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;group&gt;</term>
+              <listitem>
+                <para>Specifies the name or UNIX group ID (GID) of the group to be designated
+                the directory's group in the output from the UNIX <computeroutput>ls -lgd</computeroutput> command.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;mode&gt;</term>
+              <listitem>
+                <para>Defines the directory's UNIX mode bits. Acceptable values are the standard
+                three- or four-digit numbers corresponding to combinations of
+                permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>drwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                <computeroutput>drw-r--r--</computeroutput>.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect2>
+        <refsect2>
+          <title>The F Instruction for Creating or Updating a File</title>
+          <para>The <computeroutput>F</computeroutput> instruction in a package configuration file creates or updates a
+          file on the local disk by copying in the contents of the indicated source
+          file, which can reside in AFS or on the local disk. If the <emphasis role="bold">package</emphasis>
+          command interpreter cannot access the source file, it exits without
+          executing any instruction in the configuration file.</para>
+
+          <para>If a file with the same name already exists on disk, the package command
+          overwrites it with the contents of the source file, unless the <computeroutput>I</computeroutput> update
+          code is used to prevent that. To add a <computeroutput>.old</computeroutput> extension to the current
+          version of the file, include the <computeroutput>O</computeroutput> update code. To have the machine
+          reboot automatically after the <emphasis role="bold">package</emphasis> program completes, include the
+          <computeroutput>Q</computeroutput> update code.</para>
+
+          <para>If a symbolic link, directory, or other element on the local disk has the
+          same name, it is replaced with the file (a directory's contents are first
+          removed as necessary).</para>
+
+          <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   F[&amp;lt;update_code&amp;gt;] &amp;lt;file&amp;gt; &amp;lt;source&amp;gt; [&amp;lt;owner&amp;gt; &amp;lt;group&amp;gt; &amp;lt;mode&amp;gt;]
+
+</programlisting>
+            <para>where</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>F</term>
+                <listitem>
+                  <para>Indicates the creation or update of a file. It must be a capital letter.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;update_code&gt;</term>
+                <listitem>
+                  <para>Modulates the file creation instruction. It is optional and follows the
+                  letter <computeroutput>F</computeroutput> directly, without an intervening space. Choose one or more of
+                  the four acceptable values, and list them in any order:</para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term>A</term>
+                      <listitem>
+                        <para>Indicates that the pathname in the &lt;source&gt; field is the complete pathname
+                        of the source file, including the filename. If this argument is omitted,
+                        the <emphasis role="bold">package</emphasis> command appends the pathname in the &lt;file&gt; field to the
+                        pathname in the &lt;source&gt; field to derive the source file's full name. This
+                        code allows the source and target filenames to differ.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>I</term>
+                      <listitem>
+                        <para>Preserves the existing file called &lt;file&gt;, rather than overwriting it.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>O</term>
+                      <listitem>
+                        <para>Saves the existing version of the file by appending a <computeroutput>.old</computeroutput> extension to
+                        it.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>Q</term>
+                      <listitem>
+                        <para>Causes the package command to exit with status code <computeroutput>4</computeroutput> if it overwrites
+                        the file. If the standard <emphasis role="bold">package</emphasis>-related changes have been made to the
+                        machine's AFS initialization file, then status code <computeroutput>4</computeroutput> causes the
+                        machine to reboot automatically. Use this code when the machine must
+                        reboot if updates to the file are to have any effect (for example, if the
+                        operating system file -- <replaceable>/vmunix</replaceable> or equivalent -- has changed).</para>
+
+                      </listitem>
+                    </varlistentry>
+                  </variablelist>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;file&gt;</term>
+                <listitem>
+                  <para>Specifies the complete pathname on the local disk of the file to create or
+                  update, including the filename as the final element.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;source&gt;</term>
+                <listitem>
+                  <para>Specifies the pathname (local or AFS) of the file to copy to the local
+                  disk.</para>
+
+                  <para>If the <computeroutput>A</computeroutput> update code is included, specify the source file's complete
+                  pathname. Otherwise, the <emphasis role="bold">package</emphasis> command derives the source file's full
+                  name by appending the <emphasis>file</emphasis> pathname to this pathname. For example, if
+                  the <computeroutput>A</computeroutput> update code is not included and the file
+                  <replaceable>/afs/abc.com/rs_aix42/bin/grep</replaceable> is the source file for the <replaceable>/bin/grep</replaceable>
+                  binary, the proper value in this field is <replaceable>/afs/abc.com/rs_aix42</replaceable>.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;owner&gt;</term>
+                <listitem>
+                  <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                  the file's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command.</para>
+
+                  <para>To copy the source file's owner to the target file, leave this field
+                  empty. In this case, the &lt;group&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;group&gt;</term>
+                <listitem>
+                  <para>Specifies the name or UNIX group ID (GID) of the group to be designated
+                  the file's group in the output from the UNIX <computeroutput>ls -lg</computeroutput> command.</para>
+
+                  <para>To copy the source file's group to the target file, leave this field
+                  empty. In this case, the &lt;owner&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;mode&gt;</term>
+                <listitem>
+                  <para>Defines the file's UNIX mode bits. Acceptable values are the standard
+                  three- or four-digit numbers corresponding to combinations of
+                  permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                  <computeroutput>rw-r--r--</computeroutput>.</para>
+
+                  <para>To copy the source file's mode bits to the target file, leave this field
+                  empty. In this case, the &lt;owner&gt; and &lt;group&gt; fields must also be empty.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </refsect2>
+          <refsect2>
+            <title>The L Instruction for Creating a Symbolic Link</title>
+            <para>The <computeroutput>L</computeroutput> instruction in a package configuration file creates a symbolic
+            link on the local disk to a directory or file that exists either in AFS or
+            elsewhere on the local disk. As with the standard UNIX <computeroutput>ln -s</computeroutput> command,
+            the link is created even if the actual file or directory does not exist.</para>
+
+            <para>If a file or directory on the local disk already has the same name, the
+            <emphasis role="bold">package</emphasis> command replaces it with a symbolic link.</para>
+
+            <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   L[I&amp;lt;update_code&amp;gt;] &amp;lt;link&amp;gt; &amp;lt;path&amp;gt; [&amp;lt;owner&amp;gt; &amp;lt;group&amp;gt; &amp;lt;mode&amp;gt;]
+
+</programlisting>
+              <para>where</para>
+
+              <variablelist>
+                <varlistentry>
+                  <term>L</term>
+                  <listitem>
+                    <para>Indicates the creation of a symbolic link. It must be a capital letter.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;update_code&gt;</term>
+                  <listitem>
+                    <para>Modulates the link creation instruction. It is optional and follows the
+                    letter <computeroutput>L</computeroutput> directly, without an intervening space. Choose one or both of
+                    the acceptable values, and list them in any order:</para>
+
+                    <variablelist>
+                      <varlistentry>
+                        <term>A</term>
+                        <listitem>
+                          <para>Indicates that the pathname in the &lt;path&gt; field is the complete pathname
+                          of the actual directory or file (including the filename for a file). If
+                          this argument is omitted, the <emphasis role="bold">package</emphasis> command appends the value in the
+                          &lt;link&gt; field to the pathname in the &lt;path&gt; field to derive the actual
+                          directory or file's full name. This code allows the name of the symbolic
+                          link and actual directory or file to differ.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>I</term>
+                        <listitem>
+                          <para>Preserves the existing symbolic link called &lt;link&gt;, rather than
+                          overwriting it.</para>
+
+                        </listitem>
+                      </varlistentry>
+                    </variablelist>
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;link&gt;</term>
+                  <listitem>
+                    <para>Specifies the complete local disk pathname of the symbolic link to create.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;path&gt;</term>
+                  <listitem>
+                    <para>Specifies the pathname (local or AFS) of the directory or file to which
+                    the link refers. If the <computeroutput>A</computeroutput> update code is included, specify the
+                    directory or file's complete pathname. Otherwise, the <emphasis role="bold">package</emphasis> command
+                    derives the actual directory or file's full name by appending the value in
+                    the <emphasis>link</emphasis> field to this pathname. For example, if the <computeroutput>A</computeroutput> update code
+                    is not included and <replaceable>/etc/ftpd</replaceable> is a symbolic link to the file
+                    <replaceable>/afs/abc.com/sun4x_56/etc/ftpd</replaceable>, the proper value in this field is
+                    <replaceable>/afs/abc.com/sun4x_56</replaceable>.</para>
+
+                    <para>The package command interpreter correctly handles pathnames that begin
+                    with the <computeroutput>./</computeroutput> (period, slash) or <computeroutput>../</computeroutput> (two periods, slash) notation,
+                    interpreting them relative to the current working directory from which the
+                    <emphasis role="bold">package</emphasis> command is invoked.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;owner&gt;</term>
+                  <listitem>
+                    <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                    the symbolic link's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command.</para>
+
+                    <para>To designate the issuer of the package command (usually, the local
+                    superuser <computeroutput>root</computeroutput>) as the symbolic link's owner, leave this field
+                    empty. In this case, the &lt;group&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;group&gt;</term>
+                  <listitem>
+                    <para>Specifies the name or UNIX group ID (GID) of the group to be designated
+                    the link's group in the output from the UNIX <computeroutput>ls -lg</computeroutput> command.</para>
+
+                    <para>To have the symbolic link's group match the default group associated with
+                    the <emphasis role="bold">package</emphasis> command's issuer, leave this field empty. The issuer is
+                    usually the local superuser <computeroutput>root</computeroutput> and the default group is designated in
+                    the issuer's entry in the local <replaceable>/etc/passwd</replaceable> file or equivalent. If this
+                    field is left empty, the &lt;owner&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;mode&gt;</term>
+                  <listitem>
+                    <para>Defines the symbolic link's UNIX mode bits. Acceptable values are the
+                    standard three- or four-digit numbers corresponding to combinations of
+                    permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                    <computeroutput>rw-r--r--</computeroutput>.</para>
+
+                    <para>Leaving this field empty sets the symbolic link's mode bits to <computeroutput>777</computeroutput>
+                    (<computeroutput>rwxrwxrwx</computeroutput>). In this case, the &lt;owner&gt; and &lt;group&gt; fields must also be
+                    empty.</para>
+
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </refsect2>
+            <refsect2>
+              <title>The S Instruction for Creating a Socket</title>
+              <para>The <computeroutput>S</computeroutput> instruction in a package configuration file creates a socket (a
+              communications device for UDP or TCP/IP connections) on the local
+              disk. The instruction has the following syntax:</para>
+
+<programlisting>
+   S &amp;lt;socket&amp;gt; [&amp;lt;owner&amp;gt; &amp;lt;group&amp;gt; &amp;lt;mode&amp;gt;]
+
+</programlisting>
+                <para>where</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term>S</term>
+                    <listitem>
+                      <para>Indicates the creation of a socket. It must be a capital letter.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;socket&gt;</term>
+                    <listitem>
+                      <para>Names the socket. The proper format depends on the local machine's
+                      operating system.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;owner&gt;</term>
+                    <listitem>
+                      <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                      the socket's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command.</para>
+
+                      <para>To designate the issuer of the package command (usually, the local
+                      superuser <computeroutput>root</computeroutput>) as the socket's owner, leave this field empty. In this
+                      case, the &lt;group&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;group&gt;</term>
+                    <listitem>
+                      <para>Specifies the name or UNIX group ID (GID) of the group to be designated
+                      the socket's group in the output from the UNIX <computeroutput>ls -lg</computeroutput> command.</para>
+
+                      <para>To have the symbolic link's group match the default group associated with
+                      the <emphasis role="bold">package</emphasis> command's issuer, leave this field empty. The issuer is
+                      usually the local superuser <computeroutput>root</computeroutput> and the default group is designated in
+                      the issuer's entry in the local <replaceable>/etc/passwd</replaceable> file or equivalent. If this
+                      field is left empty, the &lt;owner&gt; and &lt;mode&gt; fields must also be empty.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;mode&gt;</term>
+                    <listitem>
+                      <para>Defines the socket's UNIX mode bits. Acceptable values are the standard
+                      three- or four-digit numbers corresponding to combinations of
+                      permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                      <computeroutput>rw-r--r--</computeroutput>.</para>
+
+                      <para>Leaving this field empty sets the symbolic link's mode bits to <computeroutput>777</computeroutput>
+                      (<computeroutput>rwxrwxrwx</computeroutput>), modulated by the cell's umask. In this case, the &lt;owner&gt;
+                      and &lt;group&gt; fields must also be empty.</para>
+
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+              </refsect2>
+              <refsect2>
+                <title>The %define or %undef Instructions</title>
+                <para>The <computeroutput>%define</computeroutput> instruction in a package configuration file declares or
+                defines a variable, depending on its number of arguments:</para>
+
+                <itemizedlist>
+                  <listitem>
+                    <para>If followed by a single argument, it declares that argument to be
+                    defined. The argument is then available as a controller when mentioned in
+                    <computeroutput>%ifdef</computeroutput> and <computeroutput>%ifndef</computeroutput> statements, which evaluate to <computeroutput>true</computeroutput> and
+                    <computeroutput>false</computeroutput> respectively.</para>
+
+                  </listitem>
+                  <listitem>
+                    <para>If followed by two arguments, it defines the second argument as the value
+                    of the first. When the first argument appears later in this prototype or
+                    other prototype or library files as a variable -- surrounded by curly
+                    braces and preceded by a dollar sign, as in the example <computeroutput>${variable}</computeroutput> --
+                    the <emphasis role="bold">package</emphasis> command interpreter substitutes the second argument for it.</para>
+
+                  </listitem>
+                </itemizedlist>
+                <para>The <computeroutput>%undef</computeroutput> statement negates the effect of a previous <computeroutput>%define</computeroutput>
+                statement, declaring its argument to be defined no longer, or to have a
+                value no longer if it is a variable.</para>
+
+                <para>The syntax for the two types of instruction are as follows:</para>
+
+<programlisting>
+   %define &amp;lt;declaration&amp;gt;
+   %define &amp;lt;variable&amp;gt; &amp;lt;value&amp;gt;
+   %undef  &amp;lt;declaration&amp;gt;
+   %undef  &amp;lt;variable&amp;gt;
+
+</programlisting>
+                  <para>where</para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term>%define</term>
+                      <listitem>
+                        <para>Indicates a definition statement.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>%undef</term>
+                      <listitem>
+                        <para>Indicates a statement that negates a definition.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>&lt;declaration&gt;</term>
+                      <listitem>
+                        <para>Names the string being declared by a <computeroutput>%define</computeroutput> statement, or
+                        negated by an <computeroutput>%undef</computeroutput> statement.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>&lt;variable&gt;</term>
+                      <listitem>
+                        <para>Specifies the name of the variable that a <computeroutput>%define</computeroutput> statement is
+                        defining, or an <computeroutput>%undef</computeroutput> statement is negating.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>&lt;value&gt;</term>
+                      <listitem>
+                        <para>Specifies the value to substitute for the string in the &lt;variable&gt; field
+                        when it appears in the appropriate format (surrounded by curly braces and
+                        preceded by a dollar sign, as in the example <computeroutput>${variable}</computeroutput>), in this or
+                        other prototype and library files. It can include one or more words.</para>
+
+                      </listitem>
+                    </varlistentry>
+                  </variablelist>
+                </refsect2>
+                <refsect2>
+                  <title>The %ifdef and %ifndef Instructions</title>
+                  <para>The <computeroutput>%ifdef</computeroutput> instruction in a package configuration file specifies one or
+                  more actions to perform if the indicated string has been declared by a
+                  single-argument <computeroutput>%define</computeroutput> statement, or is a variable for which a value
+                  has been defined by a two-argument <computeroutput>%define</computeroutput> statement.</para>
+
+                  <para>Similarly, the <computeroutput>%ifndef</computeroutput> instruction specifies one or more actions to
+                  perform if the indicated string has not been declared or is a variable
+                  without a value, either because no <computeroutput>%define</computeroutput> statement has defined it or
+                  an <computeroutput>%undef</computeroutput> statement has undefined it.</para>
+
+                  <para>In both cases, the optional <computeroutput>%else</computeroutput> statement specifies one or more
+                  alternate actions to perform if the first statement evaluates to
+                  <computeroutput>false</computeroutput>. (For an <computeroutput>%ifdef</computeroutput> statement, the <computeroutput>%else</computeroutput> statement is executed
+                  if the indicated string has never been declared or is a variable without a
+                  value, or if an <computeroutput>%undef</computeroutput> statement has undefined either one; for an
+                  <computeroutput>%ifndef</computeroutput> statement, it is executed if the string has been declared or is
+                  a variable with a value.)</para>
+
+                  <para>It is possible to nest any number of <computeroutput>%ifdef</computeroutput> and <computeroutput>%ifndef</computeroutput> statements.</para>
+
+                  <para>The two types of statement share a common syntax:</para>
+
+<programlisting>
+   (%ifdef | %ifndef) &amp;lt;declaration&amp;gt;
+       &amp;lt;action&amp;gt;+
+   [%else [&amp;lt;declaration&amp;gt;]
+       &amp;lt;alternate_action&amp;gt;+]
+   %endif &amp;lt;declaration&amp;gt;
+
+</programlisting>
+                    <para>where</para>
+
+                    <variablelist>
+                      <varlistentry>
+                        <term>%ifdef</term>
+                        <listitem>
+                          <para>Indicates that the statement evaluates as true if the string in the
+                          &lt;declaration&gt; field is declared or is a variable with a defined value.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>%ifndef</term>
+                        <listitem>
+                          <para>Indicates that the statement evaluates as true if the string in the
+                          &lt;declaration&gt; field is not declared or is a variable without a defined
+                          value.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;declaration&gt;</term>
+                        <listitem>
+                          <para>Specifies the string that must be declared or the variable name that must
+                          have a defined value for an <computeroutput>%ifdef</computeroutput> statement to evaluate as <computeroutput>true</computeroutput>,
+                          which results in the specified action being performed.  For an <computeroutput>%ifndef</computeroutput>
+                          statement, the string must not be declared or the variable must have no
+                          defined value for the statement to evaluate as <computeroutput>true</computeroutput>. The first and
+                          third occurrences of &lt;declaration&gt; (the latter following the string
+                          <computeroutput>%endif</computeroutput>) are required. The second occurrence (following the string
+                          <computeroutput>%else</computeroutput>) is optional, serving only to clarify to which <computeroutput>%ifdef</computeroutput> or
+                          <computeroutput>%ifndef</computeroutput> statement the <computeroutput>%else</computeroutput> statement belongs.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;action&gt;</term>
+                        <listitem>
+                          <para>Specifies each action to perform if the <computeroutput>%ifdef</computeroutput> or <computeroutput>%ifndef</computeroutput> statement
+                          evaluates as <computeroutput>true</computeroutput>. Each action must appear on a separate
+                          line. Acceptable types of actions are other statements beginning with a
+                          percent sign and definition instructions.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;alternate_action&gt;</term>
+                        <listitem>
+                          <para>Specifies each action to perform if the <computeroutput>%ifdef</computeroutput> or <computeroutput>%ifndef</computeroutput> statement
+                          evaluates to <computeroutput>false</computeroutput>. Each action must appear on a separate
+                          line. Acceptable types of actions are other statements beginning with a
+                          percent sign and definition instructions.</para>
+
+                        </listitem>
+                      </varlistentry>
+                    </variablelist>
+                  </refsect2>
+                  <refsect2>
+                    <title>The %include Instruction for Including a Library File</title>
+                    <para>The <computeroutput>%include</computeroutput> instruction in a package configuration file includes the
+                    contents of the indicated library file in a configuration file that
+                    results from the compilation of the prototype file in which the
+                    <computeroutput>%include</computeroutput> instruction appears. It has the following syntax:</para>
+
+<programlisting>
+   %include &amp;lt;pathname&amp;gt;
+
+</programlisting>
+                      <para>where</para>
+
+                      <variablelist>
+                        <varlistentry>
+                          <term>%include</term>
+                          <listitem>
+                            <para>Indicates a library file include statement.</para>
+
+                          </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                          <term>&lt;pathname&gt;</term>
+                          <listitem>
+                            <para>Specifies the complete pathname of the library file to include. It can be
+                            in AFS or on the local disk, and can include one or more variables.</para>
+
+                          </listitem>
+                        </varlistentry>
+                      </variablelist>
+                    </refsect2>
+                  </refsect1>
+                  <refsect1>
+                    <title>Cautions</title>
+                    <para>The configuration file must be completely correct. If there are any syntax
+                    errors or incorrect values, the <emphasis role="bold">package</emphasis> command interpreter exits
+                    without executing any instruction.</para>
+
+                  </refsect1>
+                  <refsect1>
+                    <title>Examples</title>
+                    <para>The following example <computeroutput>B</computeroutput> and <computeroutput>C</computeroutput> instructions define a disk
+                    <replaceable>/dev/hd0a</replaceable> with major and minor device numbers <computeroutput>1</computeroutput> and <computeroutput>0</computeroutput> and mode
+                    bits of <computeroutput>-rw-r--r--</computeroutput>, and a tty <replaceable>/dev/ttyp5</replaceable> with major and minor device
+                    numbers <computeroutput>6</computeroutput> and <computeroutput>5</computeroutput> and mode bits of <computeroutput>-rw-rw-rw</computeroutput>. In both cases, the
+                    owner is <computeroutput>root</computeroutput> and the owning group <computeroutput>wheel</computeroutput>.</para>
+
+<programlisting>
+   B /dev/hd0a 1 0 root wheel 644
+   C /dev/ttyp5 6 5 root wheel 666
+
+</programlisting>
+                      <para>The following example <computeroutput>D</computeroutput> instruction creates the local <replaceable>/usr</replaceable> directory
+                      with owner <computeroutput>root</computeroutput> and group <computeroutput>wheel</computeroutput> and mode bits of <computeroutput>drwxr-xr-x</computeroutput>. The
+                      <computeroutput>R</computeroutput> update code removes any files and subdirectories that reside in the
+                      <replaceable>/usr</replaceable> directory (if it already exists) but do not appear in the
+                      configuration file.</para>
+
+<programlisting>
+   DR /usr root wheel 755
+
+</programlisting>
+                        <para>The following example <computeroutput>F</computeroutput> instruction, appropriate for a machine running
+                        AIX 4.2 in the ABC Corporation cell, creates or updates the local disk
+                        file <replaceable>/bin/grep</replaceable>, using <replaceable>/afs/abc.com/rs_aix42/bin/grep</replaceable> as the source.</para>
+
+<programlisting>
+   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+
+</programlisting>
+                          <para>The next example <computeroutput>F</computeroutput> instruction creates the <replaceable>/usr/vice/etc/ThisCell</replaceable>
+                          file and specifies an absolute pathname for the source file, as indicated
+                          by the <computeroutput>A</computeroutput> update code. The <computeroutput>Q</computeroutput> code makes the <emphasis role="bold">package</emphasis> command return
+                          status code 4 as it exits, prompting a reboot of the machine if the
+                          standard <emphasis role="bold">package</emphasis>-related changes have been made to the machine's AFS
+                          initialization file. No values are provided for the owner, group and mode
+                          bits, so the file inherits them from the source file.</para>
+
+<programlisting>
+   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+
+</programlisting>
+                            <para>The following example <computeroutput>L</computeroutput> instruction, appropriate for a machine running
+                            AIX 4.2 in the ABC Corporation cell, creates a symbolic link from
+                            <replaceable>/etc/ftpd</replaceable> on the local disk to the file
+                            <replaceable>/afs/abc.com/rs_aix42/etc/ftpd</replaceable>.</para>
+
+<programlisting>
+   L /etc/ftpd /afs/abc.com/rs_aix42 root wheel 644
+
+</programlisting>
+                              <para>The following example S instruction defines the socket <replaceable>/dev/printer</replaceable>.</para>
+
+<programlisting>
+   S /dev/printer root wheel 777
+
+</programlisting>
+                                <para>The following example <computeroutput>%define</computeroutput> instruction defines the value for the
+                                variable <computeroutput>${diskmode}</computeroutput>. This variable is used elsewhere in the template
+                                to fill the &lt;owner&gt;, &lt;group&gt;, and &lt;mode&gt; fields in a <computeroutput>D</computeroutput>, <computeroutput>F</computeroutput>, or <computeroutput>L</computeroutput>
+                                instruction.</para>
+
+<programlisting>
+   %define diskmode root wheel 644
+
+</programlisting>
+                                  <para>The following example <computeroutput>%undef</computeroutput> instruction declares the string <emphasis role="bold">afsd</emphasis>
+                                  not to be defined.</para>
+
+<programlisting>
+   %undef afsd
+
+</programlisting>
+                                    <para>The following example <computeroutput>%ifdef</computeroutput> instruction specifies that if the string
+                                    <computeroutput>rs_aix42</computeroutput> is currently declared, then when the prototype file containing
+                                    the instruction is compiled the three indicated library files are
+                                    included. There is no alternate action defined. There must be <computeroutput>%define</computeroutput>
+                                    statements earlier in the prototype file to declare <computeroutput>rs_aix42</computeroutput> and to
+                                    assign a value to the <computeroutput>${wsadmin}</computeroutput> variable.</para>
+
+<programlisting>
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.generic
+   %include ${wsadmin}/lib/rs_aix42.generic.dev
+   %endif rs_aix42
+
+</programlisting>
+                                      <para>The following example <computeroutput>%ifndef</computeroutput> instruction, appropriate for the State
+                                      University cell, defines <computeroutput>stateu.edu</computeroutput> as the value of the <computeroutput>${cell}</computeroutput>
+                                      variable if it does not already have a value.</para>
+
+<programlisting>
+   %ifndef cell
+   %define cell stateu.edu
+   %endif cell
+
+</programlisting>
+                                        <para>The following example <computeroutput>%include</computeroutput> instruction includes the library file
+                                        <computeroutput>base.generic</computeroutput> from the <replaceable>lib</replaceable> subdirectory of the directory in which
+                                        <emphasis role="bold">package</emphasis>-related files reside. The <computeroutput>${wsadmin}</computeroutput> variable resolves to an
+                                        actual pathname (such as <replaceable>/afs/abc.com/wsadmin</replaceable>) during compilation.</para>
+
+<programlisting>
+   %include ${wsadmin}/lib/base.generic
+
+</programlisting>
+                                        </refsect1>
+                                        <refsect1>
+                                          <title>See Also</title>
+                                          <para><link linkend="package8">package(8)</link></para>
+
+                                        </refsect1>
+                                        <refsect1>
+                                          <title>Copyright</title>
+                                          <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                                          <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                                          converted from HTML to POD by software written by Chas Williams and Russ
+                                          Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                                        </refsect1>
+                                      </refentry>

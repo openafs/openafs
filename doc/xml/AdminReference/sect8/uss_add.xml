@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss_add8">
+  <refmeta>
+    <refentrytitle>uss add</refentrytitle>
+    <manvolnum>8</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss add</refname>
+    <refpurpose>Creates a user account</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">uss add</emphasis> <emphasis role="bold">-user</emphasis> &lt;<emphasis>login name</emphasis>&gt; [<emphasis role="bold">-realname</emphasis> &lt;<emphasis>full name in quotes</emphasis>&gt;]
+        [<emphasis role="bold">-pass</emphasis> &lt;<emphasis>initial password</emphasis>&gt;]
+        [<emphasis role="bold">-pwexpires</emphasis> &lt;<emphasis>password expires in [0..254] days (0 =&gt; never)</emphasis>&gt;]
+        [<emphasis role="bold">-server</emphasis> &lt;<emphasis>file server for home volume</emphasis>&gt;]
+        [<emphasis role="bold">-partition</emphasis> &lt;<emphasis>file server's disk partition for home volume</emphasis>&gt;]
+        [<emphasis role="bold">-mount</emphasis> &lt;<emphasis>home directory mount point</emphasis>&gt;]
+        [<emphasis role="bold">-uid</emphasis> &lt;<emphasis>uid to assign the user</emphasis>&gt;]
+        [<emphasis role="bold">-template</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;]
+        [<emphasis role="bold">-verbose</emphasis>] [<emphasis role="bold">-var</emphasis> &lt;<emphasis>auxiliary argument pairs (Num val)</emphasis>&gt;+]
+        [<emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;] [<emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;]
+        [<emphasis role="bold">-dryrun</emphasis>] [<emphasis role="bold">-skipauth</emphasis>] [<emphasis role="bold">-overwrite</emphasis>] [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">uss ad</emphasis> <emphasis role="bold">-us</emphasis> &lt;<emphasis>login name</emphasis>&gt; [<emphasis role="bold">-r</emphasis> &lt;<emphasis>full name in quotes</emphasis>&gt;]
+        [<emphasis role="bold">-pas</emphasis> &lt;<emphasis>initial password</emphasis>&gt;]
+        [<emphasis role="bold">-pw</emphasis> &lt;<emphasis>password expires in [0..254] days (0 =&gt; never)</emphasis>&gt;]
+        [<emphasis role="bold">-se</emphasis> &lt;<emphasis>FileServer for home volume</emphasis>&gt;]
+        [<emphasis role="bold">-par</emphasis> &lt;<emphasis>FileServer's disk partition for home volume</emphasis>&gt;]
+        [<emphasis role="bold">-m</emphasis> &lt;<emphasis>home directory mount point</emphasis>&gt;]
+        [<emphasis role="bold">-ui</emphasis> &lt;<emphasis>uid to assign the user</emphasis>&gt;]
+        [<emphasis role="bold">-t</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;] [<emphasis role="bold">-ve</emphasis>]
+        [<emphasis role="bold">-va</emphasis> &lt;<emphasis>auxiliary argument pairs (Num val)</emphasis>&gt;+] [<emphasis role="bold">-c</emphasis> &lt;<emphasis>cell name</emphasis>&gt;]
+        [<emphasis role="bold">-a</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;] [<emphasis role="bold">-d</emphasis>] [<emphasis role="bold">-sk</emphasis>] [<emphasis role="bold">-o</emphasis>]
+        [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">uss add</emphasis> command creates entries in the Protection Database and
+    Authentication Database for the user name specified by the <emphasis role="bold">-user</emphasis>
+    argument. By default, the Protection Server automatically allocates an AFS
+    user ID (UID) for the new user; to specify an alternate AFS UID, include
+    the <emphasis role="bold">-uid</emphasis> argument. If a password is provided with the <emphasis role="bold">-pass</emphasis>
+    argument, it is stored as the user's password in the Authentication
+    Database after conversion into a form suitable for use as an encryption
+    key. Otherwise, the string <computeroutput>changeme</computeroutput> is assigned as the user's initial
+    password.</para>
+
+    <para>The other results of the command depend on which instructions and which of
+    a defined set of variables appear in the template file specified with the
+    <emphasis role="bold">-template</emphasis> argument. Many of the command's arguments supply a value for
+    one of the defined variables, and failure to provide an argument when the
+    corresponding variable appears in the template file halts the account
+    creation process at the point where the command interpreter first
+    encounters the variable in the template file.</para>
+
+    <para>To create multiple accounts with a single command, use the <emphasis role="bold">uss bulk</emphasis>
+    command. To delete accounts with a single command, use the <emphasis role="bold">uss delete</emphasis>
+    command.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-user</emphasis> &lt;<emphasis>login name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the user's Authentication Database and Protection Database
+          entries. It can include up to eight alphanumeric characters, but not any
+          of the following characters: <computeroutput>:</computeroutput> (colon), <computeroutput>@</computeroutput> (at-sign), <computeroutput>.</computeroutput> (period),
+          space, or newline. Because it becomes the username (the name under which a
+          user logs in), it is best not to include shell metacharacters and to obey
+          the restrictions that many operating systems impose on usernames (usually,
+          to contain no more than eight lowercase letters).</para>
+
+          <para>Corresponding variable in the template file: $USER.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-realname</emphasis> &lt;<emphasis>full name in quotes</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user's full name. If it contains spaces or punctuation,
+          surround it with double quotes. If not provided, it defaults to the user
+          name provided with the <emphasis role="bold">-user</emphasis> argument.</para>
+
+          <para>Corresponding variable in the template file: $NAME. Many operating systems
+          include a field for the full name in a user's entry in the local password
+          file (<replaceable>/etc/passwd</replaceable> or equivalent), and this variable can be used to pass
+          a value to be used in that field.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pass</emphasis> &lt;<emphasis>initial password</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the user's initial password. Although the AFS commands that
+          handle passwords accept strings of virtually unlimited length, it is best
+          to use a password of eight characters or less, which is the maximum length
+          that many applications and utilities accept. If not provided, this
+          argument defaults to the string <computeroutput>changeme</computeroutput>.</para>
+
+          <para>Corresponding variable in the template file: none.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-pwexpires</emphasis> &lt;<emphasis>password expiration</emphasis>&gt;</term>
+        <listitem>
+          <para>Sets the number of days after a user's password is changed that it remains
+          valid. Provide an integer from the range <computeroutput>1</computeroutput> through <computeroutput>254</computeroutput> to specify
+          the number of days until expiration, or the value <computeroutput>0</computeroutput> to indicate that
+          the password never expires (the default).</para>
+
+          <para>When the password becomes invalid (expires), the user is unable to
+          authenticate, but has 30 more days in which to issue the <emphasis role="bold">kpasswd</emphasis>
+          command to change the password (after that, only an administrator can
+          change it).</para>
+
+          <para>Corresponding variable in the template file: $PWEXPIRES.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-server</emphasis> &lt;<emphasis>file server name</emphasis>&gt;</term>
+        <listitem>
+          <para>Names the file server machine on which to create the new user's volume. It
+          is best to provide a fully qualified hostname (for example,
+          <computeroutput>fs1.abc.com</computeroutput>), but an abbreviated form is acceptable provided that the
+          cell's naming service is available to resolve it at the time the volume is
+          created.</para>
+
+          <para>Corresponding variable in the template file: $SERVER.</para>
+
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><emphasis role="bold">-partition</emphasis> &lt;<emphasis>file server partition</emphasis>&gt;</term>
+        <listitem>
+          <para>Specifies the partition on which to create the user's volume; it must be
+          on the file server machine named by the <emphasis role="bold">-server</emphasis> argument. Provide the
+          complete partition name (for example <replaceable>/vicepa</replaceable>) or one of the following
+          abbreviated forms:</para>
+
+<programlisting>
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+</programlisting>
+            <para>After <replaceable>/vicepz</replaceable> (for which the index is 25) comes</para>
+
+<programlisting>
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+</programlisting>
+              <para>and so on through</para>
+
+<programlisting>
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+</programlisting>
+                <para>Corresponding variable in the template file: $PART.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-mount</emphasis> &lt;<emphasis>home directory mount point</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the pathname for the user's home directory. Partial pathnames
+                are interpreted relative to the current working directory.</para>
+
+                <para>Specify the read/write path to the directory, to avoid the failure that
+                results from attempting to create a new mount point in a read-only
+                volume. By convention, the read/write path is indicated by placing a
+                period before the cell name at the pathname's second level (for example,
+                <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+                read-only paths through the filespace, see the <emphasis role="bold">fs mkmount</emphasis> reference
+                page.</para>
+
+                <para>Corresponding variable in template: $MTPT, but in the template file's <computeroutput>V</computeroutput>
+                instruction only. Occurrences of the $MTPT variable in template
+                instructions that follow the <computeroutput>V</computeroutput> instruction take their value from the
+                <computeroutput>V</computeroutput> instruction's <emphasis>mount_point</emphasis> field. Thus the value of this command
+                line argument becomes the value for the $MTPT variable in instructions
+                that follow the <computeroutput>V</computeroutput> instruction only if the string $MTPT appears alone in
+                the <computeroutput>V</computeroutput> instruction's <emphasis>mount_point</emphasis> field.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-uid</emphasis> &lt;<emphasis>uid to assign the user</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies a positive integer other than 0 (zero) to assign as the user's
+                AFS UID. If this argument is omitted, the Protection Server assigns an AFS
+                UID that is one greater than the current value of the <computeroutput>max user id</computeroutput>
+                counter (use the <emphasis role="bold">pts listmax</emphasis> command to display the counter). If
+                including this argument, it is best first to use the <emphasis role="bold">pts examine</emphasis>
+                command to verify that no existing account already has the desired AFS
+                UID; it one does, the account creation process terminates with an error.</para>
+
+                <para>Corresponding variable in the template file: $UID.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-template</emphasis> &lt;<emphasis>pathname of template file</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the pathname of the template file. If this argument is omitted,
+                the command interpreter searches the following directories in the
+                indicated order for a file called <computeroutput>uss.template</computeroutput>:</para>
+
+                <itemizedlist>
+                  <listitem>
+                    <para>The current working directory.</para>
+
+                  </listitem>
+                  <listitem>
+                    <para><replaceable>/afs/</replaceable><emphasis>cellname</emphasis><replaceable>/common/uss</replaceable>, where <emphasis>cellname</emphasis> names the local cell.</para>
+
+                  </listitem>
+                  <listitem>
+                    <para><replaceable>/etc</replaceable></para>
+
+                  </listitem>
+                </itemizedlist>
+                <para>If the issuer provides a filename other than <computeroutput>uss.template</computeroutput> but without a
+                pathname, the command interpreter searches for it in the indicated
+                directories. If the issuer provides a full or partial pathname, the
+                command interpreter consults the specified file only; it interprets
+                partial pathnames relative to the current working directory.</para>
+
+                <para>If the specified template file is empty (zero-length), the command creates
+                Protection and Authentication Database entries only.</para>
+
+                <para><link linkend="uss5">uss(5)</link> details the file's format.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-verbose</emphasis></term>
+              <listitem>
+                <para>Produces on the standard output stream a detailed trace of the command's
+                execution. If this argument is omitted, only warnings and error messages
+                appear.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-var</emphasis> &lt;<emphasis>auxilliary argument pairs</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies values for each of the number variables $1 through $9 that can
+                appear in the template file. Use the number variables to assign values to
+                variables in the <emphasis role="bold">uss</emphasis> template file that are not part of the standard
+                set.</para>
+
+                <para>Corresponding variables in the template file: $1 through $9.</para>
+
+                <para>For each instance of this argument, provide two parts in the indicated
+                order, separated by a space:</para>
+
+                <itemizedlist>
+                  <listitem>
+                    <para>The integer from the range <computeroutput>1</computeroutput> through <computeroutput>9</computeroutput> that matches the variable in
+                    the template file. Do not precede it with a dollar sign.</para>
+
+                  </listitem>
+                  <listitem>
+                    <para>A string of alphanumeric characters to assign as the value of the
+                    variable.</para>
+
+                  </listitem>
+                </itemizedlist>
+                <para>See the chapter on uss in the <emphasis>IBM AFS Administration Guide</emphasis> for further
+                explanation.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-cell</emphasis> &lt;<emphasis>cell name</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the cell in which to run the command. For more details, see
+                <link linkend="uss8">uss(8)</link>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-admin</emphasis> &lt;<emphasis>administrator to authenticate</emphasis>&gt;</term>
+              <listitem>
+                <para>Specifies the AFS user name under which to establish authenticated
+                connections to the AFS server processes that maintain the various
+                components of a user account. For more details, see <link linkend="uss8">uss(8)</link>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-dryrun</emphasis></term>
+              <listitem>
+                <para>Reports actions that the command interpreter needs to perform while
+                executing the command, without actually performing them. For more details,
+                see <link linkend="uss8">uss(8)</link>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-skipauth</emphasis></term>
+              <listitem>
+                <para>Prevents authentication with the AFS Authentication Server, allowing a
+                site using Kerberos to substitute that form of authentication.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-overwrite</emphasis></term>
+              <listitem>
+                <para>Overwrites any directories, files and links that exist in the file system
+                and for which there are definitions in <computeroutput>D</computeroutput>, <computeroutput>E</computeroutput>, <computeroutput>F</computeroutput>, <computeroutput>L</computeroutput>, or <computeroutput>S</computeroutput>
+                instructions in the template file named by the <emphasis role="bold">-template</emphasis> argument. If
+                this flag is omitted, the command interpreter prompts once for
+                confirmation that it is to overwrite all such elements.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold">-help</emphasis></term>
+              <listitem>
+                <para>Prints the online help for this command. All other valid options are
+                ignored.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+        <refsect1>
+          <title>Examples</title>
+          <para>The combination of the following example uss add command and <computeroutput>V</computeroutput>
+          instruction in a template file called <computeroutput>uss.tpl</computeroutput> creates Protection and
+          Authentication Database entries named <computeroutput>smith</computeroutput>, and a volume called
+          <computeroutput>user.smith</computeroutput> with a quota of 2500 kilobyte blocks, mounted at the
+          pathname <replaceable>/afs/abc.com/usr/smith</replaceable>. The access control list (ACL) on the
+          mount point grants <computeroutput>smith</computeroutput> all rights.</para>
+
+          <para>The issuer of the <emphasis role="bold">uss add</emphasis> command provides only the template file's
+          name, not its complete pathname, because it resides in the current working
+          directory. The command and <computeroutput>V</computeroutput> instruction appear here on two lines only
+          for legibility; there are no line breaks in the actual instruction or
+          command.</para>
+
+<programlisting>
+   V user.$USER $SERVER.abc.com /vice$PART $1 \
+       /afs/abc.com/usr/$USER $UID $USER all
+
+</programlisting>
+<programlisting>
+   % uss add -user smith -realname "John Smith" -pass js_pswd \
+       -server fs2 -partition b -template uss.tpl -var 1 2500
+
+</programlisting>
+            </refsect1>
+            <refsect1>
+              <title>Privilege Required</title>
+              <para>The issuer (or the user named by the <emphasis role="bold">-admin</emphasis> argument) must belong to
+              the system:administrators group in the Protection Database and must have
+              the <computeroutput>ADMIN</computeroutput> flag turned on in his or her Authentication Database entry.</para>
+
+              <para>If the template contains a <computeroutput>V</computeroutput> instruction, the issuer must be listed in
+              the <replaceable>/usr/afs/etc/UserList</replaceable> file and must have at least <computeroutput>a</computeroutput> (administer)
+              and <computeroutput>i</computeroutput> (insert) permissions on the ACL of the directory that houses the
+              new mount point. If the template file includes instructions for creating
+              other types of objects (directories, files or links), the issuer must have
+              each privilege necessary to create them.</para>
+
+            </refsect1>
+            <refsect1>
+              <title>See Also</title>
+              <para><link linkend="UserList5">UserList(5)</link>,
+              <link linkend="uss5">uss(5)</link>,
+              <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+              <link linkend="uss8">uss(8)</link>,
+              <link linkend="uss_bulk8">uss_bulk(8)</link>,
+              <link linkend="uss_delete8">uss_delete(8)</link></para>
+
+            </refsect1>
+            <refsect1>
+              <title>Copyright</title>
+              <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+              <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+              converted from HTML to POD by software written by Chas Williams and Russ
+              Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+            </refsect1>
+          </refentry>

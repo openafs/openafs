@@ -1,0 +1,437 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>About This Guide</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="NEXT"
+TITLE="Concepts and Configuration Issues"
+HREF="p128.html"></HEAD
+><BODY
+CLASS="preface"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="book1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="p128.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="preface"
+><H1
+><A
+NAME="Header_3"
+></A
+>About This Guide</H1
+><P
+>This section describes the purpose, organization, and conventions of this document.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ1"
+>Audience and Purpose</A
+></H1
+><P
+>This guide describes the concepts and procedures that an AFS(R) system administrator needs to know. It assumes familiarity
+    with UNIX(R) administration, but no previous knowledge of AFS.</P
+><P
+>This document describes AFS commands in the context of specific tasks. Thus, it does not describe all commands in detail.
+    Refer to the IBM AFS Administration Reference for detailed command descriptions.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ2"
+>Document Organization</A
+></H1
+><P
+>This document groups AFS administrative tasks into the following conceptual sections: <UL
+><LI
+><P
+>Concepts and Configuration Issues</P
+></LI
+><LI
+><P
+>Managing File Server Machines</P
+></LI
+><LI
+><P
+>Managing Client Machines</P
+></LI
+><LI
+><P
+>Managing Users and Groups</P
+></LI
+></UL
+></P
+><P
+>The individual chapters in each section contain the following: <UL
+><LI
+><P
+>A chapter overview</P
+></LI
+><LI
+><P
+>A quick reference list of the tasks and commands described in the chapter</P
+></LI
+><LI
+><P
+>An introduction to concepts that pertain to all of the tasks described in the chapter</P
+></LI
+><LI
+><P
+>A set of sections devoted to specific tasks. Each section begins with a discussion of concepts specific to that
+          task, followed by step-by-step instructions for performing the task. The instructions are as specific as has been judged
+          practical. If two related procedures differ from one another in important details, separate sets of instructions are
+          usually provided.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ3"
+>How to Use This Document</A
+></H1
+><P
+>When you need to perform a specific administrative task, follow these steps:
+
+    <OL
+TYPE="1"
+><LI
+><P
+>Determine if the task concerns file server machines, client machines, or users and groups. Turn to the appropriate
+        section in this document and then to the appropriate chapter.</P
+></LI
+><LI
+><P
+>Read or review the general introductory material at the beginning of the chapter.</P
+></LI
+><LI
+><P
+>Read or review the introductory material concerning the specific task you wish to perform.</P
+></LI
+><LI
+><P
+>Follow the step-by-step instructions for the task.</P
+></LI
+><LI
+><P
+>If necessary, refer to the IBM AFS Administration Reference for more detailed information about the commands.</P
+></LI
+></OL
+>
+</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ4"
+>Related Documents</A
+></H1
+><P
+>The following documents are also included in the AFS documentation set.
+
+    <DIV
+CLASS="variablelist"
+><DL
+><DT
+>IBM AFS Administration Reference</DT
+><DD
+><P
+>This reference manual details the syntax and effect of each AFS command. It is intended for the experienced AFS
+          administrator, programmer, or user. The IBM AFS Administration Reference lists AFS files and commands in alphabetical
+          order. The reference page for each command specifies its syntax, including the acceptable aliases and abbreviations. It
+          then describes the command's function, arguments, and output if any. Examples and a list of related commands are provided,
+          as are warnings where appropriate.</P
+><P
+>This manual complements the IBM AFS Administration Guide: it does not include procedural information, but describes
+          commands in more detail than the IBM AFS Administration Guide.</P
+></DD
+><DT
+>IBM AFS Quick Beginnings</DT
+><DD
+><P
+>This guide provides instructions for installing AFS server and client machines. It is assumed that the installer is
+          an experienced UNIX(R) system administrator.</P
+><P
+>For predictable performance, machines must be installed and configured in accordance with the instructions in this
+          guide.</P
+></DD
+><DT
+>IBM AFS Release Notes</DT
+><DD
+><P
+>This document provides information specific to each release of AFS, such as a list of new features and commands, a
+          list of requirements and limitations, and instructions for upgrading server and client machines.</P
+></DD
+><DT
+>IBM AFS User Guide</DT
+><DD
+><P
+>This guide presents the basic concepts and procedures necessary for using AFS effectively. It assumes that the
+          reader has some experience with UNIX, but does not require familiarity with networking or AFS.</P
+><P
+>The guide explains how to perform basic functions, including authenticating, changing a password, protecting AFS
+          data, creating groups, and troubleshooting. It provides illustrative examples for each function and describes some of the
+          differences between the UNIX file system and AFS.</P
+></DD
+></DL
+></DIV
+>
+</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRTYPO_CONV"
+>Typographical Conventions</A
+></H1
+><P
+>This document uses the following typographical conventions:
+
+    <UL
+><LI
+><P
+>Command and option names appear in <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bold type</B
+></SPAN
+> in syntax definitions, examples, and
+        running text. Names of directories, files, machines, partitions, volumes, and users also appear in <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bold type</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>Variable information appears in <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>italic type</I
+></SPAN
+>. This includes user-supplied information on command
+        lines and the parts of prompts that differ depending on who issues the command. New terms also appear in <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>italic
+        type</I
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>Examples of screen output and file contents appear in <SAMP
+CLASS="computeroutput"
+>monospace type</SAMP
+>.</P
+></LI
+></UL
+>
+</P
+><P
+>In addition, the following symbols appear in command syntax definitions, both in the documentation and in AFS online help
+    statements. When issuing a command, do not type these symbols. <UL
+><LI
+><P
+>Square brackets <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[ ]</B
+></SPAN
+> surround optional items.</P
+></LI
+><LI
+><P
+>Angle brackets <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60; &#62;</B
+></SPAN
+> surround user-supplied values in AFS commands.</P
+></LI
+><LI
+><P
+>A superscripted plus sign <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>+</B
+></SPAN
+> follows an argument that accepts more than one
+          value.</P
+></LI
+><LI
+><P
+>The percent sign <SAMP
+CLASS="computeroutput"
+>%</SAMP
+> represents the regular command shell prompt. Some operating systems possibly use a different
+          character for this prompt.</P
+></LI
+><LI
+><P
+>The number sign <SAMP
+CLASS="computeroutput"
+>#</SAMP
+> represents the command shell prompt for the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>.
+          Some operating systems possibly use a different character for this prompt.</P
+></LI
+><LI
+><P
+>The pipe symbol <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>|</B
+></SPAN
+> in a command syntax statement separates mutually exclusive values
+          for an argument.</P
+></LI
+></UL
+></P
+><P
+>For additional information on AFS commands, including a description of command string components, acceptable abbreviations
+    and aliases, and how to get online help for commands, see <A
+HREF="a33826.html"
+>Appendix B, Using AFS
+    Commands</A
+>.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="p128.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>AFS Administration Guide</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Concepts and Configuration Issues</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

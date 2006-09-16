@@ -1,0 +1,1172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appendix id="HDRWQ595">
+  <title>Managing the NFS/AFS Translator</title>
+
+  <indexterm>
+    <primary>NFS/AFS Translator</primary>
+  </indexterm>
+
+  <indexterm>
+    <primary>translator</primary>
+
+    <secondary>NFS/AFS</secondary>
+  </indexterm>
+
+  <para>The NFS(R)/AFS(R) Translator enables users working on NFS client machines to access, create and remove files stored in AFS.
+  This chapter assumes familiarity with both NFS and AFS.</para>
+
+  <sect1 id="HDRWQ596">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="70*" />
+
+        <colspec colwidth="30*" />
+
+        <tbody>
+          <row>
+            <entry>Mount directory on translator machine</entry>
+
+            <entry><emphasis role="bold">mount</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Examine value of <emphasis role="bold">@sys</emphasis> variable</entry>
+
+            <entry><emphasis role="bold">fs sysname</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Enable/disable reexport of AFS, set other parameters</entry>
+
+            <entry><emphasis role="bold">fs exportafs</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Assign AFS tokens to user on NFS client machine</entry>
+
+            <entry><emphasis role="bold">knfs</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ598">
+    <title>Overview</title>
+
+    <para>The NFS/AFS Translator enables users on NFS client machines to access the AFS filespace as if they are working on an AFS
+    client machine, which facilitates collaboration with other AFS users.</para>
+
+    <para>An <emphasis>NFS/AFS translator machine</emphasis> (or simply <emphasis>ltranslator machine</emphasis>) is a machine
+    configured as both an AFS client and an NFS server: <itemizedlist>
+        <listitem>
+          <para>Its AFS client functionality enables it to access the AFS filespace. The Cache Manager requests and caches files
+          from AFS file server machines, and can even maintain tokens for NFS users, if you have made the configuration changes that
+          enable NFS users to authenticate with AFS.</para>
+        </listitem>
+
+        <listitem>
+          <para>Its NFS server functionality makes it possible for the translator machine to export the AFS filespace to NFS client
+          machines. When a user on an NFS client machine mounts the translator machine's <emphasis role="bold">/afs</emphasis>
+          directory (or one of its subdirectories, if that feature is enabled), access to AFS is immediate and transparent. The NFS
+          client machine does not need to run any AFS software.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="HDRWQ599">
+      <title>Enabling Unauthenticated or Authenticated AFS Access</title>
+
+      <para>By configuring the translation environment appropriately, you can provide either unauthenticated or authenticated access
+      to AFS from NFS client machines. The sections of this chapter on configuring translator machines, NFS client machines, and AFS
+      user accounts explain how to configure the translation environment appropriately. <itemizedlist>
+          <listitem>
+            <para>If you configure the environment for unauthenticated access, the AFS File Server considers the NFS users to be the
+            user <emphasis role="bold">anonymous</emphasis>. They can access only those AFS files and directories for which the
+            access control list (ACL) extends the required permissions to the <emphasis role="bold">system:anyuser</emphasis> group.
+            They can issue only those AFS commands that do not require privilege, and then only if their NFS client machine is a
+            system type for which AFS binaries are available and accessible by the <emphasis role="bold">system:anyuser</emphasis>
+            group. Such users presumably do not have AFS accounts.</para>
+          </listitem>
+
+          <listitem>
+            <para>If you configure the environment for authenticated access, you must create entries in the AFS Authentication and
+            Protection Databases for the NFS users. The authentication procedure they use depends on whether the NFS client machine
+            is a supported system type (one for which AFS binaries are available): <itemizedlist>
+                <listitem>
+                  <para>If AFS binaries are available for the NFS client machine, NFS users can issue the <emphasis
+                  role="bold">klog</emphasis> command on the NFS client machine. They can access the filespace and issue AFS
+                  commands to the same extent as authenticated users working on AFS client machines.</para>
+                </listitem>
+
+                <listitem>
+                  <para>If AFS binaries are not available for the NFS client machine, NFS users must establish a connection with the
+                  translator machine (using the <emphasis role="bold">telnet</emphasis> utility, for example) and then issue the
+                  <emphasis role="bold">klog</emphasis> and <emphasis role="bold">knfs</emphasis> commands on the translator machine
+                  to make its Cache Manager use the tokens correctly while users work on the NFS client. They can access the AFS
+                  filespace as authenticated users, but cannot issue AFS commands. For instructions, see <link
+                  linkend="HDRWQ612">Authenticating on Unsupported NFS Client Machines</link>.</para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ600">
+      <title>Setting the AFSSERVER and AFSCONF Environment Variables</title>
+
+      <para>If you wish to enable your NFS users to issue AFS commands, you must define the AFSSERVER and AFSCONF environment
+      variables in their command shell. This section explains the variables' function and outlines the various methods for setting
+      them.</para>
+
+      <para>Issuing AFS commands also requires that the NFS client machine is a supported system type (one for which AFS binaries
+      are available and accessible). Users working on NFS client machines of unsupported system types can access AFS as
+      authenticated users, but they cannot issue AFS commands. It is not necessary to define the AFSSERVER and AFSCONF variables for
+      such users. For instructions on using the <emphasis role="bold">knfs</emphasis> command to obtain authenticated access on
+      unsupported system types, see <link linkend="HDRWQ612">Authenticating on Unsupported NFS Client Machines</link>. <indexterm>
+          <primary>AFSSERVER environment variable (NFS/AFS Translator)</primary>
+        </indexterm></para>
+
+      <sect3 id="HDRWQ601">
+        <title>The AFSSERVER Variable</title>
+
+        <para>The AFSSERVER variable designates the AFS client machine that performs two functions for NFS clients: <itemizedlist>
+            <listitem>
+              <para>It acts as the NFS client's <emphasis>remote executor</emphasis> by executing AFS-specific system calls on its
+              behalf, such as those invoked by the <emphasis role="bold">klog</emphasis> and <emphasis role="bold">tokens</emphasis>
+              commands and by many commands in the AFS suites.</para>
+            </listitem>
+
+            <listitem>
+              <para>Its stores the tokens that NFS users obtain when they authenticate with AFS. This implies that the remote
+              executor machine and the translator machine must be the same if the user needs authenticated access to AFS.</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>The choice of remote executor most directly affects commands that display or change Cache Manager configuration, such
+        as the <emphasis role="bold">fs getcacheparms</emphasis>, <emphasis role="bold">fs getcellstatus</emphasis>, and <emphasis
+        role="bold">fs setcell</emphasis> commands. When issued on an NFS client, these commands affect the Cache Manager on the
+        designated remote executor machine. (Note, however, that several such commands require the issuer to be logged into the
+        remote executor's local file system as the local superuser <emphasis role="bold">root</emphasis>. The ability of NFS client
+        users to log in as <emphasis role="bold">root</emphasis> is controlled by NFS, not by the NFS/AFS Translator, so setting the
+        remote executor properly does not necessarily enable users on the NFS client to issue such commands.)</para>
+
+        <para>The choice of remote executor is also relevant for AFS commands that do not concern Cache Manager configuration but
+        rather have the same result on every machine, such as the <emphasis role="bold">fs</emphasis> commands that display or set
+        ACLs and volume quota. These commands take an AFS path as one of their arguments. If the Cache Manager on the remote
+        executor machine mounts the AFS filespace at the <emphasis role="bold">/afs</emphasis> directory, as is conventional for AFS
+        clients, then the pathname specified on the NFS client must begin with the string <emphasis role="bold">/afs</emphasis> for
+        the Cache Manager to understand it. This implies that the remote executor must be the NFS client's primary translator
+        machine (the one whose <emphasis role="bold">/afs</emphasis> directory is mounted at <emphasis role="bold">/afs</emphasis>
+        on the NFS client). <indexterm>
+            <primary>NFS/AFS Translator</primary>
+
+            <secondary>AFSCONF environment variable</secondary>
+          </indexterm> <indexterm>
+            <primary>AFSCONF environment variable (NFS/AFS Translator)</primary>
+          </indexterm></para>
+      </sect3>
+
+      <sect3 id="Header_672">
+        <title>The AFSCONF Variable</title>
+
+        <para>The AFSCONF environment variable names the directory that houses the <emphasis role="bold">ThisCell</emphasis> and
+        <emphasis role="bold">CellServDB</emphasis> files to use when running AFS commands issued on the NFS client machine. As on
+        an AFS client, these files determine the default cell for command execution.</para>
+
+        <para>For predictable performance, it is best that the files in the directory named by the AFSCONF variable match those in
+        the <emphasis role="bold">/usr/vice/etc</emphasis> directory on the translator machine. If your cell has an AFS directory
+        that serves as the central update source for files in the <emphasis role="bold">/usr/vice/etc</emphasis> directory, it is
+        simplest to set the AFSCONF variable to refer to it. In the conventional configuration, this directory is called <emphasis
+        role="bold">/afs/</emphasis>cellname<emphasis role="bold">/common/etc</emphasis>.</para>
+      </sect3>
+
+      <sect3 id="Header_673">
+        <title>Setting Values for the Variables</title>
+
+        <para>To learn the values of the AFSSERVER and AFSCONF variables, AFS command interpreters consult the following three
+        sources in sequence: <orderedlist>
+            <listitem>
+              <para>The current command shell's environment variable definitions</para>
+            </listitem>
+
+            <listitem>
+              <para>The <emphasis role="bold">.AFSSERVER</emphasis> or <emphasis role="bold">.AFSCONF</emphasis> file in the
+              issuer's home directory</para>
+            </listitem>
+
+            <listitem>
+              <para>The <emphasis role="bold">/.AFSSERVER</emphasis> or <emphasis role="bold">/.AFSCONF</emphasis> file in the NFS
+              client machine's root (<emphasis>/</emphasis>) directory. If the client machine is diskless, its root directory can
+              reside on an NFS server machine.</para>
+            </listitem>
+          </orderedlist></para>
+
+        <para>(Actually, before consulting these sources, the NFS client looks for the <emphasis role="bold">CellServDB</emphasis>
+        and <emphasis role="bold">ThisCell</emphasis> files in its own <emphasis role="bold">/usr/vice/etc</emphasis> directory. If
+        the directory exists, the NFS client does not use the value of the AFSCONF variable. However, the <emphasis
+        role="bold">/usr/vice/etc</emphasis> directory usually exists only on AFS clients, not NFS clients.)</para>
+
+        <para>As previously detailed, correct performance generally requires that the remote executor machine be the NFS client's
+        primary translator machine (the one whose <emphasis role="bold">/afs</emphasis> directory is mounted at the <emphasis
+        role="bold">/afs</emphasis> directory on the NFS client). The requirement holds for all users accessing AFS from the NFS
+        client, so it is usually simplest to create the <emphasis role="bold">.AFSSERVER</emphasis> file in the NFS client's root
+        directory. The main reason to create the file in a user's home directory or to set the AFSSERVER environment variable in the
+        current command shell is that the user needs to switch to a different translator machine, perhaps because the original one
+        has become inaccessible.</para>
+
+        <para>Similarly, it generally makes sense to create the <emphasis role="bold">.AFSCONF</emphasis> file in the NFS client's
+        root directory. Creating it in the user's home directory or setting the AFSCONF environment variable in the current command
+        shell is useful mostly when there is a reason to specify a different set of database server machines for the cell, perhaps
+        in a testing situation.</para>
+      </sect3>
+    </sect2>
+
+    <sect2 id="HDRWQ602">
+      <title>Delayed Writes for Files Saved on NFS Client Machines</title>
+
+      <indexterm>
+        <primary>asynchrony</primary>
+
+        <secondary>when AFS files saved on NFS clients</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>synchrony</primary>
+
+        <secondary>when AFS files saved on NFS clients</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>delayed write operations</primary>
+
+        <secondary>when AFS files saved on NFS clients</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>write</primary>
+
+        <secondary>operations delayed from NFS clients</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>write</primary>
+
+        <secondary>system call for files saved on NFS client</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>fsync system call</primary>
+
+        <secondary>for files saved on NFS client</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>close system call</primary>
+
+        <secondary>for files saved on NFS client</secondary>
+      </indexterm>
+
+      <para>When an application running on an AFS client machine issues the <emphasis role="bold">close</emphasis> or <emphasis
+      role="bold">fsync</emphasis> system call on a file, the Cache Manager by default performs a synchronous write of the data to
+      the File Server. (For further discussion, see <link linkend="HDRWQ33">AFS Implements Save on Close</link> and <link
+      linkend="HDRWQ418">Enabling Asynchronous Writes</link>.)</para>
+
+      <para>To avoid degrading performance for the AFS users working on a translator machine, AFS does not perform synchronous
+      writes for applications running on the translator machine's NFS clients. Instead, one of the Cache Manager daemons (the
+      maintenance daemon) checks every 60 seconds for chunks in the cache that contain data saved on NFS clients, and writes their
+      contents to the File Server. This does not guarantee that data saved on NFS clients is written to the File Server within 60
+      seconds, but only that the <emphasis>maintenance daemon</emphasis> checks for and begins the write of data at that
+      interval.</para>
+
+      <para>Furthermore, AFS always ignores the <emphasis role="bold">fsync</emphasis> system call as issued on an NFS client. The
+      call requires an immediate and possibly time-consuming response from the File Server, which potentially causes delays for
+      other AFS clients of the File Server. NFS version 3 automatically issues the <emphasis role="bold">fsync</emphasis> system
+      call directly after the <emphasis role="bold">close</emphasis> call, but the Cache Manager ignores it and handles the
+      operation just like a regular <emphasis role="bold">close</emphasis>.</para>
+
+      <para>The delayed write mechanism means that there is usually a delay between the time when an NFS application issues the
+      <emphasis role="bold">close</emphasis> or <emphasis role="bold">fsync</emphasis> system call on a file and the time when the
+      changes are recorded at the File Server, which is when they become visible to users working on other AFS client machines
+      (either directly or on its NFS clients). The delay is likely to be longer than for files saved by users working directly on an
+      AFS client machine.</para>
+
+      <para>The exact amount of delay is difficult to predict. The NFS protocol itself allows a standard delay before saved data
+      must be transferred from the NFS client to the NFS server (the translator machine). The modified data remains in the
+      translator machine's AFS client cache until the maintenance daemon's next scheduled check for such data, and it takes
+      additional time to transfer the data to the File Server. The maintenance daemon uses a single thread, so there can be
+      additional delay if it takes more than 60 seconds to write out all of the modified NFS data. That is, if the maintenance
+      daemon is still writing data at the time of the next scheduled check, it cannot notice any additional modified data until the
+      scheduled time after it completes the long write operation.</para>
+
+      <para>The Cache Manager's response to the <emphasis role="bold">write</emphasis> system call is the same whether it is issued
+      on an AFS client machine or on an NFS client of a translator machine: it records the modifications in the local AFS client
+      cache only.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ603">
+    <title>Configuring NFS/AFS Translator Machines</title>
+
+    <para>To act as an NFS/AFS translator machine, a machine must configured as follows: <itemizedlist>
+        <listitem>
+          <para>It must be an AFS client. Many system types supported as AFS clients can be translator machines. To learn about
+          possible restrictions in a specific release of AFS, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>It must be an NFS server. The appropriate number of NFS server daemons (<emphasis role="bold">nfsd</emphasis> and
+          others) depends on the anticipated NFS client load.</para>
+        </listitem>
+
+        <listitem>
+          <para>It must export the local directory on which the AFS filespace is mounted, <emphasis role="bold">/afs</emphasis> by
+          convention.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>If users on a translator machine's NFS clients are to issue AFS commands, the translator machine must also meet the
+    requirements discussed in <link linkend="HDRRMTSYS">Configuring the Translator Machine to Accept AFS Commands</link>.</para>
+
+    <sect2 id="Header_676">
+      <title>Loading NFS and AFS Kernel Extensions</title>
+
+      <para>The AFS distribution for system types that can act as NFS/AFS Translator machines usually includes two versions of the
+      AFS kernel extensions file, one for machines where the kernel supports NFS server functionality, and one for machines not
+      using NFS (the latter AFS kernel extensions file generally has the string <emphasis role="bold">nonfs</emphasis> in its name).
+      A translator machine must use the NFS-enabled version of the AFS extensions file. On some system types, you select the
+      appropriate file by moving it to a certain location, whereas on other system types you set a variable that results in
+      automatic selection of the correct file. See the instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for
+      incorporating AFS into the kernel on each system type.</para>
+
+      <para>On many system types, NFS is included in the kernel by default, so it is not necessary to load NFS kernel extensions
+      explicitly. On system types where you must load NFS extensions, then in general you must load them before loading the AFS
+      kernel extensions. The <emphasis>IBM AFS Quick Beginnings</emphasis> describes how to incorporate the AFS initialization
+      script into a machine's startup sequence so that it is ordered correctly with respect to the script that handles NFS.</para>
+
+      <para>In addition, the AFS extensions must be loaded into the kernel before the <emphasis role="bold">afsd</emphasis> command
+      runs. The AFS initialization script included in the AFS distribution correctly orders the loading and <emphasis
+      role="bold">afsd</emphasis> commands.</para>
+    </sect2>
+
+    <sect2 id="HDRRMTSYS">
+      <title>Configuring the Translator Machine to Accept AFS Commands</title>
+
+      <para>For users working on a translator machine's NFS clients to issue AFS commands, the <emphasis
+      role="bold">-rmtsys</emphasis> flag must be included on the <emphasis role="bold">afsd</emphasis> command which initializes
+      the translator machine's Cache Manager. The flag starts an additional daemon (the <emphasis>remote executor</emphasis>
+      daemon), which executes AFS-specific system calls on behalf of NFS clients. For a discussion of the implications of NFS users
+      issuing AFS commands, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>.</para>
+
+      <para>The instructions in the IBM AFS Quick Beginnings for configuring the Cache Manager explain how to add options such as
+      the <emphasis role="bold">-rmtsys</emphasis> flag to the <emphasis role="bold">afsd</emphasis> command in the AFS
+      initialization script. On many system types, it is simplest to list the flag on the line in the script that defines the
+      OPTIONS variable. The <emphasis>remote executor daemon</emphasis> does not consume many resources, so it is simplest to add it
+      to the <emphasis role="bold">afsd</emphasis> command on every translator machine, even if not all users on the machine's NFS
+      clients issue AFS commands.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ604">
+      <title>Controlling Optional Translator Features</title>
+
+      <para>After an AFS client machine is configured as a translator machine, it by default exports the AFS filespace to NFS
+      clients. You can disable and reenable translator functionality by using the <emphasis role="bold">fs exportafs</emphasis>
+      command's <emphasis role="bold">-start</emphasis> argument. The command's other arguments control other aspects of translator
+      behavior. <itemizedlist>
+          <listitem>
+            <para>The <emphasis role="bold">-convert</emphasis> argument controls whether the second and third (<emphasis
+            role="bold">group</emphasis> and <emphasis role="bold">other</emphasis>) sets of UNIX mode bits on an AFS file or
+            directory being exported to NFS are set to match the first (<emphasis role="bold">owner</emphasis>) mode bits. By
+            default, the mode bits are set to match.</para>
+
+            <para>Unlike AFS, NFS uses all three sets of mode bits when determining whether a user can read or write a file, even
+            one stored in AFS. Some AFS files possibly do not have any <emphasis role="bold">group</emphasis> and <emphasis
+            role="bold">other</emphasis> mode bits turned on, because AFS uses only the <emphasis role="bold">owner</emphasis> bits
+            in combination with the ACL on the file's directory. If only the <emphasis role="bold">owner</emphasis> mode bits are
+            set, NFS allows only the file's owner of the file to read or write it. Setting the <emphasis
+            role="bold">-convert</emphasis> argument to the value <emphasis role="bold">on</emphasis> enables other users to access
+            the file in the same manner as the owner. Setting the value <emphasis role="bold">off</emphasis> preserves the mode bits
+            set on the file as stored in AFS.</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">-uidcheck</emphasis> argument controls whether tokens can be assigned to an NFS user
+            whose local UID on the NFS client machine differs from the local UID associated with the tokens on the translator
+            machine. By default, this is possible.</para>
+
+            <para>If you turn on UID checking by setting the value <emphasis role="bold">on</emphasis>, then tokens can be assigned
+            only to an NFS user whose local UID matches the local UID of the process on the translator machine that is assigning the
+            tokens. One consequence is that there is no point in including the <emphasis role="bold">-id</emphasis> argument to the
+            <emphasis role="bold">knfs</emphasis> command: the only acceptable value is the local UID of the command's issuer, which
+            is the value used when the <emphasis role="bold">-id</emphasis> argument is omitted. Requiring matching UIDs in this way
+            is effective only when users have the same local UID on the translator machine as on NFS client machines. In that case,
+            it guarantees that users assign their tokens only to their own NFS sessions. For instructions, see <link
+            linkend="HDRWQ612">Authenticating on Unsupported NFS Client Machines</link>.</para>
+
+            <note>
+              <para>Turning on UID checking also prevents users on supported NFS clients from using the <emphasis
+              role="bold">klog</emphasis> command to authenticate on the NFS client directly. They must authenticated and use the
+              <emphasis role="bold">knfs</emphasis> command on the translator machine instead. This is because after the <emphasis
+              role="bold">klog</emphasis> command interpreter obtains the token on the NFS client, it passes it to the Cache
+              Manager's remote executor daemon, which makes the system call that stores the token in a credential structure on the
+              translator machine. The remote executor generally runs as the local superuser <emphasis role="bold">root</emphasis>,
+              so in most cases its local UID (normally zero) does not match the local UID of the user who issued the <emphasis
+              role="bold">klog</emphasis> command on the NFS client machine.</para>
+
+              <para>On the other hand, although using the <emphasis role="bold">knfs</emphasis> command instead of the <emphasis
+              role="bold">klog</emphasis> command is possibly less convenient for users, it eliminates a security exposure: the
+              <emphasis role="bold">klog</emphasis> command interpreter passes the token across the network to the remote executor
+              daemon in clear text mode.</para>
+            </note>
+
+            <para>If you disable UID checking by assigning the value <emphasis role="bold">off</emphasis> , the issuer of the
+            <emphasis role="bold">knfs</emphasis> command can assign tokens to a user who has a different local UID on the NFS
+            client machine, such as the local superuser <emphasis role="bold">root</emphasis>. Indeed, more than one issuer of the
+            <emphasis role="bold">knfs</emphasis> command can assign tokens to the same user on the NFS client machine. Each time a
+            different user issues the <emphasis role="bold">knfs</emphasis> command with the same value for the <emphasis
+            role="bold">-id</emphasis> argument, that user's tokens overwrite the existing ones. This can result in unpredictable
+            access for the NFS user.</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">-submounts</emphasis> argument controls whether users on the NFS client can mount AFS
+            directories other than the top-level <emphasis role="bold">/afs</emphasis> directory. By default, the translator does
+            not permit these submounts.</para>
+
+            <para>Submounts can be useful in a couple of circumstances. If, for example, NFS users need to access their own AFS home
+            directories only, then creating a submount to it eliminates the need for them to know or enter the complete path.
+            Similarly, you can use a submount to prevent users from accessing parts of the filespace higher in the AFS hierarchy
+            than the submount.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="Header_679">
+      <title>To configure an NFS/AFS translator machine</title>
+
+      <para>The following instructions configure the translator to enable users to issue AFS commands. Omit Step <link
+      linkend="LIWQ605">6</link> if you do not want to enable this functionality. <orderedlist>
+          <listitem>
+            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
+            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Configure the NFS/AFS translator machine as an NFS server, if it is not already. Follow the instructions provided
+            by your NFS supplier. The appropriate number of NFS server daemons (such as <emphasis role="bold">nfsd</emphasis>)
+            depends on the number of potential NFS clients.</para>
+          </listitem>
+
+          <listitem>
+            <para>Configure the NFS/AFS translator machine as an AFS client, if it is not already. For the most predictable
+            performance, the translator machine's local copies of the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> and
+            <emphasis role="bold">/usr/vice/etc/ThisCell</emphasis> files must be the same as on other client machines in the
+            cell.</para>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LITRANS-MOUNTFILE" />Modify the file that controls mounting of directories on the machine by remote
+            NFS clients. <itemizedlist>
+                <indexterm>
+                  <primary>etc/exports file</primary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>files</primary>
+
+                  <secondary>exports</secondary>
+                </indexterm>
+
+                <listitem>
+                  <para>On systems that use the <emphasis role="bold">/etc/exports</emphasis> file, edit it to enable export of the
+                  <emphasis role="bold">/afs</emphasis> directory to NFS clients. You can list the names of specific NFS client
+                  machines if you want to provide access only to certain users. For a description of the file's format, see the NFS
+                  manual page for <emphasis role="bold">exports(5)</emphasis>.</para>
+
+                  <para>The following example enables any NFS client machine to mount the machine's <emphasis
+                  role="bold">/afs</emphasis>, <emphasis role="bold">/usr</emphasis>, and <emphasis role="bold">/usr2</emphasis>
+                  directories:</para>
+
+                  <programlisting>
+   /afs
+   /usr
+   /usr2
+</programlisting>
+
+                  <indexterm>
+                    <primary>share command</primary>
+                  </indexterm>
+
+                  <indexterm>
+                    <primary>commands</primary>
+
+                    <secondary>share</secondary>
+                  </indexterm>
+                </listitem>
+
+                <listitem>
+                  <para>On system types that use the <emphasis role="bold">share</emphasis> command, edit the <emphasis
+                  role="bold">/etc/dfs/dfstab</emphasis> file or equivalent to include <emphasis role="bold">share</emphasis>
+                  instructions that enable remote mounts of the <emphasis role="bold">/afs</emphasis> directory. Most distributions
+                  include the binary as <emphasis role="bold">/usr/sbin/share</emphasis>. The following example commands enable
+                  remote mounts of the root ( <emphasis role="bold">/</emphasis> ) and <emphasis role="bold">/afs</emphasis>
+                  directories. To verify the correct syntax, consult the manual page for the <emphasis role="bold">share</emphasis>
+                  command. <programlisting>
+   share -F nfs -o rw -d "root" /
+   share -F nfs -o rw -d "afs gateway" /afs
+</programlisting></para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>Edit the machine's AFS initialization file to invoke the standard UNIX <emphasis role="bold">exportfs</emphasis>
+            command after the <emphasis role="bold">afsd</emphasis> program runs. On some system types, the modifications you made
+            in Step <link linkend="LITRANS-MOUNTFILE">4</link> are not enough to enable exporting the AFS filespace via the
+            <emphasis role="bold">/afs</emphasis> directory, because the resulting configuration changes are made before the
+            <emphasis role="bold">afsd</emphasis> program runs during machine initialization. Only after the <emphasis
+            role="bold">afsd</emphasis> program runs does the <emphasis role="bold">/afs</emphasis> directory become the mount point
+            for the entire AFS filespace; before, it is a local directory like any other.</para>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LIWQ605" />Modify the <emphasis role="bold">afsd</emphasis> command in the AFS initialization file to
+            include the <emphasis role="bold">-rmtsys</emphasis> flag.</para>
+
+            <para>For system types other than IRIX, the instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for
+            configuring the Cache Manager explain how to add the <emphasis role="bold">-rmtsys</emphasis> flag, for example by
+            adding it to the line in the script that defines the value for the OPTIONS variable.</para>
+
+            <para>On IRIX systems, the AFS initialization script automatically adds the <emphasis role="bold">-rmtsys</emphasis>
+            flag if you have activated the <emphasis role="bold">afsxnfs</emphasis> configuration variable as instructed in the
+            <emphasis>IBM AFS Quick Beginnings</emphasis> instructions for incorporating AFS extensions into the kernel. If the
+            variable is not already activated, issue the following command.</para>
+
+            <programlisting>
+   # <emphasis role="bold">/etc/chkconfig  -f  afsxnfs  on</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">(Optional)</emphasis> Depending on the number of NFS clients you expect this machine to
+            serve, it can be beneficial to add other arguments to the <emphasis role="bold">afsd</emphasis> command in the machine's
+            initialization file, such as the <emphasis role="bold">-daemons</emphasis> argument to set the number of background
+            daemons. See <link linkend="HDRWQ387">Administering Client Machines and the Cache Manager</link> and the <emphasis
+            role="bold">afsd</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+          </listitem>
+
+          <listitem>
+            <para>Reboot the machine. On many system types, the appropriate command is <emphasis role="bold">shutdown</emphasis>;
+            consult your operating system administrator's guide. <programlisting>
+   # <emphasis role="bold">shutdown</emphasis> appropriate_options
+</programlisting></para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>exportafs</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs exportafs</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_680">
+      <title>To disable or enable Translator functionality, or set optional features</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fs exportafs</emphasis> command. <programlisting>
+   # <emphasis role="bold">fs exportafs nfs</emphasis> [<emphasis role="bold">-start</emphasis> {<emphasis role="bold">on</emphasis> | <emphasis
+                role="bold">off</emphasis>}} ]  [<emphasis role="bold">-convert</emphasis> {<emphasis role="bold">on</emphasis> | <emphasis
+                role="bold">off</emphasis>}]   
+                      [<emphasis role="bold">-uidcheck</emphasis> {<emphasis role="bold">on</emphasis> | <emphasis role="bold">off</emphasis>}]   [<emphasis
+                role="bold">-submounts</emphasis> {<emphasis role="bold">on</emphasis> | <emphasis role="bold">off</emphasis>}] 
+</programlisting> <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">-start</emphasis></term>
+
+                <listitem>
+                  <para>Disables translator functionality if the value is <emphasis role="bold">off</emphasis> or reenables it if
+                  the value is <emphasis role="bold">on</emphasis>. Omit this argument to display the current setting of all
+                  parameters set by this command.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-convert</emphasis></term>
+
+                <listitem>
+                  <para>Controls the setting of the second and third (<emphasis role="bold">group</emphasis> and <emphasis
+                  role="bold">other</emphasis>) sets of UNIX mode bits on AFS files and directories as exported to NFS clients If
+                  the value is <emphasis role="bold">on</emphasis>, they are set to match the <emphasis role="bold">owner</emphasis>
+                  mode bits. If the value is <emphasis role="bold">off</emphasis>, the bits are not changed. If this argument is
+                  omitted, the default value is <emphasis role="bold">on</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-uidcheck</emphasis></term>
+
+                <listitem>
+                  <para>Controls whether issuers of the <emphasis role="bold">knfs</emphasis> command can specify a value for its
+                  <emphasis role="bold">-id</emphasis> argument that does not match their AFS UID: <itemizedlist>
+                      <listitem>
+                        <para>If the value is <emphasis role="bold">on</emphasis>, the value of the <emphasis
+                        role="bold">-id</emphasis> argument must match the issuer's local UID.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>If the value is <emphasis role="bold">off</emphasis>, the issuer of the <emphasis
+                        role="bold">knfs</emphasis> command can use the <emphasis role="bold">-id</emphasis> argument to assign
+                        tokens to a user who has a different local UID on the NFS client machine, such as the local superuser
+                        <emphasis role="bold">root</emphasis>.</para>
+                      </listitem>
+                    </itemizedlist></para>
+
+                  <para>If this argument is omitted, the default value is <emphasis role="bold">off</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-submounts</emphasis></term>
+
+                <listitem>
+                  <para>Controls whether the translator services an NFS mount of any directory in the AFS filespace other than the
+                  top-level <emphasis role="bold">/afs</emphasis> directory. If the value is <emphasis role="bold">on</emphasis>,
+                  such submounts are allowed. If the value is off, only mounts of the <emphasis role="bold">/afs</emphasis>
+                  directory are allowed. If this argument is omitted, the default value is <emphasis
+                  role="bold">off</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ606">
+    <title>Configuring NFS Client Machines</title>
+
+    <para>Any NFS client machine that meets the following requirements can access files in AFS via the NFS/AFS Translator. It does
+    not need to be configured as an AFS client machine. <itemizedlist>
+        <listitem>
+          <para>It must NFS-mount a translator machine's <emphasis role="bold">/afs</emphasis> directory on a local directory, which
+          by convention is also called <emphasis role="bold">/afs</emphasis>. The following instructions explain how to add the
+          <emphasis role="bold">mount</emphasis> command to the NFS client machine's <emphasis role="bold">/etc/fstab</emphasis>
+          file or equivalent.</para>
+
+          <para>The directory on which an NFS client mounts the translator's machine's <emphasis role="bold">/afs</emphasis>
+          directory can be called something other than <emphasis role="bold">/afs</emphasis>. For instance, to make it easy to
+          switch to another translator machine if the original one becomes inaccessible, you can mount more than one translator
+          machine's <emphasis role="bold">/afs</emphasis> directory. Name the mount <emphasis role="bold">/afs</emphasis> for the
+          translator machine that you normally use, and use a different name the mount to each alternate translator machine.</para>
+
+          <para>Mounting the AFS filespace on a directory other than <emphasis role="bold">/afs</emphasis> introduces another
+          requirement, however: when issuing a command that takes an AFS pathname argument, you must specify the full pathname,
+          starting with <emphasis role="bold">/afs</emphasis>, rather than a relative pathname. Suppose, for example, that a
+          translator machine's AFS filespace is mounted at <emphasis role="bold">/afs2</emphasis> on an NFS client machine and you
+          issue the following command to display the ACL on the current working directory, which is in AFS:</para>
+
+          <programlisting>
+   % <emphasis role="bold">fs listacl .</emphasis>
+</programlisting>
+
+          <para>The <emphasis role="bold">fs</emphasis> command interpreter on the NFS client must construct a full pathname before
+          passing the request to the Cache Manager on the translator machine. The AFS filespace is mounted at <emphasis
+          role="bold">/afs2</emphasis>, so the full pathname starts with that string. However, the Cache Manager on the translator
+          cannot find a directory called <emphasis role="bold">/afs2</emphasis>, because its mount of the AFS filespace is called
+          <emphasis role="bold">/afs</emphasis>. The command fails. To prevent the failure, provide the file's complete pathname,
+          starting with the string <emphasis role="bold">/afs</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>It must run an appropriate number of NFS client <emphasis role="bold">biod</emphasis> daemons, which improve
+          performance by handling pre-reading and delayed writing. Most NFS vendors recommend running four such daemons, and most
+          NFS initialization scripts start them automatically. Consult your NFS documentation.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>To enable users to issue AFS commands, the NFS client machine must also be a supported system type (one for which AFS
+    binaries are available) and able to access the AFS command binaries. The <emphasis>IBM AFS Release Notes</emphasis> list the
+    supported system types in each release.</para>
+
+    <para>In addition, the AFSSERVER and AFSCONF environment variables must be set appropriately, as discussed in <link
+    linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>.</para>
+
+    <sect2 id="Header_682">
+      <title>To configure an NFS client machine to access AFS</title>
+
+      <note>
+        <para>The following instructions enable NFS users to issue AFS commands. Omit Step <link linkend="LIWQ608">5</link> and Step
+        <link linkend="LIWQ609">6</link> if you do not want to enable this functionality.</para>
+      </note>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Configure the machine as an NFS client machine, if it is not already. Follow the instructions provided by your NFS
+          vendor. The number of NFS client (<emphasis role="bold">biod</emphasis>) daemons needs to be appropriate for the expected
+          load on this machine. The usual recommended number is four.</para>
+        </listitem>
+
+        <listitem>
+          <para>Create a directory called <emphasis role="bold">/afs</emphasis> on the machine, if one does not already exist, to
+          act as the mount point for the translator machine's <emphasis role="bold">/afs</emphasis> directory. It is acceptable to
+          use other names, but doing so introduces the limitation discussed in the introduction to this section. <programlisting>
+   # <emphasis role="bold">mkdir /afs</emphasis>
+</programlisting> <indexterm>
+              <primary>commands</primary>
+
+              <secondary>mount</secondary>
+            </indexterm> <indexterm>
+              <primary>mount command</primary>
+            </indexterm></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ607" />Modify the machine's file systems registry file (<emphasis role="bold">/etc/fstab</emphasis>
+          or equivalent) to include a command that mounts a translator machine's <emphasis role="bold">/afs</emphasis> directory. To
+          verify the correct syntax of the <emphasis role="bold">mount</emphasis> command, see the operating system's <emphasis
+          role="bold">mount(5)</emphasis> manual page. The following example includes options that are appropriate on many system
+          types. <programlisting>
+   mount -o hard,intr,timeo=300  translator_machine:/afs /afs
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><computeroutput>hard</computeroutput></term>
+
+                <listitem>
+                  <para>Indicates that the NFS client retries NFS requests until the NFS server (translator machine) responds. When
+                  using the translator, file operations possibly take longer than with NFS alone, because they must also pass
+                  through the AFS Cache Manager. With a soft mount, a delayed response from the translator machine can cause the
+                  request to abort. Many NFS versions use hard mounts by default; if your version does not, it is best to add this
+                  option.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><computeroutput>intr</computeroutput></term>
+
+                <listitem>
+                  <para>Enables the user to use a keyboard interrupt signal (such as &lt;<emphasis
+                  role="bold">Ctrl-c</emphasis>&gt;) to break the mount when the translator machine is inaccessible. Include this
+                  option only if the <computeroutput>hard</computeroutput> option is used, in which case the connection does not
+                  automatically break off when a translator machine goes down.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><computeroutput>timeo</computeroutput></term>
+
+                <listitem>
+                  <para>Sets the maximum time (in tenths of seconds) the translator can take to respond to the NFS client's request
+                  before the client considers the request timed out. With a hard mount, setting this option to a high number like
+                  300 reduces the number of error messages like the following, which are generated when the translator does not
+                  respond immediately. <programlisting>
+   NFS server translator is not responding, still trying
+</programlisting></para>
+
+                  <para>With a soft mount, it reduces the number of actual errors returned on timed-out requests.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><replaceable>translator_machine</replaceable></term>
+
+                <listitem>
+                  <para>Specifies the fully-qualified hostname of the translator machine whose <emphasis role="bold">/afs</emphasis>
+                  directory is to be mounted on the client machine's <emphasis role="bold">/afs</emphasis> directory.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+
+          <note>
+            <para>To mount the translator machine's <emphasis role="bold">/afs</emphasis> directory onto a directory on the NFS
+            client other than <emphasis role="bold">/afs</emphasis>, substitute the alternate directory name for the second instance
+            of <computeroutput>/afs</computeroutput> in the <emphasis role="bold">mount</emphasis> command.</para>
+          </note>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ608" /><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
+          role="bold">/.AFSSERVER</emphasis> file to set the AFSSERVER environment variable for all of the machine's users. For a
+          discussion, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>. Place a single
+          line in the file, specifying the fully-qualified hostname of the translator machine that is to serve as the remote
+          executor. To enable users to issue commands that handle tokens, it must be the machine named as translator_machine in Step
+          <link linkend="LIWQ607">4</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ609" /><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
+          role="bold">/.AFSCONF</emphasis> file to set the AFSCONF environment variable for all of the machine's users. For a
+          discussion, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>. Place a single
+          line in the file, specifying the name of the directory where the <emphasis role="bold">CellServDB</emphasis> and <emphasis
+          role="bold">ThisCell</emphasis> files reside. If you use a central update source for these files (by convention, <emphasis
+          role="bold">/afs/</emphasis>cellname<emphasis role="bold">/common/etc</emphasis>), name it here.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ610">
+    <title>Configuring User Accounts</title>
+
+    <para>There are no requirements for NFS users to access AFS as unauthenticated users. To take advantage of more AFS
+    functionality, however, they must meet the indicated requirements. <itemizedlist>
+        <listitem>
+          <para>To access AFS as authenticated users, they must of course authenticate with AFS, which requires an entry in the
+          Protection and Authentication Databases.</para>
+        </listitem>
+
+        <listitem>
+          <para>To create and store files, they need the required ACL permissions. If you are providing a home directory for storage
+          of personal files, it is conventional to create a dedicated volume and mount it at the user's home directory location in
+          the AFS filespace.</para>
+        </listitem>
+
+        <listitem>
+          <para>To issue AFS commands, they must meet several additional requirements: <itemizedlist>
+              <listitem>
+                <para>They must be working on an NFS client machine of a supported system type and from which the AFS command
+                binaries are accessible.</para>
+              </listitem>
+
+              <listitem>
+                <para>Their command shell must define values for the AFSSERVER and AFSCONF environment variables, as described in
+                <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>. It is often simplest to
+                define the variables by creating <emphasis role="bold">/.AFSSERVER</emphasis> and <emphasis
+                role="bold">/.AFSCONF</emphasis> file in the NFS client machine's root directory, but you can also either set the
+                variables in each user's shell initialization file (<emphasis role="bold">.cshrc</emphasis> or equivalent), or
+                create files called <emphasis role="bold">.AFSSERVER</emphasis> and <emphasis role="bold">.AFSCONF</emphasis> in
+                each user's home directory.</para>
+              </listitem>
+
+              <listitem>
+                <para>They must have an entry in the AFS Protection and Authentication Databases, so that they can authenticate if
+                the command requires AFS privilege. Other commands instead require assuming the local <emphasis
+                role="bold">root</emphasis> identity on the translator machine; for further discussion, see <link
+                linkend="HDRWQ601">The AFSSERVER Variable</link>.</para>
+              </listitem>
+
+              <listitem>
+                <para>Their PATH environment variable must include the pathname to the appropriate AFS binaries. If a user works on
+                NFS client machines of different system types, include the <emphasis role="bold">@sys</emphasis> variable in the
+                pathname rather than an actual system type name.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="Header_684">
+      <title>To configure a user account for issuing AFS commands</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Create entries for the user in the Protection and Authentication Databases, or create a complete AFS account. See
+          the instructions for account creation in <link linkend="HDRWQ449">Creating and Deleting User Accounts with the uss Command
+          Suite</link> or <link linkend="HDRWQ491">Administering User Accounts</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ611" />Modify the user's PATH environment variable to include the pathname of AFS binaries, such as
+          <emphasis role="bold">/afs/</emphasis>cellname<emphasis role="bold">/</emphasis>sysname<emphasis
+          role="bold">/usr/afsws/bin</emphasis>. If the user works on NFS client machines of different system types, considering
+          replacing the specific sysname value with the <emphasis role="bold">@sys</emphasis> variable. The PATH variable is
+          commonly defined in a login or shell initialization file (such as the <emphasis role="bold">.login</emphasis> or <emphasis
+          role="bold">.cshrc</emphasis> file).</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> Set the AFSSERVER and AFSCONF environment variables if appropriate. This
+          is required if the NFS client machines on which the user works do not have the <emphasis
+          role="bold">/.AFSSERVER</emphasis> and <emphasis role="bold">/.AFSCONF</emphasis> files in their root directories, or if
+          you want user-specific values to override those settings.</para>
+
+          <para>Either define the variables in the user's login or shell initialization file, or create the files <emphasis
+          role="bold">.AFSSERVER</emphasis> and <emphasis role="bold">.AFSCONF</emphasis> files in the user's home directory.</para>
+
+          <para>For the AFSSERVER variable, specify the fully-qualified hostname of the translator machine that is to serve as the
+          remote executor. For the AFSCONF variable, specify the name of the directory where the <emphasis
+          role="bold">CellServDB</emphasis> and <emphasis role="bold">ThisCell</emphasis> files reside. If you use a central update
+          source for these files (by convention, <emphasis role="bold">/afs/</emphasis>cellname<emphasis
+          role="bold">/common/etc</emphasis>), name it here.</para>
+        </listitem>
+
+        <listitem>
+          <para>If the pathname you defined in Step <link linkend="LIWQ611">2</link> includes the <emphasis
+          role="bold">@sys</emphasis> variable, instruct users to check that their system name is defined correctly before they
+          issue AFS commands. They issue the following command: <programlisting>
+   % <emphasis role="bold">fs sysname</emphasis>
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ612">
+    <title>Authenticating on Unsupported NFS Client Machines</title>
+
+    <para>The <emphasis role="bold">knfs</emphasis> command enables users to authenticate with AFS when they are working on NFS
+    clients of unsupported system types (those for which AFS binaries are not available). This enables such users to access the AFS
+    file tree to the same extent as any other AFS user. They cannot, however, issue AFS commands, which is possible only on NFS
+    client machines of supported system types.</para>
+
+    <para>To authenticate on an unsupported system type, establish a connection to the translator machine (using a facility such as
+    <emphasis role="bold">telnet</emphasis>), and issue the <emphasis role="bold">klog</emphasis> command to obtain tokens for all
+    the cells you wish to contact during the upcoming NFS session. Then issue the <emphasis role="bold">knfs</emphasis> command,
+    which stores the tokens in a credential structure associated with your NFS session. The Cache Manager uses the tokens when
+    performing AFS access requests that originate from your NFS session.</para>
+
+    <para>More specifically, the credential structure is identified by a process authentication group (PAG) number associated with a
+    particular local UID on a specific NFS client machine. By default, the NFS UID recorded in the credential structure is the same
+    as your local UID on the translator machine. You can include the <emphasis role="bold">-id</emphasis> argument to specify an
+    alternate NFS UID, unless the translator machine's administrator has used the <emphasis role="bold">fs exportafs</emphasis>
+    command's <emphasis role="bold">-uidcheck</emphasis> argument to enable UID checking. In that case, the value of the <emphasis
+    role="bold">-id</emphasis> argument must match your local UID on the translator machine (so there is not point to including the
+    <emphasis role="bold">-id</emphasis> argument). Enforcing matching UIDs prevents someone else from placing their tokens in your
+    credential structure, either accidentally or on purpose. However, it means that your cell's administrators must set your local
+    UID on the NFS client to match your local UID on the translator machine. It also makes it impossible to authenticate by issuing
+    the <emphasis role="bold">klog</emphasis> command on supported NFS clients, meaning that all NFS users must use the <emphasis
+    role="bold">knfs</emphasis> command. See <link linkend="HDRWQ604">Controlling Optional Translator Features</link>.</para>
+
+    <para>After issuing the <emphasis role="bold">knfs</emphasis> command, you can begin working on the NFS client with
+    authenticated access to AFS. When you are finished working, it is a good policy to destroy your tokens by issuing the <emphasis
+    role="bold">knfs</emphasis> command on the translator machine again, this time with the <emphasis role="bold">-unlog</emphasis>
+    flag. This is simpler if you have left the connection to the translator machine open, but you can always establish a new
+    connection if you closed the original one.</para>
+
+    <para>If your NFS client machine is a supported system type and you wish to issue AFS commands on it, include the <emphasis
+    role="bold">-sysname</emphasis> argument to the <emphasis role="bold">knfs</emphasis> command. The remote executor daemon on the
+    translator machine substitutes its value for the <emphasis role="bold">@sys</emphasis> variable in pathnames when executing AFS
+    commands that you issue on the NFS client machine. If your PATH environment variable uses the <emphasis
+    role="bold">@sys</emphasis> variable in the pathnames for directories that house AFS binaries (as recommended), then setting
+    this argument enables the remote executor daemon to access the AFS binaries appropriate for your NFS client machine even if its
+    system type differs from the translator machine's.</para>
+
+    <para>If you do not issue the <emphasis role="bold">knfs</emphasis> command (or the <emphasis role="bold">klog</emphasis>
+    command on the NFS client machine itself, if it is a supported system type), then you are not authenticated with AFS. For a
+    description of unauthenticated access, see <link linkend="HDRWQ599">Enabling Unauthenticated or Authenticated AFS Access</link>.
+    <indexterm>
+        <primary>knfs command</primary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>knfs</secondary>
+      </indexterm></para>
+
+    <sect2 id="Header_686">
+      <title>To authenticate using the knfs command</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Log on to the relevant translator machine, either on the console or remotely by using a program such as <emphasis
+          role="bold">telnet</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Obtain tokens for every cell you wish to access while working on the NFS client. AFS-modified login utilities
+          acquire a token for the translator machine's local cell by default; use <emphasis role="bold">klog</emphasis> command to
+          obtain tokens for other cells if desired.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">knfs</emphasis> command to create a credential structure in the translator machine's
+          kernel memory for storing the tokens obtained in the previous step. Include the <emphasis role="bold">-id</emphasis>
+          argument to associate the structure with a UID on the NFS client that differs from your local UID on the translator
+          machine. This is possible unless the translator machine's administrator has enabled UID checking on the translator
+          machine; see <link linkend="HDRWQ604">Controlling Optional Translator Features</link>. If the NFS client machine is a
+          supported system type and you wish to issue AFS commands on it, include the <emphasis role="bold">-sysname</emphasis>
+          argument to specify its system type. <programlisting>
+   % <emphasis role="bold">knfs -host</emphasis> &lt;<replaceable>host name</replaceable>&gt;  [<emphasis role="bold">-id</emphasis> &lt;<replaceable>user ID (decimal)</replaceable>&gt;]  \
+                [<emphasis role="bold">-sysname</emphasis>  &lt;<replaceable>host's '@sys' value</replaceable>&gt;]
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">-host</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the fully-qualified hostname of the NFS client machine on which you are working.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-id</emphasis></term>
+
+                <listitem>
+                  <para>Specifies a local UID number on the NFS client machine with which to associate the tokens, if different from
+                  your local UID on the translator machine. If this argument is omitted, the tokens are associated with an NFS UID
+                  that matches your local UID on the translator machine. In both cases, the NFS client software marks your AFS
+                  access requests with the NFS UID when it forwards them to the Cache Manager on the translator machine.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-sysname</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the value that the local machine's remote executor daemon substitutes for the <emphasis
+                  role="bold">@sys</emphasis> variable in pathnames when executing AFS commands issued on the NFS client machine
+                  (which must be a supported system type).</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+
+          <para>The following error message indicates that the translator machine's administrator has enabled UID checking and you
+          have provided a value that differs from your local UID on the translator machine.</para>
+
+          <programlisting>
+   knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Close the connection to the translator machine (if desired) and work on the NFS client machine.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>tokens</primary>
+
+        <secondary>displaying with knfs command</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_687">
+      <title>To display tokens using the knfs command</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Log on to the relevant translator machine, either on the console or remotely by using a program such as <emphasis
+          role="bold">telnet</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">knfs</emphasis> command with the <emphasis role="bold">-tokens</emphasis> flag to
+          display the tokens associated with either the NFS UID that matches your local UID on the translator machine or the NFS UID
+          specified by the <emphasis role="bold">-id</emphasis> argument. <programlisting>
+   % <emphasis role="bold">knfs -host</emphasis> &lt;<replaceable>host name</replaceable>&gt;  [<emphasis role="bold">-id</emphasis> &lt;<replaceable>user ID (decimal)</replaceable>&gt;] <emphasis
+                role="bold">-tokens</emphasis>
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">-host</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the fully-qualified hostname of the NFS client machine on which you are working.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-id</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the local UID on the NFS client machine for which to display tokens, if different from your local
+                  UID on the translator machine. If this argument is omitted, the tokens are for the NFS UID that matches your local
+                  UID on the translator machine.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-tokens</emphasis></term>
+
+                <listitem>
+                  <para>Displays the tokens.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para>Close the connection to the translator machine if desired.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>tokens</primary>
+
+        <secondary>discarding with knfs command</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_688">
+      <title>To discard tokens using the knfs command</title>
+
+      <orderedlist>
+        <listitem>
+          <para>If you closed your connection to the translator machine after issuing the <emphasis role="bold">knfs</emphasis>
+          command, reopen it.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">knfs</emphasis> command with the <emphasis role="bold">-unlog</emphasis> flag.
+          <programlisting>
+   % <emphasis role="bold">knfs -host</emphasis>  &lt;<replaceable>host name</replaceable>&gt;  [<emphasis role="bold">-id</emphasis> &lt;<replaceable>user ID (decimal)</replaceable>&gt;]  <emphasis
+                role="bold">-unlog</emphasis>
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">-host</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the fully-qualified hostname of the NFS client machine you are working on.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-id</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the local UID number on the NFS client machine for which to discard the associated tokens, if
+                  different from your local UID on the translator machine. If this argument is omitted, the tokens associated with
+                  an NFS UID that matches your local UID on the translator machine are discarded.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-unlog</emphasis></term>
+
+                <listitem>
+                  <para>Discards the tokens.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para>If desired, close the connection to the translator machine.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</appendix>

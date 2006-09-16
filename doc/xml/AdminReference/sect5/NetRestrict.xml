@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="NetRestrict5">
+  <refmeta>
+    <refentrytitle>NetRestrict</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>NetRestrict</refname>
+    <refpurpose>Defines interfaces not to register with AFS servers</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>There are two <replaceable>NetRestrict</replaceable> files, one for an AFS client and one for an
+    AFS File Server or database server.  The AFS client <replaceable>NetRestrict</replaceable> file
+    specifies the IP addresses that the client should not register with the
+    File Servers it connects to.  The server <replaceable>NetInfo</replaceable> file specifies what
+    interfaces should not be registered with AFS Database Servers or used to
+    talk to other database servers.</para>
+
+    <refsect2>
+      <title>Client NetRestrict</title>
+      <para>The <replaceable>NetRestrict</replaceable> file, if present in a client machine's <replaceable>/usr/vice/etc</replaceable>
+      directory, defines the IP addresses of the interfaces that the local Cache
+      Manager does not register with a File Server when first establishing a
+      connection to it. For an explanation of how the File Server uses the
+      registered interfaces, see <link linkend="NetInfo5">NetInfo(5)</link>.</para>
+
+      <para>As it initializes, the Cache Manager constructs a list of interfaces to
+      register, from the <replaceable>/usr/vice/etc/NetInfo</replaceable> file if it exists, or from the
+      list of interfaces configured with the operating system otherwise.  The
+      Cache Manager then removes from the list any addresses that appear in the
+      <replaceable>NetRestrict</replaceable> file, if it exists. The Cache Manager records the resulting
+      list in kernel memory.</para>
+
+      <para>The <replaceable>NetRestrict</replaceable> file is in ASCII format. One IP address appears on each
+      line, in dotted decimal format. The order of the addresses is not
+      significant. The value <computeroutput>255</computeroutput> is a wildcard that represents all possible
+      addresses in that field. For example, the value <computeroutput>192.12.105.255</computeroutput>
+      indicates that the Cache Manager does not register any of the addresses in
+      the <computeroutput>192.12.105</computeroutput> subnet.</para>
+
+      <para>To display the addresses the Cache Manager is currently registering with
+      File Servers, use the <emphasis role="bold">fs getclientaddrs</emphasis> command.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>Server NetRestrict</title>
+      <para>The <replaceable>NetRestrict</replaceable> file, if present in the <replaceable>/usr/afs/local</replaceable> directory,
+      defines the following:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>On a file server machine, the local interfaces that the File Server
+          (<emphasis role="bold">fileserver</emphasis> process) does not register in the Volume Location Database
+          (VLDB) at initialization time.</para>
+
+        </listitem>
+        <listitem>
+          <para>On a database server machine, the local interfaces that the Ubik
+          synchronization library does not use when communicating with the database
+          server processes running on other database server machines.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>As it initializes, the File Server constructs a list of interfaces to
+      register, from the <replaceable>/usr/afs/local/NetInfo</replaceable> file if it exists, or from
+      the list of interfaces configured with the operating system otherwise. The
+      File Server then removes from the list any addresses that appear in the
+      <replaceable>NetRestrict</replaceable> file, if it exists. The File Server records the resulting
+      list in the <replaceable>/usr/afs/local/sysid</replaceable> file and registers the interfaces in
+      the VLDB. The database server processes use a similar procedure when
+      initializing, to determine which interfaces to use for communication with
+      the peer processes on other database machines in the cell.</para>
+
+      <para>The <replaceable>NetRestrict</replaceable> file is in ASCII format. One IP address appears on each
+      line, in dotted decimal format. The order of the addresses is not
+      significant. The value <computeroutput>255</computeroutput> is a wildcard that represents all possible
+      addresses in that field. For example, the value <computeroutput>192.12.105.255</computeroutput>
+      indicates that the File Server or database server processes do not
+      register or use any of the addresses in the <computeroutput>192.12.105</computeroutput> subnet.</para>
+
+      <para>To display the File Server interface addresses registered in the VLDB, use
+      the <emphasis role="bold">vos listaddrs</emphasis> command.</para>
+
+    </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>See Also</title>
+    <para><link linkend="sysid5">sysid(5)</link>,
+    <link linkend="vldb_DB05">vldb.DB0(5)</link>,
+    <link linkend="fileserver8">fileserver(8)</link>,
+    <link linkend="fs_getclientaddrs1">fs_getclientaddrs(1)</link>
+    <link linkend="vos_listaddrs1">vos_listaddrs(1)</link></para>
+
+  </refsect1>
+  <refsect1>
+    <title>Copyright</title>
+    <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+    <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+    converted from HTML to POD by software written by Chas Williams and Russ
+    Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+  </refsect1>
+</refentry>

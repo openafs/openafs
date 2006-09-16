@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="fs_getcacheparms1">
+  <refmeta>
+    <refentrytitle>fs getcacheparms</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>fs getcacheparms</refname>
+    <refpurpose>Displays the current size and usage of the cache</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Synopsis</title>
+    <para><emphasis role="bold">fs getcacheparms</emphasis> [<emphasis role="bold">-help</emphasis>]</para>
+
+    <para><emphasis role="bold">fs getca</emphasis> [<emphasis role="bold">-h</emphasis>]</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Description</title>
+    <para>The <emphasis role="bold">fs getcacheparms</emphasis> command displays the current size of the cache
+    (which can be in memory or on disk), and the amount currently in use.</para>
+
+    <para>The reported statistics are from kernel memory, so the reported size can
+    differ from the setting specified in the <replaceable>/usr/vice/etc/cacheinfo</replaceable> file
+    on a machine using a disk cache, if the <emphasis role="bold">fs setcachesize</emphasis> command has
+    been used to alter cache size.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">-help</emphasis></term>
+        <listitem>
+          <para>Prints the online help for this command. All other valid options are
+          ignored.</para>
+
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>Output</title>
+    <para>The output reports</para>
+
+<programlisting>
+   AFS using &amp;lt;amount&amp;gt; of the cache's available &amp;lt;size&amp;gt; 1K byte blocks.
+
+</programlisting>
+      <para>where &lt;amount&gt; is the number of kilobyte blocks currently used to cache
+      data and status information, and &lt;size&gt; is the total current cache size.</para>
+
+    </refsect1>
+    <refsect1>
+      <title>Examples</title>
+      <para>The following example shows the output on a machine with a 25000 kilobyte
+      cache.</para>
+
+<programlisting>
+   % fs getcacheparms
+   AFS using 22876 of the cache's available 25000 1K byte blocks.
+
+</programlisting>
+      </refsect1>
+      <refsect1>
+        <title>Privilege Required</title>
+        <para>None</para>
+
+      </refsect1>
+      <refsect1>
+        <title>See Also</title>
+        <para><link linkend="fs_setcachesize1">fs_setcachesize(1)</link></para>
+
+      </refsect1>
+      <refsect1>
+        <title>Copyright</title>
+        <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+        <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+        converted from HTML to POD by software written by Chas Williams and Russ
+        Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+      </refsect1>
+    </refentry>

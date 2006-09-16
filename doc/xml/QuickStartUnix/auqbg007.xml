@@ -1,0 +1,3761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ133">
+  <title>Installing Additional Client Machines</title>
+
+  <indexterm>
+    <primary>instructions</primary>
+
+    <secondary>client machine</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>installing</primary>
+
+    <secondary>client functionality</secondary>
+
+    <tertiary>client machine</tertiary>
+  </indexterm>
+
+  <para>This chapter describes how to install AFS client machines after you have installed the first AFS machine. Some parts of the
+  installation differ depending on whether or not the new client is of the same AFS system type (uses the same AFS binaries) as a
+  previously installed client machine. <indexterm>
+      <primary>overview</primary>
+
+      <secondary>installing client machine</secondary>
+    </indexterm></para>
+
+  <sect1 id="Header_116">
+    <title>Summary of Procedures</title>
+
+    <orderedlist>
+      <listitem>
+        <para>Incorporate AFS into the machine's kernel</para>
+      </listitem>
+
+      <listitem>
+        <para>Define the machine's cell membership</para>
+      </listitem>
+
+      <listitem>
+        <para>Define cache location and size</para>
+      </listitem>
+
+      <listitem>
+        <para>Create the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file, which determines which foreign cells the
+        client can access in addition to the local cell</para>
+      </listitem>
+
+      <listitem>
+        <para>Create the <emphasis role="bold">/afs</emphasis> directory and start the Cache Manager</para>
+      </listitem>
+
+      <listitem>
+        <para>Create and mount volumes for housing AFS client binaries (necessary only for clients of a new system type)</para>
+      </listitem>
+
+      <listitem>
+        <para>Create a link from the local <emphasis role="bold">/usr/afsws</emphasis> directory to the AFS directory housing the
+        AFS client binaries</para>
+      </listitem>
+
+      <listitem>
+        <para>Modify the machine's authentication system to enable AFS users to obtain tokens at login</para>
+      </listitem>
+    </orderedlist>
+
+    <indexterm>
+      <primary>CD-ROM</primary>
+
+      <secondary>creating /cdrom directory</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>cdrom directory</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>/cdrom directory</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>/cdrom directory</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>usr/vice/etc directory</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>/usr/vice/etc directory</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>/usr/vice/etc directory</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ134">
+    <title>Creating AFS Directories on the Local Disk</title>
+
+    <para>Create the <emphasis role="bold">/usr/vice/etc</emphasis> directory on the local disk, to house client binaries and
+    configuration files. Subsequent instructions copy files from the AFS CD-ROM into them. Create the <emphasis
+    role="bold">/cdrom</emphasis> directory as a mount point for the CD-ROM, if it does not already exist.</para>
+
+    <programlisting>
+   # <emphasis role="bold">mkdir /usr/vice</emphasis>
+   # <emphasis role="bold">mkdir /usr/vice/etc</emphasis>
+   # <emphasis role="bold">mkdir /cdrom</emphasis>
+</programlisting>
+  </sect1>
+
+  <sect1 id="HDRWQ135">
+    <title>Performing Platform-Specific Procedures</title>
+
+    <para>Every AFS client machine's kernel must incorporate AFS modifications. Some system types use a dynamic kernel loader
+    program, whereas on other system types you build AFS modifications into a static kernel. Some system types support both
+    methods.</para>
+
+    <para>Also modify the machine's authentication system so that users obtain an AFS token as they log into the local file system.
+    Using AFS is simpler and more convenient for your users if you make the modifications on all client machines. Otherwise, users
+    must perform a two-step login procedure (login to the local file system and then issue the <emphasis role="bold">klog</emphasis>
+    command). For further discussion of AFS authentication, see the chapter in the <emphasis>IBM AFS Administration Guide</emphasis>
+    about cell configuration and administration issues.</para>
+
+    <para>For convenience, the following sections group the two procedures by system type. Proceed to the appropriate section.
+    <itemizedlist>
+        <listitem>
+          <para><link linkend="HDRWQ136">Getting Started on AIX Systems</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="HDRWQ137">Getting Started on Digital UNIX Systems</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="HDRWQ138">Getting Started on HP-UX Systems</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="HDRWQ139">Getting Started on IRIX Systems</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="HDRWQ143">Getting Started on Linux Systems</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="HDRWQ144">Getting Started on Solaris Systems</link></para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>incorporating AFS kernel extensions</primary>
+
+      <secondary>client machine</secondary>
+
+      <tertiary>AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS kernel extensions</primary>
+
+      <secondary>on client machine</secondary>
+
+      <tertiary>AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>AFS kernel extensions</secondary>
+
+      <tertiary>on AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AIX</primary>
+
+      <secondary>AFS kernel extensions</secondary>
+
+      <tertiary>on client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>enabling AFS login</primary>
+
+      <secondary>client machine</secondary>
+
+      <tertiary>AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS login</primary>
+
+      <secondary>on client machine</secondary>
+
+      <tertiary>AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>AFS login</secondary>
+
+      <tertiary>on AIX</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AIX</primary>
+
+      <secondary>AFS login</secondary>
+
+      <tertiary>on client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>secondary authentication system (AIX)</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ136">
+    <title>Getting Started on AIX Systems</title>
+
+    <para>In this section you load AFS into the AIX kernel. Then incorporate AFS modifications into the machine's secondary
+    authentication system, if you wish to enable AFS login.</para>
+
+    <sect2 id="Header_120">
+      <title>Loading AFS into the AIX Kernel</title>
+
+      <para>The AIX kernel extension facility is the dynamic kernel loader provided by IBM Corporation. AIX does not support
+      incorporation of AFS modifications during a kernel build.</para>
+
+      <para>For AFS to function correctly, the kernel extension facility must run each time the machine reboots, so the AFS
+      initialization script (included in the AFS distribution) invokes it automatically. In this section you copy the script to the
+      conventional location and edit it to select the appropriate options depending on whether NFS is also to run.</para>
+
+      <para>After editing the script, you run it to incorporate AFS into the kernel. In a later section you verify that the script
+      correctly initializes the Cache Manager, then configure the AIX <emphasis role="bold">inittab</emphasis> file so that the
+      script runs automatically at reboot. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for AIX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
+            mounting CD-ROMs (either locally or remotely via NFS), see your AIX documentation. Then change directory as indicated.
+            <programlisting>
+   # <emphasis role="bold">cd  /cdrom/rs_aix42/root.client/usr/vice/etc</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/dkload</emphasis> directory,
+            and the AFS initialization script to the <emphasis role="bold">/etc</emphasis> directory. <programlisting>
+   # <emphasis role="bold">cp -rp  dkload  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp -p  rc.afs  /etc/rc.afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Edit the <emphasis role="bold">/etc/rc.afs</emphasis> script, setting the <computeroutput>NFS</computeroutput>
+            variable as indicated.</para>
+
+            <para>If the machine is not to function as an NFS/AFS Translator, set the <computeroutput>NFS</computeroutput> variable
+            as follows.</para>
+
+            <programlisting>
+   NFS=$NFS_NONE
+</programlisting>
+
+            <para>If the machine is to function as an NFS/AFS Translator and is running AIX 4.2.1 or higher, set the
+            <computeroutput>NFS</computeroutput> variable as follows. Note that NFS must already be loaded into the kernel, which
+            happens automatically on systems running AIX 4.1.1 and later, as long as the file <emphasis
+            role="bold">/etc/exports</emphasis> exists.</para>
+
+            <programlisting>
+   NFS=$NFS_IAUTH
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Invoke the <emphasis role="bold">/etc/rc.afs</emphasis> script to load AFS modifications into the kernel. You can
+            ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS client.
+            <programlisting>
+   # <emphasis role="bold">/etc/rc.afs</emphasis>
+</programlisting></para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="Header_121">
+      <title>Enabling AFS Login on AIX Systems</title>
+
+      <para>Now incorporate AFS into the AIX secondary authentication system. <orderedlist>
+          <listitem>
+            <para>Issue the <emphasis role="bold">ls</emphasis> command to verify that the <emphasis
+            role="bold">afs_dynamic_auth</emphasis> and <emphasis role="bold">afs_dynamic_kerbauth</emphasis> programs are installed
+            in the local <emphasis role="bold">/usr/vice/etc</emphasis> directory. <programlisting>
+   # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
+</programlisting></para>
+
+            <para>If the files do not exist, mount the AFS CD-ROM for AIX (if it is not already), change directory as indicated, and
+            copy them.</para>
+
+            <programlisting>
+   # <emphasis role="bold">cd /cdrom/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp  -p  afs_dynamic*  /usr/vice/etc</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Edit the local <emphasis role="bold">/etc/security/user</emphasis> file, making changes to the indicated stanzas:
+            <itemizedlist>
+                <listitem>
+                  <para>In the default stanza, set the <computeroutput>registry</computeroutput> attribute to <emphasis
+                  role="bold">DCE</emphasis> (not to <emphasis role="bold">AFS</emphasis>), as follows: <programlisting>
+   registry = DCE
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>In the default stanza, set the <computeroutput>SYSTEM</computeroutput> attribute as indicated.</para>
+
+                  <para>If the machine is an AFS client only, set the following value:</para>
+
+                  <programlisting>
+   SYSTEM = "AFS OR (AFS[UNAVAIL] AND compat[SUCCESS])"   
+</programlisting>
+
+                  <para>If the machine is both an AFS and a DCE client, set the following value (it must appear on a single line in
+                  the file):</para>
+
+                  <programlisting>
+   SYSTEM = "DCE OR DCE[UNAVAIL] OR AFS OR (AFS[UNAVAIL]  \
+       AND compat[SUCCESS])"
+</programlisting>
+                </listitem>
+
+                <listitem>
+                  <para>In the <computeroutput>root</computeroutput> stanza, set the <computeroutput>registry</computeroutput>
+                  attribute as follows. It enables the local superuser <emphasis role="bold">root</emphasis> to log into the local
+                  file system only, based on the password listed in the local password file. <programlisting>
+   root:
+         registry = files
+</programlisting></para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>Edit the local <emphasis role="bold">/etc/security/login.cfg</emphasis> file, creating or editing the indicated
+            stanzas: <itemizedlist>
+                <listitem>
+                  <para>In the <computeroutput>DCE</computeroutput> stanza, set the <computeroutput>program</computeroutput>
+                  attribute as follows.</para>
+
+                  <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
+
+                  <programlisting>
+   DCE:
+        program = /usr/vice/etc/afs_dynamic_auth   
+</programlisting>
+
+                  <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+                  <programlisting>
+   DCE:
+        program = /usr/vice/etc/afs_dynamic_kerbauth
+</programlisting>
+                </listitem>
+
+                <listitem>
+                  <para>In the <computeroutput>AFS</computeroutput> stanza, set the <computeroutput>program</computeroutput>
+                  attribute as follows.</para>
+
+                  <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
+
+                  <programlisting>
+   AFS:
+        program = /usr/vice/etc/afs_dynamic_auth   
+</programlisting>
+
+                  <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+                  <programlisting>
+   AFS:
+        program = /usr/vice/etc/afs_dynamic_kerbauth
+</programlisting>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>incorporating AFS kernel extensions</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS kernel extensions</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS kernel extensions</secondary>
+
+        <tertiary>on Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Digital UNIX</primary>
+
+        <secondary>AFS-modified kernel</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>enabling AFS login</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS login</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on Digital UNIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Digital UNIX</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>SIA (Digital UNIX)</primary>
+
+        <secondary>client machine</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ137">
+    <title>Getting Started on Digital UNIX Systems</title>
+
+    <para>In this section you build AFS into the Digital UNIX kernel. Then incorporate AFS modifications into the machine's Security
+    Integration Architecture (SIA) matrix, if you wish to enable AFS login.</para>
+
+    <sect2 id="Header_123">
+      <title>Building AFS into the Digital UNIX Kernel</title>
+
+      <para>On Digital UNIX systems, you must build AFS modifications into a new static kernel; Digital UNIX does not support
+      dynamic loading. If the machine's hardware and software configuration exactly matches another Digital UNIX machine on which
+      AFS is already built into the kernel, you can choose to copy the kernel from that machine to this one. In general, however, it
+      is better to build AFS modifications into the kernel on each machine according to the following instructions. <orderedlist>
+          <listitem>
+            <para>Create a copy called <emphasis role="bold">AFS</emphasis> of the basic kernel configuration file included in the
+            Digital UNIX distribution as <emphasis role="bold">/usr/sys/conf/</emphasis><replaceable>machine_name</replaceable>,
+            where <replaceable>machine_name</replaceable> is the machine's hostname in all uppercase letters. <programlisting>
+   # <emphasis role="bold">cd /usr/sys/conf</emphasis>
+   # <emphasis role="bold">cp</emphasis> <replaceable>machine_name</replaceable> <emphasis role="bold">AFS</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Add AFS to the list of options in the configuration file you created in the previous step, so that the result
+            looks like the following: <programlisting>
+          .                   .
+          .                   .
+       options               UFS
+       options               NFS
+       options               AFS
+          .                   .
+          .                   .
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Add an entry for AFS to two places in the file <emphasis role="bold">/usr/sys/conf/files</emphasis>. <itemizedlist>
+                <listitem>
+                  <para>Add a line for AFS to the list of <computeroutput>OPTIONS</computeroutput>, so that the result looks like
+                  the following: <programlisting>
+             .                .      .
+             .                .      .
+      OPTIONS/nfs          optional nfs 
+      OPTIONS/afs          optional afs 
+      OPTIONS/nfs_server   optional nfs_server
+             .                .      .
+             .                .      .
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Add an entry for AFS to the list of <computeroutput>MODULES</computeroutput>, so that the result looks like
+                  the following: <programlisting>
+             .                  .        .          .
+             .                  .        .          .
+      #
+      MODULE/nfs_server     optional nfs_server Binary
+      nfs/nfs_server.c      module nfs_server optimize -g3
+      nfs/nfs3_server.c     module nfs_server optimize -g3
+      #
+      MODULE/afs            optional afs Binary
+      afs/libafs.c          module afs
+      #
+</programlisting></para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>Add an entry for AFS to two places in the file <emphasis role="bold">/usr/sys/vfs/vfs_conf.c</emphasis>.
+            <itemizedlist>
+                <listitem>
+                  <para>Add AFS to the list of defined file systems, so that the result looks like the following: <programlisting>
+        .       .              
+        .       .              
+     #include &lt;afs.h&gt;
+     #if defined(AFS) &amp;&amp; AFS
+            extern struct vfsops afs_vfsops;
+     #endif  
+        .       .              
+        .       .              
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Put a declaration for AFS in the <emphasis role="bold">vfssw[]</emphasis> table's MOUNT_ADDON slot, so that
+                  the result looks like the following: <programlisting>
+        .                          .              .
+        .                          .              .
+      &amp;fdfs_vfsops,         "fdfs",   /* 12 = MOUNT_FDFS */
+   #if  defined(AFS)
+      &amp;afs_vfsops,          "afs",
+   #else
+      (struct vfsops *)0,   "",       /* 13 = MOUNT_ADDON */
+   #endif
+   #if NFS &amp;&amp; INFS_DYNAMIC   
+       &amp;nfs3_vfsops,        "nfsv3",  /* 14 = MOUNT_NFS3 */         
+</programlisting></para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>Mount the AFS CD-ROM for Digital UNIX on the local <emphasis role="bold">/cdrom</emphasis> directory. For
+            instructions on mounting CD-ROMs (either locally or remotely via NFS), see your Digital UNIX documentation. Then change
+            directory as indicated. <programlisting>
+   # <emphasis role="bold">cd /cdrom/alpha_dux40/root.client</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
+            role="bold">/sbin/init.d</emphasis> on Digital UNIX machines). Note the removal of the <emphasis
+            role="bold">.rc</emphasis> extension as you copy the script. <programlisting>
+   # <emphasis role="bold">cp usr/vice/etc/afs.rc  /sbin/init.d/afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS kernel module to the local <emphasis role="bold">/usr/sys/BINARY</emphasis> directory.</para>
+
+            <para>If the machine's kernel supports NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp bin/libafs.o /usr/sys/BINARY/afs.mod</emphasis>   
+</programlisting>
+
+            <para>If the machine's kernel does not support NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp bin/libafs.nonfs.o /usr/sys/BINARY/afs.mod</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Configure and build the kernel. Respond to any prompts by pressing &lt;<emphasis
+            role="bold">Return</emphasis>&gt;. The resulting kernel resides in the file <emphasis
+            role="bold">/sys/AFS/vmunix</emphasis>. <programlisting>
+   # <emphasis role="bold">doconfig -c AFS</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Rename the existing kernel file and copy the new, AFS-modified file to the standard location. <programlisting>
+   # <emphasis role="bold">mv /vmunix /vmunix_noafs</emphasis>
+   # <emphasis role="bold">cp /sys/AFS/vmunix /vmunix</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Reboot the machine to start using the new kernel, and login again as the superuser <emphasis
+            role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="Header_124">
+      <title>Enabling AFS Login on Digital UNIX Systems</title>
+
+      <para>On Digital UNIX systems, the AFS initialization script automatically incorporates the AFS authentication library file
+      into the Security Integration Architecture (SIA) matrix on the machine, so that users with AFS accounts obtain a token at
+      login. In this section you copy the library file to the appropriate location.</para>
+
+      <para>For more information on SIA, see the Digital UNIX reference page for <emphasis role="bold">matrix.conf</emphasis>, or
+      consult the section on security in your Digital UNIX documentation.</para>
+
+      <note>
+        <para>If the machine runs both the DCE and AFS client software, AFS must start after DCE. Consult the AFS initialization
+        script for suggested symbolic links to create for correct ordering. Also, the system startup script order must initialize
+        SIA before any long-running process that uses authentication.</para>
+      </note>
+
+      <para>Perform the following steps to enable AFS login. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for Digital UNIX on the local <emphasis role="bold">/cdrom</emphasis> directory, if it is not
+            already. Change directory as indicated. <programlisting>
+   # <emphasis role="bold">cd /cdrom/alpha_dux40/lib/afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS authentication library file to the local <emphasis role="bold">/usr/shlib</emphasis>
+            directory.</para>
+
+            <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process) in the cell:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp  libafssiad.so  /usr/shlib</emphasis>   
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication, rename the library file as you copy it:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp  libafssiad.krb.so  /usr/shlib/libafssiad.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>incorporating AFS kernel extensions</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS kernel extensions</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS kernel extensions</secondary>
+
+        <tertiary>on HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>HP-UX</primary>
+
+        <secondary>AFS-modified kernel</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>enabling AFS login</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS login</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on HP-UX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>HP-UX</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>PAM</primary>
+
+        <secondary>on HP-UX</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ138">
+    <title>Getting Started on HP-UX Systems</title>
+
+    <para>In this section you build AFS into the HP-UX kernel. Then incorporate AFS modifications into the machine's Pluggable
+    Authentication Module (PAM) system, if you wish to enable AFS login.</para>
+
+    <sect2 id="Header_126">
+      <title>Building AFS into the HP-UX Kernel</title>
+
+      <para>On HP-UX systems, you must build AFS modifications into a new static kernel; HP-UX does not support dynamic loading. If
+      the machine's hardware and software configuration exactly matches another HP-UX machine on which AFS is already built into the
+      kernel, you can choose to copy the kernel from that machine to this one. In general, however, it is better to build AFS
+      modifications into the kernel on each machine according to the following instructions. <orderedlist>
+          <listitem>
+            <para>Move the existing kernel-related files to a safe location. <programlisting>
+   # <emphasis role="bold">cp /stand/vmunix /stand/vmunix.noafs</emphasis>
+   # <emphasis role="bold">cp /stand/system /stand/system.noafs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Mount the AFS CD-ROM for HP-UX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
+            mounting CD-ROMs (either locally or remotely via NFS), see your HP-UX documentation. Then change directory as indicated.
+            <programlisting>
+   # <emphasis role="bold">cd /cdrom/hp_ux110/root.client</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS initialization file to the local directory for initialization files (by convention, <emphasis
+            role="bold">/sbin/init.d</emphasis> on HP-UX machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
+            extension as you copy the file. <programlisting>
+   # <emphasis role="bold">cp usr/vice/etc/afs.rc  /sbin/init.d/afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the file <emphasis role="bold">afs.driver</emphasis> to the local <emphasis
+            role="bold">/usr/conf/master.d</emphasis> directory, changing its name to <emphasis role="bold">afs</emphasis> as you
+            do. <programlisting>
+   # <emphasis role="bold">cp  usr/vice/etc/afs.driver  /usr/conf/master.d/afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS kernel module to the local <emphasis role="bold">/usr/conf/lib</emphasis> directory.</para>
+
+            <para>If the machine's kernel supports NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp bin/libafs.a /usr/conf/lib</emphasis>   
+</programlisting>
+
+            <para>If the machine's kernel does not support NFS server functionality, change the file's name as you copy it:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp bin/libafs.nonfs.a /usr/conf/lib/libafs.a</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Incorporate the AFS driver into the kernel, either using the <emphasis role="bold">SAM</emphasis> program or a
+            series of individual commands. <itemizedlist>
+                <listitem>
+                  <para>To use the <emphasis role="bold">SAM</emphasis> program: <orderedlist>
+                      <listitem>
+                        <para>Invoke the <emphasis role="bold">SAM</emphasis> program, specifying the hostname of the local machine
+                        as <replaceable>local_hostname</replaceable>. The <emphasis role="bold">SAM</emphasis> graphical user
+                        interface pops up. <programlisting>
+   # <emphasis role="bold">sam -display</emphasis> <replaceable>local_hostname</replaceable><emphasis role="bold">:0</emphasis> 
+</programlisting></para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Choose the <emphasis role="bold">Kernel Configuration</emphasis> icon, then the <emphasis
+                        role="bold">Drivers</emphasis> icon. From the list of drivers, select <emphasis
+                        role="bold">afs</emphasis>.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Open the pull-down <emphasis role="bold">Actions</emphasis> menu and choose the <emphasis
+                        role="bold">Add Driver to Kernel</emphasis> option.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Open the <emphasis role="bold">Actions</emphasis> menu again and choose the <emphasis
+                        role="bold">Create a New Kernel</emphasis> option.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Confirm your choices by choosing <emphasis role="bold">Yes</emphasis> and <emphasis
+                        role="bold">OK</emphasis> when prompted by subsequent pop-up windows. The <emphasis
+                        role="bold">SAM</emphasis> program builds the kernel and reboots the system.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Login again as the superuser <emphasis role="bold">root</emphasis>. <programlisting>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+                      </listitem>
+                    </orderedlist></para>
+                </listitem>
+
+                <listitem>
+                  <para>To use individual commands: <orderedlist>
+                      <listitem>
+                        <para>Edit the file <emphasis role="bold">/stand/system</emphasis>, adding an entry for <emphasis
+                        role="bold">afs</emphasis> to the <computeroutput>Subsystems</computeroutput> section.</para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Change to the <emphasis role="bold">/stand/build</emphasis> directory and issue the <emphasis
+                        role="bold">mk_kernel</emphasis> command to build the kernel. <programlisting>
+   # <emphasis role="bold">cd /stand/build</emphasis>
+   # <emphasis role="bold">mk_kernel</emphasis>
+</programlisting></para>
+                      </listitem>
+
+                      <listitem>
+                        <para>Move the new kernel to the standard location (<emphasis role="bold">/stand/vmunix</emphasis>), reboot
+                        the machine to start using it, and login again as the superuser <emphasis role="bold">root</emphasis>.
+                        <programlisting>
+   # <emphasis role="bold">mv /stand/build/vmunix_test /stand/vmunix</emphasis>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>             
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+                      </listitem>
+                    </orderedlist></para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="Header_127">
+      <title>Enabling AFS Login on HP-UX Systems</title>
+
+      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
+      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
+      authenticated access to and from the machine.</para>
+
+      <para>Explaining PAM is beyond the scope of this document. It is assumed that you understand the syntax and meanings of
+      settings in the PAM configuration file (for example, how the <computeroutput>other</computeroutput> entry works, the effect of
+      marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
+      <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+      <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
+      wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
+      tested configuration.</para>
+
+      <note>
+        <para>The instructions specify that you mark each entry as <computeroutput>optional</computeroutput>. However, marking some
+        modules as optional can mean that they grant access to the corresponding service even when the user does not meet all of the
+        module's requirements. In some operating system revisions, for example, if you mark as optional the module that controls
+        login via a dial-up connection, it allows users to login without providing a password. See the <emphasis>IBM AFS Release
+        Notes</emphasis> for a discussion of any limitations that apply to this operating system.</para>
+
+        <para>Also, with some operating system versions you must install patches for PAM to interact correctly with certain
+        authentication programs. For details, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+      </note>
+
+      <para>The recommended AFS-related entries in the PAM configuration file make use of one or more of the following three
+      attributes. <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on entries after the first one for a service; it directs
+              the module to use the password that was provided to the first module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 0 (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Perform the following steps to enable AFS login. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for HP-UX on the <emphasis role="bold">/cdrom</emphasis> directory, if it is not already.
+            Then change directory as indicated. <programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS authentication library file to the <emphasis role="bold">/usr/lib/security</emphasis> directory. Then
+            create a symbolic link to it whose name does not mention the version. Omitting the version eliminates the need to edit
+            the PAM configuration file if you later update the library file.</para>
+
+            <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process) in the cell:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/hp_ux110/lib/pam_afs.so.1  .</emphasis>
+   # <emphasis role="bold">ln -s  pam_afs.so.1  pam_afs.so</emphasis>   
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/hp_ux110/lib/pam_afs.krb.so.1   .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Edit the <computeroutput>Authentication management</computeroutput> section of the HP-UX PAM configuration file,
+            <emphasis role="bold">/etc/pam.conf</emphasis> by convention. The entries in this section have the value
+            <computeroutput>auth</computeroutput> in their second field.</para>
+
+            <para>First edit the standard entries, which refer to the HP-UX PAM module (usually, the file <emphasis
+            role="bold">/usr/lib/security/libpam_unix.1</emphasis>) in their fourth field. For each service for which you want to
+            use AFS authentication, edit the third field of its entry to read <computeroutput>optional</computeroutput>. The
+            <emphasis role="bold">pam.conf</emphasis> file in the HP-UX distribution usually includes standard entries for the
+            <emphasis role="bold">login</emphasis> and <emphasis role="bold">ftp</emphasis> services, for instance.</para>
+
+            <para>If there are services for which you want to use AFS authentication, but for which the <emphasis
+            role="bold">pam.conf</emphasis> file does not already include a standard entry, you must create that entry and place the
+            value <computeroutput>optional</computeroutput> in its third field. For instance, the HP-UX <emphasis
+            role="bold">pam.conf</emphasis> file does not usually include standard entries for the <emphasis
+            role="bold">remsh</emphasis> or <emphasis role="bold">telnet</emphasis> services.</para>
+
+            <para>Then create an AFS-related entry for each service, placing it immediately below the standard entry. The following
+            example shows what the <computeroutput>Authentication Management</computeroutput> section looks like after you have you
+            edited or created entries for the services mentioned previously. Note that the example AFS entries appear on two lines
+            only for legibility.</para>
+
+            <programlisting>
+   login   auth  optional  /usr/lib/security/libpam_unix.1
+   login   auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root  setenv_password_expires
+   ftp     auth  optional  /usr/lib/security/libpam_unix.1
+   ftp     auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root
+   remsh   auth  optional  /usr/lib/security/libpam_unix.1
+   remsh   auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root            
+   telnet  auth  optional  /usr/lib/security/libpam_unix.1
+   telnet  auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root  setenv_password_expires
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>If you use the Common Desktop Environment (CDE) on the machine and want users to obtain an AFS token as they log
+            in, also add or edit the following four entries in the <computeroutput>Authentication management</computeroutput>
+            section. Note that the AFS-related entries appear on two lines here only for legibility. <programlisting>
+   dtlogin   auth  optional  /usr/lib/security/libpam_unix.1
+   dtlogin   auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+   dtaction  auth  optional  /usr/lib/security/libpam_unix.1
+   dtaction  auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>incorporating AFS kernel extensions</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>IRIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS kernel extensions</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>IRIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS kernel extensions</secondary>
+
+        <tertiary>on IRIX</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ139">
+    <title>Getting Started on IRIX Systems</title>
+
+    <para>In this section you incorporate AFS into the IRIX kernel, choosing one of two methods: <itemizedlist>
+        <listitem>
+          <para>Dynamic loading using the <emphasis role="bold">ml</emphasis> program distributed by Silicon Graphics, Incorporated
+          (SGI).</para>
+        </listitem>
+
+        <listitem>
+          <para>Building a new static kernel.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>Then see <link linkend="HDRWQ142">Enabling AFS Login on IRIX Systems</link> to read about integrated AFS login on IRIX
+    systems.</para>
+
+    <para>In preparation for either dynamic loading or kernel building, perform the following procedures: <orderedlist>
+        <listitem>
+          <para>Mount the AFS CD-ROM for IRIX on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions on mounting
+          CD-ROMs (either locally or remotely via NFS), see your IRIX documentation. Then change directory as indicated.
+          <programlisting>
+   # <emphasis role="bold">cd  /cdrom/sgi_65/root.client</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
+          role="bold">/etc/init.d</emphasis> on IRIX machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
+          extension as you copy the script. <programlisting>
+   # <emphasis role="bold">cp -p   usr/vice/etc/afs.rc  /etc/init.d/afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">uname -m</emphasis> command to determine the machine's CPU board type. The <emphasis
+          role="bold">IP</emphasis><replaceable>xx</replaceable> value in the output must match one of the supported CPU board types
+          listed in the <emphasis>IBM AFS Release Notes</emphasis> for the current version of AFS. <programlisting>
+   # <emphasis role="bold">uname -m</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Proceed to either <link linkend="HDRWQ140">Loading AFS into the IRIX Kernel</link> or <link
+          linkend="HDRWQ141">Building AFS into the IRIX Kernel</link>.</para>
+        </listitem>
+      </orderedlist></para>
+
+    <indexterm>
+      <primary>IRIX</primary>
+
+      <secondary>AFS kernel extensions</secondary>
+
+      <tertiary>on client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>afsml variable (IRIX)</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>variables</primary>
+
+      <secondary>afsml (IRIX)</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>IRIX</primary>
+
+      <secondary>afsml variable</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>afsxnfs variable (IRIX)</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>variables</primary>
+
+      <secondary>afsxnfs (IRIX)</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>IRIX</primary>
+
+      <secondary>afsxnfs variable</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <sect2 id="HDRWQ140">
+      <title>Loading AFS into the IRIX Kernel</title>
+
+      <para>The <emphasis role="bold">ml</emphasis> program is the dynamic kernel loader provided by SGI for IRIX systems. If you
+      use it rather than building AFS modifications into a static kernel, then for AFS to function correctly the <emphasis
+      role="bold">ml</emphasis> program must run each time the machine reboots. Therefore, the AFS initialization script (included
+      on the AFS CD-ROM) invokes it automatically when the <emphasis role="bold">afsml</emphasis> configuration variable is
+      activated. In this section you activate the variable and run the script.</para>
+
+      <para>In a later section you verify that the script correctly initializes the Cache Manager, then create the links that
+      incorporate AFS into the IRIX startup and shutdown sequence. <orderedlist>
+          <listitem>
+            <para>Create the local <emphasis role="bold">/usr/vice/etc/sgiload</emphasis> directory to house the AFS kernel library
+            file. <programlisting>
+   # <emphasis role="bold">mkdir /usr/vice/etc/sgiload</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS kernel library file to the <emphasis role="bold">/usr/vice/etc/sgiload</emphasis>
+            directory. The <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable> portion of the library file name must
+            match the value previously returned by the <emphasis role="bold">uname -m</emphasis> command. Also choose the file
+            appropriate to whether the machine's kernel supports NFS server functionality (NFS must be supported for the machine to
+            act as an NFS/AFS Translator). Single- and multiprocessor machines use the same library file.</para>
+
+            <para>(You can choose to copy all of the kernel library files into the <emphasis
+            role="bold">/usr/vice/etc/sgiload</emphasis> directory, but they require a significant amount of space.)</para>
+
+            <para>If the machine's kernel supports NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.o  /usr/vice/etc/sgiload</emphasis>   
+</programlisting>
+
+            <para>If the machine's kernel does not support NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.o</emphasis>   \
+                   <emphasis role="bold">/usr/vice/etc/sgiload</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
+            role="bold">afsml</emphasis> configuration variable. <programlisting>
+   # <emphasis role="bold">/etc/chkconfig -f afsml on</emphasis>   
+</programlisting></para>
+
+            <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server functionality, activate
+            the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
+
+            <programlisting>
+   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Run the <emphasis role="bold">/etc/init.d/afs</emphasis> script to load AFS extensions into the kernel. The script
+            invokes the <emphasis role="bold">ml</emphasis> command, automatically determining which kernel library file to use
+            based on this machine's CPU type and the activation state of the <emphasis role="bold">afsxnfs</emphasis>
+            variable.</para>
+
+            <para>You can ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS
+            client.</para>
+
+            <programlisting>
+   # <emphasis role="bold">/etc/init.d/afs start</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ142">Enabling AFS Login on IRIX Systems</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>IRIX</primary>
+
+        <secondary>AFS-modified kernel</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ141">
+      <title>Building AFS into the IRIX Kernel</title>
+
+      <para>If you prefer to build a kernel, and the machine's hardware and software configuration exactly matches another IRIX
+      machine on which AFS is already built into the kernel, you can choose to copy the kernel from that machine to this one. In
+      general, however, it is better to build AFS modifications into the kernel on each machine according to the following
+      instructions. <orderedlist>
+          <listitem>
+            <para>Copy the kernel initialization file <emphasis role="bold">afs.sm</emphasis> to the local <emphasis
+            role="bold">/var/sysgen/system</emphasis> directory, and the kernel master file <emphasis role="bold">afs</emphasis> to
+            the local <emphasis role="bold">/var/sysgen/master.d</emphasis> directory. <programlisting>
+   # <emphasis role="bold">cp -p  bin/afs.sm  /var/sysgen/system</emphasis>
+   # <emphasis role="bold">cp -p  bin/afs  /var/sysgen/master.d</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS kernel library file to the local file <emphasis
+            role="bold">/var/sysgen/boot/afs.a</emphasis>; the <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable>
+            portion of the library file name must match the value previously returned by the <emphasis role="bold">uname
+            -m</emphasis> command. Also choose the file appropriate to whether the machine's kernel supports NFS server
+            functionality (NFS must be supported for the machine to act as an NFS/AFS Translator). Single- and multiprocessor
+            machines use the same library file.</para>
+
+            <para>If the machine's kernel supports NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p   bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.a   /var/sysgen/boot/afs.a</emphasis>   
+</programlisting>
+
+            <para>If the machine's kernel does not support NFS server functionality:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p  bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.a  /var/sysgen/boot/afs.a</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to deactivate the <emphasis
+            role="bold">afsml</emphasis> configuration variable. <programlisting>
+   # <emphasis role="bold">/etc/chkconfig -f afsml off</emphasis>   
+</programlisting></para>
+
+            <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server functionality, activate
+            the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
+
+            <programlisting>
+   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Copy the existing kernel file, <emphasis role="bold">/unix</emphasis>, to a safe location. Compile the new kernel,
+            which is created in the file <emphasis role="bold">/unix.install</emphasis>. It overwrites the existing <emphasis
+            role="bold">/unix</emphasis> file when the machine reboots in the next step. <programlisting>
+   # <emphasis role="bold">cp /unix /unix_noafs</emphasis>
+   # <emphasis role="bold">autoconfig</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Reboot the machine to start using the new kernel, and login again as the superuser <emphasis
+            role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ142">Enabling AFS Login on IRIX Systems</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>enabling AFS login</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>IRIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS login</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>IRIX</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on IRIX</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ142">
+      <title>Enabling AFS Login on IRIX Systems</title>
+
+      <para>The standard IRIX command-line <emphasis role="bold">login</emphasis> program and the graphical <emphasis
+      role="bold">xdm</emphasis> login program both automatically grant an AFS token when AFS is incorporated into the machine's
+      kernel. However, some IRIX distributions use another login utility by default, and it does not necessarily incorporate the
+      required AFS modifications. If that is the case, you must disable the default utility if you want AFS users to obtain AFS
+      tokens at login. For further discussion, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+
+      <para>If you configure the machine to use an AFS-modified login utility, then the <emphasis
+      role="bold">afsauthlib.so</emphasis> and <emphasis role="bold">afskauthlib.so</emphasis> files (included in the AFS
+      distribution) must reside in the <emphasis role="bold">/usr/vice/etc</emphasis> directory. Issue the <emphasis
+      role="bold">ls</emphasis> command to verify.</para>
+
+      <programlisting>
+   # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
+</programlisting>
+
+      <para>If the files do not exist, mount the AFS CD-ROM for IRIX (if it is not already), change directory as indicated, and copy
+      them.</para>
+
+      <programlisting>
+   # <emphasis role="bold">cd /cdrom/sgi_65/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp  -p  *authlib*  /usr/vice/etc</emphasis>   
+</programlisting>
+
+      <para>After taking any necessary action, proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.
+      <indexterm>
+          <primary>incorporating AFS kernel extensions</primary>
+
+          <secondary>client machine</secondary>
+
+          <tertiary>Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>AFS kernel extensions</primary>
+
+          <secondary>on client machine</secondary>
+
+          <tertiary>Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>client machine</primary>
+
+          <secondary>AFS kernel extensions</secondary>
+
+          <tertiary>on Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>Linux</primary>
+
+          <secondary>AFS kernel extensions</secondary>
+
+          <tertiary>on client machine</tertiary>
+        </indexterm> <indexterm>
+          <primary>enabling AFS login</primary>
+
+          <secondary>client machine</secondary>
+
+          <tertiary>Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>AFS login</primary>
+
+          <secondary>on client machine</secondary>
+
+          <tertiary>Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>client machine</primary>
+
+          <secondary>AFS login</secondary>
+
+          <tertiary>on Linux</tertiary>
+        </indexterm> <indexterm>
+          <primary>Linux</primary>
+
+          <secondary>AFS login</secondary>
+
+          <tertiary>on client machine</tertiary>
+        </indexterm> <indexterm>
+          <primary>PAM</primary>
+
+          <secondary>on Linux</secondary>
+
+          <tertiary>client machine</tertiary>
+        </indexterm></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ143">
+    <title>Getting Started on Linux Systems</title>
+
+    <para>In this section you load AFS into the Linux kernel. Then incorporate AFS modifications into the machine's Pluggable
+    Authentication Module (PAM) system, if you wish to enable AFS login.</para>
+
+    <sect2 id="Header_133">
+      <title>Loading AFS into the Linux Kernel</title>
+
+      <para>The <emphasis role="bold">insmod</emphasis> program is the dynamic kernel loader for Linux. Linux does not support
+      incorporation of AFS modifications during a kernel build.</para>
+
+      <para>For AFS to function correctly, the <emphasis role="bold">insmod</emphasis> program must run each time the machine
+      reboots, so the AFS initialization script (included on the AFS CD-ROM) invokes it automatically. The script also includes
+      commands that select the appropriate AFS library file automatically. In this section you run the script.</para>
+
+      <para>In a later section you also verify that the script correctly initializes the Cache Manager, then activate a
+      configuration variable, which results in the script being incorporated into the Linux startup and shutdown sequence.
+      <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for Linux on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
+            mounting CD-ROMs (either locally or remotely via NFS), see your Linux documentation. Then change directory as indicated.
+            <programlisting>
+   # <emphasis role="bold">cd  /cdrom/i386_linux22/root.client/usr/vice/etc</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/modload</emphasis> directory.
+            The filenames for the libraries have the format <emphasis
+            role="bold">libafs-</emphasis><replaceable>version</replaceable><emphasis role="bold">.o</emphasis>, where
+            <replaceable>version</replaceable> indicates the kernel build level. The string <emphasis role="bold">.mp</emphasis> in
+            the <replaceable>version</replaceable> indicates that the file is appropriate for machines running a multiprocessor
+            kernel. <programlisting>
+   # <emphasis role="bold">cp -rp  modload  /usr/vice/etc</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
+            role="bold">/etc/rc.d/init.d</emphasis> on Linux machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
+            extension as you copy the script. <programlisting>
+   # <emphasis role="bold">cp -p   afs.rc  /etc/rc.d/init.d/afs</emphasis> 
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Run the AFS initialization script to load AFS extensions into the kernel. You can ignore any error messages about
+            the inability to start the BOS Server or the Cache Manager or AFS client. <programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
+</programlisting></para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="Header_134">
+      <title>Enabling AFS Login on Linux Systems</title>
+
+      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
+      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
+      authenticated access to and from the machine.</para>
+
+      <para>Explaining PAM is beyond the scope of this document. It is assumed that you understand the syntax and meanings of
+      settings in the PAM configuration file (for example, how the <computeroutput>other</computeroutput> entry works, the effect of
+      marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
+      <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+      <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
+      wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
+      tested configuration.</para>
+
+      <para>The recommended AFS-related entries in the PAM configuration file make use of one or more of the following three
+      attributes. <variablelist>
+          <title>Authentication Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on entries after the first one for a service; it directs
+              the module to use the password that was provided to the first module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 0 (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_uid </computeroutput><emphasis>uid</emphasis></emphasis></term>
+
+            <listitem>
+              <para>This option is an extension of the "ignore_root" switch. The additional parameter is a limit. Users with a uid
+              up to the given parameter are ignored by <emphasis>pam_afs.so</emphasis>. Thus, a system administrator still has the
+              opportunity to add local user accounts to his system by choosing between "low" and "high" user ids. An example
+              /etc/passwd file for "ignore_uid 100" may have entries like these: <programlisting>
+        .
+        .
+afsuserone:x:99:100::/afs/afscell/u/afsuserone:/bin/bash
+afsusertwo:x:100:100::/afs/afscell/u/afsusertwo:/bin/bash
+localuserone:x:101:100::/home/localuserone:/bin/bash
+localusertwo:x:102:100::/home/localusertwo:/bin/bash
+        .
+        .
+</programlisting> AFS accounts should be locked in the file /etc/shadow like this: <programlisting>
+        .
+        .
+afsuserone:!!:11500:0:99999:7:::
+afsusertwo:!!:11500:0:99999:7:::
+localuserone:&lt;thelocaluserone'skey&gt;:11500:0:99999:7:::
+localusertwo:&lt;thelocalusertwo'skey&gt;:11500:0:99999:7:::
+        .
+        .
+</programlisting> There is no need to store a local key in this file since the AFS password is sent and verfied at the AFS cell
+              server!</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>set_token</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Some applications don't call <emphasis>pam_setcred()</emphasis> in order to retrieve the appropriate credentials
+              (here the AFS token) for their session. This switch sets the credentials already in
+              <emphasis>pam_sm_authenticate()</emphasis> obsoleting a call to <emphasis>pam_setcred()</emphasis>. <emphasis
+              role="bold">Caution: Don't use this switch for applications which do call
+              <emphasis>pam_setcred()</emphasis>!</emphasis> One example for an application not calling
+              <emphasis>pam_setcred()</emphasis> are older versions of the samba server. Nevertheless, using applications with
+              working pam session management is recommended as this setup conforms better with the PAM definitions.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>refresh_token</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This options is identical to "set_token" except that no new PAG is generated. This is necessary to handle
+              processes like xlock or xscreensaver. It is not enough to give the screen and the keyboard free for the user who
+              reactivated his screen typing in the correct AFS password, but one may also need fresh tokens with full livetime in
+              order to work on, and the new token must be refreshed in the already existing PAG for the processes that have been
+              started. This is achieved using this option.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>use_klog</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Activating this switch the authentication is done by calling the external program "klog". One program requiring
+              this is for example <emphasis>kdm</emphasis> of KDE 2.x.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>dont_fork</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Usually, the password verification and the establishment of the token is performed in a sub process. Using this
+              option pam_afs does not fork and performs all actions in a single process. <emphasis role="bold">Only use this options
+              in case you notice serious problems caused by the sub process.</emphasis> This option has been developed in respect to
+              the "mod_auth_pam"-project (see also <ulink url="http://pam.sourceforge.net/mod_auth_pam/">mod_auth_pam</ulink>). The
+              mod_auth_pam module enables PAM authentication for the apache http server package.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist> <variablelist>
+          <title>Session Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>no_unlog</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Normally the tokens are deleted (in memory) after the session ends. Using this options the tokens are left
+              untouched. <emphasis role="bold">This behaviour has been the default in pam_afs until openafs-1.1.1!</emphasis></para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>remainlifetime</computeroutput> <emphasis>sec</emphasis></emphasis></term>
+
+            <listitem>
+              <para>The tokens are kept active for <emphasis>sec</emphasis> seconds before they are deleted. X display managers i.e.
+              are used to inform the applications started in the X session before the logout and then end themselves. If the token
+              was deleted immediately the applications would have no chance to write back their settings to i.e. the user's AFS home
+              space. This option may help to avoid the problem.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Perform the following steps to enable AFS login. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for Linux on the <emphasis role="bold">/cdrom</emphasis> directory, if it is not already.
+            Then change to the directory for PAM modules, which depends on which Linux distribution you are using.</para>
+
+            <para>If you are using a Linux distribution from Red Hat Software:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cd /lib/security</emphasis>
+</programlisting>
+
+            <para>If you are using another Linux distribution:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS authentication library file to the directory to which you changed in the previous step.
+            Create a symbolic link whose name does not mention the version. Omitting the version eliminates the need to edit the PAM
+            configuration file if you later update the library file.</para>
+
+            <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.so.1  .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.krb.so.1   .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>For each service with which you want to use AFS authentication, insert an entry for the AFS PAM module into the
+            <computeroutput>auth</computeroutput> section of the service's PAM configuration file. (Linux uses a separate
+            configuration file for each service, unlike some other operating systems which list all services in a single file.) Mark
+            the entry as <computeroutput>sufficient</computeroutput> in the second field.</para>
+
+            <para>Place the AFS entry below any entries that impose conditions under which you want the service to fail for a user
+            who does not meet the entry's requirements. Mark these entries <computeroutput>required</computeroutput>. Place the AFS
+            entry above any entries that need to execute only if AFS authentication fails.</para>
+
+            <para>Insert the following AFS entry if using the Red Hat distribution:</para>
+
+            <programlisting>
+   auth  sufficient  /lib/security/pam_afs.so   try_first_pass  ignore_root
+</programlisting>
+
+            <para>Insert the following AFS entry if using another distribution:</para>
+
+            <programlisting>
+   auth  sufficient  /usr/lib/security/pam_afs.so  try_first_pass  ignore_root
+</programlisting>
+
+            <para>Check the PAM config files also for "session" entries. If there are lines beginning with "session" then please
+            insert this line too:</para>
+
+            <programlisting>
+   session  optional  /lib/security/pam_afs.so
+</programlisting>
+
+            <para>or</para>
+
+            <programlisting>
+   session  optional  /usr/lib/security/pam_afs.so
+</programlisting>
+
+            <para>This guarantees that the user's tokens are deleted from memory after his session ends so that no other user
+            coincidently gets those tokens without authorization! The following examples illustrate the recommended configuration of
+            the configuration file for several services: <variablelist>
+                <title>Authentication Management</title>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/login</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   #%PAM-1.0
+   auth      required   /lib/security/pam_securetty.so
+   auth      required   /lib/security/pam_nologin.so
+   auth      sufficient /lib/security/pam_afs.so try_first_pass ignore_root
+   #                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   #This enables AFS authentication for every user but root
+   auth      required   /lib/security/pam_pwdb.so shadow nullok
+   account   required   /lib/security/pam_pwdb.so
+   password  required   /lib/security/pam_cracklib.so
+   password  required   /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session   optional   /lib/security/pam_afs.so
+   #Make sure tokens are deleted after the user logs out
+   session   required   /lib/security/pam_pwdb.so
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/samba</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   auth       required     /lib/security/pam_afs.so ignore_uid 100 set_token
+   #                                                ^^^^^^^^^^^^^^^^^^^^^^^^
+   #Here, users with uid&gt;100 are considered to belong to the AFS and users
+   #with uid&lt;=100 are ignored by pam_afs. The token is retrieved already in
+   #pam_sm_authenticate() (this is an example pam config for a samba version
+   #that does not call pam_setcred(), it also does no sense to include session
+   #entries here since they would be ignored by this version of samba ).
+   account    required     /lib/security/pam_pwdb.so
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/xscreensaver</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 refresh_token
+   #                                                               ^^^^^^^^^^^^^
+   #Avoid generating a new PAG for the new tokens, use the already existing PAG and
+   #establish a fresh token in it.
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/httpd</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   auth       required   /lib/security/pam_afs.so ignore_uid 100 dont_fork
+   #                                                             ^^^^^^^^^
+   #Don't fork for the verification of the password.
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+              </variablelist> <variablelist>
+                <title>Session Management</title>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/su</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so use_authtok
+   session    required     /lib/security/pam_pwdb.so
+   session    optional     /lib/security/pam_afs.so no_unlog
+   #                                                ^^^^^^^^
+   #Don't delete the token in this case, since the user may still
+   #need it (for example if somebody logs in and changes to root
+   #afterwards he may still want to access his home space in AFS).
+   session    required     /lib/security/pam_login_access.so
+   session    optional     /lib/security/pam_xauth.so
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/xdm</emphasis>)</term>
+
+                  <listitem>
+                    <para><programlisting>
+   auth       required     /lib/security/pam_nologin.so
+   auth       required     /lib/security/pam_login_access.so
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 use_klog
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session    optional     /lib/security/pam_afs.so remainlifetime 10
+   #                                                ^^^^^^^^^^^^^^^^^
+   #Wait 10 seconds before deleting the AFS tokens in order to give
+   #the programs of the X session some time to save their settings
+   #to AFS.
+   session    required     /lib/security/pam_pwdb.so
+</programlisting></para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>incorporating AFS kernel extensions</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS kernel extensions</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS kernel extensions</secondary>
+
+        <tertiary>on Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Solaris</primary>
+
+        <secondary>AFS kernel extensions</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>enabling AFS login</primary>
+
+        <secondary>client machine</secondary>
+
+        <tertiary>Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS login</primary>
+
+        <secondary>on client machine</secondary>
+
+        <tertiary>Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on Solaris</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Solaris</primary>
+
+        <secondary>AFS login</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>PAM</primary>
+
+        <secondary>on Solaris</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Solaris</primary>
+
+        <secondary>file systems clean-up script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>file systems clean-up script (Solaris)</primary>
+
+        <secondary>client machine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>scripts</primary>
+
+        <secondary>file systems clean-up (Solaris)</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ144">
+    <title>Getting Started on Solaris Systems</title>
+
+    <para>In this section you load AFS into the Solaris kernel. Then incorporate AFS modifications into the machine's Pluggable
+    Authentication Module (PAM) system, if you wish to enable AFS login.</para>
+
+    <sect2 id="Header_136">
+      <title>Loading AFS into the Solaris Kernel</title>
+
+      <para>The <emphasis role="bold">modload</emphasis> program is the dynamic kernel loader provided by Sun Microsystems for
+      Solaris systems. Solaris does not support incorporation of AFS modifications during a kernel build.</para>
+
+      <para>For AFS to function correctly, the <emphasis role="bold">modload</emphasis> program must run each time the machine
+      reboots, so the AFS initialization script (included on the AFS CD-ROM) invokes it automatically. In this section you copy the
+      appropriate AFS library file to the location where the <emphasis role="bold">modload</emphasis> program accesses it and then
+      run the script.</para>
+
+      <para>In a later section you verify that the script correctly initializes the Cache Manager, then create the links that
+      incorporate AFS into the Solaris startup and shutdown sequence. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for Solaris on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
+            mounting CD-ROMs (either locally or remotely via NFS), see your Solaris documentation. Then change directory as
+            indicated. <programlisting>
+   # <emphasis role="bold">cd  /cdrom/sun4x_56/root.client/usr/vice/etc</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
+            role="bold">/etc/init.d</emphasis> on Solaris machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
+            extension as you copy the script. <programlisting>
+   # <emphasis role="bold">cp -p  afs.rc  /etc/init.d/afs</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS kernel library file to the local file <emphasis
+            role="bold">/kernel/fs/afs</emphasis>.</para>
+
+            <para>If the machine is running Solaris 2.6 or the 32-bit version of Solaris 7, its kernel supports NFS server
+            functionality, and the <emphasis role="bold">nfsd</emphasis> process is running:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs.o /kernel/fs/afs</emphasis>   
+</programlisting>
+
+            <para>If the machine is running Solaris 2.6 or the 32-bit version of Solaris 7, and its kernel does not support NFS
+            server functionality or the <emphasis role="bold">nfsd</emphasis> process is not running:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs.nonfs.o /kernel/fs/afs</emphasis>   
+</programlisting>
+
+            <para>If the machine is running the 64-bit version of Solaris 7, its kernel supports NFS server functionality, and the
+            <emphasis role="bold">nfsd</emphasis> process is running:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.o /kernel/fs/sparcv9/afs</emphasis>   
+</programlisting>
+
+            <para>If the machine is running the 64-bit version of Solaris 7, and its kernel does not support NFS server
+            functionality or the <emphasis role="bold">nfsd</emphasis> process is not running:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.nonfs.o /kernel/fs/sparcv9/afs</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Run the AFS initialization script to load AFS modifications into the kernel. You can ignore any error messages
+            about the inability to start the BOS Server or the Cache Manager or AFS client. <programlisting>
+   # <emphasis role="bold">/etc/init.d/afs start</emphasis>   
+</programlisting></para>
+
+            <para>When an entry called <computeroutput>afs</computeroutput> does not already exist in the local <emphasis
+            role="bold">/etc/name_to_sysnum</emphasis> file, the script automatically creates it and reboots the machine to start
+            using the new version of the file. If this happens, log in again as the superuser <emphasis role="bold">root</emphasis>
+            after the reboot and run the initialization script again. This time the required entry exists in the <emphasis
+            role="bold">/etc/name_to_sysnum</emphasis> file, and the <emphasis role="bold">modload</emphasis> program runs.</para>
+
+            <programlisting>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+   # <emphasis role="bold">/etc/init.d/afs start</emphasis>
+</programlisting>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="Header_137">
+      <title>Enabling AFS Login on Solaris Systems</title>
+
+      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
+      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
+      authenticated access to and from the machine.</para>
+
+      <para>Explaining PAM is beyond the scope of this document. It is assumed that you understand the syntax and meanings of
+      settings in the PAM configuration file (for example, how the <computeroutput>other</computeroutput> entry works, the effect of
+      marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
+      <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+      <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
+      wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
+      tested configuration.</para>
+
+      <note>
+        <para>The instructions specify that you mark each entry as <computeroutput>optional</computeroutput>. However, marking some
+        modules as optional can mean that they grant access to the corresponding service even when the user does not meet all of the
+        module's requirements. In some operating system revisions, for example, if you mark as optional the module that controls
+        login via a dial-up connection, it allows users to login without providing a password. See the <emphasis>IBM AFS Release
+        Notes</emphasis> for a discussion of any limitations that apply to this operating system.</para>
+
+        <para>Also, with some operating system versions you must install patches for PAM to interact correctly with certain
+        authentication programs. For details, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+      </note>
+
+      <para>The recommended AFS-related entries in the PAM configuration file make use of one or more of the following three
+      attributes. <variablelist>
+          <title>Authentication Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on entries after the first one for a service; it directs
+              the module to use the password that was provided to the first module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 0 (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Perform the following steps to enable AFS login. <orderedlist>
+          <listitem>
+            <para>Mount the AFS CD-ROM for Solaris on the <emphasis role="bold">/cdrom</emphasis> directory, if it is not already.
+            Then change directory as indicated. <programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS authentication library file to the <emphasis role="bold">/usr/lib/security</emphasis> directory. Then
+            create a symbolic link to it whose name does not mention the version. Omitting the version eliminates the need to edit
+            the PAM configuration file if you later update the library file.</para>
+
+            <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/sun4x_56/lib/pam_afs.so.1 .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>   
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /cdrom/sun4x_56/lib/pam_afs.krb.so.1 .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Edit the <computeroutput>Authentication management</computeroutput> section of the Solaris PAM configuration file,
+            <emphasis role="bold">/etc/pam.conf</emphasis> by convention. The entries in this section have the value
+            <computeroutput>auth</computeroutput> in their second field.</para>
+
+            <para>First edit the standard entries, which refer to the Solaris PAM module (usually, the file <emphasis
+            role="bold">/usr/lib/security/pam_unix.so.1</emphasis>) in their fourth field. For each service for which you want to
+            use AFS authentication, edit the third field of its entry to read <computeroutput>optional</computeroutput>. The
+            <emphasis role="bold">pam.conf</emphasis> file in the Solaris distribution usually includes standard entries for the
+            <emphasis role="bold">login</emphasis>, <emphasis role="bold">rlogin</emphasis>, and <emphasis
+            role="bold">rsh</emphasis> services, for instance.</para>
+
+            <para>If there are services for which you want to use AFS authentication, but for which the <emphasis
+            role="bold">pam.conf</emphasis> file does not already include a standard entry, you must create that entry and place the
+            value <computeroutput>optional</computeroutput> in its third field. For instance, the Solaris <emphasis
+            role="bold">pam.conf</emphasis> file does not usually include standard entries for the <emphasis
+            role="bold">ftp</emphasis> or <emphasis role="bold">telnet</emphasis> services.</para>
+
+            <para>Then create an AFS-related entry for each service, placing it immediately below the standard entry. The following
+            example shows what the <computeroutput>Authentication Management</computeroutput> section looks like after you have you
+            edited or created entries for the services mentioned previously. Note that the example AFS entries appear on two lines
+            only for legibility.</para>
+
+            <programlisting>
+   login   auth  optional  /usr/lib/security/pam_unix.so.1
+   login   auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+   rlogin  auth  optional  /usr/lib/security/pam_unix.so.1
+   rlogin  auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+   rsh     auth  optional  /usr/lib/security/pam_unix.so.1
+   rsh     auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root            
+   ftp     auth  optional  /usr/lib/security/pam_unix.so.1
+   ftp     auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root
+   telnet  auth  optional  /usr/lib/security/pam_unix.so.1
+   telnet  auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>If you use the Common Desktop Environment (CDE) on the machine and want users to obtain an AFS token as they log
+            in, also add or edit the following four entries in the <computeroutput>Authentication management</computeroutput>
+            section. Note that the AFS-related entries appear on two lines here only for legibility. <programlisting>
+   dtlogin   auth  optional  /usr/lib/security/pam_unix.so.1
+   dtlogin   auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+   dtsession  auth  optional /usr/lib/security/pam_unix.so.1
+   dtsession  auth  optional /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Some Solaris distributions include a script that locates and removes unneeded files from various file systems. Its
+            conventional location is <emphasis role="bold">/usr/lib/fs/nfs/nfsfind</emphasis>. The script generally uses an argument
+            to the <emphasis role="bold">find</emphasis> command to define which file systems to search. In this step you modify the
+            command to exclude the <emphasis role="bold">/afs</emphasis> directory. Otherwise, the command traverses the AFS
+            filespace of every cell that is accessible from the machine, which can take many hours. The following alterations are
+            possibilities, but you must verify that they are appropriate for your cell.</para>
+
+            <para>The first possible alteration is to add the <emphasis role="bold">-local</emphasis> flag to the existing command,
+            so that it looks like the following:</para>
+
+            <programlisting>
+   find $dir -local -name .nfs\* -mtime +7 -mount -exec rm -f {} \;   
+</programlisting>
+
+            <para>Another alternative is to exclude any directories whose names begin with the lowercase letter <emphasis
+            role="bold">a</emphasis> or a non-alphabetic character.</para>
+
+            <programlisting>
+   find /[A-Zb-z]*  <replaceable>remainder of existing command</replaceable>   
+</programlisting>
+
+            <para>Do not use the following command, which still searches under the <emphasis role="bold">/afs</emphasis> directory,
+            looking for a subdirectory of type <emphasis role="bold">4.2</emphasis>.</para>
+
+            <programlisting>
+   find / -fstype 4.2     /* <replaceable>do not use</replaceable> */
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Proceed to <link linkend="HDRWQ145">Loading and Creating Client Files</link>.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <indexterm>
+        <primary>CD-ROM</primary>
+
+        <secondary>copying client files from</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>copying client files to local disk</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>copying</primary>
+
+        <secondary>client files to local disk</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>cell name</primary>
+
+        <secondary>setting in client ThisCell file</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>cell name in client ThisCell file</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>cell membership</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>ThisCell file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ThisCell file (client)</primary>
+
+        <secondary>client machine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>CellServDB file (client)</primary>
+
+        <secondary>creating</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>database server machine</primary>
+
+        <secondary>entry in client CellServDB file</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>CellServDB file (client)</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>CellServDB file</secondary>
+
+        <tertiary>creating during initial installation</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ145">
+    <title>Loading and Creating Client Files</title>
+
+    <para>Now copy files from the AFS CD-ROM to the <emphasis role="bold">/usr/vice/etc</emphasis> directory. On some platforms that
+    use a dynamic loader program to incorporate AFS modifications into the kernel, you have already copied over some the files.
+    Copying them again does no harm.</para>
+
+    <para>Every AFS client machine has a copy of the <emphasis role="bold">/usr/vice/etc/ThisCell</emphasis> file on its local disk
+    to define the machine's cell membership for the AFS client programs that run on it. Among other functions, this file determines
+    the following: <itemizedlist>
+        <listitem>
+          <para>The cell in which users authenticate when they log onto the machine, assuming it is using an AFS-modified login
+          utility</para>
+        </listitem>
+
+        <listitem>
+          <para>The cell in which users authenticate by default when they issue the <emphasis role="bold">klog</emphasis>
+          command</para>
+        </listitem>
+
+        <listitem>
+          <para>The cell membership of the AFS server processes that the AFS command interpreters on this machine contact by
+          default</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>Similarly, the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file on a client machine's local disk lists the
+    database server machines in each cell that the local Cache Manager can contact. If there is no entry in the file for a cell, or
+    the list of database server machines is wrong, then users working on this machine cannot access the cell. The chapter in the
+    <emphasis>IBM AFS Administration Guide</emphasis> about administering client machines explains how to maintain the file after
+    creating it. A version of the client <emphasis role="bold">CellServDB</emphasis> file was created during the installation of
+    your cell's first machine (in <link linkend="HDRWQ66">Creating the Client CellServDB File</link>). It is probably also
+    appropriate for use on this machine.</para>
+
+    <para>Remember that the Cache Manager consults the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file only at
+    reboot, when it copies the information into the kernel. For the Cache Manager to perform properly, the <emphasis
+    role="bold">CellServDB</emphasis> file must be accurate at all times. Refer to the chapter in the <emphasis>IBM AFS
+    Administration Guide</emphasis> about administering client machines for instructions on updating this file, with or without
+    rebooting. <orderedlist>
+        <listitem>
+          <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the AFS CD-ROM for this machine's system type,
+          if it is not already. For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating
+          system documentation.</para>
+        </listitem>
+
+        <listitem>
+          <para>Copy files to the local <emphasis role="bold">/usr/vice/etc</emphasis> directory.</para>
+
+          <para>This step places a copy of the AFS initialization script (and related files, if applicable) into the <emphasis
+          role="bold">/usr/vice/etc</emphasis> directory. In the preceding instructions for incorporating AFS into the kernel, you
+          copied the script directly to the operating system's conventional location for initialization files. When you incorporate
+          AFS into the machine's startup sequence in a later step, you can choose to link the two files.</para>
+
+          <para>On some system types that use a dynamic kernel loader program, you previously copied AFS library files into a
+          subdirectory of the <emphasis role="bold">/usr/vice/etc</emphasis> directory. On other system types, you copied the
+          appropriate AFS library file directly to the directory where the operating system accesses it. The following commands do
+          not copy or recopy the AFS library files into the <emphasis role="bold">/usr/vice/etc</emphasis> directory, because on
+          some system types the library files consume a large amount of space. If you want to copy them, add the <emphasis
+          role="bold">-r</emphasis> flag to the first <emphasis role="bold">cp</emphasis> command and skip the second <emphasis
+          role="bold">cp</emphasis> command.</para>
+
+          <programlisting>
+   # <emphasis role="bold">cd /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp -p  *  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp -rp  C  /usr/vice/etc</emphasis>
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Create the <emphasis role="bold">/usr/vice/etc/ThisCell</emphasis> file. <programlisting>
+   # <emphasis role="bold">echo "</emphasis><replaceable>cellname</replaceable><emphasis role="bold">" &gt; /usr/vice/etc/ThisCell</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Create the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file. Use a network file transfer program such
+          as <emphasis role="bold">ftp</emphasis> or NFS to copy it from one of the following sources, which are listed in
+          decreasing order of preference: <itemizedlist>
+              <listitem>
+                <para>Your cell's central <emphasis role="bold">CellServDB</emphasis> source file (the conventional location is
+                <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+                role="bold">/common/etc/CellServDB</emphasis>)</para>
+              </listitem>
+
+              <listitem>
+                <para>The global <emphasis role="bold">CellServDB</emphasis> file maintained by the AFS Product Support group</para>
+              </listitem>
+
+              <listitem>
+                <para>An existing client machine in your cell</para>
+              </listitem>
+
+              <listitem>
+                <para>The <emphasis role="bold">CellServDB.sample</emphasis> file included in the
+                <replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis> directory of each AFS
+                CD-ROM; add an entry for the local cell by following the instructions in <link linkend="HDRWQ66">Creating the Client
+                CellServDB File</link></para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+      </orderedlist></para>
+
+    <indexterm>
+      <primary>client cache</primary>
+
+      <see>cache</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS cache</primary>
+
+      <see>cache</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>disk cache</primary>
+
+      <see>cache</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>memory cache</primary>
+
+      <see>cache</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>cache</primary>
+
+      <secondary>requirements</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>cache</primary>
+
+      <secondary>choosing size</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>requirements</primary>
+
+      <secondary>cache</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>usr/vice/etc/cacheinfo</primary>
+
+      <see>cacheinfo file</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>cacheinfo file</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>files</primary>
+
+      <secondary>cacheinfo</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>usr/vice/cache directory</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>directories</primary>
+
+      <secondary>/usr/vice/cache</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>cache</primary>
+
+      <secondary>configuring</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>configuring</primary>
+
+      <secondary>cache</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>setting</primary>
+
+      <secondary>cache size and location</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>cache size and location</secondary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ146">
+    <title>Configuring the Cache</title>
+
+    <para>The Cache Manager uses a cache on the local disk or in machine memory to store local copies of files fetched from file
+    server machines. As the <emphasis role="bold">afsd</emphasis> program initializes the Cache Manager, it sets basic cache
+    configuration parameters according to definitions in the local <emphasis role="bold">/usr/vice/etc/cacheinfo</emphasis> file.
+    The file has three fields: <orderedlist>
+        <listitem>
+          <para>The first field names the local directory on which to mount the AFS filespace. The conventional location is the
+          <emphasis role="bold">/afs</emphasis> directory.</para>
+        </listitem>
+
+        <listitem>
+          <para>The second field defines the local disk directory to use for the disk cache. The conventional location is the
+          <emphasis role="bold">/usr/vice/cache</emphasis> directory, but you can specify an alternate directory if another
+          partition has more space available. There must always be a value in this field, but the Cache Manager ignores it if the
+          machine uses a memory cache.</para>
+        </listitem>
+
+        <listitem>
+          <para>The third field specifies the number of kilobyte (1024 byte) blocks to allocate for the cache.</para>
+        </listitem>
+      </orderedlist></para>
+
+    <para>The values you define must meet the following requirements. <itemizedlist>
+        <listitem>
+          <para>On a machine using a disk cache, the Cache Manager expects always to be able to use the amount of space specified in
+          the third field. Failure to meet this requirement can cause serious problems, some of which can be repaired only by
+          rebooting. You must prevent non-AFS processes from filling up the cache partition. The simplest way is to devote a
+          partition to the cache exclusively.</para>
+        </listitem>
+
+        <listitem>
+          <para>The amount of space available in memory or on the partition housing the disk cache directory imposes an absolute
+          limit on cache size.</para>
+        </listitem>
+
+        <listitem>
+          <para>The maximum supported cache size can vary in each AFS release; see the <emphasis>IBM AFS Release Notes</emphasis>
+          for the current version.</para>
+        </listitem>
+
+        <listitem>
+          <para>For a disk cache, you cannot specify a value in the third field that exceeds 95% of the space available on the
+          partition mounted at the directory named in the second field. If you violate this restriction, the <emphasis
+          role="bold">afsd</emphasis> program exits without starting the Cache Manager and prints an appropriate message on the
+          standard output stream. A value of 90% is more appropriate on most machines. Some operating systems (such as AIX) do not
+          automatically reserve some space to prevent the partition from filling completely; for them, a smaller value (say, 80% to
+          85% of the space available) is more appropriate.</para>
+        </listitem>
+
+        <listitem>
+          <para>For a memory cache, you must leave enough memory for other processes and applications to run. If you try to allocate
+          more memory than is actually available, the <emphasis role="bold">afsd</emphasis> program exits without initializing the
+          Cache Manager and produces the following message on the standard output stream. <programlisting>
+   afsd: memCache allocation failure at <replaceable>number</replaceable> KB
+</programlisting></para>
+
+          <para>The <replaceable>number</replaceable> value is how many kilobytes were allocated just before the failure, and so
+          indicates the approximate amount of memory available.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>Within these hard limits, the factors that determine appropriate cache size include the number of users working on the
+    machine, the size of the files with which they work, and (for a memory cache) the number of processes that run on the machine.
+    The higher the demand from these factors, the larger the cache needs to be to maintain good performance.</para>
+
+    <para>Disk caches smaller than 10 MB do not generally perform well. Machines serving multiple users usually perform better with
+    a cache of at least 60 to 70 MB. The point at which enlarging the cache further does not really improve performance depends on
+    the factors mentioned previously and is difficult to predict.</para>
+
+    <para>Memory caches smaller than 1 MB are nonfunctional, and the performance of caches smaller than 5 MB is usually
+    unsatisfactory. Suitable upper limits are similar to those for disk caches but are probably determined more by the demands on
+    memory from other sources on the machine (number of users and processes). Machines running only a few processes possibly can use
+    a smaller memory cache.</para>
+
+    <sect2 id="HDRWQ147">
+      <title>Configuring a Disk Cache</title>
+
+      <note>
+        <para>Not all file system types that an operating system supports are necessarily supported for use as the cache partition.
+        For possible restrictions, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+      </note>
+
+      <para>To configure the disk cache, perform the following procedures: <orderedlist>
+          <listitem>
+            <para>Create the local directory to use for caching. The following instruction shows the conventional location,
+            <emphasis role="bold">/usr/vice/cache</emphasis>. If you are devoting a partition exclusively to caching, as
+            recommended, you must also configure it, make a file system on it, and mount it at the directory created in this step.
+            <programlisting>
+   # <emphasis role="bold">mkdir /usr/vice/cache</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Create the <emphasis role="bold">cacheinfo</emphasis> file to define the configuration parameters discussed
+            previously. The following instruction shows the standard mount location, <emphasis role="bold">/afs</emphasis>, and the
+            standard cache location, <emphasis role="bold">/usr/vice/cache</emphasis>. <programlisting>
+   # <emphasis role="bold">echo "/afs:/usr/vice/cache:</emphasis><replaceable>#blocks</replaceable><emphasis role="bold">" &gt; /usr/vice/etc/cacheinfo</emphasis>
+</programlisting></para>
+
+            <para>The following example defines the disk cache size as 50,000 KB:</para>
+
+            <programlisting>
+   # <emphasis role="bold">echo "/afs:/usr/vice/cache:50000" &gt; /usr/vice/etc/cacheinfo</emphasis>
+</programlisting>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ148">
+      <title>Configuring a Memory Cache</title>
+
+      <para>To configure a memory cache, create the <emphasis role="bold">cacheinfo</emphasis> file to define the configuration
+      parameters discussed previously. The following instruction shows the standard mount location, <emphasis
+      role="bold">/afs</emphasis>, and the standard cache location, <emphasis role="bold">/usr/vice/cache</emphasis> (though the
+      exact value of the latter is irrelevant for a memory cache).</para>
+
+      <programlisting>
+   # <emphasis role="bold">echo "/afs:/usr/vice/cache:</emphasis><replaceable>#blocks</replaceable><emphasis role="bold">" &gt; /usr/vice/etc/cacheinfo</emphasis>
+</programlisting>
+
+      <para>The following example allocates 25,000 KB of memory for the cache.</para>
+
+      <programlisting>
+   # <emphasis role="bold">echo "/afs:/usr/vice/cache:25000" &gt; /usr/vice/etc/cacheinfo</emphasis>
+</programlisting>
+
+      <indexterm>
+        <primary>afs (/afs) directory</primary>
+
+        <secondary>creating</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afs (/afs) directory</primary>
+
+        <secondary>as root of AFS filespace</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS filespace</primary>
+
+        <secondary>root at /afs directory</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>directories</primary>
+
+        <secondary>/afs</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afsd</primary>
+
+        <secondary>options file (Linux)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afsd options file (Linux)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>afsd options file (Linux)</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>afsd options file (Linux)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>etc/sysconfig/afs</primary>
+
+        <see>afs file</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>Linux</primary>
+
+        <secondary>afsd options file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>afsd options file (Linux)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afsd</primary>
+
+        <secondary>command in AFS init. script</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>afsd</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>OPTIONS variable in AFS initialization file</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>AFS initialization</secondary>
+
+        <see>AFS initialization script</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>scripts</primary>
+
+        <secondary>AFS initialization</secondary>
+
+        <see>AFS initialization script</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS initialization script</primary>
+
+        <secondary>setting afsd parameters</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>afsd command parameters</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>variables</primary>
+
+        <secondary>OPTIONS (in AFS initialization file)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>environment variables</primary>
+
+        <see>variables</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>Cache Manager</primary>
+
+        <secondary>client machine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>configuring</primary>
+
+        <secondary>Cache Manager</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>Cache Manager</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>vfs (AIX)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>vfs file</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>etc/vfs file</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AIX</primary>
+
+        <secondary>editing /etc/vfs file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+
+        <secondary>vfs file (AIX)</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ149">
+    <title>Configuring the Cache Manager</title>
+
+    <para>By convention, the Cache Manager mounts the AFS filespace on the local <emphasis role="bold">/afs</emphasis> directory. In
+    this section you create that directory.</para>
+
+    <para>The <emphasis role="bold">afsd</emphasis> program sets several cache configuration parameters as it initializes the Cache
+    Manager, and starts daemons that improve performance. You can use the <emphasis role="bold">afsd</emphasis> command's arguments
+    to override the parameters' default values and to change the number of some of the daemons. Depending on the machine's cache
+    size, its amount of RAM, and how many people work on it, you can sometimes improve Cache Manager performance by overriding the
+    default values. For a discussion of all of the <emphasis role="bold">afsd</emphasis> command's arguments, see its reference page
+    in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+
+    <para>The <emphasis role="bold">afsd</emphasis> command line in the AFS initialization script on each system type includes an
+    <computeroutput>OPTIONS</computeroutput> variable. You can use it to set nondefault values for the command's arguments, in one
+    of the following ways: <itemizedlist>
+        <listitem>
+          <para>You can create an <emphasis role="bold">afsd</emphasis> <emphasis>options file</emphasis> that sets values for
+          arguments to the <emphasis role="bold">afsd</emphasis> command. If the file exists, its contents are automatically
+          substituted for the <computeroutput>OPTIONS</computeroutput> variable in the AFS initialization script. The AFS
+          distribution for some system types includes an options file; on other system types, you must create it.</para>
+
+          <para>You use two variables in the AFS initialization script to specify the path to the options file:
+          <computeroutput>CONFIG</computeroutput> and <computeroutput>AFSDOPT</computeroutput>. On system types that define a
+          conventional directory for configuration files, the <computeroutput>CONFIG</computeroutput> variable indicates it by
+          default; otherwise, the variable indicates an appropriate location.</para>
+
+          <para>List the desired <emphasis role="bold">afsd</emphasis> options on a single line in the options file, separating each
+          option with one or more spaces. The following example sets the <emphasis role="bold">-stat</emphasis> argument to 2500,
+          the <emphasis role="bold">-daemons</emphasis> argument to 4, and the <emphasis role="bold">-volumes</emphasis> argument to
+          100.</para>
+
+          <programlisting>
+   -stat 2500 -daemons 4 -volumes 100   
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>On a machine that uses a disk cache, you can set the <computeroutput>OPTIONS</computeroutput> variable in the AFS
+          initialization script to one of <computeroutput>$SMALL</computeroutput>, <computeroutput>$MEDIUM</computeroutput>, or
+          <computeroutput>$LARGE</computeroutput>. The AFS initialization script uses one of these settings if the <emphasis
+          role="bold">afsd</emphasis> options file named by the <computeroutput>AFSDOPT</computeroutput> variable does not exist. In
+          the script as distributed, the <computeroutput>OPTIONS</computeroutput> variable is set to the value
+          <computeroutput>$MEDIUM</computeroutput>.</para>
+
+          <note>
+            <para>Do not set the <computeroutput>OPTIONS</computeroutput> variable to <computeroutput>$SMALL</computeroutput>,
+            <computeroutput>$MEDIUM</computeroutput>, or <computeroutput>$LARGE</computeroutput> on a machine that uses a memory
+            cache. The arguments it sets are appropriate only on a machine that uses a disk cache.</para>
+          </note>
+
+          <para>The script (or on some system types the <emphasis role="bold">afsd</emphasis> options file named by the
+          <computeroutput>AFSDOPT</computeroutput> variable) defines a value for each of <computeroutput>SMALL</computeroutput>,
+          <computeroutput>MEDIUM</computeroutput>, and <computeroutput>LARGE</computeroutput> that sets <emphasis
+          role="bold">afsd</emphasis> command arguments appropriately for client machines of different sizes: <itemizedlist>
+              <listitem>
+                <para><computeroutput>SMALL</computeroutput> is suitable for a small machine that serves one or two users and has
+                approximately 8 MB of RAM and a 20-MB cache</para>
+              </listitem>
+
+              <listitem>
+                <para><computeroutput>MEDIUM</computeroutput> is suitable for a medium-sized machine that serves two to six users
+                and has 16 MB of RAM and a 40-MB cache</para>
+              </listitem>
+
+              <listitem>
+                <para><computeroutput>LARGE</computeroutput> is suitable for a large machine that serves five to ten users and has
+                32 MB of RAM and a 100-MB cache</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>You can choose not to create an <emphasis role="bold">afsd</emphasis> options file and to set the
+          <computeroutput>OPTIONS</computeroutput> variable in the initialization script to a null value rather than to the default
+          <computeroutput>$MEDIUM</computeroutput> value. You can then either set arguments directly on the <emphasis
+          role="bold">afsd</emphasis> command line in the script, or set no arguments (and so accept default values for all Cache
+          Manager parameters).</para>
+        </listitem>
+      </itemizedlist> <orderedlist>
+        <listitem>
+          <para>Create the local directory on which to mount the AFS filespace, by convention <emphasis role="bold">/afs</emphasis>.
+          If the directory already exists, verify that it is empty. <programlisting>
+   # <emphasis role="bold">mkdir /afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>On AIX systems, add the following line to the <emphasis role="bold">/etc/vfs</emphasis> file. It enables AIX to
+          unmount AFS correctly during shutdown. <programlisting>
+   afs     4     none     none
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>On Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
+          role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory, removing
+          the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
+   # <emphasis role="bold">cp /usr/vice/etc/afs.conf /etc/sysconfig/afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Edit the machine's AFS initialization script or <emphasis role="bold">afsd</emphasis> options file to set
+          appropriate values for <emphasis role="bold">afsd</emphasis> command parameters. The appropriate file for each system type
+          is as follows: <itemizedlist>
+              <listitem>
+                <para>On AIX systems, <emphasis role="bold">/etc/rc.afs</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>On Digital UNIX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>On HP-UX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>On IRIX systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>On Linux systems, <emphasis role="bold">/etc/sysconfig/afs</emphasis> (the <emphasis
+                role="bold">afsd</emphasis> options file)</para>
+              </listitem>
+
+              <listitem>
+                <para>On Solaris systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
+              </listitem>
+            </itemizedlist></para>
+
+          <para>Use one of the methods described in the introduction to this section to add the following flags to the <emphasis
+          role="bold">afsd</emphasis> command line. Also set any performance-related arguments you wish. <itemizedlist>
+              <listitem>
+                <para>Add the <emphasis role="bold">-memcache</emphasis> flag if the machine is to use a memory cache.</para>
+              </listitem>
+
+              <listitem>
+                <para>Add the <emphasis role="bold">-verbose</emphasis> flag to display a trace of the Cache Manager's
+                initialization on the standard output stream.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+      </orderedlist></para>
+
+    <indexterm>
+      <primary>AFS initialization script</primary>
+
+      <secondary>running</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client machine</primary>
+
+      <secondary>AFS initialization script</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>running AFS init. script</primary>
+
+      <secondary>client machine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>installing</primary>
+
+      <secondary>AFS initialization script</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS initialization script</primary>
+
+      <secondary>adding to machine startup sequence</secondary>
+
+      <tertiary>client machine</tertiary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ150">
+    <title>Starting the Cache Manager and Installing the AFS Initialization Script</title>
+
+    <para>In this section you run the AFS initialization script to start the Cache Manager. If the script works correctly, perform
+    the steps that incorporate it into the machine's startup and shutdown sequence. If there are problems during the initialization,
+    attempt to resolve them. The AFS Product Support group can provide assistance if necessary.</para>
+
+    <para>On machines that use a disk cache, it can take a while for the <emphasis role="bold">afsd</emphasis> program to run the
+    first time on a machine, because it must create all of the <emphasis role="bold">V</emphasis><replaceable>n</replaceable> files
+    in the cache directory. Subsequent Cache Manager initializations do not take nearly as long, because the <emphasis
+    role="bold">V</emphasis><replaceable>n</replaceable> files already exist.</para>
+
+    <para>On system types that use a dynamic loader program, you must reboot the machine before running the initialization script,
+    so that it can freshly load AFS modifications into the kernel.</para>
+
+    <para>Proceed to the instructions for your system type:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><link linkend="HDRWQ151">Running the Script on AIX Systems</link></para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="HDRWQ152">Running the Script on Digital UNIX Systems</link></para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="HDRWQ153">Running the Script on HP-UX Systems</link></para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="HDRWQ154">Running the Script on IRIX Systems</link></para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="HDRWQ155">Running the Script on Linux Systems</link></para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="HDRWQ156">Running the Script on Solaris Systems</link></para>
+      </listitem>
+    </itemizedlist>
+
+    <indexterm>
+      <primary>AIX</primary>
+
+      <secondary>AFS initialization script</secondary>
+
+      <tertiary>on client machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>rc.afs file (AFS init. file for AIX)</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>files</primary>
+
+      <secondary>rc.afs</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>etc/rc.afs</primary>
+
+      <see>rc.afs file</see>
+    </indexterm>
+
+    <sect2 id="HDRWQ151">
+      <title>Running the Script on AIX Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/etc/rc.afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Edit the AIX initialization file, <emphasis role="bold">/etc/inittab</emphasis>, adding the following line to invoke
+          the AFS initialization script. Place it just after the line that starts NFS daemons. <programlisting>
+   rcafs:2:wait:/etc/rc.afs &gt; /dev/console 2&gt;&amp;1 # Start AFS services
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc</emphasis> directories. If you want to avoid
+          potential confusion by guaranteeing that they are always the same, create a link between them. You can always retrieve the
+          original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm  rc.afs</emphasis>
+   # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>Digital UNIX</primary>
+
+        <secondary>AFS initialization script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>AFS initialization file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>AFS initialization file</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>sbin/init.d/afs</primary>
+
+        <see>afs file</see>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ152">
+      <title>Running the Script on Digital UNIX Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
+          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the Digital UNIX
+          startup and shutdown sequence. <programlisting>
+   # <emphasis role="bold">cd  /sbin/init.d</emphasis>
+   # <emphasis role="bold">ln -s  ../init.d/afs  /sbin/rc3.d/S67afs</emphasis>
+   # <emphasis role="bold">ln -s  ../init.d/afs  /sbin/rc0.d/K66afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If you want
+          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
+          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm afs.rc</emphasis>
+   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>AFS initialization file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>AFS initialization file</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>HP-UX</primary>
+
+        <secondary>AFS initialization script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ153">
+      <title>Running the Script on HP-UX Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
+          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the HP-UX startup and
+          shutdown sequence. <programlisting>
+   # <emphasis role="bold">cd /sbin/init.d</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/S460afs</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/K800afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If you want
+          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
+          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm afs.rc</emphasis>
+   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>AFS initialization file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>AFS initialization file</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>IRIX</primary>
+
+        <secondary>AFS initialization script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>etc/init.d/afs</primary>
+
+        <see>afs file</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>afsclient variable (IRIX)</primary>
+
+        <secondary>client machine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>variables</primary>
+
+        <secondary>afsclient (IRIX)</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>IRIX</primary>
+
+        <secondary>afsclient variable</secondary>
+
+        <tertiary>client machine</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ154">
+      <title>Running the Script on IRIX Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>If you have configured the machine to use the <emphasis role="bold">ml</emphasis> dynamic loader program, reboot the
+          machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
+          role="bold">afsclient</emphasis> configuration variable. <programlisting>
+   # <emphasis role="bold">/etc/chkconfig -f afsclient on</emphasis> 
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/etc/init.d/afs  start</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Change to the <emphasis role="bold">/etc/init.d</emphasis> directory and issue the <emphasis role="bold">ln
+          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the IRIX startup and
+          shutdown sequence. <programlisting>
+   # <emphasis role="bold">cd /etc/init.d</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc2.d/S35afs</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc0.d/K35afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/init.d</emphasis> directories. If you want
+          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
+          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm afs.rc</emphasis>
+   # <emphasis role="bold">ln -s  /etc/init.d/afs  afs.rc</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>AFS initialization file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>AFS initialization file</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>etc/rc.d/init.d/afs</primary>
+
+        <see>afs file</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>Linux</primary>
+
+        <secondary>AFS initialization script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ155">
+      <title>Running the Script on Linux Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis role="bold">afs</emphasis>
+          configuration variable. Based on the instruction in the AFS initialization file that begins with the string
+          <computeroutput>#chkconfig</computeroutput>, the command automatically creates the symbolic links that incorporate the
+          script into the Linux startup and shutdown sequence. <programlisting>
+   # <emphasis role="bold">/sbin/chkconfig  --add afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/rc.d/init.d</emphasis> directories, and
+          copies of the <emphasis role="bold">afsd</emphasis> options file in both the <emphasis
+          role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/sysconfig</emphasis> directories. If you want to avoid
+          potential confusion by guaranteeing that the two copies of each file are always the same, create a link between them. You
+          can always retrieve the original script or options file from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm afs.rc afs.conf</emphasis>
+   # <emphasis role="bold">ln -s  /etc/rc.d/init.d/afs  afs.rc</emphasis>
+   # <emphasis role="bold">ln -s  /etc/sysconfig/afs  afs.conf</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>afs file</primary>
+
+        <secondary>AFS initialization file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>files</primary>
+
+        <secondary>afs</secondary>
+
+        <tertiary>AFS initialization file</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Solaris</primary>
+
+        <secondary>AFS initialization script</secondary>
+
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ156">
+      <title>Running the Script on Solaris Systems</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/etc/init.d/afs  start</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Change to the <emphasis role="bold">/etc/init.d</emphasis> directory and issue the <emphasis role="bold">ln
+          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the Solaris startup and
+          shutdown sequence. <programlisting>
+   # <emphasis role="bold">cd /etc/init.d</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc3.d/S99afs</emphasis>
+   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc0.d/K66afs</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/init.d</emphasis> directories. If you want
+          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
+          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm afs.rc</emphasis>
+   # <emphasis role="bold">ln -s  /etc/init.d/afs  afs.rc</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If a volume for housing AFS binaries for this machine's system type does not already exist, proceed to <link
+          linkend="HDRWQ157">Setting Up Volumes and Loading Binaries into AFS</link>. Otherwise, the installation is
+          complete.</para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>storing</primary>
+
+        <secondary>AFS binaries in volumes</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>volume</secondary>
+
+        <tertiary>for AFS binaries</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>volume</primary>
+
+        <secondary>for AFS binaries</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>binaries</primary>
+
+        <secondary>storing AFS in volume</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>usr/afsws directory</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>directories</primary>
+
+        <secondary>/usr/afsws</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ157">
+    <title>Setting Up Volumes and Loading Binaries into AFS</title>
+
+    <para>In this section, you link <emphasis role="bold">/usr/afsws</emphasis> on the local disk to the directory in AFS that
+    houses AFS binaries for this system type. The conventional name for the AFS directory is <emphasis
+    role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+    role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis>.</para>
+
+    <para>If this machine is an existing system type, the AFS directory presumably already exists. You can simply create a link from
+    the local <emphasis role="bold">/usr/afsws</emphasis> directory to it. Follow the instructions in <link
+    linkend="HDRWQ158">Linking /usr/afsws on an Existing System Type</link>.</para>
+
+    <para>If this machine is a new system type (there are no AFS machines of this type in your cell), you must first create and
+    mount volumes to store its AFS binaries, and then create the link from <emphasis role="bold">/usr/afsws</emphasis> to the new
+    directory. See <link linkend="HDRWQ159">Creating Binary Volumes for a New System Type</link>.</para>
+
+    <para>You can also store UNIX system binaries (the files normally stored in local disk directories such as <emphasis
+    role="bold">/bin</emphasis>, <emphasis role="bold">/etc</emphasis>, and <emphasis role="bold">/lib</emphasis>) in volumes
+    mounted under <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+    role="bold">/</emphasis><replaceable>sysname</replaceable>. See <link linkend="HDRWQ88">Storing System Binaries in AFS</link>
+    .</para>
+
+    <sect2 id="HDRWQ158">
+      <title>Linking /usr/afsws on an Existing System Type</title>
+
+      <para>If this client machine is an existing system type, there is already a volume mounted in the AFS filespace that houses
+      AFS client binaries for it. <orderedlist>
+          <listitem>
+            <para>Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the directory <emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/@sys/usr/afsws</emphasis>. You can
+            specify the actual system name instead of <emphasis role="bold">@sys</emphasis> if you wish, but the advantage of using
+            <emphasis role="bold">@sys</emphasis> is that it remains valid if you upgrade this machine to a different system type.
+            <programlisting>
+   # <emphasis role="bold">ln -s /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/@sys/usr/afsws  /usr/afsws</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">(Optional)</emphasis> If you believe it is helpful to your users to access the AFS documents
+            in a certain format via a local disk directory, create <emphasis role="bold">/usr/afsdoc</emphasis> on the local disk as
+            a symbolic link to the documentation directory in AFS (<emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable>). <programlisting>
+   # <emphasis role="bold">ln -s /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable> <emphasis
+                  role="bold">/usr/afsdoc</emphasis>
+</programlisting></para>
+
+            <para>An alternative is to create a link in each user's home directory to the <emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable> directory.</para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ159">
+      <title>Creating Binary Volumes for a New System Type</title>
+
+      <para>If this client machine is a new system type, you must create and mount volumes for its binaries before you can link the
+      local <emphasis role="bold">/usr/afsws</emphasis> directory to an AFS directory.</para>
+
+      <para>To create and mount the volumes, you use the <emphasis role="bold">klog</emphasis> command to authenticate as an
+      administrator and then issue commands from the <emphasis role="bold">vos</emphasis> and <emphasis role="bold">fs</emphasis>
+      command suites. However, the command binaries are not yet available on this machine (by convention, they are accessible via
+      the <emphasis role="bold">/usr/afsws</emphasis> link that you are about to create). You have two choices: <itemizedlist>
+          <listitem>
+            <para>Perform all steps except the last one (Step <link linkend="LIWQ162">10</link>) on an existing AFS machine. On a
+            file server machine, the <emphasis role="bold">klog</emphasis>, <emphasis role="bold">fs</emphasis> and <emphasis
+            role="bold">vos</emphasis> binaries reside in the <emphasis role="bold">/usr/afs/bin</emphasis> directory. On client
+            machines, the <emphasis role="bold">klog</emphasis> and <emphasis role="bold">fs</emphasis> binaries reside in the
+            <emphasis role="bold">/usr/afsws/bin</emphasis> directory and the <emphasis role="bold">vos</emphasis> binary in the
+            <emphasis role="bold">/usr/afsws/etc</emphasis> directory. Depending on how your PATH environment variable is set, you
+            possibly need to precede the command names with a pathname.</para>
+
+            <para>If you work on another AFS machine, be sure to substitute the new system type name for the
+            <replaceable>sysname</replaceable> argument in the following commands, not the system type of the machine on which you
+            are issuing the commands.</para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the necessary command binaries to a temporary location on the local disk, which enables you to perform the
+            steps on the local machine. The following procedure installs them in the <emphasis role="bold">/tmp</emphasis> directory
+            and removes them at the end. Depending on how your PATH environment variable is set, you possibly need to precede the
+            command names with a pathname.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Perform the following steps to create a volume for housing AFS binaries. <orderedlist>
+          <listitem>
+            <para>Working either on the local machine or another AFS machine, mount the AFS CD-ROM for the new system type on the
+            <emphasis role="bold">/cdrom</emphasis> directory, if it is not already. For instructions on mounting CD-ROMs (either
+            locally or remotely via NFS), consult the operating system documentation.</para>
+          </listitem>
+
+          <listitem>
+            <para>If working on the local machine, copy the necessary binaries to a temporary location on the local disk. Substitute
+            a different directory name for <emphasis role="bold">/tmp</emphasis> if you wish. <programlisting>
+   # <emphasis role="bold">cd  /cdrom/</emphasis><replaceable>new_sysname</replaceable><emphasis role="bold">/root.server/usr/afs/bin</emphasis>
+   # <emphasis role="bold">cp -p  klog  /tmp</emphasis>
+   # <emphasis role="bold">cp -p  fs  /tmp</emphasis>
+   # <emphasis role="bold">cp -p  vos  /tmp</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Authenticate as the user <emphasis role="bold">admin</emphasis>. <programlisting>
+   # <emphasis role="bold">klog admin</emphasis>
+   Password: <replaceable>admin_password</replaceable>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LIWQ160" />Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
+            the AFS client binaries for this system type. The following example instruction creates volumes called
+            <replaceable>sysname</replaceable>, <replaceable>sysname</replaceable>.<emphasis role="bold">usr</emphasis>, and
+            <replaceable>sysname</replaceable>.<emphasis role="bold">usr.afsws</emphasis>. Refer to the <emphasis>IBM AFS Release
+            Notes</emphasis> to learn the proper value of <replaceable>sysname</replaceable> for this system type. <programlisting>
+   # <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <replaceable>sysname</replaceable>
+   # <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <replaceable>sysname</replaceable><emphasis
+                  role="bold">.usr</emphasis>
+   # <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <replaceable>sysname</replaceable><emphasis
+                  role="bold">.usr.afsws</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">fs mkmount</emphasis> command to mount the newly created volumes. Because the
+            <emphasis role="bold">root.cell</emphasis> volume is replicated, you must precede the <emphasis>cellname</emphasis> part
+            of the pathname with a period to specify the read/write mount point, as shown. Then issue the <emphasis role="bold">vos
+            release</emphasis> command to release a new replica of the <emphasis role="bold">root.cell</emphasis> volume, and the
+            <emphasis role="bold">fs checkvolumes</emphasis> command to force the local Cache Manager to access them.
+            <programlisting>
+   # <emphasis role="bold">fs mkmount -dir /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable> <emphasis
+                  role="bold">-vol</emphasis> <replaceable>sysname</replaceable>
+   # <emphasis role="bold">fs mkmount -dir /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+                  role="bold">/usr</emphasis>  <emphasis role="bold">-vol</emphasis> <replaceable>sysname</replaceable><emphasis
+                  role="bold">.usr</emphasis>
+   # <emphasis role="bold">fs mkmount -dir /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+                  role="bold">/usr/afsws</emphasis> <emphasis role="bold">-vol</emphasis> <replaceable>sysname</replaceable><emphasis
+                  role="bold">.usr.afsws</emphasis>
+   # <emphasis role="bold">vos release root.cell</emphasis>
+   # <emphasis role="bold">fs checkvolumes</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">fs setacl</emphasis> command to grant the <emphasis role="bold">l</emphasis>
+            (<emphasis role="bold">lookup</emphasis>) and <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>)
+            permissions to the <emphasis role="bold">system:anyuser</emphasis> group on each new directory's ACL. <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable>
+   # <emphasis role="bold">fs setacl  -dir  .  usr  usr/afsws  -acl  system:anyuser rl</emphasis> 
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">fs setquota</emphasis> command to set an unlimited quota on the volume mounted at
+            the <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory. This
+            enables you to copy all of the appropriate files from the CD-ROM into the volume without exceeding the volume's
+            quota.</para>
+
+            <para>If you wish, you can set the volume's quota to a finite value after you complete the copying operation. At that
+            point, use the <emphasis role="bold">vos examine</emphasis> command to determine how much space the volume is occupying.
+            Then issue the <emphasis role="bold">fs setquota</emphasis> command to set a quota that is slightly larger.</para>
+
+            <programlisting>
+   # <emphasis role="bold">fs setquota /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+                role="bold">/usr/afsws  0</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LIWQ161" />Copy the contents of the indicated directories from the CD-ROM into the <emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory.
+            <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+                  role="bold">/usr/afsws</emphasis>
+   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/bin  .</emphasis>
+   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/etc  .</emphasis>
+   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/include  .</emphasis>
+   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/lib  .</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Issue the <emphasis role="bold">fs setacl</emphasis> command to set the ACL on each directory appropriately. To
+            comply with the terms of your AFS License agreement, you must prevent unauthorized users from accessing AFS software. To
+            enable access for locally authenticated users only, set the ACL on the <emphasis role="bold">etc</emphasis>, <emphasis
+            role="bold">include</emphasis>, and <emphasis role="bold">lib</emphasis> subdirectories to grant the <emphasis
+            role="bold">l</emphasis> and <emphasis role="bold">r</emphasis> permissions to the <emphasis
+            role="bold">system:authuser</emphasis> group rather than the <emphasis role="bold">system:anyuser</emphasis> group. The
+            <emphasis role="bold">system:anyuser</emphasis> group must retain the <emphasis role="bold">l</emphasis> and <emphasis
+            role="bold">r</emphasis> permissions on the <emphasis role="bold">bin</emphasis> subdirectory to enable unauthenticated
+            users to access the <emphasis role="bold">klog</emphasis> binary. To ensure that unauthorized users are not accessing
+            AFS software, check periodically that the ACLs on these directories are set properly. <programlisting>
+   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
+                  role="bold">/usr/afsws</emphasis>
+   # <emphasis role="bold">fs setacl  -dir etc include lib  -acl  system:authuser rl</emphasis>  \
+              <emphasis role="bold">system:anyuser none</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><anchor id="LIWQ162" />Perform this step on the new client machine even if you have performed the previous steps
+            on another machine. Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
+            directory <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/@sys/usr/afsws</emphasis>. You can specify the actual system name instead of <emphasis
+            role="bold">@sys</emphasis> if you wish, but the advantage of using <emphasis role="bold">@sys</emphasis> is that it
+            remains valid if you upgrade this machine to a different system type. <programlisting>
+   # <emphasis role="bold">ln -s /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/@sys/usr/afsws  /usr/afsws</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">(Optional)</emphasis> To enable users to issue commands from the AFS suites (such as
+            <emphasis role="bold">fs</emphasis>) without having to specify a pathname to their binaries, include the <emphasis
+            role="bold">/usr/afsws/bin</emphasis> and <emphasis role="bold">/usr/afsws/etc</emphasis> directories in the PATH
+            environment variable you define in each user's shell initialization file (such as <emphasis
+            role="bold">.cshrc</emphasis>).</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">(Optional)</emphasis> If you believe it is helpful to your users to access the AFS documents
+            in a certain format via a local disk directory, create <emphasis role="bold">/usr/afsdoc</emphasis> on the local disk as
+            a symbolic link to the documentation directory in AFS (<emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable>). <programlisting>
+   # <emphasis role="bold">ln -s /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable> <emphasis
+                  role="bold">/usr/afsdoc</emphasis>
+</programlisting></para>
+
+            <para>An alternative is to create a link in each user's home directory to the <emphasis
+            role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
+            role="bold">/afsdoc/</emphasis><replaceable>format_name</replaceable> directory.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">(Optional)</emphasis> If working on the local machine, remove the AFS binaries from the
+            temporary location. They are now accessible in the <emphasis role="bold">/usr/afsws</emphasis> directory.
+            <programlisting>
+   # <emphasis role="bold">cd  /tmp</emphasis>
+   # <emphasis role="bold">rm  klog  fs  vos</emphasis>
+</programlisting></para>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+  </sect1>
+</chapter>

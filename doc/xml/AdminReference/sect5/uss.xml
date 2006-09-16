@@ -1,0 +1,978 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uss5">
+  <refmeta>
+    <refentrytitle>uss</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>uss</refname>
+    <refpurpose>Provides instructions for the uss add command</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para>The uss template file defines the components of an AFS user account that
+    the <emphasis role="bold">uss add</emphasis> command (or <emphasis role="bold">add</emphasis> instruction in a <emphasis role="bold">uss</emphasis> bulk input file)
+    creates. Use the <emphasis role="bold">-template</emphasis> argument to the <emphasis role="bold">uss add</emphasis> or <emphasis role="bold">uss bulk</emphasis>
+    command to identify the template file.</para>
+
+    <refsect2>
+      <title>Summary of Template File Instructions</title>
+      <para>The template file can include the following instructions, each on its own
+      line. A more detailed description of each instruction's syntax follows
+      this list.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>A</term>
+          <listitem>
+            <para>Imposes restrictions on user passwords and authentication attempts.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>D</term>
+          <listitem>
+            <para>Creates a directory.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>E</term>
+          <listitem>
+            <para>Creates a single-line file.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>F</term>
+          <listitem>
+            <para>Creates a file by copying a prototype.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>G</term>
+          <listitem>
+            <para>Defines a directory that is one of a set of parent directories into which
+            the <emphasis role="bold">uss</emphasis> command interpreter evenly distributes newly created home
+            directories.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>L</term>
+          <listitem>
+            <para>Creates a hard link.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>S</term>
+          <listitem>
+            <para>Creates a symbolic link.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>V</term>
+          <listitem>
+            <para>Creates a volume, mounts it in the file space and sets the ACL on the
+            mount point.</para>
+
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>X</term>
+          <listitem>
+            <para>Executes a command.</para>
+
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>If the template file is empty (zero-length), the <emphasis role="bold">uss add</emphasis> command or
+      <computeroutput>add</computeroutput> instruction in a bulk input file only creates an entry in the
+      Protection and Authentication Databases, naming them according to the name
+      specified with the <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-user</emphasis> argument, or in the bulk
+      input file <computeroutput>add</computeroutput> instruction's <emphasis>username</emphasis> field.</para>
+
+    </refsect2>
+    <refsect2>
+      <title>The A Instruction for Setting the Default Treatment of Volumes</title>
+      <para>The <computeroutput>A</computeroutput> instruction in a uss template file enhances cell security by
+      imposing the following restrictions on users' password choice and
+      authentication attempts. For further information on these limits, see the
+      <emphasis>IBM AFS Administration Guide</emphasis> and the <emphasis role="bold">kas setfields</emphasis> reference page.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Limiting the user's password lifetime. When the lifetime expires, the user
+          can no longer authenticate using that password, and must change it.</para>
+
+        </listitem>
+        <listitem>
+          <para>Prohibiting the reuse of the user's 20 most recently used passwords.</para>
+
+        </listitem>
+        <listitem>
+          <para>Limiting the number of consecutive times that a user can provide an
+          incorrect password during authentication, and for how long the
+          Authentication Server refuses further authentication attempts after the
+          limit is exceeded (referred to as an <emphasis>account lockout</emphasis>). For regular user
+          accounts in most cells, the recommended limit is nine and lockout time is
+          25 minutes.</para>
+
+        </listitem>
+      </itemizedlist>
+      <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   A &amp;lt;username&amp;gt; &amp;lt;lifetime&amp;gt; &amp;lt;reuse&amp;gt; &amp;lt;failures&amp;gt; &amp;lt;locktime&amp;gt;
+
+</programlisting>
+        <para>where</para>
+
+        <variablelist>
+          <varlistentry>
+            <term>A</term>
+            <listitem>
+              <para>Indicates a security-enhancing instruction. It must be a capital letter.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;username&gt;</term>
+            <listitem>
+              <para>Names the Authentication Database entry on which to impose security
+              restrictions. Specify the value $USER to read in the username from the
+              <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-user</emphasis> argument, or from the <emphasis>username</emphasis> field of
+              an <computeroutput>add</computeroutput> instruction in a bulk input file.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;lifetime&gt;</term>
+            <listitem>
+              <para>Sets the number of days after the user's password is changed that it
+              remains valid. When the password becomes invalid (expires), the user is
+              unable to authenticate, but has 30 more days in which to issue the
+              <emphasis role="bold">kpasswd</emphasis> command to change the password (after that, only an
+              administrator can change it).</para>
+
+              <para>Specify an integer from the range <computeroutput>1</computeroutput> through <computeroutput>254</computeroutput> to specify the
+              number of days until expiration, the value <computeroutput>0</computeroutput> to indicate that the
+              password never expires, or the value $PWEXPIRES to read in the number
+              of days from the <emphasis role="bold">uss add</emphasis> or <emphasis role="bold">uss bulk</emphasis> command's <emphasis role="bold">-pwexpires</emphasis>
+              argument. If the <computeroutput>A</computeroutput> instruction does not appear in the template file,
+              the default is for the user's password never to expire.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;reuse&gt;</term>
+            <listitem>
+              <para>Determines whether or not the user can change his or her password (using
+              the <emphasis role="bold">kpasswd</emphasis> or <emphasis role="bold">kas setpassword</emphasis> command) to one that is similar to
+              any of the last twenty passwords. The acceptable values are <computeroutput>reuse</computeroutput> to
+              allow reuse and <computeroutput>noreuse</computeroutput> to prohibit it.  If the <computeroutput>A</computeroutput> instruction does
+              not appear in the template file, the default is to allow password reuse.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;failures&gt;</term>
+            <listitem>
+              <para>Sets the number of consecutive times the user can provide an incorrect
+              password during authentication (using the <emphasis role="bold">klog</emphasis> command or a login
+              utility that grants AFS tokens). When the user exceeds the limit, the
+              Authentication Server rejects further authentication attempts for the
+              amount of time specified in the &lt;locktime&gt; field.</para>
+
+              <para>Specify an integer from the range <computeroutput>1</computeroutput> through <computeroutput>254</computeroutput> to specify the
+              number of failures permitted, or the value <computeroutput>0</computeroutput> to indicate that there is
+              no limit to the number of unsuccessful attempts.  If the <computeroutput>A</computeroutput> instruction
+              does not appear in the template file, the default is to allow an unlimited
+              number of failures.</para>
+
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>&lt;locktime&gt;</term>
+            <listitem>
+              <para>Specifies how long the Authentication Server refuses authentication
+              attempts from a user who has exceeded the failure limit set in the
+              &lt;failures&gt; field.</para>
+
+              <para>Specify a number of hours and minutes (<emphasis>hh:mm</emphasis>) or minutes only (<emphasis>mm</emphasis>),
+              from the range <computeroutput>01</computeroutput> (one minute) through <computeroutput>36:00</computeroutput> (36 hours). The
+              Authentication Server automatically reduces any larger value to <computeroutput>36:00</computeroutput>
+              and also rounds up any non-zero value to the next higher multiple of 8.5
+              minutes. A value of <computeroutput>0</computeroutput> (zero) sets an infinite lockout time; an
+              administrator must always issue the <emphasis role="bold">kas unlock</emphasis> command to unlock the
+              account.</para>
+
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect2>
+      <refsect2>
+        <title>The D Instruction for Creating a Directory</title>
+        <para>The <computeroutput>D</computeroutput> instruction in a uss template file creates a directory. Its
+        intended use is to create a subdirectory in the user home directory
+        created by the <computeroutput>V</computeroutput> instruction in the template file.</para>
+
+        <para>Any number of <computeroutput>D</computeroutput> instructions can appear in the template file. If any
+        variables in the instruction take their values from the <computeroutput>V</computeroutput> instruction
+        (notably, the $MTPT variable), the instruction must follow the <computeroutput>V</computeroutput>
+        instruction in the file.</para>
+
+        <para>Although it is possible to use the <computeroutput>D</computeroutput> instruction to create a directory
+        on the local disk of the machine where the <emphasis role="bold">uss</emphasis> command is issued, it is
+        not recommended. The preferred method for automated creation of
+        directories on a local disk is the <emphasis role="bold">package</emphasis> program. Two complications
+        arise if the &lt;pathname&gt; field refers to a local disk directory:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>The <emphasis role="bold">uss</emphasis> command prints a warning message because it cannot associate an
+            access control list (ACL) with a local disk directory. It creates the
+            directory nonetheless, and some syntactically correct value must appear in
+            the instruction's &lt;ACL&gt; field.</para>
+
+          </listitem>
+          <listitem>
+            <para>To designate any user other than the issuer as the new directory's owner,
+            the issuer must log onto the machine as the local superuser <computeroutput>root</computeroutput>. For
+            local disk directories, only the local superuser <computeroutput>root</computeroutput> is allowed to
+            issue the UNIX <emphasis role="bold">chown</emphasis> command that the <emphasis role="bold">uss</emphasis> command interpreter
+            invokes to change the owner from the default value (the directory's
+            creator, which in this case is the issuer of the <emphasis role="bold">uss</emphasis> command). The
+            issuer must then also use the <emphasis role="bold">-admin</emphasis> argument to the <emphasis role="bold">uss add</emphasis> or
+            <emphasis role="bold">uss bulk</emphasis> command to authenticate as a privileged AFS administrator,
+            which is required for creating the Authentication Database and Protection
+            Database entries that the <emphasis role="bold">uss</emphasis> command interpreter always creates for a
+            new account.</para>
+
+          </listitem>
+        </itemizedlist>
+        <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   D &amp;lt;pathname&amp;gt; &amp;lt;mode&amp;gt; &amp;lt;owner&amp;gt; &amp;lt;ACL&amp;gt;
+
+</programlisting>
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>D</term>
+              <listitem>
+                <para>Indicates a directory creation instruction. It must be a capital letter.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;pathname&gt;</term>
+              <listitem>
+                <para>Specifies the directory's full pathname. It can include variables.</para>
+
+                <para>Specify the read/write path to the directory, to avoid the failure that
+                results from attempting to create a new directory in a read-only
+                volume. By convention, the read/write path is indicated by placing a
+                period before the cell name at the pathname's second level (for example,
+                <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+                read-only paths through the filespace, see the reference page for the <emphasis role="bold">fs
+                mkmount</emphasis> command.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;mode&gt;</term>
+              <listitem>
+                <para>Sets the directory's UNIX mode bits. Acceptable values are the standard
+                three- or four-digit numbers corresponding to combinations of
+                permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                <computeroutput>rw-r--r--</computeroutput>. The first (owner) <computeroutput>x</computeroutput> bit must be turned on to enable
+                access to a directory.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;owner&gt;</term>
+              <listitem>
+                <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                the directory's owner in the output from the UNIX <computeroutput>ls -ld</computeroutput> command. If
+                the directory resides in AFS, place the $UID variable in this field. If
+                the directory resides on the local disk, this field must be the username
+                or UID of the <emphasis role="bold">uss</emphasis> command's issuer, unless the issuer is logged in as
+                the local superuser <computeroutput>root</computeroutput>.</para>
+
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>&lt;ACL&gt;</term>
+              <listitem>
+                <para>Sets the ACL on the new directory. It must appear even if the new
+                directory resides on the local disk rather than in AFS, but is ignored in
+                that case. Provide one or more paired values, each pair consisting of an
+                AFS username or group name and the desired permissions, in that order.
+                Separate the two parts of the pair, and each pair, with a space. The <emphasis role="bold">fs
+                setacl</emphasis> reference page describes the available permissions.</para>
+
+                <para>For an AFS directory, grant all permissions to the directory's owner at
+                least. Usually that is the new user, in which case the appropriate value
+                is <computeroutput>$USER all</computeroutput>.</para>
+
+                <para>It is not possible to grant any permissions to the issuer of the <emphasis role="bold">uss</emphasis>
+                command. As the last step in account creation, the <emphasis role="bold">uss</emphasis> command
+                interpreter automatically deletes that person from any ACLs set during the
+                creation process.</para>
+
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect2>
+        <refsect2>
+          <title>The E Instruction for Creating a Single-line File</title>
+          <para>The <computeroutput>E</computeroutput> instruction in a uss template file creates a file by echoing a
+          specified character string into it. Its intended use is to create files in
+          the user home directory created by the <computeroutput>V</computeroutput> instruction in the template
+          file, or in a subdirectory created by a <computeroutput>D</computeroutput> instruction.</para>
+
+          <para>Any number of <computeroutput>E</computeroutput> instructions can appear in the template file. If the
+          file resides in a directory created by a <computeroutput>D</computeroutput> instruction, the <computeroutput>E</computeroutput>
+          instruction must follow the <computeroutput>D</computeroutput> instruction in the file.</para>
+
+          <para>The <computeroutput>E</computeroutput> and <computeroutput>F</computeroutput> instructions have complementary advantages. The
+          character string echoed into the file by an <computeroutput>E</computeroutput> instruction can be
+          customized for each user, because it can include the standard variables
+          for which the <emphasis role="bold">uss</emphasis> command interpreter substitutes the values specified
+          by arguments to the <emphasis role="bold">uss add</emphasis> command or fields in a bulk input file
+          <emphasis role="bold">add</emphasis> instruction. In contrast, a file created using the <computeroutput>F</computeroutput> instruction
+          cannot include variables and so has the same content for all
+          users. However, a file created by an <computeroutput>E</computeroutput> instruction can be a single line
+          only, because no carriage returns (newline characters) are allowed in the
+          character string.</para>
+
+          <para>Although it is possible to use the <computeroutput>E</computeroutput> instruction to create a file on
+          the local disk of the machine where the <emphasis role="bold">uss</emphasis> command is issued, it is
+          not recommended. The preferred method for automated creation of files on a
+          local disk is the <emphasis role="bold">package</emphasis> program.  The main complication is that
+          designating any user other than the issuer as the new file's owner
+          requires logging onto the machine as the local superuser <computeroutput>root</computeroutput>. For
+          local disk files, only the local superuser <computeroutput>root</computeroutput> is allowed to issue the
+          UNIX <emphasis role="bold">chown</emphasis> command that the <emphasis role="bold">uss</emphasis> command interpreter invokes to
+          change the owner from the default value (the file's creator, which in this
+          case is the issuer of the <emphasis role="bold">uss</emphasis> command). The issuer must then also use
+          the <emphasis role="bold">-admin</emphasis> argument to the <emphasis role="bold">uss add</emphasis> or <emphasis role="bold">uss bulk</emphasis> command to
+          authenticate as a privileged AFS administrator, which is required for
+          creating the Authentication Database and Protection Database entries that
+          the <emphasis role="bold">uss</emphasis> command interpreter always creates for a new account.</para>
+
+          <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   E &amp;lt;pathname&amp;gt; &amp;lt;mode&amp;gt; &amp;lt;owner&amp;gt; "&amp;lt;contents&amp;gt;"
+
+</programlisting>
+            <para>where</para>
+
+            <variablelist>
+              <varlistentry>
+                <term>E</term>
+                <listitem>
+                  <para>Indicates a file creation instruction. It must be a capital letter.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;pathname&gt;</term>
+                <listitem>
+                  <para>Specifies the file's full pathname. It can include variables.</para>
+
+                  <para>Specify the read/write path to the file, to avoid the failure that results
+                  from attempting to create a new file in a read-only volume. By convention,
+                  the read/write path is indicated by placing a period before the cell name
+                  at the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For
+                  further discussion of the concept of read/write and read-only paths
+                  through the filespace, see the reference page for the <emphasis role="bold">fs mkmount</emphasis>
+                  command.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;mode&gt;</term>
+                <listitem>
+                  <para>Sets the file's UNIX mode bits. Acceptable values are the standard three-
+                  or four-digit numbers corresponding to combinations of
+                  permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                  <computeroutput>rw-r--r--</computeroutput>.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;owner&gt;</term>
+                <listitem>
+                  <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                  the file's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command. If the file
+                  resides in AFS, place the $UID variable in this field. If the file
+                  resides on the local disk, specify the username or UID of the <emphasis role="bold">uss</emphasis>
+                  command's issuer; otherwise, the account creation operation halts
+                  immediately.</para>
+
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&lt;contents&gt;</term>
+                <listitem>
+                  <para>Specifies the one-line character string to write into the new file.
+                  Surround it with double quotes if it contains one or more spaces. It
+                  cannot contain the newline character, but can contain any of the standard
+                  variables, which the command interpreter resolves as it creates the file.</para>
+
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </refsect2>
+          <refsect2>
+            <title>The F Instruction for Creating a File from a Prototype</title>
+            <para>The <computeroutput>F</computeroutput> instruction in a uss template file creates a file by copying the
+            contents of an existing file (the &lt;prototype&gt;) into it. Its intended use
+            is to create files in the user home directory created by the <computeroutput>V</computeroutput>
+            instruction in the template file, or in a subdirectory created by a <computeroutput>D</computeroutput>
+            instruction.</para>
+
+            <para>Any number of <computeroutput>F</computeroutput> instructions can appear in the template file. If the
+            file resides in a directory created by a <computeroutput>D</computeroutput> instruction, the <computeroutput>F</computeroutput>
+            instruction must follow the <computeroutput>D</computeroutput> instruction in the file.</para>
+
+            <para>The <computeroutput>E</computeroutput> and <computeroutput>F</computeroutput> instructions have complementary advantages. A file
+            created using the <computeroutput>F</computeroutput> instruction has the same content for all users,
+            whereas a file created by an <computeroutput>E</computeroutput> instruction can be customized for each
+            user if it includes variables.  However, a file created by an <computeroutput>E</computeroutput>
+            instruction can be a single line only, whereas the prototype file copied
+            by an <computeroutput>F</computeroutput> instruction can be any length.</para>
+
+            <para>Although it is possible to use the <computeroutput>F</computeroutput> instruction to create a file on
+            the local disk of the machine where the <emphasis role="bold">uss</emphasis> command is issued, it is
+            not recommended. The preferred method for automated creation of files on a
+            local disk is the <emphasis role="bold">package</emphasis> program.  The main complication is that
+            designating any user other than the issuer as the new file's owner
+            requires logging onto the machine as the local superuser <computeroutput>root</computeroutput>. For
+            local disk files, only the local superuser <computeroutput>root</computeroutput> is allowed to issue the
+            UNIX <emphasis role="bold">chown</emphasis> command that the <emphasis role="bold">uss</emphasis> command interpreter invokes to
+            change the owner from the default value (the file's creator, which in this
+            case is the issuer of the <emphasis role="bold">uss</emphasis> command). The issuer must then also use
+            the <emphasis role="bold">-admin</emphasis> argument to the <emphasis role="bold">uss add</emphasis> or <emphasis role="bold">uss bulk</emphasis> command to
+            authenticate as a privileged AFS administrator, which is required for
+            creating the Authentication Database and Protection Database entries that
+            the <emphasis role="bold">uss</emphasis> command interpreter always creates for a new account.</para>
+
+            <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   F &amp;lt;pathname&amp;gt; &amp;lt;mode&amp;gt; &amp;lt;owner&amp;gt; &amp;lt;prototype_file&amp;gt;
+
+</programlisting>
+              <para>where</para>
+
+              <variablelist>
+                <varlistentry>
+                  <term>F</term>
+                  <listitem>
+                    <para>Indicates a file creation instruction. It must be a capital letter.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;pathname&gt;</term>
+                  <listitem>
+                    <para>Specifies the full pathname of the file to create, including the
+                    filename. It can include variables.</para>
+
+                    <para>Specify the read/write path to the file, to avoid the failure that results
+                    from attempting to create a new file in a read-only volume. By convention,
+                    the read/write path is indicated by placing a period before the cell name
+                    at the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For
+                    further discussion of the concept of read/write and read-only paths
+                    through the filespace, see the reference page for the <emphasis role="bold">fs mkmount</emphasis>
+                    command.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;mode&gt;</term>
+                  <listitem>
+                    <para>Sets the file's UNIX mode bits. Acceptable values are the standard three-
+                    or four-digit numbers corresponding to combinations of
+                    permissions. Examples: <computeroutput>755</computeroutput> corresponds to <computeroutput>rwxr-xr-x</computeroutput>, and <computeroutput>644</computeroutput> to
+                    <computeroutput>rw-r--r--</computeroutput>.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;owner&gt;</term>
+                  <listitem>
+                    <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                    the file's owner in the output from the UNIX <computeroutput>ls -l</computeroutput> command. If the file
+                    resides in AFS, place the $UID variable in this field. If the file
+                    resides on the local disk, specify the username or UID of the <emphasis role="bold">uss</emphasis>
+                    command's issuer; otherwise, the account creation operation halts
+                    immediately.</para>
+
+                  </listitem>
+                </varlistentry>
+                <varlistentry>
+                  <term>&lt;prototype_file&gt;</term>
+                  <listitem>
+                    <para>Names the AFS or local disk directory that houses the prototype file to
+                    copy. The prototype file's name must match the final element in the
+                    &lt;pathname&gt; field.</para>
+
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </refsect2>
+            <refsect2>
+              <title>The G Instruction for Even Distribution of Home Directories</title>
+              <para>The <computeroutput>G</computeroutput> instruction in a uss template file creates a directory as one of
+              the set of directories from which the <emphasis role="bold">uss</emphasis> command interpreter selects
+              when choosing a new user home directory's parent directory. More
+              specifically, when the $AUTO variable appears in the &lt;mount_point&gt;
+              field of a <computeroutput>V</computeroutput> instruction, the command interpreter substitutes for it
+              the directory defined by a <computeroutput>G</computeroutput> instruction that currently has the fewest
+              entries.</para>
+
+              <para>The instruction's intended use is to distribute user accounts evenly among
+              several directories, rather than using directories that reflect divisions
+              such as departmental affiliation. Distributing home directories in this
+              fashion is useful mainly in very large cells where storing all user home
+              directories under a single parent directory potentially slows directory
+              lookup, or where a workplace-based division results in unevenly sized
+              directories such that some users consistently experience slower directory
+              lookup than others. See the chapter on <emphasis role="bold">uss</emphasis> in the <emphasis>IBM AFS
+              Administration Guide</emphasis> for more information.</para>
+
+              <para>Any number of <computeroutput>G</computeroutput> instructions can appear in the template file. If the
+              <computeroutput>V</computeroutput> instruction includes the $AUTO variable, it must appear after all
+              of the <computeroutput>G</computeroutput> instructions in the file.</para>
+
+              <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   G &amp;lt;directory&amp;gt;
+
+</programlisting>
+                <para>where</para>
+
+                <variablelist>
+                  <varlistentry>
+                    <term>G</term>
+                    <listitem>
+                      <para>Indicates an instruction that creates a directory to be considered as a
+                      value for the $AUTO variable. It must be a capital letter.</para>
+
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>&lt;directory&gt;</term>
+                    <listitem>
+                      <para>Specifies the directory's name as either a complete pathname or only the
+                      directory name. The choice determines the appropriate format for the
+                      &lt;mount_point&gt; field of a <computeroutput>V</computeroutput> instruction, as discussed in the following
+                      example.</para>
+
+                      <para>Specify the read/write path to the directory, to avoid the failure that
+                      results from attempting to create a new mount point in a read-only volume
+                      when the $AUTO variable is used in a <computeroutput>V</computeroutput> instruction's &lt;mount_point&gt;
+                      field. By convention, the read/write path is indicated by placing a period
+                      before the cell name at the pathname's second level (for example,
+                      <replaceable>/afs/.abc.com</replaceable>). For further discussion of the concept of read/write and
+                      read-only paths through the filespace, see the reference page for the <emphasis role="bold">fs
+                      mkmount</emphasis> command.</para>
+
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+              </refsect2>
+              <refsect2>
+                <title>The L and S Instructions for Creating a Link</title>
+                <para>The <computeroutput>L</computeroutput> instruction in a uss template file creates a hard link between
+                two files, as achieved by the standard UNIX <emphasis role="bold">ln</emphasis> command. The <computeroutput>S</computeroutput>
+                instruction creates a symbolic link between two files, as achieved by the
+                standard UNIX <computeroutput>ln -s</computeroutput> command. A full explanation of links is beyond the
+                scope of this document, but the basic effect is to create a second name
+                for an existing file, enabling access via either name. Creating a link
+                does not create a second copy of the file.</para>
+
+                <para>AFS allows hard links only if the linked files reside in the same
+                directory, because it becomes difficult to determine which access control
+                list (ACL) applies to the file if the two copies reside in directories
+                with different ACLs. AFS allows symbolic links between two files that
+                reside in different directories, or even different volumes. The File
+                Server uses the ACL associated with the actual file rather than the link.</para>
+
+                <para>Any number of <computeroutput>L</computeroutput> and <computeroutput>S</computeroutput> instructions can appear in the template
+                file. If the existing file or link is to reside in a directory created by
+                a <computeroutput>D</computeroutput> instruction, or if the existing file was created by an <computeroutput>E</computeroutput> or <computeroutput>F</computeroutput>
+                instruction, the <computeroutput>L</computeroutput> or <computeroutput>S</computeroutput> instruction must follow the <computeroutput>D</computeroutput>, <computeroutput>E</computeroutput>, or
+                <computeroutput>F</computeroutput> instruction.</para>
+
+                <para>The instructions share the following syntax:</para>
+
+<programlisting>
+   L &amp;lt;existing_file&amp;gt; &amp;lt;link&amp;gt;
+   S &amp;lt;existing_file&amp;gt; &amp;lt;link&amp;gt;
+
+</programlisting>
+                  <para>where</para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term>L</term>
+                      <listitem>
+                        <para>Indicates a hard link creation instruction. It must be a capital letter.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>S</term>
+                      <listitem>
+                        <para>Indicates a symbolic link creation instruction. It must be a capital
+                        letter.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>&lt;existing_file&gt;</term>
+                      <listitem>
+                        <para>Specifies the complete pathname of the existing file.</para>
+
+                      </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                      <term>&lt;link&gt;</term>
+                      <listitem>
+                        <para>Specifies the complete pathname of the second name for the file.</para>
+
+                        <para>Specify the read/write path to the link, to avoid the failure that results
+                        from attempting to create a new link in a read-only volume. By convention,
+                        the read/write path is indicated by placing a period before the cell name
+                        at the pathname's second level (for example, <replaceable>/afs/.abc.com</replaceable>). For
+                        further discussion of the concept of read/write and read-only paths
+                        through the filespace, see the reference page for the <emphasis role="bold">fs mkmount</emphasis>
+                        command.</para>
+
+                      </listitem>
+                    </varlistentry>
+                  </variablelist>
+                </refsect2>
+                <refsect2>
+                  <title>The V Instruction for Creating and Mounting a Volume</title>
+                  <para>The <computeroutput>V</computeroutput> instruction in a uss template file creates a volume on a
+                  specified file server machine and partition and creates an entry for it in
+                  the Volume Location Database (VLDB). It mounts the volume at a location in
+                  the AFS file space that becomes the user's home directory, then designates
+                  the directory's owner and sets its access control list (ACL).</para>
+
+                  <para>Only one <computeroutput>V</computeroutput> instruction can appear in the template file, and one must
+                  appear if the template file contains any instructions at all (is not
+                  empty). All other instructions are optional, except that the template must
+                  include <computeroutput>G</computeroutput> instructions if the $AUTO variable appears in it. (The
+                  <computeroutput>V</computeroutput> instruction is not necessarily the first line in the template. If the
+                  template includes the $AUTO variable, then the <computeroutput>G</computeroutput> instructions which
+                  provide values for the variable must precede it in the file.)</para>
+
+                  <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   V &amp;lt;vname&amp;gt; &amp;lt;server&amp;gt; &amp;lt;partition&amp;gt; &amp;lt;quota&amp;gt; &amp;lt;mount_point&amp;gt; &amp;lt;owner&amp;gt; &amp;lt;ACL&amp;gt;
+
+</programlisting>
+                    <para>where</para>
+
+                    <variablelist>
+                      <varlistentry>
+                        <term>V</term>
+                        <listitem>
+                          <para>Indicates a volume creation instruction. It must be a capital letter.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;name&gt;</term>
+                        <listitem>
+                          <para>Specifies the volume's name. To follow the convention for AFS user volume
+                          names, specify the value <computeroutput>user.$USER</computeroutput>.  Provide a value for the $USER
+                          variable via the <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-user</emphasis> argument or the &lt;username&gt;
+                          field in the bulk input file <emphasis role="bold">add</emphasis> instruction.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;server&gt;</term>
+                        <listitem>
+                          <para>Names the file server machine on which to create the new user's volume. It
+                          is best to provide the fully-qualified hostname (for example,
+                          <computeroutput>fs1.abc.com</computeroutput>), but an abbreviated form is acceptable provided that the
+                          cell's naming service is available to resolve it at the time the volume is
+                          created. To read in the value from the <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-server</emphasis>
+                          argument, specify the value $SERVER.</para>
+
+                        </listitem>
+                      </varlistentry>
+                      <varlistentry>
+                        <term>&lt;partition&gt;</term>
+                        <listitem>
+                          <para>Specifies the partition on which to create the user's volume; it must be
+                          on the file server machine named in the &lt;server&gt; field.  Identify the
+                          partition by its complete name (for example, <replaceable>/vicepa</replaceable>) or use or use one
+                          of the following abbreviations.</para>
+
+<programlisting>
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+</programlisting>
+                            <para>After <replaceable>/vicepz</replaceable> (for which the index is 25) comes</para>
+
+<programlisting>
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+</programlisting>
+                              <para>and so on through</para>
+
+<programlisting>
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+</programlisting>
+                                <para>To read in the value from the <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-partition</emphasis> argument,
+                                specify the value $PART.</para>
+
+                              </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                              <term>&lt;quota&gt;</term>
+                              <listitem>
+                                <para>Sets the maximum number of kilobyte blocks the volume can occupy on the
+                                file server machine's disk. Specify an integer constant if all volumes
+                                have the same quota (<computeroutput>1024</computeroutput> equals a megabyte), or use one of the number
+                                variables ($1 through $9) to assign different values to different volumes.</para>
+
+                              </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                              <term>&lt;mount_point&gt;</term>
+                              <listitem>
+                                <para>Creates a mount point for the volume, which serves as the volume's root
+                                directory. Include the $USER variable as part of the pathname to follow
+                                the convention that user home directory names include the username.</para>
+
+                                <para>Specify the read/write path to the mount point, to avoid the failure that
+                                results from attempting to create a new mount point in a read-only
+                                volume. By convention, the read/write path is indicated by placing a
+                                period before the cell name at the pathname's second level (for example,
+                                <replaceable>/afs/.abc.com</replaceable>). If the $AUTO variable appears in this field, the
+                                directories named by each <computeroutput>G</computeroutput> instruction possibly already indicate the
+                                read/write path. For further discussion of the concept of read/write and
+                                read-only paths through the filespace, see the reference page for the <emphasis role="bold">fs
+                                mkmount</emphasis> command.</para>
+
+                              </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                              <term>&lt;owner&gt;</term>
+                              <listitem>
+                                <para>Specifies the username or UNIX user ID (UID) of the user to be designated
+                                the mount point's owner in the output from the UNIX <computeroutput>ls -ld</computeroutput> command. To
+                                follow the convention for home directory ownership, place the value
+                                $UID in this field.</para>
+
+                              </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                              <term>&lt;ACL&gt;</term>
+                              <listitem>
+                                <para>Sets the ACL on the new directory. Provide one or more paired values, each
+                                pair consisting of an AFS username or group name and the desired
+                                permissions, in that order. Separate the two parts of the pair, and each
+                                pair, with a space. The <emphasis role="bold">fs setacl</emphasis> reference page describes the
+                                available permissions.</para>
+
+                                <para>Grant all permissions to the new user at least. The appropriate
+                                value is <computeroutput>$USER all</computeroutput>.</para>
+
+                                <para>AFS automatically grants the system:administrators group all permissions
+                                as well. It is not possible to grant any permissions to the issuer of the
+                                <emphasis role="bold">uss</emphasis> command. As the last step in account creation, the <emphasis role="bold">uss</emphasis> command
+                                interpreter automatically deletes that user from any ACLs set during the
+                                creation process.</para>
+
+                              </listitem>
+                            </varlistentry>
+                          </variablelist>
+                        </refsect2>
+                        <refsect2>
+                          <title>The X Instruction for Running a Command</title>
+                          <para>The <computeroutput>X</computeroutput> instruction in a uss template file runs the indicated command,
+                          which can be a standard UNIX or AFS command. It can include any variables
+                          from the template file, which the <emphasis role="bold">uss</emphasis> command interpreter resolves
+                          before passing the command on to the appropriate other command
+                          interpreter. It must be a single line only, however (cannot contain
+                          carriage returns or newline characters).</para>
+
+                          <para>Any number of <computeroutput>X</computeroutput> instructions can appear in the template file. If an
+                          instruction manipulates an element created by another instruction, it must
+                          follow that instruction in the file.</para>
+
+                          <para>The instruction has the following syntax:</para>
+
+<programlisting>
+   X "&amp;lt;command&amp;gt;"
+
+</programlisting>
+                            <para>where</para>
+
+                            <variablelist>
+                              <varlistentry>
+                                <term>X</term>
+                                <listitem>
+                                  <para>Indicates a command execution instruction. It must be a capital letter.</para>
+
+                                </listitem>
+                              </varlistentry>
+                              <varlistentry>
+                                <term>&lt;command&gt;</term>
+                                <listitem>
+                                  <para>Specifies the command to run. Surround it with double quotes as shown if
+                                  it contains one or more spaces. It can contain any variables from the
+                                  template file, but not newline characters.</para>
+
+                                </listitem>
+                              </varlistentry>
+                            </variablelist>
+                          </refsect2>
+                        </refsect1>
+                        <refsect1>
+                          <title>Examples</title>
+                          <para>The following example A instruction sets a password lifetime of 254 days,
+                          prohibits password reuse, limits the number of consecutive failed
+                          authentication attempts to nine and sets the corresponding locktime to
+                          25:30 minutes (which is a multiple of 8.5 minutes). The username is read
+                          in from the <emphasis role="bold">-user</emphasis> argument to the <emphasis role="bold">uss add</emphasis> command or from the
+                          <emphasis>username</emphasis> field in each <computeroutput>add</computeroutput> instruction in a bulk input file.</para>
+
+<programlisting>
+   A $USER 254 noreuse 9 25:30
+
+</programlisting>
+                            <para>The following example <computeroutput>D</computeroutput> instruction creates a directory called
+                            <replaceable>public</replaceable> in a new user's home directory, designates the user as the
+                            directory's owner, and grants him or her all ACL permissions.</para>
+
+<programlisting>
+   D $MTPT/public 0755 $UID $USER all
+
+</programlisting>
+                              <para>The following example <computeroutput>E</computeroutput> instruction creates a file in the current
+                              working directory called <replaceable></replaceable><emphasis>username</emphasis><replaceable>.etcp</replaceable>. The contents are an entry
+                              suitable for incorporating into the cell's global <replaceable>/etc/password</replaceable> file.</para>
+
+<programlisting>
+   E  $USER.etcp  0644 root "$USER:X:$UID:10:$NAME:$MTPT:/bin/csh"
+
+</programlisting>
+                                <para>The following example <computeroutput>F</computeroutput> instruction, appropriate for the ABC
+                                Corporation cell, copies a prototype <replaceable>.login</replaceable> file into the user's home
+                                directory.</para>
+
+<programlisting>
+   F $MTPT/.login 0644 $UID /afs/abc.com/common/uss/skel/.login
+
+</programlisting>
+                                  <para>In the following example, the State University cell's administrators
+                                  have decided to distribute user home directories evenly into three
+                                  directories. They define three <computeroutput>G</computeroutput> instructions:</para>
+
+<programlisting>
+   G usr1
+   G usr2
+   G usr3
+
+</programlisting>
+                                    <para>and then put the following value in the &lt;mount_point&gt; field of the <computeroutput>V</computeroutput>
+                                    instruction:</para>
+
+<programlisting>
+   /afs/stateu.edu/$AUTO/$USER
+
+</programlisting>
+                                      <para>Alternatively, if they include the entire directory pathname in the <computeroutput>G</computeroutput>
+                                      instruction:</para>
+
+<programlisting>
+   G /afs/stateu.edu/usr1
+   G /afs/stateu.edu/usr2
+   G /afs/stateu.edu/usr3
+
+</programlisting>
+                                        <para>then the &lt;mount_point&gt; field of the <computeroutput>V</computeroutput> instruction specifies only the
+                                        following:</para>
+
+<programlisting>
+   $AUTO/$USER
+
+</programlisting>
+                                          <para>The following example <computeroutput>L</computeroutput> instruction creates a hard link between the
+                                          files <replaceable>mail</replaceable> and <replaceable>mbox</replaceable> in the user's home directory.</para>
+
+<programlisting>
+   L $MTPT/mbox $MTPT/mail
+
+</programlisting>
+                                            <para>The following example <computeroutput>S</computeroutput> instruction, appropriate for the ABC
+                                            Corporation cell, links the file <replaceable>Mail/outgoing</replaceable> in the user's home
+                                            directory to the file <replaceable>/afs/abc.com/common/mail/outgoing</replaceable>.</para>
+
+<programlisting>
+   S /afs/abc.com/common/mail/outgoing $MTPT/Mail/outgoing
+
+</programlisting>
+                                              <para>The following example <computeroutput>V</computeroutput> instruction creates a volume called
+                                              <computeroutput>user.</computeroutput><emphasis>username</emphasis><computeroutput></computeroutput> on the <replaceable>/vicepa</replaceable> partition of the specified file
+                                              server machine, assigning it a quota of 3000 kilobyte blocks. The mount
+                                              point is under <replaceable>/afs/abc.com/usr</replaceable> and matches the username (the value of
+                                              the $USER variable). The user owns the home directory and has all
+                                              access rights to it. The instruction appears on two lines only for
+                                              legibility; it must appear on a single line in the template file.</para>
+
+<programlisting>
+   V user.$USER $SERVER.abc.com /vicepa 3000 \
+           /afs/abc.com/usr/$USER $UID $USER all
+
+</programlisting>
+                                                <para>The following example <computeroutput>X</computeroutput> instruction mounts the backup version of the
+                                                user's volume at the <replaceable>OldFiles</replaceable> subdirectory.</para>
+
+<programlisting>
+   X "fs mkm /afs/abc.com/usr/$USER/OldFiles   user.$USER.backup"
+
+</programlisting>
+                                                </refsect1>
+                                                <refsect1>
+                                                  <title>See Also</title>
+                                                  <para><link linkend="uss_bulk5">uss_bulk(5)</link>,
+                                                  <link linkend="fs_mkmount1">fs_mkmount(1)</link>,
+                                                  <link linkend="uss_add8">uss_add(8)</link></para>
+
+                                                </refsect1>
+                                                <refsect1>
+                                                  <title>Copyright</title>
+                                                  <para>IBM Corporation 2000. &lt;http://www.ibm.com/&gt; All Rights Reserved.</para>
+
+                                                  <para>This documentation is covered by the IBM Public License Version 1.0.  It was
+                                                  converted from HTML to POD by software written by Chas Williams and Russ
+                                                  Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.</para>
+
+                                                </refsect1>
+                                              </refentry>
