@@ -145,6 +145,7 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
 	}
     }
     code = myCellLookup(conf, cell, AFSCONF_KAUTHSERVICE, cellinfo);
+    afsconf_Close(conf);
     UNLOCK_GLOBAL_MUTEX;
     return code;
 }
