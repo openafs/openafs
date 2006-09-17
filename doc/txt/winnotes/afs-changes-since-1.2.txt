@@ -1,3 +1,7 @@
+Since 1.4.2-rc3: (1.4.2-rc4 released 16 Sep 2006)
+
+ * No changes
+
 Since 1.4.2-rc2: (1.4.2-rc3 released 6 Sep 2006)
 
  * better handling of dot directory
