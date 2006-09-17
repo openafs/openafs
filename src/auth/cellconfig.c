@@ -114,6 +114,113 @@ static int SaveKeys(struct afsconf_dir *adir);
  * CellServDB changes.
  */
 
+#if defined(AFS_SUN5_ENV) && !defined(__sparcv9)
+/* Solaris through 10 in 32 bit mode will return EMFILE if fopen can't
+   get an fd <= 255. We allow the fileserver to claim more fds than that.
+   This has always been a problem since pr_Initialize would have the same
+   issue, but hpr_Initialize makes it more likely that we would see this. 
+   Work around it. This is not generic. It's coded with the needs of
+   afsconf_* in mind only.
+
+   http://www.opensolaris.org/os/community/onnv/flag-days/pages/2006042001/
+*/
+
+#define BUFFER 4096
+
+struct afsconf_iobuffer {
+    int _file;
+    char *buffer;
+    char *ptr;
+    char *endptr;
+};
+
+typedef struct afsconf_iobuffer afsconf_FILE;
+
+static afsconf_FILE *
+afsconf_fopen(const char *fname, const char *fmode)
+{
+    int fd;
+    afsconf_FILE *iop;
+    
+    if ((fd = open(fname, O_RDONLY)) == -1) {
+	return NULL;
+    }
+    
+    iop = malloc(sizeof(struct afsconf_iobuffer));
+    if (iop == NULL) {
+	(void) close(fd);
+	errno = ENOMEM;
+	return NULL;
+    }
+    iop->_file = fd;
+    iop->buffer = malloc(BUFFER);
+    if (iop->buffer == NULL) {
+	(void) close(fd);
+	free((void *) iop);
+	errno = ENOMEM;
+	return NULL;
+    }
+    iop->ptr = iop->buffer;
+    iop->endptr = iop->buffer;
+    return iop;
+}
+
+static int
+afsconf_fclose(afsconf_FILE *iop)
+{
+    if (iop == NULL) {
+	return 0;
+    }
+    close(iop->_file);
+    free((void *)iop->buffer);
+    free((void *)iop);
+    return 0;
+}
+
+static char *
+afsconf_fgets(char *s, int n, afsconf_FILE *iop)
+{
+    char *p;
+    
+    p = s;
+    for (;;) {
+	char c;
+	
+	if (iop->ptr == iop->endptr) {
+	    ssize_t len;
+	    
+	    if ((len = read(iop->_file, (void *)iop->buffer, BUFFER)) == -1) {
+		return NULL;
+	    }
+	    if (len == 0) {
+		*p = 0;
+		if (s == p) {
+		    return NULL;
+		}
+		return s;
+	    }
+	    iop->ptr = iop->buffer;
+	    iop->endptr = iop->buffer + len;
+	}
+	c = *iop->ptr++;
+	*p++ = c;
+	if ((p - s) == (n - 1)) {
+	    *p = 0;
+	    return s;
+	}
+	if (c == '\n') {
+	    *p = 0;
+	    return s;
+	}
+    }
+}
+#define fopen afsconf_fopen
+#define fclose afsconf_fclose
+#define fgets afsconf_fgets
+#else
+#define afsconf_FILE FILE
+#endif /* AFS_SUN5_ENV && ! __sparcv9 */
+
 /* return port number in network byte order in the low 16 bits of a long; return -1 if not found */
 static afs_int32
 afsconf_FindService(register const char *aname)
@@ -311,7 +418,7 @@ afsconf_Open(register const char *adir)
 	if (!(afsconf_path = getenv("AFSCONF"))) {
 	    /* The "AFSCONF" environment (or contents of "/.AFSCONF") will be typically set to something like "/afs/<cell>/common/etc" where, by convention, the default files for "ThisCell" and "CellServDB" will reside; note that a major drawback is that a given afs client on that cell may NOT contain the same contents... */
 	    char *home_dir;
-	    FILE *fp;
+	    afsconf_FILE *fp;
 	    size_t len;
 
 	    if (!(home_dir = getenv("HOME"))) {
@@ -366,26 +473,31 @@ afsconf_Open(register const char *adir)
     return tdir;
 }
 
-
 static int
 GetCellUnix(struct afsconf_dir *adir)
 {
     int rc;
     char tbuffer[256];
-    FILE *tf;
-
+    int fd;
+    
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
-    tf = fopen(tbuffer, "r");
-    if (tf) {
-	/* FIXME: buffer overflow waiting to happen */
-	rc = fscanf(tf, "%s", tbuffer);
-	if (rc == 1) {
-	    adir->cellName = (char *)malloc(strlen(tbuffer) + 1);
-	    strcpy(adir->cellName, tbuffer);
-	}
-	fclose(tf);
+    fd = open(tbuffer, O_RDONLY, 0);
+    if (fd < 0) {
+        return -1;
     } else {
-	return -1;
+	int sz;
+
+	memset(tbuffer, 0, 256);
+        sz = read(fd, tbuffer, 255);
+        close(fd);
+        if (sz > 0) {
+	    char *p = strchr(tbuffer, '\n');
+	    if (p)
+		*p = '\0';
+
+            adir->cellName = (char *)malloc(sz + 1);
+            strncpy(adir->cellName, tbuffer, sz);
+        }
     }
     return 0;
 }
@@ -410,7 +522,7 @@ static int
 afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 		     char clones[])
 {
-    FILE *tf;
+    afsconf_FILE *tf;
     register char *tp, *bp;
     register struct afsconf_entry *curEntry;
     struct afsconf_aliasentry *curAlias;
