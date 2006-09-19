@@ -1,6 +1,7 @@
 /*
 
 Copyright 2004 by the Massachusetts Institute of Technology
+Copyright 2006 by Secure Endpoints Inc.
 
 All rights reserved.
 
@@ -32,7 +33,7 @@ SOFTWARE.
 //
 // Note:
 //
-//	The EnableStatic method is notsupported on Win9x platforms.
+//	The EnableStatic method is not supported on Win9x platforms.
 //
 //**************************************************************************
 
@@ -214,6 +215,44 @@ SetupStringAsSafeArray(LPCWSTR s, VARIANT* v)
     return hr;
 }
 
+static BOOL
+IsXP(void)
+{
+    OSVERSIONINFOEX osInfoEx;
+    memset(&osInfoEx, 0, sizeof(osInfoEx));
+    osInfoEx.dwOSVersionInfoSize = sizeof(osInfoEx);
+
+    GetVersionEx((POSVERSIONINFO)&osInfoEx);
+
+    return(osInfoEx.dwMajorVersion == 5 && osInfoEx.dwMinorVersion == 1 && osInfoEx.wServicePackMajor < 2);
+}
+
+static VOID
+FixupXPDNSRegistrations(LPCWSTR pCfgGuidString)
+{
+    // As per http://support.microsoft.com/default.aspx?scid=kb%3Ben-us%3B834440
+    // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\<NetworkAdapterGUID>
+    HKEY hkInterfaces=NULL, hkAdapter=NULL;
+    DWORD dw = 0;
+
+    if (!IsXP())
+	return;		// Nothing to do
+
+    RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"),
+		 0, KEY_READ, &hkInterfaces);
+
+    RegOpenKeyEx(hkInterfaces, pCfgGuidString, 0, KEY_READ|KEY_WRITE, &hkAdapter);
+
+    RegDeleteValue(hkAdapter, TEXT("DisableDynamicUpdate"));
+    RegDeleteValue(hkAdapter, TEXT("EnableAdapterDomainNameRegistration"));
+    RegSetValueEx(hkAdapter, TEXT("RegistrationEnabled"), 0, REG_DWORD, (BYTE *)&dw, sizeof(DWORD));
+    RegSetValueEx(hkAdapter, TEXT("RegisterAdapterName"), 0, REG_DWORD, (BYTE *)&dw, sizeof(DWORD));
+
+    if (hkInterfaces)
+	RegCloseKey(hkInterfaces);
+    if (hkAdapter)
+	RegCloseKey(hkAdapter);
+}
 
 HRESULT
 WMIEnableStatic(
@@ -223,19 +262,19 @@ WMIEnableStatic(
     LPCWSTR mask
     )
 {
-    HRESULT hr = 0;
+    HRESULT hr = 0, hr2 = 0;
 
-    IWbemLocator* pLocator = 0;
-    IWbemServices* pNamespace = 0;
-    IWbemClassObject* pClass = 0;
-    IWbemClassObject* pOutInst = 0;
-    IWbemClassObject* pInClass = 0;
-    IWbemClassObject* pInInst = 0;
+    IWbemLocator* pLocator = NULL;
+    IWbemServices* pNamespace = NULL;
+    IWbemClassObject* pClass = NULL;
+    IWbemClassObject* pOutInst = NULL;
+    IWbemClassObject* pInClass = NULL;
+    IWbemClassObject* pInInst = NULL;
 
-    BSTR NamespacePath = 0;
-    BSTR ClassPath = 0;
-    BSTR InstancePath = 0;
-    BSTR MethodName = 0; // needs to be BSTR for ExecMethod()
+    BSTR NamespacePath = NULL;
+    BSTR ClassPath = NULL;
+    BSTR InstancePath = NULL;
+    BSTR MethodName = NULL; // needs to be BSTR for ExecMethod()
 
     BOOL comInitialized = FALSE;
 
@@ -248,6 +287,12 @@ WMIEnableStatic(
     VARIANT v_ret_value;
     VariantInit(&v_ret_value);
 
+    VARIANT v_reg_enabled;
+    VariantInit(&v_reg_enabled);
+
+    VARIANT v_netbios;
+    VariantInit(&v_netbios);
+
     int count;
 
     // end of declarations & NULL initialization
@@ -257,9 +302,6 @@ WMIEnableStatic(
 
     ClassPath = SysAllocString(L"Win32_NetWorkAdapterConfiguration");
     CLEANUP_ON_AND_SET(!ClassPath, hr, E_OUTOFMEMORY);
-
-    MethodName = SysAllocString(L"EnableStatic");
-    CLEANUP_ON_AND_SET(!MethodName, hr, E_OUTOFMEMORY);
 
     // Initialize COM and connect up to CIMOM
 
@@ -328,6 +370,9 @@ WMIEnableStatic(
     }
 #endif
 
+    MethodName = SysAllocString(L"EnableStatic");
+    CLEANUP_ON_AND_SET(!MethodName, hr, E_OUTOFMEMORY);
+
     // Get the input argument and set the property
     hr = pClass->GetMethod(MethodName, 0, &pInClass, NULL);
     CLEANUP_ON_FAILURE(hr);
@@ -348,14 +393,6 @@ WMIEnableStatic(
     hr = pInInst->Put(L"SubNetMask", 0, &v_mask_list, 0);
     CLEANUP_ON_FAILURE(hr);
 
-    // Sleep for a twenty seconds
-    ReportMessage(0,"Calling ExecMethod in 20 seconds...",NULL,NULL,0);
-    Sleep(10000);
-    ReportMessage(0,"Calling ExecMethod in 10 seconds...",NULL,NULL,0);
-    Sleep(5000);  
-    ReportMessage(0,"Calling ExecMethod in  5 seconds...",NULL,NULL,0);
-    Sleep(2000);
-
 //    printf("Skipping ExecMethod\n");
 //    hr = 0;
 //    goto cleanup;
@@ -363,26 +400,30 @@ WMIEnableStatic(
     // Try up to five times, sleeping 3 seconds between tries
     for (count=0; count<5; count++)
     {
-        if (count>0) ReportMessage(0,"Trying again in 3 seconds...",NULL,NULL,0);
-
-	Sleep(3000);
+	if (count>1) {
+	    ReportMessage(0,"Trying again in 3 seconds...",NULL,NULL,0);
+	    Sleep(3000);
+	} else if (count>0) {
+	    ReportMessage(0,"Trying again in 20 seconds...",NULL,NULL,0);
+	    Sleep(10000);
+	    ReportMessage(0,"Trying again in 10 seconds...",NULL,NULL,0);
+	    Sleep(5000);  
+	    ReportMessage(0,"Trying again in  5 seconds...",NULL,NULL,0);
+	    Sleep(2000);
+	}
   
-        ReportMessage(0,"Calling ExecMethod NOW...          ",NULL,NULL,0);     
-
-        // Call the method
-
+        ReportMessage(0,"Calling ExecMethod EnableStatic NOW...          ",NULL,NULL,0);     
+	// Call the method
         hr = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
                                   &pOutInst, NULL);   
-
         if (!SUCCEEDED(hr))
         {
-           ReportMessage(0,"ExecMethod failed",NULL,NULL, hr);
+           ReportMessage(0,"ExecMethod EnableStatic failed",NULL,NULL, hr);
            continue;
         }
 
         // Get the EnableStatic method return value
         hr = pOutInst->Get(L"ReturnValue", 0, &v_ret_value, 0, 0);
-
         if (!SUCCEEDED(hr))
         {
           ReportMessage(0,"WARNING: Could not determine return value for EnableStatic ",NULL,NULL, hr);
@@ -390,8 +431,6 @@ WMIEnableStatic(
         }
 
         hr = V_I4(&v_ret_value);                
-
-
         if(hr != 0)
             ReportMessage(0,"EnableStatic failed ", NULL,NULL,hr);
         else
@@ -399,16 +438,126 @@ WMIEnableStatic(
             ReportMessage(0,"EnableStatic succeeded",NULL,NULL,0);
             break;
         }
-
     }
 
+    /* if failure, skip SetDynamicDNSRegistration */
+    if (hr)
+	goto cleanup;
 
+    /* Cleanup and Prepare for SetDynamicDNSRegistration */
+    if (pInClass) {
+	pInClass->Release();
+	pInClass = NULL;
+    }
+    if (pInInst) {
+	pInInst->Release();
+	pInInst = NULL;
+    }
+    SysFreeString(MethodName);
+    VariantClear(&v_ret_value);
+
+    MethodName = SysAllocString(L"SetDynamicDNSRegistration");
+    CLEANUP_ON_AND_SET(!MethodName, hr2, E_OUTOFMEMORY);
+
+    // Get the input argument and set the property
+    hr2 = pClass->GetMethod(MethodName, 0, &pInClass, NULL);
+    CLEANUP_ON_FAILURE(hr2);
+
+    hr2 = pInClass->SpawnInstance(0, &pInInst);
+    CLEANUP_ON_FAILURE(hr2);
+
+    // Set up parameters
+    V_VT(&v_reg_enabled) = VT_BOOL;
+    V_BOOL(&v_reg_enabled) = VARIANT_FALSE;
+
+    hr2 = pInInst->Put(L"FullDNSRegistrationEnabled", 0, &v_reg_enabled, 0);
+    CLEANUP_ON_FAILURE(hr2);
+
+    hr2 = pInInst->Put(L"DomainDNSRegistrationEnabled", 0, &v_reg_enabled, 0);
+    CLEANUP_ON_FAILURE(hr2);
+
+    // Call the method
+    hr2 = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
+				 &pOutInst, NULL);   
+    if (!SUCCEEDED(hr2))	{
+	ReportMessage(0,"ExecMethod SetDynamicDNSRegistration failed",NULL,NULL, hr2);
+	goto cleanup;
+    }
+
+    // Get the EnableStatic method return value
+    hr2 = pOutInst->Get(L"ReturnValue", 0, &v_ret_value, 0, 0);
+    if (!SUCCEEDED(hr2)) {
+	ReportMessage(0,"WARNING: Could not determine return value for SetDynamicDNSRegistration ",NULL,NULL, hr2);
+    } else {
+	hr2 = V_I4(&v_ret_value);                
+	if(hr2 != 0)
+	    ReportMessage(0,"SetDynamicDNSRegistration failed ", NULL,NULL,hr2);
+	else
+	    ReportMessage(0,"SetDynamicDNSRegistration succeeded",NULL,NULL,0);
+    }
+
+    /* if failure, skip SetTcpipNetbios */
+    if (hr)
+	goto cleanup;
+
+    /* Cleanup and Prepare for SetTcpipNetbios */
+    if (pInClass) {
+	pInClass->Release();
+	pInClass = NULL;
+    }
+    if (pInInst) {
+	pInInst->Release();
+	pInInst = NULL;
+    }
+    SysFreeString(MethodName);
+    VariantClear(&v_ret_value);
+
+    ReportMessage(0,"Preparing for SetTcpipNetbios",NULL,NULL,0);
+
+    MethodName = SysAllocString(L"SetTcpipNetbios");
+    CLEANUP_ON_AND_SET(!MethodName, hr2, E_OUTOFMEMORY);
+
+    // Get the input argument and set the property
+    hr2 = pClass->GetMethod(MethodName, 0, &pInClass, NULL);
+    CLEANUP_ON_FAILURE(hr2);
+
+    hr2 = pInClass->SpawnInstance(0, &pInInst);
+    CLEANUP_ON_FAILURE(hr2);
+
+    // Set up parameters
+    V_VT(&v_netbios) = VT_BSTR;
+    V_BSTR(&v_netbios) = SysAllocString(L"1");	/* Use Netbios */
+
+    hr2 = pInInst->Put(L"TcpipNetbiosOptions", 0, &v_netbios, 0);
+    CLEANUP_ON_FAILURE(hr2);
+
+    // Call the method
+    hr2 = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
+				 &pOutInst, NULL);   
+    if (!SUCCEEDED(hr2)) {
+	ReportMessage(0,"ExecMethod SetTcpipNetbios failed",NULL,NULL, hr2);
+	goto cleanup;
+    }
+
+    // Get the EnableStatic method return value
+    hr2 = pOutInst->Get(L"ReturnValue", 0, &v_ret_value, 0, 0);
+    if (!SUCCEEDED(hr2)) {
+	ReportMessage(0,"WARNING: Could not determine return value for SetTcpipNetbios ",NULL,NULL, hr2);
+    } else {
+	hr2 = V_I4(&v_ret_value);                
+	if(hr2 != 0)
+	    ReportMessage(0,"SetTcpipNetbios failed ", NULL,NULL,hr2);
+	else
+	    ReportMessage(0,"SetTcpipNetbios succeeded",NULL,NULL,0);
+    }
 
  cleanup:
     // Free up resources
     VariantClear(&v_ret_value);
     VariantClear(&v_ip_list);
     VariantClear(&v_mask_list);
+    VariantClear(&v_reg_enabled);
+    VariantClear(&v_netbios);
 
     // SysFreeString is NULL safe
     SysFreeString(NamespacePath);
@@ -447,7 +596,6 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
     LPWSTR			swName = NULL;
     GUID            g;
     wchar_t         device_guid[100];
-    DWORD			lenDeviceId;    
     
     ReportMessage(0,"Running LoopbackBindings()...",NULL,NULL,0);
     
@@ -470,7 +618,6 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
     
     hr = pCfg->EnumComponents( &GUID_DEVCLASS_NET, &pEnumComponent );
     CLEANUP_ON_FAILURE(hr);
-    
     
     while( pEnumComponent->Next( 1, &pAdapter, NULL ) == S_OK )
     {
@@ -581,19 +728,15 @@ cleanup:
 }
 
         
-        extern "C"
-            DWORD
-SetIpAddress(
-    LPCWSTR guid,
-    LPCWSTR ip,
-    LPCWSTR mask
-    )
+extern "C" DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask)
 {
     ReportMessage(0,"Running SetIpAddress()...",0,0,0);
     HRESULT hr = 0;
 
     hr = WMIEnableStatic(FindNetworkAdapterConfigurationInstanceByGUID,
                         (PVOID)guid, ip, mask);
+    if (hr == 0)
+	FixupXPDNSRegistrations(guid);
     return hr;
 }
 
