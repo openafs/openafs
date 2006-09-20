@@ -720,6 +720,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_alloc_sem" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_ALLOC_SEM, 1, [define if your struct inode has alloc_sem])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_blksize" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_BLKSIZE, 1, [define if your struct inode has i_blksize])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
 		 fi
