@@ -900,7 +900,6 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
     ssize_t rc;
     int index;
 
-    if (!VALID_INO(ino)) return 0;
     /* there's no linktable yet. the salvager will create one later */
     if (h->fd_fd == -1 && fixup)
        return 1;
