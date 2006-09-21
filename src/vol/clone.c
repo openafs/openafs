@@ -262,7 +262,8 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		    Log("IH_INC failed: %x, %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
-		    assert(0);
+		    VForceOffline_r(rwvp);
+		    ERROR_EXIT(EIO);
 		}
 		inodeinced = 1;
 	    }
@@ -314,7 +315,8 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		    Log("IH_DEC failed: %x, %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
-		    assert(0);
+		    VForceOffline_r(rwvp);
+		    ERROR_EXIT(EIO);
 		}
 	    }
 	    /* And if the directory was marked clone, unmark it */
