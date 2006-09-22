@@ -32,32 +32,11 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
-############################################################################
-# Build Windows 95 version of afspthread.dll
-
-PTHR95_DLLFILE = $(DESTDIR)\lib\win95\afspthread.dll
-
-PTHR95_DLLOBJS = \
-   $(OUT)\pthread_95.obj \
-	$(OUT)\pthread95.res
-
-$(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
-	$(DLLCONLINK) /DEF:pthread.def
-        $(_VC_MANIFEST_EMBED_DLL)
-	$(DLLPREP)
-
-$(OUT)\pthread_95.obj: pthread.c
-	$(C2OBJ) $** -DAFS_WIN95_ENV 
-
-install: $(PTHR95_DLLFILE) $(PTHR_DLLFILE) $(LIBINCLUDES)
+install: $(PTHR_DLLFILE) $(LIBINCLUDES)
 
 install9x: install
 
-$(OUT)\pthread95.res: pthread95.rc AFS_component_version_number.h
-	$(RC) /fo$*.res $(*F).rc 
-
 clean::
-	$(DEL) /q $(DESTDIR)\lib\win95\*.*
 
 mkdir:
 	
