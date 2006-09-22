@@ -245,6 +245,7 @@ extern asmlinkage long sys_exit (int) __attribute__((weak));
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
 #endif
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
+extern rwlock_t tasklist_lock __attribute__((weak));
 
 
 /* Structures used to control probing.  We put all the details of which
