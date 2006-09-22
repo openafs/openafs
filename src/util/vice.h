@@ -11,7 +11,9 @@
 #define AFS_VICE_H 1
 
 #include <sys/types.h>
+#ifndef AFS_NT40_ENV
 #include <sys/ioctl.h>
+#endif
 #if defined(__sun) && defined(__SVR4)
 # include <sys/ioccom.h>
 #endif
@@ -31,7 +33,7 @@ struct ViceIoctl32 {
 #endif
 
 /* Windows uses a different structure layout, defined in sys/pioctl_nt.h. */
-#ifndef _WIN32_WINNT
+#ifndef AFS_NT40_ENV
 struct ViceIoctl {
     caddr_t in, out;		/* Data to be transferred in, or out */
     short in_size;		/* Size of input buffer <= 2K */
