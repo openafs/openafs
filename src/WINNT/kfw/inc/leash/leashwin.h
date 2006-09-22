@@ -3,10 +3,10 @@
 
 #include <krb.h>
 
-typedef struct {
-    int dlgtype;
 #define DLGTYPE_PASSWD   0
 #define DLGTYPE_CHPASSWD 1
+typedef struct {
+    int dlgtype;
     // Tells whether dialog box is in change pwd more or init ticket mode???
     // (verify this):
     int dlgstatemax; // What is this???
@@ -15,37 +15,85 @@ typedef struct {
     LPSTR principal;
 } LSH_DLGINFO, FAR *LPLSH_DLGINFO;
 
-#define LEASH_USERNAME_SZ  64
-#define LEASH_REALM_SZ    192
+#define LEASH_USERNAME_SZ        64
+#define LEASH_REALM_SZ          192
+#define LEASH_TITLE_SZ          128
+#define LEASH_CCACHE_NAME_SZ 	264
 
 typedef struct {
-	DWORD size;
+    DWORD size;
     int dlgtype;
-#define DLGTYPE_PASSWD   0
-#define DLGTYPE_CHPASSWD 1
-    // Tells whether dialog box is in change pwd more or init ticket mode???
-    // (verify this):
-    LPSTR title;
-    LPSTR username;
-	LPSTR realm;
-	int   use_defaults;
-	int   forwardable;
-	int   noaddresses;
-	int   lifetime;
-	int   renew_till;
-	int   proxiable;
-	int   publicip;
-    // Version 1 of this structure ended here
+    // Tells whether dialog box is in change pwd mode or init ticket mode
+    LPSTR title;		// in v3, set to in.title
+    LPSTR username;		// in v3, set to in.username
+    LPSTR realm;		// in v3, set to in.realm
+    int   use_defaults;
+    int   forwardable;
+    int   noaddresses;
+    int   lifetime;
+    int   renew_till;
+    int   proxiable;
+    int   publicip;
+    // Version 1 of this structure ends here
     struct {
         char username[LEASH_USERNAME_SZ];
         char realm[LEASH_REALM_SZ];
+	// Version 2 of this structure ends here
+	char ccache[LEASH_CCACHE_NAME_SZ];
     } out;
-} LSH_DLGINFO_EX, FAR *LPLSH_DLGINFO_EX;
+    struct {
+	char title[LEASH_TITLE_SZ];
+	char username[LEASH_USERNAME_SZ];
+	char realm[LEASH_REALM_SZ];
+	char ccache[LEASH_CCACHE_NAME_SZ];
+    } in;
+} LSH_DLGINFO_EX, *LPLSH_DLGINFO_EX;
 
 #define LSH_DLGINFO_EX_V1_SZ (sizeof(DWORD) + 3 * sizeof(LPSTR) + 8 * sizeof(int))
-#define LSH_DLGINFO_EX_V2_SZ (sizeof(DWORD) + 3 * sizeof(LPSTR) + 8 * sizeof(int) + max(LEASH_USERNAME_SZ,LEASH_REALM_SZ))
+#define LSH_DLGINFO_EX_V2_SZ (LSH_DLGINFO_EX_V1_SZ + LEASH_USERNAME_SZ + LEASH_REALM_SZ)
+#define LSH_DLGINFO_EX_V3_SZ (LSH_DLGINFO_EX_V2_SZ + LEASH_TITLE_SZ + LEASH_USERNAME_SZ + LEASH_REALM_SZ + 2 * LEASH_CCACHE_NAME_SZ)
 
-typedef struct {                                                
+#ifndef NETIDMGR
+#define NETID_USERNAME_SZ       128
+#define NETID_REALM_SZ          192
+#define NETID_TITLE_SZ          256
+#define NETID_CCACHE_NAME_SZ 	264
+
+#define NETID_DLGTYPE_TGT      0
+#define NETID_DLGTYPE_CHPASSWD 1
+typedef struct {
+    DWORD size;
+    DWORD dlgtype;
+    // Tells whether dialog box is in change pwd mode or init ticket mode
+    struct {
+	WCHAR title[NETID_TITLE_SZ];
+	WCHAR username[NETID_USERNAME_SZ];
+	WCHAR realm[NETID_REALM_SZ];
+	WCHAR ccache[NETID_CCACHE_NAME_SZ];
+	DWORD use_defaults;
+	DWORD forwardable;
+	DWORD noaddresses;
+	DWORD lifetime;
+	DWORD renew_till;
+	DWORD proxiable;
+	DWORD publicip;
+	DWORD must_use_specified_principal;
+    } in;
+    struct {
+        WCHAR username[NETID_USERNAME_SZ];
+        WCHAR realm[NETID_REALM_SZ];
+	WCHAR ccache[NETID_CCACHE_NAME_SZ];
+    } out;
+    // Version 1 of this structure ends here
+} NETID_DLGINFO, *LPNETID_DLGINFO;
+
+#define NETID_DLGINFO_V1_SZ (10 * sizeof(DWORD) \
+        + sizeof(WCHAR) * (NETID_TITLE_SZ + \
+        2 * NETID_USERNAME_SZ + 2 * NETID_REALM_SZ + \
+        2 * NETID_CCACHE_NAME_SZ))
+#endif /* NETIDMGR */
+
+typedef struct {
     char    principal[MAX_K_NAME_SZ]; /* Principal name/instance/realm */
     int     btickets;                 /* Do we have tickets? */
     long    lifetime;                 /* Lifetime -- needs to have

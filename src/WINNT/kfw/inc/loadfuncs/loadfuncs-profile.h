@@ -4,7 +4,11 @@
 #include "loadfuncs.h"
 #include <profile.h>
 
+#if defined(_WIN64)
+#define PROFILE_DLL      "xpprof64.dll"
+#else
 #define PROFILE_DLL      "xpprof32.dll"
+#endif
 
 TYPEDEF_FUNC(
     long,

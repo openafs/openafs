@@ -267,7 +267,7 @@ extern const struct error_table et_krb_error_table;
 
 #if !defined(_WIN32)
 /* for compatibility with older versions... */
-extern void initialize_krb_error_table () /*@modifies internalState@*/;
+extern void initialize_krb_error_table (void) /*@modifies internalState@*/;
 #else
 #define initialize_krb_error_table()
 #endif

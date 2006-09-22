@@ -47,7 +47,7 @@ extern const struct error_table et_kadm_error_table;
 
 #if !defined(_WIN32)
 /* for compatibility with older versions... */
-extern void initialize_kadm_error_table () /*@modifies internalState@*/;
+extern void initialize_kadm_error_table (void) /*@modifies internalState@*/;
 #else
 #define initialize_kadm_error_table()
 #endif

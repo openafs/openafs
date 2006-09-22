@@ -1,126 +1,145 @@
-/*
-
-@doc
-
-@module resolv.h |
- * Copyright (c) 1983, 1987, 1989 The Regents of the University of California.
- * All rights reserved. <nl>
-
-  Structure definitions for resolver functions and #define statements
-
+/*! \file resolv.h
+ *  WSHelper DNS/Hesiod Library header 
+ *	This file contains the function declaration for:\n
+ *	res_init()		\n
+ *	res_search()	\n
+ *  dn_comp()		\n
+ *	rdn_expand()	\n \n
+ *	and unsupported functions: \n 
+ *	res_setopts()		\n
+ *	res_getopts()		\n
+ *	res_querydomain()	\n
+ *	res_mkquery()		\n
+ *	res_send()			\n
 */
-
-/*
- * Copyright (c) 1983, 1987, 1989 The Regents of the University of California.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *      @(#)resolv.h    5.15 (Berkeley) 4/3/91
- */
 
 #ifndef _RESOLV_H_
 #define _RESOLV_H_
 
-#if defined(_WINDOWS) || defined(_WIN32)
 #include <windows.h>
-#endif
-
-/*
- * Resolver configuration file.
- * Normally not present, but may contain the address of the
- * inital name server(s) to query and the domain search list.
- */
-
-#ifndef _PATH_RESCONF
-#if defined(_WINDOWS) || defined(_WIN32)
-#define _PATH_RESCONF        "c:\\net\\tcp\\resolv.cfg"
-#else
-#define _PATH_RESCONF        "/etc/resolv.conf"
-#endif
-#endif
-
 #ifndef MAXDNAME
 #include <arpa/nameser.h>
 #endif
 
-/*
- * Global defines and variables for resolver stub.
+/*! \def MAXNS
+ *	max # name servers we'll track
  */
-#define MAXNS                   3       /* max # name servers we'll track */
-#define MAXDFLSRCH              3       /* # default domain levels to try */
-#define MAXDNSRCH               6       /* max # domains in search path */
-#define LOCALDOMAINPARTS        2       /* min levels in name that is "local" */
+#define MAXNS                   3       
 
-#define RES_TIMEOUT             5       /* min. seconds between retries */
+/*! \def MAXDFLSRCH
+ *	# default domain levels to try
+ */
+#define MAXDFLSRCH              3      
 
-// new
+/*!	\def MAXDNSRCH 
+ *	max # domains in search path
+ */
+#define MAXDNSRCH               6      
+
+/*! \def LOCALDOMAINPARTS
+ *	min levels in name that is "local"
+ */
+#define LOCALDOMAINPARTS        2      
+
+/*! \def RES_TIMEOUT
+ *	min. seconds between retries
+ */
+#define RES_TIMEOUT             5       
+
+/*! \def MAXMXRECS
+ *	number of records in the preference array in the MX record
+ */
 #define MAXMXRECS               8
 
+/*! \struct mxent 
+ *	structure to hold the MX record
+ */
 struct mxent {
-    int numrecs;
-    u_short pref[MAXMXRECS];
-    char FAR * FAR * hostname;
+	/*! number of records in the preference field */
+    int numrecs;	
+	/*! holds a 16 bit integer which specifies the preference given to this RR */
+    u_short pref[MAXMXRECS];	
+	/*! a host willing to act as a mail exchange */
+    char ** hostname;			
 };
 
 
-/*
-
-  @struct state | This structure holds the state for the resolver query
-
+/*! \struct state
+ * This structure holds the state for the resolver query
  */
 struct state {
-    int     retrans;                /* @field retransmition time interval */
-    int     retry;                  /* @field number of times to retransmit */
-    long    options;                /* @field option flags - see below. */
-    int     nscount;                /* @field number of name servers */
-    struct  sockaddr_in nsaddr_list[MAXNS]; /* @field address of name server */
-#define nsaddr  nsaddr_list[0]          /* @field for backward compatibility */
-    u_short id;                     /* @field current packet id */
-    char    defdname[MAXDNAME];     /* @field default domain */
-    char    *dnsrch[MAXDNSRCH+1];   /* @field components of domain to search */
+	/*! retransmition time interval */
+    int     retrans;  
+	/*! number of times to retransmit */
+    int     retry;  
+	/*! field option flags - see below. */
+    long    options;    
+	 /*! field number of name servers */
+    int     nscount; 
+	/*! address of name server */
+    struct  sockaddr_in nsaddr_list[MAXNS]; 
+#define nsaddr  nsaddr_list[0] 
+	/*! current packet id */
+    u_short id;    
+	/*! field default domain */
+    char    defdname[MAXDNAME];  
+	/*! field components of domain to search */
+    char    *dnsrch[MAXDNSRCH+1];   
 };
 
-/*
- * Resolver options
+/*! \def RES_INIT
+ *	resolver option: address initialized
  */
-#define RES_INIT        0x0001          /* address initialized */
-#define RES_DEBUG       0x0002          /* print debug messages */
-#define RES_AAONLY      0x0004          /* authoritative answers only */
-#define RES_USEVC       0x0008          /* use virtual circuit */
-#define RES_PRIMARY     0x0010          /* query primary server only */
-#define RES_IGNTC       0x0020          /* ignore trucation errors */
-#define RES_RECURSE     0x0040          /* recursion desired */
-#define RES_DEFNAMES    0x0080          /* use default domain name */
-#define RES_STAYOPEN    0x0100          /* Keep TCP socket open */
-#define RES_DNSRCH      0x0200          /* search up local domain tree */
+#define RES_INIT        0x0001          
 
+/*! \def RES_DEBUG
+ *	resolver option: print debug messages
+ */
+#define RES_DEBUG       0x0002         
+
+/*! \def RES_AAONLY
+ *	resolver option: authoritative answers only
+ */
+#define RES_AAONLY      0x0004  
+
+/*! \def RES_USEVC
+ *	resolver option: use virtual circuit
+ */
+#define RES_USEVC       0x0008          
+
+/*! \def RES_PRIMARY 
+ *	resolver option: query primary server only
+ */
+#define RES_PRIMARY     0x0010    
+
+/*! \def RES_IGNTC
+ *	resolver option: ignore trucation errors
+ */
+#define RES_IGNTC       0x0020   
+
+/*! \def RES_RECURSE
+ *	resolver option: recursion desired
+ */
+#define RES_RECURSE     0x0040          
+
+/*! \def RES_DEFNAMES
+ *	resolver option: use default domain name
+ */
+#define RES_DEFNAMES    0x0080  
+
+/*! \def RES_STAYOPEN
+ *	resolver option: Keep TCP socket ope
+ */
+#define RES_STAYOPEN    0x0100   
+
+/*! \def RES_DNSRCH
+ *	resolver option: search up local domain tree
+ */
+#define RES_DNSRCH      0x0200         
+
+/*! \def RES_DEFAULT
+ *	resolver option: Default RES options (RES_RECURSE + RES_DEFNAMES + RES_DNSRCH)
+ */
 #define RES_DEFAULT     (RES_RECURSE | RES_DEFNAMES | RES_DNSRCH)
 
 extern struct state _res;
@@ -128,7 +147,6 @@ extern struct state _res;
 #include <stdio.h>
 
 /* Private routines shared between libc/net, named, nslookup and others. */
-#define dn_skipname     __dn_skipname
 #define fp_query        __fp_query
 #define hostalias       __hostalias
 #define putlong         __putlong
@@ -137,65 +155,130 @@ extern struct state _res;
 #define p_time          __p_time
 #define p_type          __p_type
 
-#if defined(_WINDOWS) || defined(_WIN32)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/*! \fn int WINAPI res_init()
+ *	\brief retrieves the default domain name and search order. It will look to see if an environment variable LOCALDOMAIN is defined. Otherwise, 
+ *	the domain associated with the local host is used. Otherwise, it will try to find the domain name from the registry
+ *
+ *  defined in res_init.c 
+ *	
+ *	\retval		The return value is 0 if the operation was successful.  Otherwise the value -1 is returned.
+ */
 int  WINAPI res_init();
-void WINAPI res_setopts(long opts);
-long WINAPI res_getopts(void);
-int  WINAPI res_mkquery(int op, const char FAR *dname, 
-                                        int qclass, int type, 
-                                        const char FAR *data, int datalen, 
-                                        const struct rrec FAR *newrr,
-                                        char FAR *buf, int buflen);
-int  WINAPI res_send(const char FAR *msg, int msglen, 
-                                     char FAR *answer, int anslen);
-int  WINAPI res_querydomain(const char FAR *name, 
-                                            const char FAR *domain, 
-                                            int qclass, int type, 
-                                            u_char FAR *answer, int anslen);
-int  WINAPI res_search(const char FAR *name, 
-                                       int qclass, int type, 
-                                       u_char FAR *answer, int anslen);
 
-int  WINAPI dn_comp(const u_char FAR *exp_dn, 
-                                    u_char FAR *comp_dn, 
-                                    int length, u_char FAR * FAR *dnptrs, 
-                                    u_char FAR * FAR *lastdnptr);
-int  WINAPI rdn_expand(const u_char FAR *msg, 
-                                      const u_char FAR *eomorig, 
-                                      const u_char FAR *comp_dn, 
-                                      u_char FAR *exp_dn, 
+                           
+/*! \fn	int WINAPI res_search(const char* name, int qclass, int type, u_char* answer, int anslen)
+ *	\brief a generic query interface to the DNS name space. The query is performed with the dnsapi and
+ *	the answer buffer is populated based on the returned RR set.
+ *
+ *	defined in res_quer.c
+
+ *	\param[in]	name	domain name
+ *	\param[in]	qclass  class of query(such as DNS_CLASS_INTERNET, DNS_CLASS_CSNET, DNS_CLASS_CHAOS, 
+ *						DNS_CLASS_HESIOD. Defined in windns.h) 
+ *	\param[in]	type	type of query(such as DNS_TYPE_A, DNS_TYPE_NS, DNS_TYPE_MX, DNS_TYPE_SRV. Defined in
+ *						windns.h)
+ *	\param[in]	answer  buffer to put answer in
+ *	\param[in]	anslen	size of the answer buffer. compare the anslen with the return value, if the return
+ *						value is bigger than anslen, it means the answer buffer doesn't contain the complete
+ *						response. You will need to call this function again with a bigger answer buffer if
+ *						you care about the complete response
+ *
+ *	\retval		return the size of the response on success, -1 on error
+ *
+ */
+int  WINAPI res_search(const char  *name, 
+                                       int qclass, int type, 
+                                       u_char  *answer, int anslen);
+
+/*! \fn	int WINAPI dn_comp(const u_char* exp_dn, u_char* comp_dn, int length, u_char** dnptrs, u_char** lastdnptr) 
+ *	\brief Compress domain name 'exp_dn' into 'comp_dn'
+ *
+ *	defined in res_comp.c
+ *
+ *	\param[in]	exp_dn	name to compress
+ *	\param[in, out]	comp_dn		result of the compression
+ *	\param[in]	length			the size of the array pointed to by 'comp_dn'.
+ *	\param[in, out]	dnptrs		a list of pointers to previous compressed names. dnptrs[0]
+ *								is a pointer to the beginning of the message. The list ends with NULL.
+ *	\param[in]	lastdnptr		a pointer to the end of the arrary pointed to by 'dnptrs'. Side effect 
+ *								is to update the list of pointers for labels inserted into the 
+ *								message as we compress the name. If 'dnptr' is NULL, we don't try to 
+ *								compress names. If 'lastdnptr' is NULL, we don't update the list.
+ *	\retval						Return the size of the compressed name or -1
+ */
+int  WINAPI dn_comp(const u_char *exp_dn, 
+                                    u_char  *comp_dn, 
+                                    int length, u_char  **dnptrs, 
+                                    u_char  * *lastdnptr);
+
+/*! \fn int WINAPI rdn_expand(const u_char  *msg, const u_char  *eomorig, const u_char  *comp_dn, u_char  *exp_dn, 
+                              int length);
+ *	\brief	replacement for dn_expand called rdn_expand. Older versions of the DLL used to this as dn_expand 
+ *			but this has caused some conflict with more recent versions of the MSDEV libraries. rdn_expand() 
+ *			expands the compressed domain name comp_dn to a full domain name.  Expanded names are converted to upper case.
+ *
+ *	defined in res_comp.c
+ *
+ *	\param[in]		msg			msg is a pointer to the  beginning  of  the  message
+ *	\param[in]		eomorig	
+ *	\param[in]		comp_dn		the compressed domain name.
+ *	\param[in, out]	exp_dn		a pointer to the result buffer
+ *	\param[in]		length		size of the result in expn_dn
+ *	\retval						the size of compressed name is returned or -1 if there was an error.
+*/
+int  WINAPI rdn_expand(const u_char  *msg, 
+                                      const u_char  *eomorig, 
+                                      const u_char  *comp_dn, 
+                                      u_char  *exp_dn, 
                                       int length);
 /* Microsoft includes an implementation of dn_expand() in winsock */
 /* Make sure we do not use it.  jaltman@columbia.edu              */
 #define dn_expand(a,b,c,d,e) rdn_expand(a,b,c,d,e)
 
+
+/*! \fn void WINAPI res_setopts(long opts) 
+ *		unsupported 
+*/
+void WINAPI res_setopts(long opts);
+
+/*! \fn long WINAPI res_getopts(void)
+ *		unsupported
+*/
+long WINAPI res_getopts(void);
+
+/*! \fn int  WINAPI res_mkquery(int op, const char *dname, int qclass, int type, const char  *data, int datalen, 
+ *					const struct rrec  *newrr, char  *buf, int buflen)
+ *		unsupported
+ */
+int  WINAPI res_mkquery(int op, const char *dname, 
+                                        int qclass, int type, 
+                                        const char  *data, int datalen, 
+                                        const struct rrec  *newrr,
+                                        char  *buf, int buflen);
+
+/*! \fn int  WINAPI res_send(const char  *msg, int msglen, char  *answer, int anslen)
+ *		unsupported 
+*/
+int  WINAPI res_send(const char  *msg, int msglen, 
+                                     char  *answer, int anslen);
+
+/*! \fn int  WINAPI res_querydomain(const char  *name, const char  *domain, int qclass, int type, 
+									u_char  *answer, int anslen);
+*		unsupported
+*/
+int  WINAPI res_querydomain(const char  *name, 
+                                            const char  *domain, 
+                                            int qclass, int type, 
+											u_char  *answer, int anslen);
+                 
+
 #ifdef __cplusplus
 }
 #endif
-#else
-__BEGIN_DECLS
-int      __dn_skipname __P((const u_char *, const u_char *));
-void     __fp_query __P((char *, FILE *));
-char    *__hostalias __P((const char *));
-void     __putlong __P((u_long, u_char *));
-void     __putshort __P((u_short, u_char *));
-char    *__p_class __P((int));
-char    *__p_time __P((u_long));
-char    *__p_type __P((int));
-
-int      dn_comp __P((const u_char *, u_char *, int, u_char **, u_char **));
-int      rdn_expand __P((const u_char *, const u_char *, const u_char *,
-                        u_char *, int));
-int      res_init __P((void));
-int      res_mkquery __P((int, const char *, int, int, const char *, int,
-                          const struct rrec *, char *, int));
-int      res_send __P((const char *, int, char *, int));
-__END_DECLS
-#endif /* _WINDOWS || _WIN32 */
 
 #endif /* !_RESOLV_H_ */

@@ -27,7 +27,7 @@
  * Determine platform-dependent configuration.
  */
 
-#if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
+#if defined(__MACH__) && defined(__APPLE__)
 #	include <TargetConditionals.h>
 #	if TARGET_RT_MAC_CFM
 #		error "Use KfM 4.0 SDK headers for CFM compilation."
@@ -39,9 +39,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 #if TARGET_OS_MAC
-#	if defined(__MWERKS__)
-#		pragma import on
-#	endif
 #	pragma options align=mac68k
 #endif
 
@@ -54,28 +51,15 @@ extern "C" {
 #define KRB5_CALLCONV_C
 #endif
 
-#define	GSS_SIZEOF_INT		SIZEOF_INT
-#define	GSS_SIZEOF_LONG		SIZEOF_LONG
-#define	GSS_SIZEOF_SHORT	SIZEOF_SHORT
-
 /*
  * First, include stddef.h to get size_t defined.
  */
-#if	HAVE_STDDEF_H
 #include <stddef.h>
-#endif	/* HAVE_STDDEF_H */
 
 /*
  * POSIX says that sys/types.h is where size_t is defined.
  */
 #include <sys/types.h>
-
-/*
- * If the platform supports the xom.h header file, it should be included here.
- */
-#if	HAVE_XOM_H
-#include <xom.h>
-#endif	/* HAVE_XOM_H */
 
 /*
  * $Id$
@@ -93,16 +77,8 @@ typedef void * gss_ctx_id_t;
  * The following type must be defined as the smallest natural unsigned integer
  * supported by the platform that has at least 32 bits of precision.
  */
-#if (GSS_SIZEOF_SHORT == 4)
-typedef unsigned short gss_uint32;
-typedef short gss_int32;
-#elif (GSS_SIZEOF_INT == 4)
-typedef unsigned int gss_uint32;
-typedef int gss_int32;
-#elif (GSS_SIZEOF_LONG == 4)
-typedef unsigned long gss_uint32;
-typedef long gss_int32;
-#endif
+typedef uint32_t gss_uint32;
+typedef int32_t gss_int32;
 
 #ifdef	OM_STRING
 /*
@@ -715,6 +691,13 @@ OM_uint32 KRB5_CALLCONV gss_inquire_names_for_mech
 	    gss_OID_set *		/* name_types */
 	   );
 
+/* New for V2 */
+OM_uint32 KRB5_CALLCONV gss_inquire_mechs_for_name(
+    OM_uint32 *,		/* minor_status */
+    const gss_name_t,		/* input_name */
+    gss_OID_set *		/* mech_types */
+);
+
 /*
  * The following routines are obsolete variants of gss_get_mic, gss_wrap,
  * gss_verify_mic and gss_unwrap.  They should be provided by GSSAPI V2
@@ -780,9 +763,6 @@ OM_uint32 KRB5_CALLCONV gss_canonicalize_name
 	);
 
 #if TARGET_OS_MAC
-#  if defined(__MWERKS__)
-#    pragma import reset
-#  endif
 #  pragma options align=reset
 #endif
 
