@@ -496,7 +496,8 @@ GetCellUnix(struct afsconf_dir *adir)
 		*p = '\0';
 
             adir->cellName = (char *)malloc(sz + 1);
-            strncpy(adir->cellName, tbuffer, sz);
+            memset(adir->cellName, 0, sz+1);
+	    strncpy(adir->cellName, tbuffer, sz);
         }
     }
     return 0;
