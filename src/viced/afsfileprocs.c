@@ -1213,11 +1213,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
 			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
 			 V_id(volptr), volptr->partition->name, length, rdlen,
 			 wrlen, errno));
-#ifdef FAST_RESTART		/* if running in no-salvage, don't core the server */
 		ViceLog(0, ("CopyOnWrite failed: taking volume offline\n"));
-#else /* Avoid further corruption and try to get a core. */
-		assert(0);
-#endif
 		/* Decrement this inode so salvager doesn't find it. */
 		FDH_REALLYCLOSE(newFdP);
 		IH_RELEASE(newH);
