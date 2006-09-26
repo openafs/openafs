@@ -1,4 +1,16 @@
 #! /bin/sh
+### BEGIN INIT INFO
+# Provides:             openafs-client
+# Required-Start:       $network $time
+# Required-Stop:        $local_fs $remote_fs $network
+# Should-Start:         $local_fs $remote_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         S 0 1 6
+# Short-Description:    OpenAFS client
+# Description:          Starts or stops the OpenAFS client, loading the
+#                       OpenAFS kernel module as necessary.
+### END INIT INFO
+#
 # Modified by Sam Hartman <hartmans@mit.edu> for Debian
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.

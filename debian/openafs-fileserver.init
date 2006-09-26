@@ -1,4 +1,16 @@
 #! /bin/sh
+### BEGIN INIT INFO
+# Provides:             openafs-fileserver
+# Required-Start:       $local_fs $remote_fs $network $time
+# Required-Stop:        $local_fs $remote_fs $network
+# Default-Start:        2 3 4 5
+# Default-Stop:         S 0 1 6
+# Short-Description:    OpenAFS file and database server manager
+# Description:          Starts, stops, or restarts the OpenAFS bosserver,
+#                       which is the process that starts and manages the
+#                       OpenAFS file server or database servers depending on
+#                       its configuration.
+### END INIT INFO
 #
 # skeleton	example file to build /etc/init.d/ scripts.
 #		This file should be used to construct scripts for /etc/init.d.
