@@ -176,6 +176,12 @@ binary-indep: build install binary-source
 
 # Build architecture-dependent files here.  Pass -a to all debhelper commands
 # in this target to reduce clutter.
+#
+# We would like to install debugging information for everything, but currently
+# OpenAFS's makefiles strip all binaries when installed except for the
+# fileserver and the volserver.  This is fixed in OpenAFS's development
+# branch.  Until that's released, only retain debugging information for the
+# fileserver and the volserver.
 binary-arch: DH_OPTIONS=-a
 binary-arch: build install
 	dh_testdir
@@ -187,6 +193,10 @@ binary-arch: build install
 	DH_OPTIONS= dh_installinit -popenafs-fileserver -r
 	dh_link
 	dh_strip --dbg-package=openafs-dbg
+	rm -r debian/openafs-dbg/usr/lib/debug/usr/bin
+	rm -r debian/openafs-dbg/usr/lib/debug/usr/sbin
+	cd debian/openafs-dbg/usr/lib/debug/usr/lib/openafs \
+	    && rm buserver ptserver salvager vlserver
 	dh_compress
 	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs

@@ -74,6 +74,21 @@ Changes Relative to Stock OpenAFS
   The OpenAFS PAM modules have been built with pthreads rather than the
   standard LWP AFS libraries for compatibility with a threaded sshd.
 
+Debugging
+
+  The current OpenAFS installation process installs fileserver and
+  volserver unstripped, since backtraces and other debugging information
+  for those binaries are necessary to track down file server problems.
+  For the Debian packages, the fileserver and volserver binaries in the
+  openafs-fileserver package are stripped, but the debugging information
+  is available in the openafs-dbg package, which can be installed
+  separately.  If it is installed, gdb will find that debugging
+  information automatically.
+
+  Eventually the openafs-dbg package will contain debugging information
+  for all OpenAFS binaries.  This is pending upstream changes to the stock
+  OpenAFS installation rules.
+
 PAM Authentication
 
   Any new OpenAFS cell is strongly encouraged to use Kerberos v5 for
@@ -123,4 +138,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Tue Dec 27 15:53:28 2005
+ -- Russ Allbery <rra@debian.org>, Tue, 26 Sep 2006 16:32:58 z

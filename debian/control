@@ -129,7 +129,7 @@ Description: AFS distributed filesystem kaserver PAM module
 
 Package: openafs-dbg
 Priority: extra
-Depends: openafs-client (= ${binary:Version})
+Depends: openafs-fileserver (= ${binary:Version})
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Section: libdevel
 Description: AFS distributed filesystem debugging information
@@ -137,7 +137,5 @@ Description: AFS distributed filesystem debugging information
  files among multiple computers.  Facilities are provided for access
  control, authentication, backup and administrative management.
  .
- This package contains the debugging information for all of the OpenAFS
- binaries in openafs-client, openafs-fileserver, openafs-dbserver,
- openafs-krb5, etc.  Make sure the version of this package matches the
- version of the package being debugged.
+ This package contains the debugging information for the OpenAFS
+ fileserver and volserver.
