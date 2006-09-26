@@ -478,28 +478,22 @@ GetCellUnix(struct afsconf_dir *adir)
 {
     int rc;
     char tbuffer[256];
-    int fd;
+    char *p;
+    afsconf_FILE *fp;
     
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
-    fd = open(tbuffer, O_RDONLY, 0);
-    if (fd < 0) {
-        return -1;
-    } else {
-	int sz;
-
-	memset(tbuffer, 0, 256);
-        sz = read(fd, tbuffer, 255);
-        close(fd);
-        if (sz > 0) {
-	    char *p = strchr(tbuffer, '\n');
-	    if (p)
-		*p = '\0';
-
-            adir->cellName = (char *)malloc(sz + 1);
-            memset(adir->cellName, 0, sz+1);
-	    strncpy(adir->cellName, tbuffer, sz);
-        }
+    fp = fopen(tbuffer, "r");
+    if (fp == 0) {
+	return -1;
     }
+    rc = fgets(tbuffer, 256, fp);
+    fclose(fp);
+
+    p = strchr(tbuffer, '\n');
+    if (p)
+	*p = '\0';
+
+    adir->cellName = strdup(tbuffer);
     return 0;
 }
 
