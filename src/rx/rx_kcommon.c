@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.12 2006/07/31 15:08:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.13 2006/08/31 04:54:55 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -124,6 +124,7 @@ rxi_GetUDPSocket(u_short port)
     return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
+#if !defined(AFS_LINUX26_ENV)
 void
 osi_Panic(msg, a1, a2, a3)
      char *msg;
@@ -132,7 +133,7 @@ osi_Panic(msg, a1, a2, a3)
 	msg = "Unknown AFS panic";
 
     printf(msg, a1, a2, a3);
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX20_ENV
     * ((char *) 0) = 0; 
 #else
     panic(msg);
@@ -261,6 +262,13 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
     osi_Panic(buf);
 }
+#else
+void
+osi_AssertFailK(const char *expr, const char *file, int line)
+{
+    printk(KERN_CRIT "assertion failed: %s, file: %s, line: %d\n", expr, file, line);
+}
+#endif
 
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server

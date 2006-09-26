@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.16 2006/08/24 02:35:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.18 2006/09/15 23:19:28 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,8 +149,6 @@ prlist AnonCPS;			/* CPS for "Anonymous" */
 struct afsconf_dir *confDir;	/* Configuration dir object */
 
 int restartMode = RESTART_ORDINARY;
-
-int Testing = 0;		/* for ListViceInodes */
 
 /*
  * Home for the performance statistics.
@@ -1374,6 +1372,7 @@ vl_Initialize(char *confDir)
 			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
 			     scIndex);
     code = ubik_ClientInit(serverconns, &cstruct);
+    afsconf_Close(tdir);
     if (code) {
 	ViceLog(0, ("vl_Initialize: ubik client init failed.\n"));
 	return code;

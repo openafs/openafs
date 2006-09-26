@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.7 2006/08/24 20:21:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.8 2006/09/03 05:51:42 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -95,7 +95,6 @@ int DoLogging = 0;
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 
-int Testing = 0;		/* for ListViceInodes */
 int rxBind = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */

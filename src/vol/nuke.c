@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.13.2.2 2004/10/18 17:44:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.13.2.3 2006/09/03 05:38:09 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -72,7 +72,7 @@ struct ilist {
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist *allInodes)
+NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist **allInodes)
 {
     struct ilist *ti;
     register afs_int32 i;
@@ -85,13 +85,13 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist *allInodes)
     if (ainfo->u.param[0] != avolid)
 	return 0;		/* don't want this one */
     /* record the info */
-    if (!allInodes || allInodes->freePtr >= MAXATONCE) {
+    if (!*allInodes || (*allInodes)->freePtr >= MAXATONCE) {
 	ti = (struct ilist *)malloc(sizeof(struct ilist));
 	memset(ti, 0, sizeof(*ti));
-	ti->next = allInodes;
-	allInodes = ti;
+	ti->next = *allInodes;
+	*allInodes = ti;
     } else
-	ti = allInodes;		/* use the one with space */
+	ti = *allInodes;		/* use the one with space */
     i = ti->freePtr++;		/* find our slot in this mess */
     ti->inode[i] = ainfo->inodeNumber;
     ti->count[i] = ainfo->linkCount;
@@ -170,11 +170,11 @@ nuke(char *aname, afs_int32 avolid)
 #ifdef AFS_NAMEI_ENV
     code =
 	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
-		       0, wpath, allInodes);
+		       0, wpath, &allInodes);
 #else
     code =
 	ListViceInodes(lastDevComp, aname, "/tmp/vNukeXX", NukeProc, avolid,
-		       &forceSal, 0, wpath, allInodes);
+		       &forceSal, 0, wpath, &allInodes);
     unlink("/tmp/vNukeXX");	/* clean it up now */
 #endif
     if (code == 0) {

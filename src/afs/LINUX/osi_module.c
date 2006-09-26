@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.24 2006/08/14 22:09:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.25 2006/09/16 19:19:36 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -366,11 +366,9 @@ init_module(void)
 
     osi_Init();
 
-#ifndef LINUX_KEYRING_SUPPORT
     err = osi_syscall_init();
     if (err)
 	return err;
-#endif
     err = afs_init_inodecache();
     if (err)
 	return err;

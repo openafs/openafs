@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.8 2006/06/30 13:59:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.12 2006/09/05 23:48:50 jaltman Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -227,7 +227,7 @@ static char *TimeStamp(time_t clock, int precision);
 
 
 int debug;			/* -d flag */
-int Testing = 0;		/* -n flag */
+extern int Testing;		/* -n flag */
 int ListInodeOption;		/* -i flag */
 int ShowRootFiles;		/* -r flag */
 int RebuildDirs;		/* -sal flag */
@@ -1849,7 +1849,7 @@ CreateLinkTable(register struct InodeSummary *isp, Inode ino)
 	Abort("Can't open link table for volume %u (error = %d)\n",
 	      isp->RWvolumeId, errno);
 
-    if (FDH_TRUNC(fdP, 0) < 0)
+    if (FDH_TRUNC(fdP, sizeof(version) + sizeof(short)) < 0)
 	Abort("Can't truncate link table for volume %u (error = %d)\n",
 	      isp->RWvolumeId, errno);
 
@@ -1971,7 +1971,23 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 	if (Testing) {
 	    IH_INIT(VGLinkH, fileSysDevice, -1, -1);
 	} else {
+            int i, j;
+            struct ViceInodeInfo *ip;
 	    CreateLinkTable(isp, ino);
+	    fdP = IH_OPEN(VGLinkH);
+            /* Sync fake 1 link counts to the link table, now that it exists */
+            if (fdP) {
+            	for (i = 0; i < nVols; i++) {
+            		ip = allInodes + isp[i].index;
+		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
+#ifdef AFS_NT40_ENV
+			         nt_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+#else
+				 namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+#endif
+		    }
+            	}
+	    }
 	}
     }
     if (fdP)

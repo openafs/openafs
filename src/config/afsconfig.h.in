@@ -86,6 +86,9 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if you have the `flock' function. */
+#undef HAVE_FLOCK
+
 /* define if compiler has __FUNCTION__ */
 #undef HAVE_FUNCTION_MACRO
 
@@ -413,6 +416,9 @@
 
 /* define if your struct inode has alloc_sem */
 #undef STRUCT_INODE_HAS_I_ALLOC_SEM
+
+/* define if your struct inode has i_blksize */
+#undef STRUCT_INODE_HAS_I_BLKSIZE
 
 /* define if you struct inode has i_devices */
 #undef STRUCT_INODE_HAS_I_DEVICES
