@@ -1,8 +1,11 @@
 openafs (1.4.2~fc4-1) unstable; urgency=low
 
   * New upstream release candidate.
+  * Build an openafs-dbg package with debugging information for all
+    OpenAFS binaries.
+  * Update to debhelper compatibility level V5.
 
- -- Russ Allbery <rra@debian.org>  Tue, 26 Sep 2006 15:47:02 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 26 Sep 2006 15:56:25 -0700
 
 openafs (1.4.2~fc2-1) unstable; urgency=low
 

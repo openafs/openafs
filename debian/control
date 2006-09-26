@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev, libkrb5-dev
+Build-Depends: debhelper (>= 5), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev, libkrb5-dev
 Standards-Version: 3.7.2
 
 Package: openafs-client
@@ -126,3 +126,18 @@ Description: AFS distributed filesystem kaserver PAM module
  This package provides a PAM module for existing  sites using the AFS
  kaserver for authentication.  New sites should use a Kerberos v5
  implementation, a Kerberos v5 PAM module, and libpam-openafs-session.
+
+Package: openafs-dbg
+Priority: extra
+Depends: openafs-client (= ${binary:Version})
+Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
+Section: libdevel
+Description: AFS distributed filesystem debugging information
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package contains the debugging information for all of the OpenAFS
+ binaries in openafs-client, openafs-fileserver, openafs-dbserver,
+ openafs-krb5, etc.  Make sure the version of this package matches the
+ version of the package being debugged.

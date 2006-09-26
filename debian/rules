@@ -186,7 +186,7 @@ binary-arch: build install
 	DH_OPTIONS= dh_installinit -popenafs-client -r -- defaults 25 18
 	DH_OPTIONS= dh_installinit -popenafs-fileserver -r
 	dh_link
-	dh_strip
+	dh_strip --dbg-package=openafs-dbg
 	dh_compress
 	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs
