@@ -60,4 +60,6 @@ int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 int nt_HandleToName(char *name, IHandle_t * h);
 char *nt_HandleToVolDir(char *name, IHandle_t * h);
 
+extern int Testing;
+
 #endif /* _NTOPS_H_ */

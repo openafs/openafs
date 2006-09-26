@@ -1,3 +1,20 @@
+Since 1.4.2-rc3: (1.4.2-rc4 released 16 Sep 2006)
+
+ * No changes
+
+Since 1.4.2-rc2: (1.4.2-rc3 released 6 Sep 2006)
+
+ * better handling of dot directory
+
+ * fs sq adn fs mkm now behave as on UNIX
+
+ * another backconnections hostnames fix
+
+ * add license to installers
+
+ * Return Invalid Parameter error for unknown InfoLevels in
+   SMB Tran2 Search Directory.
+
 Since 1.4.2-rc1: (1.4.2-rc2 released 30 Aug 2006)
 
  * Fix rx usage of WSAStartup/WSACleanup

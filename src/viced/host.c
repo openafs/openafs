@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.43 2006/08/24 04:33:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.44 2006/09/05 22:09:00 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -272,31 +272,27 @@ hpr_Initialize(struct ubik_client **uclient)
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
-	fprintf(stderr,
-		"libprot: Could not open configuration directory: %s.\n",
-		AFSDIR_SERVER_ETC_DIRPATH);
-      return -1;
+	ViceLog(0, ("hpr_Initialize: Could not open configuration directory: %s", AFSDIR_SERVER_ETC_DIRPATH));
+	return -1;
     }
     
     code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
     if (code) {
-	fprintf(stderr,
-		"libprot: Could not get local cell. [%d]\n", code);
+	ViceLog(0, ("hpr_Initialize: Could not get local cell. [%d]", code));
 	afsconf_Close(tdir);
 	return code;
     }
     
     code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
     if (code) {
-	fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
-		cellstr, confDir, AFSDIR_CELLSERVDB_FILE);
+	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s", cellstr, confDir, AFSDIR_CELLSERVDB_FILE));
 	afsconf_Close(tdir);
 	return code;
     }
     
     code = rx_Init(0);
     if (code) {
-        fprintf(stderr, "libprot:  Could not initialize rx.\n");
+	ViceLog(0, ("hpr_Initialize: Could not initialize rx."));
 	afsconf_Close(tdir);
         return code;
     }
@@ -311,9 +307,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
         code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
         if (code)
-            fprintf(stderr,
-                    "libprot: clientauthsecure returns %d %s"
-                    " (so trying noauth)\n", code, error_message(code));
+	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, error_message(code)));
         if (code)
             scIndex = 0;        /* use noauth */
         if (scIndex != 2)
@@ -332,9 +326,7 @@ hpr_Initialize(struct ubik_client **uclient)
                 /* this is a kerberos ticket, set scIndex accordingly */
                 scIndex = 2;
             else {
-                fprintf(stderr,
-                        "libprot: funny kvno (%d) in ticket, proceeding\n",
-                        ttoken.kvno);
+                ViceLog(0, ("hpr_Initialize: funny kvno (%d) in ticket, proceeding", ttoken.kvno));
                 scIndex = 2;
             }
             sc[2] =
@@ -346,8 +338,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if ((scIndex == 0) && (sc[0] == 0))
         sc[0] = rxnull_NewClientSecurityObject();
     if ((scIndex == 0))
-        com_err("fileserver", code,
-                "Could not get afs tokens, running unauthenticated.");
+	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, running unauthenticated. [%d]", code));
     
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {
@@ -359,7 +350,7 @@ hpr_Initialize(struct ubik_client **uclient)
 
     code = ubik_ClientInit(serverconns, uclient);
     if (code) {
-        com_err("fileserver", code, "ubik client init failed.");
+	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]", code));
     }
     afsconf_Close(tdir);
     code = rxs_Release(sc[scIndex]);

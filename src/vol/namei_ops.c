@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.6 2006/07/31 15:18:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.10 2006/09/20 05:52:35 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -27,9 +27,6 @@ RCSID
 #include <sys/file.h>
 #include <sys/param.h>
 #include <lock.h>
-#ifdef AFS_AIX_ENV
-#include <sys/lockf.h>
-#endif
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
 #include <unistd.h>
 #endif
@@ -69,7 +66,41 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
+#ifndef LOCK_SH
+#define   LOCK_SH   1    /* shared lock */
+#define   LOCK_EX   2    /* exclusive lock */
+#define   LOCK_NB   4    /* don't block when locking */
+#define   LOCK_UN   8    /* unlock */
+#endif
+
+#ifndef HAVE_FLOCK
+#include <fcntl.h>
+
+/*
+ * This function emulates a subset of flock()
+ */
+int 
+emul_flock(int fd, int cmd)
+{    struct flock f;
+
+    memset(&f, 0, sizeof (f));
+
+    if (cmd & LOCK_UN)
+        f.l_type = F_UNLCK;
+    if (cmd & LOCK_SH)
+        f.l_type = F_RDLCK;
+    if (cmd & LOCK_EX)
+        f.l_type = F_WRLCK;
+
+    return fcntl(fd, (cmd & LOCK_NB) ? F_SETLK : F_SETLKW, &f);
+}
+
+#define flock(f,c)      emul_flock(f,c)
+#endif
+
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
+int Testing=0;
+
 
 afs_sfsize_t
 namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
@@ -149,7 +180,8 @@ typedef struct {
     int ogm_mode;
 } namei_ogm_t;
 
-int namei_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked);
+static int namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite);
+
 static int GetFreeTag(IHandle_t * ih, int vno);
 
 /* namei_HandleToInodeDir
@@ -858,41 +890,63 @@ namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
  * If lockit is set, lock the file and leave it locked upon a successful
  * return.
  */
-int
-namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
+static int
+namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite)
 {
     unsigned short row = 0;
     afs_foff_t offset;
+    ssize_t rc;
     int index;
 
+    /* there's no linktable yet. the salvager will create one later */
+    if (h->fd_fd == -1 && fixup)
+       return 1;
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
     if (lockit) {
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	if (lockf(h->fd_fd, F_LOCK, 0) < 0)
-#else
 	if (flock(h->fd_fd, LOCK_EX) < 0)
-#endif
 	    return -1;
     }
 
     if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
 	goto bad_getLinkByte;
 
-    if (read(h->fd_fd, (char *)&row, sizeof(row)) != sizeof(row)) {
+    rc = read(h->fd_fd, (char *)&row, sizeof(row));
+    if ((rc == 0 || !((row >> index) & NAMEI_TAGMASK)) && fixup && nowrite)
+        return 1;
+    if (rc == 0 && fixup) {
+        struct stat st;
+        if (fstat(h->fd_fd, &st) || st.st_size >= offset+sizeof(row))
+	   goto bad_getLinkByte;
+        FDH_TRUNC(h, offset+sizeof(row));
+        row = 1 << index;
+        rc = write(h->fd_fd, (char *)&row, sizeof(row));
+    }
+    if (rc != sizeof(row)) {
 	goto bad_getLinkByte;
     }
 
+    if (fixup && !((row >> index) & NAMEI_TAGMASK)) {
+        row |= 1<<index;
+        if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
+	    goto bad_getLinkByte;
+        rc = write(h->fd_fd, (char *)&row, sizeof(row));
+        if (rc != sizeof(row))
+	    goto bad_getLinkByte;
+    }
+ 
     return (int)((row >> index) & NAMEI_TAGMASK);
 
   bad_getLinkByte:
     if (lockit)
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	lockf(h->fd_fd, F_ULOCK, 0);
-#else
 	flock(h->fd_fd, LOCK_UN);
-#endif
     return -1;
+}
+
+int
+namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit) 
+{
+    return namei_GetLinkCount2(h, ino, lockit, 0, 1);
 }
 
 /* Return a free column index for this vnode. */
@@ -912,11 +966,7 @@ GetFreeTag(IHandle_t * ih, int vno)
 	return -1;
 
     /* Only one manipulates at a time. */
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    if (lockf(fdP->fd_fd, F_LOCK, 0) < 0) {
-#else
     if (flock(fdP->fd_fd, LOCK_EX) < 0) {
-#endif
 	FDH_REALLYCLOSE(fdP);
 	return -1;
     }
@@ -952,20 +1002,12 @@ GetFreeTag(IHandle_t * ih, int vno)
 	goto badGetFreeTag;
     }
     FDH_SYNC(fdP);
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
     FDH_REALLYCLOSE(fdP);
     return col;;
 
   badGetFreeTag:
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
     FDH_REALLYCLOSE(fdP);
     return -1;
 }
@@ -988,11 +1030,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
     if (!locked) {
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-	if (lockf(fdP->fd_fd, F_LOCK, 0) < 0) {
-#else
 	if (flock(fdP->fd_fd, LOCK_EX) < 0) {
-#endif
 	    return -1;
 	}
     }
@@ -1031,11 +1069,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
 
   bad_SetLinkCount:
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-    lockf(fdP->fd_fd, F_ULOCK, 0);
-#else
     flock(fdP->fd_fd, LOCK_UN);
-#endif
 
     return code;
 }
@@ -1289,9 +1323,9 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 		/* Open this handle */
 		(void)afs_snprintf(path2, sizeof path2, "%s/%s", path1,
 				   dp1->d_name);
-		linkHandle.fd_fd = afs_open(path2, O_RDONLY, 0666);
+		linkHandle.fd_fd = afs_open(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 		info.linkCount =
-		    namei_GetLinkCount(&linkHandle, (Inode) 0, 0);
+		    namei_GetLinkCount2(&linkHandle, (Inode) 0, 1, 1, Testing);
 	    }
 	    if (judgeFun && !(*judgeFun) (&info, singleVolumeNumber, rock))
 		continue;
@@ -1342,8 +1376,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 				(path3, dp3->d_name, &info, myIH.ih_vid) < 0)
 				continue;
 			    info.linkCount =
-				namei_GetLinkCount(&linkHandle,
-						   info.inodeNumber, 0);
+				namei_GetLinkCount2(&linkHandle,
+						   info.inodeNumber, 1, 1, Testing);
 			    if (info.linkCount == 0) {
 #ifdef DELETE_ZLC
 				Log("Found 0 link count file %s/%s, deleting it.\n", path3, dp3->d_name);

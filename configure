@@ -2168,7 +2168,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs
- VERSION=1.4.2fc2
+ VERSION=1.4.2fc4
 
 
 cat >>confdefs.h <<_ACEOF
@@ -5903,7 +5903,10 @@ _ACEOF
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
+		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/source"
+		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		     LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
+		   fi
 		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		     LINUX_KERNEL_PATH="/usr/src/linux-2.4"
 		   fi
@@ -11393,14 +11396,10 @@ _ACEOF
 #include <linux/rwsem.h>
 #include <linux/key.h>
 #include <linux/keyctl.h>
-#include <asm/unistd.h>
-static int errno;
-static inline _syscall2(long, keyctl, int, option, void*, arg2);
 
 void conftest(void)
 {
 #ifdef CONFIG_KEYS
-keyctl(KEYCTL_JOIN_SESSION_KEYRING, NULL);
 request_key(NULL, NULL, NULL);
 #if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
 #error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
@@ -11438,14 +11437,10 @@ cat >>conftest.$ac_ext <<_ACEOF
 #include <linux/rwsem.h>
 #include <linux/key.h>
 #include <linux/keyctl.h>
-#include <asm/unistd.h>
-static int errno;
-static inline _syscall2(long, keyctl, int, option, void*, arg2);
 int
 main ()
 {
 #ifdef CONFIG_KEYS
-keyctl(KEYCTL_JOIN_SESSION_KEYRING, NULL);
 request_key(NULL, NULL, NULL);
 #if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
 #error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
@@ -12909,6 +12904,13 @@ _ACEOF
 
 cat >>confdefs.h <<\_ACEOF
 #define STRUCT_INODE_HAS_I_ALLOC_SEM 1
+_ACEOF
+
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_blksize" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define STRUCT_INODE_HAS_I_BLKSIZE 1
 _ACEOF
 
 		 fi
@@ -16333,7 +16335,8 @@ fi
 
 
 
-for ac_func in utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec
+
+for ac_func in utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec flock
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5

@@ -220,7 +220,7 @@ typedef struct timeval osi_timeval_t;
 
 #ifdef AFS_GLOBAL_SUNLOCK
 #define AFS_ASSERT_GLOCK() \
-    (ISAFS_GLOCK() || (osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
+    do { if (!ISAFS_GLOCK()) osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__); } while (0)
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
