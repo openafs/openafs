@@ -226,11 +226,13 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_LINUX22_ENV)
-extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable()
 {
+#if !defined(LINUX_KEYRING_SUPPORT)
+    extern rwlock_t tasklist_lock __attribute__((weak));
     struct task_struct *p;
+ 
     if (&tasklist_lock)
        read_lock(&tasklist_lock);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
@@ -266,6 +268,7 @@ afs_osi_TraverseProcTable()
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     else
 	rcu_read_unlock();
+#endif
 #endif
 }
 #endif
