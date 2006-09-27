@@ -554,12 +554,26 @@ static int afs_pag_match(const struct key *key, const void *description)
 	return strcmp(key->description, description) == 0;
 }
 
+static void afs_pag_destroy(struct key *key)
+{
+    afs_uint32 pag = key->payload.value;
+    struct unixuser *pu;
+
+    pu = afs_FindUser(pag, -1, READ_LOCK);
+    if (pu) {
+	pu->ct.EndTimestamp = 0;
+	pu->tokenTime = 0;
+	afs_PutUser(pu, READ_LOCK);
+    }
+}
+
 struct key_type key_type_afs_pag =
 {
     .name        = "afs_pag",
     .describe    = afs_pag_describe,
     .instantiate = afs_pag_instantiate,
     .match       = afs_pag_match,
+    .destroy     = afs_pag_destroy,
 };
 
 void osi_keyring_init(void)
