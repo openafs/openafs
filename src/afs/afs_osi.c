@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.7 2006/05/22 19:08:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.8 2006/09/22 11:20:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -812,6 +812,11 @@ afs_osi_TraverseProcTable()
     struct task_struct *p;
     if (&tasklist_lock)
        read_lock(&tasklist_lock);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    else
+	rcu_read_lock();
+#endif
+
 #ifdef DEFINED_FOR_EACH_PROCESS
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
@@ -837,6 +842,10 @@ afs_osi_TraverseProcTable()
 #endif
     if (&tasklist_lock)
        read_unlock(&tasklist_lock);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    else
+	rcu_read_unlock();
+#endif
 }
 #endif
 
