@@ -59,6 +59,7 @@ typedef struct osi_mutexStat {
 	osi_turnstile_t turn;  	/* the real turnstile */
 	unsigned long refCount;	/* so we can iterate cleanly */
 	short states;
+        DWORD tid;
 
 	/* track # of lock calls and blocks */
 	LARGE_INTEGER lockedTime;	/* total time held */
@@ -81,6 +82,7 @@ typedef struct osi_rwlockStat {
 	osi_turnstile_t turn;		/* the real turnstile */
 	unsigned long refCount;		/* so we can iterate cleanly */
 	short states;
+        DWORD tid;
 
 	/* statistics */
 	LARGE_INTEGER writeLockedTime;	/* total time held */
