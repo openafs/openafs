@@ -280,6 +280,8 @@ typedef struct cm_scache {
 #define CM_SCACHESYNC_BUFLOCKED		0x80000	/* the buffer is locked */
 #define CM_SCACHESYNC_NOWAIT		0x100000/* don't wait for the state,
 						 * just fail */
+#define CM_SCACHESYNC_FORCECB		0x200000/* when calling cm_GetCallback()
+                                                 * set the force flag */
 
 /* flags for cm_RecycleSCache	*/
 #define CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS 	0x1

@@ -216,7 +216,9 @@ void smb_ResetServerPriority()
 
 void smb_SetRequestStartTime()
 {
-    time_t * tp = malloc(sizeof(time_t));
+    time_t * tp = TlsGetValue(smb_TlsRequestSlot);
+    if (!tp)
+	tp = malloc(sizeof(time_t));
     if (tp) {
 	*tp = osi_Time();
 
@@ -1147,7 +1149,16 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
     smb_tid_t *tidp;
 
     lock_ObtainWrite(&smb_rctLock);
+  retry:
     for (tidp = vcp->tidsp; tidp; tidp = tidp->nextp) {
+	if (tidp->refCount == 0 && tidp->delete) {
+	    tidp->refCount++;
+	    lock_ReleaseWrite(&smb_rctLock);
+	    smb_ReleaseTID(tidp);
+	    lock_ObtainWrite(&smb_rctLock);
+	    goto retry;
+	}
+
         if (tid == tidp->tid) {
             tidp->refCount++;
             break;
@@ -1452,6 +1463,13 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 
   retry:
     for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
+	if (fidp->refCount == 0 && fidp->delete) {
+	    fidp->refCount++;
+	    lock_ReleaseWrite(&smb_rctLock);
+	    smb_ReleaseFID(fidp);
+	    lock_ObtainWrite(&smb_rctLock);
+	    goto retry;
+	}
         if (fid == fidp->fid) {
             if (newFid) {
                 fid++;
@@ -3963,6 +3981,8 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
             continue;
         }
 
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
         attr = smb_Attributes(scp);
         /* check hidden attribute (the flag is only ON when dot file hiding is on ) */
         if (patchp->flags & SMB_DIRLISTPATCH_DOTFILE)
@@ -4211,6 +4231,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         return code;
     }
         
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
     dirLength = scp->length;
     bufferp = NULL;
     bufferOffset.LowPart = bufferOffset.HighPart = 0;
@@ -4317,6 +4339,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                     break;
                 }
                                 
+		cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
                 if (cm_HaveBuffer(scp, bufferp, 0)) {
                     osi_Log2(smb_logp, "SMB search dir !HaveBuffer scp %x bufferp %x", scp, bufferp);
                     break;
@@ -4492,7 +4516,10 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     /* release the mutex */
     lock_ReleaseMutex(&scp->mx);
-    if (bufferp) buf_Release(bufferp);
+    if (bufferp) {
+	buf_Release(bufferp);
+	bufferp = NULL;
+    }
 
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
@@ -4597,11 +4624,15 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     lock_ObtainMutex(&newScp->mx);
     code = cm_SyncOp(newScp, NULL, userp, &req, PRSFS_LOOKUP,
                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-    if (code && code != CM_ERROR_NOACCESS) {
-        lock_ReleaseMutex(&newScp->mx);
-        cm_ReleaseSCache(newScp);
-        cm_ReleaseUser(userp);
-        return code;
+    if (code) {
+	if (code != CM_ERROR_NOACCESS) {
+	    lock_ReleaseMutex(&newScp->mx);
+	    cm_ReleaseSCache(newScp);
+	    cm_ReleaseUser(userp);
+	    return code;
+	}
+    } else {
+	cm_SyncOpDone(newScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     }
 
     attrs = smb_Attributes(newScp);
@@ -4689,6 +4720,8 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         cm_ReleaseUser(userp);
         return code;
     }
+
+    cm_SyncOpDone(newScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     /* Check for RO volume */
     if (newScp->flags & CM_SCACHEFLAG_RO) {
@@ -4809,9 +4842,10 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                 code = CM_ERROR_NOSUCHFILE;
             else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
                 cm_buf_t *bp = buf_Find(dscp, &hzero);
-                if (bp)
+                if (bp) {
                     buf_Release(bp);
-                else
+		    bp = NULL;
+		} else
                     code = CM_ERROR_NOSUCHFILE;
             }
             cm_ReleaseSCache(dscp);
@@ -4851,6 +4885,8 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         cm_ReleaseUser(userp);
         return code;
     }
+
+    cm_SyncOpDone(newScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
 #ifdef undef
     /* use smb_Attributes instead.   Also the fact that a file is 
@@ -5932,7 +5968,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 
         cm_UnlockByKey(scp, key, CM_UNLOCK_BY_FID, userp, &req);
 
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
 
     post_syncopdone:
 
@@ -5947,16 +5983,22 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         smb_FullName(dscp, scp, pathp, &fullPathp, userp, &req);
         if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
             code = cm_RemoveDir(dscp, fullPathp, userp, &req);
-            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-                smb_NotifyChange(FILE_ACTION_REMOVED,
-                                 FILE_NOTIFY_CHANGE_DIR_NAME,
-                                 dscp, fullPathp, NULL, TRUE);
+	    if (code == 0) {
+		scp->flags |= CM_SCACHEFLAG_DELETED;
+		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		    smb_NotifyChange(FILE_ACTION_REMOVED,
+				      FILE_NOTIFY_CHANGE_DIR_NAME,
+				      dscp, fullPathp, NULL, TRUE);
+	    }
         } else {
             code = cm_Unlink(dscp, fullPathp, userp, &req);
-            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-                smb_NotifyChange(FILE_ACTION_REMOVED,
-                                 FILE_NOTIFY_CHANGE_FILE_NAME,
-                                 dscp, fullPathp, NULL, TRUE);
+	    if (code == 0) {				
+		scp->flags |= CM_SCACHEFLAG_DELETED;
+		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+		    smb_NotifyChange(FILE_ACTION_REMOVED,
+				      FILE_NOTIFY_CHANGE_FILE_NAME,
+				      dscp, fullPathp, NULL, TRUE);
+	    }
         }
         free(fullPathp);
 	lock_ObtainMutex(&fidp->mx);
@@ -6045,7 +6087,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     osi_hyper_t bufferOffset;
     long bufIndex, nbytes;
     int chunk;
-    int sequential = 0;
+    int sequential = (fidp->flags & SMB_FID_SEQUENTIAL);
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -6063,7 +6105,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
             fidp->prev_chunk = fidp->curr_chunk;
             fidp->curr_chunk = chunk;
         }
-        if (fidp->curr_chunk == fidp->prev_chunk + 1)
+        if (!(fidp->flags & SMB_FID_RANDOM) && (fidp->curr_chunk == fidp->prev_chunk + 1))
             sequential = 1;
     }
     lock_ReleaseMutex(&fidp->mx);
@@ -6071,7 +6113,10 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) goto done;
+    if (code) 
+	goto done;
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     /* now we have the entry locked, look up the length */
     fileLength = scp->length;
@@ -6127,8 +6172,11 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
                 code = cm_SyncOp(scp, bufferp, userp, &req, 0,
                                  CM_SCACHESYNC_NEEDCALLBACK |
                                  CM_SCACHESYNC_READ);
-                if (code) goto done;
-                                
+                if (code) 
+		    goto done;
+                    
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
                 if (cm_HaveBuffer(scp, bufferp, 0)) break;
 
                 /* otherwise, load the buffer and try again */
@@ -6169,7 +6217,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
   done:
     lock_ReleaseMutex(&scp->mx);
-    if (bufferp) 
+    if (bufferp)
         buf_Release(bufferp);
 
     if (code == 0 && sequential)
@@ -6240,6 +6288,8 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     if (code) 
         goto done;
         
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_GETSTATUS);
+
     /* now we have the entry locked, look up the length */
     fileLength = scp->length;
     minLength = fileLength;
@@ -6316,6 +6366,11 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
                                   | CM_SCACHESYNC_BUFLOCKED);
                 if (code) 
                     goto done;
+
+		cm_SyncOpDone(scp, bufferp, 
+			       CM_SCACHESYNC_NEEDCALLBACK 
+			       | CM_SCACHESYNC_WRITE 
+			       | CM_SCACHESYNC_BUFLOCKED);
 
                 /* If we're overwriting the entire buffer, or
                  * if we're writing at or past EOF, mark the
@@ -6426,6 +6481,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         lock_ReleaseMutex(&scp->mx);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
+	/* cm_SyncOpDone is called at the completion of cm_BkgStore */
     }
 
     cm_ReleaseSCache(scp);
@@ -7277,6 +7333,7 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code == 0) {
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (whence == 1) {
             /* offset from current offset */
             new_offset = LargeIntegerAdd(fidp->offset,

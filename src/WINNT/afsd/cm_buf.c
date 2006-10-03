@@ -108,7 +108,12 @@ void buf_ReleaseLocked(cm_buf_t *bp)
 {
     /* ensure that we're in the LRU queue if our ref count is 0 */
     osi_assert(bp->magic == CM_BUF_MAGIC);
+#ifdef DEBUG
+    if (bp->refCount == 0)
+	DebugBreak();
+#else
     osi_assert(bp->refCount > 0);
+#endif
     if (--bp->refCount == 0) {
         if (!(bp->flags & CM_BUF_INLRU)) {
             osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
@@ -134,27 +139,32 @@ void buf_IncrSyncer(long parm)
 {
     cm_buf_t *bp;			/* buffer we're hacking on; held */
     long i;				/* counter */
-    long nAtOnce;			/* how many to do at once */
+    long wasDirty;
     cm_req_t req;
 
     lock_ObtainWrite(&buf_globalLock);
     bp = cm_data.buf_allp;
     buf_HoldLocked(bp);
     lock_ReleaseWrite(&buf_globalLock);
-    nAtOnce = (long)sqrt((double)cm_data.buf_nbuffers);
+    wasDirty = 0;
+
     while (buf_ShutdownFlag == 0) {
+	if (!wasDirty) {
 #ifndef DJGPP
-        i = SleepEx(5000, 1);
-        if (i != 0) continue;
+	    i = SleepEx(5000, 1);
+	    if (i != 0) continue;
 #else
-        thrd_Sleep(5000);
+	    thrd_Sleep(5000);
 #endif /* DJGPP */
-            
+	}
+
         if (buf_ShutdownFlag == 1)
             return;
 
+	wasDirty = 0;
+
         /* now go through our percentage of the buffers */
-        for (i=0; i<nAtOnce; i++) {
+        for (i=0; i<cm_data.buf_nbuffers; i++) {
             /* don't want its identity changing while we're
              * messing with it, so must do all of this with
              * bp held.
@@ -165,8 +175,10 @@ void buf_IncrSyncer(long parm)
              * a log page at any given instant.
              */
             cm_InitReq(&req);
+#ifdef NO_BKG_RETRIES
             req.flags |= CM_REQ_NORETRY;
-            buf_CleanAsync(bp, &req);
+#endif
+	    wasDirty |= buf_CleanAsync(bp, &req);
 
             /* now advance to the next buffer; the allp chain never changes,
              * and so can be followed even when holding no locks.
@@ -478,9 +490,9 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         if ( bp->flags & CM_BUF_WAITING ) {
             bp->waitCount++;
             bp->waitRequests++;
-            osi_Log1(afsd_logp, "buf_WaitIO CM_BUF_WAITING already set for 0x%p", bp);
+            osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING already set for 0x%p", bp);
         } else {
-            osi_Log1(afsd_logp, "buf_WaitIO CM_BUF_WAITING set for 0x%p", bp);
+            osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING set for 0x%p", bp);
             bp->flags |= CM_BUF_WAITING;
             bp->waitCount = bp->waitRequests = 1;
         }
@@ -489,10 +501,10 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 	smb_UpdateServerPriority();
 
         lock_ObtainMutex(&bp->mx);
-        osi_Log1(afsd_logp, "buf_WaitIO conflict wait done for 0x%p", bp);
+        osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%p", bp);
         bp->waitCount--;
         if (bp->waitCount == 0) {
-            osi_Log1(afsd_logp, "buf_WaitIO CM_BUF_WAITING reset for 0x%p", bp);
+            osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING reset for 0x%p", bp);
             bp->flags &= ~CM_BUF_WAITING;
             bp->waitRequests = 0;
         }
@@ -503,7 +515,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         if ( scp ) {
             lock_ObtainMutex(&scp->mx);
             if (scp->flags & CM_SCACHEFLAG_WAITING) {
-                osi_Log1(afsd_logp, "buf_WaitIO waking scp 0x%p", scp);
+                osi_Log1(buf_logp, "buf_WaitIO waking scp 0x%p", scp);
                 osi_Wakeup((LONG_PTR)&scp->flags);
             }
 	    lock_ReleaseMutex(&scp->mx);
@@ -514,10 +526,10 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
      * the I/O to complete.  Do so.
      */
     if (bp->flags & CM_BUF_WAITING) {
-        osi_Log1(afsd_logp, "buf_WaitIO Waking bp 0x%p", bp);
+        osi_Log1(buf_logp, "buf_WaitIO Waking bp 0x%p", bp);
         osi_Wakeup((LONG_PTR) bp);
     }
-    osi_Log1(afsd_logp, "WaitIO finished wait for bp 0x%p", bp);
+    osi_Log1(buf_logp, "WaitIO finished wait for bp 0x%p", bp);
 }
 
 /* find a buffer, if any, for a particular file ID and offset.  Assumes
@@ -562,25 +574,36 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
  * Makes sure that there's only one person writing this block
  * at any given time, and also ensures that the log is forced sufficiently far,
  * if this buffer contains logged data.
+ *
+ * Returns one if the buffer was dirty.
  */
-void buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
+long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 {
     long code = 0;
+    long isdirty = 0;
 
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
+	isdirty = 1;
         lock_ReleaseMutex(&bp->mx);
 
-	osi_Log1(afsd_logp, "buf_CleanAsyncLocked starts I/O on 0x%p", bp);
+	osi_Log1(buf_logp, "buf_CleanAsyncLocked starts I/O on 0x%p", bp);
         code = (*cm_buf_opsp->Writep)(&bp->fid, &bp->offset,
                                        cm_data.buf_blockSize, 0, bp->userp,
                                        reqp);
-	osi_Log2(afsd_logp, "buf_CleanAsyncLocked I/O on 0x%p, done=%d", bp, code);
+	osi_Log2(buf_logp, "buf_CleanAsyncLocked I/O on 0x%p, done=%d", bp, code);
                 
         lock_ObtainMutex(&bp->mx);
-        if (code) 
-            break;
+	/* if the Write routine returns No Such File, clear the dirty flag 
+	 * because we aren't going to be able to write this data to the file
+	 * server.
+	 */
+	if (code == CM_ERROR_NOSUCHFILE){
+	    bp->flags &= ~CM_BUF_DIRTY;
+	    bp->flags |= CM_BUF_ERROR;
+	    bp->error = CM_ERROR_NOSUCHFILE;
+	}
 
 #ifdef DISKCACHE95
         /* Disk cache support */
@@ -599,6 +622,7 @@ void buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
         osi_Log1(buf_logp, "buf_WaitIO Waking bp 0x%p", bp);
         osi_Wakeup((LONG_PTR) bp);
     }
+    return isdirty;
 }
 
 /* Called with a zero-ref count buffer and with the buf_globalLock write locked.
@@ -799,6 +823,9 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             if (scp) {
                 bp->flags |= CM_BUF_INHASH;
                 bp->fid = scp->fid;
+#ifdef DEBUG
+		bp->scp = scp;
+#endif
                 bp->offset = *offsetp;
                 i = BUF_HASH(&scp->fid, offsetp);
                 bp->hashp = cm_data.buf_hashTablepp[i];
@@ -930,16 +957,17 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         if (bp) {
             /* lock it and break out */
             lock_ObtainMutex(&bp->mx);
-            break;
 
 #ifdef DISKCACHE95
             /* touch disk chunk to update LRU info */
             diskcache_Touch(bp->dcp);
 #endif /* DISKCACHE95 */
+            break;
         }
 
         /* otherwise, we have to create a page */
         code = buf_GetNewLocked(scp, &pageOffset, &bp);
+	/* bp->mx is now held */
 
         /* check if the buffer was created in a race condition branch.
          * If so, go around so we can hold a reference to it. 
@@ -1078,13 +1106,16 @@ long buf_CountFreeList(void)
 }
 
 /* clean a buffer synchronously */
-void buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
+long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
 {
+    long code;
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
     lock_ObtainMutex(&bp->mx);
-    buf_CleanAsyncLocked(bp, reqp);
+    code = buf_CleanAsyncLocked(bp, reqp);
     lock_ReleaseMutex(&bp->mx);
+
+    return code;
 }       
 
 /* wait for a buffer's cleaning to finish */
@@ -1153,8 +1184,8 @@ long buf_CleanAndReset(void)
 
                 /* now no locks are held; clean buffer and go on */
                 cm_InitReq(&req);
-                buf_CleanAsync(bp, &req);
-                buf_CleanWait(NULL, bp);
+		buf_CleanAsync(bp, &req);
+		buf_CleanWait(NULL, bp);
 
                 /* relock and release buffer */
                 lock_ObtainWrite(&buf_globalLock);
@@ -1313,6 +1344,10 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
             }
         }
 		
+	cm_SyncOpDone( scp, bufp, 
+		       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
+		       | CM_SCACHESYNC_SETSIZE | CM_SCACHESYNC_BUFLOCKED);
+
         lock_ReleaseMutex(&scp->mx);
         lock_ReleaseMutex(&bufp->mx);
     
@@ -1434,8 +1469,8 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->userp = userp;
                 lock_ReleaseMutex(&bp->mx);
             }   
-            buf_CleanAsync(bp, reqp);
-            buf_CleanWait(scp, bp);
+            code = buf_CleanAsync(bp, reqp);
+	    buf_CleanWait(scp, bp);
             lock_ObtainMutex(&bp->mx);
             if (bp->flags & CM_BUF_ERROR) {
                 if (code == 0 || code == -1) 
@@ -1561,3 +1596,43 @@ void buf_ForceTrace(BOOL flush)
         FlushFileBuffers(handle);
     CloseHandle(handle);
 }
+
+long buf_DirtyBuffersExist(cm_fid_t *fidp)
+{
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+
+    for (bp = cm_data.buf_allp; bp; bp=bp->allp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY))
+	    return 1;
+    }
+    return 0;
+}
+
+long buf_CleanDirtyBuffers(cm_scache_t *scp)
+{
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+    cm_fid_t * fidp = &scp->fid;
+
+    for (bp = cm_data.buf_allp; bp; bp=bp->allp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY)) {
+		buf_Hold(bp);
+	    lock_ObtainMutex(&bp->mx);
+	    bp->cmFlags &= ~CM_BUF_CMSTORING;
+	    bp->flags &= ~CM_BUF_DIRTY;
+	    bp->flags |= CM_BUF_ERROR;
+	    bp->error = VNOVNODE;
+	    bp->dataVersion = -1; /* bad */
+	    bp->dirtyCounter++;
+	    if (bp->flags & CM_BUF_WAITING) {
+		osi_Log2(buf_logp, "BUF CleanDirtyBuffers Waking [scp 0x%x] bp 0x%x", scp, bp);
+		osi_Wakeup((long) &bp);
+	    }
+	    lock_ReleaseMutex(&bp->mx);
+	    buf_Release(bp);
+	}
+    }
+    return 0;
+}
+

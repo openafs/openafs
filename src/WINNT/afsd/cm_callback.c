@@ -1684,9 +1684,16 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         /* turn off mustCall, since it has now forced us past the check above */
         mustCall = 0;
 
+#if 0
+	/* 20060929 jaltman - We are being called from within cm_SyncOp.
+	 * if we call cm_SyncOp again and another thread has attempted
+	 * to obtain current status CM_SCACHEFLAG_WAITING will be set
+	 * and we will deadlock.  
+	 */
         /* otherwise, we have to make an RPC to get the status */
         sflags = CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK;
         cm_SyncOp(scp, NULL, userp, reqp, 0, sflags);
+#endif /* deadlock */
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
         lock_ReleaseMutex(&scp->mx);
@@ -1721,7 +1728,10 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
         }
+#if 0
+	/* 20060929 jaltman - don't deadlock */
         cm_SyncOpDone(scp, NULL, sflags);
+#endif
 
         /* now check to see if we got an error */
         if (code) {

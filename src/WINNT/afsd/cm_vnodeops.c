@@ -452,8 +452,8 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
     /* First check permissions */
     lock_ObtainMutex(&dscp->mx);
     code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_DELETE,
-                      CM_SCACHESYNC_GETSTATUS
-                      | CM_SCACHESYNC_NEEDCALLBACK);
+                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     lock_ReleaseMutex(&dscp->mx);
     if (code)
         return code;
@@ -489,6 +489,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         lock_ReleaseMutex(&scp->mx);
         lock_ObtainMutex(&bufferp->mx);
         lock_ObtainMutex(&scp->mx);
+	cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
         if (code)
             break;
     }
@@ -695,6 +696,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                     lock_ReleaseMutex(&scp->mx);
                     break;
                 }
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
                                 
                 if (cm_HaveBuffer(scp, bufferp, 1)) {
                     lock_ReleaseMutex(&scp->mx);
@@ -913,6 +915,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (code) {
             goto done;
         }
+	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
 
         if (cm_HaveBuffer(scp, bufp, 0)) 
             break;
@@ -1187,6 +1191,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
         cm_ReleaseSCache(tscp);
         return code;
     }
+    cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     /* tscp is now locked */
 
     if (!(flags & CM_FLAG_NOMOUNTCHASE)
@@ -1385,6 +1390,8 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
                 buf_Release(bufp);
                 return code;
             }
+	    cm_SyncOpDone(linkScp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
             if (cm_HaveBuffer(linkScp, bufp, 0)) 
                 break;
 
@@ -1638,6 +1645,8 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     }
                     break;
                 }
+		cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
                 if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
                     /* this is a symlink; assemble a new buffer */
                     lock_ReleaseMutex(&tscp->mx);
@@ -2107,7 +2116,8 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         goto done;
-        
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
     if (scp->fileType != CM_SCACHETYPE_FILE) {
         code = CM_ERROR_ISDIR;
         goto done;
@@ -2166,6 +2176,10 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     /* done successfully */
     code = 0;
 
+    cm_SyncOpDone(scp, NULL, 
+		   CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
+		   | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
+
   done:
     lock_ReleaseMutex(&scp->mx);
     lock_ReleaseWrite(&scp->bufCreateLock);
@@ -2178,7 +2192,6 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
                 cm_req_t *reqp)
 {
     long code;
-    int flags;
     AFSFetchStatus afsOutStatus;
     AFSVolSync volSync;
     cm_conn_t *connp;
@@ -2189,8 +2202,6 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     /* handle file length setting */
     if (attrp->mask & CM_ATTRMASK_LENGTH)
         return cm_SetLength(scp, &attrp->length, userp, reqp);
-
-    flags = CM_SCACHESYNC_STORESTATUS;
 
     lock_ObtainMutex(&scp->mx);
     /* otherwise, we have to make an RPC to get the status */
@@ -3512,6 +3523,8 @@ long cm_LockCheckPerms(cm_scache_t * scp,
 	if (code == CM_ERROR_NOACCESS)
 	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
     }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     osi_Log1(afsd_logp, "cm_LockCheckPerms returning code %d", code);
 

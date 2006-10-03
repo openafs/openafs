@@ -1005,7 +1005,7 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         
     /* if something went wrong, bail out now */
     if (code) {
-        goto done;
+        goto done2;
     }
         
     lock_ObtainMutex(&scp->mx);
@@ -1014,7 +1014,7 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) {     
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
-        goto done;
+        goto done2;
     }
 
     /* now check that this is a real mount point */
@@ -1022,7 +1022,7 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
-        goto done;
+        goto done1;
     }
 
     /* time to make the RPC, so drop the lock */
@@ -1036,7 +1036,10 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
 
-  done:
+  done1:
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+  done2:
     cm_ReleaseSCache(dscp);
     return code;
 }
@@ -1859,7 +1862,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         
     /* if something went wrong, bail out now */
     if (code) {
-        goto done;
+        goto done2;
     }
         
     lock_ObtainMutex(&scp->mx);
@@ -1868,7 +1871,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) {     
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
-        goto done;
+        goto done2;
     }
 	
     /* now check that this is a real symlink */
@@ -1878,7 +1881,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
-        goto done;
+        goto done1;
     }
 	
     /* time to make the RPC, so drop the lock */
@@ -1893,7 +1896,10 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           | FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
 
-  done:
+  done1:
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+  done2:
     cm_ReleaseSCache(dscp);
     return code;
 }

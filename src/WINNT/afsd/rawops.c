@@ -41,6 +41,8 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     if (code) 
         goto done;
 
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
     /* now we have the entry locked, look up the length */
     fileLength = scp->length;
 
@@ -97,6 +99,8 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                                   | CM_SCACHESYNC_READ);
                 if (code) 
                     goto done;
+
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
                 if (cm_HaveBuffer(scp, bufferp, 0)) break;
 
@@ -177,6 +181,8 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     if (code) 
         goto done;
     
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_GETSTATUS);
+
 #if 0
     /* make sure we have a writable FD */
     if (!(fidp->flags & SMB_FID_OPENWRITE)) {
@@ -260,7 +266,12 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                                   | CM_SCACHESYNC_BUFLOCKED);
                 if (code) 
                     goto done;
-                                
+                       
+		cm_SyncOpDone(scp, bufferp, 
+			       CM_SCACHESYNC_NEEDCALLBACK 
+			       | CM_SCACHESYNC_WRITE 
+			       | CM_SCACHESYNC_BUFLOCKED);
+
                 /* If we're overwriting the entire buffer, or
                  * if we're writing at or past EOF, mark the
                  * buffer as current so we don't call
@@ -363,8 +374,9 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         lock_ReleaseMutex(&scp->mx);
         cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
-    }       
+    }   
 
+    /* cm_SyncOpDone is called when cm_BkgStore completes */
     return code;
 }
 

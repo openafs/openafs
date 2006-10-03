@@ -100,7 +100,7 @@ void cm_BkgDaemon(long parm)
     lock_ReleaseWrite(&cm_daemonLock);
 }
 
-void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2, long p3, long p4,
+void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
 	cm_user_t *userp)
 {
     cm_bkgRequest_t *rp;

@@ -2812,6 +2812,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) goto done;
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
@@ -3087,11 +3089,13 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
-	lock_ReleaseMutex(&scp->mx);
         if (code) {
+	    lock_ReleaseMutex(&scp->mx);
             goto done;
         }
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
+	lock_ReleaseMutex(&scp->mx);
 	lock_ObtainMutex(&fidp->mx);
 	lock_ObtainMutex(&scp->mx);
 
@@ -3217,6 +3221,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         goto done;
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
@@ -3356,10 +3362,14 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
-	lock_ReleaseMutex(&scp->mx);
-        if (code)
+        if (code) {
+	    lock_ReleaseMutex(&scp->mx);
             goto done;
+	}
 
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+	lock_ReleaseMutex(&scp->mx);
 	lock_ObtainMutex(&fidp->mx);
 	lock_ObtainMutex(&scp->mx);
 
@@ -3716,7 +3726,9 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
             }
             continue;
         }
-                
+        
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
         /* now watch for a symlink */
         code = 0;
         while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
@@ -4373,6 +4385,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return code;
     }
 
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
   startsearch:
     dirLength = scp->length;
     bufferp = NULL;
@@ -4490,7 +4504,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     osi_Log2(smb_logp, "T2 search dir cm_SyncOp scp %x failed %d", scp, code);
                     break;
                 }
-                                
+                       
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
                 if (cm_HaveBuffer(scp, bufferp, 0)) {
                     osi_Log2(smb_logp, "T2 search dir !HaveBuffer scp %x bufferp %x", scp, bufferp);
                     break;
@@ -4756,8 +4772,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     /* release the mutex */
     lock_ReleaseMutex(&scp->mx);
-    if (bufferp) 
+    if (bufferp) {
         buf_Release(bufferp);
+	bufferp = NULL;
+    }
 
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
@@ -5477,6 +5495,8 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     if (code) 
 	goto done;
 
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
     /* decode times.  We need a search time, but the response to this
      * call provides the date first, not the time, as returned in the
      * searchTime variable.  So we take the high-order bits first.
@@ -6058,6 +6078,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidflags |= SMB_FID_OPENWRITE;
     if (createOptions & FILE_DELETE_ON_CLOSE)
         fidflags |= SMB_FID_DELONCLOSE;
+    if (createOptions & FILE_SEQUENTIAL_ONLY && !(createOptions & FILE_RANDOM_ACCESS))
+	fidflags | SMB_FID_SEQUENTIAL;
+    if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
+	fidflags & SMB_FID_RANDOM;
 
     /* and the share mode */
     if (shareAccess & FILE_SHARE_READ)
@@ -6802,6 +6826,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         fidflags |= SMB_FID_OPENWRITE;
     if (createOptions & FILE_DELETE_ON_CLOSE)
         fidflags |= SMB_FID_DELONCLOSE;
+    if (createOptions & FILE_SEQUENTIAL_ONLY && !(createOptions & FILE_RANDOM_ACCESS))
+	fidflags | SMB_FID_SEQUENTIAL;
+    if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
+	fidflags & SMB_FID_RANDOM;
 
     /* And the share mode */
     if (shareAccess & FILE_SHARE_READ)
