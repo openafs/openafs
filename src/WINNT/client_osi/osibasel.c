@@ -55,6 +55,8 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
 		lockp->flags |= OSI_LOCKFLAG_EXCL;
 	}
 
+        lockp->tid = thrd_Current();
+
 	LeaveCriticalSection(csp);
 }
 
@@ -83,7 +85,8 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
 		/* if we're here, all clear to set the lock */
 		lockp->readers++;
 	}
-	LeaveCriticalSection(csp);
+
+        LeaveCriticalSection(csp);
 }
 
 void lock_ReleaseRead(osi_rwlock_t *lockp)
@@ -128,6 +131,8 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
 
 	osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "write lock not held");
 	
+        lockp->tid = 0;
+
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
 	if (!osi_TEmpty(&lockp->d.turn)) {
 		osi_TSignalForMLs(&lockp->d.turn, 0, csp);
@@ -157,6 +162,8 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
 	/* convert write lock to read lock */
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
         lockp->readers++;
+
+        lockp->tid = 0;
 
 	if (!osi_TEmpty(&lockp->d.turn)) {
 		osi_TSignalForMLs(&lockp->d.turn, /* still have readers */ 1, csp);
@@ -274,7 +281,10 @@ int lock_TryWrite(struct osi_rwlock *lockp)
 		i = 1;
 	}
 
-	LeaveCriticalSection(csp);
+	if (i)
+	    lockp->tid = thrd_Current();
+
+        LeaveCriticalSection(csp);
 
 	return i;
 }
@@ -300,6 +310,9 @@ int lock_TryMutex(struct osi_mutex *lockp) {
 		lockp->flags |= OSI_LOCKFLAG_EXCL;
 		i = 1;
 	}
+
+        if (i)
+	    lockp->tid = thrd_Current();
 
 	LeaveCriticalSection(csp);
 
@@ -435,6 +448,7 @@ void lock_InitializeRWLock(osi_rwlock_t *mp, char *namep)
 	mp->flags = 0;
 	mp->atomicIndex = osi_MUTEXHASH(mp);
 	mp->readers = 0;
+        mp->tid = 0;
         osi_TInit(&mp->d.turn);
 	return;
 }

@@ -56,6 +56,7 @@ typedef struct osi_rwlock {
 	char type;			/* for all types; type 0 uses atomic count */
 	char flags;			/* flags for base type */
         unsigned short atomicIndex;	/* index into hash table for low-level sync */
+        DWORD tid;			/* writer's tid */
         unsigned short waiters;		/* waiters */
 	unsigned short readers;		/* readers */
 	union {
