@@ -81,12 +81,18 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
      * buffer, although more likely it will just return a new, empty, buffer.
      */
     scp = cm_FindSCache(fidp);
-    if (scp == NULL)
+    if (scp == NULL) {
         return CM_ERROR_NOSUCHFILE;	/* shouldn't happen */
+    }
 
     cm_AFSFidFromFid(&tfid, fidp);
 
     lock_ObtainMutex(&scp->mx);
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+	lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseSCache(scp);
+	return CM_ERROR_NOSUCHFILE;
+    }
 
     code = cm_SetupStoreBIOD(scp, offsetp, length, &biod, userp, reqp);
     if (code) {
@@ -450,6 +456,8 @@ long cm_BufUnstabilize(void *parmp, cm_user_t *userp)
         
     scp = parmp;
         
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_SETSIZE);
+
     lock_ReleaseMutex(&scp->mx);
         
     /* always succeeds */
@@ -559,6 +567,7 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
                  && bp->dataVersion != scp->dataVersion)
                 stop = 1;
             buf_Release(bp);
+	    bp = NULL;
         }
         else 
             stop = 1;
@@ -592,15 +601,23 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
     return code;
 }
 
-void cm_BkgStore(cm_scache_t *scp, long p1, long p2, long p3, long p4,
+void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
                  cm_user_t *userp)
 {
     osi_hyper_t toffset;
     long length;
     cm_req_t req;
+    long code;
+
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+	osi_Log4(afsd_logp, "Skipping BKG store - Deleted scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
+	return;
+    }
 
     cm_InitReq(&req);
+#ifdef NO_BKG_RETRIES
     req.flags |= CM_REQ_NORETRY;
+#endif
 
     toffset.LowPart = p1;
     toffset.HighPart = p2;
@@ -608,7 +625,7 @@ void cm_BkgStore(cm_scache_t *scp, long p1, long p2, long p3, long p4,
 
     osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
-    cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
+    code = cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
 
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
@@ -753,7 +770,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     lock_ObtainMutex(&scp->mx);
 
     bufp = NULL;
-    for (temp = 0; temp < inSize; temp += cm_data.buf_blockSize, bufp = NULL) {
+    for (temp = 0; temp < inSize; temp += cm_data.buf_blockSize) {
         thyper.HighPart = 0;
         thyper.LowPart = temp;
         tbase = LargeIntegerAdd(*inOffsetp, thyper);
@@ -789,6 +806,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             cm_SyncOpDone(scp, bufp, flags);
             lock_ReleaseMutex(&bufp->mx);
             buf_Release(bufp);
+	    bufp = NULL;
         }       
     }
 
@@ -814,6 +832,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     biop->length = cm_data.buf_blockSize;
     firstModOffset = bufp->offset;
     biop->offset = firstModOffset;
+    bufp = NULL;	/* this buffer and reference added to the queue */
 
     /* compute the window surrounding *inOffsetp of size cm_chunkSize */
     scanStart = *inOffsetp;
@@ -844,6 +863,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         lock_ObtainMutex(&scp->mx);
         if (code == 0) {
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
                 
@@ -851,6 +871,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         if (code) {
             lock_ReleaseMutex(&bufp->mx);
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
                 
@@ -859,6 +880,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             cm_SyncOpDone(scp, bufp, flags);
             lock_ReleaseMutex(&bufp->mx);
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
 
@@ -875,6 +897,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         osi_QAddT((osi_queue_t **) &biop->bufListp,
                   (osi_queue_t **) &biop->bufListEndp,
                   &qdp->q);
+	bufp = NULL;		/* added to the queue */
 
         /* update biod info describing the transfer */
         biop->offset = LargeIntegerSubtract(biop->offset, thyper);
@@ -900,6 +923,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         lock_ObtainMutex(&scp->mx);
         if (code == 0) {
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
 
@@ -907,6 +931,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         if (code) {
             lock_ReleaseMutex(&bufp->mx);
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
                 
@@ -915,6 +940,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             cm_SyncOpDone(scp, bufp, flags);
             lock_ReleaseMutex(&bufp->mx);
             buf_Release(bufp);
+	    bufp = NULL;
             break;
         }
 
@@ -931,6 +957,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         osi_QAddH((osi_queue_t **) &biop->bufListp,
                   (osi_queue_t **) &biop->bufListEndp,
                   &qdp->q);
+	bufp = NULL;
 
         /* update biod info describing the transfer */
         biop->length += cm_data.buf_blockSize;
@@ -1224,6 +1251,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
         lock_ReleaseMutex(&scp->mx);
         lock_ReleaseMutex(&bufp->mx);
         buf_Release(bufp);
+	bufp = NULL;
     }
 
     /* clean things out */
@@ -1409,7 +1437,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
                     nbytes_hi = ntohl(nbytes_hi);
                 } else {
                     nbytes_hi = 0;
-					code = callp->error;
+		    code = callp->error;
                     rx_EndCall(callp, code);
                     callp = NULL;
                 }

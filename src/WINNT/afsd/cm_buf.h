@@ -80,6 +80,10 @@ typedef struct cm_buf {
 #endif /* notdef */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
+#ifdef DEBUG
+    cm_scache_t *scp;		/* for debugging, the scache object belonging to */
+                                /* the fid at the time of fid assignment. */
+#endif
     long flags;		        /* flags we're using */
     long size;		        /* size in bytes of this buffer */
     char *datap;		/* data in this buffer */
@@ -111,7 +115,7 @@ typedef struct cm_softRef {
     long counter;		/* counter of changes to identity */
 } cm_softRef_t;
 
-#define CM_BUF_READING	1	/* now reading buffer to the disk */
+#define CM_BUF_READING	1	/* now reading buffer from the disk */
 #define CM_BUF_WRITING	2	/* now writing buffer to the disk */
 #define CM_BUF_INHASH	4	/* in the hash table */
 #define CM_BUF_DIRTY		8	/* buffer is dirty */
@@ -160,9 +164,9 @@ extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
 extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
-extern void buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *);
+extern long buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *);
 
-extern void buf_CleanAsync(cm_buf_t *, cm_req_t *);
+extern long buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
 extern void buf_CleanWait(cm_scache_t *, cm_buf_t *);
 
@@ -196,6 +200,10 @@ extern long buf_SetNBuffers(afs_uint64 nbuffers);
 extern long buf_ValidateBuffers(void);
 
 extern void buf_ForceTrace(BOOL flush);
+
+extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
+
+extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */

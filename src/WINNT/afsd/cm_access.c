@@ -114,7 +114,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 {
     long code;
     cm_fid_t tfid;
-    cm_scache_t *aclScp;
+    cm_scache_t *aclScp = NULL;
     int got_cb = 0;
 
     /* pretty easy: just force a pass through the fetch status code */
@@ -143,19 +143,27 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
         code = cm_GetSCache(&tfid, &aclScp, userp, reqp);
         if (code) {
             lock_ObtainMutex(&scp->mx);
-            return code;
+	    goto _done;
         }       
                 
         osi_Log2(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
         lock_ObtainMutex(&aclScp->mx);
-
-	code = cm_GetCallback(aclScp, userp, reqp, 1);
+	code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
+		      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	if (!code) {
+	    code = cm_GetCallback(aclScp, userp, reqp, 1);
+	    cm_SyncOpDone(aclScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	}
         lock_ReleaseMutex(&aclScp->mx);
         cm_ReleaseSCache(aclScp);
         lock_ObtainMutex(&scp->mx);
     } else if (!got_cb) {
 	code = cm_GetCallback(scp, userp, reqp, 1);
     }
+
+  _done:
+    if (got_cb)
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     return code;
 }

@@ -84,6 +84,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMSTORING;
 		bufp->flags &= ~CM_BUF_DIRTY;
+		bufp->flags |= CM_BUF_ERROR;
+		bufp->error = VNOVNODE;
 		bufp->dataVersion = -1; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
@@ -102,6 +104,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMFETCHING;
 		bufp->flags &= ~CM_BUF_DIRTY;
+		bufp->flags |= CM_BUF_ERROR;
+		bufp->error = VNOVNODE;
 		bufp->dataVersion = -1; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
@@ -112,6 +116,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		buf_Release(bufp);
 	    }
         }
+	buf_CleanDirtyBuffers(scp); 
     } else {
 	/* look for things that shouldn't still be set */
 	osi_assert(scp->bufWritesp == NULL);
@@ -121,6 +126,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     /* invalidate so next merge works fine;
      * also initialize some flags */
     scp->flags &= ~(CM_SCACHEFLAG_STATD
+		     | CM_SCACHEFLAG_DELETED
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
@@ -183,34 +189,86 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 cm_scache_t *cm_GetNewSCache(void)
 {
     cm_scache_t *scp;
+    int retry = 0;
 
-  start:
-    if (cm_data.currentSCaches >= cm_data.maxSCaches) {
-        for (scp = cm_data.scacheLRULastp;
-              scp;
-              scp = (cm_scache_t *) osi_QPrev(&scp->q)) {
-            if (scp->refCount == 0) 
-                break;
-        }
-                
-        if (scp) {
-            osi_assert(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.hashTablep);
+    /* first pass - look for deleted objects */
+    for ( scp = cm_data.scacheLRULastp;
+	  scp;
+	  scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
+    {
+	osi_assert(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.hashTablep);
 
-	    if (!cm_RecycleSCache(scp, 0)) {
-	    
+	if (scp->refCount == 0) {
+	    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+		osi_Log1(afsd_logp, "GetNewSCache attempting to recycle deleted scp 0x%x", scp);
+		if (!cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS)) {
+
+		    /* we found an entry, so return it */
+		    /* now remove from the LRU queue and put it back at the
+		     * head of the LRU queue.
+		     */
+		    cm_AdjustLRU(scp);
+
+		    /* and we're done */
+		    return scp;
+		} 
+		osi_Log1(afsd_logp, "GetNewSCache recycled failed scp 0x%x", scp);
+	    } else if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
 		/* we found an entry, so return it */
 		/* now remove from the LRU queue and put it back at the
-		 * head of the LRU queue.
-		 */
+		* head of the LRU queue.
+		*/
 		cm_AdjustLRU(scp);
 
 		/* and we're done */
 		return scp;
-	    } else {
-		/* We don't like this entry, choose another one. */
-		goto start;
 	    }
-        }
+	}	
+    }	
+    osi_Log0(afsd_logp, "GetNewSCache no deleted or recycled entries available for reuse");
+
+    if (cm_data.currentSCaches >= cm_data.maxSCaches) {
+	/* There were no deleted scache objects that we could use.  Try to find
+	 * one that simply hasn't been used in a while.
+	 */
+	while (1) {
+	    for ( scp = cm_data.scacheLRULastp;
+		  scp;
+		  scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
+	    {
+		/* It is possible for the refCount to be zero and for there still
+		 * to be outstanding dirty buffers.  If there are dirty buffers,
+		 * we must not recycle the scp. */
+		if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
+		    if (!buf_DirtyBuffersExist(&scp->fid)) {
+			if (!cm_RecycleSCache(scp, 0)) {
+			    /* we found an entry, so return it */
+			    /* now remove from the LRU queue and put it back at the
+			     * head of the LRU queue.
+			     */
+			    cm_AdjustLRU(scp);
+
+			    /* and we're done */
+			    return scp;
+			}
+		    } else {
+			osi_Log1(afsd_logp,"GetNewSCache dirty buffers exist scp 0x%x", scp);
+		    }
+		}	
+	    }
+	    osi_Log1(afsd_logp, "GetNewSCache all scache entries in use (retry = %d)", retry);
+	    
+	    /* If get here it means that every scache is either in use or has dirty buffers.
+	     * We used to panic.  Now we will give up our lock and wait.
+	     */
+	    if (++retry < 10) {
+		lock_ReleaseWrite(&cm_scacheLock);
+		Sleep(1000);
+		lock_ObtainWrite(&cm_scacheLock);
+	    } else {
+		return NULL;
+	    }
+	} /* forever */
     }
         
     /* if we get here, we should allocate a new scache entry.  We either are below
@@ -443,8 +501,13 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
     cm_scache_t *scp;
 
     hash = CM_SCACHE_HASH(fidp);
-        
-    osi_assert(fidp->cell != 0);
+
+    if (fidp->cell == 0) {
+#ifdef DEBUG
+	DebugBreak();
+#endif
+	return NULL;
+    }
 
     lock_ObtainWrite(&cm_scacheLock);
     for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
@@ -529,7 +592,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             mp = "";
         }
         scp = cm_GetNewSCache();
-	  
+	if (scp == NULL) {
+	    osi_Log0(afsd_logp,"cm_getSCache unable to obtain *new* scache entry");
+            lock_ReleaseWrite(&cm_scacheLock);
+	    return CM_ERROR_WOULDBLOCK;
+	}
+
 	lock_ObtainMutex(&scp->mx);
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
@@ -602,6 +670,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     /* now, if we don't have the fid, recycle something */
     scp = cm_GetNewSCache();
+    if (scp == NULL) {
+	osi_Log0(afsd_logp,"cm_getSCache unable to obtain *new* scache entry");
+	lock_ReleaseWrite(&cm_scacheLock);
+	return CM_ERROR_WOULDBLOCK;
+    }
+
     osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
     lock_ObtainMutex(&scp->mx);
     scp->fid = *fidp;
@@ -898,7 +972,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         // yj: modified this so that callback only checked if we're
         // not checking something on /afs
         /* fix the conditional to match the one in cm_HaveCallback */
-        if (  (flags & CM_SCACHESYNC_NEEDCALLBACK)
+        if ((flags & CM_SCACHESYNC_NEEDCALLBACK)
 #ifdef AFS_FREELANCE_CLIENT
              && (!cm_freelanceEnabled || 
                   !(scp->fid.vnode==0x1 && scp->fid.unique==0x1) ||
@@ -912,7 +986,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                           scp);
                 if (bufLocked) 
 		    lock_ReleaseMutex(&bufp->mx);
-                code = cm_GetCallback(scp, userp, reqp, 0);
+                code = cm_GetCallback(scp, userp, reqp, (flags & CM_SCACHESYNC_FORCECB)?1:0);
                 if (bufLocked) {
                     lock_ReleaseMutex(&scp->mx);
                     lock_ObtainMutex(&bufp->mx);
@@ -1086,12 +1160,16 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	}
         if (bufp) {
+	    int release = 0;
+	    if (bufp->cmFlags & CM_BUF_CMFETCHING)
+		release = 1;
             bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
             if (bufp->flags & CM_BUF_WAITING) {
                 osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
                 osi_Wakeup((LONG_PTR) &bufp);
             }
-            buf_Release(bufp);
+	    if (release)
+		buf_Release(bufp);
         }
     }
 
@@ -1108,12 +1186,16 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	}
         if (bufp) {
+	    int release = 0;
+	    if (bufp->cmFlags & CM_BUF_CMSTORING)
+		release = 1;
             bufp->cmFlags &= ~CM_BUF_CMSTORING;
             if (bufp->flags & CM_BUF_WAITING) {
                 osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
                 osi_Wakeup((LONG_PTR) &bufp);
             }
-            buf_Release(bufp);
+	    if (release)
+		buf_Release(bufp);
         }
     }
 
