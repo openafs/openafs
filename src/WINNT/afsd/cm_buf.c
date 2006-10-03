@@ -110,7 +110,7 @@ void buf_IncrSyncer(long parm)
     bp = cm_data.buf_allp;
     bp->refCount++;
     lock_ReleaseWrite(&buf_globalLock);
-    nAtOnce = (long)sqrt(cm_data.buf_nbuffers);
+    nAtOnce = cm_data.buf_nbuffers/10;
     while (buf_ShutdownFlag == 0) {
 #ifndef DJGPP
         i = SleepEx(5000, 1);
