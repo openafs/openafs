@@ -440,6 +440,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 		lock_ObtainWrite(&cm_scacheLock);
 		cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS);
+		cm_ReleaseSCacheNoLock(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
 
  		if (pscp) {
