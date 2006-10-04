@@ -611,21 +611,20 @@ void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, 
 
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	osi_Log4(afsd_logp, "Skipping BKG store - Deleted scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
-	return;
-    }
-
-    cm_InitReq(&req);
+    } else {
+	cm_InitReq(&req);
 #ifdef NO_BKG_RETRIES
-    req.flags |= CM_REQ_NORETRY;
+	req.flags |= CM_REQ_NORETRY;
 #endif
 
-    toffset.LowPart = p1;
-    toffset.HighPart = p2;
-    length = p3;
+	toffset.LowPart = p1;
+	toffset.HighPart = p2;
+	length = p3;
 
-    osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
+	osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
-    code = cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
+	code = cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
+    }
 
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);

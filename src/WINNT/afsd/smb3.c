@@ -2289,7 +2289,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	    created = 1;
 	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME,  
+				 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,  
 				  dscp, lastNamep, NULL, TRUE);
 	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
@@ -5073,7 +5073,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	    created = 1;
 	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				 dscp, lastNamep, NULL, TRUE);
 	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried
@@ -6065,9 +6065,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (createOptions & FILE_DELETE_ON_CLOSE)
         fidflags |= SMB_FID_DELONCLOSE;
     if (createOptions & FILE_SEQUENTIAL_ONLY && !(createOptions & FILE_RANDOM_ACCESS))
-	fidflags | SMB_FID_SEQUENTIAL;
+	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
-	fidflags & SMB_FID_RANDOM;
+	fidflags |= SMB_FID_RANDOM;
 
     /* and the share mode */
     if (shareAccess & FILE_SHARE_READ)
@@ -6339,7 +6339,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	    created = 1;
 	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				 dscp, lastNamep, NULL, TRUE);
 	} else if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
             /* Not an exclusive create, and someone else tried
@@ -6813,9 +6813,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (createOptions & FILE_DELETE_ON_CLOSE)
         fidflags |= SMB_FID_DELONCLOSE;
     if (createOptions & FILE_SEQUENTIAL_ONLY && !(createOptions & FILE_RANDOM_ACCESS))
-	fidflags | SMB_FID_SEQUENTIAL;
+	fidflags |= SMB_FID_SEQUENTIAL;
     if (createOptions & FILE_RANDOM_ACCESS && !(createOptions & FILE_SEQUENTIAL_ONLY))
-	fidflags & SMB_FID_RANDOM;
+	fidflags |= SMB_FID_RANDOM;
 
     /* And the share mode */
     if (shareAccess & FILE_SHARE_READ)
@@ -7020,7 +7020,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	    created = 1;
 	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				 dscp, lastNamep, NULL, TRUE);
 	} else if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
             /* Not an exclusive create, and someone else tried
