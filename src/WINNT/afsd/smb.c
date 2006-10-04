@@ -5129,7 +5129,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         code = cm_Unlink(dscp, dep->name, rockp->userp, rockp->reqp);
         if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
             smb_NotifyChange(FILE_ACTION_REMOVED,
-                             FILE_NOTIFY_CHANGE_FILE_NAME,
+			     FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
                              dscp, dep->name, NULL, TRUE);
         if (code == 0) {
             rockp->any = 1;
@@ -5687,7 +5687,7 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
         code = cm_RemoveDir(dscp, dep->name, rockp->userp, rockp->reqp);
         if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
             smb_NotifyChange(FILE_ACTION_REMOVED,
-                             FILE_NOTIFY_CHANGE_DIR_NAME,
+                             FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
                              dscp, dep->name, NULL, TRUE);
         if (code == 0)
             rockp->any = 1;
@@ -5987,7 +5987,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 		scp->flags |= CM_SCACHEFLAG_DELETED;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
-				      FILE_NOTIFY_CHANGE_DIR_NAME,
+				      FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				      dscp, fullPathp, NULL, TRUE);
 	    }
         } else {
@@ -5996,7 +5996,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 		scp->flags |= CM_SCACHEFLAG_DELETED;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
-				      FILE_NOTIFY_CHANGE_FILE_NAME,
+				      FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				      dscp, fullPathp, NULL, TRUE);
 	    }
         }
@@ -7222,7 +7222,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	    created = 1;
 	    if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		smb_NotifyChange(FILE_ACTION_ADDED,	
-				 FILE_NOTIFY_CHANGE_FILE_NAME,
+				 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
 				 dscp, lastNamep, NULL, TRUE);
 	} else if (!excl && code == CM_ERROR_EXISTS) {
             /* not an exclusive create, and someone else tried

@@ -2206,6 +2206,10 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     lock_ObtainMutex(&scp->mx);
     /* otherwise, we have to make an RPC to get the status */
     code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STORESTATUS);
+    if (code) {
+	lock_ReleaseMutex(&scp->mx);
+        return code;
+    }
 
     /* make the attr structure */
     cm_StatusFromAttr(&afsInStatus, scp, attrp);
@@ -2214,9 +2218,6 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
 
-    lock_ReleaseMutex(&scp->mx);
-    if (code) 
-        return code;
 
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);

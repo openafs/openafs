@@ -59,6 +59,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     cm_scache_t *tscp;
     int i;
 
+    lock_ObtainMutex(&scp->mx);
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
 	/* hash it out first */
 	i = CM_SCACHE_HASH(&scp->fid);
@@ -83,6 +84,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
 	    osi_QDFree(qdp);
 	    if (bufp) {
+		lock_ReleaseMutex(&scp->mx);
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMSTORING;
 		bufp->flags &= ~CM_BUF_DIRTY;
@@ -96,6 +98,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		}
 		lock_ReleaseMutex(&bufp->mx);
 		buf_Release(bufp);
+		lock_ObtainMutex(&scp->mx);
 	    }
         }
 	while(qdp = scp->bufReadsp) {
@@ -103,6 +106,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
 	    osi_QDFree(qdp);
 	    if (bufp) {
+		lock_ReleaseMutex(&scp->mx);
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMFETCHING;
 		bufp->flags &= ~CM_BUF_DIRTY;
@@ -116,6 +120,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		}
 		lock_ReleaseMutex(&bufp->mx);
 		buf_Release(bufp);
+		lock_ObtainMutex(&scp->mx);
 	    }
         }
 	buf_CleanDirtyBuffers(scp); 
@@ -181,6 +186,9 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      */
     cm_FreeAllACLEnts(scp);
 
+    osi_Wakeup((long)&scp->flags);
+
+    lock_ReleaseMutex(&scp->mx);
     return 0;
 }
 
