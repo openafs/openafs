@@ -2215,7 +2215,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
-
+	lock_ReleaseMutex(&scp->mx);
 
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
