@@ -2728,7 +2728,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
                 lock_ReleaseMutex(&newDscp->mx);
                 if (code) {
                     /* cleanup first one */
-                    lock_ObtainMutex(&newDscp->mx);
+                    lock_ObtainMutex(&oldDscp->mx);
                     cm_SyncOpDone(oldDscp, NULL,
                                    CM_SCACHESYNC_STOREDATA);
                     lock_ReleaseMutex(&oldDscp->mx);
