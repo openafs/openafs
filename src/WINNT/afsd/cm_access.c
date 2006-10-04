@@ -123,7 +123,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 
     /* pretty easy: just force a pass through the fetch status code */
         
-    osi_Log2(afsd_logp, "GetAccess scp %x user %x", scp, userp);
+    osi_Log2(afsd_logp, "GetAccess scp 0x%p user 0x%p", scp, userp);
 
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
@@ -151,14 +151,16 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
         }       
                 
         osi_Log2(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
-        lock_ObtainMutex(&aclScp->mx);
-	code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
-		      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-	if (!code) {
-	    code = cm_GetCallback(aclScp, userp, reqp, 1);
-	    cm_SyncOpDone(aclScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	if (!cm_HaveCallback(aclScp)) {
+	    lock_ObtainMutex(&aclScp->mx);
+	    code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
+			      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	    if (!code) {
+		code = cm_GetCallback(aclScp, userp, reqp, 1);
+		cm_SyncOpDone(aclScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	    }
+	    lock_ReleaseMutex(&aclScp->mx);
 	}
-        lock_ReleaseMutex(&aclScp->mx);
         cm_ReleaseSCache(aclScp);
         lock_ObtainMutex(&scp->mx);
     } else if (!got_cb) {
