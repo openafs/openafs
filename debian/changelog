@@ -1,7 +1,13 @@
+openafs (1.4.2~fc4-3) unstable; urgency=low
+
+  * Apply upstream patch to fix klog segfaults.  (Closes: #390940)
+
+ -- Russ Allbery <rra@debian.org>  Tue,  3 Oct 2006 17:09:23 -0700
+
 openafs (1.4.2~fc4-2) unstable; urgency=low
 
   * Apply additional upstream patch for AMD64 2.6.18 kernel module build
-    issues.  (Closes:  #389729)
+    issues.  (Closes: #389729)
 
  -- Russ Allbery <rra@debian.org>  Sat, 30 Sep 2006 00:34:33 -0700
 
