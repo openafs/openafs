@@ -89,9 +89,13 @@ void cm_BkgDaemon(long parm)
         osi_assert(cm_bkgQueueCount-- > 0);
         lock_ReleaseWrite(&cm_daemonLock);
 
+	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
+
         (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
                 
-        cm_ReleaseUser(rp->userp);
+	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
+
+	cm_ReleaseUser(rp->userp);
         cm_ReleaseSCache(rp->scp);
         free(rp);
 

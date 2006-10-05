@@ -46,7 +46,7 @@ extern osi_mutex_t cm_Freelance_Lock;
 /* functions called back from the buffer package when reading or writing data,
  * or when holding or releasing a vnode pointer.
  */
-long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
+long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                  cm_user_t *userp, cm_req_t *reqp)
 {
     /* store the data back from this buffer; the buffer is locked and held,
@@ -56,8 +56,7 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
      * bufp->scp.
      */
     long code;
-    cm_fid_t *fidp = vfidp;
-    cm_scache_t *scp;
+    cm_scache_t *scp = vscp;
     long nbytes;
     long temp;
     AFSFetchStatus outStatus;
@@ -82,17 +81,12 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
      */
-    scp = cm_FindSCache(fidp);
-    if (scp == NULL) {
-        return CM_ERROR_NOSUCHFILE;	/* shouldn't happen */
-    }
-
-    cm_AFSFidFromFid(&tfid, fidp);
 
     lock_ObtainMutex(&scp->mx);
+    cm_AFSFidFromFid(&tfid, &scp->fid);
+
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseSCache(scp);
 	return CM_ERROR_NOSUCHFILE;
     }
 
@@ -100,7 +94,6 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
     if (code) {
         osi_Log1(afsd_logp, "cm_SetupStoreBIOD code %x", code);
         lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseSCache(scp);
         return code;
     }
 
@@ -108,7 +101,6 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseBIOD(&biod, 1);	/* should be a NOOP */
-        cm_ReleaseSCache(scp);
         return 0;
     }
 
@@ -301,7 +293,6 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
     }
     lock_ReleaseMutex(&scp->mx);
     cm_ReleaseBIOD(&biod, 1);
-    cm_ReleaseSCache(scp);
 
     return code;
 }
@@ -433,13 +424,11 @@ long cm_BufRead(cm_buf_t *bufp, long nbytes, long *bytesReadp, cm_user_t *userp)
 /* stabilize scache entry, and return with it locked so 
  * it stays stable.
  */
-long cm_BufStabilize(void *parmp, cm_user_t *userp, cm_req_t *reqp)
+long cm_BufStabilize(void *vscp, cm_user_t *userp, cm_req_t *reqp)
 {
-    cm_scache_t *scp;
+    cm_scache_t *scp = vscp;
     long code;
 
-    scp = parmp;
-        
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, reqp, 0, 
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_SETSIZE);
@@ -452,11 +441,9 @@ long cm_BufStabilize(void *parmp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 /* undoes the work that cm_BufStabilize does: releases lock so things can change again */
-long cm_BufUnstabilize(void *parmp, cm_user_t *userp)
+long cm_BufUnstabilize(void *vscp, cm_user_t *userp)
 {
-    cm_scache_t *scp;
-        
-    scp = parmp;
+    cm_scache_t *scp = vscp;
         
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_SETSIZE);
 
@@ -625,7 +612,7 @@ void cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, 
 
 	osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
-	code = cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
+	code = cm_BufWrite(scp, &toffset, length, /* flags */ 0, userp, &req);
     }
 
     lock_ObtainMutex(&scp->mx);
@@ -652,7 +639,7 @@ void cm_ClearPrefetchFlag(long code, cm_scache_t *scp, osi_hyper_t *base)
 }
 
 /* do the prefetch */
-void cm_BkgPrefetch(cm_scache_t *scp, long p1, long p2, long p3, long p4,
+void cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
                     cm_user_t *userp)
 {
     long length;
@@ -758,7 +745,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     long flags;			/* flags to cm_SyncOp */
         
     /* clear things out */
-    biop->scp = scp;		/* don't hold */
+    biop->scp = scp;			/* do not hold; held by caller */
     biop->offset = *inOffsetp;
     biop->length = 0;
     biop->bufListp = NULL;
@@ -993,7 +980,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     osi_queueData_t *heldBufListEndp;	/* first one */
     int reserving;
 
-    biop->scp = scp;
+    biop->scp = scp;			/* do not hold; held by caller */
     biop->offset = *offsetp;
     /* null out the list of buffers */
     biop->bufListp = biop->bufListEndp = NULL;
@@ -1207,7 +1194,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
  */
 void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
 {
-    cm_scache_t *scp;
+    cm_scache_t *scp;		/* do not release; not held in biop */
     cm_buf_t *bufp;
     osi_queueData_t *qdp;
     osi_queueData_t *nqdp;

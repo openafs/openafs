@@ -581,6 +581,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 {
     long code = 0;
     long isdirty = 0;
+	cm_scache_t * scp = NULL;
 
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
@@ -588,11 +589,17 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	isdirty = 1;
         lock_ReleaseMutex(&bp->mx);
 
-	osi_Log1(buf_logp, "buf_CleanAsyncLocked starts I/O on 0x%p", bp);
-        code = (*cm_buf_opsp->Writep)(&bp->fid, &bp->offset,
+	scp = cm_FindSCache(&bp->fid);
+	osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
+        code = (*cm_buf_opsp->Writep)(scp, &bp->offset,
                                        cm_data.buf_blockSize, 0, bp->userp,
                                        reqp);
-	osi_Log2(buf_logp, "buf_CleanAsyncLocked I/O on 0x%p, done=%d", bp, code);
+	osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
+
+	if (scp) {
+	    cm_ReleaseSCache(scp);
+	    scp = NULL;
+	}
                 
         lock_ObtainMutex(&bp->mx);
 	/* if the Write routine returns No Such File, clear the dirty flag 
@@ -1609,6 +1616,7 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
     return 0;
 }
 
+#if 0
 long buf_CleanDirtyBuffers(cm_scache_t *scp)
 {
     cm_buf_t *bp;
@@ -1635,4 +1643,4 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
     }
     return 0;
 }
-
+#endif

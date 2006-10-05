@@ -5884,7 +5884,9 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     cm_req_t req;
     cm_scache_t *dscp = fidp->NTopen_dscp;
     char *pathp = fidp->NTopen_pathp;
-    cm_scache_t * scp;
+    cm_scache_t * scp = fidp->scp;
+    int deleted = 0;
+    int nullcreator = 0;
 
     osi_Log3(smb_logp, "smb_CloseFID Closing fidp 0x%x (fid=%d vcp=0x%x)",
              fidp, fidp->fid, vcp);
@@ -5920,10 +5922,6 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         thrd_WaitForSingleObject_Event(fidp->raw_write_event, RAWTIMEOUT);
         lock_ObtainMutex(&fidp->mx);
     }
-
-    scp = fidp->scp;
-    if (scp)
-	cm_HoldSCache(scp);
 
     /* watch for ioctl closes, and read-only opens */
     if (scp != NULL &&
@@ -5984,7 +5982,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
             code = cm_RemoveDir(dscp, fullPathp, userp, &req);
 	    if (code == 0) {
-		scp->flags |= CM_SCACHEFLAG_DELETED;
+		deleted = 1;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
 				      FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
@@ -5993,7 +5991,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         } else {
             code = cm_Unlink(dscp, fullPathp, userp, &req);
 	    if (code == 0) {				
-		scp->flags |= CM_SCACHEFLAG_DELETED;
+		deleted = 1;
 		if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
 		    smb_NotifyChange(FILE_ACTION_REMOVED,
 				      FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
@@ -6008,10 +6006,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     /* if this was a newly created file, then clear the creator
      * in the stat cache entry. */
     if (fidp->flags & SMB_FID_CREATED) {
-        lock_ObtainMutex(&scp->mx);
-	if (scp->creator == userp)
-	    scp->creator = NULL;
-	lock_ReleaseMutex(&scp->mx);
+	nullcreator = 1;
 	fidp->flags &= ~SMB_FID_CREATED;
     }
 
@@ -6024,13 +6019,23 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         free(fidp->NTopen_wholepathp);
         fidp->NTopen_wholepathp = NULL;
     }
+    fidp->scp = NULL;
     lock_ReleaseMutex(&fidp->mx);
 
     if (dscp)
 	cm_ReleaseSCache(dscp);
 
-    if (scp)
+    if (scp) {
+	if (deleted || nullcreator) {
+	    lock_ObtainMutex(&scp->mx);
+	    if (nullcreator && scp->creator == userp)
+		scp->creator = NULL;
+	    if (deleted)
+		scp->flags |= CM_SCACHEFLAG_DELETED;
+	    lock_ReleaseMutex(&scp->mx);
+	}
 	cm_ReleaseSCache(scp);
+    }
 
     if (pathp)
 	free(pathp);
