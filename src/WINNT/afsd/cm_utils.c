@@ -261,13 +261,9 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
               || error == 122   /* EDQUOT on Linux */
               || error == 1133) /* EDQUOT on Irix  */
         error = CM_ERROR_QUOTA;
-    else if (error == VNOVNODE) {
-#ifdef COMMENT
+    else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
-#else
-        error = CM_ERROR_RETRY;
-#endif
-    } else if (error == 21)
+    else if (error == 21)
         return CM_ERROR_ISDIR;
     return error;
 }

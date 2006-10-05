@@ -894,6 +894,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 {
     smb_vc_t *vcp;
 
+	lock_ObtainWrite(&smb_globalLock);	/* for numVCs */
     lock_ObtainWrite(&smb_rctLock);
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
 	if (vcp->magic != SMB_VC_MAGIC)
@@ -909,9 +910,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
     if (!vcp && (flags & SMB_FLAG_CREATE)) {
         vcp = malloc(sizeof(*vcp));
         memset(vcp, 0, sizeof(*vcp));
-	lock_ObtainWrite(&smb_globalLock);
         vcp->vcID = ++numVCs;
-	lock_ReleaseWrite(&smb_globalLock);
 	vcp->magic = SMB_VC_MAGIC;
         vcp->refCount = 2; 	/* smb_allVCsp and caller */
         vcp->tidCounter = 1;
@@ -954,13 +953,12 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
             memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
 
         if (numVCs >= CM_SESSION_RESERVED) {
-	    lock_ObtainWrite(&smb_globalLock);
             numVCs = 0;
-	    lock_ReleaseWrite(&smb_globalLock);
             osi_Log0(smb_logp, "WARNING: numVCs wrapping around");
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
+	lock_ReleaseWrite(&smb_globalLock);
     return vcp;
 }
 
