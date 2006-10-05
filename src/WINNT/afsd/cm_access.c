@@ -124,9 +124,9 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
      */
-    if (!cm_HaveCallback(scp)) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || !cm_HaveCallback(scp)) {
 	code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-		      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (code) 
 	    return code;
 
@@ -152,16 +152,24 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 	    code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
 			      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	    if (!code) {
-		code = cm_GetCallback(aclScp, userp, reqp, 1);
-		cm_SyncOpDone(aclScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+#if 0
+		/* cm_GetCallback was called by cm_SyncOp */
+		code = cm_GetCallback(aclScp, userp, reqp, 1); 
+#endif
+		cm_SyncOpDone(aclScp, NULL, 
+			      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	    }
 	    lock_ReleaseMutex(&aclScp->mx);
 	}
         cm_ReleaseSCache(aclScp);
         lock_ObtainMutex(&scp->mx);
-    } else if (!got_cb) {
+    }
+#if 0    
+    else if (!got_cb) {
+	/* cm_GetCallback was called by cm_SyncOp */
 	code = cm_GetCallback(scp, userp, reqp, 1);
     }
+#endif
 
   _done:
     if (got_cb)

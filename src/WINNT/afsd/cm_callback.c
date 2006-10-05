@@ -1614,7 +1614,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                     struct cm_req *reqp, long flags)
 {
-    long code;
+    long code = 0;
     cm_conn_t *connp = NULL;
     AFSFetchStatus afsStatus;
     AFSVolSync volSync;
@@ -1624,6 +1624,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     int mustCall;
     cm_fid_t sfid;
     struct rx_connection * callp = NULL;
+    int syncop_done = 0;
 
     osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
              scp, scp->fid.cell, scp->fid.volume, flags);
@@ -1670,23 +1671,20 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     mustCall = (flags & 1);
     cm_AFSFidFromFid(&tfid, &scp->fid);
     while (1) {
-        if (!mustCall && cm_HaveCallback(scp)) {
-            osi_Log3(afsd_logp, "GetCallback Complete scp 0x%p cell %d vol %d", 
-                      scp, scp->fid.cell, scp->fid.volume);
-            return 0;
-        }
+        if (!mustCall && cm_HaveCallback(scp))
+	    break;
 
         /* turn off mustCall, since it has now forced us past the check above */
         mustCall = 0;
 
-	/* 20060929 jaltman - We are being called from within cm_SyncOp.
-	 * if we call cm_SyncOp again and another thread has attempted
-	 * to obtain current status CM_SCACHEFLAG_WAITING will be set
-	 * and we will deadlock.  
-	 */
         /* otherwise, we have to make an RPC to get the status */
-        cm_SyncOp(scp, NULL, userp, reqp, 0, 
-		  CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
+	if (!syncop_done) {
+	    code = cm_SyncOp(scp, NULL, userp, reqp, 0, 
+			     CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
+	    if (code)
+		break;
+	    syncop_done = 1;
+	}
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
         lock_ReleaseMutex(&scp->mx);
@@ -1721,17 +1719,25 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
         }
-	/* 20060929 jaltman - don't deadlock */
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
 
-        /* now check to see if we got an error */
-        if (code) {
-            osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%p -->",code, scp);
-            osi_Log4(afsd_logp, "            cell %u vol %u vn %u uniq %u",
-                     scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
-            return code;
-        }
+        /* if we got an error, return to caller */
+        if (code)
+	    break;
     }
+
+    if (syncop_done)
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
+    
+    if (code) {
+	osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%p -->",code, scp);
+	osi_Log4(afsd_logp, "            cell %u vol %u vn %u uniq %u",
+		 scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+    } else {
+	osi_Log3(afsd_logp, "GetCallback Complete scp 0x%p cell %d vol %d", 
+		  scp, scp->fid.cell, scp->fid.volume);
+    }
+
+    return code;
 }
 
 /* called periodically by cm_daemon to shut down use of expired callbacks */

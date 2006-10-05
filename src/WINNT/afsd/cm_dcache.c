@@ -768,8 +768,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             lock_ObtainMutex(&bufp->mx);
             lock_ObtainMutex(&scp->mx);
 
-            flags = CM_SCACHESYNC_NEEDCALLBACK
-                | CM_SCACHESYNC_GETSTATUS
+            flags = CM_SCACHESYNC_GETSTATUS
                     | CM_SCACHESYNC_STOREDATA
                         | CM_SCACHESYNC_BUFLOCKED;
             code = cm_SyncOp(scp, bufp, userp, reqp, 0, flags); 
@@ -827,8 +826,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     thyper.HighPart = 0;
     scanEnd = LargeIntegerAdd(scanStart, thyper);
 
-    flags = CM_SCACHESYNC_NEEDCALLBACK
-        | CM_SCACHESYNC_GETSTATUS
+    flags = CM_SCACHESYNC_GETSTATUS
         | CM_SCACHESYNC_STOREDATA
         | CM_SCACHESYNC_BUFLOCKED
         | CM_SCACHESYNC_NOWAIT;
@@ -1111,8 +1109,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
             break;
         }
 
-        flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_FETCHDATA
-            | CM_SCACHESYNC_BUFLOCKED;
+        flags = CM_SCACHESYNC_FETCHDATA | CM_SCACHESYNC_BUFLOCKED;
         if (!isFirst) 
             flags |= CM_SCACHESYNC_NOWAIT;
 
@@ -1202,42 +1199,47 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
     if (biop->reserved)
         buf_UnreserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
         
-    flags = CM_SCACHESYNC_NEEDCALLBACK;
     if (isStore)
-        flags |= CM_SCACHESYNC_STOREDATA;
+        flags = CM_SCACHESYNC_STOREDATA;
     else
-        flags |= CM_SCACHESYNC_FETCHDATA;
+        flags = CM_SCACHESYNC_FETCHDATA;
 
     scp = biop->scp;
-    for(qdp = biop->bufListp; qdp; qdp = nqdp) {
-        /* lookup next guy first, since we're going to free this one */
-        nqdp = (osi_queueData_t *) osi_QNext(&qdp->q);
+    if (biop->bufListp) {
+	for(qdp = biop->bufListp; qdp; qdp = nqdp) {
+	    /* lookup next guy first, since we're going to free this one */
+	    nqdp = (osi_queueData_t *) osi_QNext(&qdp->q);
                 
-        /* extract buffer and free queue data */
-        bufp = osi_GetQData(qdp);
-	osi_QRemoveHT((osi_queue_t **) &biop->bufListp,
-		      (osi_queue_t **) &biop->bufListEndp,
-		      &qdp->q);
-        osi_QDFree(qdp);
+	    /* extract buffer and free queue data */
+	    bufp = osi_GetQData(qdp);
+	    osi_QRemoveHT((osi_queue_t **) &biop->bufListp,
+			   (osi_queue_t **) &biop->bufListEndp,
+			   &qdp->q);
+	    osi_QDFree(qdp);
 
-        /* now, mark I/O as done, unlock the buffer and release it */
-        lock_ObtainMutex(&bufp->mx);
-        lock_ObtainMutex(&scp->mx);
-        cm_SyncOpDone(scp, bufp, flags);
+	    /* now, mark I/O as done, unlock the buffer and release it */
+	    lock_ObtainMutex(&bufp->mx);
+	    lock_ObtainMutex(&scp->mx);
+	    cm_SyncOpDone(scp, bufp, flags);
                 
-        /* turn off writing and wakeup users */
-        if (isStore) {
-            if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%p] bp 0x%p", scp, bufp);
-                osi_Wakeup((LONG_PTR) bufp);
-            }
-            bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
-        }
+	    /* turn off writing and wakeup users */
+	    if (isStore) {
+		if (bufp->flags & CM_BUF_WAITING) {
+		    osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%p] bp 0x%p", scp, bufp);
+		    osi_Wakeup((LONG_PTR) bufp);
+		}
+		bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+	    }
 
-        lock_ReleaseMutex(&scp->mx);
-        lock_ReleaseMutex(&bufp->mx);
-        buf_Release(bufp);
-	bufp = NULL;
+	    lock_ReleaseMutex(&scp->mx);
+	    lock_ReleaseMutex(&bufp->mx);
+	    buf_Release(bufp);
+	    bufp = NULL;
+	}
+    } else {
+	lock_ObtainMutex(&scp->mx);
+	cm_SyncOpDone(scp, NULL, flags);
+	lock_ReleaseMutex(&scp->mx);
     }
 
     /* clean things out */

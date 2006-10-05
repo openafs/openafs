@@ -75,23 +75,23 @@ void cm_InitConn(void)
 	    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
 	    if (code == ERROR_SUCCESS)
-                ConnDeadtimeout = dwValue;
+                ConnDeadtimeout = (unsigned short)dwValue;
 
 	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
 	    if (code == ERROR_SUCCESS)
-                HardDeadtimeout = dwValue;
+                HardDeadtimeout = (unsigned short)dwValue;
 	    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
 	    RegCloseKey(parmKey);
 	}
 
 	afsi_log("lanmanworkstation : SessTimeout %d", RDRtimeout);
 	if (ConnDeadtimeout == 0)
-	    ConnDeadtimeout = RDRtimeout / 2;
+	    ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
 	afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
 	if (HardDeadtimeout == 0)
-	    HardDeadtimeout = RDRtimeout;
+	    HardDeadtimeout = (unsigned short) RDRtimeout;
 	afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
 
 	osi_EndOnce(&once);

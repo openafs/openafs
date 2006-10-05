@@ -240,7 +240,6 @@ cm_scache_t *cm_GetNewSCache(void)
 	/* There were no deleted scache objects that we could use.  Try to find
 	 * one that simply hasn't been used in a while.
 	 */
-	while (1) {
 	    for ( scp = cm_data.scacheLRULastp;
 		  scp;
 		  scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
@@ -267,17 +266,7 @@ cm_scache_t *cm_GetNewSCache(void)
 	    }
 	    osi_Log1(afsd_logp, "GetNewSCache all scache entries in use (retry = %d)", retry);
 	    
-	    /* If get here it means that every scache is either in use or has dirty buffers.
-	     * We used to panic.  Now we will give up our lock and wait.
-	     */
-	    if (++retry < 10) {
-		lock_ReleaseWrite(&cm_scacheLock);
-		Sleep(1000);
-		lock_ObtainWrite(&cm_scacheLock);
-	    } else {
 		return NULL;
-	    }
-	} /* forever */
     }
         
     /* if we get here, we should allocate a new scache entry.  We either are below
@@ -819,6 +808,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     cm_buf_t *tbufp;
     afs_uint32 outRights;
     int bufLocked;
+    afs_uint32 sleep_scp_flags = 0;
+    afs_uint32 sleep_buf_cmflags = 0;
+    afs_uint32 sleep_scp_bufs = 0;
 
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
@@ -994,7 +986,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                   cm_fakeDirCallback < 2)
 #endif /* AFS_FREELANCE_CLIENT */
              ) {
-            if (!cm_HaveCallback(scp)) {
+            if ((flags & CM_SCACHESYNC_FORCECB) || !cm_HaveCallback(scp)) {
                 osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
                           scp);
                 if (bufLocked) 
@@ -1007,6 +999,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 }
                 if (code) 
                     return code;
+		flags &= ~CM_SCACHESYNC_FORCECB;	/* only force once */
                 continue;
             }
         }
@@ -1046,6 +1039,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
          */
         if (flags & CM_SCACHESYNC_NOWAIT) 
             return CM_ERROR_WOULDBLOCK;
+
+	sleep_scp_flags = scp->flags;		/* so we know why we slept */
+	sleep_buf_cmflags = bufp ? bufp->cmFlags : 0;
+	sleep_scp_bufs = (scp->bufReadsp ? 1 : 0) | (scp->bufWritesp ? 2 : 0);
 
         /* wait here, then try again */
         osi_Log1(afsd_logp, "CM SyncOp sleeping scp 0x%p", scp);
@@ -1143,6 +1140,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 {
     osi_queueData_t *qdp;
     cm_buf_t *tbufp;
+
+    lock_AssertMutex(&scp->mx);
 
     /* now, update the recorded state for RPC-type calls */
     if (flags & CM_SCACHESYNC_FETCHSTATUS)
