@@ -1009,6 +1009,11 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 #else
 	ptr = aptr;
 #endif
+	if ((unsigned long)ptr < init_mm.start_code ||
+		(unsigned long)ptr > init_mm.end_data) {
+	     continue;
+	}
+
 	ret = check_table(P, ptr);
 	if (ret >= 0) {
 	    /* return value is number of entries to skip */
@@ -1113,6 +1118,10 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 	printk("<7>osi_probe: %s                      try_harder\n", P->symbol);
 #endif
     for (offset = 0; offset < datalen; offset++, ptr++) {
+	if ((unsigned long)ptr < init_mm.start_code ||
+		(unsigned long)ptr > init_mm.end_data) {
+	     continue;
+	}
 	ret = check_table(P, ptr);
         if (ret >= 0) {
             /* return value is number of entries to skip */

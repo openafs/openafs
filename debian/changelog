@@ -1,11 +1,13 @@
 openafs (1.4.2~fc4-3) unstable; urgency=low
 
+  * Apply patch from Chaskiel Grundman to fix kernel panics when loading
+    the kernel module into AMD64 2.6.18 kernels.  (Closes: #390653)
   * Apply upstream patch to fix klog segfaults.  (Closes: #390940)
   * The UTS_RELEASE string is no longer found in linux/version.h in
     2.6.18, so fall back on looking in config/kernel.release.  Thanks to
     Marcus Watts for the patch.
 
- -- Russ Allbery <rra@stanford.edu>  Wed,  4 Oct 2006 11:52:20 -0700
+ -- Russ Allbery <rra@debian.org>  Thu,  5 Oct 2006 13:02:50 -0700
 
 openafs (1.4.2~fc4-2) unstable; urgency=low
 
