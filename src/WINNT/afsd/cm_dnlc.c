@@ -185,14 +185,14 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
     int safety, match;
   
     if (!cm_useDnlc)
-	return 0;
+	return NULL;
     if ( cm_debugDnlc ) 
 	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %s", 
 		adp, osi_LogSaveString(afsd_logp,aname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
     if (ts - aname >= CM_AFSNCNAMESIZE) 
-	return 0;
+	return NULL;
 
     skey = key & (NHSIZE -1);
 
@@ -262,7 +262,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	    if ( cm_debugDnlc ) 
 		osi_Log0(afsd_logp, "DNLC cycle"); 
 	    cm_dnlcPurge();
-	    return(0);
+	    return(NULL);
 	}
     }
 

@@ -50,14 +50,20 @@ void cm_AdjustLRU(cm_scache_t *scp)
         cm_data.scacheLRULastp = scp;
 }
 
-/* called with cm_scacheLock write-locked; recycles an existing scp. */
+/* called with cm_scacheLock write-locked; recycles an existing scp. 
+ *
+ * this function ignores all of the locking hierarchy.  
+ */
 long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 {
     cm_scache_t **lscpp;
     cm_scache_t *tscp;
     int i;
 
-    lock_ObtainMutex(&scp->mx);
+    if (scp->refCount != 0) {
+	return -1;
+    }
+
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
 	/* hash it out first */
 	i = CM_SCACHE_HASH(&scp->fid);
@@ -70,9 +76,9 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		break;
 	    }
 	}
-	osi_assertx(tscp, "afsd: scache hash screwup");
     }
 
+#if 0
     if (flags & CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS) {
 	osi_queueData_t *qdp;
 	cm_buf_t *bufp;
@@ -82,7 +88,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
 	    osi_QDFree(qdp);
 	    if (bufp) {
-		lock_ReleaseMutex(&scp->mx);
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMSTORING;
 		bufp->flags &= ~CM_BUF_DIRTY;
@@ -96,7 +101,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		}
 		lock_ReleaseMutex(&bufp->mx);
 		buf_Release(bufp);
-		lock_ObtainMutex(&scp->mx);
 	    }
         }
 	while(qdp = scp->bufReadsp) {
@@ -104,7 +108,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
 	    osi_QDFree(qdp);
 	    if (bufp) {
-		lock_ReleaseMutex(&scp->mx);
 		lock_ObtainMutex(&bufp->mx);
 		bufp->cmFlags &= ~CM_BUF_CMFETCHING;
 		bufp->flags &= ~CM_BUF_DIRTY;
@@ -118,7 +121,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		}
 		lock_ReleaseMutex(&bufp->mx);
 		buf_Release(bufp);
-		lock_ObtainMutex(&scp->mx);
 	    }
         }
 	buf_CleanDirtyBuffers(scp); 
@@ -127,6 +129,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	osi_assert(scp->bufWritesp == NULL);
 	osi_assert(scp->bufReadsp == NULL);
     }
+#endif
 
     /* invalidate so next merge works fine;
      * also initialize some flags */
@@ -183,10 +186,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      * while we hold the global refcount lock.
      */
     cm_FreeAllACLEnts(scp);
-
-    osi_Wakeup((long)&scp->flags);
-
-    lock_ReleaseMutex(&scp->mx);
     return 0;
 }
 
@@ -199,6 +198,7 @@ cm_scache_t *cm_GetNewSCache(void)
     cm_scache_t *scp;
     int retry = 0;
 
+#if 0
     /* first pass - look for deleted objects */
     for ( scp = cm_data.scacheLRULastp;
 	  scp;
@@ -234,6 +234,7 @@ cm_scache_t *cm_GetNewSCache(void)
 	}	
     }	
     osi_Log0(afsd_logp, "GetNewSCache no deleted or recycled entries available for reuse");
+#endif 
 
     if (cm_data.currentSCaches >= cm_data.maxSCaches) {
 	/* There were no deleted scache objects that we could use.  Try to find
@@ -511,9 +512,6 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
     hash = CM_SCACHE_HASH(fidp);
 
     if (fidp->cell == 0) {
-#ifdef DEBUG
-	DebugBreak();
-#endif
 	return NULL;
     }
 
@@ -551,7 +549,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
          fidp->volume==cm_data.rootFid.volume &&
          fidp->vnode==0x0 && fidp->unique==0x0)
     {
-        osi_Log0(afsd_logp,"cm_getSCache called with root cell/volume and vnode=0 and unique=0");
+        osi_Log0(afsd_logp,"cm_GetSCache called with root cell/volume and vnode=0 and unique=0");
     }
 
     // yj: check if we have the scp, if so, we don't need
@@ -583,7 +581,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
               fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
               fidp->vnode==0x1 && fidp->unique==0x1);
     if (cm_freelanceEnabled && isRoot) {
-        osi_Log0(afsd_logp,"cm_getSCache Freelance and isRoot");
+        osi_Log0(afsd_logp,"cm_GetSCache Freelance and isRoot");
         /* freelance: if we are trying to get the root scp for the first
          * time, we will just put in a place holder entry. 
          */
@@ -591,7 +589,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
 	  
     if (cm_freelanceEnabled && special) {
-        osi_Log0(afsd_logp,"cm_getSCache Freelance and special");
+        osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
         if (fidp->vnode > 1 && fidp->vnode <= cm_noLocalMountPoints + 2) {
 	    lock_ObtainMutex(&cm_Freelance_Lock);
             mp =(cm_localMountPoints+fidp->vnode-2)->mountPointStringp;
@@ -601,12 +599,14 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         }
         scp = cm_GetNewSCache();
 	if (scp == NULL) {
-	    osi_Log0(afsd_logp,"cm_getSCache unable to obtain *new* scache entry");
+	    osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
             lock_ReleaseWrite(&cm_scacheLock);
 	    return CM_ERROR_WOULDBLOCK;
 	}
 
+	lock_ReleaseWrite(&cm_scacheLock);
 	lock_ObtainMutex(&scp->mx);
+	lock_ObtainWrite(&cm_scacheLock);
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
@@ -618,6 +618,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         cm_data.hashTablep[hash]=scp;
         scp->flags |= CM_SCACHEFLAG_INHASH;
         scp->refCount = 1;
+	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%x", scp);
         if (fidp->vnode > 1 && fidp->vnode <= cm_noLocalMountPoints + 2)
             scp->fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
         else 
@@ -679,13 +680,16 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     /* now, if we don't have the fid, recycle something */
     scp = cm_GetNewSCache();
     if (scp == NULL) {
-	osi_Log0(afsd_logp,"cm_getSCache unable to obtain *new* scache entry");
+	osi_Log0(afsd_logp,"cm_GetNewSCache unable to obtain *new* scache entry");
 	lock_ReleaseWrite(&cm_scacheLock);
 	return CM_ERROR_WOULDBLOCK;
     }
+    osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%x flags 0x%x", scp, scp->flags);
 
     osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
+    lock_ReleaseWrite(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&cm_scacheLock);
     scp->fid = *fidp;
     scp->volp = volp;	/* a held reference */
 
@@ -707,6 +711,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     cm_data.hashTablep[hash] = scp;
     scp->flags |= CM_SCACHEFLAG_INHASH;
     scp->refCount = 1;
+    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
     lock_ReleaseMutex(&scp->mx);
 
     /* XXX - The following fields in the cm_scache are 
@@ -731,7 +736,7 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     cm_fid_t    parent_fid;
     cm_scache_t * pscp = NULL;
 
-    lock_ObtainWrite(&cm_scacheLock);
+    lock_ObtainRead(&cm_scacheLock);
     parent_fid = scp->fid;
     parent_fid.vnode = scp->parentVnode;
     parent_fid.unique = scp->parentUnique;
@@ -746,7 +751,7 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
 	    }
 	}
     }
-    lock_ReleaseWrite(&cm_scacheLock);
+    lock_ReleaseRead(&cm_scacheLock);
 
     return pscp;
 }
@@ -1396,31 +1401,37 @@ void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)
 void cm_HoldSCacheNoLock(cm_scache_t *scp)
 {
     osi_assert(scp != 0);
-    osi_assert(scp->refCount >= 0);
     scp->refCount++;
+    osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%x ref %d",scp, scp->refCount);
 }
 
 void cm_HoldSCache(cm_scache_t *scp)
 {
     osi_assert(scp != 0);
     lock_ObtainWrite(&cm_scacheLock);
-    osi_assert(scp->refCount >= 0);
     scp->refCount++;
+    osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%x ref %d",scp, scp->refCount);
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
 void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
 {
-    osi_assert(scp != 0);
+    osi_assert(scp != NULL);
+    if (scp->refCount == 0)
+	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
     osi_assert(scp->refCount-- >= 0);
+    osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%x ref %d",scp,scp->refCount);
 }
 
 void cm_ReleaseSCache(cm_scache_t *scp)
 {
-    osi_assert(scp != 0);
+    osi_assert(scp != NULL);
     lock_ObtainWrite(&cm_scacheLock);
+    if (scp->refCount == 0)
+	osi_Log1(afsd_logp,"cm_ReleaseSCache about to panic scp 0x%x",scp);
     osi_assert(scp->refCount != 0);
     scp->refCount--;
+    osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%x ref %d",scp,scp->refCount);
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
