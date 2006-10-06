@@ -25,9 +25,6 @@
 #endif
 #endif
 #include <stdlib.h>
-#ifdef AFS_AIX51_ENV
-#include <sys/cred.h>
-#endif
 
 RCSID
     ("$Header$");
@@ -186,7 +183,7 @@ curpag(void)
 #if defined(AFS_AIX51_ENV)
     afs_int32 pag;
 
-    if (get_pag(PAG_AFS, &pag) < 0 || pag == 0)
+    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
         pag = NOPAG;
     return pag;
 #else
@@ -213,7 +210,6 @@ curpag(void)
 	    return -1;
     }
     return -1;
-#endif
 }
 
 /* Returns the AFS pag number, if any, otherwise return -1 */
