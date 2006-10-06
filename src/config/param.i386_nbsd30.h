@@ -5,8 +5,8 @@
 #define AFS_X86_ENV 1
 #define AFSLITTLE_ENDIAN 1
 
-#define SYS_NAME       "i386_nbsd30"
-#define SYS_NAME_ID    SYS_NAME_ID_i386_nbsd30
+#define SYS_NAME       "i386_nbsd40"
+#define SYS_NAME_ID    SYS_NAME_ID_i386_nbsd40
 
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
