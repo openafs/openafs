@@ -83,12 +83,13 @@ void cm_BkgDaemon(long parm)
         osi_assert(cm_bkgQueueCount-- > 0);
         lock_ReleaseWrite(&cm_daemonLock);
 
+#ifdef DEBUG_REFCOUNT
 	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
-
+#endif
         (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
-                
+#ifdef DEBUG_REFCOUNT                
 	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
-
+#endif
 	cm_ReleaseUser(rp->userp);
         cm_ReleaseSCache(rp->scp);
         free(rp);

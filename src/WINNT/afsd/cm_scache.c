@@ -609,7 +609,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	}
 
 #if not_too_dangerous
-	/* dropping the cm_scacheLock is dangerous */
+	/* dropping the cm_scacheLock allows more than one thread
+	 * to obtain the same cm_scache_t from the LRU list.  Since
+	 * the refCount is known to be zero at this point we have to
+	 * assume that no one else is using the one this is returned.
+	 */
 	lock_ReleaseWrite(&cm_scacheLock);
 	lock_ObtainMutex(&scp->mx);
 	lock_ObtainWrite(&cm_scacheLock);
@@ -697,9 +701,16 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
     osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
 
+#if not_too_dangerous
+    /* dropping the cm_scacheLock allows more than one thread
+     * to obtain the same cm_scache_t from the LRU list.  Since
+     * the refCount is known to be zero at this point we have to
+     * assume that no one else is using the one this is returned.
+     */
     lock_ReleaseWrite(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
     lock_ObtainWrite(&cm_scacheLock);
+#endif
     scp->fid = *fidp;
     scp->volp = volp;	/* a held reference */
 
@@ -722,7 +733,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     scp->flags |= CM_SCACHEFLAG_INHASH;
     scp->refCount = 1;
     osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
+#if not_too_dangerous
     lock_ReleaseMutex(&scp->mx);
+#endif
 
     /* XXX - The following fields in the cm_scache are 
      * uninitialized:
@@ -1413,7 +1426,9 @@ void cm_HoldSCacheNoLock(cm_scache_t *scp)
 {
     osi_assert(scp != 0);
     scp->refCount++;
-    osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%x ref %d",scp, scp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, scp->refCount);
+#endif
 }
 
 void cm_HoldSCache(cm_scache_t *scp)
@@ -1421,7 +1436,9 @@ void cm_HoldSCache(cm_scache_t *scp)
     osi_assert(scp != 0);
     lock_ObtainWrite(&cm_scacheLock);
     scp->refCount++;
-    osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%x ref %d",scp, scp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%p ref %d",scp, scp->refCount);
+#endif
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
@@ -1431,7 +1448,9 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
     if (scp->refCount == 0)
 	osi_Log1(afsd_logp,"cm_ReleaseSCacheNoLock about to panic scp 0x%x",scp);
     osi_assert(scp->refCount-- >= 0);
-    osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%x ref %d",scp,scp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp,scp->refCount);
+#endif
 }
 
 void cm_ReleaseSCache(cm_scache_t *scp)
@@ -1442,7 +1461,9 @@ void cm_ReleaseSCache(cm_scache_t *scp)
 	osi_Log1(afsd_logp,"cm_ReleaseSCache about to panic scp 0x%x",scp);
     osi_assert(scp->refCount != 0);
     scp->refCount--;
-    osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%x ref %d",scp,scp->refCount);
+#ifdef DEBUG_REFCOUNT
+    osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp,scp->refCount);
+#endif
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
