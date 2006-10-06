@@ -239,7 +239,7 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 			lep->parms[0], lep->parms[1],
 			lep->parms[2], lep->parms[3]);
 		snprintf(wholemsg, sizeof(wholemsg),
-			 "time %d.%06d, tid %d %s\n",
+			 "time %d.%06d, tid %d %s\r\n",
 			lep->micros / 1000000,
 			lep->micros % 1000000,
 			lep->tid, msg);
