@@ -323,13 +323,21 @@ else
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
-		i?86-*-netbsd*3.0*)
+		i?86-*-netbsd*3.[[0-8]]*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.99*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
+			;;
+		i?86-*-netbsd*4.[[0-8]]*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="i386_nbsd40"
+			;;
+		i?86-*-netbsd*4.99*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="i386_nbsd40"
 			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
