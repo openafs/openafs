@@ -1,14 +1,38 @@
+Since 1.5.8:
+ * "Show Tray Icon" checkbox removed from afs_config.exe
+
+ * Disable DNS Registrations for the Loopback Adapter and make sure
+   that Netbios is turned on.
+
+ * A reference count leak on stat cache objects was fixed
+
+ * For debugging, tread ids of writers are now tracked on locks
+
+ * Corrected an incorrect lock that was being held but not
+   freed in a rare error case
+
+ * Changed trace log end of line to CR-LF so it can be read
+   with notepad.exe
+
+ * modify the buffer synchronization thread to write all dirty
+   buffers and sleep only when there is no work to be done
+
+ * improve behavior of cache manager when large numbers of 
+   temporary files are being created by multiple clients within
+   the same directory.
+
+ * do not permit dirty buffers that belong to deleted files
+   to be written to the file server.  its a waste of bandwidth
+
 Since 1.5.7:
 
  * better handling of dot directory
 
- * fs sq adn fs mkm now behave as on UNIX
+ * fs sq and fs mkm now behave as on UNIX
 
  * add license to installers
 
  * Return Invalid Parameter error for unknown InfoLevels in
-   SMB Tran2 Search Directory.
- * Return Invalid Parameter error for unknown InfoLevels in 
    SMB Tran2 Search Directory.
 
  * Correctly use WSAStartup and WSACleanup within the RX library
