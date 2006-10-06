@@ -110,7 +110,7 @@ void buf_ReleaseLocked(cm_buf_t *bp)
     osi_assert(bp->magic == CM_BUF_MAGIC);
 #ifdef DEBUG
     if (bp->refCount == 0)
-	DebugBreak();
+	osi_panic("buf refcount 0",__FILE__,__LINE__);;
 #else
     osi_assert(bp->refCount > 0);
 #endif
@@ -1514,31 +1514,31 @@ buf_ValidateBufQueues(void)
     lock_ObtainRead(&buf_globalLock);
     for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
         if (bp->magic != CM_BUF_MAGIC)
-            DebugBreak();
+            osi_panic("buf magic error",__FILE__,__LINE__);
         countb++;
         bpb = bp;
     }
 
     for (bp = cm_data.buf_freeListp; bp; bp=(cm_buf_t *) osi_QNext(&bp->q)) {
         if (bp->magic != CM_BUF_MAGIC)
-            DebugBreak();
+            osi_panic("buf magic error",__FILE__,__LINE__);
         countf++;
         bpf = bp;
     }
 
     for (bp = cm_data.buf_allp; bp; bp=bp->allp) {
         if (bp->magic != CM_BUF_MAGIC)
-            DebugBreak();
+            osi_panic("buf magic error",__FILE__,__LINE__);
         counta++;
         bpa = bp;
     }
     lock_ReleaseRead(&buf_globalLock);
 
     if (countb != countf)
-        DebugBreak();
+	osi_panic("buf magic error",__FILE__,__LINE__);
 
     if (counta != cm_data.buf_nbuffers)
-        DebugBreak();	
+	osi_panic("buf magic error",__FILE__,__LINE__);
 }
 #endif /* TESTING */
 

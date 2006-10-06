@@ -770,9 +770,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             lock_ObtainMutex(&bufp->mx);
             lock_ObtainMutex(&scp->mx);
 
-            flags = CM_SCACHESYNC_GETSTATUS
-                    | CM_SCACHESYNC_STOREDATA
-                        | CM_SCACHESYNC_BUFLOCKED;
+            flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_STOREDATA | CM_SCACHESYNC_BUFLOCKED;
             code = cm_SyncOp(scp, bufp, userp, reqp, 0, flags); 
             if (code) {
                 lock_ReleaseMutex(&bufp->mx);

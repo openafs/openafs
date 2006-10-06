@@ -128,16 +128,12 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
      */
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || !cm_HaveCallback(scp)) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY ) {
 	code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
-	if (code) 
-	    return code;
-
-	got_cb = 1;
-    }
-        
-    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+	if (!code) 
+	    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    } else {
         /* not a dir, use parent dir's acl */
         tfid.cell = scp->fid.cell;
         tfid.volume = scp->fid.volume;
@@ -151,33 +147,17 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
         }       
                 
         osi_Log2(afsd_logp, "GetAccess parent scp %x user %x", aclScp, userp);
-	if (!cm_HaveCallback(aclScp)) {
-	    lock_ObtainMutex(&aclScp->mx);
-	    code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
-			      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-	    if (!code) {
-#if 0
-		/* cm_GetCallback was called by cm_SyncOp */
-		code = cm_GetCallback(aclScp, userp, reqp, 1); 
-#endif
-		cm_SyncOpDone(aclScp, NULL, 
-			      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
-	    }
-	    lock_ReleaseMutex(&aclScp->mx);
-	}
+	lock_ObtainMutex(&aclScp->mx);
+	code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
+			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
+	if (!code)
+	    cm_SyncOpDone(aclScp, NULL, 
+			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	lock_ReleaseMutex(&aclScp->mx);
         cm_ReleaseSCache(aclScp);
         lock_ObtainMutex(&scp->mx);
     }
-#if 0    
-    else if (!got_cb) {
-	/* cm_GetCallback was called by cm_SyncOp */
-	code = cm_GetCallback(scp, userp, reqp, 1);
-    }
-#endif
 
   _done:
-    if (got_cb)
-	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-
     return code;
 }

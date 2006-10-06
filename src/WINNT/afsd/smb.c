@@ -1561,7 +1561,13 @@ void smb_ReleaseFID(smb_fid_t *fidp)
         vcp = fidp->vcp;
         fidp->vcp = NULL;
         scp = fidp->scp;    /* release after lock is released */
+		if (scp) {
+		lock_ObtainMutex(&scp->mx);
+		scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+		lock_ReleaseMutex(&scp->mx);
+		osi_Log2(afsd_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
         fidp->scp = NULL;
+		}
         userp = fidp->userp;
         fidp->userp = NULL;
 
@@ -2023,6 +2029,7 @@ void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
         lock_ReleaseMutex(&dsp->mx);
         lock_FinalizeMutex(&dsp->mx);
         scp = dsp->scp;
+	osi_Log2(afsd_logp,"smb_ReleaseDirSearch dsp 0x%p scp 0x%p", dsp, scp);
         free(dsp);
     } else {
         lock_ReleaseMutex(&dsp->mx);
@@ -3618,6 +3625,7 @@ void smb_WaitingLocksDaemon()
                          wlRequest);
 
                 scp = wlRequest->scp;
+		osi_Log2(afsd_logp,"smb_WaitingLocksDaemon wlRequest 0x%p scp 0x%p", wlRequest, scp);
 
                 cm_InitReq(&req);
 
@@ -4154,6 +4162,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     lock_ObtainMutex(&dsp->mx);
     if (dsp->scp) {
         scp = dsp->scp;
+	osi_Log2(afsd_logp,"smb_ReceiveCoreSearchDir (1) dsp 0x%p scp 0x%p", dsp, scp);
         cm_HoldSCache(scp);
         code = 0;
     } else {
@@ -4185,6 +4194,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 #endif /* DFS_SUPPORT */
 
             dsp->scp = scp;
+	    osi_Log2(afsd_logp,"smb_ReceiveCoreSearchDir (2) dsp 0x%p scp 0x%p", dsp, scp);
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done with this
              * function, we'll drop the one for our own processing.
@@ -5050,6 +5060,11 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    osi_Log2(afsd_logp,"smb_ReceiveCoreOpen fidp 0x%p scp 0x%p", fidp, scp);
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+
     /* and the user */
     cm_HoldUser(userp);
     fidp->userp = userp;
@@ -5886,8 +5901,8 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     int deleted = 0;
     int nullcreator = 0;
 
-    osi_Log3(smb_logp, "smb_CloseFID Closing fidp 0x%x (fid=%d vcp=0x%x)",
-             fidp, fidp->fid, vcp);
+    osi_Log4(smb_logp, "smb_CloseFID Closing fidp 0x%x (fid=%d scp=0x%x vcp=0x%x)",
+             fidp, fidp->fid, scp, vcp);
 
     if (!userp) {
 	lock_ObtainMutex(&fidp->mx);
@@ -6017,6 +6032,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         free(fidp->NTopen_wholepathp);
         fidp->NTopen_wholepathp = NULL;
     }
+    
     fidp->scp = NULL;
     lock_ReleaseMutex(&fidp->mx);
 
@@ -6032,6 +6048,9 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 		scp->flags |= CM_SCACHEFLAG_DELETED;
 	    lock_ReleaseMutex(&scp->mx);
 	}
+	lock_ObtainMutex(&scp->mx);
+	scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+	lock_ReleaseMutex(&scp->mx);
 	cm_ReleaseSCache(scp);
     }
 
@@ -6100,6 +6119,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
     lock_ObtainMutex(&fidp->mx);
     scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ObtainMutex(&scp->mx);
 
     if (offset.HighPart == 0) {
@@ -6225,6 +6245,8 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
     if (code == 0 && sequential)
         cm_ConsiderPrefetch(scp, &lastByte, userp, &req);
+
+    cm_ReleaseSCache(scp);
 
     return code;
 }
@@ -7276,8 +7298,14 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (created)
 	fidp->flags |= SMB_FID_CREATED;
 
+    osi_Log2(afsd_logp,"smb_ReceiveCoreCreate fidp 0x%p scp 0x%p", fidp, scp);
+
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+    
     /* and the user */
     fidp->userp = userp;
     lock_ReleaseMutex(&fidp->mx);
@@ -9137,6 +9165,10 @@ void smb_Shutdown(void)
                 if (fidp->scp != NULL) {
                     scp = fidp->scp;
                     fidp->scp = NULL;
+		    lock_ObtainMutex(&scp->mx);
+		    scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+		    lock_ReleaseMutex(&scp->mx);
+		    osi_Log2(afsd_logp,"smb_Shutdown fidp 0x%p scp 0x%p", fidp, scp);
                     cm_ReleaseSCache(scp);
                 }
                 lock_ReleaseMutex(&fidp->mx);

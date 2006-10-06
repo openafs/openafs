@@ -2363,7 +2363,12 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     cm_HoldUser(userp);
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
+    osi_Log2(afsd_logp,"smb_ReceiveTran2Open fidp 0x%p scp 0x%p", fidp, scp);
     fidp->scp = scp;
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+    
     /* and the user */
     fidp->userp = userp;
         
@@ -3214,6 +3219,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     lock_ObtainMutex(&fidp->mx);
     delonclose = fidp->flags & SMB_FID_DELONCLOSE;
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReleaseTran2QFileInfo fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
     lock_ObtainMutex(&scp->mx);
@@ -3332,6 +3338,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }
 
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReceiveTran2SetFileInfo fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
@@ -4308,6 +4315,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     lock_ObtainMutex(&dsp->mx);
     if (dsp->scp) {
         scp = dsp->scp;
+	osi_Log2(afsd_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
         cm_HoldSCache(scp);
         code = 0;
     } else {
@@ -4346,6 +4354,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
 #endif /* DFS_SUPPORT */
             dsp->scp = scp;
+	    osi_Log2(afsd_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done
              * with this function, we'll drop the one for our own
@@ -5128,6 +5137,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+    osi_Log2(afsd_logp,"smb_ReceiveV3OpenX fidp 0x%p scp 0x%p", fidp, scp);
     /* also the user */
     fidp->userp = userp;
         
@@ -5243,6 +5256,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReceiveV3LockingX fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
@@ -5324,6 +5338,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 wlRequest->vcp = vcp;
                 smb_HoldVC(vcp);
                 wlRequest->scp = scp;
+		osi_Log2(afsd_logp,"smb_ReceiveV3LockingX wlRequest 0x%p scp 0x%p", wlRequest, scp);
                 cm_HoldSCache(scp);
                 wlRequest->inp = smb_CopyPacket(inp);
                 wlRequest->outp = smb_CopyPacket(outp);
@@ -5482,6 +5497,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReceiveV3GetAttributes fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
@@ -5558,6 +5574,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReceiveV3SetAttributes fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
@@ -6577,6 +6594,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;    /* Hold transfered to fidp->scp and no longer needed */
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+    osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
 
@@ -6588,6 +6609,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
+	osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p dscp 0x%p", fidp, dscp);
         cm_HoldSCache(dscp);
         fidp->NTopen_pathp = strdup(lastNamep);
     }
@@ -7190,6 +7212,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    lock_ObtainMutex(&scp->mx);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+    lock_ReleaseMutex(&scp->mx);
+    osi_Log2(afsd_logp,"smb_ReceiveNTTranCreate fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
 
@@ -7201,6 +7227,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
+	osi_Log2(afsd_logp,"smb_ReceiveNTTranCreate fidp 0x%p dscp 0x%p", fidp, dscp);
         cm_HoldSCache(dscp);
         fidp->NTopen_pathp = strdup(lastNamep);
     }
@@ -7366,6 +7393,7 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
              filter, fid, watchtree, osi_LogSaveString(smb_logp, fidp->NTopen_wholepathp));
 
     scp = fidp->scp;
+    osi_Log2(afsd_logp,"smb_ReceiveNTTranNotifyChange fidp 0x%p scp 0x%p", fidp, scp);
     lock_ObtainMutex(&scp->mx);
     if (watchtree)
         scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
@@ -7716,6 +7744,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                           osi_LogSaveString(smb_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
                 scp = fidp->scp;
+		osi_Log2(afsd_logp,"smb_ReceiveNTCancel fidp 0x%p scp 0x%p", fidp, scp);
                 lock_ObtainMutex(&scp->mx);
                 if (watchtree)
                     scp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;
