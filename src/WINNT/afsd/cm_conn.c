@@ -411,13 +411,17 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		if (scp->fileType != CM_SCACHETYPE_DIRECTORY)
 		    pscp = cm_FindSCacheParent(scp);
 
+
+		lock_ObtainMutex(&scp->mx);
 		lock_ObtainWrite(&cm_scacheLock);
-		cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS);
-		cm_ReleaseSCacheNoLock(scp);
+		cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
+		scp->flags |= CM_SCACHEFLAG_DELETED;
+		lock_ReleaseMutex(&scp->mx);
+		cm_ReleaseSCache(scp);
 
  		if (pscp) {
-		    if (pscp->cbExpires > 0 && pscp->cbServerp != NULL) {
+		    if (cm_HaveCallback(pscp)) {
  			lock_ObtainMutex(&pscp->mx);
  			cm_DiscardSCache(pscp);
  			lock_ReleaseMutex(&pscp->mx);

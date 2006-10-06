@@ -50,26 +50,19 @@ void cm_AdjustLRU(cm_scache_t *scp)
         cm_data.scacheLRULastp = scp;
 }
 
-/* called with cm_scacheLock write-locked; recycles an existing scp. 
- *
- * this function ignores all of the locking hierarchy.  
- */
-long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
+/* call with scache write-locked and mutex held */
+void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 {
     cm_scache_t **lscpp;
     cm_scache_t *tscp;
     int i;
-
-    if (scp->refCount != 0) {
-	return -1;
-    }
-
+	
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
 	/* hash it out first */
 	i = CM_SCACHE_HASH(&scp->fid);
 	for (lscpp = &cm_data.hashTablep[i], tscp = cm_data.hashTablep[i];
-	      tscp;
-	      lscpp = &tscp->nextp, tscp = tscp->nextp) {
+	     tscp;
+	     lscpp = &tscp->nextp, tscp = tscp->nextp) {
 	    if (tscp == scp) {
 		*lscpp = scp->nextp;
 		scp->flags &= ~CM_SCACHEFLAG_INHASH;
@@ -77,6 +70,27 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    }
 	}
     }
+}
+
+/* called with cm_scacheLock write-locked; recycles an existing scp. 
+ *
+ * this function ignores all of the locking hierarchy.  
+ */
+long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
+{
+    if (scp->refCount != 0) {
+	return -1;
+    }
+
+    if (scp->flags & CM_SCACHEFLAG_SMB_FID) {
+	osi_Log1(afsd_logp,"cm_RecycleSCache CM_SCACHEFLAG_SMB_FID detected scp 0x%p", scp);
+#ifdef DEBUG
+	osi_panic("cm_RecycleSCache CM_SCACHEFLAG_SMB_FID detected",__FILE__,__LINE__);
+#endif
+	return -1;
+    }
+
+    cm_RemoveSCacheFromHashTable(scp);
 
 #if 0
     if (flags & CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS) {
@@ -138,7 +152,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
-		     | CM_SCACHEFLAG_OUTOFSPACE);
+		     | CM_SCACHEFLAG_OUTOFSPACE
+		     | CM_SCACHEFLAG_EACCESS);
     scp->serverModTime = 0;
     scp->dataVersion = 0;
     scp->bulkStatProgress = hzero;
@@ -593,9 +608,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	    return CM_ERROR_WOULDBLOCK;
 	}
 
+#if not_too_dangerous
+	/* dropping the cm_scacheLock is dangerous */
 	lock_ReleaseWrite(&cm_scacheLock);
 	lock_ObtainMutex(&scp->mx);
 	lock_ObtainWrite(&cm_scacheLock);
+#endif
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
@@ -629,8 +647,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->group=0;
         scp->dataVersion=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
+#if not_too_dangerous
 	lock_ReleaseMutex(&scp->mx);
-        *outScpp = scp;
+#endif
+	*outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
         return 0;
     }
@@ -676,6 +696,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%x flags 0x%x", scp, scp->flags);
 
     osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
+
     lock_ReleaseWrite(&cm_scacheLock);
     lock_ObtainMutex(&scp->mx);
     lock_ObtainWrite(&cm_scacheLock);
@@ -815,18 +836,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     /* lookup this first */
     bufLocked = flags & CM_SCACHESYNC_BUFLOCKED;
 
-    /* some minor assertions */
-    if (flags & (CM_SCACHESYNC_STOREDATA | CM_SCACHESYNC_FETCHDATA
-                  | CM_SCACHESYNC_READ | CM_SCACHESYNC_WRITE
-                  | CM_SCACHESYNC_SETSIZE)) {
-        if (bufp) {
-            osi_assert(bufp->refCount > 0);
-            /*
-               osi_assert(cm_FidCmp(&bufp->fid, &scp->fid) == 0);
-             */
-        }
-    }
-    else osi_assert(bufp == NULL);
+	if (bufp)
+		osi_assert(bufp->refCount > 0);
+
 
     /* Do the access check.  Now we don't really do the access check
      * atomically, since the caller doesn't expect the parent dir to be
