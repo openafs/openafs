@@ -318,8 +318,7 @@ afs_init_inodecache(void)
 void
 afs_destroy_inodecache(void)
 {
-    if (kmem_cache_destroy(afs_inode_cachep))
-	printk(KERN_INFO "afs_inode_cache: not all structures were freed\n");
+    (void) kmem_cache_destroy(afs_inode_cachep);
 }
 #else
 int
