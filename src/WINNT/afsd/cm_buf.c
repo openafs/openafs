@@ -581,7 +581,7 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 {
     long code = 0;
     long isdirty = 0;
-	cm_scache_t * scp = NULL;
+    cm_scache_t * scp = NULL;
 
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
@@ -590,19 +590,22 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
         lock_ReleaseMutex(&bp->mx);
 
 	scp = cm_FindSCache(&bp->fid);
-	osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
-        code = (*cm_buf_opsp->Writep)(scp, &bp->offset,
-                                       cm_data.buf_blockSize, 0, bp->userp,
-                                       reqp);
-	osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
-
 	if (scp) {
+	    osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
+	    code = (*cm_buf_opsp->Writep)(scp, &bp->offset,
+					   cm_data.buf_blockSize, 0, bp->userp,
+					   reqp);
+	    osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
+
 	    cm_ReleaseSCache(scp);
 	    scp = NULL;
-	}
-                
-        lock_ObtainMutex(&bp->mx);
-	/* if the Write routine returns No Such File, clear the dirty flag 
+	} else {
+	    osi_Log1(buf_logp, "buf_CleanAsyncLocked unable to start I/O - scp not found buf 0x%p", bp);
+	    code = CM_ERROR_NOSUCHFILE;
+	}    
+        
+	lock_ObtainMutex(&bp->mx);
+	/* if the Write routine returns No Such File, clear the dirty flag
 	 * because we aren't going to be able to write this data to the file
 	 * server.
 	 */
@@ -610,6 +613,8 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	    bp->flags &= ~CM_BUF_DIRTY;
 	    bp->flags |= CM_BUF_ERROR;
 	    bp->error = CM_ERROR_NOSUCHFILE;
+	    bp->dataVersion = -1; /* bad */
+	    bp->dirtyCounter++;
 	}
 
 #ifdef DISKCACHE95

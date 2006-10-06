@@ -76,6 +76,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     int require_64bit_ops = 0;
 
     osi_assert(userp != NULL);
+    osi_assert(scp != NULL);
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
