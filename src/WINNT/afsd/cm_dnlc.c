@@ -203,7 +203,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 
     ts = 0;
     tnc_begin = cm_data.nameHash[skey];
-    for ( tvc = (cm_scache_t *) 0, tnc = tnc_begin, safety=0; 
+    for ( tvc = (cm_scache_t *) NULL, tnc = tnc_begin, safety=0; 
           tnc; tnc = tnc->next, safety++ ) 
     {
 	if (tnc->dirp == adp) 

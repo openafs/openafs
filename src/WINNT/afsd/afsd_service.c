@@ -360,7 +360,7 @@ afsd_ServiceControlHandlerEx(
         {
             afsi_log("SERVICE_CONTROL_CUSTOM_DUMP"); 
             GenerateMiniDump(NULL);
-			dwRet = NO_ERROR;
+	    dwRet = NO_ERROR;
         }
         break;
     }		/* end switch(ctrlCode) */                                                        
@@ -1069,10 +1069,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif
 
 #ifdef _DEBUG
+    afsd_DbgBreakAllocInit();
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
                    _CRTDBG_CHECK_CRT_DF /* | _CRTDBG_DELAY_FREE_MEM_DF */ );
 #endif 
 
+    afsd_SetUnhandledExceptionFilter();
+       
     osi_InitPanic(afsd_notifier);
     osi_InitTraceOption();
 

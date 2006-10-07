@@ -6607,10 +6607,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* save parent dir and pathname for delete or change notification */
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
+	osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p dscp 0x%p", fidp, dscp);
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
-	osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p dscp 0x%p", fidp, dscp);
-        cm_HoldSCache(dscp);
+	dscp = NULL;
         fidp->NTopen_pathp = strdup(lastNamep);
     }
     fidp->NTopen_wholepathp = realPathp;
@@ -7228,7 +7228,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
 	osi_Log2(afsd_logp,"smb_ReceiveNTTranCreate fidp 0x%p dscp 0x%p", fidp, dscp);
-        cm_HoldSCache(dscp);
+	dscp = NULL;
         fidp->NTopen_pathp = strdup(lastNamep);
     }
     fidp->NTopen_wholepathp = realPathp;
