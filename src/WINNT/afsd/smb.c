@@ -5615,9 +5615,9 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
                   afs_uint32 dosTime) {
     long code = 0;
     cm_req_t req;
-    cm_scache_t *dscp = fidp->NTopen_dscp;
-    char *pathp = fidp->NTopen_pathp;
-    cm_scache_t * scp = fidp->scp;
+    cm_scache_t *dscp = NULL;
+    char *pathp = NULL;
+    cm_scache_t * scp = NULL;
     int deleted = 0;
     int nullcreator = 0;
 
@@ -5649,6 +5649,20 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     lock_ReleaseWrite(&smb_rctLock);
 
     lock_ObtainMutex(&fidp->mx);
+    if (fidp->NTopen_dscp) {
+	dscp = fidp->NTopen_dscp;
+	cm_HoldSCache(dscp);
+    }
+
+    if (fidp->NTopen_pathp) {
+	pathp = strdup(fidp->NTopen_pathp);
+    }
+
+    if (fidp->scp) {
+	scp = fidp->scp;
+	cm_HoldSCache(scp);
+    }
+
     /* Don't jump the gun on an async raw write */
     while (fidp->raw_writers) {
         lock_ReleaseMutex(&fidp->mx);
@@ -5744,16 +5758,25 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     }
 
     if (fidp->flags & SMB_FID_NTOPEN) {
+	cm_ReleaseSCache(fidp->NTopen_dscp);
 	fidp->NTopen_dscp = NULL;
+	free(fidp->NTopen_pathp);
         fidp->NTopen_pathp = NULL;
 	fidp->flags &= ~SMB_FID_NTOPEN;
+    } else {
+	osi_assert(fidp->NTopen_dscp == NULL);
+	osi_assert(fidp->NTopen_pathp == NULL);
     }
+
     if (fidp->NTopen_wholepathp) {
-        free(fidp->NTopen_wholepathp);
-        fidp->NTopen_wholepathp = NULL;
+	free(fidp->NTopen_wholepathp);
+	fidp->NTopen_wholepathp = NULL;
     }
-    
-    fidp->scp = NULL;
+
+    if (fidp->scp) {
+	cm_ReleaseSCache(fidp->scp);
+	fidp->scp = NULL;
+    }
     lock_ReleaseMutex(&fidp->mx);
 
     if (dscp)
