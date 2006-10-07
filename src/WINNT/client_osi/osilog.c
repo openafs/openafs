@@ -48,7 +48,7 @@ osi_fdOps_t osi_logFDOps = {
 };
 
 /* create a new log, taking a name and a size in entries (not words) */
-osi_log_t *osi_LogCreate(char *namep, long size)
+osi_log_t *osi_LogCreate(char *namep, size_t size)
 {
 	osi_log_t *logp;
         osi_fdType_t *typep;
