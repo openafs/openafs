@@ -765,15 +765,15 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     parent_fid.unique = scp->parentUnique;
 
     if (cm_FidCmp(&scp->fid, &parent_fid)) {
-	for (i=0; i<cm_data.hashTableSize; i++) {
-	    for (pscp = cm_data.hashTablep[i]; pscp; pscp = pscp->nextp) {
-		if (!cm_FidCmp(&pscp->fid, &parent_fid)) {
-		    cm_HoldSCacheNoLock(pscp);
-		    break;
-		}
+	i = CM_SCACHE_HASH(&parent_fid);
+	for (pscp = cm_data.hashTablep[i]; pscp; pscp = pscp->nextp) {
+	    if (!cm_FidCmp(&pscp->fid, &parent_fid)) {
+		cm_HoldSCacheNoLock(pscp);
+		break;
 	    }
 	}
     }
+
     lock_ReleaseRead(&cm_scacheLock);
 
     return pscp;
