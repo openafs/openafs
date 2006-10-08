@@ -323,6 +323,20 @@ extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVol
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 
+#ifdef DEBUG_REFCOUNT
+extern void cm_HoldSCacheNoLockDbg(cm_scache_t *, char *, long);
+
+extern void cm_HoldSCacheDbg(cm_scache_t *, char *, long);
+
+extern void cm_ReleaseSCacheNoLockDbg(cm_scache_t *, char *, long);
+
+extern void cm_ReleaseSCacheDbg(cm_scache_t *, char *, long);
+
+#define cm_HoldSCacheNoLock(scp)    cm_HoldSCacheNoLockDbg(scp, __FILE__, __LINE__)
+#define cm_HoldSCache(scp)          cm_HoldSCacheDbg(scp, __FILE__, __LINE__)
+#define cm_ReleaseSCacheNoLock(scp) cm_ReleaseSCacheNoLockDbg(scp, __FILE__, __LINE__)
+#define cm_ReleaseSCache(scp)       cm_ReleaseSCacheDbg(scp, __FILE__, __LINE__)
+#else
 extern void cm_HoldSCacheNoLock(cm_scache_t *);
 
 extern void cm_HoldSCache(cm_scache_t *);
@@ -330,7 +344,7 @@ extern void cm_HoldSCache(cm_scache_t *);
 extern void cm_ReleaseSCacheNoLock(cm_scache_t *);
 
 extern void cm_ReleaseSCache(cm_scache_t *);
-
+#endif
 extern cm_scache_t *cm_FindSCache(cm_fid_t *fidp);
 
 extern cm_scache_t *cm_FindSCacheParent(cm_scache_t *);
