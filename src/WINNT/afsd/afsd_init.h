@@ -14,6 +14,7 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc);
 
 void GenerateMiniDump(PEXCEPTION_POINTERS ep);
 int afsd_InitDaemons(char **reasonP);
+int afsd_ShutdownCM(void);
 void afsd_ForceTrace(BOOL flush);
 void afsd_SetUnhandledExceptionFilter();
 
