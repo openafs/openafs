@@ -1238,6 +1238,13 @@ int afsd_InitCM(char **reasonP)
     return 0;
 }
 
+int afsd_ShutdownCM(void)
+{
+    cm_ReleaseSCache(&cm_data.rootSCachep);
+
+    return 0;
+}
+
 int afsd_InitDaemons(char **reasonP)
 {
     long code;

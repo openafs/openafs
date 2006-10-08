@@ -19,6 +19,7 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock);
 int afsd_InitSMB(char **reasonP);
 #endif /* !DJGPP */
 int afsd_InitDaemons(char **reasonP);
+int afsd_ShutdownCM(void);
 void afsd_ForceTrace(BOOL flush);
 void afsd_SetUnhandledExceptionFilter();
 
