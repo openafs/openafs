@@ -1540,6 +1540,9 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
 
+    osi_Log4(afsd_logp,"cm_NameI rootscp 0x%p path %s tidpath %s flags 0x%x",
+	      rootSCachep, pathp, tidPathp, flags);
+
     tp = tidPathp;
     if (tp == NULL) {
         tp = pathp;
@@ -1554,6 +1557,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     cm_HoldSCache(tscp);
     symlinkCount = 0;
     dirScp = NULL;
+
 
     while (1) {
         tc = *tp++;
@@ -1608,10 +1612,13 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 			cm_ReleaseSCache(dirScp);
 		    if (psp) 
 			cm_FreeSpace(psp);
-		    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK)
+		    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK) {
+			osi_Log0(afsd_logp,"cm_NameI code CM_ERROR_NOSUCHPATH");
 			return CM_ERROR_NOSUCHPATH;
-		    else
+		    } else {
+			osi_Log1(afsd_logp,"cm_NameI code 0x%x", code);
 			return code;
+		    }
 		}	
 		haveComponent = 0;	/* component done */
 		if (dirScp)
@@ -1659,6 +1666,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                         }
                         if (psp) 
                             cm_FreeSpace(psp);
+			osi_Log0(afsd_logp,"cm_NameI code CM_ERROR_TOO_MANY_SYMLINKS");
                         return CM_ERROR_TOO_MANY_SYMLINKS;
                     }
                     if (tc == 0) 
@@ -1742,6 +1750,7 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         *outScpp = tscp;
     else if (tscp)
         cm_ReleaseSCache(tscp);
+    osi_Log2(afsd_logp,"cm_NameI code 0x%x outScpp 0x%p", code, *outScpp);
     return code;
 }
 

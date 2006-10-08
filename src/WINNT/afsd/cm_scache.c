@@ -1424,27 +1424,41 @@ void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)
     afsFidp->Unique = fidp->unique;
 }       
 
+#ifdef DEBUG_REFCOUNT
+void cm_HoldSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
+#else
 void cm_HoldSCacheNoLock(cm_scache_t *scp)
+#endif
 {
     osi_assert(scp != 0);
     scp->refCount++;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_HoldSCacheNoLock scp 0x%p ref %d",scp, scp->refCount);
+    afsi_log("%s:%d cm_HoldSCacheNoLock scp 0x%p, ref %d", file, line, scp, scp->refCount);
 #endif
 }
 
+#ifdef DEBUG_REFCOUNT
+void cm_HoldSCacheDbg(cm_scache_t *scp, char * file, long line)
+#else
 void cm_HoldSCache(cm_scache_t *scp)
+#endif
 {
     osi_assert(scp != 0);
     lock_ObtainWrite(&cm_scacheLock);
     scp->refCount++;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_HoldSCache scp 0x%p ref %d",scp, scp->refCount);
+    afsi_log("%s:%d cm_HoldSCache scp 0x%p ref %d", file, line, scp, scp->refCount);
 #endif
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
+#ifdef DEBUG_REFCOUNT
+void cm_ReleaseSCacheNoLockDbg(cm_scache_t *scp, char * file, long line)
+#else
 void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
+#endif
 {
     osi_assert(scp != NULL);
     if (scp->refCount == 0)
@@ -1452,10 +1466,15 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
     osi_assert(scp->refCount-- >= 0);
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp,scp->refCount);
+    afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, scp->refCount);
 #endif
 }
 
+#ifdef DEBUG_REFCOUNT
+void cm_ReleaseSCacheDbg(cm_scache_t *scp, char * file, long line)
+#else
 void cm_ReleaseSCache(cm_scache_t *scp)
+#endif
 {
     osi_assert(scp != NULL);
     lock_ObtainWrite(&cm_scacheLock);
@@ -1465,6 +1484,7 @@ void cm_ReleaseSCache(cm_scache_t *scp)
     scp->refCount--;
 #ifdef DEBUG_REFCOUNT
     osi_Log2(afsd_logp,"cm_ReleaseSCache scp 0x%p ref %d",scp,scp->refCount);
+    afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, scp->refCount);
 #endif
     lock_ReleaseWrite(&cm_scacheLock);
 }
