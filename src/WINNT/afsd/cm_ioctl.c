@@ -256,13 +256,17 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, sharePath, reqp, &substRootp);
             free(sharePath);
-            if (code) 
+            if (code) {
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [1] code 0x%x", code);
                 return code;
+	    }
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
-            if (code) 
+            if (code) {
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
                 return code;
+	    }
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
              * This requires that we reconstruct the shareName string with 
@@ -284,25 +288,35 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, shareName, reqp, &substRootp);
-            if (code) 
+            if (code) {
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath [3] code 0x%x", code);
                 return code;
+	    }
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, NULL, reqp, scpp);
-            if (code) 
+            if (code) {
+		cm_ReleaseSCache(substRootp);
+		osi_Log1(afsd_logp,"cm_ParseIoctlPath code [4] 0x%x", code);
                 return code;
+	    }
         }
     } else {
         code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
-        if (code) 
+        if (code) {
+	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [6] code 0x%x", code);
             return code;
+	}
         
         code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, NULL, reqp, scpp);
-        if (code) 
+        if (code) {
+	    cm_ReleaseSCache(substRootp);
+	    osi_Log1(afsd_logp,"cm_ParseIoctlPath [7] code 0x%x", code);
             return code;
+	}
     }
 
     /* # of bytes of path */
@@ -312,7 +326,11 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     /* This is usually nothing, but for StatMountPoint it is the file name. */
     TranslateExtendedChars(ioctlp->inDatap);
 
+    if (substRootp)
+	cm_ReleaseSCache(substRootp);
+
     /* and return success */
+    osi_Log1(afsd_logp,"cm_ParseIoctlPath [8] code 0x%x", code);
     return 0;
 }
 

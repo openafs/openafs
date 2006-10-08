@@ -1345,7 +1345,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                                          
     cm_DaemonShutdown();                 
     afsi_log("Daemon shutdown complete");
-                                         
+    
+    afsd_ShutdownCM();
+
     buf_Shutdown();                      
     afsi_log("Buffer shutdown complete");
                                          
