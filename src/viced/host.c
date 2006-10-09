@@ -1122,8 +1122,11 @@ h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
 	held = (*proc) (host, held, param);
 	if (!H_ENUMERATE_ISSET_HELD(held))
 	    h_Release_r(host); /* this might free up the host */
-	if (H_ENUMERATE_ISSET_BAIL(held))
+	if (H_ENUMERATE_ISSET_BAIL(held)) {
+	    if (!H_ENUMERATE_ISSET_HELD(nheld))
+		h_Release_r(next); /* this might free up the host */
 	    break;
+	}
     }
 }				/*h_Enumerate_r */
 
