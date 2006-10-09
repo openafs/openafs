@@ -1236,7 +1236,7 @@ int afsd_InitCM(char **reasonP)
 
 int afsd_ShutdownCM(void)
 {
-    cm_ReleaseSCache(&cm_data.rootSCachep);
+    cm_ReleaseSCache(cm_data.rootSCachep);
 
     return 0;
 }
