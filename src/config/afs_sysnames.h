@@ -213,6 +213,20 @@
 #define SYS_NAME_ID_i386_nbsd21		2525
 #define SYS_NAME_ID_i386_nbsd30		2526
 #define SYS_NAME_ID_amd64_nbsd20	2527
+#define SYS_NAME_ID_i386_nbsd40 2528
+#define SYS_NAME_ID_i386_nbsd50 2529
+#define SYS_NAME_ID_sparc64_nbsd30 2530
+#define SYS_NAME_ID_sparc64_nbsd40 2531
+#define SYS_NAME_ID_sparc64_nbsd50 2532
+#define SYS_NAME_ID_amd64_nbsd30 2533
+#define SYS_NAME_ID_amd64_nbsd40 2534
+#define SYS_NAME_ID_amd64_nbsd50 2535
+#define SYS_NAME_ID_alpha_nbsd30 2536
+#define SYS_NAME_ID_alpha_nbsd40 2537
+#define SYS_NAME_ID_alpha_nbsd50 2538
+#define SYS_NAME_ID_macppc_nbsd30 2539
+#define SYS_NAME_ID_macppc_nbsd40 2540
+#define SYS_NAME_ID_macppc_nbsd50 2541
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
