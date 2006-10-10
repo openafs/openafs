@@ -1107,7 +1107,6 @@
                                 <File Id="fileafsd_eventlog_H" Name="AFSD_E~1.h" LongName="afsd_eventlog.h" DiskId="1" src="$(var.IncDir)afs\afsd_eventlog.h" /> 
                                 <File Id="fileafsint_H" Name="afsint.h" LongName="afsint.h" DiskId="1" src="$(var.IncDir)afs\afsint.h" /> 
                                 <File Id="fileafskfw_H" Name="afskfw.h" LongName="afskfw.h" DiskId="1" src="$(var.IncDir)afs\afskfw.h" /> 
-                                <File Id="fileafsmsg95_H" Name="afsmsg95.h" LongName="afsmsg95.h" DiskId="1" src="$(var.IncDir)afs\afsmsg95.h" /> 
                                 <File Id="fileafsrpc_H" Name="afsrpc.h" LongName="afsrpc.h" DiskId="1" src="$(var.IncDir)afs\afsrpc.h" /> 
                                 <File Id="fileafssyscalls_H" Name="AFSSYS~1.h" LongName="afssyscalls.h" DiskId="1" src="$(var.IncDir)afs\afssyscalls.h" /> 
                                 <File Id="fileafsutil_H" Name="afsutil.h" LongName="afsutil.h" DiskId="1" src="$(var.IncDir)afs\afsutil.h" /> 
