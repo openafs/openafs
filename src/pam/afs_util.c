@@ -180,13 +180,6 @@ do_klog(const char *user, const char *password, const char *lifetime,
 static afs_int32
 curpag(void)
 {
-#if defined(AFS_AIX51_ENV)
-    afs_int32 pag;
-
-    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
-        pag = NOPAG;
-    return pag;
-#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
