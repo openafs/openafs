@@ -179,6 +179,7 @@ $(OUT)\afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
 clean::
 	$(DEL) $(COPYHEADERS)
 	$(CD) lang
+	$(DEL) AFS_component_version_number.h
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /e /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /e /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /e /f NTMakefile clean
