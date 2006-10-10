@@ -476,7 +476,7 @@ afsconf_Open(register const char *adir)
 static int
 GetCellUnix(struct afsconf_dir *adir)
 {
-    int rc;
+    char *rc;
     char tbuffer[256];
     char *p;
     afsconf_FILE *fp;
