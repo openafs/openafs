@@ -131,6 +131,7 @@ de_DE:
 clean::
 	$(DEL) *.pdb
 	$(CD) lang
+	$(DEL) AFS_component_version_number.h
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /f NTMakefile clean
