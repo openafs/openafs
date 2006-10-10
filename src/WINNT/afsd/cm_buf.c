@@ -428,6 +428,8 @@ long buf_SetNBuffers(afs_uint64 nbuffers)
  */
 void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 {
+    int release = 0;
+
     if (scp)
         osi_assert(scp->magic == CM_SCACHE_MAGIC);
     osi_assert(bp->magic == CM_BUF_MAGIC);
@@ -464,7 +466,8 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         }
 
         if ( !scp ) {
-            scp = cm_FindSCache(&bp->fid);
+            if (scp = cm_FindSCache(&bp->fid))
+		 release = 1;
         }
         if ( scp ) {
             lock_ObtainMutex(&scp->mx);
@@ -484,6 +487,9 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         osi_Wakeup((LONG_PTR) bp);
     }
     osi_Log1(buf_logp, "WaitIO finished wait for bp 0x%p", bp);
+
+    if (scp && release)
+	cm_ReleaseSCache(scp);
 }
 
 /* find a buffer, if any, for a particular file ID and offset.  Assumes
