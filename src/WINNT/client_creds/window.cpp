@@ -207,20 +207,20 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   {
                       if (StartService (hService, 0, 0))
                           TestAndDoMapShare(SERVICE_START_PENDING);
-		                  if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
+		      if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
 #ifdef USE_MS2MIT
-                              KFW_import_windows_lsa();
+			  KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
-			                  KFW_AFS_renew_tokens_for_all_cells();
-						  }
+			  KFW_AFS_renew_tokens_for_all_cells();
+		      }
 
                       CloseServiceHandle (hService);
                   }
 
                   CloseServiceHandle (hManager);
               }
-              KFW_AFS_wait_for_service_start();
-              ObtainTokensFromUserIfNeeded(g.hMain);
+              if (KFW_AFS_wait_for_service_start())
+		  ObtainTokensFromUserIfNeeded(g.hMain);
           }
           break;
       }
