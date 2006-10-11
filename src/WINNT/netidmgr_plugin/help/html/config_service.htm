@@ -1,0 +1,39 @@
+<html>
+<head>
+  <title>Configuring the AFS Service</title>
+  <meta name="description" content="Configuring the AFS Service">
+  <meta name="keywords" content="configure,service">
+  <link rel="stylesheet" type="text/css" href="afsplhlp.css">
+</head>
+<body>
+
+<h1>Configuring the AFS Service</h1>
+
+<p>The OpenAFS plug-in allows you to start or stop the AFS
+client service, determine the installed version,  and invoke the AFS 
+Control Panel.  This is provided via the AFS configuration panel in 
+the NetIDMgr configuration dialog, as seen below:
+</p>
+
+<p><img src="images/window_cfg_afs_main.bmp" /></p>
+
+<p>Depending on the status of the service, either the <span
+class="pre">Stop service</span> or the <span class="pre">Start
+service</span> buttons will be enabled.  If the service is in a state
+where it will not accept these control requests, then both buttons will
+be disabled.
+</p>
+
+<p>The <span class="pre">Version</span> field and the <span
+class="pre">Company</span> fields are populated based on the resources
+found in the <span class="pre">afsd_service.exe</span> binary.  This
+is the main binary that provides the AFS client service.  Unless the
+build of OpenAFS that you have installed is a private build, the
+version should correspond to the release of OpenAFS that is installed
+on your machine.</p>
+
+<p>Clicking the <span class="pre">Open AFS Control Panel...</span>
+will open the AFS configuration utility.</p>
+
+</body>
+</html>

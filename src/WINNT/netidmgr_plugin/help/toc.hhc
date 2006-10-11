@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<!-- Sitemap 1.0 -->
+</HEAD>
+<BODY>
+<OBJECT type="text/site properties">
+	<param name="Category" value="Usage">
+	<param name="CategoryDesc" value="Usage instructions for Network Identity Manager">
+	<param name="Window Styles" value="0x800025">
+</OBJECT>
+<UL>
+        <LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Welcome to OpenAFS">
+		<param name="Local" value="html\welcome.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Reporting bugs">
+			<param name="Local" value="html\bugs.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="License agreement">
+			<param name="Local" value="html\copyright.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="How do I ...">
+		</OBJECT>
+        <ul>
+                <li> <object type="text/sitemap">
+                        <param name="Name" value="Specify AFS tokens when getting new credentials...">
+                        <param name="Local" value="html\tokens_per_id.htm#new_tokens">
+                        </object>
+
+                <li> <object type="text/sitemap">
+                        <param name="Name" value="Change AFS tokens list for an identity...">
+                        <param name="Local" value="html\tokens_per_id.htm#persistent_tokens">
+                        </object>
+
+                <li> <object type="text/sitemap">
+                        <param name="Name" value="Configure the AFS client service...">
+                        <param name="Local" value="html\config_service.htm">
+                        </object>
+        </ul>
+        <li> <object type="text/sitemap">
+                <param name="Name" value="Topics">
+                </object>
+        <ul>
+                <li> <object type="text/sitemap">
+                        <param name="Name" value="Token Acquisition Methods">
+                        <param name="Local" value="html\token_methods.htm">
+                        </object>
+        </ul>
+</UL>
+</BODY></HTML>

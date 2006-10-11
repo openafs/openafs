@@ -1,0 +1,183 @@
+#
+# Copyright (c) 2005,2006 Secure Endpoints Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+AFSDEV_AUXRCFLAGS=/i ..\kfw\inc\netidmgr
+RELDIR=WINNT\netidmgr_plugin
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+AFSPLUGIN_VERSION_MAJOR=$(AFSPRODUCT_VER_MAJOR)
+AFSPLUGIN_VERSION_MINOR=$(AFSPRODUCT_VER_MINOR)
+AFSPLUGIN_VERSION_PATCH=$(AFSPRODUCT_VER_PATCH)
+AFSPLUGIN_VERSION_AUX  =$(AFSPRODUCT_VER_BUILD)
+
+AFSPLUGIN_VERSION=$(AFSPLUGIN_VERSION_MAJOR).$(AFSPLUGIN_VERSION_MINOR).$(AFSPLUGIN_VERSION_PATCH).$(AFSPLUGIN_VERSION_AUX)
+AFSPLUGIN_VERLIST=$(AFSPLUGIN_VERSION_MAJOR),$(AFSPLUGIN_VERSION_MINOR),$(AFSPLUGIN_VERSION_PATCH),$(AFSPLUGIN_VERSION_AUX)
+
+# short form version numbers
+TAFSPLUGIN_VERSION=$(AFSPLUGIN_VERSION_MAJOR).$(AFSPLUGIN_VERSION_MINOR).$(AFSPLUGIN_VERSION_PATCH)
+
+# Directories
+
+EXEDIR = $(DESTDIR)\root.client\usr\vice\etc
+
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+LIBFILEDIR = $(DESTDIR)\lib
+
+KFWINCDIR = ..\kfw\inc
+
+KFWLIBDIR = ..\kfw\lib\$(CPU)
+
+# Build environment
+
+kfwincflags=-I$(KFWINCDIR)\krb5\KerberosIV -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 -I$(KFWINCDIR)\netidmgr -I$(KFWINCDIR)
+afsincflags=-I$(DESTDIR)\include
+
+incflags=$(kfwincflags) $(afsincflags) -I.
+pldefines=-DUNICODE -D_UNICODE
+cdebug=$(cdebug) -Os -Zi
+cwarn=$(cwarn) /Wp64 /WX
+
+plcflags=$(cdebug) $(cflags) $(incflags) $(pldefines) $(cwarn) $(cvarsmt)
+
+PC2OBJ=$(CC) $(plcflags) /Fo"$@" /c $**
+
+{}.c{$(OBJ)}.obj:
+	$(PC2OBJ)
+
+# Targets
+
+CHMFILE=$(EXEDIR)\afsplhlp.chm
+
+DLLFILE=$(EXEDIR)\afscred.dll
+
+LIBFILE=$(LIBFILEDIR)\afscred.lib
+
+INCFILES=				\
+	$(INCFILEDIR)\afspext.h		\
+	$(INCFILEDIR)\afsp_version.h
+
+OBJFILES= 				\
+	$(OUT)\afsfuncs.obj 		\
+	$(OUT)\afsplugin.obj 		\
+	$(OUT)\main.obj 		\
+	$(OUT)\afsconfig.obj 		\
+	$(OUT)\afsconfigdlg.obj 	\
+	$(OUT)\afsnewcreds.obj		\
+	$(OUT)\afsext.obj		\
+	$(OUT)\afshelp.obj		\
+	$(OUT)\dynimport.obj 		\
+	$(OUT)\krb5common.obj
+
+LIBFILES= 				\
+	$(KFWLIBDIR)\nidmgr32.lib
+
+SDKLIBFILES= 				\
+	$(DESTDIR)\lib\afsauthent.lib 	\
+	$(DESTDIR)\lib\libafsconf.lib 	\
+	$(KFWLIBDIR)\loadfuncs.lib	\
+	htmlhelp.lib			\
+	shell32.lib			\
+	comctl32.lib			\
+	version.lib			\
+	shlwapi.lib			\
+	psapi.lib
+
+VERRESFILE=$(OUT)\version.res
+
+$(OUT)\afsfuncs.obj: afsfuncs.c
+	$(PC2OBJ)
+
+$(OUT)\afsplugin.obj: afsplugin.c
+	$(PC2OBJ)
+
+$(OUT)\main.obj: main.c
+	$(PC2OBJ)
+
+$(OUT)\afsconfig.obj: afsconfig.c
+	$(PC2OBJ)
+
+$(OUT)\afsconfigdlg.obj: afsconfigdlg.c
+	$(PC2OBJ)
+
+$(OUT)\afsnewcreds.obj: afsnewcreds.c
+	$(PC2OBJ)
+
+$(OUT)\afsext.obj: afsext.c
+	$(PC2OBJ)
+
+$(OUT)\afshelp.obj: afshelp.c
+	$(PC2OBJ)
+
+$(OUT)\dynimport.obj: dynimport.c
+	$(PC2OBJ)
+
+$(OUT)\krb5common.obj: krb5common.c
+	$(PC2OBJ)
+
+!include afsp_version.h.in
+
+$(DLLFILE): $(OBJFILES) $(VERRESFILE)
+	$(DLLGUILINK) $(LIBFILES) $(SDKLIBFILES)
+	$(_VC_MANIFEST_EMBED_DLL)
+	$(_VC_MANIFEST_CLEAN)
+
+dummy:
+
+$(CHMFILE): dummy
+	$(CD) help
+	nmake /f NTMakefile install
+	$(CD) ..
+
+install: $(INCFILES) $(CHMFILE) $(DLLFILE) lang
+
+lang::
+
+# Repeat this block as necessary redefining LANG for additional
+# languages.
+
+# Begin language block
+LANG=en_us
+
+LANGDLL=$(EXEDIR)\afscred_$(LANG).dll
+
+lang:: $(LANGDLL)
+
+$(LANGDLL): $(OUT)\langres_$(LANG).res $(OUT)\langres_ver_$(LANG).res
+	$(DLLRESLINK)
+
+$(OUT)\langres_ver_$(LANG).res: version.rc
+	$(RC) /d LANGVER /d LANG_$(LANG) /fo $@ $** 
+
+$(OUT)\langres_$(LANG).res: lang\$(LANG)\langres.rc
+	$(RC) /fo $@ $**
+# End language block
+
+clean::
+!ifdef INCFILES
+	$(DEL) $(INCFILES)
+!endif
+	$(CD) help
+	$(MAKECMD) /f NTMakefile clean
+	$(CD) ..

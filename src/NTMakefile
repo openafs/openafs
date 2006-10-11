@@ -563,7 +563,14 @@ aklog: client_creds
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-extra: aklog
+netidmgr_plugin: aklog
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+extra: netidmgr_plugin
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@

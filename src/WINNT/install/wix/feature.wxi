@@ -24,33 +24,48 @@
                     <ComponentRef Id="rcm_Loopback"/>
                 </Feature>
 
-				<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
-					<ComponentRef Id="rcm_KB301673" />
-					<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
-				</Feature>
-				
-				<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
-					<ComponentRef Id="cmp_credsStartup" />
-					<Condition Level="130">CREDSSTARTUP = 0</Condition>
-				</Feature>
-				
-			<?ifdef DebugSyms?>
-				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
-					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
-                    <ComponentRef Id="cmp_ClientProgramDebug" />
-                    <ComponentRef Id="cmp_CommonCommonDebug" />
-                    <ComponentRef Id="cmp_ClientCommonDebug" />
-                    <ComponentRef Id="cmp_ClientSystemDebug" />
-                    <?include runtime_debug.wxi?>
-				</Feature>
-			<?endif?>
+  <?if $(env.CPU) = "i386"?>
+            <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
+                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrNIDMPluginDesc)">
+                    <ComponentRef Id="_afscreds_plugin" />
+                    <ComponentRef Id="_afscreds_en_us" />
+                    <ComponentRef Id="_afscreds_chm" />
+   	    <?ifdef DebugSyms?>
+                    <Feature Id="DebugSyms" Title="$(loc.StrNIDMDebugDesc)" InstallDefault="$(var.DebugSymInstallDefault)"
+                    	Level="$(var.DebugSymLowLevel)" Display="expand" Description="$(loc.StrNIDMDebugLongDesc)">
+                    	<ComponentRef Id="_afscreds_debugsym" />
+                    </Feature>
+	    <?endif?>
+            </Feature>
+  <?endif?>
 
-				<ComponentRef Id="rcm_Client" />
+		<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
+			<ComponentRef Id="rcm_KB301673" />
+			<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
+		</Feature>
+				
+		<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
+			<ComponentRef Id="cmp_credsStartup" />
+			<Condition Level="130">CREDSSTARTUP = 0</Condition>
+		</Feature>
+				
+		<?ifdef DebugSyms?>
+			<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
+				InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+                	        <ComponentRef Id="cmp_ClientProgramDebug" />
+                    		<ComponentRef Id="cmp_CommonCommonDebug" />
+                    		<ComponentRef Id="cmp_ClientCommonDebug" />
+                    		<ComponentRef Id="cmp_ClientSystemDebug" />
+                    		<?include runtime_debug.wxi?>
+			</Feature>
+		<?endif?>
+
+		<ComponentRef Id="rcm_Client" />
                 <ComponentRef Id="rcm_ClientCacheSize" />
                 <ComponentRef Id="rcm_ClientCachePath" />
                 <ComponentRef Id="rcm_StoreAnsiFilenames" />
 
-				<ComponentRef Id="cmp_CommonDir" />
+		<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
                 <ComponentRef Id="efl_CellServDB" />
@@ -263,16 +278,31 @@
             <Feature Id="feaBinaries" AllowAdvertise="no" Description="$(loc.StrBinsOnlyLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="100" Title="$(loc.StrBinsOnlyDesc)">
 
-			<?ifdef DebugSyms?>
-				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
-					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+		<?ifdef DebugSyms?>
+			<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
+				InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
                     <ComponentRef Id="cmp_ClientProgramDebug" />
                     <ComponentRef Id="cmp_CommonCommonDebug" />
                     <?include runtime_debug.wxi?>
 				</Feature>
 			<?endif?>
 
-				<ComponentRef Id="cmp_CommonDir" />
+  <?if $(env.CPU) = "i386"?>
+            <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
+                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrNIDMPluginDesc)">
+                    <ComponentRef Id="_afscreds_plugin" />
+                    <ComponentRef Id="_afscreds_en_us" />
+                    <ComponentRef Id="_afscreds_chm" />
+   	    <?ifdef DebugSyms?>
+                    <Feature Id="DebugSyms" Title="$(loc.StrNIDMDebugDesc)" InstallDefault="$(var.DebugSymInstallDefault)"
+                    	Level="$(var.DebugSymLowLevel)" Display="expand" Description="$(loc.StrNIDMDebugLongDesc)">
+                    	<ComponentRef Id="_afscreds_debugsym" />
+                    </Feature>
+	    <?endif?>
+            </Feature>
+  <?endif?>
+
+		<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />

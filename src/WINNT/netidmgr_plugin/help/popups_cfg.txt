@@ -1,0 +1,30 @@
+.topic IDH_SVCSTATUS
+Current status of the OpenAFS Client Service.
+
+.topic IDH_SVCSTOP
+Stops the OpenAFS Client service.  Access to resources in AFS will not
+be available until the service is started again.  All exising AFS
+tokens will also be lost.
+
+.topic IDH_SVCSTART
+Start the service.  Once the service starts, it will not have any AFS
+tokens for any of the users.  Therefore new tokens will be
+automatically be obtained once the service starts.
+
+.topic IDH_SVCVERSION
+Version of the OpenAFS Client that is installed on this machine.  The
+version is derived from the executable that provides the OpenAFS
+Client service on this machine.
+
+.topic IDH_SVCCOMPANY
+The company that provided the OpenAFS client.
+
+.topic IDH_SVCCPL
+Open the OpenAFS Client Configuration utility.
+
+.topic IDH_STARTAFSCREDS
+Once the OpenAFS plugin for NetIDMgr is installed, it is no longer
+necessary to start AFSCreds.exe everytime a user logs in.  The allows
+you to disable AFSCreds.exe.  Note that this is a per machine setting
+and requires Administrator privileges on the machine to have an
+effect.
