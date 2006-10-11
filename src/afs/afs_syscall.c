@@ -100,7 +100,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 
 #ifdef AFS_SPARC64_LINUX26_ENV
     if (test_thread_flag(TIF_32BIT))
-#elif AFS_SPARC64_LINUX24_ENV
+#elif defined(AFS_SPARC64_LINUX24_ENV)
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
@@ -367,7 +367,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 
 #ifdef AFS_SPARC64_LINUX26_ENV
     if (test_thread_flag(TIF_32BIT))
-#elif AFS_SPARC64_LINUX24_ENV
+#elif defined(AFS_SPARC64_LINUX24_ENV)
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
