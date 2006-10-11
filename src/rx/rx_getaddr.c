@@ -301,7 +301,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 			maskBuffer[count] = a->sin_addr.s_addr;
 		    else
 			maskBuffer[count] = htonl(0xffffffff);
-		    memset(&ifr, sizeof(ifr), 0);
+		    memset(&ifr, 0, sizeof(ifr));
 		    ifr.ifr_addr.sa_family = AF_INET;
 		    strncpy(ifr.ifr_name, sdl->sdl_data, sdl->sdl_nlen);
 		    if (ioctl(s, SIOCGIFMTU, (caddr_t) & ifr) < 0)
