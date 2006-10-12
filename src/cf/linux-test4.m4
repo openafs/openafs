@@ -650,9 +650,16 @@ AC_DEFUN([LINUX_DO_SYNC_READ], [
   AC_CACHE_VAL([ac_cv_linux_do_sync_read], [
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
+[do_sync_read(NULL, NULL, 0, NULL, 0);],
+      ac_cv_linux_do_sync_read=no,
+      ac_cv_linux_do_sync_read=maybe)
+    if test "x$ac_cv_linux_do_sync_read" = "xmaybe"; then
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
 [do_sync_read(NULL, NULL, 0, NULL);],
       ac_cv_linux_do_sync_read=yes,
       ac_cv_linux_do_sync_read=no)])
+    fi
   AC_MSG_RESULT($ac_cv_linux_do_sync_read)
   if test "x$ac_cv_linux_do_sync_read" = "xyes"; then
     AC_DEFINE([DO_SYNC_READ], 1, [define if your kernel has do_sync_read()])
@@ -663,10 +670,18 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
   AC_CACHE_VAL([ac_cv_linux_generic_file_aio_read], [
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
+[generic_file_aio_read(NULL, NULL, 0, 0, 0);],
+      ac_cv_linux_generic_file_aio_read=no,
+      ac_cv_linux_generic_file_aio_read=maybe)
+    if test "x$ac_cv_linux_generic_file_aio_read" = "xmaybe"; then
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
 [generic_file_aio_read(NULL, NULL, 0, 0);],
       ac_cv_linux_generic_file_aio_read=yes,
       ac_cv_linux_generic_file_aio_read=no)])
+    fi
   AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
   if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
   fi])
+
