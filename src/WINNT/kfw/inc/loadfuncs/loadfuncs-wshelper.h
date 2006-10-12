@@ -4,7 +4,11 @@
 #include <loadfuncs.h>
 #include <wshelper.h>
 
+#if defined(_WIN64)
+#define WSHELPER_DLL "wshelp64.dll"
+#else
 #define WSHELPER_DLL "wshelp32.dll"
+#endif
 #define CALLCONV_C
 
 TYPEDEF_FUNC(

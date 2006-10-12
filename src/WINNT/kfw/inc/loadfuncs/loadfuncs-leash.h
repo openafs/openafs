@@ -4,7 +4,11 @@
 #include "loadfuncs.h"
 #include <leashwin.h>
 
+#if defined(_WIN64)
+#define LEASH_DLL      "leashw64.dll"
+#else
 #define LEASH_DLL      "leashw32.dll"
+#endif
 
 #define CALLCONV_C
 

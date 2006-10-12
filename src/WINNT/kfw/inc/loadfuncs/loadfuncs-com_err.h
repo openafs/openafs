@@ -4,7 +4,11 @@
 #include "loadfuncs.h"
 #include <com_err.h>
 
+#if defined(_WIN64)
+#define COMERR_DLL      "comerr64.dll"
+#else
 #define COMERR_DLL      "comerr32.dll"
+#endif
 
 TYPEDEF_FUNC(
     void,

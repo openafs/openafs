@@ -4,7 +4,11 @@
 #include "loadfuncs.h"
 #include <krb5.h>
 
+#if defined(_WIN64)
+#define KRB5_DLL      "krb5_64.dll"
+#else
 #define KRB5_DLL      "krb5_32.dll"
+#endif
 
 TYPEDEF_FUNC(
     void,
