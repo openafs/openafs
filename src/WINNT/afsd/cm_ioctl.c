@@ -1039,7 +1039,9 @@ long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           dscp, cp, NULL, TRUE);
 
   done1:
+    lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseMutex(&scp->mx);
 
   done2:
     cm_ReleaseSCache(dscp);
@@ -1899,7 +1901,9 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           dscp, cp, NULL, TRUE);
 
   done1:
+    lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseMutex(&scp->mx);
 
   done2:
     cm_ReleaseSCache(dscp);
