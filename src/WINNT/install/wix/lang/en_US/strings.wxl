@@ -27,6 +27,10 @@
     <String Id="StrLoopbackLongDesc">Loopback adapter for AFS.  It is recommended that you install the loopback adapter if you are installing the client components.</String>
     <String Id="StrBinsOnlyLongDesc">OpenAFS command-line utilities and libraries.</String>
     <String Id="StrBinsOnlyDesc">Tools and libraries</String>
+    <String Id="StrNIDMPluginDesc">NetIDMgr Plug-in</String>
+    <String Id="StrNIDMPluginLongDesc">OpenAFS plug-in for Network Identity Manager. Adds AFS token management capabilities to Network Identity Manager.</String>
+    <String Id="StrNIDMDebugDesc">Debug symbols for NetIDMgr plug-in</String>
+    <String Id="StrNIDMDebugLongDesc">Debugging symbols for the OpenAFS NetIDMgr plug-in.</String>
 
     <String Id="StrShlExtDesc">AFS Context Menu Shell Extension</String>
     <String Id="StrAfsCredsDesc">Authentication for AFS</String>

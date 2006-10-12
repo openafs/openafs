@@ -851,6 +851,42 @@
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
 
+  <?if $(env.CPU)="i386"?>
+                    <Component Win64="$(var.Win64)" Id="_afscreds_en_us"
+                        Guid="$(var._afscreds_en_us_guid)" DiskId="1">
+                        <File Id="file_afscred_en_us_dll" Name="afscenu.dll" LongName="afscred_en_us.dll" KeyPath="yes"/>
+                    </Component>
+
+                    <Component Win64="$(var.Win64)" Id="_afscreds_plugin" 
+                        Guid="$(var._afscreds_plugin_guid)" DiskId="1">
+                        <File Id="file_afscred_dll" Name="afscred.dll" LongName="afscred.dll" KeyPath="yes"/>
+                        <Registry Id="reg_mod_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Action="createKeyAndRemoveKeyOnUninstall" />
+                        <Registry Id="reg_mod_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" />
+                        <Registry Id="reg_mod_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Name="ImagePath" Type="string" Value="[#file_afscred_dll]" />
+                        <Registry Id="reg_mod_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Name="Description" Type="string" Value="OpenAFS Module" />
+                        <Registry Id="reg_mod_05" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Name="Vendor" Type="string" Value="Secure Endpoints Inc." />
+                        <Registry Id="reg_mod_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Name="PluginList" Type="string" Value="AfsCred" />
+                        <Registry Id="reg_mod_07" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\OpenAFS" Name="NoUnload" Type="integer" Value="1" />
+                        <Registry Id="reg_plg_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" Action="createKeyAndRemoveKeyOnUninstall" />
+                        <Registry Id="reg_plg_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" />
+                        <Registry Id="reg_plg_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" Name="Module" Type="string" Value="OpenAFS" />
+                        <Registry Id="reg_plg_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" Name="Description" Type="string" Value="AFS Credentials Provider" />
+                        <Registry Id="reg_plg_05" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" Name="Dependencies" Type="string" Value="Krb5Cred" />
+                        <Registry Id="reg_plg_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\AfsCred" Name="Type" Type="integer" Value="1" />
+                    </Component>
+  
+     <?ifdef DebugSyms?>            
+                    <Component Win64="$(var.Win64)" Id="_afscreds_debugsym"
+                        Guid="$(var._afscreds_debugsym_guid)" DiskId="1">
+                        <File Id="file_afscred_pdb" Name="afscred.pdb" LongName="afscred.pdb" KeyPath="yes"/>
+                    </Component>
+     <?endif?>
+                    <Component Id="_afscreds_chm"
+                        Guid="$(var._afscreds_chm_guid)" DiskId="1">
+                        <File Id="file_afsplhlp_chm" Name="afsplhlp.chm" LongName="afsplhlp.chm" KeyPath="yes" />
+                    </Component>
+  <?endif?>
+
   <?ifndef BinsOnly ?>
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />

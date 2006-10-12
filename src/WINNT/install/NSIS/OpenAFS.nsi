@@ -85,6 +85,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
   !define AFS_REGKEY_ROOT "Software\TransarcCorporation"
+  !define NID_PLUGIN_MGR  "Software\MIT\NetIDMgr\PluginManager"
   CRCCheck force
 
   ;Folder selection page
@@ -539,7 +540,7 @@ Section "!AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\afsdacl.exe"
   File "${AFS_CLIENT_BUILDDIR}\cmdebug.exe"
   File "${AFS_CLIENT_BUILDDIR}\aklog.exe"
-  File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds.exe"	   "$INSTDIR\Client\Program\afscreds.exe"    "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
@@ -553,6 +554,9 @@ Section "!AFS Client" secClient
   File "${AFS_DESTDIR}\etc\rxdebug.exe"
   File "${AFS_DESTDIR}\etc\backup.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$INSTDIR\Client\Program\afs_cpa.cpl" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscred.dll" "$INSTDIR\Client\Program\afscred.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscred_en_us.dll" "$INSTDIR\Client\Program\afscred_en_us.dll" "$INSTDIR"
+  File "${AFS_CLIENT_BUILDDIR}\afsplhlp.chm"
   
   SetOutPath "$SYSDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
@@ -625,6 +629,18 @@ Section "!AFS Client" secClient
    DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Debug"
    DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Debug"
 !endif
+
+  ;NetIDMgr Plug-in Reg Entries
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS" "ImagePath" "$INSTDIR\Client\Program\afscred.dll"
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS" "Description" "OpenAFS Module"
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS" "Vendor" "Secure Endpoints Inc."
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS" "PluginList" "AfsCred"
+  WriteRegDWORD HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS" "NoUnload" "1"
+  
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Plugins\AfsCred" "Module" "OpenAFS"
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Plugins\AfsCred" "Description" "AFS Credentials Provider"
+  WriteRegStr HKLM "${NID_PLUGIN_MGR}\Plugins\AfsCred" "Dependencies" "Krb5Cred"
+  WriteRegDWORD HKLM "${NID_PLUGIN_MGR}\Plugins\AfsCred" "Type" "1"
 
    ; On Windows 2000 work around KB301673.  This is fixed in Windows XP and 2003
    Call GetWindowsVersion
@@ -1133,6 +1149,7 @@ Section /o "Debug symbols" secDebug
   File "${AFS_DESTDIR}\etc\rxdebug.pdb"
   File "${AFS_DESTDIR}\etc\backup.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afscred.pdb"
 
   SetOutPath "$SYSDIR"
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
@@ -1998,6 +2015,9 @@ StartRemove:
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server"
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
+  DeleteRegKey HKLM "${NID_PLUGIN_MGR}\Modules\OpenAFS"
+  DeleteRegKey HKLM "${NID_PLUGIN_MGR}\Plugins\AfsCred"
+  DeleteRegKey /ifempty HKLM "Software\MIT\NetIDMgr"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
   DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
 

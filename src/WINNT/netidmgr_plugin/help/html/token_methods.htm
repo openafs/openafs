@@ -1,0 +1,70 @@
+<html>
+<head>
+  <title>Token Acquisition Methods</title>
+  <meta name="description" content="Token Acquisition Methods">
+  <meta name="keywords" content="token, krb5, krb4, krb524">
+  <link rel="stylesheet" type="text/css" href="afsplhlp.css">
+</head>
+<body>
+
+<h1>Token Acquisition Methods</h1>
+
+<p>AFS tokens can be obtained via several different methods.  Each of
+the methods that are natively supported by the OpenAFS plug-in is
+described below.  Note that, additional plug-ins may define other
+acquisition methods that are not listed here.
+</p>
+
+<h4>Contents</h4>
+
+<ul>
+<li><a href="#krb5">Kerberos 5</a></li>
+<li><a href="#krb524">Kerberos 5 to 4 conversion</a></li>
+<li><a href="#krb4">Kerberos 4</a></li>
+<li><a href="#auto">Automatic method selection</a></li>
+</ul>
+
+<a name="krb5" />
+<h3>Kerberos 5</h3>
+
+<p>A Kerberos 5 service ticket is obtained for the cell and used directly to
+construct the AFS token.
+</p>
+
+<a name="krb524"/>
+<h3>Kerberos 5 to 4 conversion (Kerberos 524)</h3>
+
+<p>A Kerberos 5 service ticket is obtained for the cell and then
+converted to a Kerberos 4 service ticket using the krb524 daemon.  The
+resulting Kerberos 4 ticket is used to construct the AFS token.
+</p>
+
+<a name="krb4"/>
+<h3>Kerberos 4</h3>
+
+<p>A Kerberos 4 service ticket is obtained for the cell and then used
+to construct the AFS token.  In order to use this method, the identity
+must be be configured to obtain Kerberos 4 tickets when obtaining and
+renewing credentials.  Otherwise a Kerberos 4 TGT (ticket granting
+ticket) will not be available to obtain the service ticket with.
+</p>
+
+<a name="auto"/>
+<h3>Automatic method selection</h3>
+
+<p>When the OpenAFS plug-in is configured to use automatic method
+selection for obtaining an AFS token, it iterates through the Kerberos
+5, Kerberos 524 and Kerberos 4 methods until one of them succeeds.  If
+a realm for the service ticket is specified, then the realm will be
+used for all methods.
+</p>
+
+<p>The correct method to use for your AFS cell will depend on the
+configuration of the AFS cell and the associated Kerberos realm.  In
+most cases, automatic method selection will determine the correct
+realm.  However, other cases, the method will have to be specified
+explicitly.
+</p>
+
+</body>
+</html>

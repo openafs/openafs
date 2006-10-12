@@ -1,0 +1,189 @@
+<html>
+<head>
+  <title>Configuring identifications to obtain tokens for AFS cells</title>
+  <meta name="description" content="Specifying tokens per identification">
+  <meta name="keywords" content="tokns, identification, specify">
+  <link rel="stylesheet" type="text/css" href="afsplhlp.css">
+</head>
+<body>
+
+<h1>Configuring identifications to obtain tokens for AFS cells</h1>
+
+<p>
+The OpenAFS plug-in maintains a list of AFS cells for each identification.
+A list is created the first time AFS tokens are obtained for an
+identification or when the list of cells is 
+specified in the identification configuration panels.  Each AFS cell that
+is listed is associated with a method by which a token should
+be obtained and the name of the Kerberos realm that is used to
+obtain the service ticket (more details are provided in the <a
+href="token_methods.htm">Token Aquisition Methods</a> topic).
+</p>
+
+<p>The following sections detail the process by which AFS cells can be
+specified when obtaining new credentials or configuring identifications.
+</p>
+
+<a name="new_tokens" />
+<h3>Specifying AFS cells when obtaining new credentials</h3>
+
+<p>
+When the OpenAFS plug-in is installed, it enhances the NetIDMgr new credentials
+dialog with an AFS tokens options panel.  A typical new
+credentials dialog is shown below demonstrating AFS cells listed in the
+credentials summary window.
+</p>
+
+<p><img src="images/window_nc_main.bmp" alt="New credentials window showing AFS cells in the credentials summary window" /></p>
+
+<p>Clicking on the <span class="pre">AFS</span> link in the
+credentials summary window will take you to the AFS options page.
+Alternatively, you can select the <span class="pre">Options
+&gt;&gt;</span> button which expands the dialog to show the
+credentials type buttons, and then click the <span
+class="pre">AFS</span> button at the bottom of the expanded dialog.
+</p>
+
+<p>The AFS identification options page is shown below</p>
+
+<p><img src="images/window_nc_afs_0.bmp" alt="AFS identification options page" /></p>
+
+<p>This page allows you to specify if AFS tokens are obtained for this
+identification and if so, for which tokens and by which method will they be
+obtained.  By unchecking the <span class="pre">Obtain AFS
+tokens</span> checkbox, you can prevent AFS tokens from being obtained
+for this idenfication.
+</p>
+
+<p>Once the new credentials dialog successfully completes, the list of
+cells will be saved with the identification.  The next
+time you obtain new credentials for the identification, the list of cells
+will be loaded automatically.  This list can be edited either by using
+the new credentials dialog or the identity configuration
+panels. (See <a href="#persistent_tokens">Changing persistent tokent lists</a>).
+</p>
+
+<h4>To add a cell:</h4>
+<p>
+<ul>
+
+<li>Specify the name of the cell in the <span class="pre">Cell</span>
+text box.</li>
+
+<li>Specify the Kerberos realm for the service ticket in the <span
+class="pre">Realm</span> text box.  Note that you can select <span
+class="pre">(Automatic)</span> as the realm to allow the OpenAFS
+plug-in to select the realm.  For most cases, you don't need to specify
+the realm manually and can safely leave the <span
+class="pre">Realm</span> as <span class="pre">(Automatic)</span></li>
+
+<li>Specify the token acquisition method in the <span
+class="pre">Method</span>.  You can select <span
+class="pre">(Automatic)</span> as the method to allow the OpenAFS
+plug-in to select the method automatically.  Similar to the automatic
+realm selection, for most cases the plug-in will be able to correctly
+select the token aquisition method.  More details about credentials
+acquisition methods are provided in the <a
+href="token_methods.htm">Token Acquisition Methods</a> topic.</li>
+
+<li>Select the <span class="pre">Add/Update</span> button to add the
+cell.</li>
+
+</ul>
+</p>
+
+<p>Note that only one token can exist per cell per login session.
+Which means that if you already have a token for cell <em>X</em> while
+you are logged in as user <em>A</em>, then you can't have another
+token for cell <em>X</em>.  This means that only one identification can 
+obtain a token for a given cell.</p>
+
+<p>Therefore, if you try to add a cell to an identification which is
+already listed in the persistent cell list for another identification or
+which currently exists under a different identification, you will receive a
+warning such as the following:
+</p>
+
+<p>
+<img src="images/window_nc_prob.bmp" alt="Message displaying warning about a duplicate cell" />
+</p>
+
+<p>From here, you can decide to keep the cell listed for both
+identifications (although only one of them can be active at any given
+time), or remove the cell from all the other identifications and add it to
+the current one.  Also, you can cancel the add cell request.
+</p>
+
+<h4>To modify a cell</h4>
+<p>
+<ul>
+
+<li>Select the cell from the list of cells.  The cell name, realm and
+method in the text boxes will be updated to display the information
+from the cell just selected.</li>
+
+<li>Make changes to the realm and method fields as appropriate</li>
+
+<li>Select <span class="pre">Add / Update</span> to update the
+information in the cell list</li>
+
+</ul>
+</p>
+
+<p>Note that if you don't click the <span class="pre">Add /
+Update</span>, the cell entry will not be updated.
+</p>
+
+<h4>To delete cells</h4>
+
+<p>
+<ul>
+
+<li>Select the cells you want to delete from the cell list.  You can
+select multiple cells by clicking while holding the <span
+class="pre">Ctrl</span> key.</li>
+
+<li>Select the <span class="pre">Delete</span> button.</span></li>
+
+</ul>
+</p>
+
+<h4>Cell states</h4>
+
+<p>When you add cells or when you view the cell list, you will see
+an icon next to each cell name.  This icon represents the current state of
+the cell's token.  You can double-click on the cell to get details about the
+state.
+</p>
+
+<p><img src="images/window_nc_afs_2.bmp" /></p>
+
+<p>
+<div class="inline"><img src="images/window_nc_afs_1.bmp" /></div>
+Token for cell <span class="pre">foo.bar</span> is a new token while
+the token for <span class="pre">net.mit.edu</span> is in a problem
+state.  Double clicking the problem token will display a balloon
+prompt indicating what the problem is.
+</p>
+
+<a name="persistent_tokens" />
+<h3>Changing persistent cell lists for existing identifications</h3>
+
+<p>
+The configuration panel for a persistent identification contains a panel for
+specifying the AFS cells.  This panel is identical to the panel used
+by the new credentials dialog.  You can easily modify the cell lists
+as described above and click <span class="pre">Apply</span> and you
+are done.
+</p>
+
+<p>The AFS configuration panel for an identification is shown below.</p>
+
+<p><img src="images/window_cfg_afs_0.bmp" /></p>
+
+<p>You can reach this configuration panel by opening the configuration
+dialog (<span class="pre">Options</span> menu), and then clicking the
+persistent identification you need to modify options for.</p>
+
+</body>
+</html>

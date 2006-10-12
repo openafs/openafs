@@ -1,0 +1,31 @@
+.topic IDH_OBTAIN
+If checked, obtains AFS tokens for this identity as specified below.
+Otherwise, doesn't obtain AFS tokens at all.
+
+.topic IDH_CELL
+The name of the cell for which this token will be obtained for.
+
+.topic IDH_REALM
+The Kerberos realm used to obtain the service ticket for the cell.
+Select 'Automatic' to let the AFS plug-in determine the realm
+automatically.
+
+.topic IDH_METHOD
+The method used to construct the AFS token.  Select 'Automatic' to let
+the AFS plugin determine the method automatically.
+
+.topic IDH_ADD
+Add or update the token in the token list.  If the token already
+exists in the list, then the information will be updated.  Otherwise
+it will be added.
+
+.topic IDH_DELETE
+Delete the selected tokens from the token list.  Tokens that are
+currently selected in the tokens list will be deleted.  If no tokens
+are selected in the list, then the token corresponding to the cell
+listed in the 'Cell' input box will be deleted.
+
+.topic IDH_TOKENLIST
+The list of tokens that will be obtained for this identity.
+Double-click on any of the tokens here to get details about the state
+of each token.

@@ -207,7 +207,7 @@
         <AdvertiseExecuteSequence />
         <AdminExecuteSequence />
         <InstallExecuteSequence>
-			<RemoveExistingProducts After="InstallValidate">IBMAFS_UPGRADE OR OPENAFS_UPGRADE</RemoveExistingProducts>
+			<RemoveExistingProducts After="InstallValidate">IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR AFSPLUGIN_UPGRADE</RemoveExistingProducts>
 			<Custom Action="RemoveNsisInstallation" Before="AbortInstallationA">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
 			<Custom Action="AbortInstallationA" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
 			<!-- Assert that if the server is going to be installed locally after this session, control center and client are also local -->
@@ -242,6 +242,13 @@
         <Upgrade Id="5332B94F-DE38-4927-9EAB-51F4A64193A7">
             <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="3.6.2" MigrateFeatures="no" Property="IBMAFS_UPGRADE" />
         </Upgrade>
+        
+  <?if $(env.CPU) = "i386" ?>
+        <!-- Secure-Endpoints OpenAFS NetIDMgr plug-in -->
+        <Upgrade Id="646D643A-73E3-4C77-AE4A-EDBE313DD45D">
+            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.NumericVersion)" MigrateFeatures="no" Property="AFSPLUGIN_UPGRADE" />
+        </Upgrade>
+  <?endif?>
         
         <!-- openafs.org NSIS installer is detected using other means -->
         <!-- Please let us know if you want other Installers to be detected and upgraded/removed -->

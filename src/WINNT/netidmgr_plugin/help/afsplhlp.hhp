@@ -1,0 +1,29 @@
+[OPTIONS]
+Auto Index=Yes
+Compatibility=1.1 or later
+Compiled file=afsplhlp.chm
+Contents file=toc.hhc
+Default Window=MainHelpWnd
+Default topic=html/welcome.htm
+Display compile progress=No
+Index file=Index.hhk
+Language=0x409 English (United States)
+Title=OpenAFS Plugin for NetIDMgr
+
+[WINDOWS]
+MainHelpWnd="OpenAFS/NetIDMgr Help","toc.hhc","Index.hhk","html/welcome.htm","html/welcome.htm",,,,,0x42120,,0x384e,[271,372,593,566],0x830000,,,,,,0
+
+
+[ALIAS]
+
+[MAP]
+#include afsplhlp.h
+
+[TEXT POPUPS]
+afsplhlp.h
+popups_newcred.txt
+popups_cfg.txt
+
+[INFOTYPES]
+Category:Usage
+CategoryDesc:Usage instructions for OpenAFS/NetIDMgr

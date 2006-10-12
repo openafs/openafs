@@ -374,6 +374,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\license\lang))
 		$(MKDIR) $(OJT)\WINNT\license\lang
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\netidmgr_plugin))
+		$(MKDIR) $(OJT)\WINNT\netidmgr_plugin
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\pthread))
 		$(MKDIR) $(OJT)\WINNT\pthread
 !	ENDIF

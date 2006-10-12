@@ -198,7 +198,10 @@
 	<?define cmp_Server_Program_Debug_guid="5F7BA9F7-E9BD-4AC3-9232-5EFBF6B740F8"?>
         <?define rcm_binsonly_parm_guid="4DFE834A-F129-4FDD-91AD-8A31A849AF0B"?>
         <?define clsid_afs_shl_ext="DC515C27-6CAC-11D1-BAE7-00C04FD140D2"?>
-
+        <?define _afscreds_en_us_guid="B7F72D5F-B8A2-4FE8-B675-71BA4D04FA5C"?>
+        <?define _afscreds_plugin_guid="3477A7C4-9BC9-4AF9-B97D-C96455CC3AF6"?>
+        <?define _afscreds_debugsym_guid="DCBE9170-746F-4894-96FA-B8441A133133"?>
+        <?define _afscreds_chm_guid="11657F75-67AD-4DBA-8344-BF65B7CCAAD2"?>
 <?else?>
 	<?error Unknown platform?>
 <?endif?>
