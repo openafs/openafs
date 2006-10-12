@@ -98,7 +98,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	    bufferPtr += sizeof(vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    va_copy(vaLst, vaList);
+	    va_copy(vaLst, va_arg(vaList, va_list));
 	    audmakebuf(audEvent, vaLst);
 	    va_end(vaLst);
 	    break;
@@ -224,7 +224,7 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	    fprintf(out, "LONG %d ", vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    va_copy(vaLst, vaList);
+	    va_copy(vaLst, va_arg(vaList, va_list));
 	    printbuf(out, 1, "VALST", 0, vaLst);
 	    va_end(vaLst);
 	    break;
