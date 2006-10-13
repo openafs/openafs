@@ -37,16 +37,6 @@ RCSID
 #endif
 #include <afs/afsutil.h>
 
-/* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
-   Autoconf manual, memcpy is a generally portable fallback. */          
-#ifndef va_copy              
-# ifdef __va_copy
-#  define va_copy(d, s)         __va_copy((d), (s))             
-# else
-#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list)) 
-# endif
-#endif      
-
 char *bufferPtr;
 int bufferLen;
 int osi_audit_all = (-1);	/* Not determined yet */
@@ -97,11 +87,6 @@ audmakebuf(char *audEvent, va_list vaList)
 	    *(afs_int32 *) bufferPtr = vaLong;
 	    bufferPtr += sizeof(vaLong);
 	    break;
-	case AUD_LST:		/* Ptr to another list */
-	    va_copy(vaLst, va_arg(vaList, va_list));
-	    audmakebuf(audEvent, vaLst);
-	    va_end(vaLst);
-	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = (struct AFSFid *)va_arg(vaList, struct AFSFid *);
 	    if (vaFid) {
@@ -148,7 +133,8 @@ audmakebuf(char *audEvent, va_list vaList)
 }
 
 static void
-printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
+printbuf(FILE *out, int rec, char *audEvent, char *afsName, afs_int32 hostId, 
+	 afs_int32 errCode, va_list vaList)
 {
     int vaEntry;
     int vaInt;
@@ -175,8 +161,12 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	    fprintf(out, "[%d] ", num);
     }
     
-    if (strcmp(audEvent, "VALST") != 0)
-	fprintf(out,  "EVENT %s CODE %d ", audEvent, errCode);
+    fprintf(out,  "EVENT %s CODE %d ", audEvent, errCode);
+
+    if (afsName) {
+	hostAddr.s_addr = hostId;
+	fprintf(out,  "NAME %s HOST %s ", afsName, inet_ntoa(hostAddr));
+    }
 
     vaEntry = va_arg(vaList, int);
     while (vaEntry != AUD_END) {
@@ -223,11 +213,6 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	    vaLong = va_arg(vaList, afs_int32);
 	    fprintf(out, "LONG %d ", vaLong);
 	    break;
-	case AUD_LST:		/* Ptr to another list */
-	    va_copy(vaLst, va_arg(vaList, va_list));
-	    printbuf(out, 1, "VALST", 0, vaLst);
-	    va_end(vaLst);
-	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = va_arg(vaList, struct AFSFid *);
 	    if (vaFid)
@@ -265,8 +250,7 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 
-    if (strcmp(audEvent, "VALST") != 0)
-	fprintf(out, "\n");
+    fprintf(out, "\n");
 }
 
 #ifdef AFS_PTHREAD_ENV
@@ -296,9 +280,11 @@ osi_audit_init(void)
 /* The routine that acually does the audit call.
  * ************************************************************************** */
 int
-osi_audit(char *audEvent,	/* Event name (15 chars or less) */
-	  afs_int32 errCode,	/* The error code */
-	  ...)
+osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
+		   afs_int32 errCode,	/* The error code */
+		   char *afsName,
+		   afs_int32 hostId,
+		   va_list vaList)
 {
 #ifdef AFS_AIX32_ENV
     afs_int32 code;
@@ -306,7 +292,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     static char BUFFER[32768];
 #endif
     int result;
-    va_list vaList;
+    va_list vaCopy;
 
 #ifdef AFS_PTHREAD_ENV
     /* i'm pretty sure all the server apps now call osi_audit_init(),
@@ -319,6 +305,8 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	osi_audit_check();
     if (!osi_audit_all && !auditout)
 	return 0;
+
+    va_copy(vaCopy, vaList);
 
     switch (errCode) {
     case 0:
@@ -354,36 +342,44 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     *(int *)bufferPtr = errCode;
     bufferPtr += sizeof(errCode);
 
-    va_start(vaList, errCode);
     audmakebuf(audEvent, vaList);
 #endif
 
     if (osi_echo_trail) {
-	va_start(vaList, errCode);
-	printbuf(stdout, 0, audEvent, errCode, vaList);
+	printbuf(stdout, 0, audEvent, afsName, hostId, errCode, vaList);
     }
+    va_end(vaCopy);
 
 #ifdef AFS_AIX32_ENV
     bufferLen = (int)((afs_int32) bufferPtr - (afs_int32) & BUFFER[0]);
     code = auditlog(audEvent, result, BUFFER, bufferLen);
-#ifdef notdef
-    if (code) {
-	err = errno;
-	code = auditlog("AFS_Aud_Fail", result, &err, sizeof(err));
-	if (code)
-	    printf("Error while writing audit entry: %d.\n", errno);
-    }
-#endif /* notdef */
 #else
     if (auditout) {
-	va_start(vaList, errCode);
-	printbuf(auditout, 0, audEvent, errCode, vaList);
+	printbuf(auditout, 0, audEvent, afsName, hostId, errCode, vaList);
 	fflush(auditout);
     }
 #endif
 #ifdef AFS_PTHREAD_ENV
     pthread_mutex_unlock(&audit_lock);
 #endif
+
+    return 0;
+}
+int
+osi_audit(char *audEvent,	/* Event name (15 chars or less) */
+	  afs_int32 errCode,	/* The error code */
+	  ...)
+{
+    va_list vaList;
+
+    if ((osi_audit_all < 0) || (osi_echo_trail < 0))
+	osi_audit_check();
+    if (!osi_audit_all && !auditout)
+	return 0;
+
+    va_start(vaList, errCode);
+    osi_audit_internal(audEvent, errCode, NULL, 0, vaList);
+    va_end(vaList);
 
     return 0;
 }
@@ -473,9 +469,8 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 	osi_audit("AFS_Aud_NoCall", (-1), AUD_STR, audEvent, AUD_END);
     }
     va_start(vaList, errCode);
-    osi_audit(audEvent, errCode, AUD_NAME, afsName, AUD_HOST, hostId, 
-              AUD_LST, vaList, AUD_END);
-
+    osi_audit_internal(audEvent, errCode, afsName, hostId, vaList);
+    va_end(vaList);
     return 0;
 }
 
