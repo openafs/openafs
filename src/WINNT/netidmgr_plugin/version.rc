@@ -51,7 +51,7 @@
 
 1 VERSIONINFO 
         FILEVERSION     AFSPLUGIN_VERSION_LST
-        PRODUCTVERSION  KH_VERSION_LIST
+        PRODUCTVERSION  AFSPLUGIN_VERSION_LST
         FILEFLAGSMASK   KH_VER_FILEFLAGMASK
         FILEFLAGS       KH_VER_FILEFLAGS
         FILEOS          KH_VER_FILEOS
@@ -67,10 +67,10 @@
         VALUE "FileDescription", STR_FILEDESC
         VALUE "FileVersion",     AFSPLUGIN_VERSION_STR
         VALUE "InternalName",    STR_INTNAME
-        VALUE "LegalCopyright",  "(C) 2005 Secure Endpoints Inc."
+        VALUE "LegalCopyright",  "(C) 2005,2006 Secure Endpoints Inc."
         VALUE "OriginalFilename", STR_ORIGNAME
         VALUE "ProductName",     "OpenAFS Plugin for NetIDMgr"
-        VALUE "ProductVersion",  KH_VERSION_STRING
+        VALUE "ProductVersion",  AFSPLUGIN_VERSION_STR
 #ifndef LANGVER
         VALUE NIMV_MODULE,       "OpenAFS"
         VALUE NIMV_PLUGINS,      "AfsCred"
