@@ -625,7 +625,6 @@ pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
     if (*id == ANONYMOUSID)
 	return PRNOENT;
     code = ubik_PR_ListEntry(pruclient, 0, *id, &aentry);
-      //code = ubik_PR_ListEntry(pruclient, 0, *id, &aentry);
     if (code)
 	return code;
     /* this should be done in one RPC, but I'm lazy. */
