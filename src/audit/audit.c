@@ -37,6 +37,16 @@ RCSID
 #endif
 #include <afs/afsutil.h>
 
+/* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
+   Autoconf manual, memcpy is a generally portable fallback. */          
+#ifndef va_copy              
+# ifdef __va_copy
+#  define va_copy(d, s)         __va_copy((d), (s))             
+# else
+#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list)) 
+# endif
+#endif      
+
 char *bufferPtr;
 int bufferLen;
 int osi_audit_all = (-1);	/* Not determined yet */
