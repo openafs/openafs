@@ -617,8 +617,8 @@ AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
 #include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS
 request_key(NULL, NULL, NULL);
-#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
-#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
+#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH) || !defined(KEY_POS_SETATTR) 
+#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH or KEY_POS_SETATTR"
 #endif
 #else
 #error rebuild your kernel with CONFIG_KEYS
