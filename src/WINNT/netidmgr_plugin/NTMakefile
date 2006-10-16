@@ -37,6 +37,8 @@ AFSPLUGIN_VERLIST=$(AFSPLUGIN_VERSION_MAJOR),$(AFSPLUGIN_VERSION_MINOR),$(AFSPLU
 # short form version numbers
 TAFSPLUGIN_VERSION=$(AFSPLUGIN_VERSION_MAJOR).$(AFSPLUGIN_VERSION_MINOR).$(AFSPLUGIN_VERSION_PATCH)
 
+!INCLUDE afsp_version.h.in
+
 # Directories
 
 EXEDIR = $(DESTDIR)\root.client\usr\vice\etc
@@ -75,6 +77,7 @@ DLLFILE=$(EXEDIR)\afscred.dll
 LIBFILE=$(LIBFILEDIR)\afscred.lib
 
 INCFILES=				\
+	afsp_version.h			\
 	$(INCFILEDIR)\afspext.h		\
 	$(INCFILEDIR)\afsp_version.h
 
@@ -136,8 +139,6 @@ $(OUT)\dynimport.obj: dynimport.c
 $(OUT)\krb5common.obj: krb5common.c
 	$(PC2OBJ)
 
-!include afsp_version.h.in
-
 $(DLLFILE): $(OBJFILES) $(VERRESFILE)
 	$(DLLGUILINK) $(LIBFILES) $(SDKLIBFILES)
 	$(_VC_MANIFEST_EMBED_DLL)
@@ -175,9 +176,8 @@ $(OUT)\langres_$(LANG).res: lang\$(LANG)\langres.rc
 # End language block
 
 clean::
-!ifdef INCFILES
 	$(DEL) $(INCFILES)
-!endif
+	$(DEL) *.pdb
 	$(CD) help
 	$(MAKECMD) /f NTMakefile clean
 	$(CD) ..
