@@ -1,6 +1,7 @@
-afsp_version.h: NTMakefile afsp_version.h.in
-        $(COPY) << $@
-/* Copyright (c) 2004 Massachusetts Institute of Technology
+
+afsp_version.h: afsp_version.h.in
+	$(COPY) << $@
+/* Copyright (c) 2005,2006 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -38,3 +39,4 @@ afsp_version.h: NTMakefile afsp_version.h.in
 
 #endif
 <<
+
