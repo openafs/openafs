@@ -263,6 +263,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
                 return code;
@@ -391,7 +392,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     long code;
     char tbuffer[1024];
     char *tp, *jp;
-    cm_scache_t *substRootp;
+    cm_scache_t *substRootp = NULL;
 
     StringCbCopyA(tbuffer, sizeof(tbuffer), ioctlp->inDatap);
     tp = strrchr(tbuffer, '\\');
@@ -446,6 +447,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) return code;
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
@@ -471,6 +473,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) return code;
         }
     } else {
@@ -481,6 +484,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
         code = cm_NameI(substRootp, tbuffer, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, NULL, reqp, scpp);
+	cm_ReleaseSCache(substRootp);
         if (code) return code;
     }
 
@@ -1656,6 +1660,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
         code = cm_FreelanceAddMount(leaf, fullCell, volume, 
                                     *ioctlp->inDatap == '%', NULL);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
@@ -1714,6 +1719,7 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
         code = cm_FreelanceAddSymlink(leaf, cp, NULL);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
@@ -1847,6 +1853,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
         code = cm_FreelanceRemoveSymlink(cp);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
