@@ -284,6 +284,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) {
 		osi_Log1(afsd_logp,"cm_ParseIoctlPath [2] code 0x%x", code);
                 return code;
@@ -413,7 +414,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     long code;
     char tbuffer[1024];
     char *tp, *jp;
-    cm_scache_t *substRootp;
+    cm_scache_t *substRootp = NULL;
 
     StringCbCopyA(tbuffer, sizeof(tbuffer), ioctlp->inDatap);
     tp = strrchr(tbuffer, '\\');
@@ -468,6 +469,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) return code;
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
@@ -493,6 +495,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
             code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, NULL, reqp, scpp);
+	    cm_ReleaseSCache(substRootp);
             if (code) return code;
         }
     } else {
@@ -503,6 +506,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
         code = cm_NameI(substRootp, tbuffer, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, NULL, reqp, scpp);
+	cm_ReleaseSCache(substRootp);
         if (code) return code;
     }
 
@@ -1685,6 +1689,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
         code = cm_FreelanceAddMount(leaf, fullCell, volume, 
                                     *ioctlp->inDatap == '%', NULL);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
@@ -1743,6 +1748,7 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
         code = cm_FreelanceAddSymlink(leaf, cp, NULL);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
@@ -1876,6 +1882,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
         code = cm_FreelanceRemoveSymlink(cp);
+	cm_ReleaseSCache(dscp);
         return code;
     }
 #endif
@@ -1883,32 +1890,25 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         
     /* if something went wrong, bail out now */
-    if (code) {
-        goto done2;
-    }
+    if (code)
+        goto done3;
         
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {     
-        lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseSCache(scp);
+    if (code)
         goto done2;
-    }
 	
     /* now check that this is a real symlink */
     if (scp->fileType != CM_SCACHETYPE_SYMLINK &&
         scp->fileType != CM_SCACHETYPE_DFSLINK &&
         scp->fileType != CM_SCACHETYPE_INVALID) {
-        lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
         goto done1;
     }
 	
     /* time to make the RPC, so drop the lock */
     lock_ReleaseMutex(&scp->mx);
-    cm_ReleaseSCache(scp);
         
     /* easier to do it this way */
     code = cm_Unlink(dscp, cp, userp, &req);
@@ -1918,12 +1918,15 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                           | FILE_NOTIFY_CHANGE_DIR_NAME,
                           dscp, cp, NULL, TRUE);
 
-  done1:
     lock_ObtainMutex(&scp->mx);
+  done1:
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&scp->mx);
 
   done2:
+    lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
+
+  done3:
     cm_ReleaseSCache(dscp);
     return code;
 }
