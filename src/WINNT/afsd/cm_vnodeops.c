@@ -1256,13 +1256,23 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
     return 1;
 }   
 
+#ifdef DEBUG_REFCOUNT
+long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
+               cm_req_t *reqp, cm_scache_t **outpScpp, char * file, long line)
+#else
 long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                cm_req_t *reqp, cm_scache_t **outpScpp)
+#endif
 {
     long code;
     char tname[256];
     int sysNameIndex = 0;
     cm_scache_t *scp = NULL;
+
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_Lookup dscp 0x%p ref %d", file, line, dscp, dscp->refCount, file, line);
+    osi_Log2(afsd_logp, "cm_Lookup dscp 0x%p ref %d", dscp, dscp->refCount);
+#endif
 
     if ( stricmp(namep,SMB_IOCTL_FILENAME_NOSLASH) == 0 ) {
         if (flags & CM_FLAG_CHECKPATH)
@@ -1275,6 +1285,11 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
         code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
         if (code > 0) {
             code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
+#ifdef DEBUG_REFCOUNT
+	    afsi_log("%s:%d cm_LookupInternal (1) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+	    osi_Log3(afsd_logp, "cm_LookupInternal (1) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+#endif
+
             if (code == 0) {
                 *outpScpp = scp;
                 return 0;
@@ -1284,7 +1299,13 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                 scp = NULL;
             }
         } else {
-            return cm_LookupInternal(dscp, namep, flags, userp, reqp, outpScpp);
+            code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
+#ifdef DEBUG_REFCOUNT
+	    afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+	    osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+#endif
+	    *outpScpp = scp;
+	    return code;
         }
     }
 
@@ -1515,9 +1536,14 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
     lock_ReleaseMutex(&linkScp->mx);
     return code;
 }
-
+#ifdef DEBUG_REFCOUNT
+long cm_NameIDbg(cm_scache_t *rootSCachep, char *pathp, long flags,
+               cm_user_t *userp, char *tidPathp, cm_req_t *reqp, cm_scache_t **outScpp, 
+	       char * file, long line)
+#else
 long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                cm_user_t *userp, char *tidPathp, cm_req_t *reqp, cm_scache_t **outScpp)
+#endif
 {
     long code;
     char *tp;			/* ptr moving through input buffer */
@@ -1538,8 +1564,12 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
 
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_NameI rootscp 0x%p ref %d", file, line, rootSCachep, rootSCachep->refCount);
     osi_Log4(afsd_logp,"cm_NameI rootscp 0x%p path %s tidpath %s flags 0x%x",
-	      rootSCachep, pathp, tidPathp, flags);
+	      rootSCachep, pathp ? pathp : "<NULL>", tidPathp ? tidPathp : "<NULL>", 
+	      flags);
+#endif
 
     tp = tidPathp;
     if (tp == NULL) {
@@ -1748,6 +1778,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         *outScpp = tscp;
     else if (tscp)
         cm_ReleaseSCache(tscp);
+
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_NameI code 0x%x outScpp 0x%p ref %d", file, line, code, *outScpp, (*outScpp)->refCount);
+#endif
     osi_Log2(afsd_logp,"cm_NameI code 0x%x outScpp 0x%p", code, *outScpp);
     return code;
 }

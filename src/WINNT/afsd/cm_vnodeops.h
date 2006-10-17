@@ -65,12 +65,23 @@ extern void cm_Gen8Dot3Name(struct cm_dirEntry *dep, char *shortName,
 extern long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp,
 	cm_req_t *reqp);
 
+#ifdef DEBUG_REFCOUNT
+extern long cm_NameIDbg(cm_scache_t *rootSCachep, char *pathp, long flags,
+	cm_user_t *userp, char *tidPathp, cm_req_t *reqp,
+	cm_scache_t **outScpp, char *, long);
+
+extern long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags,
+	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp, char *, long);
+
+#define cm_Lookup(a,b,c,d,e,f)  cm_LookupDbg(a,b,c,d,e,f,__FILE__,__LINE__)
+#define cm_NameI(a,b,c,d,e,f,g) cm_NameIDbg(a,b,c,d,e,f,g,__FILE__,__LINE__)
+#else
 extern long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 	cm_user_t *userp, char *tidPathp, cm_req_t *reqp,
 	cm_scache_t **outScpp);
-
 extern long cm_Lookup(cm_scache_t *dscp, char *namep, long flags,
 	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp);
+#endif
 
 extern long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags,
                               cm_user_t *userp, cm_req_t *reqp, 

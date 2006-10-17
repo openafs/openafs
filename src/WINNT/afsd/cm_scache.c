@@ -532,8 +532,13 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
     return NULL;
 }
 
+#ifdef DEBUG_REFCOUNT
+long cm_GetSCacheDbg(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
+                  cm_req_t *reqp, char * file, long line)
+#else
 long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
                   cm_req_t *reqp)
+#endif
 {
     long hash;
     cm_scache_t *scp;
@@ -561,6 +566,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     lock_ObtainWrite(&cm_scacheLock);
     for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
+#ifdef DEBUG_REFCOUNT
+	    afsi_log("%s:%d cm_GetSCache (1) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
+	    osi_Log1(afsd_logp,"cm_GetSCache (1) outScpp 0x%p", scp);
+#endif
             cm_HoldSCacheNoLock(scp);
             *outScpp = scp;
             cm_AdjustLRU(scp);
@@ -656,6 +665,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 #endif
 	*outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
+#ifdef DEBUG_REFCOUNT
+	afsi_log("%s:%d cm_GetSCache (2) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
+	osi_Log1(afsd_logp,"cm_GetSCache (2) outScpp 0x%p", scp);
+#endif
         return 0;
     }
     // end of yj code
@@ -679,6 +692,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
      */
     for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
+#ifdef DEBUG_REFCOUNT
+	    afsi_log("%s:%d cm_GetSCache (3) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
+	    osi_Log1(afsd_logp,"cm_GetSCache (3) outScpp 0x%p", scp);
+#endif
             cm_HoldSCacheNoLock(scp);
             osi_assert(scp->volp == volp);
             cm_AdjustLRU(scp);
@@ -747,6 +764,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     /* now we have a held scache entry; just return it */
     *outScpp = scp;
+#ifdef DEBUG_REFCOUNT
+    afsi_log("%s:%d cm_GetSCache (4) outScpp 0x%p ref %d", file, line, scp, scp->refCount);
+    osi_Log1(afsd_logp,"cm_GetSCache (4) outScpp 0x%p", scp);
+#endif
     return 0;
 }
 
