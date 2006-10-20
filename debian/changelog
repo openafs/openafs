@@ -1,3 +1,10 @@
+openafs (1.4.2-1) unstable; urgency=medium
+
+  * New upstream release, fixes amd64 kernel issues
+  * Update CellServDB
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 20 Oct 2006 06:44:45 -0400
+
 openafs (1.4.2~fc4-3) unstable; urgency=low
 
   * Apply patch from Chaskiel Grundman to fix kernel panics when loading
