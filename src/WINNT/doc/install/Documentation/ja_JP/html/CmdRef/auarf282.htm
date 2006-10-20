@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRXSTAT_CM_TEST" HREF="auarf002.htm#ToC_296">xstat_cm_test</A></H2>
+<A NAME="IDX5869"></A>
+<A NAME="IDX5870"></A>
+<P><STRONG>目的</STRONG>
+<P>キャッシュ・マネージャーからのデータ収集を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>xstat_cm_test</B> [<B>initcmd</B>] <B>-cmname</B> &lt;<VAR>Cache Manager name(s) to monitor</VAR>><SUP>+</SUP>
+              <B>-collID</B> &lt;<VAR>Collection(s) to fetch</VAR>><SUP>+</SUP>  [<B>-onceonly</B>]  
+              [<B>-frequency</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  
+              [<B>-period</B> &lt;<VAR>data collection time, in minutes</VAR>>]  [<B>-debug</B>]  [<B>-help</B>]
+   
+<B>xstat_cm_test</B> [<B>i</B>] <B>-cm</B> &lt;<VAR>Cache Manager name(s) to monitor</VAR>><SUP>+</SUP>
+              <B>-co</B> &lt;<VAR>Collection(s) to fetch</VAR>><SUP>+</SUP>  [<B>-o</B>]  
+              [<B>-f</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  
+              [<B>-p</B> &lt;<VAR>data collection time, in minutes</VAR>>]  [<B>-d</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>xstat_cm_test</B> コマンドは、
+<B>libxstat_cm.a</B> ライブラリーのルーチンをテストして、キャッシュ・マネージャーに関連したデータ収集を表示します。このコマンドはフォアグラウンドで実行されます。
+<P>このコマンドは、大量の出力を生成します。この出力は保存して後で分析に使用したり、ファイルに出力することができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>initcmd
+</B><DD>コマンドの AFS コマンド・パーサーの使用状況を調べます。これはオプションです。
+<P><DT><B>-cmname
+</B><DD>キャッシュ・マネージャーをモニターする各クライアント・マシンの完全修飾ホスト名を指定します。
+<P><DT><B>-collID
+</B><DD>収集するデータのコレクションを指定します。これにより、キャッシュ・マネージャーについてコマンド・インタープリターが収集するデータのタイプおよび量が決まります。データは、定義済みのデータ構造で戻されます。
+<P>
+<P>次の 3 つの値が指定できます。
+<P>
+<DL>
+<P><DT><B>0
+</B><DD>キャッシュ・マネージャーが開始されてから、内部キャッシュ・マネージャー・ルーチンが呼び出された回数についてのプロファイル情報が与えられます。
+<P><DT><B>1
+</B><DD>キャッシュ・マネージャーに関連した様々な内部パフォーマンス統計をレポートします (たとえば、キャッシュの使用状況用、内部セルおよび内部セル・データのアクセス量についての統計)。
+<P><DT><B>2
+</B><DD>設定値 <B>1</B> により提供されるすべての内部パフォーマンス統計に加え、詳細なパフォーマンス値 (たとえば、キャッシュ・マネージャーにより送信される RPC 数および完了するまでにかかる時間に関する統計、認証、アクセス、およびデータ・アクセスに関連した PAG 情報に関する統計) を報告します。
+</DL>
+<P><DT><B>-onceonly
+</B><DD>統計を 1 回だけ収集します。このフラグを省略すると、コマンドは、
+<B>-frequency</B> 引き数で指定された頻度で、統計を取るために、キャッシュ・マネージャーのプローブを続行します。この場合、プローブを停止するには、&lt;<B>Ctrl-c</B>&gt; を押します。
+<P><DT><B>-frequency
+</B><DD>プログラムがキャッシュ・マネージャーにプローブを開始する頻度を秒数で設定します。デフォルトは 30 秒です。
+<P><DT><B>-period
+</B><DD>プログラムの実行時間を分単位で設定します。指定した時間が経過すると、プログラムは終了します。デフォルトは、10 分です。
+<P><DT><B>-debug
+</B><DD>コマンド実行時に標準出力ストリームにトレースを表示します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf283.htm#HDRXSTAT_FS_TEST">xstat_fs_test</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf281.htm">前ページ</A> &#124; <A HREF="auarf283.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

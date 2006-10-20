@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf062.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf064.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_ADDVOLENTRY" HREF="auarf002.htm#ToC_77">backup addvolentry</A></H2>
+<A NAME="IDX4239"></A>
+<A NAME="IDX4240"></A>
+<A NAME="IDX4241"></A>
+<A NAME="IDX4242"></A>
+<A NAME="IDX4243"></A>
+<A NAME="IDX4244"></A>
+<A NAME="IDX4245"></A>
+<A NAME="IDX4246"></A>
+<A NAME="IDX4247"></A>
+<A NAME="IDX4248"></A>
+<A NAME="IDX4249"></A>
+<A NAME="IDX4250"></A>
+<A NAME="IDX4251"></A>
+<A NAME="IDX4252"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Defines a volume entry in a volume set
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup addvolentry -name</B> &lt;<VAR>volume set name</VAR>>  <B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>
+                   <B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>> 
+                   <B>-volumes</B> &lt;<VAR>volume&nbsp;name&nbsp;(regular&nbsp;expression)</VAR>>   
+                   [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup addvole -n</B> &lt;<VAR>volume set name</VAR>>  <B>-s</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-p</B> &lt;<VAR>partition&nbsp;name</VAR>>
+               <B>-v</B> &lt;<VAR>volume&nbsp;name&nbsp;(regular&nbsp;expression)</VAR>>
+               [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup addvolentry</B> command adds a volume entry definition to
+the existing volume set named by the <B>-name</B> argument. A
+volume entry definition can match one or more volumes, depending on the
+combination of the <B>-server</B>, <B>-partition</B>, and
+<B>-volumes</B> arguments.
+<P>For the <B>-server</B> and <B>-partition</B> arguments, provide
+either
+<UL>
+<P><LI>The name of one machine or partition
+<P><LI>The metacharacter expression <B>.*</B> (period and asterisk),
+which matches every machine name or partition name in the Volume Location
+Database (VLDB).
+</UL>
+<P>For the <B>-volumes</B> argument, specify a combination of alphanumeric
+characters and one or more metacharacters to wildcard part or all of the
+volume name. The <B>Options</B> section lists the acceptable
+metacharacters.
+<P><STRONG>Cautions</STRONG>
+<P>It is best to issue this command in interactive mode. If issuing it
+at the shell prompt, enclose any strings containing metacharacters in double
+quotes, or escape the metacharacters with other delimiters, to prevent the
+shell from interpreting them. Adding volume entries to a temporary
+volume set is possible only within the interactive session in which the volume
+set was created.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Names the volume set to which to add this volume entry definition.
+The volume set must already exist (use the <B>backup addvolset</B> command
+to create it).
+<P><DT><B>-server
+</B><DD>Defines the set of one or more file server machines that house the volumes
+in the volume entry. Provide either one fully-qualified hostname (such
+as <B>fs1.abc.com</B>) or the metacharacter expression
+<B>.*</B> (period and asterisk), which matches all machine names in
+the VLDB.
+<P><DT><B>-partition
+</B><DD>Defines the set of one or more partitions that house the volumes in the
+volume entry. Provide either one complete partition name (such as
+<B>/vicepa</B>) or the metacharacter expression <B>.*</B>
+(period and asterisk), which matches all partition names.
+<P><DT><B>-volumes
+</B><DD>Defines the set of one or more volumes included in the volume
+entry. Specify the volumes by name, by using any combination of regular
+alphanumeric characters and one or more of the following metacharacter
+expressions&#58;
+<A NAME="IDX4253"></A>
+<A NAME="IDX4254"></A>
+<DL>
+<P><DT><B>.
+</B><DD>The period matches any single character.
+<P><DT><B>*
+</B><DD>The asterisk matches zero or more instances of the preceding
+character. Combine it with any other alphanumeric character or
+metacharacter.
+<P><DT><B>[ ]
+</B><DD>Square brackets around a list of characters match a single instance of any
+of the characters, but no other characters; for example, <B>[abc]</B>
+matches a single <B>a</B> or <B>b</B> or <B>c</B>, but not
+<B>d</B> or <B>A</B>. This expression can be combined with the
+asterisk.
+<P><DT><B>^
+</B><DD>The caret, when used as the first character in a square-bracketed set,
+designates a match with any single character <I>except</I> the characters
+that follow it; for example, <B>[^a]</B> matches any single character
+except lowercase <B>a</B>. This expression can be combined with the
+asterisk.
+<P><DT><B>\
+</B><DD>A backslash preceding any of the metacharacters in this list makes it
+match its literal value only. For example, the expression
+<B>\.</B> (backslash and period) matches a single period,
+<B>\*</B> a single asterisk, and <B>\\</B> a single backslash.
+Such expressions can be combined with the asterisk (for example,
+<B>\.*</B> matches any number of periods).
+</DL>
+<P>
+<P>Perhaps the most common metacharacter expression is the period followed by
+an asterisk (<B>.*</B>). This expression matches any string
+of any length, because the period matches any character and the asterisk means
+any number of that character. As mentioned, it is the only acceptable
+metacharacter expression for the <B>-server</B> and <B>-partition</B>
+arguments. In a volume definition it can stand alone (in which case it
+matches every volume listed in the VLDB), or can combine with regular
+characters. The following example matches any volume name that begins
+with the string <B>user</B> and ends with <B>backup</B>&#58; 
+<PRE>   <B>user.*backup</B>
+   
+</PRE>
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command adds a volume entry to the volume set called
+<B>sys</B>. The entry matches all volumes on any machine or
+partition whose names begin with the string <B>sun4x_56</B> followed by a
+period&#58;
+<PRE>   backup> <B>addvolentry sys .* .* sun4x_56\..*</B>
+   
+</PRE>
+<P>The following command adds a volume entry to the volume set called
+<B>fs2</B>, to match all volumes on the <B>/vicepb</B> partition of
+file server machine <B>fs2.abc.com</B>. Because it is
+issued at the shell prompt, double quotes surround the metacharacters in the
+<B>-volumes</B> argument. (The command is shown here on two lines
+only for legibility reasons.)
+<PRE>   % <B>backup addvolentry -name fs2 -server fs2.abc.com \
+                        -partition /vicepb -volumes ".*"</B>
+   
+</PRE>
+<P>The chapter in the <I>AFS Administration Guide</I> about configuring
+the AFS Backup System presents additional examples as well as advice on
+grouping volumes.
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf064.htm#HDRBK_ADDVOLSET">backup addvolset</A>
+<P><A HREF="auarf070.htm#HDRBK_DELVOLENTRY">backup delvolentry</A>
+<P><A HREF="auarf071.htm#HDRBK_DELVOLSET">backup delvolset</A>
+<P><A HREF="auarf082.htm#HDRBK_LISTVOLSETS">backup listvolsets</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf062.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf064.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

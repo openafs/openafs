@@ -1,0 +1,208 @@
+﻿<?xml version="1.0"?> 
+<Include>
+    <!--
+    This file will be included as a child of the root Directory tag.
+    -->
+    <Component Id="rcm_Server" Guid="D30C980B-8284-49DF-88F5-C90BBFB3E80D">
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server"/>
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Id="reg_Server3"/>
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Name="TypesSupported" Type="integer" Value="7" Id="reg_Server4" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Server6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Id="reg_Server7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Server8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Server9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Server10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_Server11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]Server" Id="reg_Server12" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Server13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Server15" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSServerDesc)" Id="reg_Server16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server18" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Server19" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Id="reg_Server20" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Server21" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Server22" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Server23" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_Server24" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]Server" Id="reg_Server25" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Server26" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Server28" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSServerDesc)" Id="reg_Server29" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server31"/>
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Server" Id="reg_Server32" KeyPath="yes"/>
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Name="EventMessageFile" Type="string" Value="[AFSDIR]Common\afseventmsg_$(var.LanguageCode).dll" Id="reg_Server_$(var.LanguageCode)" />
+    </Component>
+
+    <Component Id="rcm_Control_Center" Guid="2007844F-E101-4C99-81F5-EF9AEAD98821">
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center" KeyPath="yes" Id="reg_Control_Center2" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center3" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Control_Center4" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Id="reg_Control_Center5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Control_Center6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Control_Center7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Control_Center8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_Control_Center9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]Control Center" Id="reg_Control_Center10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Control_Center11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center14" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Control_Center17" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Id="reg_Control_Center18" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Control_Center19" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Control_Center20" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Control_Center21" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_Control_Center22" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]Control Center" Id="reg_Control_Center23" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Control_Center24" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center26" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center27" />
+    </Component>
+    <Component Id="rcm_Client" Guid="954679B0-547B-4F1E-9A3A-ABFB15B6C724">
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall2" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_NoUninstall3" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Id="reg_Client2" KeyPath="yes" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Client6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Id="reg_Client7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Client8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Client9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Client10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_Client11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]Client" Id="reg_Client12" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Client13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Client16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSClientDesc)" Id="reg_Client17" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Action="createKey" Id="reg_Client50" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client\CSCPolicy" Action="createKey" Id="reg_Client51" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client\Freelance" Action="createKey" Id="reg_Client52" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client\Submounts" Action="createKey" Id="reg_Client53" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="AfscredsShortcutParams" Type="string" Value="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Id="reg_Client54" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="ShowTrayIcon" Type="integer" Value="1" Id="reg_Client18" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client19" />
+        <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client20" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client21" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="AuthentProviderPath" Type="expandable" Value="[SystemFolder]afslogon.dll" Id="reg_Client22" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Id="reg_Client23" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonOptions" Type="integer" Value="[LOGONOPTIONS]" Id="reg_Client24" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="VerboseLogging" Type="integer" Value="10" Id="reg_Client25" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[SystemFolder]afslogon.dll" Id="reg_Client26" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonScript" Type="expandable" Value="[AFSDIR]Client\Program\afscreds.exe -:%s -x -a -m -n -q" Id="reg_Client27" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Class" Type="integer" Value="2" Id="reg_Client29" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Name" Type="string" Value="TransarcAFSDaemon" Id="reg_Client30" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client31" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Client32" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Id="reg_Client33" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Client34" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Client35" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Client36" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_Client37" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]Client" Id="reg_Client38" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Client39" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Client42" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSClientDesc)" Id="reg_Client43" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client45" />
+        <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client46" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client47" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client48" />
+        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Id="reg_Client49" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Full_Client" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="HideDotFiles" Type="integer" Value="[HIDEDOTFILES]" Id="reg_Full_Client2" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Id="reg_Full_Client3" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="IsGateway" Type="integer" Value="0" Id="reg_Full_Client4" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="RxMaxMTU" Type="integer" Value="[RXMAXMTU]" Id="reg_Full_Client5" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="NetbiosName" Type="string" Value="[NETBIOSNAME]" Id="reg_Full_Client6" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="Cell" Type="string" Value="[AFSCELLNAME]" Id="regAFSCellName" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="MountRoot" Type="string" Value="[MOUNTROOT]" Id="reg_Full_Client7" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="NoFindLanaByName" Type="integer" Value="[NOFINDLANABYNAME]" Id="reg_Full_Client8" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="FreelanceClient" Type="integer" Value="[FREELANCEMODE]" Id="reg_Full_Client9" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="UseDNS" Type="integer" Value="[USEDNS]" Id="reg_Full_Client10" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SecurityLevel" Type="integer" Value="[SECURITYLEVEL]" Id="reg_Full_Client12" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SMBAuthType" Type="integer" Value="[SMBAUTHTYPE]" Id="reg_Full_Client13" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Mappings" Type="string" Value="USR:Software\OpenAFS\Client\mappings" Id="reg_Full_Client14" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Submounts" Type="string" Value="SYS:OpenAFS\Client\Submounts" Id="reg_Full_Client15" />
+    </Component>
+    <Component Id="rcm_ClientCachePath" Guid="4080E08D-6649-4A06-B286-F5E737DF4D8A" Transitive="yes">
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CachePath" Type="expandable" Value="[AFSCACHEPATH]" Id="reg_Full_Client16" KeyPath="yes" />
+        <Condition>AFSCACHEPATH &lt;&gt; ""</Condition>
+    </Component>
+    <Component Id="rcm_ClientCacheSize" Guid="F3A12290-920B-42E9-8E49-4958D7C0B6E2" Transitive="yes">
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CacheSize" Type="integer" Value="[AFSCACHESIZE]" Id="reg_Full_Client17" KeyPath="yes" />
+        <Condition>AFSCACHESIZE &lt;&gt; ""</Condition>
+    </Component>
+    <Component Id="rcm_StoreAnsiFilenames" Guid="EAC84AD6-CF90-4b28-AF32-6F96DF55C3C4" Transitive="yes">
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="StoreAnsiFilenames" Type="integer" Value="[STOREANSIFILENAMES]" Id="reg_Full_Client18" KeyPath="yes" />
+        <Condition>STOREANSIFILENAMES &lt;&gt; ""</Condition>
+    </Component>
+    <Component Id="rcm_Documentation" Guid="97493526-4A5C-4C55-A1D6-EA38841B1B85">
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation" KeyPath="yes" Id="reg_Docs2" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Docs" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Docs3" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Docs4" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Id="reg_Docs5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Docs6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Docs7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Docs8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_Docs9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]Documentation" Id="reg_Docs10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Docs11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Docs13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSDocDesc)" Id="reg_Docs14" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Docs16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_Docs17" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Id="reg_Docs18" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_Docs19" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_Docs20" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_Docs21" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_Docs22" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]Documentation" Id="reg_Docs23" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Docs24" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Docs26" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSDocDesc)" Id="reg_Docs27" />
+    </Component>
+    <Component Id="rcm_SDK" Guid="648BE65B-C152-412C-A45C-1562512B52DC">
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" KeyPath="yes" Id="reg_SDK2" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK3" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_SDK4" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Id="reg_SDK5" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_SDK6" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_SDK7" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_SDK8" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="Software Type" Type="string" Value="File System" Id="reg_SDK9" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="PathName" Type="string" Value="[AFSDIR]lib" Id="reg_SDK10" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_SDK11" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_SDK13" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Name="Description" Type="string" Value="$(loc.StrAFSSDKDesc)" Id="reg_SDK14" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK16" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="MinorVersion" Type="integer" Value="$(var.VersionMinor)" Id="reg_SDK17" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Id="reg_SDK18" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="PatchLevel" Type="integer" Value="$(var.VersionPatch)" Id="reg_SDK19" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="MajorVersion" Type="integer" Value="$(var.VersionMajor)" Id="reg_SDK20" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="ReleaseType" Type="string" Value="$(var.ReleaseType)" Id="reg_SDK21" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="Software Type" Type="string" Value="File System" Id="reg_SDK22" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="PathName" Type="string" Value="[AFSDIR]lib" Id="reg_SDK23" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_SDK24" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_SDK26" />
+        <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSSDKDesc)" Id="reg_SDK27" />
+    </Component>
+
+    <!-- Work around bug KB30673.  Only for Windows 2000. -->    
+    <Component Id="rcm_KB301673" Guid="BAF01A13-445B-45BB-A832-DC2E7F98AE6A">
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\NetBT\Parameters" Name="SmbDeviceEnabled" Type="integer" Value="0" Id="reg_KB301673" KeyPath="yes" />
+    </Component>
+
+	<!-- The loopback adapter is installed by a custom action, which leaves the loopback feature
+	     empty.  Due to a bug in Windows Installer, when a feature is empty (i.e. contains no components)
+	     its install state is set as NULL, instead of Local or Absent.  This prevents the feature from
+	     being removed when the product is uninstalled. This is just a flag component to add to the
+	     loopback feature so that it is not empty. -->
+    <Component Id="rcm_Loopback" Guid="9F9BBDA3-208C-4F93-B81F-313E031B6DDA">
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="LoopbackInstalled" Type="integer" Value="1" Id="reg_Loopback1" KeyPath="yes" />
+    </Component>
+    
+</Include>

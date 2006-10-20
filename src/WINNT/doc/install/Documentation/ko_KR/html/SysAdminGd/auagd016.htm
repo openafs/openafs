@@ -1,0 +1,1132 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>관리 안내서</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- c:\IDWBWIN\TEMP\idwt1054\Auagd000.scr converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 31 Dec 1999 at       -->
+<!-- 09:23:05                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=euc-kr">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 31 Dec 1999 09:22:58">
+<META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>관리 안내서</H1>
+<HR><H1><A NAME="HDRWQ419" HREF="auagd002.htm#ToC_491">package 프로그램을 사용한 클라이언트 시스템 구성</A></H1>
+<P><B>package</B> 프로그램은 클라이언트 구성 프로세스의 여러 측면을
+자동화합니다. <B>package</B> 프로그램을 통해 전역 구성 파일을
+정의하여 여러 클라이언트의 로컬 디스크를 쉽게 구성할 수 있습니다.
+<A NAME="IDX7519"></A>
+<A NAME="IDX7520"></A>
+<A NAME="IDX7521"></A>
+<A NAME="IDX7522"></A>
+<HR><H2><A NAME="HDRWQ420" HREF="auagd002.htm#ToC_492">명령 요약</A></H2>
+<P>본 장에서는 프로토타입 파일에 있는 명령(들)을 사용하여 다음 타스크를 수행하는 방법을
+설명합니다.
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">클라이언트 시스템의 로컬 디스크 구성
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>package</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">디렉토리 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>D</B> [<VAR>update_code</VAR>] <VAR>directory</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">파일 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>F</B> [<VAR>update_code</VAR>] <VAR>file</VAR> <VAR>source_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">심볼릭 링크 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>L</B> [<VAR>update_code</VAR>] <VAR>link</VAR> <VAR>actual_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">블록 특별 장치 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>B</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR> <VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">문자 특별 장치 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>C</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR> <VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">소켓 정의
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>S</B> <VAR>socket_name</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ422" HREF="auagd002.htm#ToC_493">package 프로그램 사용</A></H2>
+<A NAME="IDX7523"></A>
+<A NAME="IDX7524"></A>
+<P><B>package</B> 프로그램은 시스템과 무관한 <I>프로토타입
+파일</I>을 사용하여 표준 디스크 구성을 정의합니다. 프로토타입 파일은 로컬 클라이언트
+디스트에 상주하는 파일, AFS에 연결된 파일 등을 나타냅니다. 프로토타입 파일은 시스템
+유형마다 <I>구성 파일</I>로 컴파일됩니다.
+<P>모든 클라이언트 시스템의 구성이 같지는 않습니다. 원하는 경우 서로 다른 클라이언트
+기능(인쇄 서버, 일반 클라이언트 등)에 대해 다른 프로토타입 파일을 작성할 수 있습니다.
+<P><B>package</B> 프로그램은 로컬 클라이언트 디스크의 내용을 구성 파일과
+비교합니다. 차이가 있으면 <B>package</B> 프로그램은 AFS에서 디스크로
+파일을 복사하여 로컬 디스크를 적절히 갱신합니다. <B>package</B>
+프로그램은 또한 시스템 구성의 일부가 아닌 파일을 삭제하도록 구성하거나 특정
+파일(예를 들어 <B>dkload</B> 파일)이 갱신된 경우 클라이언트를 자동으로
+재부트하도록 구성할 수 있습니다.
+<P><B>package</B> 프로그램에서는 프로토타입 파일을 준비하기 위해 시간이
+걸리지만 다음과 같은 이익을 제공합니다.
+<UL>
+<LI>더 이상 각 시스템을 개별적으로 구성할 필요가 없습니다. 프로토타입 구성 파일은
+모든 시스템에 적용됩니다.
+</LI><LI>프로토타입 파일을 변경한 후 클라이언트를 재부트하여 시스템의 구성을 쉽게
+바꿀 수 있습니다.
+</LI><LI>디스크 구성은 시스템 그룹에서 동일합니다.
+</LI><LI>구성 파일은 디스크에서 파일 레코드의 역할을 하고 AFS에서는 심볼릭 링크의 역할을
+합니다.
+</LI></UL>
+<P><H3><A NAME="Header_494" HREF="auagd002.htm#ToC_494">파일 서버 시스템에서의 Package 사용</A></H3>
+<P><B>package</B> 프로그램은 클라이언트 시스템에서
+사용하도록 설계되었지만 파일 서버 시스템의 디스크를 구성할 때도
+사용할 수 있습니다. 그러나 구성 파일에서 참조된 파일 중에서
+파일 서버의 볼륨에 상주하는 것이 있으면 <B>package</B>
+프로그램은 재부트중에 볼륨을 액세스할 수 없습니다(그리고
+파일 서버 프로세스와 볼륨 서버 프로세스가 다시 시작할 때까지).
+<P><B>package</B> 프로그램은 파일을 액세스할 수
+없을 때 중단되므로 AFS의 파일 중에서 파일 서버 시스템의
+볼륨에 상주하는 파일에 대한 참조를 제거해야 합니다. 이런
+제한으로 인해 앞으로는 <B>package</B> 프로그램이
+클라이언트 구성에서만 사용되는 것으로 간주하겠습니다.
+<HR><H2><A NAME="HDRWQ423" HREF="auagd002.htm#ToC_495">Package 개요</A></H2>
+<P><B>package</B> 프로그램을 실행하기 전에
+수행해야 하는 3가지 주요 단계가 있습니다.
+<OL TYPE=1>
+<LI>기능별 <I>프로토타입 파일</I>(그리고 포함된
+<I>라이브러리 파일</I>) 준비.
+</LI><LI><B>package</B> <B>Makefile</B>을
+수정하고 프로토타입 파일을 시스템별 <I>구성
+파일</I>로 컴파일.
+</LI><LI>적합한 <B>package</B> 구성 파일을 자동으로
+실행할 수 있도록 클라이언트 시스템 수정.
+</LI></OL>
+<P>다음 절은 이런 단계를 요약합니다.
+<P><H3><A NAME="Header_496" HREF="auagd002.htm#ToC_496">프로토타입 파일 준비</A></H3>
+<A NAME="IDX7525"></A>
+<A NAME="IDX7526"></A>
+<P>클라이언트 시스템에서 수행하는 여러 기능 및 역할과 이런 기능을 지원하는 로컬 디스크
+구성을 나열하는 것으로 시작합니다. 역할 예에는 AFS 액세스를 제공하는 표준 클라이언트,
+프린터를 구동하는 인쇄 서버 그리고 <B>백업</B> 스위트에서 명령을 발행하는
+백업 시스템이 있습니다. 각 역할마다 서로 다른 <I>프로토타입 파일</I>을
+작성하십시오.
+<P>프로토타입 파일은 고유 역할을 지원하는 디스크 구성을 정의합니다. 일반적으로, 프로토타입 파일은
+기능마다 고유하지만 시스템과는 무관합니다. 시스템별 값은 변수와 라이브러리 파일을
+사용하여 정의할 수 있습니다. 그런 후, 변수나 라이브러리 파일을 수정하면 변경사항은
+<B>package</B> 프로그램이 호출될 때 적절한 모든 클라이언트로 전달됩니다.
+<P>유지하기 쉬운 유연한 프로토타입 파일을 작성하는 방법은 <A HREF="#HDRWQ427">예제 프로토타입 및 라이브러리 파일</A>에
+있습니다.
+<P><H3><A NAME="HDRWQ424" HREF="auagd002.htm#ToC_497">프로토타입 파일 컴파일</A></H3>
+<A NAME="IDX7527"></A>
+<A NAME="IDX7528"></A>
+<A NAME="IDX7529"></A>
+<P>프로토타입 파일은 보통 시스템과 무관하지만 여러 가지 시스템
+유형의 요구를 만족시키기 위해 <TT>ifdef</TT>문을 포함할
+수 있습니다. 프로토타입 파일을 컴파일하여 운영 체제 고유
+버전을 생성합니다. 컴파일중에 <B>package</B>
+프로그램은 각 시스템 유형에 적합한 정의를 선택하고 변수를
+실제 값으로 바꿉니다. 이런 컴파일된 시스템 고유 파일은
+<I>구성 파일</I>이라고 합니다.
+<P>프로토타입 파일은 <A HREF="#HDRWQ438">Package Makefile 파일</A>에 있는
+설명대로 표준형의 <B>Makefile</B> 파일을
+사용하여 컴파일됩니다.
+<P><H3><A NAME="Header_498" HREF="auagd002.htm#ToC_498">클라이언트 준비</A></H3>
+<P>일단 시스템 고유 구성 파일이 있으면 <B>package</B>
+프로그램은 클라이언트를 실행할 수 있습니다. 먼저
+<B>package</B> 2진을 사용할 수 있게 만들고
+올바른 구성 파일을 지정해야 합니다.
+<P>다음과 같이 클라이언트를 수정하십시오.
+<OL TYPE=1>
+<LI>기본 구성 파일을 정의하는 각 클라이언트의 로컬 디스크의
+루트(<B>/</B>) 디렉토리에
+<B>.package</B> 파일을 작성합니다.
+</LI><LI>로컬 디스크에서 <B>package</B>
+2진(<B>/etc/package</B>)을 사용할 수 있게 만듭니다.
+</LI><LI>시스템의 초기 파일(<B>/etc/rc</B> 또는
+이와 동등한 것)을 수정하여 <B>package</B>
+프로그램에 대한 호출을 포함합니다.
+</LI></OL>
+<P>이런 단계는 <A HREF="#HDRWQ447">클라이언트 시스템 수정</A>에
+더 자세히 설명되어 있습니다.
+<HR><H2><A NAME="HDRWQ425" HREF="auagd002.htm#ToC_499">package 디렉토리 구조</A></H2>
+<A NAME="IDX7530"></A>
+<P>본 절에서는 <B>package</B> 관련 파일이 <I>AFS 빠른 시작</I>에서 권한 대로
+<B>/afs/</B><VAR>cellname</VAR>/<B>wsadmin</B> 디렉토리의
+하위 디렉토리인 <B>src</B>, <B>lib</B> 그리고
+<B>etc</B>에 설치되어 있다고 간주합니다.
+<P>이런 디렉토리에는 여러 예제 프로토타입, 라이브러리 그리고 구성 파일이 있는 데, 이는
+<B>package</B> 프로그램의 작업 방법을 명확하게 보여 줄 수
+있습니다. 그러나, 이는 사용자 셀에서 사용하기에 적합하지 않을 수도 있습니다. 각자의
+요구에 맞도록 수정해야 합니다.
+<P><H3><A NAME="HDRWQ426" HREF="auagd002.htm#ToC_500">src 디렉토리</A></H3>
+<P><B>src</B> 디렉토리에는 몇 가지 예제 프로토타입 파일(구성 파일 작성에
+사용), 이를 작성하는 데 사용되는 <B>Makefile</B> 파일 그리고 결과인
+컴파일된 구성 파일이 있습니다.
+<P>프로토타입 파일은 <VAR>function</VAR>.<B>proto</B> 양식의 이름을 사용합니다. 예를
+들어, <B>minimal.proto</B> 파일은 AFS 실행에 필요한 최소한의 라이브러리
+파일 집합을 정의하고 <B>staff.dkload.proto</B> 파일은 동적 커널 로드
+프로그램을 사용하는 클라이언트 구성을 정의합니다. 프로토타입 파일에는
+<B>hosts.equiv</B> 파일과 같은 시스템 관리 파일에 대한 정의가 있을 수도
+있습니다.
+<P><B>Makefile</B> 파일은 시스템과 무관한 프로토타입 파일을 시스템 고유
+구성 파일로 컴파일할 때 사용됩니다. 사용자의 셀에서 사용할 수 있도록 이 파일을
+수정하는 방법에 대해 알아보려면 <A HREF="#HDRWQ438">Package Makefile 파일</A>을 참조하십시오.
+<P>구성 파일은 프로토타입 파일의 컴파일된 버전이며
+<VAR>function</VAR><B>.</B><VAR>sysname</VAR>으로 명명됩니다. 구성 파일은
+디스크를 구성할 때 <B>package</B> 프로그램이 액세스하는
+<B>etc</B> 하위 디렉토리에도 나타납니다.
+<P><H3><A NAME="Header_501" HREF="auagd002.htm#ToC_501">lib 디렉토리</A></H3>
+<P><B>lib</B> 디렉토리에는 프로토타입 파일에서 참조되는 여러 예제 라이브러리
+파일이 있습니다. 예를 들어, <B>base.generic</B> 파일은 셀 이름 정의,
+시스템 옵션 그리고 변수를 포함하는 시스템과 무관한 파일입니다. 이는 파일과 심볼릭 링크
+정의에서 <VAR>owner</VAR>, <VAR>group</VAR> 그리고 <VAR>mode_bits</VAR> 필드를 설정하는 데
+사용됩니다.
+<P><H3><A NAME="Header_502" HREF="auagd002.htm#ToC_502">etc 디렉토리</A></H3>
+<P><B>etc</B> 디렉토리에는 <B>src</B> 하위 디렉토리에
+있는 프로토타입 파일에서 작성된 시스템 고유 구성 파일이 있습니다.
+<B>package</B> 프로그램은 <B>etc</B> 디렉토리에 있는
+구성 파일을 사용하여 디스크를 구성합니다.
+<P>일부 예제 파일에는 여러 시스템 유형에 대해 컴파일된 <B>minimal</B>과
+<B>staff</B> 프로토타입 파일이 있습니다.
+<HR><H2><A NAME="HDRWQ427" HREF="auagd002.htm#ToC_503">예제 프로토타입 및 라이브러리 파일</A></H2>
+<A NAME="IDX7531"></A>
+<A NAME="IDX7532"></A>
+<P>프로토타입 파일은 클라이언트의 로컬 디스크의 구성을 정의하는 템플릿입니다. 프로토타입 파일은
+보통 기능마다 고유하지만(예를 들어, 백업 시스템, 인쇄 서버 등) 시스템과 무관합니다. 프로토타입
+파일은 <TT>ifdef</TT>문과 변수의 사용을 지원하므로 시스템 고유 정의를 포함할 수
+있습니다. 실제 시스템 고유 구성 파일은 프로토타입 파일이 컴파일될 때 생성됩니다.
+<P>프로토타입 파일에서 정의되는 구성요소는 디렉토리, 파일, 심볼릭 링크, 블록 특별 장치, 문자
+특별 장치와 클라이언트의 로컬 디스크에 상주해야 하는 소켓을 포함하여 인쇄 서버나
+백업 시스템과 같은 고유 역할을 수행합니다. 그러므로, 서로 다른 클라이언트 기능마다
+고유한 프로토타입 파일을 작성하는 것이 바람직합니다.
+<P><B>package</B> 프로그램을 더 효과적으로 만들고 유지하기 쉽게 하려면
+라이브러리 파일과 변수를 사용하여 고유한 것 대신 모듈러 방식의 일반적인 프로토타입 파일을
+작성하십시오. 
+<A NAME="IDX7533"></A>
+<A NAME="IDX7534"></A>
+<UL>
+<LI>범용 라이브러리 파일을 작성하면 같은 라이브러리 파일을 여러 프로토타입 파일에 포함시킬
+수 있습니다. 그러므로, 단일 라이브러리 파일을 수정하여 전역으로 구성을 변경할 수
+있습니다. 각각의 프로토타입 파일을 수정하지 않아도 됩니다.
+</LI><LI>변수의 값을 변경하여 간단히 정의를 변경할 수 있습니다.
+</LI></UL>
+<P><H3><A NAME="HDRWQ428" HREF="auagd002.htm#ToC_504">예제 프로토타입 파일</A></H3>
+<A NAME="IDX7535"></A>
+<P>다음은 AFS를 실행하는 데 필요한 최소한의 정의가 들어 있는 예제 프로토타입 파일의
+일부입니다. <B>minimal.proto</B>라고 하는 비슷한 파일은
+<B>src</B> 하위 디렉토리에 상주할 수 있습니다.
+권장한 대로 이 프로토타입 파일은 라이브러리 파일을 참조하고 실제 정의는 포함하지
+않습니다.
+<PRE>            .
+            .
+   # Package prototype for a minimal configuration.
+   # Base components
+   %include ${wsadmin}/lib/base.generic
+   # Machine-specific components
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+   %ifdef alpha_dux40
+   %include ${wsadmin}/lib/alpha_dux40.readonly
+   %include ${wsadmin}/lib/alpha_dux40.AFS
+   %endif alpha_dux40
+   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+            .
+            .
+</PRE>
+<P>앞 예제에서 주석이 없는 첫 행에는 <B>/lib/base.generic</B> 라이브러리
+파일이 포함됩니다. 이 라이브러리 파일에는 여러 프로토타입 파일에 적합한 정의가 있습니다.
+<B>base.generic</B> 라이브러리 파일은 또한 <B>staff.proto</B>나
+<B>backup.proto</B> 파일과 같은 기타 프로토타입 파일에 포함될 수 있습니다. 예제
+라이브러리 파일은 다음 절에 나타납니다.
+<P>시스템 고유 정의는 <TT>ifdef</TT>문과 변수(예를 들어, <TT>${wsadmin}</TT>은 경로명
+지정에 사용됨)의 사용을 통해 허용됩니다. 그러므로, AIX 4.2나 Solaris 2.6에서 서로 다른
+파일, 디렉토리, 심볼릭 링크와 장치가 필요해도 같은 프로토타입 파일을 사용하여 이를 실행하는
+시스템을 구성할 수 있습니다.
+<P>이 예제에서 주석이 없는 다음 행에서 관리자는 시스템 유형마다
+서로 다른 라이브러리 파일을 작성했습니다. 각각은 고유한 구성
+파일로 컴파일됩니다. 예를 들어, 이 프로토타입 파일에서 다음
+행은 <B>package</B> 프로그램에게
+<TT>rs_aix42</TT> 값이 선언되었을 때 구성 파일에 대해
+<B>lib/rs_aix42.readonly</B>와
+<B>lib/rs_aix42.AFS</B> 라이브러리 파일을 사용하도록
+지시합니다(시스템 유형 정의는 <B>Makefile</B>에서
+선언됩니다. <A HREF="#HDRWQ438">Package Makefile 파일</A>을 참조하십시오).
+<PRE>   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+</PRE>
+<P>이와 비슷하게, 다음 행은 <B>package</B>
+프로그램에게 <TT>sun4x_56</TT> 값이 선언되었을 때
+<B>lib/sun4x_56.readonly</B>와
+<B>lib/sun4x_56.AFS</B> 라이브러리 파일을
+사용하도록 지시합니다.
+<PRE>   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+</PRE>
+<P><H3><A NAME="Header_505" HREF="auagd002.htm#ToC_505">예제 라이브러리 파일</A></H3>
+<A NAME="IDX7536"></A>
+<A NAME="IDX7537"></A>
+<A NAME="IDX7538"></A>
+<A NAME="IDX7539"></A>
+<P>다음은 기본 구성 정의에 대한 예제 라이브러리 파일의 일부입니다.
+<B>base.generic</B>라고 하는 비슷한 파일은
+<B>lib</B> 하위 디렉토리에 상주할 수 있습니다. 구성은
+표준 <TT>ifdef</TT>문을 사용하여 정의된다는 점에 유의하십시오.
+<PRE>            .
+            .
+   #
+   # Base package definitions.
+   #
+   %ifndef	cell
+   %define	cell	abc.com
+   %endif	cell
+   %ifndef	sys
+   %include /etc/package.sys
+   %endif	sys
+   %define	${name}		${name}
+   %define	${cpu}		${cpu}
+   %define	${sys}		${sys}
+   %define	${dept}		${dept}
+   %define	${hostname}	${hostname}
+   %ifdef	rs_aix42
+   %	define 	AIX
+   %	define	rootlinks
+   %ifndef	noafsd 
+   %	define	afsd
+   %endif	noafsd
+   %endif	rs_aix42
+            .
+            .
+   #
+   # Some definitions to handle common combinations of owner, group,
+   # and protection fields.
+   #
+   %define	rzmode		root wheel 600
+   %define	usermode	root wheel 666
+   %define      systemmode	root wheel 644
+   %define	diskmode	root wheel 644
+   %define	ptymode		root wheel 666
+   %define	ttymode		root wheel 666
+            .
+            .
+   %define aix_rootbin	   root bin
+   %define aix_rootprintq  root printq
+   %define aix_rootstaff   root staff
+   %define aix_rootsys	   root system
+   %define aix_binbin      bin bin
+   %define aix_binmail	   bin mail
+   %define aix_binsys	   bin system
+   %define aix_addsys	   adduser system
+   %define aix_romode	   444
+   %define aix_loginmode   544
+   %define aix_usermode	   666
+   %define aix_systemmode  644
+   %define aix_textmode	   644
+   %define aix_rwmode1	   660
+   %define aix_allrugw	   664
+</PRE>
+<P>다음 예제 라이브러리 파일은 <B>package</B>에 고유한 구문을 사용하여
+파일, 디렉토리, 소켓 등을 정의합니다. <I>구성 파일 명령</I>이라고 하는
+각 행은 디스크 구성의 고유한 구성요소를 정의합니다. 이런 명령에 맞는 구문은
+<A HREF="#HDRWQ429">패키지 구성 파일 명령 구문</A>에서 간단하게 설명하고 있습니다. 자세한
+내용은 <I>AFS Administration Reference</I>에 있는 <B>package</B> 구성 파일의 참조 페이지를
+참조하십시오.
+<P>이 예제에서 라이브러리 파일에는 <B>rs_aix42</B> 시스템의 구성에
+고유한 명령이 있습니다. <B>lib</B> 하위 디렉토리에 있는 비슷한
+라이브러리 파일을 사용할 수 있습니다.
+<PRE>            .
+            .
+   #
+   # Generic configuration for an AFS rs_aix42 machine.
+   #
+   D	/                                       ${treemode}
+   D	/afs
+   FAQ	/unix	       ${machine}/unix.std 	${binmode}
+   LA	/unix.std	/unix
+   D	/bin					${treemode}
+   F	/bin/as		${machine}		${binmode}
+   F	/bin/ld		${machine}		${binmode}
+   F	/bin/nm		${machine}		${binmode}
+   FO	/bin/login	${afstest}		${suidmode}
+            .
+            .
+   FAQ  /usr/vice/etc/ThisCell  ${common}/etc/ThisCell ${textmode}
+   FQ	/usr/vice/etc/afsd      ${afstest}/root.client ${binmode}
+   FA	/usr/vice/etc/bos       ${afstest}/bin/bos     ${binmode}
+   FA	/usr/vice/etc/fs        ${afstest}/bin/fs      ${binmode}
+</PRE>
+<HR><H2><A NAME="HDRWQ429" HREF="auagd002.htm#ToC_506">패키지 구성 파일 명령 구문</A></H2>
+<A NAME="IDX7540"></A>
+<A NAME="IDX7541"></A>
+<P>라이브러리 파일에서 구성 파일 명령은 고유 디스크 구성을 정의할 때 사용됩니다. 각
+명령을 사용하여 파일, 디렉토리, 소켓 또는 클라이언트 시스템의 장치를 정의할 수
+있습니다. 유효한 각 명령 유형의 구문은 여기서 간단하게 설명합니다. 필드에 대한
+자세한 설명은 <I>AFS Command Reference Manual</I>에 있습니다.
+<UL>
+<LI><B>D</B>는 디렉토리를 정의합니다
+</LI><LI><B>F</B>는 파일을 정의합니다
+</LI><LI><B>L</B>은 링크를 정의합니다
+</LI><LI><B>B</B>는 블록 특별 장치를 정의합니다
+</LI><LI><B>C</B>는 문자 특별 장치를 정의합니다
+</LI><LI><B>S</B>는 소켓을 정의합니다
+</LI></UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">각 구성 명령은 끊기지 않은 하나의 행에 표시되어야 합니다. 여기서 명령은
+때때로 읽기 편하도록 여러 행에 나타날 수 있습니다.
+<P>
+<P>구성 파일은 정확해야 합니다. 구문 오류가 있거나 틀린 값이 있으면
+<B>package</B> 명령 인터프리터는 명령을 실행하지 않고 종료합니다.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ430" HREF="auagd002.htm#ToC_507">로컬 파일과 심볼릭 링크 비교</A></H3>
+<P>로컬 클라이언트 디스크에서 파일의 수를 최소한으로 유지하여 AFS를 활용할 수 있습니다.
+대신 AFS를 가리키는 심볼릭 링크를 작성하십시오. 이는 캐슁과 스와핑에 더 많은 공간을
+허용하여 시스템의 성능을 향상시킬 수 있습니다.
+<P>그러나, 일부 파일은 다음 설명대로 로컬 디스크에 상주해야 합니다.
+이런 파일을 <B>L</B>(심볼릭 링크) 명령이 아닌 <B>F</B>(파일)
+명령을 사용하여 프로토타입이나 라이브러리 파일에서 작성합니다.
+<P>다음 파일 유형은 모든 AFS 클라이언트의 로컬 디스크에 상주해야 합니다.
+<UL>
+<LI><B>afsd</B> 프로그램 실행 전에 실행된 순서 파일을 부팅합니다.
+<P>
+<P><B>afsd</B>가 실행하고 캐쉬 관리 프로그램을 초기화할 때까지 AFS를
+클라이언트에서 액세스할 수 없습니다. <B>afsd</B> 프로그램이 실행하기
+전에 실행되어야 하는 모든 파일은 로컬 클라이언트 디스크에 상주해야 합니다.
+<P>
+<P>예를 들어, 디스크 캐쉬를 사용하는 시스템에서 캐쉬 파일을 작성할 수 있는 자리가
+있도록 <B>/usr/vice/cache</B> 디렉토리는 캐쉬 관리 프로그램을
+불러올 때 있어야 합니다. 2진 파일인 <B>/etc/mount</B>와
+<B>/etc/umount</B>는 <B>/usr/vice/cache</B> 디렉토리를
+마운트하기 위해 로컬 디스크에서 시스템 부트로 사용할 수 있어야 합니다.
+<P>
+<P>이 외에도, 초기화 파일(<B>/etc/rc</B> 또는 이와 동등한 것) 및 파일
+시스템 맵핑 파일(<B>/etc/fstab</B> 또는 이와 동등한 것)과 같은 특정
+UNIX 파일은 로컬 디스크에 상주해야 합니다.
+</LI><LI>진단 및 복구 파일
+<P>
+<P>특정 명령을 사용하여 파일 서버 정전으로 발생하는 문제를 진단하고 복구할 수
+있습니다. 이런 명령에 대한 2진의 복사본을 로컬 디스크에 보관하는 것이 가장
+좋습니다. 예를 들어, <B>bos</B> 및 <B>fs</B> 2진을
+로컬 디스크의 <B>/usr/vice/etc</B> 디렉토리와
+<B>/usr/afsws</B> 디렉토리(여기서 전형적인 구성은 AFS로의 심볼릭
+링크임)에 저장합니다. 그런 후, <B>/usr/afsws</B> 디렉토리가
+<B>/usr/vice/etc</B> 디렉토리 전에 나타나도록 PATH 변수를 설정합니다. 그러면,
+사용자가 AFS를 액세스할 수 없어도(예를 들어, 파일 서버 정전으로 인하여) 계속 로컬
+디스크의 <B>/usr/vice/etc</B> 디렉토리에서 <B>bos</B>와
+<B>fs</B> 2진의 복사본을 액세스할 수 있습니다.
+</LI><LI><B>/usr/vice</B> 디렉토리에 있는 파일
+<P>
+<P><B>cache</B> 하위 디렉토리에 있는 캐쉬 파일과 <B>etc</B>
+하위 디렉토리에 있는 구성 파일을 포함한 <B>/usr/vice</B> 디렉토리의
+내용은 로컬 디스크에 상주해야 합니다.
+디렉토리에 있는 파일의 설명은 <A HREF="auagd015.htm#HDRWQ391">로컬 디스크에서의 구성 및 캐쉬 관련 파일</A>을 참조하십시오.
+</LI></UL>
+<A NAME="IDX7542"></A>
+<A NAME="IDX7543"></A>
+<A NAME="IDX7544"></A>
+<A NAME="IDX7545"></A>
+<P><H3><A NAME="HDRWQ431" HREF="auagd002.htm#ToC_508">디렉토리 정의</A></H3>
+<P><B>D</B> 명령은 로컬 디스크에 작성할 디렉토리를 정의합니다. 로컬
+디스크에 있는 심볼릭 링크, 파일 또는 기타 요소가 같은 이름을 사용하면 이는 디렉토리로
+바뀝니다. 디렉토리가 이미 있으면 그 소유자, 그룹 그리고 모드 비트는 필요한 경우
+명령을 따르도록 변경됩니다.
+<P>다음 명령을 사용하여 디렉토리를 정의하십시오.
+<PRE>   <B>D</B> [<VAR>update_code</VAR>] <VAR>directory</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</PRE>
+<P>다음 예는 <B>/usr</B> 디렉토리를 정의합니다.
+<PRE>   D /usr root wheel 755
+</PRE>
+<A NAME="IDX7546"></A>
+<A NAME="IDX7547"></A>
+<A NAME="IDX7548"></A>
+<A NAME="IDX7549"></A>
+<P><H3><A NAME="HDRWQ432" HREF="auagd002.htm#ToC_509">파일 정의</A></H3>
+<P><B>F</B> 명령은 로컬 디스크에서 작성할 파일을 정의합니다. 원본 파일은
+AFS나 로컬 디스크에 상주할 수 있습니다.
+<P>이 이름을 사용하는 파일이 이미 있으면 <B>I</B> 갱신 코드가 지정되지
+않는 이상 이는 원본 파일로 갱신됩니다(겹쳐쓰여짐).
+이 이름을 사용하는 심볼릭 링크나 라이브러리가 있으면 <B>package</B>
+프로그램은 이를 원본 파일로 바꿉니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">일부 파일은 로컬 디스크에 상주해야 합니다. 이는 심볼릭 링크가 될 수
+없습니다. <A HREF="#HDRWQ430">로컬 파일과 심볼릭 링크 비교</A>를 참조하십시오.
+</TD></TR></TABLE>
+<P>다음 명령을 사용하여 파일을 정의하십시오.
+<PRE>   <B>F</B> [<VAR>update_code</VAR>] <VAR>file</VAR> <VAR>source_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</PRE>
+<P>로컬 디스크에서 <B>/bin/grep</B> 파일을 작성/갱신하는 예에서
+<B>/afs/abc.com/rs_aix42/bin/grep</B>을 원본으로 사용합니다.
+<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+</PRE>
+<P>다음 예에서 두 갱신 코드가 사용되고 <I>owner</I>,
+<I>group</I> 그리고 <I>mode_bits</I> 슬롯은
+비어 있는 상태로 남으므로 디스크 파일은 이런 파일에 대해 원본 파일의 값을 사용합니다.
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+</PRE>
+<A NAME="IDX7550"></A>
+<A NAME="IDX7551"></A>
+<A NAME="IDX7552"></A>
+<A NAME="IDX7553"></A>
+<P><H3><A NAME="HDRWQ433" HREF="auagd002.htm#ToC_510">심볼릭 링크 정의</A></H3>
+<P><B>L</B> 명령은 로컬 디스크에서 작성할 심볼릭 링크를 정의합니다. 심볼릭
+링크는 AFS 파일 시스템이나 로컬 디스크를 가리킬 수 있습니다. 똑같은 심볼릭 링크가
+이미 있으면 <B>package</B> 프로그램을 아무 작업도 수행하지 않습니다. 그러나,
+디스크에 같은 이름을 사용하는 요소가 파일이나 디렉토리로 있으면 <B>package</B>
+프로그램은 요소를 심볼릭 링크로 바꿉니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">일부 파일은 로컬 디스크에 상주해야 합니다. 이는 심볼릭 링크가 될 수
+없습니다. <A HREF="#HDRWQ430">로컬 파일과 심볼릭 링크 비교</A>를 참조하십시오.
+</TD></TR></TABLE>
+<P>다음 명령을 사용하여 심볼릭 링크를 정의하십시오.
+<PRE>   <B>L</B> [<VAR>update_code</VAR>] <VAR>link</VAR> <VAR>actual_file</VAR>  [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</PRE>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이름이 숫자 기호(<B>#</B>)나 퍼센트
+기호(<B>%</B>)로 시작하는 파일에 심볼릭 링크를 작성하지 마십시오. 캐쉬
+관리 프로그램은 일반 읽기/쓰기 볼륨에서 이런 링크를 마운트 포인트로 해석합니다.
+</TD></TR></TABLE>
+<P>다음 예는 로컬 디스크의 <B>/etc/ftpd</B> 디렉토리에서 AFS의
+<B>/afs/abc.com/hp_ux110/etc/ftpd</B> 파일로 심볼릭 링크를
+작성합니다. <I>owner</I>, <I>group</I> 그리고
+<I>mode_bits</I> 필드는 비어 있으므로 심볼릭 링크는 실제 파일에서
+이런 필드의 값을 가져옵니다.
+<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110 
+</PRE>
+<P>이 예는 <B>A</B> 갱신 코드를 사용합니다.
+<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+               root wheel 644
+</PRE>
+<A NAME="IDX7554"></A>
+<A NAME="IDX7555"></A>
+<A NAME="IDX7556"></A>
+<A NAME="IDX7557"></A>
+<P><H3><A NAME="HDRWQ434" HREF="auagd002.htm#ToC_511">블록 특별 장치 정의</A></H3>
+<P><B>B</B> 명령은 디스크와 같은 다중바이트 블록의 단위로 데이터를 처리하는
+장치인 블록 특별 장치를 정의합니다. 같은 이름을 사용하는 장치가 이미 있으면
+<B>package</B> 프로그램은 이를 지정된 블록 장치로 바꿉니다.
+<P>다음 명령을 사용하여 블록 특별 장치(알아보기 쉽도록 여기서만 두 행에 걸쳐 표시됨)를
+정의합니다.
+<PRE>   <B>B</B> <VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+      <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>다음 예는 <B>/dev/hd0a</B>라고 하는 디스크에 주 장치 번호
+<B>1</B>과 부 장치 번호 <B>0</B>이 오도록 정의합니다.
+<PRE>   B /dev/hd0a 1 0 root wheel 644
+</PRE>
+<A NAME="IDX7558"></A>
+<A NAME="IDX7559"></A>
+<A NAME="IDX7560"></A>
+<A NAME="IDX7561"></A>
+<P><H3><A NAME="HDRWQ435" HREF="auagd002.htm#ToC_512">문자 특별 장치 정의</A></H3>
+<P><B>C</B> 명령은 터미널이나 tty와 같이 데이터를 한번에 문자 하나의 단위로
+처리하는 장치인 문자 특별 장치를 정의합니다. 같은 이름을 사용하는 장치가 이미 있으면
+<B>package</B> 프로그램은 이를 지정된 문자 장치로 바꿉니다.
+<P>다음 명령을 사용하여 문자 특별 장치(알아보기 쉽도록 여기서만 두 행에 걸쳐 표시됨)를
+정의합니다.
+<PRE>   <B>C </B><VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+      <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>다음 예는 <B>/dev/ttyp5</B>라고 하는 tty에 주 장치 번호
+<B>6</B>과 부 장치 번호 <B>5</B>가 오도록 정의합니다.
+<PRE>   C /dev/ttyp5 6 5 root wheel 666
+</PRE>
+<A NAME="IDX7562"></A>
+<A NAME="IDX7563"></A>
+<A NAME="IDX7564"></A>
+<A NAME="IDX7565"></A>
+<P><H3><A NAME="HDRWQ436" HREF="auagd002.htm#ToC_513">소켓 정의</A></H3>
+<P><B>S</B> 명령은 UDP와 TCP/IP 연결의 통신 장치인 소켓을 정의합니다. 같은
+이름을 사용하는 소켓이 이미 있으면 <B>package</B> 프로그램은 이를
+바꿉니다.
+<P>다음 명령을 사용하여 소켓을 정의하십시오.
+<PRE>   <B>S</B>   <VAR>socket_name</VAR>  [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</PRE>
+<P>다음 예는 <B>/dev/printer</B>라고 하는 소켓을 정의합니다.
+<PRE>   S /dev/printer root wheel 777
+</PRE>
+<HR><H2><A NAME="HDRWQ437" HREF="auagd002.htm#ToC_514">프로토타입 및 라이브러리 파일 구성</A></H2>
+<A NAME="IDX7566"></A>
+<A NAME="IDX7567"></A>
+<A NAME="IDX7568"></A>
+<P>이 절에서는 <B>package</B> 프로토타입과 라이브러리 파일을 작성하는 데 필요한
+일반 단계를 설명합니다. 지침으로 이전 절을 참조하고 예제는 <B>wsadmin</B>
+디렉토리에서 참조하십시오. 프로토타입과 라이브러리 파일의 구성은 각 셀마다 다릅니다.
+<P><H3><A NAME="Header_515" HREF="auagd002.htm#ToC_515">프로토타입과 그 구성요소 라이브러리 파일을 구성하려면</A></H3>
+<OL TYPE=1>
+<LI>셀의 파일 트리에서 3가지 <B>package</B>
+관련 하위 디렉토리(<B>src</B>,
+<B>lib</B> 그리고 <B>etc</B>)가
+상주하는 위치를 결정합니다. 다음 명령은 <I>AFS 빠른 시작</I>의 설명대로
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+디렉토리에 이런 디렉토리가 로드되었다고 간주합니다.
+</LI><LI>셀의 클라이언트 시스템에서 수행할 기능의 수를 결정합니다.
+각 기능마다 별도의 프로토타입 파일을 구성하는 것이 바람직합니다.
+공동 기능에는 다음이 포함됩니다.
+<UL>
+<LI>표준 워크스테이션: 사용자에게 AFS에 있는 파일에 대한 액세스를 제공합니다.
+</LI><LI>프린터 서버: 프린터를 구동합니다. 이를 "직원" 기능과 결합할 수 있습니다.
+</LI><LI>백업 시스템: AFS 백업 시스템 소프트웨어를 실행하여 AFS 볼륨의 백업을
+테이프에 수행합니다
+</LI></UL>
+</LI><LI>모든 클라이언트(예를 들어, AFS 설정)에 필요한 최소한의 기능을 결정하고 이런
+일반 정의를 두 개 이상의 라이브러리 파일에 보관합니다.
+</LI><LI>각 클라이언트 유형(프린터 서버, 백업 시스템 등)마다 시스템과 무관한 모든 정의를
+파일 하나에 보관하고 운영 체제마다 다른 모든 정의를 또 다른 파일에 보관합니다.
+</LI></OL>
+<HR><H2><A NAME="HDRWQ438" HREF="auagd002.htm#ToC_516">Package Makefile 파일</A></H2>
+<A NAME="IDX7569"></A>
+<A NAME="IDX7570"></A>
+<A NAME="IDX7571"></A>
+<P>일단 적합한 프로토타입과 라이브러리 파일을 작성하면 각 시스템 유형마다 프로토타입을 컴파일해야
+합니다. 결과는 시스템마다 고유한 구성 파일입니다.
+<P><B>Makefile</B> 파일은 사용된 프로토타입과 라이브러리 파일 그리고
+컴파일 순서를 정의합니다. 이 절에서 설명하는 대로 AFS를 분배할 때 함께 제공되는
+예를 수정하여 <B>Makefile</B> 파일을 작성하는 것이 바람직합니다. 전형적인
+구성에서 이는 <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src/Makefile</B>에
+위치합니다.
+<P><H3><A NAME="Header_517" HREF="auagd002.htm#ToC_517">개요</A></H3>
+<P>다음 목록은 섹션을 시작하는 헤더 이름으로 식별되는 <B>package</B>
+<B>Makefile</B> 파일의 섹션을 요약합니다. 자세한 설명은 다음과
+같습니다.
+<DL>
+<P><DT><B><TT>CONFIG=</TT>
+</B><DD>작성되고 시스템 유형마다 컴파일되는 프로토타입 파일을 정의하는 모든 구성 파일을
+나열합니다. <A HREF="#HDRWQ439">CONFIG 섹션</A>을 참조하십시오.
+<P><DT><B><TT>BASE_LIBS=</TT>
+</B><DD>모든 프로토타입 파일에 포함된 모든 운영 체제 및 기능에 무관한 라이브러리 파일의
+경로 이름을 나열합니다. <A HREF="#HDRWQ440">BASE_LIBS 섹션</A>을 참조하십시오.
+<P><DT><B><TT>MACHINE_LIBS=</TT>
+</B><DD>모든 프로토타입 파일에 포함된 모든 운영 체제마다 고유한 라이브러리 파일의 경로 이름을
+나열합니다. <A HREF="#HDRWQ441">MACHINE_LIBS 섹션</A>을 참조하십시오.
+<P><DT><B><TT>LIBS=</TT>
+</B><DD><TT>LIBS</TT>를 <TT>BASE_LIBS</TT>와 <TT>MACHINE_LIBS</TT>의 조합으로
+정의하는 일 행 명령입니다. <A HREF="#HDRWQ442">LIBS 섹션</A>을 참조하십시오.
+<P><DT><B><TT>.SUFFIXES</TT>
+</B><DD>프로토타입이나 구성 파일에 표시될 수 있는 모든 접미어를 정의합니다. <A HREF="#HDRWQ443">.SUFFIXES 섹션</A>을 참조하십시오.
+</DL>
+<P>마지막으로 <B>Makefile</B> 파일에는
+<B>package</B> 프로그램이 구성 파일을 생성하기 위해 따르는
+명령 세트가 들어 있습니다. 일반적으로 이 섹션을 변경할 필요가 없습니다. <A HREF="#HDRWQ444">Makefile 명령 섹션</A>을 참조하십시오.
+<P><H3><A NAME="HDRWQ439" HREF="auagd002.htm#ToC_518">CONFIG 섹션</A></H3>
+<P>앞에서 언급했듯이 구성 파일은 특정 운영 체제 유형에 대해 컴파일된 프로토타입
+파일입니다. <B>Makefile</B> 파일의 <TT>CONFIG</TT> 섹션은 각
+시스템 유형마다 컴파일할 프로토타입 파일을 정의합니다. 결과의 컴파일된 파일은 시스템마다
+고유한 구성 파일입니다.
+<P><B>Makefile</B> 파일 예에서 취한 다음 예를 살펴보십시오. 구성 파일은
+프로토타입-시스템 조합을 <VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR>으로
+지정하여 정의됩니다.
+각 프로토타입-시스템 유형 조합마다 구성 파일을 생성할 필요는 없습니다.
+<PRE>   #Makefile...
+   #	(C) Copyright IBM Corporation 1999
+   #	Licensed Materials - Property of IBM
+   #	All Rights Reserved.
+   #
+   CONFIG = \
+            staff.rs_aix42 \
+            staff.alpha_dux40 \
+            staff.xdm.alpha_dux40 \
+            staff.sun4x_56 \
+            staff.hp_ux110 \
+            minimal.rs_aix42 \
+            minimal.alpha_dux40 \
+            minimal.hp_ux110 \
+            minimal.sun4x_56
+</PRE>
+<P><TT>CONFIG</TT> 섹션의 항목은 다음 형식을 사용합니다.
+<UL>
+<LI>항목의 첫 부분은 프로토타입 파일을 정의하고 프로토타입 파일 이름과
+같습니다(<B>.proto</B> 확장자 없음).
+항목의 둘째 부분은 프로토타입 파일이 컴파일될 시스템 유형을 나타냅니다. 이런 접미어의
+완전한 목록은 <A HREF="#HDRWQ443">.SUFFIXES 섹션</A>의 설명 대로 <B>Makefile</B>
+파일의 <TT>.SUFFIXES</TT> 섹션에 있습니다. 이 <VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR>
+정의는 컴파일된 구성 파일의 이름이 됩니다.
+<P>
+<P>예를 들어, <B>staff.rs_aix42</B>는 <B>staff.proto</B>
+파일은 AIX 4.2를 실행하는 시스템에 대해 컴파일된다는 것을 나타냅니다. 결과의 컴파일된
+구성 파일은 <B>staff.rs_aix42</B>라고 합니다.
+</LI><LI>각 구성 파일은 별도의 행에 나타나야 합니다.
+</LI><LI>역슬래쉬는 마지막 행을 제외하고 <TT>CONFIG=</TT> 헤더 및 모든 이름 다음에
+와야합니다. 역슬래쉬는 빈 행에도 나타나야 합니다.
+</LI></UL>
+<P><H3><A NAME="HDRWQ440" HREF="auagd002.htm#ToC_519">BASE_LIBS 섹션</A></H3>
+<P>이 섹션은 프로토타입 파일에 포함된 모든 시스템 및 기능에 무관한 라이브러리 파일의 완전한
+경로 이름을 정의합니다(시스템 고유 라이브러리 파일은 <TT>MACHINE_LIBS</TT> 섹션에
+정의되어 있음). 경로 이름에는 <B>make</B> 명령행에서 값을 제공하는
+<TT>${wsadmin}</TT> 변수가 포함됩니다.
+<P>프로토타입 파일에 참조되는 모든 라이브러리 파일을 포함해야 합니다. 포함되었지만 사용되지
+않는 파일은 무시됩니다.
+<P>다음 예를 살펴보십시오. 모든 항목(단, 마지막 것 제외) 다음에는 역슬래쉬가 와야 합니다.
+<PRE>   BASE_LIBS = \
+	   ${wsadmin}/src/admin \
+	   ${wsadmin}/lib/devel \
+	   ${wsadmin}/lib/base.generic
+</PRE>
+<P><H3><A NAME="HDRWQ441" HREF="auagd002.htm#ToC_520">MACHINE_LIBS 섹션</A></H3>
+<P>이 섹션은 프로토타입 파일에 포함된 모든 운영 체제 고유
+라이브러리 파일의 완전한 경로 이름을 나열합니다(시스템 및
+기능에 무관한 라이브러리 파일은 <TT>BASE_LIBS</TT> 섹션에
+정의되어 있습니다).
+<P>다음 예를 살펴보십시오. 이 예에서 라이브러리 파일은 운영 체제
+유형별로 나누었습니다. 다시 한번, 모든 행(마지막 것 제외)
+다음에는 역슬래쉬가 와야 하고 <TT>${wsadmin}</TT> 변수가
+허용되며 포함되었지만 사용되지 않은 파일은 무시됩니다.
+<PRE>   MACHINE_LIBS = \
+           ${wsadmin}/lib/rs_aix42.generic \
+           ${wsadmin}/lib/rs_aix42.generic.dev \
+           ${wsadmin}/lib/rs_aix42.readonly \
+           ${wsadmin}/lib/rs_aix42.readwrite \
+           ${wsadmin}/lib/rt_aix42.generic.printer \
+    \
+    .
+    .
+           ${wsadmin}/lib/alpha_dux40.AFS \
+           ${wsadmin}/lib/hp_ux110.AFS \
+           ${wsadmin}/lib/sun4x_56.AFS \
+           ${wsadmin}/lib/rs_aix42.AFS
+</PRE>
+<P><H3><A NAME="HDRWQ442" HREF="auagd002.htm#ToC_521">LIBS 섹션</A></H3>
+<P>이 섹션에는 <TT>LIBS</TT>가 <TT>MACHINE_LIBS</TT> 및
+<TT>BASE_LIBS</TT>의 조합으로 정의되었다는 것을 나타내는
+명령 하나만 들어 있습니다. 행 다음에 빈 행을 넣어 이 섹션을
+다음 섹션과 구분하십시오.
+<PRE>   LIBS = ${MACHINE_LIBS} ${BASE_LIBS}
+</PRE>
+<P><H3><A NAME="HDRWQ443" HREF="auagd002.htm#ToC_522">.SUFFIXES 섹션</A></H3>
+<P>이 섹션은 유효한 시스템 유형 접미어를 나열합니다. 이 목록에는
+AFS에 대해 현재 지원되는 시스템 유형이 들어 있습니다. 사용되지
+않는 접미어는 무시됩니다.
+<PRE>   .SUFFIXES: .rs_aix42 \
+              .alpha_dux40 \
+              .proto \
+              .sun4x_56 \
+              .i386_linux22 \
+              .hp_ux110
+</PRE>
+<P><H3><A NAME="HDRWQ444" HREF="auagd002.htm#ToC_523">Makefile 명령 섹션</A></H3>
+<P><B>Makefile</B> 파일의 나머지는
+<B>package</B> 프로그램이 구성 파일을
+생성하는 방법을 제어합니다.
+<P>다음 명령을 살펴보십시오. 여기서 사용자는 프로그래밍과
+<B>Makefile</B> 개념에 익숙해 있다는
+가정하에서 시작합니다.
+<PRE>   #The following appear on a single line each in the actual file
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+                           -Dname=$* $*.proto > $@
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+                           -Dname=$* $*.proto > $@
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+                           -Dname=$* $*.proto > $@
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+                           -Dname=$* $*.proto > $@
+   all: ${CONFIG}
+   ${CONFIG}: ${LIBS}
+   system: install
+   install: ${CONFIG}
+	   cp ${CONFIG} ${wsadmin}/etc
+   clean:
+	   rm -f ${CONFIG} *.BAK *.CKP
+</PRE>
+<HR><H2><A NAME="HDRWQ445" HREF="auagd002.htm#ToC_524">Makefile 수정</A></H2>
+<A NAME="IDX7572"></A>
+<A NAME="IDX7573"></A>
+<A NAME="IDX7574"></A>
+<P>다음과 같은 경우에 <B>package</B>
+<B>Makefile</B> 파일을 수정하십시오.
+<UL>
+<LI>새 프로토타입 파일(<VAR>function</VAR><B>.proto</B>) 추가.
+</LI><LI>새 시스템 유형 추가.
+</LI><LI>새 라이브러리 파일 추가.
+</LI></UL>
+<P>다음 절은 이런 이유로 <B>Makefile</B> 파일을
+수정하는 방법에 대한 간단한 예를 제공합니다.
+<P><H3><A NAME="Header_525" HREF="auagd002.htm#ToC_525">새 프로토타입 파일 추가</A></H3>
+<P>새 프로토타입 파일을 작성할 때 파일 이름과 그 시스템 유형을 <B>Makefile</B>
+파일의 <TT>CONFIG</TT> 섹션에 추가합니다.
+<P>예를 들어, <B>alpha_dux40</B>과 <B>hp_ux110</B>에
+대해 <VAR>function</VAR><B>.proto</B> 파일을 추가하려면 다음 항목을
+<TT>CONFIG</TT> 섹션에 추가하십시오.
+<PRE>   CONFIG = \
+   ...
+           <VAR>function</VAR>.alpha_dux40 \
+           <VAR>function</VAR>.hp_ux110 \
+   ...
+</PRE>
+<P>이 프로토타입 기능에 대해 새 라이브러리 파일을 추가한 경우 이를 <TT>MACHINE_LIBS</TT>
+섹션에 추가하십시오.
+<P><H3><A NAME="Header_526" HREF="auagd002.htm#ToC_526">새 시스템 유형 추가</A></H3>
+<P>새 시스템 유형을 작성할 각 프로토타입 파일에 대해 항목을 <TT>CONFIG</TT> 섹션에
+추가합니다. 또한, 새 라이브러리를 <TT>MACHINE_LIBS</TT> 섹션에 추가하고 새 시스템
+유형을 <TT>.SUFFIXES</TT> 섹션에 추가합니다.
+<P>다음 예는 이 새 시스템 유형에 대해 <B>staff</B>와
+<B>minimal</B> 프로토타입을 작성할 때 적합한 수정을 보여줍니다.
+<PRE>   CONFIG = \
+   ...
+           staff.<VAR>sysname</VAR> \
+           minimal.<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>이 새 시스템 유형에 해당하는 라이브러리 파일을 작성하면 이를 <TT>MACHINE_LIBS</TT>
+섹션에 추가합니다.
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic.dev \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readonly \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readwrite \
+   ...
+</PRE>
+<P>새 시스템 유형을 <TT>SUFFIXES</TT> 섹션에 추가합니다.
+<PRE>   .SUFFIXES: ...\
+            .<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>나머지 명령으로 섹션에 있는 이 시스템에 대해 구성 파일을 작성하기 위한 행을 추가하여
+구성 파일을 작성하십시오.
+<PRE>   .proto.<VAR>sysname</VAR>: ; mpp -Dwsadmin=${wsadmin} \
+   -Dsys=<VAR>sysname</VAR>  -Dname=$* $*.proto > $
+</PRE>
+<P><H3><A NAME="Header_527" HREF="auagd002.htm#ToC_527">새 라이브러리 파일 추가</A></H3>
+<P>각 시스템 유형마다 새 라이브러리 파일인
+<VAR>sysname</VAR><B>.</B><VAR>library_file</VAR>을
+추가하면 이런 파일을 <B> Makefile</B>의
+MACHINE_LIBS 섹션에 추가하십시오.
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/rs_aix42.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/alpha_dux40.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/sun4x_56.<VAR>library_file</VAR> \
+   ...
+</PRE>
+<P>모든 시스템 유형에 공통인 새 라이브러리 파일인 <I>library_file</I>을
+추가하면 이를 <TT>BASE_LIBS</TT> 섹션에만 추가하십시오.
+<PRE>   BASE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>library_file</VAR> \
+   ...
+</PRE>
+<HR><H2><A NAME="HDRWQ446" HREF="auagd002.htm#ToC_528">프로토타입 파일 컴파일</A></H2>
+<A NAME="IDX7575"></A>
+<A NAME="IDX7576"></A>
+<P><B>package</B> 프로그램은 구성 파일을 생성하고 이를 <B>make</B>
+명령행에서 <B>wsadmin=</B>으로 지정된 디렉토리의 <B>etc</B>와
+<B>src</B> 하위 디렉토리에 설치합니다. 프로토타입이나 라이브러리 파일을
+수정할 때마다 다시 컴파일하십시오.
+<P><H3><A NAME="Header_529" HREF="auagd002.htm#ToC_529">프로토타입 파일을 컴파일하려면</A></H3>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이런 명령은 사용자가 자신의 <B>package</B> 관련 파일을
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> 디렉토리에
+저장한다고 가정합니다. 다른 디렉토리를 사용하면 그 이름을
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>으로
+대체하십시오.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI><B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+디렉토리와 <B>src</B>, <B>lib</B> 그리고
+<B>etc</B> 하위 디렉토리에 모든 특권이 있는지 확인합니다.
+필요한 경우, <B>fs</B> <B>listacl</B> 명령을
+실행하십시오.
+<P>
+<PRE>   % <B>fs listacl</B> [<VAR>dir/file&nbsp;path</VAR>]
+</PRE>
+</LI><LI><B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B>
+하위 디렉토리로 변경합니다.
+<P>
+<PRE>   % <B>cd /afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B>
+</PRE>
+</LI><LI>AFS를 분배할 때 포함되는 <B>Makefile</B> 파일의 백업 복사본을
+작성합니다.
+<P>
+<PRE>   % <B>cp  Makefile Makefile.example</B> 
+</PRE>
+</LI><LI><A HREF="#HDRWQ439">CONFIG 섹션</A>, <A HREF="#HDRWQ440">BASE_LIBS 섹션</A> 그리고
+<A HREF="#HDRWQ441">MACHINE_LIBS 섹션</A>의 설명 대로 <B>Makefile</B> 파일의
+<TT>CONFIG</TT>, <TT>BASE_LIBS</TT> 그리고 <TT>MACHINE_LIBS</TT> 섹션을
+수정합니다.
+</LI><LI><B>make</B> command.
+<P>
+<P><B>wsadmin=</B> 인수를 사용하여 <B>package</B> 디렉토리를
+지정합니다. 이는 프로토타입과 라이브러리 파일에서 <TT>${wsadmin}</TT> 변수의 값이 됩니다.
+<P>
+<P><B>package</B> 프로그램은 구성 파일을 생성하고 이를 <B>wsadmin=</B>으로
+지정된 디렉토리의 <B>etc</B>와 <B>src</B> 하위 디렉토리에
+설치합니다.
+<P>
+<PRE>   %
+<B>make system wsadmin=/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+</PRE>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ447" HREF="auagd002.htm#ToC_530">클라이언트 시스템 수정</A></H2>
+<A NAME="IDX7577"></A>
+<A NAME="IDX7578"></A>
+<A NAME="IDX7579"></A>
+<A NAME="IDX7580"></A>
+<P><B>package</B> 프로그램을 자동으로 실행하도록
+클라이언트를 준비하려면 다음 단계를 수행하십시오. 명령은
+시스템 고유 구성 파일을 참조하지 않으므로 일반적입니다. 원하는
+경우 <I>AFS Administration Reference</I>의 설명 대로 고유 인수를 사용하여
+<B>package</B> 프로그램을 호출할 수 있습니다.
+<OL TYPE=1>
+<LI>사용할 구성 파일을 지정합니다.
+<P>
+<P>클라이언트 시스템의 루트(<B>/</B>) 디렉토리에 있는
+<B>.package</B> 파일은 <B>package</B>
+명령에 인수로 방향 전환됩니다. <B>.package</B>
+파일은 <B>package</B> 프로그램에서 사용하는
+구성 파일을 지정합니다.
+</LI><LI><B>package</B> 2진을 로컬 디스크에
+복사하거나 AFS에 대한 심볼릭 링크를 만들어서 클라이언트에서
+사용할 수 있게 만드십시오.
+<UL>
+<LI>심볼릭 링크는 로컬 디스크 공간을 절약합니다. 그러나,
+<B>package</B> 2진이 들어 있는 파일 서버
+시스템이 중단되면 액세스할 수 없습니다.
+</LI><LI><B>package</B> 2진을 로컬 디스크에 보존하면
+파일 서버가 중단된 경우에도 <B>package</B>
+프로그램을 실행할 수 있습니다. 그러나, 대부분의 구성 파일
+명령이 AFS에 있는 파일을 참조하므로 파일 서버 시스템이 정지되면
+보통 <B>package</B> 프로그램을 실행하기 어렵게
+됩니다. <B>package</B> 2진의 로컬 복사본은
+명령에서 참조한 파일이 복제된 볼륨에 있는 경우 유용합니다.
+</LI></UL>
+</LI><LI>클라이언트 시스템의 초기설정 파일을 수정하여 재부트할 때 <B>package</B>
+프로그램을 호출합니다. 클라이언트 시스템은 <B>package</B> 프로그램이
+<B>Q</B> 갱신 코드로 표시된 파일을 갱신할 때 다시 한번 재부트합니다.
+</LI></OL>
+<P><H3><A NAME="Header_531" HREF="auagd002.htm#ToC_531">package 프로그램을 실행하도록 클라이언트 시스템을 준비하려면</A></H3>
+<P><B>package</B> 프로그램을 실행하는 모든 클라이언트에서 다음 명령을
+반복 수행하십시오.
+<P>이런 명령은 <B>package</B> 구성 파일(프로토타입 파일이 컴파일될 때 작성됨)이
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc</B> 디렉토리에
+상주한다고 간주합니다.
+<OL TYPE=1>
+<LI>시스템에서 로컬 수퍼유저 <B>루트</B>가 아닌 경우
+<B>su</B> 명령을 실행하여 이러한 권한을 얻으십시오.
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI>루트(<B>/</B>) 디렉토리에서
+<B>.package</B> 파일을 작성하고 사용할
+프로토타입 파일의 이름을 지정합니다. 시스템 유형 접미어(예를
+들어, <B>.rs_aix42</B>)를 포함하지 마십시오.
+<B>package</B> 프로그램을 올바른 시스템 유형을
+자동으로 결정합니다.
+<P>
+<PRE>   # <B>echo
+"/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/</B><VAR>config_file</VAR><B>" >> /.package</B>
+</PRE>
+<P>
+<P>예를 들어, 시스템을 직원용 시스템으로 구성하려면(적합한 프로토타입 파일이 그 시스템 유형에
+대해 정의되고 컴파일되었다고 간주) 이에 해당하는 명령은 다음과 같습니다.
+<P>
+<PRE>   # <B>echo "/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/staff" >> /.package</B>
+</PRE>
+</LI><LI>로컬 디스크에서 <B>package</B> 2진을
+<B>/etc/package</B>로 사용할 수 있게 만듭니다. 파일 또는 심볼릭 링크
+작성에 따라 다음 명령 중 하나를 실행하십시오.
+<P>
+<P><B>package</B> 2진을 로컬에 저장하려면 다음 명령을 입력하십시오.
+<P>
+<PRE>   # <B>cp
+/afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE>
+<P>
+<P>심볼릭 링크를 작성하려면 다음 명령을 입력하십시오.
+<P>
+<PRE>   # <B>ln -s /afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE>
+</LI><LI><B>afsd</B> 명령을 호출한 다음에 다음 행을
+적합한 초기설정 파일에 추가합니다. 파일 서버 시스템인 경우
+<B>bosserver</B> 명령은
+<B>package</B> 명령 다음에 와야 합니다.
+<P>
+<P><B>-v</B>와 <B>-c</B> 옵션을
+사용하는 것이 바람직합니다. <B>-v</B> 플래그는
+자세한 추적을 생산하고 <B>-c</B> 옵션은 시스템
+유형을 구성 파일의 기본 이름에 추가합니다. 기타 옵션에 대한
+설명은 <I>AFS Administration Reference</I>를 참조하십시오.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP"><B>shutdown</B> 명령이 시스템
+재부트에 적합하지 않으면 이를 비슷한 명령으로 바꾸십시오.
+</TD></TR></TABLE>
+<P>
+<PRE>   if [ -f /etc/package ]; then
+           if [ -f /.package ]: then
+                   /etc/package -v -c `cat /.package` >/dev/console
+           else
+                   /etc/package -v >/dev/console
+   fi
+   case $? in
+   0)
+           echo "Package completed successfully" >/dev/console 2>&amp;1
+           date >/dev/console 2>&amp;1
+           ;;
+   4)
+           echo "Rebooting to restart system" >/dev/console 2>&amp;1
+           echo >/fastboot
+           shutdown
+           ;;
+   *)
+           echo "Update failed, continuing anyway" >/dev/console 2>&amp;1
+           ;;
+   esac
+   fi
+</PRE>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ448" HREF="auagd002.htm#ToC_532">package 프로그램 실행</A></H2>
+<P>프로토타입 파일을 작성 및 컴파일하고 클라이언트 시스템을
+수정한 다음 <B>package</B> 프로그램을 실행할
+수 있습니다. 재부트할 때 시스템의 AFS 초기설정 파일에서
+<B>package</B> 프로그램을 호출하여 자동으로
+실행하는 것이 가장 편리할 것입니다. 명령 쉘 프롬프트에서 명령을
+실행할 수도 있습니다.
+<P>구성 파일은 정확해야 합니다. 구문 오류가 있거나 틀린 값이
+있으면 프로그램을 명령을 실행하지 않고 종료합니다. 구성
+파일을 확인하려면 명령 쉘 프롬프트에서
+<B>package</B> 명령을
+<B>-noaction</B>과 <B>-debug</B>
+플래그와 함께 실행하십시오. 명령을 실제로 실행하지 않고
+잠재적인 문제 목록을 표시합니다.
+<P><B>package</B> 프로그램은 다음과 같은 일반
+규칙을 따릅니다. 완전한 설명은
+<A HREF="#HDRWQ429">패키지 구성 파일 명령 구문</A>에 있습니다.
+<UL>
+<LI><B>package</B> 프로그램은 프로토타입
+파일에 <B>R</B> 갱신 코드가 지정되지 않는
+이상 디스크에서 파일을 삭제하지 않습니다. <B>R</B>
+갱신 코드가 상위 디렉토리와 연관되어 있으면
+<B>package</B> 프로그램은 로컬 디스크
+디렉토리에서 구성 파일에 지정되지 않은 모든 것을 제거합니다.
+</LI><LI>로컬 파일은 오래된 경우에만 갱신됩니다. 구성 파일의
+각 <B>F</B> 명령에 대해
+<B>package</B> 프로그램은 로컬 파일의 시간을
+지정된 원본 파일과 비교합니다. 원본 파일이 로컬 파일보다
+최근 것이면 파일이 갱신됩니다.
+</LI><LI>초기설정 파일이 <A HREF="#HDRWQ447">클라이언트 시스템 수정</A>에서
+권장하는 대로 수정될 때 <B>Q</B> 갱신 코드로
+표시된 파일이 갱신되고 <B>package</B> 프로그램이
+초기설정 파일에서 호출되면 <B>package</B>
+프로그램은 워크스테이션을 자동으로 재부트합니다.
+<B>Q</B> 갱신 코드로 표시된 파일이 변경되면
+<B>package</B> 프로그램은 상태 코드 4와 함께
+종료하고 재부트(초기설정 파일에서 지시하는 대로)를 일으킵니다.
+변경사항을 인식하기 전에 재부트되어야 하는 파일(예를 들어,
+운영 체제 커널과 <B>/usr/vice/etc/CellServDB</B>
+파일)은 구성 파일에서 <B>Q</B> 갱신 코드로
+표시되어야 합니다.
+</LI><LI><B>package</B> 프로그램은
+<B>/etc/package.</B><VAR>sysname</VAR>에서
+방금 사용한 구성 파일을 복사합니다. 여기서 <VAR>sysname</VAR>은
+이 시스템의 시스템 유형을 나타냅니다. 구성 파일 이름을
+입력하지 않으면 <B>package</B> 명령 인터프리터는
+이 파일을 참조합니다. 이것이 원하는 대로 로컬 디스크를 구성하는지
+확인하려면 그 내용을 검토하십시오.
+</LI></UL>
+<P><H3><A NAME="Header_533" HREF="auagd002.htm#ToC_533">재부트로 package 프로그램을 호출하려면</A></H3>
+<OL TYPE=1>
+<LI>시스템에서 로컬 수퍼유저 <B>루트</B>가 아닌 경우
+<B>su</B> 명령을 실행하여 이러한 권한을 얻으십시오.
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI><B>(권장사항)</B> 다음을 확인하십시오.
+<UL>
+<LI><B>/.package</B> 파일은 원하는 구성 파일을
+식별합니다
+</LI><LI><B>package</B> 2진은
+<B>/etc/package</B>로 사용할 수 있습니다
+</LI><LI>초기설정 파일은 <B>package</B> 프로그램을
+자동으로 호출할 수 있도록 적절히 수정됩니다
+</LI></UL>
+</LI><LI>적절한 명령을 사용하여 시스템을 재부트합니다.
+<P>
+<PRE>   # <B>shutdown</B>
+</PRE>
+</LI></OL>
+<A NAME="IDX7581"></A>
+<A NAME="IDX7582"></A>
+<P><H3><A NAME="Header_534" HREF="auagd002.htm#ToC_534">package 프로그램을 직접 호출하려면(재부트하지 않고)</A></H3>
+<OL TYPE=1>
+<LI>시스템에서 로컬 수퍼유저 <B>루트</B>가 아닌 경우
+<B>su</B> 명령을 실행하여 이러한 권한을 얻으십시오.
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI>다음을 확인하십시오.
+<UL>
+<LI><B>/.package</B> 파일은 원하는 구성 파일을 식별합니다
+</LI><LI><B>package</B> 2진은 <B>/etc/package</B>로
+사용할 수 있습니다
+</LI><LI>초기설정 파일은 <B>package</B> 프로그램을 자동으로 호출할 수 있도록
+적절히 수정됩니다
+</LI></UL>
+</LI><LI><B>package</B> 명령을 실행합니다.
+<P>
+<PRE>   # <B>package</B>  [<B>initcmd</B>]  [<B>-config</B> &lt;<VAR>base&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file</VAR>>]  \
+    [<B>-fullconfig</B> &lt;<VAR>full&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file,&nbsp;or&nbsp;stdin&nbsp;for&nbsp;standard&nbsp;input</VAR>>]  \
+    [<B>-overwrite</B>]  [<B>-noaction</B>] 
+[<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>] 
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>-config
+</B><DD>사용할 구성 파일의 전체 경로 이름을 지정합니다. 이 이름은 시스템 유형을
+나타내는 접미어를 생략하는 파일의 기본 이름으로 끝납니다. <B>package</B>
+프로그램은 시스템 유형을 결정하는 방법을 알고 있으며 기본 파일 이름의 해당 버전을
+자동으로 선택합니다.
+이 인수의 적합한 값의 예는 <B>staff.rs_aix42</B>보다는
+<B>staff</B>입니다. <B>package</B> 프로그램에서
+<B>/.package</B>를 참조하여 다음 값을 통해 구성 파일에 대해 배울 수도
+있습니다.
+<P>
+<P><B>`cat /.package`</B>
+<P>
+<P>이 인수나 <B>-fullconfig</B> 인수를 사용하십시오.
+<P><DT><B>-fullconfig
+</B><DD>시스템 유형 확장자가 있는 사용할 구성 파일의 전체 이름을 지정합니다. 예는
+<B>staff.rs_aix42</B>와 <B>minimal.hp_ux110</B> 파일입니다.
+<P>
+<P>또 다른 가능성은 표준 입력 스트림을 통해 실행자가 구성 정보를 파이프 파일로 또는
+키보드에서 구성 파일을 입력하여 제공하고 있음을 나타내는 <B>stdin</B>
+문자열입니다. &lt;<B>Ctrl-d</B>>를 눌러 입력을 완료합니다.
+<P>
+<P>이 인수나 <B>-config</B> 인수를 사용하십시오.
+<P><DT><B>-overwrite
+</B><DD>첫(소유자) <B>w</B>(<B>write</B>) 모드 비트가
+파일의 로컬 디스크 복사본에서 꺼져 있어도 구성 파일에 지정된 원본 버전으로 로컬
+디스크의 요소를 겹쳐씁니다. <B>I</B> 갱신 코드로 보호되는 파일은
+겹쳐쓸 수 없습니다. <B>F</B> 명령에 대한 정의를 참조하십시오.
+<P><DT><B>-noaction
+</B><DD>실제로 명령을 실행하지 않은 상태에서 표준 출력 스트림에 명령을 실행하여
+발생할 수 있는 잠재적 문제를 추적한 내용을 표시합니다. <B>-verbose</B>
+플래그가 추가되면 추적은 또한 <B>package</B> 프로그램이 시도하려는 작업도
+기록합니다.
+<P><DT><B>-silent
+</B><DD>명령을 실행하는 중에 만날 수 있는 문제의 목록만 포함하는 추적의 기본 레벨을
+명시적으로 호출합니다.
+<P><DT><B>-verbose
+</B><DD>표준 출력 스트림에 프로그램 작업의 자세한 추적을 생산합니다. 추적은 구성 파일에
+있는 각 요소의 전송과 소유권/모드 비트를 기록합니다.
+<P><DT><B>-rebootfiles
+</B><DD>구성 파일에서 <B>Q</B> 갱신 모드 코드로 표시된 모든 요소를
+겹쳐쓰지 못하도록 막습니다. 이는 <B>package</B> 프로그램이 초기설정
+파일에서 호출되었을 때 시스템이 다시 자동으로 재부트하지 않게 효과적으로 막습니다.
+</DL>
+</LI><LI><B>Q</B> 갱신 코드로 표시된 파일이 갱신되었다고 생각하면 시스템을
+재부트합니다. 이 때 재부트 작업은 자동으로 일어나지 않습니다.
+</LI></OL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd015.htm">이전 페이지</A> &#124; <A HREF="auagd017.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

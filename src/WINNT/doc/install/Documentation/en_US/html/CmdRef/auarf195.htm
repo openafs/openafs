@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf194.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf196.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRKAS_STATISTICS" HREF="auarf002.htm#ToC_209">kas statistics</A></H2>
+<A NAME="IDX5155"></A>
+<A NAME="IDX5156"></A>
+<A NAME="IDX5157"></A>
+<A NAME="IDX5158"></A>
+<A NAME="IDX5159"></A>
+<A NAME="IDX5160"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays statistics from an Authentication Server process
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>kas statistics</B> [<B>-admin_username</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>]
+               [<B>-password_for_admin</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>] 
+               [<B>-servers</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]
+               [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas sta</B> [<B>-a</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>]  
+        [<B>-p</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+        [<B>-s</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-n</B>]  [<B>-h</B>]  
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>kas statistics</B> command displays statistics from the
+Authentication Server running on one of the cell&#39;s database server
+machines. Use the <B>-servers</B> argument to name a specific
+machine, or the command interpreter chooses one at random from all the
+database server machines with which it has established connections.
+<P><STRONG>Cautions</STRONG>
+<P>The <B>-servers</B> argument is not available in interactive mode,
+making it impossible to specify a certain machine.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-admin_username
+</B><DD>Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory <B>kas</B> reference page.
+<P><DT><B>-password_for_admin
+</B><DD>Specifies the password of the command&#39;s issuer. If it is
+omitted (as recommended), the <B>kas</B> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>kas</B> reference page.
+<P><DT><B>-servers
+</B><DD>Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>kas</B> reference
+page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The information in the output includes&#58;
+<UL>
+<P><LI>The number of allocation and freeing operations the Authentication Server
+has performed, and how many password change requests it has processed.
+<P><LI>An indication of its hash table use.
+<P><LI>The server machine&#39;s IP address in hexadecimal and the date when the
+current instance of the Authentication Server started.
+<P><LI>The number of requests and aborted requests for various services&#58;
+authentication, ticket granting, password setting, entry listing, and so
+on.
+<P><LI>The amount of CPU time that the Authentication Server has used to process
+requests since it started. The amount is not accurate on all system
+types, however.
+<P><LI>The number of entries in the Authentication Database that are marked with
+the <TT>ADMIN</TT> flag.
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>In the following example, an administrator using the <B>admin</B>
+account gathers statistics from the Authentication Server running on the
+machine <B>fs1.abc.com</B>.
+<PRE>   % <B>kas statistics -servers fs1.abc.com</B>
+   56 allocs, 46 frees, 0 password changes
+   Hash table utilization = 0.100000%
+   From host bfff21a7 started at Tue Mar 23 12&#58;42&#58;02 1999&#58;
+     of 88 requests for Authenticate, 18 were aborted.
+     of 14 requests for GetTicket, 0 were aborted.
+     of 4 requests for CreateUser, 1 were aborted.
+     of 12 requests for SetFields, 4 were aborted.
+     of 3 requests for DeleteUser, 0 were aborted.
+     of 23 requests for GetEntry, 4 were aborted.
+     of 18 requests for ListEntry, 0 were aborted.
+     of 2 requests for GetStats, 1 were aborted.
+     of 2 requests for GetRandomKey, 0 were aborted.
+   Used 6.015 seconds of CPU time.
+   3 admin accounts
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must have the <TT>ADMIN</TT> flag set on his or her
+Authentication Database entry.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf194.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf196.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

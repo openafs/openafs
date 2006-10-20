@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_REMOVEKEY" HREF="auarf002.htm#ToC_125">bos removekey</A></H2>
+<A NAME="IDX4593"></A>
+<A NAME="IDX4594"></A>
+<A NAME="IDX4595"></A>
+<A NAME="IDX4596"></A>
+<A NAME="IDX4597"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/etc/KeyFile</B> ファイルからサーバー暗号化キーを削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos removekey -server</B> &lt;<VAR>machine name</VAR>>  <B>-kvno</B> &lt;<VAR>key version number</VAR>><SUP>+</SUP>
+              [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos removek -s</B> &lt;<VAR>machine name</VAR>>  <B>-k</B> &lt;<VAR>key version number</VAR>><SUP>+</SUP>  
+            [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos removekey</B> コマンドは、<B>-server</B> 引き数に指定されたマシンの <B>/usr/afs/etc/KeyFile</B> ファイルから、指定された暗号化キーを削除します。各キーをキー・バージョン番号で指定するには、<B>-kvno</B> 引き数を使用してください。キー・バージョン番号を表示するには、<B>bos listkeys</B> コマンドを使用してください。
+<P><STRONG>注意</STRONG>
+<P>古いキーを削除する前に、<B>kas setpassword</B> および <B>bos addkey</B> コマンドを使用して、現行キーが定義されてからセルの最大チケット存続時間が経過しているかどうか調べてください。これにより、古いキーで暗号化されたチケットを持っているクライアントがあるかどうか確認することができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD><B>/usr/afs/etc/KeyFile</B> ファイルを変更するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P>
+<P>米国版 AFS を実行し、更新サーバーを使って <B>/usr/afs/etc</B> ディレクトリーの内容を配布するセルでは、通常 <B>-server</B> 引き数の値としてシステム・コントロール・マシンだけを指定します。国際版 AFS を実行しているセルでは、各ファイル・サーバー・マシンに対しコマンドを繰り返し発行してください。詳細については、<B>bos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B><B>-kvno</B>
+</B><DD>削除するキーのキー・バージョン番号を指定します。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、システム・コントロール・マシン <B>fs1.abc.com</B> の <B>KeyFile</B> ファイルから、キー・バージョン番号が 5 および 6 のキーを削除しています。
+<PRE>   % <B>bos removekey -server fs1.abc.com -kvno 5 6</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<P><A HREF="auarf107.htm#HDRBOS_LISTKEYS">bos listkeys</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf110.htm">前ページ</A> &#124; <A HREF="auarf112.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,37 @@
+# rcsid : $Id: NTMakefile,v 1.2.2.1 2004/08/23 15:55:09 jaltman Exp $
+
+RELDIR=WINNT\install\wix\custom
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+MEDIABINDIR = $(DESTDIR)\WinInstall\Dll
+
+DLLFILE = $(MEDIABINDIR)\afscustom.dll
+
+DLLEXPORTS=\
+	-EXPORT:InstallNetProvider \
+	-EXPORT:UninstallNetProvider \
+	-EXPORT:ConfigureClientService \
+	-EXPORT:ConfigureServerService \
+	-EXPORT:AbortMsiImmediate \
+	-EXPORT:UninstallNsisInstallation \
+        -EXPORT:CreateAFSClientAdminGroup \
+        -EXPORT:RemoveAFSClientAdminGroup
+
+DLLLIBFILES=\
+	msi.lib advapi32.lib netapi32.lib
+
+LINK=link
+
+# afscustom.dll
+
+$(OUT)\afscustom.obj: afscustom.cpp
+	$(CC) -ML -c /Fo$@ $**
+
+$(DLLFILE): $(OUT)\afscustom.obj
+	$(LINK) -DLL $(DLLEXPORTS) \
+	  -OUT:$@ $** $(DLLLIBFILES)
+
+install: $(DLLFILE)
+
+clean	::

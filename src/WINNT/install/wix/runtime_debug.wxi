@@ -1,0 +1,38 @@
+﻿<?xml version="1.0"?>
+<Include>
+    <?ifdef Debug?>
+    <?if $(env.AFSVER_CL) = "1310" ?>
+        <ComponentRef Id="cmp_VC1310msvcr71dPDB" />
+        <ComponentRef Id="cmp_VC1310msvcp71dPDB" />
+        <ComponentRef Id="cmp_VC1310mfc71dPDB" />
+        <ComponentRef Id="cmp_VC1310mfc71udPDB" />
+    <?endif?>
+    <?if $(env.AFSVER_CL) = "1300" ?>
+        <ComponentRef Id="cmp_VC1300msvcr70dPDB" />
+        <ComponentRef Id="cmp_VC1300msvcp70dPDB" />
+        <ComponentRef Id="cmp_VC1300mfc70dPDB" />
+    <?endif?>
+    <?if $(env.AFSVER_CL) = "1200" ?>
+        <ComponentRef Id="cmp_VC1200msvcrtdPDB" />
+        <ComponentRef Id="cmp_VC1200msvcp60dPDB" />
+        <ComponentRef Id="cmp_VC1200mfc42dPDB" />
+    <?endif?>
+    <?else?>
+        <?if $(env.AFSVER_CL) = "1310" ?>
+            <ComponentRef Id="cmp_VC1310msvcr71PDB" />
+            <ComponentRef Id="cmp_VC1310msvcp71PDB" />
+            <ComponentRef Id="cmp_VC1310mfc71PDB" />
+            <ComponentRef Id="cmp_VC1310mfc71uPDB" />
+        <?endif?>
+        <?if $(env.AFSVER_CL) = "1300" ?>
+            <ComponentRef Id="cmp_VC1300msvcr70PDB" />
+            <ComponentRef Id="cmp_VC1300msvcp70PDB" />
+            <ComponentRef Id="cmp_VC1300mfc70PDB" />
+        <?endif?>
+        <?if $(env.AFSVER_CL) = "1200" ?>
+            <ComponentRef Id="cmp_VC1200msvcrtPDB" />
+            <ComponentRef Id="cmp_VC1200msvcp60PDB" />
+            <ComponentRef Id="cmp_VC1200mfc42PDB" />
+        <?endif?>
+    <?endif?>
+</Include>

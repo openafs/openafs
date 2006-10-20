@@ -1,0 +1,53 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\bosctlsvc
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Definitions for building a bosctlsvc.exe
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosctlsvc.exe
+
+EXEOBJS =\
+	$(OUT)\bosctlsvc.obj \
+	$(OUT)\bosctlsvc.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+    $(DESTDIR)\lib\afsicf.obj
+
+EXESDKLIBS=\
+    ole32.lib \
+    oleaut32.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK) $(EXESDKLIBS)
+	$(EXEPREP)
+
+############################################################################
+# Definitions for generating versioninfo resource via RC
+
+$(OUT)\bosctlsvc.res: AFS_component_version_number.h
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+mkdir:

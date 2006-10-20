@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_VOLINFO" HREF="auarf002.htm#ToC_104">backup volinfo</A></H2>
+<A NAME="IDX4416"></A>
+<A NAME="IDX4417"></A>
+<A NAME="IDX4418"></A>
+<A NAME="IDX4419"></A>
+<A NAME="IDX4420"></A>
+<A NAME="IDX4421"></A>
+<P><STRONG>目的</STRONG>
+<P>バックアップ・データベースからボリュームのダンプ履歴を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup volinfo -volume</B> &lt;<VAR>volume name</VAR>>
+               [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+  
+<B>backup voli -v</B> &lt;<VAR>volume name</VAR>>  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup volinfo</B> コマンドは、指定されたボリュームのダンプ履歴を表示します。ボリューム・ダンプの作成日、ダンプが書き込まれた磁気テープ名などの情報を表示します。ボリュームのバックアップ・バージョンがダンプされている場合には、ボリューム名に拡張子 <B>.backup</B> を付けてください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-volume
+</B><DD>ダンプ履歴を表示するボリューム名を指定します。ボリュームのバックアップまたは読み取り専用バージョンがダンプされている場合には、拡張子 <TT>.backup</TT> または <TT>.readonly</TT> を付けてください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力には、それぞれのバックアップ・データベース・ダンプ・レコードごとに、指定されたボリューム、最新から最古までの順序を示す行が含まれます。レコードごとの出力は、次の 6 つの列があるテーブルに表示されます。
+<DL>
+<P><DT><B><TT>dumpID</TT>
+</B><DD>ボリュームがあるダンプのダンプ ID。
+<P><DT><B><TT>lvl</TT>
+</B><DD>ボリュームがダンプされたダンプ・レベルのダンプ階層内での深さ。
+<TT>0</TT> はフル・ダンプです。
+<TT>1</TT> 以上の値の場合は、ダンプ階層内の指定された深さでインクリメンタル・ダンプが作成されたことを示します。
+<P><DT><B><TT>parentid</TT>
+</B><DD>ダンプの親ダンプのダンプ ID。値 <TT>0</TT> は、フル・ダンプを示します。このダンプには親はありません。この場合、<TT>lvl</TT> 列も <TT>0</TT> です。
+<P><DT><B><TT>creation date</TT>
+</B><DD>バックアップ・システムがダンプ操作を開始し、ダンプを作成した時刻。
+<P><DT><B><TT>clone date</TT>
+</B><DD>バックアップまたは読み取り専用ボリュームの場合、そのボリュームが読み取り / 書き込み送信元から複製された時刻。読み取り / 書き込みボリュームの場合は、
+<TT>creation date</TT> フィールドの値と同じです。
+<P><DT><B><TT>tape name</TT>
+</B><DD>ダンプのある磁気テープ名。永続名または AFS 磁気テープ名が、
+<I>volume_set_name</I>.<I>dump_level_name</I>.<I>tape_index</I> の形式で表示されます。
+<I>volume_set_name</I> は、この磁気テープのダンプ・セットで初期ダンプに関連するボリューム・セットの名前です。
+<I>dump_level_name</I> は、初期ダンプがバックアップされたダンプ・レベルの名前です。
+<I>tape_index</I> は、ダンプ・セット内での磁気テープの位置を表しています。いずれのタイプの名前でも、その後に括弧で囲んだダンプ ID を続けることができます。そのようなダンプ ID は、追加されたこのダンプを含むダンプ・セットの、最初のダンプのダンプ ID です。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、<B>user.smith.backup</B> のダンプ履歴の一部を示しています。
+<PRE>   % <B>backup volinfo -volume user.smith.backup</B>
+   DumpID    lvl parentID  creation date    clone date       tape name
+   924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6
+       .     .      .         .       .       .      .         .
+       .     .      .         .       .       .      .         .
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf074.htm#HDRBK_DUMPINFO">backup dumpinfo</A>
+<P><A HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf089.htm">前ページ</A> &#124; <A HREF="auarf091.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

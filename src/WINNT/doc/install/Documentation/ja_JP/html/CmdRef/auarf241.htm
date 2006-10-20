@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUPSERVER" HREF="auarf002.htm#ToC_255">upserver</A></H2>
+<A NAME="IDX5502"></A>
+<A NAME="IDX5503"></A>
+<A NAME="IDX5504"></A>
+<A NAME="IDX5505"></A>
+<A NAME="IDX5506"></A>
+<A NAME="IDX5507"></A>
+<P><STRONG>目的</STRONG>
+<P>更新サーバーのサーバー部分を初期化します。
+<P><STRONG>構文</STRONG>
+<PRE><B>upserver</B> [&lt;<VAR>directory</VAR>><SUP>+</SUP>]  [<B>-crypt</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>]  [<B>-clear</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>]
+         [<B>-auth</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+</PRE>
+<P>このコマンドは、AFS コマンド・セットの構文規則に準拠していません。コマンド名およびすべてのオプション名は省略せずにすべて指定してください。
+<P><STRONG>構文</STRONG>
+<P><B>upserver</B> コマンドは、更新サーバーのサーバー部分 (<B>upserver</B> プロセス) を初期化します。通常の構成では、バイナリー・ファイルはファイル・サーバー・マシンの <B>/usr/afs/bin</B> ディレクトリーにあります。
+<P><B>upserver</B> コマンドは、通常はコマンド・シェル・プロンプトでは発行されず、ファイル・サーバー・マシンの <B>/usr/afs/local/BosConfig</B> ファイルに <B>bos create</B> コマンドと一緒に記述されます。コマンド・シェル・プロンプトで発行される場合は、発行者は、ローカル・スーパーユーザーの<B>ルート (root)</B> としてデータベース・サーバー・マシンにログオンされていなければなりません。
+<P><B>upserver</B> コマンドは、他のマシンで実行中の更新サーバーのクライアント部分 (<B>upclient</B> プロセス) からの要求に応じて、プロセスが配布するローカル・ディスクのディレクトリーを指定します。ディレクトリーが指定されない場合、
+<B>upserver</B> プロセスは、ローカル・ディスク上の任意のディレクトリーの内容を配布します。
+<P><B>upserver</B> プロセスは、ディレクトリーの内容を暗号化または非暗号化形式で配布することができます。デフォルトでは、
+<B>upclient</B> プロセスが要求しない限り暗号化を使用しません (このデフォルトは、<B>-clear</B> フラグ設定と同じです)。<B>-crypt</B> フラグが指定された場合、
+<B>upserver</B> プロセスは、暗号化転送要求のみを処理します。
+<P>米国版の AFS の場合、<B>-crypt</B> フラグを使用すると、
+<B>upserver</B> プロセスが暗号化形式でのみディレクトリー内容を転送します。国際版の場合は、<B>-crypt</B> フラグを使用すると、データ転送が完全にブロックされます。国際版の <B>upclient</B> プロセスは、暗号形式の転送を要求できないためです。
+<B>upclient</B> 初期設定コマンドに、<B>-crypt</B> フラグは不要です。
+<P><B>upclient</B> および <B>upserver</B> プロセスは、転送されるデータのが暗号化されているかにかかわらず、相互に認証されます。
+<B>/usr/afs/etc/KeyFile</B> ファイルの最も高いバージョンのキーを使用して、相互認証のサーバー・チケットを構成します。
+<P><STRONG>注意</STRONG>
+<P>国際版 AFS を使用する場合は、更新サーバーを使用して <B> /usr/afs/etc</B> ディレクトリーの内容を配布しないでください。ディレクトリーの内容は機密で、国際版の AFS には、ネットワーク側に転送する前にファイルを暗号化する暗号化ルーチンがありません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><VAR>directory</VAR>
+</B><DD>非暗号化形式で配布する各ディレクトリーを指定します (コマンド行で最初の <B>-crypt</B> または <B>-clear</B> フラグの前に表示するため)。この引き数を省略すると、マシンのローカル・ディスク上のすべてのディレクトリーが配布の対象になります。
+<P><DT><B>-crypt
+</B><DD><B>upserver</B> プロセスが暗号化形式でのみ配布する 1 つ以上のディレクトリーのリストの前に指定します。
+<P><DT><B>-clear
+</B><DD><B>upclient</B> プロセスが暗号化形式を要求しない場合、<B>upserver</B> プロセスは非暗号形式で配布する 1 つ以上のディレクトリー・リストの前に指定します。コマンド行で、
+<B>-crypt</B> フラグで指定された 1 つのディレクトリー・リストがこの引き数よりも前にある場合にのみ、この引き数を使用します。
+<P><DT><B>-auth
+</B><DD><B> upserver</B> プロセスが暗号形式を使用して配布する 1 つ以上のディレクトリー・リストの前に指定し、
+<B>-clear</B> および <B>-crypt</B> 引き数で設定された暗号レベルと非暗号レベル間での、複合度およびセキュリティーを仲介します。
+<B>upclient</B> プロセスには、このレベルのデータ転送要求に使用できる引き数がないため、この引き数は使用しないでください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例では、<B>bos create</B> コマンドが、ホスト・マシン <B>fs1.abc.com</B> 上の <B>upserver</B> プロセスを定義して、開始します。最後のパラメーター (引用符で囲まれています) は、
+<B>/usr/afs/bin</B> ディレクトリーの内容を非暗号化形式で、および <B>/usr/afs/etc</B> ディレクトリーの内容を暗号化形式で配布するように、
+<B>upserver</B> プロセスに指示しています。
+<PRE>   % <B>bos create  -server fs1.abc.com -instance upserver -type simple</B>   \
+                 <B>-cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"</B>
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>シェル・プロンプトでコマンドを発行するためには、発行者はファイルのサーバー・マシン上でローカル・スーパーユーザー <B>root</B> としてログインする必要があります。通常は、<B>bos create</B> コマンドを発行して、プロセスの作成および開始を行います。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf240.htm">前ページ</A> &#124; <A HREF="auarf242.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

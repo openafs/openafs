@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_NEWCELL" HREF="auarf002.htm#ToC_168">fs newcell</A></H2>
+<A NAME="IDX4905"></A>
+<A NAME="IDX4906"></A>
+<A NAME="IDX4907"></A>
+<A NAME="IDX4908"></A>
+<A NAME="IDX4909"></A>
+<A NAME="IDX4910"></A>
+<A NAME="IDX4911"></A>
+<A NAME="IDX4912"></A>
+<P><STRONG>目的</STRONG>
+<P>セルのデータベース・サーバー・マシンのカーネル常駐リストを変更します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs newcell -name</B> &lt;<VAR>cell name</VAR>> <B>-servers</B> &lt;<VAR>primary servers</VAR>><SUP>+</SUP>
+           [<B>-linkedcell</B> &lt;<VAR>linked cell name</VAR>>]  [<B>-help</B>]
+   
+<B>fs n -n</B> &lt;<VAR>cell name</VAR>>  <B>-s</B> &lt;<VAR>primary servers</VAR>><SUP>+</SUP>  [<B>-l</B> &lt;<VAR>linked cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs newcell</B> コマンドは、<B>-name</B> 引き数で指定されたセルの、データベース・サーバー・マシンの、キャッシュ・マネージャーのカーネル常駐リストを削除し、<B>-servers</B> 引き数によって指定されたデータベース・サーバー・マシンと置き換えます。
+<P>マシンをリブートするたびに、キャッシュ・マネージャーはローカルの <B>/usr/vice/etc/CellServDB</B> ファイルを読み込み、セルおよびデータベース・サーバー・マシンのカーネル・リストを構成します。このコマンドは、<B>CellServDB</B> ファイルを変更しません。したがって、発行者がファイルも編集しないかぎり、このコマンドで行なわれた変更が持続されるのは、次のリブートまでです。
+<B>fs listcells</B> コマンドの出力には、このコマンドで行なわれた変更が反映されます。それは、コマンドが <B>CellServDB</B> ファイルではなく、カーネル常駐リストを調べるからです。
+<P>このコマンドは、まったく新しいセルをカーネル常駐リストに導入することができますが、セルをアクセス不能にすることはできません
+(<B>-server</B> 引き数の値を提供しないで、カーネル常駐リストからセルの項目を除去することはできません)。セルをアクセス不能にするには、その項目を <B>CellServDB</B> ファイルから除去して、マシンをリブートします。
+<P><B>-name</B> 引き数で DCE セルに名前を付ける場合には、その後、<B>-servers</B> 引き数で
+DFS ファイル・セット・ロケーション (FL) サーバー・マシンを指定します。
+<B>-linkedcell</B> 引き数は、DFS ファイル・セット・ロケーションを使用するための DCE セルにリンクする AFS セルの名前を指定します。このコマンドを使用するか <B>/usr/vice/etc/CellServDB</B> ファイルを編集して、
+AFS クライアントを DCE セルにリンクする方法についての詳細は、<I>AFS/DFS Migration Toolkit Administration Guide and Reference</I> を参照してください。
+<P><STRONG>注意</STRONG>
+<P><B>klog</B> コマンドなど、一部のコマンドは、
+<B>CellServDB</B> ファイルおよびカーネル常駐リストの両方のセルに関する情報が正確である場合にしか、正しく機能しないことがあります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>AFS セルまたは DCE セルの完全修飾セル名を指定します。
+<P><DT><B>-servers
+</B><DD><B>-name</B> 引き数で命名されたセルのすべての AFS データベース・サーバー・マシンまたは
+DFS ファイル・セット・ロケーション (FL) サーバー・マシンの完全修飾ホスト名を指定します。
+FL サーバー・マシンが指定される場合には、ローカル・マシンは AFS/DFS 移行ツールキット・プロトコル変換プログラムを実行していなければなりません。
+<P><DT><B>-linkedcell
+</B><DD>AFS セルの名前を指定して、DFS ファイル・セット位置を目標に、DCE
+セルにリンクします。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例は、ABC Corporation セルがマシン
+<B>db1.abc.com</B> と <B>db2.abc.com</B>を組み込むために、データベース・サーバー・マシンのカーネル常駐リストを変更します。
+<PRE>   % <B>fs newcell -name abc.com -servers db1.abc.com db2.abc.com</B>
+   
+</PRE>
+<P>次の例では、DCE セル <B>dce.abc.com</B> を AFS セル <B>abc.com</B> にリンクします。
+AFS クライアントは、DFS パス名の解釈に必要なファイル・セットの位置情報のために、ファイル・ロケーション (FL) サーバー<B>db1.dce.abc.com</B> および <B>db2.dce.abc.com</B> に接続します。
+<PRE>   % <B>fs newcell -name dce.abc.com -servers db1.dce.abc.com db2.dce.abc.com</B>   \
+                <B>-linkedcell abc.com</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (クライアント・バージョン)</A>
+<P><A HREF="auarf149.htm#HDRFS_LISTCELLS">fs listcells</A>
+<P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
+<P><I>AFS/DFS 移行 Toolkit 管理インストールおよび構成ガイド</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf153.htm">前ページ</A> &#124; <A HREF="auarf155.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

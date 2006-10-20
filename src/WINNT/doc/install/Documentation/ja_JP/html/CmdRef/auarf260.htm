@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_DUMP" HREF="auarf002.htm#ToC_274">vos dump</A></H2>
+<A NAME="IDX5642"></A>
+<A NAME="IDX5643"></A>
+<A NAME="IDX5644"></A>
+<A NAME="IDX5645"></A>
+<A NAME="IDX5646"></A>
+<A NAME="IDX5647"></A>
+<A NAME="IDX5648"></A>
+<A NAME="IDX5649"></A>
+<A NAME="IDX5650"></A>
+<A NAME="IDX5651"></A>
+<A NAME="IDX5652"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリュームを ASCII 形式に変換し、ファイルに書き込みます。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos dump -id</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-time</B> &lt;<VAR>dump from time</VAR>>]  [<B>-file</B> &lt;<VAR>dump file</VAR>>]  
+         [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+         [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos du -i</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-t</B> &lt;<VAR>dump from time</VAR>>]  [<B>-f</B> &lt;<VAR>dump file</VAR>>]  
+       [<B>-s</B> &lt;<VAR>server</VAR>>]  [<B>-p</B> &lt;<VAR>partition</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+       [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos dump</B> コマンドは、指定されたボリューム (読み取り / 書き込み、読み取り専用、バックアップ) の内容を ASCII 形式に変換します。ボリューム・サーバーは、変換された内容を、
+<B>-file</B> 引き数に指定されたファイルに書き込みます。この引き数が指定されていない場合には、標準出力ストリームに出力します。後者の場合、サード・パーティー製のバックアップ・ユーティリティーで操作できるように、名前付きパイプに出力をダイレクトすることができます。
+<P>ボリューム全体のダンプを取る (<I>フル・ダンプ</I> を作成する) には、
+<B>-time</B> 引き数を省略するか、この引き数に値 <B>0</B> (ゼロ) を指定します。ボリュームに、特定の時刻以降の修正タイム・スタンプがあるファイルおよびディレクトリーだけを含む<I>増分ダンプ</I> を作成するには、
+<B>-time</B> 引き数の値として日時を指定します。
+<P>デフォルトでは、<B>vos</B> コマンド・インタープリターは、ボリューム・ロケーション・データベース (VLDB) を参照し、ボリュームの位置を解釈します。そのため、<B>-server</B> および <B>-partition</B> 引き数は必要ありません。
+<B>-id</B> 引き数で、複数サイトにある読み取り専用ボリュームを識別すると、コマンドは、ボリュームのうちの 1 つだけ (通常は、<B>vos examine</B> または <B>vos listvldb</B> コマンドで報告されるときに、ボリュームの VLDB 項目で最初にリストされているボリューム) からバージョンをダンプします。特定のサイトからで読み取り専用バージョンをダンプするには、
+<B>-server</B> および <B>-partition</B> 引き数を使用して、サイトを指定します。
+VLDB 索引全体をう回するには、<B>-server</B> および <B>-partition</B> 引き数と一緒に、
+<B>-id</B> 引き数の値として、(ボリューム名ではなく)、ボリューム ID 番号を指定します。これにより、VLDB 項目のないボリュームをダンプすることができます。
+<P>ダンプ操作中、キャッシュ・マネージャーおよび他のボリューム操作は、そのボリュームにアクセスできなくなります。そうしないと、ボリュームのダンプによって、区画の状況または VLDB 項目が更新されなくなります。
+<P>ダンプされたボリュームを AFS に復元するには、<B>vos restore</B> コマンドを使用します。
+<P><STRONG>注意</STRONG>
+<P>増分ダンプがサポートされているので、サード・パーティー製のバックアップ・ユーティリティーも使用することができます。<B>vos dump</B> コマンドには、実際のバックアップ・システムのような管理機能はありません。したがって、管理者は、ダンプ時刻のレコードおよびボリュームのフル・ダンプと増分ダンプの関係を手操作で保守しなければなりません。増分ダンプの復元後にボリュームの内容の整合性を保つには、そのボリュームの直前のダンプ作成時間と、増分ダンプを作成する <B>vos dump</B> コマンドの <B>-time</B> 引き数の値との間にギャップがあってはいけません。特に、読み取り / 書き込みボリュームの場合は、
+<B>-time</B> 引き数は、前のダンプが実行された時刻を指定し、読み取り専用ボリュームの場合は、ダンプの前に (<B>vos release</B> コマンドを使用して) 最後に解放された時刻、または (<B>vos backup</B> または <B>vos backupsys</B> コマンドを使用して) 複製が作成された時刻を指定しなければなりません。親ダンプは、フル・ダンプの場合も、他の増分ダンプの場合もあります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>ダンプする読み取り / 書き込み、読み取り専用、またはバックアップ・ボリュームの完全名またはボリューム ID 番号のいずれかを指定します。
+<P><DT><B>-time
+</B><DD>フル・ダンプか増分ダンプかを指定します。この引き数を省略してフル・ダンプを作成するか、以下の 3 つの許容値のいずれかを指定します。
+<UL>
+<LI>フル・ダンプを作成する場合には、<B>0</B> (ゼロ) を指定してください。
+</LI><LI>日付を指定して、その日の午前 (12:00 a.m) 以降の修正タイム・スタンプを持つファイルおよびディレクトリーだけを含む増分ダンプを作成する場合には、
+<VAR>mm</VAR><B>/</B><VAR>dd</VAR><B>/</B><VAR>yyyy</VAR> (月、日、および年) の形式で日付を指定してください。年に指定できる値は、<B>1970</B> から <B>2037</B> までの範囲です。ただし、
+UNIX の標準表記では 2038 年までしか表現できないため、これより高い値は無効になります。コマンド・インタープリターは、最大値から 1 を引いた値を自動的に割り当てます。たとえば、<B>01/13/1999</B> と指定してください。
+</LI><LI>日付と時刻を指定して、その時間以降の修正タイム・スタンプを持つファイルおよびディレクトリーだけを含む増分ダンプを作成する場合には、
+<B>"</B><VAR>mm</VAR><B>/</B><VAR>dd</VAR><B>/</B><VAR>yyyy</VAR> <VAR>hh</VAR><B>:</B><VAR>MM</VAR><B>"</B> の形式で日付と時刻を指定してください。日付の形式は、日付のみの場合と同じです。時刻は、時と分を <VAR> hh</VAR>:<VAR>MM</VAR> で、24 時間形式で指定してください。
+(たとえば、午後 8 時 30 分は <B> 20:30</B> になります。) 式の中にスペースがあるので、式全体を二重引用符で囲んでください。たとえば、<B>"01/13/1999 22:30"</B> と指定してください。
+</LI></UL>
+<P><DT><B>-file
+</B><DD>ダンプを書き込むファイルのパス名を指定します。ファイルはAFS の中が可能ですが、ダンプを取っているボリュームは不可能です。部分的なパス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。この引き数を省略すると、ダンプは標準出力ストリームに送信されます。
+<P><DT><B>-server
+</B><DD>ボリュームが常駐するファイル・サーバー・マシンを指定します。この引き数と一緒に <B>-partition</B> 引き数を指定します。
+<P><DT><B>-partition
+</B><DD>ボリュームが常駐する区画を指定します。この引き数と一緒に <B>-server</B> 引き数を指定します。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、ボリューム <B>user.terry</B> のフル・ダンプをファイル <B>/afs/abc.com/common/dumps/terry.dump</B> に書き込みます。
+<PRE>   % <B>vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump</B>
+   
+</PRE>
+<P>次のコマンドは、ボリューム <B>user.smith</B> の増分ダンプを現行作業ディレクトリーのファイル <B>smith.990131.dump</B> に書き込みます。ボリュームの中でダンプされるファイルは、1999 年 1 月 31 日午後 6 時 00 分以降の修正タイム・スタンプを持つファイルです。
+<PRE>   % <B>vos dump -id user.smith -time "01/31/1999 18:00" -file smith.990131.dump</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><B>-file</B> 引き数を使用する場合、コマンドの発行側には、ファイルのあるディレクトリーに対する挿入および書き込みアクセス権が必要になります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
+<P><A HREF="auarf274.htm#HDRVOS_RESTORE">vos restore</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf259.htm">前ページ</A> &#124; <A HREF="auarf261.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

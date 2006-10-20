@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_MESSAGES" HREF="auarf002.htm#ToC_166">fs messages</A></H2>
+<A NAME="IDX4889"></A>
+<A NAME="IDX4890"></A>
+<A NAME="IDX4891"></A>
+<A NAME="IDX4892"></A>
+<P><STRONG>目的</STRONG>
+<P>キャッシュ・マネージャーがログ・メッセージを書き込むかどうかを設定します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs messages</B> [<B>-show</B> &lt;[<B>user</B>|<B>console</B>|<B>all</B>|<B>none</B>]>]  [<B>-help</B>]
+    
+<B>fs me</B> [<B>-s</B> &lt;[<B>user</B>|<B>console</B>|<B>all</B>|<B>none</B>]>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs messages</B> コマンドは、キャッシュ・マネージャーがユーザーの画面またはクライアント・マシンのコンソール、あるいはその両方に状況および警告メッセージを表示するかどうか、あるいはどちらにも表示しないかを制御します。
+<P>キャッシュ・マネージャーのメッセージには 2 つのタイプがあります。
+<UL>
+<LI>ユーザー・メッセージは、ユーザー・レベルの状況および警告情報を提供し、キャッシュ・マネージャーがユーザーの画面に送信します。
+</LI><LI>コンソール・メッセージは、システム・レベルの状況および警告情報を提供し、キャッシュ・マネージャーがクライアント・マシンの指定のコンソールに送信します。
+</LI></UL>
+<P>メッセージは有効な状況および警告情報を提供するので、これを完全に使用不可にすることは推奨されていません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-show
+</B><DD>表示するメッセージのタイプを指定します。次のいずれかの値を選択します。
+<P>
+<DL>
+<P><DT><B>user
+</B><DD>ユーザーの画面にユーザー・メッセージを送信します。
+<P><DT><B>console
+</B><DD>コンソールにコンソール・メッセージを送信します。
+<P><DT><B>all
+</B><DD>ユーザー・メッセージをユーザー画面に、コンソール・メッセージをコンソールに送信します
+(<B>-show</B> 引き数を省略した場合のデフォルト)。
+<P><DT><B>none
+</B><DD>ユーザーの画面またはコンソールに何もメッセージを送信しません。
+</DL>
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、キャッシュ・マネージャーに両方のタイプのメッセージを表示するように指示します。
+<PRE>   % <B>fs messages -show all</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf151.htm">前ページ</A> &#124; <A HREF="auarf153.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

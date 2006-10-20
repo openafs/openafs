@@ -1,0 +1,780 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS クライアント構成"
+#define AFS_VERINFO_NAME "afs_config"
+#define AFS_VERINFO_FILENAME "afs_config.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_GENERAL_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "一般"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "クライアント構成",IDC_STATIC,7,7,206,142
+    LTEXT           "セル名(&C):",IDC_STATIC,13,24,39,8
+    EDITTEXT        IDC_CELL,59,23,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    CONTROL         "Windows へのログイン時に AFS トークンを取得(&O)",
+                    IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,50,
+                    198,10
+    CONTROL         "タスクバーにAFSクライアント・アイコンを表示(&H)",
+                    IDC_TRAYICON,
+                    "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,72,193,10
+    LTEXT           "注: AFS クライアント・サービスが実行されていないため、これらの制御は使用できません。",
+                    IDC_WARN,13,124,193,17
+    GROUPBOX        "クライアント状況",IDC_STATIC,7,157,206,61
+    LTEXT           "(現在の状況を照会中)",IDC_STATUS,13,172,193,17
+    PUSHBUTTON      "サービスの開始(&S)",IDC_SERVICE_START,48,195,77,14
+    PUSHBUTTON      "サービスの停止(&T)",IDC_SERVICE_STOP,129,195,77,14
+END
+
+IDD_GENERAL_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "一般"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "クライアント構成",IDC_STATIC,7,7,231,131
+    LTEXT           "ゲートウェイ(&G):",IDC_STATIC,13,19,51,8
+    EDITTEXT        IDC_GATEWAY,57,33,110,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "即時接続(&N)",IDC_GATEWAY_CONN,177,33,57,14
+    LTEXT           "セル名(&C):",IDC_STATIC,13,57,37,8
+    EDITTEXT        IDC_CELL,57,55,110,13,ES_LOWERCASE | ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+    CONTROL         "Windows へのログイン時に AFS トークンを取得(&O)",
+                    IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,77,
+                    217,10
+    CONTROL         "タスクバーに AFS Light アイコンを表示(&H)",IDC_TRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,95,215,10
+    LTEXT           "注: AFS Light が AFS ゲートウェイに接続していないため、これらの制御は使用できません。",
+                    IDC_WARN,13,114,219,17
+END
+
+IDD_PREFS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "サーバー設定",-1,7,7,206,211
+    CONTROL         "ファイル・サーバー設定の表示(&F)",IDC_SHOW_FS,"Button",
+                    BS_AUTORADIOBUTTON,10,21,193,10
+    CONTROL         "ボリューム・ロケーション・サーバー設定の表示(&V)",
+                    IDC_SHOW_VLS,"Button",BS_AUTORADIOBUTTON,10,36,193,10
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+                    54,173,115
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,81,173,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,137,173,50,14
+    PUSHBUTTON      "↑",IDC_UP,191,97,15,14,BS_ICON
+    PUSHBUTTON      "↓",IDC_DOWN,191,117,15,14,BS_ICON
+    PUSHBUTTON      "インポート(&I)...",IDC_IMPORT,13,173,62,14
+    LTEXT           "注: AFS クライアント・サービスが実行されていないため、これらの制御は使用できません。",
+                    IDC_WARN,13,196,193,17
+END
+
+IDD_HOSTS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS セル"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "AFS セル",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    21,193,168
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,51,195,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,104,195,50,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,157,195,50,14
+END
+
+IDD_DRIVES_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ドライブ名"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "ドライブ名",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,193,135
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,75,171,42,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,120,171,42,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,165,171,42,14
+    LTEXT           "AFS 内のパスにマッピングされたドライブ名:",IDC_STATIC,
+                    13,21,193,8
+    PUSHBUTTON      "拡張(&V)...",IDC_ADVANCED,13,171,53,14
+    LTEXT           "注: AFS クライアント・サービスが実行されていないため、これらの制御は使用できません。",
+                    IDC_WARN,13,193,193,17
+END
+
+IDD_ADVANCED_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "拡張"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_CACHE_SIZE,108,21,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CACHE_PATH,108,41,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CHUNK_SIZE,108,62,32,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_STAT_ENTRIES,108,83,32,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "ログオン(&L)...",IDC_LOGON_PARMS,13,128,57,14
+    PUSHBUTTON      "グローバル・ドライブ(&G)...",IDC_AUTOMAP_PARMS,13,173,
+                    106,14
+    PUSHBUTTON      "各種(&M)...",IDC_MISC_PARMS,13,195,56,14
+    GROUPBOX        "キャッシュ構成",IDC_STATIC,7,7,206,100
+    LTEXT           "キャッシュ・サイズ(&C):",IDC_STATIC,13,23,73,8
+    LTEXT           "kb",IDC_INUSE,155,23,17,8
+    LTEXT           "チャンク・サイズ(&H):",IDC_STATIC,13,64,73,8
+    LTEXT           "kb",IDC_STATIC,155,65,17,8
+    LTEXT           "状況キャッシュ(&S):",IDC_STATIC,13,85,73,8
+    LTEXT           "項目",IDC_STATIC,155,85,17,8
+    LTEXT           "キャッシュ・パス(&P):",IDC_STATIC,13,44,73,8
+    GROUPBOX        "追加の拡張パラメーター",IDC_STATIC,7,114,206,104
+    LTEXT           "グローバル AFS ドライブ・マッピングの作成。",IDC_STATIC,
+                    124,167,79,28
+    LTEXT           "統合ログオンの設定の調整。",IDC_STATIC,74,132,133,10
+    LTEXT           "その他各種のパラメーターの設定。",IDC_STATIC,74,199,132,
+                    10
+    PUSHBUTTON      "診断(&D)...",IDC_DIAG_PARMS,13,150,56,14
+    LTEXT           "問題デバッグ用の設定を可能にする。",IDC_STATIC,74,151,
+                    137,11
+END
+
+IDD_PREFS_EDIT DIALOG DISCARDABLE  0, 0, 251, 123
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "サーバー優先順位の指定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "この AFS セル内のサーバーの優先順位ランクを指定できます。AFS 内のデータを検索するとき、番号の小さいランクを持つサーバーが最初に照会されます。",
+                    IDC_STATIC,7,5,237,23
+    LTEXT           "サーバー(&S):",IDC_STATIC,34,37,49,8
+    LTEXT           "ランク(&R):",IDC_STATIC,34,55,42,8
+    EDITTEXT        IDC_SERVER,93,35,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RANK,93,53,80,13,ES_AUTOHSCROLL
+    LTEXT           "ヒント: 「インポート」ボタンを使用して、サーバーとそのランクを指定するテキスト・ファイルを読み取り、複数のサーバーのランクを一度に指定することができます。",
+                    IDC_STATIC,7,75,237,20
+    PUSHBUTTON      "取消し",IDCANCEL,140,102,50,14
+    PUSHBUTTON      "了解",IDOK,86,102,50,14
+    PUSHBUTTON      "ヘルプ",9,194,102,50,14
+END
+
+IDD_CELL_EDIT DIALOG DISCARDABLE  0, 0, 244, 223
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "セル・プロパティー"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "このページの情報は AFS に指定のセルとの接続方法を伝えます。",
+                    IDC_STATIC,4,4,235,8
+    LTEXT           "AFS セル(&F):",IDC_STATIC,4,24,50,8
+    EDITTEXT        IDC_CELL,64,24,105,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    LTEXT           "記述(&D):",IDC_STATIC,4,41,38,8
+    EDITTEXT        IDC_COMMENT,64,39,176,13,ES_AUTOHSCROLL
+    GROUPBOX        "サーバー",IDC_STATIC,4,61,236,158
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+                    76,217,117
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,75,198,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,128,198,50,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,181,198,50,14
+END
+
+IDD_SERVER_EDIT DIALOG DISCARDABLE  0, 0, 251, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "サーバーの追加 / 編集"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ボリューム・ロケーション・サーバーの名前を入力してください。",
+                    IDC_STATIC,7,7,239,8
+    LTEXT           "サーバー名(&N):",IDC_STATIC,7,27,58,8
+    EDITTEXT        IDC_COMMENT,73,25,170,13,ES_AUTOHSCROLL
+    LTEXT           "サーバー・アドレス(&A):",IDC_STATIC,7,46,89,8
+    CONTROL         "特定アドレスの使用(&U):",IDC_ADDR_SPECIFIC,"Button",
+                    BS_AUTORADIOBUTTON,63,60,100,10
+    CONTROL         "アドレスを自動的に検索(&L)",IDC_ADDR_LOOKUP,"Button",
+                    BS_AUTORADIOBUTTON,63,76,100,10
+    CONTROL         "",IDC_SERVER,"SockAddr",WS_BORDER | WS_TABSTOP,171,59,
+                    65,13
+    PUSHBUTTON      "取消し",IDCANCEL,140,91,50,14
+    PUSHBUTTON      "了解",IDOK,86,91,50,14
+    PUSHBUTTON      "ヘルプ",9,194,91,50,14
+END
+
+IDD_DRIVE_EDIT DIALOG DISCARDABLE  0, 0, 297, 156
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ドライブ名のマッピング"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "コンピューターのドライブ名を AFS 内のパスにマッピングすることができます。",
+                    IDC_STATIC,7,7,283,8
+    LTEXT           "たとえば、ドライブ Q を /afs/acme.com/usr/bob としてマッピングすると、/afs/acme.com/usr/bob/* として AFS 内で使用可能なファイルはコンピューターの Q:\\ ディレクトリーで見ることができます。",
+                    IDC_STATIC,7,23,283,26
+    LTEXT           "ドライブ名(&D):",IDC_STATIC,30,59,58,8
+    COMBOBOX        IDC_DRIVE,97,57,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS パス(&P):",IDC_STATIC,30,77,58,8
+    EDITTEXT        IDC_PATH,97,75,168,13,ES_AUTOHSCROLL
+    LTEXT           "記述(&E):",IDC_STATIC,30,96,58,8
+    EDITTEXT        IDC_DESC,97,94,72,13,ES_AUTOHSCROLL
+    CONTROL         "ログオン時にこのマッピングを復元(&R)",IDC_PERSISTENT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,97,112,188,10
+    PUSHBUTTON      "取消し",IDCANCEL,186,135,50,14
+    PUSHBUTTON      "了解",IDOK,132,135,50,14
+    PUSHBUTTON      "ヘルプ",9,240,135,50,14
+END
+
+IDD_SUBMOUNTS DIALOG DISCARDABLE  0, 0, 244, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "サブマウント"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS でサブマウント--ネットワーク共用を提供できます。",
+                    IDC_STATIC,7,4,229,8
+    GROUPBOX        "サブマウント",IDC_STATIC,4,26,236,168
+    LTEXT           "以下のサブマウントがこのコンピューターから共用されます:",
+                    IDC_STATIC,10,42,223,8
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+                    55,223,115
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,78,175,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,131,175,50,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,184,175,50,14
+END
+
+IDD_SUBMOUNT_EDIT DIALOG DISCARDABLE  0, 0, 271, 123
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "サブマウントの指定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サブマウントは、Windows ネットワーキングを使用した AFS サブディレクトリー・ツリーの共用を可能にします。",
+                    IDC_STATIC,10,7,251,18
+    LTEXT           "サブマウント(&S):",IDC_STATIC,21,34,47,11
+    LTEXT           "AFS パス(&P):",IDC_STATIC,29,54,39,12
+    EDITTEXT        IDC_SUBMOUNT,78,33,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MAPPING,78,53,177,14,ES_AUTOHSCROLL
+    LTEXT           "プロンプトにサブマウントの短い名前とフル AFS パスを入力してください。AFS パスは ""\\afs"" で始まります (始まっていない場合は、""\\afs"" が自動的に追加されます)。",
+                    IDC_STATIC,10,76,251,18
+    PUSHBUTTON      "取消し",IDCANCEL,159,102,50,14
+    PUSHBUTTON      "了解",IDOK,105,102,50,14
+    PUSHBUTTON      "ヘルプ",9,213,102,50,14
+END
+
+IDD_DRIVES_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ドライブ名"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "ドライブ名",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,219,60
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,100,95,42,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,145,95,42,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,190,95,42,14
+    LTEXT           "AFS 内のパスにマッピングされたドライブ名:",IDC_STATIC,
+                    13,21,193,8
+    LTEXT           "注: AFS Light サービスが AFS ゲートウェイに接続していないため、これらのコントロールは使用できません。",
+                    IDC_WARN,13,116,219,17
+END
+
+IDD_HOSTS_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS セル"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "AFS セル",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    21,218,94
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,75,119,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,128,119,50,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,181,119,50,14
+END
+
+IDD_STARTSTOP DIALOGEX 0, 0, 289, 48
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "AFS クライアント・サービス"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,0,280,44
+    ICON            IDI_MAIN,IDC_STATIC,14,15,20,20
+    LTEXT           "お待ちください。AFS クライアント・サービスを開始中です...",
+                    IDC_STARTING,46,20,228,8
+    LTEXT           "お待ちください。AFS クライアント・サービスを停止中です...",
+                    IDC_STOPPING,46,20,234,8
+END
+
+IDD_HOSTS_CCENTER DIALOG DISCARDABLE  0, 0, 220, 256
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "一般"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "デフォルト・セル",IDC_STATIC,1,7,214,54
+    LTEXT           "管理するデフォルトAFSセルの名前を入力してください:",
+                    IDC_STATIC,8,21,201,8
+    LTEXT           "デフォルト・セル:",IDC_STATIC,8,37,50,8
+    EDITTEXT        IDC_CELL,68,45,143,14,ES_LOWERCASE | ES_AUTOHSCROLL
+    GROUPBOX        "AFS セル",IDC_STATIC,7,69,206,180
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    84,193,137
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,51,227,50,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,104,227,50,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,157,227,50,14
+END
+
+IDD_MISC_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 220, 193
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "各種の構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_LAN_ADAPTER,128,20,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROBE,128,40,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THREADS,128,60,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DAEMONS,128,80,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SYSNAME,128,100,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOUNTDIR,128,120,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ROOTVOLUME,128,140,83,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,55,172,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,109,172,50,14
+    PUSHBUTTON      "ヘルプ",9,163,172,50,14
+    GROUPBOX        "パラメーター",IDC_STATIC,7,7,208,156
+    LTEXT           "プローブ間隔(&P):",IDC_STATIC,14,42,90,8
+    LTEXT           "秒",IDC_STATIC,180,43,28,8
+    LTEXT           "バックグラウンド・スレッド(&B):",IDC_STATIC,14,62,90,8
+    LTEXT           "スレッド",IDC_STATIC,180,62,28,8
+    LTEXT           "サービス・スレッド(&E):",IDC_STATIC,14,82,90,8
+    LTEXT           "スレッド",IDC_STATIC,180,82,28,8
+    LTEXT           "システム名(&Y):",IDC_STATIC,14,102,90,8
+    LTEXT           "マウント・ディレクトリー(&M):",IDC_STATIC,14,122,90,8
+    LTEXT           "LAN アダプター番号(&L):",IDC_STATIC,14,22,90,8
+    LTEXT           "ルート・ボリューム(&R):",IDC_STATIC,14,141,90,8
+END
+
+IDD_DIAG_PARMS DIALOG DISCARDABLE  0, 0, 217, 135
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "診断の構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_TRACE_LOG_BUF_SIZE,113,21,42,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,52,114,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,106,114,50,14
+    PUSHBUTTON      "ヘルプ",9,160,114,50,14
+    GROUPBOX        "トレース・ログ・パラメーター",IDC_STATIC,7,7,203,54
+    LTEXT           "バッファー・サイズ(&B):",IDC_STATIC,13,22,89,8
+    LTEXT           "kb",IDC_STATIC,171,24,9,8
+    GROUPBOX        "イベント・ログ・パラメーター",IDC_STATIC,7,69,203,35
+    COMBOBOX        IDC_TRAP_ON_PANIC,113,41,42,61,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "パニック時のトラップ(&T):",IDC_STATIC,13,42,89,8
+    LTEXT           "セッション始動のレポート:",IDC_STATIC,13,86,89,8
+    COMBOBOX        IDC_REPORT_SESSION_STARTUPS,113,85,42,64,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_LOGIN_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 186, 92
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ログインの構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_LOGIN_RETRY_INTERVAL,125,17,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_FAIL_SILENTLY,125,39,42,40,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "了解",IDOK,21,71,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,75,71,50,14
+    PUSHBUTTON      "ヘルプ",9,129,71,50,14
+    LTEXT           "ログインの再試行間隔(&L):",IDC_STATIC,13,20,96,8
+    GROUPBOX        "パラメーター",IDC_STATIC,7,7,172,54
+    LTEXT           "ログイン失敗時に通知しない(&F):",IDC_STATIC,13,41,96,8
+END
+
+IDD_GLOBAL_DRIVES DIALOG DISCARDABLE  0, 0, 253, 169
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "グローバル・ドライブ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "クローズ",IDOK,141,148,50,14
+    PUSHBUTTON      "ヘルプ",9,196,148,50,14
+    PUSHBUTTON      "追加(&A)",IDC_ADD,108,119,42,14
+    GROUPBOX        "グローバルにマッピングされる AFS ドライブ",IDC_STATIC,7,
+                    7,239,133
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER | 
+                    WS_TABSTOP | 0x1b,14,22,226,89
+    PUSHBUTTON      "変更(&C)",IDC_CHANGE,153,119,42,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,198,119,42,14
+END
+
+IDD_GLOBAL_DRIVES_ADDEDIT DIALOG DISCARDABLE  0, 0, 247, 118
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "グローバル・ドライブのマッピング"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_DRIVE,66,23,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_PATH,66,42,168,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,66,62,72,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,82,96,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,136,96,50,14
+    PUSHBUTTON      "ヘルプ",9,190,96,50,14
+    LTEXT           "ドライブ名(&D):",IDC_STATIC,14,25,44,8
+    LTEXT           "AFS パス(&P):",IDC_STATIC,14,44,44,8
+    LTEXT           "記述(&E):",IDC_STATIC,13,64,44,8
+    GROUPBOX        "グローバル AFS ドライブ",IDC_STATIC,7,7,232,80
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_GENERAL_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GENERAL_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_PREFS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_HOSTS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_DRIVES_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_ADVANCED_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_PREFS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
+
+    IDD_CELL_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_SERVER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_DRIVE_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 290
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+    END
+
+    IDD_SUBMOUNTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_SUBMOUNT_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 264
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
+
+    IDD_DRIVES_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_HOSTS_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 215
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 44
+    END
+
+    IDD_HOSTS_CCENTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 249
+    END
+
+    IDD_MISC_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 186
+    END
+
+    IDD_DIAG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_LOGIN_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_GLOBAL_DRIVES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS クライアント構成""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afs_config.ico"
+IDI_UP                  ICON    DISCARDABLE     "up.ico"
+IDI_DOWN                ICON    DISCARDABLE     "down.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE_NT            "AFS クライアント構成"
+    IDS_TITLE_95            "AFS Light 構成"
+    IDS_STATE_STOPPED       "AFS クライアント・サービスは現在停止されています。"
+    IDS_STATE_RUNNING       "AFS クライアント・サービスは正常に実行されています。"
+    IDS_STATE_STARTING      "お待ちください。AFS クライアント・サービスを開始中です..."
+    IDS_STATE_STOPPING      "お待ちください。AFS クライアント・サービスを停止中です..."
+    IDS_STATE_UNKNOWN       "AFS クライアント・サービスが正しく構成されていません。"
+    IDS_SERVICE_FAIL_START  "AFS クライアント・サービスを正常に開始できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1"
+    IDS_SERVICE_FAIL_STOP   "AFS クライアント・サービスを正常に停止できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1 "
+    IDS_WARN_STOPPED        "AFS クライアント・サービスが実行されていないため、使用不可の制御を変更できません。"
+    IDS_WARN_ADMIN          "Windows に管理者としてログインしていないため、使用不可の制御を変更できません。"
+    IDS_CELL_UNKNOWN        "(不明)"
+    IDS_GATEWAY_UNKNOWN     "(不明)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADLOOKUP_DESC      "Windows が %1 のネットワーク・アドレスを検索できませんでした。マシンの名前を正しく入力したかを確かめてください。"
+    IDS_NEWSUB_DESC         "AFS はネットワーク・ドライブの接続時に指定された記述を使用できませんでした。\n\n指定された記述はすでに他の AFS パスに使用されています。"
+    IDS_BADSUB_DESC         "入力したドライブ名記述を使用できません。\n\nドライブ名の記述は 12 文字を超えてはならず、スペースまたはタブを含んでいてはいけません。"
+    IDS_BADGATEWAY_DESC     "AFS が指定されたゲートウェイ・マシンに接続できませんでした。\n\nゲートウェイ・マシンの名前を正しく入力したかを確かめてください。"
+    IDS_BADGWCELL_DESC      "指定されたゲートウェイ・マシンが使用する AFS セルの構成情報が見つかりませんでした。\n\nAFS クライアントを新規セルへ構成したい場合は、「AFS セル」タブを使用して、そのセルの構成情報を追加する必要があります。\n\nセル: %1"
+    IDS_TITLE_CAUTION_NT    "注意 - AFS クライアント構成"
+    IDS_TITLE_CAUTION_95    "注意 - AFS Light 構成"
+    IDS_TITLE_ERROR_NT      "エラー - AFS クライアント構成"
+    IDS_TITLE_ERROR_95      "エラー - AFS Light 構成"
+    IDS_SHRINKCACHE         "AFS クライアント・サービスの実行中は、AFS クライアント・キャッシュのサイズを小さくすることはできません。\n\nキャッシュのサイズを小さくするには、まず「一般」タブの「サービスの停止」ボタンを使用して AFS クライアント・サービスを停止してください。"
+    IDS_BADCELL_DESC_CC     "入力した AFS セルの構成情報が見つかりませんでした。\n\n+"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_DESC           "AFS クライアント・サービスを停止すると、AFS に保管されたファイルはこのコンピューターからアクセスできなくなります。\n\nサービスを停止してもいいですか?"
+    IDS_PREFCOL_SERVER      "サーバー"
+    IDS_PREFCOL_RANK        "ランク"
+    IDS_TIP_PREFS           "ヒント: より小さい番号のランクを持つサーバーは、AFS を通じて読み取られるときに、より高い優先順位が与えられます。"
+    IDS_PREFERROR_RESOLVE   "AFS がサーバー %1 を見つけられませんでした。サーバー名を正しく入力したかを確かめてください。"
+    IDS_FILTER_TXT          "テキスト・ファイル (*.TXT);*.TXT;"
+    IDS_HOSTREM_MANY        "選択した AFS セルのすべての接続情報の削除を選択しました。\n\nこれらの項目を削除してもいいですか?"
+    IDS_HOSTREM_ONE         "AFS セル %1 のすべての接続情報の削除を選択しました。\n\nこれらの項目を削除してもいいですか?"
+    IDS_CELLEDIT_TITLE      "%1 - プロパティー"
+    IDS_CELLADD_TITLE       "新規セル"
+    IDS_SVRCOL_SERVER       "アドレス"
+    IDS_SVRCOL_COMMENT      "サーバー名"
+    IDS_TIP_DRIVES          "ヒント: マッピングのドライブ名の横にあるボックスをチェックすると、ネットワーク・ドライブ・マッピングに接続することができます。"
+    IDS_MAP_LETTER          "ドライブ *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "ドライブ %1: \t%2"
+    IDS_ERROR_MAP           "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_MAP_DESC      "AFS は AFS 内の指定されたパスにネットワーク・ドライブをマッピングできませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1 "
+    IDS_ERROR_UNMAP         "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_UNMAP_DESC    "AFS は指定されたネットワーク・ドライブをマッピング解除できませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1"
+    IDS_ADDSERVER_TITLE     "サーバーの追加"
+    IDS_EDITSERVER_TITLE    "サーバーの編集"
+    IDS_SUBCOL_SHARE        "サブマウント"
+    IDS_SUBCOL_PATH         "AFS パス"
+    IDS_SUBMOUNTS_TITLE     "サブマウント"
+    IDS_BADCELL_DESC        "入力した AFS セルの構成情報が見つかりません。\n\n+"
+    IDS_BADCELL_DESC2       "セルの名前を正しく入力したかを確かめてください。AFS クライアントを新規セルへ構成したい場合は、「AFS クライアント」タブを使用して、そのセルの構成情報を追加する必要があります。"
+    IDS_KB_IN_USE           "kb (%1 kb 使用中)"
+    IDS_NOGATEWAY_TITLE     "無効な AFS ゲートウェイ"
+    IDS_NOGATEWAY_DESC      "AFS ゲートウェイが指定されていないため、AFS Light を構成できません。\n\n提供されたエリアに AFS ゲートウェイの名前または IP アドレスを入力してください。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOCELL_DESC         "AFS セルが指定されていないため、AFS クライアントを構成できません。\n\n提供されたエリアに AFS セルの名前を入力してください。"
+    IDS_STOPPED_NOCELL      "AFS セルを指定してからでなければ、AFS クライアント・サービスを開始することはできません。"
+    IDS_OKSTOP_DESC         "AFS クライアント・サービスが実行されていません。AFS に保管されたファイルは AFS クライアント・サービスを開始するまでこのコンピューターからアクセスできなくなります。\n\nサービスをいますぐ開始しますか?"
+    IDS_BADMAP_DESC         "パスが ""\\afs"" で始まっていないため、AFS はドライブ名を指定されたパスにマッピングできません。\n\n入力したパスが ""\\afs"" で始まっているかを確かめてから、やり直してください。"
+    IDS_RESTART_TITLE       "AFS クライアント構成"
+    IDS_RESTART_DESC        "AFS クライアント・サービスを停止して再始動するまで、変更のいくつかは有効になりません。\n\nサービスをいますぐ停止して、再始動しますか?"
+    IDS_KB_ONLY             "kb"
+    IDS_FAILCONFIG_AUTHENT  "ログオン時に認証を使用可能または使用不可にしようとしたときにエラーが起きました。\n\nエラー %1"
+    IDS_FAILCONFIG_PREFS    "割り当てたサーバー・ランキング優先順位のいくつかが使用できませんでした。\n\nエラー %1"
+    IDS_FAILCONFIG_CACHE    "入力した AFS クライアント・キャッシュ・サイズが使用できませんでした。\n\nエラー %1"
+    IDS_FAILCONFIG_PROBE    "入力した AFS クライアント・プローブ間隔が使用できませんでした。\n\nエラー %1"
+    IDS_FAILCONFIG_SYSNAME  "入力した AFS クライアント sysname が使用できませんでした。\n\nエラー %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADCELL_DESC_CC2    "セルの名前を正しく入力したかを確かめてください。正しいセル名が「AFS セル」リストに示されていない場合は、「追加」ボタンを使用してセルの項目を作成してください。"
+    IDS_NOCELL_DESC_CC      "デフォルト AFS セルが指定されていないため、AFS コントロール・センターを構成できません。\n\n提供されたエリアに AFS セルの名前を入力してください。"
+    IDS_TITLE_CAUTION_CCENTER 
+                            "注意 - AFS コントロール・センター・プロパティー"
+    IDS_TITLE_ERROR_CCENTER "エラー - AFS コントロール・センター・プロパティー"
+    IDS_TITLE_CCENTER       "AFS コントロール・センター・プロパティー"
+    IDS_YES                 "はい"
+    IDS_NO                  "いいえ"
+    IDS_DRIVE               "ドライブ"
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

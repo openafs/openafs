@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf033.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf035.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRTL" HREF="auarf002.htm#ToC_32">TL_<I>device_name</I></A></H2>
+<P><STRONG>Purpose</STRONG>
+<P>Traces Tape Coordinator operations and logs errors
+<P><STRONG>Description</STRONG>
+<P>The <B>TL_</B><VAR>device_name</VAR> file logs the actions performed by
+the Backup System Tape Coordinator (<B>butc</B> process) that controls the
+tape device or backup data file indicated by <VAR>device_name</VAR>. It
+also records the same error and warning messages written to the
+<B>TE_</B><VAR>device_name</VAR> file.
+<P>As the Tape Coordinator initializes, it creates the file in ASCII format in
+the <B>/usr/afs/backup</B> directory. If there is an existing file,
+the Tape Coordinator renames it to
+<B>TL_</B><VAR>device_name</VAR><B>.old</B>, overwriting the
+existing <B>TL_</B><VAR>device_name</VAR><B>.old</B> file if it
+exists.
+<P>For a tape device, the Tape Coordinator derives the variable
+<VAR>device_name</VAR> portion of the filename from the device pathname listed
+in the local <B>/usr/afs/backup/tapeconfig</B> file, by stripping off the
+initial <B>/dev/</B> string and replacing any other slashes in the name
+with underscores. For example, the filename for a device called
+<B>/dev/rmt/4m</B> is <B>TL_rmt_4m</B>. Similarly, for a backup
+data file the Tape Coordinator strips off the initial slash (/) and replaces
+any other slashes in the name with underscores. For example, the
+filename for a backup data file called <B>/var/tmp/FILE</B> is
+<B>TL_var_tmp_FILE</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf031.htm#HDRTE">TE_<I>device_name</I></A>
+<P><A HREF="auarf050.htm#HDRTAPECONFIG">tapeconfig</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf033.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf035.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

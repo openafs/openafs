@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" ?>
+<Include>
+        <Feature Id="feaOpenAFS" AllowAdvertise="no" Absent="disallow" ConfigurableDirectory="AFSDIR"
+            Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
+            Title="OpenAFS">
+           <ComponentRef Id="efl_desktop_INI" />
+           <ComponentRef Id="efl_replace_afs_CMD" />
+           <ComponentRef Id="efl_uninstall_EXE" />
+
+           <ComponentRef Id="cmp_Release_Notes_en_US" />
+           <ComponentRef Id="cmf_index2_HTM_en_US" />
+           <ComponentRef Id="cmp_index_files_en_US" />
+           <ComponentRef Id="cmp_logo_files_en_US" />
+
+            <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
+                InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
+                
+                <Feature Id="feaLoopback" AllowAdvertise="no" Description="$(loc.StrLoopbackLongDesc)"
+                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrLoopbackDesc)">
+                    <ComponentRef Id="rcm_Loopback"/>
+                </Feature>
+
+				<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
+					<ComponentRef Id="rcm_KB301673" />
+					<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
+				</Feature>
+				
+				<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
+					<ComponentRef Id="cmp_credsStartup" />
+					<Condition Level="130">CREDSSTARTUP = 0</Condition>
+				</Feature>
+				
+			<?ifdef DebugSyms?>
+				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+                    <ComponentRef Id="cmp_ClientProgramDebug" />
+                    <ComponentRef Id="cmp_CommonCommonDebug" />
+                    <ComponentRef Id="cmp_ClientCommonDebug" />
+                    <ComponentRef Id="cmp_ClientSystemDebug" />
+                    <?include runtime_debug.wxi?>
+				</Feature>
+			<?endif?>
+
+				<ComponentRef Id="rcm_Client" />
+                <ComponentRef Id="rcm_ClientCacheSize" />
+                <ComponentRef Id="rcm_ClientCachePath" />
+                <ComponentRef Id="rcm_StoreAnsiFilenames" />
+
+				<ComponentRef Id="cmp_CommonDir" />
+
+                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
+                <ComponentRef Id="efl_CellServDB" />
+                <ComponentRef Id="cpf_CellServDB" />
+                <ComponentRef Id="cmf_afs_cpa_CPL" />
+
+                <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsauthent2_DLL" />
+                <ComponentRef Id="cmf_afspthread_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
+                <ComponentRef Id="cmf_afsprocmgmt_DLL" />
+                <ComponentRef Id="cmf_afs_config_EXE" />
+
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)"/>
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
+
+                <ComponentRef Id="cmf_afsshare_EXE" />
+                <ComponentRef Id="cmf_libosi_DLL" />
+                <ComponentRef Id="cmf_libafsconf_DLL" />
+                <ComponentRef Id="cmf_klog_EXE" />
+                <ComponentRef Id="cmf_tokens_EXE" />
+                <ComponentRef Id="cmf_unlog_EXE" />
+                <ComponentRef Id="cmf_fs_EXE" />
+                <ComponentRef Id="cmf_afsdacl_EXE" />
+                <ComponentRef Id="cmf_afscreds_EXE" />
+                <ComponentRef Id="cmf_afs_shl_ext_DLL" />
+                <ComponentRef Id="cmf_afsd_service_EXE" />
+                <ComponentRef Id="cmf_afslogon_DLL" />
+                <ComponentRef Id="cmf_symlink_EXE" />
+                <ComponentRef Id="cmf_kpasswd_EXE" />
+                <ComponentRef Id="cmf_pts_EXE" />
+                <ComponentRef Id="cmf_bos_EXE" />
+                <ComponentRef Id="cmf_kas_EXE" />
+                <ComponentRef Id="cmf_vos_EXE" />
+                <ComponentRef Id="cmf_udebug_EXE" />
+                <ComponentRef Id="cmf_translate_et_EXE" />
+                <ComponentRef Id="cmf_rxdebug_EXE" />
+                <ComponentRef Id="cmf_backup_EXE" />
+                <ComponentRef Id="cmf_aklog_EXE" />
+                <ComponentRef Id="cmf_cmdebug_EXE" />
+                
+                <!-- Runtime -->
+                <?include runtime.wxi?>
+            </Feature>
+            
+            <Feature Id="feaServer" AllowAdvertise="no" Description="$(loc.StrAFSServerLongDesc)" Display="expand"
+                InstallDefault="followParent" Level="130" Title="$(loc.StrAFSServerDesc)">
+
+				<ComponentRef Id="rcm_Server" />
+				<ComponentRef Id="cmp_CommonDir" />
+
+                <ComponentRef Id="cmf_afsserver_CPL" />
+                <ComponentRef Id="cmf_afsbosadmin_DLL" />
+                <ComponentRef Id="cmf_afscfgadmin_DLL" />
+                <ComponentRef Id="cmf_afsclientadmin_DLL" />
+                <ComponentRef Id="cmf_afskasadmin_DLL" />
+                <ComponentRef Id="cmf_afsptsadmin_DLL" />
+                <ComponentRef Id="cmf_afsvosadmin_DLL" />
+                <ComponentRef Id="cmf_afsadminutil_DLL" />
+
+                <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsauthent2_DLL" />
+                <ComponentRef Id="cmf_afspthread_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
+                <ComponentRef Id="cmf_afsprocmgmt_DLL" />
+
+                <ComponentRef Id="cmf_afseventmsg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afsserver_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afssvrcfg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
+                <ComponentRef Id="cmp_Lang_$(var.Language)" />
+            
+                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
+
+                <ComponentRef Id="cmf_vlserver_EXE" />
+                <ComponentRef Id="cmf_volinfo_EXE" />
+                <ComponentRef Id="cmf_volserver_EXE" />
+                <ComponentRef Id="cmf_afskill_EXE" />
+                <ComponentRef Id="cmf_afssvrcfg_EXE" />
+                <ComponentRef Id="cmf_asetkey_EXE" />
+                <ComponentRef Id="cmf_bosctlsvc_EXE" />
+                <ComponentRef Id="cmf_bosserver_EXE" />
+                <ComponentRef Id="cmf_buserver_EXE" />
+                <ComponentRef Id="cmf_fileserver_EXE" />
+                <ComponentRef Id="cmf_fms_EXE" />
+                <ComponentRef Id="cmf_butc_EXE" />
+                <ComponentRef Id="cmf_kaserver_EXE" />
+                <ComponentRef Id="cmf_ptserver_EXE" />
+                <ComponentRef Id="cmf_salvager_EXE" />
+                <ComponentRef Id="cmf_upclient_EXE" />
+                <ComponentRef Id="cmf_upserver_EXE" />
+                <ComponentRef Id="cmp_Server_Program" />
+
+            <?ifdef DebugSyms?>
+				<Feature Id="feaServerDebug" AllowAdvertise="no" Description="$(loc.StrAFSServerDebugLongDesc)" Display="expand"
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSServerDebugDesc)">
+					<ComponentRef Id="cmp_Server_Program_Debug" />
+					<ComponentRef Id="cmp_ServerCommonDebug" />
+					<ComponentRef Id="cmp_CommonCommonDebug" />
+					<?include runtime_debug.wxi?>
+                </Feature>
+            <?endif?>
+
+                <!-- Runtime -->
+                <?include runtime.wxi?>
+            </Feature>
+            <Feature Id="feaControlCenter" AllowAdvertise="no" Description="$(loc.StrAFSCCLongDesc)"
+                Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSCCDesc)">
+                
+                <ComponentRef Id="rcm_Control_Center" />
+                <ComponentRef Id="cmp_CommonDir" />
+                
+                <ComponentRef Id="cmf_afs_cpa_CPL" />
+                <ComponentRef Id="cmf_afsbosadmin_DLL" />
+                <ComponentRef Id="cmf_afscfgadmin_DLL" />
+                <ComponentRef Id="cmf_afsclientadmin_DLL" />
+                <ComponentRef Id="cmf_afskasadmin_DLL" />
+                <ComponentRef Id="cmf_afsptsadmin_DLL" />
+                <ComponentRef Id="cmf_afsvosadmin_DLL" />
+                <ComponentRef Id="cmf_afsadminutil_DLL" />
+                <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsauthent2_DLL" />
+                <ComponentRef Id="cmf_afspthread_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
+                <ComponentRef Id="cmf_afsprocmgmt_DLL" />
+                <ComponentRef Id="cmf_afs_config_EXE" />
+				<ComponentRef Id="cmf_TaAfsServerManager_EXE" />
+				<ComponentRef Id="cmf_TaAfsAdmSvr_EXE" />
+				<ComponentRef Id="cmf_TaAfsAccountManager_EXE" />
+
+                <ComponentRef Id="cmf_afseventmsg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afsserver_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afssvrcfg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAccountManager_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsServerManager_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
+                <ComponentRef Id="cmp_Lang_$(var.Language)" />
+
+            <?ifdef DebugSyms?>
+				<Feature Id="feaControlCenterDebug" AllowAdvertise="no" Description="$(loc.StrAFSCCDebugLongDesc)"
+					Display="expand" InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCCDebugDesc)">
+					<ComponentRef Id="cmp_Control_CenterDebug" />
+					<ComponentRef Id="cmp_ServerCommonDebug" />
+					<ComponentRef Id="cmp_CommonCommonDebug" />
+					<ComponentRef Id="cmp_ClientCommonDebug" />
+					<?include runtime_debug.wxi?>
+				</Feature>
+            <?endif?>
+            
+                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
+                
+                <!-- Runtime -->
+                <?include runtime.wxi?>
+            </Feature>
+            <Feature Id="feaSDK" AllowAdvertise="no" Description="$(loc.StrAFSSDKLongDesc)" Display="expand"
+                InstallDefault="followParent" Level="130" Title="$(loc.StrAFSSDKDesc)">
+
+				<ComponentRef Id="rcm_SDK" />
+
+                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
+				<ComponentRef Id="cmp_SDK_Sample" />
+				<ComponentRef Id="cmp_SDK_Include" />
+				<ComponentRef Id="cmp_SDK_Include_afs" />
+				<ComponentRef Id="cmp_SDK_Include_rx" />
+				<ComponentRef Id="cmp_SDK_Include_Winnt" />
+				<ComponentRef Id="cmp_SDK_Lib" />
+				<ComponentRef Id="cmp_SDK_Lib_Afs" />
+
+			<?ifdef DebugSyms?>
+				<Feature Id="feaSDKDebug" AllowAdvertise="no" Description="$(loc.StrAFSSDKDebugLongDesc)" Display="expand"
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSSDKDebugDesc)">
+					<?include runtime_debug.wxi?>
+				</Feature>
+			<?endif?>
+                <!-- Runtime -->
+                <?include runtime.wxi?>
+            </Feature>
+            
+            <Feature Id="feaDocumentation" AllowAdvertise="no" Description="$(loc.StrAFSDocLongDesc)"
+                Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
+
+				<ComponentRef Id="rcm_Documentation" />
+                
+                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
+                <ComponentRef Id="efl_DocHtml_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_en_US" />
+                <ComponentRef Id="cmp_Install_Guide_en_US" />
+                <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
+
+                <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
+                <ComponentRef Id="cmp_Lang_en_US" />
+		
+            </Feature>
+        </Feature>
+</Include>

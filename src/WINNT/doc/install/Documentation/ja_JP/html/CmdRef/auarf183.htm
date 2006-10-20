@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_CREATE" HREF="auarf002.htm#ToC_197">kas create</A></H2>
+<A NAME="IDX5073"></A>
+<A NAME="IDX5074"></A>
+<A NAME="IDX5075"></A>
+<A NAME="IDX5076"></A>
+<A NAME="IDX5077"></A>
+<P><STRONG>目的</STRONG>
+<P>認証データベース項目を作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas create -name</B> &lt;<VAR>name of user</VAR>>  [<B>-initial_password</B> &lt;<VAR>initial password</VAR>>] 
+           [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+           [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
+           [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  
+           [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas c -na</B> &lt;<VAR>name of user</VAR>>  [<B>-i</B> &lt;<VAR>initial password</VAR>>] 
+      [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+      [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>] 
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas create</B> コマンドは、
+<B>-name</B> 引き数に指定されたユーザーの項目を認証データベースに作成します。
+<P>シェル・プロンプトでアカウントの最初のパスワードが表示されないようにするには、<B>-initial_password</B> 引き数を省略してください。コマンド・インタープリター・プロンプトは、パスワードを要求するときに、表示しません。
+<B>-initial_password</B> の指定に関係なく、認証サーバーは、入力されたパスワードを暗号化キーに適した形式に変換し、その項目のキー・フィールドに格納します。
+<P>認証データベース項目の設定値を更新するには、<B>kas setfields</B> コマンドを使用します。項目を調査するには、<B>kas examine</B> コマンドを使用します。データベースのすべての項目をリストするには、<B>kas list</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>新しい認証データベース項目の名前を指定します。これは、ユーザーがログインしたときの名前になるため、多くのオペレーティング・システムで準拠している制限に従う必要があります。(通常、8 文字以下の英小文字から構成されます。)
+<P><DT><B>-initial_password
+</B><DD>ユーザーのパスワードを設定します。英大文字および英小文字、数値および句読点が使用できます。認証サーバーは、項目のキー・フィールドに配置する前に、文字列を暗号化キーとして使用するための 8 進数文字列セットに変換します。この引き数を省略すると、コマンド・インタープリターは、文字列を要求しますが、入力した文字列は画面に表示されません。
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例は、
+<B>admin</B> としてログインした管理者が、ユーザー <B>smith</B> の認証データベース項目を作成しています。ここでは <B>-initial_password</B> または <B>-password_for_admin</B> 引き数のどちらかも使用していません。
+<PRE>   % <B>kas create smith</B>
+   Password for admin:
+   initial_password:
+   Verifying, please re-enter initial_password:
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者には、認証データベース項目で <TT>ADMIN</TT> フラグを設定させなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf185.htm#HDRKAS_EXAMINE">kas examine</A>
+<P><A HREF="auarf189.htm#HDRKAS_LIST">kas list</A>
+<P><A HREF="auarf193.htm#HDRKAS_SETFIELDS">kas setfields</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf182.htm">前ページ</A> &#124; <A HREF="auarf184.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

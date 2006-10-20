@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf113.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf115.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_SALVAGE" HREF="auarf002.htm#ToC_128">bos salvage</A></H2>
+<A NAME="IDX4609"></A>
+<A NAME="IDX4610"></A>
+<A NAME="IDX4611"></A>
+<A NAME="IDX4612"></A>
+<A NAME="IDX4613"></A>
+<A NAME="IDX4614"></A>
+<A NAME="IDX4615"></A>
+<A NAME="IDX4616"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Restores internal consistency to a file system or volume
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos salvage -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-partition</B> &lt;<VAR>salvage&nbsp;partition</VAR>>]
+            [<B>-volume</B> &lt;<VAR>salvage&nbsp;volume&nbsp;number&nbsp;or&nbsp;volume&nbsp;name</VAR>>]
+            [<B>-file</B> &lt;<VAR>salvage&nbsp;log&nbsp;output&nbsp;file</VAR>>]  [<B>-all</B>]  [<B>-showlog</B>] 
+            [<B>-parallel</B> &lt;<VAR>#&nbsp;of&nbsp;max&nbsp;parallel&nbsp;partition&nbsp;salvaging</VAR>>]  
+            [<B>-tmpdir</B> &lt;<VAR>directory&nbsp;to&nbsp;place&nbsp;tmp&nbsp;files</VAR>>] 
+            [<B>-orphans</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>] 
+            [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+            [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos sa -se</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-part</B> &lt;<VAR>salvage&nbsp;partition</VAR>>]
+       [<B>-v</B> &lt;<VAR>salvage&nbsp;volume&nbsp;number&nbsp;or&nbsp;volume&nbsp;name</VAR>>]  
+       [<B>-f</B> &lt;<VAR>salvage&nbsp;log&nbsp;output&nbsp;file</VAR>>]  [<B>-a</B>]  [<B>-sh</B>] 
+       [<B>-para</B> &lt;<VAR>#&nbsp;of&nbsp;max&nbsp;parallel&nbsp;partition&nbsp;salvaging</VAR>>]  
+       [<B>-t</B> &lt;<VAR>directory&nbsp;to&nbsp;place&nbsp;tmp&nbsp;files</VAR>>]   
+       [<B>-o</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>] 
+       [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos salvage</B> command salvages (restores internal consistency
+to) one or more volumes on the file server machine named by the
+<B>-server</B> argument. When processing one or more partitions,
+the command restores consistency to corrupted read/write volumes where
+possible. For read-only or backup volumes, it inspects only the volume
+header&#58;
+<UL>
+<P><LI>If the volume header is corrupted, the Salvager removes the volume
+completely and records the removal in its log file,
+<B>/usr/afs/logs/SalvageLog</B>. Issue the <B>vos release</B>
+or <B>vos backup</B> command to create the read-only or backup volume
+again.
+<P><LI>If the volume header is intact, the Salvager skips the volume (does not
+check for corruption in the contents). However, if the File Server
+notices corruption as it initializes, it sometimes refuses to attach the
+volume or bring it online. In this case, it is simplest to remove the
+volume by issuing the <B>vos remove</B> or <B>vos zap</B>
+command. Then issue the <B>vos release</B> or <B>vos backup</B>
+command to create it again.
+</UL>
+<P>Use the indicated arguments to salvage a specific number of volumes&#58;
+<UL>
+<P><LI>To process all volumes on a file server machine, provide the
+<B>-server</B> argument and the <B>-all</B> flag. No volumes on
+the machine are accessible to Cache Managers during the salvage operation,
+because the BOS Server stops the File Server and Volume Server processes while
+the Salvager runs. The BOS Server automatically restarts them when the
+operation completes.
+<P><LI>To process all volumes on one partition, provide the <B>-server</B>
+and <B>-partition</B> arguments. As for a salvage of the entire
+machine, no volumes on the machine are accessible to Cache Managers during the
+salvage operation. The BOS Server automatically restarts the File
+Server and Volume Server when the operation completes.
+<P><LI>To salvage only one read/write volume, combine the <B>-server</B>,
+<B>-partition</B>, and <B>-volume</B> arguments. Only that
+volume is inaccessible to Cache Managers, because the BOS Server does not
+shutdown the File Server and Volume Server processes during the salvage of a
+single volume. Do not name a read-only or backup volume with the
+<B>-volume</B> argument. Instead, remove the volume, using the
+<B>vos remove</B> or <B>vos zap</B> command. Then create a new
+copy of the volume with the <B>vos release</B> or <B>vos backup</B>
+command.
+</UL>
+<P>During the salvage of an entire machine or partition, the <B>bos
+status</B> command reports the <B>fs</B> process&#39;s auxiliary status
+as <TT>Salvaging file system</TT>.
+<P>The Salvager always writes a trace to the
+<B>/usr/afs/logs/SalvageLog</B> file on the file server machine where it
+runs. To record the trace in another file as well (either in AFS or on
+the local disk of the machine where the <B>bos salvage</B> command is
+issued), name the file with the <B>-file</B> argument. To display
+the trace on the standard output stream as it is written to the
+<B>/usr/afs/logs/SalvageLog</B> file, include the <B>-showlog</B>
+flag.
+<P>By default, multiple Salvager subprocesses run in parallel&#58; one for
+each partition up to four, and four subprocesses for four or more
+partitions. To increase or decrease the number of subprocesses running
+in parallel, provide a positive integer value for the <B>-parallel</B>
+argument.
+<P>If there is more than one server partition on a physical disk, the Salvager
+by default salvages them serially to avoid the inefficiency of constantly
+moving the disk head from one partition to another. However, this
+strategy is often not ideal if the partitions are configured as logical
+volumes that span multiple disks. To force the Salvager to salvage
+logical volumes in parallel, provide the string <B>all</B> as the value
+for the <B>-parallel</B> argument. Provide a positive integer to
+specify the number of subprocesses to run in parallel (for example,
+<B>-parallel 5all</B> for five subprocesses), or omit the integer to run
+up to four subprocesses, depending on the number of logical volumes being
+salvaged.
+<P>The Salvager creates temporary files as it runs, by default writing them to
+the partition it is salvaging. The number of files can be quite large,
+and if the partition is too full to accommodate them, the Salvager terminates
+without completing the salvage operation (it always removes the temporary
+files before exiting). Other Salvager subprocesses running at the same
+time continue until they finish salvaging all other partitions where there is
+enough disk space for temporary files. To complete the interrupted
+salvage, reissue the command against the appropriate partitions, adding the
+<B>-tmpdir</B> argument to redirect the temporary files to a local disk
+directory that has enough space.
+<P>The <B>-orphans</B> argument controls how the Salvager handles orphaned
+files and directories that it finds on server partitions it is
+salvaging. An <I>orphaned</I> element is completely inaccessible
+because it is not referenced by the vnode of any directory that can act as its
+parent (is higher in the filespace). Orphaned objects occupy space on
+the server partition, but do not count against the volume&#39;s quota.
+<P><STRONG>Cautions</STRONG>
+<P>Running this command can result in data loss if the Salvager process can
+repair corruption only by removing the offending data. Consult the
+<I>AFS Administration Guide</I> for more information.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>Indicates the file server machine on which to salvage volumes.
+Identify the machine by IP address or its host name (either fully-qualified or
+abbreviated unambiguously). For details, see the introductory reference
+page for the <B>bos</B> command suite.
+<P><DT><B>-partition
+</B><DD>Specifies a single partition on which to salvage all volumes.
+Provide the complete partition name (for example <B>/vicepa</B>) or one of
+the following abbreviated forms&#58;
+<PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
+   <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
+   
+</PRE>
+<P>
+<P>After <B>/vicepz</B> (for which the index is 25) comes 
+<PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
+   <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
+   
+</PRE>
+<P>and so on through 
+<PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
+    
+</PRE>
+<P><DT><B>-volume
+</B><DD>Specifies the name or volume ID number of a read/write volume to
+salvage. The <B>-partition</B> argument must be provided along with
+this one.
+<P><DT><B>-file
+</B><DD>Specifies the complete pathname of a file into which to write a trace of
+the salvage operation, in addition to the <B>/usr/afs/logs/SalvageLog</B>
+file on the server machine. If the file pathname is local, the trace is
+written to the specified file on the local disk of the machine where the
+<B>bos salvage</B> command is issued. If the <B>-volume</B>
+argument is included, the file can be in AFS, though not in the volume being
+salvaged. Do not combine this argument with the <B>-showlog</B>
+flag.
+<P><DT><B>-all
+</B><DD>Salvages all volumes on all of the partitions on the machine named by the
+<B>-server</B> argument.
+<P><DT><B>-showlog
+</B><DD>Displays the trace of the salvage operation on the standard output stream,
+as well as writing it to the <B>/usr/afs/logs/SalvageLog</B> file.
+Do not combine this flag with the <B>-file</B> argument.
+<P><DT><B>-parallel
+</B><DD>Specifies the maximum number of Salvager subprocesses to run in
+parallel. Provide one of three values&#58;
+<UL>
+<P><LI>An integer from the range <B>1</B> to <B>32</B>. A value of
+<B>1</B> means that a single Salvager process salvages the partitions
+sequentially.
+<P><LI>The string <B>all</B> to run up to four Salvager subprocesses in
+parallel on partitions formatted as logical volumes that span multiple
+physical disks. Use this value only with such logical volumes.
+<P><LI>The string <B>all</B> followed immediately (with no intervening space)
+by an integer from the range <B>1</B> to <B>32</B>, to run the
+specified number of Salvager subprocesses in parallel on partitions formatted
+as logical volumes. Use this value only with such logical
+volumes.
+</UL>
+<P>The BOS Server never starts more Salvager subprocesses than there are
+partitions, and always starts only one process to salvage a single
+volume. If this argument is omitted, up to four Salvager subprocesses
+run in parallel.
+<P><DT><B>-tmpdir
+</B><DD>Specifies the full pathname of a local disk directory to which the
+Salvager process writes temporary files as it runs. If this argument is
+omitted, or specifies an ineligible or nonexistent directory, the Salvager
+process writes the files to the partition it is currently salvaging.
+<P><DT><B>-orphans
+</B><DD>Controls how the Salvager handles orphaned files and directories.
+Choose one of the following three values&#58;
+<DL>
+<P><DT><B>ignore
+</B><DD>Leaves the orphaned objects on the disk, but prints a message to the
+<B>/usr/afs/logs/SalvageLog</B> file reporting how many orphans were found
+and the approximate number of kilobytes they are consuming. This is the
+default if the <B>-orphans</B> argument is omitted.
+<P><DT><B>remove
+</B><DD>Removes the orphaned objects, and prints a message to the
+<B>/usr/afs/logs/SalvageLog</B> file reporting how many orphans were
+removed and the approximate number of kilobytes they were consuming.
+<P><DT><B>attach
+</B><DD>Attaches the orphaned objects by creating a reference to them in the vnode
+of the volume&#39;s root directory. Since each object&#39;s actual
+name is now lost, the Salvager assigns each one a name of the following
+form&#58; 
+<DL>
+<DD><P><B>_ _ORPHANFILE_ _.</B><VAR>index</VAR> for files
+<DD><P><B>_ _ORPHANDIR_ _.</B><VAR>index</VAR> for directories
+</DL>
+<P>
+<P>where <VAR>index</VAR> is a two-digit number that uniquely identifies each
+object. The orphans are charged against the volume&#39;s quota and
+appear in the output of the <B>ls</B> command issued against the
+volume&#39;s root directory.
+</DL>
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command salvages all volumes on the <B>/vicepd</B>
+partition of the machine <B>db3.abc.com</B>&#58;
+<PRE>   % <B>bos salvage -server db3.abc.com -partition /vicepd</B>
+   
+</PRE>
+<P>The following command salvages the volume with volume ID number 536870988
+on partition <B>/vicepb</B> of the machine
+<B>fs2.abc.com</B>&#58;
+<PRE>   % <B>bos salvage -server fs2.abc.com -partition /vicepb -volume 536870988</B>
+   
+</PRE>
+<P>The following command salvages all volumes on the machine
+<B>fs4.abc.com</B>. Six Salvager processes run in
+parallel rather than the default four.
+<PRE>   % <B>bos salvage -server fs4.abc.com -all -parallel 6</B>
+    
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine named by the <B>-server</B> argument, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf030.htm#HDRSALVAGELOG">SalvageLog</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P><A HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
+<P><I>AFS Administration Guide</I>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf113.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf115.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

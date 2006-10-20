@@ -1,0 +1,440 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>관리 안내서</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- c:\IDWBWIN\TEMP\idwt1054\Auagd000.scr converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 31 Dec 1999 at       -->
+<!-- 09:23:05                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=euc-kr">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 31 Dec 1999 09:22:58">
+<META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>관리 안내서</H1>
+<HR><H1><A NAME="HDRWQ581" HREF="auagd002.htm#ToC_651">관리 특권 관리</A></H1>
+<P>이 장에서는 시스템 관리자와 운영자가 특권이 부여된 AFS 조작을 수행하는 방법을
+설명합니다.
+<HR><H2><A NAME="HDRWQ582" HREF="auagd002.htm#ToC_652">명령 요약</A></H2>
+<P>이 장에서는 지정된 명령을 사용하여 다음 타스크를 수행하는 방법을 설명합니다.
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>system:administrators</B> 그룹의 구성원 표시
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts membership</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>system:administrators</B> 그룹에 사용자 추가
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>system:administrators</B> 그룹에서 사용자 제거
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts removeuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">인증 데이터베이스 항목에 <TT>ADMIN</TT> 플래그 표시
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">인증 데이터베이스 항목에서 <TT>ADMIN</TT> 플래그 설정 또는 제거
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> 파일에 있는 사용자 표시
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos listusers</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> 파일에 사용자 추가
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> 파일에서 사용자 제거
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos removeuser</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ584" HREF="auagd002.htm#ToC_653">관리 특권 개요</A></H2>
+<A NAME="IDX8103"></A>
+<A NAME="IDX8104"></A>
+<P>완전한 특권이 부여된 AFS 관리자에게는 다음과 같은 특성이 있습니다.
+<UL>
+<LI>셀 <B>system:administrators</B> 그룹의 멤버쉽.
+<A HREF="#HDRWQ586">system:administrators 그룹 관리</A>를 참조하십시오.
+</LI><LI>셀의 인증 데이터베이스에 있는 사용자의 <TT>ADMIN</TT> 플래그. <A HREF="#HDRWQ589">kas 명령에 특권 부여:  ADMIN 플래그</A>를 참조하십시오.
+</LI><LI>셀의 각 AFS 서버 시스템의 로컬 디스크에서 <B>/usr/afs/etc/UserList</B>
+파일에 포함. <A HREF="#HDRWQ592">UserList 파일 관리</A>를 참조하십시오.
+</LI></UL>
+<P>이 절에서는 3가지 특권을 설명하고 특권이 하나 이상 필요한
+이유를 설명합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">서버 정전으로 상호 인증이 불가능해도
+<B>anonymous</B> 사용자에게는 절대로 관리 특권을
+부여하지 마십시오. 이런 특권을 부여하면 셀에서 시스템을 액세스할
+있는 사용자가 특권이 부여된 명령을 실행할 수 있습니다. 대체
+솔루션은 영향 받은 서버 시스템을 비인증 모드에 놓고 여러
+명령에서 사용할 수 있는 <B>-noauth</B> 플래그를
+사용하여 상호 인증 시도를 방지합니다. 더 자세한 내용은
+<A HREF="auagd008.htm#HDRWQ123">인증 관리 및 권한 부여 요구조건</A>을 참조하십시오.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ585" HREF="auagd002.htm#ToC_654">별도의 특권이 필요한 이유</A></H3>
+<P>종종 셀의 관리자는 작업을 효과적으로 수행하기 위해 완전한
+관리 특권이 필요합니다. 그러나 3가지 유형의 특권을 분리하면
+관리자가 자신의 작업을 완료하기 위해 필요한 취소한의 특권
+집합만 부여할 수 있게 됩니다.
+<P><B>system:administrators</B> 그룹 특권은 아마도
+정상적인 조작(모든 서버가 정상적으로 실행하는 경우)에서 가장
+자주 사용되는 가장 기본적인 특권일 것입니다. 기계나 시스템의
+정전으로 보호 데이터베이스를 사용할 수 없게 되면 이런 유형의
+특권을 요구하는 명령을 실행할 수 없게 됩니다.
+<P><TT>ADMIN</TT> 플래그 특권은 인증 데이터베이스에 있는 정보 중에서 특히
+<B>afs</B> 항목에 있는 서버 암호화 키와 같이 극도로 민감한
+정보 때문에 분리됩니다. 기계나 시스템의 정전으로 인증 데이터베이스를 사용할
+수 없게 되면 이런 유형의 특권을 요구하는 명령을 실행할 수 없게 됩니다.
+<P>특권이 부여된 <B>bos</B>와 <B>vos</B> 명령을 실행할
+수 있는 능력은 데이터베이스보다 각 AFS 서버 기계의 로컬 디스크에 있는
+<B>/usr/afs/etc/UserList</B> 파일에 기록됩니다. 그러므로 심각한
+서버나 네트워크 문제가 발생하면 관리자는 계속 서버 기계에 로그온하고 문제를 해결하는
+동안 이런 명령을 사용할 수 있습니다.
+<HR><H2><A NAME="HDRWQ586" HREF="auagd002.htm#ToC_655">system:administrators 그룹 관리</A></H2>
+<A NAME="IDX8105"></A>
+<A NAME="IDX8106"></A>
+<A NAME="IDX8107"></A>
+<A NAME="IDX8108"></A>
+<A NAME="IDX8109"></A>
+<A NAME="IDX8110"></A>
+<A NAME="IDX8111"></A>
+<P>AFS 관리 특권의 첫 유형은 멤버쉽입니다. 보호 데이터베이스에 있는
+<B>system:administrators</B> 그룹의 구성원은 다음과 같은 특권을
+가지고 있습니다.
+<UL>
+<LI>보호 데이터베이스를 관리할 때 사용되는 모든 <B>pts</B> 명령을
+실행할 수 있는 권한. <A HREF="auagd019.htm#HDRWQ531">보호 데이터베이스 관리</A>를 참조하십시오.
+</LI><LI><A HREF="auagd010.htm#HDRWQ234">볼륨 할당량과 현재 크기 설정 및 표시</A>에 설명 대로 볼륨에서의 공간 할당량을 설정하는
+<B>fs setvol</B>과 <B>fs setquota</B> 명령을 실행할
+수 있는 권한.
+</LI><LI>셀의 AFS 파일 공간에 있는 모든 디렉토리의 액세스 제어 목록(ACL)에 있는 묵시적
+<B>a</B>(<B>administer</B>)와 기본의
+<B>l</B>(<B>lookup</B>) 권한. 그룹의 구성원은
+<A HREF="auagd020.htm#HDRWQ573">ACL 항목 설정</A>의 설명 대로 <B>fs setacl</B> 명령을
+사용하여 필요한 다른 권한을 자신에게 부여할 수 있습니다.
+<P>
+<P>주어진 파일 서버 기계의 파일 서버가 볼륨에 있는 데이터의
+<B>system:administrators</B> 그룹 구성원에게 묵시적으로
+부여한 ACL 권한을 변경할 수 있습니다. <B>bos create</B> 명령을
+실행하는 기계에서 <B>fs</B> 프로세스를 작성하고 시작하면
+<B>-implicit</B> 인수를 <B>fileserver</B> 초기설정
+명령에 포함시키십시오. 자세한 구문은 <I>AFS Administration Reference</I>의 <B>fileserver</B>
+참조 페이지를 참조하십시오. 추가 권한을 부여하거나 <B>l</B> 권한을
+제거할 수 있습니다. 그러나, <B>-implicit</B> 인수의 값을
+<B>없음</B>으로 설정해도 파일 서버는 항상 <B>a</B> 권한을
+그룹의 구성원에게 자동으로 부여합니다.
+</LI></UL>
+<A NAME="IDX8112"></A>
+<A NAME="IDX8113"></A>
+<A NAME="IDX8114"></A>
+<A NAME="IDX8115"></A>
+<P><H3><A NAME="HDRWQ587" HREF="auagd002.htm#ToC_656">system:administrators 그룹 구성원을 표시하려면</A></H3>
+<OL TYPE=1>
+<LI><B>pts membership</B> 명령을 실행하여
+<B>system:administrators</B> 그룹의 구성원 목록을 표시하십시오. 모든
+사용자는 <B>system:administrators</B> 그룹의 보호 데이터베이스 항목의
+첫 개인 플래그가 기본값인 대문자 <TT>S</TT>에서 변경되지 않는 이상 이 명령을
+실행할 수 있습니다.
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+</PRE>
+<P>
+<P>여기서 <B>m</B>은 <B>membership</B>의 사용할 수 있는 가장
+짧은 축약형입니다.
+</LI></OL>
+<P><H3><A NAME="Header_657" HREF="auagd002.htm#ToC_657">system:administrators 그룹에 사용자를 추가하려면</A></H3>
+<A NAME="IDX8116"></A>
+<A NAME="IDX8117"></A>
+<A NAME="IDX8118"></A>
+<A NAME="IDX8119"></A>
+<OL TYPE=1>
+<LI>사용자가 <B>system:administrators</B> 그룹에 속하는지 확인합니다.
+필요하면 <A HREF="#HDRWQ587">system:administrators 그룹 구성원을 표시하려면</A>에서 자세히 설명되어 있는
+<B>pts membership</B> 명령을 실행하십시오.
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts adduser</B> 그룹을 실행하여 사용자를 두 명 이상 추가합니다.
+<P>
+<PRE>   % <B>pts adduser -user</B>
+&lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group system:administrators</B>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>ad
+</B><DD>사용할 수 있는 <B>adduser</B>의 가장 짧은 축약형입니다.
+<P><DT><B>-user
+</B><DD><B>system:administrators</B> 그룹에 추가할 사용자를 명명합니다.
+</DL>
+</LI></OL>
+<P><H3><A NAME="HDRWQ588" HREF="auagd002.htm#ToC_658">system:administrators 그룹에서 사용자를 제거하려면</A></H3>
+<A NAME="IDX8120"></A>
+<A NAME="IDX8121"></A>
+<A NAME="IDX8122"></A>
+<A NAME="IDX8123"></A>
+<OL TYPE=1>
+<LI>사용자가 <B>system:administrators</B> 그룹에 속하는지 확인합니다.
+필요하면 <A HREF="#HDRWQ587">system:administrators 그룹 구성원을 표시하려면</A>에서 자세히 설명되어 있는
+<B>pts membership</B> 명령을 실행하십시오.
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts removeuser</B> 명령을 실행하여 사용자를 두 명 이상
+제거합니다.
+<P>
+<PRE>   % <B>pts removeuser -user</B>  &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group system:administrators</B>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B><B>rem</B>
+</B><DD>사용할 수 있는 <B>removeuser</B>의 가장 짧은 축약형입니다.
+<P><DT><B>-user
+</B><DD><B>system:administrators</B> 그룹에서 제거할 사용자를 명명합니다.
+</DL>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ589" HREF="auagd002.htm#ToC_659">kas 명령에 특권 부여:  ADMIN 플래그</A></H2>
+<A NAME="IDX8124"></A>
+<P>인증 데이터베이스 항목에 <TT>ADMIN</TT> 플래그가 있는 관리자는 인증 데이터베이스를
+관리할 수 있게 하는 모든 <B>kas</B> 명령을 실행할 수 있습니다.
+<A NAME="IDX8125"></A>
+<A NAME="IDX8126"></A>
+<A NAME="IDX8127"></A>
+<P><H3><A NAME="HDRWQ590" HREF="auagd002.htm#ToC_660">ADMIN 플래그가 설정되어 있는지 확인하려면</A></H3>
+<A NAME="IDX8128"></A>
+<A NAME="IDX8129"></A>
+<A NAME="IDX8130"></A>
+<A NAME="IDX8131"></A>
+<OL TYPE=1>
+<LI><A NAME="LIWQ591"></A><B>kas examine</B> 명령을
+실행하여 인증 데이터베이스에서 항목을 표시합니다.
+<P>
+<P>인증 서버는 기존 AFS 토큰을 승인하는 대신 자체 인증을
+수행합니다. 기본적으로, 이는 AFS-특권 관리자에게 해당하지
+않을 수도 있는 로컬(UFS) ID를 인증합니다.
+<B>-admin_username</B>(<B>-admin</B>으로
+축약) 인수를 포함시켜서 인증 데이터베이스 항목에
+<TT>ADMIN</TT> 플래그가 있는 사용자 ID를 명명합니다.
+<P>
+<PRE>   % <B>kas examine</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>   \
+                 <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
+   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>e
+</B><DD>사용할 수 있는 <B>examine</B>의 가장 짧은 축약형입니다.
+<P><DT><B><VAR>name of user</VAR>
+</B><DD>표시할 항목을 명명합니다.
+<P><DT><B>-admin
+</B><DD><B>admin</B> 계정처럼 인증 데이터베이스 항목에 <TT>ADMIN</TT>
+플래그와 함께 관리 계정을 명명합니다.
+암호 프롬프트는 이를 <VAR>admin_user</VAR>로 표시합니다. 적합한 암호를 <VAR>admin_password</VAR>로
+입력합니다.
+</DL>
+</LI></OL>
+<P><TT>ADMIN</TT> 플래그가 켜져 있으면 이 예에서처럼 첫 행에 나타납니다.
+<PRE>   % <B>kas e terry -admin admin</B>
+   Administrator's (admin) password: <VAR>admin_password</VAR>
+   User data for terry (ADMIN)
+     key version is 0, <VAR>etc...</VAR>
+</PRE>
+<A NAME="IDX8132"></A>
+<A NAME="IDX8133"></A>
+<A NAME="IDX8134"></A>
+<A NAME="IDX8135"></A>
+<A NAME="IDX8136"></A>
+<A NAME="IDX8137"></A>
+<P><H3><A NAME="Header_661" HREF="auagd002.htm#ToC_661">ADMIN 플래그를 설정 또는 제거하려면</A></H3>
+<OL TYPE=1>
+<LI><B>kas setfields</B> 명령을 실행하여 인증 데이터베이스 항목에서
+<TT>ADMIN</TT> 플래그를 킵니다.
+<P>
+<P>인증 서버는 기존 AFS 토큰을 사용하지 않고 자신의 인증 프로세스를
+수행합니다. 기본적으로 이것은 로컬(UNIX) ID를 인증하며, AFS가 특권을
+부여한 관리자에 해당되지 않을 수 있습니다.
+<B>-admin</B> 인수를 삽입하여 인증 데이터베이스
+항목에 <TT>ADMIN</TT> 플래그가 있는 ID의 이름을 지정하십시오.
+항목에 플래그가 있는 지 확인하려면, <A HREF="#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>에서
+설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
+<P>
+<P>다음 명령은 읽기 쉽게 두 행에 걸쳐 표시됩니다.
+<P>
+<PRE>    % <B>kas setfields</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> 
+{<B>ADMIN</B> |  <B>NOADMIN</B>} \  
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+    Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>sf
+</B><DD><B>setfields</B>의 별명입니다(그리고 <B>setf</B>는
+사용할 수 있는 가장 짧은 축약형임).
+<P><DT><B><VAR>name of user</VAR>
+</B><DD><TT>ADMIN</TT> 플래그를 설정하거나 제거할 항목을 명명합니다.
+<P><DT><B>ADMIN | NOADMIN
+</B><DD><TT>ADMIN</TT> 플래그를 설정하거나 제거합니다.
+<P><DT><B>-admin
+</B><DD><B>admin</B> 계정처럼 인증 데이터베이스 항목에 <TT>ADMIN</TT>
+플래그와 함께 관리 계정을 명명합니다.
+암호 프롬프트는 이를 <VAR>admin_user</VAR>로 표시합니다. 적합한 암호를 <VAR>admin_password</VAR>로
+입력합니다.
+</DL>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ592" HREF="auagd002.htm#ToC_662">UserList 파일 관리</A></H2>
+<A NAME="IDX8138"></A>
+<P>각 AFS 서버 기계의 로컬 디스크에 있는 <B>/usr/afs/etc/UserList</B> 파일에
+포함시키면 관리자는 지정된 집합에서 명령을 실행할 수 있습니다.
+<UL>
+<LI><B>bos</B> 명령을 통해 관리자는 서버 프로세스와 셀의 데이터베이스
+서버 기계, 서버 암호화 키 그리고 특권이 부여된 사용자를 정의하는 서버 구성 파일을
+관리할 수 있습니다. <A HREF="auagd008.htm#HDRWQ80">서버 시스템 관리</A>와 <A HREF="auagd009.htm#HDRWQ142">서버 프로세스 모니터 및 제어</A>를 참조하십시오.
+</LI><LI><B>vos</B> 명령을 통해 관리자는 볼륨과 VLDB(Volume Location Database)를
+관리할 수 있습니다. <A HREF="auagd010.htm#HDRWQ174">볼륨 관리</A>를 참조하십시오.
+</LI><LI><B>backup</B> 명령을 통해 관리자는 AFS 백업 시스템을 사용하여
+데이터를 영구 기억영역에 복사할 수 있습니다. <A HREF="auagd011.htm#HDRWQ248">AFS 백업 시스템 구성</A>과
+<A HREF="auagd012.htm#HDRWQ283">AFS 데이터 백업 및 복원</A>을 참조하십시오.
+</LI></UL>
+<A NAME="IDX8139"></A>
+<A NAME="IDX8140"></A>
+<A NAME="IDX8141"></A>
+<A NAME="IDX8142"></A>
+<A NAME="IDX8143"></A>
+<A NAME="IDX8144"></A>
+<A NAME="IDX8145"></A>
+<A NAME="IDX8146"></A>
+<A NAME="IDX8147"></A>
+<A NAME="IDX8148"></A>
+<P>비록 각 AFS 서버 기계의 로컬 디스크에서 파일의 복사본을 별도로 유지해도 보통 모든
+복사본을 동일하게 유지합니다. 관리자가 일부 기계에서 특권을 가지고 있으면서 다른
+기계에서 특권을 가지고 있지 않으면 혼동될 것입니다.
+<A NAME="IDX8149"></A>
+<P>셀에서 AFS의 미국판을 실행하고 갱신 서버를 사용하여 시스템 제어 기계의
+<B>/usr/afs/etc</B> 디렉토리 내용을 분배하면 시스템 제어 기계에
+저장된 <B>UserList</B> 파일의 복사본만 편집하십시오. 어떤 기계가
+시스템 제어 기계인지 잊은 경우에는 <A HREF="auagd008.htm#HDRWQ90">파일 서버 시스템의 네 가지 역할</A>을 참조하십시오.
+<P>셀에서 AFS의 각국 언어판을 실행하거나 시스템 제어 기계가 없으면 각 서버 기계에서
+<B>UserList</B> 파일을 편집해야 합니다.
+<P>성능 문제를 일으킬 수 있는 포맷 오류 발생을 피하려면 절대로
+<B>UserList</B> 파일을 직접 편집하지 마십시오. 대신, 이 절의 설명 대로
+<B>bos adduser</B>나 <B>bos removeuser</B> 명령을
+사용하십시오.
+<A NAME="IDX8150"></A>
+<A NAME="IDX8151"></A>
+<A NAME="IDX8152"></A>
+<A NAME="IDX8153"></A>
+<P><H3><A NAME="HDRWQ593" HREF="auagd002.htm#ToC_663">UserList 파일에서 사용자를 표시하려면</A></H3>
+<OL TYPE=1>
+<LI><B>bos listusers</B> 명령을 실행하여 <B>/usr/afs/etc/UserList</B>
+파일의 내용을 표시하십시오.
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>listu
+</B><DD>사용할 수 있는 <B>listusers</B>의 가장 짧은 축약형입니다.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>AFS 서버 기계를 명명합니다. 보통 파일은 모든 기계에서 동일하므로 어느 기계나
+사용할 수 있습니다.
+</DL>
+</LI></OL>
+<P><H3><A NAME="HDRWQ594" HREF="auagd002.htm#ToC_664">UserList 파일에 사용자를 추가하려면</A></H3>
+<A NAME="IDX8154"></A>
+<A NAME="IDX8155"></A>
+<A NAME="IDX8156"></A>
+<A NAME="IDX8157"></A>
+<OL TYPE=1>
+<LI><B>/usr/afs/etc/UserList</B> 파일에 있는지 확인합니다. 파일에
+없으면 사용자가 파일에 항목을 추가할 수 있기 전에 완전한 권한을 가지 관리자가 자신을
+추가하도록 해야 합니다.
+필요하면 <A HREF="#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
+<B>bos listusers</B> 명령을 실행하십시오.
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+</LI><LI><B>bos adduser</B> 명령을 실행하여 <B>UserList</B>
+파일에 사용자를 두 명 이상 추가합니다.
+<P>
+<PRE>   % <B>bos adduser</B> &lt;<VAR>machine&nbsp;name</VAR>>
+&lt;<VAR>user&nbsp;names</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>addu
+</B><DD>사용할 수 있는 <B>adduser</B>의 가장 짧은 축약형입니다.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>갱신 서버를 사용하여 <B>/usr/afs/etc</B> 디렉토리의 내용을
+분배하는 경우 시스템 제어 기계를 명명합니다(AFS의 미국판을 실행하는 셀에서만
+가능). 기본적으로 갱신 서버가 변경사항을 분배하는 데 최대 5분 정도 걸리므로 새롭게 추가된
+사용자는 특권이 부여된 명령을 실행하기 전에 그만큼 기다려야 합니다.
+<P>
+<P>AFS의 각국 언어판을 실행하거나 갱신 서버를 사용하지 않으면 명령을 반복하면서 차례대로
+<VAR>machine name</VAR>에 대한 각 ASF 서버 기계의 이름을 대체합니다.
+<P><DT><B><VAR>user names</VAR>
+</B><DD>각 관리자의 사용자 이름을 지정하여 <B>UserList</B> 파일에
+추가합니다.
+</DL>
+</LI></OL>
+<P><H3><A NAME="Header_665" HREF="auagd002.htm#ToC_665">UserList 파일에서 사용자를 제거하려면</A></H3>
+<A NAME="IDX8158"></A>
+<A NAME="IDX8159"></A>
+<A NAME="IDX8160"></A>
+<A NAME="IDX8161"></A>
+<OL TYPE=1>
+<LI><B>/usr/afs/etc/UserList</B> 파일에 있는지 확인합니다. 파일에
+없으면 사용자가 파일에서 항목을 제거할 수 있기 전에 완전한 권한을 가지 관리자가
+자신을 추가하도록 해야 합니다.
+필요하면 <A HREF="#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
+<B>bos listusers</B> 명령을 실행하십시오.
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+필요하면 <A HREF="#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
+<B>bos listusers</B> 명령을 실행하십시오.
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+</LI><LI><B>bos removeuser</B> 명령을 실행하여 <B>UserList</B>
+파일에서 사용자를 두 명 이상 제거합니다.
+<P>
+<PRE>   % <B>bos removeuser</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>user&nbsp;names</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>여기서,
+<P>
+<DL>
+<P><DT><B>removeu
+</B><DD>사용할 수 있는 <B>removeuser</B>의 가장 짧은 축약형입니다.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>갱신 서버를 사용하여 <B>/usr/afs/etc</B> 디렉토리의 내용을
+분배하는 경우 시스템 제어 기계를 명명합니다(AFS의 미국판을 실행하는 셀에서만
+가능). 기본적으로 갱신 서버가 변경사항을 분배하는 데 최대 5분 걸리므로 새롭게 추가된
+사용자는 그 시간 동안 특권이 부여된 명령을 계속 실행할 수 있습니다.
+<P>
+<P>AFS의 각국 언어판을 실행하거나 갱신 서버를 사용하지 않으면 명령을 반복하면서 차례대로
+<VAR>machine name</VAR>에 대한 각 ASF 서버 기계의 이름을 대체합니다.
+<P><DT><B><VAR>user names</VAR>
+</B><DD>각 관리자의 사용자 이름을 지정하여 <B>UserList</B> 파일에
+추가합니다.
+</DL>
+</LI></OL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd020.htm">이전 페이지</A> &#124; <A HREF="auagd022.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

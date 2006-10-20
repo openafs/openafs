@@ -1,0 +1,457 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+[
+uuid(ae274620-dea3-11d1-bfb3-00a024c0d1ef),
+version(1.0),
+pointer_default(unique),
+implicit_handle(handle_t hBindTaAfsAdminSvr)
+]
+interface ITaAfsAdminSvr
+{
+   import "ITaAfsAdmSvrTypes.idl";
+
+   // AfsAdmSvr_Connect
+   // ...obtains a cookie to represent the calling process. The cookie should
+   //    be freed with AfsAdmSvr_Disconnect when the process disconnects.
+   //
+   int AfsAdmSvr_Connect (
+      [in]      STRING szClientAddress,
+      [out]     DWORD *pidClient,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_Disconnect
+   // ...releases and invalidates the cookie representing the calling process.
+   //
+   int AfsAdmSvr_Disconnect (
+      [in]      DWORD idClient,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_Ping
+   // ...reminds the admin server that the specified client is still around.
+   //    this call should be made at least every csecAFSADMSVR_CLIENT_PING
+   //    seconds, lest the admin server think you've disconnected. (The client
+   //    library TaAfsAdmSvrClient.lib automatically handles this.)
+   //
+   int AfsAdmSvr_Ping (
+      [in]      DWORD idClient,
+      [out]     ULONG *pStatus
+   );
+   const DWORD csecAFSADMSVR_CLIENT_PING = (2L * 60L);  // 2 minutes
+
+
+   // AfsAdmSvr_CrackCredentials
+   // ...obtains information about the supplied credentials token.
+   //
+   int AfsAdmSvr_CrackCredentials (
+      [in]      DWORD idClient,
+      [in]      DWORD hCreds,
+      [out]     STRING pszCell,
+      [out]     STRING pszUser,
+      [out]     SYSTEMTIME *pstExpiration,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_GetCredentials
+   // ...queries the user's current AFS credentials for the specified cell.
+   //    if the user already has credentials in the cell, returns a nonzero
+   //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
+   //
+   DWORD AfsAdmSvr_GetCredentials (
+      [in]      DWORD idClient,
+      [in]      STRING pszCell,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_SetCredentials
+   // ...obtains new AFS credentials within the administrative server process
+   //    on behalf of the specified user. if successful, returns a nonzero
+   //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
+   //
+   DWORD AfsAdmSvr_SetCredentials (
+      [in]      DWORD idClient,
+      [in]      STRING pszCell,
+      [in]      STRING pszUser,
+      [in]      STRING pszPassword,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_PushCredentials
+   // ...requests that the specified AFS credentials be used hereafter
+   //    when manipulating the specified cell. You should follow this
+   //    call with a Refresh request if necessary.
+   //
+   int AfsAdmSvr_PushCredentials (
+      [in]      DWORD idClient,
+      [in]      DWORD hCreds,
+      [in]      ASID idCell,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_GetLocalCell
+   // ...obtains the name of the primary cell used by the admin server
+   //
+   int AfsAdmSvr_GetLocalCell (
+      [in]      DWORD idClient,
+      [out]     STRING pszCellName,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_ErrorCodeTranslate
+   // ...translates an error code into a readable string
+   //
+   int AfsAdmSvr_ErrorCodeTranslate (
+      [in]      DWORD idClient,
+      [in]      ULONG code,
+      [in]      LANGID idLanguage,    // pass 0 for default language at server
+      [out]     STRING pszErrorText,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_GetAction
+   // ...returns information about a particular operation in progress.
+   //
+   int AfsAdmSvr_GetAction (
+      [in]      DWORD idClient,
+      [in]      DWORD idAction,
+      [out]     LPASACTION pAction,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_GetActions
+   // ...returns a list of operations in progress. The list returned can
+   //    be constrained to only including those operations initiated by
+   //    a particular client and/or performed in a particular cell.
+   //
+   int AfsAdmSvr_GetActions (
+      [in]      DWORD idClient,
+      [in]      DWORD idClientSearch,   // 0 to return for all clients
+      [in]      ASID idCellSearch,      // 0 to return for all cells
+      [out]     LPASACTIONLIST *ppList,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_OpenCell
+   // ...opens a cell for administration.
+   //
+   int AfsAdmSvr_OpenCell (
+      [in]      DWORD idClient,
+      [in]      DWORD hCreds,
+      [in]      STRING pszCellName,
+      [in]      DWORD dwScopeFlags,
+      [out]     ASID *pidCell,
+      [out]     ULONG *pStatus
+   );
+   const DWORD AFSADMSVR_SCOPE_VOLUMES = 0x00000001;
+   const DWORD AFSADMSVR_SCOPE_USERS   = 0x00000002;
+
+   // AfsAdmSvr_CloseCell
+   // ...used by client to open a cell for administration.
+   //
+   int AfsAdmSvr_CloseCell (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_FindObject
+   // AfsAdmSvr_FindObjects
+   // ...used to search through all objects in the cell, obtaining a list
+   //    of those which match the specified criteria. For FindObjects, the
+   //    {*ppList} parameter will be filled in with an allocated list of ASID
+   //    objects, and should be freed using the AfsAdmSvr_FreeAsidList()
+   //    routine (clients using the TaAfsAdmSvrClient.lib library should call
+   //    asc_AsidListFree(), which is a wrapper for the former routine).
+   //    The _FindObject routine can be used to find exactly one object--for
+   //    instance, finding the ASID for a particular user or volume--while
+   //    the _FindObjects routine returns a list of all objects which
+   //    match the specified criteria--all volumes on a partition, or all
+   //    users named "b*" within a cell.
+   //
+   int AfsAdmSvr_FindObject (
+      [in]      DWORD idClient,
+      [in]      ASID idSearchScope,
+      [in]      ASOBJTYPE ObjectType,
+      [in]      AFSADMSVR_SEARCH_REFRESH SearchRefresh,
+      [in]      STRING szName,
+      [out]     ASID *pidObject,
+      [out]     ULONG *pStatus
+   );
+
+   int AfsAdmSvr_FindObjects (
+      [in]      DWORD idClient,
+      [in]      ASID idSearchScope,
+      [in]      ASOBJTYPE ObjectType,
+      [in]      AFSADMSVR_SEARCH_REFRESH SearchRefresh,
+      [in]      STRING szPattern,
+      [in]      LPAFSADMSVR_SEARCH_PARAMS pSearchParams,
+      [out]     LPASIDLIST *ppList,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_GetObject
+   // AfsAdmSvr_GetObjects
+   // ...returns server-cached information about the specified object (or
+   //    objects).
+   //
+   int AfsAdmSvr_GetObject (
+      [in]      DWORD idClient,
+      [in]      AFSADMSVR_GET_TYPE GetType,
+      [in]      AFSADMSVR_GET_LEVEL GetLevel,
+      [in]      ASID idObject,
+      [in]      DWORD verProperties,  // can be 0 if not RETURN_IF_OUT_OF_DATE
+      [out]     LPASOBJPROP pProperties,
+      [out]     ULONG *pStatus
+   );
+
+   int AfsAdmSvr_GetObjects (
+      [in]      DWORD idClient,
+      [in]      AFSADMSVR_GET_TYPE GetType,
+      [in]      AFSADMSVR_GET_LEVEL GetLevel,
+      [in]      LPASIDLIST pListObjects,  // lParam used as verProperties
+      [out]     LPASOBJPROPLIST *ppListObjectProperties,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_RefreshObject
+   // AfsAdmSvr_RefreshObjects
+   // ...invalidates the server's cache of information about the specified
+   //    object or objects.
+   //
+   int AfsAdmSvr_RefreshObject (
+      [in]      DWORD idClient,
+      [in]      ASID idObject,
+      [out]     ULONG *pStatus
+   );
+
+   int AfsAdmSvr_RefreshObjects (
+      [in]      DWORD idClient,
+      [in]      LPASIDLIST pListObjects,
+      [out]     ULONG *pStatus
+   );
+
+
+   // AfsAdmSvr_CallbackHost
+   // ...provides a context in which the server can issue callback functions
+   //    via the AfsAdmSvrCallBack_* routines, which the client must implement.
+   //    This routine will only return if the server is shut down. It should
+   //    be called on a dedicated thread by the client. (TaAfsAdmSvrClient.lib
+   //    automatically handles this.)
+   //
+   void AfsAdmSvr_CallbackHost (void);
+
+   // AfsAdmSvrCallback_Action
+   // ...called by the server in the context of the CallbackHost() routine;
+   //    this routine is used to notify the client whenever an action is
+   //    initiated or completed.
+   //
+   [callback] void AfsAdmSvrCallback_Action (
+      [in]      LPASACTION pAction,
+      [in]      BOOL fFinished
+   );
+
+   // AfsAdmSvr_GetRandomKey
+   // ...returns a randomly-generated 8-byte encryption key
+   //
+   int AfsAdmSvr_GetRandomKey (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [out]     BYTE keyData[ ENCRYPTIONKEYLENGTH ],
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_ChangeUser
+   // ...changes a user account's properties.
+   //
+   int AfsAdmSvr_ChangeUser (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idUser,
+      [in]      LPAFSADMSVR_CHANGEUSER_PARAMS pChange,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_GetGroupMembership
+   // ...retrieves the list of groups to which a user or group belongs
+   //
+   int AfsAdmSvr_GetGroupMembership (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idMember,
+      [out]     LPASIDLIST *ppAsidList,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_GetGroupOwnership
+   // ...retrieves the list of groups which a user or group owns
+   //
+   int AfsAdmSvr_GetGroupOwnership (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idOwner,
+      [out]     LPASIDLIST *ppAsidList,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_ChangeGroup
+   // ...changes a PTS group's properties.
+   //
+   int AfsAdmSvr_ChangeGroup (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [in]      LPAFSADMSVR_CHANGEGROUP_PARAMS pChange,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_GetGroupMembers
+   // ...retrieves the list of users which belong to a group
+   //
+   int AfsAdmSvr_GetGroupMembers (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [out]     LPASIDLIST *ppAsidList,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_AddGroupMember
+   // ...adds a member to the specified group
+   //
+   int AfsAdmSvr_AddGroupMember (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [in]      ASID idMember,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_RemoveGroupMember
+   // ...removes a member from the specified group
+   //
+   int AfsAdmSvr_RemoveGroupMember (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [in]      ASID idMember,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_RenameGroup
+   // ...changes a group's name
+   //
+   int AfsAdmSvr_RenameGroup (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [in]      STRING szNewGroupName,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_CreateGroup
+   // ...creates a new PTS group
+   //
+   int AfsAdmSvr_CreateGroup (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      LPAFSADMSVR_CREATEGROUP_PARAMS pCreate,
+      [out]     ASID *pidGroup,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_DeleteGroup
+   // ...deletes a PTS group
+   //
+   int AfsAdmSvr_DeleteGroup (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idGroup,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_SetUserPassword
+   // ...changes the password for the specified user account. Pass a non-empty
+   //    string in {keyString} to encrypt the specified string; otherwise,
+   //    pass a valid encryption key in {keyData}.
+   //
+   int AfsAdmSvr_SetUserPassword (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idUser,
+      [in]      int keyVersion,
+      [in]      STRING keyString,
+      [in]      BYTE keyData[ ENCRYPTIONKEYLENGTH ],
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_UnlockUser
+   // ...unlocks a user's account
+   //
+   int AfsAdmSvr_UnlockUser (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idUser,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_CreateUser
+   // ...creates a new user account
+   //
+   int AfsAdmSvr_CreateUser (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      LPAFSADMSVR_CREATEUSER_PARAMS pCreate,
+      [out]     ASID *pidUser,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_DeleteUser
+   // ...deletes a user account
+   //
+   int AfsAdmSvr_DeleteUser (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ASID idUser,
+      [in]      LPAFSADMSVR_DELETEUSER_PARAMS pDelete,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_ChangeCell
+   // ...changes a cell's properties.
+   //
+   int AfsAdmSvr_ChangeCell (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      LPAFSADMSVR_CHANGECELL_PARAMS pChange,
+      [out]     ULONG *pStatus
+   );
+
+   // AfsAdmSvr_SetRefreshRate
+   // ...changes the refresh rate for a specific cell
+   //
+   int AfsAdmSvr_SetRefreshRate (
+      [in]      DWORD idClient,
+      [in]      ASID idCell,
+      [in]      ULONG cminRefreshRate,
+      [out]     ULONG *pStatus
+   );
+
+}
+

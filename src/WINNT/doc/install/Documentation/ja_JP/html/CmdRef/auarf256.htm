@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_BACKUPSYS" HREF="auarf002.htm#ToC_270">vos backupsys</A></H2>
+<A NAME="IDX5605"></A>
+<A NAME="IDX5606"></A>
+<A NAME="IDX5607"></A>
+<A NAME="IDX5608"></A>
+<A NAME="IDX5609"></A>
+<A NAME="IDX5610"></A>
+<A NAME="IDX5611"></A>
+<P><STRONG>目的</STRONG>
+<P>複数の読み取り / 書き込みボリュームにバックアップ・ボリュームを作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]  
+              [<B>-server</B> &lt;<VAR>machine name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]
+              [<B>-exclude</B>]  [<B>-xprefix</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>] 
+              [<B>-dryrun</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]
+              [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos backups</B> [<B>-pr</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]  [<B>-s</B> &lt;<VAR>machine name</VAR>>] 
+            [<B>-pa</B> &lt;<VAR>partition name</VAR>>]  [<B>-e</B>]  [<B>-x</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>]  
+            [<B>-d</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos backupsys</B> コマンドは、指定された読み取り / 書き込みボリュームをそれぞれ複製して、バックアップ・バージョンを作成し、読み取り / 書き込みソース・バージョンと同じサイトにそれぞれの複製を置きます。このコマンドは、各複製ごとに、読み取り / 書き込みソースと同じ名前を割り当て、
+<B>.backup</B> 拡張子を付加します。ボリューム・ロケーション・データベース (VLDB) にあるバックアップ・バージョンに、既に割り振られたボリューム ID 番号を割り当てます指定されたボリュームのバックアップ・バージョンが既に存在する場合には、新しい複製で置換されます。
+<P>VLDB にリストされている、あらゆる読み取り / 書き込みボリュームの複製を作成するには、このコマンドのオプションをすべて省略します。そうでない場合は、コマンドのオプションを組み合わせて、さまざまなグループのボリュームの複製を作成します。オプションは、ボリュームを選択するのに、以下の 2 つの基本的基準のいずれかを使用します。位置 (<B>-server</B> および <B>-partition</B> 引き数)
+または、指定された文字列の集合の 1 つのボリューム名の存在 (<B>-prefix</B>、<B>-exclude</B>、および <B>-xprefix</B> オプション)。
+<P>1 つのファイル・サーバー・マシンに常駐するボリュームだけの複製を作成するには、
+<B>-server</B> 引き数を組み込みます。
+1 つの区画に常駐するボリュームだけの複製を作成するには、
+<B>-server</B> 引き数と <B>-partition</B> 引き数を組み合わせます。
+<B>-partition</B> 引き数を単独で使用して、あらゆるファイル・サーバー・マシン上の指示された区画に常駐するボリュームの複製を作成することもできます。これらの引き数は、引き数名に基づいてボリュームを選択する引き数と組み合わせることができます。
+<P><B>-prefix</B>、<B>-exclude</B>、および <B>-xprefix</B> オプション (<B>-server</B> 引き数と <B>-partition</B> 引き数を指定している場合、または指定していない場合) を指示どおり組み合わせて、引き数名に含まれる文字列に基づいて、ボリュームを選択します。
+<UL>
+<LI>指定された文字列の集合 (たとえば、<B>user.</B> で始まったり、文字列 <B>afs</B> を含んでいたりする) の 1 つを含む名前を持つ、あらゆる読み取り / 書き込みボリュームの複製を指定された位置に作成するには、
+<B>-prefix</B> 引き数を使用するか、
+<B>-xprefix</B> および <B>-exclude</B> オプションを組み合わせます。
+</LI><LI>指定された文字列の集合の 1 つを含む名前を持つものを除く、あらゆる読み取り / 書き込みボリュームの複製を指定された位置に作成するには、
+<B>-xprefix</B> 引き数を使用するか、
+<B>-prefix</B> および <B>-exclude</B> オプションを組み合わせます。
+</LI><LI>指定された文字列の集合の 1 つを含む名前を持つ、あらゆる読み取り / 書き込みボリュームの複製を、指定された文字列の別の集合の 1 つを含む名前を持つものを除いて、指定された位置に作成するには、
+<B>-prefix</B> 引き数と <B>-xprefix</B> 引き数を組み合わせます。このコマンドは、
+<B>-prefix</B> 引き数に一致するすべてのボリュームのリストを作成した後、そのリストから <B>-xprefix</B> 引き数に一致するボリュームを削除します。有効な結果を得るには、
+<B>-xprefix</B> 引き数で指定された文字列は、
+<B>-prefix</B> 引き数で指定された文字列のサブセットを指定していなければなりません。
+<P>
+<P><B>-exclude</B> フラグが <B>-prefix</B> および <B>-xprefix</B> 引き数と組み合わされている場合、このコマンドは、<B>-prefix</B> 引き数に一致しないすべてのボリュームのリストを作成した後、そのリストに <B>-xprefix</B> 引き数に一致するすべてのボリュームを追加します。
+<B>-exclude</B> フラグが使用されていない場合、結果が有効であるのは、<B>-xprefix</B> 引き数で指定された文字列が、
+<B>-prefix</B> 引き数で指定されたボリュームのサブセットを指定している場合だけです。
+</LI></UL>
+<P><B>-prefix</B> 引き数および <B>-xprefix</B> 引き数は、両方とも複数の値を受け入れます。これを使用して、非結合グループのボリュームを定義します。それぞれの値は、以下の 2 通りの値のうちのいずれかになります。
+<OL TYPE=1>
+<LI>単一文字列。この文字列で始まる名前をもつボリュームとの突き合わせを行います。文字はすべて文字として解釈されます (つまり、ピリオドなど、コマンド・シェルに対して特別な意味をもち得る文字は、その文字としての意味しかもちません)。
+</LI><LI>一般式。式を含む名前をもつボリュームとの突き合わせを行います。式の先頭に脱字記号 (<B>^</B>) を置き、文字列全体を単一引用符 (<B>'</B><B>'</B>) で囲みます。一般式の説明は、この解説ページ内にはありません。
+<B>regexp(5)</B> または (簡単な概要について) <B>backup addvolentry</B> 解説ページについては、この文書の UNIX 解説書ページを参照してください。たとえば、次の式は、ボリューム名に文字列 <B>aix</B> を含む文字列との突き合わせを行います。
+<P>
+<PRE>   <B>-prefix  '^.*aix'</B>
+</PRE>
+</LI></OL>
+<P>複製するボリュームのリストを表示するには、実際には複製しない場合でも、<B>-dryrun</B> フラグを組み込みます。ボリュームの選択に使用する基準を要約するステートメントを表示するには、
+<B>-verbose</B> フラグを組み込みます。
+<P>このコマンドを使用して、単一の読み取り / 書き込みボリュームを複製することができます。その完全名を <B> -prefix</B> 引き数に指定してください。ただし、この場合には <B> vos backup</B> コマンドのほうが有効です。このコマンドを使用すると、単一のボリュームを簡単に検索することができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-prefix
+</B><DD>1 つまたは複数の単一文字列または任意の長さの一般式を指定します。文字列を含む名前をもつボリュームは、複製するボリュームの集合に置かれます。必要であれば、フィールド区切り記号 (ピリオドなど) を入れてください。この引き数は、<B>-server</B>、<B>-partition</B>、<B>-exclude</B>、および <B>-xprefix</B> オプションの任意の組み合わせと組み合わせることができます。
+<P><DT><B>-server
+</B><DD>各読み取り / 書き込みソース・ボリュームが常駐しているファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数は、
+<B>-prefix</B>、<B>-partition</B>、<B>-exclude</B>、および <B>-xprefix</B> オプションの任意の組み合わせと組み合わせることができます。
+<P><DT><B><B>-partition</B>
+</B><DD>各読み取り / 書き込みソース・ボリュームが常駐している区画を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数は、<B>-prefix</B>、<B>-server</B>、
+<B>-exclude</B>、および <B>-xprefix</B> オプションの任意の組み合わせと組み合わせることができます。
+<P><DT><B>-exclude
+</B><DD><B>-prefix</B> または <B>-xprefix</B> 引き数の意味を逆にします。この引き数は、
+<B>-prefix</B>、<B>-server</B>、<B>-partition</B>、および <B>-xprefix</B> オプションの任意の組み合わせと組み合わせることができます。
+<P><DT><B>-xprefix
+</B><DD>単一文字列または任意の長さの一般式を指定します。文字列を含む名前をもつボリュームは、複製するボリュームの集合から削除されます。必要であれば、フィールド区切り記号 (ピリオドなど) を入れてください。この引き数は、
+<B>-prefix</B>、<B>-server</B>、<B>-partition</B>、および <B>-exclude</B> オプションの任意の組み合わせと組み合わせることができます。
+<P><DT><B>-dryrun
+</B><DD>複製するボリュームのリストを、実際にはボリュームを複製しなくても、標準出力で表示します。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>このコマンドは、標準出力で、操作が成功したことを確認するための以下のメッセージを生成します。
+<PRE>   done
+   Total volumes backed up: <VAR>number_cloned</VAR>; failed to backup: <VAR>failures</VAR>
+</PRE>
+<P><B>-dryrun</B> フラグが組み込まれている場合、バックアップするボリュームのリストが、標準的な確認メッセージよりも前に表示されます。
+<P><B>-verbose</B> フラグは組み込まれていて、
+<B>-dryrun</B> フラグは組み込まれていない場合、ボリュームごとに以下のメッセージが表示されます。出力の最後には、標準的な確認メッセージが表示されます。
+<PRE>   Creating backup volume for <VAR>volume_name</VAR> on <VAR>date/time</VAR>
+   {Recloning backup volume | Creating a new backup clone} <VAR>backup_volumeID</VAR> . . .done
+</PRE>
+<P><B>-dryrun</B> フラグと <B>-verbose</B> フラグが両方とも組み込まれている場合、出力は、ボリュームを選択するために使用する基準を要約するステートメントで始まり、その後にボリュームのリストと標準的な確認メッセージが続きます。基準の要約ステートメントの形式は、他にどのオプションが指定されているのかによって決まります。
+<UL>
+<LI><B>-prefix</B> 引き数だけが指定されているか、
+<B>-xprefix</B> オプションおよび <B>-exclude</B> オプションが組み合わされている場合、メッセージは、以下のようになります。
+<P>
+<PRE>   Would have backed up volumes which are prefixed with <VAR>string</VAR> [or<VAR>string</VAR>] . .
+</PRE>
+</LI><LI><B>-xprefix</B> 引き数だけが指定されているか、
+<B>-prefix</B> および <B>-exclude</B> オプションが組み合わされている場合、メッセージは、以下のようになります。
+<P>
+<PRE>   Would have backed up volumes which are not prefixed with <VAR>string</VAR> [nor<VAR>string</VAR>] . .
+</PRE>
+</LI><LI><B>-prefix</B> および <B>-xprefix</B> 引き数が組み合わされている場合は、以下のようになります。
+<P>
+<PRE>   Would have backed up volumes which are prefixed with <VAR>string</VAR> [or<VAR>string</VAR>]  \
+      removing those which are prefixed with  <VAR>x_string</VAR> [or<VAR>x_string</VAR>] . .
+</PRE>
+</LI><LI><B>-prefix</B>、<B>-xprefix</B>、および <B>-exclude</B> オプションが指定されている場合は、以下のようになります。
+<P>
+<PRE>   Would have backed up volumes which are not prefixed with <VAR>string</VAR> [nor<VAR>string</VAR>]  \
+      adding those which are prefixed with  <VAR>x_string</VAR> [or<VAR>x_string</VAR>] . .
+</PRE>
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次の例では、文字列 <B>user</B> で始まる名前をもつ、セルの VLDB にリストされている、読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys -prefix user</B>
+   
+</PRE>
+<P>次の例は、ABC Corporation セルに適合したもので、ファイル・サーバー・マシン <B>fs3.abc.com</B> のすべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys -server fs3.abc.com</B>
+   
+</PRE>
+<P>次の例では、State University セルのファイル・サーバー・マシン <B>db1.stateu.edu</B> に、名前に文字列 <B>temp</B> を含むボリュームを除く、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys  -server db1.stateu.edu -prefix '^.*temp'</B>
+   
+</PRE>
+<P>次の例では、名前に文字列 <B>source</B> を含むボリュームを除き、名前に文字列 <B>source.current</B> を含むボリュームを含む、セルの VLDB にリストされている、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys  -prefix '^.*source' -exclude -xprefix '^.*source\.current'</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf063.htm#HDRBK_ADDVOLENTRY">backup addvolentry</A>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><B>regexp(5)</B> については、UNIX 解説書ページ
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf255.htm">前ページ</A> &#124; <A HREF="auarf257.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

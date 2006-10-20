@@ -1,0 +1,577 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client"
+
+#define AFS_VERINFO_NAME "afscreds"
+#define AFS_VERINFO_FILENAME "afscreds.exe"
+#define AFS_VERINFO_LANG_CODE 0x409
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afscreds.ico"
+IDI_CREDS_NO            ICON    DISCARDABLE     "creds_3.ico"
+IDI_CREDS_SOME          ICON    DISCARDABLE     "creds_2.ico"
+IDI_CREDS_YES           ICON    DISCARDABLE     "creds_1.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOG DISCARDABLE  0, 0, 307, 131
+STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS Client"
+CLASS "AfsCreds"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    RTEXT           "AFS Version %s (patch %lu)",IDC_TITLE_VERSION,210,8,90,
+                    8
+    LTEXT           "Currently logged on to Windows Networking as ""%s""",
+                    IDC_TITLE_NT,7,8,203,8
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,27,293,97
+END
+
+IDD_TAB_CREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Cell:     ",IDC_STATIC,7,9,24,8
+    LTEXT           "(none)",IDC_CREDS_CELL,51,9,282,8
+    LTEXT           "Tokens:",IDC_STATIC,7,26,27,8
+    LTEXT           "(none)",IDC_CREDS_INFO,51,26,282,8
+    CONTROL         "&Show a warning before these tokens expire",
+                    IDC_CREDS_REMIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    51,43,193,10
+    PUSHBUTTON      "&Obtain New Tokens...",IDC_CREDS_OBTAIN,51,63,88,14
+    PUSHBUTTON      "&Discard These Tokens",IDC_CREDS_DESTROY,142,63,92,14
+    PUSHBUTTON      "Help",9,237,63,45,14
+END
+
+IDD_TAB_NOCREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You do not have tokens within any AFS cell.",
+                    IDC_RUNNING,7,9,275,8
+    LTEXT           "The AFS Client is not configured properly, or the AFS Client service is not running.\n\nUse the Advanced tab to start the AFS Client service.",
+                    IDC_STOPPED,7,9,275,25
+    PUSHBUTTON      "Help",9,237,63,45,14
+    PUSHBUTTON      "&Obtain New Tokens...",IDC_CREDS_OBTAIN,51,63,88,14
+END
+
+IDD_TAB_ADVANCED DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "(querying...)",IDC_SERVICE_STATUS,7,9,275,8
+    PUSHBUTTON      "&Start Service",IDC_SERVICE_START,51,28,63,14
+    PUSHBUTTON      "S&top Service",IDC_SERVICE_STOP,118,28,63,14
+    PUSHBUTTON      "&Configure AFS Client",IDC_OPEN_CPL,185,28,97,14
+    CONTROL         "St&art the AFS Client Service whenever this computer restarts",
+                    IDC_SERVICE_AUTO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    51,204,10
+    CONTROL         "&Always show the AFS Client icon in the taskbar",
+                    IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,65,
+                    204,10
+    PUSHBUTTON      "Help",9,237,63,45,14
+END
+
+IDD_NEWCREDS DIALOG DISCARDABLE  0, 0, 232, 127
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Obtain New AFS Tokens"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "To obtain new AFS tokens, enter your AFS user name and the password for your AFS account. You can have tokens in multiple AFS cells simultaneously.",
+                    IDC_STATIC,7,7,218,24
+    LTEXT           "AFS &Cell:",IDC_STATIC,24,42,30,8
+    EDITTEXT        IDC_NEWCREDS_CELL,67,40,132,14,ES_AUTOHSCROLL | ES_LOWERCASE
+    LTEXT           "User &Name:",IDC_STATIC,24,60,38,8
+    EDITTEXT        IDC_NEWCREDS_USER,67,58,97,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,23,78,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,67,76,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,69,106,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,106,50,14
+    PUSHBUTTON      "Help",9,175,106,50,14
+END
+
+IDD_NEWCREDS_EXPIRE DIALOG DISCARDABLE  0, 0, 232, 155
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Obtain New AFS Tokens"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "To obtain new AFS tokens, enter your AFS user name and the password for your AFS account. You can have tokens in multiple AFS cells simultaneously.",
+                    IDC_STATIC,7,29,218,24
+    LTEXT           "AFS &Cell:",IDC_STATIC,24,70,30,8
+    EDITTEXT        IDC_NEWCREDS_CELL,67,68,132,14,ES_AUTOHSCROLL | ES_LOWERCASE
+    LTEXT           "User &Name:",IDC_STATIC,24,88,38,8
+    EDITTEXT        IDC_NEWCREDS_USER,67,86,97,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,23,106,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,67,104,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Your tokens within the %1 cell are about to expire.",
+                    IDC_NEWCREDS_TITLE,7,7,218,16
+    DEFPUSHBUTTON   "OK",IDOK,69,134,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,134,50,14
+    PUSHBUTTON      "Help",9,175,134,50,14
+END
+
+IDD_TAB_MOUNT DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You have chosen to map the following drive letters to paths in AFS:",
+                    IDC_TITLE,7,8,275,8
+    PUSHBUTTON      "&Add...",IDC_ADD,51,63,45,14
+    PUSHBUTTON      "&Change...",IDC_EDIT,99,63,45,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,147,63,45,14
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x1d3,51,21,231,37
+    PUSHBUTTON      "Help",9,237,63,45,14
+END
+
+IDD_WIZARD DIALOGEX 0, 0, 272, 152
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Client Wizard"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Next >",IDNEXT,162,131,50,14
+    PUSHBUTTON      "Cance&l",IDCANCEL,215,131,50,14
+    CONTROL         "",IDC_LHS,"Static",SS_BLACKFRAME,7,7,76,112
+    CONTROL         "",IDC_RHS,"Static",SS_BLACKFRAME,91,7,174,112
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,125,258,1
+    PUSHBUTTON      "&Help",9,59,131,50,14
+    PUSHBUTTON      "< &Back",IDBACK,112,131,50,14
+END
+
+IDD_WIZ_START DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The AFS Client Service has not yet started.",IDC_STATIC,
+                    0,0,173,8
+    LTEXT           "To start the AFS Client Service, click Next.",
+                    IDC_STATIC,0,73,173,8
+    LTEXT           "Until the AFS Client Service is running, you will be unable to use files stored in AFS.",
+                    IDC_STATIC,0,17,173,17
+    LTEXT           "To leave the AFS Client Service stopped, click Cancel.",
+                    IDC_STATIC,0,88,173,8
+END
+
+IDD_WIZ_CREDS DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The AFS Client Service is now running, but you have not yet obtained any tokens for using AFS.",
+                    IDC_STATIC,0,0,173,16
+    CONTROL         "Do not obtain tokens for any cell",IDC_NOCREDS,"Button",
+                    BS_AUTORADIOBUTTON,10,28,141,10
+    CONTROL         "Obtain tokens in the following cell:",IDC_YESCREDS,
+                    "Button",BS_AUTORADIOBUTTON,10,44,141,10
+    LTEXT           "AFS &Cell:",IDC_STATIC,34,64,30,8
+    EDITTEXT        IDC_NEWCREDS_CELL,77,62,96,14,ES_AUTOHSCROLL | ES_LOWERCASE
+    LTEXT           "User &Name:",IDC_STATIC,34,82,38,8
+    EDITTEXT        IDC_NEWCREDS_USER,77,80,96,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,33,100,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,77,97,96,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+END
+
+IDD_WIZ_STARTING DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait; the AFS Client Service is starting...",
+                    IDC_START_TRY,0,33,173,8
+    LTEXT           "The AFS Client Service could not be started.\n\nCheck your network settings, and use the AFS icon in the Control Panel to check the configuration of the AFS Client on this computer.",
+                    IDC_START_FAIL,0,25,173,41
+END
+
+IDD_WIZ_MOUNT DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "To access files stored in AFS, you must map drive letters to paths in AFS.",
+                    IDC_STATIC,0,0,173,16
+    CONTROL         "&Do not map any drive letters to paths in AFS",
+                    IDC_NOMAP,"Button",BS_AUTORADIOBUTTON,10,23,152,10
+    CONTROL         "&Map at least one drive letter to a path in AFS:",
+                    IDC_YESMAP,"Button",BS_AUTORADIOBUTTON,10,40,156,10
+    LTEXT           "Drive &Letter:",IDC_STATIC,34,58,40,8
+    COMBOBOX        IDC_MAP_LETTER,77,56,48,125,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS &Path:",IDC_STATIC,34,76,33,8
+    EDITTEXT        IDC_MAP_PATH,77,74,96,14,ES_AUTOHSCROLL
+    LTEXT           "&Submount:",IDC_STATIC,34,94,38,8
+    EDITTEXT        IDC_MAP_DESC,77,92,60,14,ES_AUTOHSCROLL
+END
+
+IDD_TERMINATE DIALOGEX 0, 0, 291, 117
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Client"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Remove Icon",IDOK,167,96,63,14
+    PUSHBUTTON      "Cance&l",IDCANCEL,234,96,50,14
+    LTEXT           "You have chosen to remove the AFS Client icon from your computer's taskbar. Unless the AFS Client icon is in your computer's taskbar, AFS cannot warn you when your AFS tokens are about to expire.",
+                    IDC_STATIC,7,7,277,25
+    LTEXT           "The AFS Client Service is currently running. If you want, you can stop it at this time.",
+                    IDC_STATIC,7,41,277,8
+    CONTROL         "&Leave the AFS Client Service running",IDC_LEAVE,"Button",
+                    BS_AUTORADIOBUTTON,26,55,228,10
+    CONTROL         "&Stop the AFS Client Service",IDC_STOP,"Button",
+                    BS_AUTORADIOBUTTON,26,69,228,10
+    CONTROL         "S&how the icon when my computer restarts",IDC_STARTUP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,98,148,10
+END
+
+IDD_TERMINATE_SMALL DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Client"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Remove Icon",IDOK,167,47,63,14
+    PUSHBUTTON      "Cance&l",IDCANCEL,234,47,50,14
+    LTEXT           "You have chosen to remove the AFS Client icon from your computer's taskbar. Unless the AFS Client icon is in your computer's taskbar, AFS cannot warn you when your AFS tokens are about to expire.",
+                    -1,7,7,277,25
+    CONTROL         "S&how the icon when my computer restarts",IDC_STARTUP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,49,148,10
+END
+
+IDD_TERMINATE_SMALL_95 DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Light"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Remove Icon",IDOK,167,47,63,14
+    PUSHBUTTON      "Cance&l",IDCANCEL,234,47,50,14
+    LTEXT           "You have chosen to remove the AFS Light icon from your computer's taskbar. Unless the AFS Light icon is in your computer's taskbar, AFS cannot warn you when your AFS tokens are about to expire.",
+                    -1,7,7,277,25
+    CONTROL         "S&how the icon when my computer restarts",IDC_STARTUP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,49,148,10
+END
+
+IDD_WIZ_MOUNTING DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "One or more of the drive letters you have chosen could not be mapped to the appropriate paths in AFS.\n\nYou may need to close any applications which are already trying to use paths in AFS.",
+                    IDC_MAP_FAIL,1,26,173,41
+    LTEXT           "Please wait; mapping drive letters to paths in AFS...",
+                    IDC_MAP_TRY,0,33,173,8
+END
+
+IDD_WIZ_FINISH DIALOG DISCARDABLE  0, 0, 174, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The AFS Client is ready for use.",IDC_STATIC,0,0,173,8
+    LTEXT           "To close this wizard, click Finish.",IDC_STATIC,0,73,
+                    173,8
+END
+
+IDD_MAPPING DIALOG DISCARDABLE  0, 0, 275, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Map Drive Letter"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can map drive letters on your computer to paths in AFS.\n\nFor instance, if you map Q: as \\afs\\acme.com\\usr\\bob, then the files available in AFS as \\afs\\acme.com\\usr\\bob\\* will be visible in Q:\\",
+                    IDC_STATIC,7,7,261,32
+    LTEXT           "Drive &Letter:",IDC_STATIC,23,53,40,8
+    COMBOBOX        IDC_MAP_LETTER,73,51,56,162,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS &Path:",IDC_STATIC,23,70,33,8
+    EDITTEXT        IDC_MAP_PATH,73,68,178,13,ES_AUTOHSCROLL
+    LTEXT           "&Submount:",IDC_STATIC,23,88,38,8
+    EDITTEXT        IDC_MAP_DESC,73,86,60,13,ES_AUTOHSCROLL
+    CONTROL         "&Restore this mapping whenever I logon",
+                    IDC_MAP_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    73,105,185,10
+    DEFPUSHBUTTON   "OK",IDOK,112,131,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,131,50,14
+    PUSHBUTTON      "Help",9,218,131,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 124
+    END
+
+    IDD_TAB_CREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_NOCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_NEWCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+
+    IDD_NEWCREDS_EXPIRE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+
+    IDD_TAB_MOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 265
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 145
+    END
+
+    IDD_TERMINATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 110
+    END
+
+    IDD_TERMINATE_SMALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_MAPPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 268
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 145
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_TRAYICON MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Show Tokens...",             M_ACTIVATE
+    MENUITEM "&Warn Before Expiration",     M_REMIND, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "&Remove Icon...",                M_TERMINATE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WIZ16               BITMAP  DISCARDABLE     "wiz16.bmp"
+IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOOLTIP             "AFS Client"
+    IDS_TOOLTIP_95          "AFS Light"
+    IDS_CREDENTIALS         "Tokens"
+    IDS_UNKNOWN             "(unknown)"
+    IDS_ADVANCED            "Advanced"
+    IDS_CREDS               "%1   (tokens expire %2)"
+    IDS_NO_CREDS            "(you have no tokens in this cell)"
+    IDS_SERVICE_BROKEN      "The AFS Client Service is not properly installed, or you do not have authorization to query its status."
+    IDS_SERVICE_RUNNING     "The AFS Client Service is running normally."
+    IDS_SERVICE_STOPPED     "The AFS Client Service is currently stopped."
+    IDS_SERVICE_STOPPING    "Please wait; the AFS Client Service is stopping..."
+    IDS_SERVICE_STARTING    "Please wait; the AFS Client Service is starting..."
+    IDS_SERVICE_UNKNOWN     "The status of the AFS Client Service could not be determined."
+    IDS_SERVICE_FAIL_STOP   "The AFS Client Service could not be stopped successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
+    IDS_SERVICE_FAIL_START  "The AFS Client Service could not be started successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
+    IDS_SERVICE_FAIL_CONFIG "The AFS Client Service's startup parameters could not be changed. You might not have authorization to perform this operation.\n\nError 0x%1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_ERROR       "Error Configuring Service"
+    IDS_ERROR_TITLE         "Error - AFS Client"
+    IDS_ERROR_TITLE_95      "Error - AFS Light"
+    IDS_ERROR_DESTROY_95    "Your tokens in the %1 cell could not be destroyed.\n\nError: %2"
+    IDS_ERROR_DESTROY_NOCM  "Your tokens in the %1 cell could not be destroyed because the AFS Client Service is not responding.\n\nCheck the Advanced tab to see if the AFS Client is running properly.\n\nError: %2"
+    IDS_ERROR_DESTROY_UNKNOWN 
+                            "Your tokens in the %1 cell could not be destroyed.\n\nCheck the Advanced tab to see if the AFS Client is running properly.\n\nError: %2"
+    IDS_ERROR_OBTAIN        "The AFS Client was unable to obtain tokens as %2 in cell %1.\n\nError: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "AFS Light was unable to obtain tokens as %2 in cell %1.\n\nError: %4 (%3)"
+    IDS_TITLE_VERSION       "AFS Version %s"
+    IDS_TITLE_VERSION_NOPATCH "AFS Version %s"
+    IDS_MOUNT_SOME          "You have chosen to map the following drive letters to paths in AFS:"
+    IDS_MOUNT_NONE          "You have not yet chosen to map any drive letters to paths in AFS."
+    IDS_MOUNT               "Drive Letters"
+    IDS_WIZ_NEXT            "&Next >"
+    IDS_WIZ_FINISH          "&Finish"
+    IDS_MAP_LETTER          "Drive *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "Drive %1: \t%2"
+    IDS_ERROR_MAP           "Error Mapping Network Drive"
+    IDS_ERROR_MAP_DESC      "AFS was unable to map the network drive to the specified path in AFS. Check to make sure the drive letter is not currently in use.\n\nError: 0x%1."
+    IDS_ERROR_UNMAP         "Error Mapping Network Drive"
+    IDS_ERROR_UNMAP_DESC    "AFS was unable to unmap the specified network drive. Check to make sure the drive letter is not currently in use.\n\nError: 0x%1."
+    IDS_CELL_GATEWAY        "%s (via gateway %s)"
+    IDS_BADMAP_TITLE        "Error Mapping Network Drive"
+    IDS_BADMAP_DESC         "AFS cannot map a drive letter to the path specified because the path does not begin with ""\\afs"".\n\nMake sure that the path you enter begins with ""\\afs"", and try again."
+    IDS_UNCONFIG_TITLE_95   "Error - AFS Light"
+    IDS_UNCONFIG_DESC_95    "AFS Light cannot be used because it is not yet configured.\n\nTo configure AFS Light, open the Control Panel and double-click on the AFS Light Configuration icon."
+    IDS_UNCONFIG_TITLE      "Error - AFS Client"
+    IDS_UNCONFIG_DESC       "The AFS Client cannot be used because it is not yet configured.\n\nTo configure the AFS Client, open the Control Panel and double-click on the AFS Client icon."
+    IDS_NEWSUB_TITLE        "Caution - AFS Client"
+    IDS_NEWSUB_TITLE_95     "Caution - AFS Light"
+    IDS_NEWSUB_DESC         "AFS was unable to use the submount you specified when connecting the network drive.\n\nThe specified submount is already used for a different AFS path."
+    IDS_BADSUB_TITLE        "Error - AFS Client"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BADSUB_TITLE_95     "Error - AFS Light"
+    IDS_BADSUB_DESC         "The drive letter description you entered cannot be used.\n\nA drive letter description may have no more than 12 characters, and may not contain spaces or tabs."
+    IDS_TITLE_95            "AFS Light"
+    IDS_CREDS_EXPIRED       "%1   (expired)"
+END
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,974 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理の手引き</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- E:\IDWB\TEMP\idwt2118\AUAGD000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 12:07:32            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 12:07:30">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理の手引き</H1>
+<HR><H1><A NAME="HDRWQ843" HREF="auagd002.htm#ToC_706">付録 C. afsmonitor プログラムの統計</A></H1>
+<P>この付録は、<B>afsmonitor</B> プログラムにより得られた統計の一覧です。統計は、カテゴリーおよびセクション別に収集して、各フィールド、グループ、およびセクションが簡単に説明されています。
+<B>afsmonitor</B> プログラムの使用方法については、<A HREF="auagd013.htm#HDRWQ439">AFS パフォーマンスのモニターおよび監査</A> を参照してください。
+<A NAME="IDX8181"></A>
+<HR><H2><A NAME="HDRWQ844" HREF="auagd002.htm#ToC_707">キャッシュ・マネージャー統計</A></H2>
+<A NAME="IDX8182"></A>
+<P>キャッシュ・マネージャー統計フィールドは、以下の機能グループおよびグループに分類されています。
+<UL>
+<LI>PerfStats_section - パフォーマンス統計機能グループ
+<UL>
+<LI>PerfStats_group - パフォーマンス統計グループ
+</LI><LI>misc_group - 各種グループ
+</LI></UL>
+</LI><LI>Server_UpDown_section - サーバー Up/Down 統計機能グループ
+<UL>
+<LI>FS_upDown_SC_group - 同一セル・グループ内のファイル・サーバー Up/Down 統計
+</LI><LI>FS_upDown_OC_group - 別のセル・グループ内のファイル・サーバー Up/Down 統計
+</LI><LI>VL_upDown_SC_group - 同一セル・グループ内の VL サーバー Up/Down 統計
+</LI><LI>VL_upDown_OC_group - 別のセル・グループ内の VL サーバー Up/Down 統計
+</LI></UL>
+</LI><LI>RPCop_section - RPC オペレーション測定機能グループ
+<UL>
+<LI>FS_RPCopTimes_group - ファイル・サーバー RPC オペレーション・タイミング・グループ
+</LI><LI>FS_RPCopErrors_group - ファイル・サーバー RPC オペレーション・エラー・グループ
+</LI><LI>FS_RPCopBytes_group - ファイル・サーバー RPC 転送タイミング・グループ
+</LI><LI>CM_RPCopTimes_group - キャッシュ・マネージャー RPC オペレーション・タイミング・グループ
+</LI></UL>
+</LI><LI>Auth_Access_section - 認証および複写済みファイル・アクセス・機能グループ
+<UL>
+<LI>Auth_Stats_group - キャッシュ・マネージャー・グループ用認証情報
+</LI><LI>Access_Stats_group - 未複写ファイル・アクセス・グループ
+</LI></UL>
+</LI></UL>
+<P>これらの機能グループ名およびグループ名で分類される全キャッシュ・マネージャー変数は、以下にリストします。
+<P><H3><A NAME="Header_708" HREF="auagd002.htm#ToC_708">パフォーマンス統計機能グループ (PerfStats_section)</A></H3>
+<P>パフォーマンス統計グループ (PerfStats_group)
+<UL>
+<LI>dlocalAccesses: ローカル・セル内のファイルへのデータ・アクセス数
+</LI><LI>vlocalAccesses: ローカル・セル内のファイルへの stat アクセス数
+</LI><LI>dremoteAccesses: ローカル・セル外のファイルへのデータ・アクセス数
+</LI><LI>vremoteAccesses: ローカル・セル外のファイルへの stat アクセス数
+</LI><LI>cacheNumEntries: キャッシュ項目数
+</LI><LI>cacheBlocksTotal: キャッシュ用に構成された (1K) ブロックの数
+</LI><LI>cacheBlocksInUse: 現行使用中のキャッシュ・ブロックの数
+</LI><LI>cacheBlocksOrig: ブート時のキャッシュ・ブロックの数
+</LI><LI>cacheMaxDirtyChunks: ダーティー・キャッシュ・チャンクの許容最大数
+</LI><LI>cacheCurrDirtyChunks: ダーティー・キャッシュ・チャンクの現行数
+</LI><LI>dcacheHits: ローカル・キャッシュで検索されるデータ・ファイル数
+</LI><LI>vcacheHits: ローカル・キャッシュで検索される stat 項目数
+</LI><LI>dcacheMisses: ローカル・キャッシュで検索され<B>ない</B>データ・ファイル数
+</LI><LI>vcacheMisses: ローカル・キャッシュで検索され<B>ない</B> stat 項目数
+</LI><LI>cacheFlushes: キャッシュからフラッシュされるファイル数
+</LI><LI>cacheFilesReused: 再利用されるキャッシュ・ファイル数
+</LI><LI>ProtServerAddr: 使用される保護サーバーのアドレス
+</LI><LI>vcacheXAllocs: 追加で割り振られる vcaches
+</LI><LI>bufAlloced: AFS によって割り振られるバッファー数
+</LI><LI>bufHits: バッファー・キャッシュ上で検索されるページ数
+</LI><LI>bufMisses: バッファー・キャッシュ上で検索され<B>ない</B>ページ数
+</LI><LI>bufFlushDirty: すべて使用中のためフラッシュされたキャッシュ済みダーティー・バッファーの数
+</LI><LI>LargeBlocksActive: 現在使用済みのラージ空きプール項目の数
+</LI><LI>LargeBlocksAlloced: 割り振り済みのラージ空きプール項目の数
+</LI><LI>SmallBlocksActive: 現在使用済みのスモール空きプール項目の数
+</LI><LI>SmallBlocksAlloced: 割り振り済み使用済みのスモール空きプール項目の数
+</LI><LI>OutStandingMemUsage: 割り振り済みメモリー容量
+</LI><LI>OutStandingAllocs: 未解決の osi_allocs (未だ osi_frees でない)
+</LI><LI>CallBackAlloced: 割り振り済みコールバック構造の数
+</LI><LI>CallBackFlushes: 実行済みコールバック・フラッシュ・オペレーションの数
+</LI><LI>srvRecords: 現在レコード上にあるサーバー数
+</LI><LI>srvRecordsHWM: サーバー・レコードの上限基準点
+</LI><LI>srvNumBuckets: サーバー・ハッシュ・チェーン・バケットの数
+</LI><LI>srvMaxChainLength: サーバー・ハッシュ・チェーンの最大長
+</LI><LI>srvMaxChainLengthHWM: サーバー・ハッシュ・チェーンの上限基準点
+</LI><LI>sysName_ID: ホスト・ハードウェアの Sysname ID
+</LI></UL>
+<P>各種グループ (misc_group)
+<UL>
+<LI>numPerfCalls: 受信済みパフォーマンス・コール数
+</LI><LI>epoch: キャッシュ・マネージャーのエコー時間
+</LI><LI>numCellsVisible: 認識済みのセル数
+</LI><LI>numCellsContacted: アクセス済みのセル数
+</LI></UL>
+<P><H3><A NAME="Header_709" HREF="auagd002.htm#ToC_709">サーバー Up/Down 統計機能グループ (Server_UpDown_section)</A></H3>
+<P>同一セル・グループ内のファイル・サーバー Up/Down 統計 (FS_upDown_SC_group)
+<P><B>注:</B> この機能グループで言及する <I>レコード</I> は、
+<B>afsmonitor</B> プログラムが保持する内部レコードのことで、データを収集するプロセスをトラックするためのものです。
+<UL>
+<LI>fs_sc_numTtlRecords: 活動または活動停止中のファイル・サーバー数
+</LI><LI>fs_sc_numUpRecords: 現在マークアップ済みの (活動) ファイル・サーバー・レコード数
+</LI><LI>fs_sc_numDownRecords: 現在マーク・ダウン済みの (活動) ファイル・サーバー・レコード数
+</LI><LI>fs_sc_sumOfRecordAges: ファイル・サーバー・レコードの存続時間の合計
+</LI><LI>fs_sc_ageOfYoungestRecord: 一番新しいファイル・サーバー・レコードの経過時間
+</LI><LI>fs_sc_ageOfOldestRecord: 一番古いファイル・サーバー・レコードの経過時間
+</LI><LI>fs_sc_numDowntimeIncidents: (完了) 故障時機能不良の数
+</LI><LI>fs_sc_numRecordsNeverDown: マークされたことがないファイル・サーバー・レコード数
+</LI><LI>fs_sc_maxDowntimesInARecord: 任意のファイル・サーバー・レコード内の最大ダウン時間
+</LI><LI>fs_sc_sumOfDowntimes: 全 (完了) ダウン時間の合計 (秒)
+</LI><LI>fs_sc_shortestDowntime: 最短ダウン時間 (秒)
+</LI><LI>fs_sc_longestDowntime: 最長ダウン時間 (秒)
+</LI><LI>fs_sc_down_0_10_min: 故障時機能不良: 0-10 分
+</LI><LI>fs_sc_down_10_30_min: 故障時機能不良: 10-30 分
+</LI><LI>fs_sc_down_half_1_hr: 故障時機能不良: 30-60 分
+</LI><LI>fs_sc_down_1_2_hr: 故障時機能不良: 1-2 時間
+</LI><LI>fs_sc_down_2_4_hr: 故障時機能不良: 2-4 時間
+</LI><LI>fs_sc_down_4_8_hr: 故障時機能不良: 4-8 時間
+</LI><LI>fs_sc_down_more_8_hr: 故障時機能不良: 8 時間以上
+</LI><LI>fs_sc_downDst_0: 故障時機能不良: 0 回
+</LI><LI>fs_sc_downDst_1: 故障時機能不良: 1 回
+</LI><LI>fs_sc_downDst_2_5: 故障時機能不良: 2-5 回
+</LI><LI>fs_sc_downDst_6_10: 故障時機能不良: 6-10 回
+</LI><LI>fs_sc_downDst_10_50: 故障時機能不良: 10-50 回
+</LI><LI>fs_sc_downDst_more_50: 故障時機能不良: 50 回以上
+</LI></UL>
+<P>別のセル・グループ内のファイル・サーバー Up/Down 統計 (FS_upDown_OC_group)
+<UL>
+<LI>fs_oc_numTtlRecords: 活動または活動停止中のファイル・サーバー・レコード数
+</LI><LI>fs_oc_numUpRecords: 現在マークアップ済みの (活動) ファイル・サーバー・レコード数
+</LI><LI>fs_oc_numDownRecords: 現在マーク・ダウン済みの (活動) ファイル・サーバー・レコード数
+</LI><LI>fs_oc_sumOfRecordAges: サーバー・レコードの存続時間の合計
+</LI><LI>fs_oc_ageOfYoungestRecord: 一番新しいファイル・サーバー・レコードの経過時間
+</LI><LI>fs_oc_ageOfOldestRecord: 一番古いファイル・サーバー・レコードの経過時間
+</LI><LI>fs_oc_numDowntimeIncidents: (完了) 故障時機能不良の数
+</LI><LI>fs_oc_numRecordsNeverDown: マークされたことがないファイル・サーバー・レコードの数
+</LI><LI>fs_oc_maxDowntimesInARecord: 任意のファイル・サーバー・レコード内の最大ダウン時間
+</LI><LI>fs_oc_sumOfDowntimes: 全 (完了) ダウン時間の合計 (秒)
+</LI><LI>fs_oc_shortestDowntime: 最短ダウン時間 (秒)
+</LI><LI>fs_oc_longestDowntime: 最長ダウン時間 (秒)
+</LI><LI>fs_oc_down_0_10_min: 故障時機能不良: 0-10 分
+</LI><LI>fs_oc_down_10_30_min: 故障時機能不良: 10-30 分
+</LI><LI>fs_oc_down_half_1_hr: 故障時機能不良: 30-60 分
+</LI><LI>fs_oc_down_1_2_hr: 故障時機能不良: 1-2 時間
+</LI><LI>fs_oc_down_2_4_hr: 故障時機能不良: 2-4 時間
+</LI><LI>fs_oc_down_4_8_hr: 故障時機能不良: 4-8 時間
+</LI><LI>fs_oc_down_more_8_hr: 故障時機能不良: 8 時間以上
+</LI><LI>fs_oc_downDst_0: 故障時機能不良: 0 回
+</LI><LI>fs_oc_downDst_1: 故障時機能不良: 1 回
+</LI><LI>fs_oc_downDst_2_5: 故障時機能不良: 2-5 回
+</LI><LI>fs_oc_downDst_6_10: 故障時機能不良: 6-10 回
+</LI><LI>fs_oc_downDst_10_50: 故障時機能不良: 10-50 回
+</LI><LI>fs_oc_downDst_more_50: 故障時機能不良: 50 回以上
+</LI></UL>
+<P>同一セル・グループ内の VL サーバー Up/Down 統計 (VL_upDown_SC_group)
+<UL>
+<LI>vl_sc_numTtlRecords: 活動または活動停止中のファイル・サーバー・レコード数
+</LI><LI>vl_sc_numUpRecords: 現在マークアップ済みの (活動) vlserver レコード数
+</LI><LI>vl_sc_numDownRecords: 現在マーク・ダウン済みの (活動) vlserver レコード数
+</LI><LI>vl_sc_sumOfRecordAges: vlserver レコードの存続時間の合計
+</LI><LI>vl_sc_ageOfYoungestRecord: 一番新しい vlserver レコードの経過時間
+</LI><LI>vl_sc_ageOfOldestRecord: 一番古い vlserver レコードの経過時間
+</LI><LI>vl_sc_numDowntimeIncidents: (完了) 故障時機能不良の数
+</LI><LI>vl_sc_numRecordsNeverDown: マークされたことがない vlserver レコードの数
+</LI><LI>vl_sc_maxDowntimesInARecord: 任意の vlserver レコード内の最大ダウン時間
+</LI><LI>vl_sc_sumOfDowntimes: 全 (完了) ダウン時間の合計 (秒)
+</LI><LI>vl_sc_shortestDowntime: 最短ダウン時間 (秒)
+</LI><LI>vl_sc_longestDowntime: 最長ダウン時間 (秒)
+</LI><LI>vl_sc_down_0_10_min: 故障時機能不良: 0-10 分
+</LI><LI>vl_sc_down_10_30_min: 故障時機能不良: 10-30 分
+</LI><LI>vl_sc_down_half_1_hr: 故障時機能不良: 30-60 分
+</LI><LI>vl_sc_down_1_2_hr: 故障時機能不良: 1-2 時間
+</LI><LI>vl_sc_down_2_4_hr: 故障時機能不良: 2-4 時間
+</LI><LI>vl_sc_down_4_8_hr: 故障時機能不良: 4-8 時間
+</LI><LI>vl_sc_down_more_8_hr: 故障時機能不良: 8 時間以上
+</LI><LI>vl_sc_downDst_0: 故障時機能不良: 0 回
+</LI><LI>vl_sc_downDst_1: 故障時機能不良: 1 回
+</LI><LI>vl_sc_downDst_2_5: 故障時機能不良: 2-5 回
+</LI><LI>vl_sc_downDst_6_10: 故障時機能不良: 6-10 回
+</LI><LI>vl_sc_downDst_10_50: 故障時機能不良: 10-50 回
+</LI><LI>vl_sc_downDst_more_50: 故障時機能不良: 50 回以上
+</LI></UL>
+<P>別のセル・グループ内の VL サーバー Up/Down 統計 (VL_upDown_DC_group)
+<UL>
+<LI>vl_oc_numTtlRecords: 活動または活動停止中の vlserver レコード数
+</LI><LI>vl_oc_numUpRecords: 現在マークアップ済みの (活動) vlserver レコード数
+</LI><LI>vl_oc_numDownRecords: 現在マークアップ済みの (活動) vlserver レコード数
+</LI><LI>vl_oc_sumOfRecordAges: vlserver レコードの存続時間の合計
+</LI><LI>vl_oc_ageOfYoungestRecord: 一番新しい vlserver レコードの経過時間
+</LI><LI>vl_oc_ageOfOldestRecord: 一番古い vlserver レコードの経過時間
+</LI><LI>vl_oc_numDowntimeIncidents: (完了) 故障時機能不良の数
+</LI><LI>vl_oc_numRecordsNeverDown: マークされたことがない vlserver レコードの数
+</LI><LI>vl_oc_maxDowntimesInARecord: 任意の vlserver レコード内の最大ダウン時間
+</LI><LI>vl_oc_sumOfDowntimes: 全 (完了) ダウン時間の合計 (秒)
+</LI><LI>vl_oc_shortestDowntime: 最短ダウン時間 (秒)
+</LI><LI>vl_oc_longestDowntime: 最長ダウン時間 (秒)
+</LI><LI>vl_oc_down_0_10_min: 故障時機能不良: 0-10 分
+</LI><LI>vl_oc_down_10_30_min: 故障時機能不良: 10-30 分
+</LI><LI>vl_oc_down_half_1_hr: 故障時機能不良: 30-60 分
+</LI><LI>vl_oc_down_1_2_hr: 故障時機能不良: 1-2 時間
+</LI><LI>vl_oc_down_2_4_hr: 故障時機能不良: 2-4 時間
+</LI><LI>vl_oc_down_4_8_hr: 故障時機能不良: 4-8 時間
+</LI><LI>vl_oc_down_more_8_hr: 故障時機能不良: 8 時間以上
+</LI><LI>vl_oc_downDst_0: 故障時機能不良: 0 回
+</LI><LI>vl_oc_downDst_1: 故障時機能不良: 1 回
+</LI><LI>vl_oc_downDst_2_5: 故障時機能不良: 2-5 回
+</LI><LI>vl_oc_downDst_6_10: 故障時機能不良: 6-10 回
+</LI><LI>vl_oc_downDst_10_50: 故障時機能不良: 10-50 回
+</LI><LI>vl_oc_downDst_more_50: 故障時機能不良: 50 回以上
+</LI></UL>
+<P><H3><A NAME="Header_710" HREF="auagd002.htm#ToC_710">RPC オペレーション測定機能グループ (RPCop_section)</A></H3>
+<P>ファイル・サーバー RPC オペレーション・タイミング・グループ (FS_RPCopTimes_group)
+<UL>
+<LI>FetchData_ops: 実行済み FetchData オペレーションの数
+</LI><LI>FetchData_ops_ok: 正常な FetchData オペレーションの数
+</LI><LI>FetchData_sum: FetchData オペレーションのタイミングの合計
+</LI><LI>FetchData_sqr: FetchData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchData_min: FetchData オペレーションのための監視最小実行時間
+</LI><LI>FetchData_max: FetchData オペレーションのための監視最大実行時間
+</LI><LI>FetchACL_ops: 実行済み FetchACL オペレーションの数
+</LI><LI>FetchACL_ops_ok: 正常な FetchACL オペレーションの数
+</LI><LI>FetchACL_sum: FetchACL オペレーションのタイミングの合計
+</LI><LI>FetchACL_sqr: FetchACL オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchACL_min: FetchACL オペレーションのための監視最小実行時間
+</LI><LI>FetchACL_max: FetchACL オペレーションのための監視最大実行時間
+</LI><LI>FetchStatus_ops: 実行済み FetchStatus オペレーションの数
+</LI><LI>FetchStatus_ops_ok: 正常な FetchStatus オペレーションの数
+</LI><LI>FetchStatus_sum: FetchStatus オペレーションのタイミングの合計
+</LI><LI>FetchStatus_sqr: FetchStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchStatus_min: FetchStatus オペレーションのための監視最小実行時間
+</LI><LI>FetchStatus_max: FetchStatus オペレーションのための監視最大実行時間
+</LI><LI>StoreData_ops: 実行済み StoreData オペレーションの数
+</LI><LI>StoreData_ops_ok: 正常な StoreData オペレーションの数
+</LI><LI>StoreData_sum: StoreData オペレーションのタイミングの合計
+</LI><LI>StoreData_sqr: StoreData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreData_min: StoreData オペレーションのための監視最小実行時間
+</LI><LI>StoreData_max: StoreData オペレーションのための監視最大実行時間
+</LI><LI>StoreACL_ops: 実行済み StoreACL オペレーションの数
+</LI><LI>StoreACL_ops_ok: 正常な StoreACL オペレーションの数
+</LI><LI>StoreACL_sum: StoreACL オペレーションのタイミングの合計
+</LI><LI>StoreACL_sqr: StoreACL オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreACL_min: StoreACL オペレーションのための監視最小実行時間
+</LI><LI>StoreACL_max: StoreACL オペレーションのための監視最大実行時間
+</LI><LI>StoreStatus_ops: 実行済み StoreStatus オペレーションの数
+</LI><LI>StoreStatus_ops_ok: 正常な StoreStatus オペレーションの数
+</LI><LI>StoreStatus_sum: StoreStatus オペレーションのタイミングの合計
+</LI><LI>StoreStatus_sqr: StoreStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreStatus_min: StoreStatus オペレーションのための監視最小実行時間
+</LI><LI>StoreStatus_max: StoreStatus オペレーションのための監視最大実行時間
+</LI><LI>RemoveFile_ops: 実行済み RemoveFile オペレーションの数
+</LI><LI>RemoveFile_ops_ok: 正常な RemoveFile オペレーションの数
+</LI><LI>RemoveFile_sum: RemoveFile オペレーションのタイミングの合計
+</LI><LI>RemoveFile_sqr: RemoveFile オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>RemoveFile_min: RemoveFile オペレーションのための監視最小実行時間
+</LI><LI>RemoveFile_max: RemoveFile オペレーションのための監視最大実行時間
+</LI><LI>CreateFile_ops: 実行済み CreateFile オペレーションの数
+</LI><LI>CreateFile_ops_ok: 正常な CreateFile オペレーションの数
+</LI><LI>CreateFile_sum: CreateFile オペレーションのタイミングの合計
+</LI><LI>CreateFile_sqr: CreateFile オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>CreateFile_min: CreateFile オペレーションのための監視最小実行時間
+</LI><LI>CreateFile_max: CreateFile オペレーションのための監視最大実行時間
+</LI><LI>Rename_ops: 実行済み Rename オペレーションの数
+</LI><LI>Rename_ops_ok: 正常な Rename オペレーションの数
+</LI><LI>Rename_sum: Rename オペレーションのタイミングの合計
+</LI><LI>Rename_sqr: Rename オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Rename_min: Rename オペレーションのための監視最小実行時間
+</LI><LI>Rename_max: Rename オペレーションのための監視最大実行時間
+</LI><LI>Symlink_ops: 実行済み Symlink オペレーションの数
+</LI><LI>Symlink_ops_ok: 正常な Symlink オペレーションの数
+</LI><LI>Symlink_sum: Symlink オペレーションのタイミングの合計
+</LI><LI>Symlink_sqr: Symlink オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Symlink_min: Symlink オペレーションのための監視最小実行時間
+</LI><LI>Symlink_max: Symlink オペレーションのための監視最大実行時間
+</LI><LI>Link_ops: 実行済み Link オペレーションの数
+</LI><LI>Link_ops_ok: 正常な Link オペレーションの数
+</LI><LI>Link_sum: Link オペレーションのタイミングの合計
+</LI><LI>Link_sqr: Link オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Link_min: Link オペレーションのための監視最小実行時間
+</LI><LI>Link_max: Link オペレーションのための監視最大実行時間
+</LI><LI>MakeDir_ops: 実行済み MakeDir オペレーションの数
+</LI><LI>MakeDir_ops_ok: 正常な MakeDir オペレーションの数
+</LI><LI>MakeDir_sum: MakeDir オペレーションのタイミングの合計
+</LI><LI>MakeDir_sqr: MakeDir オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>MakeDir_min: MakeDir オペレーションのための監視最小実行時間
+</LI><LI>MakeDir_max: MakeDir オペレーションのための監視最大実行時間
+</LI><LI>RemoveDir_ops: 実行済み RemoveDir オペレーションの数
+</LI><LI>RemoveDir_ops_ok: 正常な RemoveDir オペレーションの数
+</LI><LI>RemoveDir_sum: RemoveDir オペレーションのタイミングの合計
+</LI><LI>RemoveDir_sqr: RemoveDir オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>RemoveDir_min: RemoveDir オペレーションのための監視最小実行時間
+</LI><LI>RemoveDir_max: RemoveDir オペレーションのための監視最大実行時間
+</LI><LI>SetLock_ops: 実行済み SetLock オペレーションの数
+</LI><LI>SetLock_ops_ok: 正常な SetLock オペレーションの数
+</LI><LI>SetLock_sum: SetLock オペレーションのタイミングの合計
+</LI><LI>SetLock_sqr: SetLock オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>SetLock_min: SetLock オペレーションのための監視最小実行時間
+</LI><LI>SetLock_max: SetLock オペレーションのための監視最大実行時間
+</LI><LI>ExtendLock_ops: 実行済み ExtendLock オペレーションの数
+</LI><LI>ExtendLock_ops_ok: 正常な ExtendLock オペレーションの数
+</LI><LI>ExtendLock_sum: ExtendLock オペレーションのタイミングの合計
+</LI><LI>ExtendLock_sqr: ExtendLock オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>ExtendLock_min: ExtendLock オペレーションのための監視最小実行時間
+</LI><LI>ExtendLock_max: ExtendLock オペレーションのための監視最大実行時間
+</LI><LI>ReleaseLock_ops: 実行済み ReleaseLock オペレーションの数
+</LI><LI>ReleaseLock_ops_ok: 正常な ReleaseLock オペレーションの数
+</LI><LI>ReleaseLock_sum: ReleaseLock オペレーションのタイミングの合計
+</LI><LI>ReleaseLock_sqr: StoreStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>ReleaseLock_min: ReleaseLock オペレーションのための監視最小実行時間
+</LI><LI>ReleaseLock_max: ReleaseLock オペレーションのための監視最大実行時間
+</LI><LI>GetStatistics_ops: 実行済み GetStatistics オペレーションの数
+</LI><LI>GetStatistics_ops_ok: 正常な GetStatistics オペレーションの数
+</LI><LI>GetStatistics_sum: GetStatistics オペレーションのタイミングの合計
+</LI><LI>GetStatistics_sqr: GetStatistics オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetStatistics_min: GetStatistics オペレーションのための監視最小実行時間
+</LI><LI>GetStatistics_max: GetStatistics オペレーションのための監視最大実行時間
+</LI><LI>GiveUpCallbacks_ops: 実行済み GiveUpCallbacks オペレーションの数
+</LI><LI>GiveUpCallbacks_ops_ok: 正常な GiveUpCallbacks オペレーションの数
+</LI><LI>GiveUpCallbacks_sum: GiveUpCallbacks オペレーションのタイミングの合計
+</LI><LI>GiveUpCallbacks_sqr: GiveUpCallbacks オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GiveUpCallbacks_min: GiveUpCallbacks オペレーションのための監視最小実行時間
+</LI><LI>GiveUpCallbacks_max: GiveUpCallbacks オペレーションのための監視最大実行時間
+</LI><LI>GetVolumeInfo_ops: 実行済み GetVolumeInfo オペレーションの数
+</LI><LI>GetVolumeInfo_ops_ok: 正常な GetVolumeInfo オペレーションの数
+</LI><LI>GetVolumeInfo_sum: GetVolumeInfo オペレーションのタイミングの合計
+</LI><LI>GetVolumeInfo_sqr: GetVolumeInfo オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetVolumeInfo_min: GetVolumeInfo オペレーションのための監視最小実行時間
+</LI><LI>GetVolumeInfo_max: GetVolumeInfo オペレーションのための監視最大実行時間
+</LI><LI>GetVolumeStatus_ops: 実行済み GetVolumeStatus オペレーションの数
+</LI><LI>GetVolumeStatus_ops_ok: 正常な GetVolumeStatus オペレーションの数
+</LI><LI>GetVolumeStatus_sum: GetVolumeStatus オペレーションのタイミングの合計
+</LI><LI>GetVolumeStatus_sqr: GetVolumeStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetVolumeStatus_min: GetVolumeStatus オペレーションのための監視最小実行時間
+</LI><LI>GetVolumeStatus_max: GetVolumeStatus オペレーションのための監視最大実行時間
+</LI><LI>SetVolumeStatus_ops: 実行済み SetVolumeStatus オペレーションの数
+</LI><LI>SetVolumeStatus_ops_ok: 正常な SetVolumeStatus オペレーションの数
+</LI><LI>SetVolumeStatus_sum: SetVolumeStatus オペレーションのタイミングの合計
+</LI><LI>SetVolumeStatus_sqr: SetVolumeStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>SetVolumeStatus_min: SetVolumeStatus オペレーションのための監視最小実行時間
+</LI><LI>SetVolumeStatus_max: SetVolumeStatus オペレーションのための監視最大実行時間
+</LI><LI>GetRootVolume_ops: 実行済み GetRootVolume オペレーションの数
+</LI><LI>GetRootVolume_ops_ok: 正常な GetRootVolume オペレーションの数
+</LI><LI>GetRootVolume_sum: GetRootVolume オペレーションのタイミングの合計
+</LI><LI>GetRootVolume_sqr: GetRootVolume オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetRootVolume_min: GetRootVolume オペレーションのための監視最小実行時間
+</LI><LI>GetRootVolume_max: GetRootVolume オペレーションのための監視最大実行時間
+</LI><LI>CheckToken_ops: 実行済み CheckToken オペレーションの数
+</LI><LI>CheckToken_ops_ok: 正常な CheckToken オペレーションの数
+</LI><LI>CheckToken_sum: CheckToken オペレーションのタイミングの合計
+</LI><LI>CheckToken_sqr: CheckToken オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>CheckToken_min: CheckToken オペレーションのための監視最小実行時間
+</LI><LI>CheckToken_max: CheckToken オペレーションのための監視最大実行時間
+</LI><LI>GetTime_ops: 実行済み GetTime オペレーションの数
+</LI><LI>GetTime_ops_ok: 正常な GetTime オペレーションの数
+</LI><LI>GetTime_sum: GetTime オペレーションのタイミングの合計
+</LI><LI>GetTime_sqr: GetTime オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetTime_min: GetTime オペレーションのための監視最小実行時間
+</LI><LI>GetTime_max: GetTime オペレーションのための監視最大実行時間
+</LI><LI>NGetVolumeInfo_ops: 実行済み NGetVolumeInfo オペレーションの数
+</LI><LI>NGetVolumeInfo_ops_ok: 正常な NGetVolumeInfo オペレーションの数
+</LI><LI>NGetVolumeInfo_sum: NGetVolumeInfo オペレーションのタイミングの合計
+</LI><LI>NGetVolumeInfo_sqr: NGetVolumeInfo オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>NGetVolumeInfo_min: NGetVolumeInfo オペレーションのための監視最小実行時間
+</LI><LI>NGetVolumeInfo_max: NGetVolumeInfo オペレーションのための監視最大実行時間
+</LI><LI>BulkStatus_ops: 実行済み BulkStatus オペレーションの数
+</LI><LI>BulkStatus_ops_ok: 正常な BulkStatus オペレーションの数
+</LI><LI>BulkStatus_sum: BulkStatus オペレーションのタイミングの合計
+</LI><LI>BulkStatus_sqr: BulkStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>BulkStatus_min: BulkStatus オペレーションのための監視最小実行時間
+</LI><LI>BulkStatus_max: BulkStatus オペレーションのための監視最大実行時間
+</LI><LI>XStatsVersion_ops: 実行済み XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_ops_ok: 正常な XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_sum: XStatsVersion オペレーションのタイミングの合計
+</LI><LI>XStatsVersion_sqr: XStatsVersion オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>XStatsVersion_min: XStatsVersion オペレーションのための監視最小実行時間
+</LI><LI>XStatsVersion_max: XStatsVersion オペレーションのための監視最大実行時間
+</LI><LI>GetXStats_ops: 実行済み GetXStats オペレーションの数
+</LI><LI>GetXStats_ops_ok: 正常な GetXStats オペレーションの数
+</LI><LI>GetXStats_sum: GetXStats オペレーションのタイミングの合計
+</LI><LI>GetXstats_sqr: GetXStats オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetXStats_min: GetXStats オペレーションのための監視最小実行時間
+</LI><LI>GetXStats_max: GetXStats オペレーションのための監視最大実行時間
+</LI></UL>
+<P>ファイル・サーバー RPC オペレーション・エラー・グループ (FS_RPCopErrors_group)
+<UL>
+<LI>FetchData_srv_err: FetchData オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>FetchData_net_err: FetchData オペレーション中のネットワーク・エラーの数
+</LI><LI>FetchData_prot_err_err: FetchData オペレーション中の保護違反の数
+</LI><LI>FetchData_vol_err: FetchData オペレーション中のボリューム関連エラーの数
+</LI><LI>FetchData_busy_err: FetchData オペレーション中のボリューム使用中状態の数
+</LI><LI>FetchData_other_err: FetchData オペレーション中のその他の各種エラーの数
+</LI><LI>FetchACL_srv_err: FetchACL オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>FetchACL_net_err: FetchACL オペレーション中のネットワーク・エラーの数
+</LI><LI>FetchACL_prot_err: FetchACL オペレーション中の保護違反の数
+</LI><LI>FetchACL_vol_err: FetchACL オペレーション中のボリューム関連エラーの数
+</LI><LI>FetchACL_busy_err: FetchACL オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>FetchACL_other_err: FetchACL オペレーション中のその他の各種エラーの数
+</LI><LI>FetchStatus_srv_err: FetchStatus オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>FetchStatus_net_err: FetchStatus オペレーション中のネットワーク・エラーの数
+</LI><LI>FetchStatus_prot_err: FetchStatus オペレーション中の保護違反の数
+</LI><LI>FetchStatus_vol_err: FetchStatus オペレーション中のボリューム関連エラーの数
+</LI><LI>FetchStatus_busy_err: FetchStatus オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>FetchStatus_other_err: FetchStatus オペレーション中のその他の各種エラーの数
+</LI><LI>StoreData_srv_err: StoreData オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>StoreData_net_err: StoreData オペレーション中のネットワーク・エラーの数
+</LI><LI>StoreData_prot_err: StoreData オペレーション中の保護違反の数
+</LI><LI>StoreData_vol_err: StoreData オペレーション中のボリューム関連エラーの数
+</LI><LI>StoreData_busy_err: StoreData オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>StoreData_other_err: StoreData オペレーション中のその他の各種エラーの数
+</LI><LI>StoreACL_srv_err: StoreACL オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>StoreACL_net_err: StoreACL オペレーション中のネットワーク・エラーの数
+</LI><LI>StoreACL_prot_err: StoreACL オペレーション中の保護違反の数
+</LI><LI>StoreACL_vol_err: StoreACL オペレーション中のボリューム関連エラーの数
+</LI><LI>StoreACL_busy_err: StoreACL オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>StoreACL_other_err: StoreACL オペレーション中のその他の各種エラーの数
+</LI><LI>StoreStatus_srv_err: StoreStatus オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>StoreStatus_net_err: StoreStatus オペレーション中のネットワーク・エラーの数
+</LI><LI>StoreStatus_prot_err: StoreStatus オペレーション中の保護違反の数
+</LI><LI>StoreStatus_vol_err: StoreStatus オペレーション中のボリューム関連エラーの数
+</LI><LI>StoreStatus_busy_err: StoreStatus オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>StoreStatus_other_err: StoreStatus オペレーション中のその他の各種エラーの数
+</LI><LI>RemoveFile_srv_err: RemoveFile オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>RemoveFile_net_err: RemoveFile オペレーション中のネットワーク・エラーの数
+</LI><LI>RemoveFile_prot_err: RemoveFile オペレーション中の保護違反の数
+</LI><LI>RemoveFile_vol_err: RemoveFile オペレーション中のボリューム関連エラーの数
+</LI><LI>RemoveFile_busy_err: RemoveFile オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>RemoveFile_other_err: RemoveFile オペレーション中のその他の各種エラーの数
+</LI><LI>CreateFile_srv_err: CreateFile オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>CreateFile_net_err: CreateFile オペレーション中のネットワーク・エラーの数
+</LI><LI>CreateFile_prot_err: CreateFile オペレーション中の保護違反の数
+</LI><LI>CreateFile_vol_err: CreateFile オペレーション中のボリューム関連エラーの数
+</LI><LI>CreateFile_busy_err: CreateFile オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>CreateFile_other_err: CreateFile オペレーション中のその他の各種エラーの数
+</LI><LI>Rename_srv_err: Rename オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>Rename_net_err: Rename オペレーション中のネットワーク・エラーの数
+</LI><LI>Rename_prot_err: Rename オペレーション中の保護違反の数
+</LI><LI>Rename_vol_err: Rename オペレーション中のボリューム関連エラーの数
+</LI><LI>Rename_busy_err: Rename オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>Rename_other_err: Rename オペレーション中のその他の各種エラーの数
+</LI><LI>Symlink_srv_err: Symlink オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>Symlink_net_err: Symlink オペレーション中のネットワーク・エラーの数
+</LI><LI>Symlink_prot_err: Symlink オペレーション中の保護違反の数
+</LI><LI>Symlink_vol_err: Symlink オペレーション中のボリューム関連エラーの数
+</LI><LI>Symlink_busy_err: Symlink オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>Symlink_other_err: Symlink オペレーション中のその他の各種エラーの数
+</LI><LI>Link_srv_err: Link オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>Link_net_err: Link オペレーション中のネットワーク・エラーの数
+</LI><LI>Link_prot_err: Link オペレーション中の保護違反の数
+</LI><LI>Link_vol_err: Link オペレーション中のボリューム関連エラーの数
+</LI><LI>Link_busy_err: Link オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>Link_other_err: Link オペレーション中のその他の各種エラーの数
+</LI><LI>MakeDir_srv_err: MakeDir オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>MakeDir_net_err: MakeDir オペレーション中のネットワーク・エラーの数
+</LI><LI>MakeDir_prot_err: MakeDir オペレーション中の保護違反の数
+</LI><LI>MakeDir_vol_err: MakeDir オペレーション中のボリューム関連エラーの数
+</LI><LI>MakeDir_busy_err: MakeDir オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>MakeDir_other_err: MakeDir オペレーション中のその他の各種エラーの数
+</LI><LI>RemoveDir_srv_err: RemoveDir オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>RemoveDir_net_err: RemoveDir オペレーション中のネットワーク・エラーの数
+</LI><LI>RemoveDir_prot_err: RemoveDir オペレーション中の保護違反の数
+</LI><LI>RemoveDir_vol_err: RemoveDir オペレーション中のボリューム関連エラーの数
+</LI><LI>RemoveDir_busy_err: RemoveDir オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>RemoveDir_other_err: RemoveDir オペレーション中のその他の各種エラーの数
+</LI><LI>SetLock_srv_err: SetLock オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>SetLock_net_err: SetLock オペレーション中のネットワーク・エラーの数
+</LI><LI>SetLock_prot_err: SetLock オペレーション中の保護違反の数
+</LI><LI>SetLock_vol_err: SetLock オペレーション中のボリューム関連エラーの数
+</LI><LI>SetLock_busy_err: SetLock オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>SetLock_other_err: SetLock オペレーション中のその他の各種エラーの数
+</LI><LI>ExtendLock_srv_err: ExtendLock オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>ExtendLock_net_err: ExtendLock オペレーション中のネットワーク・エラーの数
+</LI><LI>ExtendLock_prot_err: ExtendLock オペレーション中の保護違反の数
+</LI><LI>ExtendLock_vol_err: ExtendLock オペレーション中のボリューム関連エラーの数
+</LI><LI>ExtendLock_busy_err: ExtendLock オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>ExtendLock_other_err: ExtendLock オペレーション中のその他の各種エラーの数
+</LI><LI>ReleaseLock_srv_err: ReleaseLock オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>ReleaseLock_net_err: ReleaseLock オペレーション中のネットワーク・エラーの数
+</LI><LI>ReleaseLock_prot_err: ReleaseLock オペレーション中の保護違反の数
+</LI><LI>ReleaseLock_vol_err: ReleaseLock オペレーション中のボリューム関連エラーの数
+</LI><LI>ReleaseLock_busy_err: ReleaseLock オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>ReleaseLock_other_err: ReleaseLock オペレーション中のその他の各種エラーの数
+</LI><LI>GetStatistics_srv_err: GetStatistics オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetStatistics_net_err: GetStatistics オペレーション中のネットワーク・エラーの数
+</LI><LI>GetStatistics_prot_err: GetStatistics オペレーション中の保護違反の数
+</LI><LI>GetStatistics_vol_err: GetStatistics オペレーション中のボリューム関連エラーの数
+</LI><LI>GetStatistics_busy_err: GetStatistics オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetStatistics_other_err: GetStatistics オペレーション中のその他の各種エラーの数
+</LI><LI>GiveUpCallbacks_srv_err: GiveUpCallbacks オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GiveUpCallbacks_net_err: GiveUpCallbacks オペレーション中のネットワーク・エラーの数
+</LI><LI>GiveUpCallbacks_prot_err: GiveUpCallbacks オペレーション中の保護違反の数
+</LI><LI>GiveUpCallbacks_vol_err: GiveUpCallbacks オペレーション中のボリューム関連エラーの数
+</LI><LI>GiveUpCallbacks_busy_err: GiveUpCallbacks オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GiveUpCallbacks_other_err: GiveUpCallbacks オペレーション中のその他の各種エラーの数
+</LI><LI>GetVolumeInfo_srv_err: GetVolumeInfo オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetVolumeInfo_net_err: GetVolumeInfo オペレーション中のネットワーク・エラーの数
+</LI><LI>GetVolumeInfo_prot_err: GetVolumeInfo オペレーション中の保護違反の数
+</LI><LI>GetVolumeInfo_vol_err: GetVolumeInfo オペレーション中のボリューム関連エラーの数
+</LI><LI>GetVolumeInfo_busy_err: GetVolumeInfo オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetVolumeInfo_other_err: GetVolumeInfo オペレーション中のその他の各種エラーの数
+</LI><LI>GetVolumeStatus_srv_err: GetVolumeStatus オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetVolumeStatus_net_err: GetVolumeStatus オペレーション中のネットワーク・エラーの数
+</LI><LI>GetVolumeStatus_prot_err: GetVolumeStatus オペレーション中の保護違反の数
+</LI><LI>GetVolumeStatus_vol_err: GetVolumeStatus オペレーション中のボリューム関連エラーの数
+</LI><LI>GetVolumeStatus_busy_err: GetVolumeStatus オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetVolumeStatus_other_err: GetVolumeStatus オペレーション中のその他の各種エラーの数
+</LI><LI>SetVolumeStatus_srv_err : SetVolumeStatus オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>SetVolumeStatus_net_err: SetVolumeStatus オペレーション中のネットワーク・エラーの数
+</LI><LI>SetVolumeStatus_prot_err: SetVolumeStatus オペレーション中の保護違反の数
+</LI><LI>SetVolumeStatus_vol_err: SetVolumeStatus オペレーション中のボリューム関連エラーの数
+</LI><LI>SetVolumeStatus_busy_err: SetVolumeStatus オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>SetVolumeStatus_other_err: SetVolumeStatus オペレーション中のその他の各種エラーの数
+</LI><LI>GetRootVolume_srv_err: GetRootVolume オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetRootVolume_net_err: GetRootVolume オペレーション中のネットワーク・エラーの数
+</LI><LI>GetRootVolume_prot_err: GetRootVolume オペレーション中の保護違反の数
+</LI><LI>GetRootVolume_vol_err: GetRootVolume オペレーション中のボリューム関連エラーの数
+</LI><LI>GetRootVolume_busy_err: GetRootVolume オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetRootVolume_other_err: GetRootVolume オペレーション中のその他の各種エラーの数
+</LI><LI>CheckToken_srv_err: CheckToken オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>CheckToken_net_err: CheckToken オペレーション中のネットワーク・エラーの数
+</LI><LI>CheckToken_prot_err: CheckToken オペレーション中の保護違反の数
+</LI><LI>CheckToken_vol_err: CheckToken オペレーション中のボリューム関連エラーの数
+</LI><LI>CheckToken_busy_err: CheckToken オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>CheckToken_other_err: CheckToken オペレーション中のその他の各種エラーの数
+</LI><LI>GetTime_srv_err: GetTime オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetTime_net_err: GetTime オペレーション中のネットワーク・エラーの数
+</LI><LI>GetTime_prot_err: GetTime オペレーション中の保護違反の数
+</LI><LI>GetTime_vol_err: GetTime オペレーション中のボリューム関連エラーの数
+</LI><LI>GetTime_busy_err: GetTime オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetTime_other_err: GetTime オペレーション中のその他の各種エラーの数
+</LI><LI>NGetVolumeInfo_srv_err: NGetVolumeInfo オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>NGetVolumeInfo_net_err: NGetVolumeInfo オペレーション中のネットワーク・エラーの数
+</LI><LI>NGetVolumeInfo_prot_err: NGetVolumeInfo オペレーション中の保護違反の数
+</LI><LI>NGetVolumeInfo_vol_err: NGetVolumeInfo オペレーション中のボリューム関連エラーの数
+</LI><LI>NGetVolumeInfo_busy_err: NGetVolumeInfo オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>NGetVolumeInfo_other_err: NGetVolumeInfo オペレーション中のその他の各種エラーの数
+</LI><LI>BulkStatus_srv_err: BulkStatus オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>BulkStatus_net_err: BulkStatus オペレーション中のネットワーク・エラーの数
+</LI><LI>BulkStatus_prot_err: BulkStatus オペレーション中の保護違反の数
+</LI><LI>BulkStatus_vol_err: BulkStatus オペレーション中のボリューム関連エラーの数
+</LI><LI>BulkStatus_busy_err: BulkStatus オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>BulkStatus_other_err: BulkStatus オペレーション中のその他の各種エラーの数
+</LI><LI>XStatsVersion_srv_err: XStatsVersion オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>XStatsVersion_net_err: XStatsVersion オペレーション中のネットワーク・エラーの数
+</LI><LI>XStatsVersion_prot_err: XStatsVersion オペレーション中の保護違反の数
+</LI><LI>XStatsVersion_vol_err: XStatsVersion オペレーション中のボリューム関連エラーの数
+</LI><LI>XStatsVersion_busy_err: XStatsVersion オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>XStatsVersion_other_err: XStatsVersion オペレーション中のその他の各種エラーの数
+</LI><LI>GetXStats_srv_err: GetXStats オペレーション中のサーバー・ダウン・エラーの数
+</LI><LI>GetXStats_net_err: GetXStats オペレーション中のネットワーク・エラーの数
+</LI><LI>GetXStats_prot_err: GetXStats オペレーション中の保護違反の数
+</LI><LI>GetXStats_vol_err: GetXStats オペレーション中のボリューム関連エラーの数
+</LI><LI>GetXStats_busy_err: GetXStats オペレーション中に発生したボリューム使用中状態の数
+</LI><LI>GetXStats_other_err: GetXStats オペレーション中のその他の各種エラーの数
+</LI></UL>
+<P>ファイル・サーバー RPC 転送タイミング・グループ (FS_RPCopBytes_group)
+<UL>
+<LI>FetchData_xfers: FetchData オペレーションの数
+</LI><LI>FetchData_xfers_ok: 正常な FetchData オペレーションの数
+</LI><LI>FetchData_xfers_sum: FetchData オペレーションのタイミング値の合計
+</LI><LI>FetchData_xfers_sqr: FetchData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchData_xfers_min: FetchData オペレーションのための監視最小転送時間
+</LI><LI>FetchData_xfers_max: FetchData オペレーションのための監視最大転送時間
+</LI><LI>FetchData_xfers_bytes_sum: FetchData オペレーション用に転送済みのバイトの合計
+</LI><LI>FetchData_xfers_bytes_min: FetchData オペレーションのための監視最小転送バイト
+</LI><LI>FetchData_xfers_bytes_max: FetchData オペレーションのための監視最大転送バイト
+</LI><LI>FetchData_xfers_bucket0: FetchData オペレーションのための bucket0 内の件数
+</LI><LI>FetchData_xfers_bucket1: FetchData オペレーションのための bucket1 内の件数
+</LI><LI>FetchData_xfers_bucket2: FetchData オペレーションのための bucket2 内の件数
+</LI><LI>FetchData_xfers_bucket3: FetchData オペレーションのための bucket3 内の件数
+</LI><LI>FetchData_xfers_bucket4: FetchData オペレーションのための bucket4 内の件数
+</LI><LI>FetchData_xfers_bucket5: FetchData オペレーションのための bucket5 内の件数
+</LI><LI>FetchData_xfers_bucket6: FetchData オペレーションのための bucket6 内の件数
+</LI><LI>FetchData_xfers_bucket7: FetchData オペレーションのための bucket7 内の件数
+</LI><LI>FetchData_xfers_bucket8: FetchData オペレーションのための bucket8 内の件数
+</LI><LI>StoreData_xfers: StoreData オペレーションの数
+</LI><LI>StoreData_xfers_ok: 正常な StoreData オペレーションの数
+</LI><LI>StoreData_xfers_sum: StoreData オペレーションのタイミング値の合計
+</LI><LI>StoreData_xfers_sqr: StoreData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreData_xfers_min: StoreData オペレーションのための監視最小転送時間
+</LI><LI>StoreData_xfers_max: StoreData オペレーションのための監視最大転送時間
+</LI><LI>StoreData_xfers_bytes_sum: StoreData オペレーション用に転送済みのバイトの合計
+</LI><LI>StoreData_xfers_bytes_min: StoreData オペレーションのための監視最小転送バイト
+</LI><LI>StoreData_xfers_bytes_max: StoreData オペレーションのための監視最大転送バイト
+</LI><LI>StoreData_xfers_bucket0: StoreData オペレーションのための bucket0 内の件数
+</LI><LI>StoreData_xfers_bucket1: StoreData オペレーションのための bucket1 内の件数
+</LI><LI>StoreData_xfers_bucket2: StoreData オペレーションのための bucket2 内の件数
+</LI><LI>StoreData_xfers_bucket3: StoreData オペレーションのための bucket3 内の件数
+</LI><LI>StoreData_xfers_bucket4: StoreData オペレーションのための bucket4 内の件数
+</LI><LI>StoreData_xfers_bucket5: StoreData オペレーションのための bucket5 内の件数
+</LI><LI>StoreData_xfers_bucket6: StoreData オペレーションのための bucket6 内の件数
+</LI><LI>StoreData_xfers_bucket7: StoreData オペレーションのための bucket7 内の件数
+</LI><LI>StoreData_xfers_bucket8: StoreData オペレーションのための bucket8 内の件数
+</LI></UL>
+<P>キャッシュ・マネージャー RPC オペレーション・タイミング・グループ (CM_RPCopTimes_group)
+<UL>
+<LI>CallBack_ops: 実行済み CallBack オペレーションの数
+</LI><LI>CallBack_ops_ok: 正常な CallBack オペレーションの数
+</LI><LI>CallBack_ops_sum: CallBack オペレーションのタイミングの合計
+</LI><LI>CallBack_ops_min: CallBack オペレーションのための監視最小実行時間
+</LI><LI>CallBack_ops_max: CallBack オペレーションのための監視最大実行時間
+</LI><LI>InitCallBackState_ops: 実行済み InitCallBackState オペレーションの数
+</LI><LI>InitCallBackState_ops_ok: 正常な InitCallBackState オペレーションの数
+</LI><LI>InitCallBackState_ops_sum: InitCallBackState オペレーションのタイミングの合計
+</LI><LI>InitCallBackState_ops_min: InitCallBackState オペレーションのための監視最小実行時間
+</LI><LI>InitCallBackState_ops_max: InitCallBackState オペレーションのための監視最大実行時間
+</LI><LI>Probe_ops: 実行済み Probe オペレーションの数
+</LI><LI>Probe_ops_ok: 正常な Probe オペレーションの数
+</LI><LI>Probe_ops_sum: Probe オペレーションのタイミングの合計
+</LI><LI>Probe_ops_min: Probe オペレーションのための監視最小実行時間
+</LI><LI>Probe_ops_max: Probe オペレーションのための監視最大実行時間
+</LI><LI>GetLock_ops: 実行済み GetLock オペレーションの数
+</LI><LI>GetLock_ops_ok: 正常な GetLock オペレーションの数
+</LI><LI>GetLock_ops_sum: GetLock オペレーションのタイミングの合計
+</LI><LI>GetLock_ops_min: GetLock オペレーションのための監視最小実行時間
+</LI><LI>GetLock_ops_max: GetLock オペレーションのための監視最大実行時間
+</LI><LI>GetCE_ops: 実行済み GetCE オペレーションの数
+</LI><LI>GetCE_ops_ok: 正常な GetCE オペレーションの数
+</LI><LI>GetCE_ops_sum: GetCE オペレーションのタイミングの合計
+</LI><LI>GetCE_ops_min: GetCE オペレーションのための監視最小実行時間
+</LI><LI>GetCE_ops_max: GetCE オペレーションのための監視最大実行時間
+</LI><LI>XStatsVersion_CM_ops: 実行済み XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_CM_ops_ok: 正常な XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_CM_ops_sum: XStatsVersion オペレーションのタイミングの合計
+</LI><LI>XStatsVersion_CM_ops_min: XStatsVersion オペレーションのための監視最小実行時間
+</LI><LI>XStatsVersion_CM_ops_max: XStatsVersion オペレーションのための監視最大実行時間
+</LI><LI>GetXStats_CM_ops: 実行済み GetXStats オペレーションの数
+</LI><LI>GetXStats_CM_ops_ok: 正常な GetXStats オペレーションの数
+</LI><LI>GetXStats_CM_ops_sum: GetXStats オペレーションのタイミングの合計
+</LI><LI>GetXStats_CM_ops_min: GetXStats オペレーションのための監視最小実行時間
+</LI><LI>GetXStats_CM_ops_max: GetXStats オペレーションのための監視最大実行時間
+</LI></UL>
+<P><H3><A NAME="Header_711" HREF="auagd002.htm#ToC_711">認証および複写済みファイル・アクセス・機能グループ (Auth_Access_section)</A></H3>
+<P>キャッシュ・マネージャー・グループ用認証情報 (Auth_Stats_group)
+<UL>
+<LI>curr_PAGs: PAG の現行数
+</LI><LI>curr_Records: テーブル内のレコードの現行数
+</LI><LI>curr_AuthRecords: 認証済みレコードの現行数 (有効なキップ含む)
+</LI><LI>curr_UnauthRecords: 未認証レコードの現行数 (キップは全く含まず)
+</LI><LI>curr_MaxRecordsInPAG: 単一 PAG に対する最大レコード
+</LI><LI>curr_LongestChain: 最長現行ハッシュ・チェーンの長さ
+</LI><LI>PAGCreations: PAG 作成の数
+</LI><LI>TicketUpdates: キップの追加/リフレッシュの数
+</LI><LI>HWM_PAGS: 上限基準点 - PAG の数
+</LI><LI>HWM_Records: 上限基準点 - レコード数
+</LI><LI>HWM_MaxRecordsInPAG: 上限基準点 - 単一 PAG に対する最大レコード
+</LI><LI>HWM_LongestChain: 上限基準点 - 最長ハッシュ・チェーン
+</LI></UL>
+<P>未複写ファイル・アクセス・グループ (Access_Stats_group)
+<UL>
+<LI>unreplicatedRefs: 未複写データへの参照数
+</LI><LI>replicatedRefs: 複写済みデータへの参照数
+</LI><LI>numReplicasAccessed: アクセスされたレプリカの数
+</LI><LI>maxReplicasPerRef: 参照ごとにアクセスされたレプリカの最大数
+</LI><LI>refFirstReplicaOK: 第 1 回のレプリカで条件を満たした参照の数
+</LI></UL>
+<HR><H2><A NAME="HDRWQ845" HREF="auagd002.htm#ToC_712">ファイル・サーバー統計</A></H2>
+<A NAME="IDX8183"></A>
+<P>ファイル・サーバー統計は、以下の機能グループおよびグループに分類されています。
+<UL>
+<LI>PerfStats_section: パフォーマンス統計機能グループ
+<UL>
+<LI>VnodeCache_group: Vnode キャッシュ・グループ
+</LI><LI>Directory_group: ディレクトリー・パッケージ・グループ
+</LI><LI>Rx_group: Rx グループ
+</LI><LI>HostModule_group: ホスト・モジュール・フィールド・グループ
+</LI><LI>misc_group: 各種変数グループ
+</LI></UL>
+</LI><LI>RPCop_section: RPC オペレーション・機能グループ
+<UL>
+<LI>RPCopTimes_group: 個別の RPC オペレーション・タイミング
+</LI><LI>RPCopBytes_group: 特定の RPC オペレーションのためのバイト情報
+</LI></UL>
+</LI></UL>
+<P>上記の機能グループ名およびグループ名で分類される全ファイル・サーバー変数は、以下のリストの通りです。
+<P><H3><A NAME="Header_713" HREF="auagd002.htm#ToC_713">パフォーマンス統計機能グループ (PerfStats_section)</A></H3>
+<P>Vnode キャッシュ・グループ (VnodeCache_group)
+<UL>
+<LI>vcache_L_Entries: ラージ vnode キャッシュ内の項目数
+</LI><LI>vcache_L_Allocs: 割り振り数 (ラージ)
+</LI><LI>vcache_L_Gets: 取得数 (ラージ)
+</LI><LI>vcache_L_Reads: 読み取り数 (ラージ)
+</LI><LI>vcache_L_Writes: 書き込み数 (ラージ)
+</LI><LI>vcache_S_Entries: スモール vnode キャッシュ内の項目数
+</LI><LI>vcache_S_Allocs: 割り振り数 (スモール)
+</LI><LI>vcache_S_Gets: 取得数 (スモール)
+</LI><LI>vcache_S_Reads: 読み取り数 (スモール)
+</LI><LI>vcache_S_Writes: 書き込み数 (スモール)
+</LI><LI>vcache_H_Entries: ヘッダー vnode キャッシュ内の項目数
+</LI><LI>vcache_H_Gets: 取得数 (ヘッダー)
+</LI><LI>vcache_H_Replacements: 置換数 (ヘッダー)
+</LI></UL>
+<P>ディレクトリー・パッケージ・グループ (Directory_group)
+<UL>
+<LI>dir_Buffers: 使用中のバッファー数
+</LI><LI>dir_Calls: 作成済み読み取りコール数
+</LI><LI>dir_IOs: 実行済み入出力オペレーション
+</LI></UL>
+<P>Rx グループ (Rx_group)
+<UL>
+<LI>rx_packetRequests: パケット割り振り要求
+</LI><LI>rx_noPackets_RcvClass: 失敗したパケット要求 (受信クラス)
+</LI><LI>rx_noPackets_SendClass: 失敗したパケット要求 (送信クラス)
+</LI><LI>rx_noPackets_SpecialClass: 失敗したパケット要求 (特別クラス)
+</LI><LI>rx_socketGreedy: SO_GREEDY は成功したか?
+</LI><LI>rx_bogusPacketOnRead: 受信済みショート・パケット
+</LI><LI>rx_bogusHost: bogus パケットからのホスト・アドレス
+</LI><LI>rx_noPacketOnRead: パケットなしの読み取りパケット
+</LI><LI>rx_noPacketBuffersOnRead: バッファー不足によりドロップされたパケット
+</LI><LI>rx_selects: パケット上で待機した、またはタイムアウトになった選択
+</LI><LI>rx_sendSelects: 送信時に強制された選択
+</LI><LI>rx_packetsRead_RcvClass: パケット読み取り (受信クラス)
+</LI><LI>rx_packetsRead_SendClass: パケット読み取り (送信クラス)
+</LI><LI>rx_packetsRead_SpecialClass: パケット読み取り (特別クラス)
+</LI><LI>rx_dataPacketsRead: ワイヤー外での固有なデータ・パケットの読み取り
+</LI><LI>rx_ackPacketsRead: ACK パケット読み取り
+</LI><LI>rx_dupPacketsRead: 重複データ・パケット読み取り
+</LI><LI>rx_spuriousPacketsRead: 不適切なパケット読み取り
+</LI><LI>rx_packetsSent_RcvClass: 送信済みパケット (受信クラス)
+</LI><LI>rx_packetsSent_SendClass: 送信済みパケット (送信クラス)
+</LI><LI>rx_packetsSent_SpecialClass: 送信済みパケット (特別クラス)
+</LI><LI>rx_ackPacketsSent: 送信済み ACK パケット
+</LI><LI>rx_pingPacketsSent: 送信済みパケットのPING
+</LI><LI>rx_abortPacketsSent: 送信済みパケットの打ち切り
+</LI><LI>rx_busyPacketsSent: 送信済み使用中パケット
+</LI><LI>rx_dataPacketsSent: 送信済み固有なデータ・パケット
+</LI><LI>rx_dataPacketsReSent: 送信済み再転送
+</LI><LI>rx_dataPacketsPushed: NACK に push された再転送
+</LI><LI>rx_ignoreAckedPacket: rxi_Start 上に ACKed フラグを持つパケット
+</LI><LI>rx_totalRtt_Sec and rx_totalRtt_Usec: 合計往復時間 (秒およびミリ秒)
+</LI><LI>rx_minRtt_Sec and rx_minRtt_Usec: 最小往復時間 (秒およびミリ秒)
+</LI><LI>rx_maxRtt_Sec and rx_maxRtt_Usec: 最大往復時間 (秒およびミリ秒)
+</LI><LI>rx_nRttSamples: 往復のサンプル
+</LI><LI>rx_nServerConns: 合計サーバー接続
+</LI><LI>rx_nClientConns: 合計クライアント接続
+</LI><LI>rx_nPeerStructs: 合計ピア構造
+</LI><LI>rx_nCallStructs: 合計コール構造
+</LI><LI>rx_nFreeCallStructs: 合計フリー・コール構造
+</LI></UL>
+<P>ホスト・モジュール・フィールド・グループ (HostModule_group)
+<UL>
+<LI>host_NumHostEntries: ホスト項目数
+</LI><LI>host_HostBlocks: ホストに対する使用中のブロック
+</LI><LI>host_NonDeletedHosts: 未削除ホスト
+</LI><LI>host_HostsInSameNetOrSubnet: 同一サブネット内のサーバーとしてのホスト
+</LI><LI>host_HostsInDiffSubnet: 異なるサブネット内のサーバー以外のホスト
+</LI><LI>host_HostsInDiffNetwork: 異なるネットワーク内のサーバー以外のホスト
+</LI><LI>host_NumClients: クライアントの項目数
+</LI><LI>host_ClientBlocks: クライアントに対する使用中のブロック
+</LI></UL>
+<P>各種変数グループ (misc_group)
+<UL>
+<LI>numPerfCalls: 受信済みパフォーマンス・コール数
+</LI></UL>
+<P><H3><A NAME="Header_714" HREF="auagd002.htm#ToC_714">RPC オペレーション・機能グループ (RPCop_section)</A></H3>
+<P>個別の RPC オペレーション・タイミング・グループ (RPCopTimes_group)
+<UL>
+<LI>epoch: データ収集の開始時刻
+</LI><LI>FetchData_ops: 実行済み FetchData オペレーションの数
+</LI><LI>FetchData_ops_ok: 正常な FetchData オペレーションの数
+</LI><LI>FetchData_sum: FetchData オペレーションのタイミングの合計
+</LI><LI>FetchData_sqr: FetchData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchData_min: FetchData オペレーションのための監視最小実行時間
+</LI><LI>FetchData_max: FetchData オペレーションのための監視最大実行時間
+</LI><LI>FetchACL_ops: 実行済み FetchACL オペレーションの数
+</LI><LI>FetchACL_ops_ok: 正常な FetchACL オペレーションの数
+</LI><LI>FetchACL_sum: FetchACL オペレーションのタイミングの合計
+</LI><LI>FetchACL_sqr: FetchACL オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchACL_min: FetchACL オペレーションのための監視最小実行時間
+</LI><LI>FetchACL_max: FetchACL オペレーションのための監視最大実行時間
+</LI><LI>FetchStatus_ops: 実行済み FetchStatus オペレーションの数
+</LI><LI>FetchStatus_ops_ok: 正常な FetchStatus オペレーションの数
+</LI><LI>FetchStatus_sum: FetchStatus オペレーションのタイミングの合計
+</LI><LI>FetchStatus_sqr: FetchStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchStatus_min: FetchStatus オペレーションのための監視最小実行時間
+</LI><LI>FetchStatus_max: FetchStatus オペレーションのための監視最大実行時間
+</LI><LI>StoreData_ops: 実行済み StoreData オペレーションの数
+</LI><LI>StoreData_ops_ok: 正常な StoreData オペレーションの数
+</LI><LI>StoreData_sum: StoreData オペレーションのタイミングの合計
+</LI><LI>StoreData_sqr: StoreData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreData_min: StoreData オペレーションのための監視最小実行時間
+</LI><LI>StoreData_max: StoreData オペレーションのための監視最大実行時間
+</LI><LI>StoreACL_ops: 実行済み StoreACL オペレーションの数
+</LI><LI>StoreACL_ops_ok: 正常な StoreACL オペレーションの数
+</LI><LI>StoreACL_sum: StoreACL オペレーションのタイミングの合計
+</LI><LI>StoreACL_sqr: StoreACL オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreACL_min: StoreACL オペレーションのための監視最小実行時間
+</LI><LI>StoreACL_max: StoreACL オペレーションのための監視最大実行時間
+</LI><LI>StoreStatus_ops: 実行済み StoreStatus オペレーションの数
+</LI><LI>StoreStatus_ops_ok: 正常な StoreStatus オペレーションの数
+</LI><LI>StoreStatus_sum: StoreStatus オペレーションのタイミングの合計
+</LI><LI>StoreStatus_sqr: StoreStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreStatus_min: StoreStatus オペレーションのための監視最小実行時間
+</LI><LI>StoreStatus_max: StoreStatus オペレーションのための監視最大実行時間
+</LI><LI>RemoveFile_ops: 実行済み RemoveFile オペレーションの数
+</LI><LI>RemoveFile_ops_ok: 正常な RemoveFile オペレーションの数
+</LI><LI>RemoveFile_sum: RemoveFile オペレーションのタイミングの合計
+</LI><LI>RemoveFile_sqr: RemoveFile オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>RemoveFile_min: RemoveFile オペレーションのための監視最小実行時間
+</LI><LI>RemoveFile_max: RemoveFile オペレーションのための監視最大実行時間
+</LI><LI>CreateFile_ops: 実行済み CreateFile オペレーションの数
+</LI><LI>CreateFile_ops_ok: 正常な CreateFile オペレーションの数
+</LI><LI>CreateFile_sum: CreateFile オペレーションのタイミングの合計
+</LI><LI>CreateFile_sqr: CreateFile オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>CreateFile_min: CreateFile オペレーションのための監視最小実行時間
+</LI><LI>CreateFile_max: CreateFile オペレーションのための監視最大実行時間
+</LI><LI>Rename_ops: 実行済み Rename オペレーションの数
+</LI><LI>Rename_ops_ok: 正常な Rename オペレーションの数
+</LI><LI>Rename_sum: Rename オペレーションのタイミングの合計
+</LI><LI>Rename_sqr: Rename オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Rename_min: Rename オペレーションのための監視最小実行時間
+</LI><LI>Rename_max: Rename オペレーションのための監視最大実行時間
+</LI><LI>Symlink_ops: 実行済み Symlink オペレーションの数
+</LI><LI>Symlink_ops_ok: 正常な Symlink オペレーションの数
+</LI><LI>Symlink_sum: Symlink オペレーションのタイミングの合計
+</LI><LI>Symlink_sqr: Symlink オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Symlink_min: Symlink オペレーションのための監視最小実行時間
+</LI><LI>Symlink_max: Symlink オペレーションのための監視最大実行時間
+</LI><LI>Link_ops: 実行済み Link オペレーションの数
+</LI><LI>Link_ops_ok: 正常な Link オペレーションの数
+</LI><LI>Link_sum: Link オペレーションのタイミングの合計
+</LI><LI>Link_sqr: Link オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>Link_min: Link オペレーションのための監視最小実行時間
+</LI><LI>Link_max: Link オペレーションのための監視最大実行時間
+</LI><LI>MakeDir_ops: 実行済み MakeDir オペレーションの数
+</LI><LI>MakeDir_ops_ok: 正常な MakeDir オペレーションの数
+</LI><LI>MakeDir_sum: MakeDir オペレーションのタイミングの合計
+</LI><LI>MakeDir_sqr: MakeDir オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>MakeDir_min: MakeDir オペレーションのための監視最小実行時間
+</LI><LI>MakeDir_max: MakeDir オペレーションのための監視最大実行時間
+</LI><LI>RemoveDir_ops: 実行済み RemoveDir オペレーションの数
+</LI><LI>RemoveDir_ops_ok: 正常な RemoveDir オペレーションの数
+</LI><LI>RemoveDir_sum: RemoveDir オペレーションのタイミングの合計
+</LI><LI>RemoveDir_sqr: RemoveDir オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>RemoveDir_min: RemoveDir オペレーションのための監視最小実行時間
+</LI><LI>RemoveDir_max: RemoveDir オペレーションのための監視最大実行時間
+</LI><LI>SetLock_ops: 実行済み SetLock オペレーションの数
+</LI><LI>SetLock_ops_ok: 正常な SetLock オペレーションの数
+</LI><LI>SetLock_sum: SetLock オペレーションのタイミングの合計
+</LI><LI>SetLock_sqr: SetLock オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>SetLock_min: SetLock オペレーションのための監視最小実行時間
+</LI><LI>SetLock_max: SetLock オペレーションのための監視最大実行時間
+</LI><LI>ExtendLock_ops: 実行済み ExtendLock オペレーションの数
+</LI><LI>ExtendLock_ops_ok: 正常な ExtendLock オペレーションの数
+</LI><LI>ExtendLock_sum: ExtendLock オペレーションのタイミングの合計
+</LI><LI>ExtendLock_sqr: ExtendLock オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>ExtendLock_min: ExtendLock オペレーションのための監視最小実行時間
+</LI><LI>ExtendLock_max: ExtendLock オペレーションのための監視最大実行時間
+</LI><LI>ReleaseLock_ops: 実行済み ReleaseLock オペレーションの数
+</LI><LI>ReleaseLock_ops_ok: 正常な ReleaseLock オペレーションの数
+</LI><LI>ReleaseLock_sum: ReleaseLock オペレーションのタイミングの合計
+</LI><LI>ReleaseLock_sqr: ReleaseLock オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>ReleaseLock_min: ReleaseLock オペレーションのための監視最小実行時間
+</LI><LI>ReleaseLock_max: ReleaseLock オペレーションのための監視最大実行時間
+</LI><LI>GetStatistics_ops: 実行済み GetStatistics オペレーションの数
+</LI><LI>GetStatistics_ops_ok: 正常な GetStatistics オペレーションの数
+</LI><LI>GetStatistics_sum: GetStatistics オペレーションのタイミングの合計
+</LI><LI>GetStatistics_sqr: GetStatistics オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetStatistics_min: GetStatistics オペレーションのための監視最小実行時間
+</LI><LI>GetStatistics_max: GetStatistics オペレーションのための監視最大実行時間
+</LI><LI>GiveUpCallbacks_ops: 実行済み GiveUpCallbacks オペレーションの数
+</LI><LI>GiveUpCallbacks_ops_ok: 正常な GiveUpCallbacks オペレーションの数
+</LI><LI>GiveUpCallbacks_sum: GiveUpCallbacks オペレーションのタイミングの合計
+</LI><LI>GiveUpCallbacks_sqr: GiveUpCallbacks オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GiveUpCallbacks_min: GiveUpCallbacks オペレーションのための監視最小実行時間
+</LI><LI>GiveUpCallbacks_max: GiveUpCallbacks オペレーションのための監視最大実行時間
+</LI><LI>GetVolumeInfo_ops: 実行済み GetVolumeInfo オペレーションの数
+</LI><LI>GetVolumeInfo_ops_ok: 正常な GetVolumeInfo オペレーションの数
+</LI><LI>GetVolumeInfo_sum: GetVolumeInfo オペレーションのタイミングの合計
+</LI><LI>GetVolumeInfo_sqr: GetVolumeInfo オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetVolumeInfo_min: GetVolumeInfo オペレーションのための監視最小実行時間
+</LI><LI>GetVolumeInfo_max: GetVolumeInfo オペレーションのための監視最大実行時間
+</LI><LI>GetVolumeStatus_ops: 実行済み GetVolumeStatus オペレーションの数
+</LI><LI>GetVolumeStatus_ops_ok: 正常な GetVolumeStatus オペレーションの数
+</LI><LI>GetVolumeStatus_sum: GetVolumeStatus オペレーションのタイミングの合計
+</LI><LI>GetVolumeStatus_sqr: GetVolumeStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetVolumeStatus_min: GetVolumeStatus オペレーションのための監視最小実行時間
+</LI><LI>GetVolumeStatus_max: GetVolumeStatus オペレーションのための監視最大実行時間
+</LI><LI>SetVolumeStatus_ops: 実行済み SetVolumeStatus オペレーションの数
+</LI><LI>SetVolumeStatus_ops_ok: 正常な SetVolumeStatus オペレーションの数
+</LI><LI>SetVolumeStatus_sum: SetVolumeStatus オペレーションのタイミングの合計
+</LI><LI>SetVolumeStatus_sqr: SetVolumeStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>SetVolumeStatus_min: SetVolumeStatus オペレーションのための監視最小実行時間
+</LI><LI>SetVolumeStatus_max: SetVolumeStatus オペレーションのための監視最大実行時間
+</LI><LI>GetRootVolume_ops: 実行済み GetRootVolume オペレーションの数
+</LI><LI>GetRootVolume_ops_ok: 正常な GetRootVolume オペレーションの数
+</LI><LI>GetRootVolume_sum: GetRootVolume オペレーションのタイミングの合計
+</LI><LI>GetRootVolume_sqr: GetRootVolume オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetRootVolume_min: GetRootVolume オペレーションのための監視最小実行時間
+</LI><LI>GetRootVolume_max: GetRootVolume オペレーションのための監視最大実行時間
+</LI><LI>CheckToken_ops: 実行済み CheckToken オペレーションの数
+</LI><LI>CheckToken_ops_ok: 正常な CheckToken オペレーションの数
+</LI><LI>CheckToken_sum: CheckToken オペレーションのタイミングの合計
+</LI><LI>CheckToken_sqr: CheckToken オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>CheckToken_min: CheckToken オペレーションのための監視最小実行時間
+</LI><LI>CheckToken_max: CheckToken オペレーションのための監視最大実行時間
+</LI><LI>GetTime_ops: 実行済み GetTime オペレーションの数
+</LI><LI>GetTime_ops_ok: 正常な GetTime オペレーションの数
+</LI><LI>GetTime_sum: GetTime オペレーションのタイミングの合計
+</LI><LI>GetTime_sqr: GetTime オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetTime_min: GetTime オペレーションのための監視最小実行時間
+</LI><LI>GetTime_max: GetTime オペレーションのための監視最大実行時間
+</LI><LI>NGetVolumeInfo_ops: 実行済み NGetVolumeInfo オペレーションの数
+</LI><LI>NGetVolumeInfo_ops_ok: 正常な NGetVolumeInfo オペレーションの数
+</LI><LI>NGetVolumeInfo_sum: NGetVolumeInfo オペレーションのタイミングの合計
+</LI><LI>NGetVolumeInfo_sqr: NGetVolumeInfo オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>NGetVolumeInfo_min: NGetVolumeInfo オペレーションのための監視最小実行時間
+</LI><LI>NGetVolumeInfo_max: NGetVolumeInfo オペレーションのための監視最大実行時間
+</LI><LI>BulkStatus_ops: 実行済み BulkStatus オペレーションの数
+</LI><LI>BulkStatus_ops_ok: 正常な BulkStatus オペレーションの数
+</LI><LI>BulkStatus_sum: BulkStatus オペレーションのタイミングの合計
+</LI><LI>BulkStatus_sqr: BulkStatus オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>BulkStatus_min: BulkStatus オペレーションのための監視最小実行時間
+</LI><LI>BulkStatus_max: BulkStatus オペレーションのための監視最大実行時間
+</LI><LI>XStatsVersion_ops: 実行済み XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_ops_ok: 正常な XStatsVersion オペレーションの数
+</LI><LI>XStatsVersion_sum: XStatsVersion オペレーションのタイミングの合計
+</LI><LI>XStatsVersion_sqr: XStatsVersion オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>XStatsVersion_min: XStatsVersion オペレーションのための監視最小実行時間
+</LI><LI>XStatsVersion_max: XStatsVersion オペレーションのための監視最大実行時間
+</LI><LI>GetXStats_ops: 実行済み GetXStats オペレーションの数
+</LI><LI>GetXStats_ops_ok: 正常な GetXStats オペレーションの数
+</LI><LI>GetXStats_sum: GetXStats オペレーションのタイミングの合計
+</LI><LI>GetXStats_sqr: GetXStats オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>GetXStats_min: GetXStats オペレーションのための監視最小実行時間
+</LI><LI>GetXStats_max: GetXStats オペレーションのための監視最大実行時間
+</LI></UL>
+<P>特定の RPC オペレーション・グループのためのバイト情報 (RPCopBytes_group)
+<UL>
+<LI>FetchData_xfers: FetchData オペレーションの数
+</LI><LI>FetchData_xfers_ok: 正常な FetchData オペレーションの数
+</LI><LI>FetchData_xfers_sum: FetchData オペレーションのタイミング値の合計
+</LI><LI>FetchData_xfers_sqr: FetchData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>FetchData_xfers_min: FetchData オペレーションのための監視最小転送時間
+</LI><LI>FetchData_xfers_max: FetchData オペレーションのための監視最大転送時間
+</LI><LI>FetchData_xfers_bytes_sum: FetchData オペレーション用に転送済みのバイトの合計
+</LI><LI>FetchData_xfers_bytes_min: FetchData オペレーションのための監視最小転送バイト
+</LI><LI>FetchData_xfers_bytes_max: FetchData オペレーションのための監視最大転送バイト
+</LI><LI>FetchData_xfers_bucket0: FetchData オペレーションのための bucket0 内の件数
+</LI><LI>FetchData_xfers_bucket1: FetchData オペレーションのための bucket1 内の件数
+</LI><LI>FetchData_xfers_bucket2: FetchData オペレーションのための bucket2 内の件数
+</LI><LI>FetchData_xfers_bucket3: FetchData オペレーションのための bucket3 内の件数
+</LI><LI>FetchData_xfers_bucket4: FetchData オペレーションのための bucket4 内の件数
+</LI><LI>FetchData_xfers_bucket5: FetchData オペレーションのための bucket5 内の件数
+</LI><LI>FetchData_xfers_bucket6: FetchData オペレーションのための bucket6 内の件数
+</LI><LI>FetchData_xfers_bucket7: FetchData オペレーションのための bucket7 内の件数
+</LI><LI>FetchData_xfers_bucket8: FetchData オペレーションのための bucket8 内の件数
+</LI><LI>StoreData_xfers: StoreData オペレーションの数
+</LI><LI>StoreData_xfers_ok: 正常な StoreData オペレーションの数
+</LI><LI>StoreData_xfers_sum: StoreData オペレーションのタイミング値の合計
+</LI><LI>StoreData_xfers_sqr: StoreData オペレーションのためのサンプル・タイミングの二乗の合計
+</LI><LI>StoreData_xfers_min: StoreData オペレーションのための監視最小転送時間
+</LI><LI>StoreData_xfers_max: StoreData オペレーションのための監視最大転送時間
+</LI><LI>StoreData_xfers_bytes_sum: StoreData オペレーション用に転送済みのバイトの合計
+</LI><LI>StoreData_xfers_bytes_min: StoreData オペレーションのための監視最小転送バイト
+</LI><LI>StoreData_xfers_bytes_max: StoreData オペレーションのための監視最大転送バイト
+</LI><LI>StoreData_xfers_bucket0: StoreData オペレーションのための bucket0 内の件数
+</LI><LI>StoreData_xfers_bucket1: StoreData オペレーションのための bucket1 内の件数
+</LI><LI>StoreData_xfers_bucket2: StoreData オペレーションのための bucket2 内の件数
+</LI><LI>StoreData_xfers_bucket3: StoreData オペレーションのための bucket3 内の件数
+</LI><LI>StoreData_xfers_bucket4: StoreData オペレーションのための bucket4 内の件数
+</LI><LI>StoreData_xfers_bucket5: StoreData オペレーションのための bucket5 内の件数
+</LI><LI>StoreData_xfers_bucket6: StoreData オペレーションのための bucket6 内の件数
+</LI><LI>StoreData_xfers_bucket7: StoreData オペレーションのための bucket7 内の件数
+</LI><LI>StoreData_xfers_bucket8: StoreData オペレーションのための bucket8 内の件数
+</LI></UL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd023.htm">前ページ</A> &#124; <A HREF="auagd025.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

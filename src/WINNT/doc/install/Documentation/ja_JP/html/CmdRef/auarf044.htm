@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFMSLOG" HREF="auarf002.htm#ToC_42">fms.log</A></H2>
+<P><STRONG>目的</STRONG>
+<P><B>fms</B> コマンドの出力を記録します。
+<P><STRONG>構文</STRONG>
+<P><B>fms.log</B> ファイルには、<B>fms</B> コマンドが生成した出力が記録されます。この出力には、磁気テープ装置が接続している磁気テープ・コーディネーター・マシンの
+<B>/usr/afs/backup/tapeconfig</B>
+ファイルの磁気テープ装置項目に存在することができる次の 2 つの数字が含まれます。
+<UL>
+<LI>装置の磁気テープの容量 (バイト単位)
+</LI><LI>磁気テープ装置に書き込まれたファイル終わり (EOF) マーク (しばしば、単に<I>ファイル・マーク</I>といいます)。バイト単位で示されます。
+</LI></UL>
+<P>このファイルに記録された数字を <B>tapeconfig</B> ファイルに転送する場合は、ダンプ操作中の磁気テープ・コーディネーターのパフォーマンスを向上させるために、それらの数字を <B>tapeconfig</B> ファイルの解説ページに指定されているように調整します。
+<P><B>fms.log</B> ファイルが現行作業ディレクトリーに存在しない場合、<B>fms</B> コマンド・インタープリターはこのファイルを作成します。この場合は、ディレクトリーのモード・ビットは <B>rwx</B>
+(<B>読み取り</B>、<B>書き込み</B>、および<B>実行</B>) アクセス権をそのコマンドの発行者に許可しなければなりません。このファイルがすでに存在する場合、コマンド・インタープリターはそのファイルを上書きするので、ファイルのモード・ビットは、
+<B>fms</B> コマンドの発行者に <B>w</B> アクセス権を許可しなければなりません。また、<B>fms</B> コマンドは、実行時に、類似の情報を標準出力ストリームに書き込みます。
+<P>このファイルは、ASCII 形式です。その内容を表示するには、クライアント・マシンにログオンしてから、テキスト・エディター、または UNIX の <B>cat</B> コマンドなどのファイル表示コマンドを使用してください。デフォルトでは、<B>fms.log</B> ファイルのモード・ビットは、そのファイルの所有者 (デフォルトではローカル・スーパーユーザー
+<B>root</B>) にのみ <B>r</B> アクセス権を許可します。
+<P><STRONG>出力</STRONG>
+<P>ファイルの最初の数行には、<B>fms</B> コマンド・インタープリターのアクションの簡単な追跡情報があります。ここでは、磁気テープに書き込まれたブロック数などが示されます。最後の 2 行には、次の形式で磁気テープ容量およびファイル・マーク・サイズのバイト数が示されます。
+<PRE>   Tape capacity is <VAR>tape_size</VAR> bytes
+   File marks are <VAR>filemark_size</VAR> bytes
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次の <B>fms.log</B> ファイルの例は、<B>fms</B> コマンドの実行中に使用された磁気テープに 2,136,604,672 バイトの容量があり、磁気テープ装置が 1,910,220 バイトのファイル・マークを書き込んでいることを示しています。
+<PRE>   fms test started
+   wrote 130408 blocks
+   Tape capacity is 2136604672 bytes
+   File marks are 1910220 bytes
+   
+</PRE>
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf050.htm#HDRTAPECONFIG">tapeconfig</A>
+<P><A HREF="auarf130.htm#HDRFMS">fms</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf043.htm">前ページ</A> &#124; <A HREF="auarf045.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

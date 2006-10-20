@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf159.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf161.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_SETCLIENTADDRS" HREF="auarf002.htm#ToC_174">fs setclientaddrs</A></H2>
+<A NAME="IDX4961"></A>
+<A NAME="IDX4962"></A>
+<A NAME="IDX4963"></A>
+<A NAME="IDX4964"></A>
+<A NAME="IDX4965"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Sets the client interfaces to register with the File Server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs setclientaddrs</B> [<B>-address</B> &lt;<VAR>client&nbsp;network&nbsp;interfaces</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs setcl</B> [<B>-a</B> &lt;<VAR>client&nbsp;network&nbsp;interfaces</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+   
+<B>fs sc</B> [<B>-a</B> &lt;<VAR>client&nbsp;network&nbsp;interfaces</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs setclientaddrs</B> command defines the IP addresses of the
+interfaces that the local Cache Manager registers with a File Server when
+first establishing a connection to it.
+<P>The File Server uses the addresses when it initiates a remote procedure
+call (RPC) to the Cache Manager (as opposed to responding to an RPC sent by
+the Cache Manager). There are two common circumstances in which the
+File Server initiates RPCs&#58; when it breaks callbacks and when it pings
+the client machine to verify that the Cache Manager is still
+accessible.
+<P>The list of interfaces specified with this command replaces the list that
+the Cache Manager constructs and records in kernel memory as it
+initializes. At that time, if the file <B>/usr/vice/etc/NetInfo</B>
+exists on the client machine&#39;s local disk, the Cache Manager uses its
+contents as the basis for the list of interfaces addresses. If the file
+does not exist, the Cache Manager instead uses the network interfaces
+configured with the operating system. It then removes from the list any
+address included in the local <B>/usr/vice/etc/NetRestrict</B>
+file. It records the final list in kernel memory. (An
+administrator must create the <B>NetInfo</B> and <B>NetRestrict</B>
+files; there are no default versions of them.)
+<P>If an RPC to that interface fails, the File Server simultaneously sends
+RPCs to all of the other interfaces in the list, to learn which of them are
+still available. Whichever interface replies first is the one to which
+the File Server then sends pings and RPCs to break callbacks.
+<P>To list the interfaces that the Cache Manager is currently registering with
+File Servers, use the <B>fs getclientaddrs</B> command.
+<P><STRONG>Cautions</STRONG>
+<P>The list specified with this command persists in kernel memory only until
+the client machine reboots. To preserve it across reboots, either list
+the interfaces in the local <B>/usr/vice/etc/NetInfo</B> file, or place
+the appropriate <B>fs setclientaddrs</B> command in the machine&#39;s AFS
+initialization script.
+<P>Changes made with this command do not propagate automatically to File
+Servers to which the Cache Manager has already established a
+connection. To force such File Servers to use the revised list, either
+reboot each file server machine, or change the <B>NetInfo</B> file and
+reboot the client machine.
+<P>The <B>fs</B> command interpreter verifies that each of the addresses
+specified as a value for the <B>-address</B> argument is actually
+configured with the operating system on the client machine. If it is
+not, the command fails with an error message that marks the address as a
+<TT>Nonexistent</TT> <TT>interface</TT>.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-address
+</B><DD>Specifies each IP address to place in the list of interfaces, in dotted
+decimal format. Hostnames are not acceptable. Separate each
+address with one or more spaces.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The message
+<PRE>   Adding <VAR>interface</VAR>
+   
+</PRE>
+<P>confirms that each new interface was added to the Cache Manager&#39;s
+list. The address appears in hexadecimal format to match the notation
+used in the File Server log, <B>/usr/afs/logs/FileLog</B>.
+<P><STRONG>Examples</STRONG>
+<P>The following example sets the two interfaces that the Cache Manager
+registers with File Servers.
+<PRE>   % <B>fs setclientaddrs 191.255.105.68 191.255.108.84</B>
+   Adding 0xbfff6944
+   Adding 0xbfff6c54
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf024.htm#HDRCLI_NETINFO">NetInfo (client version)</A>
+<P><A HREF="auarf026.htm#HDRCLI_NETRESTRICT">NetRestrict (client version)</A>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf145.htm#HDRFS_GETCLIENTADDRS">fs getclientaddrs</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf159.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf161.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

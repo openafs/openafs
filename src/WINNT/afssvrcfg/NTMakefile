@@ -1,0 +1,103 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# AFSDEV_AUXCDEFINES = /DUNICODE
+RELDIR=WINNT\afssvrcfg
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Definitions for building afssvrcfg.exe.
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afssvrcfg.exe
+
+EXEOBJS =\
+    $(OUT)\char_conv.obj             \
+	$(OUT)\admin_info_dlg.obj        \
+	$(OUT)\cfg_utils.obj             \
+	$(OUT)\create_partition_dlg.obj  \
+	$(OUT)\file_server_page.obj      \
+	$(OUT)\graphics.obj              \
+	$(OUT)\info_page.obj             \
+	$(OUT)\intro_page.obj            \
+	$(OUT)\partitions_page.obj       \
+	$(OUT)\partition_page.obj        \
+	$(OUT)\replicatition_page.obj    \
+	$(OUT)\services_page.obj         \
+	$(OUT)\toolbox.obj               \
+	$(OUT)\afscfg.obj                \
+	$(OUT)\backup_server_page.obj    \
+	$(OUT)\config_server_page.obj    \
+	$(OUT)\db_server_page.obj        \
+	$(OUT)\get_cur_config.obj        \
+	$(OUT)\help.obj                  \
+	$(OUT)\info2_page.obj            \
+	$(OUT)\logfile.obj               \
+	$(OUT)\partition_utils.obj       \
+	$(OUT)\root_afs_page.obj         \
+	$(OUT)\sys_control_page.obj      \
+	$(OUT)\volume_utils.obj          \
+	$(OUT)\salvage_dlg.obj			  \
+    $(OUT)\get_pw_dlg.obj            \
+    $(OUT)\salvage_results_dlg.obj   \
+    $(OUT)\validation.obj            \
+	$(OUT)\afscfg_stub.res
+
+VCLIBS =\
+	comctl32.lib \
+    mpr.lib
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\taafsapplib.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\afscfgadmin.lib \
+	$(DESTDIR)\lib\afs\afsbosadmin.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+    $(DESTDIR)\lib\lanahelper.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS) 
+	$(EXEGUILINK)  $(VCLIBS)
+	$(EXEPREP)     
+
+
+############################################################################
+# Definitions for generating versioninfo resource via RC
+
+$(OUT)\afscfg_stub.res:afscfg_stub.rc AFS_component_version_number.h
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(EXEFILE) lang
+
+
+############################################################################
+# Language target
+
+lang::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /e /f NTMakefile install
+	$(CD) ..
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(CD) lang
+        @if exist AFS_component_version_number.h del AFS_component_version_number.h
+	for /f %l in ('dir /B ??_??') do ( if exist @$(NTLANG) do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile clean )
+	$(CD) ..
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+

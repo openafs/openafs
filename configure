@@ -2168,7 +2168,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs
- VERSION=1.4.2fc4
+ VERSION=1.4.2
 
 
 cat >>confdefs.h <<_ACEOF
@@ -6359,13 +6359,21 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
-		i?86-*-netbsd*3.0*)
+		i?86-*-netbsd*3.[0-8]*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.99*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
+			;;
+		i?86-*-netbsd*4.[0-8]*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="i386_nbsd40"
+			;;
+		i?86-*-netbsd*4.99*)
+			AFS_PARAM_COMMON=param.nbsd40.h
+			AFS_SYSNAME="i386_nbsd40"
 			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
@@ -11626,6 +11634,246 @@ echo "${ECHO_T}$ac_cv_key_alloc_needs_struct_task" >&6; }
 
 cat >>confdefs.h <<\_ACEOF
 #define KEY_ALLOC_NEEDS_STRUCT_TASK 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking for linux do_sync_read()" >&5
+echo $ECHO_N "checking for linux do_sync_read()... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_do_sync_read+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+
+  if test -f $LINUX_KERNEL_PATH/scripts/Makefile.build; then
+
+  rm -fr conftest.dir
+  if mkdir conftest.dir; then
+  cd conftest.dir
+    cat >Makefile <<_ACEOF
+CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.c <<\_ACEOF
+#include <linux/module.h>
+#include <linux/fs.h>
+
+void conftest(void)
+{
+do_sync_read(NULL, NULL, 0, NULL);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    cd ..
+  fi
+  if { (echo "$as_me:$LINENO: make -C \$LINUX_KERNEL_PATH M=\`pwd\`/conftest.dir modules > /dev/null") >&5
+  (make -C $LINUX_KERNEL_PATH M=`pwd`/conftest.dir modules > /dev/null) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_linux_do_sync_read=yes
+else
+  ac_cv_linux_do_sync_read=no
+fi
+
+  rm -fr conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+int
+main ()
+{
+do_sync_read(NULL, NULL, 0, NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_do_sync_read=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_do_sync_read=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+    CPPFLAGS="$save_CPPFLAGS"
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_do_sync_read" >&5
+echo "${ECHO_T}$ac_cv_linux_do_sync_read" >&6; }
+  if test "x$ac_cv_linux_do_sync_read" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define DO_SYNC_READ 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking for linux generic_file_aio_read()" >&5
+echo $ECHO_N "checking for linux generic_file_aio_read()... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_generic_file_aio_read+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+
+  if test -f $LINUX_KERNEL_PATH/scripts/Makefile.build; then
+
+  rm -fr conftest.dir
+  if mkdir conftest.dir; then
+  cd conftest.dir
+    cat >Makefile <<_ACEOF
+CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.c <<\_ACEOF
+#include <linux/module.h>
+#include <linux/fs.h>
+
+void conftest(void)
+{
+generic_file_aio_read(NULL, NULL, 0, 0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    cd ..
+  fi
+  if { (echo "$as_me:$LINENO: make -C \$LINUX_KERNEL_PATH M=\`pwd\`/conftest.dir modules > /dev/null") >&5
+  (make -C $LINUX_KERNEL_PATH M=`pwd`/conftest.dir modules > /dev/null) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_linux_generic_file_aio_read=yes
+else
+  ac_cv_linux_generic_file_aio_read=no
+fi
+
+  rm -fr conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+int
+main ()
+{
+generic_file_aio_read(NULL, NULL, 0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_generic_file_aio_read=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_generic_file_aio_read=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+    CPPFLAGS="$save_CPPFLAGS"
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_generic_file_aio_read" >&5
+echo "${ECHO_T}$ac_cv_linux_generic_file_aio_read" >&6; }
+  if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define GENERIC_FILE_AIO_READ 1
 _ACEOF
 
   fi
@@ -18572,7 +18820,7 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd2*|*nbsd3*)
+	*nbsd2*|*nbsd3*|*nbsd4*)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon

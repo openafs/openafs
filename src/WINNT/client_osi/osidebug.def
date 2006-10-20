@@ -1,0 +1,17 @@
+NAME	     osidebug
+
+DESCRIPTION  'OSI Remote Debugging Program'
+
+EXETYPE      WINDOWS
+
+STUB	     'WINSTUB.EXE'
+
+CODE	     PRELOAD MOVEABLE
+DATA	     PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE     1024
+STACKSIZE    8192
+
+EXPORTS
+	MainWndProc   @1
+	About	      @2

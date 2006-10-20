@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_MOVE" HREF="auarf002.htm#ToC_282">vos move</A></H2>
+<A NAME="IDX5766"></A>
+<A NAME="IDX5767"></A>
+<A NAME="IDX5768"></A>
+<A NAME="IDX5769"></A>
+<A NAME="IDX5770"></A>
+<A NAME="IDX5771"></A>
+<A NAME="IDX5772"></A>
+<A NAME="IDX5773"></A>
+<A NAME="IDX5774"></A>
+<P><STRONG>目的</STRONG>
+<P>読み取り / 書き込みボリュームを別のサイトに移動します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos move -id</B> &lt;<VAR>volume name or ID</VAR>>  <B>-fromserver</B> &lt;<VAR>machine name on source</VAR>> 
+         <B>-frompartition</B> &lt;<VAR>partition name on source</VAR>> 
+         <B>-toserver</B> &lt;<VAR>machine name on destination</VAR>>  
+         <B>-topartition</B> &lt;<VAR>partition name on destination</VAR>> 
+         [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>] 
+    
+<B>vos m -i</B> &lt;<VAR>volume name or ID</VAR>>  <B>-froms</B> &lt;<VAR>machine name on source</VAR>> 
+      <B>-fromp</B> &lt;<VAR>partition name on source</VAR>>  <B>-tos</B> &lt;<VAR>machine name on destination</VAR>> 
+      <B>-top</B> &lt;<VAR>partition name on destination</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+      [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos move</B> コマンドは、指定された読み取り / 書き込みボリュームを現在のサイト (<B>-fromserver</B> および <B>-frompartition</B> 引き数で指定します) から宛先のサイト (<B>-toserver</B> および <B> -topartition</B> 引き数で指定します) に移動します。このコマンドは、バックアップ・コピーがあると、現在のサイトからバックアップ・コピーを自動的に移動します。新規バックアップ・ボリュームを宛先のサイトに作成するには、
+<B>vos backup</B> コマンドを使用します。
+<P>このコマンドは、読み取り / 書き込みボリュームにだけ機能します。読み取り専用ボリュームを移動する場合には、
+<B>vos addsite</B> および <B>vos release</B> コマンドを使用して、新規の読み取り専用サイトを定義し、ボリュームの内容をそこにコピーします。次に、<B>vos remove</B> コマンドを使用して、前の読み取り専用ボリュームの定義をボリューム・ロケーション・データベース (VLDB) から削除し、区画からデータを削除します。バックアップ・ボリュームを移動するには、このコマンドを使用して、その読み取り / 書き込みソースを移動し、
+<B>vos backup</B> コマンドを発行します。
+<P>このコマンドを実行する前に、<B>vos</B> コマンド・インタープリターは、移動するボリュームが入る十分なスペースか宛先の区画にあるかどうかチェックします。十分なスペースがないと、移動操作は実行されず、次のメッセージが表示されます。
+<PRE>   vos: no space on target partition <VAR>dest_part</VAR> to move volume <VAR>volume</VAR>
+   
+</PRE>
+<P><STRONG>注意</STRONG>
+<P>特別な理由のない限り、<B>vos move</B> コマンドの実行中に操作を中断しないでください。移動操作を中断すると、次のような矛盾が生じる可能性があります。
+<UL>
+<LI>送信元サイトと宛先サイトに 2 つのバージョンが存在する。
+(この場合、VLDB に指定されているバージョンを保存し、もう1 つのバージョンは、<B>vos zap</B> コマンドで削除してください。)
+</LI><LI>ボリュームのバックアップ・バージョンは、古いサイトに残されます。
+(この場合、<B>vos zap</B> コマンドで削除してください。)
+</LI><LI>ボリュームがオフラインになる。(この場合には、<B>bos salvage</B> コマンドを実行して、オンラインに戻してください。)
+</LI></UL>
+<P><B>vos move</B> 操作の実行中に &lt;<B>Ctrl-c</B>&gt; 割り込み信号を押すと、次の警告メッセージが表示され、信号を kill するかどうか確認を求められます。
+<PRE>SIGINT ハンドラー: vos move 操作が進行中です
+警告: AFS 記憶域およびメタデータが中間状態のままになる可能性があります
+もう一度 control-c を押して処理を終了してください
+   
+</PRE>
+<P>操作を終了する場合は、
+&lt;<B>Ctrl-c</B>&gt; を再度押してください。操作を継続する場合は、それ以外のキーを押してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>読み取り / 書き込みボリュームの完全名またはボリューム ID 番号のいずれかを指定します。
+<P><DT><B>-fromserver
+</B><DD>ボリュームが現在存在するファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-frompartition
+</B><DD>現在ボリュームが存在する区画の名前を指定します。完全な区画名を指定します。(たとえば、
+<B>/vicepa</B>) または、
+<B>vos</B> 解説ページの概要に記載されている省略形のいずれかを指定してください。
+<P><DT><B>-toserver
+</B><DD>ボリュームの移動先になるファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-topartition
+</B><DD>ボリュームの移動先の区画名を指定します。完全な区画名を指定します。(たとえば、
+<B>/vicepa</B>) または、
+<B>vos</B> 解説ページの概要に記載されている省略形のいずれかを指定してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、ボリューム <B>user.smith</B> をファイル・サーバー・マシン <B>fs3.abc.com</B> の区画 <B>/vicepb</B> からファイル・サーバー・マシン <B>fs7.abc.com</B>の区画 <B>/vicepg</B> に移動しています。
+<PRE>   % <B>vos move -id user.smith -fromserver fs3.abc.com -frompartition b</B>  \
+              <B>-toserver fs7.abc.com -topartition g</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-toserver</B> および
+<B>-fromserver</B> 引き数に指定されたマシン、および各データベース・サーバー・マシンにある
+<B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf253.htm#HDRVOS_ADDSITE">vos addsite</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf267.htm">前ページ</A> &#124; <A HREF="auarf269.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

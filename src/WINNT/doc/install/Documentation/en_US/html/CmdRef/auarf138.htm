@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf137.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf139.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_EXAMINE" HREF="auarf002.htm#ToC_152">fs examine</A></H2>
+<A NAME="IDX4772"></A>
+<A NAME="IDX4773"></A>
+<A NAME="IDX4774"></A>
+<A NAME="IDX4775"></A>
+<A NAME="IDX4776"></A>
+<A NAME="IDX4777"></A>
+<A NAME="IDX4778"></A>
+<A NAME="IDX4779"></A>
+<A NAME="IDX4780"></A>
+<A NAME="IDX4781"></A>
+<A NAME="IDX4782"></A>
+<A NAME="IDX4783"></A>
+<A NAME="IDX4784"></A>
+<A NAME="IDX4785"></A>
+<A NAME="IDX4786"></A>
+<A NAME="IDX4787"></A>
+<A NAME="IDX4788"></A>
+<A NAME="IDX4789"></A>
+<A NAME="IDX4790"></A>
+<A NAME="IDX4791"></A>
+<A NAME="IDX4792"></A>
+<A NAME="IDX4793"></A>
+<A NAME="IDX4794"></A>
+<A NAME="IDX4795"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays information about the volume containing a directory or file
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs examine</B> [<B>-path</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs exa</B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+         
+<B>fs listvol</B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+     
+<B>fs listv</B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+        
+<B>fs lv</B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs examine</B> command displays information about the volume
+containing each specified directory or file, including its volume ID number,
+quota and the percentage of its quota that is used.
+<P>This command provides the most information about a volume, but the <B>fs
+listquota</B> command displays similar information in tabular format, and
+the <B>fs quota</B> command reports only the percentage of quota
+used.
+<P>To set volume quota, use the <B>fs setquota</B> or <B>fs setvol</B>
+command.
+<P><STRONG>Cautions</STRONG>
+<P>The partition-related statistics in this command&#39;s output do not
+always agree with the corresponding values in the output of the standard UNIX
+<B>df</B> command. The statistics reported by this command can be
+up to five minutes old, because the Cache Manager polls the File Server for
+partition information at that frequency. Also, on some operating
+systems, the <B>df</B> command&#39;s report of partition size includes
+reserved space not included in this command&#39;s calculation, and so is
+likely to be about 10% larger.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>Names a file or directory that resides in the volume about which to
+produce output. Partial pathnames are interpreted relative to the
+current working directory, which is also the default value if this argument is
+omitted.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output displays information about the volume that houses each specified
+directory or file, in the following format
+<PRE>   Volume status for vid = <VAR>volume ID</VAR> named <VAR>volume name</VAR>
+   Current offline message is <VAR>message</VAR>
+   Current disk quota is <VAR>quota in kilobytes</VAR>
+   Current blocks used are <VAR>volume size in kilobytes</VAR>
+   The partition has <VAR>available partition</VAR> blocks available out of
+      <VAR>partition size</VAR>
+   
+</PRE>
+<P>where the first line specifies the volume&#39;s ID number and name.
+The <TT>Current</TT> <TT>offline</TT> <TT>message</TT> line appears only
+if an administrator has included the <B>-offlinemsg</B> argument to the
+<B>fs setvol</B> command. The remaining lines report, respectively,
+<UL>
+<P><LI>the volume&#39;s quota in kilobytes, or the string <TT>unlimited</TT>
+to indicate an unlimited quota
+<P><LI>the volume&#39;s current size in kilobytes
+<P><LI>the number of blocks available and total size of the host partition, both
+in kilobytes.
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the output for the volume
+<B>user.smith</B> and the partition housing it&#58;
+<PRE>   % <B>fs examine -path /afs/abc.com/usr/smith</B>
+   Volume status for vid = 50489902 named user.smith
+   Current maximum quota is 15000
+   Current blocks used are 5073
+   The partition has 336662 blocks available out of 4177920 
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must have the <B>l</B> (<B>lookup</B>) permission on the
+ACL of the root directory of the volume that houses the file or directory
+named by the <B>-path</B> argument, and on the ACL of each directory that
+precedes it in the pathname.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf150.htm#HDRFS_LISTQUOTA">fs listquota</A>
+<P><A HREF="auarf155.htm#HDRFS_QUOTA">fs quota</A>
+<P><A HREF="auarf161.htm#HDRFS_SETQUOTA">fs setquota</A>
+<P><A HREF="auarf163.htm#HDRFS_SETVOL">fs setvol</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf137.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf139.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

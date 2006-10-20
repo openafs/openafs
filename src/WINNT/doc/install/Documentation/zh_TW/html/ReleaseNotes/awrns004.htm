@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>版本注意事項</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWBWIN\TEMP\idwt1035\awrns000.scr converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 23 Feb 2000 at       -->
+<!-- 14:03:43                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
+<META HTTP-EQUIV="updated" CONTENT="Wed, 23 Feb 2000 14:03:40">
+<META HTTP-EQUIV="review" CONTENT="Fri, 23 Feb 2001 14:03:40">
+<META HTTP-EQUIV="expires" CONTENT="Sat, 23 Feb 2002 14:03:40">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>版本注意事項</H1>
+<HR><H1><A NAME="HDRCLIENT" HREF="awrns002.HTM#ToC_6">AFS 用戶端版本注意事項</A></H1>
+<HR><H2><A NAME="Header_7" HREF="awrns002.HTM#ToC_7">簡介</A></H2>
+<P>本節包含有關 AFS for Windows 3.6 版之 AFS 用戶端元件的重要資訊。AFS 用戶端可從執行 Windows NT
+的 PC 上直接存取 AFS 檔案空間，讓使用者能管理 AFS 的檔案和目錄。AFS 用戶端 包含 AFS Light 閘道，可讓 AFS Light 使用者存取 AFS 檔案空間。
+<HR><H2><A NAME="HDRPREREQ" HREF="awrns002.HTM#ToC_8">AFS 用戶端安裝基本需求</A></H2>
+<P>您的系統必須符合下列硬體、軟體及管理權限的基本需求，
+才能安裝 AFS 用戶端。
+<P><H3><A NAME="Header_9" HREF="awrns002.HTM#ToC_9">硬體</A></H3>
+<P>安裝 AFS 用戶端的硬體基本需求：
+<UL>
+<LI>80486/66 MHz（或更快）微處理器或 Pentium 等級微處理器的 PC
+</LI><LI>至少 16 MB 的 RAM
+</LI><LI>至少 4 MB 可用磁碟空間的硬碟，加上足夠的額外快取磁碟空間，以滿足適當的快取記憶體大小。
+（根據預設值，快取記憶體位於安裝 Windows 的磁碟機上，
+快取記憶體大小是 20 MB。）
+</LI></UL>
+<P><H3><A NAME="Header_10" HREF="awrns002.HTM#ToC_10">軟體</A></H3>
+<P>安裝 AFS 用戶端的軟體基本需求：
+<UL>
+<LI>Microsoft Windows NT 4.0 加上 Service Pack 4 或 Service Pack 5
+</LI></UL>
+<P><H3><A NAME="Header_11" HREF="awrns002.HTM#ToC_11">管理權限基本需求</A></H3>
+<P>您必須是 Windows 系統的本端<B>管理者</B>群組成員之一，
+才能夠安裝、架構及啟動 AFS 用戶端。
+<HR><H2><A NAME="Header_12" HREF="awrns002.HTM#ToC_12">產品注意事項</A></H2>
+<P>本節說明有關 AFS for Windows 3.6 版之 AFS 用戶端元件的一般資訊。
+內容包括本版次 AFS Clinet 提供的新功能和加強功能。
+<P><H3><A NAME="Header_13" HREF="awrns002.HTM#ToC_13">用戶端介面提供的其它架構選項</A></H3>
+<P>「AFS 用戶端架構」公用程式的<B>進階</B>標籤，
+現在提供選項來架構登入參數、診斷參數以及其它雜項架構參數。
+從<B>進階</B>標籤中，您亦可架構廣域磁碟機對應。
+許多這類的架構選項在以往是以登錄設定的方式提供給 AFS 用戶端使用者。
+<P>從 Windows 控制台中存取<B>進階</B>標籤。
+若要顯示<B>進階</B>標籤：
+<OL TYPE=1>
+<LI>從<B>開始</B>功能表中，選擇<B>設定</B>，然後選擇<B>控制台</B>。
+</LI><LI>按兩下 <B>AFS 用戶端架構</B>圖示，
+以顯示「AFS 用戶端架構」公用程式。
+</LI><LI>選取<B>進階</B>標籤。
+</LI></OL>
+<P><H3><A NAME="HDRCACHE" HREF="awrns002.HTM#ToC_14">可架構 AFS 用戶端快取位置</A></H3>
+<P>「AFS 用戶端快取」儲存於名為 <B>AFSCache</B> 的檔案中，而不是儲存在系統換頁檔。根據預設值，快取儲存於安裝 Windows 的磁碟機上。
+「AFS 用戶端快取」的大小受限於可用的磁碟空間。
+快取大小必須至少是 1 MB。預設的快取大小是 20480 KB（20MB）。
+<P>「AFS 用戶端快取」的位置是可變更的。當安裝 Windows 的磁碟機上沒有足夠的可用磁碟空間時，變更快取位置就非常有用。
+若要變更快取位置，請至「AFS Clinet 架構」的<B>進階</B>標籤，
+在<B>快取路徑</B>欄位中輸入一個有效的完整檔案名稱。
+<P><H3><A NAME="Header_15" HREF="awrns002.HTM#ToC_15">將廣域磁碟機對應到 AFS 檔案空間</A></H3>
+<P>AFS 用戶端的圖形使用者介面，現在可用來將廣域磁碟機對應到 AFS 檔案空間中的位置。
+啟動 IBM AFS 用戶端服務時，廣域磁碟機會對應到 AFS 檔案空間；
+使用者不必登入。
+若要將廣域磁碟機對應到 AFS：
+<OL TYPE=1>
+<LI>從<B>開始</B>功能表中，選擇<B>設定</B>，然後選擇<B>控制台</B>。
+</LI><LI>按兩下 <B>AFS 用戶端架構</B>圖示，
+以顯示「AFS 用戶端架構」公用程式。選取<B>進階</B>標籤。
+</LI><LI>按一下<B>新增</B>。出現「對應廣域磁碟機」對話方塊。
+在<B>磁碟機代號</B>方塊中，選擇一個網路磁碟機，或接受預設值。
+在 <B>AFS 路徑</B>方塊中，鍵入 AFS 檔案空間的路徑。
+需要的話，請在<B>說明</B>方框中輸入與指定的磁碟機代號和 AFS 路徑相關的縮寫。
+請注意：磁碟機代號說明不可超過 12 個字元，且不可包含空格或欄標字元。
+</LI><LI>按一下<B>確定</B>，以建立連接。「廣域磁碟機」對話方塊會出現磁碟機代號和 AFS 路徑。
+磁碟機代號現在出現在您的 Windows NT 檔案總管中。
+</LI></OL>
+<P><H3><A NAME="Header_16" HREF="awrns002.HTM#ToC_16">AFS 用戶端電腦名稱必須符合名稱服務主電腦名稱</A></H3>
+<P>AFS 用戶端機器的電腦名稱（出現在「網路」對話方塊的<B>識別資料</B>標籤的<B>電腦名稱</B>欄位中），
+必須符合名稱服務（通常是「領域名稱服務」或 DNS）指派給電腦的主電腦名稱，
+名稱服務可將名稱對應到網際網路通信協定（IP）位址。
+例如，若已安裝 AFS 用戶端的機器具有電腦名稱
+<B>afsclient1</B>，且位於 <B>yourcompany.com</B> 領域內，
+則機器所對應的 DNS 登錄必須是<B>afsclient1.yourcompany.com</B>。
+<P><H3><A NAME="Header_17" HREF="awrns002.HTM#ToC_17">AFS 指令行程式</A></H3>
+<P>AFS 用戶端包含管理專用的指令集，例如 <B>bos</B>、<B>kas</B>、<B>vos</B>、
+及 <B>pts</B>。請從 Windows「指令提示」中執行這些指令集。
+<P><H3><A NAME="Header_18" HREF="awrns002.HTM#ToC_18">必須將 AFS 用戶端安裝在其路徑只含 ANSI 字元的目錄中</A></H3>
+<P>必須將 AFS for Windows 軟體安裝在其路徑只含 ANSI 字元的目錄中，
+例如預設目錄 <B>C:\Program Files</B>。
+<P><H3><A NAME="Header_19" HREF="awrns002.HTM#ToC_19">在 AFS for Windows 設定程式中，停用用戶端元件以外的全部元件</A></H3>
+<P>您可以選擇將 AFS for Windows 安裝程式改變成停用用戶端元件以外的所有元件。 此種只有用戶端的安裝程式使得使用者無法安裝「 AFS 用戶端」以外的任何元件。
+若要執行只有用戶端的安裝，請在與其它安裝檔案相同的目錄中建立
+<B>setup.co</B> 檔案；這樣設定程式就只容許 AFS 用戶端的安裝。
+請注意：<B>setup.co</B> 檔案的內容並不重要。不論您執行的安裝類型為何，
+請依照 <I>IBM AFS for Windows 快速入門</I>所述的安裝程序。
+<P><H3><A NAME="Header_20" HREF="awrns002.HTM#ToC_20">暫存檔</A></H3>
+<P>有時候 Windows 版的 AFS 用戶端會建立暫存檔。
+若要控制這些檔案的建立位置，請將環境變數（TMP 或 TEMP）設定為您要之暫時目錄的完整路徑。若不指定暫時目錄，
+則將在建立檔案的程序之現行工作目錄中建立暫存檔。
+<P><H3><A NAME="Header_21" HREF="awrns002.HTM#ToC_21">AFS 用戶端的國家語言支援</A></H3>
+<P>AFS 提供有關 AFS 用戶端圖形使用者介面（GUI）工具和說明文件的國家語言支援，
+包括雙向 script 的支援（希伯來、阿拉伯等）。
+安裝的語言字串係由機器的系統預設語言環境所決定，
+亦即「控制台」的「國別設定內容」對話方塊中所指定的。
+若目前的語言環境沒有可用的語言字串，
+則依預設值將安裝英語字串。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>註:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">機器的<I>系統預設</I>語言環境可能不同於
+<I>使用者</I>語言環境（由使用者指定）。
+不過，AFS for Windows 所安裝的語言字串，一律由系統預設語言環境來決定。
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_22" HREF="awrns002.HTM#ToC_22">Windows 系統不使用 kpwvalid 密碼強化檢查器</A></H3>
+<P>在 Windows 系統上變更 AFS 使用者密碼時，<I>不使用</I><B>kpwvalid</B> 程式來檢查新密碼的品質。
+（在 UNIX 系統上，若 <B>kpwvalid</B> 程式和
+<B>kpasswd</B> 程式位於相同目錄中，
+則由 <B>kpwvalid</B> 程式檢查新使用者密碼的品質。）
+<P><H3><A NAME="Header_23" HREF="awrns002.HTM#ToC_23">可架構的 LAN 配接卡號碼</A></H3>
+<P>AFS 用戶端服務所用的 LAN 配接卡（LANA）號碼，必須符合 Windows 系統的 LANA 號碼設定。
+根據預設值，AFS 用戶端服務是使用 LANA 號碼 <B>0</B>（零）。
+<P>您現在可使用 AFS 用戶端的圖形使用者介面工具，來修改 AFS 用戶端服務所用的 LANA 號碼值。
+若要變更 LANA 號碼，請至「AFS 用戶端架構」的<B>進階</B>標籤，
+在 <B>LAN 配接卡號碼</B>欄位中輸入新的值。
+修改此參數之後，您必須重新啟動 AFS 用戶端服務。
+<P>另外，若您不要變更 AFS 用戶端服務所用的預設 LANA 號碼來符合 Windows NT 機器的
+NetBIOS 架構，您可修改系統的 LANA 號碼設定來符合
+AFS 預設設定（<B>0</B>）。請開啟「控制台」的「網路」應用程式，
+然後存取<B>服務</B>標籤。選取 <B>NetBIOS 介面</B>，並選取<B>內容</B>按鈕。
+在 <B>Lana 號碼</B>欄位中輸入 <B>0</B>（零）。
+變更此 Windows 設定之後，您必須重新啟動機器。
+<P><H3><A NAME="Header_24" HREF="awrns002.HTM#ToC_24">WinLogon 圖形化辨識與鑑別（GINA）模組和 AFS 鑑別</A></H3>
+<P>AFS 用戶端包含建立 WinLogon 圖形辨識與鑑別（GINA）模組（用來取得 AFS 記號）所需的標頭檔和程式庫。
+這些標頭檔和程式庫安裝於 <B> &lt;</B><I>AFS for Windows 安裝目錄</I><B>>\afs\client\program</B> 目錄中。此外，
+<B>&lt;</B><I>AFS for Windows 安裝目錄</I><B>>\afs\client\program\sample\token.c</B>
+中提供一個範例程式，含有編譯和鏈結說明。
+<P><H3><A NAME="Header_25" HREF="awrns002.HTM#ToC_25">升級時保留 Cell 資料庫</A></H3>
+<P>當升級 AFS 用戶端軟體時，不會置換位於 <B>Windows</B> 目錄中的 AFS 用戶端cell 資料庫檔案（<B>afsdcell.ini</B>），
+因此得以保留本端 cell 架構資訊。
+不過，會複製一份供應商所發送的 cell 資料庫到 AFS 用戶端程式目錄中。
+<P>
+<HR><H2><A NAME="Header_26" HREF="awrns002.HTM#ToC_26">限制</A></H2>
+<P>本節簡述 AFS 用戶端元件 AFS for Windows 3.6 版中已知的限制。
+<P><H3><A NAME="Header_27" HREF="awrns002.HTM#ToC_27">AFS 檔案和目錄的符號鏈結</A></H3>
+<P>目錄的符號鏈結被視為目錄，檔案的符號鏈結在
+Windows NT 系統中是以檔案形式出現。兩者皆不以鏈結的形式呈現。
+<P>目前，您無法使用 Windows 介面（例如 Windows NT 檔案總管）來刪除或建立 AFS 檔案空間中的符號鏈結。
+若您嘗試使用 Windows 介面來刪除符號鏈結的目錄，
+則會刪除目錄的內容。目錄本身不會被刪除。
+若您嘗試使用 Windows 介面來刪除符號鏈結的檔案，
+則會移除鏈結，而非刪除目標檔案。
+<P>若要建立或刪除 AFS 檔案和目錄的符號鏈結，請使用 AFS for Windows 3.6 版
+提供的 <B>symlink.exe</B> 程式。請從 Windows NT 指令提示中執行
+<B>symlink</B> 指令。
+<P><H3><A NAME="Header_28" HREF="awrns002.HTM#ToC_28">當網路磁碟機位於應用程式路徑中時，無法載入 AFS 用戶端</A></H3>
+<P>載入應用程式時（如 AFS 用戶端），Windows NT 會搜尋應用程式的動態鏈結程式庫（DLL）。
+Windows 搜尋應用程式之 DLL 的其中一個地方是 Path 環境變數所指定的每一個目錄。
+在 Path 環境變數中，若網路路徑位於 DLL 路徑之前，
+則可能無法載入應用程式。
+<P>大部份的服務（如 AFS 用戶端）對於 Path 環境變數中所指定的網路磁碟機，
+不具有安全性存取。若路徑中包含網路磁碟機，且應用程式沒有許可權可存取網路，
+則 Windows 無法分辨「拒絕存取」的錯誤，究竟是由無法存取檔案的程序所造成，
+還是由無法存取含有檔案的網路磁碟機的程序所造成。
+因為無法區別，作業系統會假設該檔案存在，但程序無法存取。
+此錯誤會導致系統暫停搜尋 DLL，並且假設無法存取 DLL。
+因為 Windows 認為無法存取 DLL，所以無法載入應用程式。
+<P>為了避免此問題，請確定在路徑中，應用程式 DLL 的目錄是位於任何網路磁碟機之前。
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">頁面頂端</A> &#124; <A HREF="awrns003.HTM">前一頁</A> &#124; <A HREF="awrns005.HTM">下一頁</A> &#124; <A HREF="awrns002.HTM#ToC">目錄</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

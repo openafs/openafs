@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_FLUSHMOUNT" HREF="auarf002.htm#ToC_155">fs flushmount</A></H2>
+<A NAME="IDX4813"></A>
+<A NAME="IDX4814"></A>
+<A NAME="IDX4815"></A>
+<A NAME="IDX4816"></A>
+<A NAME="IDX4817"></A>
+<A NAME="IDX4818"></A>
+<P><STRONG>目的</STRONG>
+<P>キャッシュ・マネージャーにマウント・ポイントを破棄させます。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs flushmount</B> [<B>-path</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs flushm</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs flushmount</B> コマンドは、
+<B>-path</B> 引き数で名前を付けた、それぞれのマウント・ポイントに関連するすべての情報をキャッシュから除去します。アプリケーションが次にマウント・ポイントにアクセスすると、キャッシュ・マネージャーは最新のバージョンをファイル・サーバーから取り出します。関連したボリュームからキャッシュされたデータが影響を受けます。
+<P>このコマンドを意図的な使用方法は、キャッシュ内で破壊されたマウント・ポイントに関する情報を破棄することです。
+(キャッシュ・マネージャーはキャッシュされたマウント・ポイントを定期的に最新表示しますが、マウント・ポイントを即時に破棄するほかの唯一の方法は、マシンをリブートしてキャッシュ・マネージャーを最初期化することです。)
+破壊されたマウント・ポイントの症状は、
+<B>fs lsmount</B> コマンドの混同された出力を組み込み、ディレクトリーを変更しようとして、あるいはマウント・ポイントの内容をリストしようとして失敗しました。
+<P>マウント・ポイントではなくキャッシュ済みのデータをフラッシュするには、
+<B>fs flush</B> コマンドまたは <B>fs flushvolume</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>キャッシュからフラッシュするそれぞれのマウント・ポイントを指定します。部分的なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、ユーザー <B>pat</B> のホーム・ディレクトリーのマウント・ポイントをキャッシュからフラッシュします。
+<PRE>   % <B>fs flushm /afs/abc.com/usr/pat</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者は、
+<B>-path</B> 引き数で命名されたファイルまたはディレクトリーを格納するボリュームのルート・ディレクトリーの ACL で、およびパス名でその前に置かれる各ディレクトリーの ACL で、
+<B>l</B> (<B>検索</B>) アクセス権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf140.htm#HDRFS_FLUSH">fs flush</A>
+<P><A HREF="auarf142.htm#HDRFS_FLUSHVOLUME">fs flushvolume</A>
+<P><A HREF="auarf151.htm#HDRFS_LSMOUNT">fs lsmount</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf140.htm">前ページ</A> &#124; <A HREF="auarf142.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

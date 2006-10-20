@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_GETLOG" HREF="auarf002.htm#ToC_116">bos getlog</A></H2>
+<A NAME="IDX4527"></A>
+<A NAME="IDX4528"></A>
+<A NAME="IDX4529"></A>
+<A NAME="IDX4530"></A>
+<A NAME="IDX4531"></A>
+<A NAME="IDX4532"></A>
+<A NAME="IDX4533"></A>
+<A NAME="IDX4534"></A>
+<A NAME="IDX4535"></A>
+<P><STRONG>目的</STRONG>
+<P>サーバー・プロセスのログ・ファイルを出力します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos getlog -server</B> &lt;<VAR>machine name</VAR>>  <B>-file</B> &lt;<VAR>log file to examine</VAR>>
+           [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos getl -s</B> &lt;<VAR>machine name</VAR>>  <B>-f</B> &lt;<VAR>log file to examine</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+         [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos getlog</B> コマンドは、<B>-server</B> 引き数に指定されたマシンにある特定のログ・ファイルを、標準出力ストリームに表示します。
+<B>-file</B> 引き数の一部に代替パス名が指定されていなければ、BOS サーバーは、<B>/usr/afs/logs</B> ディレクトリーからログ・ファイルを取り出します。
+<P><STRONG>注意</STRONG>
+<P>特にデータベース・サーバーの場合、ログ・ファイルのサイズが大きくなることがあります。管理可能なサイズにしておくためには、UNIX の <B>rm</B> コマンドを定期的に使用して、ログ・ファイルを切り捨てるか、あるいは <B>bos restart</B> コマンドを使用して、各プロセスを再起動してください。
+<P>ファイルが削除されてプロセスが再起動し、ログ・ファイルが占有していたスペースが解放されるまで、5 分ほどかかります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>ログ・ファイルのあるサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-file</B>
+</B><DD>表示するログ・ファイルを指定します。ファイル名だけを指定すると、BOS サーバー は、<B>/usr/afs/logs</B> ディレクトリーからログ・ファイルを取り出します。標準値は次のとおりです。
+<P>
+<DL>
+<P><DT><B><B>AuthLog</B>
+</B><DD>認証サーバー (<B>kaserver</B>) のログ・ファイル
+<P><DT><B><B>BackupLog</B>
+</B><DD>バックアップ・サーバー (<B>buserver</B>) のログ・ファイル
+<P><DT><B><B>BosLog</B>
+</B><DD>BOS サーバー (<B>bosserver</B>) のログ・ファイル
+<P><DT><B><B>FileLog</B>
+</B><DD>ファイル・サーバー (<B>fileserver</B>) のログ・ファイル
+<P><DT><B><B>SalvageLog</B>
+</B><DD>サルベージャー (<B>salvager</B>) のログ・ファイル
+<P><DT><B><B>VLLog</B>
+</B><DD>ボリューム・ロケーション (VL) サーバーServer (<B>vlserver</B>) のログ・ファイル
+<P><DT><B><B>VolserLog</B>
+</B><DD>ボリューム・サーバー (<B>volserver</B>) のログ・ファイル
+</DL>
+<P>
+<P>
+<P>パス名とファイル名の両方を指定すると、指定したディレクトリーから最初にログ・ファイルが検索されます。部分的なパス名を指定した場合、<B>/usr/afs/logs</B> ディレクトリーを基準としてパス名が解釈されます。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>まず最初に、次の行が出力されます。
+<PRE>Fetching log file '<VAR>filename</VAR>'...
+   
+</PRE>
+<P>残りの出力部分は、ログ・ファイルによって異なります。
+<P><STRONG>例</STRONG>
+<P>次の例は、マシン <B>fs3.abc.com</B> の <B>FileLog</B> ファイルを表示しています。
+<PRE>   % <B>bos getlog -server fs3.abc.com -file FileLog</B>
+   Fetching log file 'FileLog'...
+   Sun Nov 8 04:00:34 1998 File server starting
+   Sun Nov 8 04:00:39 1998 Partition /vicepa:  attached 21 volumes;
+                           0 volumes not attached
+   Sun Nov 8 04:00:40 1998 File Server started Sun Nov 8 04:00:40
+                           1998
+   Mon Nov 9 21:45:06 1998 CB: RCallBack (zero fid probe in host.c)
+                           failed for host 28cf37c0.22811
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf101.htm">前ページ</A> &#124; <A HREF="auarf103.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Release Notes</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt4485/awrns000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 15 Feb 2000 at 10:10:20               -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 15 Feb 2000 10:10:19">
+<META HTTP-EQUIV="review" CONTENT="Thu, 15 Feb 2001 10:10:19">
+<META HTTP-EQUIV="expires" CONTENT="Fri, 15 Feb 2002 10:10:19">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Release Notes</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="awrns002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="awrns002.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="awrns004.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="#INDEX_START"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRINTRO" HREF="awrns002.htm#ToC_1">Introduction</A></H1>
+<HR><H2><A NAME="Header_2" HREF="awrns002.htm#ToC_2">Overview</A></H2>
+<P>AFS<SUP>(R)</SUP> is a distributed file system that provides
+secure, reliable access to information across an enterprise. By
+seamlessly uniting the directories and files on individual file server
+machines into one file system accessible from any desktop, AFS presents users
+with a single filespace independent of machine boundaries.
+<P>AFS offers several advantages. It improves the availability of files
+by employing client-side caching and replication of frequently accessed data
+across multiple file servers. AFS provides powerful security to protect
+the information stored in the filespace. In addition, AFS is highly
+scalable. Virtually unlimited additional server and client machines can
+be added as needed to an AFS configuration with little impact on existing
+server and client machines. This enables the file system to grow with
+the enterprise.
+<P>AFS for Windows includes the following products&#58;
+<UL>
+<P><LI><B>AFS Server</B>
+<P>The AFS Server runs AFS server processes on a Windows NT<SUP>(R)</SUP>
+machine. An AFS Server on a Windows NT machine can be configured as one
+or more of the following&#58; an AFS File Server, an AFS Database Server, an
+AFS Backup Server, and an AFS System Control Server. The AFS Server
+includes the AFS Server Configuration Wizard to facilitate setup.
+<P><LI><B>AFS Control Center</B>
+<P>The AFS Control Center includes two powerful graphical user interface (GUI)
+tools to assist AFS system administrators in AFS cell administration&#58;
+the AFS Server Manager, a tool that facilitates the administration of volumes
+and services on one or more AFS servers (on Windows NT and UNIX systems), and
+the AFS Account Manager, a tool that enables simple creation and maintenance
+of AFS user and group accounts.
+<P><LI><B>AFS Client</B>
+<P>The AFS Client provides direct access to the AFS filespace from a PC
+running Windows NT, enabling users to manage files and directories in
+AFS.
+<P><LI><B>AFS Light</B>
+<P>AFS Light provides access to the AFS filespace from a PC running Windows 98
+or Windows 95 by forwarding AFS requests to another PC on which the AFS Client
+is installed.
+</UL>
+<HR><H2><A NAME="Header_3" HREF="awrns002.htm#ToC_3">About the Release Notes</A></H2>
+<P>This document contains important information about AFS for Windows,
+version 3.6. This document summarizes the installation
+prerequisites, product notes, and specific limitations and restrictions of
+this release.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS for Windows users can view the <B>README.txt</B> file to check
+for any additional AFS for Windows information that became available since the
+writing of this document. The <B>README.txt</B> file is
+installed in the <I>AFS for Windows
+Installation</I>\<B>documentation</B> directory when AFS for Windows is
+installed.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_4" HREF="awrns002.htm#ToC_4">Audience</A></H3>
+<P>This document is written for system administrators responsible for the
+installation, configuration, and use of the products included in AFS for
+Windows. This document assumes that readers are familiar with system
+administration in general and with the use of AFS.
+<P><H3><A NAME="Header_5" HREF="awrns002.htm#ToC_5">Document Organization</A></H3>
+<P>The document has the following organization&#58;
+<UL>
+<P><LI><A HREF="awrns004.htm#HDRCLIENT">AFS Client Release Notes</A> provides release information for the AFS Client, version
+3.6.
+<P><LI><A HREF="awrns005.htm#HDRLTCLIENT">AFS Light Release Notes</A> provides release information for AFS Light, version
+3.6.
+<P><LI><A HREF="awrns006.htm#HDRSERVER">AFS Server Release Notes</A> provides release information for the AFS Server, version
+3.6.
+<P><LI><A HREF="awrns007.htm#HDRCNTRLCNTR">AFS Control Center Release Notes</A> provides release information for the AFS Control Center,
+version 3.6.
+</UL>
+<P>Each section describes installation requirements, product notes, and
+limitations and restrictions for the specified AFS for Windows
+component. Also, where applicable, descriptions of new features and
+enhancements that are made available in this release of AFS for Windows are
+included.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="awrns002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="awrns002.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="awrns004.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="#INDEX_START"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,659 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#endif\r\n"
+    "#include ""afs_shl_ext.rc2"" // nicht mit Microsoft Visual C++ bearbeitete Ressourcen\r\n"
+    "#include ""afxres.rc"" // Standardkomponenten\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Explorer Extension DLL"
+
+#define AFS_VERINFO_NAME "afs_shl_ext"
+#define AFS_VERINFO_FILENAME "afs_shl_ext.exe"
+#define AFS_VERINFO_LANG_CODE 0x407
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+#endif    // !_MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_FILE MENU DISCARDABLE 
+BEGIN
+    MENUITEM "Authentifizierung...",        IDM_AUTHENTICATION
+    MENUITEM "Zugriffssteuerungslisten...", IDM_ACL_SET
+    POPUP "&Volume/Partition"
+    BEGIN
+        MENUITEM "&Merkmale...",                IDM_VOLUME_PROPERTIES
+        MENUITEM "&Name/ID-Zuordnung aktualisieren", 
+                                                IDM_VOLUMEPARTITION_UPDATENAMEIDTABLE
+
+    END
+    POPUP "&Mount-Punkt"
+    BEGIN
+        MENUITEM "&Anzeigen...",                IDM_MOUNTPOINT_SHOW
+        MENUITEM "&Entfernen...",               IDM_MOUNTPOINT_REMOVE
+        MENUITEM "&Erstellen...",               IDM_MOUNTPOINT_MAKE
+    END
+    MENUITEM "Datei/Verz &Flush",           IDM_FLUSH
+    MENUITEM "Vol&ume leeren",              IDM_FLUSH_VOLUME
+    MENUITEM "&Datei-Server anzeigen...",   IDM_SHOW_SERVER
+    MENUITEM "&Zellen anzeigen...",         IDM_SHOWCELL
+    MENUITEM "Server-Status anzeigen...",   IDM_SERVER_STATUS
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_VOLUME_INFO DIALOG DISCARDABLE  0, 0, 349, 173
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Volume-Informationen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,60,150,50,14,WS_DISABLED
+    PUSHBUTTON      "Hilfe",9,240,150,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,150,150,50,14
+    LISTBOX         IDC_LIST,10,20,330,100,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Datei/Verzeichnis",IDC_STATIC,10,10,63,10
+    LTEXT           "Name",IDC_STATIC,90,10,20,8
+    LTEXT           "Quote",IDC_STATIC,225,10,19,8
+    LTEXT           "Benutzt",IDC_STATIC,270,10,27,8
+    LTEXT           "%Benutzt",IDC_STATIC,305,10,31,8
+    LTEXT           "ID",IDC_STATIC,175,10,10,8
+    LTEXT           "Neue Quote:",IDC_STATIC,10,127,41,10
+    EDITTEXT        IDC_NEW_QUOTA,55,126,50,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "Informationen zur Partition anzeigen",
+                    IDC_PARTITION_INFO,190,125,117,14,WS_DISABLED
+    LTEXT           "KBytes",IDC_STATIC,118,127,25,10
+    CONTROL         "Spin1",IDC_QUOTA_SPIN,"msctls_updown32",UDS_WRAP | 
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS | 
+                    WS_DISABLED,106,125,10,14
+END
+
+IDD_SET_AFS_ACL DIALOG DISCARDABLE  0, 0, 325, 228
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "fAFS-ACL festlegen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_DIR_NAME,62,12,249,10
+    LISTBOX         IDC_NORMAL_RIGHTS,10,46,175,75,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    LISTBOX         IDC_NEGATIVE_ENTRIES,10,141,175,75,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    CONTROL         "r - Read",IDC_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,52,55,10
+    CONTROL         "w - Write",IDC_WRITE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,111,55,10
+    CONTROL         "l - Lookup",IDC_LOOKUP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,66,55,10
+    CONTROL         "d - Delete",IDC_DELETE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,96,55,10
+    CONTROL         "i - Insert",IDC_INSERT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,81,55,10
+    CONTROL         "k - Lock",IDC_LOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,126,55,10
+    CONTROL         "a - Administer",IDC_ADMINISTER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,200,141,55,10
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,270,45,45,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,270,70,45,14,WS_DISABLED
+    PUSHBUTTON      "&Bereinigen",IDC_CLEAN,270,95,45,14
+    DEFPUSHBUTTON   "&OK",IDOK,270,150,45,14
+    PUSHBUTTON      "&Abbrechen",IDCANCEL,270,175,45,14
+    PUSHBUTTON      "&Hilfe",9,270,201,45,14
+    LTEXT           "Verzeichnis:",IDC_STATIC,15,12,45,10
+    GROUPBOX        "Berechtigungen",IDC_STATIC,195,41,65,115
+    LTEXT           "Normale",IDC_STATIC,10,30,28,8
+    LTEXT           "Name",IDC_COLUMN_3,69,38,20,8
+    LTEXT           "Berechtigungen",IDC_STATIC,10,38,52,8
+    LTEXT           "Negative Zahlen",IDC_STATIC,10,125,30,8
+    LTEXT           "Berechtigungen",IDC_STATIC,10,133,52,8
+    LTEXT           "Name",IDC_COLUMN_4,69,133,31,8
+    GROUPBOX        "",IDC_STATIC,10,5,305,20
+    PUSHBUTTON      "Ko&pieren...",IDC_COPY,270,120,45,14
+END
+
+IDD_MAKE_MOUNT_POINT DIALOG DISCARDABLE  0, 0, 219, 103
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mount-Punkt erstellen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_DIR,51,10,159,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_VOLUME,51,25,159,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CELL,51,40,159,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,20,81,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,85,81,50,14
+    PUSHBUTTON      "Hilfe",9,150,81,50,14
+    LTEXT           "Verzeichnis:",IDC_STATIC,7,12,37,10
+    LTEXT           "Volume:",IDC_STATIC,7,28,25,10
+    LTEXT           "Zelle:",IDC_STATIC,7,42,22,10
+    GROUPBOX        "",IDC_STATIC,45,52,117,20
+    LTEXT           "Optionen:",IDC_STATIC,9,59,32,10
+    CONTROL         "Regulär",IDC_REGULAR,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,48,59,38,10
+    CONTROL         "Lesen/Schreiben",IDC_RW,"Button",BS_AUTORADIOBUTTON,90,
+                    59,71,10
+END
+
+IDD_ADD_ACL DIALOG DISCARDABLE  0, 0, 264, 114
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ACL-Eintrag hinzufügen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NAME,35,70,224,12,ES_AUTOHSCROLL
+    CONTROL         "r - Read",IDC_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,15,45,10
+    CONTROL         "l - Lookup",IDC_LOOKUP2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,25,50,10
+    CONTROL         "i - Insert",IDC_INSERT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,35,50,10
+    CONTROL         "d - Delete",IDC_DELETE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,45,50,10
+    CONTROL         "w - Write",IDC_WRITE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,80,15,50,10
+    CONTROL         "k - Lock",IDC_LOCK2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,80,25,55,10
+    CONTROL         "a - Administer",IDC_ADMINISTER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,80,35,60,10
+    CONTROL         "Normaler Eintrag",IDC_ADD_NORMAL_ENTRY,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,161,16,79,10
+    CONTROL         "Eingabe negativer Zahlen",IDC_ADD_NEGATIVE_ENTRY,"Button",
+                    BS_AUTORADIOBUTTON,161,26,96,10
+    DEFPUSHBUTTON   "OK",IDOK,101,90,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,155,90,50,14
+    PUSHBUTTON      "Hilfe",9,209,90,50,14
+    LTEXT           "Name:",IDC_STATIC,10,72,20,8
+    GROUPBOX        "Berechtigungen",IDC_STATIC,10,5,135,55
+    GROUPBOX        "Eintragungsart",IDC_STATIC,155,6,105,34
+END
+
+IDD_PARTITION_INFO DIALOG DISCARDABLE  0, 0, 139, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Informationen zur Partition"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_TOTAL_SIZE,63,10,40,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_TABSTOP
+    EDITTEXT        IDC_BLOCKS_FREE,63,25,40,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_TABSTOP
+    EDITTEXT        IDC_PERCENT_USED,63,40,40,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+    DEFPUSHBUTTON   "Schließen",IDOK,18,62,40,14
+    PUSHBUTTON      "Hilfe",9,75,62,40,14
+    LTEXT           "% benutzt:",IDC_STATIC,6,42,41,8
+    LTEXT           "Blöcke frei:",IDC_STATIC,5,27,40,8
+    LTEXT           "Größe insgesamt:",IDC_STATIC,5,12,55,8
+    LTEXT           "KBytes",IDC_STATIC,105,12,25,8
+    LTEXT           "KBytes",IDC_STATIC,105,27,25,8
+END
+
+IDD_COPY_ACL DIALOG DISCARDABLE  0, 0, 239, 88
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ACL kopieren"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_FROM_DIR,55,10,181,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_TO_DIR,55,26,130,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Durchsuchen",IDC_BROWSE,188,25,49,14
+    CONTROL         "Aktuelle Einträge löschen:",IDC_CLEAR,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,5,46,102,10
+    DEFPUSHBUTTON   "OK",IDOK,20,65,50,14,WS_DISABLED
+    PUSHBUTTON      "Abbrechen",IDCANCEL,95,65,50,14
+    PUSHBUTTON      "Hilfe",9,170,65,50,14
+    LTEXT           "Kopieren von:",IDC_STATIC,5,12,47,8
+    LTEXT           "Kopieren nach:",IDC_STATIC,5,29,49,8
+END
+
+IDD_WHERE_IS DIALOG DISCARDABLE  0, 0, 299, 168
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wo befindet sich"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Schließen",IDOK,65,145,50,14
+    PUSHBUTTON      "Hilfe",9,180,145,50,14
+    LISTBOX         IDC_LIST,10,20,280,115,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Datei/Verzeichnis",IDC_STATIC,10,10,66,8
+    LTEXT           "Datei-Server",IDC_STATIC,128,10,56,8
+END
+
+IDD_RESULTS DIALOG DISCARDABLE  0, 0, 299, 168
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ergebnisse"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Schließen",IDOK,65,145,50,14
+    PUSHBUTTON      "Hilfe",9,180,145,50,14
+    LISTBOX         IDC_LIST,10,20,280,115,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Datei/Verzeichnis",-1,10,10,69,8
+    LTEXT           "Ergebnis",IDC_RESULTS_LABEL,128,10,44,8
+END
+
+IDD_MOUNT_POINTS DIALOG DISCARDABLE  0, 0, 299, 168
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mount-Punkte"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Schließen",IDOK,65,145,50,14
+    PUSHBUTTON      "Hilfe",9,180,145,50,14
+    LISTBOX         IDC_LIST,10,20,280,115,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Datei",IDC_STATIC,10,11,26,8
+    LTEXT           "Volume",IDC_STATIC,75,11,29,8
+    LTEXT           "Zelle",IDC_STATIC,155,11,20,8
+    LTEXT           "Typ",IDC_STATIC,230,11,20,8
+END
+
+IDD_DOWN_SERVERS DIALOG DISCARDABLE  0, 0, 209, 163
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inaktive Server"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LIST,10,20,190,110,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL
+    LTEXT           "Diese Servers sind noch inaktiv:",IDC_STATIC,10,10,114,
+                    8
+    DEFPUSHBUTTON   "OK",IDOK,82,140,45,15
+END
+
+IDD_SERVERSTATUS DIALOG DISCARDABLE  0, 0, 179, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Server-Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Lokale Zelle",IDC_LOCALCELL,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,20,20,92,8
+    CONTROL         "Angegebene Zelle:",IDC_SPECIFIEDCELL,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,20,36,89,10
+    CONTROL         "Alle Zellen",IDC_ALL_CELLS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,20,65,45,10
+    CONTROL         "Server nicht testen",IDC_DONTPROBESERVERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,87,89,10
+    DEFPUSHBUTTON   "Status anzeigen",IDC_SHOWSTATUS,5,120,58,14
+    GROUPBOX        "Zelle",IDC_STATIC,10,5,160,105,WS_GROUP
+    GROUPBOX        "",IDC_STATIC,20,80,88,20,WS_GROUP
+    EDITTEXT        IDC_CELL_NAME,30,47,130,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Schließen",IDCANCEL,67,120,50,14
+    PUSHBUTTON      "Hilfe",9,120,120,50,14
+END
+
+IDD_AUTHENTICATION DIALOG DISCARDABLE  0, 0, 285, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Authentifizierung"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_TOKEN_LIST,10,18,265,110,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "Token erhalten",ID_GET_TOKENS,15,137,55,14
+    PUSHBUTTON      "Token löschen",ID_DISCARD_TOKENS,80,137,55,14
+    PUSHBUTTON      "Schließen",IDCANCEL,145,137,55,14
+    PUSHBUTTON      "Hilfe",9,215,137,55,14
+    LTEXT           "Benutzername",IDC_STATIC,10,9,57,8
+    LTEXT           "Zellenname",IDC_STATIC,104,9,47,8
+    LTEXT           "Verfall",IDC_STATIC,222,9,50,8
+END
+
+IDD_KLOG_DIALOG DIALOGEX 0, 0, 169, 93
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Token erhalten"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NAME,40,10,115,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD,40,30,115,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_CELL_NAME,40,50,115,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,20,70,35,14,WS_DISABLED
+    PUSHBUTTON      "Abbrechen",IDCANCEL,67,70,43,14
+    PUSHBUTTON      "Hilfe",9,120,70,35,14
+    LTEXT           "Name:",IDC_STATIC,17,12,22,8
+    LTEXT           "Kennwort:",IDC_STATIC,5,32,34,8
+    LTEXT           "Zelle:",IDC_STATIC,17,52,19,8
+END
+
+IDD_UNLOG_DIALOG DIALOGEX 0, 0, 185, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Token löschen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,25,40,35,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,72,40,44,14
+    PUSHBUTTON      "Hilfe",9,125,40,35,14
+    LTEXT           "Zelle:",IDC_STATIC,10,17,21,8
+    EDITTEXT        IDC_CELL_NAME,40,15,136,12,ES_AUTOHSCROLL
+END
+
+IDD_SUBMTINFO DIALOG DISCARDABLE  0, 0, 257, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Submounts"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LIST,10,20,183,157,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Hinzufügen ",IDC_ADD,202,20,45,14
+    PUSHBUTTON      "Löschen",IDC_DELETE,202,39,45,14,WS_DISABLED
+    PUSHBUTTON      "Ändern",IDC_CHANGE,202,58,45,14,WS_DISABLED
+    LTEXT           "Submounts:",IDC_STATIC,10,10,50,8
+    DEFPUSHBUTTON   "OK",IDOK,202,145,45,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,202,163,45,14
+END
+
+IDD_ADD_SUBMOUNT DIALOG DISCARDABLE  0, 0, 229, 79
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Submount hinzufügen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_SHARE_NAME,77,8,141,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PATH_NAME,77,23,141,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,22,53,45,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,92,53,45,14
+    PUSHBUTTON      "Hilfe",9,167,53,45,14
+    LTEXT           "Gemeinsam benutzter Name:",IDC_STATIC,18,7,60,15
+    LTEXT           "Pfadname:",IDC_STATIC,18,25,41,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SERVERSTATUS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 171
+    END
+
+    IDD_AUTHENTICATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 278
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_KLOG_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 86
+    END
+
+    IDD_UNLOG_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 178
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_SUBMTINFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 10
+        RIGHTMARGIN, 247
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_ADD_SUBMOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 25
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_ACL_CLEAN            "fs cleanacl"
+    ID_ACL_COPY             "fs copyacl"
+    ID_ACL_LIST             "fs listacl"
+    ID_ACL_SET              "fs setacl"
+    ID_VOLUME_CHECK         "fs checkvolumes"
+    ID_VOLUME_DISKFREE      "fs diskfree"
+    ID_VOLUME_EXAMINE       "fs examine"
+    ID_VOLUME_FLUSH         "fs flushvolume"
+    ID_VOLUME_QUOTA_BRIEF   "fs quota"
+    ID_VOLUME_QUOTA_FULL    "fs listquota"
+    ID_VOLUME_QUOTA_SET     "fs setvol"
+    ID_VOLUME_SET           "fs setvol"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FLUSH                "fs flush"
+    ID_WHEREIS              "fs whereis"
+    ID_SHOWCELL             "fs whichcell"
+    ID_MOUNTPOINT_SHOW      "fs lsmount"
+    ID_MOUNTPOINT_REMOVE    "fs rmmount"
+    ID_SHOW_SERVER          "fs whereis"
+    ID_AUTHENTICATE         "Bei oder von AFS anmelden oder abmelden"
+    ID_SERVER_STATUS        "Server überprüfen"
+    ID_VOLUME_PROPERTIES    "fs listquota, diskfree, examine, quota, setquota, setvol"
+    ID_VOLUMEPARTITION_UPDATENAMEIDTABLE "fs checkvolumes"
+    ID_MOUNTPOINT_MAKE      "fs mkmount"
+    IDS_FLUSH_FAILED        "Leeren der aktiven Datei %o nicht möglich"
+    IDS_FLUSH_ERROR         "Fehler beim Leeren von Datei %o: %s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FLUSH_OK            "Ausgewählte Datei(en) erfolgreich geleert"
+    IDS_CANT_GET_CELL       "Fehler beim Bestimmen der Zelle: "
+    IDS_FLUSH_VOLUME_ERROR  "Fehler beim Leeren des Volume für %o: %s"
+    IDS_FLUSH_VOLUME_OK     "Volume erfolgreich geleert"
+    IDS_WHERE_IS            "Datei %o befindet sich auf Host %s"
+    IDS_CLEANACL_NOT_SUPPORTED 
+                            "ACL für Datei %o kann nicht bereinigt werden: Clean Acl wird für DFS-Zugriffslisten nicht unterstützt"
+    IDS_ACL_IS_FINE         "Zugriffsliste für %o ist sauber"
+    IDS_CLEANACL_INVALID_ARG 
+                            "ACL für Datei %o kann nicht bereinigt werden: Ungültiges Argument; mögliche Gründe: Datei nicht stellvertretend oder zu viele Benutzer in der Zugriffssteuerungsliste"
+    IDS_ANY_STRING          "%o"
+    IDS_CLEANACL_DONE       "Veraltete ACL-Einträge sind gelöscht worden."
+    ID_SUBMOUNTS            "AFS-Submount erstellen oder löschen"
+    IDS_GETRIGHTS_ERROR     "Zugriffsliste für Verzeichnis %o konnte nicht gelesen werden: %o"
+    IDS_DFSACL_ERROR        "Mit diesem Befehl können DFS-ACLs nicht editiert werden"
+    IDS_SAVE_ACL_ERROR      "ACL für %o kann nicht gespeichert werden: %o"
+    IDS_SAVE_ACL_EINVAL_ERROR 
+                            "ACL für %o kann nicht gespeichert werden: Ungültiges Argument; mögliche Gründe: Datei nicht in AFS; zu viele Benutzer in der Zugriffssteuerungsliste; es wurde versucht, einen nicht vorhandenen Benutzer zur Zugriffssteuerungsliste hinzuzufügen"
+    IDS_ACL_READ_ERROR      "ACL für %o kann nicht gelesen werden: %o"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO_DFS_COPY_ACL     "ACL kann nicht in Verzeichnis %o kopiert werden: Copy ACL wird für DFS-Zugriffslisten nicht unterstützt"
+    IDS_COPY_ACL_EINVAL_ERROR 
+                            "ACL kann nicht in Verzeichnis %o kopiert werden: Ungültiges Argument; mögliche Gründe: Datei nicht in AFS."
+    IDS_COPY_ACL_ERROR      "ACL kann nicht nach %o kopiert werden: %o"
+    IDS_NOT_MOUNT_POINT_ERROR "%o ist kein Mount-Punkt."
+    IDS_LIST_MOUNT_POINT_ERROR "Fehler: %o"
+    IDS_MAKE_MP_NOT_AFS_ERROR 
+                            "Mount-Punkte müssen innerhalb des AFS-Dateisystems erstellt werden"
+    IDS_MOUNT_POINT_ERROR   "Fehler beim Erstellen des Mount-Punktes: %o"
+    IDS_ERROR               "Fehler: %o"
+    IDS_DELETED             "Erfolgreich gelöscht"
+    IDS_SET_QUOTA_ERROR     "Quote für Fehlereinstellungen: %o"
+    ID_SUBMOUNTS_CREATE     "Ein AFS-Submount erstellen"
+    ID_SUBMOUNTS_EDIT       "AFS-Submounts hinzufügen, ändern oder löschen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CHECK_SERVERS_ERROR "Fehler beim Überprüfen des Status von Datei-Server-Maschinen: %o"
+    IDS_ALL_SERVERS_RUNNING "Alle Server sind aktiv."
+    IDS_CHECK_VOLUMES_OK    "Alle VolumeID/Name-Zuordnungen überprüft."
+    IDS_CHECK_VOLUMES_ERROR "Fehler beim Überprüfen von VolumeID/Name-Zuordnungen: %o"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACL_ENTRY_NAME_IN_USE 
+                            "Der von Ihnen ausgewählte Name ist bereits in Gebrauch. Bitte geben Sie einen anderen Namen ein."
+    IDS_REALLY_DEL_MOUNT_POINTS 
+                            "Sind Sie sicher, daß Sie den (die) ausgewählten Mount-Punkt(e) entfernen möchten?"
+    IDS_DIR_DOES_NOT_EXIST_ERROR "Das Verzeichnis '%o' ist nicht vorhanden."
+    IDS_CLEANACL_MSG        "Veraltete ACLs werden gelöscht!"
+    IDS_COPY_ACL_OK         "ACL erfolgreich kopiert."
+    IDS_GET_TOKENS_NO_AFS_SERVICE 
+                            "Token-Informationen können nicht gelesen werden: AFS-Service wurde vieleicht noch nicht gestartet."
+    IDS_GET_TOKENS_UNEXPECTED_ERROR 
+                            "Token-Informationen können nicht gelesen werden: Unerwarteter Fehler, Code %d."
+    IDS_GET_TOKENS_UNEXPECTED_ERROR2 
+                            "Token-Informationen können nicht gelesen werden: Unerwarteter Fehler, Service %s.%s.%s, Code %d."
+    IDS_ENTER_QUOTA         "Bitte geben Sie eine gültige Quote ein."
+    IDS_AUTHENTICATION_ITEM "&Authentifizierung..."
+    IDS_ACLS_ITEM           "&Zugriffssteuerungslisten..."
+    IDS_VOL_PART_ITEM       "&Volume/Partition"
+    IDS_VOL_PART_PROPS_ITEM "&Merkmale"
+    IDS_VOL_PART_REFRESH_ITEM "&Name/ID-Zuordnung aktualisieren"
+    IDS_MOUNT_POINT_ITEM    "&Mount-Punkt"
+    IDS_MP_SHOW_ITEM        "&Anzeigen..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MP_REMOVE_ITEM      "&Entfernen..."
+    IDS_MP_MAKE_ITEM        "&Erstellen..."
+    IDS_FLUSH_FILE_DIR_ITEM "Datei/Verz leeren"
+    IDS_FLUSH_VOLUME_ITEM   "Vol&ume leeren"
+    IDS_SHOW_FILE_SERVERS_ITEM "&Datei-Server anzeigen..."
+    IDS_SHOW_CELL_ITEM      "&Zellen anzeigen..."
+    IDS_SHOW_SERVER_STATUS_ITEM "Server-Status anzeigen..."
+    IDS_AFS_ITEM            "&AFS"
+    IDS_SUBMOUNTS_ITEM      "Su&bmounts"
+    IDS_GET_SUBMT_INFO_ERROR 
+                            "Submount-Informationen für gemeinsam benutzten Namen %o können nicht gelesen werden."
+    IDS_REALLY_DELETE_SUBMT "Gemeinsam benutzten Namen %o löschen?"
+    IDS_SUBMT_SAVE_FAILED   "Ihre Änderungen der Submount-Datenbank sind fehlgeschlagen."
+    IDS_SUBMOUNTS_CREATE_ITEM "&Hinzufügen"
+    IDS_SUBMOUNTS_EDIT_ITEM "&Editieren..."
+    IDS_EDIT_PATH_NAME      "Pfadname editieren"
+    IDS_SHOW_CELL           "Zelle anzeigen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SHOW_CELL_COLUMN    "Zelle"
+    IDS_SHOW_FS             "Datei-Server anzeigen"
+    IDS_SHOW_FS_COLUMN      "Datei-Server"
+    IDS_REMOVE_MP           "Mount-Punkte entfernen"
+    IDS_REMOVE_MP_COLUMN    "Ergebnis"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS Client"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#endif
+#include "afs_shl_ext.rc2" // nicht mit Microsoft Visual C++ bearbeitete Ressourcen
+#include "afxres.rc" // Standardkomponenten
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

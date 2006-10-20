@@ -1,0 +1,32 @@
+:Base TAAFSCFG.HLP
+:Title IBM AFS 서버 구성
+1 AFS 서버 구성 도움말
+2 AFS 및 AFS 서버 정보와 AFS 제어 센터=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 AFS 서버 구성
+3 개요=Configuring_the_AFS_Server
+3 AFS 서버 구성 마법사=The_AFS_Server_Configuration_Wizard
+3 기존 셀로 AFS 서버를 구성하려면=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 셀에 있는 첫번째 AFS 서버로 AFS 서버를 구성하려면=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 AFS 데이터 액세스=Accessing_AFS_Data
+2 AFS 서버 구성 대화 상자
+3 개요=The_AFS_Server_Configuration_Dialog_Box
+3 AFS 서버 구성 대화 상자 액세스하기=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 파티션 탭
+4 개요=IDH_PARTITIONS_PAGE
+4 AFS 파티션 설정
+5 개요=Setting_Up_AFS_Partitions
+5 AFS 파티션을 작성하려면=To_Create_an_AFS_Partion
+4 AFS 파티션 관리
+5 개요=Administering_AFS_Partitions
+5 AFS 파티션 복원
+6 개요=Salvaging_an_AFS_Partition
+6 AFS 파티션을 복원하려면=To_Salvage_an_AFS_Partition
+5 AFS 파티션 제거
+6 개요=Removing_AFS_Partitions
+6 AFS 파티션을 제거하려면=To_Remove_an_AFS_Partition
+3 서비스 탭
+4 개요=IDH_SERVICES_PAGE
+4 AFS 서버 기능=AFS_Server_Roles
+4 AFS 서비스=AFS_Services
+4 AFS 서비스 구성 및 시작하기=To_Configure_and_Start_an_AFS_Service
+4 AFS 서비스 정지 및 구성해제하기=To_Stop_and_Unconfigure_an_AFS_Service

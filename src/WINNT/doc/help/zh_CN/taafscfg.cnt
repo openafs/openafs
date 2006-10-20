@@ -1,0 +1,32 @@
+:Base TAAFSCFG.HLP
+:Title IBM AFS 服务器配置
+1 AFS 服务器配置帮助
+2 关于 AFS、AFS 服务器和 AFS 控制中心=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 配置 AFS 服务器
+3 概述=Configuring_the_AFS_Server
+3 AFS 服务器配置向导=The_AFS_Server_Configuration_Wizard
+3 将 AFS 服务器配置到一个现有单元中=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 将 AFS 服务器配置成单元中的第一个 AFS 服务器=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 存取 AFS 数据=Accessing_AFS_Data
+2 AFS 服务器配置对话框
+3 概述=The_AFS_Server_Configuration_Dialog_Box
+3 要存取“AFS 服务器配置”对话框=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 分区标签
+4 概述=IDH_PARTITIONS_PAGE
+4 设置 AFS 分区
+5 概述=Setting_Up_AFS_Partitions
+5 创建一个 AFS 分区=To_Create_an_AFS_Partion
+4 管理 AFS 分区
+5 概述=Administering_AFS_Partitions
+5 挽救一个 AFS 分区
+6 概述=Salvaging_an_AFS_Partition
+6 要挽救一个 AFS 分区=To_Salvage_an_AFS_Partition
+5 除去 AFS 分区
+6 概述=Removing_AFS_Partitions
+6 要除去一个 AFS 分区=To_Remove_an_AFS_Partition
+3 服务标签
+4 概述=IDH_SERVICES_PAGE
+4 AFS 服务器角色=AFS_Server_Roles
+4 AFS 服务=AFS_Services
+4 要配置和启动 AFS 服务=To_Configure_and_Start_an_AFS_Service
+4 要停止和取消配置 AFS 服务=To_Stop_and_Unconfigure_an_AFS_Service

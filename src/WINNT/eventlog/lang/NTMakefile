@@ -1,0 +1,77 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\eventlog\lang
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+############################################################################
+#
+# LANGUAGE
+#
+# To select which language to build, run the ntlang.bat batch file
+# before performing a build.
+#
+
+!IF ("$(LANGID)" == "") || ("$(LANGNAME)" == "") || ("$(LANGCP)" == "")
+!ERROR Must select language before building (run NTLANG.BAT)
+!ENDIF
+
+############################################################################
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+INCFILES =\
+	$(INCFILEDIR)\afsevent.h
+
+############################################################################
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afseventmsg_$(LANGID).dll
+
+DLLRESFILE = $(OUT)\afseventmsg_$(LANGID).res
+
+DLLRCFILE = afseventmsg.rc
+
+EVENTRCFILE = $(LANGNAME)\event.rc
+
+EVENTRESFILE = $(OUT)\$(LANGNAME)\event.res
+
+DLLOBJS = $(DLLRESFILE)
+
+$(DLLFILE): $(DLLOBJS)
+	$(DLLRESLINK)
+	$(DLLPREP)
+
+############################################################################
+# Generate versioninfo resources
+
+$(DLLRESFILE): $(DLLRCFILE) $(EVENTRCFILE) AFS_component_version_number.h
+	$(RC) /fo$(DLLRESFILE) /c$(LANGCP) /I$(LANGNAME) /I.. $(DLLRCFILE)
+
+############################################################################
+
+$(INCFILEDIR)\afsevent.h: $(LANGNAME)\afsevent.h
+	$(COPY) $(LANGNAME)\afsevent.h $@
+
+$(LANGNAME)\afsevent.h: ..\logevent.h $(LANGNAME)\event.h
+	$(DEL) $(LANGNAME)\afsevent.h
+	$(COPY) ..\logevent.h + $(LANGNAME)\event.h $(LANGNAME)\afsevent.h
+
+$(LANGNAME)\event.h $(LANGNAME)\event.rc: $(LANGNAME)\event.mc
+	$(CD) $(LANGNAME)
+	$(MC) event.mc
+	$(CD) ..
+
+############################################################################
+install: $(INCFILES) $(DLLFILE)
+
+install9x: install
+
+clean::
+	$(DEL) $(INCFILES) $(DLLFILE)
+	$(DEL) $(LANGNAME)\afsevent.h
+	$(DEL) $(LANGNAME)\event.h
+	$(DEL) $(LANGNAME)\event.rc
+	$(DEL) $(LANGNAME)\MSG*.bin

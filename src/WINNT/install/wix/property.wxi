@@ -1,0 +1,127 @@
+﻿<?xml version="1.0"?>
+<Include>
+
+    <Property Id="AFSCELLNAME">$(var.CellName)</Property>
+    <Property Id="LOGONOPTIONS">$(var.LogonOptions)</Property>
+    <Property Id="FREELANCEMODE">$(var.FreelanceMode)</Property>
+    <Property Id="USEDNS">$(var.UseDNS)</Property>
+	<Property Id="NOFINDLANABYNAME">$(var.NoFindLanaByName)</Property>
+	<Property Id="MOUNTROOT">$(var.MountRoot)</Property>
+	<Property Id="NETBIOSNAME">$(var.NetbiosName)</Property>
+	<Property Id="RXMAXMTU">$(var.RxMaxMTU)</Property>
+	<Property Id="HIDEDOTFILES">$(var.HideDotFiles)</Property>
+	<Property Id="SECURITYLEVEL">$(var.SecurityLevel)</Property>
+	<Property Id="CREDSSTARTUP">1</Property>
+	<Property Id="CREDSAUTOINIT">-a</Property>
+	<Property Id="CREDSRENEWDRMAP">-m</Property>
+	<Property Id="CREDSIPCHDET">-n</Property>
+	<Property Id="CREDSQUIET">-q</Property>
+	<Property Id="SMBAUTHTYPE">$(var.SMBAuthType)</Property>
+	<!-- empty property 
+	<Property Id="CREDSSHOW"></Property>
+	-->
+	<!-- empty property
+	<Property Id="AFSCACHEPATH"></Property>
+	-->
+	<!-- empty property
+	<Property Id="AFSCACHESIZE"></Property>
+	-->
+	<!-- empty property
+	<Property Id="STOREANSIFILENAMES"></Property>
+	-->
+
+    <!-- Add/remove programs -->
+    <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
+    <Property Id="ARPCONTACT">openafs-info@openafs.org</Property>
+    <Property Id="ARPHELPLINK">http://openafs.org</Property>
+    <Property Id="ARPURLINFOABOUT">http://openafs.org</Property>
+    <Property Id="ComponentDownload">http://openafs.org</Property>
+
+    <!-- Install mode -->
+    <Property Id="ALLUSERS">1</Property>
+    <Property Id="ACTION">INSTALL</Property>
+    <Property Id="INSTALLLEVEL">100</Property>
+    
+    <Property Id="InstallMode">Typical</Property>
+
+    <Property Id="AFSCCPATCH">
+      <RegistrySearch Id="rl_AFSCC_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PatchLevel" Type="raw" />
+    </Property>
+    <Property Id="AFSCCMAJOR">
+      <RegistrySearch Id="rl_AFSCC_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MajorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSCCMINOR">
+      <RegistrySearch Id="rl_AFSCC_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="MinorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSCCPATH">
+      <RegistrySearch Id="rl_AFSCC_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Control Center\CurrentVersion" Name="PathName" Type="directory" />
+    </Property>
+    
+    <Property Id="AFSCLIENTPATCH">
+      <RegistrySearch Id="rl_AFSClient_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PatchLevel" Type="raw" />
+    </Property>
+    <Property Id="AFSCLIENTMAJOR">
+      <RegistrySearch Id="rl_AFSClient_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MajorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSCLIENTMINOR">
+      <RegistrySearch Id="rl_AFSClient_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="MinorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSCLIENTPATH">
+      <RegistrySearch Id="rl_AFSClient_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Client\CurrentVersion" Name="PathName" Type="directory" />
+    </Property>
+
+    <Property Id="AFSDOCPATCH">
+      <RegistrySearch Id="rl_AFSDoc_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PatchLevel" Type="raw" />
+    </Property>
+    <Property Id="AFSDOCMAJOR">
+      <RegistrySearch Id="rl_AFSDoc_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MajorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSDOCMINOR">
+      <RegistrySearch Id="rl_AFSDoc_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="MinorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSDOCPATH">
+      <RegistrySearch Id="rl_AFSDoc_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Name="PathName" Type="directory" />
+    </Property>
+
+    <Property Id="AFSSERVERPATCH">
+      <RegistrySearch Id="rl_AFSServer_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PatchLevel" Type="raw" />
+    </Property>
+    <Property Id="AFSSERVERMAJOR">
+      <RegistrySearch Id="rl_AFSServer_major" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MajorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSSERVERMINOR">
+      <RegistrySearch Id="rl_AFSServer_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="MinorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSSERVERPATH">
+      <RegistrySearch Id="rl_AFSServer_path" Root="HKLM" Key="Software\TransarcCorporation\AFS Server\CurrentVersion" Name="PathName" Type="directory" />
+    </Property>
+    
+    <Property Id="AFSSDKPATCH">
+      <RegistrySearch Id="rl_AFSSDK_patch" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PatchLevel" Type="raw" />
+    </Property>
+    <Property Id="AFSSDKMAJOR">
+      <RegistrySearch Id="rl_AFSSDK_major" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MajorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSSDKMINOR">
+      <RegistrySearch Id="rl_AFSSDK_minor" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="MinorVersion" Type="raw" />
+    </Property>
+    <Property Id="AFSSDKPATH">
+      <RegistrySearch Id="rl_AFSSDK_path" Root="HKLM" Key="Software\TransarcCorporation\AFS SDK\CurrentVersion" Name="PathName" Type="directory" />
+    </Property>
+
+	<Property Id="NSISVERSION">
+	  <RegistrySearch Id="rl_NSIS_Ver" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="DisplayVersion" Type="raw" />
+	</Property>
+    <Property Id="NSISUNINSTALL">
+	  <RegistrySearch Id="rl_NSIS_Uninst" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" Name="UninstallString" Type="file" />
+    </Property>
+    
+    <Property Id="ABORTREASON">$(loc.StrNsisAbortReason)</Property>
+    
+    <Property Id="OLDCELLSERVDB">
+      <DirectorySearch Id="dsOldCellServDB" Path="[WindowsFolder]" >
+        <FileSearch Id="fsOldCellServDB" Name="afsdcell.ini" />
+      </DirectorySearch>
+    </Property>
+
+</Include>

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.5 2006/07/20 23:35:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.6 2006/10/06 12:44:40 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -59,9 +59,6 @@ RCSID
 #include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
-#ifdef AFS_AIX51_ENV
-#include <sys/cred.h>
-#endif
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -1615,13 +1612,6 @@ afs_tf_dest_tkt()
 static afs_uint32
 curpag()
 {
-#if defined(AFS_AIX51_ENV)
-    afs_int32 pag;
-
-    if (get_pag(PAG_AFS, &pag) < 0 || pag == 0)
-        pag = NOPAG;
-    return pag;
-#else
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
@@ -1645,7 +1635,6 @@ curpag()
 	    return -1;
     }
     return -1;
-#endif
 }
 
 

@@ -1,0 +1,90 @@
+:Base TAAFSSVRMGR.HLP
+:Title IBM AFS Server Manager
+1 AFS Server Manager
+2 Visión general de AFS
+3 AFS: Visión general=AFS__Overview
+3 Células de AFS=DCE_Cells
+2 AFS Server Manager
+3 AFS Server Manager: Visión general=DFS_Server_Manager
+2 Autentificación de AFS
+3 Para autentificarse en AFS=To_Obtain_DCE_Credentials
+3 Para seleccionar una célula AFS para administrar=To_Choose_a_DCE_Cell_to_Administer
+2 AFS Server
+3 Servidores: Visión general=Servers__An_Overview
+3 Mantenimiento de AFS Server=Setting_Up_and_Maintaining_DFS_Servers
+3 Supervisión de subconjuntos de servidores=Monitoring_Server_Subsets
+3 Propiedades del servidor=Server_Properties
+3 Avisos del servidor=Server_Warnings
+3 Administradores para un servidor
+4 Administradores para un servidor: Visión general=Administrators_for_a_Server
+4 Para añadir o eliminar un usuario de la lista de administradores de un servidor=To_Edit_an_Administrative_List
+3 Claves de cifrado de servidor
+4 Claves de cifrado de servidor: Visión general=Server_Encryption_Keys
+4 Para añadir una nueva clave de cifrado de servidor=To_Add_a_New_Server_Key
+4 Para eliminar una clave de cifrado de servidor=To_Remove_a_Server_Encryption_Key
+3 Archivos del servidor
+4 Para instalar un nuevo archivo en el servidor=To_Install_New_Files_on_a_Server
+4 Para instalar las versiones anteriores de archivos binarios en un servidor=To_Install_Former_Versions_of_Binary_Files_on_a_Server
+4 Para podar archivos de un servidor=To_Prune_Files_from_a_Server
+4 Para obtener fechas de archivos=To_Get_File_Dates
+3 Sincronización de VLDB en un servidor
+4 Sincronización de VLDB=Synchronizing_the_FLDB
+4 Para sincronizar VLDB en un servidor=To_Synchronize_the_FLDB
+2 Particiones de AFS
+3 Particiones: Visión general=Partitions__An_Overview
+3 Propiedades de las particiones=Partition_Properties
+3 Avisos de las particiones=Partition_Warnings
+2 Volúmenes de AFS
+3 Volúmenes: Visión general=Filesets__An_Overview
+3 Los tipos diferentes de volúmenes =Read__Write_and_Read_Only_Filesets
+3 La Base de datos de ubicación de volumen (VLDB)=FLDB__Fileset_Location_Database_
+3 Propiedades del volumen=Fileset_Properties
+3 Para crear un volumen =To_Create_a_Fileset
+3 Para cambiar el nombre de un volumen =To_Rename_a_Fileset
+3 Para suprimir un volumen =To_Delete_a_Fileset
+3 Movimiento de volúmenes
+4 Movimiento de volúmenes: Visión general=Moving_Filesets
+4 Para mover un volumen =To_Move_a_Fileset
+3 Creación de versiones de copia de seguridad de los volúmenes
+4 Para crear una versión de copia de seguridad de un volumen=IDH_SVRMGR_CLONE_OVERVIEW
+4 Para crear versiones de copias de seguridad de múltiples volúmenes=To_Clone_Multiple_Filesets
+3 Bloqueo y desbloqueo de volúmenes
+4 Bloqueo y desbloqueo de entradas de VLDB=Locking_and_Unlocking_Filesets
+4 Para determinar si un volumen está bloqueado=To_Determine_Whether_a_Fileset_Entry_is_Locked
+4 Para bloquear un volumen =To_Lock_a_Fileset
+4 Para desbloquear un volumen =To_Unlock_a_Fileset
+3 Vuelco y restauración de volúmenes
+4 Vuelco de volúmenes=Dumping_and_Restoring_Filesets
+4 Para volcar un volumen =To_Dump_a_Fileset
+4 Restauración de volúmenes=Restoring_Filesets
+4 Restauración de vuelcos graduales de volúmenes=Restoring_Multiple_Incremental_Dumps_of_a_Fileset
+4 Para restaurar un archivo de vuelcos=To_Restore_a_Dump_File_to_a_New_Fileset
+3 Avisos de volumen=Fileset_Warnings
+2 Duplicación de volúmenes de AFS
+3 Duplicación de volúmenes=Replicating_Filesets
+3 Para crear un nuevo sitio de duplicación de volúmenes=To_Create_a_New_Fileset_Replication_Site
+3 Para duplicar un volumen =To_Replicate_a_Fileset
+3 Actualización de duplicados de volumen=Updating_Replicas
+2 Servicios de AFS
+3 Servicios: Visión general=Services__An_Overview
+3 Configuración y mantenimiento de servicios AFS=Setting_Up_and_Maintaining_DFS_Services
+3 Propiedades del servicio=Service_Properties
+3 Para crear un servicio=To_Create_a_Service
+3 Para suprimir un servicio=To_Delete_a_Service
+3 Para iniciar un servicio=To_Start_a_Service
+3 Para detener un servicio=To_Stop_a_Service
+3 Para reiniciar un servicio=To_Restart_a_Service
+3 Para establecer las fechas de reinicio del servicio BOS=To_Set_BOS_Service_Restart_Dates_and_Times
+3 Para ver el estado del servicio y los detalles=To_View_Service_Status_and_Details
+3 Archivos de registro cronológico del servicio
+4 Archivos de registro cronológico=Log_Files
+4 Para ver un archivo de registro cronológico=To_View_Service_Log
+2 Recuperación de volúmenes
+3 Recuperación de volúmenes: Visión general=Salvaging_Volumes
+3 Para recuperar todos los volúmenes de un Servidor de archivos=To_Salvage_all_Volumes_on_a_File_Server
+3 Para recuperar todos los volúmenes de una partición=To_Salvage_all_Volumes_on_a_Partition
+3 Para recuperar un volumen=To_Salvage_a_Volume
+2 Consulta de mandatos de AFS
+3 Consulta de mandatos para usuarios UNIX de AFS=UNIX_Command_Reference
+3 Mandatos del indicador de mandatos de AFS=AFS_Command_Prompt_Commands
+

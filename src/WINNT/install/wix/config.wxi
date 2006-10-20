@@ -1,0 +1,168 @@
+﻿<?xml version="1.0"?>
+
+<Include>
+    <!--
+     config.wxi defines the following variables :
+      General:
+       NumericVersion : Version number of the form a.b.c
+       VersionMajor   : a
+       VersionMinor   : b
+       VersionPatch   : c
+       PackageCode    : Package code
+       Debug          : Whether or not to include debugging information
+       ReleaseType    : AFS release type
+       InstallTimestamp: Timestamp for when the installer was generated.
+       
+       CellName       : Default cell name
+       CellDbFile     : Path to default CellServDB file
+       
+       RemoveLoopback : Defined if we want to remove the loopback adapter
+       
+      
+      Directory specs: (all dir. specs end in a '\')
+       MediaDllDir    : Installer Dlls
+       MediaBinDir    : Installer Exes
+       SrcDir         : openafs\src\
+       DestDir        : $(DEST)\
+       BinDir         : $(DEST)\bin\
+       LibDir         : $(DEST)\lib\
+       IncDir         : $(DEST)\include\
+       EtcDir         : $(DEST)\etc\
+       ClientDir      : $(DEST)\root.client\usr\vice\etc\
+       ServerDir      : $(DEST)\root.server\usr\afs\bin\
+       
+       SystemDir      : %SystemRoot%\System32\
+     -->
+
+	<!-- Configuration options, allow for commandline specification -->
+    <?ifndef CellName?>
+        <?define CellName="openafs.org"?>
+    <?endif?>
+    <?ifndef LogonOptions?>
+		<?define LogonOptions="1"?>
+    <?endif?>
+    <?ifndef FreelanceMode?>
+		<?define FreelanceMode="1"?>
+    <?endif?>
+    <?ifndef UseDNS?>
+		<?define UseDNS="1"?>
+    <?endif?>
+    <?ifndef NoFindLanaByName?>
+		<?define NoFindLanaByName="1"?>
+    <?endif?>
+    <?ifndef MountRoot?>
+		<?define MountRoot="/afs"?>
+    <?endif?>
+    <?ifndef NetbiosName?>
+		<?define NetbiosName="AFS"?>
+    <?endif?>
+    <?ifndef RxMaxMTU?>
+		<?define RxMaxMTU="1260"?>
+    <?endif?>
+    <?ifndef HideDotFiles?>
+		<?define HideDotFiles="1"?>
+    <?endif?>
+    <?ifndef SecurityLevel?>
+		<?define SecurityLevel="1"?>
+    <?endif?>
+    <?ifndef SMBAuthType?>
+		<?define SMBAuthType="2"?>
+    <?endif?>
+
+    <?define InstallTimestamp="[Date] [Time]"?>
+    
+    <!-- The following general parameters may be specified on the commandline to candle -->
+    <?ifndef NumericVersion?>
+        <?error NumericVersion should have been specified on the commandline?>
+    <?endif?>
+    <!-- We can't currently break down a numeric version into components in here,
+         so we also need the major, minor and patch on the command line as well
+    -->
+    <?ifndef VersionMajor?>
+        <?error VersionMajor should have been specified on the commandline?>
+    <?endif?>
+    <?ifndef VersionMinor?>
+        <?error VersionMinor should be specified on the commandline?>
+    <?endif?>
+    <?ifndef VersionPatch?>
+        <?error VersionRevision should be specified on the commandline?>
+    <?endif?>
+
+    <!-- define some packagecode, though we aren't really using it.  See openafs.wxs -->
+    <?ifndef PackageCode?>
+        <?define PackageCode="6086552D-3EFA-436C-A0BD-25668849F0DB"?>
+    <?endif?>
+    <?if $(env.AFSDEV_BUILDTYPE) = "CHECKED"?>
+        <?define Debug?>
+        <?define ReleaseType="DT"?>
+    <?elseif $(env.AFSDEV_BUILDTYPE) = "FREE"?>
+        <?define ReleaseType="GA"?>
+    <?else?>
+        <?error AFSDEV_BUILDTYPE is not set in the environment.?>
+    <?endif?>
+
+    <!-- We are including debug symbols anyway.  Undefine this for a leaner installer without debug syms. -->
+    <?define DebugSyms?>
+
+    <!-- Parameters for the features containing debug symbols -->
+    <?ifdef DebugSyms?>
+         <?ifdef Debug?>
+             <?define DebugSymInstallDefault="followParent"?>
+             <?define DebugSymLowLevel="30"?>
+             <?define DebugSymHighLevel="130"?>
+         <?else?>
+             <?define DebugSymInstallDefault="followParent"?>
+             <?define DebugSymLowLevel="130"?>
+             <?define DebugSymHighLevel="130"?>
+         <?endif?>
+    <?endif?>
+    
+    <!-- Use the afsloopback.dll instead of instloop.exe -->
+    <?define UseDllLoopbackInstaller?>
+
+    <!-- Note that if the follwing file does not exist, the build will fail -->
+    <?ifndef CellDbFile?>
+        <?define CellDbFile="CellServDB"?>
+    <?endif?>
+    
+    <!-- Directories -->
+    <!-- DestDir must be specified -->
+    <?ifndef DestDir?>
+        <?define DestDir="$(env.AFSROOT)\dest\"?>
+    <?endif?>
+    <?ifndef SrcDir?>
+        <?define SrcDir="$(env.AFSROOT)\src\"?>
+    <?endif?>
+    <?ifndef MediaDllDir?>
+        <?define MediaDllDir="$(var.DestDir)WinInstall\Dll\"?>
+    <?endif?>
+    <?ifndef MediaBinDir?>
+        <?define MediaBinDir="$(var.DestDir)WinInstall\Config\"?>
+    <?endif?>
+    <?ifndef BinDir?>
+        <?define BinDir="$(var.DestDir)bin\"?>
+    <?endif?>
+    <?ifndef LibDir?>
+        <?define LibDir="$(var.DestDir)lib\"?>
+    <?endif?>
+    <?ifndef IncDir?>
+        <?define IncDir="$(var.DestDir)include\"?>
+    <?endif?>
+    <?ifndef EtcDir?>
+        <?define EtcDir="$(var.DestDir)etc\"?>
+    <?endif?>
+    <?ifndef ClientDir?>
+        <?define ClientDir="$(var.DestDir)root.client\usr\vice\etc\"?>
+    <?endif?>
+    <?ifndef ServerDir?>
+        <?define ServerDir="$(var.DestDir)root.server\usr\afs\bin\"?>
+    <?endif?>
+    
+    <!-- We need the following to locate the proper runtime libraries -->
+    <?ifndef env.AFSVER_CL?>
+		<?error AFSVER_CL needs to be set to the compiler version?>
+    <?endif?>
+    <?define SystemDir="$(env.SystemRoot)\System32\"?>
+
+
+</Include>

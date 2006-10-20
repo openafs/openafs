@@ -1,0 +1,116 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include <resource.h>
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Setup Utilities DLL"
+#define AFS_VERINFO_NAME "afs_setup_utils"
+#define AFS_VERINFO_FILENAME "afs_setup_utils.exe"
+#define AFS_VERINFO_CHARSET 1252
+#define AFS_VERINFO_LANG_CODE 0x40a
+#include "AFS_component_version_number.h"
+#include "..\..\..\..\config\NTVersioninfo.rc"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALLATION_FAILURE "Se ha producido un error:  %s (%ld)."
+    IDS_SCM_OPEN_FAILED     "Anomalía al abrir el Gestor de control de servicio"
+    IDS_SERVICE_CREATE_FAILED "Anomalía al crear el servicio"
+    IDS_SERVICE_OPEN_FAILED "Anomalía al abrir el servicio"
+    IDS_SERVICE_QUERY_FAILED "Anomalía al consultar el estado del servicio"
+    IDS_SERVICE_STOP_FAILED "Anomalía al detener el servicio"
+    IDS_SERVICE_DELETE_FAILED "Anomalía al suprimir el servicio"
+    IDS_REG_DELETE_VALUE_ERROR "Anomalía al suprimir entradas de registro"
+    IDS_SERVICE_ENABLE_FAILED "Anomalía al habilitar el servicio"
+    IDS_OLE_DLL_INSTALL_FAILED "Anomalía al instalar una DLL OLE"
+    IDS_OLE_DLL_UNINSTALL_FAILED "Anomalía al desinstalar una DLL OLE"
+    IDS_EXTENSION_DLL_UNINSTALL_FAILED 
+                            "Anomalía al desinstalar la extensión de shell de montaje/desmontaje de conjunto de archivos"
+    IDS_EXTENSION_DLL_INSTALL_FAILED 
+                            "Anomalía al instalar la extensión de shell de montaje/desmontaje de conjunto de archivos"
+    IDS_CANT_DETERMINE_PRODUCT 
+                            "No se puede determinar qué producto de AFS se va a desinstalar"
+    IDS_TITLE               "AFS« para Windows"
+    IDS_CANT_DETERMINE_APP_PATH 
+                            "No se ha podido determinar el directorio de instalación de la aplicación"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLIENT_APP_NAME     "AFS Client"
+    IDS_SERVER_APP_NAME     "AFS Server"
+    IDS_CC_APP_NAME         "AFS Control Center"
+    IDS_CANT_LOAD_RESOURCES "No se puede desinstalar este producto: la carga de los recursos de desinstalación ha fallado."
+    IDS_CANT_UNINSTALL_AFSCREDS "Anomalía al desconfigurar AFS Client."
+    IDS_MUST_STOP_SERVER    "AFS Server debe detenerse antes de que pueda continuar la desinstalación. Este proceso puede ser muy largo. ¿Detener el Server ahora?"
+    IDS_MUST_STOP_CLIENT    "AFS Client debe detenerse antes de que pueda continuar la desinstalación. Este proceso puede ser muy largo. ¿Detener el Client ahora?"
+    IDS_LIGHT_CLIENT_APP_NAME "AFS Light"
+    IDS_WAITING_FOR_CLIENT_TO_STOP "Deteniendo AFS Client. Espere, por favor..."
+    IDS_WAITING_FOR_SERVER_TO_STOP "Deteniendo AFS Server. Espere, por favor..."
+    IDS_CLIENT_NEEDED_BY_SERVER "La desinstalación de AFS Client impedirá que AFS Server funcione correctamente. ¿Continuar con la desinstalación?"
+    IDS_PRESERVE_CLIENT_CONFIG_INFO "¿Desea conservar la información de configuración de Client? Es recomendable si va a actualizarlo o instalarlo de nuevo."
+    IDS_PRESERVE_SERVER_CONFIG_INFO "¿Desea conservar la información de configuración de Server? Es recomendable si va a actualizarlo o instalarlo de nuevo."
+    IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "Anomalía al restaurar la información de configuración anterior"
+    IDS_SAVE_OF_CONFIG_INFO_FAILED  "Anomalía al guardar la información de configuración. ¿Continuar con la desinstalación?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "¿Desea conservar la información de configuración de AFS Light? Es recomendable si va a actualizarlo o instalarlo de nuevo."
+    IDS_PRESERVE_CC_CONFIG_INFO "¿Desea conservar la información de configuración de Control Center? Es recomendable si va a actualizarlo o instalarlo de nuevo."
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Boxes
+//
+IDD_PROGRESS DIALOGEX 0, 0, 226, 52
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | DS_CENTER
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "AFS« para Windows"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_LOGO,17,16,21,20
+    LTEXT           "Deteniendo AFS Server. Espere, por favor...",IDC_MSG,50,23,
+                    163,10
+    GROUPBOX        "",IDC_STATIC,7,4,212,40
+END
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SPIN1               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin1.ico"
+IDI_SPIN2               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin2.ico"
+IDI_SPIN3               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin3.ico"
+IDI_SPIN4               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin4.ico"
+IDI_SPIN5               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin5.ico"
+IDI_SPIN6               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin6.ico"
+IDI_SPIN7               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin7.ico"
+IDI_SPIN8               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin8.ico"
+IDI_SPINSTOP            ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spinstop.ico"
+
+
+
+

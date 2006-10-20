@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf255.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf257.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_BACKUPSYS" HREF="auarf002.htm#ToC_270">vos backupsys</A></H2>
+<A NAME="IDX5605"></A>
+<A NAME="IDX5606"></A>
+<A NAME="IDX5607"></A>
+<A NAME="IDX5608"></A>
+<A NAME="IDX5609"></A>
+<A NAME="IDX5610"></A>
+<A NAME="IDX5611"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Creates a backup volume for several read/write volumes
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]  
+              [<B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  
+              [<B>-exclude</B>]  [<B>-xprefix</B> &lt;<VAR>negative&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>] 
+              [<B>-dryrun</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]
+              [<B>-verbose</B>]  [<B>-help</B>] 
+    
+<B>vos backups</B> [<B>-pr</B> &lt;<VAR>common&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]  [<B>-s</B> &lt;<VAR>machine&nbsp;name</VAR>>] 
+            [<B>-pa</B> &lt;<VAR>partition&nbsp;name</VAR>>]  [<B>-e</B>]  [<B>-x</B> &lt;<VAR>negative&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]  
+            [<B>-d</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos backupsys</B> command clones each indicated read/write
+volume to create a backup version, placing each clone at the same site as its
+read/write source version. It assigns each clone the same name as the
+read/write source, adding a <B>.backup</B> extension. It
+assigns the volume ID number already allocated for the backup version in the
+Volume Location Database (VLDB). If a backup version already exists for
+a given volume, the new clone replaces it.
+<P>To clone every read/write volume listed in the VLDB, omit all of the
+command&#39;s options. Otherwise, combine the command&#39;s options
+to clone various groups of volumes. The options use one of two basic
+criteria to select volumes&#58; location (the <B>-server</B> and
+<B>-partition</B> arguments) or presence in the volume name of one of a
+set of specified character strings (the <B>-prefix</B>,
+<B>-exclude</B>, and <B>-xprefix</B> options).
+<P>To clone only volumes that reside on one file server machine, include the
+<B>-server</B> argument. To clone only volumes that reside on one
+partition, combine the <B>-server</B> and <B>-partition</B>
+arguments. The <B>-partition</B> argument can also be used alone to
+clone volumes that reside on the indicated partition on every file server
+machine. These arguments can be combined with those that select volumes
+based on their names.
+<P>Combine the <B>-prefix</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options (with or without the <B>-server</B> and
+<B>-partition</B> arguments) in the indicated ways to select volumes based
+on character strings contained in their names&#58;
+<UL>
+<P><LI>To clone every read/write volume at the specified location whose name
+includes one of a set of specified character strings (for example, begins with
+<B>user.</B> or includes the string <B>afs</B>), use the
+<B>-prefix</B> argument or combine the <B>-xprefix</B> and
+<B>-exclude</B> options.
+<P><LI>To clone every read/write volume at the specified location except those
+whose name includes one of a set of specified character strings, use the
+<B>-xprefix</B> argument or combine the <B>-prefix</B> and
+<B>-exclude</B> options.
+<P><LI>To clone every read/write volume at the specified location whose name
+includes one of one of a set of specified character strings, except those
+whose names include one of a different set of specified character strings,
+combine the <B>-prefix</B> and <B>-xprefix</B> arguments. The
+command creates a list of all volumes that match the <B>-prefix</B>
+argument and then removes from the list the volumes that match the
+<B>-xprefix</B> argument. For effective results, the strings
+specified by the <B>-xprefix</B> argument must designate a subset of the
+volumes specified by the <B>-prefix</B> argument.
+<P>If the <B>-exclude</B> flag is combined with the <B>-prefix</B> and
+<B>-xprefix</B> arguments, the command creates a list of all volumes that
+do not match the <B>-prefix</B> argument and then adds to the list any
+volumes that match the <B>-xprefix</B> argument. As when the
+<B>-exclude</B> flag is not used, the result is effective only if the
+strings specified by the <B>-xprefix</B> argument designate a subset of
+the volumes specified by the <B>-prefix</B> argument.
+</UL>
+<P>The <B>-prefix</B> and <B>-xprefix</B> arguments both accept
+multiple values, which can be used to define disjoint groups of
+volumes. Each value can be one of two types&#58;
+<OL TYPE=1>
+<P><LI>A simple character string, which matches volumes whose name begin with the
+string. All characters are interpreted literally (that is, characters
+that potentially have special meaning to the command shell, such as the
+period, have only their literal meaning).
+<P><LI>A regular expression, which matches volumes whose names contain the
+expressions. Place a caret (&nbsp;<B>^</B>&nbsp;) at the
+beginning of the expression, and enclose the entire string in single quotes
+(<B>&#39;</B>&nbsp;<B>&#39;</B>). Explaining regular
+expressions is outside the scope of this reference page; see the UNIX
+manual page for <B>regexp(5)</B> or (for a brief introduction) the
+<B>backup addvolentry</B> reference page in this document. As an
+example, the following expression matches volumes that have the string
+<B>aix</B> anywhere in their names&#58;
+<PRE>   <B>-prefix  &#39;^.*aix&#39;</B>
+</PRE>
+</OL>
+<P>To display a list of the volumes to be cloned, without actually cloning
+them, include the <B>-dryrun</B> flag. To display a statement that
+summarizes the criteria being used to select volume, include the
+<B>-verbose</B> flag.
+<P>This command can be used to clone a single read/write volume; specify
+its complete name as the <B>-prefix</B> argument. However, it is
+more efficient to use the <B>vos backup</B> command, which employs a more
+streamlined technique for finding a single volume.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-prefix
+</B><DD>Specifies one or more simple character strings or regular expressions of
+any length; a volume whose name includes the string is placed on the set
+of volumes to be cloned. Include field separators (such as periods) if
+appropriate. This argument can be combined with any combination of the
+<B>-server</B>, <B>-partition</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options.
+<P><DT><B>-server
+</B><DD>Identifies the file server machine where each read/write source volume
+resides. Provide the machine&#39;s IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the <B>vos</B> command suite. 
+<P>This argument can be combined with any combination of the
+<B>-prefix</B>, <B>-partition</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options.
+<P><DT><B><B>-partition</B>
+</B><DD>Identifies the partition where each read/write source volume
+resides. Provide the partition&#39;s complete name with preceding
+slash (for example, <B>/vicepa</B>) or use one of the three acceptable
+abbreviated forms. For details, see the introductory reference page for
+the <B>vos</B> command suite. 
+<P>This argument can be combined with any combination of the
+<B>-prefix</B>, <B>-server</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options.
+<P><DT><B>-exclude
+</B><DD>Reverses the meaning of the <B>-prefix</B> or <B>-xprefix</B>
+argument. This flag can be combined with any combination of the
+<B>-prefix</B>, <B>-server</B>, <B>-partition</B>, and
+<B>-xprefix</B> options.
+<P><DT><B>-xprefix
+</B><DD>Specifies a simple character string or regular expression of any
+length; a volume whose name includes the string is removed from the set
+of volumes to be cloned. Include field separators (such as periods) if
+appropriate. This argument can be combined with any combination of the
+<B>-prefix</B>, <B>-server</B>, <B>-partition</B>, and
+<B>-exclude</B> options.
+<P><DT><B>-dryrun
+</B><DD>Displays on the standard output stream a list of the volumes to be cloned,
+without actually cloning them.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command&#39;s execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The command generates the following messages on the standard output stream
+to confirm that the operation was successful&#58;
+<PRE>   done
+   Total volumes backed up&#58; <VAR>number_cloned</VAR>; failed to backup&#58; <VAR>failures</VAR>
+</PRE>
+<P>If the <B>-dryrun</B> flag is included, a list of the volumes to be
+backed up precedes the standard confirmation messages.
+<P>If the <B>-verbose</B> flag is included but not the <B>-dryrun</B>
+flag, the following messages appear for each volume. The output
+concludes with the standard confirmation messages.
+<PRE>   Creating backup volume for <VAR>volume_name</VAR> on <VAR>date/time</VAR>
+   {Recloning backup volume | Creating a new backup clone} <VAR>backup_volumeID</VAR> . . .done
+</PRE>
+<P>If both the <B>-dryrun</B> and <B>-verbose</B> flags are included,
+the output begins with a statement summarizing the criteria being used to
+select the volumes, followed by a list of the volumes and the standard
+confirmation messages. The format of the criteria summary statement
+depends on which other options are provided&#58;
+<UL>
+<P><LI>If only the <B>-prefix</B> argument is provided, or the
+<B>-xprefix</B> and <B>-exclude</B> options are combined&#58;
+<PRE>   Would have backed up volumes which are prefixed with <VAR>string</VAR> [or<VAR>string</VAR>] . .
+</PRE>
+<P><LI>If only the <B>-xprefix</B> argument is provided, or the
+<B>-prefix</B> and <B>-exclude</B> options are combined&#58;
+<PRE>   Would have backed up volumes which are not prefixed with <VAR>string</VAR> [nor<VAR>string</VAR>] . .
+</PRE>
+<P><LI>If the <B>-prefix</B> and <B>-xprefix</B> arguments are
+combined&#58;
+<PRE>   Would have backed up volumes which are prefixed with <VAR>string</VAR> [or<VAR>string</VAR>]  \
+      removing those which are prefixed with  <VAR>x_string</VAR> [or<VAR>x_string</VAR>] . .
+</PRE>
+<P><LI>If the <B>-prefix</B>, <B>-xprefix</B>, and <B>-exclude</B>
+options are provided&#58;
+<PRE>   Would have backed up volumes which are not prefixed with <VAR>string</VAR> [nor<VAR>string</VAR>]  \
+      adding those which are prefixed with  <VAR>x_string</VAR> [or<VAR>x_string</VAR>] . .
+</PRE>
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>The following example creates a backup version of every read/write volume
+listed in the cell&#39;s VLDB whose name begins with the string
+<B>user</B>.
+<PRE>   % <B>vos backupsys -prefix user</B>
+   
+</PRE>
+<P>The following example, appropriate in the ABC Corporation cell, creates a
+backup version of every read/write volume on the file server machine
+<B>fs3.abc.com</B>.
+<PRE>   % <B>vos backupsys -server fs3.abc.com</B>
+   
+</PRE>
+<P>The following example, appropriate in the State University cell, creates a
+backup version of every read/write volume on the file server machine
+<B>db1.stateu.edu</B> except those whose name includes the
+string <B>temp</B>.
+<PRE>   % <B>vos backupsys  -server db1.stateu.edu -prefix &#39;^.*temp&#39;</B>
+   
+</PRE>
+<P>The following example creates a backup version of every volume listed in
+the cell&#39;s VLDB, excluding those whose names contain the string
+<B>source</B>, but including those whose names contain the string
+<B>source.current</B>.
+<PRE>   % <B>vos backupsys  -prefix &#39;^.*source&#39; -exclude -xprefix &#39;^.*source\.current&#39;</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine specified with the <B>-server</B> argument and on each
+database server machine. If the <B>-localauth</B> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf063.htm#HDRBK_ADDVOLENTRY">backup addvolentry</A>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P>UNIX manual page for <B>regexp(5)</B>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf255.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf257.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

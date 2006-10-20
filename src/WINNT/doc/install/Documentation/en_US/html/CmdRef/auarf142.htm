@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf141.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf143.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_FLUSHVOLUME" HREF="auarf002.htm#ToC_156">fs flushvolume</A></H2>
+<A NAME="IDX4819"></A>
+<A NAME="IDX4820"></A>
+<A NAME="IDX4821"></A>
+<A NAME="IDX4822"></A>
+<A NAME="IDX4823"></A>
+<A NAME="IDX4824"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Forces the Cache Manager to discard all cached data from the volume
+containing a file or directory
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs flushvolume</B> [<B>-path</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs flushv</B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs flushvolume</B> command removes from the cache all data that
+was fetched from the same volume as each specified directory or file.
+It does not discard cached status information. The next time an
+application requests data from a flushed directory or file, the Cache Manager
+fetches the most current version from a File Server, along with a new callback
+(if necessary) and associated status information. This command has no
+effect on two types of data&#58;
+<OL TYPE=1>
+<P><LI>Data in application program buffers
+<P><LI>Data that has been changed locally and written to the cache but not yet
+written to the copy on the file server machine
+</OL>
+<P>To discard the data and status information associated with individual files
+and directories, use the <B>fs flush</B> command. To flush a
+corrupted mount point, use the <B>fs flushmount</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>Names a file or directory from each volume for which to discard all cached
+data. Partial pathnames are interpreted relative to the current working
+directory, which is also the default value if this argument is omitted.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command flushes from the cache all data fetched from the
+volume that contains the current working directory&#58;
+<PRE>   % <B>fs flushvolume </B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must have the <B>l</B> (<B>lookup</B>) permission on the
+ACL of the root directory of the volume that houses the file or directory
+named by the <B>-path</B> argument, and on the ACL of each directory that
+precedes it in the pathname.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf140.htm#HDRFS_FLUSH">fs flush</A>
+<P><A HREF="auarf141.htm#HDRFS_FLUSHMOUNT">fs flushmount</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf141.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf143.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

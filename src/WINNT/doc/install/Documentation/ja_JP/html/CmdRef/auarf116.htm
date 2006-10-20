@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_SETCELLNAME" HREF="auarf002.htm#ToC_130">bos setcellname</A></H2>
+<A NAME="IDX4622"></A>
+<A NAME="IDX4623"></A>
+<A NAME="IDX4624"></A>
+<A NAME="IDX4625"></A>
+<A NAME="IDX4626"></A>
+<A NAME="IDX4627"></A>
+<A NAME="IDX4628"></A>
+<A NAME="IDX4629"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/etc/ThisCell</B> および <B>/usr/afs/etc/CellServDB</B> ファイルにセル名を設定します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos setcellname -server</B> &lt;<VAR>machine name</VAR>>  <B>-name</B> &lt;<VAR>cell name</VAR>>
+                [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos setc -s</B> &lt;<VAR>machine name</VAR>>  <B>-n</B> &lt;<VAR>cell name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos setcellname</B> コマンドは、<B>-name</B> 引き数の値をローカル・ディスク上に作成された次の 2 つのファイルに記録することにより、セル名を確立して <B>-server</B> 引き数で指定されたサーバー・マシンをそのメンバーにします。
+<UL>
+<LI><B>/usr/afs/etc/ThisCell</B>
+</LI><LI><B>/usr/afs/etc/CellServDB</B>。セル名はファイルの最初の行に表示され、必須の <TT>&gt;</TT> 記号が前に付いています。
+<B>-server</B> 引き数に指定したマシン名が、セルのネーム・サービスから取得した IP アドレスと一緒に 2 行目に表示されます。したがって、このマシンはセルの最初のデータベース・サーバー・マシンとして指定されています。
+</LI></UL>
+<P><STRONG>注意</STRONG>
+<P>このコマンドは、セルの最初の AFS サーバー・マシンをインストールする場合にだけを発行してください。追加のサーバー・マシンをインストールしているときに、このマシンまたは他のマシンから <B>ThisCell</B> および <B>CellServDB</B> ファイルをコピーする方法については、
+<I>AFS インストールの手引き</I> を参照してください。
+<P>セル名の変更は非常に複雑なため、コマンドを発行する場合は、適切なセル名を選択してください。たとえば、説明を変更すると、認証データベースのパスワードを変更しなければなりません。セル名の選択については、<I>AFS 管理の手引き</I> を参照してください。セル名を変更しなければならない場合は、AFS 製品サポートに連絡して、指示を受けてください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD><B>ThisCell</B> および <B>CellServDB</B> ファイルにセル名を設定するサーバー・マシンを指定します。これは、セルで最初にインストールされたマシンです。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-name</B>
+</B><DD>標準的なインターネットのドメイン名を使用して、セル名を定義します。(通常、実際のドメイン名のほうが適切です。) たとえば、ABC Corporation は <B>abc.com</B> となり、State University は、<B>stateu.edu</B> となります。指定する値は、<B>-cell</B> 引き数の値に一致しなければなりません。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、マシン <B>fs1.abc.com</B> がセルの最初のサーバー・マシンとしてインストールされるときに、そのマシンの <B>ThisCell</B> および <B>CellServDB</B> ファイルにセル名 <B>fs1.abc.com</B> を定義しています。
+<PRE>   % <B>bos setcellname -server fs1.abc.com -name abc.com</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>通常、許可検査は、インストール時にオフになっています。この場合だけこのコマンドは特権がなくても実行できます。許可検査がオンの場合、コマンドの発行側は、<B>-server</B> 引き数で指定されたマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。あるいは、<B>-localauth</B> フラグがある場合は、スーパーユーザー <B>root</B> としてログインしていなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (サーバー・バージョン)</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf033.htm#HDRSV_THISCELL">ThisCell (サーバー・バージョン)</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><I>AFS インストールの手引き</I>
+<P><I>AFS 管理の手引き</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf115.htm">前ページ</A> &#124; <A HREF="auarf117.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_RESTART" HREF="auarf002.htm#ToC_127">bos restart</A></H2>
+<A NAME="IDX4603"></A>
+<A NAME="IDX4604"></A>
+<A NAME="IDX4605"></A>
+<A NAME="IDX4606"></A>
+<A NAME="IDX4607"></A>
+<A NAME="IDX4608"></A>
+<P><STRONG>目的</STRONG>
+<P>サーバー・プロセスを再起動します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos restart -server</B> &lt;<VAR>machine name</VAR>>  [<B>-instance</B> &lt;<VAR>instances</VAR>><SUP>+</SUP>]  [<B>-bosserver</B>]
+            [<B>-all</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos res -s</B> &lt;<VAR>machine name</VAR>>  [<B>-i</B> &lt;<VAR>instances</VAR>><SUP>+</SUP>]  [<B>-b</B>]  [<B>-a</B>]
+        [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos restart</B> コマンドは、<B>-server</B> 引き数で指定されたサーバー・マシンのサーバー・プロセスを停止し、すぐに再起動します。次の引き数を使用して、再起動するプロセスを指定します。
+<UL>
+<LI><B>-instance</B> 引き数には、<B>/usr/afs/local/BosConfig</B> ファイルの状況フラグに関係なく、停止して即時に再起動する AFS サーバー・プロセスを指定します。プロセスのリストに <B>bosserver</B> を追加せず、<B>-bosserver</B> フラグを使用してください。
+</LI><LI><B>-bosserver</B> フラグを使用すると、BOS サーバーを含むマシン上で実行されているすべての AFS サーバー・プロセスが停止します。新規の BOS サーバー が即時に開始し、<B>BosConfig</B> ファイルで状況フラグが <TT>Run</TT> とマークされているプロセスの新規インスタンスを開始します。
+</LI><LI><B>-all</B> フラグを使用すると、BOS サーバーを除いて、マシン上で実行されているすべての AFS サーバー・プロセスを停止し、<B>BosConfig</B>ファイルで状況フラグが <TT>Run</TT> とマークされているプロセスを即時に再起動します。
+</LI></UL>
+<P>このコマンドは、<B>BosConfig</B> ファイルのプロセス状況フラグを変更しません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>プロセスを再起動するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-instance</B>
+</B><DD>状況フラグの設定に関係なく、停止直後に再起動するプロセスを指定します。<B>bos create</B> コマンドの <B>-instance</B> 引き数で割り当てたプロセス名を使用してください。
+<B>bos status</B> コマンドの出力には、この名前がリストされます。このフラグ、または <B>-bosserver</B> 引き数あるいは <B>-all</B> オプションの 1 つを指定してください。これらを一緒に使用してはなりません。
+<P><DT><B><B>-bosserver</B>
+</B><DD>マシン上で実行されている BOS サーバーを含むすべての AFS サーバー・プロセスを停止します。新規の BOS サーバー・インスタンスがすぐに開始し、<B>BosConfig</B>ファイルで状況フラグが <TT>Run</TT> になっているすべてのプロセスを開始します。このフラグ、または <B>-instance</B> あるいは <B>-all</B> オプションの 1 つを指定してください。これらを一緒に使用してはなりません。
+<P><DT><B><B>-all</B>
+</B><DD>BOS サーバー以外のマシン上で実行されているすべての AFS サーバー・プロセスを停止し、<B>BosConfig</B> ファイルで状況フラグが <B>Run</B> にマークされているプロセスを即時に再起動します。このフラグ、または <B>-instance</B> 引き数または <B>-bosserver</B> オプションの 1 つを指定してください。これらを一緒に使用してはなりません。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、BOS サーバーを含む、マシン <B>fs3.abc.com</B> 上で実行されているすべてのプロセスを停止し、再始動します。
+<PRE>   % <B>bos restart -server fs3.abc.com -bosserver</B>
+    
+</PRE>
+<P>次のコマンドは、BOS サーバーを除く、マシン <B>fs5.abc.com</B> 上で実行されているすべてのプロセスを停止し、再始動します。
+<PRE>   % <B>bos restart -server fs5.abc.com -all</B>
+    
+</PRE>
+<P>次のコマンドは、マシン <B>db3.abc.com</B> 上の保護サーバーおよびボリューム・ロケーション (VL) サーバー・プロセスを停止し、再起動します。
+<PRE>   % <B>bos restart -server db3.abc.com -instance ptserver vlserver</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf112.htm">前ページ</A> &#124; <A HREF="auarf114.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

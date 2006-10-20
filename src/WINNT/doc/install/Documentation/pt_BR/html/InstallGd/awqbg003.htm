@@ -1,0 +1,1264 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Iniciação Rápida</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- D:\IDWB\TEMP\idwt1186\awqbg000.scr converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 21 Dec 1999 at 12:38:17            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<META HTTP-EQUIV="updated" CONTENT="Tue, 21 Dec 1999 12:38:16">
+<META HTTP-EQUIV="review" CONTENT="Thu, 21 Dec 2000 12:38:16">
+<META HTTP-EQUIV="expires" CONTENT="Fri, 21 Dec 2001 12:38:16">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. Todos os Direitos Reservados.    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Iniciação Rápida</H1>
+<HR><H1><A NAME="Header_1" HREF="awqbg002.htm#ToC_1">Iniciação Rápida ao IBM AFS para Windows</A></H1>
+<HR><H2><A NAME="Header_2" HREF="awqbg002.htm#ToC_2">Introdução</A></H2>
+<A NAME="IDX178"></A>
+<A NAME="IDX179"></A>
+<P>O AFS<SUP><SUP>(R)</SUP></SUP> é um sistema de arquivo empresarial que fornece um
+acesso a arquivo consistente através de um espaço de arquivo
+compartilhado. Pela união de sistemas de arquivo locais de diversas
+máquinas Servidores de Arquivo, o AFS apresenta um único espaço de arquivo
+independente das fronteiras das máquinas. Arquivos são armazenados em
+máquinas diferentes na rede de computadores mas podem ser acessados de todas
+as máquinas da empresa.
+<P>O IBM AFS para Windows<SUP><SUP>(R)</SUP></SUP>, versão 3.6 amplia a
+capacidade total do AFS para sistemas operacionais Microsoft<SUP><SUP>(R)</SUP></SUP>
+Windows.
+<HR><H2><A NAME="Header_3" HREF="awqbg002.htm#ToC_3">Visão Geral do Documento</A></H2>
+<P>
+<A NAME="IDX180"></A>
+Este documento resume os pré-requisitos de instalação, fornece instruções
+detalhadas sobre como instalar, configurar e remover a instalação do AFS para
+Windows, e delineia as alterações efetuadas em seu sistema durante os
+processos de instalação e remoção da instalação. Este documento também
+descreve a documentação fornecida com o AFS para Windows.
+<P><H3><A NAME="Header_4" HREF="awqbg002.htm#ToC_4">Audiência</A></H3>
+<P>
+<A NAME="IDX181"></A>
+Este documento fornece informações para administradores do sistema e usuários
+responsáveis pela instalação e configuração dos produtos incluídos no AFS para
+Windows. Este documento assume que os administradores do sistema estão
+familiarizados com administração de sistema em geral e que os usuários estão
+familiarizados com os termos e conceitos básicos dos sistemas operacionais
+Microsoft Windows.
+<P><H3><A NAME="Header_5" HREF="awqbg002.htm#ToC_5">Organização</A></H3>
+<P>Este documento possui a seguinte organização:
+<UL>
+<LI><A HREF="#HDRINSTALLATION">Instalando o AFS para Windows</A> delineia as combinações instaláveis dos componentes AFS,
+descreve o procedimento para instalar os produtos que são incluídos no AFS
+para Windows, e lista as alterações que o processo de instalação efetua em seu
+sistema.
+</LI><LI><A HREF="#HDRDOCUMENT">Documentação do AFS para Windows</A> apresenta os diversos tipos de documentação que são
+fornecidos com o AFS para Windows e discute os procedimentos para acessar esta
+documentação.
+</LI><LI><A HREF="#HDRCONFIGURE">Configurando o AFS para Windows</A> descreve os procedimentos para configuração dos produtos que
+são incluídos no AFS para Windows.
+</LI><LI><A HREF="#HDRUNINSTALL">Removendo a instalação do AFS para Windows</A> delineia os pré-requisitos para remoção da instalação,
+descreve o procedimento para remover a instalação dos produtos que são
+incluídos no AFS para Windows, e lista as alterações que o processo de remoção
+da instalação efetua em seu sistema.
+</LI></UL>
+<HR><H2><A NAME="HDRINSTALLATION" HREF="awqbg002.htm#ToC_6">Instalando o AFS para Windows</A></H2>
+<P>Esta seção delineia as combinações instaláveis dos componentes AFS,
+descreve o procedimento para instalar o AFS para Windows, e lista as
+alterações que o processo de instalação efetua em seu sistema.
+<P><H3><A NAME="Header_7" HREF="awqbg002.htm#ToC_7">Componentes do AFS para Windows</A></H3>
+<P>
+<A NAME="IDX182"></A>
+O AFS para Windows, versão 3.6 inclui os seguintes componentes:
+<UL>
+<LI>
+<A NAME="IDX183"></A>
+<A NAME="IDX184"></A>
+<A NAME="IDX185"></A>
+<B>AFS Server</B>
+<P>O AFS Server executa processos do servidor AFS e inclui o Assistente de
+Configuração do AFS Server para facilitar a configuração.
+</LI><LI>
+<A NAME="IDX186"></A>
+<A NAME="IDX187"></A>
+<A NAME="IDX188"></A>
+<B>Centro de Controle do AFS</B>
+<P>O Centro de Controle do AFS inclui duas poderosas ferramentas de interfaces
+gráficas de usuário (GUI) para assistir aos administradores do sistema AFS na
+administração da célula AFS: O Gerenciador de Servidor do AFS e o
+Gerenciador de Contas do AFS.
+</LI><LI>
+<A NAME="IDX189"></A>
+<A NAME="IDX190"></A>
+<A NAME="IDX191"></A>
+<B>AFS Client</B>
+<P>O AFS Client fornece acesso direto ao espaço de arquivo do AFS, permitindo
+a usuários gerenciar arquivos e diretórios no AFS. O AFS Client inclui
+o Gateway AFS Básico.
+</LI><LI>
+<A NAME="IDX192"></A>
+<A NAME="IDX193"></A>
+<A NAME="IDX194"></A>
+<B>AFS Básico</B>
+<P>O AFS Básico fornece acesso ao espaço de arquivo do AFS através da máquina
+Gateway AFS Básico, permitindo a usuários gerenciar arquivos e diretórios no
+AFS.
+</LI><LI>
+<A NAME="IDX195"></A>
+<B>Documentação Suplementar do AFS</B>
+<P>A Documentação Suplementar do AFS fornece informações adicionais de
+administração do sistema AFS e inclui os seguintes documentos: <I>IBM
+AFS Administration Guide</I> e <I>IBM AFS Administration
+Reference</I>.
+</LI></UL>
+<P><H3><A NAME="HDROPTIONS" HREF="awqbg002.htm#ToC_8">Opções de Instalação</A></H3>
+<P>
+<A NAME="IDX196"></A>
+<A NAME="IDX197"></A>
+<A NAME="IDX198"></A>
+Você pode instalar os componentes do AFS para Windows em várias combinações,
+baseado em seu sistema operacional Windows. Consulte o <I>Notas de
+Release do IBM AFS para Windows</I> para obter detalhes das exigências
+específicas de software para cada componente do AFS para Windows. Note
+que se você estiver instalando o AFS Server, também deverá instalar o AFS
+Client, a menos que o AFS Client, versão 3.6 já esteja instalado na
+máquina. Siga o procedimento de instalação descrito em <A HREF="#HDRHOWTOINSTALL">Para Instalar o AFS para Windows</A>, independente dos componentes que esteja instalando.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">
+<A NAME="IDX199"></A>
+<A NAME="IDX200"></A>
+<A NAME="IDX201"></A>
+<A NAME="IDX202"></A>
+<A NAME="IDX203"></A>
+Você tem a opção de alterar o programa de configuração do AFS para Windows
+para desativar todos os componentes menos o do cliente. Tal programa de
+configuração somente-cliente não permite que os usuários instalem outros
+componentes que não sejam o AFS Client. Para efetuar uma instalação
+somente-cliente, crie o arquivo <B>setup.co</B> no mesmo diretório
+dos outros arquivos de instalação; o programa de configuração então
+permite que apenas o AFS Client seja instalado. Note que o conteúdo do
+arquivo <B>setup.co</B> é irrelevante. Siga o procedimento
+de instalação descrito em <A HREF="#HDRHOWTOINSTALL">Para Instalar o AFS para Windows</A> independente do tipo de instalação que estiver
+efetuando.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_9" HREF="awqbg002.htm#ToC_9">Fazendo Atualização a Partir de uma Versão Anterior</A></H3>
+<P>
+<A NAME="IDX204"></A>
+<A NAME="IDX205"></A>
+<A NAME="IDX206"></A>
+Em uma máquina Windows NT, <I>não</I> é necessário remover a instalação
+dos componentes do AFS para Windows para atualizar o software; você pode
+instalar este release do AFS para Windows em seu sistema <I>sem</I>
+remover o software existente ou a sua configuração. Para atualizar o
+AFS para Windows, siga o procedimento de instalação descrito em <A HREF="#HDRHOWTOINSTALL">Para Instalar o AFS para Windows</A>. Durante o processo de instalação, o componente AFS
+da versão anterior é atualizado e as informações de configuração do AFS são
+preservadas.
+<P>Em uma máquina Windows 95 ou Windows 98, você deve remover a instalação do
+componente AFS Básico instalado anteriormente, conforme descrito em <A HREF="#HDRTOUNINSTALL">Para Remover a Instalação do AFS para Windows</A>, antes de atualizar o AFS Básico.
+<P>Note que a ferramenta de instalação do AFS para Windows <I>não</I>
+permite que um usuário instale componentes AFS que tenham números de versão
+diferentes. Se você tiver mais de um componente AFS para Windows
+instalado em sua máquina, você não pode atualizar um componente sem atualizar
+igualmente todos os outros componentes.
+<P><H3><A NAME="HDRHOWTOINSTALL" HREF="awqbg002.htm#ToC_10">Para Instalar o AFS para Windows</A></H3>
+<A NAME="IDX207"></A>
+<A NAME="IDX208"></A>
+<A NAME="IDX209"></A>
+<A NAME="IDX210"></A>
+<A NAME="IDX211"></A>
+<A NAME="IDX212"></A>
+<A NAME="IDX213"></A>
+<P>Antes de instalar o AFS para Windows, consulte o seu <I>Notas de Release
+do IBM AFS para Windows</I> para obter uma descrição detalhada dos
+pré-requisitos de instalação. Se você estiver executando outras
+aplicações Windows, é recomendável que você saia delas antes de instalar o AFS
+para Windows. 
+<OL TYPE=1>
+<LI>Coloque o disco de instalação do AFS para Windows em sua unidade de
+CD-ROM.
+</LI><LI>Execute o programa de <B>configuração</B> do AFS para Windows
+utilizando um dos seguintes métodos;
+<UL>
+<LI>A partir do menu <B>Iniciar</B>, selecione <B>Executar</B>.
+Digite <TT><I>unidade</I><B>:\setup</B></TT> em que
+<I>unidade</I> é a letra da unidade do CD-ROM. Clique em
+<B>OK</B>.
+</LI><LI>No <B>Windows Explorer</B>, selecione sua unidade do CD-ROM e dê um
+clique duplo no programa <B>setup.exe</B>.
+</LI></UL>
+</LI><LI>A janela Bem-vindo aparece. Selecione o botão <B>Avançar</B>
+para continuar com o processo de instalação.
+</LI><LI>A caixa de diálogo Selecionar Componentes aparece.
+<UL>
+<LI>Na caixa <B>Componentes</B> , selecione os componentes do AFS para
+Windows que você deseja instalar ou atualizar. Consulte <A HREF="#HDROPTIONS">Opções de Instalação</A> para obter informações sobre as várias combinações de
+componentes que podem ser instalados em uma máquina Windows. Note que
+se você estiver instalando o AFS Server, também deverá selecionar instalar (ou
+atualizar) o AFS Client, a não ser que o AFS Client, versão 3.6 já
+esteja instalado em seu sistema.
+</LI><LI>A caixa <B>Pasta de Destino</B> indica a unidade e diretório padrão no
+qual os componentes selecionados serão instalados. A unidade padrão é a
+unidade onde o Windows está instalado. O diretório padrão nesta unidade
+é <B>\Arquivos de Programa\Ibm\Afs</B>. Para selecionar outra
+unidade, diretório, ou ambos, selecione o botão <B>Procurar</B>. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se você estiver atualizando a partir de uma versão anterior do AFS para
+Windows ou reinstalando o AFS para Windows, o diretório de instalação que você
+escolher deve ser o mesmo diretório de instalação que foi utilizado pela
+versão instalada anteriormente.
+</TD></TR></TABLE>
+</LI></UL>
+<P>Selecione o botão <B>Avançar</B> para continuar com o processo de
+instalação.
+</LI><LI>Os arquivos de aplicação para os componentes selecionados do AFS para
+Windows são instalados em seu sistema. Quando o processo de instalação
+terminar, a caixa de diálogo Instalação Completa aparece, indicando que você
+deve reiniciar seu sistema antes de poder utilizar os produtos AFS
+instalados. Selecione <B>Sim, eu desejo reiniciar meu computador
+agora</B>, e selecione então o botão <B>Finalizar</B>. Seu
+sistema será encerrado e reiniciado.
+<P>A instalação do AFS para Windows está completa.
+</LI></OL>
+<P><H3><A NAME="Header_11" HREF="awqbg002.htm#ToC_11">Alterações Efetuadas em seu Sistema</A></H3>
+<P>
+<A NAME="IDX214"></A>
+Esta seção descreve as alterações que foram efetuadas em seu sistema pela
+instalação de cada componente do AFS para Windows. As informações nesta
+seção são baseadas nas configurações de instalação padrão.
+<P><H4><A NAME="HDRCLIENTCHANGE">Alterações efetuadas em seu sistema pela instalação do AFS Client</A></H4>
+<P>A instalação do AFS Client para Windows NT efetua as seguintes
+alterações em seu sistema:
+<UL>
+<LI>Cria um grupo de programa no menu <B>Iniciar</B> chamado <B>IBM
+AFS</B> com os seguintes programas de aplicação:
+<DL>
+<DD><P>A entrada de programa <B>Documentação</B> permite acesso ao conjunto
+de documentação online do AFS fornecido com o AFS para Windows.
+<DD><P>O subgrupo de programa <B>Cliente</B> permite aos usuários acessar a
+caixa de propriedade do AFS Client e a Ajuda Online do AFS Client.
+</DL>
+</LI><LI>Inclui o Menu AFS no menu de contexto do Windows NT Explorer.
+</LI><LI>Cria um diretório de documentação e coloca os documentos online
+<I>Iniciação Rápida IBM AFS para Windows</I> e <I>Notas de Release do
+IBM AFS para Windows</I> no diretório, o qual está localizado em
+<B>\Arquivos de Programa\Ibm\Afs\Documentação</B>.
+</LI><LI>Inclui <B>Credenciais AFS</B> ao grupo de programas
+<B>Inicialização</B>. O ícone <B>AFS Client</B> é exibido na
+barra de tarefas durante a inicialização.
+</LI><LI>Cria os diretórios de instalação nos quais o programa de configuração
+instala arquivos AFS binários, de ícones, e de ajuda. Os diretórios
+padrão são <B>\Arquivos de Programa\Ibm\Afs\Cliente\Programa</B> e
+<B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Registra o AFS Client como um serviço.
+</LI><LI>Instala o utilitário Configuração do AFS Client e inclui o ícone
+<B>Configuração do AFS Client</B> no Painel de Controle através da
+colocação do arquivo <B>afs_cpa.cpl</B> no diretório
+<B>\</B><I>WindowsDefault</I><B>\system32</B>, onde
+<I>WindowsDefault</I> é o seu diretório Windows.
+</LI><LI>Coloca o arquivo <B>afsdcell.ini</B> no seu diretório Windows e
+no diretório <B>\Arquivos de Programa\Ibm\Afs\Comum</B>. Se você
+atualizou a partir de uma versão anterior do AFS Client, o banco de dados da
+célula AFS Client (<B>afsdcell.ini</B>) no diretório Windows não é
+substituído.
+</LI><LI>Modifica o Registro Windows NT ao incluir entradas pertinentes ao AFS
+Client.
+</LI></UL>
+<P><H4><A NAME="Header_13">Alterações efetuadas em seu sistema pela instalação do AFS Básico</A></H4>
+<P>A instalação do AFS Básico para Windows 95 e Windows 98 efetua as
+seguintes alterações em seu sistema:
+<UL>
+<LI>Cria um grupo de programas chamado <B>IBM AFS</B> com os seguintes
+programas de aplicação:
+<DL>
+<DD><P>A entrada de programa <B>Documentação</B> permite acesso ao conjunto
+de documentação online do AFS fornecido com o AFS para Windows.
+<DD><P>O subgrupo de programa <B>Básico</B> permite aos usuários acessar a
+caixa de propriedade do AFS Básico e a Ajuda Online do AFS Básico.
+</DL>
+</LI><LI>Inclui o Menu AFS no menu de contexto do Windows Explorer.
+</LI><LI>Cria um diretório de documentação e coloca os documentos online
+<I>Iniciação Rápida ao IBM AFS para Windows</I> e <I>Notas de Release do
+IBM AFS para Windows</I> no diretório, o qual está localizado em
+<B>\Arquivos de Programa\Ibm\Afs\Documentação</B>.
+</LI><LI>Cria os diretórios de instalação nos quais o programa de configuração
+instala arquivos AFS binários, de ícones e de ajuda. Os diretórios
+padrão são <B>\Arquivos de Programa\Ibm\Afs\Cliente\Programa</B> e
+<B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Instala o utilitário Configuração do AFS Básico e inclui o ícone <B>
+Configuração do AFS Básico</B> no Painel de Controle através da colocação do
+arquivo <B>afs_cpa.cpl</B> no diretório
+<B>\</B><I>WindowsDefault</I><B>\system</B>, onde <I>
+WindowsDefault</I> é o seu diretório Windows.
+</LI><LI>Coloca o arquivo <B>afsdcell.ini</B> no seu diretório Windows e
+no diretório <B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Modifica o Registro Windows ao incluir entradas pertinentes ao AFS
+Básico.
+</LI></UL>
+<P><H4><A NAME="Header_14">Alterações efetuadas em seu sistema pela instalação do AFS Server</A></H4>
+<P>A instalação do AFS Server para Windows NT efetua as seguintes
+alterações em seu sistema:
+<UL>
+<LI>Cria um grupo de programa no menu <B>Iniciar</B> chamado <B>IBM
+AFS</B> com os seguintes programas de aplicação:
+<DL>
+<DD><P>A entrada de programa <B>Documentação</B> permite acesso ao conjunto
+de documentação online do AFS fornecido com o AFS para Windows.
+<DD><P>O subgrupo de programa <B>Servidor</B> permite aos usuários acessar o
+Assistente Início Rápido do AFS Server.
+</DL>
+</LI><LI>Cria um diretório de documentação e coloca os documentos online
+<I>Inciação Rápida ao IBM AFS para Windows</I> e <I>Notas de Release do
+IBM AFS para Windows</I> no diretório, o qual está localizado em
+<B>\Arquivos de Programa\Ibm\Afs\Documentação</B>.
+</LI><LI>Cria os diretórios de instalação nos quais o programa de configuração
+instala arquivos AFS binários, de ícones, e de ajuda. Os diretórios
+padrão são <B> \Arquivos de Programa\Ibm\Afs\Servidor\usr\afs\bin</B> e
+<B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Registra o AFS Server como um serviço.
+</LI><LI>Instala o utilitário Configuração do AFS Server e inclui o ícone
+<B>Configuração do AFS Server</B> no Painel de Controle através da
+colocação do arquivo <B>afsserver.cpl</B> no diretório
+<B>\</B><I> WindowsDefault</I><B>\system32</B>, onde
+<I>WindowsDefault</I> é o seu diretório Windows.
+</LI><LI>Modifica o Registro Windows NT ao incluir entradas pertinentes ao AFS
+Server.
+</LI></UL>
+<P><H4><A NAME="Header_15">Alterações efetuadas em seu sistema pela instalação do Centro de Controle do AFS</A></H4>
+<P>A instalação do Centro de Controle do AFS para Windows NT efetua as
+seguintes alterações em seu sistema:
+<UL>
+<LI>Cria um grupo de programa no menu <B>Iniciar</B> chamado <B>IBM
+AFS</B> com os seguintes programas de aplicação:
+<DL>
+<DD><P>A entrada de programa <B>Documentação</B> permite acesso ao conjunto
+de documentação online do AFS fornecido com o AFS para Windows.
+<DD><P>O subgrupo de programa <B>Centro de Controle</B> permite aos usuários
+acessar o Gerenciador de Conta e o Gerenciador de Servidor.
+</DL>
+</LI><LI>Cria um diretório de documentação e coloca os documentos online
+<I>Iniciação Rápida ao IBM AFS para Windows</I> e <I>Notas de Release do
+IBM AFS para Windows</I> no diretório, o qual está localizado em
+<B>\Arquivos de Programa\Ibm\Afs\Documentação</B>.
+</LI><LI>Cria os diretórios de instalação nos quais o programa de configuração
+instala arquivos AFS binários, de ícones, e de ajuda. Os diretórios
+padrão são <B>\Arquivos de Programa\Ibm\Afs\Centro de Controle</B> e
+<B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Instala o utilitário Propriedades do Centro de Controle do AFS e inclui o
+ícone <B>Centro de Controle do AFS</B> no Painel de Controle através da
+colocação do arquivo <B>afs_cpa.cpl</B> no diretório
+<B>\</B><I>WindowsDefault</I><B>\system32</B>, onde <I>
+WindowsDefault</I> é o seu diretório Windows. Este ícone é incluído
+no Painel de Controle se somente o Centro de Controle do AFS estiver instalado
+em seu sistema.
+</LI><LI>Coloca o arquivo <B>afsdcell.ini</B> no seu diretório Windows e
+no diretório <B>\Arquivos de Programa\Ibm\Afs\Comum</B>.
+</LI><LI>Modifica o Registro Windows NT ao incluir entradas pertinentes ao Centro
+de Controle do AFS.
+</LI></UL>
+<P><H4><A NAME="Header_16">Alterações efetuadas em seu sistema pela instalação da Documentação Suplementar do AFS</A></H4>
+<P>A instalação da Documentação Suplementar do AFS efetua as seguintes
+alterações em seu sistema:
+<UL>
+<LI>Cria um grupo de programa no menu <B>Iniciar</B> chamado <B>IBM
+AFS</B> com uma entrada de programa chamada <B>Documentação</B>.
+</LI><LI>Os seguintes documentos de administração de sistema são instalados na
+máquina: <I>IBM AFS Administration Guide</I> e <I>IBM AFS
+Administration Reference</I>. Estes programas são incluídos no
+diretório de documentação online, o qual está localizado em <B>\Arquivos de
+Programa\Ibm\Afs\Documentação</B>. Os documentos online
+<I>Iniciação Rápida ao IBM AFS para Windows</I> e <I>Notas de Release do
+IBM AFS para Windows</I> também são instalados no diretório de
+documentação.
+</LI><LI>Modifica o Registro Windows NT ao incluir entradas pertinentes à
+Documentação Suplementar do AFS.
+</LI></UL>
+<HR><H2><A NAME="HDRDOCUMENT" HREF="awqbg002.htm#ToC_17">Documentação do AFS para Windows</A></H2>
+<P>Esta seção descreve a documentação fornecida com o AFS para Windows e
+detalha os procedimentos para acessar esta documentação.
+<P><H3><A NAME="Header_18" HREF="awqbg002.htm#ToC_18">O Diretório de Documentação Online</A></H3>
+<A NAME="IDX215"></A>
+<A NAME="IDX216"></A>
+<P>Independente dos componentes que você instalar em seu sistema, um diretório
+de documentação é criado. A localização padrão é <B>\Arquivos de
+Programa\Ibm\Afs\Documentação</B>. Este diretório inclui o
+<I>Iniciação Rápida ao IBM AFS para Windows</I> e o <I>Notas de Release
+do IBM AFS para Windows</I>. Estes mesmos documentos estão
+disponíveis no Índice de documentação acessado a partir da entrada
+<B>Documentação</B> no menu <B>Iniciar</B>.
+<P>Se você instalar a Documentação Suplementar do AFS, o diretório de
+documentação também inclui os seguintes documentos: <I>IBM AFS
+Administration Guide</I> e <I>IBM AFS Administration
+Reference</I>. Estes mesmos documentos estão disponíveis no Índice de
+documentação acessado a partir da entrada <B>Documentação</B> no menu
+<B> Iniciar</B>.
+<P><H4><A NAME="Header_19">Para acessar o diretório de documentação online:</A></H4>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Programas</B>, escolha
+então <B>IBM AFS</B>, em seguida escolha <B>Documentação</B>.
+</LI><LI>Selecione o documento que deseja exibir.
+</LI></OL>
+<P><H3><A NAME="Header_20" HREF="awqbg002.htm#ToC_20">O Diretório de Documentação em CD-ROM</A></H3>
+<A NAME="IDX217"></A>
+<A NAME="IDX218"></A>
+<P>O CD-ROM do AFS para Windows possui um diretório de documentação.
+Este diretório inclui a seguinte documentação: <I>Iniciação Rápida ao
+IBM AFS para Windows</I>, <I>Notas de Release do IBM AFS para
+Windows</I>, <I>IBM AFS Administration Guide</I> e <I>IBM AFS
+Administration Reference</I>. A documentação é fornecida nos formatos
+HTML e PDF.
+<P><H4><A NAME="Header_21">Para acessar o diretório de documentação em CD-ROM:</A></H4>
+<OL TYPE=1>
+<LI>Coloque o CD-ROM do AFS para Windows na unidade de CD-ROM de sua
+máquina.
+</LI><LI>Siga um dos caminhos listados abaixo. Note que <I>CD</I> é a
+letra da unidade da sua unidade de CD-ROM.
+<UL>
+<LI>Para documentação HMTL, siga o caminho
+<I>CD</I><B>:\Documentação\Html</B>.
+</LI><LI>Para documentação PDF, siga o caminho
+<I>CD</I><B>:\Documentação\Pdf</B>.
+</LI></UL>
+</LI></OL>
+<P><H3><A NAME="Header_22" HREF="awqbg002.htm#ToC_22">Ajuda Online</A></H3>
+<A NAME="IDX219"></A>
+<A NAME="IDX220"></A>
+<P>A ajuda online é instalada junto com cada componente AFS para
+Windows. A documentação de ajuda online descreve os recursos
+disponíveis em cada componente. Utilize os menus <B>Ajuda</B> e os
+botões <B>Ajuda</B> localizados na maioria das caixas de diálogo para
+acessar a ajuda online. Você pode obter ajuda sobre tópicos navegando
+na página de conteúdo, utilizando o índice para localizar tópicos, e
+utilizando <B>Procurar</B>, o mecanismo de pesquisa da ajuda
+online.
+<HR><H2><A NAME="HDRCONFIGURE" HREF="awqbg002.htm#ToC_23">Configurando o AFS para Windows</A></H2>
+<P>
+<A NAME="IDX221"></A>
+<A NAME="IDX222"></A>
+Esta seção detalha o procedimento de configuração para cada um dos componentes
+do AFS para Windows. Você deve configurar os componentes em seu sistema
+antes de poder utilizar o AFS.
+<P><H3><A NAME="HDRCLIENT_CONFIG" HREF="awqbg002.htm#ToC_24">Para Configurar o AFS Client</A></H3>
+<A NAME="IDX223"></A>
+<A NAME="IDX224"></A>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se você pretende configurar o AFS Server em seu sistema Windows NT, não é
+necessário configurar o AFS Client. O AFS Client é configurado
+automaticamente quando o AFS Server é configurado. Além disto, se você
+atualizou para esta versão do AFS para Windows a partir de uma versão anterior
+do AFS Client, as informações de configuração são preservadas. Você não
+precisa reconfigurar o AFS Client.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Configurações</B>, em
+seguida escolha <B>Painel de Controle</B>.
+</LI><LI>Dê um clique duplo no ícone <B> Configuração do AFS Client</B>.
+O utilitário Configuração do AFS Client é aberto, exibindo a guia
+<B>Geral</B>.
+</LI><LI>Na caixa <B>Nome da Célula</B>, digite o nome da célula AFS na qual a
+máquina deve ser um cliente.
+</LI><LI>Escolha a guia <B>Células AFS</B>. Se a célula na qual a
+máquina deve ser um cliente não estiver presente na lista de células AFS,
+escolha o botão <B>Incluir</B>. A caixa de diálogo Nova Célula é
+aberta. Digite o nome da célula na caixa <B>Célula AFS</B> e uma
+pequena descrição na caixa <B>Descrição</B>.
+<P>Escolha o botão <B>Incluir</B>. A caixa de diálogo Incluir
+Servidor é aberta. Na caixa <B>Nome do Servidor</B>, digite o nome
+de um Servidor de Localização de Volume na célula selecionada. Escolha
+<B>OK</B> para fechar a caixa de diálogo Incluir Servidor. Repita
+este processo, incluindo informações para todos os Servidores de Localização
+de Volume na célula. (Se você não souber os nomes dos Servidores de
+Localização de Volume na célula AFS, consulte seu administrador de sistema
+AFS.) Após todas as informações do servidor terem sido digitadas,
+escolha <B>OK</B> para fechar a caixa de diálogo Nova Célula.
+</LI><LI>Selecione a guia <B>Geral</B> e escolha o botão <B>Iniciar
+Serviço</B> para iniciar o serviço do AFS Client.
+</LI><LI>Selecione a guia <B>Letras das Unidades</B>. Para mapear uma
+letra de unidade em uma máquina Windows NT para o espaço de arquivo do AFS,
+escolha o botão <B>Incluir</B>. A caixa de diálogo Mapear Letra da
+Unidade é aberta.
+</LI><LI>Na caixa <B>Letra da Unidade</B>, selecione a unidade a ser mapeada
+para o espaço de arquivo do AFS ou aceite o padrão. Na caixa
+<B>Caminho</B> do <B>AFS</B>, indique a localização AFS para a qual
+você deseja mapear a unidade selecionada, por exemplo,<B> /afs</B>.
+Se desejado, digite uma descrição do mapeamento da unidade AFS na caixa
+<B>Descrição</B>. Escolha <B>OK</B> para conectar a unidade ao
+local especificado no espaço de arquivo do AFS.
+</LI><LI>Escolha <B>OK</B> para fechar o utilitário Configuração do AFS
+Client.
+<P>Agora, o AFS Client está configurado na célula AFS selecionada e o espaço
+de arquivo do AFS pode ser acessado através do mapeamento de unidade
+selecionado no Windows NT Explorer.
+</LI></OL>
+<P><H3><A NAME="HDRGATEWAY" HREF="awqbg002.htm#ToC_25">Para Configurar o AFS Client como um Gateway AFS Básico</A></H3>
+<A NAME="IDX225"></A>
+<A NAME="IDX226"></A>
+<A NAME="IDX227"></A>
+<P>Você pode configurar o AFS Client em sua máquina Windows NT para funcionar
+como um Gateway AFS Básico. Seu AFS Client, configurado como um Gateway
+AFS Básico, possibilita que os usuários AFS Básico acessem o espaço de arquivo
+do AFS.
+<OL TYPE=1>
+<LI>Configure o AFS Client conforme detalhado em <A HREF="#HDRCLIENT_CONFIG">Para Configurar o AFS Client</A>.
+</LI><LI>A partir do menu <B>Iniciar</B>, escolha <B>Configurações</B>, em
+seguida escolha <B>Painel de Controle</B>.
+</LI><LI>Dê um clique duplo no ícone <B> Configuração do AFS Client</B>.
+O utilitário Configuração do AFS Client é aberto, exibindo a guia <B>
+Geral</B>.
+</LI><LI>Selecione a opção <B>Prover um Gateway AFS Básico</B>.
+</LI><LI>Escolha <B>OK</B>. 
+<UL>
+<LI>Se o serviço do AFS Client estiver sendo executado, uma caixa de mensagens
+aparece, informando que o serviço deve ser reiniciado. Escolha
+<B>Sim</B> para reiniciar o serviço do AFS Client e ativar o Gateway AFS
+Básico.
+</LI><LI>Se o serviço do AFS Client for interrompido, uma caixa de mensagens
+aparece, informando que você deve iniciar o serviço do AFS Client.
+Escolha <B>Sim</B> para iniciar o serviço do AFS Client e ativar o Gateway
+AFS Básico.
+</LI></UL>
+</LI><LI>
+<A NAME="IDX228"></A>
+Adicione entradas de células ao banco de dados da célula em seu Gateway AFS
+Básico. Note que para que um usuário AFS Básico acesse uma célula, uma
+entrada para a célula deve existir tanto no banco de dados da célula no AFS
+Básico quanto no banco de dados da célula no Gateway AFS Básico.
+Informações incorretas ou inexistentes sobre uma célula no banco de dados da
+célula na máquina gateway torna clientes básicos incapazes de acessar
+arquivos. 
+<P><B>Para incluir uma entrada no banco de dados da célula:</B>
+<P>Acesse a guia <B>Células AFS</B>a partir do utilitário Configuração do
+AFS Básico e escolha o botão <B>Incluir</B>. A caixa de diálogo
+Nova Célula é aberta. Digite o nome da célula na caixa <B>Célula
+AFS</B> e uma pequena descrição na caixa <B>Descrição</B>.
+<P>Escolha o botão <B>Incluir</B>. A caixa de diálogo Incluir
+Servidor é aberta. Na caixa <B> Nome do Servidor</B>, digite o nome
+de um Servidor de Localização de Volume na célula selecionada. Escolha
+<B>OK</B> para fechar a caixa de diálogo Incluir Servidor. Repita
+este processo, incluindo informações para todos os Servidores de Localização
+de Volume na célula. (Se você não souber os nomes dos Servidores de
+Localização de Volume na célula AFS, consulte seu administrador de sistema
+AFS.) Após todas as informações do servidor terem sido digitadas,
+escolha <B>OK</B> para fechar a caixa de diálogo Nova Célula.
+</LI></OL>
+<P>
+<A NAME="IDX229"></A>
+<A NAME="IDX230"></A>
+<A NAME="IDX231"></A>
+A máquina Windows NT agora está configurada como um Gateway AFS Básico.
+Uma vez configurada como um Gateway AFS Básico, sua máquina AFS Client deve
+ser capaz de autenticar usuários AFS Básico em um contexto Windows.
+Esta autenticação pode ser obtida através de uma conta do usuário de
+<I>domínio</I> ou através de contas do usuário de <I>máquina</I>
+sincronizadas. Uma conta do usuário de domínio é uma conta do usuário
+em um domínio Windows. Uma conta do usuário de máquina é uma conta do
+usuário que é válida somente em uma máquina host específica.
+<P>Quando o Gateway AFS Básico é configurado em um domínio Windows, o usuário
+AFS Básico precisa se conectar ou em uma conta do usuário de domínio no
+domínio ao qual o gateway pertence ou a uma conta do usuário de máquina com o
+mesmo nome do usuário e senha da conta do usuário de domínio no domínio do
+gateway.
+<P>Se contas do usuário de máquina são empregadas, então estas contas devem
+ser sincronizadas nas máquinas Gateway AFS Básico e AFS Básico. Um
+usuário deve se conectar em uma máquina AFS Básico com o mesmo nome do usuário
+e senha de uma conta do usuário de máquina que esteja definida na máquina
+Gateway AFS Básico.
+<P><H3><A NAME="Header_26" HREF="awqbg002.htm#ToC_26">Para Configurar o AFS Básico</A></H3>
+<A NAME="IDX232"></A>
+<A NAME="IDX233"></A>
+<P>O AFS Básico acessa o espaço de arquivo do AFS através de um Gateway AFS
+Básico. Antes de configurar o AFS Básico, você deve ter uma máquina
+Windows NT executando o AFS Client e configurada como um Gateway AFS
+Básico. Consulte <A HREF="#HDRGATEWAY">Para Configurar o AFS Client como um Gateway AFS Básico</A> para obter maiores informações.
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Configurações</B>, em
+seguida escolha <B>Painel de Controle</B>.
+</LI><LI>Dê um clique duplo no ícone <B>Configuração do AFS Básico</B>.
+O utilitário Configuração do AFS Básico é aberto, exibindo a guia <B>
+Geral</B>.
+<A NAME="IDX234"></A>
+<A NAME="IDX235"></A>
+</LI><LI>Na caixa <B>Gateway</B>, digite o nome da máquina Windows NT que está
+configurada como um Gateway AFS Básico e clique em <B>Conectar
+Agora</B>. O nome da máquina gateway é o nome do serviço NetBIOS do
+gateway, no formato <I>mach</I><B>-afs</B>, onde
+<I>mach</I> é o nome do computador host até um máximo de 11
+caracteres. O AFS Básico deve ser capaz de resolver este nome de
+serviço para se comunicar com uma máquina gateway. Resolução de nome
+pode ser obtida incluindo o nome do serviço NetBIOS do gateway ao arquivo
+LMHOSTS do cliente ou aos servidores DNS ou WINS adequados. Se a
+máquina AFS Básico e sua máquina Gateway AFS Básico se localizam na mesma
+sub-rede, nenhuma configuração adicional é necessária. 
+<P>O AFS Básico se torna automaticamente um membro da mesma célula do seu
+Gateway AFS Básico. O nome da célula é exibido na caixa <B>Nome da
+Célula</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se a máquina Gateway AFS Básico estiver no mesmo domínio da máquina AFS
+Básico e o nome de host da máquina gateway neste domínio for
+<B>xyz-pc</B>, você pode especificar o nome do computador na caixa
+<B>Gateway</B> como <B>xyz-pc</B> ou
+<B>xyz-pc.xcompany.com</B>.
+</TD></TR></TABLE>
+</LI><LI>Escolha a guia <B>Células AFS</B>. Se a célula a qual a máquina
+pertence não estiver presente na lista de células AFS, escolha o botão
+<B>Incluir</B>. A caixa de diálogo Nova Célula é aberta.
+Digite o nome da célula na caixa <B>Célula AFS</B> e uma pequena descrição
+na caixa <B>Descrição</B>. 
+<P>Escolha o botão <B> Incluir</B>. A caixa de diálogo Incluir
+Servidor é aberta. Na caixa <B> Nome do Servidor</B>, digite o nome
+de um Servidor de Localização de Volume na célula selecionada. Escolha
+<B>OK</B> para fechar a caixa de diálogo Incluir Servidor. Repita
+este processo, incluindo informações para todos os Servidores de Localização
+de Volume na célula. (Se você não souber os nomes dos Servidores de
+Localização de Volume na célula AFS, consulte seu administrador de sistema
+AFS.) Após todas as informações do servidor terem sido digitadas,
+escolha <B>OK</B> para fechar a caixa de diálogo Nova Célula.
+<P>Note que uma entrada idêntica deve existir no banco de dados da célula do
+Gateway AFS Básico (arquivo <B>afsdcell.ini</B>) para que o usuário
+AFS Básico autentique para a célula. Consulte <A HREF="#HDRGATEWAY">Para Configurar o AFS Client como um Gateway AFS Básico</A> para obter maiores informações sobre sincronizar o banco de
+dados da célula da máquina gateway com o banco de dados da célula de seu
+cliente básico.
+</LI><LI>Selecione a guia <B>Letras das Unidades</B>. Para mapear uma
+letra de unidade em uma máquina Windows para o espaço de arquivo do AFS,
+escolha o botão <B> Incluir</B>. A caixa de diálogo Mapear Letra da
+Unidade é aberta.
+</LI><LI>Na caixa <B>Letra da Unidade</B>, selecione a unidade a ser mapeada
+para o espaço de arquivo AFS ou aceite o padrão. Na caixa
+<B>Caminho</B> do <B>AFS</B>, indique a localização AFS para a qual
+você deseja mapear a unidade selecionada, por exemplo,<B> /afs</B>.
+Se desejado, digite uma descrição do mapeamento da unidade AFS na caixa
+<B>Descrição</B>. Escolha <B>OK</B> para conectar a unidade ao
+local especificado no espaço de arquivo do AFS.
+</LI><LI>Escolha <B>OK</B> para fechar o utilitário Configuração do AFS
+Básico.
+<P>O AFS Básico está agora configurado na célula AFS especificada e o espaço
+de arquivo do AFS pode ser acessado através do mapeamento de unidade no
+Windows Explorer.
+</LI></OL>
+<P><H3><A NAME="Header_27" HREF="awqbg002.htm#ToC_27">Para Configurar o AFS Server</A></H3>
+<A NAME="IDX236"></A>
+<A NAME="IDX237"></A>
+<P>O processo de configuração inicia os serviços necessários para a execução
+do AFS Server e define partições AFS na sua máquina Windows NT.
+Utilizando o Assistente de Configuração do AFS, você pode configurar
+rapidamente o AFS Server como o primeiro servidor em uma nova célula AFS ou
+como um servidor em uma célula AFS existente. Note que se você
+atualizou para esta versão do AFS Server, as informações de configuração da
+versão anterior são preservadas; você não precisa reconfigurar o
+servidor.
+<P><B>
+<A NAME="IDX238"></A>
+Para configurar o AFS Server como primeiro AFS Server em uma
+célula:</B>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Programas</B>, escolha
+então <B>IBM AFS</B>, escolha em seguida <B>Servidor</B>, e em seguida
+<B>Assistente de Configuração</B>. O Assistente Início Rápido do
+AFS Server é aberto.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Informações
+de Célula e Servidor aparece.
+</LI><LI>Escolha a opção <B>Este será o primeiro servidor em uma nova célula
+AFS</B>.
+</LI><LI>Na caixa <B>Nome da Célula</B>, digite o nome da nova célula
+AFS.
+<P>As seguintes restrições se aplicam ao formato do nome de um domínio
+internet que pode ser utilizado como nome de uma célula AFS:
+<UL>
+<LI>O nome da célula deve ser único para distinguir sua célula AFS de todas as
+outras no espaço de nome global do AFS.
+</LI><LI>O nome da célula pode contar até 64 caracteres; entretanto,
+recomenda-se utilizar nomes mais curtos.
+</LI><LI>O nome da célula deve incluir apenas caracteres minúsculos, números,
+sublinhado, traço e pontos para garantir portabilidade entre tipos diferentes
+de sistemas operacionais.
+</LI><LI>O nome da célula pode incluir qualquer quantidade de letras, as quais, por
+convenção, são separadas por pontos.
+</LI><LI>O nome da célula deve terminar com um sufixo que indique o tipo de
+instituição ao qual pertence. Alguns sufixos padrão são
+<B>.com</B>, para empresas e outras organizações comerciais,
+<B>.edu</B>, para instituições educacionais como universidades,
+<B>.gov</B>, para instituições governamentais e
+<B>.mil</B>, para instituições militares.
+</LI></UL>
+</LI><LI>Na caixa <B>Senha</B>, digite a cadeia de caracteres que vai servir
+como senha para a conta principal do AFS Server na célula
+(<B>afs</B>). Todos os Servidores AFS recebem tokens AFS como este
+principal, e o módulo Ticket Granting Service (TGS) do Servidor de
+Autenticação utiliza esta senha para criptografar os bilhetes de servidor que
+os Clientes AFS apresentam aos servidores durante autenticação mútua.
+</LI><LI>Na caixa <B>Verificar senha</B>, digite novamente a senha AFS inicial
+para a conta principal do AFS Server nesta célula para confirmar a seleção da
+senha.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Informações
+Administrativas aparece.
+</LI><LI>Na caixa <B>Nome</B>, digite um nome do usuário para servir como conta
+administrativa genérica do AFS para esta célula (geralmente,
+<B>admin</B>.)
+<P>
+<A NAME="IDX239"></A>
+A utilização de uma conta administrativa genérica significa que você não
+precisa conceder privilégios para cada administrador de sistema. Em vez
+disto, cada administrador sabe o nome e a senha desta conta administrativa
+genérica e utiliza esta identidade para autenticar no AFS quando for executar
+tarefas que necessitem de privilégios administrativos.
+</LI><LI>Na caixa <B>Senha</B>, digite a cadeia de caracteres que vai servir
+como senha para a conta administrativa do AFS.
+</LI><LI>Na caixa <B>Verificar senha</B>, digite novamente a senha para a conta
+administrativa do AFS para confirmar a seleção da senha.
+</LI><LI>Especifique o ID do Usuário AFS (UID) a ser atribuído à conta
+administrativa do AFS:
+<UL>
+<LI>(Recomendado) Para atribuir automaticamente o próximo UID disponível à
+conta administrativa do AFS, escolha a opção <B>Utilize o próximo UID AFS
+disponível</B>.
+</LI><LI>Para atribuir um UID específico à conta administrativa do AFS, escolha a
+opção <B>Utilize este ID AFS</B> e digite o UID desejado na caixa de
+entrada.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Não é normalmente recomendado atribuir um UID específico a uma conta AFS
+nova, a menos que você precise fazer com que o UID AFS seja igual a um UID
+UNIX existente.
+</TD></TR></TABLE>
+</LI></UL>
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviços de
+Arquivo aparece.
+<P>
+<A NAME="IDX240"></A>
+Os Servidores de Arquivo AFS fornecem arquivos e dados requisitados ao
+servidor pelos Clientes AFS. Os Servidores de Arquivo armazenam
+arquivos e dados, manipulam pedidos para copiar, mover, criar, e excluir
+arquivos e diretórios, e mantém o controle das informações de status sobre
+cada arquivo e diretório no servidor.
+<P>Como você está configurando o primeiro AFS Server em uma célula nova, os
+Serviços de Arquivo devem ser configurados no servidor, e serão configurados
+automaticamente.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviço de
+Banco de Dados aparece.
+<P>
+<A NAME="IDX241"></A>
+Toda célula AFS deve conter pelo menos um Servidor de Banco de Dados.
+Cada Servidor de Banco de Dados executa os processos de Banco de Dados que
+preservam os bancos de dados AFS: o Banco de Dados de Autenticação, o
+Banco de Dados de Proteção, o Banco de Dados de Localização de Volume e,
+opcionalmente, o Banco de Dados de Backup.
+<P>Como você está configurando o primeiro AFS Server em uma célula nova, o
+Serviço de Banco de Dados deve ser configurado no servidor, e é configurado
+automaticamente.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Servidor de
+Backup aparece.
+<P>
+<A NAME="IDX242"></A>
+Um Servidor de Backup preserva o Banco de Dados de Backup onde informações
+relativas ao sistema de Backup estão armazenadas. O Servidor de Backup
+permite que o administrador de sistema AFS execute o backup dos dados
+localizados no espaço de arquivos do AFS de volumes para fita. Os dados
+podem ser recuperados a partir da fita em caso de perda no sistema de arquivos
+(por exemplo, se um defeito no sistema ou no disco resultar em perda de
+dados).
+</LI><LI>Escolha a opção <B>Sim, configure como Servidor de Backup</B> se você
+deseja configurar este AFS Server como um Servidor de Backup. Se você
+não deseja configurar este AFS Server como um Servidor de Backup, escolha a
+opção <B>Não configurar como um Servidor de Backup</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se o Servidor de Backup for configurado em qualquer Servidor de Banco de
+Dados na célula, ele deve ser configurado em <I>todos</I> os Servidores de
+Banco de Dados na célula.
+</TD></TR></TABLE>
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Partição AFS
+aparece.
+<P>
+<A NAME="IDX243"></A>
+Todo Servidor de Arquivo AFS deve ter pelo menos uma partição designada
+exclusivamente para armazenar volumes AFS, e todos os volumes AFS devem estar
+localizados em partições que tenham sido designadas como partições AFS.
+Em uma máquina Windows NT, somente volumes NTFS podem ser designados como
+partições AFS. Além disto, partições AFS somente podem ser criadas em
+volumes NTFS que estejam vazios (ou contenham somente a Lixeira do Windows
+NT).
+<P>Como você está configurando o primeiro AFS Server em uma célula nova, você
+deve designar uma partição AFS no servidor.
+</LI><LI>Na lista de volumes NTFS, escolha o volume que deseja designar como
+partição AFS. Na caixa <B>Nome da Partição AFS</B>, digite a última
+parte do nome da partição.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Podem existir até 256 partições AFS em um AFS Server. Por convenção,
+cada partição é chamada de <B>/vicep</B><I>x</I>, onde <I>x</I> é
+uma ou duas letras minúsculas do alfabeto Inglês. Partições AFS podem
+ser chamadas de <B>/vicepa</B>, <B>/vicepb</B> e assim por diante até
+<B>/vicepz</B>. Partições adicionais podem ser chamadas de
+<B>/vicepaa</B> a <B>vicepaz</B> e assim por diante até
+<B>/vicepiv</B>.
+</TD></TR></TABLE>
+<P>É extremamente recomendável que você utilize letras de unidades de volumes
+NTFS como a última letra do nome da partição.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Volumes Raiz
+do AFS aparece.
+<P>
+<A NAME="IDX244"></A>
+<A NAME="IDX245"></A>
+<A NAME="IDX246"></A>
+Os volumes raiz do AFS são dois volumes que toda célula AFS deve possuir em
+seu sistema de arquivos. Eles são chamados:
+<UL>
+<LI><B>root.afs</B>, para o volume correspondente ao nível mais
+alto (<B>/afs</B>) do espaço de arquivo do AFS
+</LI><LI><B>root.cell</B>, para o volume montado logo abaixo de
+<B>/afs</B> no nome da célula (por exemplo,
+<B>/afs/yourcompany.com</B> na célula
+<B>yourcompany.com</B>)
+</LI></UL>
+<P>Como você está configurando o primeiro AFS Server em uma célula nova, os
+volumes raiz da célula devem ser criados no servidor, e serão criados
+automaticamente.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Replicação
+aparece.
+<P>
+<A NAME="IDX247"></A>
+Se você deseja ser capaz de aproveitar as capacidades de replicação do AFS, os
+volumes raiz do AFS devem ser replicados. O processo de replicação cria
+uma ou mais cópias somente para leitura de um volume AFS, e distribui estas
+cópias para um ou mais locais diferentes (partições e servidores AFS).
+A Replicação aumenta a eficiência do sistema e aprimora a disponibilidade dos
+dados tornando o conteúdo de um volume AFS acessível a uma ou mais máquinas
+Servidor de Arquivo AFS.
+<P>Como você está configurando o primeiro AFS Server em uma célula nova, os
+volumes raiz da célula devem ser replicados no servidor, e serão replicados
+automaticamente durante a configuração do servidor.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviços de
+Controle do Sistema aparece.
+<P>
+<A NAME="IDX248"></A>
+Em células executando a versão doméstica do AFS para Windows, o Servidor de
+Controle do Sistema distribui novas versões de informações de configuração do
+AFS Server para todos os servidores AFS. Recomenda-se normalmente que
+você designe o primeiro servidor em uma célula AFS como o Servidor de Controle
+do Sistema. (Células que estejam utilizando a versão internacional do
+AFS para Windows não utilizam o Servidor de Controle do Sistema para
+distribuir arquivos de configuração do sistema.)
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A função de Servidor de Controle do Sistema pode posteriormente ser atribuído
+a uma máquina servidor diferente se assim for desejado. Entretanto,
+dependendo do número de servidores AFS na célula, o processo de atribuir a
+função para outra máquina pode ser bastante demorado.
+</TD></TR></TABLE>
+</LI><LI>Para configurar este AFS Server como o Servidor de Controle do Sistema
+para a célula AFS, escolha a opção <B>Configurar como o Servidor de Controle
+do Sistema</B>. Se você não deseja configurar este AFS Server como o
+Servidor de Controle do Sistema para a célula AFS, escolha a opção <B>Não
+configurar como o Servidor de Controle do Sistema</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Configurar o
+Sistema aparece.
+<P>Uma lista dos passos que serão seguidos para configurar este AFS Server é
+exibida, possibilitando a revisão dos passos antes de iniciar o processo real
+de configuração.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Para retornar a um passo anterior e revisar ou modificar suas seleções,
+escolha o botão <B>Retornar</B>.
+</TD></TR></TABLE>
+</LI><LI>Para iniciar a configuração do AFS Server nesta máquina, escolha o botão
+<B>Configurar</B>. O AFS Server é configurado de acordo com suas
+especificações. A barra de progresso na parte inferior da caixa de
+diálogo indica os passos em andamento. Uma caixa de mensagem aparece
+indicando que a configuração está completa.
+</LI></OL>
+<P>
+<A NAME="IDX249"></A>
+<B>Para configurar o AFS Server em uma célula existente:</B>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Programas</B>, escolha
+então <B>IBM AFS</B>, escolha em seguida <B>Servidor</B>, e em seguida
+<B>Assistente de Configuração</B>. O Assistente Início Rápido do
+AFS Server é aberto.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Informações
+de Célula e Servidor aparece.
+</LI><LI>Escolha a opção <B>Faça deste host um servidor em uma célula
+existente</B>.
+</LI><LI>Na caixa <B>Nome da Célula</B>, digite o nome da célula AFS na qual
+deseja incluir o novo AFS Server.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Informações
+Administrativas aparece.
+</LI><LI>Na caixa <B>Nome</B>, digite o nome do usuário da conta administrativa
+do AFS, por exemplo <B>admin</B>, ou o nome do usuário de uma conta do
+usuário AFS que tenha privilégios administrativos.
+</LI><LI>Na caixa <B>Senha</B>, digite a senha para a conta administrativa do
+AFS ou a conta do usuário AFS com privilégios administrativos digitada na
+caixa <B>Nome</B>.
+</LI><LI>Na caixa <B>AFS Server</B>, digite o nome do host de um AFS Server que
+esteja sendo executado nesta célula AFS. As informações de configuração
+do AFS serão recuperadas a partir do servidor para serem utilizadas na
+configuração deste novo AFS Server.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviços de
+Arquivo aparece.
+<P>
+<A NAME="IDX250"></A>
+Servidores de Arquivo AFS fornecem arquivos e dados requisitados ao servidor
+pelos Clientes AFS. Servidores de Arquivo armazenam arquivos e dados,
+manipulam pedidos para copiar, mover, criar, e excluir arquivos e diretórios,
+e mantém o controle das informações de status sobre cada arquivo e diretório
+no servidor.
+<P>Para configurar este AFS Server como um Servidor de Arquivo, escolha a
+opção <B>Sim, configure como um Servidor de Arquivo</B>. Se você
+não deseja configurar este AFS Server como um Servidor de Arquivo, escolha a
+opção <B>Não configurar como um Servidor de Arquivo</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviço de
+Banco de Dados aparece.
+<P>
+<A NAME="IDX251"></A>
+Toda célula AFS deve conter pelo menos um Servidor de Banco de Dados.
+Cada Servidor de Banco de Dados executa os processos de Banco de Dados que
+preservam os bancos de dados AFS: o Banco de Dados de Autenticação, o
+Banco de Dados de Proteção, o Banco de Dados de Localização de Volume, e
+opcionalmente o Banco de Dados de Backup.
+<P>Para configurar este AFS Server como um Servidor de Banco de Dados, escolha
+a opção <B>Sim, configure como um Servidor de Banco de Dados</B>.
+Se existir um Servidor de Controle do Sistema na célula AFS na qual você esta
+incluindo o servidor, digite o nome do host na caixa Servidor de Controle do
+Sistema. As informações de configuração do AFS (por exemplo, a lista de
+Servidores de Banco de Dados AFS mantidas no arquivo <B>CellServDB</B> em
+cada máquina AFS Server) serão atualizadas por este servidor. Se você
+não deseja configurar este AFS Server como um Servidor de Banco de Dados,
+escolha a opção <B>Não configurar como um Servidor de Banco de
+Dados</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Servidor de
+Backup aparece.
+<P>
+<A NAME="IDX252"></A>
+Um Servidor de Backup preserva o Banco de Dados de Backup onde informações
+relativas ao sistema de Backup estão armazenadas. O Servidor de Backup
+permite que o administrador de sistema AFS execute o backup dos dados
+localizados no espaço de arquivos do AFS de volumes para fita. Os dados
+podem ser recuperados a partir da fita em caso de perda no sistema de arquivos
+(por exemplo, se um defeito no sistema ou no disco resultar em perda de
+dados).
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">O Servidor de Backup só pode ser configurado em uma máquina que esteja
+configurada como um Servidor de Banco de Dados. Se o Servidor de Backup
+for configurado em qualquer Servidor de Banco de Dados na célula, ele deve ser
+configurado em <I>todos</I> os Servidores de Banco de Dados na
+célula.
+</TD></TR></TABLE>
+</LI><LI>Escolha a opção <B>Sim, configure como Servidor de Backup</B> se você
+deseja configurar este AFS Server como um Servidor de Backup. Se você
+não deseja configurar este AFS Server como um Servidor de Backup, escolha a
+opção <B>Não configurar como um Servidor de Backup</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Partição AFS
+aparece.
+<P>Se você está configurando este AFS Server como um Servidor de Arquivo, você
+deve especificar um volume NTFS para designar como partição AFS. Todo
+Servidor de Arquivo AFS deve ter pelo menos uma partição designada
+exclusivamente para armazenar volumes AFS, e todos os volumes AFS devem estar
+localizados em partições que tenham sido designadas como partições AFS.
+Em uma máquina Windows NT, somente volumes NTFS podem ser designados como
+partições AFS. Além disto, partições AFS somente podem ser criadas em
+volumes NTFS que estejam vazios (ou contenham somente a Lixeira do Windows
+NT).
+<P>Para designar um volume como uma partição AFS, escolha a opção <B>Sim,
+criar uma partição</B>. Na lista de volumes NTFS, escolha o volume
+que deseja designar como uma partição AFS. Na caixa <B>Nome da
+Partição AFS</B>, digite a última parte do nome da partição.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Podem existir até 256 partições AFS em um AFS Server. Por convenção,
+cada partição é chamada de <B>/vicep</B><I>x</I>, onde <I> x</I> é
+uma ou duas letras minúsculas do alfabeto Inglês. Partições AFS podem
+ser chamadas de <B>/vicepa</B>, <B>/vicepb</B>, e assim por diante até
+<B>/vicepz</B>. Partições adicionais podem ser chamadas de
+<B>/vicepaa</B> a <B>vicepaz</B> e assim por diante até
+<B>/vicepiv</B>.
+</TD></TR></TABLE>
+<P>É extremamente recomendável que você utilize letras de unidades de volumes
+NTFS como a última letra do nome da partição.
+<P>Se você não deseja designar um volume como uma partição AFS, escolha a
+opção <B>Não crie uma partição</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Volumes Raiz
+do AFS aparece.
+<P>Os volumes raiz do AFS são dois volumes que toda célula AFS deve possuir em
+seu sistema de arquivos. Eles são chamados:
+<UL>
+<LI><B>root.afs</B>, para o volume correspondente ao nível mais
+alto <B>/afs</B>) do espaço de arquivo do AFS
+</LI><LI><B>root.cell</B>, para o volume montado logo abaixo de
+<B>/afs</B> no nome da célula (por exemplo,
+<B>/afs/yourcompany.com</B> na célula
+<B>yourcompany.com</B>)
+</LI></UL>
+<A NAME="IDX253"></A>
+Como você está incluindo este AFS Server em uma célula AFS existente, os
+volumes raiz do AFS já existem na célula, e o Assistente de Configuração do
+AFS indica que você não precisa criar os volumes raiz. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se por alguma razão os volumes raiz do AFS não existirem ainda nesta célula
+AFS, você pode escolher a opção <B>Sim, criar os volumes raiz</B> para
+criar os volumes raiz neste AFS Server.
+</TD></TR></TABLE>
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Replicação
+aparece.
+<P>Se você deseja ser capaz de aproveitar as capacidades de replicação do AFS,
+os volumes raiz do AFS devem ser replicados. O processo de replicação
+cria uma ou mais cópias somente para leitura de um volume AFS, e distribui
+estas cópias para um ou mais locais diferentes (partições e servidores
+AFS). A Replicação aumenta a eficiência do sistema e aprimora a
+disponibilidade dos dados tornando o conteúdo de um volume AFS acessível a uma
+ou mais máquinas Servidor de Arquivo AFS.
+<P>Como você está incluindo este AFS Server em uma célula AFS existente, os
+volumes raiz do AFS provavelmente já foram replicados, e o Assistente de
+Configuração do AFS Server indica que você não precisa replicar os volumes
+raiz do AFS.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se por alguma razão os volumes raiz do AFS ainda não tiverem sido replicados
+nesta célula AFS, você pode escolher a opção <B> Sim, replicar os volumes
+raiz</B> para replicar os volumes raiz da célula AFS neste AFS
+Server.
+</TD></TR></TABLE>
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Serviços de
+Controle do Sistema aparece.
+<P>Em células que executam a versão doméstica do AFS para Windows, o Servidor
+de Controle do Sistema distribui novas versões de informações de configuração
+do AFS Server para todos os servidores AFS e as máquinas Cliente de Controle
+do Sistema obtém arquivos de configuração comuns do AFS a partir da máquina
+Controle do Sistema. (Células que estejam executando a versão
+internacional do AFS para Windows não utilizam o Servidor de Controle do
+Sistema para distribuir arquivos de configuração do sistema ou o Cliente de
+Controle do Sistema para obter estes arquivos.)
+</LI><LI>Para configurar este AFS Server como o Servidor de Controle do Sistema
+para a célula AFS, escolha a opção <B>Configurar como o Servidor de Controle
+do Sistema</B>. Para configurar este AFS Server como um Cliente de
+Controle do Sistema, escolha a opção <B>Configurar como um Cliente de
+Controle do Sistema</B> e digite o nome do host do Servidor de Controle do
+Sistema nesta célula AFS. O AFS Server irá obter novas versões das
+informações de configuração do AFS Server a partir do servidor
+especificado. Se você não deseja configurar este AFS Server como o
+Servidor de Controle do Sistema para a célula AFS ou como um Cliente de
+Controle do Sistema, escolha a opção <B>Não configurar como o Cliente ou
+Servidor de Controle do Sistema</B>.
+</LI><LI>Escolha o botão <B>Avançar</B>. A caixa de diálogo Configurar o
+Sistema aparece.
+<P>Uma lista dos passos que serão seguidos para configurar este AFS Server é
+exibida, possibilitando a revisão dos passos antes de iniciar o processo real
+de configuração.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Para retornar a um passo anterior e revisar ou modificar suas seleções,
+escolha o botão <B>Retornar</B>.
+</TD></TR></TABLE>
+</LI><LI>Para iniciar a configuração do AFS Server nesta máquina, escolha o botão
+<B>Configurar</B>. Se você estiver configurando o AFS Server em uma
+célula AFS na qual existam Servidores de Banco de Dados executando uma versão
+do AFS anterior à versão 3.5, uma caixa de diálogo aparece solicitando
+que você digite a senha principal do AFS. 
+<P>O AFS Server é configurado de acordo com suas especificações. A
+barra de progresso na parte inferior da caixa de diálogo indica os passos em
+andamento. Uma caixa de mensagem aparece indicando que a configuração
+está completa.
+</LI></OL>
+<P><H3><A NAME="Header_28" HREF="awqbg002.htm#ToC_28">Para Configurar o Centro de Controle do AFS</A></H3>
+<A NAME="IDX254"></A>
+<A NAME="IDX255"></A>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Se você instalou o Centro de Controle do AFS em conjunto com o AFS Server, ou
+o AFS Client, ou ambos, então você não precisa configurar o Centro de Controle
+do AFS. O Centro de Controle do AFS é configurado automaticamente
+quando o AFS Server ou o AFS Client são configurados. Se você instalou
+apenas o Centro de Controle do AFS, então o Centro de Controle deve ser
+configurado em seu sistema antes de poder ser utilizado.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Configurações</B>, em
+seguida escolha <B>Painel de Controle</B>.
+</LI><LI>Dê um clique duplo no ícone <B>Centro de Controle do AFS</B>. A
+caixa de diálogo Propriedades do Centro de Controle do AFS aparece.
+</LI><LI>Na caixa <B>Célula Padrão</B>, digite o nome completo da célula AFS a
+ser administrada por padrão.
+</LI><LI>Se a célula a ser administrada pelo Centro de Controle do AFS não estiver
+presente na lista de células AFS, escolha o botão <B>Incluir</B>. A
+caixa de diálogo Nova Célula é aberta. Digite o nome da célula na caixa
+<B>Célula AFS</B> e uma pequena descrição na caixa
+<B>Descrição</B>.
+<P>Escolha o botão <B> Incluir</B>. A caixa de diálogo Incluir
+Servidor é aberta. Na caixa <B> Nome do Servidor</B>, digite o nome
+de um Servidor de Localização de Volume na célula selecionada. Escolha
+<B>OK</B> para fechar a caixa de diálogo Incluir Servidor. Repita
+este processo, incluindo informações para todos os Servidores de Localização
+de Volume na célula. Após todas as informações do servidor terem sido
+digitadas, escolha <B>OK</B> para fechar a caixa de diálogo Nova
+Célula.
+</LI><LI>Escolha <B>OK</B> para fechar a caixa de diálogo Propriedades do
+Centro de Controle do AFS.
+</LI></OL>
+<P>O Centro de Controle do AFS agora está configurado.
+<A NAME="IDX256"></A>
+<HR><H2><A NAME="HDRUNINSTALL" HREF="awqbg002.htm#ToC_29">Removendo a instalação do AFS para Windows</A></H2>
+<P>Esta seção delineia os pré-requisitos para remoção da instalação,
+fornece instruções para remover a instalação do AFS para Windows, e lista as
+alterações que o processo de remoção da instalação efetuam em seu
+sistema.
+<A NAME="IDX257"></A>
+<A NAME="IDX258"></A>
+<P><H3><A NAME="Header_30" HREF="awqbg002.htm#ToC_30">Reinstalando e Atualizando</A></H3>
+<P>Em uma máquina Windows NT, <I>não</I> é necessário remover a
+instalação dos componentes do AFS para Windows para reinstalar ou atualizar o
+software. Para reinstalar ou atualizar o AFS para Windows, siga o
+procedimento de instalação descrito em <A HREF="#HDRHOWTOINSTALL">Para Instalar o AFS para Windows</A>. Durante o processo de instalação, os componentes AFS
+instalados anteriormente são substituídos. As informações de
+configuração do AFS são preservadas.
+<P>Em uma máquina Windows 95 ou Windows 98, você deve remover a instalação do
+componente AFS Básico instalado anteriormente, conforme descrito em <A HREF="#HDRTOUNINSTALL">Para Remover a Instalação do AFS para Windows</A>, antes de reinstalar ou atualizar o AFS Básico.
+<A NAME="IDX259"></A>
+<A NAME="IDX260"></A>
+<A NAME="IDX261"></A>
+<P><H3><A NAME="Header_31" HREF="awqbg002.htm#ToC_31">Pré-requisitos para Remoção da instalação</A></H3>
+<P>Remover a instalação do AFS resulta na exclusão de todos os arquivos de
+aplicação AFS. Estes arquivos não podem ser excluídos se outras
+aplicações os estiverem utilizando. Por esta razão, você deve fechar
+todas as caixas de diálogo do AFS antes de remover a instalação do AFS para
+Windows.
+<P>Se você estiver removendo a instalação do AFS Server com o propósito de
+remover a incumbência da máquina, os seguintes pré-requisitos são necessários
+para evitar perda de dados:
+<OL TYPE=1>
+<LI>Se o AFS Server estiver funcionando como um Servidor de Arquivo, mova
+todos os volumes de leitura/gravação para outro Servidor de Arquivo do AFS, e
+remova todos os volumes somente para leitura.
+</LI><LI>Remova a configuração do AFS Server. Abra o utilitário Configuração
+do AFS Server e escolha a guia <B>Servidor</B>. Limpe todas as
+caixas de seleção e escolha <B>OK</B>.
+</LI></OL>
+<A NAME="IDX262"></A>
+<A NAME="IDX263"></A>
+<A NAME="IDX264"></A>
+<A NAME="IDX265"></A>
+<A NAME="IDX266"></A>
+<A NAME="IDX267"></A>
+<A NAME="IDX268"></A>
+<P><H3><A NAME="HDRTOUNINSTALL" HREF="awqbg002.htm#ToC_32">Para Remover a Instalação do AFS para Windows</A></H3>
+<OL TYPE=1>
+<LI>A partir do menu <B>Iniciar</B>, escolha <B>Configurações</B>, em
+seguida escolha <B>Painel de Controle</B>.
+</LI><LI>Dê um clique duplo no ícone <B>Adicionar/Remover Programas</B>.
+A caixa de diálogo Propriedades de Adicionar/Remover Programas aparece,
+exibindo a guia <B>Instalar/Desinstalar</B>.
+</LI><LI>Feche o Painel de Controle.
+</LI><LI>Selecione o componente AFS cuja instalação deve ser removida, e selecione
+o botão <B>Adicionar/Remover</B>. A caixa de diálogo Confirmar
+Exclusão de Arquivo aparece, perguntando se você deseja remover o componente
+selecionado do AFS para Windows. Clique em <B>Sim</B> para
+continuar com o procedimento de remoção da instalação.
+</LI><LI>Uma caixa de mensagens AFS aparece perguntando se você deseja preservar as
+informações de configuração. Selecione <B>Sim</B> para preservar as
+informações de configuração ou <B>Não</B> para excluir todas as
+informações de configuração. (Nenhuma informação de configuração está
+associada com o componente Documentação Suplementar do AFS. Se você
+está removendo este componente do seu sistema, a caixa de mensagens AFS não
+aparece.)
+</LI><LI>A caixa de diálogo Remover Programas do seu Computador é aberta, exibindo
+os componentes que estão sendo removidos de seu sistema. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Uma caixa de mensagens pode aparecer perguntando se você deseja remover
+arquivos compartilhados do AFS que não são mais necessários para outros
+componentes. Clique em <B>Sim Para Todos</B> para remover
+completamente os componentes AFS selecionados.
+</TD></TR></TABLE>
+</LI></OL>
+<P>Os componentes do AFS para Windows selecionados estão agora
+removidos. Se você instalou uma combinação de componentes do AFS para
+Windows, deverá repetir as etapas de 4 a 6 para remover cada componente
+separadamente.
+<P><H3><A NAME="Header_33" HREF="awqbg002.htm#ToC_33">Alterações Efetuadas em seu Sistema</A></H3>
+<A NAME="IDX269"></A>
+<P><H4><A NAME="Header_34">Alterações efetuadas em seu sistema pela remoção da instalação do AFS Client</A></H4>
+<P>A remoção da instalação do AFS Client efetua as seguintes alterações em
+seu sistema:
+<UL>
+<LI>Remove todos os arquivos do AFS Client do diretório <B>\Arquivos de
+Programa\Ibm\Afs\Cliente\Programa</B>, remove o diretório
+<B>Cliente</B>, e, se nenhum outro componente AFS permanecer instalado,
+remove o diretório <B>Ibm</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Os diretórios <I>não</I> são removidos se contiverem algum outro arquivo
+diferente daqueles que foram instalados pelo programa <B>configuração</B>
+do AFS para Windows.
+</TD></TR></TABLE>
+</LI><LI>Remove o grupo de programas <B>IBM AFS</B> do menu <B>Iniciar</B>
+se nenhum outro componente AFS permanecer instalado.
+</LI><LI>Remove o ícone <B>Configuração do AFS Client</B> do Painel de
+Controle.
+</LI><LI>Remove o Menu AFS do menu de contexto do Windows NT Explorer.
+</LI><LI>Exclui o serviço <B>AFS Client da IBM</B>.
+</LI><LI>Remove as entradas de registro relacionadas ao AFS Client do seu
+sistema. Note que se você escolheu preservar as informações de
+configuração, algumas informações permanecem no registro após o processo de
+remoção da instalação.
+</LI></UL>
+<P><H4><A NAME="Header_35">Alterações efetuadas em seu sistema pela remoção da instalação do AFS Básico</A></H4>
+<P>A remoção da instalação do AFS Básico efetua as seguintes alterações em
+seu sistema:
+<UL>
+<LI>Remove todos os arquivos AFS do diretório <B>\Arquivos de
+Programa\Ibm\Afs\Cliente\Programa</B> e remove o diretório
+<B>Ibm</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Os diretórios <I>não</I> são removidos se contiverem algum outro arquivo
+diferente daqueles que foram instalados pelo programa <B>configuração</B>
+do AFS para Windows.
+</TD></TR></TABLE>
+</LI><LI>Remove o grupo de programas <B>IBM AFS</B> do menu <B>
+Iniciar</B>.
+</LI><LI>Remove o ícone <B>Configuração do AFS Básico</B> do Painel de
+Controle.
+</LI><LI>Remove o Menu AFS do menu de contexto do Windows Explorer.
+</LI><LI>Remove as entradas de registro relacionadas ao AFS Básico do seu
+sistema. Note que se você escolheu preservar as informações de
+configuração, algumas informações permanecem no registro após o processo de
+remoção da instalação.
+</LI></UL>
+<P><H4><A NAME="Header_36">Alterações efetuadas em seu sistema pela remoção da instalação do AFS Server</A></H4>
+<P>A remoção da instalação do AFS Server efetua as seguintes alterações em
+seu sistema:
+<UL>
+<LI>Remove todos os arquivos do AFS Server do diretório <B>\Arquivos de
+Programa\Ibm\Afs\Servidor</B>, remove o diretório <B>Servidor</B>, e, se
+nenhum outro componente AFS permanece instalado, remove o diretório
+<B>Ibm</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Estes diretórios <I>não</I> são removidos se contiverem algum outro
+arquivo diferente daqueles que foram instalados pelo programa
+<B>configuração</B> do AFS para Windows. Se você escolheu preservar
+informações de configuração, alguns arquivos no diretório <B>\Arquivos de
+Programa\Ibm\Afs\Servidor</B> <I>não</I> são removidos.
+</TD></TR></TABLE>
+</LI><LI>Remove o grupo de programas <B>IBM AFS</B> do menu <B> Iniciar</B>
+se nenhum outro componente AFS permanecer instalado.
+</LI><LI>Remove o ícone <B>Configuração do AFS Server</B> do Painel de
+Controle.
+</LI><LI>Exclui o serviço <B>AFS Server da IBM</B>.
+</LI><LI>Remove as entradas de registro relacionadas ao AFS Server do seu
+sistema. Note que se você escolheu preservar as informações de
+configuração, algumas informações permanecem no registro após o processo de
+remoção da instalação.
+</LI></UL>
+<P><H4><A NAME="Header_37">Alterações efetuadas em seu sistema pela remoção da instalação do Centro de Controle do AFS</A></H4>
+<P>A remoção da instalação do Centro de Controle do AFS efetua as
+seguintes alterações em seu sistema:
+<UL>
+<LI>Remove todos os arquivos do Centro de Controle do AFS do diretório
+<B>\Arquivo de Programa\Ibm\Afs\Centro de Controle</B>, remove o diretório
+<B>Centro de Controle</B>, e, se nenhum outro componente AFS permanecer
+instalado, remove o diretório <B>Ibm</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Estes diretórios <I>não</I> são removidos se contiverem algum outro
+arquivo diferente daqueles que foram instalados pelo programa
+<B>configuração</B> do AFS para Windows.
+</TD></TR></TABLE>
+</LI><LI>Remove o grupo de programas <B>IBM AFS</B> do menu <B> Iniciar</B>
+se nenhum outro componente AFS permanecer instalado.
+</LI><LI>Remove o ícone <B>Centro de Controle do AFS</B> do Painel de
+Controle. Note que este ícone aparece no Painel de Controle apenas se
+nenhum outro componente do AFS para Windows estiver instalado em seu
+sistema.
+</LI><LI>Remove as entradas de registro relacionadas ao Centro de Controle do AFS
+do seu sistema. Note que se você escolheu preservar as informações de
+configuração, algumas informações permanecem no registro após o processo de
+remoção da instalação.
+</LI></UL>
+<P><H4><A NAME="Header_38">Alterações efetuadas em seu sistema pela remoção da instalação da Documentação Suplementar do AFS</A></H4>
+<P>A remoção da instalação da documentação suplementar do AFS efetua as
+seguintes alterações em seu sistema:
+<UL>
+<LI>Remove o diretório <B>SysAdminGd</B> e o diretório <B>CmdRef</B>
+do diretório <B>\Arquivos de Programa\Ibm\Afs\Documentação\Html</B>, e, se
+nenhum outro componente AFS permanecer instalado, remove o diretório
+<B>Ibm</B>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Estes diretórios <I>não</I> são removidos se contiverem algum outro
+arquivo diferente daqueles que foram instalados pelo programa
+<B>configuração</B> do AFS para Windows.
+</TD></TR></TABLE>
+</LI><LI>Remove o grupo de programas <B>IBM AFS</B> do menu <B> Iniciar</B>
+se nenhum outro componente AFS permanecer instalado.
+</LI><LI>Remove as entradas de registro relacionadas à documentação suplementar do
+AFS do seu sistema.
+</LI></UL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">In&iacute;cio da P&aacute;gina</A> &#124; <A HREF="awqbg002.htm">P&aacute;gina Anterior</A> &#124; <A HREF="awqbg004.htm">Pr&oacute;xima P&aacute;gina</A> &#124; <A HREF="awqbg002.htm#ToC">&Iacute;ndice</A> &#124; <A HREF="awqbg004.htm#HDRINDEX">&Iacute;ndice Remissivo</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  Todos os Direitos Reservados. 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf213.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf215.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPTS_CREATEGROUP" HREF="auarf002.htm#ToC_228">pts creategroup</A></H2>
+<A NAME="IDX5252"></A>
+<A NAME="IDX5253"></A>
+<A NAME="IDX5254"></A>
+<A NAME="IDX5255"></A>
+<A NAME="IDX5256"></A>
+<A NAME="IDX5257"></A>
+<A NAME="IDX5258"></A>
+<A NAME="IDX5259"></A>
+<A NAME="IDX5260"></A>
+<A NAME="IDX5261"></A>
+<A NAME="IDX5262"></A>
+<A NAME="IDX5263"></A>
+<A NAME="IDX5264"></A>
+<A NAME="IDX5265"></A>
+<A NAME="IDX5266"></A>
+<A NAME="IDX5267"></A>
+<A NAME="IDX5268"></A>
+<A NAME="IDX5269"></A>
+<A NAME="IDX5270"></A>
+<A NAME="IDX5271"></A>
+<A NAME="IDX5272"></A>
+<A NAME="IDX5273"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Creates an (empty) Protection Database group entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>pts creategroup -name</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>  [<B>-owner</B> &lt;<VAR>owner&nbsp;of&nbsp;the&nbsp;group</VAR>>] 
+                [<B>-id</B> &lt;<VAR>id&nbsp;(negated)&nbsp;for&nbsp;the&nbsp;group</VAR>><SUP>+</SUP>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+                [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts createg -na</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner&nbsp;of&nbsp;the&nbsp;group</VAR>>] 
+            [<B>-i</B> &lt;<VAR>id&nbsp;(negated)&nbsp;for&nbsp;the&nbsp;group</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+            [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+      
+<B>pts cg -na</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner&nbsp;of&nbsp;the&nbsp;group</VAR>>]  
+       [<B>-i</B> &lt;<VAR>id&nbsp;(negated)&nbsp;for&nbsp;the&nbsp;group</VAR>><SUP>+</SUP>]  
+       [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>pts creategroup</B> command creates an entry in the Protection
+Database for each group specified by the <B>-name</B> argument. The
+entry records the issuer of the command as the group&#39;s creator, and as
+the group&#39;s owner unless the <B>-owner</B> argument names an
+alternate user or group as the owner.
+<P>There are two types of groups&#58;
+<UL>
+<P><LI><I>regular</I>, the names of which have two parts separated by a
+colon. The part before the colon names the group&#39;s owner.
+Any user can create such groups.
+<P><LI><I>prefix-less</I>, which do not have an owner prefix. Only
+members of the <B>system&#58;administrators</B> group can create
+prefix-less groups.
+</UL>
+<P>Creating a group lowers the issuer&#39;s group-creation quota by
+one. This is true even if the <B>-owner</B> argument is used to
+assign ownership to an alternate user or group. To display a
+user&#39;s group-creation quota, use the <B>pts examine</B> command;
+to set it, use the <B>pts setfields</B> command.
+<P>AFS group ID (AFS GID) numbers are negative integers and by default the
+Protection Server assigns a GID that is one less (more negative) than the
+current value of the <TT>max group id</TT> counter in the Protection
+Database, decrementing the counter by one for each group. Members of
+the <B>system&#58;administrators</B> group can use the <B>-id</B>
+argument to assign specific AFS GID numbers. If any of the specified
+GIDs is lower (more negative) than the current value of the <TT>max group
+id</TT> counter, the counter is reset to that value. It is acceptable
+to specify a GID greater (less negative) than the current value of the
+counter, but the creation operation fails if an existing group already has
+it. To display or set the value of the <TT>max group id</TT> counter,
+use the <B>pts listmax</B> or <B>pts setmax</B> command,
+respectively.
+<P><STRONG>Output</STRONG>
+<P>The command generates the following string to confirm creation of each
+group&#58;
+<PRE>   group <VAR>name</VAR> has id <VAR>AFS GID</VAR>
+   
+</PRE>
+<P><STRONG>Cautions</STRONG>
+<P>Although using the <B>-owner</B> argument to designate a machine entry
+as a group&#39;s owner does not generate an error, it is not
+recommended. The Protection Server does not extend the usual privileges
+of group ownership to users logged onto the machine.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Specifies the name of each group to create. Provide a string of up
+to 63 characters, which can include lowercase (but not uppercase) letters,
+numbers, and punctuation marks. A regular name includes a single colon
+(<B>&#58;</B>) to separate the two parts of the name; the colon
+cannot appear in a prefix-less group name.
+<P>A regular group&#39;s name must have the following format&#58;
+<PRE>   <VAR>owner_name</VAR><B>&#58;</B><VAR>group_name</VAR>
+   
+</PRE>
+<P>and the <VAR>owner_name</VAR> field must reflect the actual owner of the
+group, as follows&#58; 
+<UL>
+<P><LI>If the optional <B>-owner</B> argument is not included, the field must
+match the AFS username under which the issuer is currently
+authenticated.
+<P><LI>If the <B>-owner</B> argument names an alternate AFS user, the field
+must match that AFS username.
+<P><LI>If the <B>-owner</B> argument names another regular group, the field
+must match the owning group&#39;s owner field (the part of its name before
+the colon). If the <B>-owner</B> argument names a prefix-less
+group, the field must match the owning group&#39;s complete name.
+</UL>
+<P><DT><B>-owner
+</B><DD>Specifies a user or group as the owner for each group, rather than the
+issuer of the command. Provide either an AFS username or the name of a
+regular or prefix-less group. An owning group must already have at
+least one member. This requirement prevents assignment of
+self-ownership to a group during its creation; use the <B>pts
+chown</B> command after issuing this command, if desired.
+<P><DT><B>-id
+</B><DD>Specifies a negative integer AFS GID number for each group, rather than
+allowing the Protection Server to assign it. Precede the integer with a
+hyphen (<B>-</B>) to indicate that it is negative.
+<P>If this argument is used and the <B>-name</B> argument names multiple
+new groups, it is best to provide an equivalent number of AFS GIDs. The
+first GID is assigned to the first group, the second to the second group, and
+so on. If there are fewer GIDs than groups, the Protection Server
+assigns GIDs to the unmatched groups based on the <TT>max group id</TT>
+counter. If there are more GIDs than groups, the excess GIDs are
+ignored. If any of the GIDs is lower (more negative) than the current
+value of the <TT>max group id</TT> counter, the counter is reset to that
+value.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>pts</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>pts</B> reference
+page.
+<P><DT><B>-force
+</B><DD>Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first
+error.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>In the following example, the user <B>pat</B> creates groups called
+<B>pat&#58;friends</B> and <B>pat&#58;colleagues</B>.
+<PRE>   % <B>pts creategroup -name pat&#58;friends pat&#58;colleagues</B>
+   
+</PRE>
+<P>The following example shows a member of the
+<B>system&#58;administrators</B> group creating the prefix-less group
+<B>staff</B> and assigning its ownership to the
+<B>system&#58;administrators</B> group rather than to herself.
+<PRE>   % <B>pts creategroup -name staff -owner system&#58;administrators</B>
+   
+</PRE>
+<P>In the following example, the user <B>pat</B> creates a group called
+<B>smith&#58;team-members</B>, which is allowed because the
+<B>-owner</B> argument specifies the required value
+(<B>smith</B>). 
+<PRE>   % <B>pts creategroup -name smith&#58;team-members -owner smith</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must belong to the <B>system&#58;administrators</B> group
+to create prefix-less groups or include the <B>-id</B> argument.
+<P>To create a regular group, the issuer must
+<UL>
+<P><LI>Be authenticated. The command fails if the <B>-noauth</B> flag
+is provided.
+<P><LI>Have a group-creation quota greater than zero. The <B>pts
+examine</B> command displays this quota.
+</UL>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf213.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf215.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

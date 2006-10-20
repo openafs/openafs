@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_EXAMINE" HREF="auarf002.htm#ToC_199">kas examine</A></H2>
+<A NAME="IDX5082"></A>
+<A NAME="IDX5083"></A>
+<A NAME="IDX5084"></A>
+<A NAME="IDX5085"></A>
+<A NAME="IDX5086"></A>
+<A NAME="IDX5087"></A>
+<A NAME="IDX5088"></A>
+<A NAME="IDX5089"></A>
+<A NAME="IDX5090"></A>
+<A NAME="IDX5091"></A>
+<A NAME="IDX5092"></A>
+<A NAME="IDX5093"></A>
+<A NAME="IDX5094"></A>
+<A NAME="IDX5095"></A>
+<A NAME="IDX5096"></A>
+<A NAME="IDX5097"></A>
+<A NAME="IDX5098"></A>
+<A NAME="IDX5099"></A>
+<A NAME="IDX5100"></A>
+<P><STRONG>目的</STRONG>
+<P>認証データベース項目からの情報を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas examine -name</B> &lt;<VAR>name of user</VAR>> [<B>-showkey</B>] 
+            [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+            [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
+            [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  
+            [<B>-noauth</B>]  [<B>-help</B>]
+    
+<B>kas e -na</B> &lt;<VAR>name of user</VAR>>  [<B>-sh</B>] 
+      [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>] 
+      [<B>-se</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]  
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas examine</B> コマンドは、
+<B>-name</B> 引き数で指定されたユーザーの認証データベース項目の情報を形式化して、表示します。
+<P>このコマンドでの表示設定を更新するには、<B>kas setfields</B> コマンドを発行します。
+<P><STRONG>注意</STRONG>
+<P><B>-showkey</B> フラグを指定すると、標準出力ストリームに実際のキーが表示されるため、セキュリティーが公開されます。ほとんどの場合、チェックサムを表示するだけで十分です。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>情報を表示する認証データベース項目の名前を指定します。
+<P><DT><B><B>-showkey</B>
+</B><DD>キーを構成する 8 進数を表示します。発行者は、その認証データベース項目に <TT>ADMIN</TT> フラグが必要です。
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力には、次の情報が含まれます。
+<UL>
+<LI>項目名。文字列 <TT>User data for</TT> と表示されます。
+</LI><LI>括弧で囲まれた 1 つ以上のフラグ。これは、管理者が
+<B>kas setfields</B> コマンドを使用して、デフォルト値を変更した場合にだけ表示されます。フラグが複数ある場合には、正符号 (<TT>+</TT>) で区切られています。表示可能なデフォルト以外の値とその意味は、以下のようになります。
+<P>
+<DL>
+<P><DT><B><TT>ADMIN</TT>
+</B><DD>特権 <B>kas</B> コマンドの発行をユーザーに許可します (デフォルトは、<TT>NOADMIN</TT> です)。
+<P><DT><B><TT>NOTGS</TT>
+</B><DD>認証サーバーのチケット獲得サービスからのチケットの取得を禁止します (デフォルトは、<TT>TGS</TT> です)。
+<P><DT><B><TT>NOSEAL</TT>
+</B><DD>項目のキー・フィールドを暗号化キーとして使用することをチケット獲得サービスに禁止します (デフォルトは、<TT>SEAL</TT> です)。
+<P><DT><B><TT>NOCPW</TT>
+</B><DD>ユーザーにパスワードの変更を禁止します (デフォルトは、
+<TT>CPW</TT> です)。
+</DL>
+<A NAME="IDX5101"></A>
+<A NAME="IDX5102"></A>
+<A NAME="IDX5103"></A>
+</LI><LI>括弧で囲まれたキー・バージョン番号。<TT>key</TT> という単語の後に、次のいずれかが続きます。
+<UL>
+<LI><B>-showkey</B> フラグが含まれていない場合には、
+<TT>cksum is</TT> という文字の次にそのキーのチェックサムが続きます。チェックサムは、キーの定数を暗号化して引き出された 10 進数です。<B><B>afs</B></B> 項目の場合、この番号は、
+<B>bos listkeys</B> コマンドの出力の対応するキー・バージョン番号のチェックサムと一致していなければなりません。そうでない場合は、
+<I>AFS 管理の手引き</I> の指示に従って、新規のサーバー暗号化キーを作成します。
+</LI><LI><B>-showkey</B> フラグが含まれている場合には、コロンの次に実際のキーが続きます。キーは 8 桁の 8 進数で構成され、それぞれは 3 つの 10 進数ごとにバックスラッシュが付いて表示されます。
+</LI></UL>
+</LI><LI>ユーザーが自分のパスワードを最後に変更した日付。
+<TT>last cpw</TT> という文字列の後に表示されます (パスワードの "パスワードの最終更新日" を意味します)。
+</LI><LI>文字列 <TT>password will never expire</TT> は、関連しているパスワードに有効期限がないことを示しています。文字列<TT>password will expire</TT> は、パスワードの有効期限日の後に表示されます。示された日付後は、ユーザーは認証されません。ただし、<B>kpasswd</B> コマンドまたは
+<B>kas setpassword</B> コマンドを使用して新規パスワードを設定すると、そのパスワードは 30 日間有効です。
+30 日過ぎると、管理者 (アカウントに <TT>ADMIN</TT> フラグが付いている) だけが、
+<B>kas setpassword</B> コマンドを使用してパスワードを変更することができます。パスワードの有効期限を設定するには、
+<B>kas setfields</B> コマンドの <B>-pwexpires</B> 引き数を使用します。
+</LI><LI>ユーザーがパスワードの入力を試行できる回数。この回数を超えても正しいパスワードが入力されないと、アカウントがロックします。これは、
+<TT>consecutive unsuccessful authentications are permitted</TT> または
+<TT>An unlimited number of unsuccessful authentications is permitted</TT> という文字列の後に表示されます。後者は回数に制限がない場合に表示されます。制限を設定するには、<B>kas setfields</B> コマンドの <B>-attempts</B> 引き数を使用します。ロック状態のアカウントのロックを解除するには、<B>kas unlock</B> コマンドを使用します。この設定に関するロックアウト機能のインプリメンテーションについては、<B>kas setfields</B> の解説ページを参照してください。
+</LI><LI>認証の連続試行回数を超えた後で、認証サーバーがユーザーのログインを拒否する時間。<TT>The lock time for this user
+is</TT> という文字列の後に表示されます。ロックアウト時間を設定する場合には、<B>kas</B> コマンドの
+<B>-locktime</B> 引き数を使用します。この行は、成功しない認証試行の制限数が、<B>kas
+setfields</B> コマンドの <B>-attempts</B> 引き数で設定されている場合にのみに表示されます。
+</LI><LI>認証サーバーが現在、ユーザーのログイン試行を拒否するかどうか。文字列 <TT>User is not locked</TT> は、認証が成功可能なことを示しますが、文字列
+<TT>User is locked until</TT> <VAR>time</VAR> は、指定された時間までユーザーが認証されないことを示します。ユーザーに認証の試行を許可する場合には、
+<B>kas unlock</B> コマンドを使用します。この行は、成功しない認証試行の制限数が、
+<B>kas setfields</B> コマンドの <B>-attempts</B> 引き数で設定されている場合にのみに表示されます。
+</LI><LI>認証サーバー項目の有効期限。有効期限がない場合には、
+<TT>entry never expires</TT> という文字列。自身の項目が有効期限切れになると、ユーザーは認証されなくなります。有効期限を設定するには、<B>kas setfields</B> コマンドの <B>-expiration</B> 引き数を使用します。
+</LI><LI>認証サーバーがユーザーに許可するトークンの最大可能存続時間。この値と他の値からトークンの実際の存続時間を判別する方法については、
+<B>klog</B> コマンドの解説ページを参照してください。
+<B>kas setfields</B> コマンドの <B>-lifetime</B> 引き数を使用してこの値を設定してください。
+</LI><LI>項目の最終更新日。<TT>last mod on</TT> という文字列の後に、修正した管理者の名前が続き、その後に更新日が表示されます。ユーザーが自分のパスワードを変更した日付は、出力の 2 行目に
+<TT>last cpw</TT> として記録されます。
+</LI><LI><B>kpasswd</B>、<B>kas
+setpassword</B>、または <B>kas setkey</B> コマンド発行時に、自分が最近使用した 20 個のパスワードが再利用できるかどうか。制限を設定するには、
+<B>kas setfields</B> コマンドの
+<B>-reuse</B> 引き数を使用します。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドの例は、独自の認証データベース項目を表示しているユーザー
+<B>smith</B> を示しています。
+<B>smith</B> が特権であることを表示する
+<TT>ADMIN</TT> フラグに注意してください。
+<PRE>   % <B>kas examine smith</B>
+   Password for smith:
+   User data for smith (ADMIN)
+    key (0) cksum is 3414844392,  last cpw: Thu Mar 25 16:05:44 1999
+    password will expire:  Fri Apr 30 20:44:36 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is not locked.
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Tue Jan 5 08:22:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P>以下の例では、ユーザー <B>pat</B> は、現在有効なアカウント・ロックがいつ解除されるかを判別するために、認証データベース項目を検査しています。
+<PRE>   % <B>kas examine pat</B>
+   Password for pat:
+   User data for pat
+    key (0) cksum is 73829292912,  last cpw: Wed Apr 7 11:23:01 1999
+    password will expire:  Fri  Jun 11 11:23:01 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is locked until Tue Sep 21 12:25:07 1999
+    entry expires on never. Max ticket lifetime 100.00 hours.
+    last mod on Thu Feb 4 08:22:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P>以下の例では、<B>admin</B> としてログインした管理者が、
+<B>-showkey</B> フラグを使用して、<B>afs</B> 項目のキーを構成する 8 進数を表示しています。
+<PRE>   % <B>kas examine -name afs -showkey</B>
+   Password for admin: <VAR>admin_password</VAR>
+   User data for afs
+    key (12): \357\253\304\352\234\236\253\352, last cpw: no date
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Thu Mar 25 14:53:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>ユーザーは、自分の項目を検査することができます。他の項目を検査するには、あるいは、<B>-showkey</B> フラグを組み込むには、発行者は、認証データベース項目で <TT>ADMIN</TT> フラグを設定させる必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<P><A HREF="auarf107.htm#HDRBOS_LISTKEYS">bos listkeys</A>
+<P><A HREF="auarf115.htm#HDRBOS_SETAUTH">bos setauth</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf193.htm#HDRKAS_SETFIELDS">kas setfields</A>
+<P><A HREF="auarf194.htm#HDRKAS_SETPASSWORD">kas setpassword</A>
+<P><A HREF="auarf197.htm#HDRKAS_UNLOCK">kas unlock</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf184.htm">前ページ</A> &#124; <A HREF="auarf186.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C)2 <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B>
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

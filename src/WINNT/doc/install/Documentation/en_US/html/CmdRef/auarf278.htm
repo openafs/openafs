@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf277.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf279.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_UNLOCK" HREF="auarf002.htm#ToC_292">vos unlock</A></H2>
+<A NAME="IDX5855"></A>
+<A NAME="IDX5856"></A>
+<A NAME="IDX5857"></A>
+<A NAME="IDX5858"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Unlocks a single VLDB entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos unlock -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>] 
+           [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos unlock -i</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos unlock</B> command releases the lock on the Volume Location
+Database (VLDB) entry for the indicated volume.
+<P><STRONG>Cautions</STRONG>
+<P>Do not user this command under normal circumstances.
+<P>It is useful if the VLDB entry is locked but there is no reason to suspect
+inconsistency within the volume or between it and the VLDB. Note that
+it is possible to list information from locked VLDB entries, even though they
+cannot be manipulated in other ways.
+<P>The <B>vos unlockvldb</B> command unlocks several VLDB entries at once,
+or even the entire VLDB. The <B>vos lock</B> command locks a VLDB
+entry so that no one else can perform an action that requires writing the
+VLDB.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>Specifies either the complete name or volume ID number of a volume of any
+of the three types.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command&#39;s execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example unlocks the VLDB entry for the volume
+<B>user.terry</B>.
+<PRE>   % <B>vos unlock user.terry</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine specified with the <B>-server</B> argument and on each
+database server machine. If the <B>-localauth</B> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf267.htm#HDRVOS_LOCK">vos lock</A>
+<P><A HREF="auarf279.htm#HDRVOS_UNLOCKVLDB">vos unlockvldb</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf277.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf279.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

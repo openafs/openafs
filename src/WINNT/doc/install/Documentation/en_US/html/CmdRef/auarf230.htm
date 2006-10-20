@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf229.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf231.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRRUNNTP" HREF="auarf002.htm#ToC_244">runntp</A></H2>
+<A NAME="IDX5433"></A>
+<A NAME="IDX5434"></A>
+<A NAME="IDX5435"></A>
+<A NAME="IDX5436"></A>
+<A NAME="IDX5437"></A>
+<A NAME="IDX5438"></A>
+<A NAME="IDX5439"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the Network Time Protocol Daemon
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>runntp</B> [<B>-localclock</B>] [<B>-precision</B> &lt;<VAR>small&nbsp;negative&nbsp;integer</VAR>>]  
+       [<B>-logfile</B> &lt;<VAR>filename&nbsp;for&nbsp;ntpd&#39;s&nbsp;stdout/stderr</VAR>>]  
+       [<B>-ntpdpath</B> &lt;<VAR>pathname&nbsp;of&nbsp;ntpd&nbsp;executable&nbsp;(/usr/afs/bin/ntpd)</VAR>>]  
+       [&lt;<VAR>host</VAR>><SUP>+</SUP>] [<B>-help</B>]
+</PRE>
+<P>This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+<P><STRONG>Description</STRONG>
+<P>The <B>runntp</B> command initializes the Network Time Protocol Daemon
+(NTPD) and related programs on the local machine and constructs an
+<B>ntp.conf</B> configuration file. The intended use is on
+AFS file server machines as a convenient interface to the standard
+<B>ntpd</B> program.
+<P>In the conventional configuration, the binary file for the command is
+located in the <B>/usr/afs/bin</B> directory on a file server
+machine. The command is not normally issued at the command shell
+prompt, but rather placed into a file server machine&#39;s
+<B>/usr/afs/local/BosConfig</B> file with the <B>bos create</B>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a server machine as the local superuser
+<B>root</B>.
+<P><STRONG>Cautions</STRONG>
+<P>Do not run the <B>runntp</B> program if NTPD or another time protocol
+is already in use in the cell. Running two time-synchronization
+protocols can cause errors.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-localclock
+</B><DD>Designates the local machine&#39;s internal clock as a possible time
+source if a network partition separates the machine from the other source
+machines listed on the command line. In cells that are not connected to
+an exterior network or are behind a firewall, include this flag on every
+machine that runs the <B>runntp</B> process. In cells that
+frequently lose access to exterior networks (voluntarily or not), include it
+only on the <B>runntp</B> process running on the system control
+machine. Do not include the flag if the cell is reliably connected to
+exterior networks.
+<P><DT><B>-precision
+</B><DD>Specifies the precision of the local clock. This argument is not
+normally provided. As the <B>ntpd</B> process initializes, it
+determines the precision of the local clock on its own. If provided, it
+is a small integer preceded by a hyphen to show that it is negative.
+The value is used as an exponent on the number 2, and the result interpreted
+as the frequency, in fractions of a second, at which the local clock ticks
+(advances).
+<P>For example, a value of <B>-6</B>, which translates to
+<B>2<SUP>-6</SUP></B> or 1/64, means that the local clock ticks once every
+1/64th of a second, or has a precision of about 60 ticks per second. A
+value of <B>-7</B> translates to about 100 ticks per second. A
+value of <B>-10</B> translates to about 1000 ticks per second (a
+millisecond clock).
+<P><DT><B>-logfile
+</B><DD>Specifies the local disk pathname for the NTP daemon&#39;s log file, such
+as <B>/usr/afs/logs/ntp.log</B>. The log records which
+machines are serving as time sources and peers, what adjustments have been
+made to reduce drift, and so on. Use the <B>ntpd</B> process&#39;s
+debugging mechanism to control the amount of information produced. If
+this argument is omitted, the information is discarded.
+<P><DT><B>-ntpdpath
+</B><DD>Specifies the local disk pathname of the binary for the <B>ntpd</B>
+program. If this argument is omitted, the default is
+<B>/usr/afs/bin/ntpd</B>.
+<P><DT><B><VAR>host</VAR>
+</B><DD>Is the fully qualified hostname of each machine to consult as a time
+source. By convention, the machines are outside the cell if exterior
+networks are accessible.
+<P>In general, this argument is necessary only on the system control
+machine. If the issuer omits it, then the local machine consults the
+local database server machines listed in its copy of the
+<B>/usr/afs/etc/CellServDB</B> file.
+<P>For advice on selecting appropriate time sources, see the <I>AFS Quick
+Beginnings</I> or ask AFS Product Support.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the superuser <B>root</B> on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the <B>bos
+create</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P>UNIX manual page for <B>ntp</B>
+<P>UNIX manual page for <B>ntpd</B>
+<P>UNIX manual page for <B>ntpdc</B>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf229.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf231.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

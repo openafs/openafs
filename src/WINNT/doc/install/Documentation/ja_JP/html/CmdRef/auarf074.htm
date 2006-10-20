@@ -1,0 +1,256 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_DUMPINFO" HREF="auarf002.htm#ToC_88">backup dumpinfo</A></H2>
+<A NAME="IDX4316"></A>
+<A NAME="IDX4317"></A>
+<A NAME="IDX4318"></A>
+<A NAME="IDX4319"></A>
+<A NAME="IDX4320"></A>
+<A NAME="IDX4321"></A>
+<A NAME="IDX4322"></A>
+<A NAME="IDX4323"></A>
+<P><STRONG>目的</STRONG>
+<P>バックアップ・データベースからダンプ・レコードを表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup dumpinfo</B> [<B>-ndumps</B> &lt;<VAR>no. of dumps</VAR>>]  [<B>-id</B> &lt;<VAR>dump id</VAR>>]
+                [<B>-verbose</B>] [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup dumpi</B> [<B>-n</B> &lt;<VAR>no. of dumps</VAR>>]  [<B>-i</B> &lt;<VAR>dump id</VAR>>]
+             [<B>-v</B>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup dumpinfo</B> コマンドは、指定されたダンプのレコードの書式を設定し、表示します。最新のダンプから数えて、いくつ前のダンプまで表示するかを指定する場合には、<B>-ndumps</B> 引き数を使用してください。
+1 つダンプについて詳しい情報を表示する場合には、
+<B>-id</B> 引き数を使用してください。最新の 10 ダンプのレコードを表示する場合には、
+<B>-ndumps</B> と <B>-id</B> 引き数とを省略してください。
+<P><B>-verbose</B> フラグを使用すると、デバッグに役立つ詳しい情報が表示されます。このフラグは、<B>-id</B> 引き数と一緒に使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-ndumps
+</B><DD>最新のダンプから、指定された数のダンプそれぞれのバックアップ・データベース・レコードを表示します。要求された数のダンプがデータベースにない場合には、既存のダンプのレコードがすべて出力されます。この引き数を、<B>-id</B> または <B> -verbose</B> オプションと一緒に使用しないでください。このオプションをすべて省略すると、最新の 10 ダンプのレコードが表示されます。
+<P><DT><B>-id
+</B><DD>バックアップ・データベース・レコードを表示する単一ダンプのダンプ ID 番号を指定します。
+<VAR>dump id</VAR> 値の前に <B>-id</B> スイッチを指定してください。指定しない場合は、コマンド・インタープリターは、
+<VAR>dump id</VAR> 値 を <B>-ndumps</B> 引き数の値と解釈します。この引き数を <B>-verbose</B> フラグと一緒に使用してでください。ただし、<B> -ndumps</B> 引き数とは一緒に使用しないでください。すべてのオプションを省略すると、最新の 10 ダンプのレコードが表示されます。
+<P><DT><B>-verbose
+</B><DD><B>-id</B> 引き数に指定されたダンプについて詳細を表示します。この引き数は、この引き数と一緒に使用しなければなりません。このフラグは、<B>-ndumps</B> 引き数と一緒に使用しないでください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P><B>-ndumps</B> 引き数が指定されていると、出力には、次の表形式で情報が表示されます。それぞれのダンプは分離線で区切られて表示されます。
+<DL>
+<P><DT><B><TT>dumpid</TT>
+</B><DD>ダンプ ID 番号。
+<P><DT><B><TT>parentid</TT>
+</B><DD>親ダンプのダンプ ID 番号。値 <TT>0</TT> (ゼロ) はフル・ダンプを識別します。
+<P><DT><B><TT>lv</TT>
+</B><DD>ダンプの作成に使用するダンプ・レベルのダンプ階層内での値。値 <TT>0</TT> (ゼロ) は、フル・ダンプを識別します。この場合、[<TT>parentid</TT>] フィールド内の値も <TT>0</TT> になります。
+<TT>1</TT> 以上の値の場合、ダンプ階層内で適切なレベルで、インクリメンタル・ダンプが作成されています。
+<P><DT><B><TT>created</TT>
+</B><DD>バックアップ・システムがダンプ操作を開始し、ダンプを作成した時刻。
+<P><DT><B><TT>nt</TT>
+</B><DD>ダンプでデータを書き込んだテープの数。値 <TT>0</TT> (ゼロ) は、ダンプ操作が終了または失敗したことを示します。
+<B>backup deletedump</B> コマンドを使用すると、この項目を削除することができます。
+<P><DT><B><TT>nvols</TT>
+</B><DD>ダンプにデータが書き込まれたボリューム数。ボリュームが複数のテープに分かれて書き込まれている場合、この数は 2 倍になります。値 <TT>0</TT> (ゼロ) は、ダンプ操作が終了または失敗したことを示します。この場合、[<TT>nt</TT>] フィールド内の値も <TT>0</TT> になります。
+<P><DT><B><TT>dump name</TT>
+</B><DD>ダンプ名。次の形式です。
+<P>
+<PRE>   <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR> (<VAR>initial_dump_ID</VAR>)
+   
+</PRE>
+<P>
+<P>
+<P>ここで、<VAR>volume_set_name</VAR> はボリューム・セットの名前、
+<VAR>dump_level_name</VAR> は、ボリューム・セットがダンプされたダンプ・レベルのパス名の最後の要素です。
+<P>
+<P><VAR>initial_dump_ID</VAR> が表示されている場合、このダンプ操作で作成されたダンプ・セットの初期ダンプのダンプ ID を表しています。括弧で囲まれた値がない場合、このダンプは、ダンプが追加されていないダンプ・セットの最初のダンプです。
+</DL>
+<P><B>-id</B> 引き数だけが指定されていると、出力の最初の行は文字列 <TT>Dump</TT> で始まり、ダンプ全体の情報が続きます。このレポートは、次のフィールドから構成されます。
+<DL>
+<P><DT><B><TT>id</TT>
+</B><DD>ダンプ ID 番号。
+<P><DT><B><TT>level</TT>
+</B><DD>ダンプの作成に使用するダンプ・レベルのダンプ階層内での値。値 <TT>0</TT> (ゼロ) はフル・ダンプを識別します。
+<TT>1</TT> 以上の値は、ダンプ階層の指定されたレベルで行われたインクリメンタル・ダンプを示します。
+<P><DT><B><TT>volumes</TT>
+</B><DD>ダンプにデータが書き込まれたボリューム数。
+<P><DT><B><TT>created</TT>
+</B><DD>ダンプ操作が開始した日時。
+</DL>
+<P>ブランク行の後に、ダンプ操作でボリューム・データが書き込まれたテープの項目が続きます。
+<TT>Tape</TT> という文字列の後の最初の 2 行には、テープに関する情報が表示されます。この行は、次のフィールドから構成されます。
+<DL>
+<P><DT><B><TT>name</TT>
+</B><DD>テープの永続名がある場合には、その名前。そうでない場合には、AFS テープ名。その後に、テープ ID が括弧に囲まれて表示されます。
+<P><DT><B><TT>nVolumes</TT>
+</B><DD>このテープにデータが書き込まれたボリューム数。
+<P><DT><B><TT>created</TT>
+</B><DD>テープ・コーディネーターがこのテープに書き込みを開始した日時。
+</DL>
+<P>ブランク行の後に、テープ固有の情報が続きます。この情報の最後には、テープ上のボリューム・ダンプごとに項目が 1 行で表示されたテーブルがあります。この情報の列には、次の見出しが付いています。
+<DL>
+<P><DT><B><TT>Pos</TT>
+</B><DD>このテープまたはファイル内での各ボリュームの相対的位置。テープの場合、このカウンターは位置 2 から始まり (位置 1 はテープ・ラベル)、各ボリュームごとに 1 ずつ増分していきます。バックアップ・データ・ファイルのボリュームの場合、位置番号は 1 から始まりますが、通常 1 ずつは増分しません。ボリューム・データの開始位置がファイル内で 16 KB 倍数のオフセットになるためです。したがって、位置番号の差は、各ボリュームのデータが占有している 16 KB のブロック数を表しています。たとえば、2 番目のボリュームが位置 5 にあり、リスト内の 3 番目のボリュームが位置 9 にある場合、
+2 番目のボリュームのダンプがファイル内で 64 KB (4 つの 16 KB ブロック) のスペースを占めていることを意味します。
+<P><DT><B><TT>Clone time</TT>
+</B><DD>バックアップまたは読み取り専用ボリュームの場合、そのボリュームが読み取り / 書き込みソースから複製された時刻。読み取り / 書き込みボリュームの場合は、出力の 1 行目で報告されたダンプ作成日と同じです。
+<P><DT><B><TT>Nbytes</TT>
+</B><DD>ボリュームのダンプでのデータのバイト数。
+<P><DT><B><TT>Volume</TT>
+</B><DD>ボリューム名。最後に <TT>.backup</TT> または <TT>.readonly</TT> という拡張子が付いています。
+</DL>
+<P><B>-id</B> 引き数と <B> -verbose</B> フラグの両方が指定されている場合、出力は、いくつかのセクションに分かれて生成されます。
+<UL>
+<LI>最初のセクションにはダンプ全体の情報が入ります。このセクションには、下線付きの <TT>Dump</TT> という見出しが付いています。
+<TT>id</TT>、<TT>level</TT>、<TT>created</TT>、
+<TT>nVolumes</TT> というラベルのフィールドには、
+<B>-id</B> 引き数が指定された場合の出力の最初の行と同じ値が表示されます (表示順は異なります)。他のフィールドには、バックアップ操作員に関係のある情報が入ります。
+<P>
+<DL>
+<P><DT><B><TT>maxTapes</TT>
+</B><DD>このダンプ操作のダンプ・セットを書き込んだテープの数。
+<P><DT><B><TT>Start Tape Seq</TT>
+</B><DD>このダンプが開始するテープの順序。ダンプ・セットが入るテープ・セット内での順番です。
+</DL>
+</LI><LI>このダンプのデータが書き込まれるテープには、
+<TT>Tape</TT> という下線付きの見出しの後に、次のセクションが続きます。
+<TT>name</TT>、<TT>written</TT>、
+<TT>nVolumes</TT> というラベルのフィールドには、
+<B>-id</B> 引き数が指定された場合の出力の 2 番目と 3 番目の行と同じ値が表示されます (表示順は異なります)。他のフィールドには、バックアップ操作員に関係のある情報が入ります。
+<P>
+<DL>
+<P><DT><B><TT>expires</TT>
+</B><DD>テープに含まれるすべてのダンプがすでに有効期限切れになっているために、このテープが再利用可能になる日時。
+<P><DT><B><TT>nMBytes Data</TT> および <TT>nBytes Data</TT>
+</B><DD>合計すると、これらのフィールドは、実際にボリューム (ラベル、ファイル・マーク、その他のマーカーと対比) からダンプされたデータの合計を表します。
+<P><DT><B><TT>KBytes Tape Used</TT>
+</B><DD>ダンプ・データの格納に使用されたテープ (バックアップ・データ・ファイルの場合にはディスク・スペース)。
+KB 単位で示されます。一般に、<TT>nMBytes Data</TT> および <TT>nBytes Data</TT> フィールド内の合計値より大きくなります。なぜなら、ラベル、ファイル・マーク、その他のマーカー用に必要なスペースが含まれ、与えられたブロック内のデータが 16 KB 全部を満たしていなくても、バックアップ・システムが 16 KB オフセットでデータを書き込むからです。
+</DL>
+</LI><LI>表示された各ボリュームについて、
+<TT>Volume</TT> という下線付きの見出しの後に、次のセクションが続きます。
+<TT>name</TT>、<TT> position</TT>、<TT>clone</TT>、
+<TT>nBytes</TT> というラベルのフィールドには、
+<B>-id</B> 引き数を指定した場合の各テープのボリュームをリストした表と同じ値が入ります (表示順は異なります)。他のフィールドには、バックアップ操作員に関係のある情報が入ります。
+<P>
+<DL>
+<P><DT><B><TT>id</TT>
+</B><DD>ボリューム ID
+<P><DT><B><TT>tape</TT>
+</B><DD>このボリューム・データが書き込まれたテープの名前
+</DL>
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次の例は、最新の 5 つのダンプに関する情報を表示しています。
+<PRE>   % <B>backup dumpinfo -ndumps 5</B>
+      dumpid   parentid lv created          nt nvols dump name
+   924424000          0 0  04/18/1999 04:26  1    22 usr.sun (924424000)
+   924685000  924424000 1  04/21/1999 04:56  1    62 usr.wed (924424000)
+   924773000  924424000 1  04/22/1999 05:23  1    46 usr.thu (924424000)
+   924860000  924424000 1  04/23/1999 05:33  1    58 usr.fri (924424000)
+   925033000          0 0  04/25/1999 05:36  2    73 sys.week
+   
+</PRE>
+<P>次の例は、1 つのダンプの詳細レコードを表示しています。
+<PRE>   % <B>backup dumpinfo -id 922097346</B>
+   Dump: id 922097346, level 0, volumes 1, created Mon Mar 22 05:09:06 1999
+   Tape: name monday.user.backup (922097346)
+   nVolumes 1, created 03/22/1999 05:09
+    Pos       Clone time   Nbytes Volume
+      1 03/22/1999 04:43 27787914 user.pat.backup
+   
+</PRE>
+<P>次の例は、前の例で表示されたダンプ (ダンプ ID 922097346) のさらに詳細な情報を表示しています。この例では、各タイプのセクション (<TT>Dump</TT>、
+<TT>Tape</TT>、および <TT>Volume</TT>) の代表例を 1 つだけ示しています。
+<PRE>   % <B>backup dumpinfo -id 922097346 -verbose</B>
+   Dump
+   ----
+   id = 922097346
+   Initial id = 0
+   Appended id = 922099568
+   parent = 0
+   level = 0
+   flags = 0x0
+   volumeSet = user
+   dump path = /monday1
+   name = user.monday1
+   created = Mon Mar 22 05:09:06 1999
+   nVolumes = 1
+   id  = 0
+   tapeServer =
+   format= user.monday1.%d
+   maxTapes = 1
+   Start Tape Seq = 1
+   name = pat
+   instance =
+   cell =
+   Tape
+   ----
+   tape name = monday.user.backup
+   AFS tape name = user.monday1.1
+   flags = 0x20
+   written = Mon Mar 22 05:09:06 1999
+   expires = NEVER
+   kBytes Tape Used = 121
+   nMBytes Data = 0
+   nBytes  Data = 19092
+   nFiles = 0
+   nVolumes = 1
+   seq = 1
+   tapeid = 0
+   useCount = 1
+   dump = 922097346
+   Volume
+   ------
+   name = user.pat.backup
+   flags = 0x18
+   id = 536871640
+   server =
+   partition = 0
+   nFrags = 1
+   position = 2
+   clone = Mon Mar 22 04:43:06 1999
+   startByte = 0
+   nBytes = 19092
+   seq = 0
+   dump = 922097346
+   tape = user.monday1.1
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf068.htm#HDRBK_DELETEDUMP">backup deletedump</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf073.htm">前ページ</A> &#124; <A HREF="auarf075.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

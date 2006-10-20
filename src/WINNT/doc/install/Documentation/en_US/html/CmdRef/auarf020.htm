@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf019.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf021.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRSV_CSDB" HREF="auarf002.htm#ToC_18">CellServDB (server version)</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX3920"></A>
+<A NAME="IDX3921"></A>
+<A NAME="IDX3922"></A>
+<A NAME="IDX3923"></A>
+<A NAME="IDX3924"></A>
+<A NAME="IDX3925"></A>
+<A NAME="IDX3926"></A>
+<A NAME="IDX3927"></A>
+<P>Lists the local cell&#39;s database server machines
+<P><STRONG>Description</STRONG>
+<P>The server version of the <B>CellServDB</B> file lists the local
+cell&#39;s database server machines. These machines run the
+Authentication Server, Backup Server, Protection Server, and Volume Location
+(VL) Server (the <B>kaserver</B>, <B>buserver</B>,
+<B>ptserver</B>, and <B>vlserver</B>) processes, which maintain the
+cell&#39;s administrative AFS databases. The initial version of the
+file is created with the <B>bos setcellname</B> command during the
+installation of the cell&#39;s server machine, which is automatically
+recorded as the cell&#39;s first database server machine. When adding
+or removing database server machines, be sure to update this file
+appropriately. It must reside in the <B>/usr/afs/etc</B> directory
+on each AFS server machine.
+<P>The database server processes consult the <B>CellServDB</B> file to
+learn about their peers, with which they must maintain constant connections in
+order to coordinate replication of changes across the multiple copies of each
+database. The other AFS server processes consult the file to learn
+which machines to contact for information from the databases when they need
+it.
+<P>Although the <B>CellServDB</B> file is in ASCII format, do not use a
+text editor to alter it. Instead always use the appropriate commands
+from the <B>bos</B> command suite&#58;
+<UL>
+<P><LI>The <B>bos addhost</B> command to add a machine to the file
+<P><LI>The <B>bos listhosts</B> command to display the list of machines from
+the file
+<P><LI>The <B>bos removehost</B> command to remove a machine from the file
+</UL>
+<P>In cells that run the United States edition of AFS and use the Update
+Server to distribute the contents of the <B>/usr/afs/etc</B> directory, it
+is customary to edit only the copy of the file stored on the system control
+machine. In cells that run the international version of AFS, edit the
+file on each server machine individually. For instructions on adding
+and removing database server machine, see the <I>AFS Quick Beginnings</I>
+chapter on installing additional server machines.
+<P>The server version of the <B>CellServDB</B> file is distinct from the
+client version, which resides in the <B>/usr/vice/etc</B> directory on
+each AFS client machine. The server version lists only the local
+cell&#39;s database server machines, whereas the client version lists the
+database server machines in every AFS cell that the cell administrator wants
+the machine&#39;s users to be able to access.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<P><A HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<P><A HREF="auarf106.htm#HDRBOS_LISTHOSTS">bos listhosts</A>
+<P><A HREF="auarf110.htm#HDRBOS_REMOVEHOST">bos removehost</A>
+<P><A HREF="auarf116.htm#HDRBOS_SETCELLNAME">bos setcellname</A>
+<P><A HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<P><A HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<P><A HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<P><I>AFS Quick Beginnings</I>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf019.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf021.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

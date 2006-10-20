@@ -1,0 +1,416 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3191/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 14:06:34                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 14:06:34">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 14:06:34">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 14:06:34">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd020.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd022.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ796" HREF="auagd002.htm#ToC_651">Managing Administrative Privilege</A></H1>
+<P>This chapter explains how to enable system administrators
+and operators to perform privileged AFS operations.
+<HR><H2><A NAME="HDRWQ797" HREF="auagd002.htm#ToC_652">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands&#58;
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display members of <B>system&#58;administrators</B> group
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts membership</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Add user to <B>system&#58;administrators</B> group
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove user from <B>system&#58;administrators</B> group
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts removeuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display <TT>ADMIN</TT> flag in Authentication Database entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set or remove <TT>ADMIN</TT> flag on Authentication Database entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display users in <B>UserList</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos listusers</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Add user to <B>UserList</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove user from <B>UserList</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos removeuser</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ806" HREF="auagd002.htm#ToC_653">An Overview of Administrative Privilege</A></H2>
+<A NAME="IDX8103"></A>
+<A NAME="IDX8104"></A>
+<P>A fully privileged AFS system administrator has the following
+characteristics&#58;
+<UL>
+<P><LI>Membership in the cell&#39;s <B>system&#58;administrators</B>
+group. See <A HREF="#HDRWQ808">Administering the system&#58;administrators Group</A>.
+<P><LI>The <TT>ADMIN</TT> flag on his or her entry in the cell&#39;s
+Authentication Database. See <A HREF="#HDRWQ811">Granting Privilege for kas Commands&#58;  the ADMIN Flag</A>.
+<P><LI>Inclusion in the file <B>/usr/afs/etc/UserList</B> on the local disk
+of each AFS server machine in the cell. See <A HREF="#HDRWQ814">Administering the UserList File</A>.
+</UL>
+<P>This section describes the three privileges and explains why more than one
+privilege is necessary.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Never grant any administrative privilege to the user <B>anonymous</B>,
+even when a server outage makes it impossible to mutually authenticate.
+If you grant such privilege, then any user who can access a machine in your
+cell can issue privileged commands. The alternative solution is to put
+the affected server machine into no-authentication mode and use the
+<B>-noauth</B> flag available on many commands to prevent mutual
+authentication attempts. For further discussion, see <A HREF="auagd008.htm#HDRWQ157">Managing Authentication and Authorization Requirements</A>.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ807" HREF="auagd002.htm#ToC_654">The Reason for Separate Privileges</A></H3>
+<P>Often, a cell&#39;s administrators require full
+administrative privileges to perform their jobs effectively. However,
+separating the three types of privilege makes it possible to grant only the
+minimum set of privileges that a given administrator needs to complete his or
+her work.
+<P>The <B>system&#58;administrators</B> group privilege is perhaps the
+most basic, and most frequently used during normal operation (when all the
+servers are running normally). When the Protection Database is
+unavailable due to machine or server outage, it is not possible to issue
+commands that require this type of privilege.
+<P>The <TT>ADMIN</TT> flag privilege is separate because of the extreme
+sensitivity of the information in the Authentication Database, especially the
+server encryption key in the <B>afs</B> entry. When the
+Authentication Database is unavailable due to machine or server outage, it is
+not possible to issue commands that require this type of privilege.
+<P>The ability to issue privileged <B>bos</B> and <B>vos</B> command
+is recorded in the <B>/usr/afs/etc/UserList</B> file on the local disk of
+each AFS server machine rather than in a database, so that in case of serious
+server or network problems administrators can still log onto server machines
+and use those commands while solving the problem.
+<HR><H2><A NAME="HDRWQ808" HREF="auagd002.htm#ToC_655">Administering the system&#58;administrators Group</A></H2>
+<A NAME="IDX8105"></A>
+<A NAME="IDX8106"></A>
+<A NAME="IDX8107"></A>
+<A NAME="IDX8108"></A>
+<A NAME="IDX8109"></A>
+<A NAME="IDX8110"></A>
+<A NAME="IDX8111"></A>
+<P>The first type of AFS administrative privilege is membership .
+Members of the <B>system&#58;administrators</B> group in the Protection
+Database have the following privileges&#58;
+<UL>
+<P><LI>Permission to issue all <B>pts</B> commands, which are used to
+administer the Protection Database. See <A HREF="auagd019.htm#HDRWQ721">Administering the Protection Database</A>.
+<P><LI>Permission to issue the <B>fs setvol</B> and <B>fs setquota</B>
+commands, which set the space quota on volumes as described in <A HREF="auagd010.htm#HDRWQ319">Setting and Displaying Volume Quota and Current Size</A>.
+<P><LI>Implicit <B>a</B> (<B>administer</B>) and by default <B>l</B>
+(<B>lookup</B>) permissions on the access control list (ACL) on every
+directory in the cell&#39;s AFS filespace. Members of the group can
+use the <B>fs setacl</B> command to grant themselves any other permissions
+they require, as described in <A HREF="auagd020.htm#HDRWQ788">Setting ACL Entries</A>.
+<P>You can change the ACL permissions that the File Server on a given file
+server machine implicitly grants to the members of the
+<B>system&#58;administrators</B> group for the data in volumes that it
+houses. When you issue the <B>bos create</B> command to create and
+start the <B>fs</B> process on the machine, include the
+<B>-implicit</B> argument to the <B>fileserver</B> initialization
+command. For syntax details, see the <B>fileserver</B> reference
+page in the <I>AFS Administration Reference</I>. You can grant
+additional permissions, or remove the <B>l</B> permission. However,
+the File Server always implicitly grants the <B>a</B> permission to
+members of the group, even if you set the value of the <B>-implicit</B>
+argument to <B>none</B>.
+</UL>
+<A NAME="IDX8112"></A>
+<A NAME="IDX8113"></A>
+<A NAME="IDX8114"></A>
+<A NAME="IDX8115"></A>
+<P><H3><A NAME="HDRWQ809" HREF="auagd002.htm#ToC_656">To display the members of the system&#58;administrators group</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>pts membership</B> command to display the
+<B>system&#58;administrators</B> group&#39;s list of members.
+Any user can issue this command as long as the first privacy flag on the
+<B>system&#58;administrators</B> group&#39;s Protection Database entry
+is not changed from the default value of uppercase <TT>S</TT>.
+<PRE>   % <B>pts membership system&#58;administrators</B>
+</PRE> 
+<P>where <B>m</B> is the shortest acceptable abbreviation of
+<B>membership</B>.
+</OL>
+<P><H3><A NAME="Header_657" HREF="auagd002.htm#ToC_657">To add users to the system&#58;administrators group</A></H3>
+<A NAME="IDX8116"></A>
+<A NAME="IDX8117"></A>
+<A NAME="IDX8118"></A>
+<A NAME="IDX8119"></A>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts adduser</B> group to add one or more users. 
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group system&#58;administrators</B>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>ad
+</B><DD>Is the shortest acceptable abbreviation of <B>adduser</B>.
+<P><DT><B>-user
+</B><DD>Names each user to add to the <B>system&#58;administrators</B>
+group.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ810" HREF="auagd002.htm#ToC_658">To remove users from the system&#58;administrators group</A></H3>
+<A NAME="IDX8120"></A>
+<A NAME="IDX8121"></A>
+<A NAME="IDX8122"></A>
+<A NAME="IDX8123"></A>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts removeuser</B> command to remove one or more
+users.
+<PRE>   % <B>pts removeuser -user</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group system&#58;administrators</B>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B><B>rem</B>
+</B><DD>Is the shortest acceptable abbreviation of <B>removeuser</B>.
+<P><DT><B>-user
+</B><DD>Names each user to remove from the <B>system&#58;administrators</B>
+group.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ811" HREF="auagd002.htm#ToC_659">Granting Privilege for kas Commands&#58;  the ADMIN Flag</A></H2>
+<A NAME="IDX8124"></A>
+<P>Administrators who have the <TT>ADMIN</TT> flag on their Authentication
+Database entry can issue all <B>kas</B> commands, which enable them to
+administer the Authentication Database.
+<A NAME="IDX8125"></A>
+<A NAME="IDX8126"></A>
+<A NAME="IDX8127"></A>
+<P><H3><A NAME="HDRWQ812" HREF="auagd002.htm#ToC_660">To check if the ADMIN flag is set</A></H3>
+<A NAME="IDX8128"></A>
+<A NAME="IDX8129"></A>
+<A NAME="IDX8130"></A>
+<A NAME="IDX8131"></A>
+<OL TYPE=1>
+<P><LI><A NAME="LIWQ813"></A>Issue the <B>kas examine</B> command to display an entry
+from the Authentication Database. 
+<P>The Authentication Server performs its own authentication rather than
+accepting your existing AFS token. By default, it authenticates your
+local (UFS) identity, which possibly does not correspond to an AFS-privileged
+administrator. Include the <B>-admin_username</B> argument (here
+abbreviated to <B>-admin</B>) to name a user identity that has the
+<TT>ADMIN</TT> flag on its Authentication Database entry. 
+<PRE>   % <B>kas examine</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>   \
+                 <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
+   Administrator&#39;s (<VAR>admin_user</VAR>) password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>e
+</B><DD>Is the shortest acceptable abbreviation of <B>examine</B>.
+<P><DT><B><VAR>name of user</VAR>
+</B><DD>Names the entry to display.
+<P><DT><B>-admin
+</B><DD>Names an administrative account with the <TT>ADMIN</TT> flag on its
+Authentication Database entry, such as the <B>admin</B> account.
+The password prompt echoes it as <VAR>admin_user</VAR>. Enter the
+appropriate password as <VAR>admin_password</VAR>.
+</DL>
+</OL>
+<P>If the <TT>ADMIN</TT> flag is turned on, it appears on the first line, as
+in this example&#58;
+<PRE>   % <B>kas e terry -admin admin</B>
+   Administrator&#39;s (admin) password&#58; <VAR>admin_password</VAR>
+   User data for terry (ADMIN)
+     key version is 0, <VAR>etc...</VAR>
+</PRE>
+<A NAME="IDX8132"></A>
+<A NAME="IDX8133"></A>
+<A NAME="IDX8134"></A>
+<A NAME="IDX8135"></A>
+<A NAME="IDX8136"></A>
+<A NAME="IDX8137"></A>
+<P><H3><A NAME="Header_661" HREF="auagd002.htm#ToC_661">To set or remove the ADMIN flag</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>kas setfields</B> command to turn on the <TT>ADMIN</TT>
+flag in an Authentication Database entry. 
+<P>The Authentication Server performs its own authentication rather than
+accepting your existing AFS token. By default, it authenticates your
+local (UNIX) identity, which possibly does not correspond to an AFS-privileged
+administrator. Include the <B>-admin</B> argument to name an
+identity that has the <TT>ADMIN</TT> flag on its Authentication Database
+entry. To verify that an entry has the flag, issue the <B>kas
+examine</B> command as described in <A HREF="#HDRWQ812">To check if the ADMIN flag is set</A>.
+<P>The following command appears on two lines only for legibility. 
+<PRE>    % <B>kas setfields</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  {<B>ADMIN</B> |  <B>NOADMIN</B>} \  
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+    Administrator&#39;s (<VAR>admin_user</VAR>) password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>sf
+</B><DD>Is an alias for <B>setfields</B> (and <B>setf</B> is the shortest
+acceptable abbreviation).
+<P><DT><B><VAR>name of user</VAR>
+</B><DD>Names the entry for which to set or remove the <TT>ADMIN</TT>
+flag.
+<P><DT><B>ADMIN | NOADMIN
+</B><DD>Sets or removes the <TT>ADMIN</TT> flag, respectively.
+<P><DT><B>-admin
+</B><DD>Names an administrative account with the <TT>ADMIN</TT> flag on its
+Authentication Database entry, such as the <B>admin</B> account.
+The password prompt echoes it as <VAR>admin_user</VAR>. Enter the
+appropriate password as <VAR>admin_password</VAR>.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ814" HREF="auagd002.htm#ToC_662">Administering the UserList File</A></H2>
+<A NAME="IDX8138"></A>
+<P>Inclusion in the file <B>/usr/afs/etc/UserList</B> on the local disk of
+each AFS server machine enables an administrator to issue commands from the
+indicated suites.
+<UL>
+<P><LI>The <B>bos</B> commands enable the administrator to manage server
+processes and the server configuration files that define the cell&#39;s
+database server machines, server encryption keys, and privileged users.
+See <A HREF="auagd008.htm#HDRWQ95">Administering Server Machines</A> and <A HREF="auagd009.htm#HDRWQ176">Monitoring and Controlling Server Processes</A>.
+<P><LI>The <B>vos</B> commands enable the administrator to manage volumes and
+the Volume Location Database (VLDB). See <A HREF="auagd010.htm#HDRWQ228">Managing Volumes</A>.
+<P><LI>The <B>backup</B> commands enable the administrator to use the AFS
+Backup System to copy data to permanent storage. See <A HREF="auagd011.htm#HDRWQ333">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ382">Backing Up and Restoring AFS Data</A>.
+</UL>
+<A NAME="IDX8139"></A>
+<A NAME="IDX8140"></A>
+<A NAME="IDX8141"></A>
+<A NAME="IDX8142"></A>
+<A NAME="IDX8143"></A>
+<A NAME="IDX8144"></A>
+<A NAME="IDX8145"></A>
+<A NAME="IDX8146"></A>
+<A NAME="IDX8147"></A>
+<A NAME="IDX8148"></A>
+<P>Although each AFS server machine maintains a separate copy of the file on
+its local disk, it is conventional to keep all copies the same. It can
+be confusing for an administrator to have the privilege on some machines but
+not others.
+<A NAME="IDX8149"></A>
+<P>If your cell runs the United States edition of AFS and uses the Update
+Server to distribute the contents of the system control machine&#39;s
+<B>/usr/afs/etc</B> directory, then edit only the copy of the
+<B>UserList</B> file stored on the system control machine. If you
+have forgotten which machine is the system control machine, see <A HREF="auagd008.htm#HDRWQ124">The Four Roles for File Server Machines</A>.
+<P>If your cell runs the international edition of AFS, or does not use a
+system control machine, then you must edit the <B>UserList</B> file on
+each server machine individually.
+<P>To avoid making formatting errors that can result in performance problems,
+never edit the <B>UserList</B> file directly. Instead, use the
+<B>bos adduser</B> or <B>bos removeuser</B> commands as described in
+this section.
+<A NAME="IDX8150"></A>
+<A NAME="IDX8151"></A>
+<A NAME="IDX8152"></A>
+<A NAME="IDX8153"></A>
+<P><H3><A NAME="HDRWQ815" HREF="auagd002.htm#ToC_663">To display the users in the UserList file</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos listusers</B> command to display the contents of the
+<B>/usr/afs/etc/UserList</B> file.
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>listu
+</B><DD>Is the shortest acceptable abbreviation of <B>listusers</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names an AFS server machine. In the normal case, any machine is
+acceptable because the file is the same on all of them.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ816" HREF="auagd002.htm#ToC_664">To add users to the UserList file</A></H3>
+<A NAME="IDX8154"></A>
+<A NAME="IDX8155"></A>
+<A NAME="IDX8156"></A>
+<A NAME="IDX8157"></A>
+<OL TYPE=1>
+<P><LI>Verify you are listed in the <B>/usr/afs/etc/UserList</B> file.
+If not, you must have a qualified administrator add you before you can add
+entries to it yourself. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos adduser</B> command to add one or more users to the
+<B>UserList</B> file. 
+<PRE>   % <B>bos adduser</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>user&nbsp;names</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>addu
+</B><DD>Is the shortest acceptable abbreviation of <B>adduser</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the system control machine if you use the Update Server to
+distribute the contents of the <B>/usr/afs/etc</B> directory (possible
+only in cells running the United States edition of AFS). By default, it
+can take up to five minutes for the Update Server to distribute the changes,
+so newly added users must wait that long before attempting to issue privileged
+commands.
+<P>If you are running the international edition of AFS, or do not use the
+Update Server, repeat the command, substituting the name of each AFS server
+machine for <VAR>machine name</VAR> in turn.
+<P><DT><B><VAR>user names</VAR>
+</B><DD>Specifies the username of each administrator to add to the
+<B>UserList</B> file.
+</DL>
+</OL>
+<P><H3><A NAME="Header_665" HREF="auagd002.htm#ToC_665">To remove users from the UserList file</A></H3>
+<A NAME="IDX8158"></A>
+<A NAME="IDX8159"></A>
+<A NAME="IDX8160"></A>
+<A NAME="IDX8161"></A>
+<OL TYPE=1>
+<P><LI>Verify you are listed in the <B>/usr/afs/etc/UserList</B> file.
+If not, you must have a qualified administrator add you before you can remove
+entries from it yourself. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos removeuser</B> command to remove one or more users
+from the <B>UserList</B> file. 
+<PRE>   % <B>bos removeuser</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>user&nbsp;names</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>removeu
+</B><DD>Is the shortest acceptable abbreviation of <B>removeuser</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the system control machine if you use the Update Server to
+distribute the contents of the <B>/usr/afs/etc</B> directory (possible
+only in cells running the United States edition of AFS). By default, it
+can take up to five minutes for the Update Server to distribute the change, so
+newly removed users can continue to issue privileged commands during that
+time. 
+<P>If you are running the international edition of AFS, or do not use the
+Update Server, repeat the command, substituting the name of each AFS server
+machine for <VAR>machine name</VAR> in turn.
+<P><DT><B><VAR>user names</VAR>
+</B><DD>Specifies the username of each administrator to add to the
+<B>UserList</B> file.
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd020.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd022.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

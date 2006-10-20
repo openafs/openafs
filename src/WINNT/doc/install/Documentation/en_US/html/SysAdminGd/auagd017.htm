@@ -1,0 +1,2501 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3191/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 14:06:34                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 14:06:34">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 14:06:34">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 14:06:34">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd016.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd018.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<A NAME="IDX7583"></A>
+<HR><H1><A NAME="HDRWQ601" HREF="auagd002.htm#ToC_535">Creating and Deleting User Accounts with the uss Command Suite</A></H1>
+<P>The <B>uss</B> command suite helps you create and delete
+AFS user accounts quickly and easily. You can create a single account
+with the <B>uss add</B> command, delete a single account with the <B>uss
+delete</B> command, or create and delete multiple accounts with the <B>uss
+bulk</B> command.
+<P>A single <B>uss add</B> or <B>uss bulk</B> command can create a
+complete AFS user account because the <B>uss</B> command interpreter
+refers to a template file in which you predefine the configuration of many
+account components. The <B>uss delete</B> command deletes most of
+the components of a user account, but does not use a template file.
+<P>The <B>uss</B> suite also easily incorporates shell scripts or other
+programs that you write to perform parts of account creation and deletion
+unique to your site. To invoke a script or program automatically as a
+<B>uss</B> command runs, use the appropriate instructions in the template
+file or bulk input file. Various sections of this chapter discuss
+possible uses for scripts.
+<P>Using the <B>uss</B> commands to create and delete accounts is the
+recommended method because it automates and correctly orders most of the
+necessary steps. The alternative is to issue a series of separate
+commands to the various AFS servers, which requires more careful record
+keeping. For instructions, see <A HREF="auagd018.htm#HDRWQ662">Administering User Accounts</A>.
+<HR><H2><A NAME="HDRWQ602" HREF="auagd002.htm#ToC_536">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands&#58;
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%">Add a single user account
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%"><B>uss add</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%">Delete a single user account
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%"><B>uss delete</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%">Add and delete multiple accounts
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%"><B>uss bulk</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ606" HREF="auagd002.htm#ToC_537">Overview of the uss Command Suite</A></H2>
+<P>The commands in the <B>uss</B> suite help you to
+automate the creation and deletion of AFS user accounts&#58;
+<UL>
+<P><LI>The <B>uss add</B> command creates all of the components of an
+account, one account at a time. It consults a template file that
+defines account configuration.
+<P><LI>The <B>uss delete</B> command deletes the major components of an
+account, one account at a time. It does not use a template file, so you
+possibly need to perform additional tasks manually.
+<P><LI>The <B>uss bulk</B> command can create and delete multiple
+accounts. It refers to a bulk input file that can contain any number of
+account-creation and deletion instructions, along with other instructions for
+further automating the process.
+</UL>
+<A NAME="IDX7584"></A>
+<A NAME="IDX7585"></A>
+<P><H3><A NAME="Header_538" HREF="auagd002.htm#ToC_538">The Components of an AFS User Account</A></H3>
+<P>An AFS user account can have many components. The only two
+required components are entries in the Protection Database and Authentication
+Database, but the other components add functionality and usability. The
+following information also appears in a corresponding section of <A HREF="auagd018.htm#HDRWQ662">Administering User Accounts</A>, but is repeated here for your convenience.
+<UL>
+<P><LI>A <I>Protection Database entry</I> defines the username (the name
+provided when authenticating with AFS), and maps it to an AFS user ID (AFS
+UID), a number that the AFS servers use internally when referencing
+users. The Protection Database also tracks the groups to which the user
+belongs. For details, see <A HREF="auagd019.htm#HDRWQ721">Administering the Protection Database</A>.
+<P><LI>An <I>Authentication Database entry</I> records the user&#39;s AFS
+password in a scrambled form suitable for use as an encryption key.
+<P><LI>A home <I>volume</I> stores all the files in the user&#39;s home
+directory together on a single partition of a file server machine. The
+volume has an associated <VAR>quota</VAR> that limits its size. For a
+complete discussion of volumes, see <A HREF="auagd010.htm#HDRWQ228">Managing Volumes</A>.
+<P><LI>A <I>mount point</I> makes the contents of the user&#39;s volume
+visible and accessible in the AFS filespace, and acts as the user&#39;s home
+directory. For more details about mount points, see <A HREF="auagd010.htm#HDRWQ268">About Mounting Volumes</A>.
+<P><LI>Full access permissions on the home directory&#39;s <I>access control
+list (ACL)</I> and ownership of the directory (as displayed by the UNIX
+<B>ls -ld</B> command) enable the user to manage his or her files.
+For details on AFS file protection, see <A HREF="auagd020.htm#HDRWQ772">Managing Access Control Lists</A>.
+<P><LI>A <I>local password file entry</I> (in the <B>/etc/passwd</B> file
+or equivalent) of each AFS client machine enables the user to log in and
+access AFS files through the Cache Manager. A subsequent section in
+this chapter further discusses local password file entries.
+<P><LI>Other optional <I>configuration files</I> make the account more
+convenient to use. Such files help the user log in and log out more
+easily, receive electronic mail, print, and so on.
+</UL>
+<A NAME="IDX7586"></A>
+<A NAME="IDX7587"></A>
+<P><H3><A NAME="HDRWQ607" HREF="auagd002.htm#ToC_539">Privilege Requirements for the uss Commands</A></H3>
+<P>To issue <B>uss</B> commands successfully, you usually
+need all of the standard AFS administrative privileges&#58; membership in
+the <B>system&#58;administrators</B> group, inclusion in the
+<B>/usr/afs/etc/UserList</B> file on every relevant server machine, and
+the <TT>ADMIN</TT> flag on your Authentication Database entry. For
+details on administrative privilege, see <A HREF="auagd021.htm#HDRWQ796">Managing Administrative Privilege</A>.
+<A NAME="IDX7588"></A>
+<A NAME="IDX7589"></A>
+<A NAME="IDX7590"></A>
+<A NAME="IDX7591"></A>
+<A NAME="IDX7592"></A>
+<A NAME="IDX7593"></A>
+<A NAME="IDX7594"></A>
+<P><H3><A NAME="HDRWQ608" HREF="auagd002.htm#ToC_540">Avoiding and Recovering from Errors and Interrupted Operations</A></H3>
+<P>As for any complex operation, there are a number of possible
+reasons that an account-creation or deletion operation can halt before it
+completes. You can easily avoid several of the common reasons by making
+the following checks before issuing a <B>uss</B> command&#58;
+<UL>
+<P><LI>Verify that you have all of the administrative privileges you need to
+complete an operation, as described in <A HREF="#HDRWQ607">Privilege Requirements for the uss Commands</A>. The instructions for using the <B>uss add</B>,
+<B>uss delete</B>, and <B>uss bulk</B> commands include this check as
+a step.
+<P><LI>Proofread the template and bulk input files for correct syntax and
+acceptable values. For discussion, see <A HREF="#HDRWQ617">Constructing a uss Template File</A> and <A HREF="#HDRWQ660">Constructing a Bulk Input File</A>.
+<P><LI>Do not issue <B>uss</B> commands when you are aware of network, server
+machine, or server process outages. Because <B>uss</B> operations
+affect so many components of AFS, it is unlikely that the command can succeed
+when there are outages.
+</UL>
+<P>Another way to avoid errors that halt an operation is to preview the
+<B>uss</B> command by combining the <B>-dryrun</B> flag with the other
+arguments to be used on the actual command. The <B>uss</B> command
+interpreter generates a screen trace of the actions to be performed by the
+actual command, without performing them.
+<P>Using the <B>-dryrun</B> flag reveals many basic errors that can halt
+an operation, particularly the ones due to incorrect syntax in the command
+line, template file, or bulk input file. It does not catch all possible
+errors, however, because the command interpreter is not actually attempting to
+perform the actions it is tracing. For example, a Volume Server outage
+does not necessarily halt the volume creation step when the <B>-dryrun</B>
+flag is included, because the command interpreter is not actually contacting
+the server; such an outage halts the actual creation operation.
+<A NAME="IDX7595"></A>
+<A NAME="IDX7596"></A>
+<A NAME="IDX7597"></A>
+<P>When the <B>uss</B> command interpreter encounters error conditions
+minor enough that they do not require halting the operation, it usually
+generates a message that begins with the string <TT>uss&#58;
+Warning&#58;</TT> and describes the action it is taking to avoid
+halting. For example, if a user&#39;s Protection Database entry
+already exists, the following message appears on the standard output
+stream&#58;
+<PRE>   uss&#58; Warning&#58; User &#39;<VAR>user</VAR>&#39; already in the protection database
+   The uid for user &#39;<VAR>user</VAR>&#39; is <VAR>AFS UID</VAR>
+</PRE>
+<P>If an error is more serious, the word <TT>Warning</TT> does not appear in
+the message, which instead describes why the command interpreter cannot
+perform the requested action. Not all of these errors cause the
+<B>uss</B> operation to halt, but they still require you to take
+corrective action. For example, attempting to create a mount point
+fails if you lack the necessary permissions on the parent directory&#39;s
+ACL, or if the mount point pathname in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field is malformed. However, this error does not
+cause the creation operation to halt until later instructions in the template
+attempt to install subdirectories or files under the nonexistent mount
+point.
+<P>If the command shell prompts returns directly after an error message, then
+the error generally was serious enough to halt the operation. When an
+error halts account creation or deletion, the best way to recover is to find
+and fix the cause, and then reissue the same <B>uss</B> command.
+<A NAME="IDX7598"></A>
+<A NAME="IDX7599"></A>
+<A NAME="IDX7600"></A>
+<A NAME="IDX7601"></A>
+<A NAME="IDX7602"></A>
+<A NAME="IDX7603"></A>
+<P>The following list describes what happens when components of a user&#39;s
+account already exist when you reissue an account-creation command (the
+<B>uss add</B> command, or the <B>uss bulk</B> command when the bulk
+input file contains <B>add</B> instructions)&#58;
+<UL>
+<P><LI>If the Protection Database entry already exists, a message confirms its
+existence and specifies the associated AFS UID.
+<P><LI>If the Authentication Database entry already exists, a message confirms
+its existence.
+<P><LI>If the volume and associated Volume Location Database (VLDB) entry already
+exist, a message confirms their existence. However, the <B>uss</B>
+command interpreter does alter the volume&#39;s quota, mount point, or ACL if
+any of the relevant fields in the template <B>V</B> instruction have
+changed since the command last ran. If the value in the
+<VAR>mount_point</VAR> field has changed, the command interpreter creates the
+new mount point but does not remove any existing mount points.
+<P><LI>If any of the fields in the template <B>A</B> instruction have
+changed, the <B>uss</B> command interpreter makes the changes without
+comment.
+<P><LI>If a directory, file, or link defined by a template file <B>D</B>,
+<B>E</B>, <B>F</B>, <B>L</B>, or <B>S</B> instruction already
+exists, the <B>uss</B> command interpreter replaces the existing element
+with one that conforms to the template definition. To control whether
+the <B>uss</B> command interpreter prompts for confirmation that you wish
+to overwrite a given element, use the <B>-overwrite</B> flag to the
+<B>uss add</B> or <B>uss bulk</B> command&#58; 
+<UL>
+<P><LI>If you include the <B>-overwrite</B> flag, the command interpreter
+automatically overwrites all elements without asking for confirmation.
+<P><LI>If you omit the flag, the command interpreter prompts once for each
+account to ask if you want to overwrite all elements associated with
+it.
+</UL>
+<P><LI>The command interpreter always reexecutes <B>X</B> instructions in the
+template file. If a command&#39;s result already holds, reissuing it
+has the same effect as reissuing it outside the context of the <B>uss</B>
+commands.
+</UL>
+<P>The following describes what happens when a <B>uss delete</B> command
+references account components that have already been deleted.
+<UL>
+<P><LI>If the volume and VLDB entry no longer exist, a message confirms their
+absence.
+<P><LI>If the Authentication Database entry no longer exists, a message confirms
+its absence.
+</UL>
+<A NAME="IDX7604"></A>
+<HR><H2><A NAME="HDRWQ609" HREF="auagd002.htm#ToC_541">Creating Local Password File Entries with uss</A></H2>
+<P>To obtain authenticated access to a cell&#39;s AFS
+filespace, a user must not only have a valid AFS token, but also an entry in
+the local password file (<B>/etc/passwd</B> or equivalent) of the AFS
+client machine. This section discusses why it is important for the
+user&#39;s AFS UID to match to the UNIX UID listed in the local password
+file, the appropriate value to put in the file&#39;s password field, and
+outlines a method for creating a single source password file.
+<P>For instructions on using the template file&#39;s <B>E</B> instruction
+to generate local password file entries automatically as part of account
+creation, see <A HREF="#HDRWQ612">Creating a Common Source Password File</A>.
+<P>The following information also appears in a corresponding section of <A HREF="auagd018.htm#HDRWQ662">Administering User Accounts</A>, but is repeated here for your convenience.
+<A NAME="IDX7605"></A>
+<A NAME="IDX7606"></A>
+<A NAME="IDX7607"></A>
+<A NAME="IDX7608"></A>
+<A NAME="IDX7609"></A>
+<P><H3><A NAME="HDRWQ610" HREF="auagd002.htm#ToC_542">Assigning AFS and UNIX UIDs that Match</A></H3>
+<P>A user account is easiest to administer and use if the AFS
+user ID number (AFS UID) and UNIX UID match. All instructions in the
+AFS documentation assume that they do.
+<P>The most basic reason to make AFS and UNIX UIDs the same is so that the
+owner name reported by the UNIX <B>ls -l</B> and <B>ls -ld</B>
+commands makes sense for AFS files and directories. Following standard
+UNIX practice, the File Server records a number rather than a username in an
+AFS file or directory&#39;s owner field&#58; the owner&#39;s AFS
+UID. When you issue the <B>ls -l</B> command, it translates the UID
+to a username according to the mapping in the local password file, not the AFS
+Protection Database. If the AFS and UNIX UIDs do not match, the <B>ls
+-l</B> command reports an unexpected (and incorrect) owner. The
+output can even vary on different client machines if their local password
+files map the same UNIX UID to different names.
+<P>Follow the recommendations in the indicated sections to make AFS and UNIX
+UIDs match when you are creating accounts for various types of users&#58;
+<UL>
+<P><LI>If creating an AFS account for a user who already has a UNIX UID, see <A HREF="#HDRWQ613">Converting Existing UNIX Accounts with uss</A>.
+<P><LI>If some users in your cell have existing UNIX accounts but the user for
+whom you are creating an AFS account does not, then it is best to allow the
+Protection Server to allocate an AFS UID automatically. To avoid
+overlap of AFS UIDs with existing UNIX UIDs, set the Protection
+Database&#39;s <TT>max user id</TT> counter higher than the largest UNIX
+UID, using the instructions in <A HREF="auagd019.htm#HDRWQ770">Displaying and Setting the AFS UID and GID Counters</A>.
+<P><LI>If none of your users have existing UNIX accounts, allow the Protection
+Server to allocate AFS UIDs automatically, starting either at its default or
+at the value you have set for the <TT>max user id</TT> counter.
+</UL>
+<A NAME="IDX7610"></A>
+<A NAME="IDX7611"></A>
+<P><H3><A NAME="HDRWQ611" HREF="auagd002.htm#ToC_543">Specifying Passwords in the Local Password File</A></H3>
+<P>Authenticating with AFS is easiest for your users if you
+install and configure an AFS-modified login utility, which logs a user into
+the local file system and obtains an AFS token in one step. In this
+case, the local password file no longer controls a user&#39;s ability to
+login in most circumstances, because the AFS-modified login utility does not
+consult the local password file if the user provides the correct AFS
+password. You can nonetheless use a password file entry&#39;s password
+field (usually, the second field) in the following ways to control login and
+authentication&#58;
+<UL>
+<P><LI>To prevent both local login and AFS authentication, place an asterisk ( *
+) in the field. This is useful mainly in emergencies, when you want to
+prevent a certain user from logging into the machine.
+<P><LI>To prevent login to the local file system if the user does not provide the
+correct AFS password, place a character string of any length other than the
+standard thirteen characters in the field. This is appropriate if you
+want to allow only people with local AFS accounts to log into to your
+machines. A single <B>X</B> or other character is the most easily
+recognizable way to do this.
+<P><LI>To enable a user to log into the local file system even after providing an
+incorrect AFS password, record a standard UNIX encrypted password in the field
+by issuing the standard UNIX password-setting command (<B>passwd</B> or
+equivalent).
+</UL>
+<P>If you do not use an AFS-modified login utility, you must place a standard
+UNIX password in the local password file of every client machine the user will
+use. The user logs into the local file system only, and then must issue
+the <B>klog</B> command to authenticate with AFS. It is simplest if
+the passwords in the local password file and the Authentication Database are
+the same, but this is not required.
+<A NAME="IDX7612"></A>
+<A NAME="IDX7613"></A>
+<A NAME="IDX7614"></A>
+<A NAME="IDX7615"></A>
+<A NAME="IDX7616"></A>
+<P><H3><A NAME="HDRWQ612" HREF="auagd002.htm#ToC_544">Creating a Common Source Password File</A></H3>
+<P>This section explains how to create a common source version
+of the local password file when using <B>uss</B> commands to create user
+accounts. The sequence of steps is as follows&#58;
+<OL TYPE=1>
+<P><LI>Include an <B>E</B> instruction in the template file to create a
+one-line file that has the format of a local password file entry.
+<P><LI>Incorporate the one-line file into the common source version of the local
+password file. It makes sense to store this file in AFS. See the
+following two example scripts for automating this step.
+<P><LI>Distribute the common password file to each client machine, perhaps by
+using the AFS <B>package</B> utility as described in <A HREF="auagd016.htm#HDRWQ565">Configuring Client Machines with the package Program</A>.
+</OL>
+<P>As an example, the template file used by the ABC Corporation includes the
+following <B>E</B> instruction to create a file called
+<B>passwd_</B><VAR>username</VAR> in the directory
+<B>/afs/.abc.com/common/etc/newaccts</B> (the entire
+contents of the template file appear in <A HREF="#HDRWQ634">Example uss Templates</A> and a full description of the <B>E</B> instruction
+appears in <A HREF="#HDRWQ639">Creating One-Line Files with the E Instruction</A>)&#58;
+<PRE>   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root \
+        "$USER&#58;X&#58;$UID&#58;11&#58;$NAME&#58;$MTPT&#58;/bin/csh"
+</PRE>
+<P>For the user Joe L. Smith with username <B>smith</B>, this
+instruction creates a file called <B>passwd_smith</B> which contains the
+following line&#58;
+<PRE>   smith&#58;X&#58;1205&#58;11&#58;Joe L. Smith&#58;/afs/abc.com/usr/usr1/smith&#58;/bin/csh
+</PRE>
+<P>A shell script is probably the easiest way to incorporate a set of files
+created in this manner into a common source password file, and two sample
+shell scripts appear here. To automate the process even further, you
+can create a <B>cron</B> process in a file server machine&#39;s
+<B>/usr/afs/local/BosConfig</B> directory to execute the shell script,
+perhaps each day at a given time; for details, see <A HREF="auagd009.htm#HDRWQ216">To create and start a new process</A>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The following example scripts are suggestions only. If you choose to
+use them, or to model similar scripts on them, you must test that your script
+has the desired result, preferably in a test environment.
+</TD></TR></TABLE>
+<P><B>Example C Shell Script</B>
+<P>The first example is a simple C shell script suitable for the ABC
+Corporation cell. It incorporates the individual files found in the
+<B>/afs/.abc.com/common/uss/newaccts</B> directory into a
+new version of the global password file found in the
+<B>/afs/.abc.com/common/etc</B> directory, sorting the files
+into alphabetical order. It takes care to save the current version with
+a <B>.old</B> extension, then removes the individual files when
+done.
+<PRE>   set  dir = /afs/.abc.com/common
+   cat  $dir/uss/newaccts/passwd_* $dir/etc/passwd  >!  $dir/etc/passwd.new
+   mv  $dir/etc/passwd  $dir/etc/passwd.old
+   sort  $dir/etc/passwd.new  >  $dir/etc/passwd
+   rm  $dir/etc/passwd.new  $dir/uss/newaccts/passwd_*
+</PRE>
+<P><B>Example Bourne Shell Script</B>
+<P>The second, more elaborate, example is a Bourne shell script that first
+verifies that there are new <B>passwd_</B><VAR>username</VAR> files to be
+incorporated into the global password file. While running, it checks
+that each new entry does not already exist. Like the shorter C shell
+example, it incorporates the individual files found in the
+<B>/afs/.abc.com/common/uss/newaccts</B> directory into a
+new version of the global <B>passwd</B> file found in the
+<B>/afs/.abc.com/common/etc</B> directory.
+<PRE>   #!/bin/sh
+   DESTDIR=/afs/.abc.com/common/uss/newaccts
+   cd  $DESTDIR
+   DEST=/afs/.abc.com/common/etc
+   cp /afs/.abc.com/common/etc/passwd   /afs/.abc.com/common/uss/newaccts/passwd
+   echo "copied in passwd file."
+   PASSWD=/afs/.abc.com/common/uss/newaccts/passwd
+   ENTRIES=`ls passwd_*`
+   case $ENTRIES in 
+   "")
+        echo No new entry found to be added to passwd file
+        ;;
+   *)
+        echo  "Adding new users to passwd file."
+        for  i  in  $ENTRIES
+        do
+           cat  $i  |  awk  -F&#58;  &#39;{print $1  >  "foo"}&#39;
+           USER=`cat foo`
+           case  `egrep  -e  \^$USER\&#58; $PASSWD` in 
+           "")
+                   echo  adding  $USER
+                   cat  $i  >>  $PASSWD
+                   ;;
+           *)
+                   echo  $USER already in passwd file
+                   ;;
+           esac
+           mv  $i  ../old.passdir/done_${i}
+        done
+        cd  /afs/.abc.com/common/uss/newaccts
+        echo  "sorting password file"
+        sort  ${PASSWD}  >  ${PASSWD}.sorted
+        echo  "installing files"     
+        install  ${PASSWD}.sorted ${DEST}/passwd
+        echo  "Password file is built, sorted and installed."
+        ;;
+   esac
+</PRE>
+<A NAME="IDX7617"></A>
+<A NAME="IDX7618"></A>
+<A NAME="IDX7619"></A>
+<HR><H2><A NAME="HDRWQ613" HREF="auagd002.htm#ToC_545">Converting Existing UNIX Accounts with uss</A></H2>
+<P>This section discusses the three main issues you need to
+consider if there are existing UNIX accounts to be converted to AFS
+accounts.
+<P><H3><A NAME="HDRWQ614" HREF="auagd002.htm#ToC_546">Making UNIX and AFS UIDs Match</A></H3>
+<P>As previously mentioned, AFS users must have an entry in the
+local password file on every client machine from which they access the AFS
+filespace as an authenticated user. Both administration and use are
+much simpler if the UNIX UID and AFS UID match. When converting
+existing UNIX accounts, you have two alternatives&#58;
+<UL>
+<P><LI>Make the AFS UIDs match the existing UNIX UIDs. In this case, you
+need to assign the AFS UID yourself as you create an AFS account&#58; 
+<UL>
+<P><LI>If using the <B>uss add</B> command, include the <B>-uid</B>
+argument.
+<P><LI>If using the <B>uss bulk</B> command, specify the desired UID in the
+<VAR>uid</VAR> field of the <B>add</B> instruction in the bulk input
+file.
+</UL> 
+<P>Because you are retaining the user&#39;s UNIX UID, you do not need to
+alter the UID in the local password file entry. However, if you are
+using an AFS-modified login utility, you possibly need to change the password
+field in the entry. For a discussion of how the value in the password
+field affects login with an AFS-modified login utility, see <A HREF="#HDRWQ609">Creating Local Password File Entries with uss</A>. 
+<P>If now or in the future you need to create AFS accounts for users who do
+not have an existing UNIX UID, then you must guarantee that new AFS UIDs do
+not conflict with any existing UNIX UIDs. The simplest way is to set
+the <TT>max user id</TT> counter in the Protection Database to a value
+higher than the largest existing UNIX UID. See <A HREF="auagd019.htm#HDRWQ770">Displaying and Setting the AFS UID and GID Counters</A>.
+<P><LI>Change the existing UNIX UIDs to match the new AFS UIDs that the
+Protection Server assigns automatically. 
+<P>Allow the Protection Server to allocate the AFS UIDs automatically as you
+create AFS accounts. For instructions on creating a new entry for the
+local password file during account creation, see <A HREF="#HDRWQ609">Creating Local Password File Entries with uss</A>. 
+<P>There is one drawback to changing the UNIX UID&#58; any files and
+directories that the user owned in the local file system before becoming an
+AFS user still have the former UID in their owner field. If you want
+the <B>ls -l</B> and <B>ls -ld</B> commands to display the correct
+owner, you must use the <B>chown</B> command to change the value to the
+user&#39;s new UID, whether you are leaving the file in the local file system
+or moving it to AFS. See <A HREF="#HDRWQ616">Moving Local Files into AFS</A>.
+</UL>
+<P><H3><A NAME="HDRWQ615" HREF="auagd002.htm#ToC_547">Setting the Password Field Appropriately</A></H3>
+<P>Existing UNIX accounts already have an entry in the local
+password file, probably with a (scrambled) password in the password
+field. You possibly need to change the value in the field, depending on
+the type of login utility you use&#58;
+<UL>
+<P><LI>If the login utility is not modified for use with AFS, the actual password
+must appear (in scrambled form) in the password field of the local password
+file entry.
+<P><LI>If the login utility is modified for use with AFS, choose one of the
+acceptable values, each of which affects the login utility&#39;s behavior
+differently. See <A HREF="#HDRWQ609">Creating Local Password File Entries with uss</A>.
+</UL>
+<P>If you choose to place an actual password in a local password file entry,
+then you can define a dummy password when you use a template file <B>E</B>
+instruction to create the entry, as described in <A HREF="#HDRWQ639">Creating One-Line Files with the E Instruction</A>. Have the user issue the UNIX password-setting
+command (<B>passwd</B> or equivalent) to replace the dummy with an actual
+secret password.
+<P><H3><A NAME="HDRWQ616" HREF="auagd002.htm#ToC_548">Moving Local Files into AFS</A></H3>
+<P>New AFS users with existing UNIX accounts probably already
+own files and directories stored in a machine&#39;s local file system, and it
+usually makes sense to transfer them into the new home volume. The
+easiest method is to move them onto the local disk of an AFS client machine,
+and then use the UNIX <B>mv</B> command to transfer them into the
+user&#39;s new AFS home directory.
+<P>As you move files and directories into AFS, keep in mind that the meaning
+of their mode bits changes. AFS ignores the second and third sets of
+mode bits (group and other), and does not use the first set (the owner bits)
+directly, but only in conjunction with entries on the ACL (for details, see <A HREF="auagd020.htm#HDRWQ795">How AFS Interprets the UNIX Mode Bits</A>). Be sure that the ACL protects the file or directory
+at least as securely as the mode bits.
+<P>If you have chosen to change a user&#39;s UNIX UID to match a new AFS UID,
+you must change the ownership of UNIX files and directories as well.
+Only members of the <B>system&#58;administrators</B> group can issue the
+<B>chown</B> command on files and directories once they reside in
+AFS.
+<A NAME="IDX7620"></A>
+<A NAME="IDX7621"></A>
+<A NAME="IDX7622"></A>
+<HR><H2><A NAME="HDRWQ617" HREF="auagd002.htm#ToC_549">Constructing a uss Template File</A></H2>
+<P>Creating user accounts with <B>uss</B> commands is
+generally more convenient than using individual commands. You control
+the account creation process just as closely, but the <B>uss</B> template
+file enables you to predefine many aspects of account configuration.
+Because you construct the template before issuing <B>uss</B> commands, you
+have time to consider configuration details carefully and correct syntax
+errors. The following list summarizes some further advantages of using
+a template&#58;
+<UL>
+<P><LI>You do not have to remember the correct order in which to create or delete
+account components, or the order of each command&#39;s arguments, which
+reduces the likelihood of errors.
+<P><LI>You do not have to type the same information multiple times.
+Instead, you can place constants and variables in the template file that
+enable you to type as little on the command line as possible. See <A HREF="#HDRWQ619">Using Constants and Variables in the Template File</A>.
+<P><LI>You can create different templates for different types of users.
+Instead of having to remember which components differ for a given user,
+specify the appropriate template when issuing the <B>uss add</B> or
+<B>uss bulk</B> command.
+<P><LI>You can create any of the three types of AFS account (authentication-only,
+basic, or full) by including or omitting certain information in the template,
+as described in <A HREF="#HDRWQ618">Creating the Three Types of User Accounts</A>.
+</UL>
+<P>The following list briefly describes the instructions that can appear in a
+template file and points you to a later section for more details. It
+lists them in the order that is usually optimal for correct handling of
+dependencies between the different types of instruction.
+<DL>
+<P><DT><B><B>G</B>
+</B><DD>Defines a directory that is one of a set of parent directories into which
+the <B>uss</B> command interpreter evenly distributes newly created home
+directories. Place the corresponding template file variable, $AUTO, in
+the <VAR>mount_point</VAR> field of the <B>V</B> instruction. See <A HREF="#HDRWQ635">Evenly Distributing User Home Directories with the G Instruction</A> and <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P><DT><B><B>V</B>
+</B><DD>Creates a volume, mounts it as the user&#39;s home directory at a
+specified location in the AFS filespace, sets the volume&#39;s quota, and
+defines the owner and ACL for the directory. This instruction must
+appear in any template that is not empty (zero-length). See <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P><DT><B><B>D</B>
+</B><DD>Creates a directory, generally a subdirectory of the new home directory,
+and sets its mode bits, owner, and ACL. See <A HREF="#HDRWQ637">Creating a Directory with the D Instruction</A>.
+<P><DT><B><B>F</B>
+</B><DD>Creates a file by copying a prototype and sets its mode bits and
+owner. See <A HREF="#HDRWQ638">Creating a File from a Prototype with the F Instruction</A>.
+<P><DT><B><B>E</B>
+</B><DD>Creates a single-line file by copying in the contents of the instruction
+itself, then sets the file&#39;s mode bits and owner. See <A HREF="#HDRWQ639">Creating One-Line Files with the E Instruction</A>.
+<P><DT><B><B>L</B>
+</B><DD>Creates a hard link. See <A HREF="#HDRWQ640">Creating Links with the L and S Instructions</A>.
+<P><DT><B><B>S</B>
+</B><DD>Creates a symbolic link. See <A HREF="#HDRWQ640">Creating Links with the L and S Instructions</A>.
+<P><DT><B><B>A</B>
+</B><DD>Improves account security by imposing restrictions on passwords and
+authentication attempts. See <A HREF="#HDRWQ641">Increasing Account Security with the A Instruction</A>.
+<P><DT><B><B>X</B>
+</B><DD>Executes a command. See <A HREF="#HDRWQ642">Executing Commands with the X Instruction</A>.
+</DL>
+<A NAME="IDX7623"></A>
+<A NAME="IDX7624"></A>
+<A NAME="IDX7625"></A>
+<P><H3><A NAME="HDRWQ618" HREF="auagd002.htm#ToC_550">Creating the Three Types of User Accounts</A></H3>
+<P>Using the <B>uss add</B> and <B>uss bulk</B>
+commands, you can create three types of accounts that differ in their levels
+of functionality. For a description of the types, see <A HREF="auagd007.htm#HDRWQ72">Configuring AFS User Accounts</A>. The following list explains how to construct a
+template for each type&#58;
+<UL>
+<P><LI>To create an authentication-only account, create an empty (zero-length)
+template file. Such an account has only two components&#58; entries
+in the Authentication Database and Protection Database.
+<P><LI>To create a basic account, include a <B>V</B> instruction, and
+<B>G</B> instructions if you want to distribute home directories evenly as
+described in <A HREF="#HDRWQ635">Evenly Distributing User Home Directories with the G Instruction</A>. In addition to Authentication Database and
+Protection Database entries, this type of account includes a volume mounted at
+the home directory with owner and ACL set appropriately.
+<P><LI>To create a full account, include <B>D</B>, <B>E</B>,
+<B>F</B>, <B>L</B>, and <B>S</B> instructions as appropriate, in
+addition to the <B>V</B> and <B>G</B> instructions. This type
+of account includes configuration files for basic functions such as logging
+in, printing, and mail delivery. For a discussion of some useful types
+of configuration files, see <A HREF="auagd007.htm#HDRWQ75">Creating Standard Files in New AFS Accounts</A>.
+</UL>
+<A NAME="IDX7626"></A>
+<A NAME="IDX7627"></A>
+<A NAME="IDX7628"></A>
+<A NAME="IDX7629"></A>
+<P><H3><A NAME="HDRWQ619" HREF="auagd002.htm#ToC_551">Using Constants and Variables in the Template File</A></H3>
+<P>Each instruction in the <B>uss</B> template file has
+several fields that define the characteristics of the element that it
+creates. The <B>D</B> instruction&#39;s fields, for instance,
+define a directory&#39;s pathname, owner, mode bits, and ACL.
+<P>You can place three types of values in a field&#58; a variable, a
+constant, or a combination of the two. The appropriate value depends on
+the desired configuration, and determines which arguments you provide to the
+<B>uss add</B> command or which fields you include in a bulk input file
+<B>add</B> instruction.
+<P>If an aspect of account configuration is the same for every user, define a
+constant value in the appropriate field by inserting a character
+string. For example, to assign a space quota of 10,000 KB to every user
+volume, place the string <B>10000</B> in the <B>V</B>
+instruction&#39;s <VAR>quota</VAR> field.
+<P>If, on the other hand, an aspect of account configuration varies for each
+user, put a variable in the appropriate field. When creating each
+account, provide a value for the variable by providing either the
+corresponding argument to the <B>uss add</B> command or a value in the
+corresponding field of the <B>add</B> instruction in the bulk input
+file.
+<P>The <B>uss</B> command suite defines a set of template variables, each
+of which has a corresponding source for its value, as summarized in <A HREF="#TBLWQ620">Table 3</A>. For a discussion of their intended uses, see the
+following sections about each template instruction (<A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A> through <A HREF="#HDRWQ642">Executing Commands with the X Instruction</A>).
+<BR>
+<P><B><A NAME="TBLWQ620" HREF="auagd004.htm#FT_TBLWQ620">Table 3. Source for values of uss template variables</A></B><BR>
+<TABLE WIDTH="100%" BORDER>
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%"><B>Variable</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>Source for value</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$AUTO
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%">Previous <B>G</B> instructions in template
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$MTPT
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-mount</B> argument to <B>uss add</B> command or
+<VAR>mount_point</VAR> field of bulk input file <B>add</B> instruction, when
+in <B>V</B> instruction; <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field when in subsequent instructions
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$NAME
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-realname</B> argument to <B>uss add</B> command or
+<VAR>mount_point</VAR> field of bulk input file <B>add</B> instruction, if
+provided; otherwise, <B>-user</B> argument to <B>uss add</B>
+command or <VAR>username</VAR> field of in bulk input file <B>add</B>
+instruction
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$PART
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-partition</B> argument to <B>uss add</B> command or
+<VAR>partition</VAR> field of bulk input file <B>add</B> instruction
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$PWEXPIRES
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-pwexpires</B> argument to <B>uss add</B> command or
+<VAR>password_expires</VAR> field of bulk input file <B>add</B> instruction
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$SERVER
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-server</B> argument to <B>uss add</B> command or
+<VAR>file_server</VAR> field of bulk input file <B>add</B> instruction
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$UID
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-uid</B> argument to <B>uss add</B> command or <VAR>uid</VAR>
+field of bulk input file <B>add</B> instruction, if provided;
+otherwise, allocated automatically by Protection Server
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$USER
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-user</B> argument to <B>uss add</B> command or
+<VAR>username</VAR> field of bulk input file <B>add</B> instruction
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$1 through $9
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-var</B> argument to <B>uss add</B> command or <VAR>var1</VAR>
+through <VAR>var9</VAR> fields of bulk input file <B>add</B> instruction
+</TD></TR></TABLE>
+<P>A common use of variables is to define the file server machine and
+partition that house the user&#39;s volume, which often vary from user to
+user. Place the $SERVER variable in the <B>V</B> instruction&#39;s
+<VAR>server</VAR> field, and the $PART variable in its <VAR>partition</VAR>
+field. If using the <B>uss add</B> command, provide the desired
+value with the <B>-server</B> and <B>-partition</B> arguments.
+If using the <B>uss bulk</B> command, provide the desired values in the
+<VAR>file_server</VAR> and <VAR>partition</VAR> fields of each user&#39;s
+<B>add</B> instruction in the bulk input file.
+<A NAME="IDX7630"></A>
+<A NAME="IDX7631"></A>
+<P>The variables $1 through $9 can be used to customize other aspects of the
+account. Provide a value for these variables with the <B>-var</B>
+argument to the <B>uss add</B> command or in the appropriate field of the
+bulk input file <B>add</B> instruction. The <B>-var</B>
+argument is unusual in that each instance for it has two parts&#58; the
+number index and the value, separated by a space. For examples of the
+use of a number variable, see the discussions of the <VAR>mount_point</VAR> and
+<VAR>quota</VAR> fields in <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P>If some aspect of account configuration is partly constant and partly
+variable, you can combine variables and constants in an instruction
+field. For example, suppose that the ABC Corporation mounts user
+volumes in the <B>/afs/abc.com/usr</B> directory. That part
+of the pathname is constant, but the name of the mount point and home
+directory is the user&#39;s username, which corresponds to the $USER
+variable. To configure accounts in this way, combine a constant string
+and a variable in the <B>V</B> instruction&#39;s <VAR>mount_point</VAR>
+field as follows&#58;
+<PRE>   /afs/abc.com/usr/$USER
+</PRE>
+<P>Then provide the value for the $USER variable with the <B>-user</B>
+argument to the <B>uss add</B> command, or in the <VAR>username</VAR> field
+of each user&#39;s <B>add</B> instruction in the bulk input file.
+<A NAME="IDX7632"></A>
+<A NAME="IDX7633"></A>
+<P><H3><A NAME="HDRWQ631" HREF="auagd002.htm#ToC_552">Where to Place Template Files</A></H3>
+<P>A template must be available to the <B>uss</B> command
+interpreter as it executes a <B>uss add</B> or <B>uss bulk</B>
+command, even if it is the zero-length file appropriate for creating an
+authentication-only account.
+<P>If you do not provide the <B>-template</B> argument to the <B>uss
+add</B> or <B>uss bulk</B> command, then the command interpreter
+searches for a template file called <B>uss.template</B> in each of
+the following directories in turn&#58;
+<OL TYPE=1>
+<P><LI>The current working directory
+<P><LI><B>/afs/<VAR>cellname</VAR>/common/uss</B>, where <VAR>cellname</VAR> is
+the local cell
+<P><LI><B>/etc</B>
+</OL>
+<P>To use a template file with a different name or stored in a different
+directory, include the <B>-template</B> argument to the <B>uss add</B>
+or <B>uss bulk</B> command. If you provide a filename only, the
+command interpreter looks for it in the directories listed just
+previously. If you provide a pathname and filename, it looks only in
+the specified directory, interpreting a partial pathname relative to the
+current working directory.
+<A NAME="IDX7634"></A>
+<A NAME="IDX7635"></A>
+<P><H3><A NAME="HDRWQ632" HREF="auagd002.htm#ToC_553">Some General Rules for Constructing a Template</A></H3>
+<P>This section summarizes some general rules to follow when
+constructing a template file. For each instruction&#39;s syntax
+definition, see the following sections (<A HREF="#HDRWQ635">Evenly Distributing User Home Directories with the G Instruction</A> through <A HREF="#HDRWQ642">Executing Commands with the X Instruction</A>).
+<UL>
+<P><LI>If a variable takes its value from an element elsewhere within the
+template, the definition must precede the reference. Putting the
+instruction lines in the following order usually results in correct resolution
+of variables&#58;
+<P><B>G  V  D  F  E  L  S  A X</B>
+<P><LI>The fields in each instruction must appear in the order specified by the
+instruction&#39;s syntax definition, which appear in the following sections
+about each instruction. You cannot omit a field. Separate each
+field from its neighbors with one or more spaces.
+<P><LI>When specifying a pathname, provide a full one. Partial pathnames
+are interpreted relative to the current working directory (the one in which
+the <B>uss</B> command is issued), with possibly unintended
+results.
+<P><LI>Each instruction must appear on a single line in the template file, with a
+newline character (<B>&lt;Return></B>) only at the end of the
+instruction. Some example instructions appear in this document on more
+than one line, but that is only for legibility.
+<P><LI>Provide a value for every variable that appears in the template by
+including the corresponding argument to the <B>uss add</B> command or
+placing a value in the corresponding field of the bulk input file
+<B>add</B> instruction. A missing value halts the entire creation
+operation. If a variable does not appear in the template file, the
+command interpreter ignores the corresponding command-line argument or field
+in the bulk input file, even if you provide it.
+<P><LI>You can use blank lines in the template file to increase its
+legibility. If you place comments in the file, begin each comment line
+with the number sign (<B>#</B>).
+</UL>
+<P><H3><A NAME="HDRWQ633" HREF="auagd002.htm#ToC_554">About Creating Local Disk Directories and Files</A></H3>
+<P>It is possible to use the <B>D</B>, <B>E</B>, and
+<B>F</B> instructions to create directories or files in the local file
+system of the machine on which you are issuing the <B>uss</B> command, but
+that usage is not recommended. It introduces two potential
+complications&#58;
+<UL>
+<P><LI>The local file system automatically assigns ownership of a new local disk
+directory or file to its creator. Because you are the issuer of the
+<B>uss</B> command that is creating the object, it records your current
+UNIX UID. If that is not appropriate and you want to designate another
+owner as the object is created, then you must be logged in as the local
+superuser <B>root</B> (the local file system allows only the
+<B>root</B> user to issue the UNIX <B>chown</B> command, which the
+<B>uss</B> command interpreter invokes to change the owner from the
+default value). You must also use the <B>-admin</B> argument to the
+<B>uss add</B> or <B>uss bulk</B> command to authenticate as a
+privileged AFS administrator. Only an administrator can create
+Authentication Database and Protection Database entries, which the
+<B>uss</B> command interpreter always creates as part of a new
+account. 
+<P>The alternative is to become the local superuser <B>root</B> after the
+<B>uss</B> operation completes, and issue the necessary <B>chown</B>
+command then. However, that makes the account creation process that
+much less automated.
+<P><LI>Creating a local disk directory always generates an error message because
+the <B>uss</B> command interpreter cannot successfully set a local
+directory&#39;s ACL. The directory is created nevertheless, and a
+value still must appear in the <B>D</B> instruction&#39;s <VAR>ACL</VAR>
+field.
+</UL>
+<P>The recommended method for configuring a machine&#39;s local disk is to
+use the AFS <B>package</B> utility instead; see <A HREF="auagd016.htm#HDRWQ565">Configuring Client Machines with the package Program</A>.
+<A NAME="IDX7636"></A>
+<A NAME="IDX7637"></A>
+<P><H3><A NAME="HDRWQ634" HREF="auagd002.htm#ToC_555">Example uss Templates</A></H3>
+<P>This section describes example templates for the basic and
+full account types (the template for an authentication-only account is
+empty).
+<P>The first example creates a basic account. It contains two
+<B>G</B> instructions and a <B>V</B> instruction that defines the
+volume name, file server machine, partition, quota in kilobytes, mount point,
+home directory owner, and home directory access control list. In the
+ABC Corporation cell, a suitable template is&#58;
+<PRE>   G /afs/.abc.com/usr1
+   G /afs/.abc.com/usr2
+   V  user.$USER  $SERVER.abc.com  /vicep$PART  5000  $AUTO/$USER   $UID  \
+        $USER all staff rl
+</PRE>
+<P>When issuing the <B>uss add</B> command with this type of template,
+provide the following arguments&#58;
+<UL>
+<P><LI><B>-user</B> to specify the username for the $USER variable
+<P><LI><B>-server</B> to specify the unique part of the file server machine
+name for the $SERVER variable
+<P><LI><B>-partition</B> to specify the unique part of the partition name for
+the $PART variable
+</UL>
+<P>The Protection Server automatically assigns an AFS UID for the $UID
+variable, and the <B>G</B> instructions provide a value for the $AUTO
+variable.
+<P>The following example template file creates a full account in the ABC
+Corporation cell. The following sections about each type of instruction
+describe the effect of the examples. Note that the <B>V</B> and
+<B>E</B> instructions appear on two lines each only for the sake of
+legibility.
+<PRE>   #
+   # Specify the available grouping directories
+   #
+   G /afs/.abc.com/usr1
+   G /afs/.abc.com/usr2
+   #
+   # Create the user&#39;s home volume
+   #
+   V user.$USER $SERVER.abc.com /vicep$PART 5000 /afs/.abc.com/$AUTO/$USER \
+        $UID $USER all abc&#58;staff rl
+   #
+   # Create directories and files for mail
+   #
+   D $MTPT/.MESSAGES 0700 $UID $USER all abc&#58;staff none 
+   D $MTPT/.Outgoing 0700 $UID $USER rlidwk postman rlidwk 
+   D $MTPT/Mailbox 0700 $UID $USER all abc&#58;staff none system&#58;anyuser lik
+   #
+   # Here are some useful scripts for login etc.
+   #
+   F $MTPT/.Xbiff 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.Xresources 0644 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.Xsession 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.cshrc 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.login 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.logout 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.twmrc 0644 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/preferences 0644 $UID /afs/abc.com/admin/user/proto
+   #
+   # Make a passwd entry
+   #
+   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root \
+        "$USER&#58;X&#58;$UID&#58;11&#58;$NAME&#58;$MTPT&#58;/bin/csh"
+   #
+   # Put in the standard password/authentication checks
+   #
+   A $USER 250 noreuse 9 25
+   #
+   # Create and mount a public volume for the user
+   #
+   X "create_public_vol $USER $1 $2"
+   #
+   # Here we set up the symbolic link to public directory
+   #
+   S /afs/abc.com/public/$USER $MTPT/public
+</PRE>
+<A NAME="IDX7638"></A>
+<A NAME="IDX7639"></A>
+<A NAME="IDX7640"></A>
+<A NAME="IDX7641"></A>
+<A NAME="IDX7642"></A>
+<P><H3><A NAME="HDRWQ635" HREF="auagd002.htm#ToC_556">Evenly Distributing User Home Directories with the G Instruction</A></H3>
+<P>In cells with thousands of user accounts, it often makes
+sense to distribute the mount points for user volumes into multiple parent
+directories, because placing them all in one directory noticeably slows down
+directory lookup when a user home directory is accessed. A possible
+solution is to create parent directories that group user home directories
+alphabetically, or that reflect divisions like academic or corporate
+departments. However, in a really large cell, some such groups can
+still be large enough to slow directory lookup, and users who belong to those
+groups are unfairly penalized every time they access their home
+directory. Another drawback to groupings that reflect workplace
+divisions is that you must move mount points when users change departmental
+affiliation.
+<P>An alternative is an even distribution of user home directories into
+multiple parent directories that do not represent workplace divisions.
+The <B>uss</B> command suite enables you to define a list of directories
+by placing a <B>G</B> instruction for each one at the top of the template
+file, and then using the $AUTO variable in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field. When the <B>uss</B> command interpreter
+encounters the $AUTO variable, it substitutes the directory named by a
+<B>G</B> instruction that currently has the fewest entries.
+(Actually, the $AUTO variable can appear in any field that includes a
+pathname, in any type of instruction. In all cases, the command
+interpreter substitutes the directory that currently has the fewest
+entries.)
+<P>The <B>G</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   G  <VAR>directory</VAR>
+</PRE>
+<P>where <VAR>directory</VAR> specifies either a complete directory pathname or
+only the final element (the directory itself). The choice determines
+the appropriate value to place in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field.
+<P>Specify the read/write path to each directory, to avoid the failure that
+results when you attempt to create a new mount point in a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>For example, the ABC Corporation example template for a full account in <A HREF="#HDRWQ634">Example uss Templates</A> defines two directories&#58;
+<PRE>   G /afs/.abc.com/usr1
+   G /afs/.abc.com/usr2
+</PRE>
+<P>and puts the value <B>$AUTO/$USER</B> in the <B>V</B>
+instruction&#39;s <VAR>mount_point</VAR> field. An alternative with the
+same result is to define the directories as follows&#58;
+<PRE>   G usr1
+   G usr2
+</PRE>
+<P>and specify a more complete pathname in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field&#58;
+<B>/afs/.abc.com/$AUTO/$USER</B>.
+<A NAME="IDX7643"></A>
+<A NAME="IDX7644"></A>
+<A NAME="IDX7645"></A>
+<A NAME="IDX7646"></A>
+<A NAME="IDX7647"></A>
+<A NAME="IDX7648"></A>
+<P><H3><A NAME="HDRWQ636" HREF="auagd002.htm#ToC_557">Creating a Volume with the V Instruction</A></H3>
+<P>Unless the template file is empty (zero-length), one and
+only one <B>V</B> instruction must appear in it. (To create other
+volumes for a user as part of a <B>uss</B> account-creation operation, use
+the <B>X</B> instruction to invoke the <B>vos create</B> command or a
+script that invokes that command along with others, such as the <B>fs
+mkmount</B> command. For an example, see <A HREF="#HDRWQ642">Executing Commands with the X Instruction</A>.)
+<P>The <B>V</B> instruction defines the following AFS entities&#58;
+<UL>
+<P><LI>A volume and associated VLDB entry
+<P><LI>The volume&#39;s site (file server machine and partition)
+<P><LI>The volume&#39;s mount point in the AFS filespace, which becomes the
+user&#39;s home directory
+<P><LI>The volume&#39;s space quota
+<P><LI>The home directory&#39;s owner, usually the new user
+<P><LI>The home directory&#39;s ACL, which normally at least grants all
+permissions to the user
+</UL>
+<P>The following discussion of the fields in a <B>V</B> instruction refers
+to the example in the full account template from <A HREF="#HDRWQ634">Example uss Templates</A> (the instruction appears here on two lines only for
+legibility)&#58;
+<PRE>   V  user.$USER  $SERVER.abc.com  /vicep$PART  5000  \
+       /afs/.abc.com/$AUTO/$USER  $UID  $USER all abc&#58;staff rl
+</PRE>
+<P>The <B>V</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   V  <VAR>volume_name</VAR>  <VAR>server</VAR>  <VAR>partition</VAR>  <VAR>quota</VAR>  <VAR>mount_point</VAR> <VAR>owner</VAR>  <VAR>ACL</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><B>V</B>
+</B><DD>Indicates a volume creation instruction.
+<P><DT><B><VAR>volume_name</VAR>
+</B><DD>Specifies the volume&#39;s name as recorded in the VLDB.
+<P>To follow the convention of including the user&#39;s name as part of the
+volume name, include the $USER variable in this field. The variable
+takes its value from the <B>-user</B> argument to the <B>uss add</B>
+command or from the bulk input file <B>add</B> instruction&#39;s
+<VAR>username</VAR> field.
+<P>The ABC Corporation example uses the value <B>user.$USER</B> to
+assign the conventional volume name,
+<B>user.</B><VAR>username</VAR>. When creating an account for
+user <B>smith</B>, for example, you then include <B>-user smith</B> as
+an argument to the <B>uss add</B> command, or place the value
+<B>smith</B> in the bulk input file <B>add</B> instruction&#39;s
+<VAR>username</VAR> field.
+<P><DT><B><VAR>server</VAR>
+</B><DD>Names the file server machine on which to create the new volume. It
+is best to provide a fully qualified host name (for example,
+<B>fs1.abc.com</B>), but an abbreviated form is acceptable
+if the cell&#39;s naming service is available to resolve it at the time the
+volume is created.
+<P>To place different users&#39; volumes on different file server machines,
+use the $SERVER variable in this field, and provide a value for it either with
+the <B>-server</B> argument to the <B>uss add</B> command or in the
+<VAR>server</VAR> field of the bulk input file <B>add</B>
+instruction. One easy way to specify a fully qualified hostname without
+having to type it completely on the command line is to combine a constant and
+the $SERVER variable. Specifically, the constant specifies the
+domain-name suffix common to all the file server machines.
+<P>In the ABC Corporation example, all of the file server machines in the cell
+share the <B>abc.com</B> domain name suffix, so the <VAR>server</VAR>
+field combines a variable and constant&#58;
+<B>$SERVER.abc.com</B>. To place the new volume on
+the machine <B>fs1.abc.com</B>, you then include
+<B>-server fs1</B> as an argument to the <B>uss add</B> command, or
+place the value <B>fs1</B> in the bulk input file <B>add</B>
+instruction&#39;s <VAR>server</VAR> field.
+<P><DT><B><VAR>partition</VAR>
+</B><DD>Specifies the partition on which to create the user&#39;s volume; it
+must be on the file server machine named in the <VAR>server</VAR> field.
+Identify the partition by its complete name (for example, <B>/vicepa</B>)
+or use one of the abbreviations listed in <A HREF="auagd023.htm#HDRWQ840">Rules for Using Abbreviations and Aliases</A>.
+<P>To place different users&#39; volumes on different partitions, use the
+$PART variable in this field, and provide a value for it either with the
+<B>-partition</B> argument to the <B>uss add</B> command or in the
+<VAR>partition</VAR> field of the bulk input file <B>add</B>
+instruction. Because all full partition names start with the
+<B>/vicep</B> string, it is convenient to combine that string as a
+constant with the $PART variable.
+<P>The ABC Corporation example template combines the constant string
+<B>/vicep</B> and the $PART variable in this way, as
+<B>/vicep$PART</B>.
+<A NAME="IDX7649"></A>
+<A NAME="IDX7650"></A>
+<A NAME="IDX7651"></A>
+<A NAME="IDX7652"></A>
+<P><DT><B><VAR>quota</VAR>
+</B><DD>Sets the maximum number of kilobyte blocks the volume can occupy on the
+file server machine&#39;s disk. It must be an integer. If you
+assign the same quota to all user volumes, specify a constant value. To
+assign different quotas to different volumes, place one of the number
+variables ($1 through $9) in this field, and provide a value for it either
+with the <B>-var</B> argument to the <B>uss add</B> command or in the
+appropriate field of the bulk input file <B>add</B> instruction.
+<P>The ABC Corporation example grants a 5000 KB initial quota to every new
+user.
+<A NAME="IDX7653"></A>
+<A NAME="IDX7654"></A>
+<A NAME="IDX7655"></A>
+<A NAME="IDX7656"></A>
+<P><DT><B><VAR>mount_point</VAR>
+</B><DD>Creates a mount point for the volume, which serves as the volume&#39;s
+root directory and the user&#39;s home directory. By convention, user
+home directory names include the username, which you can read in by including
+the $USER variable in this field.
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results when you attempt to create the new mount point in a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). If you use the $AUTO variable
+in this field, the directories named by each <B>G</B> instruction possibly
+already indicate the read/write path. For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>If other parts of the mount point name also vary from user to user, you can
+use the $MTPT variable in this field, and provide a value with the <B>uss
+add</B> command&#39;s <B>-mount</B> argument or in the
+<VAR>mount_point</VAR> field of a bulk input file <B>add</B>
+instruction. Note, however, that when the $MTPT variable appears in
+subsequent instructions in the template (usually, in <B>D</B>,
+<B>E</B>, or <B>F</B> instructions), it instead takes as its value the
+complete contents of this field.
+<P>Combine constants and variables based on how you have decided to group home
+directories together in one or more parent directories. Note that the
+parent directories must already exist before you run a <B>uss add</B> or
+<B>uss bulk</B> command that references the template. Possibilities
+for grouping home directories include the following&#58;
+<A NAME="IDX7657"></A>
+<P>
+<UL>
+<P><LI>Placing all user home directories in a single parent directory; the
+name <B>/afs/</B><VAR>cellname</VAR><B>/usr</B> is an AFS-appropriate
+variation on the UNIX <B>/usr</B> convention. This choice is most
+appropriate for a cell with a small number of user accounts. The
+simplest way to implement this choice is to combine a constant string and the
+$USER variable, as in <B>/afs/.abc.com/usr/$USER</B>.
+<P><LI>Distributing home directories evenly into a set of parent directories that
+do not correspond to workplace divisions. This choice is appropriate in
+cells with tens of thousands of accounts, where the number of home directories
+is large enough to slow directory lookup significantly if they all reside
+together in one parent directory, but distribution according to workplace
+divisions is not feasible.
+<P>The $AUTO variable is designed to distribute home directories evenly in
+this manner. As explained in <A HREF="#HDRWQ635">Evenly Distributing User Home Directories with the G Instruction</A>, the <B>uss</B> command interpreter substitutes the
+directory that is defined by a preceding <B>G</B> template instruction and
+that currently has the fewest entries. The example ABC Corporation
+template illustrates this choice by using the value
+<B>/afs/.abc.com/$AUTO/$USER</B>.
+<P><LI>Distributing home directories into multiple directories that reflect
+divisions like academic or corporate departments. Perhaps the simplest
+way to implement this scheme is to use the $MTPT variable to represent the
+department, as in
+<B>/afs/.ghi.com/usr/$MTPT/$USER</B>. You then
+provide <B>-user smith</B> and <B>-mount acctg</B> arguments to the
+<B>uss add</B> command to create the mount point
+<B>/afs/.ghi.com/usr/acctg/smith</B>.
+<P><LI>Distributing home directories into alphabetic subdirectories of
+<B>usr</B> (<B>usr/a</B>, <B>usr/b</B> and so on), based on the
+first letter or letters in the username. The advantage is that knowing
+the username enables you easily to locate a home directory. A potential
+drawback is that the distribution is not likely to be even, and if there are a
+large number of accounts, then slowed directory lookup unfairly affects users
+whose names begins with popular letters. 
+<P>Perhaps the simplest way to implement this scheme is to use the $MTPT
+variable to represent the letter or letters, as in
+<B>/afs/.jkl.com/usr/$MTPT/$USER</B>. Then provide
+the <B>-user smith</B> and <B>-mount s/m</B> arguments to the <B>uss
+add</B> command to create the mount point
+<B>/afs/.jkl.com/usr/s/m/smith</B>.
+</UL>
+<P><DT><B><VAR>owner</VAR>
+</B><DD>Specifies the username or UID of the user to be designated the mount
+point&#39;s owner in the output from the UNIX <B>ls -ld</B>
+command. To follow the standard convention for home directory
+ownership, use the $UID variable in this field, as in the ABC Corporation
+example template. The Protection Server then automatically assigns an
+AFS UID unless you provide the <B>-uid</B> argument to the <B>uss
+add</B> command or fill in the <VAR>uid</VAR> field in the bulk input file
+<B>add</B> instruction. (If you are converting existing UNIX
+accounts, see the discussion of additional considerations in <A HREF="#HDRWQ613">Converting Existing UNIX Accounts with uss</A>.)
+<A NAME="IDX7658"></A>
+<A NAME="IDX7659"></A>
+<A NAME="IDX7660"></A>
+<A NAME="IDX7661"></A>
+<P><DT><B><VAR>ACL</VAR>
+</B><DD>Sets the ACL on the new home directory. Provide one or more paired
+values, each pair consisting of an AFS username or group name and the desired
+permissions, in that order (a group name must already exist in the Protection
+Database to be used). Separate the two parts of the pair, and each
+pair, with a space. For a discussion of the available permissions, see <A HREF="auagd020.htm#HDRWQ782">The AFS ACL Permissions</A>.
+<P>At minimum, grant all permissions to the new user by including the value
+<B>$USER all</B> in this field. The File Server automatically
+grants all permissions to the <B>system&#58;administrators</B> group as
+well. You cannot grant permissions to the issuer of the <B>uss</B>
+command, because as the last step in account creation the <B>uss</B>
+command interpreter automatically deletes that user from any ACLs set during
+the creation process.
+<P>The ABC Corporation example uses the following value to grant all
+permissions to the new user and <B>r</B> (<B>read</B>) and
+<B>l</B> (<B>lookup</B>) permissions to the members of the
+<B>abc&#58;staff</B> group&#58;
+<P><B>$USER all abc&#58;staff rl</B>
+</DL>
+<A NAME="IDX7662"></A>
+<A NAME="IDX7663"></A>
+<A NAME="IDX7664"></A>
+<A NAME="IDX7665"></A>
+<A NAME="IDX7666"></A>
+<A NAME="IDX7667"></A>
+<P><H3><A NAME="HDRWQ637" HREF="auagd002.htm#ToC_558">Creating a Directory with the D Instruction</A></H3>
+<P>Each <B>D</B> instruction in the template file creates a
+directory; there is no limit on the number of them in the
+template. If a <B>D</B> instruction creates a subdirectory in a new
+user&#39;s home directory (its intended use), then it must follow the
+<B>V</B> instruction. Creating a directory on the local disk of the
+machine where the <B>uss</B> command runs is not recommended for the
+reasons outlined in <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>The following discussion of the fields in a <B>D</B> instruction refers
+to one of the examples in the full account template in <A HREF="#HDRWQ634">Example uss Templates</A>&#58;
+<PRE>   D $MTPT/Mailbox 0700 $UID $USER all abc&#58;staff none  system&#58;anyuser lik
+</PRE>
+<P>The <B>D</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   D  <VAR>pathname</VAR>  <VAR>mode_bits</VAR>  <VAR>owner</VAR>  <VAR>ACL</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><B>D</B>
+</B><DD>Indicates a directory creation instruction.
+<P><DT><B><VAR>pathname</VAR>
+</B><DD>Specifies the directory&#39;s full pathname. If it is a
+subdirectory of the user&#39;s home directory, it is simplest to use the
+$MTPT variable to specify the home directory pathname. When the $MTPT
+variable appears in a <B>D</B> instruction, it takes its value from the
+preceding <B>V</B> instruction&#39;s <VAR>mount_point</VAR> field (this
+dependency is why a <B>D</B> instruction must follow the <B>V</B>
+instruction).
+<P>Specify the read/write pathname to the directory, to avoid the failure that
+results when you attempt to create a new directory in a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). If you use the $MTPT variable
+in this field, the value in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field possibly already indicates the read/write
+path. For further discussion of the concept of read/write and read-only
+paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>The ABC Corporation example uses the value <B>$MTPT/Mailbox</B> to
+place the <B>Mailbox</B> subdirectory in the user&#39;s home
+directory.
+<P><DT><B><VAR>mode_bits</VAR>
+</B><DD>Defines the directory&#39;s UNIX mode bits. Acceptable values are
+the standard three- or four-digit numbers corresponding to a combination of
+permissions. Examples&#58; <B>0755</B> corresponds to
+<B>rwxr-xr-x</B>, and <B>0644</B> to <B>rw-r--r--</B>. The
+first (owner) <B>x</B> bit must be turned on to enable access to a
+directory.
+<P>The ABC Corporation example uses the value <B>0700</B> to set the mode
+bits on the <B>Mailbox</B> subdirectory to <B>rwxr-----</B>.
+<P><DT><B><VAR>owner</VAR>
+</B><DD>Specifies the username or UID of the user to be designated the
+directory&#39;s owner in the output from the UNIX <B>ls -ld</B>
+command.
+<P>If the directory resides in AFS, place the $UID variable in this field, as
+in the ABC Corporation example template. The Protection Server then
+automatically assigns an AFS UID unless you provide the <B>-uid</B>
+argument to the <B>uss add</B> command or fill in the <VAR>uid</VAR> field
+in the bulk input file <B>add</B> instruction. (If you are
+converting existing UNIX accounts, see the discussion of additional
+considerations in <A HREF="#HDRWQ613">Converting Existing UNIX Accounts with uss</A>.)
+<P>If the directory resides on the local disk, it is simplest to specify the
+username or UNIX UID under which you are issuing the <B>uss</B>
+command. For a discussion of the complications that arise from
+designating another user, see <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<A NAME="IDX7668"></A>
+<A NAME="IDX7669"></A>
+<A NAME="IDX7670"></A>
+<A NAME="IDX7671"></A>
+<P><DT><B><VAR>ACL</VAR>
+</B><DD>Sets the ACL on the new directory. Provide one or more paired
+values, each pair consisting of an AFS username or group name and the desired
+permissions, in that order (a group name must already exist in the Protection
+Database to be used). Separate the two parts of the pair, and each
+pair, with a space. For a description of the available permissions, see
+<A HREF="auagd020.htm#HDRWQ782">The AFS ACL Permissions</A>.
+<P>At minimum, grant all permissions to the new user by including the value
+<B>$USER all</B>. You cannot grant permissions to the issuer of the
+<B>uss</B> command, because as the last step in account creation the
+<B>uss</B> command interpreter automatically deletes that user from any
+ACLs set during the creation process. An error message always appears
+if the directory is on the local disk, as detailed in <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>The ABC Corporation example uses the following value to grant all
+permissions to the new user, no permissions to the members of the
+<B>abc&#58;staff</B> group, and the <B>l</B> (<B>lookup</B>),
+<B>i</B> (<B>insert</B>), and <B>k</B> (<B>lock</B>)
+permissions to the members of the <B>system&#58;anyuser</B> group&#58;
+<P><B>$USER all abc&#58;staff none system&#58;anyuser lik</B>
+<P>It grants such extensive permissions to the <B>system&#58;anyuser</B>
+group to enable any system user (including a mail-delivery daemon) to insert
+mail into the <B>Mailbox</B> directory. The absence of the
+<B>r</B> (<B>read</B>) permission prevents members of the
+<B>system&#58;anyuser</B> group from reading the mail files.
+</DL>
+<A NAME="IDX7672"></A>
+<A NAME="IDX7673"></A>
+<A NAME="IDX7674"></A>
+<A NAME="IDX7675"></A>
+<A NAME="IDX7676"></A>
+<A NAME="IDX7677"></A>
+<P><H3><A NAME="HDRWQ638" HREF="auagd002.htm#ToC_559">Creating a File from a Prototype with the F Instruction</A></H3>
+<P>Each <B>F</B> instruction in the template file creates a
+file by copying the contents of an existing prototype file; there is no
+limit on the number of them in the template, and each can refer to a different
+prototype. If an <B>F</B> instruction creates a file in a new
+user&#39;s home directory or a subdirectory of it (the intended use), then it
+must follow the <B>V</B> or <B>D</B> instruction that creates the
+parent directory. Creating a file on the local disk of the machine
+where the <B>uss</B> command runs is not recommended for the reasons
+detailed in <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>The <B>E</B> instruction also creates a file, but the two types of
+instruction have complementary advantages. Files created with an
+<B>E</B> instruction can be customized for each user, because variables
+can appear in the field that specifies the contents of the file. In
+contrast, the contents of a file created using the <B>F</B> instruction
+are the same for every user. An <B>E</B> file can be only a single
+line, however, whereas an <B>F</B> file can be any length.
+<P>The following discussion of the fields in a <B>F</B> instruction refers
+to one of the examples in the full account template in <A HREF="#HDRWQ634">Example uss Templates</A>&#58;
+<PRE>   F $MTPT/.login 0755 $UID /afs/abc.com/admin/user/proto
+</PRE>
+<P>The <B>F</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   F  <VAR>pathname</VAR>  <VAR>mode_bits</VAR>  <VAR>owner</VAR>  <VAR>prototype_file</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><B>F</B>
+</B><DD>Indicates a file creation instruction.
+<P><DT><B><VAR>pathname</VAR>
+</B><DD>Specifies the full pathname of the file to create, including the
+filename. If it resides in the user&#39;s home directory or a
+subdirectory of it, it is simplest to use the $MTPT variable to specify the
+home directory pathname. When the $MTPT variable appears in an
+<B>F</B> instruction, it takes its value from the preceding <B>V</B>
+instruction&#39;s <VAR>mount_point</VAR> field (this dependency is why an
+<B>F</B> instruction must follow the <B>V</B> instruction).
+<P>Specify the read/write path to the file, to avoid the failure that results
+when you attempt to create a new file in a read-only volume. By
+convention, you indicate the read/write path by placing a period before the
+cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). If you use the $MTPT variable
+in this field, the value in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field possibly already indicates the read/write
+path. For further discussion of the concept of read/write and read-only
+paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>The ABC Corporation example uses the value <B>$MTPT/.login</B>
+to place a file called <B>.login</B> in the user&#39;s home
+directory.
+<P><DT><B><VAR>mode_bits</VAR>
+</B><DD>Defines the file&#39;s UNIX mode bits. Acceptable values are the
+standard three- or four-digit numbers corresponding to a combination of
+permissions. Examples&#58; <B>0755</B> corresponds to
+<B>rwxr-xr-x</B>, and <B>0644</B> to <B>rw-r--r--</B>.
+<P>The ABC Corporation example uses the value <B>0755</B> to set the mode
+bits on the <B>.login</B> file to <B>rwxr-xr-x</B>.
+<P><DT><B><VAR>owner</VAR>
+</B><DD>Specifies the username or UID of the user to be designated the file&#39;s
+owner in the output from the UNIX <B>ls -l</B> command.
+<P>If the file resides in AFS, place the $UID variable in this field, as in
+the ABC Corporation example template. The Protection Server then
+automatically assigns an AFS UID unless you provide the <B>-uid</B>
+argument to the <B>uss add</B> command or fill in the <VAR>uid</VAR> field
+in the bulk input file <B>add</B> instruction. (If you are
+converting existing UNIX accounts, see the discussion of additional
+considerations in <A HREF="#HDRWQ613">Converting Existing UNIX Accounts with uss</A>.)
+<P>If the file resides on the local disk, it is simplest to specify the
+username or UNIX UID under which you are issuing the <B>uss</B>
+command. For a discussion of the complications that arise from
+designating another user, see <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P><DT><B><VAR>prototype_file</VAR>
+</B><DD>Names the AFS or local directory that houses the prototype file to
+copy. The prototype file&#39;s name must match the final element in
+the <VAR>pathname</VAR> field. 
+<P>The ABC Corporation example references a prototype file called
+<B>.login</B> in the directory
+<B>/afs/abc.com/admin/user/proto</B>.
+</DL>
+<A NAME="IDX7678"></A>
+<A NAME="IDX7679"></A>
+<A NAME="IDX7680"></A>
+<A NAME="IDX7681"></A>
+<A NAME="IDX7682"></A>
+<A NAME="IDX7683"></A>
+<P><H3><A NAME="HDRWQ639" HREF="auagd002.htm#ToC_560">Creating One-Line Files with the E Instruction</A></H3>
+<P>Each <B>E</B> instruction in the template file creates a
+file by echoing a specified single line into it; there is no limit on the
+number of them in the template. If an <B>E</B> instruction creates
+a file in a new user&#39;s home directory or a subdirectory of it (the
+intended use), then it must follow the <B>V</B> or <B>D</B>
+instruction that creates the parent directory. Creating a file on the
+local disk of the machine where the <B>uss</B> command runs is not
+recommended for the reasons detailed in <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>The <B>F</B> instruction also creates a file, but the two types of
+instruction have complementary advantages. Files created with an
+<B>E</B> instruction can be customized for each user, because variables
+can appear in the field that specifies the contents of the file. The
+command interpreter replaces the variables with appropriate values before
+creating the file. In contrast, the contents of a file created using
+the <B>F</B> instruction are the same for every user. An
+<B>E</B> file can be only a single line, however, whereas an <B>F</B>
+file can be any length.
+<P>The <B>E</B> instruction is particularly suited to creating an entry
+for the new user in the cell&#39;s common source password file, which is then
+copied to client machines to serve as the local password file
+(<B>/etc/passwd</B> or equivalent). The following discussion of the
+fields refers to an example of this type of use, from the ABC
+Corporation&#39;s full account template shown in <A HREF="#HDRWQ634">Example uss Templates</A>. For further discussion of how to
+incorporate the files created in this way into a common source password file,
+see <A HREF="#HDRWQ612">Creating a Common Source Password File</A>.
+<PRE>   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root  \
+      "$USER&#58;X&#58;$UID&#58;11&#58;$NAME&#58;$MTPT&#58;/bin/csh"
+</PRE>
+<P>The <B>E</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   E  <VAR>pathname</VAR>  <VAR>mode_bits</VAR>  <VAR>owner</VAR>  "<VAR>contents</VAR>"
+</PRE>
+<P>where 
+<DL>
+<P><DT><B><B>E</B>
+</B><DD>Indicates a file creation instruction.
+<P><DT><B><VAR>pathname</VAR>
+</B><DD>Specifies the full pathname of the file to create, including the
+filename. It can include variables. If it resides in the
+user&#39;s home directory or a subdirectory of it, it is simplest to use the
+$MTPT variable to specify the home directory pathname. When the $MTPT
+variable appears in an <B>E</B> instruction, it takes its value from the
+preceding <B>V</B> instruction&#39;s <VAR>mount_point</VAR> field (this
+dependency is why an <B>E</B> instruction must follow the <B>V</B>
+instruction.)
+<P>Specify the read/write path to the file, to avoid the failure that results
+when you attempt to create a new file in a read-only volume. By
+convention, you indicate the read/write path by placing a period before the
+cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). If you use the $MTPT variable
+in this field, the value in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field possibly already indicates the read/write
+path. For further discussion of the concept of read/write and read-only
+paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>The ABC Corporation example writes the file created by the <B>E</B>
+instruction to <B>/afs/.abc.com/common/etc/newaccts</B>
+directory, naming it after the new user&#58; 
+<PRE>   /afs/.abc.com/common/etc/newaccts/passwd_$USER
+</PRE>
+<P><DT><B><VAR>mode_bits</VAR>
+</B><DD>Defines the file&#39;s UNIX mode bits. Acceptable values are the
+standard three- or four-digit numbers corresponding to a combination of
+permissions. Examples&#58; <B>0755</B> corresponds to
+<B>rwxr-xr-x</B>, and <B>0644</B> to <B>rw-r--r--</B>.
+<P>The ABC Corporation example uses the value <B>0644</B> to set the mode
+bits on the <B>passwd_</B><VAR>user</VAR> file to
+<B>r-xr--r--</B>.
+<P><DT><B><VAR>owner</VAR>
+</B><DD>Specifies the username or UID of the user to be designated the file&#39;s
+owner in the output from the UNIX <B>ls -l</B> command.
+<P>If the file resides in AFS and is to be owned by the user, place the $UID
+variable in this field. The Protection Server then automatically
+assigns an AFS UID unless you provide the <B>-uid</B> argument to the
+<B>uss add</B> command or fill in the <VAR>uid</VAR> field in the bulk input
+file <B>add</B> instruction. (If you are converting existing UNIX
+accounts, see the discussion of additional considerations in <A HREF="#HDRWQ613">Converting Existing UNIX Accounts with uss</A>.)
+<P>If the file resides on the local disk, specify the username or UNIX UID
+under which you are issuing the <B>uss</B> command. For a
+discussion of the complications that arise from designating another user, see <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>The ABC Corporation example is creating an AFS file intended for
+incorporation into the common password file, rather than for direct use by the
+new user. It therefore designates the local superuser <B>root</B>
+as the owner of the new file. Designating an alternate owner on an AFS
+file does not introduce complications&#58; issuing the <B>chown</B>
+command on AFS files requires membership in the
+<B>system&#58;administrators</B> group, but the issuer of the
+<B>uss</B> command is necessarily authenticated as a member of that
+group.
+<P><DT><B><VAR>contents</VAR>
+</B><DD>Specifies the one-line character string to write into the new file.
+Surround it with double quotes if it contains one or more spaces. It
+cannot contain the newline character, but can contain any of the standard
+variables, which the command interpreter resolves as it creates the
+file.
+<P>The ABC Corporation example has the following value in the
+<VAR>contents</VAR> field, to create a password file entry&#58; 
+<PRE>   $USER&#58;X&#58;$UID&#58;10&#58;$NAME&#58;$MTPT&#58;/bin/csh
+</PRE>
+</DL>
+<A NAME="IDX7684"></A>
+<A NAME="IDX7685"></A>
+<A NAME="IDX7686"></A>
+<A NAME="IDX7687"></A>
+<A NAME="IDX7688"></A>
+<A NAME="IDX7689"></A>
+<A NAME="IDX7690"></A>
+<A NAME="IDX7691"></A>
+<A NAME="IDX7692"></A>
+<A NAME="IDX7693"></A>
+<A NAME="IDX7694"></A>
+<P><H3><A NAME="HDRWQ640" HREF="auagd002.htm#ToC_561">Creating Links with the L and S Instructions</A></H3>
+<P>Each <B>L</B> instruction in the template file creates a
+hard link between two files, as achieved by the standard UNIX <B>ln</B>
+command. The <B>S</B> instruction creates a symbolic link between
+two files, as achieved by the standard UNIX <B>ln -s</B> command.
+An explanation of links is beyond the scope of this document, but the basic
+effect in both cases is to create a second name for an existing file, so that
+it can be accessed via either name. Creating a link does not create a
+second copy of the file.
+<P>There is no limit on the number of <B>L</B> or <B>S</B>
+instructions in a template file. If the link is in a new user&#39;s
+home directory or a subdirectory of it (the intended use), then it must follow
+the <B>V</B> or <B>D</B> instruction that creates the parent
+directory, and the <B>F</B>, <B>E</B>, or <B>X</B> instruction
+that creates the file being linked to. Creating a file on the local
+disk of the machine where the <B>uss</B> command runs is not recommended,
+for the reasons detailed in <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P>Note that AFS allows hard links only between files that reside in the same
+directory. This restriction is necessary to eliminate the confusion
+that results from associating two potentially different ACLs (those of the two
+directories) with the same file. Symbolic links are legal between two
+files that reside in different directories and even in different
+volumes. The ACL on the actual file applies to the link as well.
+<P>You do not set the owner or mode bits on a link created with an
+<B>L</B> or <B>S</B> instruction, as you do for directories or
+files. The <B>uss</B> command interpreter automatically records the
+UNIX UID of the <B>uss</B> command&#39;s issuer as the owner, and sets
+the mode bits to <B>lrwxrwxrwx</B> (777).
+<P>The following discussion of the fields in an <B>L</B> or <B>S</B>
+instruction refers to an example in the full account template from <A HREF="#HDRWQ634">Example uss Templates</A>, namely
+<PRE>   S /afs/abc.com/public/$USER $MTPT/public
+</PRE>
+<P>The <B>L</B> and <B>S</B> instructions&#39; syntax is as
+follows&#58;
+<PRE>   L  <VAR>existing_file</VAR>  <VAR>link</VAR>
+   S  <VAR>existing_file</VAR>  <VAR>link</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><B>L</B>
+</B><DD>Indicates a hard link creation instruction.
+<P><DT><B><B>S</B>
+</B><DD>Indicates a symbolic link creation instruction.
+<P><DT><B><VAR>existing_file</VAR>
+</B><DD>Specifies the complete pathname of the existing file. If it resides
+in the user&#39;s home directory or a subdirectory of it, it is simplest to
+use the $MTPT variable to specify the home directory pathname. When the
+$MTPT variable appears in an <B>L</B> or <B>S</B> instruction, it
+takes its value from the preceding <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field (this dependency is why the instruction must follow
+the <B>V</B> instruction).
+<P>Do not create a symbolic link to a file whose name begins with the number
+sign (<B>#</B>) or percent sign (<B>%</B>). When the Cache
+Manager reads a symbolic link whose contents begin with one of those
+characters, it interprets it as a regular or read/write mount point,
+respectively.
+<P>The ABC Corporation example creates a link to the publicly readable volume
+created and mounted by a preceding <B>X</B> instruction, by specifying the
+path to its mount point&#58; 
+<PRE>   /afs/abc.com/public/$USER
+</PRE>
+<P><DT><B><VAR>link</VAR>
+</B><DD>Specifies the complete pathname of the second name for the file. If
+it resides in the user&#39;s home directory or a subdirectory of it, it is
+simplest to use the $MTPT variable to specify the home directory
+pathname.
+<P>Specify the read/write path to the link, to avoid the failure that results
+when you attempt to create a new link in a read-only volume. By
+convention, you indicate the read/write path by placing a period before the
+cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). If you use the $MTPT variable
+in this field, the value in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field possibly already indicates the read/write
+path. For further discussion of the concept of read/write and read-only
+paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P>The ABC Corporation example creates a link called <B>public</B> in the
+user&#39;s home directory&#58; 
+<PRE>   $MTPT/public
+</PRE>
+</DL>
+<A NAME="IDX7695"></A>
+<A NAME="IDX7696"></A>
+<A NAME="IDX7697"></A>
+<A NAME="IDX7698"></A>
+<P><H3><A NAME="HDRWQ641" HREF="auagd002.htm#ToC_562">Increasing Account Security with the A Instruction</A></H3>
+<P>The <B>A</B> instruction in the template file enhances
+cell security by imposing the following restrictions on users&#39; password
+choice and authentication attempts. 
+<UL>
+<P><LI>Limiting the user&#39;s password lifetime. When the lifetime
+expires, the user can no longer use the password to authenticate and must
+change it.
+<P><LI>Prohibiting the reuse of the user&#39;s 20 most-recently used
+passwords.
+<P><LI>Limiting the number of consecutive times that a user can provide an
+incorrect password during authentication, and for how long the Authentication
+Server refuses further authentication attempts after the limit is exceeded
+(referred to as an <I>account lockout</I>). For regular user
+accounts in most cells, the recommended limit is nine and lockout time is 25
+minutes.
+</UL>
+<P>The following discussion of the fields in an <B>A</B> instruction
+refers to the example in the full account template from <A HREF="#HDRWQ634">Example uss Templates</A>, which sets a password lifetime of 250 days, prohibits reuse
+of passwords, limits the number of failed authentication attempts to nine, and
+creates a lockout time of 25 minutes if the authentication limit is
+exceeded&#58;
+<PRE>   A $USER 250 noreuse 9 25
+</PRE>
+<P>The <B>A</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   A  <VAR>username</VAR>  <VAR>password_lifetime</VAR>  <VAR>password_reuse</VAR>  <VAR>failures</VAR>  <VAR>locktime</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><B>A</B>
+</B><DD>Indicates a security enhancing instruction.
+<P><DT><B><VAR>username</VAR>
+</B><DD>Names the Authentication Database entry on which to impose security
+restrictions. Use the $USER variable to read in the username from the
+<B>uss add</B> command&#39;s <B>-user</B> argument, or from the
+<VAR>username</VAR> field of an <B>add</B> instruction in the bulk input
+file. The ABC Corporation example uses this value.
+<P><DT><B><VAR>password_lifetime</VAR>
+</B><DD>Sets the number of days after the user&#39;s password is changed that it
+remains valid. When the password becomes invalid (expires), the user is
+unable to authenticate, but has 30 more days in which to issue the
+<B>kpasswd</B> command to change the password (after that, only an
+administrator can change it).
+<P>Specify an integer from the range <B>1</B> through <B>254</B> to
+specify the number of days until expiration, the value <B>0</B> to
+indicate that the password never expires, or the value $PWEXPIRES to read in
+the number of days from the <B>uss add</B> or <B>uss bulk</B>
+command&#39;s <B>-pwexpires</B> argument. If the <B>A</B>
+instruction does not appear in the template file, by default the user&#39;s
+password never expires.
+<P>The ABC Corporation example sets a password lifetime of 250 days.
+<P><DT><B><VAR>password_reuse</VAR>
+</B><DD>Determines whether or not the user can change his or her password (using
+the <B>kpasswd</B> or <B>kas setpassword</B> command) to one that is
+similar to any of his or her last 20 passwords. The acceptable values
+are <B>reuse</B> to allow reuse and <B>noreuse</B> to prohibit
+it. If the <B>A</B> instruction does not appear in the template
+file, the default is to allow password reuse.
+<P>The ABC Corporation example prohibits password reuse.
+<P><DT><B><VAR>failures</VAR>
+</B><DD>Sets the number of consecutive times the user can provide an incorrect
+password during authentication (using the <B>klog</B> command or a login
+utility that grants AFS tokens). When the user exceeds the limit, the
+Authentication Server rejects further authentication attempts for the amount
+of time specified in the <VAR>locktime</VAR> field.
+<P>Specify an integer from the range <B>1</B> through <B>254</B> to
+specify the number of failures permitted, or the value <B>0</B> to
+indicate that there is no limit to the number of unsuccessful attempts.
+If the <B>A</B> instruction does not appear in the template file, the
+default is to allow an unlimited number of failures.
+<P>The ABC Corporation example sets the limit to nine failed attempts.
+<P><DT><B><VAR>locktime</VAR>
+</B><DD>Specifies how long the Authentication Server refuses authentication
+attempts from a user who has exceeded the failure limit set in the
+<VAR>failures</VAR> field.
+<P>Specify a number of hours and minutes (<VAR>hh</VAR>&#58;<VAR>mm</VAR>) or
+minutes only (<VAR>mm</VAR>), from the range <B>01</B> (one minute) through
+<B>36&#58;00</B> (36 hours). The Authentication Server
+automatically reduces any larger value to <B>36&#58;00</B> and also
+rounds up any nonzero value to the next highest multiple of 8.5
+minutes. A value of <B>0</B> (zero) sets an infinite lockout time,
+in which case an administrator must always issue the <B>kas unlock</B>
+command to unlock the account.
+<P>The ABC Corporation example sets the lockout time to 25 minutes, which is
+rounded up to 25 minutes 30 seconds (the next highest multiple of 8.5
+minutes).
+</DL>
+<A NAME="IDX7699"></A>
+<A NAME="IDX7700"></A>
+<A NAME="IDX7701"></A>
+<A NAME="IDX7702"></A>
+<A NAME="IDX7703"></A>
+<A NAME="IDX7704"></A>
+<P><H3><A NAME="HDRWQ642" HREF="auagd002.htm#ToC_563">Executing Commands with the X Instruction</A></H3>
+<P>The <B>X</B> instruction in the template file executes a
+command, which can be a standard UNIX command, a shell script or program, or
+an AFS command. The command string can include standard template
+variables, and any number of <B>X</B> instructions can appear in a
+template file. If an instruction manipulates an element created by
+another instruction, it must appear after that instruction.
+<P>The following discussion of the field in an <B>X</B> instruction refers
+to the example in the full account template from <A HREF="#HDRWQ634">Example uss Templates</A>&#58;
+<PRE>   X "create_public_vol $USER $1 $2"
+</PRE>
+<P>The <B>X</B> instruction&#39;s syntax is as follows&#58;
+<PRE>   X "<VAR>command</VAR>"
+</PRE>
+<P>where <VAR>command</VAR> specifies the command to execute. Surround it
+with double quotes if it contains spaces. The command string can
+contain any of the standard variables, which the <B>uss</B> command
+interpreter resolves before passing the command on to the appropriate other
+command interpreter, but it cannot contain newline characters.
+<P>The ABC Corporation example invokes a script called
+<B>create_public_vol</B>, which creates another volume associated with the
+new user and mounts it in a publicly readable part of the ABC
+Corporation&#39;s filespace&#58;
+<PRE>   "create_public_vol $USER $1 $2"
+</PRE>
+<P>It uses the $USER variable to read in the username and make it part of both
+the volume name and mount point name. The <B>uss</B> command issuer
+supplies a file server machine name for the $1 variable and a partition name
+for the $2 variable, to specify the site for the new volume.
+<A NAME="IDX7705"></A>
+<A NAME="IDX7706"></A>
+<A NAME="IDX7707"></A>
+<A NAME="IDX7708"></A>
+<A NAME="IDX7709"></A>
+<A NAME="IDX7710"></A>
+<A NAME="IDX7711"></A>
+<A NAME="IDX7712"></A>
+<A NAME="IDX7713"></A>
+<A NAME="IDX7714"></A>
+<A NAME="IDX7715"></A>
+<HR><H2><A NAME="HDRWQ643" HREF="auagd002.htm#ToC_564">Creating Individual Accounts with the uss add Command</A></H2>
+<P>After you have created a template file, you can create an
+individual account by issuing the <B>uss add</B> command (for template
+creation instructions see <A HREF="#HDRWQ617">Constructing a uss Template File</A>). When you issue the command, the <B>uss</B>
+command interpreter contacts various AFS servers to perform the following
+actions&#58;
+<UL>
+<P><LI>Create a Protection Database entry. By default, the Protection
+Server assigns an AFS UID which becomes the value of the $UID variable used in
+the template.
+<P><LI>Create an Authentication Database entry, recording an encrypted version of
+the initial password.
+<P><LI>Create the account components defined in the indicated template file,
+contacting the File Server, Volume Server, and Volume Location (VL) Server as
+necessary.
+</UL>
+<P>To review which types of instructions to include in a template to create
+different file system objects, see <A HREF="#HDRWQ617">Constructing a uss Template File</A>. If the template is empty, the <B>uss add</B>
+command creates an authentication-only account consisting of Protection
+Database and Authentication Database entries.
+<P>When you issue the <B>uss add</B> command, provide a value for each
+variable in the template file by including the corresponding command-line
+argument. If you fail to supply a value for a variable, the
+<B>uss</B> command interpreter substitutes a null string, which usually
+causes the account creation to fail. If you include a command line
+argument for which the corresponding variable does not appear in the template,
+it is ignored.
+<P><A HREF="#TBLWQ644">Table 4</A> summarizes the mappings between variables and the arguments
+to the <B>uss add</B> command. It is adapted from <A HREF="#TBLWQ620">Table 3</A>, but includes only those variables that take their value
+from command line arguments.
+<BR>
+<P><B><A NAME="TBLWQ644" HREF="auagd004.htm#FT_TBLWQ644">Table 4. Command-line argument sources for uss template variables</A></B><BR>
+<TABLE WIDTH="100%" BORDER>
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%"><B>Variable</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>Command-line Argument</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$MTPT
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-mount</B> (for occurrence in <B>V</B> instruction)
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$NAME
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-realname</B> if provided; otherwise <B>-user</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$PART
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-partition</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$PWEXPIRES
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-pwexpires</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$SERVER
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-server</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$UID
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-uid</B> if provided; otherwise allocated by Protection
+Server
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$USER
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-user</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="20%">$1 through $9
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="80%"><B>-var</B>
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ654" HREF="auagd002.htm#ToC_565">To create an AFS account with the uss add command</A></H3>
+<OL TYPE=1>
+<P><LI>Authenticate as an AFS identity with all of the following
+privileges. In the conventional configuration, the <B>admin</B>
+user account has them, or you possibly have a personal administrative
+account. (To increase cell security, it is best to create special
+privileged accounts for use only while performing administrative
+procedures; for further discussion, see <A HREF="auagd021.htm#HDRWQ806">An Overview of Administrative Privilege</A>.) If necessary, issue the <B>klog</B>
+command to authenticate. 
+<PRE>   % <B>klog</B> <VAR>admin_user</VAR>
+   Password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>The following list specifies the necessary privileges and indicates how to
+check that you have them. 
+<UL>
+<P><LI>Membership in the <B>system&#58;administrators</B> group. If
+necessary, issue the <B>pts membership</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Inclusion in the <B>/usr/afs/etc/UserList</B> file. If
+necessary, issue the <B>bos listusers</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>The <TT>ADMIN</TT> flag on the Authentication Database entry.
+However, the Authentication Server always prompts you for a password in order
+to perform its own authentication. The following instructions direct
+you to specify the administrative identity on the <B>uss</B> command line
+itself.
+<P><LI>The <B>i</B> (<B>insert</B>) and <B>l</B> (<B>lookup</B>)
+permissions on the ACL of the directory in which you are mounting the
+user&#39;s volume. If necessary, issue the <B>fs listacl</B>
+command, which is fully described in <A HREF="auagd020.htm#HDRWQ787">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system&#58;administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+</UL>
+<P><LI><B>(Optional)</B> Log in as the local superuser
+<B>root</B>. This is necessary only if you are creating new files
+or directories in the local file system and want to designate an alternate
+owner as the object is created. For a discussion of the issues
+involved, see <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P><LI>Verify the location and functionality of the template file you are
+using. For a description of where the <B>uss</B> command
+interpreter expects to find the template, see <A HREF="#HDRWQ631">Where to Place Template Files</A>. You can always provide an alternate pathname if you
+wish. Also note the variables used in the template, to be sure that you
+provide the corresponding arguments on the <B>uss</B> command line.
+<P><LI><A NAME="LIWQ655"></A><B>(Optional)</B> Change to the directory where the
+template resides. This affects the type of pathname you must type in
+Step <A HREF="#LIWQ656">6</A>. 
+<PRE>   % <B>cd</B> <VAR>template_directory</VAR>
+</PRE>
+<P><LI><B>(Optional)</B> Run the <B>uss add</B> command with the
+<B>-dryrun</B> flag to preview the creation of the account. Note
+any error messages and correct the cause before reissuing the command without
+the <B>-dryrun</B> flag. The next step describes the <B>uss
+add</B> command&#39;s syntax. For more information on the
+<B>-dryrun</B> flag, see <A HREF="#HDRWQ608">Avoiding and Recovering from Errors and Interrupted Operations</A>.
+<A NAME="IDX7716"></A>
+<A NAME="IDX7717"></A>
+<P><LI><A NAME="LIWQ656"></A>Issue the <B>uss add</B> command to create the
+account. Enter the command on a single line; it appears here on
+multiple lines only for legibility.
+<P>The <B>uss add</B> operation creates an Authentication Database
+entry. The Authentication Server performs its own authentication rather
+than accepting your existing AFS token. By default, it authenticates
+your local (UNIX) identity, which possibly does not correspond to an
+AFS-privileged administrator. Include the <B>-admin</B> argument to
+name an identity that has the <TT>ADMIN</TT> flag on its Authentication
+Database entry. To verify that an entry has the flag, issue the
+<B>kas examine</B> command as described in <A HREF="auagd021.htm#HDRWQ812">To check if the ADMIN flag is set</A>. 
+<PRE>   % <B>uss add</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>>  <B>-admin</B> &lt;<VAR>administrator&nbsp;to&nbsp;authenticate</VAR>>   \
+             [<B>-realname</B> &lt;<VAR>full&nbsp;name&nbsp;in&nbsp;quotes</VAR>>] [<B>-pass</B> &lt;<VAR>initial&nbsp;passwd</VAR>>]   \
+             [<B>-pwexpires</B> &lt;<VAR>password&nbsp;expires&nbsp;in&nbsp;[0..254]&nbsp;days&nbsp;(0&nbsp;=>&nbsp;never)</VAR>>]  \
+             [<B>-server</B> &lt;<VAR>FileServer&nbsp;for&nbsp;home&nbsp;volume</VAR>>]  \
+             [<B>-partition</B> &lt;<VAR>FileServer&#39;s&nbsp;disk&nbsp;partition&nbsp;for&nbsp;home&nbsp;volume</VAR>>]  \
+             [<B>-mount</B> &lt;<VAR>home&nbsp;directory&nbsp;mount&nbsp;point</VAR>>]  \
+             [<B>-uid</B> &lt;<VAR>uid&nbsp;to&nbsp;assign&nbsp;the&nbsp;user</VAR>>]  \
+             [<B>-template</B> &lt;<VAR>pathname&nbsp;of&nbsp;template&nbsp;file</VAR>>]  \
+             [<B>-var</B> &lt;<VAR>auxiliary&nbsp;argument&nbsp;pairs&nbsp;(Numval)</VAR>><SUP>+</SUP>] [<B>-dryrun</B>] \
+             [<B>-overwrite</B>] 
+   Administrator&#39;s (<VAR>admin_user</VAR>) password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>ad
+</B><DD>Is the shortest acceptable abbreviation of <B>add</B>.
+<P><DT><B>-user
+</B><DD>Names the user&#39;s Authentication Database and Protection Database
+entries. Because it becomes the username (the name under which a user
+logs in), it must obey the restrictions that many operating systems impose on
+usernames (usually, to contain no more than eight lowercase letters).
+Also avoid the following characters&#58; colon (<B>&#58;</B>),
+semicolon (<B>;</B>), comma (<B>,</B>), at sign (<B>@</B>),
+space, newline, and the period (<B>.</B>), which is conventionally
+used only in special administrative names.
+<P>This argument provides the value for the $USER variable in the template
+file. For suggestions on standardizing usernames, see <A HREF="auagd007.htm#HDRWQ73">Choosing Usernames and Naming Other Account Components</A>.
+<P><DT><B>-admin
+</B><DD>Names an administrative account that has the <TT>ADMIN</TT> flag on its
+Authentication Database entry, such as <B>admin</B>. The password
+prompt echoes it as <VAR>admin_user</VAR>. Enter the appropriate password
+as <VAR>admin_password</VAR>.
+<P><DT><B>-realname
+</B><DD>Specifies the user&#39;s actual full name. If it contains spaces
+or punctuation, surround it with double quotes. If you do not provide
+it, it defaults to the username provided with the <B>-user</B>
+argument.
+<P>This argument provides the value for the $NAME variable in the template
+file. For information about using this argument and variable as part of
+an automated process for creating entries in a local password file such as
+<B>/etc/passwd</B>, see <A HREF="#HDRWQ612">Creating a Common Source Password File</A>.
+<P><DT><B>-pass
+</B><DD>Specifies the user&#39;s initial password. Although the AFS
+commands that handle passwords accept strings of virtually unlimited length,
+it is best to use a password of eight characters or less, which is the maximum
+length that many applications and utilities accept.
+<P>Possible choices for initial passwords include the username, a string of
+digits such as those from a Social Security number, or a standard string such
+as <B>changeme</B>, which is the default if you do not provide this
+argument. There is no corresponding variable in the template
+file.
+<P>Instruct users to change their passwords to a truly secret string as soon
+as they authenticate with AFS for the first time. The <I>AFS User
+Guide</I> explains how to use the <B>kpasswd</B> command to change an
+AFS password.
+<P><DT><B>-pwexpires
+</B><DD>Sets the number of days after a user&#39;s password is changed that it
+remains valid. Provide an integer from the range <B>1</B> through
+<B>254</B> to specify the number of days until expiration, or the value
+<B>0</B> to indicate that the password never expires (the default if you
+do not provide this argument). When the password becomes invalid
+(expires), the user is unable to authenticate, but has 30 more days in which
+to issue the <B>kpasswd</B> command to change the password; after
+that, only an administrator can change it.
+<P>This argument provides the value for the $PWEXPIRES variable in the
+template file.
+<P><DT><B>-server
+</B><DD>Names the file server machine on which to create the new user&#39;s home
+volume. It is best to provide a fully qualified hostname (for example,
+<B>fs1.abc.com</B>), but an abbreviated form is acceptable
+provided that the cell&#39;s naming service is available to resolve it when
+you issue the <B>uss add</B> command.
+<P>This argument provides the value for the $SERVER variable in the template
+file. To avoid having to type a fully qualified hostname on the command
+line, combine the $SERVER variable with a constant (for example, the
+cell&#39;s domain name) in the <VAR>server</VAR> field of the <B>V</B>
+instruction in the template file. For an example, see <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P><DT><B>-partition
+</B><DD>Specifies the partition on which to create the user&#39;s home
+volume; it must be on the file server machine named by the
+<B>-server</B> argument. Identify the partition by its complete
+name (for example, <B>/vicepa</B>), or use one of the abbreviations listed
+in <A HREF="auagd023.htm#HDRWQ840">Rules for Using Abbreviations and Aliases</A>.
+<P>This argument provides the value for the $PART variable in the template
+file.
+<P><DT><B>-mount
+</B><DD>Specifies the pathname for the user&#39;s home directory in the
+cell&#39;s read/write filespace. Partial pathnames are interpreted
+relative to the current working directory.
+<P>This argument provides the value for the $MTPT variable in the template
+file, but only when it appears in the <B>V</B> instruction&#39;s
+<VAR>mount_point</VAR> field. When the $MTPT variable appears in any
+subsequent instructions, it takes its value from the <B>V</B>
+instruction&#39;s <VAR>mount_point</VAR> field, rather than directly from this
+argument. For more details, and for suggestions about how to use this
+argument and the $MTPT variable, see <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P><DT><B>-uid
+</B><DD>Specifies a positive integer other than <B>0</B> (zero) to assign as
+the user&#39;s AFS UID. It is best to omit this argument and allow the
+Protection Server to assign an AFS UID that is one greater than the current
+value of the <TT>max user id</TT> counter. (To display the counter,
+use the <B>pts listmax</B> command as described in <A HREF="auagd019.htm#HDRWQ771">To display the AFS ID counters</A>.) 
+<P>If you have a reason to use this argument (perhaps because the user already
+has a UNIX UID), first use the <B>pts examine</B> command to verify that
+there is no existing account with the desired AFS UID; if there is, the
+account creation process terminates with an error.
+<P>This argument provides the value for the $UID variable in the template
+file.
+<P><DT><B>-template
+</B><DD>Specifies the pathname of the template file. If you omit this
+argument, the command interpreter searches for a template file called
+<B>uss.template</B> in each of the following directories in
+turn&#58; 
+<OL TYPE=a>
+<P><LI>The current working directory
+<P><LI><B>/afs/</B><VAR>cellname</VAR><B>/common/uss</B>, where
+<VAR>cellname</VAR> names the local cell
+<P><LI><B>/etc</B>
+</OL>
+<P>If you specify a filename other than <B>uss.template</B> but
+without a pathname, the command interpreter searches for it in the indicated
+directories. If you provide a full or partial pathname, the command
+interpreter consults the specified file only; it interprets partial
+pathnames relative to the current working directory.
+<P>If the specified template file is empty (zero-length), the command creates
+Protection and Authentication Database entries only.
+<P>To learn how to construct a template file, see <A HREF="#HDRWQ617">Constructing a uss Template File</A>.
+<P><DT><B>-var
+</B><DD>Specifies values for each of the number variables $1 through $9 that can
+appear in the template file. You can use the number variables to assign
+values to variables in the <B>uss</B> template file that are not part of
+the standard set.
+<P>For each instance of this argument, provide two parts in the indicated
+order, separated by a space&#58;
+<UL>
+<P><LI>The integer from the range <B>1</B> through <B>9</B> that matches
+the variable in the template file. Do not precede it with a dollar
+sign.
+<P><LI>A string of alphanumeric characters to assign as the value of the
+variable.
+</UL>
+<P>To learn about suggested uses for the number variables, see the description
+of the <B>V</B> instruction&#39;s <VAR>quota</VAR> field in <A HREF="#HDRWQ636">Creating a Volume with the V Instruction</A>.
+<P><DT><B>-dryrun
+</B><DD>Reports actions that the command interpreter needs to perform to run the
+command, without actually performing them.
+<P><DT><B>-overwrite
+</B><DD>Overwrites any directories, files, and links that exist in the file system
+and for which there are definitions in <B>D</B>, <B>E</B>,
+<B>F</B>, <B>L</B>, or <B>S</B> instructions in the template file
+named by the <B>-template</B> argument. If you omit this flag, the
+command interpreter prompts you once for confirmation that you want to
+overwrite all such elements.
+</DL>
+<P><LI>If the new user home directory resides in a replicated volume, use the
+<B>vos release</B> command to release the volume, as described in <A HREF="auagd010.htm#HDRWQ279">To replicate a read/write volume (create a read-only volume)</A>. 
+<PRE>   
+   % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">This step can be necessary even if the home directory&#39;s parent directory
+is not itself a mount point for a replicated volume (and is easier to overlook
+in that case). For example, the ABC Corporation template puts the mount
+points for user volumes in the <B>/afs/abc.com/usr</B>
+directory. Because that is a regular directory rather than a mount
+point, it resides in the <B>root.cell</B> volume mounted at the
+<B>/afs/abc.com</B> directory. That volume is replicated, so
+after changing it by creating a new mount point the administrator must issue
+the <B>vos release</B> command.
+</TD></TR></TABLE>
+<P><LI>Create an entry for the new user in the local password file
+(<B>/etc/passwd</B> or equivalent) on each AFS client machine that he or
+she can log into. For suggestions on automating this step, see <A HREF="#HDRWQ612">Creating a Common Source Password File</A>. 
+<P>Even if you do not use the automated method, set the user&#39;s UNIX UID
+to match the AFS UID assigned automatically by the Protection Server or
+assigned with the <B>-uid</B> argument. The new user&#39;s AFS UID
+appears in the trace produced by the <B>uss add</B> output, or you can use
+the <B>pts examine</B> command to display it, as described in <A HREF="auagd019.htm#HDRWQ747">To display a Protection Database entry</A>.
+</OL>
+<A NAME="IDX7718"></A>
+<A NAME="IDX7719"></A>
+<A NAME="IDX7720"></A>
+<A NAME="IDX7721"></A>
+<A NAME="IDX7722"></A>
+<A NAME="IDX7723"></A>
+<A NAME="IDX7724"></A>
+<HR><H2><A NAME="HDRWQ657" HREF="auagd002.htm#ToC_566">Deleting Individual Accounts with the uss delete Command</A></H2>
+<P>The <B>uss delete</B> command deletes an AFS user
+account according to the arguments you provide on the command line;
+unlike the <B>uss add</B> command, it does not use a template file.
+When you issue the command, the <B>uss</B> command interpreter contacts
+various AFS servers to perform the following actions&#58;
+<UL>
+<P><LI>Remove the mount point for the user&#39;s home volume
+<P><LI>Remove the user&#39;s home volume and delete the associated VLDB entry,
+unless you include the <B>-savevolume</B> flag
+<P><LI>Delete the user&#39;s Authentication Database entry
+<P><LI>Delete the user&#39;s Protection Database entry
+</UL>
+<P>Before issuing the <B>uss delete</B> command, you can also perform the
+following optional tasks&#58;
+<UL>
+<P><LI>Copy the user&#39;s home volume to tape or another permanent medium and
+record the username and UID on a reserved list. This information
+enables you to restore the user&#39;s account easily if he or she returns to
+your cell. For information about using the AFS Backup System to back up
+volumes, see <A HREF="auagd011.htm#HDRWQ333">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ382">Backing Up and Restoring AFS Data</A>.
+<P><LI>If the user has exclusive use of any other volumes (such as a volume for
+storing project-related data), make a backup copy of each one and then remove
+it and its mount point as instructed in <A HREF="auagd010.htm#HDRWQ320">Removing Volumes and their Mount Points</A>.
+<P><LI>Use the <B>pts listowned</B> command to display any groups that the
+user owns; instructions appear in <A HREF="auagd019.htm#HDRWQ750">To list the groups that a user or group owns</A>. Decide whether to use the <B>pts delete</B>
+command to remove the groups or the <B>pts chown</B> command to transfer
+ownership to another user or group. Instructions appear in <A HREF="auagd019.htm#HDRWQ763">To delete Protection Database entries</A> and <A HREF="auagd019.htm#HDRWQ765">To change a group&#39;s owner</A>. Alternatively, you can have the
+user remove or transfer ownership of the groups before leaving. A group
+that remains in the Protection Database after its owner is removed is
+considered <VAR>orphaned</VAR>, and only members of the
+<B>system&#58;administrators</B> group can administer it.
+</UL>
+<P>You can automate some of these tasks by including <B>exec</B>
+instructions in the bulk input file and using the <B>uss bulk</B> command
+to delete the account. See <A HREF="#HDRWQ659">Creating and Deleting Multiple Accounts with the uss bulk Command</A>.
+<P><H3><A NAME="HDRWQ658" HREF="auagd002.htm#ToC_567">To delete an AFS account</A></H3>
+<OL TYPE=1>
+<P><LI>Authenticate as an AFS identity with all of the following
+privileges. In the conventional configuration, the <B>admin</B>
+user account has them, or you possibly have a personal administrative
+account. (To increase cell security, it is best to create special
+privileged accounts for use only while performing administrative
+procedures; for further discussion, see <A HREF="auagd021.htm#HDRWQ806">An Overview of Administrative Privilege</A>.) If necessary, issue the <B>klog</B>
+command to authenticate. 
+<PRE>   % <B>klog</B> <VAR>admin_user</VAR>
+   Password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>The following list specifies the necessary privileges and indicates how to
+check that you have them.
+<UL>
+<P><LI>Membership in the <B>system&#58;administrators</B> group. If
+necessary, issue the <B>pts membership</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Inclusion in the <B>/usr/afs/etc/UserList</B> file. If
+necessary, issue the <B>bos listusers</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>The <TT>ADMIN</TT> flag on the Authentication Database entry.
+However, the Authentication Server always prompts you for a password in order
+to perform its own authentication. The following instructions direct
+you to specify the administrative identity on the <B>uss</B> command line
+itself.
+<P><LI>The <B>d</B> (<B>delete</B>) permission on the ACL of the
+directory that houses the user&#39;s home directory. If necessary,
+issue the <B>fs listacl</B> command, which is fully described in <A HREF="auagd020.htm#HDRWQ787">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system&#58;administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+</UL>
+<P><LI>Consider and resolve the issues discussed in the introduction to this
+section concerning the continued maintenance of a deleted user&#39;s account
+information, owned groups, and volumes.
+<P><LI><B>(Optional)</B> Run the <B>uss delete</B> command with the
+<B>-dryrun</B> flag to preview the deletion of the account. Note
+any error messages and correct the cause before reissuing the command without
+the <B>-dryrun</B> flag. The next step describes the <B>uss
+delete</B> command&#39;s syntax.
+<A NAME="IDX7725"></A>
+<A NAME="IDX7726"></A>
+<P><LI>Issue the <B>uss delete</B> command to delete the account.
+Enter the command on a single line; it appears here on multiple lines
+only for legibility.
+<P>The delete operation always removes the user&#39;s entry from the
+Authentication Database. The Authentication Server performs its own
+authentication rather than accepting your existing AFS token. By
+default, it authenticates your local (UNIX) identity, which possibly does not
+correspond to an AFS-privileged administrator. Include the
+<B>-admin</B> argument to name an identity that has the <TT>ADMIN</TT>
+flag on its Authentication Database entry. To verify that an entry has
+the flag, issue the <B>kas examine</B> command as described in <A HREF="auagd021.htm#HDRWQ812">To check if the ADMIN flag is set</A>. 
+<PRE>   % <B>uss delete</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>>  \ 
+                <B>-mountpoint</B> &lt;<VAR>mountpoint&nbsp;for&nbsp;user&#39;s&nbsp;volume</VAR>>  \
+                [<B>-savevolume</B>]  <B>-admin </B> &lt;<VAR>administrator&nbsp;to&nbsp;authenticate</VAR>>  \
+                [<B>-dryrun</B>] 
+   Administrator&#39;s (<VAR>admin_user</VAR>) password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>d
+</B><DD>Is the shortest acceptable abbreviation of <B>delete</B>.
+<P><DT><B>-user
+</B><DD>Names the entry to delete from the Protection and Authentication
+Databases.
+<P><DT><B>-mountpoint
+</B><DD>Specifies the pathname of the mount point to delete (the user&#39;s home
+directory). Unless the <B>-savevolume</B> argument is included, the
+volume mounted there is also deleted from the file server machine where it
+resides, as is its record from the VLDB. Partial pathnames are
+interpreted relative to the current working directory.
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results when you attempt to delete a mount point from a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname&#39;s second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>.
+<P><DT><B>-savevolume
+</B><DD>Retains the user&#39;s volume and VLDB entry.
+<P><DT><B>-admin
+</B><DD>Names an administrative account that has the <TT>ADMIN</TT> flag on its
+Authentication Database entry, such as <B>admin</B>. The password
+prompt echoes it as <VAR>admin_user</VAR>. Enter the appropriate password
+as <VAR>admin_password</VAR>.
+<P><DT><B>-dryrun
+</B><DD>Reports actions that the command interpreter needs to perform to run the
+command, without actually performing them.
+</DL>
+<P><LI>If the deleted user home directory resided in a replicated volume, use the
+<B>vos release</B> command to release the volume, as described in <A HREF="auagd010.htm#HDRWQ279">To replicate a read/write volume (create a read-only volume)</A>. 
+<PRE>   
+   % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">This step can be necessary even if the home directory&#39;s parent directory
+is not itself a mount point for a replicated volume (and is easier to overlook
+in that case). For example, the ABC Corporation template puts the mount
+points for user volumes in the <B>/afs/abc.com/usr</B>
+directory. Because that is a regular directory rather than a mount
+point, it resides in the <B>root.cell</B> volume mounted at the
+<B>/afs/abc.com</B> directory. That volume is replicated, so
+after changing it by deleting a mount point the administrator must issue the
+<B>vos release</B> command.
+</TD></TR></TABLE>
+<P><LI>Delete the user&#39;s entry from the local password file
+(<B>/etc/passwd</B> or equivalent) of each client machine. If you
+use the AFS <B>package</B> utility, it is sufficient to remove the entry
+from the common source version of the file. If you intend to reactivate
+the user&#39;s account in the future, it is simpler to comment out the entry
+or place an asterisk (*) in the password field.
+</OL>
+<A NAME="IDX7727"></A>
+<A NAME="IDX7728"></A>
+<A NAME="IDX7729"></A>
+<A NAME="IDX7730"></A>
+<A NAME="IDX7731"></A>
+<HR><H2><A NAME="HDRWQ659" HREF="auagd002.htm#ToC_568">Creating and Deleting Multiple Accounts with the uss bulk Command</A></H2>
+<P>The <B>uss bulk</B> command allows you to create and
+delete many accounts at once. Before executing the command, you must
+<UL>
+<P><LI>Construct a template if you plan to create any accounts, just as you must
+do before running the <B>uss add</B> command. The same template
+applies to all accounts created by a single <B>uss bulk</B>
+command.
+<P><LI>Construct a bulk input file of instructions that create and delete
+accounts and execute any related commands, as described in <A HREF="#HDRWQ660">Constructing a Bulk Input File</A>.
+</UL>
+<A NAME="IDX7732"></A>
+<A NAME="IDX7733"></A>
+<P><H3><A NAME="HDRWQ660" HREF="auagd002.htm#ToC_569">Constructing a Bulk Input File</A></H3>
+<P>You can include five types of instructions in a bulk input
+file&#58; <B>add</B>, <B>delete</B>, <B>exec</B>,
+<B>savevolume</B>, and <B>delvolume</B>. The following sections
+discuss their uses.
+<P><B>Creating a User Account with the add Instruction</B>
+<P>Each <B>add</B> instruction creates a single user account, and so is
+basically the equivalent of issuing one <B>uss add</B> command.
+There is no limit to the number of <B>add</B> instructions in the bulk
+input file.
+<P>As indicated by the following syntax statement, the order of the
+instruction&#39;s fields matches the order of arguments to the <B>uss
+add</B> command (though some of the command&#39;s arguments do not have a
+corresponding field). Like the <B>uss add</B> command&#39;s
+arguments, many of the fields provide a value for a variable in the
+<B>uss</B> template file. Each instruction must be a single line in
+the file (have a newline character only at its end); it appears on
+multiple lines here only for legibility.
+<PRE>   <B>add</B> <VAR>username</VAR>[<B>&#58;</B><VAR>full_name</VAR>][<B>&#58;</B><VAR>initial_password</VAR>][<B>&#58;</B><VAR>password_expires</VAR>]
+   [<B>&#58;</B><VAR>file_server</VAR>][<B>&#58;</B><VAR>partition</VAR>][<B>&#58;</B><VAR>mount_point</VAR>][<B>&#58;</B><VAR>uid</VAR>]
+   [<B>&#58;</B><VAR>var1</VAR>][<B>&#58;</B><VAR>var2</VAR>][<B>&#58;</B><VAR>var3</VAR>][<B>&#58;</B><VAR>var4</VAR>][<B>&#58;</B><VAR>var5</VAR>][<B>&#58;</B><VAR>var6</VAR>][<B>&#58;</B><VAR>var7</VAR>][<B>&#58;</B><VAR>var8</VAR>][<B>&#58;</B><VAR>var9</VAR>][<B>&#58;</B>]
+</PRE>
+<P>For a complete description of the acceptable values in each field, see the
+<B>uss Bulk Input File</B> reference page in the <I>AFS Administration
+Reference</I>, or the description of the corresponding arguments to the
+<B>uss add</B> command, in <A HREF="#HDRWQ654">To create an AFS account with the uss add command</A>. Following are some basic notes&#58;
+<UL>
+<P><LI>Begin the line with the string <B>add</B> only, not <B>uss
+add</B>.
+<P><LI>Only the first argument, <VAR>username</VAR>, is required. It
+corresponds to the <B>-user</B> argument to the <B>uss add</B>
+command.
+<P><LI>Do not surround the <VAR>full_name</VAR> value with double quotes, even
+though you must use them around the value for the <B>-realname</B>
+argument to the <B>uss add</B> command.
+<P><LI>If you want to omit a value for an argument, indicate an empty field by
+using two colons with nothing between them. Leaving a field empty is
+acceptable if the corresponding command line argument is optional or if the
+corresponding variable does not appear in the template file. For every
+field that precedes the last one to which you assign an actual value, you must
+either provide a value or indicate an empty field. It is acceptable,
+but not necessary, to indicate empty fields after the last one in which you
+assign a value.
+<P><LI>After the last field, end the line with either a colon and newline
+character (<B>&lt;Return></B>), or a newline alone.
+<P><LI>The final nine fields are for assigning values to the number variables ($1
+through $9), with the fields listed in increasing numerical order.
+Specify the value only, not the variable number.
+</UL>
+<P><B>Deleting a User Account with the delete Instruction</B>
+<P>Each <B>delete</B> instruction deletes a single user account, and so is
+basically the equivalent of issuing one <B>uss delete</B> command.
+There is no limit to the number of <B>delete</B> instructions in the bulk
+input file.
+<P>Like all instructions in the bulk input file, each <B>delete</B>
+instruction must be a single line in the file (have a newline character only
+at its end), even though it can cover multiple lines on a display
+screen. The curly braces (<B>{  }</B>) indicate two mutually
+exclusive choices.
+<PRE>   <B>delete</B> <VAR>username</VAR><B>&#58;</B><VAR>mount_point_path</VAR>[&#58;{ <B>savevolume</B> | <B>delvolume</B> }][<B>&#58;</B>]
+</PRE>
+<P>For a complete description of the acceptable values in each field, see the
+<B>uss Bulk Input File</B> reference page in the <I>AFS Administration
+Reference</I> or the description of the corresponding arguments to the
+<B>uss delete</B> command, in <A HREF="#HDRWQ658">To delete an AFS account</A>. Following are some basic notes&#58;
+<UL>
+<P><LI>Begin the line with the string <B>delete</B> only, not <B>uss
+delete</B>.
+<P><LI>The first two arguments, <VAR>username</VAR> and <VAR>mount_point_path</VAR>,
+are required. They correspond to the <B>-user</B> and
+<B>-mountpoint</B> arguments to the <B>uss delete</B> command.
+<P><LI>The third field, which is optional, controls whether the user&#39;s home
+volume is removed from the file server where it resides, along with the
+corresponding VLDB entry. There are three possible values&#58; 
+<UL>
+<P><LI>No value treats the volume and VLDB entry according to the prevailing
+default, which is established by a preceding <B>savevolume</B> or
+<B>delvolume</B> instruction in the template file. See the
+following discussion of those instructions to learn how the default is
+set.
+<P><LI>The string <B>savevolume</B> preserves the volume and VLDB entry,
+overriding the default.
+<P><LI>The string <B>delvolume</B> removes the volume and VLDB entry,
+overriding the default.
+</UL>
+<P><LI>After the last field, end the line with either a colon and newline
+character (<B>&lt;Return></B>), or a newline alone.
+</UL>
+<P><B>Running a Command or Script with the exec Instruction</B>
+<P>The <B>exec</B> instruction runs the indicated AFS command, compiled
+program, or UNIX shell script or command. The command processor assumes
+the AFS and local identities of the issuer of the <B>uss bulk</B> command,
+who must have the privileges required to run the command.
+<P>The instruction&#39;s syntax is as follows&#58;
+<PRE>   <B>exec</B> <VAR>command</VAR>
+</PRE>
+<P>It is not necessary to surround the <VAR>command</VAR> string with double
+quotes (" ") or other delimiters.
+<P><B>Setting the Default Treatment of Volumes with the delvolume and
+savevolume Instructions</B>
+<P>The <B>savevolume</B> and <B>delvolume</B> instructions set the
+default treatment of volumes referenced by the <B>delete</B> instructions
+that follow them in the bulk input file. Their syntax is as
+follows&#58;
+<PRE>   <B>savevolume</B>
+   <B>delvolume</B>
+</PRE>
+<P>Both instructions are optional and take no arguments. If neither
+appears in the bulk input file, then by default all volumes and VLDB entries
+referenced by <B>delete</B> instructions are removed. If the
+<B>savevolume</B> instruction appears in the file, it prevents the removal
+of the volume and VLDB entry referenced by all subsequent <B>delete</B>
+instructions in the file. The <B>delvolume</B> instruction
+explicitly establishes the default (which is deletion) for subsequent
+<B>delete</B> instructions.
+<P>The effect of either instruction lasts until the end of the bulk input
+file, or until its opposite appears. To override the prevailing default
+for a particular <B>delete</B> instruction, put the <B>savevolume</B>
+or <B>delvolume</B> string in the instruction&#39;s third field.
+(You can also use multiple instances of the <B>savevolume</B> and
+<B>delvolume</B> instructions to toggle back and forth between default
+preservation and deletion of volumes.)
+<P><H3><A NAME="Header_570" HREF="auagd002.htm#ToC_570">Example Bulk Input File Instructions</A></H3>
+<P>To create an authentication-only account, use an <B>add</B>
+instruction like the following example, which includes only the first
+(<VAR>username</VAR>) argument. The user&#39;s real name is set to match
+the username (<B>anderson</B>) and her initial password is set to the
+string <B>changeme</B>.
+<PRE>   add anderson 
+</PRE>
+<P>The following example also creates an authentication-only account, but sets
+nondefault values for the real name and initial password.
+<PRE>   add smith&#58;John Smith&#58;js_pswd
+</PRE>
+<P>The next two example <B>add</B> instructions require that the
+administrator of the ABC Corporation cell (<B>abc.com</B>) has
+written a <B>uss</B> template file with the following <B>V</B>
+instruction in it&#58;
+<PRE>   V user.$USER $SERVER.abc.com /vicep$PART 10000 /afs/.abc.com/usr/$3/$USER \
+       $UID $USER all
+</PRE>
+<P>To create accounts for users named John Smith from the Marketing Department
+and Pat Jones from the Finance Department, the appropriate <B>add</B>
+instructions in the bulk input file are as follows&#58;
+<PRE>   add smith&#58;John Smith&#58;&#58;&#58;fs1&#58;a&#58;&#58;&#58;&#58;&#58;marketing
+   add jones&#58;Pat Jones&#58;&#58;&#58;fs3&#58;c&#58;&#58;&#58;&#58;&#58;finance
+</PRE>
+<P>The new account for Smith consists of Protection and Authentication
+Database entries called <B>smith</B>. His initial password is the
+default string <B>changeme</B>, and the Protection Server generates his
+AFS UID. His home volume, called <B>user.smith</B>, has a
+10,000 KB quota, resides on partition <B>/vicepa</B> of file server
+machine <B>fs1.abc.com</B>, and is mounted at
+<B>/afs/.abc.com/usr/marketing/smith</B>. The final
+<B>$UID $USER all</B> part of the <B>V</B> instruction gives him
+ownership of his home directory and all permissions on its ACL. The
+account for <B>jones</B> is similar, except that it resides on partition
+<B>/vicepc</B> of file server machine <B>fs3.abc.com</B>
+and is mounted at
+<B>/afs/.abc.com/usr/finance/jones</B>.
+<P>Notice that the fields corresponding to <VAR>mount_point</VAR>, <VAR>uid</VAR>,
+<VAR>var1</VAR>, and <VAR>var2</VAR> are empty (between the values <TT>a</TT>
+and <TT>marketing</TT> on the first example line) because the corresponding
+variables do not appear in the <B>V</B> instruction in the template
+file. The <VAR>initial_passwd</VAR> and <VAR>password_expires</VAR> fields
+are also empty.
+<P>If you wish, you can specify values or empty fields for all nine number
+variables in an <B>add</B> instruction. In that case, the bulk
+input file instructions are as follows&#58;
+<PRE>   add smith&#58;John Smith&#58;&#58;&#58;fs1&#58;a&#58;&#58;&#58;&#58;&#58;marketing&#58;&#58;&#58;&#58;&#58;&#58;
+   add jones&#58;Pat Jones&#58;&#58;&#58;fs3&#58;c&#58;&#58;&#58;&#58;&#58;finance&#58;&#58;&#58;&#58;&#58;&#58;
+</PRE>
+<P>The following example is a section of a bulk input file with a number of
+<B>delete</B> instructions and a <B>savevolume</B> instruction.
+Because the first three instructions appear before the <B>savevolume</B>
+instruction and their third field is blank, the corresponding volumes and VLDB
+entries are removed. The <B>delete</B> instruction for user
+<B>terry</B> follows the <B>savevolume</B> instruction, so her volume
+is not removed, but the volume for user <B>johnson</B> is, because the
+<B>delvolume</B> string in the third field of the <B>delete</B>
+instruction overrides the current default.
+<PRE>   delete smith&#58;/afs/abc.com/usr/smith
+   delete pat&#58;/afs/abc.com/usr/pat
+   delete rogers&#58;/afs/abc.com/usr/rogers
+   savevolume
+   delete terry&#58;/afs/abc.com/usr/terry
+   delete johnson&#58;/afs/abc.com/usr/johnson&#58;delvolume
+</PRE>
+<P>The following example <B>exec</B> instruction is useful as a separator
+between a set of <B>add</B> instructions and a set of <B>delete</B>
+instructions. It generates a message on the standard output stream that
+informs you of the <B>uss bulk</B> command&#39;s progress.
+<PRE>   exec echo "Additions completed; beginning deletions..."
+</PRE>
+<P><H3><A NAME="Header_571" HREF="auagd002.htm#ToC_571">To create and delete multiple AFS user accounts</A></H3>
+<OL TYPE=1>
+<P><LI>Authenticate as an AFS identity with all of the following
+privileges. In the conventional configuration, the <B>admin</B>
+user account has them, or you possibly have a personal administrative
+account. (To increase cell security, it is best to create special
+privileged accounts for use only while performing administrative
+procedures; for further discussion, see <A HREF="auagd021.htm#HDRWQ806">An Overview of Administrative Privilege</A>.) If necessary, issue the <B>klog</B>
+command to authenticate. 
+<PRE>   % <B>klog</B> <VAR>admin_user</VAR>
+   Password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>The following list specifies the necessary privileges and indicates how to
+check that you have them.
+<UL>
+<P><LI>Membership in the <B>system&#58;administrators</B> group. If
+necessary, issue the <B>pts membership</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Inclusion in the <B>/usr/afs/etc/UserList</B> file. If
+necessary, issue the <B>bos listusers</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>The <TT>ADMIN</TT> flag on the Authentication Database entry.
+However, the Authentication Server always prompts you for a password in order
+to perform its own authentication. The following instructions direct
+you to specify the administrative identity on the <B>uss</B> command line
+itself.
+<P><LI>The <B>d</B> (<B>delete</B>), <B>i</B> (<B>insert</B>) and
+<B>l</B> (<B>lookup</B>) permissions on the ACL of the parent
+directory for each volume mount point. If necessary, issue the <B>fs
+listacl</B> command, which is fully described in <A HREF="auagd020.htm#HDRWQ787">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system&#58;administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+</UL>
+<P><LI><B>(Optional.)</B> Log in as the local superuser
+<B>root</B>. This is necessary only if you are creating new files
+or directories in the local file system and want to designate an alternate
+owner as the object is created. For a discussion of the issues
+involved, see <A HREF="#HDRWQ633">About Creating Local Disk Directories and Files</A>.
+<P><LI>If the bulk input file includes <B>add</B> instructions, verify the
+location and functionality of the template you are using. For a
+description of where the <B>uss</B> command interpreter expects to find
+the template, see <A HREF="#HDRWQ631">Where to Place Template Files</A>. You can always provide an alternate pathname if you
+wish. Also note which variables appear in the template, to be sure that
+you provide the corresponding arguments in the <B>add</B> instruction or
+on the <B>uss bulk</B> command line.
+<P><LI>Create a bulk input file that complies with the rules listed in <A HREF="#HDRWQ660">Constructing a Bulk Input File</A>. It is simplest to put the file in the same directory
+as the template file you are using.
+<P><LI><B>(Optional.)</B> Change to the directory where the bulk input
+file and template file reside. 
+<PRE>   % <B>cd</B> <VAR>template_directory</VAR>
+</PRE>
+<A NAME="IDX7734"></A>
+<A NAME="IDX7735"></A>
+<P><LI><A NAME="LIWQ661"></A>Issue the <B>uss bulk</B> command to create or delete
+accounts, or both. Enter the command on a single line; it appears
+here on multiple lines only for legibility.
+<P>The bulk operation always manipulates user entries in the Authentication
+Database. The Authentication Server performs its own authentication
+rather than accepting your existing AFS token. By default, it
+authenticates your local (UNIX) identity, which possibly does not correspond
+to an AFS-privileged administrator. Include the <B>-admin</B>
+argument to name an identity that has the <TT>ADMIN</TT> flag on its
+Authentication Database entry. To verify that an entry has the flag,
+issue the <B>kas examine</B> command as described in <A HREF="auagd021.htm#HDRWQ812">To check if the ADMIN flag is set</A>.
+<PRE>   % <B>uss bulk</B> &lt;<VAR>bulk&nbsp;input&nbsp;file</VAR>>  \
+              [<B>-template</B> &lt;<VAR>pathname&nbsp;of&nbsp;template&nbsp;file</VAR>>]  \
+              <B>-admin</B> &lt;<VAR>administrator&nbsp;to&nbsp;authenticate</VAR>>  \
+              [<B>-dryrun</B>] [<B>-overwrite</B>]  \
+              [<B>-pwexpires</B> &lt;<VAR>password&nbsp;expires&nbsp;in&nbsp;[0..254]&nbsp;days&nbsp;(0&nbsp;=>&nbsp;never)></VAR>]  \
+              [<B>-pipe</B>]
+   Administrator&#39;s (<VAR>admin_user</VAR>) password&#58; <VAR>admin_password</VAR>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B><B>b</B>
+</B><DD>Is the shortest acceptable abbreviation of <B>bulk</B>.
+<P><DT><B><VAR>bulk input file</VAR>
+</B><DD>Specifies the pathname of the bulk input file. Partial pathnames
+are interpreted relative to the current working directory. For a
+discussion of the required file format, see <A HREF="#HDRWQ660">Constructing a Bulk Input File</A>.
+<P><DT><B>-template
+</B><DD>Specifies the pathname of the template file for any <B>uss add</B>
+commands that appear in the bulk input file. Partial pathnames are
+interpreted relative to the current working directory. For a discussion
+of the required file format, see <A HREF="#HDRWQ617">Constructing a uss Template File</A>.
+<P><DT><B>-admin
+</B><DD>Names an administrative account that has the <TT>ADMIN</TT> flag on its
+Authentication Database entry, such as the <B>admin</B> account.
+The password prompt echoes it as <VAR>admin_user</VAR>. Enter the
+appropriate password as <VAR>admin_password</VAR>.
+<P><DT><B>-dryrun
+</B><DD>Reports actions that the command interpreter needs to perform to run the
+command, without actually performing them.
+<P><DT><B><B>-overwrite</B>
+</B><DD>Overwrites any directories, files and links that exist in the file system
+and for which there are also <B>D</B>, <B>E</B>, <B>F</B>,
+<B>L</B>, or <B>S</B> instructions in the template file named by the
+<B>-template</B> argument. If this flag is omitted, the command
+interpreter prompts, once for each <B>add</B> instruction in the bulk
+input file, for confirmation that it is to overwrite such elements. Do
+not include this flag if there are no <B>add</B> instructions in the bulk
+input file.
+<P><DT><B><B>-pwexpires</B>
+</B><DD>Sets the number of days after a user&#39;s password is changed that it
+remains valid, for each user named by an <B>add</B> instruction in the
+bulk input file. Provide an integer from the range <B>1</B> through
+<B>254</B> to specify the number of days until expiration, or the value
+<B>0</B> to indicate that the password never expires (the default).
+<P>When the password becomes invalid (expires), the user is unable to
+authenticate, but has 30 more days in which to issue the <B>kpasswd</B>
+command to change the password (after that, only an administrator can change
+it).
+<P><DT><B><B>-pipe</B>
+</B><DD>Suppresses the Authentication Server&#39;s prompt for the password of the
+issuer or the user named by the <B>-admin</B> argument (the Authentication
+Server always separately authenticates the user who is creating or deleting an
+entry in the Authentication Database). Instead, the command interpreter
+accepts the password as piped input from another program, enabling you to run
+the <B>uss bulk</B> command in unattended batch jobs.
+</DL>
+<P><LI>If a newly created or deleted user home directory resides in a replicated
+volume, use the <B>vos release</B> command to release the volume, as
+described in <A HREF="auagd010.htm#HDRWQ279">To replicate a read/write volume (create a read-only volume)</A>. 
+<PRE>   
+   % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">This step can be necessary even if the home directory&#39;s parent directory
+is not itself a mount point for a replicated volume (and is easier to overlook
+in that case). For example, the ABC Corporation template puts the mount
+points for user volumes in the <B>/afs/abc.com/usr</B>
+directory. Because that is a regular directory rather than a mount
+point, it resides in the <B>root.cell</B> volume mounted at the
+<B>/afs/abc.com</B> directory. That volume is replicated, so
+after changing it by creating or deleting a mount point, the administrator
+must issue the <B>vos release</B> command.
+</TD></TR></TABLE>
+<P><LI>If you are creating accounts, create an entry for the new user in the
+local password file (<B>/etc/passwd</B> or equivalent) on each AFS client
+machine that he or she can log into. For suggestions on automating this
+step, see <A HREF="#HDRWQ612">Creating a Common Source Password File</A>. 
+<P>Even if you do not use the automated method, set the user&#39;s UNIX UID
+to match the AFS UID assigned automatically by the Protection Server or
+assigned with the <B>-uid</B> argument. The new user&#39;s AFS UID
+appears in the trace produced by the <B>uss add</B> output or you can use
+the <B>pts examine</B> command to display it, as described in <A HREF="auagd019.htm#HDRWQ747">To display a Protection Database entry</A>.
+<P><LI>If you are deleting accounts, delete the user&#39;s entry from the local
+password file (<B>/etc/passwd</B> or equivalent) of each client
+machine. If you use the AFS <B>package</B> utility, it is
+sufficient to remove the entry from the common source version of the
+file. If you intend to reactivate the user&#39;s account in the
+future, it is simpler to comment out the entry or place an asterisk (*) in the
+password field.
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd016.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd018.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

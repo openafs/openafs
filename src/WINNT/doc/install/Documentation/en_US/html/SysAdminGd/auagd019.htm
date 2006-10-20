@@ -1,0 +1,1437 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3191/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 14:06:34                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 14:06:34">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 14:06:34">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 14:06:34">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd018.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd020.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ721" HREF="auagd002.htm#ToC_596">Administering the Protection Database</A></H1>
+<P>This chapter explains how to create and maintain user,
+machine, and group entries in the Protection Database.
+<HR><H2><A NAME="HDRWQ722" HREF="auagd002.htm#ToC_597">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands&#58;
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display Protection Database entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Map user, machine or group name to AFS ID
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display entry&#39;s owner or creator
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display number of users or machines belonging to group
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display number of groups user or machine belongs to
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display group-creation quota
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display entry&#39;s privacy flags
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display members of group, or groups that user or machine belongs to
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts membership</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display groups that user or group owns
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listowned</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display all entries in Protection Database
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listentries</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Create machine entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts createuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Create group entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts creategroup</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Add users and machines to groups
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Remove users and machines from groups
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts removeuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Delete machine or group entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts delete</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Change a group&#39;s owner
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts chown</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Change an entry&#39;s name
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts rename</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set group creation quota
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set entry&#39;s privacy flags
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display AFS ID counters
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listmax</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Set AFS ID counters
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setmax</B>
+</TD></TR></TABLE>
+<P>
+<A NAME="IDX7821"></A>
+<A NAME="IDX7822"></A>
+<A NAME="IDX7823"></A>
+<A NAME="IDX7824"></A>
+<A NAME="IDX7825"></A>
+<A NAME="IDX7826"></A>
+<A NAME="IDX7827"></A>
+<A NAME="IDX7828"></A>
+<A NAME="IDX7829"></A>
+<A NAME="IDX7830"></A>
+<HR><H2><A NAME="HDRWQ744" HREF="auagd002.htm#ToC_598">About the Protection Database</A></H2>
+<P>The Protection Database stores information about AFS users,
+client machines, and groups which the File Server process uses to determine
+whether clients are authorized to access AFS data.
+<P>To obtain authenticated access to an AFS cell, a user must have an entry in
+the cell&#39;s Protection Database. The first time that a user
+requests access to the data stored on a file server machine, the File Server
+on that machine contacts the Protection Server to request the user&#39;s
+<I>current protection subgroup</I> (<I>CPS</I>), which lists all the
+groups to which the user belongs. The File Server scans the access
+control list (ACL) of the directory that houses the data, looking for groups
+on the CPS. It grants access in accordance with the permissions that
+the ACL extends to those groups or to the user individually. (The File
+Server stores the CPS and uses it as long as the user has the same
+tokens. When a user&#39;s group membership changes, he or she must
+reauthenticate for the File Server to recognize the change.)
+<P>Only administrators who belong to the cell&#39;s
+<B>system&#58;administrators</B> group can create user entries (the
+group is itself defined in the Protection Database, as discussed in <A HREF="#HDRWQ745">The System Groups</A>). Members of the
+<B>system&#58;administrators</B> group can also create machine entries,
+which can then be used to control access based on the machine from which the
+access request originates. After creating a machine entry, add it to a
+Protection Database group and place the group on ACLs (a machine cannot appear
+on ACLs directly). A machine entry can represent a single machine or
+multiple machines with consecutive IP addresses as specified by a wildcard
+notation. For instructions, see <A HREF="#HDRWQ752">Creating User and Machine Entries</A>. Because all replicas of a volume share the same ACL
+(the one on the volume&#39;s root directory mount point), machine entries
+enable you to replicate the volume that houses a program&#39;s binary file
+while still complying with a machine-based license agreement as required by
+the program&#39;s manufacturer. See <A HREF="#HDRWQ752">Creating User and Machine Entries</A>.
+<P>A group entry is a list of user entries, machine entries, or both (groups
+cannot belong to other groups). Putting a group on an ACL is a
+convenient way to extend or deny access to a set of users without listing them
+on the ACL individually. Similarly, adding users to a group
+automatically grants them access to all files and directories for which the
+associated ACL lists that group. Both administrators and regular users
+can create groups.
+<A NAME="IDX7831"></A>
+<A NAME="IDX7832"></A>
+<A NAME="IDX7833"></A>
+<A NAME="IDX7834"></A>
+<A NAME="IDX7835"></A>
+<A NAME="IDX7836"></A>
+<P><H3><A NAME="HDRWQ745" HREF="auagd002.htm#ToC_599">The System Groups</A></H3>
+<P>In addition to the groups that users and administrators can
+create, AFS defines the following three system groups. The Protection
+Server creates them automatically when it builds the first version of a
+cell&#39;s Protection Database, and always assigns them the same AFS
+GIDs.
+<DL>
+<P><DT><B>system&#58;anyuser
+</B><DD>Represents all users able to access the cell&#39;s filespace from the
+local and foreign cells, authenticated or not. Its AFS GID is
+<B>-101</B>. The group has no stable membership listed in the
+Protection Database. Accordingly, the <B>pts examine</B> command
+displays <B>0</B> in its <TT>membership</TT> field, and the <B>pts
+membership</B> command does not list any members for it.
+<P>Placing this group on an ACL is a convenient way to extend access to all
+users. The File Server automatically places this group on the CPS of
+any user who requests access to data stored on a file server machine.
+(Every unauthenticated user is assigned the identity <B>anonymous</B> and
+this group is the only entry on the CPS for <B>anonymous</B>.)
+<P><DT><B>system&#58;authuser
+</B><DD>Represents all users who are able to access the cell&#39;s filespace from
+the local and foreign cells and who have successfully obtained an AFS token in
+the local cell (are authenticated). Its AFS GID is
+<B>-102</B>. Like the <B>system&#58;anyuser</B> group, it has
+no stable membership listed in the Protection Database. Accordingly,
+the <B>pts examine</B> command displays <B>0</B> in its
+<TT>membership</TT> field, and the <B>pts membership</B> command does
+not list any members for it.
+<P>Placing this group on an ACL is therefore a convenient way to extend access
+to all authenticated users. The File Server automatically places this
+group on the CPS of any authenticated user who requests access to data stored
+on a file server machine.
+<P><DT><B>system&#58;administrators
+</B><DD>Represents the small number of cell administrators authorized to issue
+privileged <B>pts</B> commands and the <B>fs</B> commands that set
+quota. The ACL on the root directory of every newly created volume
+grants all permissions to the group. Even if you remove that entry, the
+group implicitly retains the <B>a</B> (<B>administer</B>), and by
+default also the <B>l</B> (<B>lookup</B>), permission on every
+ACL. Its AFS GID is <B>-204</B>. For instructions on
+administering this group, see <A HREF="auagd021.htm#HDRWQ808">Administering the system&#58;administrators Group</A>.
+</DL>
+<HR><H2><A NAME="HDRWQ746" HREF="auagd002.htm#ToC_600">Displaying Information from the Protection Database</A></H2>
+<P>This section describes the commands you can use to display
+Protection Database entries and associated information. In addition to
+name and AFS ID, the Protection Database stores the following information
+about each user, machine, or group entry.
+<UL>
+<P><LI>The entry&#39;s owner, which is the user or group of users who can
+administer the entry
+<P><LI>The entry&#39;s creator, which serves mostly as an audit trail
+<P><LI>A membership count, which indicates how many groups a user or machine
+belongs to, or how many members belong to a group
+<P><LI>A set of privacy flags, which control which users can administer or
+display information about the entry
+<P><LI>A group-creation quota, which defines how many groups a user can create
+<P><LI>A list of the groups to which a user or machine belongs, or of the users
+and machines that belong to a group
+<P><LI>A list of the groups that a user or group owns
+</UL>
+<A NAME="IDX7837"></A>
+<A NAME="IDX7838"></A>
+<A NAME="IDX7839"></A>
+<A NAME="IDX7840"></A>
+<A NAME="IDX7841"></A>
+<A NAME="IDX7842"></A>
+<A NAME="IDX7843"></A>
+<A NAME="IDX7844"></A>
+<A NAME="IDX7845"></A>
+<A NAME="IDX7846"></A>
+<A NAME="IDX7847"></A>
+<A NAME="IDX7848"></A>
+<A NAME="IDX7849"></A>
+<A NAME="IDX7850"></A>
+<A NAME="IDX7851"></A>
+<A NAME="IDX7852"></A>
+<A NAME="IDX7853"></A>
+<A NAME="IDX7854"></A>
+<A NAME="IDX7855"></A>
+<A NAME="IDX7856"></A>
+<A NAME="IDX7857"></A>
+<A NAME="IDX7858"></A>
+<A NAME="IDX7859"></A>
+<A NAME="IDX7860"></A>
+<A NAME="IDX7861"></A>
+<A NAME="IDX7862"></A>
+<A NAME="IDX7863"></A>
+<A NAME="IDX7864"></A>
+<A NAME="IDX7865"></A>
+<A NAME="IDX7866"></A>
+<A NAME="IDX7867"></A>
+<A NAME="IDX7868"></A>
+<A NAME="IDX7869"></A>
+<A NAME="IDX7870"></A>
+<A NAME="IDX7871"></A>
+<A NAME="IDX7872"></A>
+<A NAME="IDX7873"></A>
+<A NAME="IDX7874"></A>
+<P><H3><A NAME="HDRWQ747" HREF="auagd002.htm#ToC_601">To display a Protection Database entry</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group, which enables you to display an entry regardless of the setting of its
+first (<B>s</B>) privacy flag. By default, any user can display a
+Protection Database entry. If necessary, issue the <B>pts
+membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts examine</B> command to display one or more Protection
+Database entries. 
+<PRE>   % <B>pts examine</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>e
+</B><DD>Is the shortest acceptable abbreviation of <B>examine</B> (and
+<B>check</B> is an alias).
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>Specifies the name or AFS ID of each entry to display. Precede any
+AFS GID with a hyphen (<B>-</B>) because it is a negative integer.
+</DL>
+</OL>
+<P>The output includes the following fields. Examples follow.
+<DL>
+<P><DT><B><TT>Name</TT>
+</B><DD>Specifies the entry&#39;s name.
+<UL>
+<P><LI>For a user, this is the name used when authenticating with AFS and the
+name that appears on ACL entries.
+<P><LI>For a machine, this is the IP address of a single machine, or a wildcard
+notation that represents a group of machines with consecutive IP addresses, as
+described in <A HREF="#HDRWQ752">Creating User and Machine Entries</A>.
+<P><LI>For a group, this is the name that appears on ACL entries and in the list
+of groups output by the <B>pts membership</B> command. The names of
+<I>regular</I> groups have two parts, separated by a colon
+(<B>&#58;</B>). The part before the colon indicates the
+group&#39;s owner, and the part after is the unique name. A
+<I>prefix-less</I> group&#39;s name does not have the owner prefix;
+only members of the <B>system&#58;administrators</B> group can create
+prefix-less groups. For further discussion of group names, see <A HREF="#HDRWQ754">Creating Groups</A>.
+</UL>
+<A NAME="IDX7875"></A>
+<A NAME="IDX7876"></A>
+<A NAME="IDX7877"></A>
+<P><DT><B><TT>id</TT>
+</B><DD>Specifies the entry&#39;s unique AFS identification number. For
+user and machine entries, the AFS user ID (AFS UID) is a positive
+integer; for groups, the AFS group ID (AFS GID) is a negative
+integer. AFS UIDs and GIDs have the same function as their counterparts
+in the UNIX file system, but are used by the AFS servers and the Cache Manager
+only. 
+<P>Normally, the Protection Server assigns an AFS UID or GID automatically
+when you create Protection Database entries. Members of the
+<B>system&#58;administrators</B> group can specify an ID if
+desired. For further discussion, see <A HREF="#HDRWQ752">Creating User and Machine Entries</A> and <A HREF="#HDRWQ754">Creating Groups</A>.
+<P><DT><B><TT>owner</TT>
+</B><DD>Names the user or group who owns the entry and therefore can administer it
+(for more information about a group owning another group, see <A HREF="#HDRWQ755">Using Groups Effectively</A>). Other users possibly have administrative
+privileges, too, depending on the setting of the entry&#39;s privacy
+flags. For instructions on changing the owner, see <A HREF="#HDRWQ764">Changing a Group&#39;s Owner</A>.
+<P><DT><B><TT>creator</TT>
+</B><DD>Names the user who created the entry, and serves as an audit trail.
+If the entry is deleted from the Protection Database, the creator&#39;s group
+creation quota increases by one, even if the creator no longer owns the
+entry; see <A HREF="#HDRWQ768">Setting Group-Creation Quota</A>. 
+<P>The value <TT>anonymous</TT> in this field generally indicates that the
+entry was created when the Protection Server was running in no-authentication
+mode, probably during initial configuration of the cell&#39;s first file
+server machine. For a description of no-authentication mode, see <A HREF="auagd008.htm#HDRWQ157">Managing Authentication and Authorization Requirements</A>.
+<P><DT><B><TT>membership</TT>
+</B><DD>Specifies the number of groups to which the user or machine belongs, or
+the number of users or machines that belong to the group.
+<P><DT><B><TT>flags</TT>
+</B><DD>Specifies who can display or change information in a Protection Database
+entry. The five flags, each representing a different capability, always
+appear in the same order. 
+<UL>
+<P><LI>For user entries, the default value is <TT>S----</TT>, which indicates
+that anyone can issue the <B>pts examine</B> command on the entry, but
+only the user and members of the <B>system&#58;administrators</B> group
+can perform any other action.
+<P><LI>For machine entries, the default value is <TT>S----</TT>, which
+indicates that anyone can issue the <B>pts examine</B> command on the
+entry, but only members of the <B>system&#58;administrators</B> group
+can perform any other action.
+<P><LI>For group entries, the default value is <TT>S-M--</TT>, which indicates
+that anyone can issue the <B>pts examine</B> and <B>pts membership</B>
+commands on the entry, but only the group&#39;s owner and members of the
+<B>system&#58;administrators</B> group can perform any other
+action.
+</UL>
+<P>For a complete description of possible values for the flags, see <A HREF="#HDRWQ769">Setting the Privacy Flags on Database Entries</A>.
+<P><DT><B><TT>group quota</TT>
+</B><DD>Specifies how many more groups a user can create in the Protection
+Database. The value for a newly created user entry is 20, but members
+of the <B>system&#58;administrators</B> group can issue the <B>pts
+setfields</B> command at any time to change the value; see <A HREF="#HDRWQ768">Setting Group-Creation Quota</A>. 
+<P>Group creation quota has no meaning for a machine or group entry&#58; the
+Protection Server recognizes the issuer of the <B>pts creategroup</B>
+command only as an authenticated user or as the <B>anonymous</B> user,
+never as a machine or group. The default value for group entries is 0
+(zero), and there is no reason to change it.
+</DL>
+<P>The following examples show the output for a user called <B>pat</B>, a
+machine with IP address <B>192.12.108.133</B> and a
+group called <B>terry&#58;friends</B>&#58;
+<PRE>   % <B>pts examine pat</B>
+   Name&#58; pat, id&#58; 1020, owner&#58; system&#58;administrators, creator&#58; admin,
+     membership&#58; 12, flags&#58; S----, group quota&#58; 15.
+   % <B>pts ex 192.12.108.133</B>
+   Name&#58; 192.12.108.133, id&#58; 5151, owner&#58; system&#58;administrators, creator&#58; admin,
+     membership&#58; 1, flags&#58; S----, group quota&#58; 20.
+   % <B>pts examine terry&#58;friends</B>
+   Name&#58; terry&#58;friends, id&#58; -567, owner&#58; terry, creator&#58; terry,
+     membership&#58; 12, flags&#58; SOm--, group quota&#58; 0.
+</PRE>
+<A NAME="IDX7878"></A>
+<A NAME="IDX7879"></A>
+<A NAME="IDX7880"></A>
+<A NAME="IDX7881"></A>
+<A NAME="IDX7882"></A>
+<A NAME="IDX7883"></A>
+<A NAME="IDX7884"></A>
+<A NAME="IDX7885"></A>
+<A NAME="IDX7886"></A>
+<P><H3><A NAME="HDRWQ748" HREF="auagd002.htm#ToC_602">To display group membership</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group, which enables you to display an entry&#39;s group membership
+information regardless of the setting of its third (<B>m</B>) privacy
+flag. By default the owner and the user can display group membership
+for a user entry, the owner for a machine entry, and anyone for a group
+entry. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI><A NAME="LIWQ749"></A>Issue the <B>pts membership</B> command to display the list
+of groups to which a user or machine belongs, or the list of users and
+machines that belong to a group. 
+<PRE>   % <B>pts membership</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>m
+</B><DD>Is the shortest acceptable abbreviation of <B>membership</B>.
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>Specifies the name or AFS UID of each user or machine for which to list
+the groups it belongs to, or the name or AFS GID of each group for which to
+list the members.
+</DL>
+</OL>
+<P>For user and machine entries, the output begins with the following string,
+and then each group appears on its own line&#58;
+<PRE>   Groups <VAR>user_or_machine</VAR> (id&#58; <VAR>AFS_UID</VAR>) is a member of&#58;
+</PRE>
+<P>For group entries, the output begins with the following string, and then
+each member appears on its own line&#58;
+<PRE>   Members of <VAR>group</VAR> (id&#58; <VAR>AFS_GID</VAR>) are&#58;
+</PRE>
+<P>For the system groups <B>system&#58;anyuser</B> and
+<B>system&#58;authuser</B>, the output includes the initial header
+string only, because these groups do not have a stable membership listed in
+their Protection Database entry. See <A HREF="#HDRWQ745">The System Groups</A>.
+<P>The following examples show the output for a user called <B>terry</B>
+and a group called <B>terry&#58;friends</B>&#58;
+<PRE>   % <B>pts mem terry</B>
+   Groups terry (id&#58; 5347) is a member of&#58;
+     pat&#58;friends
+     sales
+     acctg&#58;general
+   % <B>pts mem terry&#58;friends</B>
+   Members of terry&#58;friends (id&#58; -567) are&#58;
+     pat
+     smith
+     johnson
+</PRE>
+<A NAME="IDX7887"></A>
+<A NAME="IDX7888"></A>
+<A NAME="IDX7889"></A>
+<A NAME="IDX7890"></A>
+<A NAME="IDX7891"></A>
+<A NAME="IDX7892"></A>
+<A NAME="IDX7893"></A>
+<A NAME="IDX7894"></A>
+<P><H3><A NAME="HDRWQ750" HREF="auagd002.htm#ToC_603">To list the groups that a user or group owns</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group, which enables you to display an entry&#39;s group ownership
+information regardless of the setting of its second (<B>o</B>) privacy
+flag. By default the owner can list the groups owned by group, and a
+user the groups he or she owns. If necessary, issue the <B>pts
+membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts listowned</B> command to list the groups owned by
+each user or group. 
+<PRE>   % <B>pts listowned</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>listo
+</B><DD>Is the shortest acceptable abbreviation of <B>listowned</B>.
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>Specifies the name or AFS UID of each user, or the name or AFS GID or each
+group, for which to list the groups owned.
+</DL>
+</OL>
+<P>The output begins with the following string, and then each group appears on
+its own line&#58;
+<PRE>   Groups owned by <VAR>user_or_group</VAR> (id&#58; <VAR>AFS_ID</VAR>) are&#58;
+</PRE>
+<P>The following examples show the output for a user called <B>terry</B>
+and a group called <B>terry&#58;friends</B>&#58;
+<PRE>   % <B>pts listo terry</B> 
+   Groups owned by terry (id&#58; 5347) are&#58;  
+     terry&#58;friends   
+     terry&#58;co-workers
+   % <B>pts listo terry&#58;friends</B>
+   Groups owned by terry&#58;friends (id&#58; -567) are&#58;
+     terry&#58;pals
+     terry&#58;buddies
+</PRE>
+<A NAME="IDX7895"></A>
+<A NAME="IDX7896"></A>
+<A NAME="IDX7897"></A>
+<A NAME="IDX7898"></A>
+<A NAME="IDX7899"></A>
+<A NAME="IDX7900"></A>
+<A NAME="IDX7901"></A>
+<A NAME="IDX7902"></A>
+<A NAME="IDX7903"></A>
+<A NAME="IDX7904"></A>
+<A NAME="IDX7905"></A>
+<A NAME="IDX7906"></A>
+<A NAME="IDX7907"></A>
+<A NAME="IDX7908"></A>
+<A NAME="IDX7909"></A>
+<A NAME="IDX7910"></A>
+<A NAME="IDX7911"></A>
+<A NAME="IDX7912"></A>
+<P><H3><A NAME="HDRWQ751" HREF="auagd002.htm#ToC_604">To display all Protection Database entries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts listentries</B> command to display all Protection
+Database entries. 
+<PRE>   % <B>pts listentries</B> [<B>-users</B>] [<B>-groups</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>liste
+</B><DD>Is the shortest acceptable abbreviation of <B>listentries</B>.
+<P><DT><B>-users
+</B><DD>Displays user and machine entries. The same output results if you
+omit both this flag and the <B>-groups</B> flag.
+<P><DT><B>-groups
+</B><DD>Displays group entries.
+</DL>
+</OL>
+<P>The output is a table that includes the following columns. Examples
+follow.
+<DL>
+<P><DT><B><TT>Name</TT>
+</B><DD>Specifies the entry&#39;s name.
+<P><DT><B><TT>ID</TT>
+</B><DD>Specifies the entry&#39;s AFS identification number. For user and
+machine entries, the AFS user ID (AFS UID) is a positive integer; for
+groups, the AFS group ID (AFS GID) is a negative integer.
+<P><DT><B><TT>Owner</TT>
+</B><DD>Specifies the AFS ID of the user or group who owns the entry and therefore
+can administer it.
+<P><DT><B><TT>Creator</TT>
+</B><DD>Specifies the AFS UID of the user who created the entry.
+</DL>
+<P>The following example is from the ABC Corporation cell. The issuer
+provides no options, so the output includes user and machine entries. 
+<PRE>   % <B>pts listentries</B>
+   Name                          ID  Owner Creator
+   anonymous                  32766   -204    -204 
+   admin                          1   -204   32766 
+   pat                         1000   -204       1 
+   terry                       1001   -204       1 
+   smith                       1003   -204       1 
+   jones                       1004   -204       1 
+   192.12.105.33               2000   -204       1 
+   192.12.105.46               2001   -204       1 
+</PRE>
+<A NAME="IDX7913"></A>
+<A NAME="IDX7914"></A>
+<A NAME="IDX7915"></A>
+<A NAME="IDX7916"></A>
+<A NAME="IDX7917"></A>
+<HR><H2><A NAME="HDRWQ752" HREF="auagd002.htm#ToC_605">Creating User and Machine Entries</A></H2>
+<P>An entry in the Protection Database is one of the two
+required components of every AFS user account, along with an entry in the
+Authentication Database. It is best to create a Protection Database
+user entry only in the context of creating a complete user account, by using
+the <B>uss add</B> or <B>uss bulk</B> command as described in <A HREF="auagd017.htm#HDRWQ601">Creating and Deleting User Accounts with the uss Command Suite</A>, or the <B>pts createuser</B> command as described in <A HREF="auagd018.htm#HDRWQ692">Creating AFS User Accounts</A>.
+<P>You can also use the <B>pts createuser</B> command to create Protection
+Database machine entries, which can then be used to control access based on
+the machine from which the access request originates. After creating a
+machine entry, add it to a Protection Database group and place the group on
+ACLs ( a machine cannot appear on ACLs directly). Because all replicas
+of a volume share the same ACL (the one on the volume&#39;s root directory
+mount point), you can replicate the volume that houses a program&#39;s binary
+file while still complying with a machine-based license agreement as required
+by the program&#39;s manufacturer. If you do not place any other
+entries on the ACL, then only users working on the designated machines can
+access the file.
+<P>Keep in mind that creating an ACL entry for a group with machine entries in
+it extends access to both authenticated and unauthenticated users working on
+the machine. However, you can deny access to unauthenticated users by
+omitting an entry for the <B>system&#58;anyuser</B> group from the ACLs
+of the parent directories in the file&#39;s pathname. Conversely, if
+you want to enable unauthenticated users on the machine to access a file, then
+the ACL on every directory leading to it must include an entry for either the
+<B>system&#58;anyuser</B> group or a group to which the machine entry
+belongs. For more information on the <B>system&#58;anyuser</B>
+group, see <A HREF="#HDRWQ745">The System Groups</A>.
+<P>Because a machine entry can include unauthenticated users, it is best not
+to add both machine entries and user entries to the same group. In
+general, it is easier to use and administer nonmixed groups. A machine
+entry can represent a single machine, or multiple machines with consecutive IP
+addresses (that is, all machines on a network or subnet) specified by a
+wildcard notation. See the instructions in <A HREF="#HDRWQ753">To create machine entries in the Protection Database</A>.
+<P>By default, the Protection Server assigns the next available AFS UID to a
+new user or machine entry. It is best to allow this, especially for
+machine entries. For user entries, it makes sense to assign an AFS UID
+only if the user already has a UNIX UID that the AFS UID needs to match (see <A HREF="auagd018.htm#HDRWQ686">Assigning AFS and UNIX UIDs that Match</A>). When automatically allocating an AFS UID, the
+Protection Server increments the <TT>max user id</TT> counter by one and
+assigns the result to the new entry. Use the <B>pts listmax</B>
+command to display the counter, as described in <A HREF="#HDRWQ770">Displaying and Setting the AFS UID and GID Counters</A>.
+<A NAME="IDX7918"></A>
+<P>Do not reuse the AFS UIDs of users who have left your cell permanently or
+machine entries you have removed, even though doing so seems to avoid the
+apparent waste of IDs. When you remove a user or machine entry from the
+Protection Database, the <B>fs listacl</B> command displays the AFS UID
+associated with the former entry, rather than the name. If you then
+assign the AFS UID to a new user or machine, the new user or machine
+automatically inherits permissions that were granted to the previous possessor
+of the ID. To remove obsolete AFS UIDs from ACLs, use the <B>fs
+cleanacl</B> command described in <A HREF="auagd020.htm#HDRWQ794">Removing Obsolete AFS IDs from ACLs</A>.
+<P>In addition to the name and AFS UID, the Protection Server records the
+following values in the indicated fields of a new user or machine&#39;s
+entry. For more information and instructions on displaying an entry,
+see <A HREF="#HDRWQ747">To display a Protection Database entry</A>.
+<UL>
+<P><LI>It sets the <TT>owner</TT> field to the
+<B>system&#58;administrators</B> group, indicating that the group&#39;s
+members administer the entry.
+<P><LI>It sets the <TT>creator</TT> field to the username of the user who
+issued the <B>pts createuser</B> command (or the <B>uss add</B> or
+<B>uss bulk</B> command).
+<P><LI>It sets the <TT>membership</TT> field to <B>0</B> (zero), because
+the new entry does not yet belong to any groups.
+<P><LI>It sets the <TT>flags</TT> field to <B>S----</B>; for
+explanation, see <A HREF="#HDRWQ769">Setting the Privacy Flags on Database Entries</A>.
+<P><LI>It sets the <TT>group quota</TT> field to <B>20</B>, meaning that
+the new user can create 20 groups. This field has no meaning for
+machine entries. For further discussion, see <A HREF="#HDRWQ768">Setting Group-Creation Quota</A>.
+</UL>
+<A NAME="IDX7919"></A>
+<A NAME="IDX7920"></A>
+<P><H3><A NAME="HDRWQ753" HREF="auagd002.htm#ToC_606">To create machine entries in the Protection Database</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts createuser</B> command to create one or more machine
+entries. 
+<PRE>   % <B>pts createuser -name</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> 
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>cu
+</B><DD>Is an alias for <B>createuser</B> (and <B>createu</B> is the
+shortest acceptable abbreviation).
+<P><DT><B>-name
+</B><DD>Specifies an IP address in dotted-decimal notation for each machine
+entry. An entry can represent a single machine or a set of several
+machines with consecutive IP addresses, using the wildcard notation described
+in the following list. The letters <B>W</B>, <B>X</B>,
+<B>Y</B>, and <B>Z</B> each represent an actual number value in the
+field&#58; 
+<UL>
+<P><LI><B>W.X.Y.Z</B> represents a single machine, for
+example <B>192.12.108.240</B>.
+<P><LI><B>W.X.Y.0</B> matches all machines whose IP
+addresses start with the first three numbers. For example,
+<B>192.12.108.0</B> matches both
+<B>192.12.108.119</B> and
+<B>192.12.108.120</B>, but does not match
+<B>192.12.105.144</B>.
+<P><LI><B>W.X.0.0</B> matches all machines whose IP
+addresses start with the first two numbers. For example, the address
+<B>192.12.0.0</B> matches both
+<B>192.12.106.23</B> and
+<B>192.12.108.120</B>, but does not match
+<B>192.5.30.95</B>.
+<P><LI><B>W.0.0.0</B> matches all machines whose IP
+addresses start with the first number in the specified address. For
+example, the address <B>192.0.0.0</B> matches both
+<B>192.5.30.95</B> and
+<B>192.12.108.120</B>, but does not match
+<B>138.255.63.52</B>.
+</UL>
+<P>Do not define a machine entry with the name
+<B>0.0.0.0</B> to match every machine. The
+<B>system&#58;anyuser</B> group is equivalent.
+</DL>
+</OL>
+<P>The following example creates a machine entry that includes all of the
+machines in the <B>192.12</B> network.
+<PRE>   % <B>pts cu 192.12.0.0</B>
+</PRE>
+<A NAME="IDX7921"></A>
+<A NAME="IDX7922"></A>
+<A NAME="IDX7923"></A>
+<A NAME="IDX7924"></A>
+<A NAME="IDX7925"></A>
+<A NAME="IDX7926"></A>
+<A NAME="IDX7927"></A>
+<A NAME="IDX7928"></A>
+<A NAME="IDX7929"></A>
+<HR><H2><A NAME="HDRWQ754" HREF="auagd002.htm#ToC_607">Creating Groups</A></H2>
+<P>Before you can add members to a group, you must create the
+group entry itself. The instructions in this section explain how to
+create both regular and prefix-less groups&#58;
+<UL>
+<P><LI>A <I>regular group</I>&#39;s name is preceded by a prefix that
+indicates who owns the group, in the following format&#58; 
+<P><VAR>owner_name</VAR><B>&#58;</B><VAR>group_name</VAR> 
+<P>Any user can create a regular group. Group names must always be
+typed in full, so a short <VAR>group_name</VAR> that indicates the group&#39;s
+purpose or its members&#39; common interest is practical. Groups with
+names like <B>terry&#58;1</B> and <B>terry&#58;2</B> are less
+useful because their purpose is unclear. For more details on the
+required format for regular group names, see the instructions in <A HREF="#HDRWQ756">To create groups</A>.
+<P><LI>A <I>prefix-less group</I>, as its name suggests, has only one field
+in its name, equivalent to a regular group&#39;s <VAR>group_name</VAR>
+field. 
+<P>Only members of the <B>system&#58;administrators</B> group can create
+prefix-less groups. For a discussion of their purpose, see <A HREF="#HDRWQ758">Using Prefix-Less Groups</A>.
+</UL>
+<P>By default, the Protection Server assigns the next available AFS GID to a
+new group entry, and it is best to allow this. When automatically
+allocating an AFS GID (which is a negative integer), the Protection Server
+decrements the <TT>max group id</TT> counter by one and assigns the result
+to the new group. Use the <B>pts listmax</B> command to display the
+counter, as described in <A HREF="#HDRWQ770">Displaying and Setting the AFS UID and GID Counters</A>.
+<P>In addition to the name and AFS GID, the Protection Server records the
+following values in the indicated fields of a new group&#39;s entry.
+See <A HREF="#HDRWQ747">To display a Protection Database entry</A>.
+<UL>
+<P><LI>It sets the <TT>owner</TT> field to the issuer of the <B>pts
+creategroup</B> command, or to the user or group specified by the
+<B>-owner</B> argument.
+<P><LI>It sets the <TT>creator</TT> field to the username of the user who
+issued the <B>pts creategroup</B> command.
+<P><LI>It sets the <TT>membership</TT> field to <B>0</B> (zero), because
+the group currently has no members.
+<P><LI>It sets the <TT>flags</TT> field to <B>S-M--</B>; for
+explanation, see <A HREF="#HDRWQ769">Setting the Privacy Flags on Database Entries</A>.
+<P><LI>It sets the <TT>group quota</TT> field to <B>0</B>, because this
+field has no meaning for group entries.
+</UL>
+<A NAME="IDX7930"></A>
+<A NAME="IDX7931"></A>
+<A NAME="IDX7932"></A>
+<A NAME="IDX7933"></A>
+<A NAME="IDX7934"></A>
+<A NAME="IDX7935"></A>
+<A NAME="IDX7936"></A>
+<A NAME="IDX7937"></A>
+<P><H3><A NAME="HDRWQ755" HREF="auagd002.htm#ToC_608">Using Groups Effectively</A></H3>
+<P>The main reason to create groups is to place them on ACLs,
+which enables you to control access for multiple users without having to list
+them individually on the ACL. There are three basic ways to use groups,
+each suited to a different purpose&#58;
+<UL>
+<P><LI><I>Private use</I>&#58; you create a group and place it on the ACL
+of directories you own, without necessarily informing the group&#39;s members
+that they belong to it. Members notice only that they can or cannot
+access the directory in a certain way. You retain sole administrative
+control over the group, since you are the owner.
+<P>The existence of the group and the identity of its members is not
+necessarily secret. Other users can use the <B>fs listacl</B>
+command and see the group&#39;s name on a directory&#39;s ACL, or use the
+<B>pts membership</B> command to list the groups they themselves belong
+to. You can set the group&#39;s third privacy flag to limit who can
+use the <B>pts membership</B> command to list the group&#39;s membership,
+but a member of the <B>system&#58;administrators</B> group always
+can; see <A HREF="#HDRWQ769">Setting the Privacy Flags on Database Entries</A>.
+<P><LI><I>Shared use</I>&#58; you inform the group&#39;s members that they
+belong to the group, but you still remain the sole administrator. For
+example, the manager of a work group can create a group of all the members in
+the work group, and encourage them to use it on the ACLs of directories that
+house information they want to share with other members of the group. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you place a group owned by someone else on your ACLs, the group&#39;s
+owner can change the group&#39;s membership without informing you.
+Someone new can gain or lose access in a way you did not intend and without
+your knowledge.
+</TD></TR></TABLE>
+<P><LI><I>Group use</I>&#58; you create a group and then use the <B>pts
+chown</B> command to assign ownership to a group, either another group or
+the group itself (the latter type is a <I>self-owned</I> group).
+You inform the members of the owning group that they all can administer the
+owned group. 
+<P>The main advantage of designating a group as an owner is that it spreads
+responsibility for administering a group among several people. A single
+person does not have to perform all administrative tasks, and if the original
+creator leaves the group, ownership does not have to be transferred.
+<P>However, everyone in the owner group can make changes that affect others
+negatively, such as adding or removing people from the group inappropriately
+or changing the group&#39;s ownership to themselves exclusively. These
+problems can be particularly sensitive in a self-owned group. Using an
+owner group works best if all the members know and trust each other; it
+is probably wise to keep the number of people in an owner group small.
+</UL>
+<A NAME="IDX7938"></A>
+<A NAME="IDX7939"></A>
+<P><H3><A NAME="HDRWQ756" HREF="auagd002.htm#ToC_609">To create groups</A></H3>
+<OL TYPE=1>
+<P><LI>If creating a prefix-less group, verify that you belong to the
+<B>system&#58;administrators</B> group. If necessary, issue the
+<B>pts membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts creategroup</B> command to create each group.
+All of the groups have the same owner. 
+<PRE>   % <B>pts creategroup  -name</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP> [<B>-owner</B> &lt;<VAR>owner&nbsp;of&nbsp;the&nbsp;group</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>cg
+</B><DD>Is an alias for <B>creategroup</B> (and <B>createg</B> is the
+shortest acceptable abbreviation).
+<A NAME="IDX7940"></A>
+<A NAME="IDX7941"></A>
+<A NAME="IDX7942"></A>
+<P><DT><B>-name
+</B><DD>Names each group to create. The name can include up to 63 lowercase
+letters or numbers, but it is best not to include punctuation characters,
+especially those that have a special meaning to the shell. 
+<P>A prefix-less group name cannot include the colon (<B>&#58;</B>),
+because it is used to separate the two parts of a regular group name&#58;
+<P><VAR>owner_name</VAR><B>&#58;</B><VAR>group_name</VAR>
+<P>The Protection Server requires that the <VAR>owner_name</VAR> prefix of a
+regular group name accurately indicate the group&#39;s owner. By
+default, you are recorded as the owner, and the <VAR>owner_name</VAR> must be
+your AFS username. You can include the <B>-owner</B> argument to
+designate another AFS user, a regular group, or a prefix-less group as the
+owner, providing the required value in the <VAR>owner_name</VAR> field&#58; 
+<UL>
+<P><LI>If the owner is a user, it must be the AFS username.
+<P><LI>If the owner is another regular group, it must match the owning
+group&#39;s <VAR>owner_name</VAR> field. For example, if the owner is
+the group <B>terry&#58;associates</B>, the owner field must be
+<B>terry</B>.
+<P><LI>If the owner is a prefix-less group, it must be the owning group&#39;s
+name.
+</UL>
+<P>(For a discussion of why it is useful for a group to own another group, see
+<A HREF="#HDRWQ755">Using Groups Effectively</A>.)
+<P><DT><B>-owner
+</B><DD>Is optional and designates an owner other than the issuer of the
+command. Specify either an AFS username or the name of a regular or
+prefix-less group that already has at least one member. Do not include
+this argument if you want to make the group self-owned as described in <A HREF="#HDRWQ755">Using Groups Effectively</A>. For instructions, see <A HREF="#HDRWQ757">To create a self-owned group</A>.
+<P>Do not designate a machine as a group&#39;s owner. Because a
+machine cannot authenticate, there is no way for a machine to administer the
+group.
+</DL>
+</OL>
+<A NAME="IDX7943"></A>
+<A NAME="IDX7944"></A>
+<A NAME="IDX7945"></A>
+<P><H3><A NAME="HDRWQ757" HREF="auagd002.htm#ToC_610">To create a self-owned group</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>pts creategroup</B> command to create a group. Do
+not include the <B>-owner</B> argument, because you must own a group to
+reassign ownership. For complete instructions, see <A HREF="#HDRWQ756">To create groups</A>. 
+<PRE>   % <B>pts creategroup</B>  &lt;<VAR>group&nbsp;name</VAR>>
+</PRE>
+<P><LI>Issue the <B>pts adduser</B> command to add one or more members to the
+group (a group must already have at least one member before owning another
+group). For complete instructions, see <A HREF="#HDRWQ759">Adding and Removing Group Members</A>. 
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>
+</PRE>
+<P><LI>Issue the <B>pts chown</B> command to assign group ownership to the
+group itself. For complete instructions, see <A HREF="#HDRWQ765">To change a group&#39;s owner</A>.
+<PRE>   % <B>pts chown</B> &lt;<VAR>group&nbsp;name</VAR>> &lt;<VAR>new&nbsp;owner</VAR>>
+</PRE>
+</OL>
+<P><H3><A NAME="HDRWQ758" HREF="auagd002.htm#ToC_611">Using Prefix-Less Groups</A></H3>
+<P>Members of the <B>system&#58;administrators</B> group
+can create prefix-less groups, which are particularly suitable for <I>group
+use</I>, which is described in <A HREF="#HDRWQ755">Using Groups Effectively</A>.
+<P>Suppose, for example, that the manager of the ABC Corporation&#39;s
+Accounting Department, user <B>smith</B>, creates a group that includes
+all of the corporation&#39;s accountants and places the group on the ACLs of
+directories that house departmental records. Using a prefix-less group
+rather than a regular group is appropriate for the following reasons&#58;
+<UL>
+<P><LI>The fact that <B>smith</B> created and owns the group is irrelevant,
+and a regular group must be called <B>smith&#58;acctg</B>. A
+prefix-less name like <B>acctg</B> is more appropriate.
+<P><LI>If another user (say <B>jones</B>) ever replaces <B>smith</B> as
+manager of the Accounting Department, <B>jones</B> needs to become the new
+owner of the group. If the group is a regular one, its
+<VAR>owner_name</VAR> prefix automatically changes to <B>jones</B>, but the
+change in the <VAR>owner_name</VAR> prefix does not propagate to any regular
+groups owned by the group. Someone must use the <B>pts rename</B>
+command to change each one&#39;s <VAR>owner_name</VAR> prefix from
+<B>smith</B> to <B>jones</B>.
+</UL>
+<P>A possible solution is to create an authentication account for a fictional
+user called <B>acctg</B> and make it the owner of regular groups which
+have <B>acctg</B> as their <VAR>owner_name</VAR> prefix. However, if
+the <B>acctg</B> account is also used for other purposes, then the number
+of people who need to know user <B>acctg</B>&#39;s password is possibly
+larger than the number of people who need to administer the groups it
+owns.
+<P>A prefix-less group called <B>acctg</B> solves the problem of
+inappropriate owner names. The groups that it owns have
+<B>acctg</B> as their <VAR>owner_name</VAR> prefix, which more accurately
+reflects their purpose than having the manager&#39;s name there.
+Prefix-less groups are also more accountable than dummy authentication
+accounts. Belonging to the group enables individuals to exercise the
+permissions granted to the group on ACLs, but users continue to perform tasks
+under their own names rather than under the dummy username. Even if the
+group owns itself, only a finite number of people can administer the group
+entry.
+<HR><H2><A NAME="HDRWQ759" HREF="auagd002.htm#ToC_612">Adding and Removing Group Members</A></H2>
+<P>Users and machines can be members of groups; groups
+cannot belong to other groups. Newly created groups have no members at
+all. To add them, use the <B>pts adduser</B> command; to
+remove them, use the <B>pts removeuser</B> command.
+<A NAME="IDX7946"></A>
+<A NAME="IDX7947"></A>
+<A NAME="IDX7948"></A>
+<A NAME="IDX7949"></A>
+<A NAME="IDX7950"></A>
+<A NAME="IDX7951"></A>
+<A NAME="IDX7952"></A>
+<P><H3><A NAME="HDRWQ760" HREF="auagd002.htm#ToC_613">To add users and machines to groups</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group, which enables you to add members to a group regardless of the setting
+of its fourth (<B>a</B>) privacy flag. By default the group&#39;s
+owner also has the necessary privilege. If necessary, issue the
+<B>pts membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts adduser</B> command to add one or more members to one
+or more groups. 
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>ad
+</B><DD>Is the shortest acceptable abbreviation of <B>adduser</B>.
+<P><DT><B>-user
+</B><DD>Specifies each username or machine IP address to add as a member of each
+group named by the <B>-group</B> argument. A group cannot belong to
+another group.
+<P><DT><B><VAR>group name</VAR>
+</B><DD>Names each group to which to add the new members.
+</DL>
+</OL>
+<A NAME="IDX7953"></A>
+<A NAME="IDX7954"></A>
+<A NAME="IDX7955"></A>
+<A NAME="IDX7956"></A>
+<A NAME="IDX7957"></A>
+<A NAME="IDX7958"></A>
+<A NAME="IDX7959"></A>
+<P><H3><A NAME="HDRWQ761" HREF="auagd002.htm#ToC_614">To remove users and machines from groups</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group, which enables you to remove members from a group regardless of the
+setting of its fifth (<B>r</B>) privacy flag. By default the
+group&#39;s owner also has the necessary privilege. If necessary,
+issue the <B>pts membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts removeuser</B> command to remove one or more members
+from one or more groups. 
+<PRE>   % <B>pts removeuser -user</B>  &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP>  <B>-group</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>rem
+</B><DD>Is the shortest acceptable abbreviation of <B>removeuser</B>.
+<P><DT><B>-user
+</B><DD>Specifies each user or machine IP address to remove from each group named
+by the <B>-group</B> argument.
+<P><DT><B>-group
+</B><DD>Names each group from which to remove members.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ762" HREF="auagd002.htm#ToC_615">Deleting Protection Database Entries</A></H2>
+<P>It is best to delete a Protection Database user entry only
+if you are removing the complete user account. Use either the <B>uss
+delete</B> command as described in <A HREF="auagd017.htm#HDRWQ657">Deleting Individual Accounts with the uss delete Command</A>, or the <B>pts delete</B> command as described in <A HREF="auagd018.htm#HDRWQ714">Removing a User Account</A>.
+<P>To remove machine and group entries, use the <B>pts delete</B> command
+as described in this section. The operation has the following
+results&#58;
+<UL>
+<P><LI>When you delete a machine entry, its name (IP address wildcard) is removed
+from groups.
+<P><LI>When you delete a group entry, its AFS GID appears on ACLs instead of the
+name. The group-creation quota of the user who created the group
+increases by one, even if the user no longer owns the group.
+<P>To remove obsolete AFS IDs from ACLs, use the <B>fs cleanacl</B>
+command as described in <A HREF="auagd020.htm#HDRWQ794">Removing Obsolete AFS IDs from ACLs</A>.
+</UL>
+<A NAME="IDX7960"></A>
+<A NAME="IDX7961"></A>
+<A NAME="IDX7962"></A>
+<A NAME="IDX7963"></A>
+<A NAME="IDX7964"></A>
+<A NAME="IDX7965"></A>
+<A NAME="IDX7966"></A>
+<P><H3><A NAME="HDRWQ763" HREF="auagd002.htm#ToC_616">To delete Protection Database entries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B> group
+or own the group you are deleting. If necessary, issue the <B>pts
+membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts delete</B> command to delete one or more entries from
+the Protection Database. 
+<PRE>   % <B>pts delete</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>del
+</B><DD>Is the shortest acceptable abbreviation of <B>delete</B>.
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>Specifies the IP address or AFS UID of each machine or the name or AFS GID
+or each group to remove.
+</DL>
+</OL>
+<A NAME="IDX7967"></A>
+<A NAME="IDX7968"></A>
+<HR><H2><A NAME="HDRWQ764" HREF="auagd002.htm#ToC_617">Changing a Group&#39;s Owner</A></H2>
+<P>For user and machine entries, the Protection Server
+automatically assigns ownership to the <B>system&#58;administrators</B>
+group at creation time, and this cannot be changed. For group entries,
+you can change ownership. This transfers administrative responsibility
+for it to another user or group (for information on group ownership of other
+groups, see <A HREF="#HDRWQ755">Using Groups Effectively</A>).
+<P>When you create a regular group, its <VAR>owner_name</VAR> prefix must
+accurately reflect its owner, as described in <A HREF="#HDRWQ756">To create groups</A>&#58;
+<UL>
+<P><LI>If the owner is a user, <VAR>owner_name</VAR> is the username.
+<P><LI>If the owner is a regular group, <VAR>owner_name</VAR> is the owning
+group&#39;s <VAR>owner_name</VAR> prefix.
+<P><LI>If the owner is a prefix-less group, <VAR>owner_name</VAR> is the owner
+group&#39;s name.
+</UL>
+<P>When you change a regular group&#39;s owner, the Protection Server
+automatically changes its <VAR>owner_name</VAR> prefix appropriately. For
+example, if the user <B>pat</B> becomes the new owner of the group
+<B>terry&#58;friends</B>, its name automatically changes to
+<B>pat&#58;friends</B>, both in the Protection Database and on
+ACLs.
+<P>However, the Protection Server does not automatically change the
+<VAR>owner_name</VAR> prefix of any regular groups that the group owns.
+To continue with the previous example, suppose that the group
+<B>terry&#58;friends</B> owns the group
+<B>terry&#58;pals</B>. When <B>pat</B> becomes the new owner
+of <B>terry&#58;friends</B>, the name <B>terry&#58;pals</B> does
+not change. To change the <VAR>owner_name</VAR> prefix of a regular group
+that is owned by another group (in the example, to change the group&#39;s
+name to <B>pat&#58;pals</B>), use the <B>pts rename</B> command as
+described in <A HREF="#HDRWQ766">Changing a Protection Database Entry&#39;s Name</A>.
+<A NAME="IDX7969"></A>
+<A NAME="IDX7970"></A>
+<A NAME="IDX7971"></A>
+<P><H3><A NAME="HDRWQ765" HREF="auagd002.htm#ToC_618">To change a group&#39;s owner</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B> group
+or own the group for which you are changing the owner. If necessary,
+issue the <B>pts membership</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI><B>(Optional)</B> If you are changing the group&#39;s owner to
+another group (or to itself) and want to retain administrative privilege on
+the owned group, verify that you belong to the new owner group. If
+necessary, issue the <B>pts membership</B> command, which is fully
+described in <A HREF="#HDRWQ748">To display group membership</A>. 
+<PRE>   % <B>pts membership</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>>
+</PRE> 
+<P>Use the <B> pts adduser</B> command to add yourself if necessary, as
+fully described in <A HREF="#HDRWQ760">To add users and machines to groups</A>. 
+<PRE>   % <B>pts adduser</B> &lt;<VAR>user&nbsp;name</VAR>> &lt;<VAR>group&nbsp;name</VAR>>
+</PRE>
+<P><LI>Issue the <B>pts chown</B> command to change the group&#39;s
+owner.
+<PRE>   % <B>pts chown</B> &lt;<VAR>group&nbsp;name</VAR>> &lt;<VAR>new&nbsp;owner</VAR>>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>cho
+</B><DD>Is the shortest acceptable abbreviation of <B>chown</B>.
+<P><DT><B><VAR>group name</VAR>
+</B><DD>Specifies the current name of the group.
+<P><DT><B><VAR>new owner</VAR>
+</B><DD>Names the user or group to become the group&#39;s owner.
+</DL>
+<P><LI><B>(Optional)</B> Issue the <B>pts listowned</B> command to
+display any groups that the group owns. As discussed in the
+introduction to this section, the <B>pts chown</B> command does not
+automatically change the <VAR>owner_name</VAR> prefix of any regular groups that
+a group owns. 
+<PRE>   % <B>pts listowned</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>>
+</PRE> 
+<P>If you want to change their names to match the new owning group, use the
+<B>pts rename</B> command on each one, as described in <A HREF="#HDRWQ767">To change the name of a machine or group entry</A>. 
+<PRE>   % <B>pts rename</B> &lt;<VAR>old&nbsp;name</VAR>> &lt;<VAR>new&nbsp;name</VAR>>
+</PRE>
+</OL>
+<A NAME="IDX7972"></A>
+<A NAME="IDX7973"></A>
+<A NAME="IDX7974"></A>
+<A NAME="IDX7975"></A>
+<A NAME="IDX7976"></A>
+<HR><H2><A NAME="HDRWQ766" HREF="auagd002.htm#ToC_619">Changing a Protection Database Entry&#39;s Name</A></H2>
+<P>To change the name of a Protection Database entry, use the
+<B>pts rename</B> command. It is best to change a user entry&#39;s
+name only when renaming the entire user account, since so many components of
+the account (Authentication Database entry, volume name, home directory mount
+point, and so on) share the name. For instructions, see <A HREF="auagd018.htm#HDRWQ708">Changing Usernames</A>. A machine entry&#39;s name maps to the actual IP
+address of one or more machine, so changing the entry&#39;s name is
+appropriate only if the IP addresses have changed.
+<P>It is likely, then, that most often you need to change group names.
+The following types of name changes are possible&#58;
+<UL>
+<P><LI>Changing a regular group&#39;s name to another regular group name.
+The most common reason for this type of change is that you have used the
+<B>pts chown</B> command to change the owner of the group. That
+operation does not change the <VAR>owner_name</VAR> prefix of a regular group
+owned by the group whose name has been changed. Therefore, you must use
+the <B>pts rename</B> command to change it appropriately. For
+example, when user <B>pat</B> becomes the owner of the
+<B>terry&#58;friends</B> group, its name changes automatically to
+<B>pat&#58;friends</B>, but the name of a group it owns,
+<B>terry&#58;pals</B>, does not change. Use the <B>pts
+rename</B> command to rename <B>terry&#58;pals</B> to
+<B>pat&#58;pals</B>. The Protection Server does not accept
+changes to the <VAR>owner_name</VAR> prefix that do not reflect the true
+ownership (changing <B>terry&#58;pals</B> to <B>smith&#58;pals</B>
+is not possible). 
+<P>You can also use the <B>pts rename</B> command to change the
+<VAR>group_name</VAR> portion of a regular group name, with or without changing
+the <VAR>owner_name</VAR> prefix.
+<P>Both the group&#39;s owner and the members of the
+<B>system&#58;administrators</B> group can change its name to another
+regular group name.
+<P><LI>Changing a regular group&#39;s name to a prefix-less name. If you
+change a group&#39;s name in this way, you must also use the <B>pts
+rename</B> command to change the name of any regular group that the group
+owns. Only members of the <B>system&#58;administrators</B> group
+can make this type of name change.
+<P><LI>Changing a prefix-less name to another prefix-less name. As with
+other name changes, the <VAR>owner_name</VAR> prefix of any regular groups that
+the prefix-less group owns does not change automatically. You must
+issue the <B>pts rename</B> command on them to maintain
+consistency.
+<P>Both the group&#39;s owner and the members of the
+<B>system&#58;administrators</B> group can change its name to another
+prefix-less name.
+<P><LI>Changing a prefix-less name to a regular name. The
+<VAR>owner_name</VAR> prefix on the new name must accurately reflect the
+group&#39;s ownership. As with other name changes, the
+<VAR>owner_name</VAR> prefix of any regular groups that the prefix-less group
+owns does not change automatically. You must issue the <B>pts
+rename</B> command on them to maintain consistency.
+<P>Only members of the <B>system&#58;administrators</B> group can make
+this type of name change.
+</UL>
+<A NAME="IDX7977"></A>
+<A NAME="IDX7978"></A>
+<P><H3><A NAME="HDRWQ767" HREF="auagd002.htm#ToC_620">To change the name of a machine or group entry</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts rename</B> command to change the entry&#39;s
+name. 
+<PRE>   % <B>pts rename</B> &lt;<VAR>old&nbsp;name</VAR>> &lt;<VAR>new&nbsp;name</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>ren
+</B><DD>Is the shortest acceptable abbreviation of <B>rename</B>.
+<P><DT><B><VAR>old name</VAR>
+</B><DD>Specifies the entry&#39;s current name.
+<P><DT><B><VAR>new name</VAR>
+</B><DD>Specifies the new name. If the new name is for a regular group, the
+<VAR>owner_name</VAR> prefix must correctly indicate the owner.
+</DL>
+</OL>
+<A NAME="IDX7979"></A>
+<A NAME="IDX7980"></A>
+<A NAME="IDX7981"></A>
+<A NAME="IDX7982"></A>
+<A NAME="IDX7983"></A>
+<A NAME="IDX7984"></A>
+<HR><H2><A NAME="HDRWQ768" HREF="auagd002.htm#ToC_621">Setting Group-Creation Quota</A></H2>
+<P>To prevent abuse of system resources, the Protection Server
+imposes a <I>group-creation quota</I> that limits how many more groups a
+user can create. When a new user entry is created, the quota is set to
+20, but members of the <B>system&#58;administrators</B> group can use
+the <B>pts setfields</B> command to increase or decrease it at any
+time.
+<P>It is pointless to change group-creation quota for machine or group
+entries. It is not possible to authenticate as a group or machine and
+then create groups.
+<P>To display the group-creation quota, use the <B>pts examine</B> command
+to display a user entry&#39;s <TT>group quota</TT> field, as described in <A HREF="#HDRWQ747">To display a Protection Database entry</A>.
+<A NAME="IDX7985"></A>
+<A NAME="IDX7986"></A>
+<P><H3><A NAME="Header_622" HREF="auagd002.htm#ToC_622">To set group-creation quota</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts setfields</B> command to specify how many more groups
+each of one or more users can create. 
+<PRE>  % <B>pts setfields -nameorid</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  \
+                  <B>-groupquota</B> &lt;<VAR>set&nbsp;limit&nbsp;on&nbsp;group&nbsp;creation</VAR>>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>setf
+</B><DD>Is the shortest acceptable abbreviation of <B>setfields</B>.
+<P><DT><B>-nameorid
+</B><DD>Specifies the name or AFS UID of each user for which to set group-creation
+quota.
+<P><DT><B>-groupquota
+</B><DD>Defines how many groups each user can create in addition to existing
+groups (in other words, groups that already exist do not count against the
+quota). The value you specify overwrites the current value, rather than
+incrementing it.
+</DL>
+</OL>
+<A NAME="IDX7987"></A>
+<A NAME="IDX7988"></A>
+<A NAME="IDX7989"></A>
+<A NAME="IDX7990"></A>
+<A NAME="IDX7991"></A>
+<A NAME="IDX7992"></A>
+<HR><H2><A NAME="HDRWQ769" HREF="auagd002.htm#ToC_623">Setting the Privacy Flags on Database Entries</A></H2>
+<P>Members of the <B>system&#58;administrators</B> group
+can always display and administer Protection Database entries in any way, and
+regular users can display and administer their own entries and any group
+entries they own. The <I>privacy flags</I> on a Protection Database
+entry determine who else can display certain information from the entry, and
+who can add and remove members in a group.
+<P>To display the flags, use the <B>pts examine</B> command as described
+in <A HREF="#HDRWQ747">To display a Protection Database entry</A>. The flags appear in the output&#39;s
+<TT>flags</TT> field. To set the flags, include the
+<B>-access</B> argument to the <B>pts setfields</B> command.
+<P>The five flags always appear, and always must be set, in the following
+order&#58;
+<DL>
+<P><DT><B>s
+</B><DD>Controls who can issue the <B>pts examine</B> command to display the
+entry.
+<P><DT><B>o
+</B><DD>Controls who can issue the <B>pts listowned</B> command to display the
+groups that a user or group owns.
+<P><DT><B>m
+</B><DD>Controls who can issue the <B>pts membership</B> command to display
+the groups a user or machine belongs to, or which users or machines belong to
+a group.
+<P><DT><B>a
+</B><DD>Controls who can issue the <B>pts adduser</B> command to add a user or
+machine to a group. It is meaningful only for groups, but a value must
+always be set for it even on user and machine entries.
+<P><DT><B>r
+</B><DD>Controls who can issue the <B>pts removeuser</B> command to remove a
+user or machine from a group. It is meaningful only for groups, but a
+value must always be set for it even on user and machine entries.
+</DL>
+<P>Each flag can take three possible types of values to enable a different set
+of users to issue the corresponding command&#58;
+<UL>
+<P><LI>A hyphen (<B>-</B>) designates the members of the
+<B>system&#58;administrators</B> group and the entry&#39;s
+owner. For user entries, it designates the user in addition.
+<P><LI>The lowercase version of the letter applies meaningfully to groups only,
+and designates members of the group in addition to the individuals designated
+by the hyphen.
+<P><LI>The uppercase version of the letter designates everyone.
+</UL>
+<P>For example, the flags <TT>SOmar</TT> on a group entry indicate that
+anyone can examine the group&#39;s entry and display the groups that it owns,
+and that only the group&#39;s members can display, add, or remove its
+members.
+<P>The default privacy flags for user and machine entries are
+<TT>S----</TT>, meaning that anyone can display the entry. The
+ability to perform any other functions is restricted to members of the
+<B>system&#58;administrators</B> group and the entry&#39;s owner (as
+well as the user for a user entry).
+<P>The default privacy flags for group entries are <TT>S-M--</TT>, meaning
+that all users can display the entry and the members of the group, but only
+the entry owner and members of the <B>system&#58;administrators</B>
+group can perform other functions.
+<A NAME="IDX7993"></A>
+<A NAME="IDX7994"></A>
+<P><H3><A NAME="Header_624" HREF="auagd002.htm#ToC_624">To set a Protection Database entry&#39;s privacy flags</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts setfields</B> command to set the privacy
+flags. 
+<PRE>   % <B>pts setfields</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP> <B>-access</B> &lt;<VAR>set&nbsp;privacy&nbsp;flags</VAR>>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>setf
+</B><DD>Is the shortest acceptable abbreviation of <B>setfields</B>.
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>Specifies the name or AFS UID of each user, the IP address or AFS UID of
+each machine, or the name or AFS GID of each group for which to set the
+privacy flags.
+<P><DT><B>-access
+</B><DD>Specifies the set of privacy flags to associate with each entry.
+Provide a value for each of the five flags, observing the following
+constraints&#58;
+<UL>
+<P><LI>Provide a value for all five flags, even though the fourth and fifth flags
+are not meaningful for user and machine entries.
+<P><LI>For self-owned groups, the hyphen is equivalent to a lowercase letter,
+because all the members of a self-owned group own it.
+<P><LI>Set the first flag to lowercase <B>s</B> or uppercase <B>S</B>
+only. For user and machine entries, the Protection Server interprets
+the lowercase <B>s</B> as equivalent to the hyphen.
+<P><LI>Set the second flag to the hyphen (<B>-</B>) or uppercase <B>O</B>
+only. For groups, the Protection Server interprets the hyphen as
+equivalent to lowercase <B>o</B> (that is, members of a group can always
+list the groups that it owns).
+<P><LI>Set the third flag to the hyphen (<B>-</B>), lowercase <B>m</B>,
+or uppercase <B>M</B>. For user and machine entries, the lowercase
+<B>m</B> does not have a meaningful interpretation, because they have no
+members.
+<P><LI>Set the fourth flag to the hyphen (<B>-</B>), lowercase <B>a</B>,
+or uppercase <B>A</B>. Although this flag does not have a
+meaningful interpretation for user and machine entries (because they have no
+members), it must be set, preferably to the hyphen.
+<P><LI>Set the fifth flag to the hyphen (<B>-</B>) or lowercase <B>r</B>
+only. Although this flag does not have a meaningful interpretation for
+user and machine entries (because they have no members), it must be set,
+preferably to the hyphen.
+</UL>
+</DL>
+</OL>
+<A NAME="IDX7995"></A>
+<A NAME="IDX7996"></A>
+<A NAME="IDX7997"></A>
+<A NAME="IDX7998"></A>
+<HR><H2><A NAME="HDRWQ770" HREF="auagd002.htm#ToC_625">Displaying and Setting the AFS UID and GID Counters</A></H2>
+<P>When you use the <B>pts createuser</B> command to create
+a user or machine entry in the Protection Database, the Protection Server by
+default automatically allocates an AFS user ID (AFS UID) for it;
+similarly, it allocates an AFS group ID (AFS GID) for each group entry you
+create with the <B>pts creategroup</B> command. It tracks the next
+available AFS UID (which is a positive integer) and AFS GID (which is a
+negative integer) with the <TT>max user id</TT> and <TT>max group id</TT>
+counters, respectively.
+<P>Members of the <B>system&#58;administrators</B> group can include the
+<B>-id</B> argument to either <B>pts</B> creation command to assign a
+specific ID to a new user, machine, or group. It often makes sense to
+assign AFS UIDs explicitly when creating AFS accounts for users with existing
+UNIX accounts, as discussed in <A HREF="auagd017.htm#HDRWQ610">Assigning AFS and UNIX UIDs that Match</A>. It is also useful if you want to establish ranges of
+IDs that correspond to departmental affiliations (for example, assigning AFS
+UIDs from 300 to 399 to members of one department, AFS UIDs from 400 to 499 to
+another department, and so on).
+<P>To display the current value of the counters, use the <B>pts
+listmax</B> command. When you next create a user or machine entry and
+do not specify its AFS UID, the Protection Server increments the <TT>max user
+id</TT> counter by one and assigns that number to the new entry. When
+you create a new group and do not specify its AFS GID, the Protection Server
+decrements the <TT>max group id</TT> counter by one (makes it more
+negative), and assigns that number to the new group.
+<P>You can change the value of either counter, or both, in one of two
+ways&#58;
+<UL>
+<P><LI>Directly, using the <B>pts setmax</B> command.
+<P><LI>Indirectly, by using the <B>-id</B> argument to the <B>pts
+createuser</B> command to assign an AFS UID that is larger than the <TT>max
+user id</TT> counter, or by using the <B>-id</B> to the <B>pts
+creategroup</B> command to assign an AFS GID that is less (more negative)
+than the <TT>max group id</TT> counter. In either case, the
+Protection Server changes the counter to the value of the <B>-id</B>
+argument. The Protection Server does not use the IDs between the
+previous value of the counter and the new one when allocating IDs
+automatically, unless you use the <B>pts setmax</B> command to move the
+counter back to its old value. 
+<P>If the value you specify with the <B>-id</B> argument is less than the
+<TT>max user id</TT> counter or greater (less negative) than the <TT>max
+group id</TT> counter, then the counter does not change.
+</UL>
+<A NAME="IDX7999"></A>
+<A NAME="IDX8000"></A>
+<A NAME="IDX8001"></A>
+<A NAME="IDX8002"></A>
+<A NAME="IDX8003"></A>
+<A NAME="IDX8004"></A>
+<P><H3><A NAME="HDRWQ771" HREF="auagd002.htm#ToC_626">To display the AFS ID counters</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>pts listmax</B> command to display the counters.
+<PRE>   % <B>pts listmax</B>
+</PRE> 
+<P>where <B>listm</B> is an acceptable abbreviation of
+<B>listmax</B>.
+</OL>
+<P>The following example illustrates the output&#39;s format. In this
+case, the next automatically assigned AFS UID is 5439 and AFS GID is
+-469.
+<PRE>   % <B>pts listmax</B>
+   Max user id is 5438 and max group id is -468.
+</PRE>
+<A NAME="IDX8005"></A>
+<A NAME="IDX8006"></A>
+<A NAME="IDX8007"></A>
+<A NAME="IDX8008"></A>
+<A NAME="IDX8009"></A>
+<A NAME="IDX8010"></A>
+<A NAME="IDX8011"></A>
+<A NAME="IDX8012"></A>
+<A NAME="IDX8013"></A>
+<A NAME="IDX8014"></A>
+<A NAME="IDX8015"></A>
+<P><H3><A NAME="Header_627" HREF="auagd002.htm#ToC_627">To set the AFS ID counters</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system&#58;administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ809">To display the members of the system&#58;administrators group</A>. 
+<PRE>   % <B>pts membership system&#58;administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>pts setmax</B> command to set the <TT>max user id</TT>
+counter, the <TT>max group id</TT> counter, or both.
+<PRE>   % <B>pts setmax</B> [<B>-group</B> &lt;<VAR>group&nbsp;max</VAR>>] [<B>-user</B> &lt;<VAR>user&nbsp;max</VAR>>]
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>setm
+</B><DD>Is the shortest acceptable abbreviation of <B>setmax</B>.
+<P><DT><B>-group
+</B><DD>Specifies an integer one greater (less negative) than the AFS GID that the
+Protection Server is to assign to the next group entry. Because the
+value is a negative integer, precede it with a hyphen (<B>-</B>).
+<P><DT><B>-user
+</B><DD>Specifies an integer one less than the AFS UID that the Protection Server
+is to assign to the next user or machine entry.
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd018.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd020.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

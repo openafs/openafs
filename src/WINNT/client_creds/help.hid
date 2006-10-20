@@ -1,0 +1,44 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
+ *** Overview Topics
+ *
+ */
+
+         // The following topics pertain to the Tokens tab
+         //
+#define IDH_AFSCREDS_TAB_TOKENS                    2000
+#define IDH_AFSCREDS_TAB_NOTOKENS_RUNNING          2001
+#define IDH_AFSCREDS_TAB_NOTOKENS_STOPPED          2002
+
+         // The following topic pertains to the Drive Letters tab
+         //
+#define IDH_AFSCREDS_TAB_DRIVES                    2100
+
+         // The following topic pertains to the Advanced tab
+         //
+#define IDH_AFSCREDS_TAB_ADVANCED                  2200
+
+         // The following topic pertains to the Map Drive Letter dialog
+         //
+#define IDH_AFSCREDS_MAPDRIVE                      2300
+
+         // The following topic pertains to the Obtain New Tokens dialog
+         //
+#define IDH_AFSCREDS_NEWTOKENS                     2400
+
+         // The following topics pertain to the startup wizard
+         //
+#define IDH_AFSCREDS_WIZ_START                     2500
+#define IDH_AFSCREDS_WIZ_START_FAIL                2501
+#define IDH_AFSCREDS_WIZ_CREDS                     2502
+#define IDH_AFSCREDS_WIZ_MOUNT                     2503
+#define IDH_AFSCREDS_WIZ_MOUNT_FAIL                2504
+

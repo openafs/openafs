@@ -1,0 +1,773 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS 클라이언트 구성"
+#define AFS_VERINFO_NAME "afs_config"
+#define AFS_VERINFO_FILENAME "afs_config.exe"
+#define AFS_VERINFO_LANG_CODE 0x412
+#define AFS_VERINFO_CHARSET 949
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Korean resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_KOR)
+#ifdef _WIN32
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_GENERAL_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "일반"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "클라이언트 구성",IDC_STATIC,7,7,206,142
+    LTEXT           "셀 이름(&C):",IDC_STATIC,13,23,35,8
+    EDITTEXT        IDC_CELL,59,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    CONTROL         "Windows로 로그인할 때 AFS 토큰 확보(&O)",IDC_LOGON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
+    CONTROL         "작업 표시줄에 AFS 클라이언트 아이콘 표시(&H)",
+                    IDC_TRAYICON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+    LTEXT           "주: 이 제어는 AFS 클라이언트 서비스가 실행 중이지 않으므로 사용할 수 없습니다.",
+                    IDC_WARN,13,124,193,17
+    GROUPBOX        "클라이언트 상태",IDC_STATIC,7,157,206,61
+    LTEXT           "(현재 상태 조회 중)",IDC_STATUS,13,172,193,17
+    PUSHBUTTON      "서비스 시작(&S)",IDC_SERVICE_START,88,195,57,14
+    PUSHBUTTON      "서비스 정지(&T)",IDC_SERVICE_STOP,149,195,57,14
+END
+
+IDD_GENERAL_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "일반"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "클라이언트 구성",IDC_STATIC,7,7,231,131
+    LTEXT           "게이트웨이(&G):",IDC_STATIC,13,28,37,8
+    EDITTEXT        IDC_GATEWAY,57,27,110,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "지금 연결(&N)",IDC_GATEWAY_CONN,172,27,57,14
+    LTEXT           "셀 이름(&C):",IDC_STATIC,13,51,35,8
+    EDITTEXT        IDC_CELL,57,49,110,13,ES_LOWERCASE | ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+    CONTROL         "Windows로 로그인할 때 AFS 토큰 확보(&O)",IDC_LOGON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,193,10
+    CONTROL         "작업 표시줄에 AFS 라이트 아이콘 표시(&H)",IDC_TRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,193,10
+    LTEXT           "주: 이 제어는 AFS 라이트가 AFS 게이트웨이에 접속되지 않았으므로 사용할 수 없습니다.",
+                    IDC_WARN,13,114,219,17
+END
+
+IDD_PREFS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "환경 설정"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "서버 환경 설정",-1,7,7,206,211
+    CONTROL         "파일 서버 환경 설정 표시(&F)",IDC_SHOW_FS,"Button",
+                    BS_AUTORADIOBUTTON,13,21,193,10
+    CONTROL         "볼륨 위치 서버 환경 설정 표시(&V)",IDC_SHOW_VLS,"Button",
+                    BS_AUTORADIOBUTTON,13,34,193,10
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+                    49,173,120
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,84,172,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,137,172,50,14
+    PUSHBUTTON      "^",IDC_UP,191,97,15,14,BS_ICON
+    PUSHBUTTON      "v",IDC_DOWN,191,117,15,14,BS_ICON
+    PUSHBUTTON      "반입(&I)...",IDC_IMPORT,13,172,50,14
+    LTEXT           "주: 이 제어는 AFS 클라이언트 서비스가 실행 중이지 않으므로 사용할 수 없습니다.",
+                    IDC_WARN,13,193,193,17
+END
+
+IDD_HOSTS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 셀"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "AFS 셀",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    21,193,168
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,51,195,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,104,195,50,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,157,195,50,14
+END
+
+IDD_DRIVES_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "드라이브 이름"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "드라이브 이름",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,193,135
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,75,171,42,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,120,171,42,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,165,171,42,14
+    LTEXT           "AFS 경로에 맵핑된 드라이브 이름:",IDC_STATIC,13,21,193,
+                    8
+    PUSHBUTTON      "고급(&V)...",IDC_ADVANCED,13,171,53,14
+    LTEXT           "주: 이 제어는 AFS 클라이언트 서비스가 실행 중이지 않으므로 사용할 수 없습니다.",
+                    IDC_WARN,13,193,193,17
+END
+
+IDD_ADVANCED_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "고급"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_CACHE_SIZE,88,21,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CACHE_PATH,88,41,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CHUNK_SIZE,88,62,32,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_STAT_ENTRIES,88,83,32,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "로그온(&L)...",IDC_LOGON_PARMS,13,129,59,14
+    PUSHBUTTON      "전역 드라이브(&G)",IDC_AUTOMAP_PARMS,13,175,58,14
+    PUSHBUTTON      "기타(&M)...",IDC_MISC_PARMS,13,197,58,14
+    GROUPBOX        "캐쉬 구성",IDC_STATIC,7,7,206,100
+    LTEXT           "캐쉬 크기(&C):",IDC_STATIC,13,23,71,8
+    LTEXT           "KB",IDC_INUSE,135,23,35,8
+    LTEXT           "청크 크기(&H):",IDC_STATIC,13,64,71,8
+    LTEXT           "KB",IDC_STATIC,134,64,33,8
+    LTEXT           "캐쉬 상태(&S):",IDC_STATIC,13,85,71,8
+    LTEXT           "입력 항목",IDC_STATIC,136,85,68,8
+    LTEXT           "캐쉬 경로(&P):",IDC_STATIC,13,44,71,8
+    GROUPBOX        "추가 고급 매개변수",IDC_STATIC,7,114,206,104
+    LTEXT           "전역 AFS 드라이브 맵핑 작성",IDC_STATIC,80,175,132,10
+    LTEXT           "통합 로그온 설정값 조정",IDC_STATIC,80,131,133,10
+    LTEXT           "기타 여러 가지 고급 매개변수 설정",IDC_STATIC,80,199,
+                    132,10
+    PUSHBUTTON      "진단(&D)...",IDC_DIAG_PARMS,13,151,58,14
+    LTEXT           "디버깅을 위한 설정값 사용 가능",IDC_STATIC,80,153,132,
+                    10
+END
+
+IDD_PREFS_EDIT DIALOG DISCARDABLE  0, 0, 259, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "서버 우선 순위 지정"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "이 AFS 셀에 있는 서버에 대해 우선 순위를 지정할 수 있습니다. AFS에서 데이터를 찾을 때 순위가 낮은 서버를 먼저 조회합니다.",
+                    IDC_STATIC,7,7,245,17
+    LTEXT           "서버(&S):",IDC_STATIC,34,38,24,8
+    LTEXT           "순위(&R):",IDC_STATIC,34,54,20,8
+    EDITTEXT        IDC_SERVER,67,35,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RANK,67,51,36,13,ES_AUTOHSCROLL
+    LTEXT           "팁: 반입 단추를 사용하여 서버 및 그 순위를 지정하는 텍스트 파일을 읽어 여러 서버의 순위를 한 번에 지정할 수 있습니다.",
+                    IDC_STATIC,15,76,230,18
+    PUSHBUTTON      "취소",IDCANCEL,140,114,50,14
+    PUSHBUTTON      "확인",IDOK,86,114,50,14
+    PUSHBUTTON      "도움말",9,202,114,50,14
+END
+
+IDD_CELL_EDIT DIALOG DISCARDABLE  0, 0, 244, 223
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "셀 특성"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "이 페이지의 정보는 AFS에 지정된 셀에 접속하는 방법을 알려줍니다.",
+                    IDC_STATIC,4,4,226,8
+    LTEXT           "AFS 셀(&A):",IDC_STATIC,4,24,30,8
+    EDITTEXT        IDC_CELL,50,22,105,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    LTEXT           "설명(&D):",IDC_STATIC,4,41,38,8
+    EDITTEXT        IDC_COMMENT,50,39,181,13,ES_AUTOHSCROLL
+    GROUPBOX        "서버",IDC_STATIC,4,61,236,158
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+                    76,217,117
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,75,198,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,128,198,50,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,181,198,50,14
+END
+
+IDD_SERVER_EDIT DIALOG DISCARDABLE  0, 0, 251, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "서버 추가/편집"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "지정된 셀에 볼륨 위치 서버의 이름을 입력하십시오.",
+                    IDC_STATIC,7,7,237,8
+    LTEXT           "서버 이름(&N):",IDC_STATIC,7,31,44,8
+    EDITTEXT        IDC_COMMENT,63,29,170,13,ES_AUTOHSCROLL
+    LTEXT           "서버 주소(&A):",IDC_STATIC,7,52,51,8
+    CONTROL         "특정 주소 사용(&U):",IDC_ADDR_SPECIFIC,"Button",
+                    BS_AUTORADIOBUTTON,63,52,83,10
+    CONTROL         "자동으로 주소 조회(&L)",IDC_ADDR_LOOKUP,"Button",
+                    BS_AUTORADIOBUTTON,63,66,111,10
+    CONTROL         "",IDC_SERVER,"SockAddr",WS_BORDER | WS_TABSTOP,151,51,
+                    65,13
+    PUSHBUTTON      "취소",IDCANCEL,140,91,50,14
+    PUSHBUTTON      "확인",IDOK,86,91,50,14
+    PUSHBUTTON      "도움말",9,194,91,50,14
+END
+
+IDD_DRIVE_EDIT DIALOG DISCARDABLE  0, 0, 323, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "드라이브 이름 맵핑"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "컴퓨터의 드라이브 이름을 AFS에 있는 경로로 맵핑할 수 있습니다.",
+                    IDC_STATIC,7,7,309,8
+    LTEXT           "예를 들어, 드라이브 Q를 /afs/acme.com/usr/bob으로 맵핑하면, AFS에서 /afs/acme.com/usr/bob/*으로 사용가능한 파일을 컴퓨터의 Q:\\ 디렉토리에서 볼 수 있습니다.",
+                    IDC_STATIC,7,26,309,16
+    LTEXT           "드라이브 이름(&D):",IDC_STATIC,30,59,53,8
+    COMBOBOX        IDC_DRIVE,87,57,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS 경로(&P):",IDC_STATIC,30,77,33,8
+    EDITTEXT        IDC_PATH,87,75,168,13,ES_AUTOHSCROLL
+    LTEXT           "설명(&E):",IDC_STATIC,29,96,38,8
+    EDITTEXT        IDC_DESC,87,94,72,13,ES_AUTOHSCROLL
+    CONTROL         "로그온할 때마다 이 맵핑 복원(&R)",IDC_PERSISTENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,77,112,188,10
+    PUSHBUTTON      "취소",IDCANCEL,186,164,50,14
+    PUSHBUTTON      "확인",IDOK,132,164,50,14
+    PUSHBUTTON      "도움말",9,266,164,50,14
+END
+
+IDD_SUBMOUNTS DIALOG DISCARDABLE  0, 0, 244, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "서브마운트"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "컴퓨터는 AFS에서 서브마운트-네트워크 공유를 제공할 수 있습니다.",
+                    IDC_STATIC,4,4,215,8
+    GROUPBOX        "서브마운트",IDC_STATIC,4,26,236,168
+    LTEXT           "이 컴퓨터에서는 다음과 같은 서브마운트가 공유됩니다.",
+                    IDC_STATIC,10,42,176,8
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+                    54,223,115
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,78,173,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,131,173,50,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,184,173,50,14
+END
+
+IDD_SUBMOUNT_EDIT DIALOG DISCARDABLE  0, 0, 302, 113
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "서브마운트 지정"
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "서브마운트를 통해 Windows 네트워크을 사용하여 AFS 하위 디렉토리를 공유할 수 있습니다.",
+                    IDC_STATIC,7,7,288,8
+    LTEXT           "서브마운트(&S):",IDC_STATIC,22,27,37,8
+    LTEXT           "AFS 경로(&P):",IDC_STATIC,22,43,33,8
+    EDITTEXT        IDC_SUBMOUNT,66,25,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MAPPING,66,41,181,13,ES_AUTOHSCROLL
+    LTEXT           "프롬프트가 표시되는 위치에 서브마운트의 축약형 이름과 전체 AFS 경로를 입력하십시오. AFS 경로는 \\afs""로 시작할 수 있습니다(그렇지 않으면, \\afs""는 자동으로 추가됩니다).",
+                    IDC_STATIC,13,59,275,27
+    PUSHBUTTON      "취소",IDCANCEL,159,92,50,14
+    PUSHBUTTON      "확인",IDOK,105,92,50,14
+    PUSHBUTTON      "도움말",9,245,92,50,14
+END
+
+IDD_DRIVES_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "드라이브 이름"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "드라이브 이름",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,219,60
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,100,95,42,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,145,95,42,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,190,95,42,14
+    LTEXT           "AFS 경로에 맵핑된 드라이브 이름:",IDC_STATIC,13,21,193,
+                    8
+    LTEXT           "주: 이 제어는 AFS 라이트가 AFS 게이트웨이에 접속되지 않았으므로 사용할 수 없습니다.",
+                    IDC_WARN,13,116,219,17
+END
+
+IDD_HOSTS_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 셀"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "AFS 셀",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    19,218,94
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,75,116,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,128,116,50,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,181,116,50,14
+END
+
+IDD_STARTSTOP DIALOGEX 0, 0, 219, 48
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "AFS 클라이언트 서비스"
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,0,211,44
+    ICON            IDI_MAIN,IDC_STATIC,14,15,20,20
+    LTEXT           "AFS 클라이언트 서비스 시작 중...",IDC_STARTING,46,20,
+                    157,8
+    LTEXT           "AFS 클라이언트 서비스 정지 중...",IDC_STOPPING,46,20,
+                    157,8
+END
+
+IDD_HOSTS_CCENTER DIALOG DISCARDABLE  0, 0, 220, 256
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "일반"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "기본 셀",IDC_STATIC,7,7,206,54
+    LTEXT           "관리할 기본 AFS 셀의 이름을 입력하십시오.",IDC_STATIC,
+                    14,19,164,8
+    LTEXT           "기본 셀:",IDC_STATIC,14,37,39,8
+    EDITTEXT        IDC_CELL,59,35,147,14,ES_LOWERCASE | ES_AUTOHSCROLL
+    GROUPBOX        "AFS 셀",IDC_STATIC,7,69,206,180
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    84,193,137
+    PUSHBUTTON      "추가(&A)...",IDC_ADD,51,227,50,14
+    PUSHBUTTON      "변경(&C)...",IDC_EDIT,104,227,50,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,157,227,50,14
+END
+
+IDD_MISC_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 220, 193
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "기타 구성"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_LAN_ADAPTER,90,20,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROBE,90,40,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THREADS,90,60,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DAEMONS,90,80,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SYSNAME,90,100,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOUNTDIR,90,120,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ROOTVOLUME,90,140,83,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "확인",IDOK,55,172,50,14
+    PUSHBUTTON      "취소",IDCANCEL,109,172,50,14
+    PUSHBUTTON      "도움말",9,163,172,50,14
+    GROUPBOX        "매개변수",IDC_STATIC,7,7,206,156
+    LTEXT           "탐침 간격(&P):",IDC_STATIC,15,42,65,8
+    LTEXT           "초",IDC_STATIC,136,42,50,8
+    LTEXT           "백그라운드 스레드(&B):",IDC_STATIC,15,62,71,8
+    LTEXT           "스레드",IDC_STATIC,136,62,49,8
+    LTEXT           "서비스 스레드(&E):",IDC_STATIC,15,82,65,8
+    LTEXT           "스레드",IDC_STATIC,136,82,41,8
+    LTEXT           "시스템 이름(&Y):",IDC_STATIC,15,102,61,8
+    LTEXT           "디렉토리 마운트(&M):",IDC_STATIC,15,122,69,8
+    LTEXT           "LAN 어댑터 번호(&L):",IDC_STATIC,15,22,70,8
+    LTEXT           "루트 볼륨(&R):",IDC_STATIC,15,141,52,8
+END
+
+IDD_DIAG_PARMS DIALOG DISCARDABLE  0, 0, 217, 135
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "진단 구성"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_TRACE_LOG_BUF_SIZE,99,20,34,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "확인",IDOK,52,114,50,14
+    PUSHBUTTON      "취소",IDCANCEL,106,114,50,14
+    PUSHBUTTON      "도움말",9,160,114,50,14
+    GROUPBOX        "추적 로그 매개변수",IDC_STATIC,7,7,203,54
+    LTEXT           "버퍼 크기(&B):",IDC_STATIC,13,22,73,8
+    LTEXT           "KB",IDC_STATIC,145,22,9,8
+    GROUPBOX        "이벤트 로그 매개변수",IDC_STATIC,7,69,203,35
+    COMBOBOX        IDC_TRAP_ON_PANIC,99,39,41,61,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "장애시 트랩(&T):",IDC_STATIC,13,42,50,8
+    LTEXT           "보고서 세션 시동:",IDC_STATIC,13,86,73,8
+    COMBOBOX        IDC_REPORT_SESSION_STARTUPS,99,84,42,64,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_LOGIN_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 186, 92
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "로그인 구성"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_LOGIN_RETRY_INTERVAL,89,18,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_FAIL_SILENTLY,89,39,39,40,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "확인",IDOK,21,71,50,14
+    PUSHBUTTON      "취소",IDCANCEL,75,71,50,14
+    PUSHBUTTON      "도움말",9,129,71,50,14
+    LTEXT           "로그인 재시도 간격(&L):",IDC_STATIC,13,20,66,8
+    GROUPBOX        "매개변수",IDC_STATIC,7,7,172,54
+    LTEXT           "자동 로그인 실패(&F):",IDC_STATIC,13,41,61,8
+END
+
+IDD_GLOBAL_DRIVES DIALOG DISCARDABLE  0, 0, 253, 169
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "전역 드라이브"
+FONT 9, "굴림"
+BEGIN
+    DEFPUSHBUTTON   "닫기",IDOK,141,148,50,14
+    PUSHBUTTON      "도움말",9,196,148,50,14
+    PUSHBUTTON      "추가(&A)",IDC_ADD,108,117,42,14
+    GROUPBOX        "전역으로 대응되는 AFS 드라이브",IDC_STATIC,7,7,239,133
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER | 
+                    WS_TABSTOP | 0x1b,14,20,226,89
+    PUSHBUTTON      "변경(&C)",IDC_CHANGE,153,117,42,14
+    PUSHBUTTON      "제거(&R)",IDC_REMOVE,198,117,42,14
+END
+
+IDD_GLOBAL_DRIVES_ADDEDIT DIALOG DISCARDABLE  0, 0, 247, 118
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "전역 드라이브 맵"
+FONT 9, "굴림"
+BEGIN
+    COMBOBOX        IDC_DRIVE,78,23,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_PATH,78,41,156,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,78,61,72,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "확인",IDOK,82,96,50,14
+    PUSHBUTTON      "취소",IDCANCEL,136,96,50,14
+    PUSHBUTTON      "도움말",9,190,96,50,14
+    LTEXT           "드라이브 이름(&D):",IDC_STATIC,16,25,49,8
+    LTEXT           "AFS 경로(&P):",IDC_STATIC,16,44,33,8
+    LTEXT           "설명(&E):",IDC_STATIC,17,64,38,8
+    GROUPBOX        "전역 AFS 드라이브",IDC_STATIC,7,7,232,80
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_GENERAL_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GENERAL_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_PREFS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_HOSTS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_DRIVES_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_ADVANCED_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_PREFS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_CELL_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_SERVER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_DRIVE_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 316
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+
+    IDD_SUBMOUNTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_SUBMOUNT_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 295
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 106
+    END
+
+    IDD_DRIVES_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_HOSTS_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 215
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 44
+    END
+
+    IDD_HOSTS_CCENTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 249
+    END
+
+    IDD_MISC_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 186
+    END
+
+    IDD_DIAG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_LOGIN_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_GLOBAL_DRIVES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS 클라이언트 구성""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afs_config.ico"
+IDI_UP                  ICON    DISCARDABLE     "up.ico"
+IDI_DOWN                ICON    DISCARDABLE     "down.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE_NT            "AFS 클라이언트 구성"
+    IDS_TITLE_95            "AFS 라이트 구성"
+    IDS_STATE_STOPPED       "AFS 클라이언트 서비스는 현재 정지되었습니다."
+    IDS_STATE_RUNNING       "AFS 클라이언트 서비스는 정상적으로 실행 중입니다."
+    IDS_STATE_STARTING      "AFS 클라이언트 서비스 시작 중..."
+    IDS_STATE_STOPPING      "AFS 클라이언트 서비스 정지 중..."
+    IDS_STATE_UNKNOWN       "AFS 클라이언트 서비스가 제대로 구성되지 않았습니다."
+    IDS_SERVICE_FAIL_START  "AFS 클라이언트 서비스를 시작할 수 없습니다. 이 조작을 수행할 수 있는 권한이 없습니다.\n\n오류 0x%1."
+    IDS_SERVICE_FAIL_STOP   "AFS 클라이언트 서비스는 정지할 수 없습니다. 이 조작을 수행할 수 있는 권한이 없습니다.\n\n오류 0x%1."
+    IDS_WARN_STOPPED        "AFS 클라이언트 서비스가 실행 중이지 않으므로 사용 불가능한 제어는 변경할 수 없습니다."
+    IDS_WARN_ADMIN          "사용자가 Windows에 관리자로 로그인하지 않았으므로 사용 불가능한 제어는 변경할 수 없습니다."
+    IDS_CELL_UNKNOWN        "(알 수 없음)"
+    IDS_GATEWAY_UNKNOWN     "(알 수 없음)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADLOOKUP_DESC      "Windows가 %1에 대한 네트워크 주소를 찾을 수 없습니다. 호스트 이름을제대로 입력했는지 확인하십시오."
+    IDS_NEWSUB_DESC         "AFS는 네트워크 드라이브에 접속할 때 지정된 설명을 사용할 수 없습니다.\n\n지정된 설명은 이미 다른 AFS 경로에서 사용되었습니다."
+    IDS_BADSUB_DESC         "입력한 드라이브 이름 설명을 사용할 수 없습니다.\n\n드라이브 이름 설명에는 12 문자 이상을 사용할 수 없으며 공백 또는 탭을 포함할 수 없습니다."
+    IDS_BADGATEWAY_DESC     "AFS는 지정된 게이트웨이에 접속할 수 없습니다.\n\n게이트웨이의 이름을 제대로 입력했는지 확인하십시오."
+    IDS_BADGWCELL_DESC      "지정된 게이트웨이에서 사용된 AFS 셀에 대한 구성 정보를 찾을 수 없습니다.\n\n새 셀에 AFS 클라이언트를 구성하려면, AFS 셀 탭을 사용하여 그 셀에 대한 구성 정보를 추가해야 합니다.\n\n셀: %1"
+    IDS_TITLE_CAUTION_NT    "주의 - AFS 클라이언트 구성"
+    IDS_TITLE_CAUTION_95    "주의 - AFS 라이트 구성"
+    IDS_TITLE_ERROR_NT      "오류 - AFS 클라이언트 구성"
+    IDS_TITLE_ERROR_95      "오류 - AFS 라이트 구성"
+    IDS_SHRINKCACHE         "AFS 클라이언트 서비스가 실행되는 동안에는 AFS 클라이언트 캐쉬 크기를 줄일수 없습니다.\n\n캐쉬 크기를 줄이려면 우선 일반 탭의 정지 서비스를 사용하여 AFS 클라이언트서비스를 정지시키십시오."
+    IDS_BADCELL_DESC_CC     "입력한 AFS 셀에 대한 구성 정보를 찾을 수 없습니다.\n\n+"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_DESC           "AFS 클라이언트 서비스를 정지시키면 이 컴퓨터에서 AFS에 저장된 파일에 액세스할 수 없습니다.\n\n서비스를 정지시키시겠습니까?"
+    IDS_PREFCOL_SERVER      "서버"
+    IDS_PREFCOL_RANK        "순위"
+    IDS_TIP_PREFS           "팁: AFS를 통해 파일을 읽을 경우, 순위가 낮은 서버에 우선순위가 주어집니다."
+    IDS_PREFERROR_RESOLVE   "AFS는 %1(이)라고 하는 서버를 찾을 수 없습니다. 서버를 제대로 입력했는지 확인하십시오."
+    IDS_FILTER_TXT          "텍스트 파일(*.TXT);*.TXT;"
+    IDS_HOSTREM_MANY        "선택된 AFS 셀에서 모든 접속 정보를 제거하도록 선택했습니다.\n\n이 입력 항목을 제거하시겠습니까?"
+    IDS_HOSTREM_ONE         "%1 AFS 셀에 대한 모든 접속 정보를 제거하도록 선택했습니다.\n\n이 입력 항목을 제거하시겠습니까?"
+    IDS_CELLEDIT_TITLE      "%1 - 특성"
+    IDS_CELLADD_TITLE       "새로운 셀"
+    IDS_SVRCOL_SERVER       "주소"
+    IDS_SVRCOL_COMMENT      "서버 이름"
+    IDS_TIP_DRIVES          "팁: 맵핑 드라이브 이름 옆의 상자를 체크하여 네트워크 드라이브 맵핑을 연결할 수 있습니다."
+    IDS_MAP_LETTER          "드라이브 *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "%1: 드라이브 \t%2"
+    IDS_ERROR_MAP           "네트워크 드라이브 맵핑 오류"
+    IDS_ERROR_MAP_DESC      "AFS는 네트워크 드라이브를 AFS에 지정된 경로로 맵핑할 수 없습니다. 현재 드라이브 이름이 사용 중이 아닌지 확인하십시오.\n\n오류: 0x%1."
+    IDS_ERROR_UNMAP         "네트워크 드라이브 맵핑 오류"
+    IDS_ERROR_UNMAP_DESC    "AFS는 지정된 네트워크 드라이브를 언맵할 수 없습니다. 현재 드라이브이름이 사용 중이어서는 안됩니다.\n\n오류: 0x%1."
+    IDS_ADDSERVER_TITLE     "서버 추가"
+    IDS_EDITSERVER_TITLE    "서버 편집"
+    IDS_SUBCOL_SHARE        "서브마운트"
+    IDS_SUBCOL_PATH         "AFS 경로"
+    IDS_SUBMOUNTS_TITLE     "서브마운트"
+    IDS_BADCELL_DESC        "입력한 AFS 셀에 대한 구성 정보를 찾을 수 없습니다.\n\n+"
+    IDS_BADCELL_DESC2       "셀 이름을 올바르게 입력했는지 확인하십시오. 새 셀에서 AFS 클라이언트를 구성하려면, AFS 셀 탭을 사용하여 그 셀에 대한 구성 정보를 추가해야 합니다."
+    IDS_KB_IN_USE           "KB(%1 KB 사용중)"
+    IDS_NOGATEWAY_TITLE     "유효하지 않은 AFS 게이트웨이"
+    IDS_NOGATEWAY_DESC      "AFS 라이트는 AFS 게이트웨이가 지정되지 않았으므로 구성될 수 없습니다.\n\n제공된 영역에 AFS 게이트웨이의 이름 또는 IP 주소를 입력하십시오."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOCELL_DESC         "AFS 클라이언트는 AFS 셀이 지정되지 않았으므로 구성될 수 없습니다.\n\n제공된 영역에 AFS 셀의 이름을 입력하십시오."
+    IDS_STOPPED_NOCELL      "AFS 클라이언트 서비스가 시작되지 전에 AFS 셀을 지정해야 합니다."
+    IDS_OKSTOP_DESC         "AFS 클라이언트 서비스가 실행 중이지 않습니다. AFS에 저장된 파일은 AFS 클라이언트 서비스를 시작하기 전에는 이 컴퓨터에서 액세스될 수 없습니다.\n\n지금 서비스를 시작하시겠습니까?"
+    IDS_BADMAP_DESC         "AFS는 경로가 \\afs""로 시작하지 않으므로 드라이브 이름을 지정된 경로에 맵핑할 수 없습니다.\n\n입력한 경로가 \\afs""로 시작하는지 확인하고 다시 시도하십시오."
+    IDS_RESTART_TITLE       "AFS 클라이언트 구성"
+    IDS_RESTART_DESC        "일부 변경 사항은 AFS 클라이언트 서비스가 정지된 후 다시 시작될 때까지는 적용되지 않습니다.\n\n지금 서비스를 정지시킨 후 다시 시작하시겠습니까?"
+    IDS_KB_ONLY             "KB"
+    IDS_FAILCONFIG_AUTHENT  "로그온할 때 인증 사용 여부를 결정하는 중에 오류가 발생했습니다.\n\n오류 %1"
+    IDS_FAILCONFIG_PREFS    "사용자가 지정한 일부 서버 우선순위를 사용할 수 없습니다.\n\n오류 %1"
+    IDS_FAILCONFIG_CACHE    "입력한 AFS 클라이언트 캐쉬 크기를 사용할 수 없습니다.\n\n오류 %1"
+    IDS_FAILCONFIG_PROBE    "입력한 AFS 클라이언트 탐심 간격을 사용할 수 없습니다.\n\n오류 %1"
+    IDS_FAILCONFIG_SYSNAME  "입력한 AFS 클라이언트 시스템 이름을 사용할 수 없습니다.\n\n오류 %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADCELL_DESC_CC2    "셀 이름을 올바르게 입력했는지 확인하십시오. AFS 셀 목록에 맞는 셀 이름이 없으면 추가 단추를 사용하여 셀 입력 항목을 만드십시오."
+    IDS_NOCELL_DESC_CC      "기본 AFS 셀을 지정하지 않아 AFS 제어 센터를 구성할 수 없습니다.\n\n제공된 영역에 AFS 셀 이름을 입력하십시오."
+    IDS_TITLE_CAUTION_CCENTER "주의 - AFS 제어 센터 특성"
+    IDS_TITLE_ERROR_CCENTER "오류 - AFS 제어 센터 특성"
+    IDS_TITLE_CCENTER       "AFS 제어 센터 특성"
+    IDS_YES                 "예"
+    IDS_NO                  "아니오"
+    IDS_DRIVE               "드라이브"
+END
+
+#endif    // Korean resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

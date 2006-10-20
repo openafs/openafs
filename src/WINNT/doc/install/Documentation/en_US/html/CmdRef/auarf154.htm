@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf153.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf155.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_NEWCELL" HREF="auarf002.htm#ToC_168">fs newcell</A></H2>
+<A NAME="IDX4905"></A>
+<A NAME="IDX4906"></A>
+<A NAME="IDX4907"></A>
+<A NAME="IDX4908"></A>
+<A NAME="IDX4909"></A>
+<A NAME="IDX4910"></A>
+<A NAME="IDX4911"></A>
+<A NAME="IDX4912"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Changes the kernel-resident list of a cell&#39;s database server machines
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs newcell -name</B> &lt;<VAR>cell&nbsp;name</VAR>> <B>-servers</B> &lt;<VAR>primary&nbsp;servers</VAR>><SUP>+</SUP>
+           [<B>-linkedcell</B> &lt;<VAR>linked&nbsp;cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>fs n -n</B> &lt;<VAR>cell&nbsp;name</VAR>>  <B>-s</B> &lt;<VAR>primary&nbsp;servers</VAR>><SUP>+</SUP>  [<B>-l</B> &lt;<VAR>linked&nbsp;cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs newcell</B> command removes the Cache Manager&#39;s
+kernel-resident list of database server machines for the cell specified by the
+<B>-name</B> argument and replaces it with the database server machines
+named by the <B>-servers</B> argument.
+<P>Each time the machine reboots, the Cache Manager constructs the kernel list
+of cells and database server machines by reading the local
+<B>/usr/vice/etc/CellServDB</B> file. This command does not change
+the <B>CellServDB</B> file, so any changes made with it persist only until
+the next reboot, unless the issuer also edits the file. The output of
+the <B>fs listcells</B> command reflects changes made with this command,
+because that command consults the kernel-resident list rather than the
+<B>CellServDB</B> file.
+<P>This command can introduce a completely new cell into the kernel-resident
+list, but cannot make a cell inaccessible (it is not possible to remove a
+cell&#39;s entry from the kernel-resident list by providing no values for the
+<B>-server</B> argument). To make a cell inaccessible, remove its
+entry from the <B>CellServDB</B> file and reboot the machine.
+<P>If the <B>-name</B> argument names a DCE cell, then the
+<B>-servers</B> argument names DFS Fileset Location (FL) Server
+machines. The <B>-linkedcell</B> argument specifies the name of the
+AFS cell to link to a DCE cell for the purpose of DFS fileset location.
+Refer to the <I>AFS/DFS Migration Toolkit Administration Guide and
+Reference</I> for more information on linking AFS clients to DCE cells using
+this command or by editing the <B>/usr/vice/etc/CellServDB</B>
+file.
+<P><STRONG>Cautions</STRONG>
+<P>Some commands, such as the <B>klog</B> command, work correctly only
+when the information is accurate for a cell in both the <B>CellServDB</B>
+file and the kernel-resident list.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Specifies the fully-qualified cell name of the AFS or DCE cell.
+<P><DT><B>-servers
+</B><DD>Specifies the fully-qualified hostnames of all AFS database server
+machines or DFS Fileset Location (FL) Server machines for the cell named by
+the <B>-name</B> argument. If FL Server machines are specified, the
+local machine must be running the AFS/DFS Migration Toolkit Protocol
+Translator.
+<P><DT><B>-linkedcell
+</B><DD>Specifies the name of the AFS cell to link to a DCE cell for the purpose
+of DFS fileset location.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example changes the machine&#39;s kernel-resident list of
+database server machines for the ABC Corporation cell to include the machines
+<B>db1.abc.com</B> and
+<B>db2.abc.com</B>&#58;
+<PRE>   % <B>fs newcell -name abc.com -servers db1.abc.com db2.abc.com</B>
+   
+</PRE>
+<P>The following example links the DCE cell
+<B>dce.abc.com</B> to the AFS cell
+<B>abc.com</B>. The AFS client contacts the Fileset Location
+(FL) servers <B>db1.dce.abc.com</B> and
+<B>db2.dce.abc.com</B> for fileset location
+information as it interprets a DFS pathname.
+<PRE>   % <B>fs newcell -name dce.abc.com -servers db1.dce.abc.com db2.dce.abc.com</B>   \
+                <B>-linkedcell abc.com</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<P><A HREF="auarf149.htm#HDRFS_LISTCELLS">fs listcells</A>
+<P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
+<P><I>AFS/DFS Migration Toolkit Administration Installation and
+Configuration Guide</I>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf153.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf155.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPTS_SETMAX" HREF="auarf002.htm#ToC_240">pts setmax</A></H2>
+<A NAME="IDX5409"></A>
+<A NAME="IDX5410"></A>
+<A NAME="IDX5411"></A>
+<A NAME="IDX5412"></A>
+<A NAME="IDX5413"></A>
+<A NAME="IDX5414"></A>
+<A NAME="IDX5415"></A>
+<A NAME="IDX5416"></A>
+<P><STRONG>目的</STRONG>
+<P><TT>max group id</TT> または、
+<TT>max user id</TT> カウンターの値を設定します。
+<P><STRONG>構文</STRONG>
+<PRE><B>pts setmax</B> [<B>-group</B> &lt;<VAR>group max</VAR>>]  [<B>-user</B> &lt;<VAR>user max</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]   
+           [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+    
+<B>pts setm</B> [<B>-g</B> <VAR>group max</VAR>>]  [<B>-u</B> &lt;<VAR>user max</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>pts setmax</B> コマンドは、保護サーバーが新規のユーザー、マシン、またはグループに割り振る ID を記録するカウンターの、一方または両方の値を設定します。ユーザーおよびマシンに割り当てられた、
+AFS ユーザー ID (AFS UID) 用の <TT>max user id</TT> カウンターと、グループに割り当てられた、
+AFS グループ ID (AFS GID) 用の <TT>max group id</TT> カウンターがあります。
+<P>両方のカウンターの現行値を表示する場合には、
+<B>pts listmax</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-group
+</B><DD><TT>max group id</TT> カウンターを設定します。負であることを示すために、値の前にハイフンを付けてください。管理者が次に <B>pts creategroup</B> コマンドを使用して、グループ項目を作成したときに、コマンドに、
+<B>-id</B> 引き数が組み込まれていなければ、保護サーバーは、そのグループに、この値より 1 小さい AFS GID を割り当てます。
+<P><DT><B>-user
+</B><DD><TT>max user id</TT> カウンターを設定します。管理者が次に <B>pts createuser</B> コマンドを使用して、ユーザーまたはマシン項目を作成したときに、コマンドに、
+<B>-id</B> 引き数が組み込まれていなければ、保護サーバーは、そのグループにこの値より 1 大きい AFS UID を割り当てます。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>発行者に、非特権 ID <B>anonymous</B> を割り当てます。詳細については、
+<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-force
+</B><DD>このフラグを使用すると、エラーや他の問題が発生したときに、最初のエラーでコマンドの実行を停止するのではなく、可能な限り継続します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは <TT>max group id</TT> カウンターを -500 に、
+<TT>max user id</TT> カウンターを 1000 に設定しています。
+<PRE>   % <B>pts setmax -group -500 -user 1000</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、<B>system:administrators</B> グループに属している必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf214.htm#HDRPTS_CREATEGROUP">pts creategroup</A>
+<P><A HREF="auarf215.htm#HDRPTS_CREATEUSER">pts createuser</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf225.htm">前ページ</A> &#124; <A HREF="auarf227.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

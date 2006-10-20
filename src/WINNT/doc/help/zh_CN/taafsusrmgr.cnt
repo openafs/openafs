@@ -1,0 +1,66 @@
+:Base TAAFSUSRMGR.HLP
+:Title IBM AFS 帐户管理器
+1 AFS 帐户管理器 
+2 AFS 用户帐户
+3 创建 AFS 帐户
+4 创建 AFS 用户帐户=Creating_User_Entries
+4 创建新的 AFS 用户帐户=To_create_a_single_user_account
+3 口令认证和安全性
+4 改进口令/认证安全性=Improving_Password_Authentication_Security
+4 限制用户连续尝试登录失败的次数=To_limit_the_number_of_consecutive_failed_login_attempts
+4 解锁一个锁定的用户帐户=To_unlock_a_locked_user_account
+4 为一个 AFS 用户帐户设置口令生命期=To_set_password_lifetime
+4 限制用户重用口令=To_restrict_reuse_of_passwords
+3 更改口令
+4 更改口令=Changing_Passwords
+4 更改用户的 AFS 口令=To_change_a_password_in_the_Authentication_Database
+3 除去用户帐户
+4 除去用户帐户=Removing_User_Accounts
+4 删除 AFS 用户帐户=To_remove_a_user_account
+2 AFS 组
+3 关于保护数据库=AFS_Protection_Database
+3 保护数据库条目=Protection_Database_Entries
+3 使用组
+4 有效地使用组=Using_Groups_Effectively
+4 使用无前缀 AFS 组=Using_Prefix_Less_Groups
+4 在组中放置 IP 地址=Placing_Machines_in_Groups
+4 标准系统组=The_Standard_System_Groups
+4 列出有关组的信息
+5 列出有关组的信息=Listing_Information_about_Groups
+5 查看 AFS 组成员的列表=To_list_the_members_of_a_group
+5 查看关于 AFS 组的信息=To_examine_a_Protection_Database_group_entry
+5 查看 AFS 组所有者的组列表=To_list_the_groups_that_a_group_owns
+4 列出有关用户和机器条目的组相关信息
+5 列出有关用户和机器条目的组相关信息=Listing_Group_Related_Information_about_Users_and_Machine_Entries
+5 查看一个 AFS 用户所属的组的列表=To_examine_a_Protection_Database_entry_for_a_user_or_machine
+5 查看一个 AFS 用户拥有的组的列表=To_view_a_list_of_the_groups_that_an_AFS_user_owns
+5 查看 IP 地址帐户拥有的组的列表=To_view_a_list_of_the_groups_that_an_IP_address_account_owns
+5 查看 IP 地址帐户所属的组的列表=To_view_a_list_of_the_groups_to_which_an_IP_address_account_belongs
+4 创建用户条目
+5 创建 AFS 用户帐户=Creating_User_Entries
+5 创建新的 AFS 用户帐户=To_create_a_single_user_account
+4 创建机器条目
+5 创建 IP 地址条目=Creating_Machine_Entries
+5 在 AFS 保护数据库中创建一个 IP 地址帐户=To_create_a_single_machine_entry_in_the_Protection_Database
+4 创建常规组和无前缀组
+5 创建常规和无前缀 AFS 组=Creating_Regular_and_Prefix_Less_Groups
+5 创建新的常规 AFS 组=To_create_a_single_regular_group_entry
+5 创建新的无前缀 AFS 组=To_create_a_single_prefix_less_group_entry
+4 添加成员至组中和从组中删除成员
+5 添加成员至组中和从组中删除成员=Adding_Members_to_Groups_and_Removing_Them_from_Groups
+5 添加用户或 IP 地址至组中=To_add_users_and_machines_to_groups
+5 从 AFS 组中删除用户、IP 地址帐户或组=To_remove_users_and_machines_from_groups
+3 从保护数据库中删除条目
+4 从保护数据库中删除条目=Deleting_Entries_from_the_Protection_Database
+4 删除 AFS 组=To_delete_user_and_group_entries
+3 更改条目的所有者
+4 更改 AFS 组的所有者=Changing_the_Owner_of_an_Entry
+4 更改所有权的名称更改蕴含式=The_Name_Changing_Implications_of_Changing_Ownership
+4 更改 AFS 组的所有者=To_change_the_owner_of_a_group_entry
+3 更改条目的名称
+4 更改 AFS 组名=Changing_the_Name_of_an_Entry
+4 更改 AFS 组的名称=To_change_the_name_of_a_group_entry
+3 更改组创建限额
+4 更改组创建限额=Changing_Group_Creation_Quota
+4 查看 AFS 用户的组创建限额=To_examine_group_creation_quota
+4 更改 AFS 用户的组创建限额=To_change_group_creation_quota

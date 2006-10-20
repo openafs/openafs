@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_ZAP" HREF="auarf002.htm#ToC_294">vos zap</A></H2>
+<A NAME="IDX5863"></A>
+<A NAME="IDX5864"></A>
+<A NAME="IDX5865"></A>
+<A NAME="IDX5866"></A>
+<P><STRONG>目的</STRONG>
+<P>サイトからボリュームを削除します。ただし、VLDB の変更はしません。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos zap -server</B> &lt;<VAR>machine name</VAR>>  <B>-partition</B> &lt;<VAR>partition name</VAR>> 
+        <B>-id</B> &lt;<VAR>volume ID</VAR>>  [<B>-force</B>]  [<B>-backup</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+        [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos z -s</B> &lt;<VAR>machine name</VAR>>  <B>-p</B> &lt;<VAR>partition name</VAR>>  <B>-i</B> &lt;<VAR>volume ID</VAR>>
+      [<B>-f</B>]  [<B>-b</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos zap</B> コマンドは、指定された <VAR>ボリューム ID</VAR> を持つボリュームを、
+<B>-server</B> および <B>-partition</B> 引き数で定義されているサイトから削除します。対応するボリューム・ロケーション・データベース (VLDB) の変更は行いません。ボリュームを削除した結果、VLDB のデータとの矛盾が生じると、警告メッセージが表示されます。
+<P><B>-force</B> フラグを使用すると、"接続" できない場合 (オンラインでない場合) でも、ボリュームを削除することができます。これは、ボリュームがかなり損傷を受けていたり、サルベージ機能が異常終了すると、発生する可能性があります。このフラグを使用しないと、接続不能なボリュームを削除することはできません。「<B>注意</B>」セクションも参照してください。
+<P>指定された読み取り / 書き込みボリュームのバックアップ・バージョンを同時に削除するには、
+<B>-backup</B> フラグを組み込みます。
+<P><STRONG>注意</STRONG>
+<P>標準の方法でボリュームを削除する場合に、このコマンドを使用しないでください。サーバー上のボリュームと VLDB の同期が取れなくなる可能性があります。その場合には、<B>vos remove</B> コマンドを使用してください。
+<P>このコマンドは、ボリュームを削除することが重要であるのに、何らかの理由で (たとえば、ボリューム・ロケーション・サーバーが使用不能であるため)、
+VLDB にアクセスできない状況で有効です。コマンドの発行側は、後で <B>vos remove</B> または <B>vos delentry</B> コマンドを発行して VLDB 項目を削除することができます。また、この項目は、<B>vos syncserv</B> および <B>vos syncvldb</B> コマンドが実行されたときに、自動的に削除されます。
+<P>間違って VLDB に定義された読み取り専用サイトを削除する場合には、実際にコピーがサイトに配布される前に、<B>vos remsite</B> コマンドを使用します。サイトのボリュームに影響を与えないように VLDB 項目全体を削除する場合には、<B>vos delentry</B> コマンドを使用してください。
+<P>ボリュームがオンラインの場合には、
+<B>-force</B> フラグを使用しないでください。このフラグは、<B>vos remove</B> または <B>vos zap</B> コマンドでボリュームを削除しようとして失敗したか、あるいはボリュームに全く接続できない場合だけにしてください。
+<B> -force</B> フラグを使用したら、ボリュームの VLDB 項目も削除されているかどうか確認してください (必要であれば、<B>vos delentry</B> コマンドを発行してください。)
+<P><B>-force</B> フラグを追加すると、ボリューム・サーバーがボリュームの追跡用の区画のすべての i ノードを検査するので、コマンドが非常に長く (およそ同じ区画の salvage と同じくらい)なります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>ボリュームを削除するファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-partition
+</B><DD>ボリュームを削除する区画 (<B>-server</B> 引き数に指定されたファイル・サーバー・マシン上の) を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-id
+</B><DD>削除するボリュームのボリューム IDを指定します。これは、3 つのタイプのいずれかになります。ボリューム名は指定できません。
+<P><DT><B>-force
+</B><DD>ボリュームを削除します (接続されていないボリュームも削除します)。前にこのフラグを付けず <B>vos remove</B> コマンド または <B>vos</B> コマンドを発行し、ボリュームを削除しようとして失敗した場合にだけ使用してください。
+<P><DT><B>-backup
+</B><DD><B>-id</B> 引き数で指定された読み取り / 書き込みボリュームのバックアップ・バージョンを削除します。このフラグは、<B> -id</B> 引き数に読み取り専用またはバックアップ・ボリュームが指定されている場合には使用しないでください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、ボリューム ID が 536870988 のボリュームをファイル・サーバー・マシン <B>fs6.abc.com</B>の区画 <B>/vicepf</B> から削除し、VLDB には変更を加えません。
+<PRE>   % <B>vos zap -server fs6.abc.com -partition f -id 536870988</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf259.htm#HDRVOS_DELENTRY">vos delentry</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P><A HREF="auarf272.htm#HDRVOS_REMSITE">vos remsite</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf279.htm">前ページ</A> &#124; <A HREF="auarf281.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

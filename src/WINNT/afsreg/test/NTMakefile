@@ -1,0 +1,29 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\afsreg\test
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+
+test tests: $(OUT)\getifinfo.exe $(OUT)\regman.exe $(OUT)\dupkey.exe
+
+$(OUT)\getifinfo.exe: $(OUT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
+	$(EXECONLINK)
+
+$(OUT)\dupkey.exe: $(OUT)\dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
+	$(EXECONLINK)
+
+REGMAN_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib
+
+$(OUT)\regman.exe: $(OUT)\regman.obj $(REGMAN_EXELIBS)
+	$(EXECONLINK)
+
+mkdir:
+	

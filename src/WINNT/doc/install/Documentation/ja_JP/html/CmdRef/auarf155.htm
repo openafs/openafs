@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_QUOTA" HREF="auarf002.htm#ToC_169">fs quota</A></H2>
+<A NAME="IDX4913"></A>
+<A NAME="IDX4914"></A>
+<A NAME="IDX4915"></A>
+<A NAME="IDX4916"></A>
+<A NAME="IDX4917"></A>
+<P><STRONG>目的</STRONG>
+<P>ディレクトリーまたはファイルを含むボリュームが使用した割り当て量のパーセンテージを表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs quota</B> [<B>-path</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+    
+<B>fs q</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs quota</B> コマンドは、指定された各ディレクトリーまたはファイルを含むボリュームで消費された割り当て量のパーセンテージを表示します。
+<P>常駐するボリュームおよび区画についてより詳しい情報を表示するには、<B>fs examine</B> および <B>fs listquota</B> コマンドを使用してください。
+<P>ボリュームの割り当て量を設定するには、<B>fs setquota</B> または <B>fs setvol</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>その親ボリュームで消費された割り当て量を表示したい各ファイルまたはディレクトリーを指定します。部分的なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、使用されたボリュームの割り当て量のパーセンテージを、次の形式で報告します。
+<PRE>   <VAR>percent</VAR>% of quota used.
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、現行作業ディレクトリーを格納しているボリュームが使用した割り当て量のパーセンテージをリストします。
+<PRE>   %<B> fs quota</B>
+   17% of quota used.
+   
+</PRE>
+<P>次のコマンドは、現行作業ディレクトリーの親ディレクトリーを格納しているボリュームとディレクトリー <B>/afs/abc.com/usr/smith</B> を格納しているボリュームの両方が使用した割り当て量のパーセンテージをリストします。
+<PRE>   % <B>fs quota -path  ..  /afs/abc.com/usr/smith</B>
+   43% of quota used.
+   92% of quota used.
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者は、
+<B>-path</B> 引き数で命名されたファイルまたはディレクトリーを格納するボリュームのルート・ディレクトリーの ACL で、およびパス名でその前に置かれる各ディレクトリーの ACL で、
+<B>l</B> (<B>検索</B>) アクセス権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf138.htm#HDRFS_EXAMINE">fs examine</A>
+<P><A HREF="auarf150.htm#HDRFS_LISTQUOTA">fs listquota</A>
+<P><A HREF="auarf161.htm#HDRFS_SETQUOTA">fs setquota</A>
+<P><A HREF="auarf163.htm#HDRFS_SETVOL">fs setvol</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf154.htm">前ページ</A> &#124; <A HREF="auarf156.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

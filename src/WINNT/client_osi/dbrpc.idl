@@ -1,0 +1,94 @@
+/* Copyright (C) 1994 Cazamar Systems, Inc. */
+
+[
+uuid(7E8952D8-1B50-101B-8952-204C4F4F5020),
+version(1.0)
+]
+interface dbrpc
+{
+
+/* return codes */
+const long OSI_DBRPC_NOENTRY = 1;
+const long OSI_DBRPC_EOF = 2;
+const long OSI_DBRPC_NOFD = 3;
+
+/* parameter for string descr */
+const long OSI_DBRPC_STRLEN = 256;	/* max bytes string */
+
+/* info passed around */
+const long OSI_DBRPC_NUMINTS = 32;	/* # of integers */
+const long OSI_DBRPC_NUMSTRS = 8;	/* # of strings */
+
+/* lock types */
+const long OSI_DBRPC_MUTEXTYPE = 1;	/* a mutex */
+const long OSI_DBRPC_RWLOCKTYPE = 2;	/* a rwlock */
+
+/* getformat region values */
+const long OSI_DBRPC_REGIONSTRING = 0;	/* string index */
+const long OSI_DBRPC_REGIONINT = 1;	/* index in the integer region */
+
+/* error codes */
+const long OSI_DBRPC_OK		= 0;
+const long OSI_DBRPC_DONE	= 1;
+const long OSI_DBRPC_BADFD	= 2;
+
+/* format bits */
+const long OSI_DBRPC_SUPRESSIFZERO	= 1;	/* don't print zeroes */
+const long OSI_DBRPC_HEX		= 2;	/* print #s in hex */
+const long OSI_DBRPC_SIGNED		= 4;	/* print as signed # */
+
+/* describe the format of a statistics entry */
+typedef struct osi_remFormat {
+	char label[32];
+	long format;
+} osi_remFormat_t;
+
+typedef struct osi_remHyper {
+	unsigned long LowPart;
+	unsigned long HighPart;
+} osi_remHyper_t;
+
+typedef char osi_remString_t[OSI_DBRPC_STRLEN];
+
+typedef struct osi_remGetInfoParms {
+	long icount;
+	long scount;
+/*	[length_is (icount)] long idata[OSI_DBRPC_NUMINTS]; */
+	long idata[OSI_DBRPC_NUMINTS];
+	[length_is (scount)] osi_remString_t sdata[OSI_DBRPC_NUMSTRS];
+} osi_remGetInfoParms_t;
+
+void dbrpc_Ping(
+	[in] handle_t handle
+);
+
+void dbrpc_Open(
+	[in] handle_t handle,
+	[in, string] char *namep,
+	[out, ref] osi_remHyper_t *fd,
+	[out, ref] long *code
+);
+
+void dbrpc_GetInfo(
+	[in] handle_t handle,
+	[in, ref] osi_remHyper_t *fd,
+	[out, ref] osi_remGetInfoParms_t *status,
+	[out, ref] long *code
+);
+
+void dbrpc_Close(
+	[in] handle_t handle,
+	[in, ref] osi_remHyper_t *fd,
+	[out, ref] long *code
+);
+
+void dbrpc_GetFormat(
+	[in] handle_t handle,
+	[in, string] char *namep,
+	[in] long region,	/* 0 for string, 1 for integer */
+	[in] long index,
+	[out, ref] osi_remFormat_t *formatp,
+	[out, ref] long *code
+);
+
+}

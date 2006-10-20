@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf076.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf078.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_JOBS" HREF="auarf002.htm#ToC_91">backup jobs</A></H2>
+<A NAME="IDX4332"></A>
+<A NAME="IDX4333"></A>
+<A NAME="IDX4334"></A>
+<A NAME="IDX4335"></A>
+<A NAME="IDX4336"></A>
+<A NAME="IDX4337"></A>
+<A NAME="IDX4338"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Lists pending and running operations in interactive mode
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>jobs</B>  [<B>-help</B>]
+  
+<B>j</B> [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>(backup) jobs</B> command lists the job ID number and status of
+each <B>backup</B> operation running or pending in the current interactive
+session.
+<P>This command can be issued in interactive mode only. If the issuer
+of the <B>backup (interactive)</B> command included the
+<B>-localauth</B> flag, the <B>-cell</B> argument, or both, those
+settings apply to this command also.
+<P>To terminate operations that appear in the output, issue the <B>(backup)
+kill</B> command and identify the operation to cancel with the job ID number
+from this command&#39;s output.
+<P>To check the status of a Tape Coordinator, rather than of a certain
+operation, use the <B>backup status</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output always includes the expiration date and time of the tokens that
+the <B>backup</B> command interpreter is using during the current
+interactive session, in the following format&#58; 
+<PRE>   <VAR>date</VAR>   <VAR>time</VAR>&#58; TOKEN EXPIRATION
+</PRE>
+<P>If the execution date and time specified for a scheduled dump operation is
+later than <I>date time</I>, then its individual line (as described in the
+following paragraphs) appears below this line to indicate that the current
+tokens will not be available to it.
+<P>If the issuer of the <B>backup</B> command included the
+<B>-localauth</B> flag when entering interactive mode, the line instead
+reads as follows&#58;
+<PRE>   &#58;  TOKEN NEVER EXPIRES
+</PRE>
+<P>The entry for a scheduled dump operation has the following format&#58;
+<PRE>   Job <VAR>job_ID</VAR>&#58;  <VAR>timestamp</VAR>&#58;  dump  <VAR>volume_set</VAR>  <VAR>dump_level</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>job_ID</VAR>
+</B><DD>Is a job identification number assigned by the Backup System.
+<P><DT><B><VAR>timestamp</VAR>
+</B><DD>Indicates the date and time the dump operation is to begin, in the format
+<I>month</I>/<I>date</I>/<I>year</I>
+<I>hours</I>&#58;<I>minutes</I> (in 24-hour format)
+<P><DT><B><VAR>volume_set</VAR>
+</B><DD>Indicates the volume set to dump.
+<P><DT><B><VAR>dump_level</VAR>
+</B><DD>Indicates the dump level at which to perform the dump operation.
+</DL>
+<P>The line for a pending or running operation of any other type has the
+following format&#58;
+<PRE>   Job <VAR>job_ID</VAR>&#58;  <VAR>operation</VAR>  <VAR>status</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>job_ID</VAR>
+</B><DD>Is a job identification number assigned by the Backup System.
+<P><DT><B><VAR>operation</VAR>
+</B><DD>Identifies the operation the Tape Coordinator is performing, which is
+initiated by the indicated command&#58;
+<DL>
+<P><DT><B><TT>Dump</TT> <TT>(</TT><VAR>dump name</VAR><TT>)</TT>
+</B><DD>Initiated by the <B>backup dump</B> command. The <VAR>dump
+name</VAR> has the following format&#58; 
+<P><VAR>volume_set_name</VAR><B>.</B><VAR>dump_level_name</VAR>
+<P><DT><B><TT>Restore</TT>
+</B><DD>Initiated by the <B>backup diskrestore</B>, <B>backup
+volrestore</B>, or <B>backup volsetrestore</B> command.
+<P><DT><B><TT>Labeltape</TT> <TT>(</TT><VAR>tape_label</VAR><TT>)</TT>
+</B><DD>Initiated by the <B>backup labeltape</B> command. The
+<VAR>tape_label</VAR> is the name specified by the <B>backup labeltape</B>
+command&#39;s <B>-name</B> or <B>-pname</B> argument.
+<P><DT><B><TT>Scantape</TT>
+</B><DD>Initiated by the <B>backup scantape</B> command.
+<P><DT><B><TT>SaveDb</TT>
+</B><DD>Initiated by the <B>backup savedb</B> command.
+<P><DT><B><TT>RestoreDb</TT>
+</B><DD>Initiated by the <B>backup restoredb</B> command.
+</DL>
+<P><DT><B><VAR>status</VAR>
+</B><DD>Indicates the job&#39;s current status in one of the following
+messages. If no message appears, the job is either still pending or has
+finished.
+<DL>
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, volume</TT> <VAR>volume_name</VAR>
+</B><DD>For a running dump operation, indicates the number of kilobytes copied to
+tape or a backup data file so far, and the volume currently being
+dumped.
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, restore.volume</TT>
+</B><DD>For a running restore operation, indicates the number of kilobytes copied
+into AFS from a tape or a backup data file so far.
+<P><DT><B><TT>[abort requested]</TT>
+</B><DD>The <B>(backup) kill</B> command was issued, but the termination
+signal has yet to reach the Tape Coordinator.
+<P><DT><B><TT>[abort sent]</TT>
+</B><DD>The operation is canceled by the <B>(backup) kill</B> command.
+Once the Backup System removes an operation from the queue or stops it from
+running, it no longer appears at all in the output from the command.
+<P><DT><B><TT>[butc contact lost]</TT>
+</B><DD>The <B>backup</B> command interpreter cannot reach the Tape
+Coordinator. The message can mean either that the Tape Coordinator
+handling the operation was terminated or failed while the operation was
+running, or that the connection to the Tape Coordinator timed out.
+<P><DT><B><TT>[done]</TT>
+</B><DD>The Tape Coordinator has finished the operation.
+<P><DT><B><TT>[drive wait]</TT>
+</B><DD>The operation is waiting for the specified tape drive to become
+free.
+<P><DT><B><TT>[operator wait]</TT>
+</B><DD>The Tape Coordinator is waiting for the backup operator to insert a tape
+in the drive.
+</DL>
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example shows that two restore operations and one dump
+operation are running (presumably on different Tape Coordinators) and that the
+<B>backup</B> command interpreter&#39;s tokens expire on 22 April 1999 at
+10&#58;45 am&#58;
+<PRE>   backup> <B>jobs</B>
+   Job 1&#58; Restore, 1306 Kbytes, restore.volume
+   Job 2&#58; Dump (user.sunday1), 34 Kbytes, volume user.pat.backup
+   Job 3&#58; Restore, 2498 Kbytes, restore.volume
+          04/22/1999 10&#58;45&#58; TOKEN EXPIRATION
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None. However, queuing any operation requires privilege, and it is
+possible to issue this command only within the interactive session in which
+the jobs are queued.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf076.htm#HDRBK_INTERACTIVE">backup interactive</A>
+<P><A HREF="auarf078.htm#HDRBK_KILL">backup kill</A>
+<P><A HREF="auarf083.htm#HDRBK_QUIT">backup quit</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf076.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf078.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

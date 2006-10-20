@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBUSERVER" HREF="auarf002.htm#ToC_139">buserver</A></H2>
+<A NAME="IDX4685"></A>
+<A NAME="IDX4686"></A>
+<A NAME="IDX4687"></A>
+<A NAME="IDX4688"></A>
+<A NAME="IDX4689"></A>
+<A NAME="IDX4690"></A>
+<P><STRONG>目的</STRONG>
+<P>バックアップ・サーバーを初期化します。
+<P><STRONG>構文</STRONG>
+<PRE><B>buserver</B> [<B>-database</B> &lt;<VAR>database directory</VAR>>] 
+         [<B>-cellservdb</B> &lt;<VAR>cell configuration directory</VAR>>]
+         [<B>-resetdb</B>]  [<B>-noauth</B>]  [<B>-smallht</B>] 
+         [<B>-servers</B> &lt;<VAR>list of ubik database servers</VAR>><SUP>+</SUP>]  
+         [<B>-enable_peer_stats</B>]  [<B>-enable_process_stats</B>]
+         [<B>-help</B>]
+</PRE>
+<P>このコマンドは、AFS コマンド・セットの構文規則に準拠していません。コマンド名およびすべてのオプション名は省略せずにすべて指定してください。
+<P><STRONG>構文</STRONG>
+<P><B>buserver</B> コマンドは、バックアップ・サーバーを初期化します。バックアップ・サーバーは、データベース・サーバー・マシン上で実行され、バックアップ・データベースを保守します。規約構成ではこのバイナリー・ファイルは、ファイル・サーバー・マシンの <B>/usr/afs/bin</B> ディレクトリーにあります。
+<P><B>buserver</B> コマンドは、通常はコマンド・シェル・プロンプトでは発行せず、データベース・サーバー・マシンの <B>/usr/afs/local/BosConfig</B> ファイルに <B>bos create</B> コマンドと一緒に記述します。このコマンドをコマンド・シェル・プロンプトで発行する場合には、発行者はローカルのスーパーユーザー <B>root</B>としてログオンしなければなりません。
+<P>バックアップ・サーバーは初期化時に、バックアップ・データベースを構成する <B>bdb.DB0</B> と <B> bdb.DBSYS1</B> という 2 つのファイルを <B>/usr/afs/db</B> ディレクトリーに作成します (これらのファイルが存在しない場合)。バックアップ・データベースには、ボリューム・セットおよび項目ダンプ階層、磁気テープ・コーディネーター、および以前に実行したダンプ・セットについての情報があります。データベースを管理するには、<B>backup</B> セットのコマンドを使用してください。
+<P>バックアップ・サーバーは、<B>/usr/afs/logs/BackupLog</B> ファイルに活動の追跡を記録します。<B>bos getlog</B> コマンドを使用して、ファイルの内容を表示します。
+<P><STRONG>注意</STRONG>
+<P><B>buserver</B> プロセスは、ポート <B>7021</B> を予約しています。<B>buserver</B> プロセスの実行中に、別のプロセスがこのポートを予約しようとすると、予期しない振る舞いが発生することがあります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-database
+</B><DD>バックアップ・データベース・ファイルの代替ディレクトリーのパス名を指定します。最後にスラッシュ (<B>/</B>) を付けてください。この引き数を使用しないと、デフォルトで
+<B>/usr/afs/db</B> ディレクトリーが使用されます。
+<P><DT><B>-cellservdb
+</B><DD>バックアップ・サーバーが <B>CellServDB</B> ファイルの代替バージョンがあるディレクトリーのパス名を指定します。標準の <B>/usr/afs/etc/CellServDB</B> ファイル (バックアップ・サーバーは、この引き数が指定されていない場合にこのファイルを参照します) にリストされている多くのマシンに該当しない、セルのデータベース・サーバー・マシンのサブセットでバックアップ・サーバーを実行する場合に、正常に動作するためにはこの引き数が必須です。他の環境で使うのは適切ではありません。
+<P><DT><B>-resetdb
+</B><DD><B>/usr/afs/db</B> ディレクトリーのバックアップ・データベース・ファイルにある情報をすべて削除します。長さがゼロの情報は削除されません。バックアップ操作員は、バックアップ操作を実行する前に、データベースの構成項目 (ボリューム・セットの場合にはダンプ階層など) を再度作成しなければなりません。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者とバックアップ・サーバーの間に認証されていない接続を確立します。バックアップ・サーバーは、コマンドの発行者を非特権ユーザー <B>anonymous</B> として扱います。これは、データベース・サーバー・マシンの許可検査が使用不可の場合に有効です。通常の環境では、バックアップ・サーバーは、バックアップ・データベースに影響を及ぼしたり、アクセスするコマンドを特権ユーザーだけに許可します。<B>-noauth</B> フラグが指定されていても、このようなアクションの実行は許可しません。
+<P><DT><B>-smallht
+</B><DD>このフラグを使用すると、バックアップ・サーバーは、バックアップ・データベースに小規模な内部ハッシュ・テーブルを使用します。これにより、メモリー要件は削減できますが、データのアクセスに時間がかかります。
+<P><DT><B>-servers
+</B><DD>バックアップ・サーバーを開始するデータベース・サーバー・マシンを指定します。サブセットのデータベース・サーバー・マシン上でバックアップ・サーバーを実行する場合には、この引き数を使用してください。このサブセットは、
+<B>/usr/afs/etc/CellServDB</B> ファイルにリストされたマシンとは異なります。
+<P><DT><B>-enable_peer_stats
+</B><DD>Rx 統計集合を活動化し、それらを保管するためのメモリーを割り振ります。別のマシンの特定の UDP ポートとの接続ごとに、送信または受信された RPC の各タイプ (FetchFile、
+GetStatus など) のレコードが別々に保持されています。レコードを表示したり、ほかの方法でレコードにアクセスするには、
+Rx Monitoring API を使用します。
+<P><DT><B>-enable_process_stats
+</B><DD>Rx 統計集合を活動化し、それらを保管するためのメモリーを割り振ります。送信または受信された RPC の各タイプ (FetchFile、GetStatus など) ごとに、レコードが別々に保持され、別のマシンへのすべての接続が集計されます。レコードを表示したり、ほかの方法でレコードにアクセスするには、
+Rx Monitoring API を使用します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、<B>bos create</B> コマンドを使用して、
+<B>buserver</B> プロセスをファイル・サーバー・マシン
+<B> fs3.abc.com</B> 上に作成しています。ここでは、読みやすくするために 2 行で表示されています。
+<PRE>   % <B>bos create -server fs3.abc.com -instance buserver</B>  \
+                <B>-type simple -cmd /usr/afs/bin/buserver</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>シェル・プロンプトでコマンドを発行するためには、発行者はファイルのサーバー・マシン上でローカル・スーパーユーザー <B>root</B> としてログインする必要があります。通常は、<B>bos create</B> コマンドを発行して、プロセスの作成および開始を行います。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf014.htm#HDRBACKUPLOG">BackupLog</A>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (サーバー・バージョン)</A>
+<P><A HREF="auarf042.htm#HDRBDBDB">bdb.DB0 および bdb.DBSYS1</A>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf124.htm">前ページ</A> &#124; <A HREF="auarf126.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

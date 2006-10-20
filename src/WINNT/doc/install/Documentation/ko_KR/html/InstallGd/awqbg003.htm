@@ -1,0 +1,1111 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>빠른 시작</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- c:\IDWBWIN\TEMP\idwt1048\AWQBG000.SCR converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 29 Dec 1999 at       -->
+<!-- 17:04:57                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=euc-kr">
+<META HTTP-EQUIV="updated" CONTENT="Wed, 29 Dec 1999 17:04:52">
+<META HTTP-EQUIV="review" CONTENT="Fri, 29 Dec 2000 17:04:52">
+<META HTTP-EQUIV="expires" CONTENT="Sat, 29 Dec 2001 17:04:52">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>빠른 시작</H1>
+<HR><H1><A NAME="Header_1" HREF="awqbg002.htm#ToC_1">IBM Windows용 AFS 기본 안내서</A></H1>
+<HR><H2><A NAME="Header_2" HREF="awqbg002.htm#ToC_2">소개</A></H2>
+<A NAME="IDX178"></A>
+<A NAME="IDX179"></A>
+<P>AFS<SUP><SUP>(R)</SUP></SUP>는 파일 공간 공유를 통해 일관된
+파일 액세스를 제공하는 기업용 파일 시스템입니다. AFS는 여러 개의 파일 서버
+기계로 구성된 로컬 파일 시스템들을 결합하여 기계 경계와 독립적인 단일한
+파일 공간을 제시합니다. 파일이 컴퓨터 네트워크의 서로 다른 시스템에 저장되어
+있지만 사내 모든 시스템에서 액세스할 수 있습니다.
+<P>IBM Windows용 AFS<SUP><SUP>(R)</SUP></SUP>, 버전 3.6은 AFS의
+전기능을 Microsoft<SUP><SUP>(R)</SUP></SUP> Windows 운영 체제로
+확장한 것입니다.
+<HR><H2><A NAME="Header_3" HREF="awqbg002.htm#ToC_3">문서 개요</A></H2>
+<P>
+<A NAME="IDX180"></A>
+이 문서에는
+설치 전제조건이 요약되어 있고, Windows용 AFS의 설치, 구성 및 설치 해제 방법에
+대한 상세한 안내와 설치 및 설치 해제 중의 시스템 변경사항이 있습니다. 이
+문서에는 Windows용 AFS와 함께 제공되는 문서에 대한 설명도 있습니다.
+<P><H3><A NAME="Header_4" HREF="awqbg002.htm#ToC_4">이 책의 사용자</A></H3>
+<P>
+<A NAME="IDX181"></A>
+이 책은 Windows용 AFS에 포함된
+제품 설치 및 구성 담당자 및 시스템 관리자를 대상으로 합니다. 시스템
+관리자는 전반적인 시스템 관리에 대해 잘 알고 있으며, 설치 및 구성 담당자는
+Microsoft Windows 운영 체제의 기본 용어 및 개념을 잘 알고 있다고 가정합니다.
+<P><H3><A NAME="Header_5" HREF="awqbg002.htm#ToC_5">이 책의 구성</A></H3>
+<P>이 책은 다음과 같이 구성되어 있습니다.
+<UL>
+<LI><A HREF="#HDRINSTALLATION">Windows용 AFS 설치</A>에서는 설치가능한 AFS 구성요소들의 조합에
+대한 설명과, Windows용 AFS에 포함된 제품 설치 절차, 설치 중 시스템 변경
+내용 등에 대해 다룹니다.
+</LI><LI><A HREF="#HDRDOCUMENT">Windows용 AFS 문서</A>에서는 이 문서에 액세스하기 위한 절차와 Windows용
+AFS와 함께 제공되는 다양한 문서 유형이 제공됩니다.
+</LI><LI><A HREF="#HDRCONFIGURE">Windows용 AFS 구성</A>에서는 Windows용 AFS에 포함된 제품의 구성 절차에
+대해 설명합니다.
+</LI><LI><A HREF="#HDRUNINSTALL">Windows용 AFS 설치 해제</A>에서는 설치 해제 전제조건과, Windows용 AFS에
+포함된 제품의 설치 해제 절차에 대해 설명하고, 설치 해제 중 시스템 변경
+내용을 나열합니다.
+</LI></UL>
+<HR><H2><A NAME="HDRINSTALLATION" HREF="awqbg002.htm#ToC_6">Windows용 AFS 설치</A></H2>
+<P>이 절에서는 설치가능한 AFS 구성요소들의 조합에
+대한 설명과, Windows용 AFS 설치 절차, 설치 중 시스템 변경
+내용 등에 대해 다룹니다.
+<P><H3><A NAME="Header_7" HREF="awqbg002.htm#ToC_7">Windows용 AFS 구성요소</A></H3>
+<P>
+<A NAME="IDX182"></A>
+Windows용
+AFS, 버전 3.6에는 다음과 같은 구성요소들이 있습니다.
+<UL>
+<LI>
+<A NAME="IDX183"></A>
+<A NAME="IDX184"></A>
+<A NAME="IDX185"></A>
+<B>AFS 서버</B>
+<P>
+<P>AFS 서버는 AFS 서버 프로세스를 실행하며, 설정을 돕기 위한 AFS 서버 구성
+마법사가 들어 있습니다.
+</LI><LI>
+<A NAME="IDX186"></A>
+<A NAME="IDX187"></A>
+<A NAME="IDX188"></A>
+<B>AFS 제어 센터</B>
+<P>
+<P>AFS 제어 센터에는 AFS 시스템 관리자의 AFS 셀 관리를 돕기 위해 두 개의 강력한
+그래픽 사용자 인터페이스(GUI), 즉 AFS 서버 관리 프로그램과 AFS 계정 관리
+프로그램이 있습니다.
+</LI><LI>
+<A NAME="IDX189"></A>
+<A NAME="IDX190"></A>
+<A NAME="IDX191"></A>
+<B>AFS 클라이언트</B>
+<P>
+<P>AFS 클라이언트는 AFS 파일 공간으로의 직접 액세스를 제공함으로써, 사용자가
+AFS에서 파일 및 디렉토리를 관리할 수 있도록 합니다. AFS 클라이언트에는
+AFS Light 게이트웨이가 있습니다.
+</LI><LI>
+<A NAME="IDX192"></A>
+<A NAME="IDX193"></A>
+<A NAME="IDX194"></A>
+<B>AFS Light</B>
+<P>
+<P>AFS Light는 AFS Light 게이트웨이 시스템을 통해 AFS 파일 공간으로의 액세스를
+제공함으로써, 사용자가 AFS에서 파일 및 디렉토리를 관리할 수 있도록 합니다.
+</LI><LI>
+<A NAME="IDX195"></A>
+<B>AFS 보충 문서</B>
+<P>
+<P>AFS Supplemental Documentation은 보다 상세한 AFS 시스템 관리 정보를
+제공하며, <I>IBM AFS 관리 안내서</I> 및 <I>IBM AFS Administration Reference</I>와 같은 문서가 들어 있습니다.
+</LI></UL>
+<P><H3><A NAME="HDROPTIONS" HREF="awqbg002.htm#ToC_8">설치 옵션</A></H3>
+<P>
+<A NAME="IDX196"></A>
+<A NAME="IDX197"></A>
+<A NAME="IDX198"></A>
+사용자의
+Windows 운영 체제에 따라 다양한 조합으로 Windows용 AFS 구성요소를 설치할
+수 있습니다. Windows용 AFS의 각 구성요소에 대한 구체적인 소프트웨어 요구조건에
+대해서는 <I>Windows용 IBM AFS 릴리스 노트</I>를 참조하십시오.
+AFS 서버를 설치할 경우, AFS 클라이언트, 버전 3.6이 설치되어 있지 않으면 AFS
+클라이언트도 설치해야 합니다. 설치 중인 구성요소에 상관없이
+<A HREF="#HDRHOWTOINSTALL">Windows용 AFS 설치</A>에 설명된 설치 절차를 따르십시오.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">
+<A NAME="IDX199"></A>
+<A NAME="IDX200"></A>
+<A NAME="IDX201"></A>
+<A NAME="IDX202"></A>
+<A NAME="IDX203"></A>
+Windows용 AFS 설정 프로그램을 변경하여 클라이언트 구성요소를 제외한 모든
+구성요소를 사용 불가능하게 할 수 있는 옵션이 있습니다. 이러한 클라이언트
+전용 설정 프로그램으로는 AFS 클라이언트가 아닌 구성요소는 설치하지 못합니다.
+클라이언트 전용 설치를 수행하려면 다른 설치 파일과 같은 디렉토리에
+<B>setup.co</B> 파일을 작성하십시오. 그러면 설정 프로그램이
+AFS 클라이언트만 설치합니다. <B>setup.co</B> 파일 내용과는
+관계 없습니다. 설치 유형에 상관없이 <A HREF="#HDRHOWTOINSTALL">Windows용 AFS 설치</A>에 설명된
+설치 절차를 따르십시오.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_9" HREF="awqbg002.htm#ToC_9">이전 버전에서 업그레이드</A></H3>
+<P>
+<A NAME="IDX204"></A>
+<A NAME="IDX205"></A>
+<A NAME="IDX206"></A>
+Windows NT 시스템에서는 소프트웨어 업그레이드
+목적으로 Windows용 AFS 구성요소를 설치 해제할 필요가 <I>없습니다</I>.
+기존의 소프트웨어를 제거하거나 구성 해제하지 <I>않고</I>
+시스템에 이 릴리스의 Windows용 AFS를 설치할 수 있습니다. Windows용 AFS를
+업그레이드하려면 <A HREF="#HDRHOWTOINSTALL">Windows용 AFS 설치</A>에 설명된 설치 절차를 따르십시오.
+설치 중에 이전 버전의 AFS 구성요소가 업그레이드되고 AFS 구성 정보는
+보존됩니다.
+<P>Windows 95 또는 Windows 98 시스템에서 AFS Light를 업그레이드하기 전에,
+<A HREF="#HDRTOUNINSTALL">Windows용 AFS 설치 해제</A>에 설명된 대로 이전에 설치된 AFS Light 구성요소를
+설치 해제해야 합니다.
+<P>Windows용 AFS 설치 도구를 이용해서는 다른 버전의 AFS 구성요소는 설치할 수
+<I>없습니다</I>. 시스템이 하나 이상의 Windows용 AFS 구성요소가
+설치되어 있는 경우 다른 모든 구성요소를 갱신하지 않고는 한 구성요소를
+갱신할 수 없습니다.
+<P><H3><A NAME="HDRHOWTOINSTALL" HREF="awqbg002.htm#ToC_10">Windows용 AFS 설치</A></H3>
+<A NAME="IDX207"></A>
+<A NAME="IDX208"></A>
+<A NAME="IDX209"></A>
+<A NAME="IDX210"></A>
+<A NAME="IDX211"></A>
+<A NAME="IDX212"></A>
+<A NAME="IDX213"></A>
+<P>Windows용 AFS를 설치하기 전에 설치 전제조건에 대한 자세한 설명은
+<I>Windows용 IBM AFS 릴리스 노트</I>를 참조하십시오.
+다른 Windows 응용 프로그램을 실행하고 있는 경우 Windows용 AFS를 설치하기 전에
+실행 중인 응용 프로그램에서 나가는 것이 좋습니다.
+<OL TYPE=1>
+<LI>Windows용 AFS 설치 디스크를 CD-ROM 드라이브에 넣으십시오.
+</LI><LI>다음 방법 중 하나를 사용하여 Windows용 AFS <B>setup</B> 프로그램을
+실행하십시오.
+<UL>
+<LI><B>시작</B> 메뉴에서 <B>실행</B>을
+선택하십시오. <TT><I>drive</I><B>:\setup</B></TT>을
+입력하십시오. <I>drive</I>에는 사용자의 CD-ROM 드라이브
+이름을 입력하십시오. <B>확인</B>을 누르십시오
+</LI><LI><B>Windows 탐색기</B>에서 CD-ROM 드라이브를 선택하고
+<B>setup.exe</B> 프로그램을 두 번 누르십시오.
+</LI></UL>
+</LI><LI>Welcome 대화 상자가 나타납니다. <B>다음</B> 단추를 눌러
+설치를 계속하십시오.
+</LI><LI>구성요소 선택 대화 상자가 나타납니다.
+<UL>
+<LI><B>구성요소</B> 상자에서 설치 또는 업그레이드하려는 Windows용
+AFS 구성요소를 선택하십시오. Windows 시스템에 설치할 수 있는 다양한 구성요소
+조합에 대해서는 <A HREF="#HDROPTIONS">설치 옵션</A> 내용을 참조하십시오. AFS 서버를 설치하려면
+AFS 클라이언트 버전 3.6이 시스템에 이미 설치되어 있지 않으면 AFS 클라이언트도
+설치(또는 업그레이드)해야 합니다.
+</LI><LI><B>목적지 폴더</B> 상자에는 선택된 구성요소가 설치될 기본
+드라이브 및 디렉토리가 표시됩니다. 기본 드라이브는 Windows가 설치된
+드라이브입니다. 그 드라이브의 기본 디렉토리는
+<B>\Program Files\Ibm\Afs</B>입니다. 다른 드라이브나 디렉토리,
+또는 둘다를 선택하려면 <B>찾아보기</B> 단추를 선택하십시오.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이전 버전의 Windows용 AFS에서 업그레이드하거나 Windows용 AFS를
+다시 설치하는 경우, 선택하는 설치 디렉토리는 이전 버전을 설치한 디렉토리와
+같아야 합니다.
+</TD></TR></TABLE>
+</LI></UL>
+<P>
+<B>다음</B> 단추를 눌러 설치를 계속하십시오.
+</LI><LI>선택한 Windows용 AFS 구성요소의 응용프로그램 파일이 시스템에 설치되어
+있습니다. 설치 프로세스가 완료되면 설정 완료 대화 상자가 나타나며, 이 대화 상자에는
+설치된 AFS 제품을 사용하려면 먼저 시스템을 재시작해야 한다는 메시지가 표시됩니다.
+<B>예, 지금 컴퓨터를 재시작합니다.</B>를 선택한 후
+<B>종료</B> 단추를 누르십시오. 시스템이 종료된 후 다시 시작됩니다.
+<P>
+<P>Windows용 AFS 설치가 완료되었습니다.
+</LI></OL>
+<P><H3><A NAME="Header_11" HREF="awqbg002.htm#ToC_11">시스템 변경사항</A></H3>
+<P>
+<A NAME="IDX214"></A>
+이 절에서는 각 Windows용 AFS 구성요소를 설치할 때의
+변경사항이 나와 있습니다. 이 절의 정보는 기존 설치 설정값을 기초로 한 것입니다.
+<P><H4><A NAME="HDRCLIENTCHANGE">AFS 클라이언트 설치로 인한 시스템 변경사항</A></H4>
+<P>Windows NT용 AFS 클라이언트를 설치하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI>다음 응용 프로그램에서 <B>IBM AFS</B>라는
+<B>시작</B> 메뉴 프로그램 그룹을 작성합니다.
+<P>
+<DL>
+<DD><P><B>문서</B> 프로그램 항목은 Windows용 AFS에 제공된 AFS
+온라인 문서 세트에 대한 액세스를 허용합니다.
+<DD><P><B>클라이언트</B> 프로그램 하위 그룹을 이용하여 AFS 클라이언트
+등록 정보 상자 및 AFS 클라이언트 온라인 도움말에 액세스할 수 있습니다.
+</DL>
+</LI><LI>AFS 메뉴를 Windows NT Explorer의 컨텍스트 메뉴에 추가합니다.
+</LI><LI>문서 디렉토리를 작성하고 <I>Windows용 IBM AFS 빠른 시작</I>과
+<I>Windows용 IBM AFS 릴리스 노트</I> 온라인 문서를
+<B>\Program Files\Ibm\Afs\Documentation</B> 디렉토리에
+둡니다.
+</LI><LI><B>AFS 자격사항</B>을 <B>시작</B> 프로그램
+그룹에 추가합니다. <B>AFS 클라이언트</B> 아이콘이 시동시 작업
+표시줄에 표시됩니다.
+</LI><LI>설정 프로그램이 AFS 이진, 아이콘 및 도움말 파일을 설치하는 설치 디렉토리를
+작성합니다. 기본 디렉토리는 <B>\Program Files\Ibm\Afs\Client\Program</B>
+및 <B>\Program Files\Ibm\Afs\Common</B>입니다.
+</LI><LI>서비스로서 AFS 클라이언트를 등록합니다.
+</LI><LI>AFS 클라이언트 구성 유틸리티를 설치하고
+<B>\</B><I>WindowsDefault</I><B>\system32</B>
+(<I>WindowsDefault</I>는 사용자의 Windows 디렉토리) 디렉토리에
+<B>afs_cpa.cpl</B> 파일을 두어 <B>AFS 클라이언트
+구성</B> 아이콘을 제어판에 추가합니다.
+</LI><LI><B>afsdcell.ini</B> 파일을 Windows 디렉토리 및
+<B>\Program Files\Ibm\Afs\Common</B> 디렉토리에 둡니다. 이전
+버전의 AFS 클라이언트로부터 업그레이드한 경우 Windows 디렉토리에 있는 AFS
+클라이언트 셀 데이터베이스(<B>afsdcell.ini</B>)가 교체되지 않습니다.
+</LI><LI>AFS 클라이언트와 관계된 항목을 추가하여 Windows NT 레지스트리를 수정합니다.
+</LI></UL>
+<P><H4><A NAME="Header_13">AFS Light 설치로 인한 시스템 변경사항</A></H4>
+<P>Windows 95 및 Windows 98용 AFS Light를 설치하면 시스템에 다음과 같은 변경을
+수행합니다.
+<UL>
+<LI>다음과 같은 응용 프로그램에서 <B>IBM AFS</B> 프로그램 그룹을
+작성합니다.
+<P>
+<DL>
+<DD><P><B>문서</B> 프로그램 항목은 Windows용 AFS에 제공된 AFS
+온라인 문서 세트에 대한 액세스를 허용합니다.
+<DD><P><B>Light</B> 프로그램 하위 그룹을 이용하여 AFS Light 등록 정보
+상자 및 AFS Light 온라인 도움말에 액세스할 수 있습니다.
+</DL>
+</LI><LI>AFS 메뉴를 Windows Explorer의 컨텍스트 메뉴에 추가합니다.
+</LI><LI>문서 디렉토리를 작성하고 <I>Windows용 IBM AFS 빠른 시작</I>과
+<I>Windows용 IBM AFS 릴리스 노트</I> 온라인 문서를
+<B>\Program Files\Ibm\Afs\Documentation</B> 디렉토리에
+둡니다.
+</LI><LI>설정 프로그램이 AFS 이진, 아이콘 및 도움말 파일을 설치하는 설치 디렉토리를
+작성합니다. 기본 디렉토리는 <B>\Program Files\Ibm\Afs\Client\Program</B>
+및 <B>\Program Files\Ibm\Afs\Common</B>입니다.
+</LI><LI>AFS Light 구성 유틸리티를 설치하고
+<B>\</B><I>WindowsDefault</I><B>\system</B>
+(<I>WindowsDefault</I>는 사용자의 Windows 디렉토리) 디렉토리에
+<B>afs_cpa.cpl</B> 파일을 두어 <B>AFS Light
+구성</B> 아이콘을 제어판에 추가합니다.
+</LI><LI><B>afsdcell.ini</B> 파일을 Windows 디렉토리 및
+<B>\Program Files\Ibm\Afs\Common</B> 디렉토리에 둡니다.
+</LI><LI>AFS Light와 관계된 항목을 추가하여 Windows 레지스트리를 수정합니다.
+</LI></UL>
+<P><H4><A NAME="Header_14">AFS 서버 설치로 인한 시스템 변경사항</A></H4>
+<P>Windows NT용 AFS 서버를 설치하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI>다음 응용 프로그램에서 <B>IBM AFS</B>라는
+<B>시작</B> 메뉴 프로그램 그룹을 작성합니다.
+<P>
+<DL>
+<DD><P><B>문서</B> 프로그램 항목은 Windows용 AFS에 제공된 AFS
+온라인 문서 세트에 대한 액세스를 허용합니다.
+<DD><P><B>서버</B> 프로그램 하위 그룹을 이용하여 AFS 서버
+Quick-Start 마법사에 액세스할 수 있습니다.
+</DL>
+</LI><LI>문서 디렉토리를 작성하고 <I>Windows용 IBM AFS 빠른 시작</I>과
+<I>Windows용 IBM AFS 릴리스 노트</I> 온라인 문서를
+<B>\Program Files\Ibm\Afs\Documentation</B> 디렉토리에
+둡니다.
+</LI><LI>설정 프로그램이 AFS 이진, 아이콘 및 도움말 파일을 설치하는 설치 디렉토리를
+작성합니다. 기본 디렉토리는 <B>\Program Files\Ibm\Afs\Server\usr\afs\bin</B> 및 <B>\Program
+Files\Ibm\Afs\Common</B>입니다.
+</LI><LI>서비스로서 AFS 서버를 등록합니다.
+</LI><LI>AFS 서버 구성 응용 프로그램을 설치하고
+<B>\</B><I>WindowsDefault</I><B>\system32</B>
+(<I>WindowsDefault</I>는 사용자의 Windows 디렉토리) 디렉토리에
+<B>afsserver.cpl</B> 파일을 두어 <B>AFS 서버
+구성</B> 아이콘을 제어판에 추가합니다.
+</LI><LI>AFS 서버와 관계된 항목을 추가하여 Windows NT 레지스트리를 수정합니다.
+</LI></UL>
+<P><H4><A NAME="Header_15">AFS 제어 센터 설치로 인한 시스템 변경사항</A></H4>
+<P>Windows NT용 AFS 제어 센터를 설치하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI>다음 응용 프로그램에서 <B>IBM AFS</B>라는
+<B>시작</B> 메뉴 프로그램 그룹을 작성합니다.
+<P>
+<DL>
+<DD><P><B>문서</B> 프로그램 항목은 Windows용 AFS에 제공된 AFS
+온라인 문서 세트에 대한 액세스를 허용합니다.
+<DD><P><B>제어 센터</B> 프로그램 하위 그룹을 이용하여 계정 관리
+프로그램 및 서버 관리 프로그램에 액세스할 수 있습니다.
+</DL>
+</LI><LI>문서 디렉토리를 작성하고 <I>Windows용 IBM AFS 빠른 시작</I>과
+<I>Windows용 IBM AFS 릴리스 노트</I> 온라인 문서를
+<B>\Program Files\Ibm\Afs\Documentation</B> 디렉토리에
+둡니다.
+</LI><LI>설정 프로그램이 AFS 이진, 아이콘 및 도움말 파일을 설치하는 설치 디렉토리를
+작성합니다. 기본 디렉토리는 <B>\Program Files\Ibm\Afs\Control Center</B>
+및 <B>\Program Files\Ibm\Afs\Common</B>입니다.
+</LI><LI>AFS 제어 센터 등록 정보 유틸리티를 설치하고
+<B>\</B><I>WindowsDefault</I><B>\system32</B>
+(<I>WindowsDefault</I>는 사용자의 Windows 디렉토리) 디렉토리에
+<B>afs_cpa.cpl</B> 파일을 두어 <B>AFS 제어 센터</B>
+아이콘을 제어판에 추가합니다. 이 아이콘은
+AFS 제어 센터만 시스템에 설치된 경우 제어 센터에 추가됩니다.
+</LI><LI><B>afsdcell.ini</B> 파일을 Windows 디렉토리 및
+<B>\Program Files\Ibm\Afs\Common</B> 디렉토리에 둡니다.
+</LI><LI>AFS 제어 센터와 관계된 항목을 추가하여 Windows NT 레지스트리를 수정합니다.
+</LI></UL>
+<P><H4><A NAME="Header_16">AFS Supplemental Documentation 설치로 인한 시스템 변경사항</A></H4>
+<P>AFS Supplemental Documentation을 설치하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI>프로그램 항목 이름이 <B>문서</B>인
+<B>IBM AFS</B> <B>시작</B> 메뉴 프로그램 그룹을
+작성합니다.
+</LI><LI><I>IBM AFS 관리 안내서</I> 및 <I>IBM AFS Administration Reference</I> 시스템 관리 문서가 시스템에 설치됩니다. 이들 문서는
+<B>\Program Files\Ibm\Afs\Documentation</B>에 있는 온라인 문서
+디렉토리에 추가됩니다. <I>Windows용 IBM AFS 빠른 시작</I>
+및 <I>Windows용 IBM AFS 릴리스 노트</I> 온라인 문서도
+문서 디렉토리에 설치됩니다.
+</LI><LI>AFS Supplemental Documentation과 관계된 항목을 추가하여 Windows NT 레지스트리를
+수정합니다.
+</LI></UL>
+<HR><H2><A NAME="HDRDOCUMENT" HREF="awqbg002.htm#ToC_17">Windows용 AFS 문서</A></H2>
+<P>이 절에서는 Windows용 AFS와 함께 제공된 문서를 나열하고, 이 문서에 액세스하기
+위한 절차에 대해 상세히 설명합니다.
+<P><H3><A NAME="Header_18" HREF="awqbg002.htm#ToC_18">온라인 문서 디렉토리</A></H3>
+<A NAME="IDX215"></A>
+<A NAME="IDX216"></A>
+<P>시스템에 설치되는 구성요소에 관계없이 문서 디렉토리가 작성됩니다. 기본 위치는
+<B>\Program Files\Ibm\Afs\Documentation</B>입니다. 이 디렉토리에는
+<I>Windows용 IBM AFS 빠른 시작</I> 및
+<I>Windows용 IBM AFS 릴리스 노트</I>가 포함됩니다.
+<B>시작</B> 메뉴의
+<B>문서</B> 항목에서 액세스할 수 있는 문서 색인에서 동일한 문서를
+사용할 수 있습니다.
+<P>AFS Supplemental Documentation을 설치하면, 문서 디렉토리에 <I>IBM AFS 관리 안내서</I> 및 <I>IBM AFS Administration Reference</I>
+문서도 포함됩니다. <B>시작</B> 메뉴의
+<B>문서</B> 항목에서 액세스할 수 있는 문서 색인에서 동일한 문서를
+사용할 수 있습니다.
+<P><H4><A NAME="Header_19">온라인 문서 디렉토리 액세스</A></H4>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>프로그램</B>,
+<B>IBM AFS</B>, <B>문서</B>를 차례로 선택하십시오.
+</LI><LI>보고자 하는 문서를 선택하십시오.
+</LI></OL>
+<P><H3><A NAME="Header_20" HREF="awqbg002.htm#ToC_20">CD-ROM 문서 디렉토리</A></H3>
+<A NAME="IDX217"></A>
+<A NAME="IDX218"></A>
+<P>Windows용 AFS CD-ROM에는 문서 디렉토리가 있습니다. 이 디렉토리에는
+<I>Windows용 IBM AFS 빠른 시작</I>,
+<I>Windows용 IBM AFS 릴리스 노트</I>, <I>IBM AFS 관리 안내서</I> 및 <I>IBM AFS Administration Reference</I>
+등의 문서가 들어 있습니다. 문서는 HTML 및 PDF 형식으로 제공됩니다.
+<P><H4><A NAME="Header_21">CD-ROM 문서 디렉토리에 액세스</A></H4>
+<OL TYPE=1>
+<LI>Windows용 AFS CD-ROM을 CD-ROM 드라이브에 넣으십시오.
+</LI><LI>아래 나열된 경로를 사용하십시오. <I>CD</I>는 CD-ROM 드라이브
+이름을 말합니다.
+<UL>
+<LI>HTML 문서의 경우, <I>CD</I><B>:\Documentation\Html</B> 경로를 사용하십시오.
+</LI><LI>PDF 문서의 경우, <I>CD</I><B>:\Documentation\Pdf</B> 경로를 사용하십시오.
+</LI></UL>
+</LI></OL>
+<P><H3><A NAME="Header_22" HREF="awqbg002.htm#ToC_22">온라인 도움말</A></H3>
+<A NAME="IDX219"></A>
+<A NAME="IDX220"></A>
+<P>온라인 도움말은 Windows용 AFS의 각 문서를 따라 설치됩니다. 온라인 도움말 문서에는
+각 구성요소에서 사용가능한 기능에 대한 설명이 있습니다. 대부분의 대화 상자에
+있는 <B>도움말</B> 단추와 <B>도움말</B> 메뉴를
+사용하면 온라인 도움말에 액세스됩니다. 목차 페이지를 검색하고, 주제의 위치를
+찾기 위해 색인을 사용하며, <B>찾기</B> 및 온라인 도움말 탐색
+엔진을 사용하여 주제에 대한 도움말을 얻을 수 있습니다.
+<HR><H2><A NAME="HDRCONFIGURE" HREF="awqbg002.htm#ToC_23">Windows용 AFS 구성</A></H2>
+<P>
+<A NAME="IDX221"></A>
+<A NAME="IDX222"></A>
+이 절에서는 Windows용
+AFS의 각 구성요소에 대한 구성 절차에 대해 상세히 설명합니다. AFS를 사용할 수
+있으려면 시스템에 구성요소를 구성해야 합니다.
+<P><H3><A NAME="HDRCLIENT_CONFIG" HREF="awqbg002.htm#ToC_24">AFS 클라이언트 구성</A></H3>
+<A NAME="IDX223"></A>
+<A NAME="IDX224"></A>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows NT 시스템에서 AFS 서버를 구성하려면 AFS 클라이언트는 구성하지
+않아도 됩니다. AFS 클라이언트는 AFS 서버가 구성될 때 자동으로 구성됩니다.
+또한, 이전 버전의 AFS 클라이언트로부터 이 버전의 Windows용 AFS로 업그레이드하면
+구성 정보가 보존됩니다. AFS 클라이언트를 다시 구성하지 않아도 됩니다.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>설정</B>과
+<B>제어판</B>을 차례로 선택하십시오.
+</LI><LI><B>AFS 클라이언트 구성</B> 아이콘을 두 번 누르십시오.
+AFS 클라이언트 구성 유틸리티가 열리면서 <B>일반</B> 탭이
+표시됩니다.
+</LI><LI><B>셀 이름</B> 상자에 시스템이 클라이언트가 될 AFS 셀의 이름을
+입력하십시오.
+</LI><LI><B>AFS 셀</B> 탭을 선택하십시오. 시스템이 클라이언트가 될
+셀이 AFS 셀 리스트에 나열되어 있지 않은 경우 <B>추가</B> 단추를
+선택하십시오. 신규 셀 대화 상자가 열립니다. <B>AFS 셀</B> 상자에
+셀 이름을 입력하고 <B>설명</B> 상자에 간략한 설명을 입력하십시오.
+<P>
+<P><B>추가</B> 단추를 선택하십시오. 서버 추가 대화 상자가 열립니다.
+<B>서버 이름</B> 상자에서 선택된 셀에 있는 볼륨 위치 서버 이름을
+입력하십시오. 서버 추가 대화 상자를 닫으려면 <B>확인</B>을
+선택하십시오. 이 과정을 반복하여 셀에 있는 모든 볼륨 위치 서버에 대한 정보를
+추가하십시오. (AFS 셀의 볼륨 위치 서버 이름을 모르면 AFS 시스템 관리자에게
+문의하십시오.) 모든 서버 정보를 입력한 후에는 <B>확인</B>을 눌러
+신규 셀 대화 상자를 닫으십시오.
+</LI><LI><B>일반</B> 탭과 <B>서비스 시작</B> 단추를
+차례로 선택하여 AFS 클라이언트 서비스를 시작하십시오.
+</LI><LI><B>드라이브 이름</B> 탭을 선택하십시오. Windows NT 시스템의
+드라이브 이름을 AFS 파일 공간에 맵하려면 <B>추가</B> 버튼을
+선택하십시오. 드라이브 이름 맵 대화 상자가 열립니다.
+</LI><LI><B>드라이브 이름</B> 상자에서 AFS 파일 공간에 맵할 드라이브를
+선택하거나 기본값을 그대로 사용하십시오. <B>AFS</B>
+<B>경로</B> 상자에서, 선택한 드라이브를 맵하고자 하는 AFS 위치(예:
+<B>/afs</B>)를 표시하십시오. 원하는 경우 <B>설명</B>
+상자에 AFS 드라이브 맵핑 설명을 입력하십시오. AFS 파일 공간의 지정된 위치에
+드라이브를 연결하려면 <B>확인</B>을 선택하십시오.
+</LI><LI>AFS 클라이언트 구성 유틸리티를 닫으려면 <B>확인</B>을
+선택하십시오.
+<P>
+<P>이제 AFS 클라이언트는 선택된 AFS 셀에 구성되고 AFS 파일 공간은
+Windows NT 탐색기에서 선택된 드라이브 맵핑을 통해 액세스할 수 있습니다.
+</LI></OL>
+<P><H3><A NAME="HDRGATEWAY" HREF="awqbg002.htm#ToC_25">AFS Light 게이트웨이로서 AFS 클라이언트 구성</A></H3>
+<A NAME="IDX225"></A>
+<A NAME="IDX226"></A>
+<A NAME="IDX227"></A>
+<P>AFS Light 게이트웨이 기능을 하도록 Windows NT 기계에 AFS 클라이언트를 구성할 수
+있습니다. AFS Light 게이트웨이로서 구성된 사용자의 AFS 클라이언트는 AFS Light
+사용자가 AFS 파일 공간에 액세스할 수 있도록 합니다.
+<OL TYPE=1>
+<LI><A HREF="#HDRCLIENT_CONFIG">AFS 클라이언트 구성</A>에 상세히 설명된 대로 AFS 클라이언트를 구성하십시오.
+</LI><LI><B>시작</B> 메뉴에서 <B>설정</B>과
+<B>제어판</B>을 차례로 선택하십시오.
+</LI><LI><B>AFS 클라이언트 구성</B> 아이콘을 두 번 누르십시오.
+AFS 클라이언트 구성 유틸리티가 열리면서 <B>일반</B> 탭이
+표시됩니다.
+</LI><LI><B>AFS Light 게이트웨이</B> 옵션을 선택하십시오.
+</LI><LI><B>확인</B>을 선택하십시오.
+<UL>
+<LI>AFS 클라이언트 서비스가 실행 중이면 서비스를 다시 시작해야
+한다는 메시지 상자가 나타납니다. AFS 클라이언트 서비스를 다시 시작하고 AFS
+Light 게이트웨이를 사용 가능하게 하려면 <B>예</B>를 선택하십시오.
+</LI><LI>AFS 클라이언트 서비스가 중지되면 AFS 클라이언트 서비스를
+시작해야 한다는 메시지 상자가 나타납니다. AFS 클라이언트 서비스를 시작하고 AFS
+Light 게이트웨이를 시작하려면 <B>예</B>를 선택하십시오.
+</LI></UL>
+</LI><LI>
+<A NAME="IDX228"></A>
+사용자의 AFS Light 게이트웨이의 셀 데이터베이스에 셀
+항목을 추가하십시오. AFS Light 사용자의 셀 액세스 순서에서, 셀의 입력 항목은
+AFS Light 셀 데이터베이스와 AFS Light 게이트웨이 셀 데이터베이스 모두에 존재해야
+합니다. 게이트웨이 시스템의 셀 데이터베이스에 있는 셀에 대한 정보가 틀리거나
+빠진 경우 라이트 클라이언트 시스템은 파일에 액세스할 수 없게 됩니다.
+<P>
+<P><B>셀 데이터베이스에 항목 추가</B>
+<P>
+<P>AFS Light 구성 유틸리티에서 <B>AFS 셀</B> 탭에 액세스하고
+<B>추가</B> 단추를 선택하십시오. 신규 셀 대화 상자가 열립니다.
+<B>AFS 셀</B> 상자에
+셀 이름을 입력하고 <B>설명</B> 상자에 간략한 설명을 입력하십시오.
+<P>
+<P><B>추가</B> 단추를 선택하십시오. 서버 추가 대화 상자가 열립니다.
+<B>서버 이름</B> 상자에서 선택된 셀에 있는 볼륨 위치 서버 이름을
+입력하십시오. 서버 추가 대화 상자를 닫으려면 <B>확인</B>을
+선택하십시오. 이 과정을 반복하여 셀에 있는 모든 볼륨 위치 서버에 대한 정보를
+추가하십시오. (AFS 셀의 볼륨 위치 서버 이름을 모르면 AFS 시스템 관리자에게
+문의하십시오.)
+모든 서버 정보를 입력한 후에는 <B>확인</B>을 눌러
+신규 셀 대화 상자를 닫으십시오.
+</LI></OL>
+<P>
+<A NAME="IDX229"></A>
+<A NAME="IDX230"></A>
+<A NAME="IDX231"></A>
+이제 Windows NT 시스템이
+AFS Light 게이트웨이로서 구성됩니다. 일단 AFS Light게이트웨이로 구성되면 AFS
+클라이언트 시스템은 Windows 컨텍스트에 AFS Light 사용자를 인증할 수 있어야
+합니다. 이러한 인증은 <I>도메인</I> 사용자 계정 또는 동기화된
+<I>시스템</I> 사용자 계정을 통해 이루어집니다. 도메인 사용자
+계정은 Windows 도메인의 사용자 계정입니다. 시스템 사용자 계정은 특정 호스트
+시스템에서만 유효한 사용자 계정입니다.
+<P>AFS Light 게이트웨이가 Windows 도메인으로 구성될 때 AFS Light 사용자는 게이트웨이가
+속해 있는 도메인의 도메인 사용자 계정 또는 게이트웨이 도메인의 도메인 사용자 계정과
+같은 사용자 이름 및 암호를 가진 시스템 사용자 계정으로 로그온해야 합니다.
+<P>시스템 사용자 계정이 이미 사용중인 경우 AFS Light 게이트웨이 및 AFS Light 시스템에서
+이러한 계정을 동기화해야 합니다. 사용자는 AFS Light 게이트웨이 시스템에 정의된
+시스템 사용자 계정과 같은 사용자 이름 및 암호를 가진 AFS Light 시스템으로
+로그온해야 합니다.
+<P><H3><A NAME="Header_26" HREF="awqbg002.htm#ToC_26">AFS Light 구성</A></H3>
+<A NAME="IDX232"></A>
+<A NAME="IDX233"></A>
+<P>AFS Light는 AFS Light 게이트웨이를 통해 AFS 파일 공간에 액세스합니다. AFS Light를
+구성하기 전에 AFS 클라이언트를 실행하고 AFS Light 게이트웨이로서 구성된 Windows NT
+시스템이 있어야 합니다. 세부사항은 <A HREF="#HDRGATEWAY">AFS Light 게이트웨이로서 AFS 클라이언트 구성</A>의 내용을 참조하십시오.
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>설정</B>과
+<B>제어판</B>을 차례로 선택하십시오.
+</LI><LI><B>AFS Light 구성</B> 아이콘을 두 번 누르십시오. AFS Light
+구성 유틸리티가 열리고 <B>일반</B> 탭이 표시됩니다.
+<A NAME="IDX234"></A>
+<A NAME="IDX235"></A>
+</LI><LI><B>게이트웨이</B> 상자에, AFS Light 게이트웨이로 구성된
+Windows NT 시스템 이름을 입력하고 <B>지금 연결</B>을 누르십시오.
+게이트웨이 시스템 이름은 <I>mach</I><B>-afs</B> 형식의 게이트웨이 NetBIOS 서비스 이름입니다. 여기서
+<I>mach</I>는 최고 11자의 호스트 컴퓨터 이름입니다. AFS Light는
+게이트웨이 시스템과 통신하기 위해 이 서비스 이름을 분석할 수 있어야 합니다.
+게이트웨이의 NetBIOS 서비스 이름을 클라이언트의 LMHOSTS 파일이나 해당 DNS 또는
+WINS 서버에 추가하여 이름 분석을 할 수 있습니다. AFS Light 시스템과 AFS Light
+게이트웨이 시스템이 같은 서브넷에 있는 경우 추가 구성은 필요하지 않습니다.
+<P>
+<P>AFS Light는 자동으로 AFS Light 게이트웨이와 같은 셀의 구성원이 됩니다. 셀
+이름이 <B>셀 이름</B> 상자에 표시됩니다.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS Light 게이트웨이 시스템이 AFS Light 시스템과 같은 도메인에 있고
+이 도메인에 있는 게이트웨이 시스템의 호스트 이름이 <B>xyz-pc</B>인
+경우, <B>게이트웨이</B> 상자의 컴퓨터 이름을 <B>xyz-pc</B>
+또는 <B>xyz-pc.xcompany.com</B>으로 지정할 수 있습니다.
+</TD></TR></TABLE>
+</LI><LI><B>AFS 셀</B> 탭을 선택하십시오. 시스템이 속해 있는 셀이
+AFS 셀 목록에 없는 경우 <B>추가</B> 단추를 선택하십시오. 신규 셀
+대화 상자가 열립니다. <B>AFS 셀</B> 상자에
+셀 이름을 입력하고 <B>설명</B> 상자에 간략한 설명을 입력하십시오.
+<P>
+<P><B>추가</B> 단추를 선택하십시오. 서버 추가 대화 상자가 열립니다.
+<B>서버 이름</B> 상자에서 선택된 셀에 있는 볼륨 위치 서버 이름을
+입력하십시오. 서버 추가 대화 상자를 닫으려면 <B>확인</B>을
+선택하십시오. 이 과정을 반복하여 셀에 있는 모든 볼륨 위치 서버에 대한 정보를
+추가하십시오. (AFS 셀의 볼륨 위치 서버 이름을 모르면 AFS 시스템 관리자에게
+문의하십시오.) 모든 서버 정보를 입력한 후에는 <B>확인</B>을 눌러
+신규 셀 대화 상자를 닫으십시오.
+<P>
+<P>AFS Light 게이트웨이의 셀 데이터베이스(<B>afsdcell.ini</B> 파일)에
+동일한 항목이 AFS Light 사용자의 셀 인증 순서대로 표시되어야 합니다. 사용자의
+라이트 클라이언트의 셀 데이터베이스와 게이트웨이 시스템의 셀 데이터베이스를
+동기화하는 방법에 대해서는 <A HREF="#HDRGATEWAY">AFS Light 게이트웨이로서 AFS 클라이언트 구성</A>을 참조하십시오.
+</LI><LI><B>드라이브 이름</B> 탭을 선택하십시오. Windows 시스템의
+드라이브 이름을 AFS 파일 공간에 맵하려면 <B>추가</B> 단추를
+선택하십시오. 드라이브 이름 맵 대화 상자가 열립니다.
+</LI><LI><B>드라이브 이름</B> 상자에서 AFS 파일 공간에 맵할 드라이브를
+선택하거나 기본값을 그대로 사용하십시오. <B>AFS</B>
+<B>경로</B> 상자에서, 선택한 드라이브를 맵하고자 하는 AFS 위치(예:
+<B>/afs</B>)를 표시하십시오. 원하는 경우 <B>설명</B>
+상자에 AFS 드라이브 맵핑 설명을 입력하십시오. AFS 파일 공간의 지정된 위치에
+드라이브를 연결하려면 <B>확인</B>을 선택하십시오.
+</LI><LI>AFS Light 구성 유틸리티를 닫으려면 <B>확인</B>을 선택하십시오.
+<P>
+<P>이제 AFS Light가 지정된 AFS 셀에 구성되고, AFS 파일 공간은 Windows Explorer의
+드라이브 맵핑을 통해 액세스할 수 있습니다.
+</LI></OL>
+<P><H3><A NAME="Header_27" HREF="awqbg002.htm#ToC_27">AFS 서버 구성</A></H3>
+<A NAME="IDX236"></A>
+<A NAME="IDX237"></A>
+<P>구성 프로세스는 AFS 서버 실행에 필요한 서비스를 시작하고, Windows NT 시스템에서
+AFS 파티션을 설정합니다. AFS 구성 마법사를 사용하여 새로운 AFS 셀의 첫번째
+서버 또는 기존의 AFS 셀에 있는 서버로서 AFS 서버를 빠르게 구성할 수 있습니다.
+이 버전의 AFS 서버로 업그레이드한 경우 이전 버전의 구성 정보가 보존됩니다.
+서버를 다시 구성하지 않아도 됩니다.
+<P><B>셀의 첫번째 AFS 서버로서 AFS 서버 구성:</B>
+<A NAME="IDX238"></A>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>프로그램</B>,
+<B>IBM AFS</B>, <B>서버</B>, <B>구성
+마법사</B>를 차례로 선택하십시오. AFS 서버 Quick-Start 마법사가 열립니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 셀 및 서버 정보 대화 상자가
+나타납니다.
+</LI><LI><B>새로운 AFS 셀의 첫번째 서버</B> 옵션을
+선택하십시오.
+</LI><LI><B>셀 이름</B> 상자에 새로운 AFS 셀의 이름을 입력하십시오.
+<P>
+<P>AFS 셀 이름으로 사용할 수 있는 인터넷 도메인 이름 형식에 다음과 같은 제한사항이
+있습니다.
+<UL>
+<LI>셀 이름은 AFS 전역 이름 공간의 다른 모든 셀과 구분하기 위해 고유한 것이어야 합니다.
+</LI><LI>셀 이름에는 최고 64자가 포함될 수 있지만, 짧은 이름이 좋습니다.
+</LI><LI>여러 운영 체제 사이의 이식성을 위해,
+셀 이름에는 소문자, 숫자, 밑줄, 대시 및 마침표만 포함될 수 있습니다.
+</LI><LI>셀 이름에 모든 숫자와 문자를 사용할 수 있으며, 일반적으로 마침표로 구분합니다.
+</LI><LI>셀 이름은 속해 있는 기관의 유형을 나타내는 접미사로 끝나야 합니다. 기업 및
+기타 상업 조직의 경우에는 <B>.com</B>, 대학교와 같은 교육 기관인
+경우에는 <B>.edu</B>, 정부 기관인 경우에는 <B>.gov</B>,
+군사 기관의 경우에는 <B>.mil</B>이 표준 접미사입니다.
+</LI></UL>
+</LI><LI><B>암호</B> 상자에 셀의 AFS 서버 핵심부 계정의 암호 기능을
+하는 문자열(예: <B>afs</B>)을 입력하십시오. 모든 AFS 서버는
+이 핵심부로 AFS 토큰을 확보하고, 인증 서버의 TGS(티켓 부여 서비스) 모듈은 이
+암호를 사용하여 상호 인증 중에 AFS 클라이언트가 서버에 제공하는 서버 티켓을
+암호화합니다.
+</LI><LI><B>암호 확인</B> 상자에 이 셀의 AFS 서버 핵심부 계정에 대한
+초기 AFS 암호를 다시 입력하여 암호 선택을 확인하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 관리 정보 대화 상자가 나타납니다.
+</LI><LI><B>이름</B> 상자에 이 셀의 일반 AFS 관리 계정 기능을 하는 사용자
+이름(예: <B>admin</B>)을 입력하십시오.
+<P>
+<P>
+<A NAME="IDX239"></A>
+일반 관리 계정을 사용하면 각 시스템
+관리자에게 특권을 부여할 필요가 없습니다. 대신, 각 관리자는 이 일반 관리 계정의
+이름 및 암호를 알고 있고, 관리 특권이 필요한 타스크를 수행할
+때 이 ID를 사용하여 AFS에 인증합니다.
+</LI><LI><B>암호</B> 상자에 AFS 관리 계정의 암호 기능을 하는 문자열을
+입력하십시오.
+</LI><LI><B>암호 확인</B> 상자에 AFS 관리 계정에 대한 암호를 다시
+입력하여 암호 선택을 확인하십시오.
+</LI><LI>AFS 관리 계정에 지정할 AFS 사용자 ID(UID)를 지정하십시오.
+<UL>
+<LI>(권장사항) 다음으로 사용가능한 UID를 AFS 관리 계정에 자동으로 지정하려면,
+<B>다음으로 사용가능한 AFS UID 사용</B> 옵션을 선택하십시오.
+</LI><LI>특정 UID를 AFS 관리 계정에 지정하려면 <B>이 AFS ID 사용</B>
+옵션을 선택하고 입력 상자에 원하는 UID를 입력하십시오.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS UID를 기존의 UNIX UID와 일치하도록 할 필요가 없다면, 특정 UID를 새로운
+AFS 계정에 지정하지 않는 것이 좋습니다.
+</TD></TR></TABLE>
+</LI></UL>
+</LI><LI><B>다음</B> 단추를 선택하십시오. 파일 서비스 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX240"></A>
+AFS 파일 서버가 요청된 파일 및 데이터를 서버에서 AFS
+클라이언트로 보냅니다. 파일 서버는 파일 및 데이터를 저장하고, 파일 및 디렉토리의
+복사, 이동, 작성 및 삭제 요청을 처리하며, 서버의 각 파일 및 디렉토리에 대한 상태
+정보를 추적합니다.
+<P>
+<P>새로운 셀에 있는 첫번째 AFS 서버를 구성하고 있으므로 파일 서비스를 서버에
+구성해야 하며, 자동으로 구성됩니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 데이터베이스 서비스 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX241"></A>
+모든 AFS 셀에는 적어도 하나의 데이터베이스 서버가 포함되어야
+합니다. 각 데이터베이스 서버는 AFS 데이터베이스를 유지하는 데이터베이스 프로세스,
+즉 인증 데이터베이스, 보호 데이터베이스, 볼륨 위치 데이터베이스 그리고 선택적으로 백업
+데이터베이스를 실행합니다.
+<P>
+<P>새로운 셀에 첫번째 AFS 서버를 구성하고 있으므로 데이터베이스 서비스를 서버에
+구성해야 하고, 자동으로 구성됩니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 백업 서버 대화 상자가 나타납니다.
+<P>
+<P>
+<A NAME="IDX242"></A>
+백업 서버는 백업 시스템과 관련된 정보가 저장되는 백업
+데이터베이스를 유지보수합니다. 백업 서버는 AFS 시스템 관리자가 볼륨에서 테이프로
+AFS 파일 공간의 데이터를 백업할 수 있도록 합니다. 그러면 데이터는 파일 시스템에서
+소실되는 경우(예를 들면, 시스템 또는 디스크 장애로 인해 데이터가 소실된 경우)
+테이프로부터 복원할 수 있습니다.
+</LI><LI>이 AFS 서버를 백업 서버로서 구성하려면 <B>예, 백업 서버로서
+구성</B> 옵션을 선택하십시오. 이 AFS 서버를 백업 서버로서 구성하지 않으려면
+<B>아니오, 백업 서버로서 구성 안함</B> 옵션을 선택하십시오.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">백업 서버가 셀의 데이터베이스 서버에서 구성되어 있는 경우 셀의
+<I>모든</I> 데이터베이스 서버에서 구성되어야 합니다.
+</TD></TR></TABLE>
+</LI><LI><B>다음</B> 단추를 선택하십시오. AFS 파티션 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX243"></A>
+모든 AFS 파일 서버에 AFS 볼륨을 독점적으로
+저장하도록 지정된 파티션이 적어도 한 개 있어야 하며, 모든 AFS 볼륨은 AFS
+파티션으로서 지정된 파티션에 상주해야 합니다. Windows NT 시스템에서는 NTFS 볼륨만
+AFS 파티션으로 지정할 수 있습니다. 또한, AFS 파티션은 비어 있는 NTFS 볼륨(또는
+Windows NT 휴지통)에서만 작성할 수 있습니다.
+<P>
+<P>새로운 셀에 첫번째 AFS 서버를 구성하고 있으므로 서버에서 AFS 파티션을 지정해야
+합니다.
+</LI><LI>NTFS 볼륨 목록에서 AFS 파티션으로서 지정할 볼륨을 선택하십시오. <B>AFS 파티션 이름</B> 상자에 파티션 이름의 마지막 부분을 입력하십시오.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS 서버에 최고 256개의 AFS 파티션이 있을 수 있습니다. 일반적으로 각
+파티션 이름은 <B>/vicep</B><I>x</I>가 됩니다.
+여기서 <I>x</I>는 한 개 이상의 영문자입니다. AFS 파티션 이름은
+<B>/vicepa</B>, <B>/vicepb</B>,
+<B>/vicepz</B>까지 될 수 있습니다. 추가 파티션의 이름은
+<B>/vicepaa</B>에서 <B>vicepaz</B>,
+<B>/vicepiv</B>까지 될 수 있습니다.
+</TD></TR></TABLE>
+<P>
+<P>파티션 이름의 마지막 글자로서 NTFS 볼륨 드라이브 이름을 사용하는 것이 좋습니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 루트 AFS 볼륨 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX244"></A>
+<A NAME="IDX245"></A>
+<A NAME="IDX246"></A>
+루트 AFS 볼륨은 모든 AFS 셀이 파일 시스템에 포함시켜야
+하는 두 개의 볼륨입니다. 루트 볼륨의 이름은 다음과 같습니다.
+<UL>
+<LI><B>root.afs</B> - AFS 파일 공간의 최상위
+레벨(<B>/afs</B>)에 해당되는 볼륨인 경우
+</LI><LI><B>root.cell</B> - 셀 이름에서 <B>/afs</B>
+바로 아래에 마운트되는 볼륨의 경우(예: <B>yourcompany.com</B>
+셀에서는 <B>/afs/yourcompany.com</B>)
+</LI></UL>
+<P>
+새로운 셀에 첫번째 AFS 서버를 구성하고 있으므로 셀의 루트 볼륨을 서버에 작성해야
+하며, 서버 구성 중에 자동으로 작성됩니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 복제 대화 상자가 나타납니다.
+<P>
+<P>
+<A NAME="IDX247"></A>
+AFS의 복제 기능을 이용할 수 있으려면 AFS 루트 볼륨을
+복제해야 합니다. 복제 프로세스는 하나 이상의 읽기 전용 AFS 볼륨 사본을 작성하며,
+하나 이상의 기타 사이트(AFS 파티션 및 서버)로 이 사본을 분배합니다. 복제는
+시스템 효율을 증가시키고, 하나 이상의 AFS 파일 서버 시스템에서 액세스 가능한 AFS
+볼륨 내용을 만들어 데이터의 가용성을 향상시킵니다.
+<P>
+<P>새로운 셀에 첫번째 AFS 서버를 구성하고 있으므로 셀의 루트 볼륨을 서버에서
+복제해야 하며, 서버 구성 중에 자동으로 복제됩니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 시스템 제어 서비스 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX248"></A>
+Windows용 AFS의 국내판 버전을 실행하는
+셀에서 시스템 제어 서버는 새로운 버전의 AFS 서버 구성 정보를 모든 AFS 서버에
+분배합니다. 일반적으로 시스템 제어 서버로서 AFS 셀에 첫번째 서버를 지정하는
+것이 좋습니다. (국제 버전의 Windows용 AFS를 실행하는 셀은 시스템 구성 파일을
+분배하기 위해 시스템 제어 서버를 사용하지 않습니다.)
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">원하는 경우 나중에 시스템 제어 서버 역할을 다른 서버 기계에 지정할 수 있습니다.
+그러나, 셀의 AFS 서버 수에 따라 역할을 다른 시스템에 지정하는 프로세스는 시간이
+많이 걸립니다.
+</TD></TR></TABLE>
+</LI><LI>AFS 셀에 대한 시스템 제어 서버로서 이 AFS 서버를 구성하려면
+<B>시스템 제어 서버로서 구성</B> 옵션을 선택하십시오.
+AFS 셀에 대한 시스템 제어 서버로서 이 AFS 서버를 구성하지 않으려면
+<B>시스템 제어 서버로서 구성 안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 시스템 구성 대화 상자가 나타납니다.
+<P>
+<P>실제 구성 프로세스를 시작하기 전에 단계를 검토할 수 있도록 이 AFS 서버 구성 단계
+목록이 표시됩니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이전 단계로 돌아가 선택사항을 검토하거나 수정하려면 <B>뒤로</B>
+단추를 선택하십시오.
+</TD></TR></TABLE>
+</LI><LI>이 시스템에서의 AFS 서버 구성을 시작하려면 <B>구성</B> 단추를
+선택하십시오. 사용자 스펙에 따라 AFS 서버가 구성됩니다. 대화 상자 아래의 진행
+표시줄은 진행 중인 단계를 표시합니다. 구성이 완료되었음을 나타내는 메시지 상자가
+나타납니다.
+</LI></OL>
+<P>
+<A NAME="IDX249"></A>
+<B>AFS 서버를 기존의 AFS 셀에 구성:</B>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>프로그램</B>,
+<B>IBM AFS</B>, <B>서버</B>, <B>구성
+마법사</B>를 차례로 선택하십시오. AFS 서버 Quick-Start 마법사가 열립니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 셀 및 서버 정보 대화 상자가
+나타납니다.
+</LI><LI><B>이 호스트를 기존 AFS 셀의 서버로 만들기</B> 옵션을
+선택하십시오.
+</LI><LI><B>셀 이름</B> 상자에 새로운 AFS 서버를 추가할 AFS 셀의 이름을
+입력하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 관리 정보 대화 상자가 나타납니다.
+</LI><LI><B>이름</B> 상자에서, AFS 관리 계정의 사용자 이름(예:
+<B>admin</B>), 또는 관리 특권을 가진 AFS 사용자 계정의 사용자 이름을
+입력하십시오.
+</LI><LI><B>암호</B> 상자에 AFS 관리 계정 또는 <B>이름</B>
+상자에 관리 특권이 입력된 AFS 사용자 계정의 암호를 입력하십시오.
+</LI><LI><B>AFS 서버</B> 상자에 이 AFS 셀에서 실행 중인 AFS 서버의
+호스트 이름을 입력하십시오. 이 새로운 AFS 서버를 구성하는 데 사용하기 위해
+AFS 구성 정보가 서버로부터 검색됩니다.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 파일 서비스 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX250"></A>
+AFS 파일 서버가 요청된 파일 및 데이터를 서버에서 AFS
+클라이언트로 보냅니다. 파일 서버는 파일 및 데이터를 저장하고, 파일 및 디렉토리의
+복사, 이동, 작성 및 삭제 요청을 처리하며, 서버의 각 파일 및 디렉토리에 대한 상태
+정보를 추적합니다.
+<P>
+<P>이 AFS 서버를 파일 서버로서 구성하려면 <B>예, 파일 서버로서 구성</B>
+옵션을 선택하십시오. 이 AFS 서버를 파일 서버로서 구성하지 않으려면
+<B>아니오, 파일 서버로서 구성 안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 데이터베이스 서비스 대화 상자가
+나타납니다.
+<P>
+<P>
+<A NAME="IDX251"></A>
+모든 AFS 셀에는 적어도 하나의 데이터베이스 서버가 포함되어야
+합니다. 각 데이터베이스 서버는 AFS 데이터베이스를 유지하는 데이터베이스 프로세스,
+즉 인증 데이터베이스, 보호 데이터베이스, 볼륨 위치 데이터베이스 그리고 선택적으로 백업
+데이터베이스를 실행합니다.
+<P>
+<P>데이터베이스 서버로서 이 AFS 서버를 구성하려면 <B>예, 데이터베이스
+서버로서 구성</B> 옵션을 선택하십시오. 서버를 추가하고 있는 AFS 셀에 시스템
+제어 서버가 있으면 시스템 제어 서버 상자에 호스트 이름을 입력하십시오. AFS
+구성 정보(예: 각 AFS 서버 시스템의 <B>CellServDB</B> 파일에서
+유지되는 AFS 데이터베이스 서버 목록)가 이 서버에 의해 갱신됩니다. 이 AFS 서버를
+데이터베이스 서버로서 구성하지 않으려면 <B>아니오, 데이터베이스
+서버로서 구성 안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 백업 서버 대화 상자가 나타납니다.
+<P>
+<P>
+<A NAME="IDX252"></A>
+백업 서버는 백업 시스템과 관련된 정보가 저장되는 백업
+데이터베이스를 유지보수합니다. 백업 서버는 AFS 시스템 관리자가 볼륨에서 테이프로
+AFS 파일 공간의 데이터를 백업할 수 있도록 합니다. 그러면 데이터는 파일 시스템에서
+소실되는 경우(예를 들면, 시스템 또는 디스크 장애로 인해 데이터가 소실된 경우)
+테이프로부터 복원할 수 있습니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">백업 서버는 데이터베이스 서버로서 구성되는 시스템에서만 구성될 수
+있습니다. 또한, 백업 서버가 셀의 데이터베이스 서버에서 구성되는 경우 셀의
+<I>모든</I> 데이터베이스 서버에서 구성되어야 합니다.
+</TD></TR></TABLE>
+</LI><LI>이 AFS 서버를 백업 서버로서 구성하려면 <B>예, 백업 서버로서
+구성</B> 옵션을 선택하십시오. 이 AFS 서버를 백업 서버로서 구성하지 않으려면
+<B>아니오, 백업 서버로서 구성 안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. AFS 파티션 대화 상자가
+나타납니다.
+<P>
+<P>이 AFS 서버를 파일 서버로서 구성할 경우 AFS 파티션으로서 지정할 NTFS 볼륨을
+지정해야 합니다. 모든 AFS 파일 서버에 AFS 볼륨을 독점적으로
+저장하도록 지정된 파티션이 적어도 한 개 있어야 하며, 모든 AFS 볼륨은 AFS
+파티션으로서 지정된 파티션에 상주해야 합니다. Windows NT 시스템에서는 NTFS 볼륨만
+AFS 파티션으로 지정할 수 있습니다. 또한, AFS 파티션은 비어 있는 NTFS 볼륨(또는
+Windows NT 휴지통)에서만 작성할 수 있습니다.
+<P>
+<P>AFS 파티션으로서 볼륨을 지정하려면 <B>예, 파티션 작성</B> 옵션을
+선택하십시오. NTFS 볼륨 목록에서 AFS 파티션으로서 지정할 볼륨을 선택하십시오. <B>AFS 파티션 이름</B> 상자에 파티션 이름의 마지막 부분을 입력하십시오.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS 서버에 최고 256개의 AFS 파티션이 있을 수 있습니다. 일반적으로 각
+파티션 이름은 <B>/vicep</B><I>x</I>가 됩니다.
+여기서 <I>x</I>는 한 개 이상의 영문자입니다. AFS 파티션 이름은
+<B>/vicepa</B>, <B>/vicepb</B>,
+<B>/vicepz</B>까지 될 수 있습니다. 추가 파티션의 이름은
+<B>/vicepaa</B>에서 <B>vicepaz</B>,
+<B>/vicepiv</B>까지 될 수 있습니다.
+</TD></TR></TABLE>
+<P>
+<P>파티션 이름의 마지막 글자로서 NTFS 볼륨 드라이브 이름을 사용하는 것이 좋습니다.
+<P>
+<P>AFS 파티션으로서 볼륨을 지정하지 않으려면 <B>아니오, 파티션 작성
+안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 루트 AFS 볼륨 대화 상자가
+나타납니다.
+<P>
+<P>루트 AFS 볼륨은 모든 AFS 셀이 파일 시스템에 포함시켜야
+하는 두 개의 볼륨입니다. 루트 볼륨의 이름은 다음과 같습니다.
+<UL>
+<LI><B>root.afs</B> - AFS 파일 공간의 최상위
+레벨(<B>/afs</B>)에 해당되는 볼륨인 경우
+</LI><LI><B>root.cell</B> - 셀 이름에서 <B>/afs</B>
+바로 아래에 마운트되는 볼륨의 경우(예: <B>yourcompany.com</B>
+셀에서는 <B>/afs/yourcompany.com</B>)
+</LI></UL>
+<A NAME="IDX253"></A>
+<P>
+이 AFS 서버를 기존의 AFS 셀에 추가하므로, 루트 AFS
+볼륨이 이미 셀에 존재하며, AFS 구성 마법사는 루트 볼륨을 작성할 필요가 없음을
+나타냅니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">어떤 이유로 루트 AFS 볼륨이 아직 이 AFS 셀에 없는 경우, <B>예, 루트 볼륨 작성</B> 옵션을 선택하여 이 AFS 서버에 루트 볼륨을 작성할 수 있습니다.
+</TD></TR></TABLE>
+</LI><LI><B>다음</B> 단추를 선택하십시오. 복제 대화 상자가 나타납니다.
+<P>
+<P>AFS의 복제 기능을 이용할 수 있으려면 AFS 루트 볼륨을
+복제해야 합니다. 복제 프로세스는 하나 이상의 읽기 전용 AFS 볼륨 사본을 작성하며,
+하나 이상의 기타 사이트(AFS 파티션 및 서버)로 이 사본을 분배합니다. 복제는
+시스템 효율을 증가시키고, 하나 이상의 AFS 파일 서버 시스템에서 액세스 가능한 AFS
+볼륨 내용을 만들어 데이터의 가용성을 향상시킵니다.
+<P>
+<P>이 AFS 서버를 기존의 AFS 셀에 추가하므로, 루트 AFS 볼륨이 이미 복제되었고
+AFS 서버 구성 마법사는 루트 AFS 볼륨을 복제할 필요가 없음을 나타냅니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">어떤 이유로 루트 AFS 볼륨이 아직 이 AFS 셀에서 복제되지 않은 경우,
+<B>예, 루트 볼륨 복제</B> 옵션을 선택하여 이 AFS 서버에 AFS 셀의
+루트 볼륨을 복제할 수 있습니다.
+</TD></TR></TABLE>
+</LI><LI><B>다음</B> 단추를 선택하십시오. 시스템 제어 서비스 대화 상자가
+나타납니다.
+<P>
+<P>Windows용 AFS의 국내판 버전을 실행하는 셀에서 시스템 제어 서버는 새로운 버전의
+AFS 서버 구성 정보를 모든 AFS 서버에 분배하고, 시스템 제어 클라이언트 시스템은
+시스템 제어 시스템에서 공통 AFS 구성 파일을 확보합니다. (국제 버전의 Windows용
+AFS를 실행하는 셀은 시스템 구성 파일을 분배하기 위해 시스템 제어 서버를 사용하지
+않으며, 이러한 파일을 확보하기 위해 시스템 제어 클라이언트를 사용하지 않습니다.)
+</LI><LI>AFS 셀에 대한 시스템 제어 서버로서 이 AFS 서버를 구성하려면
+<B>시스템 제어 서버로서 구성</B> 옵션을 선택하십시오.
+이 AFS 서버를 시스템 제어 클라이언트로서 구성하려면, <B>시스템 제어
+클라이언트로서 구성</B> 옵션을 선택하고 이 AFS 셀에 시스템 제어 서버의 호스트
+이름을 입력하십시오. AFS 서버는 지정된 서버로부터 새로운 버전의 AFS 서버 구성
+정보를 얻습니다. 이 AFS 서버를 AFS 셀에 대한 시스템 제어 서버로 또는 시스템
+제어 클라이언트로 구성하지 않으려면 <B>시스템 제어 클라이언트
+또는 서버로서 구성 안함</B> 옵션을 선택하십시오.
+</LI><LI><B>다음</B> 단추를 선택하십시오. 시스템 구성 대화 상자가 나타납니다.
+<P>
+<P>실제 구성 프로세스를 시작하기 전에 단계를 검토할 수 있도록 이 AFS 서버 구성 단계
+목록이 표시됩니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이전 단계로 돌아가 선택사항을 검토하거나 수정하려면 <B>뒤로</B>
+단추를 선택하십시오.
+</TD></TR></TABLE>
+</LI><LI>이 시스템에서의 AFS 서버 구성을 시작하려면 <B>구성</B> 단추를
+선택하십시오. 버전 3.5 이전의 AFS 버전을 실행하는 데이터베이스 서버가 있는 AFS
+서버를 AFS 셀로 구성하면, AFS 계정 암호를 입력하라는 대화 상자가 나타납니다.
+<P>
+<P>사용자 스펙에 따라 AFS 서버가 구성됩니다. 대화 상자 아래의 진행
+표시줄은 진행 중인 단계를 표시합니다. 구성이 완료되었음을 나타내는 메시지 상자가
+나타납니다.
+</LI></OL>
+<P><H3><A NAME="Header_28" HREF="awqbg002.htm#ToC_28">AFS 제어 센터 구성</A></H3>
+<A NAME="IDX254"></A>
+<A NAME="IDX255"></A>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS 서버나 AFS 클라이언트, 또는 두 서버 모두와 함께 AFS 제어 센터를
+설치했으면 AFS 제어 센터를 구성하지 않아도 됩니다. AFS 서버 또는 AFS 클라이언트가
+구성될 때 AFS 제어 센터는 자동으로 구성됩니다. AFS 제어 센터만 설치한 경우 제어
+센터를 시스템에 구성한 후에 사용할 수 있습니다.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>설정</B>과
+<B>제어판</B>을 차례로 선택하십시오.
+</LI><LI><B>AFS 제어 센터</B> 아이콘을 두 번 누르십시오. AFS 제어
+센터 등록 정보 대화 상자가 나타납니다.
+</LI><LI><B>기본 셀</B> 상자에서 기본적으로 관리할 AFS 셀의 전체 이름을
+입력하십시오.
+</LI><LI>AFS 제어 센터에 의해 관리되는 셀이 AFS 셀 리스트에 나열되어 있지 않은 경우
+<B>추가</B> 단추를 선택하십시오. 신규 셀 대화 상자가 열립니다.
+<B>AFS 셀</B> 상자에
+셀 이름을 입력하고 <B>설명</B> 상자에 간략한 설명을 입력하십시오.
+<P>
+<P><B>추가</B> 단추를 선택하십시오. 서버 추가 대화 상자가 열립니다.
+<B>서버 이름</B> 상자에서 선택된 셀에 있는 볼륨 위치 서버 이름을
+입력하십시오. 서버 추가 대화 상자를 닫으려면 <B>확인</B>을
+선택하십시오. 이 과정을 반복하여 셀에 있는 모든 볼륨 위치 서버에 대한 정보를
+추가하십시오. 모든 서버 정보를 입력한 후에는 <B>확인</B>을 눌러
+신규 셀 대화 상자를 닫으십시오.
+</LI><LI>AFS 제어 센터 등록 정보 대화 상자를 닫으려면 <B>확인</B>을
+선택하십시오.
+</LI></OL>
+<P>이제 AFS 제어 센터가 구성되었습니다.
+<HR><H2><A NAME="HDRUNINSTALL" HREF="awqbg002.htm#ToC_29">Windows용 AFS 설치 해제</A></H2>
+<A NAME="IDX256"></A>
+<P>이 절에서는 설치 해제 전제조건에 대한 간략한 설명과 Windows용 AFS 설치 해제
+절차에 대해 설명하고, 설치 해제로 인한 시스템 변경사항이 나열됩니다.
+<P><H3><A NAME="Header_30" HREF="awqbg002.htm#ToC_30">재설치 및 업그레이드</A></H3>
+<A NAME="IDX257"></A>
+<A NAME="IDX258"></A>
+<P>Windows NT 시스템에서 소프트웨어의 설치 해제 또는 업그레이드를 목적으로 Windows용
+AFS 구성요소를 설치 해제할 필요가 <I>없습니다</I>. Windows용 AFS를
+다시 설치하거나 업그레이드하려면 <A HREF="#HDRHOWTOINSTALL">Windows용 AFS 설치</A>에 설명된 설치 절차를
+따르십시오. 설치 중에 이전에 설치된 AFS 구성요소가 교체됩니다.
+AFS 구성 정보가 보존됩니다.
+<P>Windows 95 또는 Windows 98 시스템에서, AFS Light를 다시 설치하거나 업그레이드하기
+전에 <A HREF="#HDRTOUNINSTALL">Windows용 AFS 설치 해제</A>에 설명된 대로 이전에 설치된 AFS Light 구성요소를
+설치 해제해야 합니다.
+<P><H3><A NAME="Header_31" HREF="awqbg002.htm#ToC_31">설치 해제 전제조건</A></H3>
+<A NAME="IDX259"></A>
+<A NAME="IDX260"></A>
+<A NAME="IDX261"></A>
+<P>AFS를 설치 해제하면 모든 AFS 응용프로그램 파일이 삭제됩니다. 다른 응용 프로그램이
+이 파일들을 사용하고 있으면 삭제할 수 없습니다. 따라서, Windows용 AFS를
+설치 해제하기 전에 모든 AFS 대화 상자를 닫아야 합니다.
+<P>시스템의 커미션 해제를 목적으로 AFS 서버를 설치 해제하는 경우 데이터를 소실하지
+않으려면 다음과 같은 전제조건이 필요합니다.
+<OL TYPE=1>
+<LI>AFS 서버가 파일 서버 기능을 하면 모든 읽기/쓰기 볼륨을 다른 AFS 파일 서버로
+이동시키고 모든 읽기 전용 볼륨을 제거하십시오.
+</LI><LI>AFS 서버를 구성 해제하십시오. AFS 서버 구성 유틸리티를 열고
+<B>서버</B> 탭을 선택하십시오. 모든 확인란을 지우고
+<B>확인</B>을 선택하십시오.
+</LI></OL>
+<P><H3><A NAME="HDRTOUNINSTALL" HREF="awqbg002.htm#ToC_32">Windows용 AFS 설치 해제</A></H3>
+<A NAME="IDX262"></A>
+<A NAME="IDX263"></A>
+<A NAME="IDX264"></A>
+<A NAME="IDX265"></A>
+<A NAME="IDX266"></A>
+<A NAME="IDX267"></A>
+<A NAME="IDX268"></A>
+<OL TYPE=1>
+<LI><B>시작</B> 메뉴에서 <B>설정</B>과
+<B>제어판</B>을 차례로 선택하십시오.
+</LI><LI><B>프로그램 추가/삭제</B> 아이콘을 두 번 누르십시오. 프로그램
+추가/삭제 등록 정보 대화 상자가 나타나며, 이 상자에 <B>설치/설치
+해제</B> 탭이 표시됩니다.
+</LI><LI>제어판을 닫으십시오.
+</LI><LI>설치 해제할 AFS 구성요소를 선택하고 <B>추가/삭제</B> 단추를
+선택하십시오. 파일 삭제 확인 대화 상자가 나타나며, 선택한 Windows용 AFS 구성요소를
+제거하겠다고 확인하십시오. 설치 해제 절차를 계속하려면 <B>예</B>를
+누르십시오.
+</LI><LI>구성 정보를 보존할 것인지 묻는 AFS 메시지 상자가 나타납니다. 구성 정보를
+보존하려면 <B>예</B>를, 모든 구성 정보를 삭제하려면
+<B>아니오</B>를 선택하십시오. (AFS Supplemental Documentation
+구성요소와 연관된 구성 정보가 없습니다. 시스템에서 이 구성요소를 제거할 경우
+AFS 메시지 상자가 나타나지 않습니다.)
+</LI><LI>컴퓨터에서 프로그램 제거 대화 상자가 열리며, 이 상자에 시스템에서 제거 중인
+구성요소가 표시됩니다.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">다른 구성요소에 필요 없는 공유 AFS 파일을 제거할 것인지 묻는 메시지
+상자가 나타날 수 있습니다. 선택한 AFS 구성요소를 완전히 제거하려면
+<B>모두 예</B>를 누르십시오.
+</TD></TR></TABLE>
+</LI></OL>
+<P>이제 선택한 Windows용 AFS가 설치 해제되었습니다. Windows용 AFS 구성요소들의
+조합을 설치했으면 4-6 단계를 반복하여 각 구성요소를 별도로 제거해야
+합니다.
+<P><H3><A NAME="Header_33" HREF="awqbg002.htm#ToC_33">시스템 변경사항</A></H3>
+<A NAME="IDX269"></A>
+<P><H4><A NAME="Header_34">AFS 클라이언트 설치 해제로 인한 시스템 변경사항</A></H4>
+<P>AFS 클라이언트를 설치 해제하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI><B>\Program Files\Ibm\Afs\Client\Program</B> 디렉토리에서
+모든 AFS 클라이언트 파일을 제거하고, <B>Client</B> 디렉토리를 제거한 후, 설치된 다른 AFS 구성요소가 없는 경우 <B>Ibm</B>
+디렉토리를 제거합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows용 AFS <B>setup</B> 프로그램에 의해 설치된 것이
+아닌 파일이 포함되어 있으면 디렉토리가 제거되지 <I>않습니다</I>.
+</TD></TR></TABLE>
+</LI><LI>설치된 다른 AFS 구성요소가 없는 경우 <B>시작</B> 메뉴에서
+<B>IBM AFS</B> 프로그램을 제거합니다.
+</LI><LI>제어판에서 <B>AFS 클라이언트 구성</B> 아이콘을 제거합니다.
+</LI><LI>Windows NT 탐색기의 컨텍스트 메뉴에서 AFS 메뉴를 제거합니다.
+</LI><LI><B>IBM AFS 클라이언트</B> 서비스를 삭제합니다.
+</LI><LI>시스템에서 AFS 클라이언트 관련 레지스트리 항목을 제거합니다. 구성 정보를
+보존하려면 설치 해제 후 레지스트리에 정보가 남아 있어야 합니다.
+</LI></UL>
+<P><H4><A NAME="Header_35">AFS Light 설치 해제로 인한 시스템 변경사항</A></H4>
+<P>AFS Light를 설치 해제하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI><B>\Program Files\Ibm\Afs\Client\Program</B> 디렉토리에서 모든
+AFS 파일을 제거하고 <B>Ibm</B> 디렉토리를 제거합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows용 AFS <B>setup</B> 프로그램에 의해 설치된 것이
+아닌 파일이 포함되어 있으면 디렉토리가 제거되지 <I>않습니다</I>.
+</TD></TR></TABLE>
+</LI><LI><B>시작</B> 메뉴에서 <B>IBM AFS</B> 프로그램
+그룹을 제거합니다.
+</LI><LI>제어판에서 <B>AFS Light 구성</B> 아이콘을 제거합니다.
+</LI><LI>Windows 탐색기의 컨텍스트 메뉴에서 AFS 메뉴를 제거합니다.
+</LI><LI>시스템에서 AFS Light 관련 레지스트리 항목을 제거합니다. 구성 정보를
+보존하려면 설치 해제 후 레지스트리에 정보가 남아 있어야 합니다.
+</LI></UL>
+<P><H4><A NAME="Header_36">AFS 서버 설치 해제로 인한 변경사항</A></H4>
+<P>AFS 서버를 설치 해제하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI><B>\Program Files\Ibm\Afs\Server</B> 디렉토리에서 모든 AFS
+서버 파일을 제거하고, <B>서버</B> 디렉토리를 제거한 후, 설치된
+다른 AFS 구성요소가 없으면 <B>Ibm</B> 디렉토리를 제거합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows용 AFS <B>setup</B> 프로그램에 의해 설치된 것이
+아닌 파일이 포함되어 있으면 이 디렉토리는 제거되지 <I>않습니다</I>.
+또한, 구성 정보를 보존하려면 <B>\Program Files\Ibm\Afs\Server</B>
+디렉토리에 일부 파일이 제거되지 <I>않아야</I> 합니다.
+</TD></TR></TABLE>
+</LI><LI>설치된 다른 AFS 구성요소가 없는 경우 <B>시작</B> 메뉴에서
+<B>IBM AFS</B> 프로그램을 제거합니다.
+</LI><LI>제어판에서 <B>AFS 서버 구성</B> 아이콘을 제거합니다.
+</LI><LI><B>IBM AFS 서버</B> 서비스를 삭제합니다.
+</LI><LI>시스템에서 AFS 서버 관련 레지스트리 항목을 제거합니다. 구성 정보를
+보존하려면 설치 해제 후 레지스트리에 정보가 남아 있어야 합니다.
+</LI></UL>
+<P><H4><A NAME="Header_37">AFS 제어 센터 설치 해제로 인한 시스템 변경사항</A></H4>
+<P>AFS 제어 센터를 설치 해제하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI><B>\Program Files\Ibm\Afs\Control Center</B> 디렉토리에서
+모든 AFS 제어 센터 파일을 제거하고, <B>Control Center</B> 디렉토리를
+제거한 후, 설치된 다른 AFS 구성요소가 없으면 <B>Ibm</B> 디렉토리를
+제거합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows용 AFS <B>setup</B> 프로그램에 의해 설치된 것이
+아닌 파일이 포함되어 있으면 이 디렉토리는 제거되지 <I>않습니다</I>.
+</TD></TR></TABLE>
+</LI><LI>설치된 다른 AFS 구성요소가 없는 경우 <B>시작</B> 메뉴에서
+<B>IBM AFS</B> 프로그램을 제거합니다.
+</LI><LI>제어판에서 <B>AFS 제어 센터</B> 아이콘을 제거합니다. 다른
+Windows용 AFS 구성요소가 시스템에 설치되어 있지 않은 경우에만 이 아이콘이
+나타납니다.
+</LI><LI>시스템에서 AFS 제어 센터 관련 레지스트리 항목을 제거합니다. 구성 정보를
+보존하려면 설치 해제 후 레지스트리에 정보가 남아 있어야 합니다.
+</LI></UL>
+<P><H4><A NAME="Header_38">AFS supplemental documentation 설치 해제로 인한 시스템 변경</A></H4>
+<P>AFS supplemental documentation을 설치 해제하면 시스템이 다음과 같이 변경됩니다.
+<UL>
+<LI><B>\Program Files\Ibm\Afs\Documentation\Html</B> 디렉토리에서
+<B>SysAdminGd</B> 디렉토리와 <B>CmdRef</B> 디렉토리를
+제거하고, 다른 AFS 구성요소가 설치되어 있지 않으면 <B>Ibm</B>
+디렉토리를 제거합니다.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Windows용 AFS <B>setup</B> 프로그램에 의해 설치된 것이
+아닌 파일이 포함되어 있으면 이 디렉토리는 제거되지 <I>않습니다</I>.
+</TD></TR></TABLE>
+</LI><LI>설치된 다른 AFS 구성요소가 없는 경우 <B>시작</B> 메뉴에서
+<B>IBM AFS</B> 프로그램을 제거합니다.
+</LI><LI>시스템에서 AFS supplemental documentation 관련 레지스트리를 제거합니다.
+</LI></UL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="awqbg002.htm">이전 페이지</A> &#124; <A HREF="awqbg004.htm">다음 페이지</A> &#124; <A HREF="awqbg002.htm#ToC">목차</A> &#124; <A HREF="awqbg004.htm#HDRINDEX">색인</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

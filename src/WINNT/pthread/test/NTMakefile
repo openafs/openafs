@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\pthread\test
+!INCLUDE ../../../config/NTMakefile.$(SYS_NAME)
+
+test tests: ptest.exe tsd.exe native.exe
+
+
+$(OUT)\ptest.exe: $(OUT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+
+$(OUT)\tsd.exe: $(OUT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+
+$(OUT)\native.exe: $(OUT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+
+clean::
+	$(DEL) $(DESTDIR)/lib/afspthread.lib
+
+mkdir:
+	

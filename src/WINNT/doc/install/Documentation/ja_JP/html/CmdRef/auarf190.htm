@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_LISTTICKETS" HREF="auarf002.htm#ToC_204">kas listtickets</A></H2>
+<A NAME="IDX5116"></A>
+<A NAME="IDX5117"></A>
+<A NAME="IDX5118"></A>
+<A NAME="IDX5119"></A>
+<P><STRONG>目的</STRONG>
+<P>すべての発行者のチケット (トークン) を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas listtickets</B> [<B>-name</B> &lt;<VAR>name of server</VAR>>]  [<B>-long</B>]  [<B>-help</B>]
+   
+<B>kas listt</B> [<B>-n</B> &lt;<VAR>name of server</VAR>>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas listtickets</B> コマンドは、指定されたオプションに応じて、関連するユーザー ID (AFS UID)、セル名、および発行者のチケット (トークン) の有効期限を表示します。
+<UL>
+<LI>すべてのトークンを表示する場合には <B>-name</B> 引き数も、<B>-long</B> フラグも指定しないでください。この出力は、<B>tokens</B> コマンドの出力に類似しています。
+</LI><LI>トークンを 1 つだけ表示する場合には、<B>-name</B>
+引き数に、トークンを受け取るエンティティーの認証データベース項目名を指定してください。すべての AFS サーバー・プロセスは、<B>afs</B> 項目のキーで暗号化されたトークンを受け取ります。
+</LI><LI>また、トークンおよびセッション・キーを構成する 8 進数を表示するには、<B>-long</B> フラグを使用してください。
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>表示するトークンを受け取るエンティティー (通常のサーバー・プロセス) の認証データベース項目名を指定します。
+<P><DT><B>-long
+</B><DD>セッション・キーおよびチケットを構成する 8 進数を表示します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>この出力には、トークンを所有するユーザーの AFS UID、サービス (通常は <TT>afs</TT>)、それに有効なセル、および有効期限が、次の形式で示されます。メッセージにセルが表示されない場合、チケットはローカル・セル用のチケットになります。
+<PRE>   User's (AFS ID <VAR>AFS UID</VAR>) tokens for <VAR>service</VAR>[@<VAR>cellname</VAR>] [Expires <VAR>date</VAR>]
+   
+</PRE>
+<P><B>-long</B> フラグを指定すると、セッション・キーおよびトークンを構成する 8 進数が、トークンのキー・バージョン番号およびバイト数と一緒に出力されます。(バイト数が 56 でない場合には、エラーが発生しています。)
+<P>有効期限の代わりにマーカー <TT>[>> POSTDATED &lt;]</TT> が表示された場合、チケットは表示された時間まで有効になりません。(内部呼び出しによって日付の古いチケットを作成することができますが、そのための標準インターフェースは用意されていません。)
+<P><STRONG>例</STRONG>
+<P>以下の 2 つの例は、<B>abc.com</B> セルの AFS UID
+1020 および <B>test.abc.com</B> セルの AFS UID 35 のユーザーの場合です。ユーザーは、最初のセルのマシンで作業しており、両方のセルで認証されています。
+<PRE>   % <B>kas listtickets</B>
+   User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
+   User's (AFS ID 35@test.abc.com) tokens for afs@test.abc.com  \
+             [Expires Wed Mar 31 13:54:26 1999]
+   
+   % <B>kas listtickets -name afs -long</B>
+   User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
+   SessionKey: \375\205\351\227\032\310\263\013
+   Ticket: (kvno = 0, len = 56): \033\005\221\156\203\278\312\058\016\133 <VAR>(etc.)</VAR>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。パスワードは不要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf189.htm">前ページ</A> &#124; <A HREF="auarf191.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

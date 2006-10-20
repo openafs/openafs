@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>リリース情報</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1070\AWRNS000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 23 Feb 2000 at 13:24:44            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Wed, 23 Feb 2000 13:24:42">
+<META HTTP-EQUIV="review" CONTENT="Fri, 23 Feb 2001 13:24:42">
+<META HTTP-EQUIV="expires" CONTENT="Sat, 23 Feb 2002 13:24:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>リリース情報</H1>
+<HR><H1><A NAME="HDRINTRO" HREF="AWRNS002.htm#ToC_1">概要</A></H1>
+<HR><H2><A NAME="Header_2" HREF="AWRNS002.htm#ToC_2">概説</A></H2>
+<P>AFS<SUP><SUP>(R)</SUP></SUP> は、企業内の情報に対する安全で信頼性のあるアクセスを提供する、分散ファイル・システムです。個別のファイル・サーバー・マシンのディレクトリーおよびファイルを、どのデスクトップからでもアクセス可能な 1 つのファイル・システムに完全に統合することにより、
+AFS は、ユーザーにマシンの境界を意識させない単一のファイル・スペースを提供します。
+<P>AFS には、いくつかの利点があります。クライアント側のキャッシュ機能および複数のファイル・サーバー間で頻繁にアクセスされるデータの複写を使用すると、ファイルの可用性が改善されます。
+AFS は、ファイル・スペースに保管される情報を保護する強力なセキュリティーを提供します。さらに、AFS は拡張が極めて容易です。サーバーおよびクライアント・マシンの追加は、事実上、無制限であり、既存のサーバーおよびクライアント・マシンにほとんど影響を与えずに、必要に応じて AFS 構成に追加することができます。これにより、ファイル・システムは企業の成長に合わせて拡張していくことができます。
+<P>AFS for Windows には、以下の製品が含まれます。
+<UL>
+<LI><B>AFS サーバー</B>
+<P>
+<P>AFS サーバーは、
+Windows NT<SUP><SUP>(R)</SUP></SUP> マシンで AFS サーバー・プロセスを実行します。
+Windows NT マシン上の AFS サーバーは、
+AFS ファイル・サーバー、AFS データベース・サーバー、
+AFS バックアップ・サーバー、および AFS システム制御サーバーのうちの 1 つまたは複数から構成することができます。
+AFS サーバーには、簡単にセットアップできるように、AFS サーバー構成ウィザードがあります。
+</LI><LI><B>AFS コントロール・センター</B>
+<P>
+<P>AFS コントロール・センターには、
+AFS システム管理者が AFS セル管理を支援するために非常に有効な 2 つのグラフィカル・ユーザー・インターフェース (GUI) ツールがあります。
+AFS サーバー・マネージャーという、
+(Windows NT および UNIX システムにおいて) 1 つまたは複数の AFS サーバーにおけるボリュームおよびサービスの管理を容易にするツールと、
+AFS アカウント・マネージャーという、
+AFS ユーザーおよびグループのアカウントを簡単に作成したり、保守したりできるようにするツールです。
+</LI><LI><B>AFS クライアント</B>
+<P>
+<P>AFS クライアントを使用すると、
+Windows NT を稼働している PC から AFS ファイル・スペースに直接、アクセスできるため、ユーザーは AFS のファイルおよびディレクトリーを管理することができます。
+</LI><LI><B>AFS Light</B>
+<P>
+<P>AFS Light は、
+AFS 要求を AFS クライアントがインストールされている別の PC に転送することにより、
+Windows 98 または Windows 95 を稼働している PC から AFS ファイル・スペースにアクセスできるようにします。
+</LI></UL>
+<HR><H2><A NAME="Header_3" HREF="AWRNS002.htm#ToC_3">リリース情報について</A></H2>
+<P>本書では、AFS for Windows バージョン 3.6 に関する重要な情報について説明します。本書の概要は、本リリースのインストール前提条件、製品情報、および特定の制限および制約事項です。
+<P><TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS for Windows ユーザーは、
+<B>README.txt</B> ファイルを表示して、本書の発行以降に使用可能になった AFS for Windows の追加情報を確認することができます。
+<B>README.txt</B> ファイルは、
+AFS for Windows のインストール時に <I>AFS for Windows Installation</I>\<B>documentation</B> ディレクトリーにインストールされます。
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_4" HREF="AWRNS002.htm#ToC_4">対象読者</A></H3>
+<P>本書は、
+AFS for Windows に含まれる製品をインストールおよび構成して使用するシステム管理者を対象として書かれています。本書は、対象の読者が、一般的な AFS を使用したシステム管理に精通していることを前提としています。
+<P><H3><A NAME="Header_5" HREF="AWRNS002.htm#ToC_5">本書の編成</A></H3>
+<P>本書は、次の章から編成されます。
+<UL>
+<LI><A HREF="AWRNS004.htm#HDRCLIENT">AFS クライアント・リリース情報</A>は、AFS クライアントのバージョン 3.6 に関するリリース情報を提供します。
+</LI><LI><A HREF="AWRNS005.htm#HDRLTCLIENT">AFS Light リリース情報</A>は、AFS Light のバージョン 3.6 に関するリリース情報を提供します。
+</LI><LI><A HREF="AWRNS006.htm#HDRSERVER">AFS サーバー・リリース情報</A>は、AFS サーバーのバージョン 3.6 に関するリリース情報を提供します。
+</LI><LI><A HREF="AWRNS007.htm#HDRCNTRLCNTR">AFS コントロール・センター・リリース情報</A>は、AFS コントロール・センターのバージョン 3.6 に関するリリース情報を提供します。
+</LI></UL>
+<P>各節では、指定された AFS for Windows コンポーネントのインストール要件、製品情報、および制限および制約事項について説明します。ここでは、適宜、AFS for Windows の本リリースで使用可能になった新規機能および拡張機能についても説明します。
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="AWRNS002.htm">前ページ</A> &#124; <A HREF="AWRNS004.htm">次ページ</A> &#124; <A HREF="AWRNS002.htm#ToC">目次</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

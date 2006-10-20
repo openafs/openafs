@@ -1,0 +1,785 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "Konfiguration des AFS Clients"
+#define AFS_VERINFO_NAME "afs_config"
+#define AFS_VERINFO_FILENAME "afs_config.exe"
+#define AFS_VERINFO_LANG_CODE 0x407
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_GENERAL_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Client-Konfiguration",IDC_STATIC,7,7,206,142
+    LTEXT           "&Zellenname:",IDC_STATIC,13,23,41,8
+    EDITTEXT        IDC_CELL,59,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    CONTROL         "&AFS-Token beim Anmelden bei Windows erhalten",
+                    IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,
+                    193,10
+    CONTROL         "Das Symbol für den AFS Client in der Menüleiste &anzeigen",
+                    IDC_TRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
+    LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Client-Service nicht aktiv ist.",
+                    IDC_WARN,13,124,193,17
+    GROUPBOX        "Client-Status",IDC_STATIC,7,157,206,61
+    LTEXT           "(Abfragen des aktuellen Status)",IDC_STATUS,13,172,193,
+                    17
+    PUSHBUTTON      "Service &starten",IDC_SERVICE_START,88,195,57,14
+    PUSHBUTTON      "Service s&toppen",IDC_SERVICE_STOP,149,195,57,14
+END
+
+IDD_GENERAL_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Client-Konfiguration",IDC_STATIC,7,7,231,131
+    LTEXT           "&Gateway:",IDC_STATIC,13,28,31,8
+    EDITTEXT        IDC_GATEWAY,57,27,110,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Jetzt verbinden",IDC_GATEWAY_CONN,172,27,57,14
+    LTEXT           "&Zellenname:",IDC_STATIC,13,51,39,8
+    EDITTEXT        IDC_CELL,57,49,110,13,ES_LOWERCASE | ES_AUTOHSCROLL | 
+                    WS_DISABLED | NOT WS_TABSTOP
+    CONTROL         "&AFS-Token beim Anmelden bei Windows erhalten",
+                    IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,
+                    193,10
+    CONTROL         "Das Symbol für den AFS Light in der Menüleiste &anzeigen",
+                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,93,
+                    193,10
+    LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Light mit keinem AFS-Gateway verbunden ist.",
+                    IDC_WARN,13,114,219,17
+END
+
+IDD_PREFS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Vorgaben"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Server-Vorgaben",-1,7,7,206,211
+    CONTROL         "Vorgaben für &File Server anzeigen",IDC_SHOW_FS,"Button",
+                    BS_AUTORADIOBUTTON,13,21,193,10
+    CONTROL         "Vorgaben für &Volume Location Server anzeigen",
+                    IDC_SHOW_VLS,"Button",BS_AUTORADIOBUTTON,13,34,193,10
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+                    49,173,120
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,84,172,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,137,172,50,14
+    PUSHBUTTON      "^",IDC_UP,191,97,15,14,BS_ICON
+    PUSHBUTTON      "v",IDC_DOWN,191,117,15,14,BS_ICON
+    PUSHBUTTON      "&Importieren...",IDC_IMPORT,13,172,50,14
+    LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Client-Service nicht aktiv ist.",
+                    IDC_WARN,13,193,193,17
+END
+
+IDD_HOSTS_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS-Zellen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "AFS-Zellen",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    21,193,168
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,51,195,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,104,195,50,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,157,195,50,14
+END
+
+IDD_DRIVES_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Laufwerkbuchstaben"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Laufwerkbuchstaben",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,193,135
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,70,171,47,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,120,171,42,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,165,171,42,14
+    LTEXT           "Den Pfaden in AFS zugeordnete Laufwerkbuchstaben:",
+                    IDC_STATIC,13,21,193,8
+    PUSHBUTTON      "Er&weitert...",IDC_ADVANCED,13,171,53,14
+    LTEXT           "Hinweis: Diese Steuerelemente sind gesperrt, weil der AFS Client-Service nicht aktiv ist.",
+                    IDC_WARN,13,190,194,25
+END
+
+IDD_ADVANCED_NT DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Erweitert"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_CACHE_SIZE,88,21,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CACHE_PATH,88,41,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CHUNK_SIZE,88,62,32,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_STAT_ENTRIES,88,83,32,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Anmelden...",IDC_LOGON_PARMS,13,127,72,14
+    PUSHBUTTON      "&Globale Laufwerke...",IDC_AUTOMAP_PARMS,13,172,72,14
+    PUSHBUTTON      "&Verschiedenes...",IDC_MISC_PARMS,13,194,72,14
+    GROUPBOX        "Cache-Konfiguration",IDC_STATIC,7,7,206,100
+    LTEXT           "&Cache-Größe:",IDC_STATIC,13,23,71,8
+    LTEXT           "KB",IDC_INUSE,136,23,68,8
+    LTEXT           "C&hunk-Größe:",IDC_STATIC,13,64,71,8
+    LTEXT           "KB",IDC_STATIC,136,64,68,8
+    LTEXT           "&Status Cache:",IDC_STATIC,13,85,71,8
+    LTEXT           "Einträge",IDC_STATIC,136,85,68,8
+    LTEXT           "Cache-&Pfad:",IDC_STATIC,13,44,71,8
+    GROUPBOX        "Zusätzliche erweiterte Parameter",IDC_STATIC,7,114,206,
+                    104
+    LTEXT           "Globale AFS- Laufwerkszuordnungen erstellen.",
+                    IDC_STATIC,94,172,108,17
+    LTEXT           "Einstellungen zur integrierten Anmeldung anpassen.",
+                    IDC_STATIC,94,127,108,18
+    LTEXT           "Verschiedene andere erweiterte Parameter festlegen.",
+                    IDC_STATIC,94,193,108,16
+    PUSHBUTTON      "&Diagnostisch...",IDC_DIAG_PARMS,13,149,72,14
+    LTEXT           "Einstellungen für Fehler-Debug aktivieren.",IDC_STATIC,
+                    94,148,108,17
+END
+
+IDD_PREFS_EDIT DIALOG DISCARDABLE  0, 0, 251, 123
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Server-Priorität angeben"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Sie können für einen Server in dieser AFS-Zelle eine Prioritätenfolge angeben. Server mit niedrigerer Rangordnung werden beim Suchen von Daten in AFS zuerst abgefragt.",
+                    IDC_STATIC,7,7,237,24
+    LTEXT           "&Server:",IDC_STATIC,34,42,24,8
+    LTEXT           "&Rang:",IDC_STATIC,34,58,20,8
+    EDITTEXT        IDC_SERVER,63,40,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RANK,63,56,36,13,ES_AUTOHSCROLL
+    LTEXT           "Tip: Sie können mit einem Mal für mehrere Server Ränge vergeben, indem Sie mit Hilfe der Schaltfläche Importieren eine Textdatei einlesen, die Server und ihre Rangordnung angibt.",
+                    IDC_STATIC,7,73,237,25
+    PUSHBUTTON      "Abbrechen",IDCANCEL,140,102,50,14
+    PUSHBUTTON      "OK",IDOK,86,102,50,14
+    PUSHBUTTON      "Hilfe",9,194,102,50,14
+END
+
+IDD_CELL_EDIT DIALOG DISCARDABLE  0, 0, 244, 223
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zellenmerkmale"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Die Informationen auf dieser Seite teilen AFS mit, wie die angegebene Zelle anzusprechen ist.",
+                    IDC_STATIC,4,4,226,16
+    LTEXT           "&AFS-Zelle:",IDC_STATIC,4,27,36,8
+    EDITTEXT        IDC_CELL,51,25,105,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    LTEXT           "&Beschreibung:",IDC_STATIC,4,44,43,8
+    EDITTEXT        IDC_COMMENT,51,42,181,13,ES_AUTOHSCROLL
+    GROUPBOX        "Server",IDC_STATIC,4,61,236,158
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+                    76,217,117
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,75,198,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,128,198,50,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,181,198,50,14
+END
+
+IDD_SERVER_EDIT DIALOG DISCARDABLE  0, 0, 251, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Server hinzufügen/bearbeiten"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Geben Sie den Namen eines Volume Location Servers in der angegebenen Zelle ein.",
+                    IDC_STATIC,7,7,237,16
+    LTEXT           "Server-&Name:",IDC_STATIC,7,31,44,8
+    EDITTEXT        IDC_COMMENT,63,29,175,13,ES_AUTOHSCROLL
+    LTEXT           "Server-&Adresse:",IDC_STATIC,7,52,51,8
+    CONTROL         "Spezielle Adresse &verwenden:",IDC_ADDR_SPECIFIC,"Button",
+                    BS_AUTORADIOBUTTON,60,52,105,10
+    CONTROL         "Adresse automatisch &suchen",IDC_ADDR_LOOKUP,"Button",
+                    BS_AUTORADIOBUTTON,60,66,111,10
+    CONTROL         "",IDC_SERVER,"SockAddr",WS_BORDER | WS_TABSTOP,173,51,
+                    65,13
+    PUSHBUTTON      "Abbrechen",IDCANCEL,140,91,50,14
+    PUSHBUTTON      "OK",IDOK,86,91,50,14
+    PUSHBUTTON      "Hilfe",9,194,91,50,14
+END
+
+IDD_DRIVE_EDIT DIALOG DISCARDABLE  0, 0, 297, 156
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Laufwerkbuchstabe zuordnen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Sie können Pfaden in AFS Laufwerkbuchstaben ihres Computers zuordnen.",
+                    IDC_STATIC,7,7,283,8
+    LTEXT           "Wenn Sie, zum Beispiel, Laufwerk Q den Pfad /afs/acme.com/usr/bob zuordnen, erscheinen die in AFS unter /afs/acme.com/usr/bob/* erreichbaren Dateien im Verzeichnis Q:\\ Ihres Computers.",
+                    IDC_STATIC,7,26,283,25
+    LTEXT           "&Laufwerkbuchstabe:",IDC_STATIC,16,60,64,8
+    COMBOBOX        IDC_DRIVE,91,58,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS-&Pfad:",IDC_STATIC,16,78,33,8
+    EDITTEXT        IDC_PATH,91,76,168,13,ES_AUTOHSCROLL
+    LTEXT           "B&eschreibung:",IDC_STATIC,15,97,52,8
+    EDITTEXT        IDC_DESC,91,95,72,13,ES_AUTOHSCROLL
+    CONTROL         "Diese Zuordnung bei jeder Anmeldung &wiederherstellen",
+                    IDC_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,91,
+                    114,188,10
+    PUSHBUTTON      "Abbrechen",IDCANCEL,186,135,50,14
+    PUSHBUTTON      "OK",IDOK,132,135,50,14
+    PUSHBUTTON      "Hilfe",9,240,135,50,14
+END
+
+IDD_SUBMOUNTS DIALOG DISCARDABLE  0, 0, 244, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Submounts"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Ihr Computer kann Submounts - Netzwerkabtrennungen - in AFS realisieren.",
+                    IDC_STATIC,4,4,196,16
+    GROUPBOX        "Submounts",IDC_STATIC,4,26,236,168
+    LTEXT           "Die folgenden Submounts sind von diesem Computer abgetrennt:",
+                    IDC_STATIC,10,42,221,8
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+                    54,223,115
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,78,173,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,131,173,50,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,184,173,50,14
+END
+
+IDD_SUBMOUNT_EDIT DIALOG DISCARDABLE  0, 0, 270, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Submount angeben"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Über Submounts können Sie eine AFS-Unterverzeichnisstruktur mittels Windows Networking abtrennen.",
+                    IDC_STATIC,7,7,256,18
+    LTEXT           "&Submount:",IDC_STATIC,21,31,35,8
+    LTEXT           "AFS-&Pfad:",IDC_STATIC,21,47,33,8
+    EDITTEXT        IDC_SUBMOUNT,63,29,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MAPPING,63,45,181,13,ES_AUTOHSCROLL
+    LTEXT           "Geben Sie an der Eingabeaufforderung für das Submount einen Kurznamen und einen vollständigen AFS-Pfad ein. Der AFS-Pfad kann mit ""\\afs"" beginnen (wenn nicht, wird ""\\afs"" automatisch hinzugefügt).",
+                    IDC_STATIC,7,60,256,27
+    PUSHBUTTON      "Abbrechen",IDCANCEL,159,91,50,14
+    PUSHBUTTON      "OK",IDOK,105,91,50,14
+    PUSHBUTTON      "Hilfe",9,213,91,50,14
+END
+
+IDD_DRIVES_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Laufwerkbuchstaben"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Laufwerkbuchstaben",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+                    13,32,219,60
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,90,95,52,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,145,95,42,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,190,95,42,14
+    LTEXT           "Den Pfaden in AFS zugeordnete Laufwerkbuchstaben:",
+                    IDC_STATIC,13,21,193,8
+    LTEXT           "Hinweis: Diese Steuerzeichen sind gesperrt, weil der AFS Light mit keinem AFS-Gateway verbunden ist.",
+                    IDC_WARN,13,116,219,17
+END
+
+IDD_HOSTS_95 DIALOG DISCARDABLE  0, 0, 245, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS-Zellen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "AFS-Zellen",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    19,218,94
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,75,116,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,128,116,50,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,181,116,50,14
+END
+
+IDD_STARTSTOP DIALOGEX 0, 0, 239, 49
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "AFS Client-Service"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,1,231,44
+    ICON            IDI_MAIN,IDC_STATIC,14,15,20,20
+    LTEXT           "Bitte warten; der AFS Client-Service wird gestartet...",
+                    IDC_STARTING,46,20,180,8
+    LTEXT           "Bitte warten; der AFS Client-Service wird gestoppt...",
+                    IDC_STOPPING,46,20,174,8
+END
+
+IDD_HOSTS_CCENTER DIALOG DISCARDABLE  0, 0, 220, 256
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Standardzelle",IDC_STATIC,7,7,206,54
+    LTEXT           "Geben Sie den Namen der zu verwaltenden AFS-Standardzelle ein:",
+                    IDC_STATIC,14,19,186,16
+    LTEXT           "Standardzelle:",IDC_STATIC,14,40,51,8
+    EDITTEXT        IDC_CELL,67,38,139,14,ES_LOWERCASE | ES_AUTOHSCROLL
+    GROUPBOX        "AFS-Zellen",IDC_STATIC,7,69,206,180
+    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+                    84,193,137
+    PUSHBUTTON      "&Hinzufügen...",IDC_ADD,51,227,50,14
+    PUSHBUTTON      "Ä&ndern...",IDC_EDIT,104,227,50,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,157,227,50,14
+END
+
+IDD_MISC_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 220, 193
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Verschiedenes konfigurieren"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_LAN_ADAPTER,90,20,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROBE,90,40,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THREADS,90,60,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DAEMONS,90,80,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SYSNAME,90,100,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOUNTDIR,90,120,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ROOTVOLUME,90,140,83,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,55,172,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,109,172,50,14
+    PUSHBUTTON      "Hilfe",9,163,172,50,14
+    GROUPBOX        "Parameter",IDC_STATIC,7,7,206,156
+    LTEXT           "&Testintervall:",IDC_STATIC,15,42,71,8
+    LTEXT           "Sekunden",IDC_STATIC,138,42,68,8
+    LTEXT           "&Hintergrund-Threads:",IDC_STATIC,15,62,71,8
+    LTEXT           "Threads",IDC_STATIC,138,62,68,8
+    LTEXT           "S&ervice-Threads:",IDC_STATIC,15,82,71,8
+    LTEXT           "Threads",IDC_STATIC,138,82,68,8
+    LTEXT           "S&ystemname:",IDC_STATIC,15,102,71,8
+    LTEXT           "&Mount-Verzeichnis:",IDC_STATIC,15,122,71,8
+    LTEXT           "&LAN-Adapternummer:",IDC_STATIC,15,22,71,8
+    LTEXT           "&Root-Volume:",IDC_STATIC,15,141,71,8
+END
+
+IDD_DIAG_PARMS DIALOG DISCARDABLE  0, 0, 217, 135
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Diagnostische Konfiguration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_TRACE_LOG_BUF_SIZE,113,20,32,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,52,114,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,106,114,50,14
+    PUSHBUTTON      "Hilfe",9,160,114,50,14
+    GROUPBOX        "Parameter des Trace-Protokolls",IDC_STATIC,7,7,203,54
+    LTEXT           "&Puffergröße:",IDC_STATIC,13,22,73,8
+    LTEXT           "KB",IDC_STATIC,164,22,9,8
+    GROUPBOX        "Parameter des Ereignisprotokolls",IDC_STATIC,7,69,203,
+                    35
+    COMBOBOX        IDC_TRAP_ON_PANIC,113,40,32,61,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Notfall-Unterbrechungspunkt:",IDC_STATIC,13,42,95,11
+    LTEXT           "Start von Berichtsprogrammen:",IDC_STATIC,13,86,98,8
+    COMBOBOX        IDC_REPORT_SESSION_STARTUPS,113,85,32,64,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_LOGIN_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 186, 92
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Konfiguration der Anmeldung"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_LOGIN_RETRY_INTERVAL,117,19,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_FAIL_SILENTLY,117,40,32,40,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,21,71,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,75,71,50,14
+    PUSHBUTTON      "Hilfe",9,129,71,50,14
+    LTEXT           "Wiederholungsintervall für die &Anmeldung:",IDC_STATIC,
+                    13,19,94,16
+    GROUPBOX        "Parameter",IDC_STATIC,7,7,172,54
+    LTEXT           "Lautlos &fehlgeschlagene Anmeldungen:",IDC_STATIC,13,41,
+                    61,8
+END
+
+IDD_GLOBAL_DRIVES DIALOG DISCARDABLE  0, 0, 253, 169
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Globale Laufwerke"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Schließen",IDOK,141,148,50,14
+    PUSHBUTTON      "Hilfe",9,196,148,50,14
+    PUSHBUTTON      "&Hinzufügen",IDC_ADD,108,117,42,14
+    GROUPBOX        "Global zugeordnete AFS-Laufwerke",IDC_STATIC,7,7,239,
+                    133
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER | 
+                    WS_TABSTOP | 0x1b,14,20,226,89
+    PUSHBUTTON      "Ä&ndern",IDC_CHANGE,153,117,42,14
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,198,117,42,14
+END
+
+IDD_GLOBAL_DRIVES_ADDEDIT DIALOG DISCARDABLE  0, 0, 247, 118
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Globales Laufwerk zuordnen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_DRIVE,90,23,63,206,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_PATH,90,42,138,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,90,62,72,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,82,96,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,136,96,50,14
+    PUSHBUTTON      "Hilfe",9,190,96,50,14
+    LTEXT           "&Laufwerkbuchstabe:",IDC_STATIC,16,25,71,8
+    LTEXT           "AFS-&Pfad:",IDC_STATIC,16,44,33,8
+    LTEXT           "B&eschreibung:",IDC_STATIC,15,64,52,8
+    GROUPBOX        "Globales AFS-Laufwerk",IDC_STATIC,7,7,232,80
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_GENERAL_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GENERAL_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_PREFS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_HOSTS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_DRIVES_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_ADVANCED_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_PREFS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
+
+    IDD_CELL_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_SERVER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_DRIVE_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 290
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+    END
+
+    IDD_SUBMOUNTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_SUBMOUNT_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 263
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_DRIVES_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_HOSTS_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 235
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 45
+    END
+
+    IDD_HOSTS_CCENTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 249
+    END
+
+    IDD_MISC_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 186
+    END
+
+    IDD_DIAG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_LOGIN_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_GLOBAL_DRIVES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""Konfiguration des AFS Clients""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afs_config.ico"
+IDI_UP                  ICON    DISCARDABLE     "up.ico"
+IDI_DOWN                ICON    DISCARDABLE     "down.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE_NT            "Konfiguration des AFS Clients"
+    IDS_TITLE_95            "Konfiguration des AFS Light"
+    IDS_STATE_STOPPED       "Der AFS Client-Service ist zur Zeit gestoppt."
+    IDS_STATE_RUNNING       "Der AFS Client-Service läuft normal."
+    IDS_STATE_STARTING      "Bitte warten; der AFS Client-Service wird gestartet..."
+    IDS_STATE_STOPPING      "Bitte warten; der AFS Client-Service wird gestoppt..."
+    IDS_STATE_UNKNOWN       "Der AFS Client-Service ist nicht richtig konfiguriert."
+    IDS_SERVICE_FAIL_START  "Der AFS Client-Service konnte nicht erfolgreich gestartet werden. Vielleicht besitzen Sie nicht die Berechtigung für diese Operation.\n\nFehler 0x%1."
+    IDS_SERVICE_FAIL_STOP   "Der AFS Client-Service konnte nicht erfolgreich gestoppt werden. Vielleicht besitzen Sie nicht die Berechtigung für diese Operation.\n\nFehler 0x%1."
+    IDS_WARN_STOPPED        "Hinweis: Die gesperrten Steuerelemente können nicht verändert werden, weil der AFS Client-Service nicht aktiv ist."
+    IDS_WARN_ADMIN          "Hinweis: Die gesperrten Steuerelemente können nicht verändert werden, weil Sie bei Windows nicht als Administrator angemeldet sind."
+    IDS_CELL_UNKNOWN        "(unbekannt)"
+    IDS_GATEWAY_UNKNOWN     "(unbekannt)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADLOOKUP_DESC      "Windows konnte eine Netzadresse für %1 nicht finden. Überprüfen Sie, ob Sie den Namen der Maschine korrekt eingegeben haben."
+    IDS_NEWSUB_DESC         "AFS konnte die Beschreibung nicht verwenden, die Sie beim Verbinden des Netzlaufwerkes angegeben haben.\n\nDie angegebene Beschreibung wird bereits für einen anderen AFS-Pfad verwendet."
+    IDS_BADSUB_DESC         "Die durch Sie eingegebene Beschreibung zum Laufwerkbuchstaben kann nicht verwendet werden.\n\nDie Beschreibung zu einem Laufwerkbuchstaben darf nicht mehr als 12 Zeichen lang sein und keine Leerzeichen oder Tabulatoren enthalten."
+    IDS_BADGATEWAY_DESC     "AFS konnte die von Ihnen angegebene Gateway-Machine nicht ansprechen.\n\nÜberprüfen Sie, ob Sie den Namen der Gateway-Machine korrekt eingegeben haben."
+    IDS_BADGWCELL_DESC      "Für die durch die angegebene Gateway-Machine verwendete AFS-Zelle \nkonnten keine Konfigurationsdaten gefunden werden.\n\nWenn Sie den AFS Client für eine neue Zelle konfigurieren möchten, müssen Sie das Register AFS-Zellen verwenden, um für diese Zelle Konfigurationsdaten hinzuzufügen.\n\nZelle: %1"
+    IDS_TITLE_CAUTION_NT    "Warnung - Konfiguration des AFS Clients"
+    IDS_TITLE_CAUTION_95    "Warnung - Konfiguration des AFS Light"
+    IDS_TITLE_ERROR_NT      "Fehler - Konfiguration des AFS Clients"
+    IDS_TITLE_ERROR_95      "Fehler - Konfiguration des AFS Light"
+    IDS_SHRINKCACHE         "Die Cache-Größe des AFS Client kann nicht reduziert werden, \nwährend der AFS Client-Service aktiv ist.\n\nUm die Größe des Cache zu reduzieren, verwenden \nSie zuerst die Schaltfläche Service stoppen auf dem Register Allgemein, um den AFS Client-Service zu \nstoppen."
+    IDS_BADCELL_DESC_CC     "Für die von Ihnen eingegebene AFS-Zelle konnten keine Konfigurationsdaten gefunden werden.\n\n+"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_DESC           "In AFS gespeicherte Dateien werden für diesen Computer nicht mehr \nerreichbar sein, wenn Sie den AFS Client-Service stoppen.\n\nSind Sie sicher, daß Sie den Service stoppen möchten?"
+    IDS_PREFCOL_SERVER      "Server"
+    IDS_PREFCOL_RANK        "Rang"
+    IDS_TIP_PREFS           "Tip: Server mit niedrigerer Rangordnung erhalten beim Lesen von Dateien über AFS Priorität."
+    IDS_PREFERROR_RESOLVE   "AFS konnte den Server mit der Bezeichnung %1 nicht finden. Bitte überprüfen Sie, ob Sie den Server korrekt eingegeben haben."
+    IDS_FILTER_TXT          "Textdateien (*.TXT);*.TXT;"
+    IDS_HOSTREM_MANY        "Sie haben gewählt, alle Informationen zum Ansprechen der ausgewählten AFS-Zellen zu entfernen.\n\nSind Sie sicher, daß Sie diese Einträge entfernen möchten?"
+    IDS_HOSTREM_ONE         "Sie haben gewählt, alle Informationen zum Ansprechen der AFS-Zelle \n%1 zu entfernen.\n\nSind Sie sicher, daß Sie diesen Eintrag entfernen möchten?"
+    IDS_CELLEDIT_TITLE      "%1 - Merkmale"
+    IDS_CELLADD_TITLE       "Neue Zelle"
+    IDS_SVRCOL_SERVER       "Adresse"
+    IDS_SVRCOL_COMMENT      "Server-Name"
+    IDS_TIP_DRIVES          "Tip: Sie können eine Netzlaufwerkszuordnung verbinden, indem Sie das Fenster neben dem Laufwerkbuchstaben der Zuordnung überprüfen."
+    IDS_MAP_LETTER          "Laufwerk *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "Laufwerk %1: \t%2"
+    IDS_ERROR_MAP           "Netzlaufwerk zur Fehlerzuordnung"
+    IDS_ERROR_MAP_DESC      "AFS konnte das Netzlaufwerk dem angegebenen Pfad in AFS nicht \nzuordnen. Stellen Sie sicher, daß der Laufwerkbuchstabe zur Zeit nicht in Gebrauch \nist.\n\nFehler: 0x%1."
+    IDS_ERROR_UNMAP         "Netzlaufwerk zur Fehlerzuordnung"
+    IDS_ERROR_UNMAP_DESC    "AFS konnte die Zuordnung des angegebenen Netzlaufwerks nicht \naufheben. Stellen Sie sicher, daß der Laufwerkbuchstabe zur Zeit nicht in Gebrauch \nist.\n\nFehler: 0x%1."
+    IDS_ADDSERVER_TITLE     "Server hinzufügen"
+    IDS_EDITSERVER_TITLE    "Server editieren"
+    IDS_SUBCOL_SHARE        "Submount"
+    IDS_SUBCOL_PATH         "AFS-Pfad"
+    IDS_SUBMOUNTS_TITLE     "Submounts"
+    IDS_BADCELL_DESC        "Für die von Ihnen eingegebene AFS-Zelle konnten keine Konfigurationsdaten gefunden werden.\n\n+"
+    IDS_BADCELL_DESC2       "Überprüfen Sie, ob Sie den Namen der Zelle korrekt eingegeben \nhaben. Wenn Sie den AFS Client für eine neue Zelle konfigurieren möchten, müssen Sie das Register \nAFS-Zellen verwenden, um für diese Zelle Konfigurationsdaten hinzuzufügen."
+    IDS_KB_IN_USE           "KB (%1 KB in Gebrauch)"
+    IDS_NOGATEWAY_TITLE     "Ungültiges AFS-Gateway"
+    IDS_NOGATEWAY_DESC      "AFS Light kann nicht konfiguriert werden, weil Sie kein AFS-Gateway angegeben haben.\n\nBitte geben Sie in das entsprechende Feld den Namen oder die IP-Adresse eines AFS-Gateways ein."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOCELL_DESC         "AFS Client kann nicht konfiguriert werden, weil Sie keine \nAFS-Zelle angegeben haben.\n\nBitte geben Sie in das entsprechende Feld den Namen oder die \nIP-Adresse einer AFS-Zelle ein."
+    IDS_STOPPED_NOCELL      "Sie müssen eine AFS-Zelle angeben, bevor der AFS Client-Service gestartet werden kann."
+    IDS_OKSTOP_DESC         "Der AFS Client-Service ist nicht aktiv. In AFS gespeicherte \nDateien werden für diesen Computer nicht erreichbar sein, bis Sie den AFS Client-Service \nstarten.\n\nMöchten Sie den Service jetzt starten?"
+    IDS_BADMAP_DESC         "AFS kann dem angegebenen Pfad keinen Laufwerkbuchstaben zuordnen, \nweil der Pfad nicht mit ""\\afs"" beginnt.\n\nStellen Sie sicher, daß der eingegebene Pfad mit \n""\\afs"" beginnt, und versuchen Sie es erneut."
+    IDS_RESTART_TITLE       "Konfiguration des AFS Clients"
+    IDS_RESTART_DESC        "Einige der durch Sie vorgenommenen Änderungen werden unwirksam \nsein, bis der AFS Client-Service gestoppt und neu gestartet worden ist.\n\nMöchten Sie den \nService jetzt stoppen und neu starten?"
+    IDS_KB_ONLY             "KB"
+    IDS_FAILCONFIG_AUTHENT  "Beim Aktivieren oder Sperren der Authentifizierung bei der Anmeldung ist ein Fehler aufgetreten.\n\nFehler %1"
+    IDS_FAILCONFIG_PREFS    "Einige der durch Sie zugewiesenen Server-Prioritäten konnten nicht verwendet werden.\n\nFehler %1"
+    IDS_FAILCONFIG_CACHE    "Die von Ihnen eingegebene Cache-Größe für den AFS Client konnte nicht verwendet werden.\n\nFehler %1"
+    IDS_FAILCONFIG_PROBE    "Das von Ihnen eingegebene Testintervall für den AFS Client konnte \nnicht verwendet werden.\n\nFehler %1"
+    IDS_FAILCONFIG_SYSNAME  "Der von Ihnen eingegebene Syname für den AFS Client konnte \nnicht verwendet werden.\n\nFehler %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADCELL_DESC_CC2    "Überprüfen Sie, ob Sie den Namen der Zelle korrekt eingegeben \nhaben. Wenn der korrekte Zellenname in der Liste AFS-Zellen nicht auftritt, verwenden Sie die \nSchaltfläche Hinzufügen, um für die Zelle einen Eintrag zu erstellen."
+    IDS_NOCELL_DESC_CC      "AFS Control Center kann nicht konfiguriert werden, weil Sie keine \nAFS-Standardzelle angegeben haben.\n\nBitte geben Sie in das entsprechende Feld den Namen einer \nAFS-Zelle ein."
+    IDS_TITLE_CAUTION_CCENTER "Warnung - Merkmale für AFS Control Center"
+    IDS_TITLE_ERROR_CCENTER "Fehler - Merkmale für AFS Control Center"
+    IDS_TITLE_CCENTER       "Merkmale für AFS Control Center"
+    IDS_YES                 "Ja"
+    IDS_NO                  "Nein"
+    IDS_DRIVE               "Laufwerk"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

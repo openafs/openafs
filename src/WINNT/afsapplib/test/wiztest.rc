@@ -1,0 +1,190 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOG DISCARDABLE  0, 0, 330, 165
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "Wizard Test"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cance&l",IDCANCEL,114,144,50,14
+    PUSHBUTTON      "< &Back",IDBACK,167,144,50,14
+    PUSHBUTTON      "&Next >",IDNEXT,220,144,50,14
+    PUSHBUTTON      "&Help",9,273,144,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,137,316,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,67,120,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,83,7,240,120
+END
+
+IDD_STEP1 DIALOG DISCARDABLE  0, 0, 240, 120
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This is step one in the wizard!",IDC_STATIC,0,0,239,8
+    LTEXT           "Select the step you'd like to go to next:",IDC_STATIC,0,
+                    33,123,8
+    CONTROL         "&Continue to step two",IDC_GOTO_TWO,"Button",
+                    BS_AUTORADIOBUTTON,30,52,81,10
+    CONTROL         "&Skip to step three",IDC_GOTO_THREE,"Button",
+                    BS_AUTORADIOBUTTON,30,66,71,10
+END
+
+IDD_STEP2 DIALOG DISCARDABLE  0, 0, 240, 120
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This is step two in the wizard!",IDC_STATIC,0,0,239,8
+    LTEXT           "Click Back to return to step one, or Next to continue to step three.",
+                    IDC_STATIC,0,32,208,8
+END
+
+IDD_STEP3 DIALOG DISCARDABLE  0, 0, 240, 120
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This is the final step in the wizard!",IDC_STATIC,0,0,
+                    239,8
+    LTEXT           "Click Back to return to the previous step, or click Finish to quit.",
+                    IDC_STATIC,0,32,197,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 323
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 158
+    END
+
+    IDD_STEP1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 113
+    END
+
+    IDD_STEP2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 113
+    END
+
+    IDD_STEP3, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 113
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "256color.bmp"
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "16color.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "&Next >"
+    IDS_FINISH              "&Finish"
+    IDS_HELP_TITLE          "Help Button Pressed"
+    IDS_HELP_DESC           "You clicked the Help button. Sorry, but you're helpless."
+    IDS_CANCEL_TITLE        "Cancel Wizard Test?"
+    IDS_CANCEL_DESC         "Are you sure you want to close the glorious Wizard Test application? Your ancestors will despise you..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

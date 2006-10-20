@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Release Notes</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt4485/awrns000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 15 Feb 2000 at 10:10:20               -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 15 Feb 2000 10:10:19">
+<META HTTP-EQUIV="review" CONTENT="Thu, 15 Feb 2001 10:10:19">
+<META HTTP-EQUIV="expires" CONTENT="Fri, 15 Feb 2002 10:10:19">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Release Notes</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="awrns002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="awrns005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="awrns007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="#INDEX_START"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRSERVER" HREF="awrns002.htm#ToC_46">AFS Server Release Notes</A></H1>
+<HR><H2><A NAME="Header_47" HREF="awrns002.htm#ToC_47">Introduction</A></H2>
+<P>This section contains important information about the AFS Server
+component of AFS for Windows, version 3.6. The AFS Server runs
+AFS server processes on a Windows NT machine. An AFS Server on a
+Windows NT machine can be configured as one or more of the following&#58; an
+AFS File Server, an AFS Database Server, an AFS Backup Server, and an AFS
+System Control Server.
+<HR><H2><A NAME="Header_48" HREF="awrns002.htm#ToC_48">AFS Server Installation Requirements</A></H2>
+<P>Your system must meet the following hardware, software, and
+administrative privilege requirements to install the AFS Server component of
+AFS for Windows.
+<P><H3><A NAME="Header_49" HREF="awrns002.htm#ToC_49">Hardware</A></H3>
+<P>The hardware requirements for installing the AFS Server are&#58;
+<UL>
+<P><LI>A PC using an 80486/66 MHz (or faster) microprocessor or Pentium-based
+microprocessor 
+<P><I>Recommended&#58; A PC using a Pentium or higher microprocessor</I>
+<P><LI>At least 16 MB of RAM 
+<P><I>Recommended&#58; 32 MB of RAM or more</I>
+<P><LI>A hard disk with at least 20 MB of available disk space
+<P><LI>At least one NTFS disk volume to hold the AFS file system data. The
+NTFS volume must not contain any data or files other than that of a Windows NT
+Recycle Bin to be eligible for configuration as an AFS partition.
+</UL>
+<P><H3><A NAME="Header_50" HREF="awrns002.htm#ToC_50">Software</A></H3>
+<P>The software requirements for installing the AFS Server are&#58;
+<UL>
+<P><LI>Microsoft Windows NT 4.0 with Service Pack 4 or Service Pack 5
+</UL>
+<P><H3><A NAME="Header_51" HREF="awrns002.htm#ToC_51">Administrative Privilege Requirement</A></H3>
+<P>You must be a member of the local <B>Administrators</B> group on
+your Windows system in order to install, configure, and start the AFS
+Server.
+<HR><H2><A NAME="Header_52" HREF="awrns002.htm#ToC_52">Product Notes</A></H2>
+<P>This section highlights important general information about the AFS
+Server component of AFS for Windows, version 3.6. Included in
+this section are descriptions of new features and enhancements made available
+in this release of the AFS Server.
+<P><H3><A NAME="Header_53" HREF="awrns002.htm#ToC_53">Support for Volumes That Are Greater Than 2 GB</A></H3>
+<P>An AFS volume is a collection of related files that are organized into
+a single, easily managed unit and that can be easily moved between File Server
+machines to facilitate load balancing across the network. Each AFS
+volume has a specific quota associated with it. A volume&#39;s quota
+specifies the maximum amount of disk space the information in the volume can
+occupy. Quota is set on a per volume basis, so it can be increased for
+volumes that contain more data and decreased for volumes that do not need the
+additional space. AFS for Windows, version 3.6 now supports
+volumes with quotas greater than 2 GB.
+<P><H3><A NAME="Header_54" HREF="awrns002.htm#ToC_54">Encryption Routines Used by the System Control Server Are Included with All Versions of AFS for Windows</A></H3>
+<P>Encryption routines used by the Update Service on the System Control
+Server machine are now being included with <I>all</I> versions of AFS for
+Windows due to the relaxation of United States government export
+regulations. Previously, government regulations prohibited the export
+of these encryption routines. Thus, sites that were not running the
+United States distribution of AFS were not able to use a System Control Server
+to distribute configuration files, because doing so permitted sensitive system
+information to be transmitted unencrypted. Now, all sites can use a
+System Control Server machine to distribute new versions of AFS Server
+configuration information to all AFS File Server machines.
+<P><H3><A NAME="Header_55" HREF="awrns002.htm#ToC_55">AFS Server Computer Name Must Correspond to the Name Service Host Name</A></H3>
+<P>The computer name of an AFS Server machine (as displayed in the
+<B>Computer Name</B> field on the <B>Identification</B> tab of the
+Network dialog box) must correspond to the host name assigned to the computer
+by the name service (normally the Domain Name Service, or DNS) used to map
+names to Internet Protocol (IP) addresses. For example, if the machine
+on which the AFS Server is installed has the computer name
+<B>afsserver1</B> and is in the <B>yourcompany.com</B> domain,
+the corresponding DNS entry for the machine must be
+<B>afsserver1.yourcompany.com</B>.
+<P><H3><A NAME="Header_56" HREF="awrns002.htm#ToC_56">Time Clock Synchronization</A></H3>
+<P>To support security and database replication protocols, the time clocks
+on all machines running AFS servers must be synchronized. Time
+synchronization software can be obtained from numerous sources; for
+example, Microsoft distributes the <B>timeserv</B> time synchronization
+service with the Windows NT Server Resource Kit.
+<P><H3><A NAME="Header_57" HREF="awrns002.htm#ToC_57">Securing AFS Server Machines</A></H3>
+<P>If the machine on which the AFS Server software is installed is not
+secure (that is, if nonadministrative personnel are able to log into the
+machine), then it is strongly recommended that the AFS Server software
+directories and all AFS partitions on the machine be secured as appropriate
+for the environment and file system type. However, when securing AFS
+Server machines, ensure that the Windows NT local <B>SYSTEM</B> principal
+has full access to the AFS software and all AFS partitions; otherwise AFS
+processes will not be able to run.
+<P><H3><A NAME="Header_58" HREF="awrns002.htm#ToC_58">Shutting Down AFS File Server Machines</A></H3>
+<P>Before shutting down a Windows NT machine that is running as an AFS
+File Server, always stop the AFS File Server on the machine.
+<P>When the AFS File Server is started on a machine, the process creates a
+salvage file. When the File Server is stopped manually, this salvage
+file is removed. However, if a Windows NT machine is shut down while
+the AFS File Server is still running, this salvage file is not removed.
+When the machine is subsequently restarted, the File Server starts
+automatically and, upon noticing the presence of the salvage file, executes
+the Salvager. Because running the Salvager can be very time consuming,
+it is always preferable to stop the AFS File Server on a machine before
+shutting the machine down to avoid unnecessarily executing the Salvager
+process.
+<P>Use one of the following procedures to shut down the AFS File Server on a
+Windows NT machine.
+<P>
+<UL>
+<P><LI>From the Windows NT Control Panel&#58;
+<OL TYPE=1>
+<P><LI>Double-click the <B>Services</B> icon. The Services dialog box
+opens.
+<P><LI>In the <B>Service</B> list, select the <B>IBM AFS Server</B>
+service.
+<P><LI>Choose the <B>Stop</B> button. A message box appears, prompting
+you to confirm that you want to stop the service. Choose the
+<B>Yes</B> button.
+<P>The AFS File Server on the machine is stopped.
+</OL>
+<P><LI>From the Windows NT Command Prompt&#58;
+<OL TYPE=1>
+<P><LI>Enter the following command&#58;
+<PRE>bos shutdown -server <VAR>machine_name</VAR> -wait
+</PRE>
+<P>where <I>machine_name</I> is the name of the Windows NT machine on
+which the AFS File Server is running.
+<P><LI>Press &lt;<B>Enter</B>> to execute the command.
+</OL>
+</UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">In general, machines that are running as AFS File Servers are shut down only
+to perform preventative maintenance.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_59" HREF="awrns002.htm#ToC_59">Obtaining Crash Dump Files in the Event of Server Problems</A></H3>
+<P>It is recommended that you configure all AFS Server machines to create
+a crash dump file in the event of a server failure. This information is
+important for technical support personnel to use in order to diagnose a server
+problem. Consult your Microsoft Windows NT documentation for
+information on how to configure the Dr. Watson utility to generate a
+binary crash dump file automatically when an application error occurs.
+<P><H3><A NAME="Header_60" HREF="awrns002.htm#ToC_60">The AFS Server Must Be Installed in a Directory Whose Path Contains Only ANSI Characters</A></H3>
+<P>The AFS for Windows software can only be installed in a directory whose
+path contains only ANSI characters, for example the default directory
+<B>C&#58;\Program Files</B>.
+<P><H3><A NAME="Header_61" HREF="awrns002.htm#ToC_61">Temporary Files</A></H3>
+<P>The AFS Server for Windows occasionally creates temporary files.
+To control where such files are created, set your environment variable (TMP or
+TEMP) to the fully qualified path of the preferred temporary directory.
+If you do not specify a temporary directory, then any temporary files are
+created in the current working directory of the process that creates the
+files.
+<P><H3><A NAME="Header_62" HREF="awrns002.htm#ToC_62">National Language Support for the AFS Server</A></H3>
+<P>AFS provides national language support for the AFS Server graphical
+user interface (GUI) tools and documentation, including support for
+bidirectional scripts (Hebrew, Arabic, etc.). The language
+strings installed are determined by your machine&#39;s system default locale,
+as specified in the Control Panel&#39;s Regional Settings Properties dialog
+box. If no language strings exist for the current locale, then English
+language strings are installed by default.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The <I>system default</I> locale for a machine can be different than the
+<I>user</I> locale (specified by a user) on the machine. However,
+the language strings installed with AFS for Windows are always determined by
+the system default locale.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_63" HREF="awrns002.htm#ToC_63">The kpwvalid Password Strength Checker Is Not Used on Windows Systems</A></H3>
+<P>When an AFS user password is changed from a Windows system, the
+<B>kpwvalid</B> program is <I>not</I> used to check the quality of the
+new password. (On UNIX systems, if a <B>kpwvalid</B> program exists
+in the same directory as the <B>kpasswd</B> program, the
+<B>kpwvalid</B> program checks the quality of every new user
+password.)
+<P><H3><A NAME="Header_64" HREF="awrns002.htm#ToC_64">Configuring a Server into a Cell with pre-3.5 Database Servers Requires the Principal Password</A></H3>
+<P>If you configure the AFS Server for Windows, version 3.6, into
+an AFS cell in which the Database Servers are running a version of AFS older
+than version 3.5, during the configuration process a dialog box prompts
+you to provide the AFS principal password.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If for some reason the AFS principal password is unknown, you can instead
+enter the 24-character string of octal digits representing the AFS
+principal&#39;s key. To obtain the octal key, issue either the
+<B>kas examine</B> command or <B>boslistkeys</B> command on an AFS
+Database Server machine. Note, the server must be running in
+<B>noauth</B> mode in order to display the AFS principal&#39;s octal
+key.
+</TD></TR></TABLE>
+<HR><H2><A NAME="Header_65" HREF="awrns002.htm#ToC_65">Limitations and Restrictions</A></H2>
+<P>This section briefly describes the known limitations and restrictions
+in the AFS Server component of AFS for Windows, version 3.6.
+<P><H3><A NAME="Header_66" HREF="awrns002.htm#ToC_66">AFS bosserver Process Does Not Execute the Notifier Program When a Process Terminates</A></H3>
+<P>The AFS <B>bosserver</B> process does not currently execute the
+registered notifier command (if one is specified) when a process under its
+control terminates.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="awrns002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="awrns005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="awrns007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="#INDEX_START"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

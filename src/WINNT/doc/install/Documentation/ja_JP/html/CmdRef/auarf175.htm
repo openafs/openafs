@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFSTRACE_LSSET" HREF="auarf002.htm#ToC_189">fstrace lsset</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX5038"></A>
+<A NAME="IDX5039"></A>
+<P>イベント・セットの状況をレポートします。
+<P><STRONG>構文</STRONG>
+<PRE><B>fstrace lsset</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-help</B>] 
+   
+<B>fstrace lss</B> [<B>-s</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fstrace lsset</B> コマンドは、使用可能なイベント設定のリストを表示して、それらの現在の状況 (活動、活動停止中、または休止) をレポートします。
+<P>イベント設定の状況を変更するには、<B>fstrace
+setset</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-set
+</B><DD>表示する状況のイベント・セットに名前を付けます。唯一の許容値で、この引き数が省略されている場合のデフォルトも
+<B>cm</B> です。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、以下の形式で使用可能なイベント設定および各状況をリストします。
+<PRE>   Available sets:
+   cm {active | inactive | dormant}
+   
+</PRE>
+<P>ここで、
+<DL>
+<P><DT><B><TT>active</TT>
+</B><DD>トレースする使用可能なイベント設定、および対応するトレース・ログのために割り振られるカーネル・メモリーを指示します。
+<P><DT><B><TT>inactive</TT>
+</B><DD>トレースがイベント設定のために一時的に使用できないが、カーネル・メモリーは対応するトレース・ログのために割り振られたままであることを指示します。
+<P><DT><B><TT>dormant</TT>
+</B><DD>トレースがイベント設定のために使用可能で、対応するトレース・ログのために割り振られたカーネル・メモリーがないことを指示します。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例は、使用可能なイベント設定とその状況を表示します。
+<PRE>   # <B>fstrace lsset</B>
+   Available sets:
+   cm active
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<P><A HREF="auarf177.htm#HDRFSTRACE_SETSET">fstrace setset</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf174.htm">前ページ</A> &#124; <A HREF="auarf176.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

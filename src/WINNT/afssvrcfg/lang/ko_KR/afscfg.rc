@@ -1,0 +1,1169 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS 구성 응용프로그램 및 마법사"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x412
+#define AFS_VERINFO_CHARSET 949
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Korean resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_KOR)
+#ifdef _WIN32
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOGEX 0, 0, 320, 246
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "AFS 서버 빠른 시작 마법사"
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "취소(&L)",IDCANCEL,101,225,50,14
+    PUSHBUTTON      "< 뒤로(&B)",IDBACK,155,225,50,14
+    DEFPUSHBUTTON   "다음(&N) >",IDNEXT,209,225,50,14
+    PUSHBUTTON      "도움말(&H)",9,263,225,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,8,214,305,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,91,200,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,103,7,210,200
+END
+
+IDD_PARTITION_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    CONTROL         "파티션 작성(&Y)",IDC_CREATE_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,81,87,10
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,104,
+                    186,52,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_PARTITION_NAME,93,172,20,12,ES_AUTOHSCROLL
+    CONTROL         "파티션을 작성하지 않음(&O)",IDC_DONT_CREATE_PARTITION,
+                    "Button",BS_AUTORADIOBUTTON,0,191,102,8
+    LTEXT           "이 파일 서버는 파일 및 프로그램을 저장한 후 AFS 클라이언트에 전달합니다. 이 시스템에 저장되고 AFS를 통해 공유되어질 데이터를 위해 최소한 하나의 NTFS 볼륨이 AFS 파티션 전용으로 사용되어야 합니다.",
+                    -1,0,12,209,35
+    LTEXT           "파티션에 사용할 볼륨 선택(&S)",IDC_SELECT_DRIVE,12,93,
+                    163,9
+    LTEXT           "AFS 파티션 이름(&M):  /vicep",IDC_NAME_LABEL,12,174,72,
+                    8
+    LTEXT           "이 파일 서버에 AFS 파티션을 작성하십시오.",IDC_TITLE,0,
+                    0,209,8
+    LTEXT           "AFS 파티션은 물리적으로 NTFS 볼륨과 같지만 파티션 정보 복원 및 위치에 대한 특수한 메타데이터가 들어 있습니다.",
+                    -1,0,49,208,18
+    LTEXT           "이 파일 서버에 파티션을 작성하시겠습니까?",
+                    IDC_ASK_CREATE_PARTITION,0,69,207,11
+    LTEXT           "필요한 경우, 실행 중 메시지를 설정하십시오.",
+                    IDC_PARTITION_MSG,0,162,209,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PARTITION_COVER,0,75,210,92,NOT WS_VISIBLE
+END
+
+IDD_FILE_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "파일 서버로 구성(&Y)",IDC_SHOULD_CONFIG_FILE_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,179,114,10
+    CONTROL         "파일 서버로 구성하지 않음(&O)",
+                    IDC_DONT_CONFIG_FILE_SERVER,"Button",BS_AUTORADIOBUTTON,
+                    0,190,133,10
+    LTEXT           "AFS 파일 서비스는 요청된 파일 및 프로그램을 이 서버에서 AFS 클라이언트로 전달합니다. 이 서비스는 또한 볼륨 작성, 삭제, 이동 및 복제와 같은 모든 볼륨 관리 조작을 처리합니다.",
+                    -1,0,38,210,34
+    LTEXT           "이 기계를 파일 서버로 구성하십시오.",IDC_TITLE,0,0,209,
+                    8
+    LTEXT           "이 기계를 파일 서버로 구성하시겠습니까?",
+                    IDC_CREATE_FS_QUESTION,0,166,210,8
+    LTEXT           "이 기계를 파일 서버로 구성하려면, 파일 서비스를 구성해야 합니다.",
+                    -1,0,14,210,17
+    LTEXT           "주: 이 기계에는 현재 AFS에 파일을 저장할 디스크 드라이브가 없습니다. 이 기계를 파일 서버로 구성할 수는 있어도 AFS 데이터를 기계에 저장할 수 없습니다.",
+                    IDC_NO_DRIVES_NOTE,0,77,210,32,NOT WS_VISIBLE
+    LTEXT           "디스크 드라이브를 작성하려면, Windows NT 디스크 관리자를 사용하십시오.",
+                    IDC_DISK_ADMIN_NOTE,0,112,210,16,NOT WS_VISIBLE
+    LTEXT           "이 기계는 이미 파일 서버로 구성되었습니다.",IDC_MSG,0,
+                    166,209,34,NOT WS_VISIBLE
+END
+
+IDD_INTRO_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "AFS 서버 빠른 시작 마법사를 사용하게 된 것을 환영합니다. 이 마법사를 사용하면 Windows NT 시스템에서 AFS 서버를 빠르게 구성할 수 있습니다.",
+                    IDC_TITLE,0,0,209,26
+    LTEXT           "다음을 눌러 AFS 서버의 구성을 시작하십시오.",IDC_STATIC,
+                    0,166,209,8
+END
+
+IDD_REPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "루트 볼륨 복제(&Y)",IDC_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,115,10
+    CONTROL         "루트 볼륨을 복제하지 않음(&O)",IDC_DONT_REPLICATE,
+                    "Button",BS_AUTORADIOBUTTON,0,190,134,10
+    LTEXT           "복제는 주로 다른 파일 서버의 여러 파티션에 있는 볼륨의 읽기-전용 복사본을 작성하는 프로세스입니다. 복제는 네트워크 이벤트에서 볼륨의 가용도를 증가시킵니다.",
+                    IDC_STATIC,0,36,208,25
+    LTEXT           "루트 볼륨을 복제하시겠습니까?",IDC_REPLICATE_QUESTION,0,
+                    166,209,8
+    LTEXT           "복제는 자주 액세스되는 볼륨에 대한 요청으로 인해 하나의 서버에 과부하가 걸리는 것을 방지하는 데 도움이 됩니다.",
+                    IDC_STATIC,0,90,209,25
+    LTEXT           "셀 루트 볼륨 복제",IDC_TITLE,0,0,209,8
+    LTEXT           "이 AFS 셀에 있는 다른 볼륨을 복제할 계획이라면, 먼저 루트 볼륨을 복제해야 합니다.",
+                    IDC_STATIC,0,15,209,16
+    LTEXT           "볼륨이 들어 있는 서버 중 하나를 사용할 수 없으므로 서버 부족 상황이 발생하지만, 다른 서버에서 그 볼륨에 액세스할 수 있습니다. ",
+                    IDC_STATIC,0,67,209,19
+    LTEXT           "필요한 경우, 실행 중 메시지를 설정하십시오.",
+                    IDC_CANT_REPLICATE_MSG,0,166,209,34,NOT WS_VISIBLE | NOT 
+                    WS_GROUP
+END
+
+IDD_ROOT_VOLUMES_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "루트 볼륨 작성(&Y)",IDC_CREATE_ROOT_VOLUMES,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,108,10
+    CONTROL         "루트 볼륨을 작성하지 않음(&O)",
+                    IDC_DONT_CREATE_ROOT_VOLUMES,"Button",BS_AUTORADIOBUTTON,
+                    0,190,124,10
+    LTEXT           "AFS에서 볼륨은 시스템 관리를 쉽게하기 위해 하나의 단위로 정리한 연관된 파일들의 모음입니다. ",
+                    IDC_STATIC,0,15,209,17
+    LTEXT           "루트 볼륨을 작성하시겠습니까?",IDC_ROOT_AFS_QUESTION,0,
+                    166,209,8
+    LTEXT           "셀의 루트 볼륨을 작성하십시오.",IDC_TITLE,0,0,209,8
+    LTEXT           "일단 루트 볼륨이 작성되면, AFS 파일 공간에서 자동으로 액세스할 수 있습니다.",
+                    IDC_STATIC,0,88,209,17
+    LTEXT           "필요한 경우, 실행 중 메시지를 설정하십시오.",
+                    IDC_ROOT_AFS_MSG,0,166,209,33,NOT WS_VISIBLE
+    LTEXT           "root.afs 볼륨은 AFS 파일 공간의 루트입니다. root.cell 볼륨은 AFS 파일 공간에서 이 셀의 서브트리의 루트이며 root.afs의 마운트 포인트를 통해 액세스됩니다. ",
+                    IDC_STATIC,0,51,209,25
+END
+
+IDD_GET_CURRENT_CONFIG DIALOG DISCARDABLE  0, 0, 198, 84
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS 서버 구성"
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    36,38,148,14
+    LTEXT           "조작 텍스트 - 실행 중 설정.",IDC_OPERATION,35,20,145,10
+    ICON            "",IDC_LOGO,7,7,20,20
+    PUSHBUTTON      "취소",IDCANCEL,73,63,50,14
+    LTEXT           "현재 구성 판별:",IDC_OPERATION2,35,7,156,10
+END
+
+IDD_BACKUP_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "백업 서버 구성(&Y)",IDC_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,1,171,128,10
+    CONTROL         "백업 서버를 구성하지 않음(&O)",
+                    IDC_DONT_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,1,183,147,10
+    LTEXT           "백업 서버는 데이터베이스 서버로 구성된 기계에서만 실행될 수 있습니다. 또한, 백업 서버가 셀의 한 데이터베이스 서버에서 실행되면, 셀의 모든 데이터베이스 서버에서 실행되어야 합니다. ",
+                    -1,0,38,205,27
+    LTEXT           "이 기계를 백업 서버로 구성하시겠습니까?",
+                    IDC_BACKUP_SERVER_QUESTION,0,147,209,10
+    LTEXT           "이 기계를 백업 서버로 구성하십시오.",IDC_TITLE,0,0,207,
+                    8
+    LTEXT           "백업 서버는 데이터베이스 서비스의 선택적 기능입니다.",
+                    -1,0,14,209,16
+    LTEXT           "이 기계는 이미 데이터베이스 서버로 구성되어 있습니다.",
+                    IDC_CANT_BACKUP_MSG,0,158,210,33,NOT WS_VISIBLE
+END
+
+IDD_SYS_CONTROL_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "시스템 제어 서버로 구성(&S)",IDC_SYS_CONTROL_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,151,141,10
+    CONTROL         "시스템 제어 클라이언트로 구성(&C)",
+                    IDC_SYS_CONTROL_CLIENT,"Button",BS_AUTORADIOBUTTON,0,164,
+                    131,9
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,90,174,113,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    CONTROL         "시스템 제어 클라이언트 또는 서버로 구성하지 않음(&O)",
+                    IDC_DONT_CONFIGURE,"Button",BS_AUTORADIOBUTTON,0,190,183,
+                    9
+    LTEXT           "시스템 제어 서버는 시스템 제어 클라이언트로 실행 중인 기타 AFS 서버 기계에 공통 구성 파일을 제공합니다. AFS 셀은 하나의 시스템 제어 서버만 실행해야 합니다.",
+                    -1,0,14,209,25
+    LTEXT           "시스템 제어 서버 또는 클라이언트로 구성하십시오.",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "이 기계를 시스템 제어 서버 또는 클라이언트로 구성하시겠습니까?",
+                    IDC_SYS_CONTROL_MACHINE_QUESTION,0,131,207,17
+    LTEXT           "시스템 제어 클라이언트는 셀의 시스템 제어 서버에서 AFS 구성 파일에 사용가능한 모든 갱신을 수신합니다.",
+                    IDC_SYS_CONTROL_CLIENT_DESC,0,43,209,18
+    LTEXT           "시스템 제어 서버(&Y):",IDC_SYS_CONTROL_MACHINE_LABEL,15,
+                    176,73,8,WS_DISABLED
+    LTEXT           "",IDC_CANT_CONFIG_MSG,0,166,210,34,NOT WS_VISIBLE
+END
+
+IDD_CONFIG_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    LTEXT           "이는 이 시스템에서 AFS 서버를 구성하는 필요한 정보입니다.",
+                    IDC_ALL_NEEDED_MSG,1,19,209,9
+    LTEXT           "이 기계를 셀 <실행 중 설정>으로 구성하십시오",IDC_TITLE,
+                    1,0,208,8
+    LTEXT           "다음 구성 단계가 수행됩니다.",IDC_FOLLOWING_STEPS_MSG,1,
+                    30,187,8
+    LTEXT           "단계 1 - 실행 중 설정된 텍스트",IDC_STEP1,22,42,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 3 - 런타임시 설정된 텍스트",IDC_STEP3,22,65,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 2 - 실행 중 설정된 텍스트",IDC_STEP2,22,53,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 4 - 실행 중 설정된 텍스트",IDC_STEP4,22,77,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 5 - 실행 중 설정된 텍스트",IDC_STEP5,22,89,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 6 - 실행 중 설정된 텍스트",IDC_STEP6,22,101,179,8,
+                    NOT WS_VISIBLE
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,1,190,200,9
+    LTEXT           "단계 8 - 실행 중 설정된 텍스트",IDC_STEP8,22,125,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "단계 7 - 실행 중 설정된 텍스트",IDC_STEP7,22,113,179,8,
+                    NOT WS_VISIBLE
+    LTEXT           "필요한 경우, 실행 중 메시지를 설정하십시오.",
+                    IDC_CANT_CONFIG_MSG,1,9,200,9,NOT WS_VISIBLE
+    LTEXT           "현재 조작:",IDC_CURRENT_STEP_LABEL,1,137,39,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "이 컴퓨터의 구성을 시작하려면, 구성 단추를 누르십시오. 수행할 구성 단계를 변경하려면, 뒤로 단추를 누르십시오.",
+                    IDC_STATUS_MSG,1,147,206,32
+    LTEXT           "현재 단계 설명 - 실행 중 설정",IDC_CURRENT_STEP,1,167,
+                    208,8,NOT WS_VISIBLE
+    LTEXT           "완료 진행률:",IDC_PERCENT_COMPLETE_LABEL,1,179,42,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,49,177,49,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP1_GRAPHIC,11,40,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP2_GRAPHIC,11,52,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP3_GRAPHIC,11,64,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP4_GRAPHIC,11,76,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP5_GRAPHIC,11,88,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP6_GRAPHIC,11,100,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP7_GRAPHIC,11,112,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP8_GRAPHIC,11,124,9,9,NOT WS_VISIBLE
+END
+
+IDD_INFO_PAGE2_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,64,55,138,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,64,71,138,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_VERIFY_ADMIN_PW,64,87,138,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_AFS_UID,101,155,37,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_AFS_UID_SPINNER,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,140,154,9,14
+    LTEXT           "관리 정보",IDC_TITLE,0,0,202,8
+    LTEXT           "이름(&N):",IDC_ADMIN_NAME_LABEL,7,57,22,8
+    LTEXT           "암호(&P):",IDC_ADMIN_PW_LABEL,7,73,34,8
+    GROUPBOX        "계정 이름 및 암호",IDC_ADMIN_INFO_FRAME,0,41,210,65
+    LTEXT           "암호 확인(&V):",IDC_VERIFY_ADMIN_PW_LABEL,7,90,48,8
+    LTEXT           "다음 정보는 새로운 셀에 대한 관리 계정을 작성할 때 필요합니다.",
+                    IDC_STATIC,0,15,209,17
+    CONTROL         "기존 AFS UID 사용(&S)",IDC_USE_THIS_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,157,88,10
+    CONTROL         "다음으로 사용가능한 AFS UID 사용(&U)",IDC_USE_NEXT_UID,
+                    "Button",BS_AUTORADIOBUTTON,6,144,159,10
+    GROUPBOX        "AFS UID",IDC_STATIC,0,118,209,57
+    LTEXT           "AFS 관리 계정에 대한 사용자 ID를 입력하십시오.",
+                    IDC_STATIC,6,130,196,9
+END
+
+IDD_DB_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    CONTROL         "데이터베이스 서버로 구성함(&Y)",IDC_CONFIG_DB_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,110,134,10
+    CONTROL         "데이터베이스 서버로 구성하지 않음(&O)",
+                    IDC_DONT_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON,0,
+                    167,153,10
+    LTEXT           "데이터베이스 서비스는 AFS 셀에서 필요한 복제된 데이터베이스 세트를 유지합니다. 이 서비스는 셀에 대한 모든 계정, 볼륨 위치 및(선택적) 백업 정보를 유지합니다.",
+                    -1,0,38,209,54
+    LTEXT           "이 기계를 데이터베이스 서버로 구성하시겠습니까?",
+                    IDC_DB_SERVER_QUESTION,1,97,209,10
+    LTEXT           "이 기계를 데이터베이스 서버로 구성하십시오.",IDC_TITLE,
+                    0,0,209,8
+    LTEXT           "이 기계를 데이터베이스 서버로 구성하려면, 데이터베이스 서비스를 구성해야 합니다. ",
+                    -1,0,14,209,16
+    LTEXT           "이 기계는 이미 데이터베이스 서버로 구성되어 있습니다.",
+                    IDC_MSG,1,182,201,9,NOT WS_VISIBLE
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,81,143,119,12,ES_AUTOHSCROLL
+    LTEXT           "시스템 제어 서버(&y):",IDC_SYS_CONTROL_MACHINE_LABEL,9,
+                    145,69,10
+    LTEXT           "셀에 시스템 제어 서버가 있으면, 그 호스트 이름을 아래에 입력하십시오. AFS 구성 파일은 이 서버를 통해 갱신됩니다.",
+                    IDC_SCM_PROMPT,9,124,195,17
+END
+
+IDD_INFO_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    CONTROL         "이 호스트를 기존 AFS 셀 내의 서버로 만듦(&M)",
+                    IDC_JOIN_EXISTING_CELL,"Button",BS_AUTORADIOBUTTON,0,37,
+                    160,10
+    CONTROL         "이것이 새 AFS 셀 내의 첫 번째 서버가 됨(&T)",
+                    IDC_FIRST_SERVER,"Button",BS_AUTORADIOBUTTON,0,49,153,10
+    EDITTEXT        IDC_CELL_NAME,64,91,139,12,ES_LOWERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SERVER_PW,64,166,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_VERIFY_PW,64,180,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "셀 및 서버 정보",IDC_TITLE,0,0,203,8
+    LTEXT           "셀 이름(&C):",IDC_CELL_NAME_LABEL,7,93,35,8
+    LTEXT           "암호(&P):",IDC_SERVER_PW_LABEL,7,167,34,8,WS_DISABLED
+    LTEXT           "AFS 셀의 이름을 입력하십시오.",IDC_CELL_NAME_PROMPT,8,
+                    78,195,11
+    LTEXT           "AFS 계정에 대한 암호를 입력하십시오. 모든 AFS 서버는 이 계정으로서 토큰을 확보합니다.",
+                    IDC_SERVER_PW_PROMPT,7,130,196,19,WS_DISABLED
+    GROUPBOX        "셀 이름",IDC_CELL_NAME_FRAME,0,67,210,43
+    GROUPBOX        "서버 암호",IDC_SERVER_PW_FRAME,0,119,210,81,WS_DISABLED
+    LTEXT           "암호 확인(&V):",IDC_VERIFY_PW_LABEL,7,180,52,8,
+                    WS_DISABLED
+    LTEXT           "AFS 셀은 파일 액세스에 대해 일정한 이름 공간을 제공하는 서버의 모음입니다.",
+                    IDC_CELL_NAME_PROMPT2,1,14,202,17
+    LTEXT           "이름:",IDC_PRINCIPAL_LABEL,7,152,22,8,WS_DISABLED
+    LTEXT           "afs",IDC_PRINCIPAL,64,150,139,12,WS_DISABLED,
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_INFO_PAGE2_NOT_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,53,43,149,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,53,59,149,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,53,132,149,12,ES_AUTOHSCROLL
+    LTEXT           "관리 정보",IDC_TITLE,0,0,209,8
+    LTEXT           "아래에 관리 계정 정보를 입력하십시오.",
+                    IDC_ADMIN_INFO_PROMPT,7,30,196,10
+    LTEXT           "이름(&N):",IDC_ADMIN_NAME_LABEL,7,46,22,8
+    LTEXT           "암호(&P):",IDC_ADMIN_PW_LABEL,7,62,34,8
+    GROUPBOX        "계정 이름 및 암호",IDC_ADMIN_INFO_FRAME,0,17,210,62
+    GROUPBOX        "기존의 AFS 서버",IDC_HOSTNAME_FRAME,1,92,209,60
+    LTEXT           "AFS 서버:",IDC_HOSTNAME_LABEL,9,134,37,8
+    LTEXT           "조인할 셀에서 다른 AFS 서버의 호스트 이름을 입력하십시오. AFS 구성 정보는 이 서버에서 조회됩니다.",
+                    IDC_HOSTNAME_PROMPT,7,105,202,25
+END
+
+IDD_SERVICES_PAGE DIALOG DISCARDABLE  0, 0, 295, 285
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "서비스"
+FONT 9, "굴림"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,20,281,40
+    GROUPBOX        "",IDC_STATIC,7,66,281,43
+    GROUPBOX        "",IDC_STATIC,7,115,281,42
+    GROUPBOX        "",IDC_STATIC,7,161,281,44
+    CONTROL         "파일 서비스",IDC_FS_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,25,60,10
+    CONTROL         "데이터베이스 서비스",IDC_DB_SERVICE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,72,82,10
+    PUSHBUTTON      "자세히...",IDC_DB_DETAILS,230,91,52,14,NOT WS_VISIBLE
+    CONTROL         "백업 서버",IDC_BK_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,121,71,10
+    CONTROL         "시스템 제어 서버",IDC_SCS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,168,98,10
+    EDITTEXT        IDC_SC_MACHINE,107,245,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "이 AFS 서버에서 실행할 서비스를 선택하십시오.",
+                    IDC_STATIC,7,7,156,8
+    LTEXT           "파일 서비스가 현재 실행 중입니다.",IDC_FS_STATUS_MSG,14,
+                    38,261,8
+    LTEXT           "데이터베이스 서비스가 현재 일부만 설치되었습니다.",
+                    IDC_DB_STATUS_MSG,14,85,208,8
+    LTEXT           "시스템 제어 서버(&Y):",IDC_SC_MACHINE_LABEL,31,247,70,8,
+                    WS_DISABLED
+    LTEXT           "파일 서비스를 정지하려면, 위의 상자를 선택취소하십시오.",
+                    IDC_FS_ACTION_MSG,14,50,262,8
+    LTEXT           "더 자세한 정보를 얻으려면, 자세히를 누르십시오.",
+                    IDC_DB_ACTION_MSG,14,96,209,8
+    LTEXT           "백업 서버가 현재 실행 중입니다.",IDC_BK_STATUS_MSG,14,
+                    135,259,8
+    LTEXT           "백업 서버를 정지하려면, 위의 상자를 선택취소하십시오.",
+                    IDC_BK_ACTION_MSG,14,147,262,8
+    LTEXT           "이 서버를 사용하려면, 파일 서비스 또는 데이터베이스 서비스를 실행해야 합니다.",
+                    IDC_SCS_ACTION_MSG,14,193,268,9
+    LTEXT           "시스템 제어 서비스는 현재 실행되지 않고 있습니다.",
+                    IDC_SCS_STATUS_MSG,14,180,263,9
+    GROUPBOX        "",IDC_STATIC,7,214,281,59
+    CONTROL         "시스템 제어 클라이언트",IDC_SCC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,221,95,10
+    LTEXT           "이 서버를 사용 하려면, 파일 서비스 또는 데이터베이스 서비스를 실행해야 합니다.",
+                    IDC_SCC_ACTION_MSG,14,261,268,9
+    LTEXT           "시스템 제어 서비스는 현재 실행되지 않고 있습니다.",
+                    IDC_SCC_STATUS_MSG,14,235,263,9
+END
+
+IDD_PARTITIONS_PAGE DIALOGEX 0, 0, 295, 265
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "파티션"
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    LTEXT           "다음 AFS 파티션이 컴퓨터에 있음(&A)",IDC_STATIC,8,7,175,
+                    8
+    PUSHBUTTON      "작성(&C)...",IDC_CREATE_PARTITIONS,17,118,53,14
+    LTEXT           "파티션 또는 파티션의 볼륨을 복원하려면, 목록에서 파티션을 선택하고 위의 단추를 누르십시오. 이 서버에 있는 모든 파티션을 복원하려면, 위의 단추를 누르십시오.",
+                    IDC_SALVAGE_MSG,30,179,250,25
+    PUSHBUTTON      "복원(&S)...",IDC_SALVAGE,17,159,53,14
+    LTEXT           "파티션을 제거하려면, 목록에서 파티션을 선택하고 위의 단추를 누르십시오.",
+                    IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
+    PUSHBUTTON      "제거(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
+    GROUPBOX        "파티션",IDC_AGGR_FRAME,7,103,281,155
+    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+                    281,79,WS_EX_CLIENTEDGE
+    LTEXT           "이 서버에 새 파티션을 작성하려면, 위의 단추를 누르십시오.",
+                    IDC_CREATE_MSG,30,136,254,8
+END
+
+IDD_CREATE_PARTITION DIALOGEX 0, 0, 264, 177
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS 파티션 작성"
+FONT 9, "굴림", 0, 0, 0x1
+BEGIN
+    LTEXT           "아래 목록에서 새 파티션을 작성할 NTFS 볼륨을 선택하십시오.",
+                    IDC_TITLE,7,5,250,8
+    LTEXT           "AFS 파티션 이름:",IDC_NAME_STATIC,17,131,66,8
+    EDITTEXT        IDC_PARTITION_NAME,119,129,20,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "작성(&C)",IDC_CREATE,96,158,50,14,WS_DISABLED
+    PUSHBUTTON      "닫기(&O)",IDC_CLOSE,152,158,50,14
+    PUSHBUTTON      "도움말",9,207,158,50,14
+    GROUPBOX        "파티션 매개변수",IDC_ARGS_FRAME,7,117,250,33
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+                    95,WS_EX_CLIENTEDGE
+    LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,22,8
+END
+
+IDD_ADMIN_INFO DIALOG DISCARDABLE  0, 0, 249, 193
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 서버 구성"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,59,33,151,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,59,49,151,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,59,110,151,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "구성(&C)",IDOK,108,172,50,14,WS_DISABLED
+    PUSHBUTTON      "취소",IDCANCEL,48,172,50,14
+    PUSHBUTTON      "도움말",9,192,172,50,14
+    LTEXT           "아래에 관리 계정 정보를 입력하십시오.",
+                    IDC_ADMIN_INFO_PROMPT,14,20,196,10
+    LTEXT           "이름(&N):",IDC_ADMIN_NAME_LABEL,15,36,22,8
+    LTEXT           "암호(&P):",IDC_ADMIN_PW_LABEL,15,52,34,8
+    GROUPBOX        "계정 이름 및 암호",IDC_ADMIN_INFO_FRAME,7,7,235,62
+    GROUPBOX        "시스템 제어 서버",IDC_HOSTNAME_FRAME,7,76,235,54
+    LTEXT           "호스트 이름(&H):",IDC_HOSTNAME_LABEL,15,112,40,8
+    LTEXT           "셀에 시스템 제어 서버가 있으면, 그 호스트 이름을 아래에 입력하십시오. AFS 구성 파일은 이 서버를 통해 갱신됩니다.",
+                    IDC_HOSTNAME_PROMPT,13,88,197,18
+END
+
+IDD_CONFIG_SERVER DIALOG DISCARDABLE  0, 0, 273, 107
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 서버 구성"
+FONT 9, "굴림"
+BEGIN
+    PUSHBUTTON      "취소",IDCANCEL,107,88,50,12
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,40,76,200,8
+    LTEXT           "완료 진행률:",IDC_PERCENT_COMPLETE_LABEL,40,65,61,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "현재 조작:",IDC_CURRENT_STEP_LABEL,40,7,34,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "현재 단계 설명 - 실행 중 설정",IDC_CURRENT_STEP,40,54,
+                    226,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,101,50,49,8,NOT WS_VISIBLE
+    ICON            "",IDC_LOGO,7,7,20,20
+    LTEXT           "이 컴퓨터의 구성을 시작하려면, 구성 단추를 누르십시오. 수행할 구성 단계를 변경하려면, 뒤로 단추를 누르십시오.",
+                    IDC_STATUS_MSG,40,19,226,31
+    PUSHBUTTON      "로그 보기(&V)",IDNEXT,159,88,50,12,NOT WS_VISIBLE | 
+                    WS_DISABLED
+END
+
+IDD_CELLSERVDB_ERRORS DIALOG DISCARDABLE  0, 0, 187, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CellServDB 갱신 오류"
+FONT 9, "굴림"
+BEGIN
+    LISTBOX         IDC_LIST,7,26,173,127,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "확인",IDOK,22,162,50,14
+    PUSHBUTTON      "취소",IDCANCEL,75,162,50,14
+    PUSHBUTTON      "도움말",9,130,162,50,14
+    LTEXT           "다음 AFS 서버의 CellServDB 파일은 자동으로 갱신될 수 없습니다.",
+                    IDC_STATIC,7,7,173,18
+END
+
+IDD_SALVAGE DIALOG DISCARDABLE  0, 0, 259, 239
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "복원"
+FONT 9, "굴림"
+BEGIN
+    DEFPUSHBUTTON   "확인",IDOK,79,99,50,14
+    PUSHBUTTON      "취소",IDCANCEL,133,99,50,14
+    PUSHBUTTON      "도움말(&H)",9,187,99,50,14
+    CONTROL         "해당 파일 서버상의 모든 파티션 복원(&S)",IDC_SERVER,
+                    "Button",BS_AUTORADIOBUTTON,14,35,176,10
+    CONTROL         "선택된 파티션상의 모든 볼륨 복원(&P)",IDC_PARTITION,
+                    "Button",BS_AUTORADIOBUTTON,14,48,177,10
+    CONTROL         "선택된 파티션상의 특정 볼륨 복원(&V)",IDC_VOLUME,"Button",
+                    BS_AUTORADIOBUTTON,14,61,177,10
+    EDITTEXT        IDC_VOLUME_NAME,79,73,88,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "<< 고급(&A) ",IDC_ADVANCED,7,99,50,14
+    GROUPBOX        "",IDC_STATIC,7,25,245,67
+    LTEXT           "볼륨 이름(&N):",IDC_VOLUME_NAME_LABEL,27,75,47,8,
+                    WS_DISABLED
+    GROUPBOX        "고급 복원 옵션",IDC_ADVANCED_FRAME,7,180,245,52
+    LTEXT           "임시 파일 경로(&T):",IDC_TEMP_DIR_LABEL,17,165,74,8
+    EDITTEXT        IDC_LOG_FILE,93,147,133,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NUM_PROCESSES,188,130,21,12,ES_AUTOHSCROLL
+    LTEXT           "결과 로그의 파일 이름(&L):",IDC_LOG_FILE_LABEL,17,149,
+                    74,8
+    EDITTEXT        IDC_TEMP_DIR,93,163,133,12,ES_AUTOHSCROLL
+    CONTROL         "병렬 복원 조작(&R), 프로세스 수:",
+                    IDC_NUM_PROCESSES_CHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,132,165,10
+    LTEXT           "서버 또는 전체 파티션을 복원할 경우, 서버는 일시적으로 오프라인이 됩니다.",
+                    IDC_STATIC,34,7,218,17
+    LTEXT           "주:",IDC_STATIC,7,7,16,8
+END
+
+IDD_GET_PW DIALOG DISCARDABLE  0, 0, 197, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 계정 암호"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_PW,48,39,142,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "확인",IDOK,31,61,50,14
+    PUSHBUTTON      "취소",IDCANCEL,85,61,50,14
+    PUSHBUTTON      "도움말",9,140,61,50,14
+    LTEXT           "AFS 계정 키는 3.5 이전 인증 서버에서는 검색될 수 없습니다. 아래에 AFS 계정 암호를 입력하십시오.",
+                    IDC_STATIC,7,7,183,21
+    LTEXT           "암호:",IDC_STATIC,7,41,35,8
+END
+
+IDD_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 337, 287
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "볼륨 복원 - 결과"
+FONT 9, "굴림"
+BEGIN
+    EDITTEXT        IDC_LOG,7,48,323,211,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "닫기(&C)",IDC_CLOSE,225,266,50,14,WS_DISABLED
+    PUSHBUTTON      "도움말",9,280,266,50,14
+    LTEXT           "<실행 중 설정>",IDC_LOG_TITLE,7,38,263,8
+    ICON            "",IDC_LOGO,7,7,21,20
+    LTEXT           "<실행 중 설정>",IDC_SALVAGE_STATUS,37,15,185,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 239
+        HORZGUIDE, 207
+    END
+
+    IDD_INTRO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 209
+    END
+
+    IDD_GET_CURRENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        VERTGUIDE, 35
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_CONFIG_SERVER_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        VERTGUIDE, 11
+        VERTGUIDE, 22
+        VERTGUIDE, 201
+    END
+
+    IDD_INFO_PAGE2_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 6
+        VERTGUIDE, 64
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 203
+        VERTGUIDE, 64
+        VERTGUIDE, 203
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE2_NOT_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 53
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_SERVICES_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 288
+        VERTGUIDE, 14
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 278
+    END
+
+    IDD_PARTITIONS_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 17
+        VERTGUIDE, 30
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_ADMIN_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        VERTGUIDE, 59
+        VERTGUIDE, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 186
+    END
+
+    IDD_CONFIG_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 266
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_CELLSERVDB_ERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 232
+        HORZGUIDE, 7
+    END
+
+    IDD_GET_PW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#define  AFS_VERINFO_FILE_DESCRIPTION ""AFS 구성 응용프로그램 및 마법사""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "status_16.bmp"
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "status_256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DISABLED_DISK_DRIVE ICON    DISCARDABLE     "disabled.ico"
+IDI_DISK_DRIVE          ICON    DISCARDABLE     "disk_dri.ico"
+IDI_APP_ICON            ICON    DISCARDABLE     "app_icon.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FILE                ICON    DISCARDABLE     "file.ico"
+IDI_DISK_DRIVE_WITH_WARNING ICON    DISCARDABLE     "warn_dri.ico"
+IDI_AFS_DISK_DRIVE      ICON    DISCARDABLE     "afsdrive.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "다음(&N) >"
+    IDS_FINISH              "종료(&F)"
+    IDS_HELP_TITLE          "도움말 단추를 누름"
+    IDS_HELP_DESC           "지금은 도움말을 사용할 수 없습니다."
+    IDS_CANCEL_DESC         "AFS 빠른 시작 마법사를 취소하시겠습니까?"
+    IDS_PARTITION_ALREADY_CREATED "AFS 파티션이 이미 이 기계에 존재합니다."
+    IDS_NOT_A_FS_SERVER     "이 기계는 파일 서버로 구성되지 않았습니다. 볼륨은 파일 서버 기계에서만 작성될 수 있습니다."
+    IDS_ROOT_AFS_ALREADY_EXISTS "루트 볼륨이 이미 존재합니다."
+    IDS_NO_PARTITION_EXISTS "루트 볼륨을 작성할 파티션이 없습니다. 루트 볼륨을 작성하려면 먼저 파티션이 존재해야 합니다."
+    IDS_ALREADY_REPLICATED  "루트 볼륨이 이미 복제되었습니다."
+    IDS_ROOT_AFS_DOESNT_EXIST 
+                            "루트 볼륨이 없습니다. 루트 볼륨이 있어야 이를 복제할 수 있습니다."
+    IDS_ALREADY_CONFIGURED  "이 기계는 이미 AFS 서버로 구성되었습니다."
+    IDS_NOTHING_TO_CONFIGURE "구성할 내용을 선택하지 않았습니다."
+    IDS_EXIT                "종료"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_FS_STEP       "파일 서비스 시작 중"
+    IDS_CANCEL_CONFIG_MSG   "이 시점에서 취소하면, 컴퓨터는 부분적으로만 AFS 서버로 구성됩니다. 그래도 취소하시겠습니까?"
+    IDS_WIZARD_APP_TITLE    "AFS 서버 빠른 시작 마법사"
+    IDS_CANCEL_PENDING      "*** 보류 취소 - 잠시만 기다리십시오...***"
+    IDS_CHECK_FS_CONFIG     "파일 서버 확인..."
+    IDS_CHECK_DB_CONFIG     "데이터베이스 서버 확인..."
+    IDS_CHECK_BAK_CONFIG    "백업 서버 확인..."
+    IDS_CHECK_PARTITION     "AFS 파티션 확인..."
+    IDS_CHECK_ROOT_AFS      "루트 볼륨 확인..."
+    IDS_CHECK_REP           "루트 볼륨 복제 확인..."
+    IDS_CANCEL_GET_CONFIG   "취소 중...잠시만 기다리십시오..."
+    IDS_ALREADY_A_BACKUP_SERVER "이 기계는 이미 백업 서버로 구성되었습니다."
+    IDS_NOT_A_DB_SERVER     "이 기계는 데이터베이스 서버로 구성되지 않았습니다. 백업 서버는 데이터베이스 서버 기계에서만 실행될 수 있습니다."
+    IDS_ALREADY_A_SYS_CONTROL_SERVER 
+                            "이 기계는 이미 시스템 제어 서버로 구성되었습니다."
+    IDS_ALREADY_A_SYS_CONTROL_CLIENT 
+                            "이 기계는 이미 시스템 제어 클라이언트로 구성되었습니다."
+    IDS_SC_NOT_A_DB_OR_FS_SERVER 
+                            "이 기계는 데이터베이스 또는 파일 서버로 구성되지 않았습니다. 컴퓨터는 데이터베이스 또는 파일 서버 기계로 구성된 경우에만 시스템 제어 기계로 구성될 수 있습니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE               "볼륨"
+    IDS_NAME_OR_ERROR       "이름(또는 오류 메시지)"
+    IDS_BIN_NOT_A_DB_OR_FS_SERVER 
+                            "이 기계는 데이터베이스 또는 파일 서버로 구성되지 않았습니다. 컴퓨터는 데이터베이스 또는 파일 서버 기계로 구성된 경우에만 이진 분배 기계로 구성될 수 있습니다."
+    IDS_CHECK_SCS           "시스템 제어 서버 확인..."
+    IDS_CHECK_SCC           "시스템 제어 클라이언트 확인..."
+    IDS_SIZE                "크기"
+    IDS_ERROR_SEP           ",   "
+    IDS_MUST_CONFIG_FS      "셀의 첫번째 AFS 서버이므로 파일 서비스가 구성됩니다."
+    IDS_MUST_CONFIG_DB      "셀의 첫번째 AFS 서버이므로, 데이타베이스 서비스가 구성됩니다."
+    IDS_MUST_MAKE_PARTITION "파티션은 셀의 첫번째 AFS 서버이므로 작성되어야 합니다."
+    IDS_MUST_CREATE_ROOT_AFS 
+                            "셀의 첫번째 AFS 서버이므로 root.afs 및 root.cell 볼륨이 작성됩니다."
+    IDS_MUST_REPLICATE      "셀의 첫번째 AFS 서버이므로 root.afs 및 root.cell 볼륨이 복제됩니다."
+    IDS_CHECK_AFS_CLIENT    "AFS 클라이언트 설치 확인..."
+    IDS_ERROR_HOST_NAME     "이 기계의 호스트 이름을 판별하는 데 실패했습니다."
+    IDS_ERROR_DRIVE_COMPRESSED "드라이브가 압축되었습니다"
+    IDS_ERROR_CFG_HOST_OPEN "서버 구성 라이브러리를 초기 설정하는 데 실패했습니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_CLIENT_STEP    "AFS 클라이언트 정지 중"
+    IDS_ERROR_LOCAL_HOST_NAME 
+                            "이 기계의 지역 호스트 이름을 판별하지 못했습니다."
+    IDS_GET_TOKENS_ERROR    "토큰을 확보하는 데 실패했습니다. 입력한 사용자 이름 및 암호가 올바른지 검증하십시오."
+    IDS_CANT_SALVAGE_WHEN_FS_NOT_CONFIGURED 
+                            "파일 서비스가 시작되지 않아 복원을 수행할 수 없습니다. 파일 서비스를 시작한 후 복원을 재시도하십시오."
+    IDS_SALVAGING           "복원이 진행 중입니다. 기다리십시오..."
+    IDS_CURRENT_SALVAGE_LOG "현재 복원 로그 내용:"
+    IDS_FINAL_SALVAGE_LOG   "최종 복원 로그 내용:"
+    IDS_SALVAGE_COMPLETE    "복원이 완료되었습니다."
+    IDS_CANT_GET_SALVAGE_LOG "복원 로그를 검색할 수 없습니다."
+    IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK 
+                            "복원 로그를 디스크에 저장할 수 없습니다."
+    IDS_VALIDATION_ERROR_TEMPLATE 
+                            "지정된 %1이(가) 유효하지 않습니다. %2을(를) 다시 입력하십시오."
+    IDS_CELL_NAME_VALIDATION_TYPE "셀 이름"
+    IDS_SERVER_NAME_VALIDATION_TYPE "서버 이름"
+    IDS_PASSWORD_VALIDATION_TYPE "암호"
+    IDS_UID_VALIDATION_TYPE "UID"
+    IDS_USER_NAME_VALIDATION_TYPE "사용자 이름"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_AFS_CLIENT_NOT_INSTALLED 
+                            "AFS 클라이언트가 설치되지 않았습니다. AFS 클라이언트는 AFS 서버가 구성되기 전에 설치되어야 합니다."
+    IDS_ERROR_AFS_CLIENT_CHECK "AFS 설치 여부를 판별하는 데 실패했습니다."
+    IDS_ERROR_FS_IS_NOT_NTFS "파일 시스템이 NTFS가 아닙니다"
+    IDS_ERROR_DRIVE_HAS_DATA "드라이브에 데이터가 있습니다"
+    IDS_PARTITION_STEP_DESC "AFS 파티션을 작성하십시오"
+    IDS_ERROR_DRIVE_CONTAINS_NT "드라이브에 NT 설치가 있습니다"
+    IDS_DB_STEP_DESC        "데이터베이스 서비스를 시작하십시오"
+    IDS_FS_STEP_DESC        "파일 서비스를 시작하십시오"
+    IDS_SCC_STEP_DESC       "시스템 제어 클라이언트를 시작하십시오"
+    IDS_SCS_STEP_DESC       "시스템 제어 서버를 시작하십시오"
+    IDS_ROOT_AFS_STEP_DESC  "루트 볼륨을 작성하십시오"
+    IDS_REP_STEP_DESC       "루트 볼륨을 복제하십시오"
+    IDS_PARTITIONS_PAGE_TITLE "파티션"
+    IDS_CONFIGURE           "구성(&C)"
+    IDS_DB_AND_BK_STEP_DESC "데이터베이스 서비스(백업 서버 포함)를 시작하십시오"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_STEP      "AFS 파티션 작성 중"
+    IDS_CONFIG_COMMON_FUNCS "모든 서비스에 공통인 기능 구성 중"
+    IDS_START_DB_STEP       "데이터베이스 서비스 시작 중"
+    IDS_START_SCC_STEP      "시스템 제어 클라이언트로 시스템 제어 서비스 시작 중"
+    IDS_START_SCS_STEP      "시스템 제어 서버로 시스템 제어 서비스 시작 중"
+    IDS_CREATE_ROOT_AFS_STEP "root.afs 볼륨 작성 중"
+    IDS_REP_STEP            "루트 볼륨 복제 중"
+    IDS_START_AUTH_STEP     "이 서버에 대한 토큰 확보 중"
+    IDS_SERVICES_PAGE_TITLE "서비스"
+    IDS_CONFIG_SUCCEEDED    "구성이 완료되었습니다."
+    IDS_CONFIG_CANCELED     "구성이 취소되었습니다."
+    IDS_CONFIG_FAILED       "구성에 실패했습니다.\r\n자세한 %1 로그 파일이 %2 위치에 작성되었습니다."
+    IDS_ERROR_NO_LICENSE_NUM "AFS 사용권 번호를 찾지 못했습니다."
+    IDS_VERIFY_CLIENT_INSTALL_STEP "AFS 클라이언트의 설치 확인 중"
+    IDS_SET_SERVER_LICENSE_STEP "이 서버에 대한 사용권 설정 중"
+    IDS_DEFINE_CELL_NAME_STEP "이 셀에 대한 이름 정의 중"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFINE_CELL_MEMBERSHIP_STEP "이 서버를 셀의 구성원으로 작성 중"
+    IDS_START_BOS_SERVER_STEP "BOS 서버 시작 중"
+    IDS_START_AUTH_SERVER_STEP "인증 서버 시작 중"
+    IDS_CREATE_PRINCIPAL_AND_KEY_STEP "이 서버에 대한 계정 및 키 작성 중"
+    IDS_START_DB_AND_BK_STEP "데이터베이스 서비스(백업 서버 포함) 시작 중"
+    IDS_CREATE_ADMIN_PRINCIPAL_STEP "셀 관리 계정 작성 중"
+    IDS_START_CLIENT_STEP   "AFS 클라이언트 시작 중"
+    IDS_SET_ROOT_ACL_STEP   "root.afs 볼륨에서 ACL 설정 중"
+    IDS_CREATE_ROOT_CELL_STEP "root.cell 볼륨 작성 중"
+    IDS_MOUNT_ROOT_CELL_STANDARD_STEP 
+                            "표준 마운트 포인트를 사용하여 root.cell 마운트 중"
+    IDS_SET_ROOT_CELL_ACL_STEP "root.cell 볼륨에서 ACL 설정 중"
+    IDS_MOUNT_ROOT_CELL_RW_STEP 
+                            "읽기/쓰기 마운트 포인트를 사용하여 root.cell 볼륨 마운트 중"
+    IDS_ENABLE_AUTH_CHECKING_STEP "인증 확인 작동 중"
+    IDS_OBTAIN_ADMIN_CREDS_STEP "관리 토큰 확보 중"
+    IDS_RESTART_SERVERS_STEP "이 기계에서 모든 서버를 인증된 서버로 재시작 중"
+    IDS_ALREADY_A_FS_SERVER "이 기계는 이미 파일 서버로 구성되었습니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALREADY_A_DB_SERVER "이 기계는 이미 데이터베이스 서버로 구성되어 있습니다."
+    IDS_INTRO_PAGE          "개요"
+    IDS_INFO_PAGE           "셀 및 서버 정보"
+    IDS_FS_PAGE             "파일 서비스"
+    IDS_DB_PAGE             "데이터베이스 서비스"
+    IDS_CFG_TOOL_APP_TITLE  "AFS 서버 구성"
+    IDS_BK_PAGE             "백업 서버"
+    IDS_ROOT_AFS_PAGE       "루트 AFS 볼륨"
+    IDS_NAME                "이름"
+    IDS_REP_PAGE            "복제"
+    IDS_SC_PAGE             "시스템 제어 서비스"
+    IDS_CONFIG_PAGE         "시스템을 구성하십시오"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_PAGE      "AFS 파티션"
+    IDS_GRAPHIC_FONT        "굴림, 12, B"
+    IDS_CURRENT_STEP        "현재 단계:"
+    IDS_ADD_TO_CELLSERVDB_STEP "이 서버를 CellServDB에 추가 중"
+    IDS_RESTART_ALL_DB_SERVERS_STEP "셀 내의 모든 데이터베이스 서버 재시작 중"
+    IDS_CONFIG_SUCCEEDED_NEED_CELLSERVDB_UPDATE 
+                            "구성이 완료되었습니다. 주: 사용자 셀에 있는 모든 AFS 클라이언트의 CellServDB 파일을 갱신해야 합니다. 다른 사이트에서 사용자 셀을 사용할 수 있도록 하려면 AFS 제품 지원에 최신 데이터베이스 서버의 목록을 제공해야 합니다. "
+    IDS_SYS_CONTROL_SERVER_ONLY_MSG 
+                            "이 기계를 시스템 제어 서버로 구성하시겠습니까?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DONT_CONFIG_SYS_CONTROL_SERVER_MSG 
+                            "시스템 제어 서버로 구성하지 않음(&O)"
+    IDS_CLIENT_CELL_WILL_CHANGE 
+                            "AFS 서버의 구성에서는 AFS 클라이언트가 서버와 같은 셀에 구성되어야 합니다.  이는 자동으로 이루어집니다."
+    IDS_INFO_PAGE2          "관리 정보"
+    IDS_CONFIG_SUCCEEDED_FIRST_SERVER 
+                            "구성이 완료되었습니다.\r\n주: 다른 사이트에서 셀을 사용할 수 있게 하려면 사용자의 데이터베이스 서버 목록을 제공해야 합니다."
+    IDS_CONFIG_SCS          "셀의 시스템 제어 서버로 구성하십시오."
+    IDS_CONFIG_INTO_CELL_MSG "이 호스트를 셀에 구성하십시오 "
+    IDS_VIEW_LOG            "로그 보기(&V)"
+    IDS_VIEW_LOG_ERROR      "로그 파일을 볼 수 없습니다"
+    IDS_ERROR_NO_LOG_FILE   "로그 파일이 없습니다."
+    IDS_UPDATING_CELLSERVDB_HOST_SUCCEEDED 
+                            "호스트에서 CellServDB를 갱신했습니다 "
+    IDS_UPDATING_CELLSERVDB_HOST_FAILED 
+                            "호스트에서 CellServDB를 갱신하지 못했습니다 "
+    IDS_CELL_NAME_LEN_ERROR "입력한 셀 이름이 너무 깁니다. 셀 이름은 64 문자를 초과할 수 없습니다."
+    IDS_CONFIG_CHECK_FAILED "이 기계의 현재 구성을 판별하지 못했습니다."
+    IDS_YES                 "예"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO                  "아니오"
+    IDS_FREE                "사용가능한 공간"
+    IDS_TOTAL               "총 크기"
+    IDS_DRIVE2              "드라이브"
+    IDS_SERVICE_STATUS      "상태"
+    IDS_SERVICE             "서비스"
+    IDS_FS_RUNNING          "파일 서비스가 현재 실행 중입니다."
+    IDS_FS_STOPPED          "파일 서비스가 현재 실행 중이 아닙니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DB_RUNNING          "데이터베이스 서비스가 현재 실행 중입니다."
+    IDS_DB_STOPPED          "데이터베이스 서비스가 현재 실행 중이 아닙니다."
+    IDS_BK_RUNNING          "백업 서비스가 현재 실행 중입니다."
+    IDS_BK_STOPPED          "백업 서비스가 현재 실행 중이 아닙니다."
+    IDS_SCS_STOPPED         "시스템 제어 서버가 현재 실행 중이 아닙니다."
+    IDS_SCC_STOPPED         "시스템 제어 클라이언트가 현재 실행 중이 아닙니다."
+    IDS_FS_HOW_TO_RUN       "파일 서비스를 시작하려면, 위의 상자를 선택하십시오."
+    IDS_FS_HOW_TO_STOP      "파일 서비스를 정지하려면, 위의 상자를 선택취소하십시오."
+    IDS_DB_HOW_TO_RUN       "데이터베이스 서비스를 시작하려면, 위의 상자를 선택하십시오."
+    IDS_DB_HOW_TO_STOP      "데이터베이스 서비스를 정지하려면, 위의 상자를 선택취소하십시오."
+    IDS_BK_HOW_TO_RUN       "백업 서비스를 시작하려면, 위의 상자를 선택하십시오."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BK_HOW_TO_STOP      "백업 서비스를 정지하려면, 위의 상자를 선택취소하십시오."
+    IDS_SCS_HOW_TO_RUN      "시스템 제어 서버를 시작하려면, 위의 상자를 선택하십시오."
+    IDS_SCS_HOW_TO_STOP     "시스템 제어 서버를 정지하려면, 위의 상자를 선택취소하십시오."
+    IDS_DB_PARTIAL_CONFIG   "데이터베이스 서비스는 부분적으로 구성됩니다."
+    IDS_DB_DETAILS          "더 자세한 정보를 얻으려면, 자세히를 누르십시오."
+    IDS_BK_DISABLED         "백업 서비스는 사용불가능합니다."
+    IDS_BK_ENABLE           "백업 서비스를 사용 가능하게 하려면, 데이터베이스 서비스를 실행해야 합니다."
+    IDS_SC_DISABLED         "이 서버는 사용불가능합니다."
+    IDS_SC_ENABLE           "이 서버를 사용 하려면, 파일 서비스 또는 데이터베이스 서비스를 실행해야 합니다."
+    IDS_FS_WILL_RUN         "파일 서비스가 시작됩니다."
+    IDS_FS_WILL_STOP        "파일 서버가 정지됩니다."
+    IDS_DB_WILL_RUN         "데이터베이스 서비스가 시작됩니다."
+    IDS_DB_WILL_STOP        "데이터베이스 서비스가 정지됩니다."
+    IDS_BK_WILL_RUN         "백업 서비스가 시작됩니다."
+    IDS_BK_WILL_STOP        "백업 서비스가 정지됩니다."
+    IDS_SCS_WILL_RUN        "시스템 제어 서버가 시작됩니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCS_WILL_STOP       "시스템 제어 서버가 정지됩니다."
+    IDS_ERROR_DRIVE_ALREADY_HAS_AFS "드라이브는 이미 AFS 파티션입니다"
+    IDS_VOLUME_HAS_NO_NAME  "<볼륨에 이름이 없습니다>"
+    IDS_PARTITION_CREATED   "새 AFS 파티션이 작성되었습니다."
+    IDS_PARTITION_EXISTS    "입력한 파티션 이름이 이미 다른 파티션에서 사용하고 있습니다."
+    IDS_SCS_RUNNING         "시스템 제어 서버는 현재 실행 중입니다."
+    IDS_WARNING_DRIVE_HAS_RECYCLE_BIN "이 드라이브에는 휴지통만 있습니다."
+    IDS_SCC_WILL_RUN        "시스템 제어 클라이언트가 시작됩니다."
+    IDS_SCC_WILL_STOP       "시스템 제어 클라이언트가 정지됩니다."
+    IDS_SCC_RUNNING         "시스템 제어 클라이언트는 현재 실행 중입니다."
+    IDS_SCC_HOW_TO_RUN      "시스템 제어 클라이언트를 시작하려면, 위의 상자를 선택하십시오."
+    IDS_SCC_HOW_TO_STOP     "시스템 제어 클라이언트를 정지하려면, 위의 상자를 선택취소하십시오."
+    IDS_SCS_ENABLE          "이 서버를 작동시키려면, 시스템 제어 클라이언트의 실행을 정지시켜야 합니다."
+    IDS_SCC_ENABLE          "이 서버를 작동시키려면, 시스템 제어 서버의 실행을 정지시켜야 합니다."
+    IDS_UNCONFIG_DB_STEP    "데이터베이스 서비스 구성취소 중"
+    IDS_UNCONFIG_DB_STEP_DESC "데이터베이스 서비스를 구성취소하십시오"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNCONFIG_DB_AND_BK_STEP 
+                            "데이터베이스 서비스(백업 서버 포함) 구성취소 중"
+    IDS_UNCONFIG_DB_AND_BK_STEP_DESC 
+                            "데이터베이스 서비스(및 백업 서버) 구성취소 중"
+    IDS_UNCONFIG_BK_STEP    "백업 서버 구성취소 중"
+    IDS_UNCONFIG_BK_STEP_DESC "백업 서버를 구성취소하십시오"
+    IDS_UNCONFIG_FS_STEP    "파일 서비스 구성취소 중"
+    IDS_UNCONFIG_FS_STEP_DESC "파일 서비스를 구성취소하십시오"
+    IDS_UNCONFIG_SCS_STEP   "시스템 제어 서버 구성취소 중"
+    IDS_UNCONFIG_SCS_STEP_DESC "시스템 제어 서버를 구성취소하십시오"
+    IDS_UNCONFIG_SCC_STEP   "시스템 제어 클라이언트 구성취소 중"
+    IDS_UNCONFIG_SCC_STEP_DESC "시스템 제어 클라이언트를 구성취소하십시오"
+    IDS_INVALIDATE_CONFIG_INFO_STEP "이 기계의 구성 정보 무효화"
+    IDS_CLOSE               "닫기(&C)"
+    IDS_CELLSERVDB_UPDATE_ERR_MSG 
+                            "아래의 AFS 서버에서는 CellServDB 파일을 갱신할 수 없습니다. 이는 치명적인 오류는 아닙니다.\r\n"
+    IDS_DELETE_PARTITION_PROMPT "'%1' 파티션을 삭제하시겠습니까?"
+    IDS_INVALIDATE_CFG_INFO "지금 이 컴퓨터에서 실행 중인 AFS 서버 프로세스가 없습니다. 이 기계에서 구성 정보를 제거하시겠습니까?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CELL_IS_GONE_MUST_EXIT 
+                            "더 이상 셀이 없습니다. AFS 구성 응용프로그램은 AFS 셀에 이미 구성된 서버 기계를 구성할 때만 사용될 수 있습니다. AFS 구성 마법사는 새 셀을 시작할 때 사용됩니다."
+    IDS_CFG_MAN_CANT_CONTINUE 
+                            "AFS 구성 응용프로그램은 이제 중단되어야 합니다. 이는 이미 AFS 서버로 구성된 기계에서만 실행될 수 있습니다. 이 기계를 다시 AFS 서버로 구성하려면, AFS 구성 마법사를 실행하십시오."
+    IDS_CONFIG_INFO_INVALIDATED 
+                            "이 기계는 더 이상 AFS 서버로 구성되지 않습니다. AFS 구성 응용프로그램은 AFS 서버 기계를 구성할 때만 사용될 수 있습니다. AFS 구성 마법사는 이 기계를 AFS 서버로 재구성할 때 사용될 수 있습니다."
+    IDS_GET_TOKENS_FAILED   "지정된 셀에 대한 토큰 확보에 실패했습니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_BK_STEP       "백업 서버 시작 중"
+    IDS_BK_STEP_DESC        "백업 서버를 시작하십시오"
+    IDS_CONFIG_ERROR        "구성 오류가 발생했습니다"
+    IDS_CREATE_PARTITION_ERROR "파티션을 작성할 수 없습니다"
+    IDS_REMOVE_PARTITION_ERROR "파티션을 제거할 수 없습니다"
+    IDS_READ_PARTITIONS_ERROR "파티션 테이블을 읽을 수 없습니다"
+    IDS_CELLSERVDB_UPDATE_PROBLEM 
+                            "\r\nCellServDB 갱신 프로세스가 미완의 상태로 중단되었습니다. 모든 서버가 갱신되지 않았을 수도 있습니다."
+    IDS_GET_PARTITION_LIST_ERROR "이 서버에서 파티션을 판별할 수 없습니다"
+    IDS_EXPORTED            "반출됨"
+    IDS_CANT_DELETE_EXPORTED_PARTITION 
+                            "파일 서비스가 실행 중일 때는 반출된 파티션을 제거될 수 없습니다. 이 파티션을 제거하기 전에 파일 서비스를 정지해야 합니다."
+    IDS_CHECK_CONFIG_INFO   "유효한 구성 정보 확인 중..."
+    IDS_ERROR_CFG_HOST_CLOSE "서버 구성 라이브러리를 닫는 데 실패했습니다"
+    IDS_FAILED_OPEN_CELL    "셀을 여는 데 실패했습니다"
+    IDS_FAILED_OPEN_NULL_CELL "널 셀 핸들을 여는 데 실패했습니다"
+    IDS_CREATE_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "루트 볼륨이 없을 경우, 이를 작성하시겠습니까?"
+    IDS_REP_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "루트 볼륨이 복제되지 않았을 경우, 이를 복제하시겠습니까?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TRANSARC_AFS_SERVER "AFS 서버"
+    IDS_CANT_INIT_ADMIN_LIBS 
+                            "이 응용프로그램을 실행할 수 없습니다. 라이브러리를 초기설정하지 못했습니다."
+    IDS_CANT_OPEN_LOG_FILE  "로그 파일을 열 수 없습니다."
+    IDS_NEED_CLIENT_INFO    "AFS 클라이언트가 이 컴퓨터에 구성되어 있지 않으므로 AFS 구성 응용프로그램을 실행할 수 없습니다. AFS 구성 마법사는 이런 경우에 사용될 수 있습니다. AFS 구성 마법사를 실행하시겠습니까?"
+    IDS_NEED_SERVER_INFO    "이 컴퓨터는 AFS 서버로 구성되어 있지 않습니다. AFS 구성 마법사는 AFS 서버를 초기 구성할 때 사용되어야 합니다. 그런 다음, AFS 구성 응용프로그램을 사용할 수 있습니다. AFS 구성 마법사를 실행하여 이 컴퓨터를 초기 구성하시겠습니까?"
+    IDS_ADVANCED_OPEN       "<< 고급(&A)"
+    IDS_ADVANCED_CLOSED     "고급(&A) >>"
+    IDS_BOS_OPEN_FAILED     "서버에 연결할 수 없습니다(bos 열기 실패)."
+    IDS_SALVAGE_ERROR       "복원 조작이 실패했습니다."
+    IDS_INVALID_NUM_SALVAGE_PROCESSSES 
+                            "지정된 복원 프로세스의 수가 유효하지 않습니다. 복원 프로세스의 수는 1-32개입니다."
+    IDS_WRONG_CELL          "이전 단계에서 구성 정보를 검색해야 할 서버를 지정했습니다. 지정된 서버는 조인할 셀에 속하지 않습니다."
+    IDS_CELLSERVDB_UPDATE_ERRORS_ARE_IN_LOG_FILE 
+                            "셀의 일부 서버에 있는 CellServDB 파일은 갱신될 수 없습니다. 갱신된 서버 및 갱신되지 않은 서버 목록을 얻으려면 파일에 저장된 구성 로그를 보십시오."
+    IDS_GET_CREDENTIALS_STEP "관리 토큰 확보 중"
+    IDS_MUST_ENTER_SCS_NAME "시스템 제어 기계 이름은 구성이 시작되기 전에 입력되어야 합니다."
+    IDS_NOT_SAME_CELL       "AFS 클라이언트는 AFS 서버와 다른 셀에 구성됩니다. AFS 서버를 구성하려면 먼저 AFS 클라이언트를 서버의 셀에 재구성해야 합니다."
+    IDS_LAST_DB_SERVER      "이 기계는 셀의 마지막 데이터베이스 서버를 실행 중입니다. 계속 진행하여 이 기계에서 데이터베이스 서비스를 구성해제하면, 셀은 더 이상 존재하지 않고 이 기계에서 실행 중인 다른 모든 AFS 서비스도 구성해제됩니다. 그래도 계속하시겠습니까?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BAD_PW              "AFS 계정에 대한 암호가 유효하지 않습니다."
+    IDS_ERROR_CLIENT_VERSION 
+                            "이 컴퓨터에서 AFS 클라이언트의 버전은 AFS 서버와 호환될 수 없습니다. AFS 서버는 최소한 버전 3.5의 AFS 클라이언트가 필요합니다."
+    IDS_CANT_MAP_ROOT_AFS   "ACL을 루트 볼륨에 설정하려면, 드라이브 이름이 AFS에 대응되어야 합니다. 현재 사용가능한 드라이브 이름이 없습니다. 드라이브 이름을 사용할 수 있도록 해제하고 확인을 누르십시오."
+    IDS_NO_MSG_STEP         " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_NAME_VALIDATION_TYPE "파티션 이름"
+    IDS_VOLUME_NAME_VALIDATION_TYPE "볼륨 이름"
+    IDS_NUM_SALVAGE_PROCS_VALIDATION_TYPE "복원 프로세스 수"
+    IDS_PATH_NAME_VALIDATION_TYPE "경로 이름"
+    IDS_FILE_NAME_VALIDATION_TYPE "파일 이름"
+    IDS_GENERIC_VALIDATION_TYPE "값"
+END
+
+#endif    // Korean resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

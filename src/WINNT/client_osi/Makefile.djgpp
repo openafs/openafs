@@ -1,0 +1,32 @@
+#
+# Makefile.djgpp
+# make information for this directory
+# requires gmake
+#
+
+SOURCES = osifd.c osilog.c osiqueue.c osithrd95.c
+include ../../config/Makefile.djgpp.common
+
+# apply changes from common for this directory
+# 
+# no changes for this directory
+
+# what this directory builds
+#
+TARGETS = libosi.a
+all : $(TARGETS)
+install : $(DESTLIB)/libosi.a includes
+
+INCFILES = \
+      $(DESTINC)/osi.h \
+      $(DESTINC)/osifd.h \
+      $(DESTINC)/osilog.h \
+      $(DESTINC)/osiqueue.h \
+      $(DESTINC)/osisleep.h \
+      $(DESTINC)/osiutils.h \
+      $(DESTINC)/osithrd95.h
+
+# hard-wired dependency information
+#
+libosi.a : $(ALL_OBJS)
+includes: $(INCFILES)

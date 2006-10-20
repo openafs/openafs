@@ -1,0 +1,129 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include <resource.h>
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS セットアップ・ユーティリティー DLL"
+#define AFS_VERINFO_NAME "afs_setup_utils"
+#define AFS_VERINFO_FILENAME "afs_setup_utils.exe"
+#define AFS_VERINFO_CHARSET 932
+#define AFS_VERINFO_LANG_CODE 0x411
+#include "AFS_component_version_number.h"
+#include "..\..\..\..\config\NTVersioninfo.rc"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALLATION_FAILURE "エラーが起こりました:  %s (%ld)."
+    IDS_SCM_OPEN_FAILED     "サービス・コントロール・マネージャーのオープンに失敗しました"
+    IDS_SERVICE_CREATE_FAILED "サービスの作成に失敗しました"
+    IDS_SERVICE_OPEN_FAILED "サービスのオープンに失敗しました"
+    IDS_SERVICE_QUERY_FAILED "サービス状況の照会に失敗しました"
+    IDS_SERVICE_STOP_FAILED "サービスの停止に失敗しました"
+    IDS_SERVICE_DELETE_FAILED "サービスの削除に失敗しました"
+    IDS_REG_DELETE_VALUE_ERROR "レジストリー項目の削除に失敗しました"
+    IDS_SERVICE_ENABLE_FAILED "サービスを使用可能にできませんでした"
+    IDS_OLE_DLL_INSTALL_FAILED "OLE DLL のインストールに失敗しました"
+    IDS_OLE_DLL_UNINSTALL_FAILED "OLE DLL のアンインストールに失敗しました"
+    IDS_EXTENSION_DLL_UNINSTALL_FAILED 
+                            "ファイル・セットのマウント/マウント解除シェル拡張のアンインストールに失敗しました"
+    IDS_EXTENSION_DLL_INSTALL_FAILED 
+                            "ファイル・セットのマウント/マウント解除シェル拡張のインストールに失敗しました"
+    IDS_CANT_DETERMINE_PRODUCT 
+                            "アンインストールする AFS プロダクトを判別できません"
+    IDS_TITLE               "AFS(R) for Windows"
+    IDS_CANT_DETERMINE_APP_PATH 
+                            "アプリケーションがインストールされているディレクトリーを判別できません"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLIENT_APP_NAME     "AFS クライアント"
+    IDS_SERVER_APP_NAME     "AFS サーバー"
+    IDS_CC_APP_NAME         "AFS コントロール・センター"
+    IDS_CANT_LOAD_RESOURCES "このプロダクトをアンインストールできません。アンインストール・リソースのロードに失敗しました。"
+    IDS_CANT_UNINSTALL_AFSCREDS "AFS クライアントの構成解除に失敗しました。"
+    IDS_MUST_STOP_SERVER    "アンインストールを続行できるように AFS サーバーを停止してください。これには長時間かかります。サーバーをただちに停止しますか?"
+    IDS_MUST_STOP_CLIENT    "アンインストールを続行できるように AFS クライアントを停止してください。クライアントをただちに停止しますか?"
+    IDS_LIGHT_CLIENT_APP_NAME "AFS Light"
+    IDS_WAITING_FOR_CLIENT_TO_STOP "AFS クライアントを停止中です。お待ちください..."
+    IDS_WAITING_FOR_SERVER_TO_STOP "AFS サーバーを停止中です。お待ちください..."
+    IDS_CLIENT_NEEDED_BY_SERVER "AFS クライアントをアンインストールすると、AFS サーバーが正常に機能しなくなる可能性があります。アンインストールを続行しますか?"
+    IDS_PRESERVE_CLIENT_CONFIG_INFO "クライアントの構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
+    IDS_PRESERVE_SERVER_CONFIG_INFO "サーバーの構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
+    IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "前の構成情報の復元に失敗しました"
+    IDS_SAVE_OF_CONFIG_INFO_FAILED  "構成情報の保管に失敗しました。アンインストールを続行しますか?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "AFS Light の構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
+    IDS_PRESERVE_CC_CONFIG_INFO "コントロール・センターの構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Boxes
+//
+IDD_PROGRESS DIALOGEX 0, 0, 226, 52
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | DS_CENTER
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "AFS(R) for Windows"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    ICON            "",IDC_LOGO,17,16,21,20
+    LTEXT           "AFS サーバーを停止中です。お待ちください...",IDC_MSG,50,23,
+                    163,10
+    GROUPBOX        "",IDC_STATIC,7,4,212,40
+END
+
+IDD_LICENSE DIALOGEX 0, 0, 315, 204
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ご使用条件"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "同意する(&A)",IDOK,197,185,50,14
+    PUSHBUTTON      "取消し",IDC_STATIC,255,185,50,14,WS_DISABLED
+    CONTROL         "",IDC_TEXT,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | WS_VSCROLL,10,10,295,161,WS_EX_STATICEDGE
+    PUSHBUTTON      "印刷(&P)",IDC_PRINT,10,185,50,14
+    PUSHBUTTON      "同意しない(&D)",IDCANCEL,147,185,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,10,178,296,1
+END
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SPIN1               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin1.ico"
+IDI_SPIN2               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin2.ico"
+IDI_SPIN3               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin3.ico"
+IDI_SPIN4               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin4.ico"
+IDI_SPIN5               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin5.ico"
+IDI_SPIN6               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin6.ico"
+IDI_SPIN7               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin7.ico"
+IDI_SPIN8               ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spin8.ico"
+IDI_SPINSTOP            ICON    DISCARDABLE     "..\\..\\..\\afsapplib\\resource\\spinstop.ico"
+
+

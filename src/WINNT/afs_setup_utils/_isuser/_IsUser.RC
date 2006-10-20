@@ -1,0 +1,188 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include <sdrc.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_DRIVEPATH DIALOGEX 0, 0, 332, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Local Drive Mapping"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",52,0,0,332,36
+    LTEXT           "Enable Assignment, choose drive letter and define AFS mount point path.",
+                    901,17,41,289,19,SS_NOPREFIX
+    LTEXT           "Map local drive letter to AFS mount point.",50,10,3,220,
+                    8,0,WS_EX_TRANSPARENT
+    LTEXT           "AFS service can map drive letters to AFS mount points.\nBoth Letters and mounts points can be configured!",
+                    51,17,12,273,22,0,WS_EX_TRANSPARENT
+    CONTROL         "",1301,"Static",SS_ETCHEDHORZ | WS_GROUP,0,36,332,1
+    DEFPUSHBUTTON   "&Next >",SD_PBUT_CONTINUE,215,196,50,14
+    PUSHBUTTON      "Cancel",SD_PBUT_CANCEL,272,196,50,14
+    PUSHBUTTON      "< &Back",SD_PBUT_BACK,166,196,50,14
+    CONTROL         "",SD_STA_IMAGE_2,"Static",SS_BLACKFRAME,54,185,268,1
+    LTEXT           "",7,10,182,40,10,NOT WS_VISIBLE
+    COMBOBOX        IDC_HOMEDRIVELIST,17,151,41,76,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Root Drive Assignment",IDC_STATIC,2,62,323,52,WS_GROUP
+    EDITTEXT        IDC_HOMEPATH,66,151,258,12,ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT | WS_GROUP
+    LTEXT           "Drive",IDC_STATIC,17,139,17,8
+    LTEXT           "Path",IDC_STATIC,66,139,15,8
+    COMBOBOX        IDC_ROOTDRIVELIST,17,94,40,76,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Home Drive Assignment",IDC_STATIC,5,117,323,56,WS_GROUP
+    EDITTEXT        IDC_ROOTPATH,66,94,254,12,ES_AUTOHSCROLL | ES_OEMCONVERT | 
+                    WS_GROUP
+    LTEXT           "Drive",IDC_STATIC,17,84,17,8
+    LTEXT           "Path",IDC_STATIC,66,84,15,8
+    LTEXT           "@10550,10551;1;0;;0,128,128   ",1200,0,0,332,36,NOT 
+                    WS_VISIBLE,WS_EX_TRANSPARENT
+    PUSHBUTTON      "C",3,21,200,25,12,NOT WS_VISIBLE | WS_GROUP | NOT 
+                    WS_TABSTOP
+    CONTROL         "Enable Assigment",IDC_ENABLEROOT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,72,71,10
+    CONTROL         "Enable Assigment",IDC_ENABLEHOME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,128,71,10
+END
+
+DLG_CELLSERVDB DIALOGEX 0, 0, 336, 228
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select AFS Cell Data Base (afsdcell.ini)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",52,0,0,336,36
+    LTEXT           "Select the data base from one of the following source locations.",
+                    901,17,41,289,15,SS_NOPREFIX
+    LTEXT           "Choose Source location:",50,10,3,220,8,0,
+                    WS_EX_TRANSPARENT
+    LTEXT           "AFS Cell Data Base contains the list of available AFS cells and their IP addresses.",
+                    51,17,15,275,19,0,WS_EX_TRANSPARENT
+    CONTROL         "",1301,"Static",SS_ETCHEDHORZ | WS_GROUP,0,36,336,1
+    DEFPUSHBUTTON   "&Next >",SD_PBUT_CONTINUE,215,196,50,14
+    PUSHBUTTON      "Cancel",SD_PBUT_CANCEL,272,196,50,14
+    PUSHBUTTON      "< &Back",SD_PBUT_BACK,166,196,50,14
+    CONTROL         "",SD_STA_IMAGE_2,"Static",SS_BLACKFRAME,54,185,268,1
+    LTEXT           "",7,10,182,40,10,NOT WS_VISIBLE
+    LTEXT           "@10550,10551;1;0;;0,128,128   ",1200,0,0,336,36,NOT 
+                    WS_VISIBLE,WS_EX_TRANSPARENT
+    PUSHBUTTON      "C",3,21,200,25,12,NOT WS_VISIBLE | WS_GROUP | NOT 
+                    WS_TABSTOP
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,262,160,46,14
+    GROUPBOX        "Download from Web Address",IDC_STATIC,108,115,205,31
+    GROUPBOX        "Select File",IDC_STATIC,108,150,205,31
+    EDITTEXT        IDC_WEB,115,126,180,12,ES_AUTOHSCROLL | ES_OEMCONVERT | 
+                    WS_GROUP
+    GROUPBOX        "Packaged Installation File",IDC_STATIC,108,87,205,23,
+                    WS_GROUP
+    LTEXT           "General.org",IDC_INSTALL,114,96,187,10
+    GROUPBOX        "",IDC_STATIC,90,58,15,124,NOT WS_VISIBLE | WS_GROUP
+    CONTROL         "",IDC_CHECK_INSTALL,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,94,96,8,10
+    CONTROL         "",IDC_CHECK_WEB,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    94,125,8,10
+    CONTROL         "",IDC_CHECK_BROWSEFILE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,94,160,8,10
+    CONTROL         "",IDC_CHECK_PREVIOUSFILE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,94,70,8,10
+    LTEXT           "",IDC_PREVIOUSFILE,114,71,189,8
+    GROUPBOX        "Previous Installation",IDC_STATIC,108,58,205,26,
+                    WS_GROUP
+    EDITTEXT        IDC_BROWSEFILE,113,161,142,12,ES_AUTOHSCROLL
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""sdrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+//10000                   ICON    DISCARDABLE     "icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DLG_CELLSERVDB, DIALOG
+    BEGIN
+        RIGHTMARGIN, 332
+        BOTTOMMARGIN, 218
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

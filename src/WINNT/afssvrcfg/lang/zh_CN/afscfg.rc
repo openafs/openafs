@@ -1,0 +1,1140 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS 配置应用程序和向导"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x804
+#define AFS_VERINFO_CHARSET 936
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOGEX 0, 0, 320, 246
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "AFS 服务器快速启动向导"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "取消(&L)",IDCANCEL,101,225,50,14
+    PUSHBUTTON      "< 上一步(&B)",IDBACK,155,225,50,14
+    DEFPUSHBUTTON   "下一步(&N) >",IDNEXT,209,225,50,14
+    PUSHBUTTON      "帮助(&H)",9,263,225,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,8,214,305,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,91,200,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,103,7,210,200
+END
+
+IDD_PARTITION_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "是，创建分区(&Y)",IDC_CREATE_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,94,87,10
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,116,
+                    186,41,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_PARTITION_NAME,101,175,20,12,ES_AUTOHSCROLL
+    CONTROL         "否，不要创建分区(&O)",IDC_DONT_CREATE_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON,0,191,102,8
+    LTEXT           "该文件服务器将文件和程序存储和传送至 AFS 客户机。对于存储在该系统上并要通过 AFS 实现共享的数据，至少有一个 NTFS 卷必须作为专用的 AFS 分区。",
+                    -1,0,12,209,25
+    LTEXT           "选择用于此分区的卷(&S)：",IDC_SELECT_DRIVE,12,106,163,9
+    LTEXT           "AFS 分区名(&M)：/vicep",IDC_NAME_LABEL,12,177,89,8
+    LTEXT           "在该文件服务器上创建一个 AFS 分区。",IDC_TITLE,0,0,209,
+                    8
+    LTEXT           "一个 AFS 分区在物理上等价于一个 NTFS 卷，但是它也包含关于分区中信息的结构和位置的特殊元数据。",
+                    -1,0,40,209,25
+    LTEXT           "您是否希望在该文件服务器上创建一个分区?",
+                    IDC_ASK_CREATE_PARTITION,0,75,209,18
+    LTEXT           "如果必要的话，在运行时设置的消息。",IDC_PARTITION_MSG,0,
+                    159,210,41,NOT WS_VISIBLE
+    LTEXT           "",IDC_PARTITION_COVER,0,75,210,92,NOT WS_VISIBLE
+END
+
+IDD_FILE_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "是，配置成文件服务器(&Y)。",
+                    IDC_SHOULD_CONFIG_FILE_SERVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,114,10
+    CONTROL         "否，不要配置成文件服务器(&O)。",
+                    IDC_DONT_CONFIG_FILE_SERVER,"Button",BS_AUTORADIOBUTTON,
+                    0,190,133,10
+    LTEXT           "AFS 文件服务将请求的文件和程序从该服务器传送至 AFS 客户机。该服务也处理所有的卷管理操作，例如创建、删除、移动和复制卷。",
+                    -1,0,38,210,34
+    LTEXT           "将机器配置成文件服务器。",IDC_TITLE,0,0,209,8
+    LTEXT           "您是否希望将该机器配置成文件服务器?",
+                    IDC_CREATE_FS_QUESTION,0,166,210,8
+    LTEXT           "要将该机器配置成文件服务器，您必须配置文件服务。",-1,0,
+                    14,210,17
+    LTEXT           "注意：该机器当前没有可用的磁盘驱动器将文件存储在 AFS 中。尽管您可以将该机器配置成文件服务器，但您将无法在该机器上存储 AFS 数据。",
+                    IDC_NO_DRIVES_NOTE,0,77,210,32,NOT WS_VISIBLE
+    LTEXT           "要创建磁盘驱动器，请使用 Windows NT 磁盘管理器。",
+                    IDC_DISK_ADMIN_NOTE,0,112,210,16,NOT WS_VISIBLE
+    LTEXT           "该机器已配置成文件服务器。",IDC_MSG,0,166,209,34,NOT 
+                    WS_VISIBLE
+END
+
+IDD_INTRO_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "欢迎使用 AFS 服务器快速启动向导。该向导将帮助您在 Windows NT 系统上快速地配置 AFS 服务器。",
+                    IDC_TITLE,0,0,209,26
+    LTEXT           "按“下一步”开始配置 AFS 服务器。",IDC_STATIC,0,166,209,
+                    8
+END
+
+IDD_REPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "是，复制根卷(&Y)。",IDC_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,115,10
+    CONTROL         "否，不要复制根卷(&O)。",IDC_DONT_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON,0,190,134,10
+    LTEXT           "复制是在多个分区创建卷的只读副本的过程，通常是在其它文件服务器上。复制增加了卷在网络事件中的可用性。",
+                    IDC_STATIC,0,36,209,25
+    LTEXT           "您是否希望复制根卷?",IDC_REPLICATE_QUESTION,0,166,209,8
+    LTEXT           "复制也可以防止任何服务器的经常存取的卷因请求过多而超负荷。",
+                    IDC_STATIC,0,90,209,25
+    LTEXT           "复制单元根卷。",IDC_TITLE,0,0,209,8
+    LTEXT           "如果您计划复制该 AFS 单元中的其它卷，首先必须复制根卷。",
+                    IDC_STATIC,0,15,209,16
+    LTEXT           "由于提供卷的服务器之一不可用，所以服务器停机，但从其它服务器仍可存取该卷。",
+                    IDC_STATIC,0,63,209,22
+    LTEXT           "如果必要的话，在运行时设置的消息。",
+                    IDC_CANT_REPLICATE_MSG,0,166,209,34,NOT WS_VISIBLE | NOT 
+                    WS_GROUP
+END
+
+IDD_ROOT_VOLUMES_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "是，创建根卷(&Y)。",IDC_CREATE_ROOT_VOLUMES,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,108,10
+    CONTROL         "否，不要创建根卷(&O)。",IDC_DONT_CREATE_ROOT_VOLUMES,
+                    "Button",BS_AUTORADIOBUTTON,0,190,124,10
+    LTEXT           "在 AFS 中，卷是相关文件的集合，它们组织成单个、易于管理的单元以简化系统管理。",
+                    IDC_STATIC,0,15,209,17
+    LTEXT           "您是否希望创建根卷?",IDC_ROOT_AFS_QUESTION,0,166,209,8
+    LTEXT           "创建单元的根卷。",IDC_TITLE,0,0,209,8
+    LTEXT           "一旦创建，根卷将自动成为 AFS 文件空间中可存取的卷。",
+                    IDC_STATIC,0,67,209,17
+    LTEXT           "如果必要的话，在运行时设置的消息。",IDC_ROOT_AFS_MSG,0,
+                    166,209,33,NOT WS_VISIBLE
+    LTEXT           "root.afs 卷是 AFS 文件空间的根卷。root.cell 卷是该单元的 AFS 文件空间子树的根卷，并通过一个来自于 root.afs 的安装点存取它。",
+                    IDC_STATIC,0,35,209,25
+END
+
+IDD_GET_CURRENT_CONFIG DIALOG DISCARDABLE  0, 0, 198, 84
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS 服务器配置"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    36,38,148,14
+    LTEXT           "运行时设置的操作文本。",IDC_OPERATION,35,20,145,10
+    ICON            "",IDC_LOGO,7,7,20,20
+    PUSHBUTTON      "取消",IDCANCEL,73,63,50,14
+    LTEXT           "确定当前配置：",IDC_OPERATION2,35,7,156,10
+END
+
+IDD_BACKUP_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "是，配置成备份服务器(&Y)。",IDC_CONFIG_BACKUP_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,179,128,10
+    CONTROL         "否，不要配置成备份服务器(&O)。",
+                    IDC_DONT_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,0,190,147,10
+    LTEXT           "备份服务器只能运行在配置成数据库服务器的机器上。另外，如果备份服务器运行在单元中的某个数据库服务器上，则它必须运行在单元中的所有数据库服务器上。",
+                    -1,0,38,199,32
+    LTEXT           "您是否希望将该机器配置成备份服务器?",
+                    IDC_BACKUP_SERVER_QUESTION,0,166,209,10
+    LTEXT           "将该机器配置成备份服务器。",IDC_TITLE,0,0,207,8
+    LTEXT           "备份服务器是数据库服务的一个可选项。",-1,0,14,209,16
+    LTEXT           "该机器已配置成数据库服务器。",IDC_CANT_BACKUP_MSG,0,166,
+                    210,33,NOT WS_VISIBLE
+END
+
+IDD_SYS_CONTROL_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "配置成系统控制服务器(&S)。",IDC_SYS_CONTROL_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,151,141,10
+    CONTROL         "配置成系统控制客户机(&C)。",IDC_SYS_CONTROL_CLIENT,
+                    "Button",BS_AUTORADIOBUTTON,0,164,131,9
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,90,174,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    CONTROL         "不要配置成系统控制客户机或服务器(&O)。",
+                    IDC_DONT_CONFIGURE,"Button",BS_AUTORADIOBUTTON,0,190,183,
+                    9
+    LTEXT           "系统控制服务器向其它作为系统控制客户机运行的 AFS 服务器提供了公共配置文件。AFS 单元必须仅运行单个系统控制服务器。",
+                    -1,0,14,209,25
+    LTEXT           "配置成系统控制服务器或客户机。",IDC_TITLE,0,0,209,8
+    LTEXT           "您是否希望将该机器配置成系统控制服务器或客户机?",
+                    IDC_SYS_CONTROL_MACHINE_QUESTION,0,131,207,17
+    LTEXT           "系统控制客户机从单元的系统控制服务器接收任何对其 AFS 配置文件的可用更新。",
+                    IDC_SYS_CONTROL_CLIENT_DESC,0,43,209,18
+    LTEXT           "系统控制服务器(&Y)：",IDC_SYS_CONTROL_MACHINE_LABEL,11,
+                    176,76,8,WS_DISABLED
+    LTEXT           "",IDC_CANT_CONFIG_MSG,0,166,210,34,NOT WS_VISIBLE
+    LTEXT           "警告：不使用美国分布的 AFS 站点不能通过系统控制服务器分布配置文件。如果这样做的话，将导致敏感系统信息未经加密而传输。",
+                    -1,9,73,183,34
+END
+
+IDD_CONFIG_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "这是在该系统中配置 AFS 服务器所需的所有信息。",
+                    IDC_ALL_NEEDED_MSG,1,14,209,17
+    LTEXT           "将该机器配置到单元内 <运行时设置>",IDC_TITLE,1,0,208,8
+    LTEXT           "将执行下列配置步骤：",IDC_FOLLOWING_STEPS_MSG,1,36,187,
+                    8
+    LTEXT           "步骤 1 - 运行时设置的文本",IDC_STEP1,22,49,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 3 - 运行时设置的文本",IDC_STEP3,22,73,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 2 - 运行时设置的文本",IDC_STEP2,22,61,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 4 - 运行时设置的文本",IDC_STEP4,22,85,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 5 - 运行时设置的文本",IDC_STEP5,22,97,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 6 - 运行时设置的文本",IDC_STEP6,22,109,179,8,NOT 
+                    WS_VISIBLE
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,1,178,200,11
+    LTEXT           "步骤 8 - 运行时设置的文本",IDC_STEP8,22,133,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步骤 7 - 运行时设置的文本",IDC_STEP7,22,121,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "如果必要的话，在运行时设置的消息。",IDC_CANT_CONFIG_MSG,
+                    1,13,209,17,NOT WS_VISIBLE
+    LTEXT           "完成百分比：",IDC_PERCENT_COMPLETE_LABEL,1,191,61,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "当前操作：",IDC_CURRENT_STEP_LABEL,1,157,108,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "当前步骤描述 - 运行时设置",IDC_CURRENT_STEP,1,167,208,8,
+                    NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,63,191,49,8,NOT WS_VISIBLE
+    LTEXT           "要开始配置该计算机，请按“配置”按钮。要更改已执行的配置步骤，请按“上一步”按钮。",
+                    IDC_STATUS_MSG,1,159,208,41
+    LTEXT           "",IDC_STEP1_GRAPHIC,10,49,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP2_GRAPHIC,10,61,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP3_GRAPHIC,10,73,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP4_GRAPHIC,10,85,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP5_GRAPHIC,10,97,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP6_GRAPHIC,10,109,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP7_GRAPHIC,10,121,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP8_GRAPHIC,10,133,9,9,NOT WS_VISIBLE
+END
+
+IDD_INFO_PAGE2_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,64,55,138,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,64,71,138,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_VERIFY_ADMIN_PW,64,87,138,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_AFS_UID,97,155,37,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_AFS_UID_SPINNER,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,134,154,11,14
+    LTEXT           "管理信息",IDC_TITLE,0,0,202,8
+    LTEXT           "名称(&M)：",IDC_ADMIN_NAME_LABEL,7,57,52,8
+    LTEXT           "口令(&P)：",IDC_ADMIN_PW_LABEL,7,73,52,8
+    GROUPBOX        "帐户名和口令",IDC_ADMIN_INFO_FRAME,0,41,210,65
+    LTEXT           "验证口令(&V)：",IDC_VERIFY_ADMIN_PW_LABEL,7,90,52,8
+    LTEXT           "以下信息是为该新单元创建管理帐户时必须的。",IDC_STATIC,
+                    0,15,209,17
+    CONTROL         "使用此 AFS UID(&S)：",IDC_USE_THIS_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,157,87,10
+    CONTROL         "使用下一个可用的 AFS UID(&U)",IDC_USE_NEXT_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,144,126,10
+    GROUPBOX        "AFS UID",IDC_STATIC,0,118,209,57
+    LTEXT           "输入 AFS 管理帐户的用户标识符：",IDC_STATIC,6,130,196,9
+END
+
+IDD_DB_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "是，配置成数据库服务器(&Y)。",IDC_CONFIG_DB_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,142,134,10
+    CONTROL         "否，不要配置成数据库服务器(&O)。",
+                    IDC_DONT_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON,0,
+                    190,153,10
+    LTEXT           "数据库服务维护 AFS 单元必须的一套复制数据库。该服务维护单元的所有帐户、卷位置和备份信息(可选)。",
+                    -1,0,38,209,54
+    LTEXT           "您是否希望将该机器配置成数据库服务器?",
+                    IDC_DB_SERVER_QUESTION,0,129,209,10
+    LTEXT           "将该机器配置成数据库服务器。",IDC_TITLE,0,0,209,8
+    LTEXT           "要将该机器配置成数据库服务器，您必须配置数据库服务。",
+                    -1,0,14,209,16
+    LTEXT           "该机器已配置成数据库服务器。",IDC_MSG,0,167,210,33,NOT 
+                    WS_VISIBLE
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,86,174,119,12,ES_AUTOHSCROLL
+    LTEXT           "系统控制服务器(&Y)：",IDC_SYS_CONTROL_MACHINE_LABEL,12,
+                    176,73,8
+    LTEXT           "如果您的单元中有系统控制服务器，请在下面输入它的主机名。将通过该服务器更新 AFS 配置文件。",
+                    IDC_SCM_PROMPT,12,154,195,17
+END
+
+IDD_INFO_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "将该主机设置成现有 AFS 单元中的服务器(&M)",
+                    IDC_JOIN_EXISTING_CELL,"Button",BS_AUTORADIOBUTTON,0,37,
+                    180,10
+    CONTROL         "这将是新的 AFS 单元中的第一个服务器(&T)",
+                    IDC_FIRST_SERVER,"Button",BS_AUTORADIOBUTTON,0,49,180,10
+    EDITTEXT        IDC_CELL_NAME,64,91,139,12,ES_LOWERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SERVER_PW,64,166,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_VERIFY_PW,64,180,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "单元和服务器信息",IDC_TITLE,0,0,203,8
+    LTEXT           "单元名(&C)：",IDC_CELL_NAME_LABEL,7,93,49,8
+    LTEXT           "口令(&P)：",IDC_SERVER_PW_LABEL,7,167,52,8,WS_DISABLED
+    LTEXT           "输入 AFS 单元名。",IDC_CELL_NAME_PROMPT,8,78,195,11
+    LTEXT           "输入 AFS 委托人的口令。所有 AFS 服务器都作为该委托人获得令牌。 ",
+                    IDC_SERVER_PW_PROMPT,7,130,196,19,WS_DISABLED
+    GROUPBOX        "单元名",IDC_CELL_NAME_FRAME,0,67,210,43
+    GROUPBOX        "服务器口令",IDC_SERVER_PW_FRAME,0,119,210,81,
+                    WS_DISABLED
+    LTEXT           "验证口令(&V)：",IDC_VERIFY_PW_LABEL,7,180,52,8,
+                    WS_DISABLED
+    LTEXT           "AFS 单元是为文件存取提供统一名称空间的服务器的集合。",
+                    IDC_CELL_NAME_PROMPT2,1,14,202,17
+    LTEXT           "名称：",IDC_PRINCIPAL_LABEL,7,152,52,8,WS_DISABLED
+    LTEXT           "afs",IDC_PRINCIPAL,64,150,139,12,WS_DISABLED,
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_INFO_PAGE2_NOT_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "宋体"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,66,43,136,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,66,59,136,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,65,132,137,12,ES_AUTOHSCROLL
+    LTEXT           "管理信息",IDC_TITLE,0,0,209,8
+    LTEXT           "在下面输入管理帐户信息：",IDC_ADMIN_INFO_PROMPT,7,30,
+                    196,10
+    LTEXT           "名称(&M)：",IDC_ADMIN_NAME_LABEL,7,46,40,8
+    LTEXT           "口令(&P)：",IDC_ADMIN_PW_LABEL,7,62,40,8
+    GROUPBOX        "帐户名和口令",IDC_ADMIN_INFO_FRAME,0,17,210,62
+    GROUPBOX        "现有 AFS 服务器",IDC_HOSTNAME_FRAME,1,92,209,60
+    LTEXT           "AFS 服务器：",IDC_HOSTNAME_LABEL,7,134,52,8
+    LTEXT           "输入您希望加入的单元中其它 AFS 服务器的主机名。可从该服务器检索 AFS 配置信息。",
+                    IDC_HOSTNAME_PROMPT,7,105,202,25
+END
+
+IDD_SERVICES_PAGE DIALOG DISCARDABLE  0, 0, 295, 265
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "服务"
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,20,281,40
+    GROUPBOX        "",IDC_STATIC,7,66,281,43
+    GROUPBOX        "",IDC_STATIC,7,115,281,40
+    GROUPBOX        "",IDC_STATIC,7,161,281,40
+    CONTROL         "文件服务",IDC_FS_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,19,60,10
+    CONTROL         "数据库服务",IDC_DB_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,65,82,10
+    PUSHBUTTON      "详细信息...",IDC_DB_DETAILS,215,81,50,14,NOT WS_VISIBLE
+    CONTROL         "备份服务器",IDC_BK_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,114,71,10
+    CONTROL         "系统控制服务器",IDC_SCS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,160,98,10
+    EDITTEXT        IDC_SC_MACHINE,107,230,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "选择要运行在该 AFS 服务器上的服务：",IDC_STATIC,7,7,144,
+                    8
+    LTEXT           "当前文件服务正在运行。",IDC_FS_STATUS_MSG,14,32,261,8
+    LTEXT           "当前已部分安装了数据库服务。",IDC_DB_STATUS_MSG,14,78,
+                    195,8
+    LTEXT           "系统控制服务器(&Y)：",IDC_SC_MACHINE_LABEL,21,232,79,8,
+                    WS_DISABLED
+    LTEXT           "要停止文件服务，请不要选取此复选框。",IDC_FS_ACTION_MSG,
+                    14,44,262,8
+    LTEXT           "如需更多信息，请单击“详细信息”按钮。",
+                    IDC_DB_ACTION_MSG,14,92,186,8
+    LTEXT           "当前备份服务器正在运行。",IDC_BK_STATUS_MSG,14,127,259,
+                    8
+    LTEXT           "要停止备份服务器，请不要选取此复选框。",
+                    IDC_BK_ACTION_MSG,14,139,262,8
+    LTEXT           "要启用该服务器，您必须运行文件服务或数据库服务。",
+                    IDC_SCS_ACTION_MSG,14,185,268,9
+    LTEXT           "当前系统控制服务未运行。",IDC_SCS_STATUS_MSG,14,172,263,
+                    9
+    GROUPBOX        "",IDC_STATIC,7,207,281,51
+    CONTROL         "系统控制客户机",IDC_SCC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,206,95,10
+    LTEXT           "要启用该服务器，您必须运行文件服务或数据库服务。",
+                    IDC_SCC_ACTION_MSG,14,245,268,9
+    LTEXT           "当前系统控制服务未运行。",IDC_SCC_STATUS_MSG,14,219,263,
+                    9
+END
+
+IDD_PARTITIONS_PAGE DIALOGEX 0, 0, 295, 265
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "分区"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "您的计算机上有下列 AFS 分区(&A)：",IDC_STATIC,8,7,175,8
+    PUSHBUTTON      "创建(&C)...",IDC_CREATE_PARTITIONS,17,118,53,14
+    LTEXT           "要挽救分区或分区上的卷，请选择列表中的分区并单击上面的按钮。要挽救服务器上的所有分区，单击上面的按钮。",
+                    IDC_SALVAGE_MSG,30,179,250,25
+    PUSHBUTTON      "挽救(&S)...",IDC_SALVAGE,17,159,53,14
+    LTEXT           "要删除分区，请选择列表中的分区并单击上面的按钮。",
+                    IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
+    PUSHBUTTON      "除去(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
+    GROUPBOX        "分区",IDC_AGGR_FRAME,7,103,281,155
+    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+                    281,79,WS_EX_CLIENTEDGE
+    LTEXT           "要在该服务器上新建分区，单击上面的按钮。",
+                    IDC_CREATE_MSG,30,136,254,8
+END
+
+IDD_CREATE_PARTITION DIALOGEX 0, 0, 264, 177
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "创建 AFS 分区"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "从下面列表中选择要新建分区所在的 NTFS 卷：",IDC_TITLE,7,
+                    5,250,8
+    LTEXT           "AFS 分区名：",IDC_NAME_STATIC,17,131,66,8
+    EDITTEXT        IDC_PARTITION_NAME,119,129,20,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "创建(&C)",IDC_CREATE,96,158,50,14,WS_DISABLED
+    PUSHBUTTON      "关闭(&O)",IDC_CLOSE,152,158,50,14
+    PUSHBUTTON      "帮助",9,207,158,50,14
+    GROUPBOX        "分区参数",IDC_ARGS_FRAME,7,117,250,33
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+                    95,WS_EX_CLIENTEDGE
+    LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,24,8
+END
+
+IDD_ADMIN_INFO DIALOG DISCARDABLE  0, 0, 225, 159
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 服务器配置"
+FONT 9, "宋体"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,61,33,151,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,61,49,151,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,61,110,151,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "配置(&C)",IDOK,108,138,50,14,WS_DISABLED
+    PUSHBUTTON      "取消",IDCANCEL,48,138,50,14
+    PUSHBUTTON      "帮助",9,168,138,50,14
+    LTEXT           "在下面输入管理帐户信息：",IDC_ADMIN_INFO_PROMPT,14,20,
+                    196,10
+    LTEXT           "名称(&M)：",IDC_ADMIN_NAME_LABEL,15,36,38,8
+    LTEXT           "口令(&P)：",IDC_ADMIN_PW_LABEL,15,52,38,8
+    GROUPBOX        "帐户名和口令",IDC_ADMIN_INFO_FRAME,7,7,211,62
+    GROUPBOX        "系统控制服务器",IDC_HOSTNAME_FRAME,7,76,211,54
+    LTEXT           "主机名(&H)：",IDC_HOSTNAME_LABEL,15,112,44,8
+    LTEXT           "如果您的单元中有系统控制服务器，请在下面输入它的主机名。将通过该服务器更新 AFS 配置文件。",
+                    IDC_HOSTNAME_PROMPT,13,88,197,18
+END
+
+IDD_CONFIG_SERVER DIALOG DISCARDABLE  0, 0, 257, 87
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 服务器配置"
+FONT 9, "宋体"
+BEGIN
+    PUSHBUTTON      "取消",IDCANCEL,103,66,50,14
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,40,37,200,11
+    LTEXT           "完成百分比：",IDC_PERCENT_COMPLETE_LABEL,40,50,61,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "当前操作：",IDC_CURRENT_STEP_LABEL,40,15,108,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "当前步骤描述 - 运行时设置",IDC_CURRENT_STEP,40,26,210,8,
+                    NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,101,50,49,8,NOT WS_VISIBLE
+    ICON            "",IDC_LOGO,7,7,20,20
+    LTEXT           "要开始配置该计算机，请按“配置”按钮。要更改已执行的配置步骤，请按“上一步”按钮。",
+                    IDC_STATUS_MSG,40,16,210,41
+    PUSHBUTTON      "查看日志(&V)",IDNEXT,158,66,50,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+END
+
+IDD_CELLSERVDB_ERRORS DIALOG DISCARDABLE  0, 0, 187, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CellServCB 更新出错"
+FONT 9, "宋体"
+BEGIN
+    LISTBOX         IDC_LIST,7,26,173,127,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "确定",IDOK,22,162,50,14
+    PUSHBUTTON      "取消",IDCANCEL,75,162,50,14
+    PUSHBUTTON      "帮助",9,130,162,50,14
+    LTEXT           "下列 AFS 服务器上的 CellServDB 文件无法自动更新：",
+                    IDC_STATIC,7,7,173,18
+END
+
+IDD_SALVAGE DIALOG DISCARDABLE  0, 0, 243, 188
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "挽救"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,79,99,50,14
+    PUSHBUTTON      "取消",IDCANCEL,133,99,50,14
+    PUSHBUTTON      "帮助(&H)",9,187,99,50,14
+    CONTROL         "挽救该文件服务器上的所有分区(&S)",IDC_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,14,35,176,10
+    CONTROL         "挽救所选分区上的所有卷(&P)",IDC_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON,14,48,177,10
+    CONTROL         "挽救所选分区上的特定卷(&V)",IDC_VOLUME,"Button",
+                    BS_AUTORADIOBUTTON,14,61,177,10
+    EDITTEXT        IDC_VOLUME_NAME,76,74,97,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "<< 高级(&A) ",IDC_ADVANCED,7,99,50,14
+    GROUPBOX        "",IDC_STATIC,7,25,229,67
+    LTEXT           "卷名(&N)：",IDC_VOLUME_NAME_LABEL,27,75,47,8,
+                    WS_DISABLED
+    GROUPBOX        "高级挽救选项",IDC_ADVANCED_FRAME,7,119,229,62
+    LTEXT           "临时文件的路径(&T)：",IDC_TEMP_DIR_LABEL,17,165,92,8
+    EDITTEXT        IDC_LOG_FILE,112,147,114,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NUM_PROCESSES,188,130,21,12,ES_AUTOHSCROLL
+    LTEXT           "结果日志的文件名(&L)：",IDC_LOG_FILE_LABEL,17,149,92,8
+    EDITTEXT        IDC_TEMP_DIR,112,163,114,12,ES_AUTOHSCROLL
+    CONTROL         "并行挽救操作(&R)；进程数：",IDC_NUM_PROCESSES_CHECKBOX,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,132,168,10
+    LTEXT           "如果您挽救服务器或一个完整分区，则服务器将临时脱机。",
+                    IDC_STATIC,38,7,198,17
+    LTEXT           "注意：",IDC_STATIC,7,7,28,8
+END
+
+IDD_GET_PW DIALOG DISCARDABLE  0, 0, 197, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 委托人口令"
+FONT 9, "宋体"
+BEGIN
+    EDITTEXT        IDC_PW,48,39,142,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,31,61,50,14
+    PUSHBUTTON      "取消",IDCANCEL,85,61,50,14
+    PUSHBUTTON      "帮助",9,140,61,50,14
+    LTEXT           "AFS 委托人密钥不能从早于 3.5 的认证服务器上检索。请在下面输入 AFS 委托人口令。",
+                    IDC_STATIC,7,7,183,26
+    LTEXT           "口令：",IDC_STATIC,7,41,35,8
+END
+
+IDD_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 337, 287
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "挽救卷 - 结果"
+FONT 9, "宋体"
+BEGIN
+    EDITTEXT        IDC_LOG,7,48,323,211,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "关闭(&C)",IDC_CLOSE,225,266,50,14,WS_DISABLED
+    PUSHBUTTON      "帮助",9,280,266,50,14
+    LTEXT           "<运行时设置>",IDC_LOG_TITLE,7,38,263,8
+    ICON            "",IDC_LOGO,7,7,21,20
+    LTEXT           "<运行时设置>",IDC_SALVAGE_STATUS,37,15,185,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 239
+        HORZGUIDE, 207
+    END
+
+    IDD_INTRO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 209
+    END
+
+    IDD_GET_CURRENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        VERTGUIDE, 35
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_CONFIG_SERVER_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        VERTGUIDE, 11
+        VERTGUIDE, 22
+        VERTGUIDE, 201
+    END
+
+    IDD_INFO_PAGE2_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 6
+        VERTGUIDE, 64
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 203
+        VERTGUIDE, 64
+        VERTGUIDE, 203
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE2_NOT_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 66
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_SERVICES_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 288
+        VERTGUIDE, 14
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_PARTITIONS_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 17
+        VERTGUIDE, 30
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_ADMIN_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 59
+        VERTGUIDE, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_CONFIG_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 80
+    END
+
+    IDD_CELLSERVDB_ERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+        HORZGUIDE, 7
+    END
+
+    IDD_GET_PW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#define  AFS_VERINFO_FILE_DESCRIPTION ""AFS 配置应用程序和向导""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "status_16.bmp"
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "status_256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DISABLED_DISK_DRIVE ICON    DISCARDABLE     "disabled.ico"
+IDI_DISK_DRIVE          ICON    DISCARDABLE     "disk_dri.ico"
+IDI_APP_ICON            ICON    DISCARDABLE     "app_icon.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FILE                ICON    DISCARDABLE     "file.ico"
+IDI_DISK_DRIVE_WITH_WARNING ICON    DISCARDABLE     "warn_dri.ico"
+IDI_AFS_DISK_DRIVE      ICON    DISCARDABLE     "afsdrive.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "下一步(&N) >"
+    IDS_FINISH              "完成(&F)"
+    IDS_HELP_TITLE          "按下帮助按钮"
+    IDS_HELP_DESC           "帮助此时不可用。"
+    IDS_CANCEL_DESC         "取消 AFS 快速启动向导?"
+    IDS_PARTITION_ALREADY_CREATED "该机器上已存在 AFS 分区。"
+    IDS_NOT_A_FS_SERVER     "该机器未配置成文件服务器。卷只能在文件服务器上创建。"
+    IDS_ROOT_AFS_ALREADY_EXISTS "根卷已存在。"
+    IDS_NO_PARTITION_EXISTS "不存在要创建根卷的分区。创建根卷前，必须存在分区。"
+    IDS_ALREADY_REPLICATED  "已复制根卷。"
+    IDS_ROOT_AFS_DOESNT_EXIST "不存在根卷。复制根卷前，必须存在该根卷。"
+    IDS_ALREADY_CONFIGURED  "该机器已配置成 AFS 服务器。"
+    IDS_NOTHING_TO_CONFIGURE "您没有选择任何对象进行配置。"
+    IDS_EXIT                "退出"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_FS_STEP       "启动文件服务"
+    IDS_CANCEL_CONFIG_MSG   "在此处取消将使您的计算机部分地配置成 AFS 服务器。仍要取消吗?"
+    IDS_WIZARD_APP_TITLE    "AFS 服务器快速启动向导"
+    IDS_CANCEL_PENDING      "*** 取消暂挂 - 请稍候... ***"
+    IDS_CHECK_FS_CONFIG     "检查文件服务器..."
+    IDS_CHECK_DB_CONFIG     "检查数据库服务器..."
+    IDS_CHECK_BAK_CONFIG    "检查备份服务器..."
+    IDS_CHECK_PARTITION     "检查 AFS 分区..."
+    IDS_CHECK_ROOT_AFS      "检查根卷..."
+    IDS_CHECK_REP           "检查根卷复制..."
+    IDS_CANCEL_GET_CONFIG   "正在取消...请稍候..."
+    IDS_ALREADY_A_BACKUP_SERVER "该机器已配置成备份服务器。"
+    IDS_NOT_A_DB_SERVER     "该机器未配置成数据库服务器。备份服务器只能运行在数据库服务器机器上。"
+    IDS_ALREADY_A_SYS_CONTROL_SERVER "该机器已配置成系统控制服务器。"
+    IDS_ALREADY_A_SYS_CONTROL_CLIENT "该机器已配置成系统控制客户机。"
+    IDS_SC_NOT_A_DB_OR_FS_SERVER 
+                            "该机器未配置成数据库服务器或文件服务器。如果计算机配置成数据库或文件服务器机器时，则同时它只能配置成系统控制器。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE               "卷"
+    IDS_NAME_OR_ERROR       "名称(或出错消息)"
+    IDS_BIN_NOT_A_DB_OR_FS_SERVER 
+                            "将该机器未配置成数据库服务器或文件服务器。如果计算机配置成数据库或文件服务器机器时，则同时它只能配置成二进制分布机器。"
+    IDS_CHECK_SCS           "检查系统控制服务器..."
+    IDS_CHECK_SCC           "检查系统控制客户机..."
+    IDS_SIZE                "大小"
+    IDS_ERROR_SEP           ","
+    IDS_MUST_CONFIG_FS      "由于它是单元中的第一个 AFS 服务器，因此将缺省地配置文件服务。"
+    IDS_MUST_CONFIG_DB      "由于它是单元中的第一个 AFS 服务器，因此将缺省地配置数据库服务。"
+    IDS_MUST_MAKE_PARTITION "由于它是单元中的第一个 AFS 服务器，因此必须创建分区。"
+    IDS_MUST_CREATE_ROOT_AFS 
+                            "由于它是单元中的第一个 AFS 服务器，因此将缺省地创建 root.afs 和 root.cell 卷。"
+    IDS_MUST_REPLICATE      "由于它是单元中的第一个 AFS 服务器，因此将缺省地复制 root.afs 和 root.cell 卷。"
+    IDS_CHECK_AFS_CLIENT    "检查 AFS 客户机安装..."
+    IDS_ERROR_HOST_NAME     "无法确定机器的主机名。"
+    IDS_ERROR_DRIVE_COMPRESSED "驱动器已压缩"
+    IDS_ERROR_CFG_HOST_OPEN "初始化服务器配置库失败。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_CLIENT_STEP    "正在停止 AFS 客户机"
+    IDS_ERROR_LOCAL_HOST_NAME "无法确定机器的本地主机名。"
+    IDS_GET_TOKENS_ERROR    "无法获得令牌。请验证您输入了正确的用户名和口令。"
+    IDS_CANT_SALVAGE_WHEN_FS_NOT_CONFIGURED 
+                            "由于文件服务未启动，不能执行挽救。请启动文件服务，然后重试挽救。"
+    IDS_SALVAGING           "正在进行挽救。请等待..."
+    IDS_CURRENT_SALVAGE_LOG "当前挽救日志的内容:"
+    IDS_FINAL_SALVAGE_LOG   "挽救日志的最后内容:"
+    IDS_SALVAGE_COMPLETE    "挽救已完成。"
+    IDS_CANT_GET_SALVAGE_LOG "无法检索挽救日志。"
+    IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK "无法将挽救日志保存到磁盘。"
+    IDS_VALIDATION_ERROR_TEMPLATE "指定的 %1 无效。请重新输入 %2 。"
+    IDS_CELL_NAME_VALIDATION_TYPE "单元名"
+    IDS_SERVER_NAME_VALIDATION_TYPE "服务器名"
+    IDS_PASSWORD_VALIDATION_TYPE "口令"
+    IDS_UID_VALIDATION_TYPE "UID"
+    IDS_USER_NAME_VALIDATION_TYPE "用户名"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_AFS_CLIENT_NOT_INSTALLED 
+                            "没有安装 AFS 客户机。必须在能够配置 AFS 服务器前安装 AFS 客户机。"
+    IDS_ERROR_AFS_CLIENT_CHECK "无法确定是否已安装 AFS 客户机。"
+    IDS_ERROR_FS_IS_NOT_NTFS "文件系统不是 NTFS"
+    IDS_ERROR_DRIVE_HAS_DATA "驱动器包含数据"
+    IDS_PARTITION_STEP_DESC "创建 AFS 分区"
+    IDS_ERROR_DRIVE_CONTAINS_NT "驱动器包含 NT 安装"
+    IDS_DB_STEP_DESC        "启动数据库服务"
+    IDS_FS_STEP_DESC        "启动文件服务"
+    IDS_SCC_STEP_DESC       "启动系统控制客户机"
+    IDS_SCS_STEP_DESC       "启动系统控制服务器"
+    IDS_ROOT_AFS_STEP_DESC  "创建根卷"
+    IDS_REP_STEP_DESC       "复制根卷"
+    IDS_PARTITIONS_PAGE_TITLE "分区"
+    IDS_CONFIGURE           "配置(&C)"
+    IDS_DB_AND_BK_STEP_DESC "启动数据库服务(包括备份服务器)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_STEP      "正在创建 AFS 分区"
+    IDS_CONFIG_COMMON_FUNCS "正在配置所有服务的公共功能"
+    IDS_START_DB_STEP       "正在启动数据库服务"
+    IDS_START_SCC_STEP      "系统控制服务作为系统控制客户机正在启动"
+    IDS_START_SCS_STEP      "系统控制服务作为系统控制服务器正在启动"
+    IDS_CREATE_ROOT_AFS_STEP "正在创建 root.afs 卷"
+    IDS_REP_STEP            "正在复制根卷"
+    IDS_START_AUTH_STEP     "正在获得服务器令牌"
+    IDS_SERVICES_PAGE_TITLE "服务"
+    IDS_CONFIG_SUCCEEDED    "配置成功完成。"
+    IDS_CONFIG_CANCELED     "配置已取消。"
+    IDS_CONFIG_FAILED       "配置失败。\r\n\r\n已在位置 %2 创建了详细的日志文件 %1。"
+    IDS_ERROR_NO_LICENSE_NUM "没有找到 AFS 许可证号码。"
+    IDS_VERIFY_CLIENT_INSTALL_STEP "正在验证 AFS 客户机的安装"
+    IDS_SET_SERVER_LICENSE_STEP "正在设置该服务器的许可证"
+    IDS_DEFINE_CELL_NAME_STEP "正在定义该单元的名称"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFINE_CELL_MEMBERSHIP_STEP "正在将该服务器设置为单元成员"
+    IDS_START_BOS_SERVER_STEP "正在启动 BOS 服务器"
+    IDS_START_AUTH_SERVER_STEP "正在启动认证服务器"
+    IDS_CREATE_PRINCIPAL_AND_KEY_STEP "正在创建该服务器的委托人和密钥"
+    IDS_START_DB_AND_BK_STEP "正在启动数据库服务(包括备份服务器)"
+    IDS_CREATE_ADMIN_PRINCIPAL_STEP "正在创建单元管理委托人"
+    IDS_START_CLIENT_STEP   "正在启动 AFS 客户机"
+    IDS_SET_ROOT_ACL_STEP   "正在 root.afs 卷上设置 ACL"
+    IDS_CREATE_ROOT_CELL_STEP "正在创建 root.cell 卷"
+    IDS_MOUNT_ROOT_CELL_STANDARD_STEP "正在使用标准安装点安装 root.cell 卷"
+    IDS_SET_ROOT_CELL_ACL_STEP "正在 root.cell 卷上设置 ACL"
+    IDS_MOUNT_ROOT_CELL_RW_STEP "正在使用一个读／写安装点安装 root.cell 卷"
+    IDS_ENABLE_AUTH_CHECKING_STEP "正在启用认证检查"
+    IDS_OBTAIN_ADMIN_CREDS_STEP "正在获得管理令牌"
+    IDS_RESTART_SERVERS_STEP "正在该机器上将所有服务器作为认证服务器重新启动"
+    IDS_ALREADY_A_FS_SERVER "该机器已配置成文件服务器。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALREADY_A_DB_SERVER "该机器已配置成数据库服务器。"
+    IDS_INTRO_PAGE          "介绍"
+    IDS_INFO_PAGE           "单元和服务器信息"
+    IDS_FS_PAGE             "文件服务"
+    IDS_DB_PAGE             "数据库服务"
+    IDS_CFG_TOOL_APP_TITLE  "AFS 服务器配置"
+    IDS_BK_PAGE             "备份服务器"
+    IDS_ROOT_AFS_PAGE       "根 AFS 卷"
+    IDS_NAME                "名称"
+    IDS_REP_PAGE            "复制"
+    IDS_SC_PAGE             "系统控制服务"
+    IDS_CONFIG_PAGE         "配置系统"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_PAGE      "AFS 分区"
+    IDS_GRAPHIC_FONT        "Times New Roman, 12, B"
+    IDS_CURRENT_STEP        "当前步骤："
+    IDS_ADD_TO_CELLSERVDB_STEP "正在将该服务器添加至 CellServDB"
+    IDS_RESTART_ALL_DB_SERVERS_STEP "正在重新启动单元中的所有数据库服务器"
+    IDS_CONFIG_SUCCEEDED_NEED_CELLSERVDB_UPDATE 
+                            "配置已成功完成。注意：必须更新您单元中所有 AFS 客户机的 CellServDB 文件。如果您要使其它站点可用您的单元，则请确认提供带有您的数据库服务器最新列表的 AFS 产品支持。"
+    IDS_SYS_CONTROL_SERVER_ONLY_MSG "您是否希望将该机器配置成系统控制服务器?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DONT_CONFIG_SYS_CONTROL_SERVER_MSG "不要配置成系统控制服务器(&O)。"
+    IDS_CLIENT_CELL_WILL_CHANGE 
+                            "AFS 服务器的配置需将 AFS 客户机和服务器配置在同一单元中。这些将自动执行。"
+    IDS_INFO_PAGE2          "管理信息"
+    IDS_CONFIG_SUCCEEDED_FIRST_SERVER 
+                            "配置已成功完成。\r\n\r\n注意：如果您要使其它站点可用您的单元，则请确认提供带有您的数据库服务器列表的 AFS 产品支持。"
+    IDS_CONFIG_SCS          "配置成单元的系统控制服务器。"
+    IDS_CONFIG_INTO_CELL_MSG "将主机配置至单元"
+    IDS_VIEW_LOG            "查看日志(&V)"
+    IDS_VIEW_LOG_ERROR      "无法查看日志文件"
+    IDS_ERROR_NO_LOG_FILE   "日志文件不存在。"
+    IDS_UPDATING_CELLSERVDB_HOST_SUCCEEDED "主机上更新的 CellServDB"
+    IDS_UPDATING_CELLSERVDB_HOST_FAILED "在主机上更新 CellServDB 失败"
+    IDS_CELL_NAME_LEN_ERROR "您输入的单元名太长。单元名不能超过 64 个字符。"
+    IDS_CONFIG_CHECK_FAILED "无法确定该机器上的当前配置。"
+    IDS_YES                 "是"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO                  "否"
+    IDS_FREE                "空闲空间"
+    IDS_TOTAL               "总计大小"
+    IDS_DRIVE2              "驱动器"
+    IDS_SERVICE_STATUS      "状态"
+    IDS_SERVICE             "服务"
+    IDS_FS_RUNNING          "当前正在运行文件服务。"
+    IDS_FS_STOPPED          "当前没有运行文件服务。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DB_RUNNING          "当前正在运行数据库服务。"
+    IDS_DB_STOPPED          "当前没有运行数据库服务。"
+    IDS_BK_RUNNING          "当前正在运行备份服务。"
+    IDS_BK_STOPPED          "当前没有运行备份服务。"
+    IDS_SCS_STOPPED         "当前没有运行系统控制服务器。"
+    IDS_SCC_STOPPED         "当前没有运行系统控制服务器。"
+    IDS_FS_HOW_TO_RUN       "要启动文件服务，请选取上面的复选框。"
+    IDS_FS_HOW_TO_STOP      "要停止文件服务，请不要选取上面的复选框。"
+    IDS_DB_HOW_TO_RUN       "要启动数据库服务，请选取上面的复选框。"
+    IDS_DB_HOW_TO_STOP      "要停止数据库服务，请不要选取上面的复选框。"
+    IDS_BK_HOW_TO_RUN       "要启动备份服务，请选取上面的复选框。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BK_HOW_TO_STOP      "要停止备份服务，请不要选取上面的复选框。"
+    IDS_SCS_HOW_TO_RUN      "要启动系统控制服务器，请选取上面的复选框。"
+    IDS_SCS_HOW_TO_STOP     "要停止系统控制服务器，请不要选取上面的复选框。"
+    IDS_DB_PARTIAL_CONFIG   "已配置了部分数据库服务。"
+    IDS_DB_DETAILS          "如需更多信息，请按“详细信息”按钮。"
+    IDS_BK_DISABLED         "禁用备份服务。"
+    IDS_BK_ENABLE           "要启用备份服务，您必须运行数据库服务。"
+    IDS_SC_DISABLED         "禁用该服务器。"
+    IDS_SC_ENABLE           "要启用该服务器，您必须运行文件服务或数据库服务。"
+    IDS_FS_WILL_RUN         "将启动文件服务。"
+    IDS_FS_WILL_STOP        "将停止文件服务。"
+    IDS_DB_WILL_RUN         "将启动数据库服务。"
+    IDS_DB_WILL_STOP        "将停止数据库服务。"
+    IDS_BK_WILL_RUN         "将启动备份服务。"
+    IDS_BK_WILL_STOP        "将停止备份服务。"
+    IDS_SCS_WILL_RUN        "将启动系统控制服务器。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCS_WILL_STOP       "将停止系统控制服务器。"
+    IDS_ERROR_DRIVE_ALREADY_HAS_AFS "驱动器已有一个 AFS 分区"
+    IDS_VOLUME_HAS_NO_NAME  "< 卷没有名称 >"
+    IDS_PARTITION_CREATED   "已成功新建 AFS 分区。"
+    IDS_PARTITION_EXISTS    "您输入的分区名已被另一个分区使用。"
+    IDS_SCS_RUNNING         "当前正在运行系统控制服务器。"
+    IDS_WARNING_DRIVE_HAS_RECYCLE_BIN "该驱动器仅包含回收站。"
+    IDS_SCC_WILL_RUN        "将启动系统控制客户机。"
+    IDS_SCC_WILL_STOP       "将停止系统控制客户机。"
+    IDS_SCC_RUNNING         "当前正在运行系统控制客户机。"
+    IDS_SCC_HOW_TO_RUN      "要启动系统控制客户机，请选取上面的复选框。"
+    IDS_SCC_HOW_TO_STOP     "要停止系统控制客户机，请不要选取上面的复选框。"
+    IDS_SCS_ENABLE          "要启用该服务器，您必须停止正在运行的系统控制客户机。"
+    IDS_SCC_ENABLE          "要启用该服务器，您必须停止正在运行的系统控制服务器。"
+    IDS_UNCONFIG_DB_STEP    "正在取消对数据库服务的配置"
+    IDS_UNCONFIG_DB_STEP_DESC "取消对数据库服务的配置"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNCONFIG_DB_AND_BK_STEP "正在取消对数据库服务(和备份服务器)的配置"
+    IDS_UNCONFIG_DB_AND_BK_STEP_DESC "取消对数据库服务(和备份服务器)的配置"
+    IDS_UNCONFIG_BK_STEP    "正在取消对备份服务器的配置"
+    IDS_UNCONFIG_BK_STEP_DESC "取消备份服务器的配置"
+    IDS_UNCONFIG_FS_STEP    "正在取消对文件服务的配置"
+    IDS_UNCONFIG_FS_STEP_DESC "取消对文件服务的配置"
+    IDS_UNCONFIG_SCS_STEP   "正在取消对系统控制服务器的配置"
+    IDS_UNCONFIG_SCS_STEP_DESC "取消对系统控制服务器的配置"
+    IDS_UNCONFIG_SCC_STEP   "正在取消对系统控制客户机的配置"
+    IDS_UNCONFIG_SCC_STEP_DESC "取消对系统控制客户机的配置"
+    IDS_INVALIDATE_CONFIG_INFO_STEP "正在使该机器的配置信息失效"
+    IDS_CLOSE               "关闭(&C)"
+    IDS_CELLSERVDB_UPDATE_ERR_MSG 
+                            "在以下 AFS 服务器上无法更新 CellServDB 文件。这是一个非致命性错误。\r\n"
+    IDS_DELETE_PARTITION_PROMPT "确实要删除分区‘%1’吗?"
+    IDS_INVALIDATE_CFG_INFO "该计算机上现在没有运行 AFS 服务器进程。您是否希望从该机器上除去配置信息?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CELL_IS_GONE_MUST_EXIT 
+                            "单元已不存在。AFS 配置应用程序仅用于配置已配置到 AFS 单元中的服务器。AFS 配置向导可用于启动新单元。"
+    IDS_CFG_MAN_CANT_CONTINUE 
+                            "AFS 配置应用程序现在必须终止。它只能运行在已配置成 AFS 服务器的机器上。要再次将该机器配置成 AFS 服务器，请运行 AFS 配置向导。"
+    IDS_CONFIG_INFO_INVALIDATED 
+                            "不再将该机器配置成 AFS 服务器。AFS 配置应用程序只能用于配置 AFS 服务器机器。AFS 配置向导可用于将该机器重新配置成 AFS 服务器。"
+    IDS_GET_TOKENS_FAILED   "获得指定单元的令牌失败。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_BK_STEP       "正在启动备份服务器"
+    IDS_BK_STEP_DESC        "启动备份服务器"
+    IDS_CONFIG_ERROR        "配置出错"
+    IDS_CREATE_PARTITION_ERROR "无法创建分区"
+    IDS_REMOVE_PARTITION_ERROR "无法除去分区"
+    IDS_READ_PARTITIONS_ERROR "无法读取分区表"
+    IDS_CELLSERVDB_UPDATE_PROBLEM 
+                            "\r\n CellServDB 更新进程过早终止。可能有服务器未更新。"
+    IDS_GET_PARTITION_LIST_ERROR "无法确定该服务器上的分区"
+    IDS_EXPORTED            "已导出"
+    IDS_CANT_DELETE_EXPORTED_PARTITION 
+                            "当文件服务运行时，无法除去已导出的分区。您必须在除去该分区前停止文件服务。"
+    IDS_CHECK_CONFIG_INFO   "正在检查有效的配置信息..."
+    IDS_ERROR_CFG_HOST_CLOSE "关闭服务器配置库失败"
+    IDS_FAILED_OPEN_CELL    "打开单元失败。"
+    IDS_FAILED_OPEN_NULL_CELL "打开空单元句柄失败"
+    IDS_CREATE_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "如果不存在根卷，您是否希望创建根卷?"
+    IDS_REP_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "如果没有复制根卷，您是否希望复制根卷?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TRANSARC_AFS_SERVER "AFS 服务器"
+    IDS_CANT_INIT_ADMIN_LIBS "无法执行该应用程序：库初始化失败。"
+    IDS_CANT_OPEN_LOG_FILE  "无法打开日志文件。"
+    IDS_NEED_CLIENT_INFO    "AFS 配置应用程序无法运行，因为该计算机上没有配置 AFS 客户机。这种情况下可使用 AFS 配置向导。是否运行 AFS 配置向导?"
+    IDS_NEED_SERVER_INFO    "没有将计算机配置成 AFS 服务器。AFS 配置向导用于初始配置 AFS 服务器。然后可以使用 AFS 配置应用程序。是否运行 AFS 配置向导以初始配置该计算机?"
+    IDS_ADVANCED_OPEN       "<< 高级(&A)"
+    IDS_ADVANCED_CLOSED     "高级(&A) >>"
+    IDS_BOS_OPEN_FAILED     "无法连接到服务器(打开 bos 失败)。"
+    IDS_SALVAGE_ERROR       "挽救操作失败。"
+    IDS_INVALID_NUM_SALVAGE_PROCESSSES 
+                            "指定的挽救进程数无效。挽救进程数必须在 1 到 32 之间。"
+    IDS_WRONG_CELL          "在前面步骤中您指定了用于检索配置信息的服务器。该指定的服务器不属于您希望加入的单元。"
+    IDS_CELLSERVDB_UPDATE_ERRORS_ARE_IN_LOG_FILE 
+                            "无法更新单元中某些服务器上的 CellServDB 文件。如需一张列表(该列表显示服务器的更新情况)，请查看存储在文件中的配置日志。"
+    IDS_GET_CREDENTIALS_STEP "正在获得管理令牌"
+    IDS_MUST_ENTER_SCS_NAME "必须在配置前输入系统控制器名。"
+    IDS_NOT_SAME_CELL       "AFS 客户机配置到了与 AFS 服务器不同的单元中。配置 AFS 服务器前，您首先必须将 AFS 客户机重新配置到服务器的单元中。"
+    IDS_LAST_DB_SERVER      "该机器正在运行单元中最后的数据库服务器。如果您继续并取消该机器上的数据库服务配置，单元将不再存在，并将取消正运行在该机器上的所有其它 AFS 服务的配置。还要继续吗?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BAD_PW              "AFS 委托人口令无效。"
+    IDS_ERROR_CLIENT_VERSION 
+                            "该计算机上的 AFS 客户机版本与 AFS 服务器版本不兼容。AFS 服务器至少需要 AFS 客户机版本 3.5。"
+    IDS_CANT_MAP_ROOT_AFS   "为了在根卷上设置 ACL，盘符必须映射到 AFS 。当前没有可用的盘符。请释放一个盘符并按确定。"
+    IDS_NO_MSG_STEP         " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_NAME_VALIDATION_TYPE "分区名"
+    IDS_VOLUME_NAME_VALIDATION_TYPE "卷名"
+    IDS_NUM_SALVAGE_PROCS_VALIDATION_TYPE "挽救进程号"
+    IDS_PATH_NAME_VALIDATION_TYPE "路径名"
+    IDS_FILE_NAME_VALIDATION_TYPE "文件名"
+    IDS_GENERIC_VALIDATION_TYPE "值"
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

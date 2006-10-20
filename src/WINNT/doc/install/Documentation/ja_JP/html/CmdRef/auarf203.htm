@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKPWVALID" HREF="auarf002.htm#ToC_217">kpwvalid</A></H2>
+<A NAME="IDX5194"></A>
+<A NAME="IDX5195"></A>
+<A NAME="IDX5196"></A>
+<P><STRONG>目的</STRONG>
+<P>新規パスワードの品質を検査します。
+<P><STRONG>構文</STRONG>
+<P><B>kpwvalid</B> コマンドは、
+<B>kpasswd</B> コマンド、または、
+<B>kas setpassword</B> コマンドから渡される、新規パスワードの品質を検査します。このコマンドはオプションです。このコマンドを使用する場合は、<B>kpasswd</B> および、
+<B>kas</B> コマンド組のバイナリーと同じ、
+AFS ディレクトリーに常駐させる (つまりこのディレクトリーに、クライアント・マシンのローカル・ディスクから、記号リンクを作成する) 必要があります。このディレクトリーの ACL は、
+<B>a</B> (<B>管理</B>) および、
+<B>w</B> (<B>書き込み</B>) アクセス権を、
+<B>system:administrators</B> グループにのみ、許可しなければなりません。これらの要件により、非許可ユーザーが、代わりに疑似 <B>kpwvalid</B> バイナリー・ファイルを使用することが、できなくなります。
+<P>AFS 配布物には、パスワードの長さが少なくとも 8 文字であることを検査する、
+<B>kpwvalid</B> プログラムの例が組み込まれています。そのためのコードを、次の<B>例</B>のセクションで示しています。
+<P>スクリプトまたはプログラムは、標準入力ストリームで、パスワード文字列の順序を、1 行に 1 つずつ、受け入れなければなりません。最初の行は現行パスワードで、無視されます。それに続く各文字列が、検査対象となるパスワードの候補です。プログラムでは、各パスワードの標準出力ストリームに対し、以下の情報を書き込まなければなりません。
+<UL>
+<LI>パスワードが受け入れ可能であることを示す場合は、
+<TT>0</TT> (ゼロ) と改行文字。
+</LI><LI>パスワードが受け入れ不能であることを示す場合は、非ゼロの 10 進数と改行文字
+</LI></UL>
+<P>さらに、標準エラー・ストリームにのみ、エラー・メッセージを書き込まなければなりません。標準出力ストリームには、書き込む必要はありません。
+<P><STRONG>例</STRONG>
+<P>以下に示したプログラム例は、AFS 配布物に組み込まれ、要求されたパスワードが 8 文字以上であるかどうかを検査します。
+<PRE>   #include &lt;stdio.h>
+   /* prints 0 if the password is long enough, otherwise non-zero */
+   main()
+   {
+   char oldpassword[512];
+   char password[512];
+   
+   if (fgets(oldpassword, 512, stdin))
+      while (fgets(password, 512, stdin)) {
+         if (strlen(password) > 8) { /* password includes a newline */
+            fputs("0\n",stdout);
+            fflush(stdout);
+         }
+         else {
+            fputs("Passwords must contain at least 8 characters.\n",
+                  stderr);
+            fputs("1\n",stdout);
+            fflush(stdout);
+         }
+   return 0;
+   }
+   
+</PRE>
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf194.htm#HDRKAS_SETPASSWORD">kas setpassword</A>
+<P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf202.htm">前ページ</A> &#124; <A HREF="auarf204.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

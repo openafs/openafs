@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPRDBDB" HREF="auarf002.htm#ToC_45">prdb.DB0 および prdb.DBSYS1</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX4018"></A>
+<A NAME="IDX4019"></A>
+<A NAME="IDX4020"></A>
+<A NAME="IDX4021"></A>
+<A NAME="IDX4022"></A>
+<P>保護データベースとそれに関連したログを含みます。
+<P><STRONG>構文</STRONG>
+<P><B>prdb.DB0</B> ファイルには、保護データベースが含まれます。このデータベースは、
+AFS ユーザー、マシン、およびグループ名を、それぞれの ID (AFS UID と GID) にマップし、グループのメンバーシップを追跡します。ファイル・サーバーが許可ユーザーにデータ・アクセスを許可するときに、保護サーバー (<B>ptserver</B> プロセス) は、このデータベースの情報を使用してファイル・サーバーを支援します。
+<P><B>prdb.DBSYS1</B> ファイルは、各データベース操作の実行前に、保護サーバーが各操作を記録したログ・ファイルです。操作が中断すると、保護サーバーはログを参照して、操作を完了します。
+<P>この 2 つのファイルはバイナリー形式で、各セルのデータベース・サーバー・マシンの <B>/usr/afs/db</B> ディレクトリーにあります。保護サーバーが特定のマシンで始動または再始動すると、対等なサーバーとの接続を確立し、データベースのコピーと他のデータベース・サーバー・マシンのコピーが一致するかどうか検査します。一致していない場合には、保護サーバーは、AFS の分散データベース・テクノロジーである Ubik を呼び出し、最新のバージョン番号を持つデータベースのマシンのコピーをすべてのマシンに配布します。
+<P>保護データベースを管理する場合には、<B>pts</B> コマンド・セットのコマンドを必ず使用してください。
+UNIX の <B>tar</B> コマンドなどのツールを使用して、定期的にデータベースのアーカイブ・コピーを作成するようにしてください。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf209.htm#HDRPRDB_CHECK">prdb_check</A>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf046.htm">前ページ</A> &#124; <A HREF="auarf048.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

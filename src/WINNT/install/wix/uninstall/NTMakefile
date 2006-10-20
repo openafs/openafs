@@ -1,0 +1,32 @@
+# Copyright 2004, OpenAFS.ORG and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\install\wix\uninstall
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+UNINSTALL = $(DESTDIR)\root.client\usr\vice\etc\uninstall.exe
+
+OBJECTS = $(OUT)\uninstall.obj
+
+$(OBJECTS): $$(@B).c
+        $(C2OBJ) $**
+
+$(OUT)\uninstall.res: uninstall.rc AFS_component_version_number.h
+
+$(UNINSTALL): $(OBJECTS) $(OUT)\uninstall.res
+  $(EXECONLINK) msi.lib
+  $(EXEPREP)
+
+install: $(UNINSTALL)
+
+# Cleanup
+clean::
+        -$(DEL) AFS_component_version_number.h
+        -$(DEL) $(OUT)\uninstall.obj
+        -$(DEL) $(OUT)\uninstall.res
+        -$(DEL) $(UNINSTALL)

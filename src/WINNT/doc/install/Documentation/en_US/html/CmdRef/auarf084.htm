@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf083.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf085.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_READLABEL" HREF="auarf002.htm#ToC_98">backup readlabel</A></H2>
+<A NAME="IDX4386"></A>
+<A NAME="IDX4387"></A>
+<A NAME="IDX4388"></A>
+<A NAME="IDX4389"></A>
+<A NAME="IDX4390"></A>
+<A NAME="IDX4391"></A>
+<A NAME="IDX4392"></A>
+<A NAME="IDX4393"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Reads and displays a tape&#39;s label
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup readlabel</B> [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+                 [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup rea</B> [<B>-p</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup readlabel</B> command displays information from the
+magnetic tape label of a tape. The information includes the tape&#39;s
+name (either a <I>permanent name</I>, or an <I>AFS tape name</I> that
+reflects the tape&#39;s contents in a prescribed format) and its
+capacity.
+<P>If the <B>FILE YES</B> instruction appears in the
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file associated with the
+specified port offset, then the <B>backup readlabel</B> command reads the
+label information from the first 16 KB block in the backup data file listed
+for that port offset in the Tape Coordinator&#39;s
+<B>/usr/afs/backup/tapeconfig</B> file, rather than from the beginning of
+a tape.
+<P>The Tape Coordinator&#39;s default response to this command is to access
+the tape by invoking the <B>MOUNT</B> instruction in the local
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file, or by prompting the
+backup operator to insert the tape if there is no <B>MOUNT</B>
+instruction. However, if the <B>AUTOQUERY NO</B> instruction
+appears in the <B>CFG_</B><VAR>device_name</VAR> file, or if the issuer of
+the <B>butc</B> command included the <B>-noautoquery</B> flag, the
+Tape Coordinator instead expects the tape to be in the device already.
+If it is not, the Tape Coordinator invokes the <B>MOUNT</B> instruction or
+prompts the operator.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator handling the
+tapes for this operation.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>Output from this command appears in both the shell window where the command
+is issued, and in the Tape Coordinator window.
+<P>If the tape is unlabeled or if the specified tape device is empty, the
+output reads
+<PRE>   Failed to read tape label.
+   
+</PRE>
+<P>Otherwise, the output in the shell window has the following format&#58;
+<PRE>   Tape read was labelled&#58; <VAR>tape name</VAR> (<VAR>dump&nbsp;id</VAR>)
+        size&#58; <VAR>size</VAR> Kbytes
+    
+</PRE>
+<P>where <VAR>tape name</VAR> is the permanent name if the tape has one, or the
+AFS tape name otherwise. The <VAR>dump ID</VAR> is dump ID of the initial
+dump on the tape, and <VAR>size</VAR> is the recorded capacity of the tape in
+kilobytes.
+<P>The output in the Tape Coordinator windows is bounded by an underlined
+<TT>Tape</TT> <TT>label</TT> header at the top, and the following string
+at the bottom&#58;
+<PRE>   -- End of tape label --
+   
+</PRE>
+<P>In between are lines reporting the following information&#58;
+<DL>
+<P><DT><B><TT>tape name</TT>
+</B><DD>The permanent name assigned by using the <B>-pname</B> argument of the
+<B>backup labeltape</B> command. This name remains on the tape
+until that argument is used again, no matter how many times the tape is
+recycled or otherwise relabeled. If the tape does not have a permanent
+name, the value <TT>&lt;NULL></TT> appears in this field.
+<P><DT><B><TT>AFS tape name</TT>
+</B><DD>A tape name in one of the following prescribed formats. The Backup
+System automatically writes the appropriate AFS tape name to the label as part
+of a <B>backup dump</B> or <B>backup savedb</B> operation, or the
+operator can assign it with the <B>-name</B> argument to the <B>backup
+labeltape</B> command. 
+<UL>
+<P><LI><VAR>volume_set_name</VAR><B>.</B><VAR>dump_level_name</VAR><B>.</B><VAR>tape_index</VAR>,
+if the tape contains volume data. The <VAR>volume_set_name</VAR> is the
+name of the volume set that was dumped to create the initial dump in the dump
+set of to which this tape belongs; <VAR>dump_level_name</VAR> is the last
+pathname element of the dump level at which the initial dump was backed
+up; and <VAR>tape_index</VAR> is the numerical position of the tape in the
+dump set.
+<P><LI><TT>Ubik.db.dump.</TT><VAR>tape_index</VAR> if the
+tape contains a dump of the Backup Database, created with the <B>backup
+savedb</B> command. The <VAR>tape_index</VAR> is the ordinal of the
+tape in the dump set.
+<P><LI><TT>&lt;NULL></TT> if the tape has no AFS tape name. This is
+normally the case if the <B>-name</B> argument was not included the last
+time the <B>backup labeltape</B> command was used on this tape, and no
+data has been written to it since.
+</UL>
+<P><DT><B><TT>creationTime</TT>
+</B><DD>The date and time at which the Backup System started performing the dump
+operation that created the initial dump.
+<P><DT><B><TT>cell</TT>
+</B><DD>The cell in which the dump set was created. This is the cell whose
+Backup Database contains a record of the dump set.
+<P><DT><B><TT>size</TT>
+</B><DD>The tape&#39;s capacity (in kilobytes) as recorded on the label, rather
+than the amount of data on the tape. The value is assigned by the
+<B>-size</B> argument to the <B>backup labeltape</B> command or
+derived from the <B>/usr/afs/backup/tapeconfig</B> file on the Tape
+Coordinator machine, not from a measurement of the tape.
+<P><DT><B><TT>dump path</TT>
+</B><DD>The dump level of the initial dump in the dump set
+<P><DT><B><TT>dump id</TT>
+</B><DD>The dump ID number of the initial dump in the dump set, as recorded in the
+Backup Database
+<P><DT><B><TT>useCount</TT>
+</B><DD>The number of times a dump has been written to the tape, or it has been
+relabeled
+</DL>
+<P>The message <TT>ReadLabel&#58; Finished</TT> indicates the completion
+of the output.
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the output for the tape with permanent name
+<B>oct.guest.dump</B> and capacity 2 MB, expressed in
+kilobyte units (2097152 equals 2 times 1024<SUP>2</SUP>).
+<PRE>   % <B>backup readlabel -portoffset 6</B>
+   Tape read was labelled&#58; oct.guest.dump (907215000)
+        size&#58; 2097152 Kbytes
+   
+</PRE>
+<P>The output in the Tape Coordinator window reads&#58;
+<PRE>   Tape label
+   ----------
+   tape name = oct.guest.dump
+   AFS tape name = guests.monthly.3
+   creationTime = Thu Oct 1 00&#58;10&#58;00 1998
+   cell = abc.com
+   size = 2097152 Kbytes
+   dump path = /monthly
+   dump id = 907215000
+   useCount = 5
+   ---- End of tape label ----
+   
+</PRE>
+<P>The following example is for a tape that does not have a permanent
+tape.
+<PRE>   % backup readlabel -portoffset 6
+   Tape read was labelled&#58; guests.monthly.2 (909899900)
+        size&#58; 2097152 Kbytes
+   
+</PRE>
+<P>The output in the Tape Coordinator window reads&#58;
+<PRE>   Tape label
+   ----------
+   tape name = &lt;NULL>
+   AFS tape name = guests.monthly.2
+   creationTime = Sun Nov 1 00&#58;58&#58;20 1998
+   cell = abc.com
+   size = 2097152 Kbytes
+   dump path = /monthly
+   dump id = 909899900
+   useCount = 1
+   ---- End of tape label ----
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf079.htm#HDRBK_LABELTAPE">backup labeltape</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf083.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf085.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

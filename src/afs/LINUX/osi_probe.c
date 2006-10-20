@@ -245,6 +245,7 @@ extern asmlinkage long sys_exit (int) __attribute__((weak));
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
 #endif
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
+extern rwlock_t tasklist_lock __attribute__((weak));
 
 
 /* Structures used to control probing.  We put all the details of which
@@ -1008,6 +1009,12 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 #else
 	ptr = aptr;
 #endif
+	if ((unsigned long)ptr < init_mm.start_code ||
+		(unsigned long)ptr > init_mm.end_data) {
+/*	     printk("address 0x%lx (from 0x%lx %d) is out of range in check_table. wtf?\n", (unsigned long)x, (unsigned long)ptr, i);*/
+	     continue;
+	}
+
 	ret = check_table(P, ptr);
 	if (ret >= 0) {
 	    /* return value is number of entries to skip */
@@ -1112,6 +1119,11 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 	printk("<7>osi_probe: %s                      try_harder\n", P->symbol);
 #endif
     for (offset = 0; offset < datalen; offset++, ptr++) {
+	if ((unsigned long)ptr < init_mm.start_code ||
+		(unsigned long)ptr > init_mm.end_data) {
+/*	     printk("address 0x%lx (from 0x%lx %d) is out of range in check_table. wtf?\n", (unsigned long)x, (unsigned long)ptr, i);*/
+	     continue;
+	}
 	ret = check_table(P, ptr);
         if (ret >= 0) {
             /* return value is number of entries to skip */

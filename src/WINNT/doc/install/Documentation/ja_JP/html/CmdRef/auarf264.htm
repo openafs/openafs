@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_LISTPART" HREF="auarf002.htm#ToC_278">vos listpart</A></H2>
+<A NAME="IDX5703"></A>
+<A NAME="IDX5704"></A>
+<A NAME="IDX5705"></A>
+<A NAME="IDX5706"></A>
+<A NAME="IDX5707"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイル・サーバー・マシン上のすべての AFS 区画を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos listpart -server</B> &lt;<VAR>machine name</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]
+            [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos listp -s</B> &lt;<VAR>machine name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos listpart</B> コマンドは、指定されたファイル・サーバー・マシン上にある有効な AFS 区画をすべて表示します。この場合、ボリューム・ロケーション・データベース (VLDB) は参照しません。
+<B>vos partinfo</B> コマンドは、区画のサイズと、その区画で使用可能なスペースを表示します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>表示する区画のあるファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力では、次のようなヘッダーの後に、区画名のリストが <B>/vicep</B><VAR>xx</VAR> の形式で表示されます。
+<PRE>   The partitions on the server are:
+   
+</PRE>
+<P>出力の最後には、区画の総数が表示されます。
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、<B>fs1.abc.com</B> の区画を表示しています。
+<PRE>   % <B>vos listpart fs1.abc.com</B>
+   The partitions on the server are:
+       /vicepa     /vicepb     /vicepc     /vicepd
+   Total:  4
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf269.htm#HDRVOS_PARTINFO">vos partinfo</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf263.htm">前ページ</A> &#124; <A HREF="auarf265.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,67 @@
+:Base TAAFSUSRMGR.HLP
+:Title IBM AFS 帳戶管理程式
+1 AFS 帳戶管理程式 
+2 AFS 使用者帳戶
+3 建立 AFS 帳戶
+4 建立  AFS 使用者帳戶=Creating_User_Entries
+4 建立新的 AFS 使用者帳戶=To_create_a_single_user_account
+3 密碼鑑別和安全性
+4 增進密碼／鑑別安全=Improving_Password_Authentication_Security
+4 限制使用者連續失敗的登入嘗試數=To_limit_the_number_of_consecutive_failed_login_attempts
+4 解除鎖定已鎖定的使用者帳戶=To_unlock_a_locked_user_account
+4 設定 AFS 使用者帳戶的密碼生命週期=To_set_password_lifetime
+4 限制使用者重覆使用密碼=To_restrict_reuse_of_passwords
+3 變更密碼
+4 變更密碼=Changing_Passwords
+4 變更使用者的 AFS 密碼=To_change_a_password_in_the_Authentication_Database
+3 移除使用者帳戶
+4 移除使用者帳戶=Removing_User_Accounts
+4 刪除 AFS 使用者帳戶=To_remove_a_user_account
+2 AFS 群組
+3 關於保護資料庫=AFS_Protection_Database
+3 保護資料庫項目=Protection_Database_Entries
+3 使用群組
+4 有效使用群組=Using_Groups_Effectively
+4 使用無字首 AFS 群組=Using_Prefix_Less_Groups
+4 在群組內放置 IP 位址=Placing_Machines_in_Groups
+4 標準系統群組=The_Standard_System_Groups
+4 列示關於群組的資訊
+5 列示關於群組的資訊=Listing_Information_about_Groups
+5 檢視 AFS 群組成員的清單=To_list_the_members_of_a_group
+5 檢視關於 AFS 群組的資訊=To_examine_a_Protection_Database_group_entry
+5 檢視 AFS 群組擁有之群組的清單=To_list_the_groups_that_a_group_owns
+4 列示關於使用者與機器項目的群組相關資訊
+5 列示關於使用者與機器項目的群組相關資訊=Listing_Group_Related_Information_about_Users_and_Machine_Entries
+5 檢視 AFS 使用者所屬的群組清單=To_examine_a_Protection_Database_entry_for_a_user_or_machine
+5 檢視 AFS 使用者擁有的群組清單=To_view_a_list_of_the_groups_that_an_AFS_user_owns
+5 檢視 IP 位址帳戶擁有的群組清單=To_view_a_list_of_the_groups_that_an_IP_address_account_owns
+5 檢視 IP 位址帳戶所屬的群組清單=To_view_a_list_of_the_groups_to_which_an_IP_address_account_belongs
+4 建立使用者項目
+5 建立  AFS 使用者帳戶=Creating_User_Entries
+5 建立新的 AFS 使用者帳戶=To_create_a_single_user_account
+4 建立機器項目
+5 建立 IP 位址項目=Creating_Machine_Entries
+5 在 AFS 保護資料庫中建立 IP 位址帳戶=To_create_a_single_machine_entry_in_the_Protection_Database
+4 建立標準與無字首群組
+5 建立標準與無字首 AFS 群組=Creating_Regular_and_Prefix_Less_Groups
+5 建立新的標準 AFS 群組=To_create_a_single_regular_group_entry
+5 建立新的無字首 AFS 群組=To_create_a_single_prefix_less_group_entry
+4 新增成員到群組以及從群組中移除成員
+5 新增成員到群組以及從群組中移除成員=Adding_Members_to_Groups_and_Removing_Them_from_Groups
+5 新增使用者或 IP 位址帳戶到群組=To_add_users_and_machines_to_groups
+5 移除 AFS 群組中的使用者、IP 位址帳戶或群組=To_remove_users_and_machines_from_groups
+3 從保護資料庫中刪除項目
+4 從保護資料庫中刪除項目=Deleting_Entries_from_the_Protection_Database
+4 刪除 AFS 群組=To_delete_user_and_group_entries
+3 變更項目的所有人
+4 變更 AFS 群組的所有人=Changing_the_Owner_of_an_Entry
+4 變更所有權的名稱變更含意=The_Name_Changing_Implications_of_Changing_Ownership
+4 變更 AFS 群組的所有人=To_change_the_owner_of_a_group_entry
+3 變更項目名稱
+4 變更 AFS 群組的名稱=Changing_the_Name_of_an_Entry
+4 變更 AFS 群組的名稱=To_change_the_name_of_a_group_entry
+3 變更群組建立配額
+4 變更群組建立配額=Changing_Group_Creation_Quota
+4 檢視 AFS 使用者的群組建立配額=To_examine_group_creation_quota
+4 變更 AFS 使用者的群組建立配額=To_change_group_creation_quota
+

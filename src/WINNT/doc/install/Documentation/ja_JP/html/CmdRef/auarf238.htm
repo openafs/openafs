@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUNLOG" HREF="auarf002.htm#ToC_252">unlog</A></H2>
+<A NAME="IDX5487"></A>
+<A NAME="IDX5488"></A>
+<A NAME="IDX5489"></A>
+<A NAME="IDX5490"></A>
+<A NAME="IDX5491"></A>
+<A NAME="IDX5492"></A>
+<P><STRONG>目的</STRONG>
+<P>発行側のトークンすべてを破棄します。
+<P><STRONG>構文</STRONG>
+<PRE><B>unlog</B> [<B>-cell</B> &lt;<VAR>cell name</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>unlog</B> [<B>-c </B>&lt;<VAR>cell name</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>unlog</B> コマンドは、発行側が現在保留しているトークンをデフォルトで破棄します。特定のセルのトークンのみを破棄する場合は、<B>-cell</B> 引き数にセルを指定します。
+<P>トークンは 1 つのクライアント・マシンにのみ関係しているので、1 つのマシンを破棄しても、他のマシンのトークンには影響はありません。
+<P><STRONG>注意</STRONG>
+<P>1 つ以上のセル名を指定すると、発行側が任意のセルで有効なトークンを持たない限り、しばらくの間認証が停止する可能性があります。これは、コマンドがすべてのトークンを破棄し、<B>-cell</B> 引き数に指定されないセルのトークンを復元するためです。認証が停止すると、認証を必要とするジョブの操作は中断します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-cell
+</B><DD>トークンを破棄するセルを指定します。この引き数を省略すると、キャッシュ・マネージャーはすべてのトークンを破棄します。完全修飾されたドメイン名または省略形を指定してください。使用できる省略形は、コマンド発行時の名前解決サービス (ドメイン・ネーム・サービスやローカル・ホスト・テーブルなど) の可用性によって異なります。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、すべてのトークンを破棄します。
+<PRE>   % <B>unlog</B>
+   
+</PRE>
+<P>以下のコマンドは、<B>abc.com</B> および
+<B>stateu.edu</B> セルのトークンのみを破棄します。
+<PRE>   % <B>unlog -cell abc.com stateu</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf237.htm">前ページ</A> &#124; <A HREF="auarf239.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

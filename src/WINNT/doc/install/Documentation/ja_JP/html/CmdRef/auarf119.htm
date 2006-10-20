@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_START" HREF="auarf002.htm#ToC_133">bos start</A></H2>
+<A NAME="IDX4642"></A>
+<A NAME="IDX4643"></A>
+<A NAME="IDX4644"></A>
+<A NAME="IDX4645"></A>
+<A NAME="IDX4646"></A>
+<A NAME="IDX4647"></A>
+<A NAME="IDX4648"></A>
+<A NAME="IDX4649"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/local/BosConfig</B> ファイルの状況フラグを設定し、プロセスを開始します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos start -server</B> &lt;<VAR>machine name</VAR>>  <B>-instance</B> &lt;<VAR>server process name</VAR>><SUP>+</SUP>
+          [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+    
+<B>bos start -s</B> &lt;<VAR>machine name</VAR>>  <B>-i</B> &lt;<VAR>server process name</VAR>><SUP>+</SUP>
+          [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos start</B> コマンドは、<B>-server</B> 引き数で指定されたサーバー・マシン上の <B>/usr/afs/local/BosConfig</B> ファイルと BOS サーバーのメモリー内の、<B>-instance</B> 引き数で指定されたプロセスの状況フラグを <TT>Run</TT> に設定します。既にプロセスが実行している場合は、コマンドは状況フラグを <TT>Run</TT> とするだけで、プロセスを再起動することはしません。
+<P><B>BosConfig</B> ファイルの状況フラグを変更しないで、プロセスを開始する場合には、<B>bos startup</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>プロセスを開始するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-instance</B>
+</B><DD>開始するプロセスを指定します。
+<B>bos create</B> コマンドの <B>-instance</B> 引き数で割り当てたプロセス名を使用してください。<B>bos status</B> コマンドの出力には、この名前がリストされます。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、マシン <B>fs6.abc.com</B> の <B>BosConfig</B> ファイルの状況フラグを <TT>Run</TT> に変更し、<B>upclientbin</B> および <B>upclientetc</B> プロセスを開始しています。
+<PRE>   % <B>bos start -server fs6.abc.com -instance upclientbin upclientetc</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf118.htm">前ページ</A> &#124; <A HREF="auarf120.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

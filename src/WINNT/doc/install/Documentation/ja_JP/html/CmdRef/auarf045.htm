@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKASERVERDB" HREF="auarf002.htm#ToC_43">kaserver.DB0 および kaserver.DBSYS1</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX4011"></A>
+<A NAME="IDX4012"></A>
+<A NAME="IDX4013"></A>
+<A NAME="IDX4014"></A>
+<A NAME="IDX4015"></A>
+<P>認証データベースおよび関連したログを記録します。
+<P><STRONG>構文</STRONG>
+<P><B>kaserver.DB0</B> ファイルには、認証データベースが含まれています。このデータベースは、サーバーの暗号化キーとすべてのユーザーのパスワードの暗号化形式を記録しています。認証サーバー (<B>kaserver</B> プロセス) は、このデータベースの情報を使用して、AFS サーバーとクライアント・プロセスとの間で機密保護された通信を可能にします。
+<P><B>kaserver.DBSYS1</B> ファイルは、各データベース操作を実行する前に、認証サーバーがその操作を記録しているログ・ファイルです。操作が中断すると、認証サーバーはログを参照して、操作を完了します。
+<P>この 2 つのファイルはバイナリー形式で、各セルのデータベース・サーバー・マシンの <B>/usr/afs/db</B> ディレクトリーにあります。認証サーバーが特定のマシンで始動または再始動すると、対等なサーバーとの接続を確立し、データベースのコピーと他のデータベース・サーバー・マシンのコピーが一致するかどうか検査します。一致していない場合には、認証サーバーは、AFS の分散データベース・テクノロジーである Ubik を呼び出し、最新のバージョン番号を持つデータベースのマシンのコピーをすべてのマシンに配布します。
+<P>認証データベースを管理する場合には、<B>kas</B> コマンド・セットのコマンドを必ず使用してください。
+UNIX の <B>tar</B> コマンドなどのツールを使用して、定期的にデータベースのアーカイブ・コピーを作成するようにしてください。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf180.htm#HDRKADB_CHECK">kadb_check</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf044.htm">前ページ</A> &#124; <A HREF="auarf046.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUDEBUG" HREF="auarf002.htm#ToC_251">udebug</A></H2>
+<A NAME="IDX5484"></A>
+<A NAME="IDX5485"></A>
+<A NAME="IDX5486"></A>
+<P><STRONG>目的</STRONG>
+<P>データベース・サーバー・プロセスに関連した Ubik プロセスの状況を報告します。
+<P><STRONG>構文</STRONG>
+<PRE><B>udebug -servers</B>  &lt;<VAR>server machine</VAR>>  [<B>-port</B> &lt;<VAR>IP port</VAR>>]  [<B>-long</B>]  [<B>-help</B>]
+        
+<B>udebug -s</B>  &lt;<VAR>server machine</VAR>>  [<B>-p</B> &lt;<VAR>IP port</VAR>>]  [<B>-l</B>]  [<B>-h</B>]
+        
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>udebug</B> コマンドは、
+<B>-servers</B> 引き数で指定されたデータベース・サーバー・マシンで実行中の、
+<B>-port</B> 引き数で識別されるデータベース・サーバー・プロセスのライト・ウェイト Ubik プロセスの状況を表示します。出力では、ピア・データベース・サーバー・プロセスが実行しているマシンのうち、同期サイト (Ubik コーディネーター) となるもの、および、それらの間の接続状況が識別されます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-servers
+</B><DD>状況情報を表示するプロセスを実行しているデータベース・サーバー・マシンを指定します。マシンの IP アドレスを小数点付き 10 進数の形式で指定してください。完全修飾のホスト名 (たとえば、
+<B>fs1.abc.com</B>) か、他のマシンと区別できる形式であれば、ホスト名の短縮形を指定してください。短縮形が使用できるかどうかは、このコマンドを発行した時点での名前解決サービス (ドメイン・ネーム・サービス、ローカル・ホスト表など) の可用性によって異なります。
+<P><DT><B>-port
+</B><DD>プロセス名またはポート番号のいずれかで状況情報を表示するデータベース・サーバー・プロセスを識別します。以下の値のいずれかを指定します。
+<P>
+<DL>
+<DD><P><B>buserver</B> または <B>7021</B> (バックアップ・サーバーの場合)
+<DD><P><B>kaserver</B> または <B>7004</B> (認証サーバーの場合)
+<DD><P><B>ptserver</B> または <B>7002</B> (保護サーバーの場合)
+<DD><P><B>vlserver</B> または <B>7003</B> (ボリューム・ロケーション・サーバーの場合)
+</DL>
+<P><DT><B>-long
+</B><DD><B>-servers</B> 引き数で指定されたマシンのピアごとの追加情報を報告します。そのマシンが同期サイトである場合は、デフォルトで、この情報が表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力のメッセージには、
+<B>-servers</B> 引き数で指定されたマシンでの Ubik プロセスに関する基本状況情報を提示しているものもあり、他には、主にデバッグ目的の場合に有用なものもあります。
+<P>基本 Ubik 状況を検査するには、データベース・サーバー・マシンごとにコマンドを順に発行します。それぞれの出力ごとに、以下のメッセージのいずれかが、出力の上部 3 分の 1 に表示されます。
+<PRE>   I am sync site . . . (<VAR>#_sites</VAR> servers)
+   
+   I am not sync site 
+</PRE>
+<P>同期サイトの場合、次のメッセージは、すべてのサイトのデータベースのバージョンが同じであることを示しています。これは、Ubik が正しく機能しているという意味です。
+<TT>1f</TT> 以外の値の記述については、次を参照してください。
+<PRE>   Recovery state 1f
+</PRE>
+<P>Ubik 操作が正しく実行されるためには、データベース・サーバー・マシンのクロックの時刻が合っていなければなりません。出力の 2 行目および 3 行目にある以下のメッセージは、データベース・サーバー・マシンのクロック、および <B>udebug</B> コマンドが発行されるマシンのクロックに従って、現在の日付および時刻を報告します。
+<PRE>   Host's <VAR>IP_addr</VAR> time is <VAR>dbserver_date/time</VAR>
+   Local time is <VAR>local_date/time</VAR> (time differential <VAR>skew</VAR> secs)
+</PRE>
+<P><VAR>skew</VAR> は、データベース・サーバー・マシンのクロックとローカル・クロックの差です。差の絶対値は Ubik 機能に対して致命的なものではありませんが、データベース・サーバー・マシンの <VAR>skew</VAR> 値の間に 2 、3 秒以上の差があれば、クロックが同期していないことになり、
+Ubik パフォーマンスが妨げられる可能性があります。
+<P>出力のすべてのメッセージについて、以下に説明します。記述のように、デバッグの場合、非常に有用であるし、
+Ubik のインプリメンテーションについて理解しているユーザーには非常に分かりやすくなっています。
+<P>出力は、以下のメッセージで始まります。
+1 番目のメッセージは、
+<B>-servers</B> 引き数で指定されたマシンのオペレーティング・システムで構成されている IP アドレスを報告します。前述のように、
+2 番目と 3 番目のメッセージは、データベース・サーバー・マシンと <B>udebug</B> コマンドが発行されるマシンのそれぞれのクロックに従って、現在の日付および時刻を報告します。出力内の後続のタイム・スタンプはすべて、データベース・サーバー・マシン・クロックではなく、ローカル・クロックで表されます。
+<PRE>   Host's addresses are: <VAR>list_of_IP_addrs</VAR>
+   Host's <VAR>IP_addr</VAR> time is <VAR>dbserver_date/time</VAR>
+   Local time is <VAR>local_date/time</VAR> (time differential <VAR>skew</VAR> secs)
+</PRE>
+<P><VAR>skew</VAR> が約 10 秒を超える場合、次のメッセージが表示されます。記述のように、これは、必ずしも Ubik の誤動作を意味する訳ではありません。データベース・サーバー・マシン間ではなく、データベース・サーバー・マシンとローカル・マシンの間のクロック・スキューを示します。
+<PRE>   ****clock may be bad
+</PRE>
+<P>コーディネーター選出プロセス中に、<B>udebug</B> コマンドが発行され、投票がまだ開始されていない場合は、次のメッセージが表示されます。
+<PRE>   Last yes vote not cast yet
+</PRE>
+<P>そうでない場合、出力は、以下のメッセージで始まります。
+<PRE>   Last yes vote for <VAR>sync_IP_addr</VAR> was <VAR>last_vote</VAR> secs ago (sync site); 
+   Last vote started <VAR>vote_start</VAR> secs ago (at <VAR>date/time</VAR>)
+   Local db version is <VAR>db_version</VAR>
+</PRE>
+<P>最初のメッセージは、この Ubik プロセスがコーディネーターとして最後に投票した、ピア (自分で自分自身を選出できる) および、どのくらい前に投票したのかを示しています。
+2 番目のメッセージは、Ubik コーディネーターが、どのくらい前にセカンダリー・サイトからの投票の確認を要求したのかを示しています。通常、<VAR>last_vote</VAR> 値および <VAR>vote_start</VAR> 値は同じで、これらの値の差異は、
+2 つのデータベース・サーバー・マシン間のクロック・スキューまたはスロー・ネットワーク接続を示している可能性があります。小さな差異は、問題ありません。
+3 番目のメッセージは、この Ubik プロセスで保守されるデータベースの現行バージョン番号 <VAR>db_version</VAR> を報告します。この番号は、ピリオドで 2 つのフィールドに分かれています。ピリオドより前のフィールドは、最新のコーディネーター選出後、初めてデータベースが変更されたときに反映されるタイム・スタンプに基づくもので、ピリオドより後のフィールドは、選出以降変更された回数を示しています。
+<P>出力には、Ubik プロセスがコーディネーターであるか否かによって異なるメッセージが続きます。
+<UL>
+<LI>データベース・サーバー・マシンが 1 つしかない場合は、以下のメッセージで示されるように、それが、常に、コーディネーター (同期サイト) です。
+<P>
+<PRE>   I am sync site forever (1 server)
+</PRE>
+</LI><LI>複数のデータベース・サイトがあり、<B>-servers</B> 引き数でコーディネーター (同期サイト) を指定する場合、出力には、以下の 2 つのメッセージが続きます。
+<P>
+<PRE>   I am sync site until <VAR>expiration</VAR> secs from now (at <VAR>date/time</VAR>) (<VAR>#_sites</VAR> servers)
+   Recovery state <VAR>flags</VAR>
+</PRE>
+<P>
+<P>最初のメッセージは、次に定足数を保持しようとして失敗しても、そのサイトがコーディネーターでいられる期間と定足数に参加しているサイトの数を報告します。
+2 番目のメッセージの <VAR>flags</VAR> フィールドは、定足数の現在の状況を示す 16 進数です。値 <TT>1f</TT> は、完全なデータベース同期を示し、値 <TT>f</TT> は、コーディネーターのデータベースは正しいが、セカンダリー・サイトにもあるのかどうかを判別するために、すべてのセカンダリー・サイトにアクセスできる訳ではないことを示します。コーディネーターの選出時に、<B>udebug</B> コマンドが発行されると、低いほうの値が受け入れ可能となりますが、これが繰り返されれば、問題になります。個々のフラグの意味は、以下のとおりです。
+<P>
+<DL>
+<P><DT><B><TT>0x1</TT>
+</B><DD>このマシンはコーディネーターです。
+<P><DT><B><TT>0x2</TT>
+</B><DD>コーディネーターが、最大バージョン番号のデータベースをもつサイトを判別しました。
+<P><DT><B><TT>0x4</TT>
+</B><DD>コーディネーターに、最大バージョン番号のデータベースのコピーがあります。
+<P><DT><B><TT>0x8</TT>
+</B><DD>データベースのバージョン番号が正しく更新されました。
+<P><DT><B><TT>0x10</TT>
+</B><DD>すべてのサイトに、最大バージョン番号のデータベースがあります。
+</DL>
+<P>
+<P>コーディネーターがデータベースに変更を書き込んでいるときに、
+<B>udebug</B> コマンドが発行されると、次の追加メッセージが表示されます。
+<P>
+<PRE>   I am currently managing write transaction <VAR>identifier</VAR>
+</PRE>
+</LI><LI><B>-servers</B> 引き数で、セカンダリー・サイトを指定すると、出力には、以下のメッセージが続きます。
+<P>
+<PRE>   I am not sync site
+   Lowest host <VAR>lowest_IP_addr</VAR> was set <VAR>low_time</VAR> secs ago
+   Sync host <VAR>sync_IP_addr</VAR>  was set <VAR>sync_time</VAR> secs ago
+</PRE>
+<P>
+<P><VAR>lowest_IP_addr</VAR> は、
+Ubik プロセスが最近メッセージを受け取ったピアの最も低い IP アドレスです。一方、<VAR>sync_IP_addr</VAR> は現行コーディネーターの IP アドレスです。これらの IP アドレスが異なる場合、最も低い IP アドレス のマシンは、現在、コーディネーターではありません。
+Ubik プロセスは、マシン間で連絡がある限り、現行コーディネーターの投票を続行し、最大限の安定度を提供します。ただし、別にコーディネーターを選出するイベントで、この Ubik プロセスは、(連絡があると仮定して)、代わりに <VAR>lowest_IP_addr</VAR> サイトに投票します。これは、最低の IP アドレス のサイトに対して、選出で投票するようにしてあるためです。
+</LI></UL>
+<P>同期サイトとセカンダリー・サイトの両方の場合は、出力に、以下のメッセージが続きます。最初のメッセージは、同期サイトにおけるデータベースのバージョン番号を報告します。これは、その前の <TT>Local db version</TT> メッセージにより報告されている <VAR>db_version</VAR> と一致している必要があります。
+2 番目のメッセージは、任意のオペレーションまたは特に書き込みに対して現在ロックされている VLDB レコード数を示します。オペレーションの進行中に <B>udebug</B> コマンドが発行される場合、この値は非ゼロになります。
+<PRE>     Sync site's db version is <VAR>db_version</VAR>
+   <VAR>locked</VAR> locked pages, <VAR>writes</VAR> of them for write
+</PRE>
+<P>データベース・レコードについて読み取りも書き込みもロックされている場合に限り、以下のメッセージが次に表示されます。
+<PRE>   There are read locks held
+   There are write locks held
+</PRE>
+<P>同様に、<B>udebug</B> コマンドの発行時に、読み取りまたは書き込みトランザクションが実行中である場合に限り、以下のメッセージの 1 つまたは複数が次に表示されます。
+<PRE>   There is an active write transaction
+   There is at least one active read transaction
+   Transaction tid is <VAR>tid</VAR>
+</PRE>
+<P><B>-servers</B> 引き数で指定されたマシンがコーディネーターである場合、次のメッセージが、現在のコーディネーターが最後にデータベースを更新したのはいつかを報告します。
+<PRE>   Last time a new db version was labelled was:
+            <VAR>last_restart</VAR> secs ago (at <VAR>date/time</VAR>)
+</PRE>
+<P><B>-servers</B> 引き数で指定されたマシンがコーディネーターである場合、出力の最後に、定足数に入っているセカンダリー・サイトごとの項目が以下の形式で出力されます。
+<PRE>   Server( <VAR>IP_address</VAR> ): (db <VAR>db_version</VAR>)
+   last vote rcvd <VAR>last_vote</VAR> secs ago (at <VAR>date/time</VAR>),
+   last beacon sent <VAR>last_beacon</VAR> secs ago (at <VAR>date/time</VAR>), last vote was { yes | no }
+   dbcurrent={ 0 | 1 }, up={ 0 | 1 } beaconSince={ 0 | 1 }
+</PRE>
+<P>1 行目では、サイトの IP アドレスとそれが保持しているデータベースのバージョン番号を報告します。
+<VAR>last_vote</VAR> フィールドは、コーディネーターがそのサイトで Ubik プロセスから投票メッセージをどのくらい前に受け取ったのかを報告し、
+<VAR>last_beacon</VAR> フィールドは、コーディネーターが投票メッセージを最後にどのくらい前に要求したのかを報告します。コーディネーター選出プロセス中に、<B>udebug</B> コマンドが発行されたのに、投票がまだ開始されていない場合は、次のメッセージが代わりに表示されます。
+<PRE>   Last vote never rcvd
+   Last beacon never sent
+</PRE>
+<P>各項目の最終行のフィールドの意味は以下のとおりです。
+<UL>
+<LI><TT>dbcurrent</TT> は、最大バージョン番号のデータベースをもつサイトの場合は <TT>1</TT> で、そうでない場合は <TT>0</TT> です。
+</LI><LI><TT>up</TT> は、サイトの Ubik プロセスが正しく機能している場合は <TT>1</TT> で、そうでない場合は <TT>0</TT> です。
+</LI><LI><TT>beaconSince</TT> は、サイトがコーディネーターの最新の投票要求に応答している場合は <TT>1</TT> で、そうでない場合は <TT>0</TT> です。
+</LI></UL>
+<P><B>-long</B> フラグを組み込むと、
+<B>-servers</B> 引き数がセカンダリー・サイトを指定するときに、ピア項目を作成しますが、その場合、<VAR>IP_address</VAR> フィールドのみ正しいことが保証されています。たとえば、<VAR>db_version</VAR> フィールドの値は、通常 <TT>0.0</TT> ですが、これは、セカンダリー・サイトがこの情報に関してピアを調査しないためです。
+<VAR>last_vote</VAR> および <VAR>last_beacon</VAR> フィールドの値は、このサイトがコーディネーターとして最後に投票を受け取ったのはいつか、あるいは投票を要求したのはいつかを示します。これらの値は、通常、最新のコーディネーター選出がいつだったのかを示します。
+<P><STRONG>例</STRONG>
+<P>この例では、同期サイトである、マシン <B>afs1</B> 上のボリューム・ロケーション・サーバーの Ubik プロセスの状況を検査します。
+<PRE>   % <B>udebug afs1 vlserver</B>
+   Host's addresses are: 192.12.107.33 
+   Host's 192.12.107.33 time is Wed Oct 27 09:49:50 1999
+   Local time is Wed Oct 27 09:49:52 1999 (time differential 2 secs)
+   Last yes vote for 192.12.107.33 was 1 secs ago (sync site); 
+   Last vote started 1 secs ago (at Wed Oct 27 09:49:51 1999)
+   Local db version is 940902602.674
+   I am sync site until 58 secs from now (at Wed Oct 27 09:50:50 1999) (3 servers)
+   Recovery state 1f
+   Sync site's db version is 940902602.674
+   0 locked pages, 0 of them for write
+   Last time a new db version was labelled was:
+            129588 secs ago (at Mon Oct 25 21:50:04 1999)
+   
+   Server( 192.12.107.35 ): (db 940902602.674)
+       last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
+       last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
+       dbcurrent=1, up=1 beaconSince=1
+   
+   Server( 192.12.107.34 ): (db 940902602.674)
+       last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
+       last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
+       dbcurrent=1, up=1 beaconSince=1
+</PRE>
+<P>この例では、セカンダリー・サイトである、IP アドレス 192.12.107.34 のマシン上の認証サーバーの状況を検査します。ローカル・クロックは、データベース・サーバー・マシンのクロックよりも約 4 分遅れています。
+<PRE>   % <B>udebug 192.12.107.34 7004</B>
+   Host's addresses are: 192.12.107.34
+   Host's 192.12.107.34 time is Wed Oct 27 09:54:15 1999
+   Local time is Wed Oct 27 09:50:08 1999 (time differential -247 secs)
+   ****clock may be bad
+   Last yes vote for 192.12.107.33 was 6 secs ago (sync site); 
+   Last vote started 6 secs ago (at Wed Oct 27 09:50:02 1999)
+   Local db version is 940906574.25
+   I am not sync site
+   Lowest host 192.12.107.33 was set 6 secs ago
+   Sync host 192.12.107.33 was set 6 secs ago
+   Sync site's db version is 940906574.25
+   0 locked pages, 0 of them for write
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf236.htm">前ページ</A> &#124; <A HREF="auarf238.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

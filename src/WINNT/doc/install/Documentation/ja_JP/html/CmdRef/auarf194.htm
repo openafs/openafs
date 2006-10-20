@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_SETPASSWORD" HREF="auarf002.htm#ToC_208">kas setpassword</A></H2>
+<A NAME="IDX5147"></A>
+<A NAME="IDX5148"></A>
+<A NAME="IDX5149"></A>
+<A NAME="IDX5150"></A>
+<A NAME="IDX5151"></A>
+<A NAME="IDX5152"></A>
+<A NAME="IDX5153"></A>
+<A NAME="IDX5154"></A>
+<P><STRONG>目的</STRONG>
+<P>認証データベース項目のキー・フィールドを変更します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas setpassword -name</B> &lt;<VAR>name of user</VAR>>  [<B>-new_password</B> &lt;<VAR>new password</VAR>>] 
+                [<B>-kvno</B> &lt;<VAR>key version number</VAR>>] 
+                [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+                [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
+                [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]
+                [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas setpasswd -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  
+              [<B>-k</B> &lt;<VAR>key version number</VAR>>]
+              [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+              [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]  
+              [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
+   
+<B>kas setp -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  [<B>-k</B> &lt;<VAR>key version number</VAR>>]
+         [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+         [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]  
+         [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
+   
+<B>kas sp -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  [<B>-k</B> &lt;<VAR>key version number</VAR>>]
+       [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+       [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+       [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas setpassword</B> コマンドは、長さに制限のない文字ストリングを受け入れ、それを暗号化キーに適した形式に変換し、
+<B>-name</B> 引き数に指定された認証データベースのキー・フィールドに格納します。また、<B>-kvno</B> 引き数に指定されたキー・バージョン番号を割り当てます。
+<P>シェル・プロンプトでパスワード文字列を不可視にする場合には、
+<B>-new_password</B> 引き数を省略してください。シェルにはプロンプトが表示されますが、パスワードは見えません。
+<P><B>afs</B> サーバー・キーを変更する場合には、
+<B>bos addkey</B> コマンドを発行して、
+<B>/usr/afs/etc/KeyFile</B> ファイルにキー (同じキー・バージョン番号を持つ) を追加してください。命令については、<I>AFS 管理の手引き</I> を参照してください。
+<P>コマンド・インタープリターは、次の条件にしたがって、パスワード文字列を検査します。
+<UL>
+<LI><B>kas</B> バイナリーと同じディレクトリーに、
+<B>kpwvalid</B> という名前のプログラムがある場合には、コマンド・インタープリターは、そのプログラムを呼び出して、パスワードを処理します。詳細については、<B>kpwvalid</B> の解説ページを参照してください。
+</LI><LI><B>-reuse</B> 引き数を <B>kas setfields</B> コマンドに指定した場合には、前のパスワードの再利用を禁止しているので、コマンド・インタープリターは、パスワードがユーザーの発行した最近の 20 個のパスワードを使用してください。これは、シェルに以下のようなエラー・メッセージを生成します。
+<P>
+<PRE>   Password was not changed because it seems like a reused password
+   
+</PRE>
+<P>
+<P>手操作またはスクリプトを使用して、ユーザーがパスワードを変更し、この制限に近づかないようにするには、<B>kaserver</B> 初期化コマンドの <B>-minhours</B> 引き数を指定してください。次のエラー・メッセージは、最短時間が経過する前にユーザーがパスワードを変更しようとすると表示されます。
+<P>
+<PRE>   Password was not changed because you changed it too
+   recently; see your systems administrator
+   
+</PRE>
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>新規キーを記録する項目を指定します。
+<P><DT><B>-new_password
+</B><DD>AFS 認証されるときの文字ストリングにユーザー・タイプを指定します。この引き数を省略して、表示されたプロンプトでパスワードを入力すると、パスワードを不可視にすることができます。AFS 以外のプログラムは、8 文字より長いパスワードを処理することができません。
+<P><DT><B>-kvno
+</B><DD>新規キーのキー・バージョン番号を指定します。
+<B>0</B> から <B>255</B> までの範囲で整数を指定します。省略すると、デフォルトで 0 (ゼロ) が使用されますが、これはサーバー・キーとしては適切ではありません。
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例では、<B>admin</B> アカウントを使用している管理者が、<B>pat</B> のパスワードを変更しています (<B>pat</B> が前のパスワードを忘れたか、何らかの理由でアカウントがロックされたため)。
+<PRE>   % <B>kas setpassword pat</B>
+   Password for admin:
+   new_password:
+   Verifying, please re-enter new_password:
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>個々のユーザーは、自分のパスワードを変更することができます。他のユーザーのパスワードまたは <B>afs</B> などのサーバー項目のパスワード (サーバー暗号化キー) を変更するには、発行者は、自分の認証データベース項目で <TT>ADMIN</TT> フラグが設定されていなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P><A HREF="auarf203.htm#HDRKPWVALID">kpwvalid</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf193.htm">前ページ</A> &#124; <A HREF="auarf195.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

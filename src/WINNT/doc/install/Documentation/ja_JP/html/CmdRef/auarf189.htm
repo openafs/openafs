@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_LIST" HREF="auarf002.htm#ToC_203">kas list</A></H2>
+<A NAME="IDX5112"></A>
+<A NAME="IDX5113"></A>
+<A NAME="IDX5114"></A>
+<A NAME="IDX5115"></A>
+<P><STRONG>目的</STRONG>
+<P>認証データベースのすべての項目を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas list</B> [<B>-long</B>]  [<B>-showadmin</B>]  [<B>-showkey</B>]
+         [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+         [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
+         [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]
+         [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas ls</B> [<B>-l</B>]  [<B>-showa</B>]   [<B>-showk</B>]
+       [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+       [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>] 
+       [<B>-se</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-n</B>]  [<B>-h</B>] 
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas list</B> コマンドは、指定されたフラグを判別して、認証データベースのすべての項目を名前別に表示したり、特定の項目セットをすべて表示したりします。
+<UL>
+<LI>認証データベースのすべての項目の詳細を表示する場合には、
+<B>-long</B> フラグを使用してください。
+</LI><LI><TT>ADMIN</TT> フラグが設定されている項目だけの詳細を表示する場合には、
+<B>-showadmin</B> フラグを使用してください。
+</LI><LI>各認証データベース項目の名前だけを表示する場合には、
+<B>-long</B> および <B>-showadmin</B>
+の両方を省略してください。
+</LI></UL>
+<P>デフォルトでは、すべての項目には、鍵を構成する実際の 8 進数ではなく、暗号化鍵のチェックサムが組み込まれます。
+8 進数を表示するには、
+<B>-long</B> フラグまたは <B>-showadmin</B> フラグとともに、
+<B>-showkey</B> を組み込みます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-long
+</B><DD>認証データベースの詳細を表示します。このフラグまたは
+<B>-showadmin</B> フラグを使用してください。データベース項目の名前だけを表示する場合には、この両方のフラグを省略してください。
+<P><DT><B>-showadmin
+</B><DD><TT>ADMIN</TT> フラグが設定されている認証データベース項目の詳細だけを表示します。このフラグまたは <B>-long</B> フラグを使用してください。データベース項目の名前だけを表示する場合には、この両方のフラグを省略してください。
+<P><DT><B>-showkey
+</B><DD>それぞれの項目全体で鍵を構成する 8 進数を表示します。
+<B>-long</B> フラグまたは <B>-showadmin</B> フラグをこのフラグとともに提供します。
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P><B>-long</B> または
+<B>-showadmin</B> の両方の引き数を省略すると、認証データベース項目の名前だけが表示されます。
+<P><B>-long</B> フラグを使用すると、すべての認証データベース項目の詳細が表示されます。<B>-showadmin</B> フラグを使用すると、
+<TT>ADMIN</TT> フラグが設定されている認証データベース項目の詳細だけが表示されます。
+<B>-showkey</B> を他のフラグとともに提供する場合には、出力には、各項目で暗号化鍵を構成する 8 進数が組み込まれます。
+<P>完全な認証データベース項目には、<B>kas examine</B>
+コマンドで表示される情報と同じ内容が記録されています。詳細については、このコマンドの解説ページを参照してください。
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者には、認証データベース項目で <TT>ADMIN</TT> フラグを設定させなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf185.htm#HDRKAS_EXAMINE">kas examine</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf188.htm">前ページ</A> &#124; <A HREF="auarf190.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

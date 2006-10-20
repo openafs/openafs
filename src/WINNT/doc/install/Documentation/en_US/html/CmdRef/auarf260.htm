@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf259.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf261.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_DUMP" HREF="auarf002.htm#ToC_274">vos dump</A></H2>
+<A NAME="IDX5642"></A>
+<A NAME="IDX5643"></A>
+<A NAME="IDX5644"></A>
+<A NAME="IDX5645"></A>
+<A NAME="IDX5646"></A>
+<A NAME="IDX5647"></A>
+<A NAME="IDX5648"></A>
+<A NAME="IDX5649"></A>
+<A NAME="IDX5650"></A>
+<A NAME="IDX5651"></A>
+<A NAME="IDX5652"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Converts a volume into ASCII format and writes it to a file
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos dump -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  [<B>-time</B> &lt;<VAR>dump&nbsp;from&nbsp;time</VAR>>]  [<B>-file</B> &lt;<VAR>dump&nbsp;file</VAR>>]  
+         [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+         [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos du -i</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  [<B>-t</B> &lt;<VAR>dump&nbsp;from&nbsp;time</VAR>>]  [<B>-f</B> &lt;<VAR>dump&nbsp;file</VAR>>]  
+       [<B>-s</B> &lt;<VAR>server</VAR>>]  [<B>-p</B> &lt;<VAR>partition</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+       [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos dump</B> command converts the contents of the indicated
+volume, which can be read/write, read-only or backup, into ASCII
+format. The Volume Server writes the converted contents to the file
+named by the <B>-file</B> argument, or to the standard output
+stream. In the latter case, the output can be directed to a named pipe,
+which enables interoperation with third-party backup utilities.
+<P>To dump the complete contents of a volume (create a <I>full dump</I>),
+omit the <B>-time</B> argument or specify the value <B>0</B> (zero)
+for it. To create an <I>incremental dump</I>, which includes only
+the files and directories in the volume that have modification timestamps
+later than a certain time, specify a date and time as the value for the
+<B>-time</B> argument.
+<P>By default, the <B>vos</B> command interpreter consults the Volume
+Location Database (VLDB) to learn the volume&#39;s location, so the
+<B>-server</B> and <B>-partition</B> arguments are not
+required. If the <B>-id</B> argument identifies a read-only volume
+that resides at multiple sites, the command dumps the version from just one of
+them (normally, the one listed first in the volume&#39;s VLDB entry as
+reported by the <B>vos examine</B> or <B>vos listvldb</B>
+command). To dump the read-only volume from a particular site, use the
+<B>-server</B> and <B>-partition</B> arguments to specify the
+site. To bypass the VLDB lookup entirely, provide a volume ID number
+(rather than a volume name) as the value for the <B>-id</B> argument,
+together with the <B>-server</B> and <B>-partition</B>
+arguments. This makes it possible to dump a volume for which there is
+no VLDB entry.
+<P>During the dump operation, the volume is inaccessible both to Cache
+Managers and to other volume operations. Dumping a volume does not
+otherwise affect its status on the partition or its VLDB entry.
+<P>To restore a dumped volume back into AFS, use the <B>vos restore</B>
+command.
+<P><STRONG>Cautions</STRONG>
+<P>Support for incremental dumps is provided to facilitate interoperation with
+third-party backup utilities. The <B>vos dump</B> command does not
+provide any of the administrative facilities of an actual backup system, so
+the administrator must keep manual records of dump times and the relationship
+between full and incremental dumps of a volume. For a volume&#39;s
+contents to be consistent after restoration of incremental dumps, there must
+be no gap between the time at which a prior dump of the volume was created and
+the value of the <B>-time</B> argument to the <B>vos dump</B> command
+that creates the incremental dump. More specifically, for a read/write
+volume, the <B>-time</B> argument must specify the time that the prior
+dump was performed, and for a read-only or backup volume it must specify the
+time that the volume was last released (using the <B>vos release</B>
+command) or cloned (using the <B>vos backup</B> or <B>vos
+backupsys</B> command) prior to dumping it. The parent dump can be
+either a full dump or another incremental dump.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>Specifies either the complete name or volume ID number of the read/write,
+read-only, or backup volume to dump.
+<P><DT><B>-time
+</B><DD>Specifies whether the dump is full or incremental. Omit this
+argument to create a full dump, or provide one of three acceptable
+values&#58; 
+<UL>
+<P><LI>The value <B>0</B> (zero) to create a full dump.
+<P><LI>A date in the format
+<VAR>mm</VAR><B>/</B><VAR>dd</VAR><B>/</B><VAR>yyyy</VAR> (month, day and
+year) to create an incremental dump that includes only files and directories
+with modification timestamps later than midnight (12&#58;00
+a.m.) on the indicated date. Valid values for the year
+range from <B>1970</B> to <B>2037</B>; higher values are not
+valid because the latest possible date in the standard UNIX representation is
+in 2038. The command interpreter automatically reduces later dates to
+the maximum value. An example is <B>01/13/1999</B>.
+<P><LI>A date and time in the format
+<B>"</B><VAR>mm</VAR><B>/</B><VAR>dd</VAR><B>/</B><VAR>yyyy</VAR>
+<VAR>hh</VAR><B>&#58;</B><VAR>MM</VAR><B>"</B> to create an incremental
+dump that includes only files and directories with modification timestamps
+later than the specified date and time. The date format is the same as
+for a date alone. Express the time as hours and minutes
+(<VAR>hh</VAR>&#58;<VAR>MM</VAR>) in 24-hour format (for example,
+<B>20&#58;30</B> is 8&#58;30 p.m.). Surround the
+entire expression with double quotes (" ") because it contains a space.
+An example is <B>"01/13/1999 22&#58;30"</B>.
+</UL>
+<P><DT><B>-file
+</B><DD>Specifies the pathname of the file to which to write the dump. The
+file can be in AFS, but not in the volume being dumped. A partial
+pathname is interpreted relative to the current working directory. If
+this argument is omitted, the dump is directed to the standard output
+stream.
+<P><DT><B>-server
+</B><DD>Specifies the file server machine on which the volume resides.
+Provide the <B>-partition</B> argument along with this one.
+<P><DT><B>-partition
+</B><DD>Specifies the partition on which the volume resides. Provide the
+<B>-server</B> argument along with this one.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command&#39;s execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command writes a full dump of the volume
+<B>user.terry</B> to the file
+<B>/afs/abc.com/common/dumps/terry.dump</B>.
+<PRE>   % <B>vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump</B>
+   
+</PRE>
+<P>The following command writes an incremental dump of the volume
+<B>user.smith</B> to the file
+<B>smith.990131.dump</B> in the current working
+directory. Only those files in the volume with modification time stamps
+later than 6&#58;00 p.m. on 31 January 1999 are included in
+the dump.
+<PRE>   % <B>vos dump -id user.smith -time "01/31/1999 18&#58;00" -file smith.990131.dump</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine specified with the <B>-server</B> argument and on each
+database server machine. If the <B>-localauth</B> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser <B>root</B>.
+<P>If the <B>-file</B> argument is included, the issuer must also have
+permission to insert and write in the directory that houses the file.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
+<P><A HREF="auarf274.htm#HDRVOS_RESTORE">vos restore</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf259.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf261.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

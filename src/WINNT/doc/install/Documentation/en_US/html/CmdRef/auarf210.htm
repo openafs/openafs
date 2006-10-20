@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf209.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf211.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPTS_INTRO" HREF="auarf002.htm#ToC_224">pts</A></H2>
+<A NAME="IDX5220"></A>
+<A NAME="IDX5221"></A>
+<A NAME="IDX5222"></A>
+<A NAME="IDX5223"></A>
+<A NAME="IDX5224"></A>
+<A NAME="IDX5225"></A>
+<A NAME="IDX5226"></A>
+<A NAME="IDX5227"></A>
+<A NAME="IDX5228"></A>
+<A NAME="IDX5229"></A>
+<A NAME="IDX5230"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Introduction to the <B>pts</B> command suite
+<P><STRONG>Description</STRONG>
+<P>The commands in the <B>pts</B> command suite are the administrative
+interface to the Protection Server, which runs on each database server machine
+in a cell and maintains the Protection Database. The database stores
+the information that AFS uses to augment and refine the standard UNIX scheme
+for controlling access to files and directories.
+<P>Instead of relying only on the mode bits that define access rights for
+individual files, AFS associates an access control list (ACL) with each
+directory. The ACL lists users and groups and specifies which of seven
+possible access permissions they have for the directory and the files it
+contains. (It is still possible to set a directory or file&#39;s mode
+bits, but AFS interprets them in its own way; see the chapter on
+protection in the <I>AFS Administration Guide</I> for details.)
+<P>AFS enables users to define groups in the Protection Database and place
+them on ACLs to extend a set of rights to multiple users
+simultaneously. Groups simplify administration by making it possible to
+add someone to many ACLs by adding them to a group that already exists on
+those ACLs. Machines can also be members of a group, so that users
+logged into the machine automatically inherit the permissions granted to the
+group.
+<P>There are several categories of commands in the <B>pts</B> command
+suite&#58;
+<UL>
+<P><LI>Commands to create and remove Protection Database entries&#58; <B>pts
+creategroup</B>, <B>pts createuser</B>, and <B>pts delete</B>
+<P><LI>Commands to administer and display group membership&#58; <B>pts
+adduser</B>, 
+<P><B>pts listowned</B>, <B>pts membership</B>, and <B>pts
+removeuser</B>
+<P><LI>Commands to administer and display properties of user and group entries
+other than membership&#58; <B>pts chown</B>, <B>pts examine</B>,
+<B>pts listentries</B>, <B>pts rename</B>, and <B>pts
+setfields</B>
+<P><LI>Commands to set and examine the counters used when assigning IDs to users
+and groups&#58; <B>pts listmax</B> and <B>pts setmax</B>
+<P><LI>Commands to obtain help&#58; <B>pts apropos</B> and <B>pts
+help</B>
+</UL>
+<P><STRONG>Options</STRONG>
+<P>The following arguments and flags are available on many commands in the
+<B>pts</B> suite. The reference page for each command also lists
+them, but they are described here in greater detail.
+<DL>
+<A NAME="IDX5231"></A>
+<P><DT><B>-cell &lt;<VAR>cell name</VAR>>
+</B><DD>Names the cell in which to run the command. It is acceptable to
+abbreviate the cell name to the shortest form that distinguishes it from the
+other entries in the <B>/usr/vice/etc/CellServDB</B> file on the local
+machine. If the <B>-cell</B> argument is omitted, the command
+interpreter determines the name of the local cell by reading the following in
+order&#58; 
+<OL TYPE=1>
+<P><LI>The value of the AFSCELL environment variable
+<P><LI>The local <B>/usr/vice/etc/ThisCell</B> file
+</OL>
+<P><DT><B>-force
+</B><DD>
+<A NAME="IDX5232"></A>
+Enables the command to continue executing as far as possible when errors or
+other problems occur, rather than halting execution immediately.
+Without it, the command halts as soon as the first error is
+encountered. In either case, the <B>pts</B> command interpreter
+reports errors at the command shell. This flag is especially useful if
+the issuer provides many values for a command line argument; if one of
+them is invalid, the command interpreter continues on to process the remaining
+arguments.
+<A NAME="IDX5233"></A>
+<P><DT><B>-help
+</B><DD>Prints a command&#39;s online help message on the standard output
+stream. Do not combine this flag with any of the command&#39;s other
+options; when it is provided, the command interpreter ignores all other
+options, and only prints the help message.
+<P><DT><B>-noauth
+</B><DD>
+<A NAME="IDX5234"></A>
+Establishes an unauthenticated connection to the Protection Server, in which
+the server treats the issuer as the unprivileged user
+<B>anonymous</B>. It is useful only when authorization checking is
+disabled on the server machine (during the installation of a file server
+machine or when the <B>bos setauth</B> command has been used during other
+unusual circumstances). In normal circumstances, the Protection Server
+allows only privileged users to issue commands that change the Protection
+Database, and refuses to perform such an action even if the <B>-noauth</B>
+flag is provided.
+</DL>
+<P><STRONG>Privilege Required</STRONG>
+<P>Members of the <B>system&#58;administrators</B> group can issue all
+<B>pts</B> commands on any entry in the Protection Database.
+<P>Users who do not belong to the <B>system&#58;administrators</B> group
+can list information about their own entry and any group entries they
+own. The privacy flags set with the <B>pts setfields</B> command
+control access to entries owned by other users.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf211.htm#HDRPTS_ADDUSER">pts adduser</A>
+<P><A HREF="auarf212.htm#HDRPTS_APROPOS">pts apropos</A>
+<P><A HREF="auarf213.htm#HDRPTS_CHOWN">pts chown</A>
+<P><A HREF="auarf214.htm#HDRPTS_CREATEGROUP">pts creategroup</A>
+<P><A HREF="auarf215.htm#HDRPTS_CREATEUSER">pts createuser</A>
+<P><A HREF="auarf216.htm#HDRPTS_DELETE">pts delete</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf218.htm#HDRPTS_HELP">pts help</A>
+<P><A HREF="auarf219.htm#HDRPTS_LISTENTRIES">pts listentries</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P><A HREF="auarf221.htm#HDRPTS_LISTOWNED">pts listowned</A>
+<P><A HREF="auarf222.htm#HDRPTS_MEMBERSHIP">pts membership</A>
+<P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<P><A HREF="auarf224.htm#HDRPTS_RENAME">pts rename</A>
+<P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf209.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf211.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

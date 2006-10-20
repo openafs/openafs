@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf078.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf080.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_LABELTAPE" HREF="auarf002.htm#ToC_93">backup labeltape</A></H2>
+<A NAME="IDX4345"></A>
+<A NAME="IDX4346"></A>
+<A NAME="IDX4347"></A>
+<A NAME="IDX4348"></A>
+<A NAME="IDX4349"></A>
+<A NAME="IDX4350"></A>
+<A NAME="IDX4351"></A>
+<A NAME="IDX4352"></A>
+<A NAME="IDX4353"></A>
+<A NAME="IDX4354"></A>
+<A NAME="IDX4355"></A>
+<A NAME="IDX4356"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Creates the magnetic label on a tape
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup labeltape</B> [<B>-name</B> &lt;<VAR>AFS&nbsp;tape&nbsp;name,&nbsp;defaults&nbsp;to&nbsp;NULL</VAR>>]
+                 [<B>-size</B> &lt;<VAR>tape&nbsp;size&nbsp;in&nbsp;Kbytes,&nbsp;defaults&nbsp;to&nbsp;size&nbsp;in&nbsp;tapeconfig</VAR>>]
+                 [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>] 
+                 [<B>-pname</B> &lt;<VAR>permanent&nbsp;tape&nbsp;name</VAR>>] 
+                 [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup la</B> [<B>-n</B> &lt;<VAR>AFS&nbsp;tape&nbsp;name,&nbsp;defaults&nbsp;to&nbsp;NULL</VAR>>]
+          [<B>-s</B> &lt;<VAR>tape&nbsp;size&nbsp;in&nbsp;Kbytes,&nbsp;defaults&nbsp;to&nbsp;size&nbsp;in&nbsp;tapeconfig</VAR>>]
+          [<B>-po</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]  [<B>-pn</B> &lt;<VAR>permanent&nbsp;tape&nbsp;name</VAR>>]
+          [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup labeltape</B> command creates a magnetic label, readable
+by the Backup System, at the beginning of a tape. The label records the
+tape&#39;s name (either a <I>permanent name</I>, or an <I>AFS tape
+name</I> that reflects the tape&#39;s contents in a prescribed format) and
+its capacity.
+<P>(If the <B>FILE YES</B> instruction appears in the
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file on the Tape
+Coordinator machine associated with the specified port offset, then the
+<B>backup</B> command writes label information to the first 16 KB block in
+the backup data file listed for that port offset in the Tape
+Coordinator&#39;s <B>/usr/afs/backup/tapeconfig</B> file, rather than at
+the beginning of a tape. For the sake of clarity, the following text
+refers to tapes only, but the Backup System handles backup data files in much
+the same way.)
+<P>Relabeling a tape that already contains AFS backup data effectively makes
+the data unusable, because the command removes the Backup Database record of
+the complete dump set of which the tape is a part. Use this command to
+enable recycling of a tape that contains unexpired dumps that are not actually
+still needed.
+<P>To write a permanent name on the label, include the <B>-pname</B>
+argument to specify a string of up to 32 characters. The permanent name
+persists until the <B>-pname</B> argument is again included on the
+<B>backup labeltape</B> command, regardless of the tape&#39;s contents
+and of how often the tape is otherwise relabeled or recycled. Include
+this argument or the <B>-name</B> argument, but not both. If this
+argument is included, the AFS tape name is set to <TT>&lt;NULL></TT>.
+The permanent name is set to <TT>&lt;NULL></TT> if this argument is omitted
+and no permanent name already exists.
+<P>The issuer must ensure that a permanent name is unique among the tapes used
+for AFS backup in the cell, because the <B>backup</B> command interpreter
+does not verify that another tape does not already have the same permanent
+name. When a tape has a permanent name, the Backup System uses it
+instead of the AFS tape name in most prompts and when referring to the tape in
+output from <B>backup</B> commands. The permanent name appears in
+the <TT>tape</TT> <TT>name</TT> field of the output from the <B>backup
+readlabel</B> command.
+<P>To write an AFS tape name on the label, provide a value for the
+<B>-name</B> argument in the required format described in the
+<B>Options</B> section. Include the <B>-name</B> argument or
+the <B>-pname</B> argument, but not both. If this argument is
+omitted, the AFS tape name is set to <TT>&lt;NULL></TT>, but the Backup
+System automatically assigns the appropriate name when the tape is used in a
+future <B>backup dump</B> or <B>backup savedb</B> operation.
+The AFS tape name appears in the <TT>AFS</TT> <TT>tape</TT>
+<TT>name</TT> field of the output from the <B>backup readlabel</B> and
+<B>backup scantape</B> commands.
+<P>The <B>backup</B> command interpreter does not accept the
+<B>-name</B> argument if the tape already has a permanent name. To
+erase a tape&#39;s permanent name, provide a null value to the
+<B>-pname</B> argument by issuing the following command&#58;
+<PRE>   % <B>backup labeltape -pname ""</B>
+   
+</PRE>
+<P>To record the tape&#39;s capacity on the label, specify a number of
+kilobytes as the <B>-size</B> argument. If the argument is omitted
+the first time a tape is labeled, the Backup System records the default tape
+capacity recorded for the specified port offset in the
+<B>/usr/afs/backup/tapeconfig</B> file on the Tape Coordinator
+machine. Subsequently, the value in the size field persists until the
+<B>-size</B> argument is again included on the <B>backup labeltape</B>
+command.
+<P>To determine how much data can be written to a tape during a <B>backup
+dump</B> or <B>backup savedb</B> operation, the Tape Coordinator reads
+the capacity recorded on the tape&#39;s label (or uses the value associated
+with its port offset in the <B>/usr/afs/backup/tapeconfig</B> file, if the
+tape was never labeled). For further description, see the <B>backup
+dump</B> reference page.
+<P>The Tape Coordinator&#39;s default response to this command is to access
+the tape by invoking the <B>MOUNT</B> instruction in the local
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file, or by prompting the
+backup operator to insert the tape if there is no <B>MOUNT</B>
+instruction. However, if the <B>AUTOQUERY NO</B> instruction
+appears in the <B>CFG_</B><VAR>device_name</VAR> file, or if the issuer of
+the <B>butc</B> command included the <B>-noautoquery</B> flag, the
+Tape Coordinator instead expects the tape to be in the device already.
+If it is not, the Tape Coordinator invokes the <B>MOUNT</B> instruction or
+prompts the operator.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Specifies the AFS tape name to record on the label. Include this
+argument or the <B>-pname</B> argument, but not both. If this
+argument is omitted, the AFS tape name is set to <TT>&lt;NULL></TT>.
+If this argument is provided, it must have the following format&#58;
+<PRE>   <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR>.<VAR>tape_index</VAR>
+   
+</PRE>
+<P>for the tape to be acceptable for use in a future <B>backup dump</B>
+operation. The <VAR>volume_set_name</VAR> must match the volume set name
+of the initial dump to be written to the tape, <VAR>dump_level_name</VAR> must
+match the last element of the dump level pathname at which the volume set will
+be dumped, and <VAR>tape_index</VAR> indicates the order of the tape in the dump
+set (indexing begins with <B>1</B>). To disable this type of name
+checking, include the <B>NAME_CHECK NO</B> instruction in the
+<B>CFG_</B><VAR>device_name</VAR> file. 
+<P>For the tape to be acceptable for use in a future <B>backup savedb</B>
+operation, the value specified for the <B>-name</B> argument must have the
+following format&#58;
+<PRE>   <B>Ubik_db_dump.</B><VAR>tape_index</VAR>
+   
+</PRE>
+<P>where <VAR>tape_index</VAR> indicates the order of the tape in the set of
+tapes that house the Backup Database dump; indexing begins with 1
+(one).
+<P><DT><B>-size
+</B><DD>Specifies the tape capacity to record on the label. Provide an
+integer value followed by a letter that indicates units, with no intervening
+space. A unit value of <B>k</B> or <B>K</B> indicates
+kilobytes, <B>m</B> or <B>M</B> indicates megabytes, and <B>g</B>
+or <B>G</B> indicates gigabytes. If the units letter is omitted,
+the default is kilobytes.
+<P>If this argument is omitted the first time a tape is labeled, the Backup
+System records the capacity that is associated with the specified port offset
+in the <B>/usr/afs/backup/tapeconfig</B> file on the Tape Coordinator
+machine. The value recorded the first time then persists until the
+<B>-size</B> argument is provided on a future issuance of the
+command.
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator handling the tape
+for this operation.
+<P><DT><B>-pname
+</B><DD>Specifies the permanent name to record on the label. It can be up
+to 32 characters in length, and include any alphanumeric characters.
+Avoid metacharacters that have a special meaning to the shell, to avoid having
+to mark them as literal in commands issued at the shell prompt.
+<P>Include this argument or the <B>-name</B> argument, but not
+both. If this argument is provided, the AFS tape name is set to
+<TT>&lt;NULL></TT>. If this argument is omitted, any existing
+permanent name is retained.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command records the AFS tape name
+<B>user.monthly.1</B> on the label of the tape in the device
+with port offset 3&#58;
+<PRE>   % <B>backup labeltape -name user.monthly.1 -portoffset 3</B>
+   
+</PRE>
+<P>The following three commands are equivalent in effect&#58; they all
+record a capacity of 2 GB on the label of the tape in the device with port
+offset 4. They set the AFS tape name to <TT>&lt;NULL></TT> and leave
+the permanent name unchanged.
+<PRE>   % <B>backup labeltape -size 2g -portoffset 4</B>
+   % <B>backup labeltape -size 2048M -portoffset 4</B>
+   % <B>backup labeltape -size 2097152 -portoffset 4</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf018.htm#HDRCFG">CFG_<I>device_name</I></A>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf084.htm#HDRBK_READLABEL">backup readlabel</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf078.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf080.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

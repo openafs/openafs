@@ -1,0 +1,48 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# make compiler warnings fatal
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+RELDIR=WINNT\license
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+
+EXEFILE = $(DESTDIR)\bin\sgml2rtf.exe
+
+EXEOBJS = \
+	$(OUT)\main.obj \
+	$(OUT)\multistring.obj
+
+EXELIBS = \
+	user32.lib
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP) 
+
+############################################################################
+install : $(EXEFILE) lang
+
+lang ::
+	$(CD) lang
+	@$(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+
+clean ::
+	$(CD) lang
+	@$(MAKECMD) /nologo /f NTMakefile clean
+	$(CD) ..

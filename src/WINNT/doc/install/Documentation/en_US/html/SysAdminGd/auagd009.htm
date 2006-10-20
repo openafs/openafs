@@ -1,0 +1,1420 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3191/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 14:06:34                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 14:06:34">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 14:06:34">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 14:06:34">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd008.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd010.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ176" HREF="auagd002.htm#ToC_164">Monitoring and Controlling Server Processes</A></H1>
+<A NAME="IDX6247"></A>
+<A NAME="IDX6248"></A>
+<P>One of your most important responsibilities as a system administrator is
+ensuring that the processes on file server machines are running
+correctly. The BOS Server, which runs on every file server machine,
+relieves you of much of the responsibility by constantly monitoring the other
+AFS server processes on its machine. It can automatically restart
+processes that have failed, ordering the restarts to take interdependencies
+into account.
+<P>Because different file server machines run different combinations of
+processes, you must define which processes the BOS Server on each file server
+machine is to monitor (to learn how, see <A HREF="#HDRWQ200">Controlling and Checking Process Status</A>).
+<P>It is sometimes necessary to take direct control of server process status
+before performing routine maintenance or correcting problems that the BOS
+Server cannot correct (such as problems with database replication or mutual
+authentication). At those times, you control process status through the
+BOS Server by issuing <B>bos</B> commands.
+<HR><H2><A NAME="HDRWQ177" HREF="auagd002.htm#ToC_165">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands&#58;
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine process status
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos status</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine information from the <B>BosConfig file</B> file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos status</B> with <B>-long</B> flag
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create a process instance
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos create</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Stop a process
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos stop</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Start a stopped process
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos start</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Stop a process temporarily
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos shutdown</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Start a temporarily stopped process
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos startup</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Stop and immediately restart a process
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos restart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Stop and immediately restart all processes
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos restart</B> with <B>-bosserver</B> flag
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine BOS Server&#39;s restart times
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos getrestart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Set BOS Server&#39;s restart times
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos setrestart</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine a log file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos getlog</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Execute a command remotely
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>bos exec</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ191" HREF="auagd002.htm#ToC_166">Brief Descriptions of the AFS Server Processes</A></H2>
+<P>This section briefly describes the different server
+processes that can run on an AFS server machine. In cells with multiple
+server machines, not all processes necessarily run on all machines.
+<P>An AFS server process is referred to in one of three ways, depending on the
+context&#58;
+<A NAME="IDX6249"></A>
+<UL>
+<P><LI>The output from the <B>bos status</B> command refers to a process by
+the name assigned when the <B>bos create</B> command creates its entry in
+the <B>/usr/afs/local/BosConfig</B> file. The name can differ from
+machine to machine, but it is easiest to maintain the cell if you assign the
+same name on all machines. The <I>AFS Quick Beginnings</I> and the
+reference page for the <B>bos create</B> command list the conventional
+names. Examples are <B>bosserver</B>, <B>kaserver</B>, and
+<B>vlserver</B>.
+<P><LI>The process listing produced by the standard <B>ps</B> command
+generally matches the process&#39;s binary file. Examples of process
+binary files are <B>/usr/afs/bin/bosserver</B>,
+<B>/usr/afs/bin/kaserver</B>, and <B>/usr/afs/bin/vlserver</B>.
+<P><LI>In most contexts, including most references in the documentation, a
+process is referred to as (for example) the <B>Basic OverSeer (BOS)
+Server</B>, the <B>Authentication Server</B>, or the <B>Volume
+Location Server</B>.
+</UL>
+<P>The following sections specify each name for the process as well as some of
+the administrative tasks in which you use the process. For a more
+general description of the servers, see <A HREF="auagd006.htm#HDRWQ17">AFS Server Processes and the Cache Manager</A>.
+<P><H3><A NAME="HDRWQ192" HREF="auagd002.htm#ToC_167">The bosserver Process&#58; the Basic OverSeer Server</A></H3>
+<A NAME="IDX6250"></A>
+<A NAME="IDX6251"></A>
+<P>The <B>bosserver</B> process, which runs on every AFS server machine,
+is the Basic OverSeer (BOS) Server responsible for monitoring the other AFS
+server processes running on its machine. If a process fails, the BOS
+Server can restart it automatically, without human intervention. It
+takes interdependencies into account when restarting a process that has
+multiple component processes (such as the <B>fs</B> process described in <A HREF="#HDRWQ194">The fs Collection of Processes&#58; the File Server, Volume Server and Salvager</A>).
+<A NAME="IDX6252"></A>
+<P>Because the BOS Server does not monitor or restart itself, it does not
+appear in the output from the <B>bos status</B> command. It appears
+in the <B>ps</B> command&#39;s output as
+<TT>/usr/afs/bin/bosserver</TT>.
+<A NAME="IDX6253"></A>
+<A NAME="IDX6254"></A>
+<P>As a system administrator, you contact the BOS Server when you issue
+<B>bos</B> commands to perform the following kinds of tasks.
+<A NAME="IDX6255"></A>
+<UL>
+<P><LI>Defining the processes for the BOS Server to monitor by creating entries
+in the <B>/usr/afs/local/BosConfig</B> file as described in <A HREF="#HDRWQ200">Controlling and Checking Process Status</A>
+<P><LI>Stopping and starting processes on the file server machines according to
+subsequent instructions in this chapter
+<P><LI>Defining your cell&#39;s database server machines in the
+<B>/usr/afs/etc/CellServDB</B> file as described in <A HREF="auagd008.htm#HDRWQ152">Maintaining the Server CellServDB File</A>
+<P><LI>Defining AFS server encryption keys in the <B>/usr/afs/etc/KeyFile</B>
+file as described in <A HREF="auagd014.htm#HDRWQ477">Managing Server Encryption Keys</A>.
+<P><LI>Granting system administrator privileges with respect to BOS Server,
+Volume Server, and Backup Server operations, by adding a user to the
+<B>/usr/afs/etc/UserList</B> file as described in <A HREF="auagd021.htm#HDRWQ814">Administering the UserList File</A>
+<P><LI>Setting authorization checking requirements on a server machine as
+described in <A HREF="auagd008.htm#HDRWQ157">Managing Authentication and Authorization Requirements</A>
+</UL>
+<P><H3><A NAME="HDRWQ193" HREF="auagd002.htm#ToC_168">The buserver Process&#58; the Backup Server</A></H3>
+<A NAME="IDX6256"></A>
+<A NAME="IDX6257"></A>
+<P>The <B>buserver</B> process, which runs on database server machines, is
+the Backup Server. It maintains information about Backup System
+configuration and operations in the Backup Database.
+<P>The process appears as <TT>buserver</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. It appears
+in the <B>ps</B> command&#39;s output as
+<TT>/usr/afs/bin/buserver</TT>.
+<A NAME="IDX6258"></A>
+<A NAME="IDX6259"></A>
+<P>As a system administrator, you contact the Backup Server when you issue any
+<B>backup</B> command that manipulates information in the Backup Database,
+including those that change Backup System configuration information, that dump
+data from volumes to permanent storage, or that restore data to AFS.
+See <A HREF="auagd011.htm#HDRWQ333">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ382">Backing Up and Restoring AFS Data</A>.
+<P><H3><A NAME="HDRWQ194" HREF="auagd002.htm#ToC_169">The fs Collection of Processes&#58; the File Server, Volume Server and Salvager</A></H3>
+<A NAME="IDX6260"></A>
+<A NAME="IDX6261"></A>
+<P>The <B>fs</B> process, which runs on every file server machine,
+combines three component processes&#58; File Server, Volume Server and
+Salvager. The three components perform independent functions, but are
+controlled as a single process for the following reasons.
+<UL>
+<P><LI>They all operate on the same data, namely files and directories stored in
+AFS volumes. Combining them as a single process enables them to
+coordinate their actions, never attempting simultaneous operations on the same
+data that can possibly corrupt it.
+<P><LI>It enables the BOS Server to stop and restart the processes in the
+required order. When the File Server fails, the BOS Server stops the
+Volume Server and runs the Salvager to correct any corruption that resulted
+from the failure. (The Salvager runs only in this special circumstance
+or when you invoke it yourself by issuing the <B>bos salvage</B> command
+as instructed in <A HREF="auagd010.htm#HDRWQ317">Salvaging Volumes</A>.) If only the Volume Server fails, the BOS Server can
+restart it without affecting the File Server or Salvager.
+</UL>
+<P>The File Server component handles AFS data at the level of files and
+directories, manipulating file system elements as requested by application
+programs and the standard operating system commands. Its main duty is
+to deliver requested files to client machines and store them again on the
+server machine when the client is finished. It also maintains status
+and protection information about each file and directory. It runs
+continuously during normal operation. 
+<A NAME="IDX6262"></A>
+<P>The Volume Server component handles AFS data at the level of complete
+volumes rather than files and directories. In response to
+<B>vos</B> commands, it creates, removes, moves, dumps and restores entire
+volumes, among other actions. It runs continuously during normal
+operation. 
+<A NAME="IDX6263"></A>
+<P>The Salvager component runs only after the failure of one of the other two
+processes. It checks the file system for internal consistency and
+repairs any errors it finds. 
+<A NAME="IDX6264"></A>
+<A NAME="IDX6265"></A>
+<P>The process appears as <TT>fs</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. An
+auxiliary message reports the status of the File Server or Salvager
+component. See <A HREF="#HDRWQ204">Displaying Process Status and Information from the BosConfig File</A>.
+<P>The component processes of the <B>fs</B> process appear individually in
+the <B>ps</B> command&#39;s output, as follows. There is no entry
+for the <TT>fs</TT> process itself.
+<UL>
+<P><LI><TT>/usr/afs/bin/fileserver</TT>
+<P><LI><TT>/usr/afs/bin/volserver</TT>
+<P><LI><TT>/usr/afs/bin/salvager</TT>
+</UL>
+<P>The Cache Manager contacts the File Server component on your behalf
+whenever you access data or status information in an AFS file or directory or
+issue file manipulation commands such as the UNIX <B>cp</B> and
+<B>ls</B> commands. You can contact the File Server directly by
+issuing <B>fs</B> commands that perform the following functions
+<A NAME="IDX6266"></A>
+<A NAME="IDX6267"></A>
+<UL>
+<P><LI>Administering the ACL of any directory in the file system as described in <A HREF="auagd020.htm#HDRWQ772">Managing Access Control Lists</A>
+<P><LI>Installing new partitions for housing AFS volumes, in which case you must
+restart the <B>fs</B> process for it to recognize the new partition;
+for instructions, see <A HREF="auagd008.htm#HDRWQ164">Adding or Removing Disks and Partitions</A>
+<P><LI>Creating and deleting volume mount points in the AFS filespace as
+described in <A HREF="auagd010.htm#HDRWQ293">Mounting Volumes</A>
+<P><LI>Setting volume quota and displaying information about the space used and
+available in a volume or partition as described in <A HREF="auagd010.htm#HDRWQ319">Setting and Displaying Volume Quota and Current Size</A>
+</UL>
+<A NAME="IDX6268"></A>
+<A NAME="IDX6269"></A>
+<P>You contact the Volume Server component when you issue <B>vos</B>
+commands that manipulate volumes in any way--creating, removing,
+replicating, moving, renaming, converting to different formats, and
+salvaging. For instructions, see <A HREF="auagd010.htm#HDRWQ228">Managing Volumes</A>.
+<P>The Salvager normally runs automatically in case of a failure. You
+can also start it with the <B>bos salvage</B> command as described in <A HREF="auagd010.htm#HDRWQ317">Salvaging Volumes</A>.
+<A NAME="IDX6270"></A>
+<A NAME="IDX6271"></A>
+<P><H3><A NAME="HDRWQ195" HREF="auagd002.htm#ToC_170">The kaserver Process&#58; the Authentication Server</A></H3>
+<A NAME="IDX6272"></A>
+<A NAME="IDX6273"></A>
+<P>The <B>kaserver</B> process, which runs on database server machines, is
+the Authentication Server responsible for several aspects of AFS
+security. It verifies AFS user identity by requiring a password.
+It maintains all AFS server encryption keys and user passwords in the
+Authentication Database. The Authentication Server&#39;s Ticket
+Granting Service (TGS) module creates the shared secrets that AFS client and
+server processes use when establishing secure connections.
+<P>The process appears as <TT>kaserver</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. The
+<B>ka</B> string stands for <I>Kerberos Authentication</I>, reflecting
+the fact that AFS&#39;s authentication protocols are based on Kerberos, which
+was originally developed at the Massachusetts Institute of Technology&#39;s
+Project Athena.
+<P>It appears in the <B>ps</B> command&#39;s output as
+<TT>/usr/afs/bin/kaserver</TT>.
+<A NAME="IDX6274"></A>
+<A NAME="IDX6275"></A>
+<P>As a system administrator, you contact the Authentication Server when you
+issue <B>kas</B> commands to perform the following kinds of tasks.
+<UL>
+<P><LI>Setting a user&#39;s password. Users normally change their own
+passwords, so you probably perform this task only creating a new user account
+as described in <A HREF="auagd018.htm#HDRWQ692">Creating AFS User Accounts</A> and <A HREF="auagd018.htm#HDRWQ706">Changing AFS Passwords</A>.
+<P><LI>Setting the AFS server encryption key in the Authentication Database,
+which the TGS uses to seal server tickets; see <A HREF="auagd014.htm#HDRWQ477">Managing Server Encryption Keys</A>.
+<P><LI>Granting or revoking system administrator privileges with respect to the
+Authentication Server as described in <A HREF="auagd021.htm#HDRWQ811">Granting Privilege for kas Commands&#58;  the ADMIN Flag</A>.
+</UL>
+<P><H3><A NAME="HDRWQ196" HREF="auagd002.htm#ToC_171">The ptserver Process&#58; the Protection Server</A></H3>
+<A NAME="IDX6276"></A>
+<A NAME="IDX6277"></A>
+<P>The <B>ptserver</B> process, which runs on database server machines, is
+the Protection Server. Its main responsibility is maintaining the
+Protection Database which contains user, machine, and group entries.
+The Protection Server allocates AFS IDs and maintains the mapping between them
+and names. The File Server consults the Protection Server when
+verifying that a user is authorized to perform a requested action.
+<P>The process appears as <TT>ptserver</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. It appears
+in the <B>ps</B> command&#39;s output as
+<TT>/usr/afs/bin/ptserver</TT>.
+<A NAME="IDX6278"></A>
+<A NAME="IDX6279"></A>
+<P>As a system administrator, you contact the Protection Server when you issue
+<B>pts</B> commands to perform the following kinds of tasks.
+<UL>
+<P><LI>Creating a new user, machine, or group entry in the Protection Database as
+described in <A HREF="auagd019.htm#HDRWQ721">Administering the Protection Database</A>
+<P><LI>Adding or removing group members or otherwise manipulating Protection
+Database entries as described in <A HREF="auagd019.htm#HDRWQ721">Administering the Protection Database</A>
+<P><LI>Granting or revoking system administrator privilege by changing the
+membership of the <B>system&#58;administrators</B> group as described in
+<A HREF="auagd021.htm#HDRWQ808">Administering the system&#58;administrators Group</A>
+</UL>
+<P><H3><A NAME="HDRWQ197" HREF="auagd002.htm#ToC_172">The runntp Process</A></H3>
+<A NAME="IDX6280"></A>
+<A NAME="IDX6281"></A>
+<A NAME="IDX6282"></A>
+<P>The <B>runntp</B> process, which runs on every server machine, is a
+controller program for the Network Time Protocol Daemon (NTPD), which
+synchronizes the hardware clocks on server machines. You need to run
+the <B>runntp</B> process if you are not already running NTP or another
+time synchronization protocol on your server machines.
+<P>The clocks on database server machines need to be synchronized because
+AFS&#39;s distributed database technology (Ubik) works properly only when the
+clocks agree within a narrow range of variation (see <A HREF="auagd008.htm#HDRWQ137">Configuring the Cell for Proper Ubik Operation</A>). The clocks on file server machines need to be
+correct not only because the File Server sets modification time stamps on
+files, but because in the conventional configuration they serve as the time
+source for AFS client machines.
+<P>The process appears as <TT>runntp</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. It appears
+in the output from the <B>ps</B> command as
+<TT>/usr/afs/bin/runntp</TT>. The <B>ps</B> command&#39;s output
+also includes an entry called <TT>ntpd</TT>; its exact form depends on
+the arguments you provide to the <B>runntp</B> command.
+<A NAME="IDX6283"></A>
+<A NAME="IDX6284"></A>
+<P>As a system administrator, you do not contact the NTPD directly once you
+have installed it according to the instructions in the <I>AFS Quick
+Beginnings</I>.
+<P><H3><A NAME="HDRWQ198" HREF="auagd002.htm#ToC_173">The upserver and upclient Processes&#58; the Update Server</A></H3>
+<A NAME="IDX6285"></A>
+<A NAME="IDX6286"></A>
+<A NAME="IDX6287"></A>
+<P>The Update Server has two separate parts, each of which runs on a different
+type of server machine. The <B>upserver</B> process is the server
+portion of the Update Server. Its function depends on which edition of
+AFS you use&#58;
+<UL>
+<P><LI>With both the United States and international editions, it runs on the
+binary distribution machine of each system type you use as a server machine,
+distributing the contents of each one&#39;s <B>/usr/afs/bin</B> directory
+to the other server machines of that type. This guarantees that all
+machines have the same version of AFS binaries. (For a list of the
+binaries, see <A HREF="auagd008.htm#HDRWQ118">Binaries in the /usr/afs/bin Directory</A>.)
+<P><LI>In you use the United States edition of AFS, it also runs on the
+cell&#39;s system control machine, distributing the contents of its
+<B>/usr/afs/etc</B> directory to all the other server machines in order to
+synchronize the configuration files stored in that directory. (For a
+list of the configuration files, see <A HREF="auagd008.htm#HDRWQ119">Common Configuration Files in the /usr/afs/etc Directory</A>.)
+</UL>
+<P>The <B>upclient</B> process is the client portion of the Update Server,
+and like the server portion its function depends on the AFS edition in
+use.
+<UL>
+<P><LI>It runs on every server machine that is not a binary distribution machine,
+referencing the binary distribution machine of its system type as the source
+for updates to the binaries in the <B>/usr/afs/bin</B> directory.
+The conventional process name to assign is <B>upclientbin</B>.
+<P><LI>If you use the United States edition of AFS, another instance of the
+process runs on every server machine except the system control machine.
+It references the system control machine as the source for updates to the
+common configuration files in the <B>/usr/afs/etc</B> directory.
+The conventional process name to assign is <B>upclientetc</B>.
+</UL>
+<P>In output from the <B>bos status</B> command, the server portion
+appears as <TT>upserver</TT> and the client portions as
+<TT>upclientbin</TT> and <TT>upclientetc</TT>, if the conventional names
+are assigned. In the output from the <B>ps</B> command, the server
+portion appears as <TT>/usr/afs/bin/upserver</TT> and the client portions as
+<TT>/usr/afs/bin/upclient</TT>.
+<A NAME="IDX6288"></A>
+<A NAME="IDX6289"></A>
+<P>You do not contact the Update Server directly once you have installed
+it. It operates automatically whenever you use <B>bos</B> commands
+to change the files that it distributes.
+<P><H3><A NAME="HDRWQ199" HREF="auagd002.htm#ToC_174">The vlserver Process&#58; the Volume Location Server</A></H3>
+<A NAME="IDX6290"></A>
+<A NAME="IDX6291"></A>
+<P>The <B>vlserver</B> process, which runs on database server machines, is
+the Volume Location (VL) Server that automatically tracks which file server
+machines house each volume, making its location transparent to client
+applications.
+<P>The process appears as <TT>vlserver</TT> in the <B>bos status</B>
+command&#39;s output, if the conventional name is assigned. It appears
+in the <B>ps</B> command&#39;s output as
+<TT>/usr/afs/bin/vlserver</TT>.
+<A NAME="IDX6292"></A>
+<A NAME="IDX6293"></A>
+<A NAME="IDX6294"></A>
+<P>As a system administrator, you contact the VL Server when you issue any
+<B>vos</B> command that changes the status of a volume (it records the
+status changes in the VLDB).
+<HR><H2><A NAME="HDRWQ200" HREF="auagd002.htm#ToC_175">Controlling and Checking Process Status</A></H2>
+<P>To define the AFS server processes that run on a server
+machine, use the <B>bos create</B> command to create entries for them in
+the local <B>/usr/afs/local/BosConfig</B> file. The BOS Server
+monitors the processes listed in the <B>BosConfig</B> file that are marked
+with the <TT>Run</TT> status flag, and automatically attempts to restart
+them if they fail. After creating process entries, you use other
+commands from the <B>bos</B> suite to stop and start processes or change
+the status flag as desired.
+<P>Never edit the <B>BosConfig</B> file directly rather than using
+<B>bos</B> commands. Similarly, it is not a good practice to run
+server processes without listing them in the <B>BosConfig</B> file, or to
+stop them using process termination commands such as the UNIX <B>kill</B>
+command.
+<P><H3><A NAME="Header_176" HREF="auagd002.htm#ToC_176">The Information in the BosConfig File</A></H3>
+<A NAME="IDX6295"></A>
+<A NAME="IDX6296"></A>
+<P>A process&#39;s entry in the <B>BosConfig</B> file includes the
+following information&#58;
+<UL>
+<P><LI>The process&#39;s name. The recommended conventional names are
+defined in both the <I>AFS Quick Beginnings</I> and <A HREF="#HDRWQ215">Creating and Removing Processes</A>. The name of a simple process usually matches the
+name of its binary file (for example, <B>ptserver</B> for the Protection
+Server).
+<P><LI>Its type, which is one of the following&#58; 
+<DL>
+<A NAME="IDX6297"></A>
+<A NAME="IDX6298"></A>
+<P><DT><B>simple
+</B><DD>A process that runs independently of any other on the server
+machine. If several simple processes fail at the same time, the BOS
+Server can restart them in any order. All standard AFS processes except
+the <B>fs</B> process are simple.
+<P><DT><B>fs
+<A NAME="IDX6299"></A>
+<A NAME="IDX6300"></A>
+<A NAME="IDX6301"></A>
+<A NAME="IDX6302"></A>
+<A NAME="IDX6303"></A>
+</B><DD>A process type reserved for the server process for which the conventional
+name is also <B>fs</B>. This process combines three
+components&#58; the File Server, the Volume Server, and the Salvager.
+<A NAME="IDX6304"></A>
+<A NAME="IDX6305"></A>
+<P><DT><B>cron
+</B><DD>A process that runs at a defined time rather than continuously.
+There are no standard processes of this type.
+</DL>
+<A NAME="IDX6306"></A>
+<A NAME="IDX6307"></A>
+<A NAME="IDX6308"></A>
+<A NAME="IDX6309"></A>
+<P><LI>Its status flag, which tells the BOS Server whether it performs the
+following two actions with respect to the process&#58;
+<UL>
+<P><LI>Start the process during BOS Server initialization
+<P><LI>Restart the process if it (the process) fails
+</UL>The two possible values are <TT>Run</TT> (which directs the BOS Server
+to perform these actions) and <TT>NotRun</TT> (which directs the BOS Server
+to ignore the process). The BOS Server itself never changes the setting
+of this flag, even if the process fails repeatedly. Also, this flag is
+for internal use only; it does not appear in the <B>bos status</B>
+command&#39;s output.
+<P><LI>Its command parameters, which are the commands that the BOS Server runs to
+start the process.
+<A NAME="IDX6310"></A>
+<UL>
+<P><LI>A simple processes has one&#58; the complete pathname to its binary file
+<P><LI>The <B>fs</B> process has three&#58; the complete pathnames to each
+of the three component processes (<B>/usr/afs/bin/fileserver</B>,
+<B>/usr/afs/bin/volserver</B>, and <B>/usr/afs/bin/salvager</B>)
+<P><LI>A cron process has two&#58; the first the complete pathname to its
+binary file, the second the time at which the BOS Server runs it
+</UL>
+</UL>
+<P>In addition to process definitions, the <B>BosConfig</B> file also
+records automatic restart times for processes that have new binaries, and for
+all server processes including the BOS Server. See <A HREF="#HDRWQ225">Setting the BOS Server&#39;s Restart Times</A>.
+<P><H3><A NAME="HDRWQ201" HREF="auagd002.htm#ToC_177">How the BOS Server Uses the Information in the BosConfig File</A></H3>
+<A NAME="IDX6311"></A>
+<A NAME="IDX6312"></A>
+<A NAME="IDX6313"></A>
+<P>Whenever the BOS Server starts or restarts, it reads the
+<B>BosConfig</B> file to learn which processes it is to start and
+monitor. It transfers the information into kernel memory and does not
+read the <B>BosConfig</B> file again until it next restarts. This
+implies that the BOS Server&#39;s memory state can change independently of
+the <B>BosConfig</B> file. You can, for example, stop a process but
+leave its status flag in the <B>BosConfig</B> file as <TT>Run</TT>, or
+start a process even though its status flag in the <B>BosConfig</B> file
+is <TT>NotRun</TT>.
+<P><H3><A NAME="HDRWQ202" HREF="auagd002.htm#ToC_178">About Starting and Stopping the Database Server Processes</A></H3>
+<A NAME="IDX6314"></A>
+<A NAME="IDX6315"></A>
+<A NAME="IDX6316"></A>
+<A NAME="IDX6317"></A>
+<A NAME="IDX6318"></A>
+<A NAME="IDX6319"></A>
+<A NAME="IDX6320"></A>
+<P>When you start or stop a database server process (Authentication Server,
+Backup Server, Protection Server, or Volume Location Server) for more than a
+short time, you must follow the instructions in the <I>AFS Quick
+Beginnings</I> for installing or removing a database server machine.
+Here is a summary of the tasks you must perform to preserve correct AFS
+functioning.
+<UL>
+<P><LI>Start or stop all four database server processes on that machine.
+All AFS server processes and the Cache Manager processes expect all four
+database server processes to be running on each machine listed in the
+<B>CellServDB</B> file. There is no way to indicate in the file
+that a machine is running only some of the database server processes.
+<P><LI>Add or remove the machine in the <B>/usr/afs/etc/CellServDB</B> file
+on all server machines and the <B>/usr/vice/etc/CellServDB</B> file on all
+client machines.
+<P><LI>Restart the database server processes on the other database server
+machines to force an election of a new Ubik coordinator for each one.
+</UL>
+<P><H3><A NAME="HDRWQ203" HREF="auagd002.htm#ToC_179">About Starting and Stopping the Update Server</A></H3>
+<A NAME="IDX6321"></A>
+<P>In the conventional cell configuration, one server machine of each system
+type acts as a binary distribution machine, running the server portion of the
+Update Server (<B>upserver</B> process) to distribute the contents of its
+<B>/usr/afs/bin</B> directory. The other server machines of its
+system type run an instance of the Update Server client portion (by convention
+called <B>upclientbin</B>) that references the binary distribution
+machine.
+<P>If you run the United States edition of AFS, it is conventional for the
+first server machine you install to act as the system control machine, running
+the server portion of the Update Server (<B>upserver</B> process) to
+distribute the contents of its <B>/usr/afs/etc</B> directory. All
+other server machines run an instance of the Update Server client portion (by
+convention called <B>upclientetc</B>) that references the system control
+machine.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you are using the international edition of AFS, do not use the Update
+Server to distribute the contents of the <B>/usr/afs/etc</B> directory
+(you do not run a system control machine). Ignore all references to the
+process in this chapter.
+</TD></TR></TABLE>
+<P>It is simplest not to move binary distribution or system control
+responsibilities to a different machine unless you completely decommission a
+machine that is currently serving in one of those roles. Running the
+Update Server usually imposes very little processing load. If you must
+move the functionality, perform the following related tasks.
+<UL>
+<P><LI>If you replace the system control machine, you must stop the
+<B>upclientetc</B> process on every other server machine and define a new
+one that references the new system control machine.
+<P><LI>If you replace a binary distribution machine, you must stop the
+<B>upclientbin</B> process on every other server machine of its system
+type and define a new one that references the new binary distribution machine
+(unless you are no longer running any server machines of that system
+type).
+</UL>
+<HR><H2><A NAME="HDRWQ204" HREF="auagd002.htm#ToC_180">Displaying Process Status and Information from the BosConfig File</A></H2>
+<P>To display the status of the AFS server processes on a
+server machine, issue the <B>bos status</B> command. Adding the
+<B>-long</B> flag displays most of the information from each
+process&#39;s entry in the <B>BosConfig</B> file, including its type and
+command parameters. It also displays a warning message if the mode bits
+on files and subdirectories in the <B>/usr/afs</B> directory do not match
+the expected values.
+<P><H3><A NAME="HDRWQ205" HREF="auagd002.htm#ToC_181">To display the status of server processes and their BosConfig entries</A></H3>
+<A NAME="IDX6322"></A>
+<A NAME="IDX6323"></A>
+<A NAME="IDX6324"></A>
+<A NAME="IDX6325"></A>
+<A NAME="IDX6326"></A>
+<A NAME="IDX6327"></A>
+<A NAME="IDX6328"></A>
+<A NAME="IDX6329"></A>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos status</B> command. 
+<PRE>   % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>>  [&lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>]  [<B>-long</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>stat
+</B><DD>Is the shortest acceptable abbreviation of <B>status</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the file server machine for which to display process
+status.
+<P><DT><B><VAR>server process name</VAR>
+</B><DD>Names each process for which to display status, using the name assigned
+when its entry was defined with the <B>bos create</B> command. Omit
+this argument to display the status of all server processes.
+<P><DT><B>-long
+</B><DD>Displays, in addition to status, information from the process&#39;s entry
+in the <B>BosConfig</B> file&#58; its type, its status flag, its command
+parameters, the associated notifier program, and so on.
+</DL>
+</OL>
+<P>The output includes an entry for each process and uses one of the following
+strings to indicate the process&#39;s status&#58;
+<UL>
+<P><LI><TT>currently running normally</TT> indicates that the process is
+running and its status flag in the <B>BosConfig</B> file is
+<TT>Run</TT>. For cron entries, this message indicates that the
+command is still scheduled to run, not necessarily that it is actually running
+when the <B>bos status</B> command was issued.
+<P><LI><TT>temporarily enabled</TT> indicates that the process is running but
+that its status flag in the <B>BosConfig</B> file is
+<TT>NotRun</TT>. The most common reason is that a system
+administrator has used the <B>bos startup</B> command to start the
+process.
+<P><LI><TT>temporarily disabled</TT> indicates that the process is not running
+even though its status flag in the <B>BosConfig</B> file is
+<TT>Run</TT>. The most common reasons are either that a system
+administrator has used the <B>bos shutdown</B> command to stop the process
+or that the BOS Server ceased trying to restart the process after numerous
+failed attempts. In the latter case, a supplementary message
+appears&#58; <TT>stopped for too many errors</TT>.
+<P><LI><TT>disabled</TT> indicates that the process is not running and that its
+status flag in the <B>BosConfig</B> file is <TT>NotRun</TT>. The
+BOS Server is not monitoring the process. Only a system administrator
+can set the flag this way; the BOS Server never does.
+</UL>
+<P>The output for the <B>fs</B> process always includes a message marked
+<TT>Auxiliary status</TT>, which can be one of the following&#58;
+<UL>
+<P><LI><TT>file server running</TT> indicates that the File Server and Volume
+Server components of the File Server process are running normally.
+<P><LI><TT>salvaging file system</TT> indicates that the Salvager is running,
+which usually implies that the File Server and Volume Server are temporarily
+disabled. The BOS Server restarts them as soon as the Salvager is
+finished.
+</UL>
+<P>The output for a cron process also includes an <TT>Auxiliary status</TT>
+message to report when the command is scheduled to run next; see the
+example that follows.
+<P>The output for any process can include the supplementary message <TT>has
+core file</TT> to indicate that at some point the process failed and
+generated a core file in the <B>/usr/afs/logs</B> directory. In
+most cases, the BOS Server is able to restart the process and it is
+running.
+<P>The following example includes a user-defined cron entry called
+<B>backupusers</B>&#58;
+<PRE>   % <B>bos status fs3.abc.com</B>
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, has core file, currently running normally.
+   Instance buserver, currently running normally.
+   Instance fs, currently running normally.
+       Auxiliary status is&#58; file server running.
+   Instance upserver, currently running normally.
+   Instance runntp, currently running normally.
+   Instance backupusers, currently running normally.
+       Auxiliary status is&#58; run next at Mon Jun 7 02&#58;00&#58;00 1999.
+</PRE>
+<P>If you include the <B>-long</B> flag to the <B>bos status</B>
+command, a process&#39;s entry in the output includes the following
+additional information from the <B>BosConfig</B> file&#58;
+<UL>
+<P><LI>The process&#39;s type (<TT>simple</TT>, <TT>fs</TT>, or
+<TT>cron</TT>).
+<P><LI>The day and time the process last started or restarted.
+<P><LI>The number of <TT>proc starts</TT>, which is how many times the BOS
+Server has started or restarted the process since it started itself.
+<P><LI>The <TT>Last exit</TT> time when the process (or one of the component
+processes in the <B>fs</B> process) last terminated. This line does
+not appear if the process has not terminated since the BOS Server
+started.
+<P><LI>The <TT>Last error exit</TT> time when the process (or one of the
+component processes in the <B>fs</B> process) last failed due to an
+error. A further explanation such as <TT>due to shutdown request</TT>
+sometimes appears. This line does not appear if the process has not
+failed since the BOS Server started.
+<P><LI>Each command that the BOS Server invokes to start the process, as
+specified by the <B>-cmd</B> argument to the <B>bos create</B>
+command.
+<P><LI>The pathname of the notifier program that the BOS Server invokes when the
+process terminates (if any), as specified by the <B>-notifier</B> argument
+to the <B>bos create</B> command.
+</UL>
+<P>In addition, if the BOS Server has found that the mode bits on certain
+files and directories under <B>/usr/afs</B> deviate from what it expects,
+it prints the following warning message&#58;
+<PRE>   Bosserver process reports inappropriate access on server directories
+</PRE>
+<P>The expected protections for the directories and files in the
+<B>/usr/afs</B> directory are as follows. A question mark indicates
+that the BOS Server does not check the mode bit. See the <I>AFS Quick
+Beginnings</I> for more information about setting the protections on these
+files and directories.
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/backup</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/db</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/KeyFile</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>????<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/UserList</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>?????<TT>--</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/local</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/logs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR></TABLE>
+<P>The following illustrates the extended output for the <B>fs</B> process
+running on the machine <B>fs3.abc.com</B>&#58;
+<PRE>   % <B>bos status fs3.abc.com fs -long</B>
+   Instance fs, (type is fs), currently running normally.
+       Auxiliary status is file server running
+   Process last started at Mon May 3 8&#58;29&#58;19 1999 (3 proc starts)
+   Last exit at Mon May 3 8&#58;29&#58;19 1999
+   Last error exit at Mon May 3 8&#58;29&#58;19 1999, due to shutdown request
+   Command 1 is &#39;/usr/afs/bin/fileserver&#39;
+   Command 2 is &#39;/usr/afs/bin/volserver&#39;
+   Command 3 is &#39;/usr/afs/bin/salvager&#39;
+</PRE>
+<HR><H2><A NAME="HDRWQ215" HREF="auagd002.htm#ToC_182">Creating and Removing Processes</A></H2>
+<A NAME="IDX6330"></A>
+<A NAME="IDX6331"></A>
+<A NAME="IDX6332"></A>
+<A NAME="IDX6333"></A>
+<A NAME="IDX6334"></A>
+<A NAME="IDX6335"></A>
+<A NAME="IDX6336"></A>
+<A NAME="IDX6337"></A>
+<P>To start a new AFS server process on a server machine, issue the <B>bos
+create</B> command, which creates an entry in the
+<B>/usr/afs/local/BosConfig</B> file, sets the process&#39;s status flag
+to <TT>Run</TT> both in the file and in the BOS Server&#39;s memory, and
+starts it running immediately. The binary file for the new process must
+already be installed, by convention in the <B>/usr/afs/bin</B> directory
+(see <A HREF="auagd008.htm#HDRWQ145">Installing New Binaries</A>).
+<P>To stop a process permanently, first issue the <B>bos stop</B> command,
+which changes the process&#39;s status flag to <TT>NotRun</TT> in both the
+<B>BosConfig</B> file and the BOS Server&#39;s memory; it is marked
+as <TT>disabled</TT> in the output from the <B>bos status</B>
+command. If desired, issue the <B>bos delete</B> command to remove
+the process&#39;s entry from the <B>BosConfig</B> file; the process
+no longer appears in the <B>bos status</B> command&#39;s output.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you are starting or stopping a database server process in the manner
+described in this section, follow the complete instructions in the <I>AFS
+Quick Beginnings</I> for creating or removing a database server
+machine. If you run one database server process on a given machine, you
+must run them all; for more information, see <A HREF="#HDRWQ202">About Starting and Stopping the Database Server Processes</A>. Similarly, if you are stopping the
+<B>upserver</B> process on the system control machine or a binary
+distribution machine, you must complete the additional tasks described in <A HREF="#HDRWQ203">About Starting and Stopping the Update Server</A>.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ216" HREF="auagd002.htm#ToC_183">To create and start a new process</A></H3>
+<A NAME="IDX6338"></A>
+<A NAME="IDX6339"></A>
+<A NAME="IDX6340"></A>
+<A NAME="IDX6341"></A>
+<A NAME="IDX6342"></A>
+<A NAME="IDX6343"></A>
+<A NAME="IDX6344"></A>
+<A NAME="IDX6345"></A>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><B>(Optional)</B> Verify that the process&#39;s binaries are
+installed in the <B>/usr/afs/bin</B> directory on this machine. If
+necessary, login at the console or telnet to the machine and list the contents
+of the <B>/usr/afs/bin</B> directory. 
+<P>If the binaries are not present, install them on the binary distribution
+machine of the appropriate system type, and wait for the Update Server to copy
+them to this machine. For instructions, see <A HREF="auagd008.htm#HDRWQ145">Installing New Binaries</A>. 
+<PRE>   % <B>ls /usr/afs/bin</B>
+</PRE>
+<P><LI><A NAME="LIWQ217"></A>Issue the <B>bos create</B> command to create an entry in
+the <B>BosConfig</B> file and start the process. 
+<PRE>   % <B>bos create</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>>   \
+             &lt;<VAR>server&nbsp;type</VAR>> &lt;<VAR>command&nbsp;lines</VAR>><SUP>+</SUP> [ <B>-notifier</B> &lt;<VAR>Notifier&nbsp;program</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>cr
+</B><DD>Is the shortest acceptable abbreviation of <B>create</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the file server machine on which to create the process.
+<P><DT><B><VAR>server process name</VAR>
+</B><DD>Names the process to create and start. For simple processes, the
+conventional value is the name of the process&#39;s binary file. It is
+best to use the same name on every server machine that runs the
+process. The following is a list of the conventional names for simple
+and fs-type processes (there are no standard cron processes). 
+<UL>
+<P><LI><B>buserver</B> for the Backup Server
+<P><LI><B>fs</B> for the process that combines the File Server, Volume
+Server, and Salvager
+<P><LI><B>kaserver</B> for the Authentication Server
+<P><LI><B>ptserver</B> for the Protection Server
+<P><LI><B>runntp</B> for the controller process for the Network Time Protocol
+Daemon
+<P><LI><B>upclientbin</B> for the client portion of the Update Server that
+references the binary distribution machine of this machine&#39;s system type
+<P><LI><B>upclientetc</B> for the client portion of the Update Server that
+references the system control machine
+<P><LI><B>vlserver</B> for the Volume Location (VL) Server
+</UL>
+<P><DT><B><VAR>server type</VAR>
+</B><DD>Defines the process&#39;s type. Choose one of the following
+values&#58; 
+<UL>
+<P><LI><B>cron</B> for a cron process
+<P><LI><B>fs</B> for the process named <B>fs</B>
+<P><LI><B>simple</B> for all other processes listed as acceptable values for
+the <VAR>server&nbsp;process&nbsp;name</VAR> argument
+</UL>
+<P><DT><B><VAR>command lines</VAR>
+</B><DD>Specifies each command the BOS Server runs to start the process.
+Specify no more than six commands (which can include the command&#39;s
+options, in which case the entire string is surrounded by double quotes);
+any additional commands are ignored.
+<P>For a simple process, provide the complete pathname of the process&#39;s
+binary file on the local disk (for example, <B>/usr/afs/bin/ptserver</B>
+for the Protection Server). If including any of the initialization
+command&#39;s options, surround the entire command in double quotes (<B>"
+"</B>). The <B>upclient</B> process has a required argument, and
+the commands for all other processes take optional arguments.
+<A NAME="IDX6346"></A>
+<P>For the <B>fs</B> process, provide the complete pathname of the local
+disk binary file for each of the component processes&#58;
+<B>fileserver</B>, <B>volserver</B>, and <B>salvager</B>, in that
+order. The standard binary directory is <B>/usr/afs/bin</B>.
+If including any of an initialization command&#39;s options, surround the
+entire command in double quotes (<B>" "</B>).
+<A NAME="IDX6347"></A>
+<P>For a <B>cron</B> process, provide two parameters&#58;
+<A NAME="IDX6348"></A>
+<UL>
+<P><LI>The complete local disk pathname of either an executable file or a command
+from one of the AFS suites (complete with all of the necessary
+arguments). Surround this parameter with double quotes (<B>" "</B>)
+if it contains spaces.
+<P><LI>A specification of when the BOS Server executes the file or command
+indicated by the first parameter. There are three acceptable
+values&#58; 
+<UL>
+<P><LI>The string <B>now</B>, which directs the BOS Server to execute the
+file or command immediately and only once. It is usually simpler to
+issue the command directly or issue the <B>bos exec</B> command.
+<P><LI>A time of day. The BOS Server executes the file or command daily at
+the indicated time. Separate the hours and minutes with a colon
+(<I>hh</I>&#58;<I>MM</I>), and use either 24-hour format, or a value
+in the range from <B>1&#58;00</B> through <B>12&#58;59</B> with
+the addition of <B>am</B> or <B>pm</B>. For example, both
+<B>14&#58;30</B> and <B>"2&#58;30 pm"</B> indicate 2&#58;30 in
+the afternoon. Surround this parameter with double quotes (<B>"
+"</B>) if it contains a space.
+<P><LI>A day of the week and time of day, separated by a space and surrounded
+with double quotes (<B>" "</B>). The BOS Server executes the file
+or command weekly at the indicated day and time. For the day, provide
+either the whole name or the first three letters, all in lowercase letters
+(<B>sunday</B> or <B>sun</B>, <B>thursday</B> or <B>thu</B>,
+and so on). For the time, use the same format as when specifying the
+time alone.
+</UL>
+</UL>
+<P><DT><B>-notifier
+</B><DD>Specifies the pathname of a program that the BOS Server runs when the
+process terminates. For more information on notifier programs, see the
+<B>bos create</B> command reference page in the <I>AFS Administration
+Reference</I>.
+</DL>
+</OL>
+<P>The following example defines and starts the Protection Server on the
+machine <B>db2.abc.com</B>&#58;
+<PRE>   
+   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B> 
+   
+</PRE>
+<P>The following example defines and starts the <B>fs</B> process on the
+machine <B>fs6.abc.com</B>.
+<PRE>   
+   % <B>bos create fs6.abc.com fs fs /usr/afs/bin/fileserver </B>  \
+        <B>/usr/afs/bin/volserver /usr/afs/bin/salvager</B>
+    
+</PRE>
+<P>The following example defines and starts a cron process called
+<B>backupuser</B> process on the machine
+<B>fs3.abc.com</B>, scheduling it to run each day at
+3&#58;00 a.m.
+<PRE>   % <B>bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3&#58;00</B> 
+</PRE>
+<P><H3><A NAME="Header_184" HREF="auagd002.htm#ToC_184">To stop a process and remove it from the BosConfig file</A></H3>
+<A NAME="IDX6349"></A>
+<A NAME="IDX6350"></A>
+<A NAME="IDX6351"></A>
+<A NAME="IDX6352"></A>
+<A NAME="IDX6353"></A>
+<A NAME="IDX6354"></A>
+<A NAME="IDX6355"></A>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><A NAME="LIPROC-STOP"></A>Issue the <B>bos stop</B> command to change each
+process&#39;s status flag in the <B>BosConfig</B> file to
+<TT>NotRun</TT> and to stop it. You must issue this command even for
+cron processes that you wish to remove from the <B>BosConfig</B> file,
+even though they do not run continuously. For a detailed description of
+this command, see <A HREF="#HDRWQ219">To stop a process by changing its status to NotRun</A>. 
+<PRE>   
+   % <B>bos stop</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP> [<B>-wait</B>]
+   
+</PRE>
+<P><LI><A NAME="LIPROC-DEL"></A>Issue the <B>bos delete</B> command to remove each
+process from the <B>BosConfig</B> file. 
+<PRE>   % <B>bos delete</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>d
+</B><DD>Is the shortest acceptable abbreviation of <B>delete</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to remove processes from the
+<B>BosConfig</B> file.
+<P><DT><B><VAR>server process name</VAR>
+</B><DD>Names each process entry to remove from the <B>BosConfig</B>
+file. Provide the same names as in Step <A HREF="#LIPROC-STOP">2</A>.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ218" HREF="auagd002.htm#ToC_185">Stopping and Starting Processes Permanently</A></H2>
+<A NAME="IDX6356"></A>
+<A NAME="IDX6357"></A>
+<A NAME="IDX6358"></A>
+<A NAME="IDX6359"></A>
+<P>To stop a process so that the BOS Server no longer attempts to monitor it,
+issue the <B>bos stop</B> command. The process&#39;s status flag
+is set to <TT>NotRun</TT> in both the BOS Server&#39;s memory and in the
+<B>BosConfig</B> file. The process does not run again until you
+issue the <B>bos start</B> command, which sets its status flag back to
+<TT>Run</TT> in both the BOS Server&#39;s memory and in the
+<B>BosConfig</B> file. (You can also use the <B>bos startup</B>
+command to start the process again without changing its status flag in the
+<B>BosConfig</B> file; see <A HREF="#HDRWQ221">Stopping and Starting Processes Temporarily</A>.)
+<P>There is no entry for the BOS Server in the <B>BosConfig</B> file, so
+the <B>bos stop</B> and <B>bos start</B> commands do not control
+it. To stop and immediately restart the BOS Server along with all other
+processes, use the <B>-bosserver</B> flag to the <B>bos restart</B>
+command as described in <A HREF="#HDRWQ224">Stopping and Immediately Restarting Processes</A>.
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you are starting or stopping a database server process in the manner
+described in this section, follow the complete instructions in the <I>AFS
+Quick Beginnings</I> for creating or removing a database server
+machine. If you run one database server process on a given machine, you
+must run them all; for more information, see <A HREF="#HDRWQ202">About Starting and Stopping the Database Server Processes</A>. Similarly, if you are stopping the
+<B>upserver</B> process on the system control machine or a binary
+distribution machine, you must complete the additional tasks described in <A HREF="#HDRWQ203">About Starting and Stopping the Update Server</A>.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ219" HREF="auagd002.htm#ToC_186">To stop a process by changing its status to NotRun</A></H3>
+<A NAME="IDX6360"></A>
+<A NAME="IDX6361"></A>
+<A NAME="IDX6362"></A>
+<A NAME="IDX6363"></A>
+<A NAME="IDX6364"></A>
+<A NAME="IDX6365"></A>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos stop</B> command to stop each process and set its
+status flag to <TT>NotRun</TT> in the <B>BosConfig</B> file and the BOS
+Server&#39;s memory. 
+<PRE>   % <B>bos stop</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP> [<B>-wait</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sto
+</B><DD>Is the shortest acceptable abbreviation of <B>stop</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to stop the process.
+<P><DT><B><VAR>server process name</VAR>
+</B><DD>Names each process to stop, using the name assigned when its entry was
+defined with the <B>bos create</B> command.
+<P><DT><B>-wait
+</B><DD>Delays the return of the command shell prompt until all specified
+processes have stopped. If you omit the flag, the prompt returns almost
+immediately, even if all processes are not yet stopped.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ220" HREF="auagd002.htm#ToC_187">To start processes by changing their status flags to Run</A></H3>
+<A NAME="IDX6366"></A>
+<A NAME="IDX6367"></A>
+<A NAME="IDX6368"></A>
+<A NAME="IDX6369"></A>
+<A NAME="IDX6370"></A>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><A NAME="LIPROC-START"></A>Issue the <B>bos start</B> command to change each
+process&#39;s status flag to <TT>Run</TT> in both the <B>BosConfig</B>
+file and the BOS Server&#39;s memory and to start it. 
+<PRE>   %  <B>bos start</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>start
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to start running each
+process.
+<P><DT><B><VAR>server process name</VAR>
+</B><DD>Specifies each process to start on <VAR>machine name</VAR>. Use the
+name assigned to the process at creation.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ221" HREF="auagd002.htm#ToC_188">Stopping and Starting Processes Temporarily</A></H2>
+<P>It is sometimes necessary to halt a process temporarily (for
+example, to make slight configuration changes or to perform
+maintenance). The commands described in this section change a
+process&#39;s status in the BOS Server&#39;s memory only; the effect is
+immediate and lasts until you change the memory state again (or until the BOS
+Server restarts, at which time it starts the process according to its entry in
+the <B>BosConfig</B> file).
+<P>To stop a process temporarily by changing its status flag in BOS Server
+memory to <TT>NotRun</TT>, use the <B>bos shutdown</B> command.
+To restart a stopped process by changing its status flag in the BOS
+Server&#39;s memory to <TT>Run</TT>, use the <B>bos startup</B>
+command. The process starts regardless of its status flag in the
+<B>BosConfig</B> file. You can also use the <B>bos startup</B>
+command to start all processes marked with status flag <TT>Run</TT> in the
+<B>BosConfig</B> file, as described in the following instructions.
+<P>Because the <B>bos startup</B> command starts a process without
+changing it status flag in the <B>BosConfig</B> file, it is useful for
+testing a server process without enabling it permanently. To stop and
+start processes by changing their status flags in the <B>BosConfig</B>
+file, see <A HREF="#HDRWQ218">Stopping and Starting Processes Permanently</A>; to stop and immediately restart a process, see <A HREF="#HDRWQ224">Stopping and Immediately Restarting Processes</A>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Do not temporarily stop a database server process on all machines at
+once. Doing so makes the database completely unavailable.
+</TD></TR></TABLE>
+<A NAME="IDX6371"></A>
+<A NAME="IDX6372"></A>
+<P><H3><A NAME="HDRWQ222" HREF="auagd002.htm#ToC_189">To stop processes temporarily</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><A NAME="LIWQ223"></A>Issue the <B>bos shutdown</B> command to stop each process
+by changing its status flag in the BOS Server&#39;s memory to
+<TT>NotRun</TT>. 
+<PRE>   % <B>bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>instances</VAR>><SUP>+</SUP>] [<B>-wait</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sh
+</B><DD>Is the shortest acceptable abbreviation of <B>shutdown</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to stop processes
+temporarily.
+<P><DT><B><VAR>instances</VAR>
+</B><DD>Specifies each process to stop temporarily. Use the name assigned
+to the process at creation.
+<P><DT><B>-wait
+</B><DD>Delays the return of the command shell prompt until all specified
+processes have actually stopped. If you omit the flag, the prompt
+returns almost immediately, even if all processes are not yet stopped.
+</DL>
+</OL>
+<A NAME="IDX6373"></A>
+<A NAME="IDX6374"></A>
+<P><H3><A NAME="Header_190" HREF="auagd002.htm#ToC_190">To start all stopped processes that have status flag Run in the BosConfig file</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos startup</B> command to start each process on a
+machine that has status flag <TT>Run</TT> in the <B>BosConfig</B> file
+by changing its status flag in the BOS Server&#39;s memory from
+<TT>NotRun</TT> to <TT>Run</TT>. 
+<PRE>   % <B>bos startup</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>startup
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which you wish to start all processes that
+have status flag <TT>Run</TT> in the <B>BosConfig</B> file.
+</DL>
+</OL>
+<P><H3><A NAME="Header_191" HREF="auagd002.htm#ToC_191">To start specific  processes</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos startup</B> command to start specific processes by
+changing their status flags in the BOS Server&#39;s memory to <TT>Run</TT>
+without changing their status flags in the <B>BosConfig</B> file. 
+<PRE>   % <B>bos startup</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>instances</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>startup
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the server machine on which to start processes.
+<P><DT><B><VAR>instances</VAR>
+</B><DD>Specifies each process to start. Use the name assigned to the
+process at creation.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ224" HREF="auagd002.htm#ToC_192">Stopping and Immediately Restarting Processes</A></H2>
+<A NAME="IDX6375"></A>
+<A NAME="IDX6376"></A>
+<P>Although by default the BOS Server checks each day for new installed binary
+files and restarts the associated processes, it is sometimes desirable to stop
+and restart processes immediately. The <B>bos restart</B> command
+provides this functionality, starting a completely new instance of each
+affected process&#58;
+<UL>
+<P><LI>To stop and restart the BOS Server, which then restarts all processes
+marked with the <TT>Run</TT> status flag in the <B>BosConfig</B> file,
+include the <B>-bosserver</B> flag.
+<P><LI>To stop and restart all processes marked with the <TT>Run</TT> status
+flag in the <B>BosConfig</B> file, include the <B>-all</B>
+flag. The BOS Server does not restart
+<P><LI>To stop and restart specific processes regardless of the setting of their
+status flags in the <B>BosConfig</B> file, specify the name of each
+process to restart.
+</UL>
+<P>Restarting processes causes a service outage. It is usually best to
+schedule restarts for periods of low usage. The BOS Server
+automatically restarts all processes once a week, to reduce the potential for
+the core leaks that can develop as any process runs for an extended time;
+see <A HREF="#HDRWQ225">Setting the BOS Server&#39;s Restart Times</A>.
+<A NAME="IDX6377"></A>
+<A NAME="IDX6378"></A>
+<P>
+<A NAME="IDX6379"></A>
+<A NAME="IDX6380"></A>
+<A NAME="IDX6381"></A>
+<A NAME="IDX6382"></A>
+<A NAME="IDX6383"></A>
+<P><H3><A NAME="Header_193" HREF="auagd002.htm#ToC_193">To stop and restart all processes including the BOS Server</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos restart</B> command with the <B>-bosserver</B>
+flag to stop and restart the BOS Server, which restarts every process marked
+with status flag <TT>Run</TT> in the <B>BosConfig</B> file. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-bosserver</B>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to restart all processes.
+<P><DT><B>-bosserver
+</B><DD>Stops the BOS Server and all processes running on the machine. A
+new BOS Server instance starts; it then starts new instances of all
+processes marked with status flag <TT>Run</TT> in the <B>BosConfig</B>
+file.
+</DL>
+</OL>
+<A NAME="IDX6384"></A>
+<A NAME="IDX6385"></A>
+<A NAME="IDX6386"></A>
+<A NAME="IDX6387"></A>
+<P><H3><A NAME="Header_194" HREF="auagd002.htm#ToC_194">To stop and immediately restart all processes except the BOS Server</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos restart</B> command with the <B>-all</B> flag to
+stop and immediately restart every process marked with status flag
+<TT>Run</TT> in the <B>BosConfig</B> file. The BOS Server does
+not restart. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>-all</B>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine on which to stop and restart
+processes.
+<P><DT><B>-all
+</B><DD>Stops and immediately restarts all processes marked with status flag
+<TT>Run</TT> in the <B>BosConfig</B> file.
+</DL>
+</OL>
+<A NAME="IDX6388"></A>
+<A NAME="IDX6389"></A>
+<A NAME="IDX6390"></A>
+<A NAME="IDX6391"></A>
+<P><H3><A NAME="Header_195" HREF="auagd002.htm#ToC_195">To stop and immediately restart specific processes</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos restart</B> command to stop and immediately restart
+one or more specified processes, regardless of their status flag setting in
+the <B>BosConfig</B> file. 
+<PRE>   % <B>bos restart</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>instances</VAR>><SUP>+</SUP>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the server machine on which to restart the specified
+processes.
+<P><DT><B><VAR>instances</VAR>
+</B><DD>Specifies each process to stop and immediately restart. Use the
+name assigned to the process at creation.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ225" HREF="auagd002.htm#ToC_196">Setting the BOS Server&#39;s Restart Times</A></H2>
+<A NAME="IDX6392"></A>
+<A NAME="IDX6393"></A>
+<A NAME="IDX6394"></A>
+<A NAME="IDX6395"></A>
+<A NAME="IDX6396"></A>
+<A NAME="IDX6397"></A>
+<A NAME="IDX6398"></A>
+<A NAME="IDX6399"></A>
+<A NAME="IDX6400"></A>
+<P>The BOS Server by default restarts once a week, and the new instance
+restarts all processes marked with status flag <TT>Run</TT> in the local
+<B>/usr/afs/local/BosConfig</B> file (this is equivalent to issuing the
+<B>bos restart</B> command with the <B>-bosserver</B> flag).
+The default restart time is Sunday at 4&#58;00 a.m. The weekly
+restart is designed to minimize <I>core leaks</I>, which can develop as a
+process continues to allocate virtual memory but does not free it
+again. When the memory is completely exhausted, the machine can no
+longer function correctly.
+<P>The BOS Server also by default checks once a day for any newly installed
+binary files. If it finds that the modification time stamp on a
+process&#39;s binary file in the <B>/usr/afs/bin</B> directory is more
+recent than the time at which the process last started, it restarts the
+process so that a new instance starts using the new binary file. The
+default binary-checking time is 5&#58;00 a.m.
+<P>Because restarts can cause outages during which the file system is
+inaccessible, the default times for restarts are in the early morning when
+usage is likely to be lowest. Restarting a database server process on
+any database server machine usually makes the entire system unavailable to
+everyone for a brief time, whereas restarting other types of processes
+inconveniences only users interacting with that process on that
+machine. The longest outages typically result from restarting the
+<B>fs</B> process, because the File Server must reattach all
+volumes.
+<A NAME="IDX6401"></A>
+<A NAME="IDX6402"></A>
+<A NAME="IDX6403"></A>
+<P>The <B>BosConfig</B> file on each file server machine records the two
+restart times. To display the current setting, issue the <B>bos
+getrestart</B> command. To reset a time, use the <B>bos
+setrestart</B> command.
+<A NAME="IDX6404"></A>
+<A NAME="IDX6405"></A>
+<A NAME="IDX6406"></A>
+<P><H3><A NAME="Header_197" HREF="auagd002.htm#ToC_197">To display the BOS Server restart times</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>bos getrestart</B> command to display the automatic
+restart times. 
+<PRE>   % <B>bos getrestart</B> &lt;<VAR>machine&nbsp;name</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>getr
+</B><DD>Is the shortest acceptable abbreviation of <B>getrestart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine for which to display the restart
+times.
+</DL>
+</OL>
+<A NAME="IDX6407"></A>
+<A NAME="IDX6408"></A>
+<A NAME="IDX6409"></A>
+<P><H3><A NAME="HDRWQ226" HREF="auagd002.htm#ToC_198">To set the general or binary restart time</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos setrestart</B> command with the <B>-general</B>
+flag to set the general restart time or the <B>-newbinary</B> flag to set
+the binary restart time. The command accepts only one of the flags at a
+time. 
+<PRE>   % <B>bos setrestart</B> &lt;<VAR>machine&nbsp;name</VAR>> "&lt;<VAR>time&nbsp;to&nbsp;restart&nbsp;server</VAR>>" [<B>-general</B>]  [<B>-newbinary</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>setr
+</B><DD>Is the shortest acceptable abbreviation of <B>setrestart</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine.
+<P><DT><B><VAR>time to restart server</VAR>
+</B><DD>Sets when the BOS Server restarts itself (if combined with the
+<B>-general</B> flag) or any process with a new binary file (if combined
+with the <B>-newbinary</B> flag). Provide one of the following
+types of values&#58;
+<UL>
+<P><LI>The string <B>never</B>, which directs the BOS Server never to perform
+the indicated type of restart.
+<P><LI>A time of day (the conventional type of value for the binary restart
+time). Separate the hours and minutes with a colon
+(<I>hh</I>&#58;<I>MM</I>), and use either 24-hour format, or a value
+in the range from <B>1&#58;00</B> through <B>12&#58;59</B> with
+the addition of <B>am</B> or <B>pm</B>. For example, both
+<B>14&#58;30</B> and <B>"2&#58;30 pm"</B> indicate 2&#58;30 in
+the afternoon. Surround this parameter with double quotes (<B>"
+"</B>) if it contains a space.
+<P><LI>A day of the week and time of day, separated by a space and surrounded
+with double quotes (<B>" "</B>). This is the conventional type of
+value for the general restart. For the day, provide either the whole
+name or the first three letters, all in lowercase letters (<B>sunday</B>
+or <B>sun</B>, <B>thursday</B> or <B>thu</B>, and so on).
+For the time, use the same format as when specifying the time alone.
+</UL>
+<P>If desired, precede a time or day and time definition with the string
+<B>every</B> or <B>at</B>. These words do not change the
+meaning, but possibly make the output of the <B>bos getrestart</B> command
+easier to understand.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If the specified time is within one hour of the current time, the BOS Server
+does not perform the restart until the next eligible time (the next day for a
+time or next week for a day and time).
+</TD></TR></TABLE>
+<P><DT><B>-general
+</B><DD>Sets the general restart time when the BOS Server restarts itself.
+<P><DT><B>-newbinary
+</B><DD>Sets the restart time for processes with new binary files.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ227" HREF="auagd002.htm#ToC_199">Displaying Server Process Log Files</A></H2>
+<A NAME="IDX6410"></A>
+<A NAME="IDX6411"></A>
+<A NAME="IDX6412"></A>
+<A NAME="IDX6413"></A>
+<A NAME="IDX6414"></A>
+<A NAME="IDX6415"></A>
+<A NAME="IDX6416"></A>
+<A NAME="IDX6417"></A>
+<A NAME="IDX6418"></A>
+<A NAME="IDX6419"></A>
+<A NAME="IDX6420"></A>
+<A NAME="IDX6421"></A>
+<A NAME="IDX6422"></A>
+<A NAME="IDX6423"></A>
+<A NAME="IDX6424"></A>
+<A NAME="IDX6425"></A>
+<A NAME="IDX6426"></A>
+<A NAME="IDX6427"></A>
+<P>The <B>/usr/afs/logs</B> directory on each file server machine contains
+log files that detail interesting events that occur during normal operation of
+some AFS server processes. The self-explanatory information in the log
+files can help you evaluate process failures and other problems. To
+display a log file remotely, issue the <B>bos getlog</B> command.
+You can also establish a connection to the server machine and use a text
+editor or other file display program (such as the <B>cat</B>
+command).
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Log files can grow unmanageably large if you do not periodically shutdown and
+restart the database server processes (for example, if you disable the general
+restart time). In this case it is a good policy periodically to issue
+the UNIX <B>rm</B> command to delete the current log file. The
+server process automatically creates a new one as needed.
+</TD></TR></TABLE>
+<A NAME="IDX6428"></A>
+<A NAME="IDX6429"></A>
+<P><H3><A NAME="Header_200" HREF="auagd002.htm#ToC_200">To examine a server process log file</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ815">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos getlog</B> command to display a log file.
+<PRE>   % <B>bos getlog</B>  &lt;<VAR>machine&nbsp;name</VAR>>  &lt;<VAR>log&nbsp;file&nbsp;to&nbsp;examine</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>getl
+</B><DD>Is the shortest acceptable abbreviation of <B>getlog</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the server machine from which to display the log file.
+<P><DT><B><VAR>log file to examine</VAR>
+</B><DD>Names the log file to be displayed. Provide one of the following
+file names to display the indicated log file from the <B>/usr/afs/logs</B>
+directory. 
+<UL>
+<P><LI><B>AuthLog</B> for the Authentication Server log file
+<P><LI><B>BackupLog</B> for the Backup Server log file
+<P><LI><B>BosLog</B> for the BOS Server log file
+<P><LI><B>FileLog</B> for the File Server log file
+<P><LI><B>SalvageLog</B> for the Salvager log file
+<P><LI><B>VLLog</B> for the Volume Location (VL) Server log file
+<P><LI><B>VolserLog</B> for the Volume Server log file
+</UL>
+<P>You can provide a full or relative pathname to display a file from another
+directory. Relative pathnames are interpreted relative to the
+<B>/usr/afs/logs</B> directory.
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd008.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd010.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

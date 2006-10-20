@@ -1,0 +1,32 @@
+:Base TAAFSCFG.HLP
+:Title IBM AFS サーバー構成
+1 AFS サーバー構成ヘルプ
+2 AFS、AFS サーバー、および AFS コントロール・センターについて=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 AFS サーバーの構成
+3 概説=Configuring_the_AFS_Server
+3 AFS サーバー構成ウィザード=The_AFS_Server_Configuration_Wizard
+3 AFS サーバーを既存のセルに構成する=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 AFS サーバーをセルの最初の AFS サーバーとして構成する=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 AFS データのアクセス=Accessing_AFS_Data
+2 AFS サーバー構成ダイアログ・ボックス
+3 概説=The_AFS_Server_Configuration_Dialog_Box
+3 AFS サーバー構成ダイアログ・ボックスにアクセスする=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 パーティション・タブ
+4 概説=IDH_PARTITIONS_PAGE
+4 AFS パーティションの設定
+5 概説=Setting_Up_AFS_Partitions
+5 AFS パーティションを作成する=To_Create_an_AFS_Partion
+4 AFS パーティションの管理
+5 概説=Administering_AFS_Partitions
+5 AFS パーティションの回収
+6 概説=Salvaging_an_AFS_Partition
+6 AFS パーティションを回収する=To_Salvage_an_AFS_Partition
+5 AFS パーティションの削除
+6 概説=Removing_AFS_Partitions
+6 AFS パーティションを削除する=To_Remove_an_AFS_Partition
+3 サービス・タブ
+4 概説=IDH_SERVICES_PAGE
+4 AFS サーバーの役割=AFS_Server_Roles
+4 AFS サービス=AFS_Services
+4  AFS サービスを構成し、開始する=To_Configure_and_Start_an_AFS_Service
+4 AFS サービスを停止し、構成解除する=To_Stop_and_Unconfigure_an_AFS_Service

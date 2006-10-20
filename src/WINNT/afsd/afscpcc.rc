@@ -1,0 +1,15 @@
+/*
+ * Copyright 2005, Secure Endpoints Inc.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the MIT License.  
+ */
+
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Logon Copy Credentials Command"
+#define AFS_VERINFO_NAME "afscpcc"
+#define AFS_VERINFO_FILENAME "afscpcc.exe"
+
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"

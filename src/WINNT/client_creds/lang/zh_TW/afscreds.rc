@@ -1,0 +1,584 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#endif //_WIN32
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client"
+
+#define AFS_VERINFO_NAME "afscreds"
+#define AFS_VERINFO_FILENAME "afscreds.exe"
+#define AFS_VERINFO_LANG_CODE 0x404
+#define AFS_VERINFO_CHARSET 950
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afscreds.ico"
+IDI_CREDS_NO            ICON    DISCARDABLE     "creds_3.ico"
+IDI_CREDS_SOME          ICON    DISCARDABLE     "creds_2.ico"
+IDI_CREDS_YES           ICON    DISCARDABLE     "creds_1.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOG DISCARDABLE  0, 0, 306, 131
+STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 用戶端"
+CLASS "AfsCreds"
+FONT 9, "新細明體"
+BEGIN
+    RTEXT           "AFS   %s  版（修正檔 %lu）",IDC_TITLE_VERSION,197,10,
+                    101,8
+    LTEXT           "目前以 ""%s"" 登入至 Windows 網路 ",IDC_TITLE_NT,7,8,
+                    171,8
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,27,292,97
+END
+
+IDD_TAB_CREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "Cell： ",IDC_STATIC,7,9,24,8
+    LTEXT           "（無）",IDC_CREDS_CELL,51,9,193,8
+    LTEXT           "記號：",IDC_STATIC,7,26,27,8
+    LTEXT           "（無）",IDC_CREDS_INFO,51,26,193,8
+    CONTROL         "在這些記號到期之前顯示警告(&S)",IDC_CREDS_REMIND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,51,43,193,10
+    PUSHBUTTON      "取得新的記號(&O)...",IDC_CREDS_OBTAIN,51,63,88,14
+    PUSHBUTTON      "捨棄這些記號(&D)",IDC_CREDS_DESTROY,142,63,92,14
+    PUSHBUTTON      "說明",9,237,63,45,14
+END
+
+IDD_TAB_NOCREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "您尚未在所有的 AFS Cell 中取得記號。",IDC_RUNNING,7,9,
+                    275,8
+    LTEXT           "並未正確架構 AFS 用戶端，或者目前並未執行 AFS 用戶端服務。\n\n請使用「進階」標籤來啟動「AFS 用戶端」服務。",
+                    IDC_STOPPED,7,9,275,25
+    PUSHBUTTON      "說明",9,237,63,45,14
+    PUSHBUTTON      "取得新的記號(&O)...",IDC_CREDS_OBTAIN,51,63,88,14
+END
+
+IDD_TAB_ADVANCED DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "（查詢...）",IDC_SERVICE_STATUS,7,9,275,8
+    PUSHBUTTON      "啟動服務(&S)",IDC_SERVICE_START,53,34,73,14
+    PUSHBUTTON      "停止服務(&T)",IDC_SERVICE_STOP,131,34,73,14
+    PUSHBUTTON      "架構 AFS 用戶端(&C)",IDC_OPEN_CPL,209,34,73,14
+    CONTROL         "當電腦重新啟動時，即啟動「AFS 用戶端服務」(&R)",
+                    IDC_SERVICE_AUTO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    51,204,10
+    CONTROL         "總是在工作列顯示「AFS 用戶端」圖示(&A) ",IDC_STARTUP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,65,204,10
+    PUSHBUTTON      "說明",9,237,63,45,14
+END
+
+IDD_NEWCREDS DIALOG DISCARDABLE  0, 0, 232, 127
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "取得新的 AFS 記號"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "如要取得新的 AFS 記號，請輸入您 AFS 帳戶的使用者名稱與密碼。您可以同時在多重 AFS Cell 內具有記號。",
+                    IDC_STATIC,7,7,218,24
+    LTEXT           "AFS Cell (&C)：",IDC_STATIC,24,42,49,8
+    EDITTEXT        IDC_NEWCREDS_CELL,83,40,132,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "使用者名稱(&N)：",IDC_STATIC,24,60,59,8
+    EDITTEXT        IDC_NEWCREDS_USER,83,58,97,14,ES_AUTOHSCROLL
+    LTEXT           "密碼(&P)：",IDC_STATIC,23,78,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,83,76,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "確定",IDOK,69,106,50,14
+    PUSHBUTTON      "取消",IDCANCEL,122,106,50,14
+    PUSHBUTTON      "說明",9,175,106,50,14
+END
+
+IDD_NEWCREDS_EXPIRE DIALOG DISCARDABLE  0, 0, 232, 155
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "取得新的 AFS 記號"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "如要取得新的 AFS 記號，請輸入您 AFS 帳戶的使用者名稱與密碼。您可以同時在多重 AFS Cell 內具有記號。",
+                    IDC_STATIC,7,29,218,24
+    LTEXT           "AFS Cell (&C)：",IDC_STATIC,10,64,56,8
+    EDITTEXT        IDC_NEWCREDS_CELL,74,62,132,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "使用者名稱(&N)：",IDC_STATIC,10,82,59,8
+    EDITTEXT        IDC_NEWCREDS_USER,74,80,97,14,ES_AUTOHSCROLL
+    LTEXT           "密碼(&P)：",IDC_STATIC,10,100,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,74,98,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "您在 %1 Cell 的記號即將過期。",IDC_NEWCREDS_TITLE,7,7,
+                    218,16
+    DEFPUSHBUTTON   "確定",IDOK,69,134,50,14
+    PUSHBUTTON      "取消",IDCANCEL,122,134,50,14
+    PUSHBUTTON      "說明",9,175,134,50,14
+END
+
+IDD_TAB_MOUNT DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "您已選擇將以下的磁碟機代號對應至 AFS 路徑：",IDC_TITLE,
+                    7,8,275,8
+    PUSHBUTTON      "新增(&A)...",IDC_ADD,51,63,45,14
+    PUSHBUTTON      "變更(&C)...",IDC_EDIT,99,63,45,14
+    PUSHBUTTON      "移除(&R)",IDC_REMOVE,147,63,45,14
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x1d3,51,21,231,37
+    PUSHBUTTON      "說明",9,237,63,45,14
+END
+
+IDD_WIZARD DIALOGEX 0, 0, 299, 177
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS 用戶端精靈"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "下一步(&N) >",IDNEXT,187,150,50,14
+    PUSHBUTTON      "取消(&L)",IDCANCEL,242,150,50,14
+    CONTROL         "",IDC_LHS,"Static",SS_BLACKFRAME,7,7,76,119
+    CONTROL         "",IDC_RHS,"Static",SS_BLACKFRAME,97,7,195,119
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,138,285,1
+    PUSHBUTTON      "說明(&H)",9,79,150,50,14
+    PUSHBUTTON      "< 上一步(&B)",IDBACK,133,150,50,14
+END
+
+IDD_WIZ_START DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "尚未啟動「AFS 用戶端服務」。",IDC_STATIC,4,6,173,8
+    LTEXT           "如要啟動「AFS 用戶端服務」，請按「下一步」。",
+                    IDC_STATIC,4,79,185,8
+    LTEXT           "在執行「AFS 用戶端服務」之前，您將無法使用儲存於 AFS 內的檔案。",
+                    IDC_STATIC,4,23,173,17
+    LTEXT           "如要停止執行「AFS 用戶端服務」，請按「取消」。",
+                    IDC_STATIC,4,94,186,17
+END
+
+IDD_WIZ_CREDS DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "目前正在執行「AFS 用戶端服務」，但是您尚未取得任何使用 AFS 的記號。",
+                    IDC_STATIC,8,5,173,16
+    CONTROL         "不要取得任何 Cell 的記號",IDC_NOCREDS,"Button",
+                    BS_AUTORADIOBUTTON,8,28,141,10
+    CONTROL         "取得以下 Cell 的記號：",IDC_YESCREDS,"Button",
+                    BS_AUTORADIOBUTTON,8,44,141,10
+    LTEXT           "AFS Cell (&C)：",IDC_STATIC,11,64,54,8
+    EDITTEXT        IDC_NEWCREDS_CELL,77,62,96,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "使用者名稱(&N)：",IDC_STATIC,11,82,61,8
+    EDITTEXT        IDC_NEWCREDS_USER,77,80,96,14,ES_AUTOHSCROLL
+    LTEXT           "密碼(&P)：",IDC_STATIC,11,100,34,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,77,97,96,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+END
+
+IDD_WIZ_STARTING DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "請稍候；正在啟動「AFS 用戶端服務」...",IDC_START_TRY,10,
+                    33,173,8
+    LTEXT           "無法啟動「AFS 用戶端服務」。\n\n\n請檢查您的網路設定，並使用「控制台」的 AFS 圖示來檢查此電腦「AFS 用戶端」的架構。",
+                    IDC_START_FAIL,9,21,164,55
+END
+
+IDD_WIZ_MOUNT DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "如要存取儲存於 AFS 內的檔案，您必須將磁碟機代號對應至 AFS 的路徑上。",
+                    IDC_STATIC,6,4,173,16
+    CONTROL         "不要將任何磁碟機代號對應到 AFS 的路徑上(&D)",IDC_NOMAP,
+                    "Button",BS_AUTORADIOBUTTON,5,23,179,10
+    CONTROL         "至少將一個磁碟機代號對應到 AFS 的路徑上(&M)：",
+                    IDC_YESMAP,"Button",BS_AUTORADIOBUTTON,6,40,178,10
+    LTEXT           "磁碟機代號(&L)：",IDC_STATIC,24,58,61,8
+    COMBOBOX        IDC_MAP_LETTER,85,56,48,125,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS 路徑(&P)：",IDC_STATIC,24,76,58,8
+    EDITTEXT        IDC_MAP_PATH,85,74,96,14,ES_AUTOHSCROLL
+    LTEXT           "短名稱(&E)：",IDC_STATIC,24,94,38,8
+    EDITTEXT        IDC_MAP_DESC,85,92,60,14,ES_AUTOHSCROLL
+END
+
+IDD_TERMINATE DIALOGEX 0, 0, 291, 117
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS 用戶端"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "移除圖示(&R)",IDOK,167,96,63,14
+    PUSHBUTTON      "取消(&L)",IDCANCEL,234,96,50,14
+    LTEXT           "您選擇移除電腦工作列上的「AFS 用戶端」圖示。除非「AFS 用戶端」圖示出現在電腦的工作列上，否則當 AFS 記號即將過期的時候，AFS 無法警告您。",
+                    IDC_STATIC,7,7,277,25
+    LTEXT           "目前正在執行「AFS 用戶端服務」，您可以隨時停止這個程式。",
+                    IDC_STATIC,7,41,277,8
+    CONTROL         "繼續執行「AFS 用戶端服務」(&L)",IDC_LEAVE,"Button",
+                    BS_AUTORADIOBUTTON,12,55,228,10
+    CONTROL         "停止「AFS 用戶端服務」(&S)",IDC_STOP,"Button",
+                    BS_AUTORADIOBUTTON,12,69,228,10
+    CONTROL         "電腦重新啟動時顯示圖示(&H)",IDC_STARTUP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,98,148,10
+END
+
+IDD_TERMINATE_SMALL DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS 用戶端"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "移除圖示(&R)",IDOK,167,47,63,14
+    PUSHBUTTON      "取消(&L)",IDCANCEL,234,47,50,14
+    LTEXT           "您選擇移除電腦工作列上的「AFS 用戶端」圖示。除非「AFS 用戶端」圖示出現在電腦的工作列上，否則當 AFS 記號即將過期的時候，AFS 就無法警告您。",
+                    -1,7,7,277,25
+    CONTROL         "電腦重新啟動時顯示圖示(&H)",IDC_STARTUP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,49,148,10
+END
+
+IDD_TERMINATE_SMALL_95 DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Light "
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "移除圖示(&R)",IDOK,167,47,63,14
+    PUSHBUTTON      "取消(&L)",IDCANCEL,234,47,50,14
+    LTEXT           "您選擇移除電腦工作列上的「AFS Light 」圖示。除非「AFS Light 」圖示出現在電腦的工作列上，否則當 AFS 記號即將過期的時候，AFS 就無法警告您。",
+                    -1,7,7,277,25
+    CONTROL         "電腦重新啟動時顯示圖示(&H)",IDC_STARTUP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,49,148,10
+END
+
+IDD_WIZ_MOUNTING DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "您所選擇的一或多個磁碟機代號無法對應至 AFS 適當的路徑上。\n\n\n您必須關閉目前正試圖使用 AFS 路徑的應用程式。",
+                    IDC_MAP_FAIL,10,23,177,50
+    LTEXT           "請稍候；正在將磁碟機代號對應到 AFS 的路徑上...",
+                    IDC_MAP_TRY,9,43,173,8
+END
+
+IDD_WIZ_FINISH DIALOG DISCARDABLE  0, 0, 195, 119
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "「AFS 用戶端」已準備就緒。",IDC_STATIC,7,6,173,8
+    LTEXT           "如要關閉此精靈，請按一下「完成」。",IDC_STATIC,7,76,173,
+                    8
+END
+
+IDD_MAPPING DIALOG DISCARDABLE  0, 0, 275, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "對應磁碟機代號"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "您可以將電腦上的磁碟機代號對應至 AFS 的路徑上。\n\n例如，如果您把 Q: 對應為 \\afs\\acme.com\\usr\\bob，則 AFS  \\afs\\acme.com\\usr\\bob\\* 上的檔案就會出現在 Q：\\ 上 ",
+                    IDC_STATIC,7,7,261,32
+    LTEXT           "磁碟機代號(&L)：",IDC_STATIC,11,53,58,8
+    COMBOBOX        IDC_MAP_LETTER,69,51,56,162,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS 路徑(&P)：",IDC_STATIC,11,70,50,8
+    EDITTEXT        IDC_MAP_PATH,69,68,166,13,ES_AUTOHSCROLL
+    LTEXT           "短名稱(&E)：",IDC_STATIC,11,88,49,8
+    EDITTEXT        IDC_MAP_DESC,69,86,60,13,ES_AUTOHSCROLL
+    CONTROL         "每次登入時即恢復此一對應(&R)",IDC_MAP_PERSISTENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,69,105,185,10
+    DEFPUSHBUTTON   "確定",IDOK,112,131,50,14
+    PUSHBUTTON      "取消",IDCANCEL,165,131,50,14
+    PUSHBUTTON      "說明",9,218,131,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 299
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 124
+    END
+
+    IDD_TAB_CREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_NOCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_NEWCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+
+    IDD_NEWCREDS_EXPIRE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+
+    IDD_TAB_MOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 292
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
+    END
+
+    IDD_WIZ_CREDS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 174
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_WIZ_MOUNT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 191
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_TERMINATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 110
+    END
+
+    IDD_TERMINATE_SMALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_MAPPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 268
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 145
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_TRAYICON MENU DISCARDABLE 
+BEGIN
+    MENUITEM "顯示記號(&S)...",             M_ACTIVATE
+    MENUITEM "過期前先警告(&W)",            M_REMIND, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "移除圖示(&R)...",                M_TERMINATE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WIZ16               BITMAP  DISCARDABLE     "wiz16.bmp"
+IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOOLTIP             "AFS 用戶端"
+    IDS_TOOLTIP_95          "AFS Light "
+    IDS_CREDENTIALS         "記號"
+    IDS_UNKNOWN             "（不明）"
+    IDS_ADVANCED            "進階"
+    IDS_CREDS               "%1   （記號過期 %2）"
+    IDS_NO_CREDS            "（您在此 Cell 中沒有記號）"
+    IDS_SERVICE_BROKEN      "「AFS 用戶端服務」安裝不當，或者您沒有查詢其狀態的權限。"
+    IDS_SERVICE_RUNNING     "「AFS 用戶端服務」目前執行正常。"
+    IDS_SERVICE_STOPPED     "目前已停止「AFS 用戶端服務」。"
+    IDS_SERVICE_STOPPING    "請稍候；正在停止「AFS 用戶端服務」..."
+    IDS_SERVICE_STARTING    "請稍候；正在啟動「AFS 用戶端服務」..."
+    IDS_SERVICE_UNKNOWN     "無法判斷「AFS 用戶端服務」的狀態。"
+    IDS_SERVICE_FAIL_STOP   "無法順利停止「AFS 用戶端服務」。您可能未獲得執行此一作業的權限。\n\n錯誤 0x%1。"
+    IDS_SERVICE_FAIL_START  "無法順利啟動「AFS 用戶端服務」。您可能未獲得執行此一作業的權限。\n\n錯誤 0x%1。"
+    IDS_SERVICE_FAIL_CONFIG "無法變更「AFS 用戶端服務」的啟動參數。您的權限不足以執行此項作業。\n\n錯誤 0x%1。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_ERROR       "架構服務時發生錯誤"
+    IDS_ERROR_TITLE         "錯誤 - AFS 用戶端"
+    IDS_ERROR_TITLE_95      "錯誤 - AFS Light "
+    IDS_ERROR_DESTROY_95    "無法銷毀您在 %1 Cell 中的記號。\n\n錯誤： %2 "
+    IDS_ERROR_DESTROY_NOCM  "您在 %1 Cell 中的記號無法銷毀，因為「AFS 用戶端服務」沒有回應。\n\n請檢查「進階」標籤，查看「AFS 用戶端」是否正常執行。\n\n錯誤： %2"
+    IDS_ERROR_DESTROY_UNKNOWN 
+                            "您在 %1 Cell 中的記號無法銷毀。\n\n請檢查「進階」標籤，查看「 AFS 用戶端」是否正常執行。\n\n錯誤： %2"
+    IDS_ERROR_OBTAIN        "「AFS 用戶端」無法在 Cell %1 中取得 %2 的記號。\n\n錯誤： %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "「AFS Light 」無法在 Cell %1 中取得 %2 的記號。\n\n錯誤： %4 (%3)"
+    IDS_TITLE_VERSION       "AFS 版本 %s"
+    IDS_TITLE_VERSION_NOPATCH "AFS 版本 %s"
+    IDS_MOUNT_SOME          "您已選擇將以下的磁碟機代號對應至 AFS 路徑："
+    IDS_MOUNT_NONE          "您尚未選擇對應磁碟機代號至 AFS 的路徑上。"
+    IDS_MOUNT               "磁碟機代號"
+    IDS_WIZ_NEXT            "下一步(&N) >"
+    IDS_WIZ_FINISH          "完成(&F)"
+    IDS_MAP_LETTER          "磁碟機 *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "磁碟機 %1: \t%2"
+    IDS_ERROR_MAP           "對應網路磁碟機時發生錯誤"
+    IDS_ERROR_MAP_DESC      "AFS 無法對應網路磁碟機到 AFS 上的指定路徑。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
+    IDS_ERROR_UNMAP         "對應網路磁碟機時發生錯誤"
+    IDS_ERROR_UNMAP_DESC    "AFS 無法取消對應指定的網路磁碟機。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
+    IDS_CELL_GATEWAY        "%s （透過閘道 %s）"
+    IDS_BADMAP_TITLE        "對應網路磁碟機時發生錯誤"
+    IDS_BADMAP_DESC         "AFS 無法對應磁碟機代號到指定路徑，因為路徑並非以 ""\\afs"" 為開頭。\n\n請確定您所輸入的路徑開頭為 ""\\afs""，然後再試一次。"
+    IDS_UNCONFIG_TITLE_95   "錯誤 - AFS Light "
+    IDS_UNCONFIG_DESC_95    "尚未架構「AFS Light 」，因此無法使用。\n\n如要架構「AFS Light 」，請開啟「控制台」，並在「AFS Light 架構」圖示上按兩下。"
+    IDS_UNCONFIG_TITLE      "錯誤 - AFS 用戶端"
+    IDS_UNCONFIG_DESC       "尚未架構「AFS 用戶端」，因此無法使用。\n\n如要架構「AFS 用戶端」，請開啟「主控台」並在「AFS 用戶端」圖示上按兩下。"
+    IDS_NEWSUB_TITLE        "警告 - AFS 用戶端"
+    IDS_NEWSUB_TITLE_95     "警告 - AFS Light "
+    IDS_NEWSUB_DESC         "AFS 在連接網路磁碟機時，無法使用您所指定的說明。 \n\n\n所指定的說明已用於不同的 AFS 路徑。"
+    IDS_BADSUB_TITLE        "錯誤 - AFS 用戶端"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADSUB_TITLE_95     "錯誤 - AFS Light "
+    IDS_BADSUB_DESC         "您所輸入的磁碟機代號說明無法使用。\n\n磁碟機代號說明最多不能超過 12 個字元，而且不可包含空格或標欄。"
+    IDS_TITLE_95            "AFS Light "
+END
+
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

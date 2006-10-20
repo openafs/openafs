@@ -1,0 +1,1212 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS(R) 構成アプリケーションおよびウィザード"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOGEX 0, 0, 325, 247
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "AFS(R) サーバー・クィック・スタート・ウィザード"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,106,226,50,14
+    PUSHBUTTON      "< 戻る(&B)",IDBACK,161,226,50,14
+    DEFPUSHBUTTON   "次へ(&N) >",IDNEXT,216,226,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,271,226,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,219,311,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,91,200,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,104,7,216,207
+END
+
+IDD_PARTITION_PAGE DIALOGEX 0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい、パーティションを作成します。(&Y)",
+                    IDC_CREATE_PARTITION,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,2,88,162,10
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,3,116,210,
+                    49,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_PARTITION_NAME,155,180,20,12,ES_AUTOHSCROLL
+    CONTROL         "いいえ、パーティションを作成しません。(&O)",
+                    IDC_DONT_CREATE_PARTITION,"Button",BS_AUTORADIOBUTTON,3,
+                    195,138,8
+    LTEXT           "このファイル・サーバーはファイルとプログラムを AFS クライアントに保管および引き渡します。このシステムに保管されたデータを AFS を通じて共用するには、少なくとも 1 つの NTFS ボリュームが AFS パーティション専用にされている必要があります。",
+                    -1,1,12,212,31
+    LTEXT           "パーティション用に使用するボリュームを選択してください(&S):",
+                    IDC_SELECT_DRIVE,2,102,211,9
+    LTEXT           "AFS パーティション名(&M):  /vicep",IDC_NAME_LABEL,14,
+                    182,123,8
+    LTEXT           "このファイル・サーバーに AFS パーティションを作成します。",
+                    IDC_TITLE,3,0,210,8
+    LTEXT           "AFS パーティションは物理的に NTFS ボリュームと同等ですが、これにはパーティションに関する情報の構造と位置について特殊化されたメタデータも入っています。",
+                    -1,0,48,213,24
+    LTEXT           "このファイル・サーバーにパーティションを作成しますか?",
+                    IDC_ASK_CREATE_PARTITION,1,76,213,8
+    LTEXT           "メッセージは必要なら実行時に設定されます。",
+                    IDC_PARTITION_MSG,3,170,208,34,NOT WS_VISIBLE
+    LTEXT           "",IDC_PARTITION_COVER,0,75,208,86,NOT WS_VISIBLE
+END
+
+IDD_FILE_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい、構成します(&Y)。",IDC_SHOULD_CONFIG_FILE_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,3,173,98,10
+    CONTROL         "いいえ、構成しません(&O)。",IDC_DONT_CONFIG_FILE_SERVER,
+                    "Button",BS_AUTORADIOBUTTON,3,187,114,10
+    LTEXT           "AFS ファイル・サービスは要求されたファイルやプログラムをこのサーバーから AFS クライアントに引き渡します。このサービスはまた、ボリュームの作成、削除、移動、複製のようなボリューム管理操作のすべてを扱います。",
+                    -1,0,36,209,34
+    LTEXT           "このマシンをファイル・サーバーとして構成します。",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "このマシンをファイル・サーバーとして構成しますか?",
+                    IDC_CREATE_FS_QUESTION,2,158,197,8
+    LTEXT           "このマシンをファイル・サーバーとして構成するには、ファイル・サービスを構成する必要があります。",
+                    -1,0,13,209,17
+    LTEXT           "注: このマシンは現在 AFS にファイルを保管するために使用可能なディスク・ドライブを持っていません。このマシンをファイル・サーバーとして構成することはできますが、AFSデータをこのマシンに保管することはできません。",
+                    IDC_NO_DRIVES_NOTE,0,77,209,34,NOT WS_VISIBLE
+    LTEXT           "ディスク・ドライブを作成するには、Windows NT ディスク・アドミニストレータを使用してください。",
+                    IDC_DISK_ADMIN_NOTE,0,119,209,16,NOT WS_VISIBLE
+    LTEXT           "このマシンはすでにファイル・サーバーとして構成されています。",
+                    IDC_MSG,0,144,206,56,NOT WS_VISIBLE
+END
+
+IDD_INTRO_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS サーバーのクィック・スタート・ウィザードにようこそ。このウィザードは、この Windows NT システムでの AFS サーバーの構成を援助します。",
+                    IDC_TITLE,0,0,209,26
+    LTEXT           "AFS サーバー構成の開始には「次へ」を押してください。",
+                    IDC_STATIC,0,166,206,8
+END
+
+IDD_REPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい(&Y)、ルート・ボリュームを複製します。",
+                    IDC_REPLICATE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,3,
+                    168,178,10
+    CONTROL         "いいえ(&O)、ルート・ボリュームを複製しません。",
+                    IDC_DONT_REPLICATE,"Button",BS_AUTORADIOBUTTON,3,185,178,
+                    10
+    LTEXT           "複製は、通常は他のファイル・サーバーにある、複数のパーティション内のボリュームの読み取り専用コピーを作成するプロセスです。複製によって、ボリュームを入れるサーバーの１つが使用不可になった場合でも、",
+                    IDC_STATIC,0,41,213,26
+    LTEXT           "ルート・ボリュームを複製しますか?",
+                    IDC_REPLICATE_QUESTION,2,151,205,10
+    LTEXT           "複製はまた、頻繁にアクセスされるボリュームの要求でサーバーが過負荷になるのを防ぐことを可能にします。",
+                    IDC_STATIC,0,99,213,18
+    LTEXT           "セルのルート・ボリュームを複製します。",IDC_TITLE,2,0,
+                    209,8
+    LTEXT           "この AFS セル内で他のボリュームを複製する場合は、まずルート・ボリュームを複製してください。",
+                    IDC_STATIC,0,16,213,16
+    LTEXT           "そのボリュームは他のサーバーからアクセスできるので、ネットワークやサーバーの停止が起こったときのボリュームの使用可能性が増します。",
+                    IDC_STATIC,0,73,213,18
+    LTEXT           "メッセージは必要なら実行時に設定されます。",
+                    IDC_CANT_REPLICATE_MSG,0,128,206,72,NOT WS_VISIBLE | NOT 
+                    WS_GROUP
+END
+
+IDD_ROOT_VOLUMES_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい(&Y)、ルート・ボリュームを作成します。",
+                    IDC_CREATE_ROOT_VOLUMES,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,3,165,178,10
+    CONTROL         "いいえ(&O)、ルート・ボリュームを作成しません。",
+                    IDC_DONT_CREATE_ROOT_VOLUMES,"Button",BS_AUTORADIOBUTTON,
+                    3,184,178,10
+    LTEXT           "AFS でボリュームとは、システム管理を効率的に行うために、管理の容易な 1つの単位に編成される関連ファイルの集まりです。",
+                    IDC_STATIC,2,14,210,20
+    LTEXT           "ルート・ボリュームを作成しますか?",
+                    IDC_ROOT_AFS_QUESTION,3,141,201,12
+    LTEXT           "セルのルート・ボリュームを作成します。",IDC_TITLE,2,0,
+                    153,8
+    LTEXT           "作成後、ルート・ボリュームは自動的に AFS ファイル・スペースでアクセス可能になります。",
+                    IDC_STATIC,2,73,210,17
+    LTEXT           "メッセージは必要なら実行時に設定されます。",
+                    IDC_ROOT_AFS_MSG,2,116,211,80,NOT WS_VISIBLE
+    LTEXT           "root.afs ボリュームは AFS ファイル・スペースのルートです。root.cell ボリュームは AFS ファイル・スペースのこのセルのサブツリーのルートで、root.afs からマウント・ポイントを通じてアクセスされます。",
+                    IDC_STATIC,2,40,209,27
+END
+
+IDD_GET_CURRENT_CONFIG DIALOG DISCARDABLE  0, 0, 198, 84
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS(R) サーバーの構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    36,38,148,14
+    LTEXT           "操作テキスト - 実行時に設定されます。",IDC_OPERATION,35,
+                    20,145,10
+    ICON            "",IDC_LOGO,7,7,20,21
+    PUSHBUTTON      "取消し",IDCANCEL,73,63,50,14
+    LTEXT           "現行構成を判別中:",IDC_OPERATION2,35,7,156,10
+END
+
+IDD_BACKUP_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい、バックアップ・サーバーとして構成します(&Y)。",
+                    IDC_CONFIG_BACKUP_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,0,172,210,10
+    CONTROL         "いいえ、バックアップ・サーバーとして構成しません(&O)。",
+                    IDC_DONT_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,0,187,210,10
+    LTEXT           "バックアップ・サーバーはデータベース・サーバーとして構成されたマシンでのみ実行可能です。また、バックアップ・サーバーがセル内の 1 つのデータベース・サーバーで実行されている場合は、そのセルのすべてのデータベース・サーバーで実行する必要があります。",
+                    -1,0,37,210,41
+    LTEXT           "このマシンをバックアップ・サーバーとして構成しますか?",
+                    IDC_BACKUP_SERVER_QUESTION,0,157,210,10
+    LTEXT           "このマシンをバックアップ・サーバーとして構成します。",
+                    IDC_TITLE,0,0,210,8
+    LTEXT           "バックアップ・サーバーはデータベース・サービスのオプション機能です。",
+                    -1,0,15,210,16
+    LTEXT           "このマシンはすでにデータベース・サーバーとして構成されています。",
+                    IDC_CANT_BACKUP_MSG,0,142,210,57,NOT WS_VISIBLE
+END
+
+IDD_SYS_CONTROL_PAGE DIALOG DISCARDABLE  0, 0, 216, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "システム制御サーバーとして構成します(&S)。",
+                    IDC_SYS_CONTROL_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,2,142,178,10
+    CONTROL         "システム制御クライアントとして構成します(&C)。",
+                    IDC_SYS_CONTROL_CLIENT,"Button",BS_AUTORADIOBUTTON,2,156,
+                    160,9
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,100,169,108,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    CONTROL         "システム制御クライアントまたはサーバーとして構成しません(&O)。",
+                    IDC_DONT_CONFIGURE,"Button",BS_AUTORADIOBUTTON,2,187,201,
+                    9
+    LTEXT           "システム制御サーバーは、システム制御クライアントとして実行されている他の AFS サーバー・マシンに、共通構成ファイルを提供します。AFS セルはシステム制御サーバーを 1つだけ実行していることが必要です。",
+                    -1,3,17,208,33
+    LTEXT           "システム制御サーバーまたはクライアントとして構成します。",
+                    IDC_TITLE,4,4,208,8
+    LTEXT           "このマシンをシステム制御サーバーまたはクライアントとして構成しますか?",
+                    IDC_SYS_CONTROL_MACHINE_QUESTION,3,118,208,17
+    LTEXT           "システム制御クライアントは、セルのシステム制御サーバーからその AFS 構成ファイルに対する有効な更新をすべて受け取ります。",
+                    IDC_SYS_CONTROL_CLIENT_DESC,3,55,208,18
+    LTEXT           "システム制御サーバー(&Y):",
+                    IDC_SYS_CONTROL_MACHINE_LABEL,7,170,81,8,WS_DISABLED
+    LTEXT           "",IDC_CANT_CONFIG_MSG,2,116,210,84,NOT WS_VISIBLE
+    LTEXT           "警告: AFS(R) の米国の配布を使用していないサイトは、システム制御サーバーを介して構成ファイルを配布すべきではありません。配布すると、機密のシステム情報が暗号化されずに伝送されます。",
+                    -1,9,78,193,33
+END
+
+IDD_CONFIG_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "このシステムでの AFS サーバーの構成に必要な情報はこれで全部です。",
+                    IDC_ALL_NEEDED_MSG,1,11,212,16
+    LTEXT           "このマシンをセル <set at runtime> へ構成してください。",
+                    IDC_TITLE,1,0,211,8
+    LTEXT           "以下の構成ステップが実行されます:",
+                    IDC_FOLLOWING_STEPS_MSG,1,33,130,8
+    LTEXT           "ステップ 1 - テキストは実行時に設定されます",IDC_STEP1,
+                    22,47,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 3 - テキストは実行時に設定されます",IDC_STEP3,
+                    22,71,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 2 - テキストは実行時に設定されます",IDC_STEP2,
+                    22,59,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 4 - テキストは実行時に設定されます",IDC_STEP4,
+                    22,83,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 5 - テキストは実行時に設定されます",IDC_STEP5,
+                    22,95,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 6 - テキストは実行時に設定されます",IDC_STEP6,
+                    22,107,187,8,NOT WS_VISIBLE
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,1,183,211,10
+    LTEXT           "ステップ 8 - テキストは実行時に設定されます",IDC_STEP8,
+                    22,131,187,8,NOT WS_VISIBLE
+    LTEXT           "ステップ 7 - テキストは実行時に設定されます",IDC_STEP7,
+                    22,119,187,8,NOT WS_VISIBLE
+    LTEXT           "メッセージは必要なら実行時に設定されます。",
+                    IDC_CANT_CONFIG_MSG,1,13,209,17,NOT WS_VISIBLE
+    LTEXT           "完了率(%):",IDC_PERCENT_COMPLETE_LABEL,1,195,39,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "現行操作:",IDC_CURRENT_STEP_LABEL,1,143,31,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "現行ステップの記述 - 実行時に設定",IDC_CURRENT_STEP,3,
+                    168,209,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,63,195,51,8,NOT WS_VISIBLE
+    LTEXT           "このコンピューターの構成を開始するには、「構成」ボタンを押してください。実行する構成ステップを変更するには、「戻る」ボタンを押してください。",
+                    IDC_STATUS_MSG,1,158,212,44
+    LTEXT           "",IDC_STEP1_GRAPHIC,10,49,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP2_GRAPHIC,10,61,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP3_GRAPHIC,10,73,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP4_GRAPHIC,10,85,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP5_GRAPHIC,10,97,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP6_GRAPHIC,10,109,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP7_GRAPHIC,10,121,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP8_GRAPHIC,10,133,9,9,NOT WS_VISIBLE
+END
+
+IDD_INFO_PAGE2_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,92,55,118,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,92,71,118,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_VERIFY_ADMIN_PW,92,87,118,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_AFS_UID,110,158,37,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_AFS_UID_SPINNER,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,149,157,11,14
+    LTEXT           "管理情報",IDC_TITLE,0,0,210,8
+    LTEXT           "名前(&N):",IDC_ADMIN_NAME_LABEL,7,57,34,8
+    LTEXT           "パスワード(&P):",IDC_ADMIN_PW_LABEL,7,73,57,8
+    GROUPBOX        "アカウント名およびパスワード",IDC_ADMIN_INFO_FRAME,0,41,
+                    210,65
+    LTEXT           "パスワードの検査(&V):",IDC_VERIFY_ADMIN_PW_LABEL,7,90,
+                    68,8
+    LTEXT           "この新しいセルの管理アカウントの作成には以下の情報が必要です。",
+                    IDC_STATIC,0,15,206,17
+    CONTROL         "この AFS UID を使用(&S):",IDC_USE_THIS_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,160,93,10
+    CONTROL         "次に使用可能な AFS UID を使用(&U)",IDC_USE_NEXT_UID,
+                    "Button",BS_AUTORADIOBUTTON,6,144,204,10
+    GROUPBOX        "AFS UID",IDC_STATIC,0,118,209,57
+    LTEXT           "AFS 管理アカウントのユーザー ID を入力してください:",
+                    IDC_STATIC,3,130,200,9
+END
+
+IDD_DB_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "はい、データベース・サーバーとして構成します(&Y)。",
+                    IDC_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,2,117,204,10
+    CONTROL         "いいえ、データベース・サーバーとして構成しません(&O)。",
+                    IDC_DONT_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON,2,
+                    188,204,10
+    LTEXT           "データベース・サービスは AFS セルが要求する複製データベースのセットを保守します。このサービスはセルのすべてのアカウント、ボリューム位置、および (オプションで) バックアップ情報を保守します。",
+                    -1,0,38,210,31
+    LTEXT           "このマシンをデータベース・サーバーとして構成しますか?",
+                    IDC_DB_SERVER_QUESTION,2,101,205,10
+    LTEXT           "このマシンをデータベース・サーバーとして構成します。",
+                    IDC_TITLE,0,0,210,8
+    LTEXT           "このマシンをデータベース・サーバーとして構成するには、データベース・サービスを構成する必要があります。",
+                    -1,0,15,210,16
+    LTEXT           "このマシンはすでにデータベース・サーバーとして構成されています。",
+                    IDC_MSG,1,157,206,10,NOT WS_VISIBLE
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,91,171,113,12,ES_AUTOHSCROLL
+    LTEXT           "システム制御サーバー(&Y):",
+                    IDC_SYS_CONTROL_MACHINE_LABEL,4,173,80,8
+    LTEXT           "セルにシステム制御サーバーがある場合は、そのホスト名を下に入力してください。AFS 構成ファイルはこのサーバーを介して更新されます。",
+                    IDC_SCM_PROMPT,1,134,207,18
+END
+
+IDD_INFO_PAGE DIALOGEX 0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "このホストを既存 AFS セルのサーバーにする(&M)",
+                    IDC_JOIN_EXISTING_CELL,"Button",BS_AUTORADIOBUTTON,0,37,
+                    189,10
+    CONTROL         "これを新規 AFS セルの最初のサーバーにする(&T)",
+                    IDC_FIRST_SERVER,"Button",BS_AUTORADIOBUTTON,0,49,188,10
+    EDITTEXT        IDC_CELL_NAME,64,93,145,12,ES_LOWERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SERVER_PW,90,166,119,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_VERIFY_PW,90,180,119,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "セルおよびサーバー情報",IDC_TITLE,0,0,209,8
+    LTEXT           "セル名(&C):",IDC_CELL_NAME_LABEL,5,95,41,8
+    LTEXT           "パスワード(&P):",IDC_SERVER_PW_LABEL,7,167,57,8,
+                    WS_DISABLED
+    LTEXT           "AFS セルの名前を入力してください。",
+                    IDC_CELL_NAME_PROMPT,14,78,195,11
+    LTEXT           "AFS プリンシパルのパスワードを入力してください。すべての AFS サーバーがこのプリンシパルとしてトークンを取得します。",
+                    IDC_SERVER_PW_PROMPT,10,130,199,19,WS_DISABLED
+    GROUPBOX        "セル名",IDC_CELL_NAME_FRAME,0,66,210,44
+    GROUPBOX        "サーバー・パスワード",IDC_SERVER_PW_FRAME,0,117,210,83,
+                    WS_DISABLED
+    LTEXT           "パスワードの検査(&V):",IDC_VERIFY_PW_LABEL,7,180,69,8,
+                    WS_DISABLED
+    LTEXT           "AFS セルは、ファイル・アクセスのユニフォーム・ネーム・スペースを提供するサーバーの集まりです。",
+                    IDC_CELL_NAME_PROMPT2,7,14,202,17
+    LTEXT           "名前:",IDC_PRINCIPAL_LABEL,7,154,22,8,WS_DISABLED
+    LTEXT           "afs",IDC_PRINCIPAL,64,153,145,12,WS_DISABLED,
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_INFO_PAGE2_NOT_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 216, 207
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,62,45,139,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,62,61,139,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,62,133,139,12,ES_AUTOHSCROLL
+    LTEXT           "管理情報",IDC_TITLE,0,0,209,8
+    LTEXT           "以下の管理アカウント情報を入力してください:",
+                    IDC_ADMIN_INFO_PROMPT,7,31,196,10
+    LTEXT           "名前(&N):",IDC_ADMIN_NAME_LABEL,7,49,34,8
+    LTEXT           "パスワード(&P):",IDC_ADMIN_PW_LABEL,7,65,46,8
+    GROUPBOX        "アカウント名およびパスワード",IDC_ADMIN_INFO_FRAME,0,17,
+                    210,62
+    GROUPBOX        "既存の AFS サーバー",IDC_HOSTNAME_FRAME,1,92,209,60
+    LTEXT           "AFS サーバー:",IDC_HOSTNAME_LABEL,5,136,46,8
+    LTEXT           "結合したいセル内の他の AFS サーバーのホスト名を入力してください。AFS構成情報はこのサーバーから取り出されます。",
+                    IDC_HOSTNAME_PROMPT,5,105,199,19
+END
+
+IDD_SERVICES_PAGE DIALOG DISCARDABLE  0, 0, 295, 265
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "サービス"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,20,281,40
+    GROUPBOX        "",IDC_STATIC,7,66,281,43
+    GROUPBOX        "",IDC_STATIC,7,115,281,40
+    GROUPBOX        "",IDC_STATIC,7,161,281,40
+    CONTROL         "ファイル・サービス",IDC_FS_SERVICE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,22,83,10
+    CONTROL         "データベース・サービス",IDC_DB_SERVICE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,65,99,10
+    PUSHBUTTON      "詳細...",IDC_DB_DETAILS,225,91,50,14,NOT WS_VISIBLE
+    CONTROL         "バックアップ・サーバー",IDC_BK_SERVICE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,114,99,10
+    CONTROL         "システム制御サーバー",IDC_SCS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,160,91,10
+    EDITTEXT        IDC_SC_MACHINE,137,226,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "この AFS サーバーで実行するサービスを選択してください:",
+                    IDC_STATIC,7,7,213,8
+    LTEXT           "ファイル・サービスは現在実行中です。",IDC_FS_STATUS_MSG,
+                    14,35,261,8
+    LTEXT           "データベース・サービスは現在一部がインストールされています。",
+                    IDC_DB_STATUS_MSG,14,78,241,8
+    LTEXT           "システム制御サーバー(&Y):",IDC_SC_MACHINE_LABEL,31,229,
+                    97,8,WS_DISABLED
+    LTEXT           "ファイル・サービスの停止には上のボックスをチェック解除してください。",
+                    IDC_FS_ACTION_MSG,14,47,268,8
+    LTEXT           "詳しくは「詳細」をクリックしてください。",
+                    IDC_DB_ACTION_MSG,14,92,186,8
+    LTEXT           "バックアップ・サーバーは現在実行中です。",
+                    IDC_BK_STATUS_MSG,14,127,259,8
+    LTEXT           "バックアップ・サービスの停止は上のボックスをチェック解除してください。",
+                    IDC_BK_ACTION_MSG,14,139,268,8
+    LTEXT           "このサーバーを使用可能にするには、ファイル・サービスまたはデータベース・サービスを実行する必要があります。",
+                    IDC_SCS_ACTION_MSG,14,183,268,16
+    LTEXT           "システム制御サービスは現在実行中ではありません。",
+                    IDC_SCS_STATUS_MSG,14,172,263,9
+    GROUPBOX        "",IDC_STATIC,7,207,281,51
+    CONTROL         "システム制御クライアント",IDC_SCC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,206,107,10
+    LTEXT           "このサーバーを使用可能にするには、ファイル・サービスまたはデータベース・サービスを実行する必要があります。",
+                    IDC_SCC_ACTION_MSG,14,239,268,17
+    LTEXT           "システム制御サービスは現在実行中ではありません。",
+                    IDC_SCC_STATUS_MSG,14,216,263,9
+END
+
+IDD_PARTITIONS_PAGE DIALOGEX 0, 0, 295, 265
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "パーティション"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "以下の AFS パーティションがコンピューターに存在します(&A):",
+                    IDC_STATIC,8,7,227,8
+    PUSHBUTTON      "作成(&C)...",IDC_CREATE_PARTITIONS,17,118,66,14
+    LTEXT           "1 つのパーティションまたはパーティション上の 1 つのボリュームをサルベージするには、リストのパーティションを選択して上のボタンをクリックしてください。このサーバー上のすべてのパーティションをサルベージするには、上のボタンをクリックしてください。",
+                    IDC_SALVAGE_MSG,30,179,250,30
+    PUSHBUTTON      "サルベージ(&S)...",IDC_SALVAGE,17,159,66,14
+    LTEXT           "削除にはリストのパーティションを選択し上のボタンをクリック。",
+                    IDC_REMOVE_MSG,30,238,241,12,WS_DISABLED
+    PUSHBUTTON      "削除(&M)",IDC_REMOVE,17,217,66,14,WS_DISABLED
+    GROUPBOX        "パーティション",IDC_AGGR_FRAME,7,103,281,155
+    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,23,
+                    281,72,WS_EX_CLIENTEDGE
+    LTEXT           "このサーバーでの新規パーティション作成は、上のボタンをクリック。",
+                    IDC_CREATE_MSG,30,139,250,8
+END
+
+IDD_CREATE_PARTITION DIALOGEX 0, 0, 264, 177
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS パーティションの作成"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "新しいパーティションを作成する NTFS ボリュームをリストから選択:",
+                    IDC_TITLE,7,5,250,8
+    LTEXT           "AFS パーティション名:",IDC_NAME_STATIC,17,131,77,8
+    EDITTEXT        IDC_PARTITION_NAME,132,129,20,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "作成(&C)",IDC_CREATE,96,158,50,14,WS_DISABLED
+    PUSHBUTTON      "クローズ(&O)",IDC_CLOSE,152,158,53,14
+    PUSHBUTTON      "ヘルプ",9,210,158,40,14
+    GROUPBOX        "パーティション・パラメーター",IDC_ARGS_FRAME,7,117,250,
+                    33
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,21,250,
+                    89,WS_EX_CLIENTEDGE
+    LTEXT           "/vicep",IDC_VICEP_STATIC,102,131,22,8
+END
+
+IDD_ADMIN_INFO DIALOG DISCARDABLE  0, 0, 225, 159
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS(R) サーバーの構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,72,33,141,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,72,52,141,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,72,112,141,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "構成(&C)",IDOK,108,135,50,14,WS_DISABLED
+    PUSHBUTTON      "取消し",IDCANCEL,48,135,50,14
+    PUSHBUTTON      "ヘルプ",9,168,135,50,14
+    LTEXT           "以下の管理アカウント情報を入力してください:",
+                    IDC_ADMIN_INFO_PROMPT,21,20,196,10
+    LTEXT           "名前(&N):",IDC_ADMIN_NAME_LABEL,15,36,44,8
+    LTEXT           "パスワード(&P):",IDC_ADMIN_PW_LABEL,15,55,44,8
+    GROUPBOX        "アカウント名およびパスワード",IDC_ADMIN_INFO_FRAME,7,7,
+                    211,62
+    GROUPBOX        "システム制御サーバー",IDC_HOSTNAME_FRAME,7,76,211,54
+    LTEXT           "ホスト名(&H):",IDC_HOSTNAME_LABEL,15,115,44,8
+    LTEXT           "セルにシステム制御サーバーがある場合は、そのホスト名を下に入力してください。AFS 構成ファイルはこのサーバーを通じて更新されます。",
+                    IDC_HOSTNAME_PROMPT,10,87,205,22
+    LTEXT           "Translators: Please Read This! This dialog resizes at runtime.  In certain situaions, the dialog is resized and everything that is part of the bottom group box is hidden.",
+                    IDC_STATIC,0,150,225,9,NOT WS_VISIBLE
+END
+
+IDD_CONFIG_SERVER DIALOG DISCARDABLE  0, 0, 257, 87
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS(R) サーバーの構成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    PUSHBUTTON      "取消し",IDCANCEL,103,70,50,14
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,40,38,200,11
+    LTEXT           "完了率(%):",IDC_PERCENT_COMPLETE_LABEL,40,55,45,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "現行操作:",IDC_CURRENT_STEP_LABEL,40,4,108,9,NOT 
+                    WS_VISIBLE
+    LTEXT           "現行ステップの記述 - 実行時に設定",IDC_CURRENT_STEP,40,
+                    4,213,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,101,55,49,8,NOT WS_VISIBLE
+    ICON            "",IDC_LOGO,7,4,20,21
+    LTEXT           "このコンピューターの構成を開始するには、「構成」ボタンを押してください。実行する構成ステップを変更するには、「戻る」ボタンを押してください。",
+                    IDC_STATUS_MSG,40,18,213,44
+    PUSHBUTTON      "ログの表示(&V)",IDNEXT,160,70,61,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+END
+
+IDD_CELLSERVDB_ERRORS DIALOG DISCARDABLE  0, 0, 187, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CellServCB 更新エラー"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LISTBOX         IDC_LIST,7,32,173,121,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "了解",IDOK,22,162,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,75,162,50,14
+    PUSHBUTTON      "ヘルプ",9,130,162,50,14
+    LTEXT           "以下の AFS サーバーの CellServDB ファイルを自動的に更新できませんでした:",
+                    IDC_STATIC,7,7,173,18
+END
+
+IDD_SALVAGE DIALOG DISCARDABLE  0, 0, 273, 188
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "サルベージ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,79,97,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,133,97,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,187,97,50,14
+    CONTROL         "このファイル・サーバー上のパーティションをすべてサルベージ(&S)",
+                    IDC_SERVER,"Button",BS_AUTORADIOBUTTON,11,35,234,10
+    CONTROL         "選択したパーティション上のボリュームをすべてサルベージ(&P)",
+                    IDC_PARTITION,"Button",BS_AUTORADIOBUTTON,11,48,234,10
+    CONTROL         "選択したパーティション上の特定ボリュームをサルベージ(&V)",
+                    IDC_VOLUME,"Button",BS_AUTORADIOBUTTON,11,61,234,10
+    EDITTEXT        IDC_VOLUME_NAME,96,75,97,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "<< 拡張(&A) ",IDC_ADVANCED,7,97,50,14
+    GROUPBOX        "",IDC_STATIC,7,25,261,67
+    LTEXT           "ボリューム名(&N):",IDC_VOLUME_NAME_LABEL,27,76,60,8,
+                    WS_DISABLED
+    GROUPBOX        "拡張サルベージ・オプション",IDC_ADVANCED_FRAME,7,119,
+                    259,62
+    LTEXT           "一時ファイルのパス(&T):",IDC_TEMP_DIR_LABEL,17,165,89,8
+    EDITTEXT        IDC_LOG_FILE,113,147,133,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NUM_PROCESSES,188,130,21,12,ES_AUTOHSCROLL
+    LTEXT           "結果ログのファイル名(&L):",IDC_LOG_FILE_LABEL,17,149,89,
+                    8
+    EDITTEXT        IDC_TEMP_DIR,113,163,133,12,ES_AUTOHSCROLL
+    CONTROL         "並行サルベージ操作、プロセス数(&R):",
+                    IDC_NUM_PROCESSES_CHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,132,142,10
+    LTEXT           "サーバーまたはパーティション全体をサルベージすると、サーバーは一時的にオフラインになります。",
+                    IDC_STATIC,37,7,198,17
+    LTEXT           "注:",IDC_STATIC,9,7,15,8
+    LTEXT           "Translators: Please Read This! This dialog resizes at runtime.  In certain situaions, the dialog is resized and everything that is part of the bottom group box is hidden.",
+                    IDC_STATIC,0,180,243,8,NOT WS_VISIBLE
+END
+
+IDD_GET_PW DIALOG DISCARDABLE  0, 0, 197, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS プリンシパル・パスワード"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_PW,50,39,140,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,31,61,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,85,61,50,14
+    PUSHBUTTON      "ヘルプ",9,140,61,50,14
+    LTEXT           "AFS プリンシパル鍵は 3.5 以前の認証サーバーから取り出せません。AFS プリンシパル・パスワードを下に入力してください。",
+                    IDC_STATIC,7,7,183,21
+    LTEXT           "パスワード:",IDC_STATIC,7,41,37,8
+END
+
+IDD_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 337, 287
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "ボリュームのサルベージ - 結果"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_LOG,7,48,323,211,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "クローズ(&C)",IDC_CLOSE,225,266,53,14,WS_DISABLED
+    PUSHBUTTON      "ヘルプ",9,280,266,50,14
+    LTEXT           "<実行時に設定>",IDC_LOG_TITLE,9,36,317,8
+    ICON            "",IDC_LOGO,7,7,20,20
+    LTEXT           "<実行時に設定>",IDC_SALVAGE_STATUS,33,9,293,16
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 322
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 240
+        HORZGUIDE, 207
+    END
+
+    IDD_PARTITION_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 214
+    END
+
+    IDD_INTRO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 215
+    END
+
+    IDD_GET_CURRENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        VERTGUIDE, 35
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_SYS_CONTROL_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 214
+    END
+
+    IDD_CONFIG_SERVER_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        VERTGUIDE, 11
+        VERTGUIDE, 22
+        VERTGUIDE, 209
+    END
+
+    IDD_INFO_PAGE2_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 6
+        VERTGUIDE, 64
+        VERTGUIDE, 210
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 64
+        VERTGUIDE, 209
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE2_NOT_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 53
+        VERTGUIDE, 209
+        TOPMARGIN, 7
+    END
+
+    IDD_SERVICES_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 288
+        VERTGUIDE, 14
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_PARTITIONS_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 17
+        VERTGUIDE, 30
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_ADMIN_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 59
+        VERTGUIDE, 217
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_CONFIG_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 253
+        VERTGUIDE, 40
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 84
+    END
+
+    IDD_CELLSERVDB_ERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+        HORZGUIDE, 7
+    END
+
+    IDD_GET_PW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#define  AFS_VERINFO_FILE_DESCRIPTION ""AFS(R) 構成アプリケーションおよびウィザード""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "status_16.bmp"
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "status_256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DISABLED_DISK_DRIVE ICON    DISCARDABLE     "disabled.ico"
+IDI_DISK_DRIVE          ICON    DISCARDABLE     "disk_dri.ico"
+IDI_APP_ICON            ICON    DISCARDABLE     "app_icon.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FILE                ICON    DISCARDABLE     "file.ico"
+IDI_DISK_DRIVE_WITH_WARNING ICON    DISCARDABLE     "warn_dri.ico"
+IDI_AFS_DISK_DRIVE      ICON    DISCARDABLE     "afsdrive.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "次へ(&N) >"
+    IDS_FINISH              "終了(&F)"
+    IDS_HELP_TITLE          "ヘルプ・ボタンが押されました。"
+    IDS_HELP_DESC           "ヘルプは現時点では使用できません。"
+    IDS_CANCEL_DESC         "AFS クィック・スタート・ウィザードを取り消しますか?"
+    IDS_PARTITION_ALREADY_CREATED 
+                            "AFS パーティションがすでにこのマシンに存在します。"
+    IDS_NOT_A_FS_SERVER     "このマシンはファイル・サーバーとして構成されていません。ボリュームはファイル・サーバー・マシン上でのみ作成が可能です。"
+    IDS_ROOT_AFS_ALREADY_EXISTS "ルート・ボリュームがすでに存在します。"
+    IDS_NO_PARTITION_EXISTS "ルート・ボリュームを作成するパーティションが存在しません。ルート・ボリュームを作成するためには、パーティションが存在している必要があります。"
+    IDS_ALREADY_REPLICATED  "ルート・ボリュームはすでに複製されています。"
+    IDS_ROOT_AFS_DOESNT_EXIST 
+                            "ルート・ボリュームが存在しません。複製するためには、ルート・ボリュームが存在している必要があります。"
+    IDS_ALREADY_CONFIGURED  "このマシンはすでに AFS サーバーとして構成されています。"
+    IDS_NOTHING_TO_CONFIGURE "構成する対象が選択されていません。"
+    IDS_EXIT                "終了"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_FS_STEP       "ファイル・サーバーの開始中"
+    IDS_CANCEL_CONFIG_MSG   "この時点で取り消すと、コンピューターが部分的に AFS サーバーとして構成されたままになります。取り消しますか?"
+    IDS_WIZARD_APP_TITLE    "AFS(R) サーバー・クィック・スタート・ウィザード"
+    IDS_CANCEL_PENDING      "*** 取り消し保留中 - お待ちください... ***"
+    IDS_CHECK_FS_CONFIG     "ファイル・サーバー検査..."
+    IDS_CHECK_DB_CONFIG     "データベース・サーバー検査..."
+    IDS_CHECK_BAK_CONFIG    "バックアップ・サーバー検査..."
+    IDS_CHECK_PARTITION     "AFS パーティション検査..."
+    IDS_CHECK_ROOT_AFS      "ルート・ボリューム検査..."
+    IDS_CHECK_REP           "ルート・ボリューム複製検査..."
+    IDS_CANCEL_GET_CONFIG   "取り消し中...お待ちください..."
+    IDS_ALREADY_A_BACKUP_SERVER 
+                            "このマシンはすでにバックアップ・サーバーとして構成されています。"
+    IDS_NOT_A_DB_SERVER     "このマシンはデータベース・サーバーとして構成されていません。バックアップ・サーバーはデータベース・サーバー・マシン上でのみ実行が可能です。"
+    IDS_ALREADY_A_SYS_CONTROL_SERVER 
+                            "このマシンはすでにシステム制御サーバーとして構成されています。"
+    IDS_ALREADY_A_SYS_CONTROL_CLIENT 
+                            "このマシンはすでにシステム制御クライアントとして構成されています。"
+    IDS_SC_NOT_A_DB_OR_FS_SERVER 
+                            "このマシンはデータベースまたはファイル・サーバーとして構成されていません。コンピューターはデータベースまたはファイル・サーバー・マシンとして構成されている場合にのみ、システム制御マシンとして構成することができます。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE               "ボリューム"
+    IDS_NAME_OR_ERROR       "名前 (またはエラー・メッセージ)"
+    IDS_BIN_NOT_A_DB_OR_FS_SERVER 
+                            "このマシンはデータベースまたはファイル・サーバーとして構成されていません。コンピューターはデータベースまたはファイル・サーバー・マシンとして構成されている場合にのみ、バイナリー配布マシンとして構成することができます。"
+    IDS_CHECK_SCS           "システム制御サーバー検査..."
+    IDS_CHECK_SCC           "システム制御クライアント検査..."
+    IDS_SIZE                "サイズ"
+    IDS_ERROR_SEP           ",   "
+    IDS_MUST_CONFIG_FS      "セル内の最初の AFS サーバーであるため、ファイル・サービスはデフォルトで構成されます。"
+    IDS_MUST_CONFIG_DB      "セル内の最初の AFS サーバーであるため、データベース・サービスはデフォルトで構成されます。"
+    IDS_MUST_MAKE_PARTITION "セル内の最初の AFS サーバーであるため、パーティションの作成が必要です。"
+    IDS_MUST_CREATE_ROOT_AFS 
+                            "セル内の最初の AFS サーバーであるため、root.afs および root.cell ボリュームはデフォルトで作成されます。"
+    IDS_MUST_REPLICATE      "セル内の最初の AFS サーバーであるため、root.afs および root.cell ボリュームはデフォルトで複製されます。"
+    IDS_CHECK_AFS_CLIENT    "AFS クライアント・インストール検査..."
+    IDS_ERROR_HOST_NAME     "このマシンのホスト名を判別できませんでした。"
+    IDS_ERROR_DRIVE_COMPRESSED "ドライブが圧縮されています"
+    IDS_ERROR_CFG_HOST_OPEN "サーバー構成ライブラリーの初期化が失敗しました。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_CLIENT_STEP    "AFS クライアントを停止中です"
+    IDS_ERROR_LOCAL_HOST_NAME 
+                            "このマシンのローカル・ホスト名を判別できませんでした。"
+    IDS_GET_TOKENS_ERROR    "トークンの取得に失敗しました。入力したユーザー名とパスワードが正しいかを確かめてください。"
+    IDS_CANT_SALVAGE_WHEN_FS_NOT_CONFIGURED 
+                            "ファイル・サービスが始動されていないため、サルベージを実行できません。ファイル・サービスを始動してから、サルベージを再試行してください。"
+    IDS_SALVAGING           "サルベージが進行中です。お待ちください..."
+    IDS_CURRENT_SALVAGE_LOG "サルベージ・ログの現行コンテンツ:"
+    IDS_FINAL_SALVAGE_LOG   "サルベージ・ログの最終コンテンツ:"
+    IDS_SALVAGE_COMPLETE    "サルベージが完了しました。"
+    IDS_CANT_GET_SALVAGE_LOG "サルベージ・ログを検索できません。"
+    IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK 
+                            "サルベージ・ログをディスクに保管できません。"
+    IDS_VALIDATION_ERROR_TEMPLATE 
+                            "指定された %1 が無効です。%2 を再入力してください。"
+    IDS_CELL_NAME_VALIDATION_TYPE "セル名"
+    IDS_SERVER_NAME_VALIDATION_TYPE "サーバー名"
+    IDS_PASSWORD_VALIDATION_TYPE "パスワード"
+    IDS_UID_VALIDATION_TYPE "UID"
+    IDS_USER_NAME_VALIDATION_TYPE "ユーザー名"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_AFS_CLIENT_NOT_INSTALLED 
+                            "AFS クライアントがインストールされていません。AFS サーバーを構成するためには、AFS クライアントをインストールしておく必要があります。"
+    IDS_ERROR_AFS_CLIENT_CHECK 
+                            "AFS クライアントがインストールされているかどうかを判別できませんでした。"
+    IDS_ERROR_FS_IS_NOT_NTFS "ファイル・システムが NTFS ではありません"
+    IDS_ERROR_DRIVE_HAS_DATA "ドライブにデータが含まれています"
+    IDS_PARTITION_STEP_DESC "AFS パーティションを作成します"
+    IDS_ERROR_DRIVE_CONTAINS_NT 
+                            "ドライブに NT インストレーションが含まれています"
+    IDS_DB_STEP_DESC        "データベース・サービスを開始します"
+    IDS_FS_STEP_DESC        "ファイル・サービスを開始します"
+    IDS_SCC_STEP_DESC       "システム制御クライアントを開始します"
+    IDS_SCS_STEP_DESC       "システム制御サーバーを開始します"
+    IDS_ROOT_AFS_STEP_DESC  "ルート・ボリュームを作成します"
+    IDS_REP_STEP_DESC       "ルート・ボリュームを複製します"
+    IDS_PARTITIONS_PAGE_TITLE "パーティション"
+    IDS_CONFIGURE           "構成(&C)"
+    IDS_DB_AND_BK_STEP_DESC "データベース・サービス (バックアップ・サーバーを含む) を開始します"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_STEP      "AFS パーティションの作成中"
+    IDS_CONFIG_COMMON_FUNCS "すべてのサービスに共通の機能を構成中"
+    IDS_START_DB_STEP       "データベース・サービスの開始中"
+    IDS_START_SCC_STEP      "システム制御サービスをシステム制御クライアントとして開始中"
+    IDS_START_SCS_STEP      "システム制御サービスをシステム制御サーバーとして開始中"
+    IDS_CREATE_ROOT_AFS_STEP "root.afs ボリュームの作成中"
+    IDS_REP_STEP            "ルート・ボリュームの複製中"
+    IDS_START_AUTH_STEP     "このサーバーのトークンを取得中"
+    IDS_SERVICES_PAGE_TITLE "サービス"
+    IDS_CONFIG_SUCCEEDED    "構成が正常に行われました。"
+    IDS_CONFIG_CANCELED     "構成が取り消されました。"
+    IDS_CONFIG_FAILED       "構成が失敗しました。\r\n\r\n詳細ログ・ファイル %1 が %2 に作成されました。"
+    IDS_ERROR_NO_LICENSE_NUM "AFS ライセンス番号が見つかりませんでした。"
+    IDS_VERIFY_CLIENT_INSTALL_STEP "AFS クライアントのインストールを検査中"
+    IDS_SET_SERVER_LICENSE_STEP "このサーバーのライセンスを設定中"
+    IDS_DEFINE_CELL_NAME_STEP "このセルの名前を定義中"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFINE_CELL_MEMBERSHIP_STEP "このサーバーをセルのメンバーにしています"
+    IDS_START_BOS_SERVER_STEP "BOS サーバーの開始中"
+    IDS_START_AUTH_SERVER_STEP "認証サーバーの開始中"
+    IDS_CREATE_PRINCIPAL_AND_KEY_STEP "このサーバーのプリンシパルと鍵を作成中"
+    IDS_START_DB_AND_BK_STEP 
+                            "データベース・サービス (バックアップ・サーバーを含む) の開始中"
+    IDS_CREATE_ADMIN_PRINCIPAL_STEP "セル管理プリンシパルの作成中"
+    IDS_START_CLIENT_STEP   "AFS クライアントの開始中"
+    IDS_SET_ROOT_ACL_STEP   "root.afs ボリュームの ACL を設定中"
+    IDS_CREATE_ROOT_CELL_STEP "root.cell ボリュームの作成中"
+    IDS_MOUNT_ROOT_CELL_STANDARD_STEP 
+                            "標準マウント・ポイントを使用して root.cell ボリュームをマウント中"
+    IDS_SET_ROOT_CELL_ACL_STEP "root.cell ボリュームの ACL を設定中"
+    IDS_MOUNT_ROOT_CELL_RW_STEP 
+                            "読み取り/書き込みマウント・ポイントを使用して root.cell ボリュームをマウント中"
+    IDS_ENABLE_AUTH_CHECKING_STEP "認証チェックを使用可能にしています"
+    IDS_OBTAIN_ADMIN_CREDS_STEP "管理トークンの取得中"
+    IDS_RESTART_SERVERS_STEP 
+                            "このマシンのすべてのサーバーを認証サーバーとして再始動中"
+    IDS_ALREADY_A_FS_SERVER "このマシンはすでにファイル・サーバーとして構成されています。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALREADY_A_DB_SERVER "このマシンはすでにデータベース・サーバーとして構成されています。"
+    IDS_INTRO_PAGE          "紹介"
+    IDS_INFO_PAGE           "セルおよびサーバー情報"
+    IDS_FS_PAGE             "ファイル・サービス"
+    IDS_DB_PAGE             "データベース・サービス"
+    IDS_CFG_TOOL_APP_TITLE  "AFS(R) サーバーの構成"
+    IDS_BK_PAGE             "バックアップ・サーバー"
+    IDS_ROOT_AFS_PAGE       "ルート AFS ボリューム"
+    IDS_NAME                "名前"
+    IDS_REP_PAGE            "複製"
+    IDS_SC_PAGE             "システム制御サービス"
+    IDS_CONFIG_PAGE         "システムの構成"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_PAGE      "AFS パーティション"
+    IDS_GRAPHIC_FONT        "ＭＳ Ｐゴシック, 9, B"
+    IDS_CURRENT_STEP        "現行ステップ:"
+    IDS_ADD_TO_CELLSERVDB_STEP "このサーバーを CellServDB に追加中"
+    IDS_RESTART_ALL_DB_SERVERS_STEP 
+                            "セル内のすべてのデータベース・サーバーを再始動中"
+    IDS_CONFIG_SUCCEEDED_NEED_CELLSERVDB_UPDATE 
+                            "構成が正常に行われました。注: セル内のすべての AFS クライアントの CellServDB ファイルが更新されていなければなりません。セルを他のサイトで使用可能にする場合は、データベース・サーバーの最新リストを AFS 製品サポートに提供してください。"
+    IDS_SYS_CONTROL_SERVER_ONLY_MSG 
+                            "このマシンをシステム制御サーバーとして構成しますか?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DONT_CONFIG_SYS_CONTROL_SERVER_MSG 
+                            "システム制御サーバーとして構成しません(&O)。"
+    IDS_CLIENT_CELL_WILL_CHANGE 
+                            "AFS サーバーの構成では、AFS クライアントがサーバーと同じセルに構成されていることが必要です。これは自動的に行われます。"
+    IDS_INFO_PAGE2          "管理情報"
+    IDS_CONFIG_SUCCEEDED_FIRST_SERVER 
+                            "構成が正常に行われました。\r\n\r\n注:  セルを他のサイトで使用可能にする場合は、データベース・サーバーのリストを AFS 製品サポートに提供してください。"
+    IDS_CONFIG_SCS          "セルのシステム制御サーバーとして構成。"
+    IDS_CONFIG_INTO_CELL_MSG "このホストをセルに構成します"
+    IDS_VIEW_LOG            "ログの表示(&V)"
+    IDS_VIEW_LOG_ERROR      "ログ・ファイルを表示できません"
+    IDS_ERROR_NO_LOG_FILE   "ログ・ファイルが存在しません。"
+    IDS_UPDATING_CELLSERVDB_HOST_SUCCEEDED 
+                            "ホストの CellServDB が更新されました "
+    IDS_UPDATING_CELLSERVDB_HOST_FAILED 
+                            "ホストの CellServDB の更新が失敗しました "
+    IDS_CELL_NAME_LEN_ERROR "入力したセル名が長すぎます。セル名は 64 文字以内で指定してください。"
+    IDS_CONFIG_CHECK_FAILED "このマシンの現行構成を判別できませんでした。"
+    IDS_YES                 "はい"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO                  "いいえ"
+    IDS_FREE                "空きスペース"
+    IDS_TOTAL               "合計サイズ"
+    IDS_DRIVE2              "ドライブ"
+    IDS_SERVICE_STATUS      "状況"
+    IDS_SERVICE             "サービス"
+    IDS_FS_RUNNING          "ファイル・サービスは現在実行中です。"
+    IDS_FS_STOPPED          "ファイル・サービスは現在実行されていません。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DB_RUNNING          "データベース・サービスは現在実行中です。"
+    IDS_DB_STOPPED          "データベース・サービスは現在実行されていません。"
+    IDS_BK_RUNNING          "バックアップ・サービスは現在実行中です。"
+    IDS_BK_STOPPED          "バックアップ・サービスは現在実行されていません。"
+    IDS_SCS_STOPPED         "システム制御サーバーは現在実行されていません。"
+    IDS_SCC_STOPPED         "システム制御クライアントは現在実行されていません。"
+    IDS_FS_HOW_TO_RUN       "ファイル・サービスを開始するには、上のボックスをチェックしてください。"
+    IDS_FS_HOW_TO_STOP      "ファイル・サービスを停止するには、上のボックスをチェック解除してください。"
+    IDS_DB_HOW_TO_RUN       "データベース・サービスを開始するには、上のボックスをチェックしてください。"
+    IDS_DB_HOW_TO_STOP      "データベース・サービスを停止するには、上のボックスをチェック解除してください。"
+    IDS_BK_HOW_TO_RUN       "バックアップ・サービスを開始するには、上のボックスをチェックしてください。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BK_HOW_TO_STOP      "バックアップ・サービスを停止するには、上のボックスをチェック解除してください。"
+    IDS_SCS_HOW_TO_RUN      "システム制御サーバーを開始するには、上のボックスをチェックしてください。"
+    IDS_SCS_HOW_TO_STOP     "システム制御サーバーを停止するには、上のボックスをチェック解除してください。"
+    IDS_DB_PARTIAL_CONFIG   "データベース・サービスは部分的に構成されています。"
+    IDS_DB_DETAILS          "詳しくは「詳細」ボタンを押してください。"
+    IDS_BK_DISABLED         "バックアップ・サービスが使用不可になっています。"
+    IDS_BK_ENABLE           "バックアップ・サービスを使用可能にするには、データベース・サービスを実行する必要があります。"
+    IDS_SC_DISABLED         "このサーバーは使用不可になっています。"
+    IDS_SC_ENABLE           "このサーバーを使用可能にするには、ファイル・サービスまたはデータベース・サービスを実行する必要があります。"
+    IDS_FS_WILL_RUN         "ファイル・サービスが開始されます。"
+    IDS_FS_WILL_STOP        "ファイル・サービスが停止されます。"
+    IDS_DB_WILL_RUN         "データベース・サービスが開始されます。"
+    IDS_DB_WILL_STOP        "データベース・サービスが停止されます。"
+    IDS_BK_WILL_RUN         "バックアップ・サービスが開始されます。"
+    IDS_BK_WILL_STOP        "バックアップ・サービスが停止されます。"
+    IDS_SCS_WILL_RUN        "システム制御サーバーが開始されます。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCS_WILL_STOP       "システム制御サーバーが停止されます。"
+    IDS_ERROR_DRIVE_ALREADY_HAS_AFS "ドライブはすでに AFS パーティションです"
+    IDS_VOLUME_HAS_NO_NAME  "<ボリュームに名前がありません>"
+    IDS_PARTITION_CREATED   "新規 AFS パーティションが正常に作成されました。"
+    IDS_PARTITION_EXISTS    "入力したパーティション名はすでに他のパーティションに使用されています。"
+    IDS_SCS_RUNNING         "システム制御サーバーは現在実行中です。"
+    IDS_WARNING_DRIVE_HAS_RECYCLE_BIN 
+                            "このドライブにはごみ箱のみが含まれています。"
+    IDS_SCC_WILL_RUN        "システム制御クライアントが開始されます。"
+    IDS_SCC_WILL_STOP       "システム制御クライアントが停止されます。"
+    IDS_SCC_RUNNING         "システム制御クライアントは現在実行中です。"
+    IDS_SCC_HOW_TO_RUN      "システム制御クライアントを開始するには、上のボックスをチェックしてください。"
+    IDS_SCC_HOW_TO_STOP     "システム制御クライアントを停止するには、上のボックスをチェック解除してください。"
+    IDS_SCS_ENABLE          "このサーバーを使用可能にするには、システム制御クライアントの実行を停止する必要があります。"
+    IDS_SCC_ENABLE          "このサーバーを使用可能にするには、システム制御サーバーの実行を停止する必要があります。"
+    IDS_UNCONFIG_DB_STEP    "データベース・サービスの構成解除"
+    IDS_UNCONFIG_DB_STEP_DESC "データベース・サービスを構成解除します"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNCONFIG_DB_AND_BK_STEP 
+                            "データベース・サービス (およびバックアップ・サーバー) の構成解除"
+    IDS_UNCONFIG_DB_AND_BK_STEP_DESC 
+                            "データベース・サービス (およびバックアップ・サーバー) を構成解除します"
+    IDS_UNCONFIG_BK_STEP    "バックアップ・サーバーの構成解除"
+    IDS_UNCONFIG_BK_STEP_DESC "バックアップ・サーバーを構成解除します"
+    IDS_UNCONFIG_FS_STEP    "ファイル・サービスの構成解除"
+    IDS_UNCONFIG_FS_STEP_DESC "ファイル・サービスを構成解除します"
+    IDS_UNCONFIG_SCS_STEP   "システム制御サーバーの構成解除"
+    IDS_UNCONFIG_SCS_STEP_DESC "システム制御サーバーを構成解除します"
+    IDS_UNCONFIG_SCC_STEP   "システム制御クライアントの構成解除"
+    IDS_UNCONFIG_SCC_STEP_DESC "システム制御クライアントを構成解除します"
+    IDS_INVALIDATE_CONFIG_INFO_STEP "このマシンの構成情報を無効にする"
+    IDS_CLOSE               "クローズ(&C)"
+    IDS_CELLSERVDB_UPDATE_ERR_MSG 
+                            "CellServDB ファイルが下の AFS サーバーで更新できませんでした。これは重大なエラーではありません。\r\n"
+    IDS_DELETE_PARTITION_PROMPT "パーティション '%1' を削除しますか?"
+    IDS_INVALIDATE_CFG_INFO "現在このコンピューターで実行中の AFS サーバー・プロセスはありません。このマシンから構成情報を削除しますか?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CELL_IS_GONE_MUST_EXIT 
+                            "セルが存在しません。AFS 構成アプリケーションは、AFS セルに構成済みであるサーバー・マシンの構成にのみ使用できます。AFS 構成ウィザードを使用して新しいセルを開始することができます。"
+    IDS_CFG_MAN_CANT_CONTINUE 
+                            "AFS 構成アプリケーションを終了します。これは AFS サーバーとして構成済みのマシンでのみ実行が可能です。このマシンを AFS サーバーとしてもう一度構成するには、AFS 構成ウィザードを実行してください。"
+    IDS_CONFIG_INFO_INVALIDATED 
+                            "このマシンは AFS サーバーとして構成されていません。AFS 構成アプリケーションは、AFS サーバー・マシンの構成にのみ使用できます。AFS 構成ウィザードを使用して、このマシンを AFS サーバーとして再構成することができます。"
+    IDS_GET_TOKENS_FAILED   "指定されたセルのトークンを取得できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_BK_STEP       "バックアップ・サーバーの開始"
+    IDS_BK_STEP_DESC        "バックアップ・サーバーを開始します"
+    IDS_CONFIG_ERROR        "構成エラーが起きました"
+    IDS_CREATE_PARTITION_ERROR "パーティションを作成できません"
+    IDS_REMOVE_PARTITION_ERROR "パーティションを削除できません"
+    IDS_READ_PARTITIONS_ERROR "パーティション・テーブルを読み取れません"
+    IDS_CELLSERVDB_UPDATE_PROBLEM 
+                            "\r\nCellServDB 更新プロセスが予期せず終了しました。サーバーのすべては更新されていません。"
+    IDS_GET_PARTITION_LIST_ERROR 
+                            "このサーバーのパーティションを判別できません"
+    IDS_EXPORTED            "エクスポート済み"
+    IDS_CANT_DELETE_EXPORTED_PARTITION 
+                            "ファイル・サービスの実行中にエクスポートされたパーティションを削除することはできません。このパーティションを削除する前にファイル・サービスを停止してください。"
+    IDS_CHECK_CONFIG_INFO   "有効な構成情報の検査中です..."
+    IDS_ERROR_CFG_HOST_CLOSE 
+                            "サーバー構成ライブラリーのクローズに失敗しました。"
+    IDS_FAILED_OPEN_CELL    "セルのオープンに失敗しました。"
+    IDS_FAILED_OPEN_NULL_CELL "NULL セル・ハンドルのオープンに失敗しました"
+    IDS_CREATE_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "ルート・ボリュームが存在しない場合は作成しますか?"
+    IDS_REP_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "ルート・ボリュームが複製されていない場合は複製しますか?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TRANSARC_AFS_SERVER "AFS サーバー"
+    IDS_CANT_INIT_ADMIN_LIBS 
+                            "このアプリケーションを実行できません。ライブラリー初期化が失敗しました。"
+    IDS_CANT_OPEN_LOG_FILE  "ログ・ファイルをオープンできません。"
+    IDS_NEED_CLIENT_INFO    "AFS クライアントがこのコンピューターで構成されていないため、AFS 構成アプリケーションを実行できません。この状態で AFS 構成ウィザードを使用できます。AFS 構成ウィザードを実行しますか?"
+    IDS_NEED_SERVER_INFO    "このコンピューターは AFS サーバーとして構成されていません。初めて AFS サーバーを構成するには、AFS 構成ウィザードを使用する必要があります。AFS 構成アプリケーションはその後で使用可能になります。AFS 構成ウィザードを実行してこのコンピューターを初期構成しますか?"
+    IDS_ADVANCED_OPEN       "<< 拡張(&A)"
+    IDS_ADVANCED_CLOSED     "拡張(&A) >>"
+    IDS_BOS_OPEN_FAILED     "サーバーに接続できません (bos オープンが失敗)。"
+    IDS_SALVAGE_ERROR       "サルベージ操作が失敗しました。"
+    IDS_INVALID_NUM_SALVAGE_PROCESSSES 
+                            "指定したサルベージ・プロセス数が無効です。サルベージ・プロセス数は 1 から 32 の範囲でなければなりません。"
+    IDS_WRONG_CELL          "前のステップで、構成情報を検索するサーバーを指定しました。指定したサーバーは、結合するセルに属していません。"
+    IDS_CELLSERVDB_UPDATE_ERRORS_ARE_IN_LOG_FILE 
+                            "セル内のいくつかのサーバー上の CellServDB ファイルが更新できませんでした。更新されたサーバーと更新されていないサーバーのリストは、次のファイルに保管された構成ログで見ることができます。 "
+    IDS_GET_CREDENTIALS_STEP "管理トークンの取得"
+    IDS_MUST_ENTER_SCS_NAME "構成を開始する前に、システム制御マシン名を入力してください。"
+    IDS_NOT_SAME_CELL       "AFS クライアントが AFS サーバー以外のセルに構成されています。AFS サーバーを構成する前に、まず AFS クライアントをサーバーのセルに再構成してください。"
+    IDS_LAST_DB_SERVER      "このマシンはセル内で実行されている最後のデータベース・サーバーです。続行してこのマシンのデータベース・サービスを構成解除した場合、セルは存在しなくなり、このマシンで実行中の他の AFS サービスはすべて構成解除されます。続行しますか?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BAD_PW              "AFS プリンシパルのパスワードが無効です。"
+    IDS_ERROR_CLIENT_VERSION 
+                            "このコンピューターの AFS クライアントのバージョンと、AFS サーバーとの互換性がありません。AFS サーバーは少なくとも AFS クライアントのバージョン 3.5 を必要とします。"
+    IDS_CANT_MAP_ROOT_AFS   "ルート・ボリュームの ACL を設定するには、ドライブ名を AFS にマッピングする必要があります。現在使用可能なドライブ名がありません。ドライブ名を解放して、「了解」を押してください。"
+    IDS_NO_MSG_STEP         " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_NAME_VALIDATION_TYPE "パーティション名"
+    IDS_VOLUME_NAME_VALIDATION_TYPE "ボリューム名"
+    IDS_NUM_SALVAGE_PROCS_VALIDATION_TYPE "サルベージ・プロセス数"
+    IDS_PATH_NAME_VALIDATION_TYPE "パス名"
+    IDS_FILE_NAME_VALIDATION_TYPE "ファイル名"
+    IDS_GENERIC_VALIDATION_TYPE "値"
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
