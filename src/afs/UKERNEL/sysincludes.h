@@ -21,7 +21,9 @@
 #include  <limits.h>
 #include  <assert.h>
 #include  <stdarg.h>
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
 #include <setjmp.h>
+#endif
 
 #ifdef AFS_USR_SUN5_ENV
 #include  <signal.h>
@@ -120,6 +122,7 @@
 #define AFS_USR_UNDEF_KERNEL_ENV 1
 #endif
 #include  <errno.h>
+#include  <setjmp.h>
 #include  <sys/param.h>
 #include  <sys/types.h>
 #include  <sys/socket.h>

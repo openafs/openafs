@@ -1,0 +1,30 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include ../../config/Makefile.version
+
+all: afssettings
+
+afssettings: afssettings.m 
+	${CC} ${CFLAGS} -o afssettings afssettings.m -framework Foundation
+
+install: \
+	${DESTDIR}${sbindir}/afssettings
+
+dest: \
+	${DEST}/etc/afssettings
+
+${DESTDIR}${sbindir}/afssettings: afssettings
+	${INSTALL} -s $? $@
+
+${DEST}/etc/afssettings: afssettings
+	${INSTALL} -s $? $@
+
+clean:
+	$(RM) -f *.o core afssettings AFS_component_version_number.c 

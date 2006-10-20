@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.12 2006/06/15 15:13:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.13 2006/10/11 11:29:02 jaltman Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -301,7 +301,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 			maskBuffer[count] = a->sin_addr.s_addr;
 		    else
 			maskBuffer[count] = htonl(0xffffffff);
-		    memset(&ifr, sizeof(ifr), 0);
+		    memset(&ifr, 0, sizeof(ifr));
 		    ifr.ifr_addr.sa_family = AF_INET;
 		    strncpy(ifr.ifr_name, sdl->sdl_data, sdl->sdl_nlen);
 		    if (ioctl(s, SIOCGIFMTU, (caddr_t) & ifr) < 0)

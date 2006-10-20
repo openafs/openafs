@@ -1,0 +1,14 @@
+Following are the md5 hashes of all the cellservdb's shipped with
+macos x openafs releases prior to 1.2.7. No newer files need to be 
+added to this file, since the way CellServDB files are managed changed
+in 1.2.7
+MD5 (1.0.4/CellServDB) = 4ac0ebd85f6790cdd64d61ff85e5a3f7
+MD5 (1.1.0/CellServDB) = 122a61939725a7b7175ab79816cf4ebf
+MD5 (1.1.1/CellServDB) = 122a61939725a7b7175ab79816cf4ebf
+MD5 (1.2.0/CellServDB) = 122a61939725a7b7175ab79816cf4ebf
+MD5 (1.2.1/CellServDB) = 122a61939725a7b7175ab79816cf4ebf
+MD5 (1.2.2a/CellServDB) = f19fe18f0f4fc3910a0354bfd479b217
+MD5 (1.2.3/CellServDB) = f19fe18f0f4fc3910a0354bfd479b217
+MD5 (1.2.4/CellServDB) = ad94cdff3fcfbd1763099032dd3a0c84
+MD5 (1.2.5/CellServDB) = ad94cdff3fcfbd1763099032dd3a0c84
+MD5 (1.2.6/CellServDB) = 66ad76e99c0f88a7e113c1ccce83819a

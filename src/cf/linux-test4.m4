@@ -644,3 +644,36 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
     AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
   fi])
+
+AC_DEFUN([LINUX_DO_SYNC_READ], [
+  AC_MSG_CHECKING([for linux do_sync_read()])
+  AC_CACHE_VAL([ac_cv_linux_do_sync_read], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[do_sync_read(NULL, NULL, 0, NULL);],
+      ac_cv_linux_do_sync_read=yes,
+      ac_cv_linux_do_sync_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_do_sync_read)
+  if test "x$ac_cv_linux_do_sync_read" = "xyes"; then
+    AC_DEFINE([DO_SYNC_READ], 1, [define if your kernel has do_sync_read()])
+  fi])
+
+AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
+  AC_MSG_CHECKING([for linux generic_file_aio_read()])
+  AC_CACHE_VAL([ac_cv_linux_generic_file_aio_read], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[generic_file_aio_read(NULL, NULL, 0, 0);],
+      ac_cv_linux_generic_file_aio_read=yes,
+      ac_cv_linux_generic_file_aio_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
+  if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
+    AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
+  fi])
+

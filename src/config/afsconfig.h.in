@@ -37,6 +37,9 @@
 /* define if your dops.d_revalidate takes a nameidata argument */
 #undef DOP_REVALIDATE_TAKES_NAMEIDATA
 
+/* define if your kernel has do_sync_read() */
+#undef DO_SYNC_READ
+
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
@@ -60,6 +63,9 @@
 
 /* define if you want to want listvol switch */
 #undef FULL_LISTVOL_SWITCH
+
+/* define if your kernel has generic_file_aio_read() */
+#undef GENERIC_FILE_AIO_READ
 
 /* define if your get_sb_nodev needs a struct vfsmount argument */
 #undef GET_SB_HAS_STRUCT_VFSMOUNT

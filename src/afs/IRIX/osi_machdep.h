@@ -160,7 +160,7 @@ extern flid_t osi_flid;
 #else
 #define AFS_GLOCK() AFS_MUTEX_ENTER(&afs_global_lock)
 #endif
-#define AFS_GUNLOCK()  (AFS_ASSERT_GLOCK(),  mutex_exit(&afs_global_lock))
+#define AFS_GUNLOCK()  { AFS_ASSERT_GLOCK(); mutex_exit(&afs_global_lock); }
 #define ISAFS_GLOCK() mutex_mine(&afs_global_lock)
 #else
 extern long afs_global_owner;
@@ -170,7 +170,7 @@ extern long afs_global_owner;
     afs_global_owner = osi_ThreadUnique(); \
   MACRO_END
 #define AFS_GUNLOCK() \
-    (AFS_ASSERT_GLOCK(), afs_global_owner = 0, mutex_exit(&afs_global_lock))
+    { AFS_ASSERT_GLOCK(); afs_global_owner = 0; mutex_exit(&afs_global_lock); }
 #define ISAFS_GLOCK() (osi_ThreadUnique() == afs_global_owner)
 #endif /* AFS_SGI64_ENV */
 #else /* MP */
