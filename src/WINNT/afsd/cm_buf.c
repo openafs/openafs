@@ -169,9 +169,7 @@ void buf_IncrSyncer(long parm)
              * a log page at any given instant.
              */
             cm_InitReq(&req);
-#ifdef NO_BKG_RETRIES
             req.flags |= CM_REQ_NORETRY;
-#endif
 	    wasDirty |= buf_CleanAsync(bp, &req);
 
             /* now advance to the next buffer; the allp chain never changes,
@@ -535,7 +533,7 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
  * at any given time, and also ensures that the log is forced sufficiently far,
  * if this buffer contains logged data.
  *
- * Returns one if the buffer was dirty.
+ * Returns non-zero if the buffer was dirty.
  */
 long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 {
@@ -582,6 +580,13 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
         /* write buffer to disk cache (synchronous for now) */
         diskcache_Update(bp->dcp, bp->datap, cm_data.buf_blockSize, bp->dataVersion);
 #endif /* DISKCACHE95 */
+
+	/* if we get here and retries are not permitted 
+	 * then we need to exit this loop regardless of 
+	 * whether or not we were able to clear the dirty bit
+	 */
+	if (reqp->flags & CM_REQ_NORETRY)
+	    break;
     };
 
     /* do logging after call to GetLastError, or else */
@@ -1150,6 +1155,8 @@ long buf_CleanAndReset(void)
 
                 /* now no locks are held; clean buffer and go on */
                 cm_InitReq(&req);
+		req.flags |= CM_REQ_NORETRY;
+
 		buf_CleanAsync(bp, &req);
 		buf_CleanWait(NULL, bp);
 

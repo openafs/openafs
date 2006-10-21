@@ -9,6 +9,7 @@
 #include <setjmp.h>
 #include "afsd.h"
 #include "afsd_init.h"
+#include "lanahelper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
@@ -83,7 +84,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     afsi_log("--- end   dump ---");
     
 #ifdef DEBUG
-    DebugBreak();	
+	if (IsDebuggerPresent())
+		DebugBreak();	
 #endif
 
     SetEvent(WaitToTerminate);
@@ -174,7 +176,8 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
             afsi_log("SERVICE_CONTROL_SHUTDOWN");
 
         /* Write all dirty buffers back to server */
-        buf_CleanAndReset();
+	if ( !lana_OnlyLoopback() )
+	    buf_CleanAndReset();
 
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -242,7 +245,8 @@ afsd_ServiceControlHandlerEx(
         SetServiceStatus(StatusHandle, &ServiceStatus);
 
         /* Write all dirty buffers back to server */
-        buf_CleanAndReset();
+	if ( !lana_OnlyLoopback() )
+	    buf_CleanAndReset();
 
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -298,13 +302,17 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMQUERYSUSPEND:       
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND"); 
                     /* Write all dirty buffers back to server */
-                    buf_CleanAndReset();
+		    if ( !lana_OnlyLoopback() )
+			buf_CleanAndReset();
+                    afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMQUERYSTANDBY:                                                         
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY"); 
                     /* Write all dirty buffers back to server */
-                    buf_CleanAndReset();
+		    if ( !lana_OnlyLoopback() ) 
+			buf_CleanAndReset();
+                    afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete"); 
                     dwRet = NO_ERROR;                                                             
                     break;                                                                        
 							                                                                  

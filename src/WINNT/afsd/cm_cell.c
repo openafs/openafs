@@ -206,7 +206,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
     return cp;
 }
 
-cm_cell_t *cm_FindCellByID(long cellID)
+cm_cell_t *cm_FindCellByID(afs_int32 cellID)
 {
     cm_cell_t *cp;
 

@@ -382,7 +382,7 @@ extern "C" lana_number_t lana_FindLoopback(void)
         return LANA_INVALID;
     }
     for (i = 0; i < lana_list.length; i++) {
-	if (lana_IsLoopback(lana_list.lana[i])) {
+	if (lana_IsLoopback(lana_list.lana[i],TRUE)) {
 	    // Found one, return it.
 #ifndef NOLOGGING
 	    afsi_log("lana_FindLoopback: Found LAN adapter %d",
@@ -415,7 +415,7 @@ extern "C" BOOL lana_OnlyLoopback(void)
         return FALSE;
     }
     for (i = 0; i < lana_list.length; i++) {
-	if (!lana_IsLoopback(lana_list.lana[i])) {
+	if (!lana_IsLoopback(lana_list.lana[i],FALSE)) {
 	    // Found one non-Loopback adapter
 	    return FALSE;
 	}
@@ -427,7 +427,8 @@ extern "C" BOOL lana_OnlyLoopback(void)
 // Is the given lana a Windows Loopback Adapter?
 // TODO: implement a better check for loopback
 // TODO: also check for proper bindings (IPv4)
-extern "C" BOOL lana_IsLoopback(lana_number_t lana)
+// For VMWare we only check the first five octets since the last one may vary
+extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
 {
     NCB ncb;
     struct {
@@ -436,6 +437,7 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
     } astat;
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     unsigned char kVista_WLA_MAC[6] = { 0x7F, 0x00, 0x00, 0x01, 0x4f, 0x50 };
+    unsigned char kVMWare_MAC[5] = { 0x00, 0x50, 0x56, 0xC0, 0x00 };
     int status;
     HKEY hkConfig;
     LONG rv;
@@ -451,21 +453,23 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
             return TRUE;
     }
 
-    // Reset the adapter: in Win32, this is required for every process, and
-    // acts as an init call, not as a real hardware reset.
-    memset(&ncb, 0, sizeof(ncb));
-    ncb.ncb_command = NCBRESET;
-    ncb.ncb_callname[0] = 100;
-    ncb.ncb_callname[2] = 100;
-    ncb.ncb_lana_num = lana;
-    status = Netbios(&ncb);
-    if (status == 0)
-        status = ncb.ncb_retcode;
-    if (status != 0) {
+    if (reset) {
+	// Reset the adapter: in Win32, this is required for every process, and
+	// acts as an init call, not as a real hardware reset.
+	memset(&ncb, 0, sizeof(ncb));
+	ncb.ncb_command = NCBRESET;
+	ncb.ncb_callname[0] = 100;
+	ncb.ncb_callname[2] = 100;
+	ncb.ncb_lana_num = lana;
+	status = Netbios(&ncb);
+	if (status == 0)
+	    status = ncb.ncb_retcode;
+	if (status != 0) {
 #ifndef NOLOGGING
-       afsi_log("NCBRESET failed: lana %u, status %ld", lana, status);
+	    afsi_log("NCBRESET failed: lana %u, status %ld", lana, status);
 #endif
-        return FALSE;
+	    return FALSE;
+	}
     }
 
     // Use the NCBASTAT command to get the adapter address.
@@ -485,7 +489,8 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
         return FALSE;
     }
     return (memcmp(astat.status.adapter_address, kWLA_MAC, 6) == 0 ||
-	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0);
+	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0 ||
+	    memcmp(astat.status.adapter_address, kVMWare_MAC, 5) == 0);
 }
 
 // Get the netbios named used/to-be-used by the AFS SMB server.
@@ -588,7 +593,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	}
 
 	if(regNbName[0] &&
-       (regLana >=0 && lana_IsLoopback((lana_number_t) regLana))) {
+       (regLana >=0 && lana_IsLoopback((lana_number_t) regLana,FALSE))) {
         strncpy(nbName,regNbName,15);
         nbName[16] = 0;
         strupr(nbName);

@@ -1205,7 +1205,7 @@ int afsd_InitCM(char **reasonP)
               code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
     if (code != 0 && !cm_freelanceEnabled) 
     {
-        *reasonP = "can't find root cell name in afsd.ini";
+        *reasonP = "can't find root cell name in CellServDB";
         return -1;
     }   
     else if (cm_freelanceEnabled)
@@ -1518,6 +1518,9 @@ OpenDumpFile(void)
 void 
 GenerateMiniDump(PEXCEPTION_POINTERS ep)
 {
+	if (IsDebuggerPresent())
+		return;
+
     if (ep == NULL) 
     {
         // Generate exception to get proper context in dump
