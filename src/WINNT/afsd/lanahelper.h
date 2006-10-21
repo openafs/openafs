@@ -59,7 +59,7 @@ extern "C" {
 
     BOOL lana_OnlyLoopback(void);
 
-    BOOL lana_IsLoopback(lana_number_t lana);
+    BOOL lana_IsLoopback(lana_number_t lana, BOOL reset);
 
     long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags);
 

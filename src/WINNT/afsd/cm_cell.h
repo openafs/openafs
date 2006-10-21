@@ -19,7 +19,7 @@
 /* a cell structure */
 typedef struct cm_cell {        
     afs_uint32  magic;
-    long cellID;		        /* cell ID */
+    afs_int32 cellID;		        /* cell ID */
     struct cm_cell *nextp;	        /* locked by cm_cellLock */
     char name[CELL_MAXNAMELEN];         /* cell name; never changes */
     cm_serverRef_t *vlServersp;         /* locked by cm_serverLock */
@@ -44,7 +44,7 @@ extern cm_cell_t *cm_GetCell(char *namep, long flags);
 
 extern cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags);
 
-extern cm_cell_t *cm_FindCellByID(long cellID);
+extern cm_cell_t *cm_FindCellByID(afs_int32 cellID);
 
 extern void cm_ChangeRankCellVLServer(cm_server_t       *tsp);
 

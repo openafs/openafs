@@ -24,7 +24,7 @@ typedef struct cm_conn {
         struct rx_connection *callp;	/* locked by mx */
         struct cm_user *userp;		/* locked by mx; a held reference */
         osi_mutex_t mx;			/* mutex for some of these fields */
-        unsigned long refCount;			/* locked by cm_connLock */
+        unsigned long refCount;		/* locked by cm_connLock */
 	int ucgen;			/* ucellp's generation number */
         long flags;			/* locked by mx */
 	int cryptlevel;			/* encrytion status */

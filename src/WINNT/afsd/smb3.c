@@ -2867,12 +2867,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
 	smb_fid_t *fidp = smb_FindFIDByScache(vcp, scp);
-	if (fidp) {
-	    lock_ObtainMutex(&fidp->mx);
-	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
-	    lock_ReleaseMutex(&fidp->mx);
-	    smb_ReleaseFID(fidp);
-	}
 
         qpi.u.QPfileStandardInfo.allocationSize = scp->length;
         qpi.u.QPfileStandardInfo.endOfFile = scp->length;
@@ -2883,6 +2877,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	      scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 	      scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         qpi.u.QPfileStandardInfo.reserved = 0;
+
+    	if (fidp) {
+	    lock_ReleaseMutex(&scp->mx);
+	    lock_ObtainMutex(&fidp->mx);
+	    lock_ObtainMutex(&scp->mx);
+	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
+	    lock_ReleaseMutex(&fidp->mx);
+	    smb_ReleaseFID(fidp);
+	}
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         qpi.u.QPfileEaInfo.eaSize = 0;
