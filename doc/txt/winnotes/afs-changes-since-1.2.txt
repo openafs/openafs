@@ -1,3 +1,14 @@
+Since 1.5.9:
+
+ * optimize dirty buffer flushes in response to suspend operations
+   do not flush if only loopback adapter is installed
+   do no retry dirty buffer writes
+
+ * do not reset netbios when performing loopback checks.  doing
+   so will break the existing lana bind
+
+ * remove a deadlock in smb3.c QPathInfo 
+
 Since 1.5.8:
  * Add NetIDMgr AFS Plug-in
 
