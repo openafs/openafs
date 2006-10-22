@@ -2648,6 +2648,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_user_t *userp;
     cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
+    int scp_mx_held = 0;
     int delonclose = 0;
     long code = 0;
     char *pathp;
@@ -2808,6 +2809,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #endif /* DFS_SUPPORT */
 
     lock_ObtainMutex(&scp->mx);
+    scp_mx_held = 1;
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) goto done;
@@ -2873,8 +2875,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     	if (fidp) {
 	    lock_ReleaseMutex(&scp->mx);
+	    scp_mx_held = 0;
 	    lock_ObtainMutex(&fidp->mx);
-	    lock_ObtainMutex(&scp->mx);
 	    delonclose = fidp->flags & SMB_FID_DELONCLOSE;
 	    lock_ReleaseMutex(&fidp->mx);
 	    smb_ReleaseFID(fidp);
@@ -2917,7 +2919,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     /* send and free the packets */
   done:
-    lock_ReleaseMutex(&scp->mx);
+    if (scp_mx_held)
+	lock_ReleaseMutex(&scp->mx);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     if (code == 0) {
@@ -3058,8 +3061,8 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
     fidp = smb_FindFIDByScache(vcp, scp);
     if (!fidp) {
-        cm_ReleaseUser(userp);
         cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
 	smb_SendTran2Error(vcp, p, opx, code);
         return 0;
     }
@@ -3067,9 +3070,9 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     lock_ObtainMutex(&fidp->mx);
     if (!(fidp->flags & SMB_FID_OPENWRITE)) {
 	lock_ReleaseMutex(&fidp->mx);
+        cm_ReleaseSCache(scp);
         smb_ReleaseFID(fidp);
         cm_ReleaseUser(userp);
-        cm_ReleaseSCache(scp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
         return 0;
     }
@@ -5727,8 +5730,8 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBDataLength(outp, 0);
 
  done:
-    smb_ReleaseFID(fidp);
     cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
 
     return code;
 }
@@ -5846,9 +5849,8 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBParm(outp, 5, finalCount);
     smb_SetSMBDataLength(outp, finalCount);
 
-    smb_ReleaseFID(fidp);
-
     cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
     return code;
 }   
         
@@ -6199,9 +6201,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     treeStartp = realPathp + (tp - spacep->data);
 
                     if (*tp && !smb_IsLegalFilename(tp)) {
+                        cm_ReleaseUser(userp);
                         if (baseFidp) 
                             smb_ReleaseFID(baseFidp);
-                        cm_ReleaseUser(userp);
                         free(realPathp);
                         if (scp)
                             cm_ReleaseSCache(scp);
@@ -6566,16 +6568,14 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
-            /* shouldn't this be smb_CloseFID() fidp->flags = SMB_FID_DELETE; */
-	    smb_CloseFID(vcp, fidp, NULL, 0);
-            smb_ReleaseFID(fidp);
-
             cm_ReleaseSCache(scp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
+            /* shouldn't this be smb_CloseFID() fidp->flags = SMB_FID_DELETE; */
+	    smb_CloseFID(vcp, fidp, NULL, 0);
+            smb_ReleaseFID(fidp);
             free(realPathp);
-            
             return code;
         }
     }
@@ -6643,9 +6643,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
               osi_LogSaveString(smb_logp, realPathp));
 
-    smb_ReleaseFID(fidp);
-
     cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
 
     /* Can't free realPathp if we get here since
        fidp->NTopen_wholepathp is pointing there */
@@ -7186,14 +7185,12 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
             /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
 	    smb_CloseFID(vcp, fidp, NULL, 0);
             smb_ReleaseFID(fidp);
-
-            cm_ReleaseSCache(scp);
-            cm_ReleaseUser(userp);
             free(realPathp);
-            
             return CM_ERROR_SHARING_VIOLATION;
         }
     }
@@ -7340,9 +7337,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
-    smb_ReleaseFID(fidp);
-
     cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
 
     /* free(realPathp); Can't free realPathp here because fidp->NTopen_wholepathp points there */
     /* leave scp held since we put it in fidp->scp */

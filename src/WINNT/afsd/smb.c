@@ -1451,6 +1451,9 @@ void smb_HoldFIDNoLock(smb_fid_t *fidp)
     fidp->refCount++;
 }
 
+
+/* smb_ReleaseFID cannot be called while an cm_scache_t mutex lock is held */
+/* the sm_fid_t->mx and smb_rctLock must not be held */
 void smb_ReleaseFID(smb_fid_t *fidp)
 {
     cm_scache_t *scp = NULL;
@@ -1465,13 +1468,13 @@ void smb_ReleaseFID(smb_fid_t *fidp)
         vcp = fidp->vcp;
         fidp->vcp = NULL;
         scp = fidp->scp;    /* release after lock is released */
-		if (scp) {
-		lock_ObtainMutex(&scp->mx);
-		scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
-		lock_ReleaseMutex(&scp->mx);
-		osi_Log2(afsd_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
-        fidp->scp = NULL;
-		}
+	if (scp) {
+	    lock_ObtainMutex(&scp->mx);
+	    scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+	    lock_ReleaseMutex(&scp->mx);
+	    osi_Log2(afsd_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
+	    fidp->scp = NULL;
+	}
         userp = fidp->userp;
         fidp->userp = NULL;
 
