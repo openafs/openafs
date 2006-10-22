@@ -109,7 +109,7 @@ CommandProc(as, arock)
 		    cell_p);
 	} else {
 	    strncpy(cell, cellinfo.name, sizeof(cell) - 1);
-	    cell[sizeof(cell)] = '\0';
+	    cell[sizeof(cell)-1] = '\0';
 	    cell_p = cell;
 	}
     } else {
