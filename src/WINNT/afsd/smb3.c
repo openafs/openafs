@@ -2865,7 +2865,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileStandardInfo.allocationSize = scp->length;
         qpi.u.QPfileStandardInfo.endOfFile = scp->length;
         qpi.u.QPfileStandardInfo.numberOfLinks = scp->linkCount;
-        qpi.u.QPfileStandardInfo.deletePending = (delonclose ? 1 : 0);
         qpi.u.QPfileStandardInfo.directory = 
 	    ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 	      scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
@@ -2880,6 +2879,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	    lock_ReleaseMutex(&fidp->mx);
 	    smb_ReleaseFID(fidp);
 	}
+        qpi.u.QPfileStandardInfo.deletePending = (delonclose ? 1 : 0);
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         qpi.u.QPfileEaInfo.eaSize = 0;
