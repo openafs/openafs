@@ -527,7 +527,7 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 	    dpq = (diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
 	    assert(dpq != NULL);
 	    dpq->diskP = diskP;
-	    queue_Prepend(&params,dpq);
+	    queue_Append(&params,dpq);
 	}
 
 	threads = MIN(parts, vol_attach_threads);
