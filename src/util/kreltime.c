@@ -121,8 +121,8 @@ ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 
     timePtr = &timeP;
 
-    memset(&timePtr, 0, sizeof(timePtr));
-    localtime_r(&tt, &timePtr);
+    memset(&timeP, 0, sizeof(timeP));
+    localtime_r(&tt, &timeP);
 #else
     timePtr = localtime(&tt);
 #endif

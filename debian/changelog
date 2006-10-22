@@ -1,3 +1,9 @@
+openafs (1.4.2-2) unstable; urgency=low
+
+  * Upstream fix to prevent butc segfaulting.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 21 Oct 2006 20:57:09 -0400
+
 openafs (1.4.2-1) unstable; urgency=medium
 
   * New upstream release, fixes amd64 kernel issues
