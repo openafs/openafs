@@ -85,7 +85,7 @@ static struct afsconf_servPair serviceTable[] = {
 
 /* Prototypes */
 static afs_int32 afsconf_FindService(register const char *aname);
-static int TrimLine(char *abuffer);
+static int TrimLine(char *abuffer, int abufsize);
 #ifdef AFS_NT40_ENV
 static int IsClientConfigDirectory(const char *path);
 static int GetCellNT(struct afsconf_dir *adir);
@@ -249,7 +249,7 @@ afsconf_FindService(register const char *aname)
 }
 
 static int
-TrimLine(char *abuffer)
+TrimLine(char *abuffer, int abufsize)
 {
     char tbuffer[256];
     register char *tp;
@@ -261,8 +261,8 @@ TrimLine(char *abuffer)
 	    break;
 	tp++;
     }
-    strcpy(tbuffer, tp);
-    strcpy(abuffer, tbuffer);
+    strlcpy(tbuffer, tp, sizeof tbuffer);
+    strlcpy(abuffer, tbuffer, abufsize);
     return 0;
 }
 
@@ -406,8 +406,7 @@ afsconf_Open(register const char *adir)
     /* zero structure and fill in name; rest is done by internal routine */
     tdir = (struct afsconf_dir *)malloc(sizeof(struct afsconf_dir));
     memset(tdir, 0, sizeof(struct afsconf_dir));
-    tdir->name = (char *)malloc(strlen(adir) + 1);
-    strcpy(tdir->name, adir);
+    tdir->name = strdup(adir);
 
     code = afsconf_OpenInternal(tdir, 0, 0);
     if (code) {
@@ -459,8 +458,7 @@ afsconf_Open(register const char *adir)
 	    }
 	    afsconf_path = afs_confdir;
 	}
-	tdir->name = (char *)malloc(strlen(afsconf_path) + 1);
-	strcpy(tdir->name, afsconf_path);
+	tdir->name = strdup(afsconf_path);
 	code = afsconf_OpenInternal(tdir, 0, 0);
 	if (code) {
 	    free(tdir->name);
@@ -579,7 +577,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	adir->timeRead = 0;
     }
 
-    strcpy(tbuf1, tbuffer);
+    strlcpy(tbuf1, tbuffer, sizeof tbuf1);
     tf = fopen(tbuffer, "r");
     if (!tf) {
 	return -1;
@@ -588,7 +586,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	tp = fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
 	    break;
-	TrimLine(tbuffer);	/* remove white space */
+	TrimLine(tbuffer, sizeof tbuffer);	/* remove white space */
 	if (tbuffer[0] == 0 || tbuffer[0] == '\n')
 	    continue;		/* empty line */
 	if (tbuffer[0] == '>') {
@@ -611,11 +609,8 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 		free(curEntry);
 		return -1;
 	    }
-	    if (linkedcell[0] != '\0') {
-		curEntry->cellInfo.linkedCell =
-		    (char *)malloc(strlen(linkedcell) + 1);
-		strcpy(curEntry->cellInfo.linkedCell, linkedcell);
-	    }
+	    if (linkedcell[0] != '\0')
+		curEntry->cellInfo.linkedCell = strdup(linkedcell);
 	} else {
 	    /* new host in the current cell */
 	    if (!curEntry) {
@@ -669,7 +664,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	tp = fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
 	    break;
-	TrimLine(tbuffer);	/* remove white space */
+	TrimLine(tbuffer, sizeof tbuffer);	/* remove white space */
 
 	if (tbuffer[0] == '\0' || tbuffer[0] == '\n' || tbuffer[0] == '#')
 	    continue;		/* empty line */
@@ -694,8 +689,8 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	curAlias = malloc(sizeof(*curAlias));
 	memset(curAlias, 0, sizeof(*curAlias));
 
-	strcpy(curAlias->aliasInfo.aliasName, aliasPtr);
-	strcpy(curAlias->aliasInfo.realName, tbuffer);
+	strlcpy(curAlias->aliasInfo.aliasName, aliasPtr, sizeof curAlias->aliasInfo.aliasName);
+	strlcpy(curAlias->aliasInfo.realName, tbuffer, sizeof curAlias->aliasInfo.realName);
 
 	curAlias->next = adir->alias_entries;
 	adir->alias_entries = curAlias;
@@ -912,7 +907,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		 * right AFSDB type.  Write down the true cell name that
 		 * the resolver gave us above.
 		 */
-		strcpy(realCellName, host);
+		strlcpy(realCellName, host, sizeof realCellName);
 	    }
 
 	    code = dn_expand(answer, answer + len, p + 2, host, sizeof(host));
@@ -995,7 +990,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     }
 
     acellInfo->numServers = numServers;
-    strcpy(acellInfo->name, acellName);
+    strlcpy(acellInfo->name, acellName, sizeof acellInfo->name);
     if (aservice) {
 	LOCK_GLOBAL_MUTEX;
 	tservice = afsconf_FindService(aservice);
