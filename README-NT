@@ -41,7 +41,7 @@ The following steps describe how to configure Windows 2000/XP:
    D. Configure NTBUILD.BAT
    E. Set program version Level
    F. Build Win2000 binaries
-   G. Install NSIS 2.07
+   G. Install NSIS 2.18
    H. Build NSIS Install Package
    I. Install Wix 2.0
    J. Build Wix MSI Install Package
@@ -58,7 +58,7 @@ versions are supported:
     Microsoft Visual Studio .NET 2003 (recommended)
       available via a MSDN subscription
 
-    Microsoft Visual Studio .NET 2005 (do not use for production)
+    Microsoft Visual Studio .NET 2005 (required for AMD64 builds)
       available via a MSDN subscription
 
 The following Microsoft SDK is required:
@@ -73,10 +73,14 @@ The following Microsoft DDK is required:
       available via a MSDN subscription or via free CD
       http://www.microsoft.com/whdc/devtools/ddk/orderddkcd.mspx
 
+The Microsoft HTML Help Workshop is required:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=00535334-c8a6-452f-9aa0-d597d16580cc&displaylang=en
+
 The NSIS installer requires about 14 MB of storage. The following 
 version is supported:
 
-    Nullsoft Scriptable Installation System 2.07
+    Nullsoft Scriptable Installation System 2.18
       http://nsis.sourceforge.net/home/
 
 The WiX installer requires about 18 MB of storage.  The following 
