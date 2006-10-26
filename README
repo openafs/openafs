@@ -157,20 +157,17 @@ F  OpenBSD Notes
      --enable-namei-fileserver
      --enable-largefile-fileserver
      --enable-supergroups
-     --with-krb5
+
+   If you need to run regen.sh to make the configure script, you should
+   first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
    in /usr/src/sys.
 
-   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
-   should make a package for the client.  Use pkg_add to install.  The
-   package will install using transarc-paths, regardless of how you
-   configured.  The package builder does not work on OpenBSD 3.5 and later
-   due to the incompatible re-write of pkg_create.
-
-   There is no server package, but I am told that "make install" will put
-   server binaries in /usr/afs.
+   src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing the
+   client.  There is no server package, but I am told that "make install"
+   will put server binaries in /usr/afs.
 
    Your kernel may panic when you try to shutdown after running the OpenAFS
    client.  To prevent this, change the "dangling vnode" panic in
