@@ -11,11 +11,11 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 OPTMZ = @KRB5CFLAGS@ -DALLOW_REGISTER
 AKLIBS = ${LIBS} @KRB5LIBS@
-AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
-	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a \
+AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
+	  ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a \
 	  ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
-	  ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdes.a \
-	  ${TOP_LIBDIR}/libafsutil.a
+	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a
 
 SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
 OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
