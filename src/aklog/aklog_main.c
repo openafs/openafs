@@ -247,17 +247,6 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 }
 
 
-static char *copy_string(char *string)    
-{
-    char *new_string;
-
-    if ((new_string = (char *)calloc(strlen(string) + 1, sizeof(char))))
-	(void) strcpy(new_string, string);
-
-    return (new_string);
-}
-
-
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
 {
     int status = AKLOG_SUCCESS;
@@ -1358,8 +1347,8 @@ void aklog(int argc, char *argv[])
 	else if (pmode) {
 	    /* Add this path to list of paths */
 	    if ((cur_node = ll_add_node(&paths, ll_tail))) {
-		char *new_path; 
-		if ((new_path = copy_string(path)))
+		char *new_path;
+		if ((new_path = strdup(path)))
 		    ll_add_data(cur_node, new_path);
 		else {
 		    fprintf(stderr, "%s: failure copying path name.\n",
