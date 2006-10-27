@@ -20,13 +20,16 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
 SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
 OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
 
-all: aklog @ASETKEY@
+all: aklog @ASETKEY@ klog
 
 aklog:	${OBJS} ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
 
 asetkey: asetkey.o ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+
+klog:	klog.o skipwrap.o ${AFSLIBS}
+	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${AKLIBS} ${AFSLIBS} ${TOP_LIBDIR}/libcmd.a ${XLIBS}
 
 #
 # Installation targets
@@ -51,6 +54,6 @@ dest: aklog @ASETKEY@
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o ${OBJS} aklog asetkey
+	$(RM) -f *.o ${OBJS} aklog asetkey klog
 
 include ../config/Makefile.version
