@@ -869,69 +869,65 @@ ShutDown(void)
 static void
 FlagMsg()
 {
-    char buffer[2048];
-
     /* default supports help flag */
 
-    strcpy(buffer, "Usage: fileserver ");
-    strcpy(buffer, "[-auditlog <log path>] ");
-    strcat(buffer, "[-d <debug level>] ");
-    strcat(buffer, "[-p <number of processes>] ");
-    strcat(buffer, "[-spare <number of spare blocks>] ");
-    strcat(buffer, "[-pctspare <percentage spare>] ");
-    strcat(buffer, "[-b <buffers>] ");
-    strcat(buffer, "[-l <large vnodes>] ");
-    strcat(buffer, "[-s <small vnodes>] ");
-    strcat(buffer, "[-vc <volume cachesize>] ");
-    strcat(buffer, "[-w <call back wait interval>] ");
-    strcat(buffer, "[-cb <number of call backs>] ");
-    strcat(buffer, "[-banner (print banner every 10 minutes)] ");
-    strcat(buffer, "[-novbc (whole volume cbs disabled)] ");
-    strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
-    strcat(buffer, "[-readonly (read-only file server)] ");
-    strcat(buffer,
-	   "[-hr <number of hours between refreshing the host cps>] ");
-    strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
-    strcat(buffer, "[-nobusy <no VBUSY before a volume is attached>] ");
-    strcat(buffer, "[-rxpck <number of rx extra packets>] ");
-    strcat(buffer, "[-rxdbg (enable rx debugging)] ");
-    strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
-    strcat(buffer, "[-rxmaxmtu <bytes>] ");
-    strcat(buffer, "[-rxbind (bind the Rx socket to one address)] ");
+    fputs("Usage: fileserver ", stdout);
+    fputs("[-auditlog <log path>] ", stdout);
+    fputs("[-d <debug level>] ", stdout);
+    fputs("[-p <number of processes>] ", stdout);
+    fputs("[-spare <number of spare blocks>] ", stdout);
+    fputs("[-pctspare <percentage spare>] ", stdout);
+    fputs("[-b <buffers>] ", stdout);
+    fputs("[-l <large vnodes>] ", stdout);
+    fputs("[-s <small vnodes>] ", stdout);
+    fputs("[-vc <volume cachesize>] ", stdout);
+    fputs("[-w <call back wait interval>] ", stdout);
+    fputs("[-cb <number of call backs>] ", stdout);
+    fputs("[-banner (print banner every 10 minutes)] ", stdout);
+    fputs("[-novbc (whole volume cbs disabled)] ", stdout);
+    fputs("[-implicit <admin mode bits: rlidwka>] ", stdout);
+    fputs("[-readonly (read-only file server)] ", stdout);
+    fputs("[-hr <number of hours between refreshing the host cps>] ", stdout);
+    fputs("[-busyat <redirect clients when queue > n>] ", stdout);
+    fputs("[-nobusy <no VBUSY before a volume is attached>] ", stdout);
+    fputs("[-rxpck <number of rx extra packets>] ", stdout);
+    fputs("[-rxdbg (enable rx debugging)] ", stdout);
+    fputs("[-rxdbge (enable rxevent debugging)] ", stdout);
+    fputs("[-rxmaxmtu <bytes>] ", stdout);
+    fputs("[-rxbind (bind the Rx socket to one address)] ", stdout);
 #ifdef AFS_DEMAND_ATTACH_FS
-    strcat(buffer, "[-fs-state-dont-save (disable state save during shutdown)] ");
-    strcat(buffer, "[-fs-state-dont-restore (disable state restore during startup)] ");
-    strcat(buffer, "[-fs-state-verify <none|save|restore|both> (default is both)] ");
-    strcat(buffer, "[-vattachpar <max number of volume attach/shutdown threads> (default is 1)] ");
-    strcat(buffer, "[-vhashsize <log(2) of number of volume hash buckets> (default is 8)] ");
-    strcat(buffer, "[-vlrudisable (disable VLRU functionality)] ");
-    strcat(buffer, "[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ");
-    strcat(buffer, "[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ");
-    strcat(buffer, "[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ");
+    fputs("[-fs-state-dont-save (disable state save during shutdown)] ", stdout);
+    fputs("[-fs-state-dont-restore (disable state restore during startup)] ", stdout);
+    fputs("[-fs-state-verify <none|save|restore|both> (default is both)] ", stdout);
+    fputs("[-vattachpar <max number of volume attach/shutdown threads> (default is 1)] ", stdout);
+    fputs("[-vhashsize <log(2) of number of volume hash buckets> (default is 8)] ", stdout);
+    fputs("[-vlrudisable (disable VLRU functionality)] ", stdout);
+    fputs("[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ", stdout);
+    fputs("[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ", stdout);
+    fputs("[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ", stdout);
 #elif AFS_PTHREAD_ENV
-    strcat(buffer, "[-vattachpar <number of volume attach threads> (default is 1)] ");
+    fputs("[-vattachpar <number of volume attach threads> (default is 1)] ", stdout);
 #endif
 #ifdef	AFS_AIX32_ENV
-    strcat(buffer, "[-m <min percentage spare in partition>] ");
+    fputs("[-m <min percentage spare in partition>] ", stdout);
 #endif
 #if defined(AFS_SGI_ENV)
-    strcat(buffer, "[-lock (keep fileserver from swapping)] ");
+    fputs("[-lock (keep fileserver from swapping)] ", stdout);
 #endif
-    strcat(buffer, "[-L (large server conf)] ");
-    strcat(buffer, "[-S (small server conf)] ");
-    strcat(buffer, "[-k <stack size>] ");
-    strcat(buffer, "[-realm <Kerberos realm name>] ");
-    strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
-    strcat(buffer, "[-sendsize <size of send buffer in bytes>] ");
-    strcat(buffer, "[-abortthreshold <abort threshold>] ");
-/*   strcat(buffer, "[-enable_peer_stats] "); */
-/*   strcat(buffer, "[-enable_process_stats] "); */
-    strcat(buffer, "[-help]\n");
+    fputs("[-L (large server conf)] ", stdout);
+    fputs("[-S (small server conf)] ", stdout);
+    fputs("[-k <stack size>] ", stdout);
+    fputs("[-realm <Kerberos realm name>] ", stdout);
+    fputs("[-udpsize <size of socket buffer in bytes>] ", stdout);
+    fputs("[-sendsize <size of send buffer in bytes>] ", stdout);
+    fputs("[-abortthreshold <abort threshold>] ", stdout);
+/*   fputs("[-enable_peer_stats] ", stdout); */
+/*   fputs("[-enable_process_stats] ", stdout); */
+    fputs("[-help]\n", stdout);
 /*
     ViceLog(0, ("%s", buffer));
 */
 
-    printf("%s", buffer);
     fflush(stdout);
 
 }				/*FlagMsg */
