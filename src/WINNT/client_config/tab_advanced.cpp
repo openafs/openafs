@@ -34,7 +34,7 @@ extern "C" {
 #define ckCHUNK_MAX           1048576L
 
 #define cSTATS_MIN            256L
-#define cSTATS_MAX            10000L
+#define cSTATS_MAX            262144L
 
 
 /*
