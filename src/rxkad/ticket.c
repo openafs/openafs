@@ -148,7 +148,13 @@ tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 
     if (code)
 	return RXKADBADTICKET;
-    if (tkt_CheckTimes(*start, *end, time(0)) < -1)
+
+    code = tkt_CheckTimes(*start, *end, time(0));
+    if (code == 0)
+	return RXKADNOAUTH;
+    else if (code == -1)
+	return RXKADEXPIRED;
+    else if (code < -1)
 	return RXKADBADTICKET;
 
     return 0;
