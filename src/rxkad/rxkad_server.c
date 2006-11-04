@@ -358,7 +358,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     if (code == -1)
 	return RXKADEXPIRED;
     else if (code <= 0)
-	return RXKADNOAUTH;
+	return RXKADBADTICKET;
 
     code = fc_keysched(&sessionkey, sconn->keysched);
     if (code)
