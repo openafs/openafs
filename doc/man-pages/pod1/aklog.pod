@@ -33,6 +33,17 @@ ticket from the realm corresponding to that cell (the upcase version of
 the cell name), but a different realm for a particular cell can be
 specified with B<-k>.  B<-k> cannot be used in B<-path> mode (see below).
 
+When using B<aklog>, be aware that AFS uses the Kerberos v4 principal
+naming format, not the Kerberos v5 format, when referring to principals in
+PTS ACLs, F<UserList>, and similar locations.  AFS will internally map
+Kerberos v5 principal names to the Kerberos v4 syntax by removing any
+portion of the instance after the first period (generally the domain name
+of a host principal), changing any C</> to C<.>, and changing an initial
+principal part of C<host> to C<rcmd>.  In other words, to create a PTS
+entry for the Kerberos v5 principal C<user/admin>, refer to it as
+C<user.admin>, and for the principal C<host/shell.example.com>, refer to
+it as C<rcmd.shell>.
+
 =head1 OPTIONS
 
 =over 4
@@ -113,7 +124,9 @@ C<..>.
 
 When setting tokens, attempt to put the parent process in a new PAG.  This
 is usually used as part of the login process but can be used any time to
-create a new AFS authentication context.
+create a new AFS authentication context.  Note that this in some cases
+relies on dangerous and tricky manipulations of kernel records and will
+not work on all platforms or with all Linux kernels.
 
 =item B<-zsubs>
 

@@ -2,8 +2,12 @@ openafs (1.4.2-3) unstable; urgency=low
 
   * Change the documentation of afsd -shutdown to be less dire and more
     accurate.  Thanks, Daniel J. Priem.  (Closes: #394990)
+  * Document (at least partially) AFS's mapping of Kerberos v5 principal
+    names to Kerberos v4 format in the aklog man page.  Thanks, Daniel
+    J. Priem.  (Closes: #394832)
+  * Document that aklog -setpag may not always work.
 
- -- Russ Allbery <rra@debian.org>  Sun,  5 Nov 2006 20:11:36 -0800
+ -- Russ Allbery <rra@debian.org>  Sun,  5 Nov 2006 20:23:21 -0800
 
 openafs (1.4.2-2) unstable; urgency=low
 
