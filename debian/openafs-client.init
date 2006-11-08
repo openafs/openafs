@@ -109,20 +109,10 @@ EOF
 # settings that are checked here.
 choose_afsd_options() {
     if [ -z "$OPTIONS" ] || [ "$OPTIONS" = "AUTOMATIC" ] ; then
-        CACHESIZE=`awk -F: '{print $3}' < /etc/openafs/cacheinfo`
-        if [ $CACHESIZE -lt 131072 ] ; then
-            OPTIONS=$SMALL
-        elif [ $CACHESIZE -lt 524288 ] ; then
-            OPTIONS=$MEDIUM
-        elif [ $CACHESIZE -lt 1048576 ] ; then
-            OPTIONS=$LARGE
-        elif [ $CACHESIZE -lt 2097152 ] ; then
-            OPTIONS=$XLARGE
-        else
-            OPTIONS=$XXLARGE
-        fi
+        AFSD_OPTIONS="$VERBOSE"
+    else
+        AFSD_OPTIONS="$OPTIONS $VERBOSE"
     fi
-    AFSD_OPTIONS="$OPTIONS $VERBOSE"
 
     # These variables are from /etc/openafs/afs.conf.client and are managed
     # automatically by debconf.

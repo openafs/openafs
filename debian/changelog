@@ -1,5 +1,7 @@
 openafs (1.4.2-3) unstable; urgency=low
 
+  * No longer pass explicit cache tuning options to afsd and instead let
+    OpenAFS automatically choose tuning based on the cache size.
   * Change the documentation of afsd -shutdown to be less dire and more
     accurate.  Thanks, Daniel J. Priem.  (Closes: #394990)
   * Document (at least partially) AFS's mapping of Kerberos v5 principal
@@ -7,7 +9,7 @@ openafs (1.4.2-3) unstable; urgency=low
     J. Priem.  (Closes: #394832)
   * Document that aklog -setpag may not always work.
 
- -- Russ Allbery <rra@debian.org>  Sun,  5 Nov 2006 20:23:21 -0800
+ -- Russ Allbery <rra@debian.org>  Tue,  7 Nov 2006 16:41:56 -0800
 
 openafs (1.4.2-2) unstable; urgency=low
 
