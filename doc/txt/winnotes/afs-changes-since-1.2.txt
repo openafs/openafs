@@ -1,3 +1,8 @@
+Since 1.5.10:
+
+ * An error is reported in response to the SMB ReceiveCoreFlush 
+   request when an error has not occurred.
+
 Since 1.5.9:
 
  * optimize dirty buffer flushes in response to suspend operations
@@ -10,6 +15,7 @@ Since 1.5.9:
  * remove a deadlock in smb3.c QPathInfo 
 
 Since 1.5.8:
+
  * Add NetIDMgr AFS Plug-in
 
  * "Show Tray Icon" checkbox removed from afs_config.exe
