@@ -286,6 +286,7 @@ void
 afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
 {
     AFS_STATCNT(afs_inactive);
+    ObtainWriteLock(&avc->lock, 50);
     if (avc->states & CDirty) {
 	/* we can't keep trying to push back dirty data forever.  Give up. */
 	afs_InvalidateAllSegments(avc);	/* turns off dirty bit */
@@ -295,11 +296,16 @@ afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
     if (avc->states & CUnlinked) {
 	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
 	    avc->states |= CUnlinkedDel;
-	    return;
+	    goto unlock;
 	}
+	ReleaseWriteLock(&avc->lock);
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
+    return;
 
+ unlock:
+    ReleaseWriteLock(&avc->lock);
+    return;
 }
 #endif
 
