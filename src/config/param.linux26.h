@@ -33,8 +33,6 @@
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
-#include <linux/config.h>
 #define AFS_GLOBAL_SUNLOCK
 #endif /* __KERNEL__	&& !DUMP_KERNEL */
 
