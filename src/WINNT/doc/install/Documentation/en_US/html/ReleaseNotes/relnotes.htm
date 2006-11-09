@@ -10,7 +10,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <meta name=Generator content="Microsoft Word 11">
 <meta name=Originator content="Microsoft Word 11">
 <link rel=File-List href="relnotes_files/filelist.xml">
-<title>OpenAFS for Windows 1.5.10 Release Notes</title>
+<title>OpenAFS for Windows 1.5.11 Release Notes</title>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
  name="PostalCode"/>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
@@ -558,7 +558,7 @@ strict'>
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.5.10<br>
+<p class=MsoTitle>OpenAFS for Windows 1.5.11<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
@@ -703,7 +703,7 @@ Windows 2003 R2 Server (32-bit and 64-bit Intel)</p>
 <p class=MsoNormal style='margin-left:14.15pt;text-indent:-14.15pt'><span
 style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
 font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Microsoft
-Windows Vista RC2 (32-bit and 64-bit Intel)&nbsp; (not for production use)</p>
+Windows Vista (32-bit and 64-bit Intel)&nbsp; (not for production use)</p>
 
 <h3><a name="_Toc115416101"></a><a name="_Toc139993085"></a><a
 name="_Toc126872166"></a><span style='mso-bookmark:_Toc115416101'>2.1.1
@@ -1713,7 +1713,7 @@ _Toc115416139'>3.33. Windows Logon Caching vs. Kerberos Logons</span></h2>
 <p class=MsoNormal>If you are a site which utilizes MIT/Heimdal Kerberos
 principals to logon to Windows via a cross-realm relationship with a
 multi-domain Windows forest, you must enable Windows logon caching unless the
-workstation is Windows Vista RC2 or later.</p>
+workstation is Windows Vista.</p>
 
 <h2><a name="_Toc115416140"></a><a name="_Toc139993124"></a><a
 name="_Toc126872205"></a><a name="_Toc115417076"></a><span style='mso-bookmark:
@@ -1846,17 +1846,18 @@ limited only by available disk space.</p>
 <h2><a name="_Toc139993132">3.42. Known Issues with Microsoft Windows </a><st1:place
 w:st="on">Vista</st1:place></h2>
 
-<p class=MsoBodyText>OpenAFS for Windows works with Microsoft Windows Vista RC2
-(Build 5744) and Longhorn Server (Build 5744) from both the command prompt and
+<p class=MsoBodyText>OpenAFS for Windows works with Microsoft Windows Vista
+(RTM) from both the command prompt and
 the Explorer Shell.<span style='mso-spacerun:yes'>  </span>When performing an
 upgrade from earlier versions of Microsoft Windows the Microsoft Loopback
 Adapter (MSLA) will be uninstalled.<span style='mso-spacerun:yes'>  
 </span>OpenAFS should be re-installed after the Microsoft Vista installation to
 restore the MSLA configuration.</p>
 
-<p class=MsoBodyText>When Vista RC2 resumes from standby mode, the AFS Client
+<p class=MsoBodyText>When Vista resumes from standby mode, the AFS Client
 Service will panic. <span style='mso-spacerun:yes'> </span>This is due to a bug
-in <st1:place w:st="on">Vista</st1:place> that is fixed in Build 5758.</p>
+in <st1:place w:st="on">Vista</st1:place> that was not fixed before RTM.  It is hoped 
+that Microsoft will issue a QFE in the near future.</p>
 
 <p class=MsoBodyText>Under the new Windows Vista security model, users are
 required to start applications under a new “administrative session” whenever
