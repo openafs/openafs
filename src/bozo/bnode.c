@@ -912,8 +912,6 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     tp = (struct bnode_proc *)malloc(sizeof(struct bnode_proc));
     memset(tp, 0, sizeof(struct bnode_proc));
     tp->next = allProcs;
-    allProcs = tp;
-    *aproc = tp;
     tp->bnode = abnode;
     tp->comLine = aexecString;
     tp->coreName = coreName;	/* may be null */
@@ -937,6 +935,8 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     }
 
     bnode_FreeTokens(tlist);
+    allProcs = tp;
+    *aproc = tp;
     tp->pid = cpid;
     tp->flags = BPROC_STARTED;
     tp->flags &= ~BPROC_EXITED;
