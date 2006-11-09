@@ -14,7 +14,9 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #include <linux/sysctl.h>
+#ifdef CONFIG_H_EXISTS
 #include <linux/config.h>
+#endif
 
 /* From afs_util.c */
 extern afs_int32 afs_new_inum;

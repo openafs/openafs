@@ -1,3 +1,17 @@
+AC_DEFUN([LINUX_CONFIG_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/config.h existance])
+  AC_CACHE_VAL([ac_cv_linux_config_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/config.h>],
+[return;],
+      ac_cv_linux_config_h_exists=yes,
+      ac_cv_linux_config_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_config_h_exists)
+  if test "x$ac_cv_linux_config_h_exists" = "xyes"; then
+    AC_DEFINE([CONFIG_H_EXISTS], 1, [define if linux/config.h exists])
+  fi])
+
+
 AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
   AC_MSG_CHECKING([for linux/completion.h existance])
   AC_CACHE_VAL([ac_cv_linux_completion_h_exists], [
