@@ -29,9 +29,7 @@
 #define AFS_64BITPOINTER_ENV   1     /* pointers are 64 bits. */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
 
-#include <linux/config.h>
 #ifdef CONFIG_SMP
 #undef CONFIG_SMP
 #endif

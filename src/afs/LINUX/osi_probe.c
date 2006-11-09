@@ -59,7 +59,9 @@
 #include "afsincludes.h"
 #endif
 #include <linux/version.h>
+#ifdef CONFIG_H_EXISTS
 #include <linux/config.h>
+#endif
 #include <linux/linkage.h>
 #include <linux/init.h>
 #include <linux/unistd.h>

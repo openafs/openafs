@@ -29,9 +29,7 @@
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
 
-#include <linux/config.h>
 #ifdef CONFIG_SMP
 #ifndef AFS_SMP
 #define AFS_SMP 1
