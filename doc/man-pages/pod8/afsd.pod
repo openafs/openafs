@@ -344,11 +344,16 @@ suites. Provide the command name and all option names in full.
 
 =head1 CAUTIONS
 
-Do not use the B<-shutdown> parameter. It does not shutdown the Cache
-Manager effectively. Instead, halt Cache Manager activity by using the
-standard UNIX B<umount> command to unmount the AFS root directory (by
-convention, F</afs>). The machine must then be rebooted to reinitialize
-the Cache Manager.
+Before using the B<-shutdown> parameter, use the standard UNIX B<umount>
+command to unmount the AFS root directory (by convention, F</afs>).  On
+Linux, unloading the AFS kernel module and then loading it again before
+restarting AFS after B<-shutdown> is recommended.
+
+AFS has for years had difficulties with being stopped and restarted
+without an intervening reboot.  While most of these issues have been
+ironed out, stopping and restarting AFS is not recommended unless
+necessary and rebooting before restarting AFS is still the safest course
+of action.
 
 =head1 OPTIONS
 
