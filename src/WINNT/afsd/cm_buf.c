@@ -1418,14 +1418,14 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 {
-    long code;
+    long code = 0;
+    long wasDirty = 0;
     cm_buf_t *bp;		/* buffer we're hacking on */
     cm_buf_t *nbp;		/* next one */
     long i;
 
     i = BUF_FILEHASH(&scp->fid);
 
-    code = 0;
     lock_ObtainWrite(&buf_globalLock);
     bp = cm_data.buf_fileHashTablepp[i];
     if (bp) 
@@ -1442,12 +1442,11 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->userp = userp;
                 lock_ReleaseMutex(&bp->mx);
             }   
-            code = buf_CleanAsync(bp, reqp);
+            wasDirty = buf_CleanAsync(bp, reqp);
 	    buf_CleanWait(scp, bp);
             lock_ObtainMutex(&bp->mx);
             if (bp->flags & CM_BUF_ERROR) {
-                if (code == 0 || code == -1) 
-                    code = bp->error;
+		code = bp->error;
                 if (code == 0) 
                     code = -1;
             }
