@@ -175,10 +175,6 @@
 #define MAXNAMLEN		512
 #endif
 
-#ifndef PAGESIZE
-#define PAGESIZE		4096
-#endif
-
 /*
  * This file contains data types and definitions for running
  * the AFS client in user space. Kernel data structures

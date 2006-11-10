@@ -176,6 +176,21 @@ printk("%d\n", _inode.i_blksize);],
       ac_cv_linux_fs_struct_inode_has_i_blksize=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blksize)])
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS], [
+  AC_MSG_CHECKING([for i_blkbits in struct inode])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_blkbits], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printk("%d\n", _inode.i_blkbits);],
+      ac_cv_linux_fs_struct_inode_has_i_blkbits=yes,
+      ac_cv_linux_fs_struct_inode_has_i_blkbits=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blkbits)
+  if test "x$ac_cv_linux_fs_struct_inode_has_i_blkbits" = "xyes"; then
+    AC_DEFINE(STRUCT_INODE_HAS_I_BLKBITS, 1, [define if your struct inode has i_blkbits])
+  fi])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
   AC_MSG_CHECKING([for i_cdev in struct inode])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_cdev], [
