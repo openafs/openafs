@@ -114,7 +114,7 @@ if [ $firstpass = yes ]; then
     mkdir -p $PKGROOT/private/var/db/openafs/cache
     mkdir -p $PKGROOT/private/var/db/openafs/etc/config
     cp $CURDIR/CellServDB $PKGROOT/private/var/db/openafs/etc/CellServDB.master
-    echo openafs.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
+    echo grand.central.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
     if [ $majorvers -ge 7 ]; then
 	echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
         cp -RP $PKGROOT/Library/OpenAFS/Tools/etc/afssettings $PKGROOT/private/var/db/openafs/etc/config
@@ -122,7 +122,7 @@ if [ $firstpass = yes ]; then
     else
 	echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
     fi
-    echo '-afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
+    echo '-memcache -afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
 
     strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
@@ -171,7 +171,7 @@ if [ $secondpass = yes ]; then
 	cp OpenAFS.post_install $PKGRES/postupgrade
 	cp background.jpg $PKGRES/background.jpg
 	if [ $majorvers -ge 8 ]; then
-	    cp InstallationCheck $PKGRES
+	    cp InstallationCheck.$majorvers $PKGRES/InstallationCheck
 	    mkdir -p $PKGRES/English.lproj
 	    cp InstallationCheck $PKGRES/English.lproj
 	    chmod a+x $PKGRES/InstallationCheck

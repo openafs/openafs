@@ -635,11 +635,13 @@ rxi_GetIFInfo(void)
     afs_uint32 ifinaddr;
 #if defined(AFS_DARWIN80_ENV)
     errno_t t;
-    int cnt=0;
-    ifaddr_t *ifads, ifad;
-    register ifnet_t ifn;
+    unsigned int count;
+    int cnt=0, m, j;
+    ifaddr_t *ifads;
+    ifnet_t *ifn;
     struct sockaddr sout;
     struct sockaddr_in *sin;
+    struct in_addr pin;
 #else
     struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
     register struct ifnet *ifn;
@@ -649,31 +651,38 @@ rxi_GetIFInfo(void)
     memset(mtus, 0, sizeof(mtus));
 
 #if defined(AFS_DARWIN80_ENV)
-    t = ifnet_get_address_list_family(NULL, &ifads, AF_INET);
-    if (t == 0) {
-	rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
-	while((ifads[cnt] != NULL) && cnt < ADDRSPERSITE) {
-	    t = ifaddr_address(ifads[cnt], &sout, sizeof(sout));
-	    sin = (struct sockaddr_in *)&sout;
-	    ifinaddr = ntohl(sin->sin_addr.s_addr);
-	    if (myNetAddrs[i] != ifinaddr) {
-		different++;
+    if (!ifnet_list_get(AF_INET, &ifn, &count)) {
+	for (m = 0; m < count; m++) {
+	    if (!ifnet_get_address_list(ifn[m], &ifads)) {
+		for (j = 0; ifads[j] != NULL && cnt < ADDRSPERSITE; j++) {
+		    if ((t = ifaddr_address(ifads[j], &sout, sizeof(struct sockaddr))) == 0) {
+			sin = (struct sockaddr_in *)&sout;
+			rxmtu = ifnet_mtu(ifaddr_ifnet(ifads[j])) - RX_IPUDP_SIZE;
+			ifinaddr = ntohl(sin->sin_addr.s_addr);
+			if (myNetAddrs[i] != ifinaddr) {
+			    different++;
+			}
+			mtus[i] = rxmtu;
+			rxmtu = rxi_AdjustIfMTU(rxmtu);
+			maxmtu =
+			    rxmtu * rxi_nRecvFrags +
+			    ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
+			maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+			addrs[i++] = ifinaddr;
+			if ((ifinaddr != 0x7f000001) && 
+			    (maxmtu > rx_maxReceiveSize)) {
+			    rx_maxReceiveSize = 
+				MIN(RX_MAX_PACKET_SIZE, maxmtu);
+			    rx_maxReceiveSize =
+				MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+			}
+			cnt++;
+		    }
+		}
+		ifnet_free_address_list(ifads);
 	    }
-	    mtus[i] = rxmtu;
-	    rxmtu = rxi_AdjustIfMTU(rxmtu);
-	    maxmtu =
-		rxmtu * rxi_nRecvFrags +
-		((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
-	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
-	    addrs[i++] = ifinaddr;
-	    if ((ifinaddr != 0x7f000001) && (maxmtu > rx_maxReceiveSize)) {
-		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
-		rx_maxReceiveSize =
-		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
-	    }
-	    cnt++;
 	}
-	ifnet_free_address_list(ifads);
+	ifnet_list_free(ifn);
     }
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
@@ -729,10 +738,10 @@ rxi_GetIFInfo(void)
     rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
-	int j;
-	for (j = 0; j < i; j++) {
-	    myNetMTUs[j] = mtus[j];
-	    myNetAddrs[j] = addrs[j];
+	int l;
+	for (l = 0; l < i; l++) {
+	    myNetMTUs[l] = mtus[l];
+	    myNetAddrs[l] = addrs[l];
 	}
     }
     return different;
