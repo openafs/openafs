@@ -23,4 +23,6 @@ if [ -f config/afsd.options -a -f config/afsd.options.sample ]; then
   fi
 fi
 
-/Library/StartupItems/OpenAFS/OpenAFS stop
+if [ -f /Library/StartupItems/OpenAFS/OpenAFS ]; then
+  /Library/StartupItems/OpenAFS/OpenAFS stop
+fi
