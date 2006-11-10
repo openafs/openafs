@@ -854,7 +854,6 @@ afs_osi_Stat(struct osi_file *fp, struct osi_stat *stp)
 	return -1;
     }
     stp->size = st.st_size;
-    stp->blksize = st.st_blksize;
     stp->mtime = st.st_mtime;
     stp->atime = st.st_atime;
     AFS_GLOCK();

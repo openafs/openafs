@@ -41,7 +41,6 @@ struct osi_socket {
 
 struct osi_stat {
     afs_int32 size;		/* file size in bytes */
-    afs_int32 blksize;		/* optimal transfer size in bytes */
     afs_int32 mtime;		/* modification date */
     afs_int32 atime;		/* access time */
 };

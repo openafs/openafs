@@ -72,7 +72,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = afile->size = tvattr.va_size;
-	astat->blksize = tvattr.va_blocksize;
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
