@@ -53,7 +53,9 @@
 #else /* AFS_OBSD_ENV */
 #ifdef AFS_LINUX22_ENV
 #include <linux/version.h>
+#ifdef CONFIG_H_EXISTS
 #include <linux/config.h>
+#endif
 #include <linux/linkage.h>
 #include <linux/limits.h>
 #include <linux/wait.h>
