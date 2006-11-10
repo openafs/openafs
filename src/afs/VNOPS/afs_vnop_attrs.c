@@ -144,9 +144,9 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_flags = 0;
 #endif
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
-    attrs->va_blksize = PAGESIZE;	/* XXX Was 8192 XXX */
+    attrs->va_blksize = AFS_BLKSIZE;	/* XXX Was 8192 XXX */
 #else
-    attrs->va_blocksize = PAGESIZE;	/* XXX Was 8192 XXX */
+    attrs->va_blocksize = AFS_BLKSIZE;	/* XXX Was 8192 XXX */
 #endif
     attrs->va_rdev = 1;
 #if defined(AFS_HPUX110_ENV)

@@ -128,8 +128,6 @@ static inline time_t osi_Time(void) {
 extern int hz;
 #endif
 
-#define PAGESIZE 8192
-
 #define AFS_UCRED       ucred
 
 #define AFS_PROC        struct proc

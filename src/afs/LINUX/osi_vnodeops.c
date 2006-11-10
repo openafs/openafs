@@ -1313,7 +1313,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     clear_bit(PG_error, &pp->flags);
 #endif
 
-    setup_uio(&tuio, &iovec, (char *)address, offset, PAGESIZE, UIO_READ,
+    setup_uio(&tuio, &iovec, (char *)address, offset, PAGE_SIZE, UIO_READ,
 	      AFS_UIOSYS);
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -1331,7 +1331,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 
     if (!code) {
 	if (tuio.uio_resid)	/* zero remainder of page */
-	    memset((void *)(address + (PAGESIZE - tuio.uio_resid)), 0,
+	    memset((void *)(address + (PAGE_SIZE - tuio.uio_resid)), 0,
 		   tuio.uio_resid);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 	flush_dcache_page(pp);

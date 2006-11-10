@@ -85,7 +85,6 @@
 #ifndef iodone
 #define iodone biodone
 #endif
-#define PAGESIZE	8192
 #define printk		printf	/* for RX version of xdr_* */
 #define setgroups	sys_setgroups
 #define UVM

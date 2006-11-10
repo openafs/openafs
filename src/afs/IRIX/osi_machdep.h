@@ -207,11 +207,6 @@ extern long afs_global_owner;
 
 #define afs_hz HZ
 
-#ifdef PAGESIZE
-#undef PAGESIZE
-#endif
-#define PAGESIZE 4096
-
 #ifdef AFS_SGI64_ENV
 #undef setuerror
 #undef getuerror
