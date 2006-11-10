@@ -1,9 +1,9 @@
 #!/bin/sh
 majorvers=`uname -r | sed 's/\..*//'`
 echo "InstallationCheck: os release is $majorvers"
-if [ $majorvers -ne 8 ]; then
+if [ $majorvers -ne 9 ]; then
 echo "InstallationCheck: not ok"
-   exit 112
+	exit 112
 fi
 
 echo "InstallationCheck: ok"
