@@ -2821,7 +2821,7 @@ afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
     if (CheckLock(&afs_xdcache) != -1)
 	osi_Panic("getdslot nolock");
     if (aslot < 0 || aslot >= afs_cacheFiles)
-	osi_Panic("getdslot slot");
+	osi_Panic("getdslot slot %d (of %d)", aslot, afs_cacheFiles);
     tdc = afs_indexTable[aslot];
     if (tdc) {
 	QRemove(&tdc->lruq);	/* move to queue head */
@@ -2913,7 +2913,7 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
     if (CheckLock(&afs_xdcache) != -1)
 	osi_Panic("getdslot nolock");
     if (aslot < 0 || aslot >= afs_cacheFiles)
-	osi_Panic("getdslot slot");
+	osi_Panic("getdslot slot %d (of %d)", aslot, afs_cacheFiles);
     tdc = afs_indexTable[aslot];
     if (tdc) {
 	QRemove(&tdc->lruq);	/* move to queue head */
