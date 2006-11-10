@@ -123,7 +123,6 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define uprintf printk
 
 
-#define PAGESIZE PAGE_SIZE
 #ifndef NGROUPS
 #define NGROUPS NGROUPS_SMALL
 #endif

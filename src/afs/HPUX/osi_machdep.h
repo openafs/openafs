@@ -24,11 +24,6 @@
 extern struct timeval time;
 #define osi_Time() (time.tv_sec)
 
-#ifdef PAGESIZE
-#undef PAGESIZE
-#endif
-#define PAGESIZE 8192
-
 #define	AFS_UCRED	ucred
 #define	AFS_PROC	proc_t
 
