@@ -1,5 +1,8 @@
 Since 1.5.10:
 
+ * Enable renaming of directories from the Explorer Shell when
+   Offline Folders is enabled
+
  * An error is reported in response to the SMB ReceiveCoreFlush 
    request when an error has not occurred.
 
