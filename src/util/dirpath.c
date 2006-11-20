@@ -420,17 +420,25 @@ getDirPath(afsdir_id_t string_id)
 /*
  * LocalizePathHead() -- Make path relative to local part
  *
- * ConstructLocalPath takes a path  and a directory that path should
- * be considered relative to.   This  function checks the given path
- * for   a prefix  that represents a canonical path.  If such a prefix
- * is found,  the path is adjusted to remove the prefix and the path
- * is considered  relative to the local version of that path.
+ * ConstructLocalPath takes a path and a directory that path should
+ * be considered relative to.  There are two possible cases:
+ *
+ * The path is an absolute path.  In this case, the relative path
+ * is ignored.  We check the path for a prefix that represents a
+ * canonical path, and if one is found, we adjust the path to remove
+ * the prefix and adjust the directory to which it should be
+ * considered relative to be the local version of that canonical path.
+ *
+ * The path is a relative path.  In this case, we check to see if the
+ * directory to which it is relative represents a canonical path, and
+ * if so, we adjust that directory to be the local version of that
+ * canonical path.  The relative path itself is left unchanged.
  */
 
 /* The following array  maps cannonical parts to local parts.  It
  * might  seem reasonable to  simply construct an array in parallel to
  * dirpatharray  but it turns out you don't want translations for all
- local paths.
+ * local paths.
 */
 
 struct canonmapping {
@@ -448,15 +456,25 @@ static struct canonmapping CanonicalTranslations[] = {
 static void
 LocalizePathHead(const char **path, const char **relativeTo)
 {
-    struct canonmapping *current;
-    for (current = CanonicalTranslations; current->local != NULL; current++) {
-	int canonlength = strlen(current->canonical);
-	if (strncmp(*path, current->canonical, canonlength) == 0) {
-	    (*path) += canonlength;
-	    if (**path == '/')
-		(*path)++;
-	    *relativeTo = current->local;
-	    return;
+    struct canonmapping *map;
+ 
+    if (**path == '/') {
+	for (map = CanonicalTranslations; map->local != NULL; map++) {
+	    int canonlength = strlen(map->canonical);
+	    if (strncmp(*path, map->canonical, canonlength) == 0) {
+		(*path) += canonlength;
+		if (**path == '/')
+		    (*path)++;
+		*relativeTo = map->local;
+		return;
+	    }
+	}
+    } else {
+	for (map = CanonicalTranslations; map->local != NULL; map++) {
+	    if (strcmp(*relativeTo, map->canonical) == 0) {
+		*relativeTo = map->local;
+		return;
+	    }
 	}
     }
 }
