@@ -263,67 +263,51 @@ else
 			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.5*)
-			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="i386_nbsd15"
 			;;
 		alpha-*-netbsd*1.5*)
-			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="alpha_nbsd15"
 			;;
 		i?86-*-netbsd*1.6[[M-Z]]*)
-			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
 			;;
 		powerpc-*-netbsd*1.6[[M-Z]]*)
-			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="ppc_nbsd20"
 			;;
 		i?86-*-netbsd*2.0*)
-			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
 			;;
 		amd64-*-netbsd*2.0*)
-			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="amd64_nbsd20"
 			;;
 		powerpc-*-netbsd*2.0*)
-			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="ppc_nbsd20"
 			;;
 		i?86-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="i386_nbsd16"
 			;;
 		alpha-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="alpha_nbsd16"
 			;;
 		powerpc-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="ppc_nbsd16"
 			;;
 		i?86-*-netbsd*2.1*)
-			AFS_PARAM_COMMON=param.nbsd21.h
 			AFS_SYSNAME="i386_nbsd21"
 			;;
 		i?86-*-netbsd*2.99*)
-			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.[[0-8]]*)
-			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.99*)
-			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*4.[[0-8]]*)
-			AFS_PARAM_COMMON=param.nbsd40.h
 			AFS_SYSNAME="i386_nbsd40"
 			;;
 		i?86-*-netbsd*4.99*)
-			AFS_PARAM_COMMON=param.nbsd40.h
 			AFS_SYSNAME="i386_nbsd40"
 			;;
 		hppa*-hp-hpux11.0*)
@@ -530,7 +514,6 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			AFS_PARAM_COMMON="param.linux${AFS_SYSKVERS}.h"
 			save_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
 			AC_TRY_COMPILE(
@@ -548,6 +531,20 @@ else
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
+
+dnl Some hosts have a separate common param file they should include.  Figure
+dnl out if we're on one of them now that we know the sysname.
+case $AFS_SYSNAME in
+    *_nbsd15)   AFS_PARAM_COMMON=param.nbsd15.h  ;;
+    *_nbsd16)   AFS_PARAM_COMMON=param.nbsd16.h  ;;
+    *_nbsd20)   AFS_PARAM_COMMON=param.nbsd20.h  ;;
+    *_nbsd21)   AFS_PARAM_COMMON=param.nbsd21.h  ;;
+    *_nbsd30)   AFS_PARAM_COMMON=param.nbsd30.h  ;;
+    *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
+    *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
+    *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
+    *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
+esac
 
 case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
