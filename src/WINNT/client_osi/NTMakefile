@@ -45,8 +45,8 @@ EXEOBJS = \
 	osidebug.obj
 
 EXELIBS = \
-        rpcndr.lib rpcrt4.lib rpcns4.lib \
-		Ws2_32.lib \
+	rpcrt4.lib rpcns4.lib \
+	Ws2_32.lib \
 	$(DESTDIR)\lib\libosi.lib
 
 ############################################################################
@@ -70,10 +70,8 @@ DLLOBJS =\
 	$(OUT)\libosi.res
 
 DLLLIBS =\
-        rpcndr.lib \
         rpcrt4.lib \
         rpcns4.lib
-#	largeint.lib
 
 $(DLLFILE): $(DLLOBJS) 
 	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
