@@ -61,7 +61,7 @@ pldefines=-DUNICODE -D_UNICODE
 cdebug=$(cdebug) -Os -Zi
 cwarn=$(cwarn) /Wp64 /WX
 
-plcflags=$(cdebug) $(cflags) $(incflags) $(pldefines) $(cwarn) $(cvarsmt)
+plcflags=$(cdebug) $(cflags) $(incflags) $(pldefines) $(cwarn) $(cvarsdll)
 
 PC2OBJ=$(CC) $(plcflags) /Fo"$@" /c $**
 
