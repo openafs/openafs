@@ -12,7 +12,7 @@ openafs (1.4.2-3) unstable; urgency=low
     J. Priem.  (Closes: #394832)
   * Document that aklog -setpag may not always work.
 
- -- Russ Allbery <rra@debian.org>  Wed, 15 Nov 2006 16:14:52 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 20 Nov 2006 17:29:46 -0800
 
 openafs (1.4.2-2) unstable; urgency=low
 
