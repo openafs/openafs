@@ -492,10 +492,12 @@ GetCellUnix(struct afsconf_dir *adir)
     p = strchr(tbuffer, '\n');
     if (p)
 	*p = '\0';
-    p = tbuffer + strlen(tbuffer) - 1;
-    while (p > tbuffer && isspace(*p))
-	p--;
-    p[1] = '\0';
+    while (*tbuffer != '\0' && isspace(*tbuffer))
+        tbuffer++;
+    p = tbuffer + 1;
+    while (*p != '\0' && !isspace(*p))
+        p++;
+    *p = '\0';
 
     adir->cellName = strdup(tbuffer);
     return 0;
