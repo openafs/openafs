@@ -491,7 +491,7 @@ GetCellUnix(struct afsconf_dir *adir)
 
     while (*tbuffer != '\0' && isspace(*tbuffer))
         tbuffer++;
-    p = tbuffer + 1;
+    p = tbuffer;
     while (*p != '\0' && !isspace(*p))
         p++;
     *p = '\0';
