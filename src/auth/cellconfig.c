@@ -489,9 +489,6 @@ GetCellUnix(struct afsconf_dir *adir)
     rc = fgets(tbuffer, 256, fp);
     fclose(fp);
 
-    p = strchr(tbuffer, '\n');
-    if (p)
-	*p = '\0';
     while (*tbuffer != '\0' && isspace(*tbuffer))
         tbuffer++;
     p = tbuffer + 1;
