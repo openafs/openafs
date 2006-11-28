@@ -465,8 +465,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if ( timeLeft > 2 )
             retry = 1;
     }
-    else if (errorCode == RXKADEXPIRED || 
-             errorCode == RXKADBADTICKET) {
+    else if (errorCode == RXKADEXPIRED || errorCode == RXKADBADTICKET) {
         if (!dead_session) {
             lock_ObtainMutex(&userp->mx);
             ucellp = cm_GetUCell(userp, serverp->cellp);
@@ -480,6 +479,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             if ( timeLeft > 2 )
                 retry = 1;
         }
+    } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
+	cm_ForceNewConnections(serverp);
+        if ( timeLeft > 2 )
+            retry = 1;
     } else {
         if (errorCode) {
             char * s = "unknown error";
