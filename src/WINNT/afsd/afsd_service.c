@@ -232,6 +232,12 @@ afsd_ServiceControlHandlerEx(
     DWORD dummyLen, doTrace;
     long code;
     DWORD dwRet = ERROR_CALL_NOT_IMPLEMENTED;
+    OSVERSIONINFO osVersion;
+
+    /* Get the version of Windows */
+    memset(&osVersion, 0x00, sizeof(osVersion));
+    osVersion.dwOSVersionInfoSize = sizeof(osVersion);
+    GetVersionEx(&osVersion);
 
     switch (ctrlCode) 
     {
@@ -318,23 +324,33 @@ afsd_ServiceControlHandlerEx(
 							                                                                  
                     /* allow remaining case PBT_WhatEver */                                           
                 case PBT_APMSUSPEND:                         
-                    afsi_log("SERVICE_CONTROL_APMSUSPEND"); 
+                    afsi_log("SERVICE_CONTROL_APMSUSPEND");
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_StopListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMSTANDBY:                  
                     afsi_log("SERVICE_CONTROL_APMSTANDBY"); 
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_StopListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMECRITICAL:             
                     afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL"); 
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMESUSPEND:                                                        
                     afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND"); 
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMESTANDBY:                                                        
                     afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY"); 
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMBATTERYLOW:                                                           
@@ -355,6 +371,8 @@ afsd_ServiceControlHandlerEx(
                     break;                                  
                 case PBT_APMRESUMEAUTOMATIC:                                                      
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC"); 
+		    if (osVersion.dwMajorVersion >= 6)
+			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 default:                                                                          

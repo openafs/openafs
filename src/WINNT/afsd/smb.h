@@ -746,6 +746,11 @@ extern DWORD smb_ServerExceptionFilter(void);
 extern void smb_UpdateServerPriority(void);
 extern void smb_SetRequestStartTime(void);
 extern void smb_ResetServerPriority(void);
+extern void smb_RestartListeners(void);
+extern void smb_StopListeners(void);
+
+#define SMB_LISTENER_STOPPED 0
+#define SMB_LISTENER_STARTED 1
 
 /* include other include files */
 #include "smb3.h"

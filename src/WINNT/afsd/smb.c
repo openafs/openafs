@@ -36,7 +36,8 @@
 /* These characters are illegal in Windows filenames */
 static char *illegalChars = "\\/:*?\"<>|";
 
-int smbShutdownFlag = 0;
+static int smbShutdownFlag = 0;
+static int smb_ListenerState = SMB_LISTENER_STOPPED;
 
 int smb_LogoffTokenTransfer;
 time_t smb_LogoffTransferTimeout;
@@ -8255,7 +8256,7 @@ void smb_Listener(void *parmp)
     GetComputerName(cname, &cnamelen);
     _strupr(cname);
 
-    while (1) {
+    while (smb_ListenerState == SMB_LISTENER_STARTED) {
         memset(ncbp, 0, sizeof(NCB));
         flags = 0;
 
@@ -8278,15 +8279,34 @@ void smb_Listener(void *parmp)
 #else /* DJGPP */
         code = Netbios(ncbp, dos_ncb);
 #endif
+	if (code == NRC_BRIDGE) {
+            if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
+#ifndef DJGPP
+                ExitThread(1);
+#else
+                thrd_Exit(1);
+#endif
+            }
 
-        if (code != 0)
+	    osi_Log2(smb_logp,
+                     "NCBLISTEN lana=%d failed with NRC_BRIDGE.  Listener thread exiting.",
+                     ncbp->ncb_lana_num, code);
+
+	    for (i = 0; i < lana_list.length; i++) {
+		if (lana_list.lana[i] == ncbp->ncb_lana_num) {
+		    lana_list.lana[i] = 255;
+		    break;
+		}
+	    }
+	    return;
+	} else if (code != 0)
         {
 #ifndef DJGPP
             char tbuffer[256];
 #endif
 
             /* terminate silently if shutdown flag is set */
-            if (smbShutdownFlag == 1) {
+            if (smb_ListenerState == SMB_LISTENER_STOPPED || smbShutdownFlag == 1) {
 #ifndef DJGPP
                 ExitThread(1);
 #else
@@ -8510,6 +8530,8 @@ void smb_Listener(void *parmp)
         /* unlock */
         lock_ReleaseMutex(&smb_ListenerLock);
     }	/* dispatch while loop */
+
+    FreeNCB(ncbp);
 }
 
 /* initialize Netbios */
@@ -8524,12 +8546,6 @@ void smb_NetbiosInit()
     int delname_tried=0;
     int len;
     int lana_found = 0;
-    OSVERSIONINFO Version;
-
-    /* Get the version of Windows */
-    memset(&Version, 0x00, sizeof(Version));
-    Version.dwOSVersionInfoSize = sizeof(Version);
-    GetVersionEx(&Version);
 
     /* setup the NCB system */
     ncbp = GetNCB();
@@ -8614,7 +8630,9 @@ void smb_NetbiosInit()
             afsi_log("Netbios NCBADDNAME added new name >%s<",name);
         }
 
-        if (code == 0) code = ncbp->ncb_retcode;
+        if (code == 0) 
+	    code = ncbp->ncb_retcode;
+
         if (code == 0) {
             afsi_log("Netbios NCBADDNAME succeeded on lana %d\n", lana);
 #ifdef DJGPP
@@ -8677,6 +8695,91 @@ void smb_NetbiosInit()
         
     /* we're done with the NCB now */
     FreeNCB(ncbp);
+}
+
+void smb_StartListeners()
+{
+    int i;
+    int lpid;
+    thread_t phandle;
+
+    if (smb_ListenerState == SMB_LISTENER_STARTED)
+	return;
+    
+    smb_ListenerState = SMB_LISTENER_STARTED;
+
+    for (i = 0; i < lana_list.length; i++) {
+        if (lana_list.lana[i] == 255) 
+            continue;
+        phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
+                               (void*)lana_list.lana[i], 0, &lpid, "smb_Listener");
+        osi_assert(phandle != NULL);
+        thrd_CloseHandle(phandle);
+    }
+}
+
+void smb_RestartListeners()
+{
+    if (smb_ListenerState == SMB_LISTENER_STARTED)
+	return;
+
+    smb_NetbiosInit();
+    smb_StartListeners();
+}
+
+void smb_StopListeners()
+{
+    NCB *ncbp;
+#ifdef DJGPP
+    dos_ptr dos_ncb;
+#endif /* DJGPP */
+    int lana, code, l;
+
+    if (smb_ListenerState == SMB_LISTENER_STOPPED)
+	return;
+
+    smb_ListenerState = SMB_LISTENER_STOPPED;
+
+    ncbp = GetNCB();
+
+    /* Unregister the SMB name */
+    for (l = 0; l < lana_list.length; l++) {
+        lana = lana_list.lana[l];
+
+	memset(ncbp, 0, sizeof(*ncbp));
+        ncbp->ncb_command = NCBDELNAME;
+        ncbp->ncb_lana_num = lana;
+        memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
+#ifndef DJGPP
+        code = Netbios(ncbp);
+#else /* DJGPP */
+        code = Netbios(ncbp, dos_ncb);
+#endif /* !DJGPP */
+          
+        afsi_log("Netbios NCBDELNAME lana=%d code=%d retcode=%d complete=%d",
+                 lana, code, ncbp->ncb_retcode, ncbp->ncb_cmd_cplt);
+
+	/* and then reset the LANA; this will cause the listener threads to exit */
+        ncbp->ncb_command = NCBRESET;
+        ncbp->ncb_callname[0] = 100;
+        ncbp->ncb_callname[2] = 100;
+        ncbp->ncb_lana_num = lana_list.lana[l];
+        code = Netbios(ncbp);
+        if (code == 0) 
+            code = ncbp->ncb_retcode;
+        if (code != 0) {
+            afsi_log("Netbios NCBRESET lana %d error code %d", lana_list.lana[l], code);
+        } else {
+            afsi_log("Netbios NCBRESET lana %d succeeded", lana_list.lana[l]);
+        }
+
+	/* mark the adapter invalid */
+	lana_list.lana[l] = 255;  /* invalid lana */
+    }
+
+    lana_list.length = 0;
+    FreeNCB(ncbp);
+    Sleep(1000);	/* give the listener threads a chance to exit */
 }
 
 void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
@@ -8969,6 +9072,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                  * performance by removing the network access and works around a bug
                  * seen at sites which are using a MIT Kerberos principal to login
                  * to machines joined to a non-root domain in a multi-domain forest.
+		 * MsV1_0SetProcessOption was added in Windows XP.
                  */
                 PVOID pResponse = NULL;
                 ULONG cbResponse = 0;
@@ -9059,14 +9163,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
     /* Start listeners, waiters, servers, and daemons */
 
-    for (i = 0; i < lana_list.length; i++) {
-        if (lana_list.lana[i] == 255) 
-            continue;
-        phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
-                               (void*)lana_list.lana[i], 0, &lpid, "smb_Listener");
-        osi_assert(phandle != NULL);
-        thrd_CloseHandle(phandle);
-    }
+    smb_StartListeners();
 
 #ifndef DJGPP
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ClientWaiter,
@@ -9231,7 +9328,7 @@ void smb_Shutdown(void)
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
-
+    FreeNCB(ncbp);
     TlsFree(smb_TlsRequestSlot);
 }
 
