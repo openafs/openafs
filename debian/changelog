@@ -1,3 +1,10 @@
+openafs (1.4.2-4) unstable; urgency=low
+
+  * Translation updates:
+    - German, thanks Henrik Kroeger.  (Closes: #400800)
+
+ -- Russ Allbery <rra@debian.org>  Tue, 28 Nov 2006 15:01:41 -0800
+
 openafs (1.4.2-3) unstable; urgency=low
 
   * No longer pass explicit cache tuning options to afsd and instead let
