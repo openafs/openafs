@@ -70,6 +70,7 @@ typedef struct cm_buf {
 				 * hash function is good and if there are
 				 * enough buckets for the size of the cache.
 				 */
+    struct cm_buf *dirtyp;	/* next in the dirty list */
     osi_mutex_t mx;		/* mutex protecting structure except refcount */
     unsigned long refCount;	/* reference count (buf_globalLock) */
     long idCounter;		/* counter for softrefs; bumped at each recycle */

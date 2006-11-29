@@ -132,19 +132,13 @@ void buf_Release(cm_buf_t *bp)
     lock_ReleaseWrite(&buf_globalLock);
 }
 
-/* incremental sync daemon.  Writes 1/10th of all the buffers every 5000 ms */
+/* incremental sync daemon.  Writes all dirty buffers every 5000 ms */
 void buf_IncrSyncer(long parm)
 {
-    cm_buf_t *bp;			/* buffer we're hacking on; held */
+    cm_buf_t **bpp, *bp;
     long i;				/* counter */
-    long wasDirty;
+    long wasDirty = 0;
     cm_req_t req;
-
-    lock_ObtainWrite(&buf_globalLock);
-    bp = cm_data.buf_allp;
-    buf_HoldLocked(bp);
-    lock_ReleaseWrite(&buf_globalLock);
-    wasDirty = 0;
 
     while (buf_ShutdownFlag == 0) {
         if (!wasDirty) {
@@ -152,36 +146,49 @@ void buf_IncrSyncer(long parm)
             if (i != 0) continue;
 	}
 
-        if (buf_ShutdownFlag == 1)
-            return;
-
 	wasDirty = 0;
 
         /* now go through our percentage of the buffers */
-        for (i=0; i<cm_data.buf_nbuffers; i++) {
-            /* don't want its identity changing while we're
-             * messing with it, so must do all of this with
-             * bp held.
-             */
+        for (bpp = &cm_data.buf_dirtyListp; bp = *bpp; ) {
 
-            /* start cleaning the buffer; don't touch log pages since
-             * the log code counts on knowing exactly who is writing
-             * a log page at any given instant.
-             */
-            cm_InitReq(&req);
-            req.flags |= CM_REQ_NORETRY;
-	    wasDirty |= buf_CleanAsync(bp, &req);
+	    /* all dirty buffers are held when they are added to the
+	     * dirty list.  No need for an additional hold.
+	     */
 
-            /* now advance to the next buffer; the allp chain never changes,
-             * and so can be followed even when holding no locks.
-             */
-            lock_ObtainWrite(&buf_globalLock);
-            buf_ReleaseLocked(bp);
-            bp = bp->allp;
-            if (!bp) 
-                bp = cm_data.buf_allp;
-	    buf_HoldLocked(bp);
-            lock_ReleaseWrite(&buf_globalLock);
+	    if (bp->flags & CM_BUF_DIRTY) {
+		/* start cleaning the buffer; don't touch log pages since
+ 		 * the log code counts on knowing exactly who is writing
+		 * a log page at any given instant.
+		 */
+		cm_InitReq(&req);
+		req.flags |= CM_REQ_NORETRY;
+		wasDirty |= buf_CleanAsync(bp, &req);
+	    }
+
+	    /* the buffer may or may not have been dirty
+	     * and if dirty may or may not have been cleaned
+	     * successfully.  check the dirty flag again.  
+	     */
+	    if (!(bp->flags & CM_BUF_DIRTY)) {
+		lock_ObtainMutex(&bp->mx);
+		if (!(bp->flags & CM_BUF_DIRTY)) {
+		    /* remove the buffer from the dirty list */
+		    lock_ObtainWrite(&buf_globalLock);
+		    *bpp = bp->dirtyp;
+		    bp->dirtyp = NULL;
+		    if (cm_data.buf_dirtyListp == NULL)
+			cm_data.buf_dirtyListEndp = NULL;
+		    buf_ReleaseLocked(bp);
+		    lock_ReleaseWrite(&buf_globalLock);
+		} else {
+		    /* advance the pointer so we don't loop forever */
+		    bpp = &bp->dirtyp;
+		}
+		lock_ReleaseMutex(&bp->mx);
+	    } else {
+		/* advance the pointer so we don't loop forever */
+		bpp = &bp->dirtyp;
+	    }
         }	/* for loop over a bunch of buffers */
     }		/* whole daemon's while loop */
 }
@@ -588,6 +595,11 @@ long buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp)
 	if (reqp->flags & CM_REQ_NORETRY)
 	    break;
     };
+
+    if (!(bp->flags & CM_BUF_DIRTY)) {
+	/* remove buffer from dirty buffer queue */
+
+    }
 
     /* do logging after call to GetLastError, or else */
         
@@ -1111,13 +1123,39 @@ void buf_SetDirty(cm_buf_t *bp)
     osi_assert(bp->magic == CM_BUF_MAGIC);
     osi_assert(bp->refCount > 0);
 	
-    osi_Log1(buf_logp, "buf_SetDirty 0x%p", bp);
-
+    if (bp->flags & CM_BUF_DIRTY) {
+	osi_Log1(buf_logp, "buf_SetDirty 0x%p already dirty", bp);
+    } else {
+	osi_Log1(buf_logp, "buf_SetDirty 0x%p", bp);
+    }
     /* set dirty bit */
     bp->flags |= CM_BUF_DIRTY;
 
     /* and turn off EOF flag, since it has associated data now */
     bp->flags &= ~CM_BUF_EOF;
+
+    /* and add to the dirty list.  
+     * we obtain a hold on the buffer for as long as it remains 
+     * in the list.  buffers are only removed from the list by 
+     * the buf_IncrSyncer function regardless of when else the
+     * dirty flag might be cleared.
+     *
+     * This should never happen but just in case there is a bug
+     * elsewhere, never add to the dirty list if the buffer is 
+     * already there.
+     */
+    lock_ObtainWrite(&buf_globalLock);
+    if (bp->dirtyp == NULL && cm_data.buf_dirtyListEndp != bp) {
+	buf_HoldLocked(bp);
+	if (!cm_data.buf_dirtyListp) {
+	    cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
+	} else {
+	    cm_data.buf_dirtyListEndp->dirtyp = bp;
+	    cm_data.buf_dirtyListEndp = bp;
+	}
+	bp->dirtyp = NULL;
+    }
+    lock_ReleaseWrite(&buf_globalLock);
 }
 
 /* clean all buffers, reset log pointers and invalidate all buffers.
