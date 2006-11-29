@@ -790,6 +790,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
 
     if ( newFile ) {
         afsi_log("Building AFS Cache from scratch");
+	memset(&cm_data, 0, sizeof(cm_config_data_t));
         cm_data.size = sizeof(cm_config_data_t);
         cm_data.magic = CM_CONFIG_DATA_MAGIC;
         cm_data.baseAddress = baseAddress;
@@ -833,6 +834,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.bufDataBaseAddress = (char *) baseAddress;
         baseAddress += ComputeSizeOfDataBuffers(cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
         cm_data.bufEndOfData = (char *) baseAddress;
+	cm_data.buf_dirtyListp = NULL;
+	cm_data.buf_dirtyListEndp = NULL;
         cm_data.fakeDirVersion = 0x8;
         UuidCreate((UUID *)&cm_data.Uuid);
 	cm_data.volSerialNumber = volumeSerialNumber;

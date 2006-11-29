@@ -65,6 +65,8 @@ typedef struct cm_config_data {
 
     cm_buf_t	*       buf_freeListp;
     cm_buf_t    *       buf_freeListEndp;
+    cm_buf_t	*       buf_dirtyListp;
+    cm_buf_t    *       buf_dirtyListEndp;
     cm_buf_t	**      buf_hashTablepp;
     cm_buf_t	**      buf_fileHashTablepp;
     cm_buf_t	*       buf_allp;
