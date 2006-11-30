@@ -1,3 +1,37 @@
+Since 1.5.11
+
+ * Unlike previous versions of the OS, Vista performs a shutdown on
+   the Microsoft Loopback adapter just like it would on a real adapter.
+   This causes the smb_Listener threads to trigger a panic during a
+   suspend/hibernate power event.
+
+   The fix is to unbind from the network adapters in response to a
+   suspend/hibernate power event and then rebind to the adapters
+   when a resume power event is received.  Note that the resume events
+   are not reliably delivered so it is possible the afs service will
+   not be accessible.  However, this is the best we can do.
+
+ * don't allow environment variables we set to be inherited by child
+   processes
+
+ * force an rx connection reset if VICECONNBAD or VICETOKENDEAD are
+   received
+
+ * The old dirty buffer synchronization algorithm had a buf_IncrSyncer
+   thread walking the all buffer list periodically searching for dirty
+   buffers to write to the file server.  This had several negative
+   results.  The alogirithm ate up ever increasing amounts of CPU time
+   even when AFS is idle as the size of the cache increases.  Also,
+   buffers were written to the file server in an order based upon the
+   original buffer allocation which has nothing to do with the order
+   in which the buffers became dirty.
+
+   The new algorithm maintains a dirty buffer list.  Items are added
+   when the buffer is originally marked dirty.  A buffer is only
+   removed from the list by the buf_IncrSyncer when the buffer is no
+   longer dirty.  If the list is empty the thread goes back to thread
+   immediately without additional processing requirements.
+
 Since 1.5.10:
 
  * Enable renaming of directories from the Explorer Shell when
