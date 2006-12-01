@@ -7,7 +7,7 @@
 #
 # $Revision$
 
-. /etc/init.d/functions
+[ -f /etc/init.d/functions ] && . /etc/init.d/functions
 [ -f /etc/sysconfig/openafs ] && . /etc/sysconfig/openafs
 
 
