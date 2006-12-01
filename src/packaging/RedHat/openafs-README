@@ -2,28 +2,52 @@ The files in the src directory are covered by the IBM Public License
 and the SUN ONC RPC license, with are included in the files
 LICENSE.IBM and LICENSE.Sun in the same directory as this README.
 
+There are two ways to build the AFS kernel module on the local system:
+Building an RPM and Building Manually
+
+
+  REBUILDING FROM SOURCE RPM
+  --------------------------
+
+The first (and preferred) way to build a kernel module is to build an
+openafs-kernel RPM from the OpenAFS Source RPM.  To do this you can
+just use "rpm --rebuild" from the Source RPM (SRPM) and specify that
+you want to build a module and the target CPU.  For example:
+
+  rpmbuild --rebuild --define "build_modules 1" --target=i686
+
+You MUST specify the target CPU or it will not build the correct
+module for your system.
+
+For more information on all the various options for rebuilding your
+kernel module via RPM, run:
+
+  rpm -qi openafs
+
+This will explain all your options for controlling your build.
+
+
+  REBUILDING MANUALLY
+  -------------------
+
+The second method to build a kernel module is to build it manually
+from source.  You really should just build the RPM, but if you really
+don't want to you can do it this way instead.
+
 To build the AFS kernel module on a local system, run:
 
     ./configure
     make
 
 When it's done, the binary module will be src/MODLOAD-XXX/libafs-XXX.o
-and must be manually installed for your kernel.  To do this you
-generally copy the file to /usr/vice/etc/modload:
+(or .ko), where "XXX" is your linux kernel version.  Note that it may
+also compile as src/MODLOAD-XXX/openafs.ko.
 
-    cp src/MODLOAD-XXX/libafs-XXX.o /usr/vice/etc/modload/
+You must manually install this module on your system.  To do this you
+generally copy the file to /lib/modules/XXX/openafs.o:
 
-Then you need to add this module to your SymTable by using "afsmodname"
-to generate a new SymTable:
+    cp src/MODLOAD-XXX/libafs-XXX.o /lib/modules/XXX/openafs.o
 
-    cd /usr/vice/etc/modload
-    ../afsmodname -f SymTable.local -g libafs-XXX.o
-
-NOTE: This only works if you have your kernel compiled with symbol
-version support.  Without symbol version support you will not be able
-to choose kernel modules.  If you compile without kernel module
-support then you need to remove the SymTable file from
-/usr/vice/etc/modload to allow the init scripts to choose a module
-based on 'uname -r' instead of /proc/ksyms.  Keep in mind that using
-/proc/ksyms is MUCH better, so it is NOT recommended to use this
-method!
+Then you need to tell your system about the new kernel module by
+running "depmod -ae XXX" to run the module dependencies for kernel
+version "XXX".
