@@ -2,71 +2,96 @@
 <chapter id="HDRWQ6">
   <title>Installation Overview</title>
 
-  <para>This chapter describes the type of instructions provided in this guide and the hardware and software requirements for
-  installing AFS<superscript>(R)</superscript>.</para>
+  <para>This chapter describes the type of instructions provided in this
+  guide and the hardware and software requirements for installing
+  <trademark class="registered">AFS</trademark>.</para>
 
-  <para>Before beginning the installation of your cell's first machine, read this chapter and the material from the <emphasis>IBM
-  AFS Administration Guide</emphasis> listed in <link linkend="HDRWQ8">Recommended Reading List</link>. It is also best to read
-  through <link linkend="HDRWQ17">Installing the First AFS Machine</link> before beginning the installation, so that you understand
-  the overall scope of the installation procedure. Similarly, before installing additional server or client machines it is best to
-  read through <link linkend="HDRWQ99">Installing Additional Server Machines</link> and <link linkend="HDRWQ133">Installing
-  Additional Client Machines</link>.</para>
+  <para>Before beginning the installation of your cell's first machine,
+  read this chapter and the material from the <citetitle>OpenAFS
+  Administration Guide</citetitle> listed in <link
+  linkend="HDRWQ8">Recommended Reading List</link>. It is also best to
+  read through <link linkend="HDRWQ17">Installing the First AFS
+  Machine</link> before beginning the installation, so that you understand
+  the overall scope of the installation procedure. Similarly, before
+  installing additional server or client machines it is best to read
+  through <link linkend="HDRWQ99">Installing Additional Server
+  Machines</link> and <link linkend="HDRWQ133">Installing Additional
+  Client Machines</link>.</para>
 
-  <para>If you are already running a version of AFS, consult the upgrade instructions in the <emphasis>IBM AFS Release
-  Notes</emphasis> or contact the AFS Product Support group before proceeding with the installation.</para>
+  <para>If you are already running a version of AFS, consult the upgrade
+  instructions in the <citetitle>OpenAFS Release Notes</citetitle> before
+  proceeding with the installation.</para>
 
   <sect1 id="HDRWQ7">
     <title>The Procedures Described in this Guide</title>
 
-    <para>This guide describes two types of installation procedures: initial procedures (such as installing the first AFS machine or
-    incorporating AFS into the kernel) and as-needed procedures (such as installing additional server machines or client
-    machines).</para>
+    <para>This guide describes two types of installation procedures:
+    initial procedures (such as installing the first AFS machine or
+    incorporating AFS into the kernel) and as-needed procedures (such as
+    installing additional server machines or client machines).</para>
 
     <sect2 id="Header_9">
       <title>Required Initial Procedures</title>
 
-      <para>You must perform the following basic procedures to start using AFS.</para>
+      <para>You must perform the following basic procedures to start using
+      AFS.</para>
 
       <sect3 id="Header_10">
         <title>Incorporating AFS Into the Kernel</title>
 
-        <para>You must incorporate AFS modifications into the kernel of every AFS file server and client machine. Depending on the
-        operating system, you either use a program for dynamic kernel loading, build a new static kernel, or can choose between the
-        two. For your convenience, the instructions for incorporating AFS into the kernel appear in full in every chapter where you
-        need to use them. <indexterm>
+        <para>You must incorporate AFS modifications into the kernel of
+        every AFS file server and client machine. Depending on the
+        operating system, you either use a program for dynamic kernel
+        loading, build a new static kernel, or can choose between the
+        two. For your convenience, the instructions for incorporating AFS
+        into the kernel appear in full in every chapter where you need to
+        use them.
+          <indexterm>
             <primary>roles for first AFS machine</primary>
-          </indexterm> <indexterm>
+          </indexterm>
+          <indexterm>
             <primary>first AFS machine</primary>
-
             <secondary>roles</secondary>
-          </indexterm></para>
+          </indexterm>
+        </para>
       </sect3>
 
       <sect3 id="Header_11">
         <title>Installing the First AFS Machine</title>
 
-        <para>You install the first AFS machine in your cell to function as both an AFS server and client machine. You can disable
-        the client functionality after completing the installation, if you wish.</para>
+        <para>You install the first AFS machine in your cell to function
+        as both an AFS server and client machine.  You can disable the
+        client functionality after completing the installation, if you
+        wish.</para>
 
-        <para>The first server machine in a cell performs several functions: <itemizedlist>
+        <para>The first server machine in a cell performs several
+        functions:
+          <itemizedlist>
             <listitem>
-              <para>It acts as the <emphasis>system control machine</emphasis> (if your AFS distribution includes the required
-              encryption files), distributing certain configuration files to the other server machines in the cell</para>
+              <para>It acts as the <emphasis>system control
+              machine</emphasis> (if your AFS distribution includes the
+              required encryption files), distributing certain
+              configuration files to the other server machines in the
+              cell</para>
             </listitem>
 
             <listitem>
-              <para>It acts as the <emphasis>binary distribution machine</emphasis> for its system type, distributing AFS binaries
-              to other server machines of its system type</para>
+              <para>It acts as the <emphasis>binary distribution
+              machine</emphasis> for its system type, distributing AFS
+              binaries to other server machines of its system type</para>
             </listitem>
 
             <listitem>
-              <para>It acts as the first <emphasis>database server machine</emphasis>, running the server processes that maintain
-              the AFS administrative databases</para>
+              <para>It acts as the first <emphasis>database server
+              machine</emphasis>, running the server processes that
+              maintain the AFS administrative databases</para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
-        <para>After you install server and client functionality, you complete other procedures specific to the first machine,
-        including setting up the top levels of your cell's AFS filespace.</para>
+        <para>After you install server and client functionality, you
+        complete other procedures specific to the first machine, including
+        setting up the top levels of your cell's AFS filespace.</para>
       </sect3>
     </sect2>
 
@@ -76,37 +101,46 @@
       <sect3 id="Header_13">
         <title>Upgrading the Operating System</title>
 
-        <para>Upgrading the operating system requires you to take several steps to protect data and AFS-modified binaries from being
-        lost or overwritten. For guidelines, see <link linkend="HDRWQ14">About Upgrading the Operating System</link>.</para>
+        <para>Upgrading the operating system requires you to take several
+        steps to protect data and AFS-modified binaries from being lost or
+        overwritten. For guidelines, see <link linkend="HDRWQ14">About
+        Upgrading the Operating System</link>.</para>
       </sect3>
 
       <sect3 id="Header_14">
         <title>Installing Additional File Server Machines</title>
 
-        <para>See <link linkend="HDRWQ100">Installing an Additional File Server Machine</link>.</para>
+        <para>See <link linkend="HDRWQ100">Installing an Additional File
+        Server Machine</link>.</para>
       </sect3>
 
       <sect3 id="Header_15">
         <title>Configuring or Decommissioning Database Server Machines</title>
 
-        <para>See <link linkend="HDRWQ114">Installing Database Server Functionality</link> and <link linkend="HDRWQ125">Removing
+        <para>See <link linkend="HDRWQ114">Installing Database Server
+        Functionality</link> and <link linkend="HDRWQ125">Removing
         Database Server Functionality</link>.</para>
       </sect3>
 
       <sect3 id="Header_16">
         <title>Installing Additional AFS Client Machines</title>
 
-        <para>See <link linkend="HDRWQ133">Installing Additional Client Machines</link>.</para>
+        <para>See <link linkend="HDRWQ133">Installing Additional Client
+        Machines</link>.</para>
       </sect3>
 
       <sect3 id="Header_17">
         <title>Building AFS from Source Code</title>
 
-        <para>See <link linkend="HDRWQ163">Appendix A, Building AFS from Source Code</link>. <indexterm>
+        <para>See <link linkend="HDRWQ163">Appendix A, Building AFS from
+        Source Code</link>.
+          <indexterm>
             <primary>background reading list</primary>
-          </indexterm> <indexterm>
+          </indexterm>
+          <indexterm>
             <primary>reading list for background information</primary>
-          </indexterm></para>
+          </indexterm>
+        </para>
       </sect3>
     </sect2>
   </sect1>
@@ -114,76 +148,101 @@
   <sect1 id="HDRWQ8">
     <title>Recommended Reading List</title>
 
-    <para>To develop the best understanding of the overall scope of an installation procedure, read through the entire chapter or
-    section that describes it before performing any actions.</para>
+    <para>To develop the best understanding of the overall scope of an
+    installation procedure, read through the entire chapter or section
+    that describes it before performing any actions.</para>
 
-    <para>In addition, familiarity with some basic AFS concepts can make the installation more efficient, because you understand
-    better the purpose of the steps. The following is a prioritized list of material to read before installing the first AFS
-    machine. At minimum, read the first chapter of the <emphasis>IBM AFS Administration Guide</emphasis>. Then continue your reading
-    in the indicated order, as extensively as you can. It is more important at this point to read the conceptual material in each
-    section than the instructions.</para>
+    <para>In addition, familiarity with some basic AFS concepts can make
+    the installation more efficient, because you understand better the
+    purpose of the steps. The following is a prioritized list of material
+    to read before installing the first AFS machine. At minimum, read the
+    first chapter of the <citetitle>OpenAFS Administration
+    Guide</citetitle>.  Then continue your reading in the indicated order,
+    as extensively as you can. It is more important at this point to read
+    the conceptual material in each section than the instructions.</para>
 
-    <para><emphasis role="bold">Selected Topics in the <emphasis>IBM AFS Administration Guide</emphasis></emphasis> <itemizedlist>
+    <para><emphasis role="bold">Selected Topics in the <emphasis>OpenAFS
+    Administration Guide</emphasis></emphasis>
+      <itemizedlist>
         <listitem>
-          <para>The chapter titled <emphasis>An Overview of AFS Administration</emphasis></para>
+          <para>The chapter titled <emphasis>An Overview of AFS
+          Administration</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Administering Server Machines</emphasis> chapter: <emphasis>Local Disk Files on a
-          Server Machine</emphasis>, <emphasis>The Four Roles for a Server Machine</emphasis>, <emphasis>Maintaining the Server
-          CellServDB File</emphasis></para>
+          <para>Selected sections in the <emphasis>Administering Server
+          Machines</emphasis> chapter: <emphasis>Local Disk Files on a
+          Server Machine</emphasis>, <emphasis>The Four Roles for a Server
+          Machine</emphasis>, <emphasis>Maintaining the Server CellServDB
+          File</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Monitoring and Controlling Server Processes</emphasis> chapter:
-          <emphasis>Controlling and Checking Process Status</emphasis></para>
+          <para>Selected sections in the <emphasis>Monitoring and
+          Controlling Server Processes</emphasis> chapter:
+          <emphasis>Controlling and Checking Process
+          Status</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Managing Server Encryption Keys</emphasis> chapter: <emphasis>About Server
+          <para>Selected sections in the <emphasis>Managing Server
+          Encryption Keys</emphasis> chapter: <emphasis>About Server
           Encryption Keys</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Managing Volumes</emphasis> chapter: <emphasis>About Volumes</emphasis>,
-          <emphasis>Creating Read/write Volumes</emphasis>, <emphasis>Clones and Cloning</emphasis>, <emphasis>Mounting
+          <para>Selected sections in the <emphasis>Managing
+          Volumes</emphasis> chapter: <emphasis>About Volumes</emphasis>,
+          <emphasis>Creating Read/write Volumes</emphasis>,
+          <emphasis>Clones and Cloning</emphasis>, <emphasis>Mounting
           Volumes</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Administering Client Machines and the Cache Manager</emphasis> chapter:
-          <emphasis>Overview of Cache Manager Customization</emphasis>, <emphasis>Configuration and Cache-related Files on the Local
-          Disk</emphasis>, <emphasis>Determining the Cache Type, Size, and Location</emphasis></para>
+          <para>Selected sections in the <emphasis>Administering Client
+          Machines and the Cache Manager</emphasis> chapter:
+          <emphasis>Overview of Cache Manager Customization</emphasis>,
+          <emphasis>Configuration and Cache-related Files on the Local
+          Disk</emphasis>, <emphasis>Determining the Cache Type, Size, and
+          Location</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Managing Access Control Lists</emphasis> chapter: <emphasis>Protecting Data in
+          <para>Selected sections in the <emphasis>Managing Access Control
+          Lists</emphasis> chapter: <emphasis>Protecting Data in
           AFS</emphasis></para>
         </listitem>
       </itemizedlist></para>
 
-    <para><emphasis role="bold">More Selected Topics in the <emphasis>IBM AFS Administration Guide</emphasis></emphasis>
-    <itemizedlist>
+    <para><emphasis role="bold">More Selected Topics in the
+    <emphasis>OpenAFS Administration Guide</emphasis></emphasis> 
+      <itemizedlist>
         <listitem>
-          <para>Selected sections in the <emphasis>Managing Volumes</emphasis> chapter: <emphasis>Creating and Releasing Read-only
-          Volumes (Replication)</emphasis>, <emphasis>Creating Backup Volumes</emphasis></para>
+          <para>Selected sections in the <emphasis>Managing
+          Volumes</emphasis> chapter: <emphasis>Creating and Releasing
+          Read-only Volumes (Replication)</emphasis>, <emphasis>Creating
+          Backup Volumes</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Administering the Protection Database</emphasis> chapter: <emphasis>About the
+          <para>Selected sections in the <emphasis>Administering the
+          Protection Database</emphasis> chapter: <emphasis>About the
           Protection Database</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Administering User Accounts</emphasis> chapter: <emphasis>The Components of an
-          AFS User Account</emphasis></para>
+          <para>Selected sections in the <emphasis>Administering User
+          Accounts</emphasis> chapter: <emphasis>The Components of an AFS
+          User Account</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>Selected sections in the <emphasis>Managing Administrative Privilege</emphasis> chapter: <emphasis>An Overview of
+          <para>Selected sections in the <emphasis>Managing Administrative
+          Privilege</emphasis> chapter: <emphasis>An Overview of
           Administrative Privilege</emphasis></para>
         </listitem>
-      </itemizedlist></para>
+      </itemizedlist>
+    </para>
   </sect1>
 
   <sect1 id="HDRWQ9">
@@ -342,7 +401,7 @@
   <sect1 id="HDRWQ13">
     <title>Supported System Types</title>
 
-    <para>The <emphasis>IBM AFS Release Notes</emphasis> for each AFS release list the supported system types. Support for
+    <para>The <emphasis>OpenAFS Release Notes</emphasis> for each AFS release list the supported system types. Support for
     subsequent revisions of an operating system often becomes available between AFS releases. The AFS Product Support group can
     provide details.</para>
 
@@ -353,7 +412,7 @@
 
     <para>It is not always possible to support AFS on every intermediate version of an operating system or for certain processor
     types. In some cases, platform limitations make certain AFS functionality (such as file server or NFS/AFS translator
-    functionality) unavailable on one or more platforms. For a list of limitations, see the <emphasis>IBM AFS Release
+    functionality) unavailable on one or more platforms. For a list of limitations, see the <emphasis>OpenAFS Release
     Notes</emphasis> or ask the AFS Product Support group. <indexterm>
         <primary>operating system upgrades</primary>
       </indexterm> <indexterm>

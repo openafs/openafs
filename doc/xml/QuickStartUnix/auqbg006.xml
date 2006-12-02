@@ -245,10 +245,6 @@
           </listitem>
 
           <listitem>
-            <para><link linkend="HDRWQ102">Getting Started on Digital UNIX Systems</link></para>
-          </listitem>
-
-          <listitem>
             <para><link linkend="HDRWQ103">Getting Started on HP-UX Systems</link></para>
           </listitem>
 
@@ -442,310 +438,6 @@
             <listitem>
               <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
               instructions in <link linkend="HDRWQ25">Enabling AFS Login on AIX Systems</link>.</para>
-            </listitem>
-
-            <listitem>
-              <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
-            </listitem>
-          </orderedlist></para>
-      </sect3>
-
-      <sect3 id="HDRWQ102">
-        <title>Getting Started on Digital UNIX Systems</title>
-
-        <para>Begin by building AFS modifications into the kernel, then configure server partitions and replace the Digital UNIX
-        <emphasis role="bold">fsck</emphasis> program with a version that correctly handles AFS volumes.</para>
-
-        <para>If the machine's hardware and software configuration exactly matches another Digital UNIX machine on which AFS is
-        already built into the kernel, you can copy the kernel from that machine to this one. In general, however, it is better to
-        build AFS modifications into the kernel on each machine according to the following instructions. <orderedlist>
-            <indexterm>
-              <primary>incorporating AFS kernel extensions</primary>
-
-              <secondary>server machine after first</secondary>
-
-              <tertiary>Digital UNIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>AFS kernel extensions</primary>
-
-              <secondary>on server machine after first</secondary>
-
-              <tertiary>Digital UNIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>AFS kernel extensions</secondary>
-
-              <tertiary>on Digital UNIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>Digital UNIX</primary>
-
-              <secondary>AFS-modified kernel</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <listitem>
-              <para>Create a copy called <emphasis role="bold">AFS</emphasis> of the basic kernel configuration file included in the
-              Digital UNIX distribution as <emphasis role="bold">/usr/sys/conf/</emphasis><replaceable>machine_name</replaceable>,
-              where <replaceable>machine_name</replaceable> is the machine's hostname in all uppercase letters. <programlisting>
-   # <emphasis role="bold">cd /usr/sys/conf</emphasis>
-   # <emphasis role="bold">cp</emphasis> <replaceable>machine_name</replaceable> <emphasis role="bold">AFS</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Add AFS to the list of options in the configuration file you created in the previous step, so that the result
-              looks like the following: <programlisting>
-          .                   .
-          .                   .
-       options               UFS
-       options               NFS
-       options               AFS
-          .                   .
-          .                   .
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Add an entry for AFS to two places in the file <emphasis role="bold">/usr/sys/conf/files</emphasis>.
-              <itemizedlist>
-                  <listitem>
-                    <para>Add a line for AFS to the list of <computeroutput>OPTIONS</computeroutput>, so that the result looks like
-                    the following: <programlisting>
-             .                .      .
-             .                .      .
-      OPTIONS/nfs          optional nfs 
-      OPTIONS/afs          optional afs 
-      OPTIONS/nfs_server   optional nfs_server
-             .                .      .
-             .                .      .
-</programlisting></para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Add an entry for AFS to the list of <computeroutput>MODULES</computeroutput>, so that the result looks
-                    like the following: <programlisting>
-             .                  .        .          .
-             .                  .        .          .
-      #
-      MODULE/nfs_server     optional nfs_server Binary
-      nfs/nfs_server.c      module nfs_server optimize -g3
-      nfs/nfs3_server.c     module nfs_server optimize -g3
-      #
-      MODULE/afs            optional afs Binary
-      afs/libafs.c          module afs
-      #
-</programlisting></para>
-                  </listitem>
-                </itemizedlist></para>
-            </listitem>
-
-            <listitem>
-              <para>Add an entry for AFS to two places in the file <emphasis role="bold">/usr/sys/vfs/vfs_conf.c</emphasis>.
-              <itemizedlist>
-                  <listitem>
-                    <para>Add AFS to the list of defined file systems, so that the result looks like the following: <programlisting>
-        .       .              
-        .       .              
-     #include &lt;afs.h&gt;
-     #if defined(AFS) &amp;&amp; AFS
-            extern struct vfsops afs_vfsops;
-     #endif  
-        .       .              
-        .       .              
-</programlisting></para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Put a declaration for AFS in the <emphasis role="bold">vfssw[]</emphasis> table's MOUNT_ADDON slot, so
-                    that the result looks like the following: <programlisting>
-        .                          .              .
-        .                          .              .
-      &amp;fdfs_vfsops,         "fdfs",   /* 12 = MOUNT_FDFS */
-   #if  defined(AFS)
-      &amp;afs_vfsops,          "afs",
-   #else
-      (struct vfsops *)0,   "",       /* 13 = MOUNT_ADDON */
-   #endif
-   #if NFS &amp;&amp; INFS_DYNAMIC   
-       &amp;nfs3_vfsops,        "nfsv3",  /* 14 = MOUNT_NFS3 */         
-</programlisting></para>
-                  </listitem>
-                </itemizedlist></para>
-            </listitem>
-
-            <listitem>
-              <para>Mount the AFS CD-ROM for Digital UNIX on the local <emphasis role="bold">/cdrom</emphasis> directory. For
-              instructions on mounting CD-ROMs (either locally or remotely via NFS), see your Digital UNIX documentation. Then
-              change directory as indicated. <programlisting>
-   # <emphasis role="bold">cd /cdrom/alpha_dux40/root.client</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
-              role="bold">/sbin/init.d</emphasis> on Digital UNIX machines). Note the removal of the <emphasis
-              role="bold">.rc</emphasis> extension as you copy the script. <programlisting>
-   # <emphasis role="bold">cp usr/vice/etc/afs.rc  /sbin/init.d/afs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS kernel module to the local <emphasis role="bold">/usr/sys/BINARY</emphasis> directory.</para>
-
-              <para>If the machine's kernel supports NFS server functionality:</para>
-
-              <programlisting>
-   # <emphasis role="bold">cp bin/libafs.o /usr/sys/BINARY/afs.mod</emphasis>   
-</programlisting>
-
-              <para>If the machine's kernel does not support NFS server functionality:</para>
-
-              <programlisting>
-   # <emphasis role="bold">cp bin/libafs.nonfs.o /usr/sys/BINARY/afs.mod</emphasis>
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Configure and build the kernel. Respond to any prompts by pressing &lt;<emphasis
-              role="bold">Return</emphasis>&gt;. The resulting kernel resides in the file <emphasis
-              role="bold">/sys/AFS/vmunix</emphasis>. <programlisting>
-   # <emphasis role="bold">doconfig -c AFS</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Rename the existing kernel file and copy the new, AFS-modified file to the standard location. <programlisting>
-   # <emphasis role="bold">mv /vmunix /vmunix_noafs</emphasis>
-   # <emphasis role="bold">cp /sys/AFS/vmunix /vmunix</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Reboot the machine to start using the new kernel, and login again as the superuser <emphasis
-              role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -r now</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting> <indexterm>
-                  <primary>configuring</primary>
-
-                  <secondary>AFS server partition on server machine after first</secondary>
-
-                  <tertiary>Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>AFS server partition</primary>
-
-                  <secondary>configuring on server machine after first</secondary>
-
-                  <tertiary>Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>file server machine, additional</primary>
-
-                  <secondary>AFS server partition</secondary>
-
-                  <tertiary>on Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>Digital UNIX</primary>
-
-                  <secondary>AFS server partition</secondary>
-
-                  <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
-              <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS
-              server partition you are configuring (there must be at least one). Repeat the command for each partition.
-              <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Add a line with the following format to the file systems registry file, <emphasis
-              role="bold">/etc/fstab</emphasis>, for each directory just created. The entry maps the directory name to the disk
-              partition to be mounted on it. <programlisting>
-   /dev/<replaceable>disk</replaceable> /vicep<replaceable>xx</replaceable> ufs rw 0 2
-</programlisting></para>
-
-              <para>The following is an example for the first partition being configured.</para>
-
-              <programlisting>
-   /dev/rz3a /vicepa ufs rw 0 2
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Create a file system on each partition that is to be mounted at a <emphasis
-              role="bold">/vicep</emphasis><replaceable>xx</replaceable> directory. The following command is probably appropriate,
-              but consult the Digital UNIX documentation for more information. <programlisting>
-   # <emphasis role="bold">newfs -v /dev/</emphasis><replaceable>disk</replaceable>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Mount each partition by issuing either the <emphasis role="bold">mount -a</emphasis> command to mount all
-              partitions at once or the <emphasis role="bold">mount</emphasis> command to mount each partition in turn. <indexterm>
-                  <primary>replacing fsck program</primary>
-
-                  <secondary>server machine after first</secondary>
-
-                  <tertiary>Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>fsck program</primary>
-
-                  <secondary>on server machine after first</secondary>
-
-                  <tertiary>Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>file server machine, additional</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on Digital UNIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>Digital UNIX</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
-              <para>Install the <emphasis role="bold">vfsck</emphasis> binary to the <emphasis role="bold">/sbin</emphasis> and
-              <emphasis role="bold">/usr/sbin</emphasis> directories. The AFS CD-ROM must still be mounted at the <emphasis
-              role="bold">/cdrom</emphasis> directory. <programlisting>
-   # <emphasis role="bold">cd /cdrom/alpha_dux40/root.server/etc</emphasis>
-   # <emphasis role="bold">cp vfsck /sbin/vfsck</emphasis>
-   # <emphasis role="bold">cp vfsck /usr/sbin/vfsck</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Rename the Digital UNIX <emphasis role="bold">fsck</emphasis> binaries and create symbolic links to the
-              <emphasis role="bold">vfsck</emphasis> program. <programlisting>
-   # <emphasis role="bold">cd /sbin</emphasis>
-   # <emphasis role="bold">mv ufs_fsck ufs_fsck.noafs</emphasis>
-   # <emphasis role="bold">ln -s vfsck ufs_fsck</emphasis>
-   # <emphasis role="bold">cd /usr/sbin</emphasis>
-   # <emphasis role="bold">mv ufs_fsck ufs_fsck.noafs</emphasis>
-   # <emphasis role="bold">ln -s vfsck ufs_fsck</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
-              instructions in <link linkend="HDRWQ30">Enabling AFS Login on Digital UNIX Systems</link>.</para>
             </listitem>
 
             <listitem>
@@ -1122,7 +814,7 @@
                   <listitem>
                     <para>Issue the <emphasis role="bold">uname -m</emphasis> command to determine the machine's CPU board type. The
                     <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable> value in the output must match one of the
-                    supported CPU board types listed in the <emphasis>IBM AFS Release Notes</emphasis> for the current version of
+                    supported CPU board types listed in the <emphasis>OpenAFS Release Notes</emphasis> for the current version of
                     AFS. <programlisting>
    # <emphasis role="bold">uname -m</emphasis>
 </programlisting></para>
@@ -2265,7 +1957,7 @@
             <note>
               <para>Do not run the <emphasis role="bold">runntp</emphasis> process if NTPD or another time synchronization protocol
               is already running on the machine. Some versions of some operating systems run a time synchronization program by
-              default, as detailed in the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+              default, as detailed in the <emphasis>OpenAFS Release Notes</emphasis>.</para>
 
               <para>Attempting to run multiple instances of the NTPD causes an error. Running NTPD together with another time
               synchronization protocol is unnecessary and can cause instability in the clock setting.</para>
@@ -2681,10 +2373,6 @@
                 </listitem>
 
                 <listitem>
-                  <para>On Digital UNIX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
-                </listitem>
-
-                <listitem>
                   <para>On HP-UX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
                 </listitem>
 
@@ -2826,47 +2514,6 @@
    # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
    # <emphasis role="bold">rm  rc.afs</emphasis>
    # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Proceed to Step <link linkend="LIWQ113">4</link>.</para>
-                </listitem>
-              </orderedlist></para>
-
-            <indexterm>
-              <primary>Digital UNIX</primary>
-
-              <secondary>AFS initialization script</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <para><emphasis role="bold">On Digital UNIX systems:</emphasis> <orderedlist>
-                <listitem>
-                  <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-                  -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the Digital
-                  UNIX startup and shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd  /sbin/init.d</emphasis>
-   # <emphasis role="bold">ln -s  ../init.d/afs  /sbin/rc3.d/S67afs</emphasis>
-   # <emphasis role="bold">ln -s  ../init.d/afs  /sbin/rc0.d/K66afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-                  <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If
-                  you want to avoid potential confusion by guaranteeing that they are always the same, create a link between them.
-                  You can always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
 </programlisting></para>
                 </listitem>
 
@@ -3173,7 +2820,7 @@
           role="bold">/usr/afs/etc/KeyFile</emphasis> file must contain the same keys as all other server machines in the cell. If
           you run a system control machine, run the <emphasis role="bold">upclientetc</emphasis> process on every database server
           machine other than the system control machine; if you do not run a system control machine, use the <emphasis
-          role="bold">bos addkey</emphasis> command as instructed in the chapter in the <emphasis>IBM AFS Administration
+          role="bold">bos addkey</emphasis> command as instructed in the chapter in the <emphasis>OpenAFS Administration
           Guide</emphasis> about maintaining server encryption keys.</para>
 
           <para>The instructions in this section assume that the machine on which you are installing database server functionality
@@ -3195,7 +2842,7 @@
 
           <para>You update a client's kernel memory list by changing the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis>
           file and then either rebooting or issuing the <emphasis role="bold">fs newcell</emphasis> command. For instructions, see
-          the chapter in the <emphasis>IBM AFS Administration Guide</emphasis> about administering client machines.</para>
+          the chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines.</para>
 
           <para>The point at which you update your clients' knowledge of database server machines depends on which of the database
           server machines has the lowest IP address. The following instructions indicate the appropriate place to update your client
@@ -3412,7 +3059,7 @@
           linkend="LIWQ123">12</link>.)</para>
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
-          detailed in the chapter of the <emphasis>IBM AFS Administration Guide</emphasis> about administering client machines. One
+          detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
           option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
           without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
@@ -3468,7 +3115,7 @@
 
         <listitem>
           <para><anchor id="LIWQ119" />Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
-          perform other configuration procedures before actually using the AFS Backup System, as detailed in the <emphasis>IBM AFS
+          perform other configuration procedures before actually using the AFS Backup System, as detailed in the <emphasis>OpenAFS
           Administration Guide</emphasis>. <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>
 </programlisting> <indexterm>
@@ -3728,7 +3375,7 @@
           send requests to a decommissioned database server machine that is still listed in the file.</para>
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
-          detailed in the chapter of the <emphasis>IBM AFS Administration Guide</emphasis> about administering client machines. One
+          detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
           option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
           without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs

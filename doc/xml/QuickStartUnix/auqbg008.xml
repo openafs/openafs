@@ -159,7 +159,7 @@
           <para>In the directory for each system type, create subdirectories called <emphasis role="bold">dest</emphasis>, <emphasis
           role="bold">dest/bin</emphasis>, and <emphasis role="bold">obj</emphasis>. If you plan to use the
           <emphasis>@sys</emphasis> variable in pathnames that refer to these directories, then you must use the conventional system
-          names listed in the <emphasis>IBM AFS Release Notes</emphasis>. <programlisting>
+          names listed in the <emphasis>OpenAFS Release Notes</emphasis>. <programlisting>
    # <emphasis role="bold">cd</emphasis> <replaceable>sysname</replaceable>
    # <emphasis role="bold">mkdir dest</emphasis> 
    # <emphasis role="bold">mkdir dest/bin</emphasis> 

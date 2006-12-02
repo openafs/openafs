@@ -2,136 +2,196 @@
 <preface id="HDRWQ1">
   <title>About This Guide</title>
 
-  <para>This section describes the purpose, organization, and conventions of this document.</para>
+  <para>This section describes the purpose, organization, and conventions
+  of this document.</para>
 
   <sect1 id="HDRWQ2">
     <title>Audience and Purpose</title>
 
-    <para>This guide explains how to install and configure AFS<superscript>(R)</superscript> server and client machines. It assumes
-    that the reader is familiar with UNIX<superscript>(R)</superscript> system administration, but not AFS.</para>
+    <para>This guide explains how to install and configure <trademark
+    class="registered">AFS</trademark> server and client machines. It
+    assumes that the reader is familiar with <trademark
+    class="registered">UNIX</trademark> system administration, but not
+    AFS.</para>
 
-    <para>The instructions explain how to issue AFS commands in the context of specific tasks, but do not describe a command's
-    function or arguments in detail. Refer to the <emphasis>IBM AFS Administration Reference</emphasis> as necessary.</para>
+    <para>The instructions explain how to issue AFS commands in the
+    context of specific tasks, but do not describe a command's function or
+    arguments in detail. Refer to the <citetitle>OpenAFS Administration
+    Reference</citetitle> as necessary.</para>
   </sect1>
 
   <sect1 id="HDRWQ3">
     <title>Organization of the Document</title>
 
-    <para>See <link linkend="HDRWQ7">The Procedures Described in this Guide</link>.</para>
+    <para>See <link linkend="HDRWQ7">The Procedures Described in this
+    Guide</link>.</para>
   </sect1>
 
   <sect1 id="HDRWQ4">
     <title>How to Use This Document</title>
 
-    <para>See <link linkend="HDRWQ7">The Procedures Described in this Guide</link> and <link linkend="HDRWQ16">How to
+    <para>See <link linkend="HDRWQ7">The Procedures Described in this
+    Guide</link> and <link linkend="HDRWQ16">How to
     Continue</link>.</para>
   </sect1>
 
   <sect1 id="HDRWQ5">
     <title>Related Documents</title>
 
-    <para>The AFS documentation set also includes the following documents.</para>
+    <para>The OpenAFS documentation set also includes the following
+    documents.
+      <variablelist>
+        <varlistentry>
+          <term><citetitle>OpenAFS Administration Guide</citetitle></term>
 
-    <para>
-      <emphasis>IBM AFS Administration Guide</emphasis>
+          <listitem>
+            <para>This guide describes the concepts and procedures that a
+            system administrator must know to manage an AFS cell.  It
+            assumes familiarity with UNIX, but requires no previous
+            knowledge of AFS.</para>
+
+            <para>The first chapters of the <citetitle>OpenAFS
+            Administration Guide</citetitle> present basic concepts and
+            guidelines.  Understanding them is crucial to successful
+            administration of an AFS cell.  The remaining chapters in the
+            guide provide step-by-step instructions for specific
+            administrative tasks, along with discussions of the concepts
+            important to that particular task.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><citetitle>OpenAFS Administration
+          Reference</citetitle></term>
+
+          <listitem>
+            <para>This reference manual details the syntax and effect of
+            each AFS command.  It is intended for the experienced AFS
+            administrator, programmer, or user.</para>
+
+            <para>The <citetitle>OpenAFS Administration
+            Reference</citetitle> lists AFS files and commands in
+            alphabetical order.  The reference page for each command
+            specifies its syntax, including the acceptable aliases and
+            abbreviations.  It then describes the command's function,
+            arguments, and output if any.  Examples and a list of related
+            commands are provided, as are warnings where
+            appropriate.</para>
+
+            <para>This manual complements the <citetitle>OpenAFS
+            Administration Guide</citetitle>: it does not include
+            procedural information, but describes commands in more detail
+            than the <citetitle>OpenAFS Administration
+            Guide</citetitle>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><citetitle>OpenAFS User Guide</citetitle></term>
+
+          <listitem>
+            <para>This guide presents the basic concepts and procedures
+            necessary for using AFS effectively.  It assumes that the
+            reader has some experience with UNIX, but does not require
+            familiarity with networking or AFS.</para>
+
+            <para>The guide explains how to perform basic functions,
+            including authenticating, changing a password, protecting AFS
+            data, creating groups, and troubleshooting.  It provides
+            illustrative examples for each function and describes some of
+            the differences between the UNIX file system and AFS.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><citetitle>OpenAFS Release Notes</citetitle></term>
+
+          <listitem>
+            <para>This document provides information specific to each
+            release of AFS, such as a list of new features and commands, a
+            list of requirements and limitations, and instructions for
+            upgrading server and client machines.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
     </para>
-
-    <para>This guide describes the concepts and procedures that a system administrator must know to manage an AFS cell. It assumes
-    familiarity with UNIX, but requires no previous knowledge of AFS.</para>
-
-    <para>The first chapters of the <emphasis>IBM AFS Administration Guide</emphasis> present basic concepts and guidelines.
-    Understanding them is crucial to successful administration of an AFS cell. The remaining chapters in the guide provide
-    step-by-step instructions for specific administrative tasks, along with discussions of the concepts important to that particular
-    task.</para>
-
-    <para>
-      <emphasis>IBM AFS Administration Reference</emphasis>
-    </para>
-
-    <para>This reference manual details the syntax and effect of each AFS command. It is intended for the experienced AFS
-    administrator, programmer, or user.</para>
-
-    <para>The <emphasis>IBM AFS Administration Reference</emphasis> lists AFS files and commands in alphabetical order. The
-    reference page for each command specifies its syntax, including the acceptable aliases and abbreviations. It then describes the
-    command's function, arguments, and output if any. Examples and a list of related commands are provided, as are warnings where
-    appropriate.</para>
-
-    <para>This manual complements the <emphasis>IBM AFS Administration Guide</emphasis>: it does not include procedural information,
-    but describes commands in more detail than the <emphasis>IBM AFS Administration Guide</emphasis>.</para>
-
-    <para>
-      <emphasis>IBM AFS User Guide</emphasis>
-    </para>
-
-    <para>This guide presents the basic concepts and procedures necessary for using AFS effectively. It assumes that the reader has
-    some experience with UNIX, but does not require familiarity with networking or AFS.</para>
-
-    <para>The guide explains how to perform basic functions, including authenticating, changing a password, protecting AFS data,
-    creating groups, and troubleshooting. It provides illustrative examples for each function and describes some of the differences
-    between the UNIX file system and AFS.</para>
-
-    <para>
-      <emphasis>IBM AFS Release Notes</emphasis>
-    </para>
-
-    <para>This document provides information specific to each release of AFS, such as a list of new features and commands, a list of
-    requirements and limitations, and instructions for upgrading server and client machines.</para>
   </sect1>
 
   <sect1 id="HDRTYPO_CONV">
     <title>Typographical Conventions</title>
 
-    <para>This document uses the following typographical conventions: <itemizedlist>
+    <para>This document uses the following typographical conventions:
+      <itemizedlist>
         <listitem>
-          <para>Command and option names appear in <emphasis role="bold">bold type</emphasis> in syntax definitions, examples, and
-          running text. Names of directories, files, machines, partitions, volumes, and users also appear in <emphasis
-          role="bold">bold type</emphasis>.</para>
+          <para>Command and option names appear
+          in <emphasis role="bold">bold type</emphasis> in syntax
+          definitions, examples, and running text.  Names of directories,
+          files, machines, partitions, volumes, and users also appear
+          in <emphasis role="bold">bold type</emphasis>.</para>
         </listitem>
 
         <listitem>
-          <para>Variable information appears in <emphasis>italic type</emphasis>. This includes user-supplied information on command
-          lines and the parts of prompts that differ depending on who issues the command. New terms also appear in <emphasis>italic
-          type</emphasis>.</para>
+          <para>Variable information appears in <emphasis>italic
+          type</emphasis>.  This includes user-supplied information on
+          command lines and the parts of prompts that differ depending on
+          who issues the command.  New terms also appear
+          in <emphasis>italic type</emphasis>.</para>
+	</listitem>
+
+        <listitem>
+          <para>Examples of screen output and file contents appear
+          in <computeroutput>monospace type</computeroutput>.</para>
+        </listitem>
+      </itemizedlist>
+    </para>
+
+    <para>In addition, the following symbols appear in command syntax
+    definitions, both in the documentation and in AFS online help
+    statements. When issuing a command, do not type these
+    symbols.
+      <itemizedlist>
+        <listitem>
+          <para>Square brackets <emphasis role="bold">[ ]</emphasis>
+          surround optional items.</para>
         </listitem>
 
         <listitem>
-          <para>Examples of screen output and file contents appear in <computeroutput>monospace type</computeroutput>.</para>
-        </listitem>
-      </itemizedlist> </para>
-
-    <para>In addition, the following symbols appear in command syntax definitions, both in the documentation and in AFS online help
-    statements. When issuing a command, do not type these symbols. <itemizedlist>
-        <listitem>
-          <para>Square brackets <emphasis role="bold">[ ]</emphasis> surround optional items.</para>
+          <para>Angle brackets <emphasis role="bold">&lt; &gt;</emphasis>
+          surround user-supplied values in AFS commands.</para>
         </listitem>
 
         <listitem>
-          <para>Angle brackets <emphasis role="bold">&lt; &gt;</emphasis> surround user-supplied values in AFS commands.</para>
+          <para>A superscripted plus
+          sign <emphasis role="bold">+</emphasis> follows an argument that
+          accepts more than one value.</para>
         </listitem>
 
         <listitem>
-          <para>A superscripted plus sign <emphasis role="bold">+</emphasis> follows an argument that accepts more than one
-          value.</para>
+          <para>The percent sign <computeroutput>%</computeroutput>
+          represents the regular command shell prompt. Some operating
+          systems possibly use a different character for this
+          prompt.</para>
         </listitem>
 
         <listitem>
-          <para>The percent sign <computeroutput>%</computeroutput> represents the regular command shell prompt. Some operating
-          systems possibly use a different character for this prompt.</para>
+          <para>The number sign <computeroutput>#</computeroutput>
+          represents the command shell prompt for the local
+          superuser <emphasis role="bold">root</emphasis>. Some operating
+          systems possibly use a different character for this
+          prompt.</para>
         </listitem>
 
         <listitem>
-          <para>The number sign <computeroutput>#</computeroutput> represents the command shell prompt for the local superuser
-          <emphasis role="bold">root</emphasis>. Some operating systems possibly use a different character for this prompt.</para>
+          <para>The pipe symbol <emphasis role="bold">|</emphasis> in a
+          command syntax statement separates mutually exclusive values for
+          an argument.</para>
         </listitem>
+      </itemizedlist>
+    </para>
 
-        <listitem>
-          <para>The pipe symbol <emphasis role="bold">|</emphasis> in a command syntax statement separates mutually exclusive values
-          for an argument.</para>
-        </listitem>
-      </itemizedlist> </para>
-
-    <para>For additional information on AFS commands, including a description of command string components, acceptable abbreviations
-    and aliases, and how to get online help for commands, see the appendix to the <emphasis>IBM AFS Administration
-    Guide</emphasis>.</para>
+    <para>For additional information on AFS commands, including a
+    description of command string components, acceptable abbreviations and
+    aliases, and how to get online help for commands, see the appendix to
+    the <citetitle>OpenAFS Administration Guide</citetitle>.</para>
   </sect1>
 </preface>

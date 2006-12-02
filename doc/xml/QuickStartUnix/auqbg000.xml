@@ -12,47 +12,34 @@
 
 <book>
   <bookinfo>
-    <title>AFS Quick Beginnings</title>
+    <title>OpenAFS Quick Beginnings</title>
 
-    <subtitle>Version 3.6</subtitle>
-
-    <pubsnumber>Document Number SC09-4560-00</pubsnumber>
+    <subtitle>Version 1.4.2</subtitle>
 
     <copyright>
       <year>2000</year>
-
       <holder>IBM Corporation. All Rights Reserved</holder>
     </copyright>
 
+    <legalnotice>
+      <para>This documentation is covered by the IBM Public License
+      Version 1.0.</para>
+    </legalnotice>
+
     <revhistory>
       <revision>
-        <revnumber>3.6</revnumber>
-
-        <date>April 2000</date>
-
-        <revremark>First Edition</revremark>
+        <revnumber>1.4.2</revnumber>
+        <date>December 2006</date>
       </revision>
     </revhistory>
 
     <abstract>
-      <para>This edition applies to: <simplelist>
-          <member>IBM AFS for AIX, Version 3.6</member>
-
-          <member>IBM AFS for Digital Unix, Version 3.6</member>
-
-          <member>IBM AFS for HP-UX, Version 3.6</member>
-
-          <member>IBM AFS for Linux, Version 3.6</member>
-
-          <member>IBM AFS for SGI IRIX, Version 3.6</member>
-
-          <member>IBM AFS for Solaris, Version 3.6</member>
-        </simplelist></para>
-
-      <para>and to all subsequent releases and modifications until otherwise
-      indicated in new editions.This softcopy version is based on the printed
-      edition of this book. Some formatting amendments have been made to make
-      this information more suitable for softcopy.</para>
+      <para>This document describes the initial setup of an OpenAFS cell
+      and an OpenAFS client.  It is currently being updated for OpenAFS
+      1.4.2 and is still dated and incorrect in some details.  This
+      edition applies to OpenAFS for UNIX, Version 1.4.2, and to all
+      subsequent releases and modifications until otherwise indicated in
+      new editions.</para>
     </abstract>
   </bookinfo>
 
@@ -64,3 +51,20 @@
   &appendixA;
   &index;
 </book>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-omittag:nil
+sgml-shorttag:nil
+sgml-namecase-general:nil
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:nil
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
