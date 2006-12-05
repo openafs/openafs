@@ -2623,7 +2623,7 @@ rxi_PrepareSendPacket(register struct rx_call *call,
 	osi_Panic("PrepareSendPacket 1\n");	/* MTUXXX */
     } else {
         struct rx_queue q;
-       int nb;
+	int nb;
 
 	queue_Init(&q);
 
@@ -2634,8 +2634,8 @@ rxi_PrepareSendPacket(register struct rx_call *call,
 	if (nb)
 	    rxi_FreePackets(nb, &q);
 
-	p->niovecs = i;
-	p->wirevec[i - 1].iov_len += len;
+	p->niovecs = MAX(2, i);
+	p->wirevec[MAX(2, i) - 1].iov_len += len;
     }
     RXS_PreparePacket(conn->securityObject, call, p);
 }
