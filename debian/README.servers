@@ -66,10 +66,6 @@ Creating a New Cell
       all uppercase and be a domain name that you control, although
       neither is technically required.
 
-      Right now, for the aklog from openafs-krb5 to work, you need to
-      enable krb4 support (either full or nopreauth) and run krb524d.
-      Eventually this will no longer be necessary.
-
   2.  It is traditional (and recommended) in AFS (and for Kerberos) to
       give administrators two separate Kerberos principals, one regular
       principal to use for regular purposes and a separate admin principal

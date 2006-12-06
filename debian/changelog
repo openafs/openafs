@@ -2,8 +2,10 @@ openafs (1.4.2-4) unstable; urgency=low
 
   * Translation updates:
     - German, thanks Henrik Kroeger.  (Closes: #400800)
+  * Enabling v4 support or running krb524d is no longer required for aklog
+    to work.
 
- -- Russ Allbery <rra@debian.org>  Tue, 28 Nov 2006 15:01:41 -0800
+ -- Russ Allbery <rra@debian.org>  Tue,  5 Dec 2006 22:20:05 -0800
 
 openafs (1.4.2-3) unstable; urgency=low
 
