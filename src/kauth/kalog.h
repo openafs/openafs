@@ -27,6 +27,7 @@ typedef struct {
 #define	LOG_SETFIELDS		5
 #define	LOG_UNLOCK              6
 #define	LOG_AUTHFAILED	        7
+#define	LOG_TGTREQUEST		8
 
 #ifdef AUTH_DBM_LOG
 #ifdef AFS_LINUX20_ENV

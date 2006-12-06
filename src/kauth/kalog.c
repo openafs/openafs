@@ -115,6 +115,9 @@ kalog_log(char *principal, char *instance, char *sprincipal, char *sinstance,
     case LOG_GETTICKET:
 	strcat(keybuf, ":gtck");
 	break;
+    case LOG_TGTREQUEST:
+	strcat(keybuf, ":tgtreq");
+	break;
     default:
 	break;
     }
@@ -187,6 +190,9 @@ ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
     case LOG_GETTICKET:
 	strcat(logbuf, ":gtck");
 	break;
+    case LOG_TGTREQUEST:
+        strcat(logbuf, ":tgtreq");
+        break;
     default:
 	break;
     }
