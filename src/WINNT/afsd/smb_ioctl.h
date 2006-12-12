@@ -15,7 +15,7 @@
 #define SMB_IOCTL_FILENAME_NOSLASH "_._AFS_IOCTL_._"
 
 /* max parms for ioctl, in either direction */
-#define SMB_IOCTL_MAXDATA	8192
+#define SMB_IOCTL_MAXDATA	8192*2
 
 #define SMB_IOCTL_MAXPROCS	64			/* max # of calls */
 

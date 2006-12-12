@@ -2426,18 +2426,6 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     return 0;
 }   
 
-long smb_ReceiveTran2FindFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
-{
-    osi_Log0(smb_logp,"ReceiveTran2FindFirst - NOT_SUPPORTED");
-    return CM_ERROR_BADOP;
-}
-
-long smb_ReceiveTran2FindNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
-{
-    osi_Log0(smb_logp,"ReceiveTran2FindNext - NOT_SUPPORTED");
-    return CM_ERROR_BADOP;
-}
-
 long smb_ReceiveTran2QFSInfoFid(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     unsigned short fid;
@@ -4140,6 +4128,15 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 }
 #endif /* USE_OLD_MATCHING */
 
+/* smb_ReceiveTran2SearchDir implements both 
+ * Tran2_Find_First and Tran2_Find_Next
+ */
+#define TRAN2_FIND_FLAG_CLOSE_SEARCH		0x01
+#define TRAN2_FIND_FLAG_CLOSE_SEARCH_IF_END	0x02
+#define TRAN2_FIND_FLAG_RETURN_RESUME_KEYS	0x04
+#define TRAN2_FIND_FLAG_CONTINUE_SEARCH		0x08
+#define TRAN2_FIND_FLAG_BACKUP_INTENT		0x10
+
 long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     int attribute;
@@ -4278,7 +4275,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
-        searchFlags &= ~4;	/* no resume keys */
+        searchFlags &= ~TRAN2_FIND_FLAG_RETURN_RESUME_KEYS;	/* no resume keys */
 
     dirListPatchesp = NULL;
 
@@ -4416,7 +4413,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     bytesInBuffer = 0;
     while (1) {
         op = origOp;
-        if (searchFlags & 4)
+        if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
             /* skip over resume key */
             op += 4;
 
@@ -4644,7 +4641,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO)
                 ohbytes += 26;	/* Short name & length */
 
-            if (searchFlags & 4) {
+            if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
                 ohbytes += 4;	/* if resume key required */
             }   
 
@@ -4745,7 +4742,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 curPatchp->dep = dep;
             }   
 
-            if (searchFlags & 4)
+            if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS)
                 /* put out resume key */
                 *((u_long *)origOp) = nextEntryCookie;
 
@@ -4838,10 +4835,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * we're supposed to close the search if we're done, and we're done,
      * or if something went wrong, close the search.
      */
-    /* ((searchFlags & 1) || ((searchFlags & 2) && eos) */
-    if ((searchFlags & 1) || (returnedNames == 0) || 
-         ((searchFlags & 2) && eos) || code != 0)
+    if ((searchFlags & TRAN2_FIND_FLAG_CLOSE_SEARCH) || 
+	(returnedNames == 0) ||
+        ((searchFlags & TRAN2_FIND_FLAG_CLOSE_SEARCH_IF_END) && eos) || 
+	code != 0)
         smb_DeleteDirSearch(dsp);
+
     if (code)
         smb_SendTran2Error(vcp, p, opx, code);
     else
@@ -5934,6 +5933,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     BOOL foundscp;
     cm_req_t req;
     int created = 0;
+    cm_lock_data_t *ldp = NULL;									       
 
     cm_InitReq(&req);
 
@@ -6303,7 +6303,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      * scp is NULL.
      */
     if (code == 0 && !treeCreate) {
-        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req);
+        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
         if (code) {
             if (dscp)
                 cm_ReleaseSCache(dscp);
@@ -6316,6 +6316,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
             if (scp)
@@ -6344,9 +6345,20 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                      */
                     osi_Log2(smb_logp, "symlink vp %x to vp %x",
                               scp, targetScp);
+		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                     cm_ReleaseSCache(scp);
                     scp = targetScp;
-                }
+		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+		    if (code) {
+			if (dscp)
+			    cm_ReleaseSCache(dscp);
+			if (scp)
+			    cm_ReleaseSCache(scp);
+			cm_ReleaseUser(userp);
+			free(realPathp);
+			return code;
+		    }
+		}
             }
             code = cm_SetAttr(scp, &setAttr, userp, &req);
             openAction = 3;	/* truncated existing file */
@@ -6501,6 +6513,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (code) {
         /* something went wrong creating or truncating the file */
+	if (ldp)
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         if (scp) 
             cm_ReleaseSCache(scp);
         if (dscp) 
@@ -6523,12 +6537,16 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 * we'll just use the symlink anyway.
                 */
                 osi_Log2(smb_logp, "symlink vp %x to vp %x", scp, targetScp);
+		if (ldp)
+		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
+	    if (ldp)
+		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
@@ -6540,6 +6558,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* (only applies to single component case) */
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
+	if (ldp)
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         cm_ReleaseSCache(scp);
         if (dscp)
             cm_ReleaseSCache(dscp);
@@ -6582,17 +6602,23 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
+	    if (ldp)
+		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             if (dscp)
                 cm_ReleaseSCache(dscp);
-            cm_ReleaseUser(userp);
-            /* shouldn't this be smb_CloseFID() fidp->flags = SMB_FID_DELETE; */
+	    cm_ReleaseUser(userp);
+	    /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
 	    smb_CloseFID(vcp, fidp, NULL, 0);
-            smb_ReleaseFID(fidp);
+	    smb_ReleaseFID(fidp);
             free(realPathp);
             return code;
         }
     }
+
+    /* Now its safe to release the file server lock obtained by cm_CheckNTOpen() */
+    if (ldp)
+	cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
@@ -6717,6 +6743,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     char *outData;
     cm_req_t req;
     int created = 0;
+    cm_lock_data_t *ldp = NULL;
 
     cm_InitReq(&req);
 
@@ -6989,8 +7016,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
      * scp is NULL.
      */
     if (code == 0) {
-        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
-                               &req);
+        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
         if (code) {     
             if (dscp) 
                 cm_ReleaseSCache(dscp);
@@ -7002,6 +7028,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
         if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp) 
                 cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
@@ -7028,8 +7055,19 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                     */
                     osi_Log2(smb_logp, "symlink vp %x to vp %x",
                               scp, targetScp);
+		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                     cm_ReleaseSCache(scp);
                     scp = targetScp;
+		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+		    if (code) {
+			if (dscp)
+			    cm_ReleaseSCache(dscp);
+			if (scp)
+			    cm_ReleaseSCache(scp);
+			cm_ReleaseUser(userp);
+			free(realPathp);
+			return code;
+		    }
                 }
             }
             code = cm_SetAttr(scp, &setAttr, userp, &req);
@@ -7124,7 +7162,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     if (code) {
         /* something went wrong creating or truncating the file */
-        if (scp) 
+	if (ldp)
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+	if (scp) 
             cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         free(realPathp);
@@ -7145,12 +7185,16 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 */
                 osi_Log2(smb_logp, "symlink vp %x to vp %x",
                           scp, targetScp);
+		if (ldp)
+		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
+	    if (ldp)
+		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -7159,6 +7203,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
+	if (ldp)
+	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         free(realPathp);
@@ -7199,15 +7245,21 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
+	    if (ldp)
+		cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
-            /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
+	    /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
 	    smb_CloseFID(vcp, fidp, NULL, 0);
-            smb_ReleaseFID(fidp);
-            free(realPathp);
+	    smb_ReleaseFID(fidp);
+	    free(realPathp);
             return CM_ERROR_SHARING_VIOLATION;
         }
     }
+
+    /* Now its safe to drop the file server lock obtained by cm_CheckNTOpen() */
+    if (ldp)
+	cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
@@ -7363,14 +7415,15 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *outp)
 {
     smb_packet_t *savedPacketp;
-    ULONG filter; USHORT fid, watchtree;
+    ULONG filter; 
+    USHORT fid, watchtree;
     smb_fid_t *fidp;
     cm_scache_t *scp;
         
     filter = smb_GetSMBParm(inp, 19) |
              (smb_GetSMBParm(inp, 20) << 16);
     fid = smb_GetSMBParm(inp, 21);
-    watchtree = smb_GetSMBParm(inp, 22) && 0xffff;  /* TODO: should this be 0xff ? */
+    watchtree = (smb_GetSMBParm(inp, 22) & 0xff) ? 1 : 0;
 
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp) {
@@ -7378,21 +7431,51 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
         return CM_ERROR_BADFD;
     }
 
+    /* Create a copy of the Directory Watch Packet to use when sending the
+     * notification if in the future a matching change is detected.
+     */
     savedPacketp = smb_CopyPacket(inp);
     smb_HoldVC(vcp);
     if (savedPacketp->vcp)
 	smb_ReleaseVC(savedPacketp->vcp);
     savedPacketp->vcp = vcp;
+
+    /* Add the watch to the list of events to send notifications for */
     lock_ObtainMutex(&smb_Dir_Watch_Lock);
     savedPacketp->nextp = smb_Directory_Watches;
     smb_Directory_Watches = savedPacketp;
     lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
-    osi_Log4(smb_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
-             filter, fid, watchtree, osi_LogSaveString(smb_logp, fidp->NTopen_wholepathp));
-
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReceiveNTTranNotifyChange fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log3(afsd_logp,"smb_ReceiveNTTranNotifyChange fidp 0x%p scp 0x%p file \"%s\"", 
+	      fidp, scp, osi_LogSaveString(smb_logp, fidp->NTopen_wholepathp));
+    osi_Log3(smb_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d",
+             filter, fid, watchtree);
+    if (filter & FILE_NOTIFY_CHANGE_FILE_NAME)
+	osi_Log0(smb_logp, "      Notify Change File Name");
+    if (filter & FILE_NOTIFY_CHANGE_DIR_NAME)
+	osi_Log0(smb_logp, "      Notify Change Directory Name");
+    if (filter & FILE_NOTIFY_CHANGE_ATTRIBUTES)
+	osi_Log0(smb_logp, "      Notify Change Attributes");
+    if (filter & FILE_NOTIFY_CHANGE_SIZE)
+	osi_Log0(smb_logp, "      Notify Change Size");
+    if (filter & FILE_NOTIFY_CHANGE_LAST_WRITE)
+	osi_Log0(smb_logp, "      Notify Change Last Write");
+    if (filter & FILE_NOTIFY_CHANGE_LAST_ACCESS)
+	osi_Log0(smb_logp, "      Notify Change Last Access");
+    if (filter & FILE_NOTIFY_CHANGE_CREATION)
+	osi_Log0(smb_logp, "      Notify Change Creation");
+    if (filter & FILE_NOTIFY_CHANGE_EA)
+	osi_Log0(smb_logp, "      Notify Change Extended Attributes");
+    if (filter & FILE_NOTIFY_CHANGE_SECURITY)
+	osi_Log0(smb_logp, "      Notify Change Security");
+    if (filter & FILE_NOTIFY_CHANGE_STREAM_NAME)
+	osi_Log0(smb_logp, "      Notify Change Stream Name");
+    if (filter & FILE_NOTIFY_CHANGE_STREAM_SIZE)
+	osi_Log0(smb_logp, "      Notify Change Stream Size");
+    if (filter & FILE_NOTIFY_CHANGE_STREAM_WRITE)
+	osi_Log0(smb_logp, "      Notify Change Stream Write");
+
     lock_ObtainMutex(&scp->mx);
     if (watchtree)
         scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
@@ -7526,6 +7609,9 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
  *
  * If we don't know the file name (i.e. a callback break), filename is
  * NULL, and we return a zero-length list.
+ *
+ * At present there is not a single call to smb_NotifyChange that 
+ * has the isDirectParent parameter set to FALSE.  
  */
 void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 	cm_scache_t *dscp, char *filename, char *otherFilename,
@@ -7548,8 +7634,20 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         otherAction = FILE_ACTION_RENAMED_NEW_NAME;
     }
 
-    osi_Log2(smb_logp,"in smb_NotifyChange for file [%s] dscp [%x]",
-             osi_LogSaveString(smb_logp,filename),dscp);
+    osi_Log4(smb_logp,"in smb_NotifyChange for file [%s] dscp [%p] notification 0x%x parent %d",
+             osi_LogSaveString(smb_logp,filename),dscp, notifyFilter, isDirectParent);
+    if (action == 0)
+	osi_Log0(smb_logp,"      FILE_ACTION_NONE");
+    if (action == FILE_ACTION_ADDED)
+	osi_Log0(smb_logp,"      FILE_ACTION_ADDED");
+    if (action == FILE_ACTION_REMOVED)
+	osi_Log0(smb_logp,"      FILE_ACTION_REMOVED");
+    if (action == FILE_ACTION_MODIFIED)
+	osi_Log0(smb_logp,"      FILE_ACTION_MODIFIED");
+    if (action == FILE_ACTION_RENAMED_OLD_NAME)
+	osi_Log0(smb_logp,"      FILE_ACTION_RENAMED_OLD_NAME");
+    if (action == FILE_ACTION_RENAMED_NEW_NAME)
+	osi_Log0(smb_logp,"      FILE_ACTION_RENAMED_NEW_NAME");
 
     lock_ObtainMutex(&smb_Dir_Watch_Lock);
     watch = smb_Directory_Watches;
@@ -7557,20 +7655,20 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         filter = smb_GetSMBParm(watch, 19)
             | (smb_GetSMBParm(watch, 20) << 16);
         fid = smb_GetSMBParm(watch, 21);
-        wtree = smb_GetSMBParm(watch, 22) & 0xffff;  /* TODO: should this be 0xff ? */
+        wtree = (smb_GetSMBParm(watch, 22) & 0xff) ? 1 : 0;
+
         maxLen = smb_GetSMBOffsetParm(watch, 5, 1)
             | (smb_GetSMBOffsetParm(watch, 6, 1) << 16);
 
         /*
-         * Strange hack - bug in NT Client and NT Server that we
-         * must emulate?
+         * Strange hack - bug in NT Client and NT Server that we must emulate?
          */
-        if (filter == 3 && wtree)
-            filter = 0x17;
+        if ((filter == (FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME)) && wtree)
+            filter |= FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES;
 
         fidp = smb_FindFID(watch->vcp, fid, 0);
         if (!fidp) {
-            osi_Log1(smb_logp," no fidp for fid[%d]",fid);
+            osi_Log2(smb_logp," no fidp for fid[%d] in vcp 0x%p",fid, watch->vcp);
             lastWatch = watch;
             watch = watch->nextp;
             continue;
@@ -7578,7 +7676,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         if (fidp->scp != dscp
              || (filter & notifyFilter) == 0
              || (!isDirectParent && !wtree)) {
-            osi_Log1(smb_logp," passing fidp->scp[%x]", fidp->scp);
+            osi_Log1(smb_logp," skipping fidp->scp[%x]", fidp->scp);
             smb_ReleaseFID(fidp);
             lastWatch = watch;
             watch = watch->nextp;
@@ -7589,7 +7687,32 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         osi_Log4(smb_logp,
                   "Sending Change Notification for fid %d filter 0x%x wtree %d file %s",
                   fid, filter, wtree, osi_LogSaveString(smb_logp, filename));
-
+	if (filter & FILE_NOTIFY_CHANGE_FILE_NAME)
+	    osi_Log0(smb_logp, "      Notify Change File Name");
+	if (filter & FILE_NOTIFY_CHANGE_DIR_NAME)
+	    osi_Log0(smb_logp, "      Notify Change Directory Name");
+	if (filter & FILE_NOTIFY_CHANGE_ATTRIBUTES)
+	    osi_Log0(smb_logp, "      Notify Change Attributes");
+	if (filter & FILE_NOTIFY_CHANGE_SIZE)
+	    osi_Log0(smb_logp, "      Notify Change Size");
+	if (filter & FILE_NOTIFY_CHANGE_LAST_WRITE)
+	    osi_Log0(smb_logp, "      Notify Change Last Write");
+	if (filter & FILE_NOTIFY_CHANGE_LAST_ACCESS)
+	    osi_Log0(smb_logp, "      Notify Change Last Access");
+	if (filter & FILE_NOTIFY_CHANGE_CREATION)
+	    osi_Log0(smb_logp, "      Notify Change Creation");
+	if (filter & FILE_NOTIFY_CHANGE_EA)
+	    osi_Log0(smb_logp, "      Notify Change Extended Attributes");
+	if (filter & FILE_NOTIFY_CHANGE_SECURITY)
+	    osi_Log0(smb_logp, "      Notify Change Security");
+	if (filter & FILE_NOTIFY_CHANGE_STREAM_NAME)
+	    osi_Log0(smb_logp, "      Notify Change Stream Name");
+	if (filter & FILE_NOTIFY_CHANGE_STREAM_SIZE)
+	    osi_Log0(smb_logp, "      Notify Change Stream Size");
+	if (filter & FILE_NOTIFY_CHANGE_STREAM_WRITE)
+	    osi_Log0(smb_logp, "      Notify Change Stream Write");
+		     
+	/* A watch can only be notified once.  Remove it from the list */
         nextWatch = watch->nextp;
         if (watch == smb_Directory_Watches)
             smb_Directory_Watches = nextWatch;

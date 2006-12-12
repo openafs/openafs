@@ -359,15 +359,6 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         buf_Release(bufferp);
     }
 
-#if 0
-    if (code == 0 /* && filter != 0 && (fidp->flags & SMB_FID_NTOPEN)
-        && (fidp->NTopen_dscp->flags & CM_SCACHEFLAG_ANYWATCH)*/) {
-        smb_NotifyChange(FILE_ACTION_MODIFIED, filter,
-                         fidp->NTopen_dscp, fidp->NTopen_pathp,
-                         NULL, TRUE);
-    }
-#endif
-
     if (code == 0 && doWriteBack) {
         lock_ObtainMutex(&scp->mx);
         cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);

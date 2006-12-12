@@ -339,4 +339,9 @@ extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 #define FILE_GENERIC_EXECUTE (0x001200a0)
 #endif /* DJGPP */
 
+/* Some of the FILE_NOTIFY_CHANGE values are undefined in winnt.h */
+#define FILE_NOTIFY_CHANGE_EA           0x00000080
+#define FILE_NOTIFY_CHANGE_STREAM_NAME  0x00000200
+#define FILE_NOTIFY_CHANGE_STREAM_SIZE  0x00000400
+#define FILE_NOTIFY_CHANGE_STREAM_WRITE 0x00000800
 #endif /*  __SMB3_H_ENV__ */

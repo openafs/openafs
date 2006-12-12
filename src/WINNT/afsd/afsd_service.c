@@ -40,7 +40,7 @@ HANDLE hAFSDWorkerThread[WORKER_THREADS];
 
 HANDLE WaitToTerminate;
 
-int GlobalStatus;
+static int GlobalStatus;
 
 #ifdef JUMP
 unsigned int MainThreadId;
@@ -50,7 +50,8 @@ jmp_buf notifier_jmp;
 extern int traceOnPanic;
 extern HANDLE afsi_file;
 
-int powerEventsRegistered = 0;
+static int powerEventsRegistered = 0;
+extern int powerStateSuspended = 0;
 
 /*
  * Notifier function for use by osi_panic
@@ -325,12 +326,14 @@ afsd_ServiceControlHandlerEx(
                     /* allow remaining case PBT_WhatEver */                                           
                 case PBT_APMSUSPEND:                         
                     afsi_log("SERVICE_CONTROL_APMSUSPEND");
+		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6)
 			smb_StopListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMSTANDBY:                  
                     afsi_log("SERVICE_CONTROL_APMSTANDBY"); 
+		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6)
 			smb_StopListeners();
                     dwRet = NO_ERROR;                       
@@ -342,15 +345,13 @@ afsd_ServiceControlHandlerEx(
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMRESUMESUSPEND:                                                        
+		    /* User logged in after suspend */
                     afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND"); 
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
-                case PBT_APMRESUMESTANDBY:                                                        
+                case PBT_APMRESUMESTANDBY:            
+		    /* User logged in after standby */
                     afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY"); 
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
                     break;                                  
                 case PBT_APMBATTERYLOW:                                                           
@@ -369,8 +370,10 @@ afsd_ServiceControlHandlerEx(
 #endif
                     dwRet = NO_ERROR;                       
                     break;                                  
-                case PBT_APMRESUMEAUTOMATIC:                                                      
+                case PBT_APMRESUMEAUTOMATIC:          
+		    /* This is the message delivered once all devices are up */
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC"); 
+		    powerStateSuspended = 0;
 		    if (osVersion.dwMajorVersion >= 6)
 			smb_RestartListeners();
                     dwRet = NO_ERROR;                       
