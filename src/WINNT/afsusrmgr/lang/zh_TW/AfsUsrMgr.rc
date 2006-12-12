@@ -66,7 +66,7 @@ BEGIN
     EDITTEXT        IDC_USERS_PATTERN,185,4,40,13,ES_AUTOHSCROLL
     RTEXT           "型樣：",IDC_USERS_PATTERN_PROMPT,152,6,28,8
     LTEXT           "查詢中；請稍候...",IDC_USERS_TITLE,4,6,142,8
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "建立(&C)...",M_USER_CREATE,65,126,55,14
     PUSHBUTTON      "成員資格(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -81,7 +81,7 @@ BEGIN
     EDITTEXT        IDC_GROUPS_PATTERN,197,4,41,13,ES_AUTOHSCROLL
     RTEXT           "型樣：",IDC_GROUPS_PATTERN_PROMPT,163,6,28,8
     LTEXT           "查詢中；請稍候...",IDC_GROUPS_TITLE,4,6,142,8
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "建立(&C)...",M_GROUP_CREATE,65,126,55,14
     PUSHBUTTON      "成員(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -96,7 +96,7 @@ CLASS "AFSAccountManagerClass"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     LTEXT           "查詢中；請稍候...",IDC_ACTION_DESC,2,2,232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -280,7 +280,7 @@ BEGIN
     GROUPBOX        "群組",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您變更這位使用者所屬的群組清單，以及這位使用者擁有的群組清單。",
                     IDC_STATIC,5,5,220,17
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -299,7 +299,7 @@ BEGIN
     GROUPBOX        "群組成員資格",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您選擇此群組的成員，以及群組應擁有的群組。",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -329,7 +329,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "型樣：",IDC_GROUPS_PATTERN_PROMPT,198,8,29,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -403,7 +403,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "型樣：",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -429,7 +429,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "型樣：",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -441,7 +441,7 @@ BEGIN
     GROUPBOX        "群組",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您變更此使用者所屬的起始群組清單，以及此使用者擁有的群組。",
                     IDC_STATIC,5,5,220,17
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -516,7 +516,7 @@ BEGIN
     GROUPBOX        "群組成員資格",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您選擇此群組的起始成員，以及此群組應擁有的群組。",
                     IDC_STATIC,5,5,210,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -678,7 +678,7 @@ BEGIN
     EDITTEXT        IDC_MACHINES_PATTERN,197,4,41,13,ES_AUTOHSCROLL
     RTEXT           "型樣：",IDC_MACHINES_PATTERN_PROMPT,163,6,28,8
     LTEXT           "查詢中；請稍候...",IDC_MACHINES_TITLE,4,6,142,8
-    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_MACHINES_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "建立(&C)...",M_MACHINE_CREATE,65,126,55,14
     PUSHBUTTON      "成員資格(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -693,7 +693,7 @@ BEGIN
     GROUPBOX        "群組",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您選取此帳戶所屬的起始群組清單，以及該帳戶擁有的群組。",
                     IDC_STATIC,5,5,220,17,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -791,7 +791,7 @@ BEGIN
     GROUPBOX        "群組",IDC_STATIC,5,31,220,160
     LTEXT           "這些設定讓您變更此帳戶所屬的群組清單，以及此帳戶擁有的群組。",
                     IDC_STATIC,5,5,220,17,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "移除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "新增(&A)...",IDC_MEMBER_ADD,113,169,50,14

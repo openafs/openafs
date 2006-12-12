@@ -134,8 +134,11 @@ BOOL RegisterCheckListClass (void)
       wc.hbrBackground = CreateSolidBrush (GetSysColor (COLOR_BTNFACE));
       wc.lpszClassName = WC_CHECKLIST;
 
-      if (RegisterClass (&wc))
-         fRegistered = TRUE;
+	  if (RegisterClass (&wc)) {
+	      fRegistered = TRUE;
+	  } else {
+	      OutputDebugString("CheckList class registration failed\n");
+	  }
       }
 
    return fRegistered;

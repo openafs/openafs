@@ -67,7 +67,7 @@ BEGIN
     RTEXT           "パターン:",IDC_USERS_PATTERN_PROMPT,138,6,34,8
     LTEXT           "照会中です。お待ちください...",IDC_USERS_TITLE,4,6,100,
                     8
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,99
     PUSHBUTTON      "作成(&C)...",M_USER_CREATE,17,126,55,14
     PUSHBUTTON      "メンバーシップ(&M)...",M_MEMBERSHIP,76,126,83,14
@@ -83,7 +83,7 @@ BEGIN
     RTEXT           "パターン:",IDC_GROUPS_PATTERN_PROMPT,155,6,34,8
     LTEXT           "照会中です。お待ちください...",IDC_GROUPS_TITLE,4,6,142,
                     8
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,96
     PUSHBUTTON      "作成(&C)...",M_GROUP_CREATE,41,125,55,14
     PUSHBUTTON      "メンバー(&M)...",M_MEMBERSHIP,100,125,59,14
@@ -99,7 +99,7 @@ FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
     LTEXT           "照会中です。お待ちください...",IDC_ACTION_DESC,2,2,232,
                     8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -285,7 +285,7 @@ BEGIN
     GROUPBOX        "グループ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このユーザーが属しているグループのリストと、このユーザーが所有しているグループのリストを変更することができます。",
                     IDC_STATIC,5,3,220,22
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -307,7 +307,7 @@ BEGIN
     GROUPBOX        "グループ・メンバーシップ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このグループのメンバーと、このグループが所有するグループを選択することができます。",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,85,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,172,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,172,50,14
@@ -339,7 +339,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "パターン:",IDC_GROUPS_PATTERN_PROMPT,198,8,34,8
     EDITTEXT        IDC_BROWSE_PATTERN,235,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -414,7 +414,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "パターン:",IDC_GROUPS_PATTERN_PROMPT,198,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,39,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -440,7 +440,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "パターン:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,235,6,33,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -452,7 +452,7 @@ BEGIN
     GROUPBOX        "グループ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このユーザーが属する初期グループのリストと、このユーザーが所有するグループを変更することができます。",
                     IDC_STATIC,5,3,220,22
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,171,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,171,50,14
@@ -531,7 +531,7 @@ BEGIN
     GROUPBOX        "グループ・メンバーシップ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このグループの初期メンバーと、このグループが所有するグループを選択することができます。",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,170,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,170,50,14
@@ -702,7 +702,7 @@ BEGIN
     RTEXT           "パターン:",IDC_MACHINES_PATTERN_PROMPT,155,6,34,8
     LTEXT           "照会中です。お待ちください...",IDC_MACHINES_TITLE,4,6,
                     142,8
-    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_MACHINES_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,98
     PUSHBUTTON      "作成(&C)...",M_MACHINE_CREATE,15,126,55,14
     PUSHBUTTON      "メンバーシップ(&M)...",M_MEMBERSHIP,74,126,83,14
@@ -717,7 +717,7 @@ BEGIN
     GROUPBOX        "グループ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このアカウントが属する初期グループのリストと、このアカウントが所有するグループを選択することができます。",
                     IDC_STATIC,5,3,220,25,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,170,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,170,50,14
@@ -822,7 +822,7 @@ BEGIN
     GROUPBOX        "グループ",IDC_STATIC,5,31,220,160
     LTEXT           "以下の設定を使用して、このアカウントが属しているグループのリストと、このアカウントが所有しているグループを変更することができます。",
                     IDC_STATIC,5,4,220,21,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "削除(&R)",IDC_MEMBER_REMOVE,167,171,50,14
     PUSHBUTTON      "追加(&A)...",IDC_MEMBER_ADD,113,171,50,14

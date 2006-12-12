@@ -817,7 +817,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     LTEXT           "服務：",IDC_SVC_DESC,6,5,150,8
-    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,3,17,169,
+    CONTROL         "",IDC_SVC_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,3,17,169,
                     61,WS_EX_STATICEDGE
     PUSHBUTTON      "建立(&C)...",IDC_SVC_CREATE,20,83,47,12
     PUSHBUTTON      "刪除(&L)",IDC_SVC_DELETE,72,83,47,12
@@ -829,7 +829,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     LTEXT           "分割區：",IDC_AGG_DESC,2,5,154,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,1,17,164,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,1,17,164,
                     53,WS_EX_STATICEDGE
     PUSHBUTTON      "建立容體(&C)...",IDC_AGG_CREATESET,102,75,63,12
 END
@@ -839,7 +839,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     LTEXT           "容體：",IDC_SET_DESC,6,5,166,8
-    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,5,17,184,
+    CONTROL         "",IDC_SET_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,5,17,184,
                     61,WS_EX_STATICEDGE
     PUSHBUTTON      "建立(&C)...",IDC_SET_CREATE,4,82,39,12
     PUSHBUTTON      "刪除(&L)",IDC_SET_DELETE,47,82,39,12
@@ -851,7 +851,7 @@ IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+    CONTROL         "",IDC_LIST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,22,216,
                     135,WS_EX_CLIENTEDGE
     PUSHBUTTON      "新增管理員(&A)",IDC_LIST_ADD,55,160,80,14
     PUSHBUTTON      "移除管理員(&R)",IDC_LIST_REMOVE,141,160,80,14
@@ -1028,7 +1028,7 @@ BEGIN
     LTEXT           "（將會把 Cell 名稱放在此處）",IDC_CELL,62,8,208,9
     LTEXT           "AFS 記號：",IDC_STATIC,2,19,55,8
     LTEXT           "%2:%1（記號將過期 %3）",IDC_AFS_ID,62,19,208,9
-    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,31,313,
+    CONTROL         "",IDC_SERVERS,"OpenAFS_FastList",WS_TABSTOP | 0x301,2,31,313,
                     193,WS_EX_CLIENTEDGE
     CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
     ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE |
@@ -1085,7 +1085,7 @@ IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
 STYLE WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+    CONTROL         "",IDC_SET_REP_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,11,80,
                     199,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "立即釋放(&R)",IDC_SET_RELEASE,11,143,52,14
     PUSHBUTTON      "建立(&C)...",IDC_SET_REPSITE_ADD,129,143,38,14
@@ -1215,7 +1215,7 @@ BEGIN
     COMBOBOX        IDC_SET_SERVER,52,82,115,107,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "分割區(&P)：",IDC_STATIC,4,102,45,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,51,102,266,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,51,102,266,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "確定",IDOK,156,191,50,14
     PUSHBUTTON      "取消",IDCANCEL,211,191,50,14
@@ -1323,7 +1323,7 @@ FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST |
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,70,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,70,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "確定",IDOK,115,156,50,14
     PUSHBUTTON      "取消",IDCANCEL,169,156,50,14
@@ -1415,7 +1415,7 @@ CLASS "AFSManagerClass"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     LTEXT           "目前正在進行以下的作業：",IDC_ACTION_DESC,2,2,232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP |
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP |
                     0x3,2,14,232,43
 END
 
@@ -1441,7 +1441,7 @@ FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,62,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,62,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "確定",IDOK,115,153,50,14
     PUSHBUTTON      "取消",IDCANCEL,169,153,50,14
@@ -1636,7 +1636,7 @@ BEGIN
     COMBOBOX        IDC_RESTORE_SERVER,55,143,116,104,CBS_DROPDOWNLIST |
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "分割區(&P)：",IDC_STATIC,11,162,44,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,56,161,225,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,56,161,225,
                     55,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "確定",IDOK,128,230,50,14
     PUSHBUTTON      "取消",IDCANCEL,183,230,50,14
@@ -1747,7 +1747,7 @@ BEGIN
                     ES_READONLY | NOT WS_TABSTOP
     PUSHBUTTON      "開啟(&O)...",IDC_SUBSET_LOAD,188,75,39,14
     PUSHBUTTON      "儲存(&S)...",IDC_SUBSET_SAVE,233,75,39,14
-    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL |
+    CONTROL         "",IDC_SUBSET_LIST,"OpenAFS_CheckList",WS_BORDER | WS_VSCROLL |
                     WS_TABSTOP | 0x153,12,111,193,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "全部監視(&A)",IDC_SUBSET_ALL,211,122,57,14
     PUSHBUTTON      "不監視(&N)",IDC_SUBSET_NONE,211,140,57,14
@@ -1870,7 +1870,7 @@ IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,22,216,
+    CONTROL         "",IDC_KEY_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x30b,5,22,216,
                     135,WS_EX_CLIENTEDGE
     PUSHBUTTON      "新增伺服器金鑰(&A)",IDC_KEY_ADD,58,160,79,14
     PUSHBUTTON      "移除伺服器金鑰(&R)",IDC_KEY_REMOVE,141,160,79,14
@@ -2036,7 +2036,7 @@ BEGIN
     PUSHBUTTON      "移除主電腦伺服器(&R)",IDC_HOST_REMOVE,138,160,80,14
     LTEXT           "伺服器所辨識的資料庫主電腦伺服器",IDC_HOST_TITLE,5,7,
                     216,8
-    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+    CONTROL         "",IDC_HOST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,22,216,
                     135,WS_EX_CLIENTEDGE
 END
 

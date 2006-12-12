@@ -62,7 +62,7 @@ FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "&Yes, create a partition.",IDC_CREATE_PARTITION,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,0,94,87,10
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,116,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,12,116,
                     186,52,WS_EX_CLIENTEDGE
     EDITTEXT        IDC_PARTITION_NAME,101,172,20,12,ES_AUTOHSCROLL
     CONTROL         "N&o, do not create a partition.",
@@ -457,7 +457,7 @@ BEGIN
                     IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
     PUSHBUTTON      "Re&move",IDC_REMOVE,17,217,53,14,WS_DISABLED
     GROUPBOX        "Partitions",IDC_AGGR_FRAME,7,103,281,155
-    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+    CONTROL         "",IDC_PARTITION_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x83,7,16,
                     281,79,WS_EX_CLIENTEDGE
     LTEXT           "To create a new partition on this server, click the button above.",
                     IDC_CREATE_MSG,30,136,254,8
@@ -476,7 +476,7 @@ BEGIN
     PUSHBUTTON      "Cl&ose",IDC_CLOSE,152,158,50,14
     PUSHBUTTON      "Help",9,207,158,50,14
     GROUPBOX        "Partition Parameters",IDC_ARGS_FRAME,7,117,250,33
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,7,15,250,
                     95,WS_EX_CLIENTEDGE
     LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,22,8
 END

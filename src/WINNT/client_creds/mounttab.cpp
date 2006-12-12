@@ -25,9 +25,9 @@ extern "C" {
  */
 
 static struct l
-   {
-   int iDriveSelectLast;
-   } l;
+{
+    int iDriveSelectLast;
+} l;
 
 
 /*
@@ -117,53 +117,75 @@ void Mount_OnInitDialog (HWND hDlg)
 
 void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 {
-   DRIVEMAPLIST List;
-   memset(&List, 0, sizeof(DRIVEMAPLIST));
-   QueryDriveMapList (&List);
+    char dbgstr[128];
 
-   HWND hList = GetDlgItem (hDlg, IDC_LIST);
-   int iItemSel = SendMessage (hList, LB_GETCURSEL, 0, 0);
-   int iDataSel = Mount_DriveFromItem (hDlg, iItemSel);
-   iItemSel = -1;
+    DRIVEMAPLIST List;
+    memset(&List, 0, sizeof(DRIVEMAPLIST));
+    QueryDriveMapList (&List);
 
-   if (fOnInitDialog && (iDataSel == -1))
-      iDataSel = l.iDriveSelectLast;
+    HWND hList = GetDlgItem (hDlg, IDC_LIST);
+    int iItemSel = LB_GetSelected(hList);
+    sprintf(dbgstr,"Mount_OnUpdate LB_GETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
+    int iDataSel = Mount_DriveFromItem (hDlg, iItemSel);
+    sprintf(dbgstr,"Mount_OnUpdate Drive = %d\n",iDataSel);
+    OutputDebugStringA(dbgstr);
+    iItemSel = -1;
 
-   SendMessage (hList, WM_SETREDRAW, FALSE, 0);
-   SendMessage (hList, LB_RESETCONTENT, 0, 0);
+    if (fOnInitDialog && (iDataSel == -1))
+	iDataSel = l.iDriveSelectLast;
 
-   for (int iDrive = 0; iDrive < 26; ++iDrive)
-      {
-      if (!List.aDriveMap[ iDrive ].szMapping[0])
-         continue;
+    LB_StartChange(hList, TRUE);
 
-      TCHAR szAfsPath[ MAX_PATH ];
-      AdjustAfsPath (szAfsPath, List.aDriveMap[ iDrive ].szMapping, TRUE, FALSE);
+    for (int iDrive = 25; iDrive >= 0; --iDrive)
+    {
+	if (!List.aDriveMap[ iDrive ].szMapping[0])
+	    continue;
 
-      LPTSTR psz = FormatString (IDS_DRIVE_MAP, TEXT("%c%s"), List.aDriveMap[ iDrive ].chDrive, szAfsPath);
-      int iItem = SendMessage (hList, LB_ADDSTRING, 0, (LPARAM)psz);
-      SendMessage (hList, LB_SETITEMDATA, iItem, List.aDriveMap[ iDrive ].fActive);
-      FreeString (psz);
+	TCHAR szAfsPath[ MAX_PATH ];
+	AdjustAfsPath (szAfsPath, List.aDriveMap[ iDrive ].szMapping, TRUE, FALSE);
 
-      if (iDrive == iDataSel)
-         iItemSel = iItem;
-      }
+	LPTSTR psz = FormatString (IDS_DRIVE_MAP, TEXT("%c%s"), List.aDriveMap[ iDrive ].chDrive, szAfsPath);
+	int iItem = LB_AddItem(hList, psz, List.aDriveMap[ iDrive ].fActive);
+	sprintf(dbgstr,"Mount_OnUpdate LB_ADDSTRING drive %d [%s] as item %d\n", iDrive, psz, iItem);
+	OutputDebugStringA(dbgstr);
+	FreeString (psz);
 
-   SendMessage (hList, WM_SETREDRAW, TRUE, 0);
-   SendMessage (hList, LB_SETCURSEL, iItemSel, 0);
+	int iCount = SendMessage(hList, LB_GETCOUNT, 0, 0);
+	sprintf(dbgstr,"Mount_OnUpdate LB_GETCOUNT = %d\n", iCount);
+	OutputDebugStringA(dbgstr);
 
-   Mount_OnSelect (hDlg);
-   FreeDriveMapList (&List);
+	/* This really shouldn't work except that we are adding 
+	 * the strings in alphabetical order.  Otherwise, we could
+	 * identify an index value for a string that could then change.
+	 */
+	if (iDrive == iDataSel)
+	    iItemSel = iItem;
+    }
+
+    LB_EndChange(hList, NULL);
+
+    LB_SetSelected(hList, iItemSel);
+    sprintf(dbgstr,"Mount_OnUpdate LB_SETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
+
+    Mount_OnSelect (hDlg);
+    FreeDriveMapList (&List);
 }
 
 
 void Mount_OnSelect (HWND hDlg)
 {
-   BOOL fServiceRunning = IsServiceRunning();
+    char dbgstr[128];
+    BOOL fServiceRunning = IsServiceRunning();
 
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
-   int iItemSel = SendMessage (hList, LB_GETCURSEL, 0, 0);
+   int iItemSel = LB_GetSelected(hList);
+    sprintf(dbgstr,"Mount_OnSelect LB_GETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
    int iDataSel = Mount_DriveFromItem (hDlg, iItemSel);
+    sprintf(dbgstr,"Mount_OnSelect Drive = %d\n",iDataSel);
+    OutputDebugStringA(dbgstr);
 
    l.iDriveSelectLast = iDataSel;
 
@@ -175,12 +197,17 @@ void Mount_OnSelect (HWND hDlg)
 
 void Mount_OnCheck (HWND hDlg)
 {
+    char dbgstr[128];
    DRIVEMAPLIST List;
    QueryDriveMapList (&List);
 
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
-   int iItemSel = SendMessage (hList, LB_GETCURSEL, 0, 0);
+   int iItemSel = LB_GetSelected(hList);
+    sprintf(dbgstr,"Mount_OnCheck LB_GETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
    int iDriveSel = Mount_DriveFromItem (hDlg, iItemSel);
+    sprintf(dbgstr,"Mount_OnCheck Drive = %d\n",iDriveSel);
+    OutputDebugStringA(dbgstr);
    BOOL fChecked = SendMessage (hList, LB_GETITEMDATA, iItemSel, 0);
 
    if (iDriveSel != -1)
@@ -207,9 +234,14 @@ void Mount_OnCheck (HWND hDlg)
 
 void Mount_OnRemove (HWND hDlg)
 {
-   HWND hList = GetDlgItem (hDlg, IDC_LIST);
-   int iItemSel = SendMessage (hList, LB_GETCURSEL, 0, 0);
+    char dbgstr[128];
+    HWND hList = GetDlgItem (hDlg, IDC_LIST);
+    int iItemSel = LB_GetSelected(hList);
+    sprintf(dbgstr,"Mount_OnRemove LB_GETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
    int iDriveSel = Mount_DriveFromItem (hDlg, iItemSel);
+    sprintf(dbgstr,"Mount_OnRemove Drive = %d\n",iDriveSel);
+    OutputDebugStringA(dbgstr);
 
    if (iDriveSel != -1)
       {
@@ -246,9 +278,14 @@ void Mount_OnAdd (HWND hDlg)
 
 void Mount_OnEdit (HWND hDlg)
 {
+    char dbgstr[128];
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
-   int iItemSel = SendMessage (hList, LB_GETCURSEL, 0, 0);
+   int iItemSel = LB_GetSelected(hList);
+    sprintf(dbgstr,"Mount_OnEdit LB_GETCURSEL = %d\n",iItemSel);
+    OutputDebugStringA(dbgstr);
    int iDriveSel = Mount_DriveFromItem (hDlg, iItemSel);
+    sprintf(dbgstr,"Mount_OnEdit Drive = %d\n",iDriveSel);
+    OutputDebugStringA(dbgstr);
 
    Mount_AdjustMapping (hDlg, iDriveSel);
 }
@@ -330,21 +367,24 @@ void Mount_AdjustMapping (HWND hDlg, int iDrive)
 
 int Mount_DriveFromItem (HWND hDlg, int iItem)
 {
-   TCHAR szItem[ 1024 ] = TEXT("");
-   SendDlgItemMessage (hDlg, IDC_LIST, LB_GETTEXT, iItem, (LPARAM)szItem);
+    char dbgstr[128];
+    TCHAR szItem[ 1024 ] = TEXT("");
+    SendDlgItemMessage (hDlg, IDC_LIST, LB_GETTEXT, iItem, (LPARAM)szItem);
+    sprintf(dbgstr, "Mount_DriveFromItem LB_GETTEXT - [%s]\n", szItem);
+    OutputDebugString(dbgstr);
 
-   LPTSTR pch;
-   if ((pch = (LPTSTR)lstrchr (szItem, TEXT(':'))) != NULL)
-      {
-      if (pch > szItem)
-         {
-         pch--;
-         if ((*pch >= TEXT('A')) && (*pch <= TEXT('Z')))
-            return (*pch) - TEXT('A');
-         }
-      }
+    LPTSTR pch;
+    if ((pch = (LPTSTR)lstrchr (szItem, TEXT(':'))) != NULL)
+    {
+	if (pch > szItem)
+	{
+	    pch--;
+	    if ((*pch >= TEXT('A')) && (*pch <= TEXT('Z')))
+		return (*pch) - TEXT('A');
+	}
+    }
 
-   return -1;
+    return -1;
 }
 
 
@@ -388,6 +428,7 @@ BOOL CALLBACK Mapping_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Mapping_OnInitDialog (HWND hDlg)
 {
+    char dbgstr[128];
    PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fill in the combo box
@@ -429,8 +470,8 @@ void Mapping_OnInitDialog (HWND hDlg)
     CHAR msg[256], msgf[256];
     if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
     {
-		wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
-		SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
+	wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
+	SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
    }
    SetDlgItemText (hDlg, IDC_MAP_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_MAP_DESC, pMap->szSubmount);
@@ -443,6 +484,7 @@ void Mapping_OnInitDialog (HWND hDlg)
 
 void Mapping_OnOK (HWND hDlg)
 {
+    char dbgstr[128];
    PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    int iItem = SendDlgItemMessage (hDlg, IDC_MAP_LETTER, CB_GETCURSEL, 0, 0);

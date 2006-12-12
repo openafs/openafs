@@ -43,14 +43,9 @@ EXERES = \
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
 	
-AFSAPPLIBOBJS= \
-	$(OUT)\checklist.obj \
-	$(OUT)\al_wizard.obj \
-	$(OUT)\subclass.obj 
-
 CLIENTOBJS = \
 	$(OUT)\drivemap.obj \
-    $(OUT)\RegistrySupport.obj 
+    	$(OUT)\RegistrySupport.obj 
 
 VCLIBS =\
     	iphlpapi.lib \
@@ -66,12 +61,13 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
-    $(DESTDIR)\lib\lanahelper.lib \
-    $(DESTDIR)\lib\afsrxkad.lib \
-    $(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
+    	$(DESTDIR)\lib\lanahelper.lib \
+    	$(DESTDIR)\lib\afsrxkad.lib \
+    	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-    $(DESTDIR)\lib\afskfw.lib
+    	$(DESTDIR)\lib\afskfw.lib
 
 ############################################################################
 #
@@ -96,9 +92,6 @@ CLIENT= ..\client_config
 $(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
 	$(C2OBJ) -I$(*D) $**
 
-$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
-	$(C2OBJ) -I$(*D) $**
-
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$(*D) $**
 
@@ -110,7 +103,7 @@ $(EXECOBJS): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
 	$(EXEGUILINK) $(VCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 

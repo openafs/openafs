@@ -190,7 +190,7 @@ BEGIN
     PUSHBUTTON      "新增(&A)...",IDC_ADD,51,63,45,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,99,63,45,14
     PUSHBUTTON      "移除(&R)",IDC_REMOVE,147,63,45,14
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_VSCROLL | 
                     WS_TABSTOP | 0x1d3,51,21,231,37
     PUSHBUTTON      "說明",9,237,63,45,14
 END
