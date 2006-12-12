@@ -908,6 +908,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             return 0;
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
+		Sleep(100);		/* give some time for a buffer to be freed */
     }	/* while loop over everything */
     /* not reached */
 } /* the proc */
