@@ -91,7 +91,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,13,21,193,10
     CONTROL         "顯示容體位置伺服器喜好設定(&V)",IDC_SHOW_VLS,"Button",
                     BS_AUTORADIOBUTTON,13,34,193,10
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
                     49,173,120
     PUSHBUTTON      "新增(&A)...",IDC_ADD,74,173,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,136,173,50,14
@@ -108,7 +108,7 @@ CAPTION "AFS Cell"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX        "AFS Cell",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     21,193,168
     PUSHBUTTON      "新增(&A)...",IDC_ADD,51,195,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,104,195,50,14
@@ -121,7 +121,7 @@ CAPTION "磁碟機代號"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX        "磁碟機代號",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,32,193,135
     PUSHBUTTON      "新增(&A)...",IDC_ADD,71,171,42,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,118,171,42,14
@@ -191,7 +191,7 @@ BEGIN
     LTEXT           "說明(&D)：",IDC_STATIC,4,41,38,8
     EDITTEXT        IDC_COMMENT,55,39,176,13,ES_AUTOHSCROLL
     GROUPBOX        "伺服器",IDC_STATIC,4,61,236,158
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
                     76,217,117
     PUSHBUTTON      "新增(&A)...",IDC_ADD,75,198,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,128,198,50,14
@@ -251,7 +251,7 @@ BEGIN
                     4,196,8
     GROUPBOX        "子裝載",IDC_STATIC,4,26,236,168
     LTEXT           "以下的子裝載是從本電腦共享：",IDC_STATIC,10,42,176,8
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
                     54,223,115
     PUSHBUTTON      "新增(&A)...",IDC_ADD,78,173,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,131,173,50,14
@@ -282,7 +282,7 @@ CAPTION "磁碟機代號"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX        "磁碟機代號",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,32,219,60
     PUSHBUTTON      "新增(&A)...",IDC_ADD,100,95,42,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,145,95,42,14
@@ -298,7 +298,7 @@ CAPTION "AFS Cell"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX        "AFS Cell",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     19,218,94
     PUSHBUTTON      "新增(&A)...",IDC_ADD,75,116,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,128,116,50,14
@@ -330,7 +330,7 @@ BEGIN
     LTEXT           "預設 Cell：",IDC_STATIC,14,37,39,8
     EDITTEXT        IDC_CELL,59,35,147,14,ES_LOWERCASE | ES_AUTOHSCROLL
     GROUPBOX        "AFS Cell",IDC_STATIC,7,69,206,180
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     84,193,137
     PUSHBUTTON      "新增(&A)...",IDC_ADD,51,227,50,14
     PUSHBUTTON      "變更(&C)...",IDC_EDIT,104,227,50,14
@@ -411,7 +411,7 @@ BEGIN
     PUSHBUTTON      "說明",9,196,148,50,14
     PUSHBUTTON      "新增(&A)",IDC_ADD,108,117,42,14
     GROUPBOX        "廣域對應 AFS 磁碟機",IDC_STATIC,7,7,239,133
-    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER |
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"OpenAFS_FastList",WS_BORDER |
                     WS_TABSTOP | 0x1b,14,20,226,89
     PUSHBUTTON      "變更(&C)",IDC_CHANGE,153,117,42,14
     PUSHBUTTON      "移除(&R)",IDC_REMOVE,198,117,42,14

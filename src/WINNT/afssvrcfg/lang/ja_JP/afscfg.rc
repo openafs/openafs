@@ -62,7 +62,7 @@ BEGIN
     CONTROL         "はい、パーティションを作成します。(&Y)",
                     IDC_CREATE_PARTITION,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,2,88,162,10
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,3,116,210,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,3,116,210,
                     49,WS_EX_CLIENTEDGE
     EDITTEXT        IDC_PARTITION_NAME,155,180,20,12,ES_AUTOHSCROLL
     CONTROL         "いいえ、パーティションを作成しません。(&O)",
@@ -460,7 +460,7 @@ BEGIN
                     IDC_REMOVE_MSG,30,238,241,12,WS_DISABLED
     PUSHBUTTON      "削除(&M)",IDC_REMOVE,17,217,66,14,WS_DISABLED
     GROUPBOX        "パーティション",IDC_AGGR_FRAME,7,103,281,155
-    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,23,
+    CONTROL         "",IDC_PARTITION_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x83,7,23,
                     281,72,WS_EX_CLIENTEDGE
     LTEXT           "このサーバーでの新規パーティション作成は、上のボタンをクリック。",
                     IDC_CREATE_MSG,30,139,250,8
@@ -480,7 +480,7 @@ BEGIN
     PUSHBUTTON      "ヘルプ",9,210,158,40,14
     GROUPBOX        "パーティション・パラメーター",IDC_ARGS_FRAME,7,117,250,
                     33
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,21,250,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,7,21,250,
                     89,WS_EX_CLIENTEDGE
     LTEXT           "/vicep",IDC_VICEP_STATIC,102,131,22,8
 END

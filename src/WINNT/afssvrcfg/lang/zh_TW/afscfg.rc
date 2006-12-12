@@ -61,7 +61,7 @@ FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     CONTROL         "是(&Y)，建立分割區。",IDC_CREATE_PARTITION,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,0,94,87,10
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,121,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,12,121,
                     186,38,WS_EX_CLIENTEDGE
     EDITTEXT        IDC_PARTITION_NAME,124,165,33,12,ES_AUTOHSCROLL
     CONTROL         "否(&O)，不要建立分割區。",IDC_DONT_CREATE_PARTITION,
@@ -437,7 +437,7 @@ BEGIN
                     IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
     PUSHBUTTON      "移除(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
     GROUPBOX        "分割區",IDC_AGGR_FRAME,7,103,281,155
-    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+    CONTROL         "",IDC_PARTITION_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x83,7,16,
                     281,79,WS_EX_CLIENTEDGE
     LTEXT           "如要在此伺服器上建立新的分割區，請按上面的按鈕。",
                     IDC_CREATE_MSG,30,136,254,8
@@ -456,7 +456,7 @@ BEGIN
     PUSHBUTTON      "關閉(&O)",IDC_CLOSE,152,158,50,14
     PUSHBUTTON      "說明",9,207,158,50,14
     GROUPBOX        "分割區參數",IDC_ARGS_FRAME,7,117,250,33
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,7,15,250,
                     95,WS_EX_CLIENTEDGE
     LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,22,8
 END

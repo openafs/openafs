@@ -61,7 +61,7 @@ FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     CONTROL         "是，创建分区(&Y)",IDC_CREATE_PARTITION,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,0,94,87,10
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,116,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,12,116,
                     186,41,WS_EX_CLIENTEDGE
     EDITTEXT        IDC_PARTITION_NAME,101,175,20,12,ES_AUTOHSCROLL
     CONTROL         "否，不要创建分区(&O)",IDC_DONT_CREATE_PARTITION,"Button",
@@ -431,7 +431,7 @@ BEGIN
                     IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
     PUSHBUTTON      "除去(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
     GROUPBOX        "分区",IDC_AGGR_FRAME,7,103,281,155
-    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+    CONTROL         "",IDC_PARTITION_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x83,7,16,
                     281,79,WS_EX_CLIENTEDGE
     LTEXT           "要在该服务器上新建分区，单击上面的按钮。",
                     IDC_CREATE_MSG,30,136,254,8
@@ -450,7 +450,7 @@ BEGIN
     PUSHBUTTON      "关闭(&O)",IDC_CLOSE,152,158,50,14
     PUSHBUTTON      "帮助",9,207,158,50,14
     GROUPBOX        "分区参数",IDC_ARGS_FRAME,7,117,250,33
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,7,15,250,
                     95,WS_EX_CLIENTEDGE
     LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,24,8
 END

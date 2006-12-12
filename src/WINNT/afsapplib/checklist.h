@@ -31,7 +31,7 @@
 
 EXPORTED BOOL RegisterCheckListClass (void);
 
-#define WC_CHECKLIST  TEXT("CheckList")
+#define WC_CHECKLIST  TEXT("OpenAFS_CheckList")
 
 
 #define LB_GETCHECK   (WM_USER+300)   // int iItem=wp  

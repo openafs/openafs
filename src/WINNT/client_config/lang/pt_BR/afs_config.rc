@@ -95,7 +95,7 @@ BEGIN
                     IDC_SHOW_FS,"Button",BS_AUTORADIOBUTTON,9,18,193,10
     CONTROL         "Mostrar Preferências de Servidor de Localização de &Volumes",
                     IDC_SHOW_VLS,"Button",BS_AUTORADIOBUTTON,9,31,204,10
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
                     52,173,120
     PUSHBUTTON      "&Incluir...",IDC_ADD,84,175,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,137,175,50,14
@@ -112,7 +112,7 @@ CAPTION "Células do AFS"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Células do AFS",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     21,193,168
     PUSHBUTTON      "&Incluir...",IDC_ADD,51,195,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,104,195,50,14
@@ -125,7 +125,7 @@ CAPTION "Letras de Unidades"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Letras de Unidades",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,28,193,135
     PUSHBUTTON      "&Incluir...",IDC_ADD,75,166,42,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,120,166,42,14
@@ -200,7 +200,7 @@ BEGIN
     LTEXT           "&Descrição:",IDC_STATIC,4,44,38,8
     EDITTEXT        IDC_COMMENT,55,42,176,13,ES_AUTOHSCROLL
     GROUPBOX        "Servidores",IDC_STATIC,4,61,236,158
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
                     76,217,117
     PUSHBUTTON      "&Incluir...",IDC_ADD,75,198,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,128,198,50,14
@@ -262,7 +262,7 @@ BEGIN
     GROUPBOX        "Submontagens",IDC_STATIC,4,22,236,168
     LTEXT           "As seguintes submontagens são compartilhadas a partir deste computador:",
                     IDC_STATIC,10,30,224,17
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
                     49,223,115
     PUSHBUTTON      "&Incluir...",IDC_ADD,78,168,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,131,168,50,14
@@ -293,7 +293,7 @@ CAPTION "Letras de Unidades"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Letras de Unidades",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,29,219,60
     PUSHBUTTON      "&Incluir...",IDC_ADD,100,91,42,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,145,91,42,14
@@ -310,7 +310,7 @@ CAPTION "Células do AFS"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Células do AFS",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     19,218,94
     PUSHBUTTON      "&Incluir...",IDC_ADD,75,116,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,128,116,50,14
@@ -342,7 +342,7 @@ BEGIN
     LTEXT           "Célula Padrão:",IDC_STATIC,12,37,48,8
     EDITTEXT        IDC_CELL,62,35,144,14,ES_LOWERCASE | ES_AUTOHSCROLL
     GROUPBOX        "Células do AFS",IDC_STATIC,7,69,206,180
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     84,193,137
     PUSHBUTTON      "&Incluir...",IDC_ADD,51,227,50,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,104,227,50,14
@@ -426,7 +426,7 @@ BEGIN
     PUSHBUTTON      "&Incluir",IDC_ADD,108,117,42,14
     GROUPBOX        "Unidades do AFS Mapeadas Globalmente",IDC_STATIC,7,7,
                     239,133
-    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER | 
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"OpenAFS_FastList",WS_BORDER | 
                     WS_TABSTOP | 0x1b,14,20,226,89
     PUSHBUTTON      "Al&terar",IDC_CHANGE,153,117,42,14
     PUSHBUTTON      "&Remover",IDC_REMOVE,198,117,42,14

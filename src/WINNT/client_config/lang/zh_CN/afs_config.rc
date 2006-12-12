@@ -91,7 +91,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,13,21,193,10
     CONTROL         "显示卷位置服务器首选项(&V)",IDC_SHOW_VLS,"Button",
                     BS_AUTORADIOBUTTON,13,34,193,10
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0xb,13,
                     49,173,120
     PUSHBUTTON      "添加(&A)...",IDC_ADD,84,172,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,137,172,50,14
@@ -108,7 +108,7 @@ CAPTION "AFS 单元"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX        "AFS 单元",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     21,193,168
     PUSHBUTTON      "添加(&A)...",IDC_ADD,51,195,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,104,195,50,14
@@ -121,7 +121,7 @@ CAPTION "盘符"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX        "盘符",IDC_STATIC,7,7,206,211
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,32,193,135
     PUSHBUTTON      "添加(&A)...",IDC_ADD,69,171,48,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,120,171,42,14
@@ -190,7 +190,7 @@ BEGIN
     LTEXT           "描述(&D)：",IDC_STATIC,4,41,38,8
     EDITTEXT        IDC_COMMENT,62,39,171,13,ES_AUTOHSCROLL
     GROUPBOX        "服务器",IDC_STATIC,4,61,236,158
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,
                     76,217,117
     PUSHBUTTON      "添加(&A)...",IDC_ADD,75,198,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,128,198,50,14
@@ -250,7 +250,7 @@ BEGIN
                     4,4,196,8
     GROUPBOX        "子安装",IDC_STATIC,4,26,236,168
     LTEXT           "下列子安装从此计算机上共享：",IDC_STATIC,10,42,176,8
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x413,10,
                     54,223,115
     PUSHBUTTON      "添加(&A)...",IDC_ADD,78,173,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,131,173,50,14
@@ -281,7 +281,7 @@ CAPTION "盘符"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX        "盘符",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_TABSTOP | 0x153,
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,
                     13,32,219,60
     PUSHBUTTON      "添加(&A)...",IDC_ADD,83,95,48,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,134,95,48,14
@@ -297,7 +297,7 @@ CAPTION "AFS 单元"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX        "AFS 单元",IDC_STATIC,7,7,231,131
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     19,218,94
     PUSHBUTTON      "添加(&A)...",IDC_ADD,75,116,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,128,116,50,14
@@ -328,7 +328,7 @@ BEGIN
     LTEXT           "缺省单元：",IDC_STATIC,14,37,44,8
     EDITTEXT        IDC_CELL,65,35,141,14,ES_LOWERCASE | ES_AUTOHSCROLL
     GROUPBOX        "AFS 单元",IDC_STATIC,7,69,206,180
-    CONTROL         "",IDC_LIST,"FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,
                     84,193,137
     PUSHBUTTON      "添加(&A)...",IDC_ADD,51,227,50,14
     PUSHBUTTON      "更改(&C)...",IDC_EDIT,104,227,50,14
@@ -409,7 +409,7 @@ BEGIN
     PUSHBUTTON      "帮助",9,196,148,50,14
     PUSHBUTTON      "添加(&A)",IDC_ADD,108,117,42,14
     GROUPBOX        "全局映射 AFS 驱动器",IDC_STATIC,7,7,239,133
-    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"FastList",WS_BORDER | 
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"OpenAFS_FastList",WS_BORDER | 
                     WS_TABSTOP | 0x1b,14,20,226,89
     PUSHBUTTON      "更改(&C)",IDC_CHANGE,153,117,42,14
     PUSHBUTTON      "除去(&R)",IDC_REMOVE,198,117,42,14

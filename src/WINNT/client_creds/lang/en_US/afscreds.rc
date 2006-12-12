@@ -194,8 +194,10 @@ BEGIN
     PUSHBUTTON      "&Add...",IDC_ADD,51,63,45,14
     PUSHBUTTON      "&Change...",IDC_EDIT,99,63,45,14
     PUSHBUTTON      "&Remove",IDC_REMOVE,147,63,45,14
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
-                    WS_TABSTOP | 0x1d3,51,21,231,37
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList", 
+     	  	    LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+		    LBS_USETABSTOPS |LBS_NOINTEGRALHEIGHT | WS_TABSTOP,
+		    51,21,231,37
     PUSHBUTTON      "Help",9,237,63,45,14
 END
 
@@ -530,12 +532,12 @@ BEGIN
     IDS_MOUNT               "Drive Letters"
     IDS_WIZ_NEXT            "&Next >"
     IDS_WIZ_FINISH          "&Finish"
-    IDS_MAP_LETTER          "Drive *:"
+    IDS_MAP_LETTER          "*:"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DRIVE_MAP           "Drive %1: \t%2"
+    IDS_DRIVE_MAP           "%1: \t%2"
     IDS_ERROR_MAP           "Error Mapping Network Drive"
     IDS_ERROR_MAP_DESC      "AFS was unable to map the network drive to the specified path in AFS. Check to make sure the drive letter is not currently in use.\n\nError: 0x%1."
     IDS_ERROR_UNMAP         "Error Mapping Network Drive"

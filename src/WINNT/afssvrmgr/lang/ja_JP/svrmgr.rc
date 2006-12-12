@@ -807,7 +807,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
     LTEXT           "サービス:",IDC_SVC_DESC,0,5,179,8
-    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,0,17,179,
+    CONTROL         "",IDC_SVC_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,17,179,
                     55,WS_EX_STATICEDGE
     PUSHBUTTON      "作成(&C)...",IDC_SVC_CREATE,44,78,42,12
     PUSHBUTTON      "削除(&L)",IDC_SVC_DELETE,88,78,39,12
@@ -819,7 +819,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
     LTEXT           "パーティション:",IDC_AGG_DESC,0,5,159,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,0,16,165,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,16,165,
                     47,WS_EX_STATICEDGE
     PUSHBUTTON      "ボリュームの作成(&C)...",IDC_AGG_CREATESET,71,70,90,12
 END
@@ -829,7 +829,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
     LTEXT           "ボリューム:",IDC_SET_DESC,0,5,224,8
-    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,0,17,224,
+    CONTROL         "",IDC_SET_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,17,224,
                     51,WS_EX_STATICEDGE
     PUSHBUTTON      "作成(&C)...",IDC_SET_CREATE,1,77,42,12
     PUSHBUTTON      "削除(&L)",IDC_SET_DELETE,45,77,39,12
@@ -841,7 +841,7 @@ IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
-    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,23,216,
+    CONTROL         "",IDC_LIST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,23,216,
                     129,WS_EX_CLIENTEDGE
     PUSHBUTTON      "管理者の追加(&A)",IDC_LIST_ADD,69,157,69,14
     PUSHBUTTON      "管理者の削除(&R)",IDC_LIST_REMOVE,138,157,80,14
@@ -1025,7 +1025,7 @@ BEGIN
     LTEXT           "AFS トークン:",IDC_STATIC,2,21,50,8
     LTEXT           "%2:%1 (トークンの期限 %3 に切れます)",IDC_AFS_ID,62,21,
                     218,16
-    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,43,313,
+    CONTROL         "",IDC_SERVERS,"OpenAFS_FastList",WS_TABSTOP | 0x301,2,43,313,
                     181,WS_EX_CLIENTEDGE
     CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
     ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE | 
@@ -1081,7 +1081,7 @@ IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
 STYLE WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
-    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+    CONTROL         "",IDC_SET_REP_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,11,80,
                     199,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "即時解放(&R)",IDC_SET_RELEASE,11,145,53,14
     PUSHBUTTON      "作成(&C)...",IDC_SET_REPSITE_ADD,126,145,42,14
@@ -1215,7 +1215,7 @@ BEGIN
     COMBOBOX        IDC_SET_SERVER,76,82,116,107,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "パーティション(&P):",IDC_STATIC,6,100,73,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,46,112,271,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,46,112,271,
                     70,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "了解",IDOK,152,188,50,14
     PUSHBUTTON      "取消し",IDCANCEL,207,188,50,14
@@ -1325,7 +1325,7 @@ FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,72,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,72,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "了解",IDOK,115,153,50,14
     PUSHBUTTON      "取消し",IDCANCEL,167,153,50,14
@@ -1420,7 +1420,7 @@ CLASS "AFSManagerClass"
 FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
     LTEXT           "次の操作が現在進行中です:",IDC_ACTION_DESC,2,2,232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -1446,7 +1446,7 @@ FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,67,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,67,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "了解",IDOK,112,150,50,14
     PUSHBUTTON      "取消し",IDCANCEL,166,150,50,14
@@ -1651,7 +1651,7 @@ BEGIN
     COMBOBOX        IDC_RESTORE_SERVER,75,145,116,104,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "パーティション(&P):",IDC_STATIC,11,161,55,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,50,176,231,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,50,176,231,
                     42,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "了解",IDOK,125,229,50,14
     PUSHBUTTON      "取消し",IDCANCEL,180,229,50,14
@@ -1762,7 +1762,7 @@ BEGIN
                     ES_READONLY | NOT WS_TABSTOP
     PUSHBUTTON      "オープン(&O)...",IDC_SUBSET_LOAD,171,84,58,14
     PUSHBUTTON      "保管(&S)...",IDC_SUBSET_SAVE,230,84,42,14
-    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+    CONTROL         "",IDC_SUBSET_LIST,"OpenAFS_CheckList",WS_BORDER | WS_VSCROLL | 
                     WS_TABSTOP | 0x153,7,111,182,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "すべてモニター(&A)",IDC_SUBSET_ALL,196,122,77,14
     PUSHBUTTON      "モニターしない(&N)",IDC_SUBSET_NONE,196,140,77,14
@@ -1890,7 +1890,7 @@ IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
-    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,23,216,
+    CONTROL         "",IDC_KEY_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x30b,5,23,216,
                     129,WS_EX_CLIENTEDGE
     PUSHBUTTON      "サーバー鍵の追加(&A)",IDC_KEY_ADD,46,157,85,14
     PUSHBUTTON      "サーバー鍵の削除(&R)",IDC_KEY_REMOVE,133,157,85,14
@@ -2062,7 +2062,7 @@ BEGIN
                     14
     LTEXT           "サーバーが認識するデータベース・ホスト・サーバー:",
                     IDC_HOST_TITLE,5,7,216,13
-    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,26,216,
+    CONTROL         "",IDC_HOST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,26,216,
                     126,WS_EX_CLIENTEDGE
 END
 

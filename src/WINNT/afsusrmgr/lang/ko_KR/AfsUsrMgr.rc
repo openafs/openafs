@@ -67,7 +67,7 @@ BEGIN
     RTEXT           "패턴:",IDC_USERS_PATTERN_PROMPT,152,6,28,8
     LTEXT           "조회 중입니다. 잠시 기다리십시오...",IDC_USERS_TITLE,4,
                     6,142,8
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "작성(&C)...",M_USER_CREATE,65,126,55,14
     PUSHBUTTON      "멤버쉽(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -83,7 +83,7 @@ BEGIN
     RTEXT           "패턴:",IDC_GROUPS_PATTERN_PROMPT,163,6,28,8
     LTEXT           "조회 중입니다. 잠시 기다리십시오...",IDC_GROUPS_TITLE,4,
                     6,142,8
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "작성(&C)...",M_GROUP_CREATE,65,126,55,14
     PUSHBUTTON      "구성원(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -99,7 +99,7 @@ FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT           "조회 중입니다. 잠시 기다리십시오...",IDC_ACTION_DESC,2,
                     2,232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -283,7 +283,7 @@ BEGIN
     GROUPBOX        "그룹",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 이 사용자가 소유한 그룹 목록 뿐만 아니라 이 사용자가 속한 그룹 목록도 변경할 수 있습니다.",
                     IDC_STATIC,5,5,220,17
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -303,7 +303,7 @@ BEGIN
     GROUPBOX        "그룹 멤버쉽",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 이 그룹이 소유해야 하는 그룹을 선택할 수 있을 뿐만 아니라 이 그룹의 구성원을 선택할 수 있습니다.",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -334,7 +334,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "패턴:",IDC_GROUPS_PATTERN_PROMPT,198,8,29,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -409,7 +409,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "패턴:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -435,7 +435,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "패턴:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -447,7 +447,7 @@ BEGIN
     GROUPBOX        "그룹",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 이 사용자가 소유할 그룹뿐만 아니라 이 사용자가 속할 초기 그룹 목록을 변경할 수 있습니다.",
                     IDC_STATIC,5,5,220,17
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -524,7 +524,7 @@ BEGIN
     GROUPBOX        "그룹 멤버쉽",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 이 그룹이 소유해야 하는 그룹을 선택할 수 있을 뿐만 아니라 이 그룹의 초기 구성원을 선택할 수 있습니다.",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -691,7 +691,7 @@ BEGIN
     RTEXT           "패턴:",IDC_MACHINES_PATTERN_PROMPT,163,6,28,8
     LTEXT           "조회 중입니다. 잠시 기다리십시오...",IDC_MACHINES_TITLE,
                     4,6,142,8
-    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_MACHINES_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "작성(&C)...",M_MACHINE_CREATE,65,126,55,14
     PUSHBUTTON      "멤버쉽(&M)...",M_MEMBERSHIP,124,126,55,14
@@ -706,7 +706,7 @@ BEGIN
     GROUPBOX        "그룹",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 해당 계정이 소유할 그룹뿐만 아니라 속할 초기 그룹 목록도 선택할 수 있습니다.",
                     IDC_STATIC,5,5,220,17,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14
@@ -806,7 +806,7 @@ BEGIN
     GROUPBOX        "그룹",IDC_STATIC,5,31,220,160
     LTEXT           "이 설정을 사용하면 해당 계정이 소유하는 그룹뿐만 아니라 속한 그룹 목록을 변경할 수 있습니다.",
                     IDC_STATIC,5,5,220,17,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "제거(&R)",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "추가(&A)...",IDC_MEMBER_ADD,113,169,50,14

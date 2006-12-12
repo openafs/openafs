@@ -24,6 +24,7 @@
 #include <time.h>
 #include <shellapi.h>
 #include <WINNT/al_wizard.h>
+#include <WINNT/dialog.h>
 #include <WINNT\afsreg.h>
 #ifdef __cplusplus
 extern "C" {

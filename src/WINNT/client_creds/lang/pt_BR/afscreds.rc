@@ -192,7 +192,7 @@ BEGIN
     PUSHBUTTON      "&Incluir...",IDC_ADD,51,63,45,14
     PUSHBUTTON      "Al&terar...",IDC_EDIT,99,63,45,14
     PUSHBUTTON      "&Remover",IDC_REMOVE,147,63,45,14
-    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_VSCROLL | 
                     WS_TABSTOP | 0x1d3,51,21,231,37
     PUSHBUTTON      "Ajuda",9,237,63,45,14
 END

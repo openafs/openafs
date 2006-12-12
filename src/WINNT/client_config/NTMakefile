@@ -59,12 +59,13 @@ VCLIBS =\
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-    $(DESTDIR)\lib\lanahelper.lib \
-    $(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\lanahelper.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
 
 ############################################################################
 #
@@ -118,7 +119,7 @@ $(EXEOBJSc): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(EXELIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSDOBJS) $(EXELIBS)
 	$(EXEGUILINK) $(VCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 

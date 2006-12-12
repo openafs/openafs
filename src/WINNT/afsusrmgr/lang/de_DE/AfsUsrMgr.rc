@@ -67,7 +67,7 @@ BEGIN
     RTEXT           "Muster:",IDC_USERS_PATTERN_PROMPT,152,6,28,8
     LTEXT           "Abfrage läuft; bitte warten...",IDC_USERS_TITLE,4,6,142,
                     8
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Erstellen...",M_USER_CREATE,65,126,55,14
     PUSHBUTTON      "&Zugehörigkeit...",M_MEMBERSHIP,124,126,55,14
@@ -83,7 +83,7 @@ BEGIN
     RTEXT           "Muster:",IDC_GROUPS_PATTERN_PROMPT,163,6,28,8
     LTEXT           "Abfrage läuft; bitte warten...",IDC_GROUPS_TITLE,4,6,
                     142,8
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Erstellen...",M_GROUP_CREATE,65,126,55,14
     PUSHBUTTON      "&Mitglieder...",M_MEMBERSHIP,124,126,55,14
@@ -99,7 +99,7 @@ FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Abfrage läuft; bitte warten...",IDC_ACTION_DESC,2,2,232,
                     8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -292,7 +292,7 @@ BEGIN
     GROUPBOX        "Gruppen",IDC_STATIC,5,31,220,160
     LTEXT           "Diese Einstellungen ermöglichen die Änderung der Liste der Gruppen, zu denen dieser Benutzer gehört, sowie der Liste der Gruppen, deren Eigner dieser Benutzer ist.",
                     IDC_STATIC,5,5,220,24
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14
@@ -314,7 +314,7 @@ BEGIN
     GROUPBOX        "Gruppenzugehörigkeit",IDC_STATIC,5,31,220,160
     LTEXT           "Diese Einstellungen ermöglichen die Auswahl der Mitglieder dieser Gruppe sowie die Auswahl der Gruppen, deren Eigner diese Gruppe sein soll.",
                     IDC_STATIC,5,3,220,23
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14
@@ -347,7 +347,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Muster:",IDC_GROUPS_PATTERN_PROMPT,198,8,29,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -423,7 +423,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Muster:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -449,7 +449,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Muster:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,267,84
 END
 
@@ -461,7 +461,7 @@ BEGIN
     GROUPBOX        "Gruppen",IDC_STATIC,5,31,220,160
     LTEXT           "Diese Einstellungen ermöglichen die Änderung der ersten Liste der Gruppen, zu denen dieser Benutzer gehören wird, sowie der Gruppen, deren Eigner dieser Benutzer wird.",
                     IDC_STATIC,5,4,220,24
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14
@@ -543,7 +543,7 @@ BEGIN
     GROUPBOX        "Gruppenzugehörigkeit",IDC_STATIC,5,31,220,160
     LTEXT           "Diese Einstellungen ermöglichen die Auswahl der ersten Mitglieder dieser Gruppe sowie die Auswahl der Gruppen, deren Eigner diese Gruppe sein soll.",
                     IDC_STATIC,5,3,220,24
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14
@@ -721,7 +721,7 @@ BEGIN
     RTEXT           "Muster:",IDC_MACHINES_PATTERN_PROMPT,163,6,28,8
     LTEXT           "Abfrage läuft; bitte warten...",IDC_MACHINES_TITLE,4,6,
                     142,8
-    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_MACHINES_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Erstellen...",M_MACHINE_CREATE,65,126,55,14
     PUSHBUTTON      "&Zugehörigkeit...",M_MEMBERSHIP,124,126,55,14
@@ -736,7 +736,7 @@ BEGIN
     GROUPBOX        "Gruppen",IDC_STATIC,5,33,220,158
     LTEXT           "Diese Einstellungen ermöglichen die Änderung der ersten Liste der Gruppen, zu denen dieses Konto gehören wird, sowie der Gruppen, deren Eigner dieses Konto wird.",
                     IDC_STATIC,5,5,220,24,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14
@@ -841,7 +841,7 @@ BEGIN
     GROUPBOX        "Gruppen",IDC_STATIC,5,31,220,160
     LTEXT           "Diese Einstellungen ermöglichen die Änderung der Liste der Gruppen, zu denen dieses Konto gehört, sowie der Liste der Gruppen, deren Eigner dieses Konto ist.",
                     IDC_STATIC,5,5,220,25,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Entfernen",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Hinzufügen...",IDC_MEMBER_ADD,113,169,50,14

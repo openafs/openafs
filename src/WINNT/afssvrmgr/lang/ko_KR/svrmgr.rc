@@ -814,7 +814,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT           "서비스:",IDC_SVC_DESC,0,5,179,8
-    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,0,17,179,
+    CONTROL         "",IDC_SVC_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,17,179,
                     61,WS_EX_STATICEDGE
     PUSHBUTTON      "작성(&C)...",IDC_SVC_CREATE,56,80,39,12
     PUSHBUTTON      "삭제(&L)",IDC_SVC_DELETE,98,80,39,12
@@ -826,7 +826,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT           "파티션:",IDC_AGG_DESC,0,5,165,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,0,17,165,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,17,165,
                     53,WS_EX_STATICEDGE
     PUSHBUTTON      "볼륨 작성(&C)...",IDC_AGG_CREATESET,102,72,63,12
 END
@@ -836,7 +836,7 @@ STYLE DS_CENTER | WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT           "볼륨:",IDC_SET_DESC,0,5,194,8
-    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,0,17,194,
+    CONTROL         "",IDC_SET_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,0,17,194,
                     61,WS_EX_STATICEDGE
     PUSHBUTTON      "작성(&C)...",IDC_SET_CREATE,3,80,39,12
     PUSHBUTTON      "삭제(&L)",IDC_SET_DELETE,45,80,39,12
@@ -848,7 +848,7 @@ IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+    CONTROL         "",IDC_LIST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,22,216,
                     135,WS_EX_CLIENTEDGE
     PUSHBUTTON      "관리자 추가(&A)",IDC_LIST_ADD,72,160,65,14
     PUSHBUTTON      "관리자 제거(&R)",IDC_LIST_REMOVE,141,160,80,14
@@ -1026,7 +1026,7 @@ BEGIN
     LTEXT           "(셀 이름은 여기에 위치합니다)",IDC_CELL,62,8,208,9
     LTEXT           "AFS 토큰:",IDC_STATIC,2,19,55,8
     LTEXT           "%2:%1(토큰은 %3에 만기됩니다)",IDC_AFS_ID,62,19,217,9
-    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,31,313,
+    CONTROL         "",IDC_SERVERS,"OpenAFS_FastList",WS_TABSTOP | 0x301,2,31,313,
                     193,WS_EX_CLIENTEDGE
     CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
     ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE | 
@@ -1083,7 +1083,7 @@ IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
 STYLE WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+    CONTROL         "",IDC_SET_REP_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,11,80,
                     199,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "지금 해제(&R)",IDC_SET_RELEASE,11,143,52,14
     PUSHBUTTON      "작성(&C)...",IDC_SET_REPSITE_ADD,129,143,38,14
@@ -1215,7 +1215,7 @@ BEGIN
     COMBOBOX        IDC_SET_SERVER,46,82,116,107,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "파티션(&P):",IDC_STATIC,4,102,39,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,46,102,271,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,46,102,271,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "확인",IDOK,156,191,50,14
     PUSHBUTTON      "취소",IDCANCEL,211,191,50,14
@@ -1323,7 +1323,7 @@ FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,70,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,70,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "확인",IDOK,115,156,50,14
     PUSHBUTTON      "취소",IDCANCEL,169,156,50,14
@@ -1417,7 +1417,7 @@ FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     LTEXT           "다음 조작이 현재 진행 중입니다.",IDC_ACTION_DESC,2,2,
                     232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -1443,7 +1443,7 @@ FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,62,269,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,4,62,269,
                     75,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "확인",IDOK,115,153,50,14
     PUSHBUTTON      "취소",IDCANCEL,169,153,50,14
@@ -1644,7 +1644,7 @@ BEGIN
     COMBOBOX        IDC_RESTORE_SERVER,51,143,116,104,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "파티션(&P):",IDC_STATIC,11,162,36,8
-    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,50,161,231,
+    CONTROL         "",IDC_AGG_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x303,50,161,231,
                     55,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "확인",IDOK,128,230,50,14
     PUSHBUTTON      "취소",IDCANCEL,183,230,50,14
@@ -1755,7 +1755,7 @@ BEGIN
                     ES_READONLY | NOT WS_TABSTOP
     PUSHBUTTON      "열기(&O)...",IDC_SUBSET_LOAD,185,75,39,14
     PUSHBUTTON      "저장(&S)...",IDC_SUBSET_SAVE,229,75,39,14
-    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+    CONTROL         "",IDC_SUBSET_LIST,"OpenAFS_CheckList",WS_BORDER | WS_VSCROLL | 
                     WS_TABSTOP | 0x153,12,111,193,58,WS_EX_CLIENTEDGE
     PUSHBUTTON      "전부 모니터함(&A)",IDC_SUBSET_ALL,211,122,57,14
     PUSHBUTTON      "모니터 안함(&N)",IDC_SUBSET_NONE,211,140,57,14
@@ -1880,7 +1880,7 @@ IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
 STYLE WS_CHILD
 FONT 9, "굴림", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,22,216,
+    CONTROL         "",IDC_KEY_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x30b,5,22,216,
                     135,WS_EX_CLIENTEDGE
     PUSHBUTTON      "서버 키 추가(&A)",IDC_KEY_ADD,72,160,65,14
     PUSHBUTTON      "서버 키 제거(&R)",IDC_KEY_REMOVE,141,160,80,14
@@ -2046,7 +2046,7 @@ BEGIN
     PUSHBUTTON      "호스트 서버 제거(&R)",IDC_HOST_REMOVE,141,160,80,14
     LTEXT           "서버에서 인식되는 데이터베이스 호스트 서버:",
                     IDC_HOST_TITLE,5,7,216,8
-    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+    CONTROL         "",IDC_HOST_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x11,5,22,216,
                     135,WS_EX_CLIENTEDGE
 END
 

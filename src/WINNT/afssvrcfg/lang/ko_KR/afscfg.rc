@@ -61,7 +61,7 @@ FONT 9, "굴림", 0, 0, 0x1
 BEGIN
     CONTROL         "파티션 작성(&Y)",IDC_CREATE_PARTITION,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,0,81,87,10
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,104,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,12,104,
                     186,52,WS_EX_CLIENTEDGE
     EDITTEXT        IDC_PARTITION_NAME,93,172,20,12,ES_AUTOHSCROLL
     CONTROL         "파티션을 작성하지 않음(&O)",IDC_DONT_CREATE_PARTITION,
@@ -443,7 +443,7 @@ BEGIN
                     IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
     PUSHBUTTON      "제거(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
     GROUPBOX        "파티션",IDC_AGGR_FRAME,7,103,281,155
-    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+    CONTROL         "",IDC_PARTITION_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x83,7,16,
                     281,79,WS_EX_CLIENTEDGE
     LTEXT           "이 서버에 새 파티션을 작성하려면, 위의 단추를 누르십시오.",
                     IDC_CREATE_MSG,30,136,254,8
@@ -462,7 +462,7 @@ BEGIN
     PUSHBUTTON      "닫기(&O)",IDC_CLOSE,152,158,50,14
     PUSHBUTTON      "도움말",9,207,158,50,14
     GROUPBOX        "파티션 매개변수",IDC_ARGS_FRAME,7,117,250,33
-    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+    CONTROL         "",IDC_DRIVE_LIST,"OpenAFS_FastList",WS_TABSTOP | 0x8b,7,15,250,
                     95,WS_EX_CLIENTEDGE
     LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,22,8
 END

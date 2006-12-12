@@ -26,7 +26,7 @@
 #define THIS_HINST   (HINSTANCE)GetModuleHandle(NULL)
 #endif
 
-#define WC_FASTLIST   TEXT("FastList")
+#define WC_FASTLIST   TEXT("OpenAFS_FastList")
 
 #define FLM_FIRST     0x1400
 

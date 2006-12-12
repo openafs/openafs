@@ -67,7 +67,7 @@ BEGIN
     RTEXT           "Patrón:",IDC_USERS_PATTERN_PROMPT,152,6,28,8
     LTEXT           "Consultando; espere por favor...",IDC_USERS_TITLE,4,6,
                     142,8
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Crear...",M_USER_CREATE,65,126,55,14
     PUSHBUTTON      "&Pertenencia...",M_MEMBERSHIP,124,126,55,14
@@ -83,7 +83,7 @@ BEGIN
     RTEXT           "Patrón:",IDC_GROUPS_PATTERN_PROMPT,163,6,28,8
     LTEXT           "Consultando; espere por favor...",IDC_GROUPS_TITLE,4,6,
                     142,8
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Crear...",M_GROUP_CREATE,65,126,55,14
     PUSHBUTTON      "&Miembros...",M_MEMBERSHIP,124,126,55,14
@@ -99,7 +99,7 @@ FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Consultando; espere por favor...",IDC_ACTION_DESC,2,2,
                     232,8
-    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_ACTION_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x3,2,14,232,43
 END
 
@@ -291,7 +291,7 @@ BEGIN
     GROUPBOX        "Grupos",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten cambiar la lista de grupos a los que pertenece este usuario, así como la lista de grupos que posee este usuario.",
                     IDC_STATIC,5,5,220,25
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
@@ -313,7 +313,7 @@ BEGIN
     GROUPBOX        "Pertenencia a grupo",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten elegir los miembros de este grupo, así como elegir los grupos que debe poseer este grupo.",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
@@ -347,7 +347,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Patrón:",IDC_GROUPS_PATTERN_PROMPT,231,8,29,8
     EDITTEXT        IDC_BROWSE_PATTERN,268,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,302,84
 END
 
@@ -424,7 +424,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Patrón:",IDC_GROUPS_PATTERN_PROMPT,233,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,266,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,300,84
 END
 
@@ -451,7 +451,7 @@ BEGIN
                     WS_TABSTOP
     RTEXT           "Patrón:",IDC_GROUPS_PATTERN_PROMPT,227,8,28,8
     EDITTEXT        IDC_BROWSE_PATTERN,260,6,41,13,ES_AUTOHSCROLL
-    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_BROWSE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x12,7,23,294,84
 END
 
@@ -463,7 +463,7 @@ BEGIN
     GROUPBOX        "Grupos",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten cambiar la lista inicial de grupos a los que pertenecerá este usuario, así como los grupos que poseerá este usuario.",
                     IDC_STATIC,5,5,220,26
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
@@ -545,7 +545,7 @@ BEGIN
     GROUPBOX        "Pertenencia a grupo",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten elegir los miembros iniciales de este grupo, así como elegir los grupos que debe poseer este grupo.",
                     IDC_STATIC,5,5,220,18
-    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_USERS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
@@ -724,7 +724,7 @@ BEGIN
     RTEXT           "Patrón:",IDC_MACHINES_PATTERN_PROMPT,163,6,28,8
     LTEXT           "Consultando; espere por favor...",IDC_MACHINES_TITLE,4,
                     6,142,8
-    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_MACHINES_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x313,4,21,234,103
     PUSHBUTTON      "&Crear...",M_MACHINE_CREATE,65,126,55,14
     PUSHBUTTON      "&Pertenencia...",M_MEMBERSHIP,124,126,55,14
@@ -739,7 +739,7 @@ BEGIN
     GROUPBOX        "Grupos",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten seleccionar la lista inicial de grupos a los que pertenecerá esta cuenta, así como los grupos que poseerá.",
                     IDC_STATIC,5,5,220,17,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
@@ -843,7 +843,7 @@ BEGIN
     GROUPBOX        "Grupos",IDC_STATIC,5,31,220,160
     LTEXT           "Estos valores le permiten cambiar la lista de grupos a los que pertenece esta cuenta, así como los grupos que posee esta cuenta.",
                     IDC_STATIC,5,5,220,25,NOT WS_GROUP
-    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+    CONTROL         "",IDC_GROUPS_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 
                     0x312,12,84,205,82
     PUSHBUTTON      "&Eliminar",IDC_MEMBER_REMOVE,167,169,50,14
     PUSHBUTTON      "&Añadir...",IDC_MEMBER_ADD,113,169,50,14
