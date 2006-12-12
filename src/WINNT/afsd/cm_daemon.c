@@ -290,6 +290,11 @@ void cm_Daemon(long parm)
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 
     while (daemon_ShutdownFlag == 0) {
+	/* check to see if the listener threads halted due to network 
+	 * disconnect or other issues.  If so, attempt to restart them.
+	 */
+	smb_RestartListeners();
+
 	if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
 	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {

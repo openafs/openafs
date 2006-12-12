@@ -149,8 +149,17 @@ extern long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc,
 #define AFS_ACCESS_WRITE ((FILE_GENERIC_WRITE & ~(READ_CONTROL | SYNCHRONIZE)) \
 				& ~FILE_WRITE_ATTRIBUTES)
 
+typedef struct cm_lock_data {
+    cm_key_t key;
+    unsigned int sLockType;
+    LARGE_INTEGER LOffset, LLength;
+} cm_lock_data_t;
+
 extern long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
-	unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp);
+	unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp, cm_lock_data_t ** ldpp);
+
+extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
+			       cm_lock_data_t ** ldpp);
 
 extern long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp,
 	cm_user_t *userp, cm_req_t *reqp);

@@ -594,7 +594,9 @@ extern unsigned char *smb_GetSMBData(smb_packet_t *smbp, int *nbytesp);
 
 extern void smb_SetSMBDataLength(smb_packet_t *smbp, unsigned int dsize);
 
-extern unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm);
+extern unsigned short smb_GetSMBParm(smb_packet_t *smbp, int parm);
+
+extern unsigned char smb_GetSMBParmByte(smb_packet_t *smbp, int parm);
 
 extern unsigned int smb_GetSMBParmLong(smb_packet_t *smbp, int parm);
 
@@ -723,7 +725,9 @@ extern void smb_SetRequestStartTime(void);
 extern void smb_ResetServerPriority(void);
 extern void smb_RestartListeners(void);
 extern void smb_StopListeners(void);
+extern void smb_StopListener(NCB *ncbp, int lana);
 
+#define SMB_LISTENER_UNINITIALIZED -1
 #define SMB_LISTENER_STOPPED 0
 #define SMB_LISTENER_STARTED 1
 

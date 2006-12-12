@@ -330,10 +330,14 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 
 /* return success if we can open this file in this mode */
 long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
-                    unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp)
+                    unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp, 
+		    cm_lock_data_t **ldpp)
 {
     long rights;
     long code;
+
+    osi_assert(ldpp != NULL);
+    *ldpp = NULL;
 
     /* Always allow delete; the RPC will tell us if it's OK */
     if (desiredAccess == DELETE)
@@ -389,7 +393,18 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
         if (code == 0) {
-            cm_Unlock(scp, sLockType, LOffset, LLength, key, userp, reqp);
+	    (*ldpp) = (cm_lock_data_t *)malloc(sizeof(cm_lock_data_t));
+	    if (!*ldpp) {
+		code = ENOMEM;
+		goto _done;
+	    }
+
+	    (*ldpp)->key = key;
+	    (*ldpp)->sLockType = sLockType;
+	    (*ldpp)->LOffset.HighPart = LOffset.HighPart;
+	    (*ldpp)->LOffset.LowPart = LOffset.LowPart;
+	    (*ldpp)->LLength.HighPart = LLength.HighPart;
+	    (*ldpp)->LLength.LowPart = LLength.LowPart;
         } else {
             /* In this case, we allow the file open to go through even
                though we can't enforce mandatory locking on the
@@ -423,6 +438,19 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     return code;
 }
 
+extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
+			       cm_lock_data_t ** ldpp)
+{
+    if (*ldpp) {
+	lock_ObtainMutex(&scp->mx);
+	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 
+		  (*ldpp)->key, userp, reqp);
+	lock_ReleaseMutex(&scp->mx);
+	free(*ldpp);
+	*ldpp = NULL;
+    }
+    return 0;
+}
 /*
  * When CAP_NT_SMBS has been negotiated, deletion (of files or directories) is
  * done in three steps:

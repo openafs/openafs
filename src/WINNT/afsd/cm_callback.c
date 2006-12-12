@@ -145,7 +145,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
              dscp->flags & CM_SCACHEFLAG_ANYWATCH )
             smb_NotifyChange( 0,
                               FILE_NOTIFY_GENERIC_FILE_FILTER,
-                              dscp,   NULL, NULL, TRUE);
+                              dscp, NULL, NULL, TRUE);
 #else
         if (dscp)
             dc_break_callback(FID_HASH_FN(&dscp->fid));
