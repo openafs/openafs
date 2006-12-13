@@ -58,7 +58,6 @@ VCLIBS =\
     netapi32.lib
 
 EXELIBS = \
-	$(DESTDIR)\lib\afs\TaLocale.lib \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
@@ -87,20 +86,7 @@ COPYHEADERS = \
 	$(DESTDIR)\include\WINNT\resize.h \
 	$(DESTDIR)\include\WINNT\subclass.h
 
-AFSAPPLIBOBJS= \
-	$(OUT)\hashlist.obj \
-	$(OUT)\resize.obj \
-	$(OUT)\subclass.obj \
-	$(OUT)\fastlist.obj \
-	$(OUT)\dialog.obj \
-	$(OUT)\ctl_sockaddr.obj \
-	$(OUT)\ctl_spinner.obj \
-	$(OUT)\checklist.obj
-
 AFSAPPLIB=..\afsapplib
-
-$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
-	$(C2OBJ) -I$(AFSAPPLIB) $**
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$(AFSD) $**
