@@ -60,7 +60,6 @@ VCLIBS =\
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\afs\TaLocale.lib \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
     	$(DESTDIR)\lib\lanahelper.lib \
     	$(DESTDIR)\lib\afsrxkad.lib \
