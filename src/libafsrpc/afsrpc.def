@@ -219,3 +219,4 @@ EXPORTS
 	rx_InitHost				@224
 	rx_NewServiceHost			@225
         osi_AssertFailU				@226
+	DllMain					@227

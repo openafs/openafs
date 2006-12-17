@@ -301,10 +301,14 @@ rx_getAllAddr(afs_int32 * buffer, int maxSize)
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
 
+#ifndef AFS_NT40_ENV
     /* we don't want to use the loopback adapter which is first */
-    /* this is a bad bad hack */
+    /* this is a bad bad hack.
+     * and doesn't hold true on Windows.
+     */
     if ( rxi_numNetAddrs > 1 )
         offset = 1;
+#endif /* AFS_NT40_ENV */
 
     for (count = 0; offset < rxi_numNetAddrs && maxSize > 0;
 	 count++, offset++, maxSize--)
