@@ -62,6 +62,12 @@ extern int cm_stricmp(const char *, const char *);
 extern void cm_Gen8Dot3Name(struct cm_dirEntry *dep, char *shortName,
 	char **shortNameEndp);
 
+#define cm_Gen8Dot3Name(dep,shortName,shortNameEndp) \
+cm_Gen8Dot3NameInt((dep)->name, &(dep)->fid, shortName, shortNameEndp)
+
+extern void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
+                               char *shortName, char **shortNameEndp);
+
 extern long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp,
 	cm_req_t *reqp);
 

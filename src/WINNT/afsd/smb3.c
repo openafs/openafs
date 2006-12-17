@@ -1498,6 +1498,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     char * cstrp;
     char thisShare[256];
     int i,j;
+    DWORD dw;
     int nonrootShares;
     smb_rap_share_list_t rootShares;
     cm_req_t req;
@@ -1586,9 +1587,9 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     }
 
     if (hkSubmount) {
-        for (i=0; i < nRegShares && cshare < nSharesRet; i++) {
+        for (dw=0; dw < nRegShares && cshare < nSharesRet; dw++) {
             len = sizeof(thisShare);
-            rv = RegEnumValue(hkSubmount, i, thisShare, &len, NULL, NULL, NULL, NULL);
+            rv = RegEnumValue(hkSubmount, dw, thisShare, &len, NULL, NULL, NULL, NULL);
             if (rv == ERROR_SUCCESS && strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
                 strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
                 shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
@@ -4131,6 +4132,402 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 #define TRAN2_FIND_FLAG_CONTINUE_SEARCH		0x08
 #define TRAN2_FIND_FLAG_BACKUP_INTENT		0x10
 
+/* this is an optimized handler for T2SearchDir that handles the case
+   where there are no wildcards in the search path.  I.e. an
+   application is using FindFirst(Ex) to get information about a
+   single file or directory.  It will attempt to do a single lookup.
+   If that fails, then smb_ReceiveTran2SearchDir() will fall back to
+   the usual mechanism. */
+long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
+{
+    int attribute;
+    long nextCookie;
+    long code = 0, code2 = 0;
+    char *pathp;
+    int maxCount;
+    smb_dirListPatch_t *dirListPatchesp;
+    smb_dirListPatch_t *curPatchp;
+    long orbytes;			/* # of bytes in this output record */
+    long ohbytes;			/* # of bytes, except file name */
+    long onbytes;			/* # of bytes in name, incl. term. null */
+    cm_scache_t *scp = NULL;
+    cm_scache_t *targetscp = NULL;
+    cm_user_t *userp = NULL;
+    char *op;				/* output data ptr */
+    char *origOp;			/* original value of op */
+    cm_space_t *spacep;			/* for pathname buffer */
+    long maxReturnData;			/* max # of return data */
+    long maxReturnParms;		/* max # of return parms */
+    long bytesInBuffer;			/* # data bytes in the output buffer */
+    char *maskp;			/* mask part of path */
+    int infoLevel;
+    int searchFlags;
+    int eos;
+    smb_tran2Packet_t *outp;		/* response packet */
+    char *tidPathp;
+    int align;
+    char shortName[13];			/* 8.3 name if needed */
+    int NeedShortName;
+    char *shortNameEnd;
+    cm_req_t req;
+    char * s;
+
+    cm_InitReq(&req);
+
+    eos = 0;
+    osi_assert(p->opcode == 1);
+
+    /* find first; obtain basic parameters from request */
+
+    /* note that since we are going to failover to regular
+     * processing at smb_ReceiveTran2SearchDir(), we shouldn't
+     * modify any of the input parameters here. */
+    attribute = p->parmsp[0];
+    maxCount = p->parmsp[1];
+    infoLevel = p->parmsp[3];
+    searchFlags = p->parmsp[2];
+    pathp = ((char *) p->parmsp) + 12;	/* points to path */
+    nextCookie = 0;
+    maskp = strrchr(pathp, '\\');
+    if (maskp == NULL) 
+	maskp = pathp;
+    else 
+	maskp++;	/* skip over backslash */
+    /* track if this is likely to match a lot of entries */
+
+    osi_Log2(smb_logp, "smb_T2SearchDirSingle : path[%s], mask[%s]",
+            osi_LogSaveString(smb_logp, pathp),
+            osi_LogSaveString(smb_logp, maskp));
+
+    switch ( infoLevel ) {
+    case SMB_INFO_STANDARD:
+	s = "InfoStandard";
+    	break;
+    case SMB_INFO_QUERY_EA_SIZE:
+	s = "InfoQueryEaSize";
+    	break;
+    case SMB_INFO_QUERY_EAS_FROM_LIST:
+	s = "InfoQueryEasFromList";
+    	break;
+    case SMB_FIND_FILE_DIRECTORY_INFO:
+	s = "FindFileDirectoryInfo";
+    	break;
+    case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
+	s = "FindFileFullDirectoryInfo";
+    	break;
+    case SMB_FIND_FILE_NAMES_INFO:
+	s = "FindFileNamesInfo";
+    	break;
+    case SMB_FIND_FILE_BOTH_DIRECTORY_INFO:
+	s = "FindFileBothDirectoryInfo";
+    	break;
+    default:
+	s = "unknownInfoLevel";
+    }
+
+    osi_Log1(smb_logp, "smb_T2SearchDirSingle info level: %s", s);
+
+    osi_Log4(smb_logp,
+             "smb_T2SearchDirSingle attr 0x%x, info level 0x%x, max count %d, flags 0x%x",
+             attribute, infoLevel, maxCount, searchFlags);
+    
+    if (infoLevel > SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+        osi_Log1(smb_logp, "Unsupported InfoLevel 0x%x", infoLevel);
+        return CM_ERROR_INVAL;
+    }
+
+    if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
+        searchFlags &= ~TRAN2_FIND_FLAG_RETURN_RESUME_KEYS;	/* no resume keys */
+
+    dirListPatchesp = NULL;
+
+    maxReturnData = p->maxReturnData;
+    maxReturnParms = 10;	/* return params for findfirst, which
+                                   is the only one we handle.*/
+
+#ifndef CM_CONFIG_MULTITRAN2RESPONSES
+    if (maxReturnData > 6000) 
+        maxReturnData = 6000;
+#endif /* CM_CONFIG_MULTITRAN2RESPONSES */
+
+    outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
+                                      maxReturnData);
+
+    osi_Log2(smb_logp, "T2SDSingle search dir count %d [%s]",
+             maxCount, osi_LogSaveString(smb_logp, pathp));
+        
+    /* bail out if request looks bad */
+    if (!pathp) {
+        smb_FreeTran2Packet(outp);
+        return CM_ERROR_BADSMB;
+    }
+        
+    userp = smb_GetTran2User(vcp, p);
+    if (!userp) {
+    	osi_Log1(smb_logp, "T2 search dir unable to resolve user [%d]", p->uid);
+    	smb_FreeTran2Packet(outp);
+    	return CM_ERROR_BADSMB;
+    }
+
+    /* try to get the vnode for the path name next */
+    spacep = cm_GetSpace();
+    smb_StripLastComponent(spacep->data, NULL, pathp);
+    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if (code) {
+        cm_ReleaseUser(userp);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOFILES);
+        smb_FreeTran2Packet(outp);
+        return 0;
+    }
+
+    code = cm_NameI(cm_data.rootSCachep, spacep->data,
+                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                    userp, tidPathp, &req, &scp);
+    cm_FreeSpace(spacep);
+
+    if (code == 0) {
+#ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
+        if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            if ( WANTS_DFS_PATHNAMES(p) )
+                code = CM_ERROR_PATH_NOT_COVERED;
+            else
+                code = CM_ERROR_BADSHARENAME;
+            smb_SendTran2Error(vcp, p, opx, code);
+            smb_FreeTran2Packet(outp);
+            return 0;
+        }
+#endif /* DFS_SUPPORT */
+        osi_Log1(afsd_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
+        lock_ObtainMutex(&scp->mx);
+        if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
+            LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
+            scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
+        }
+        lock_ReleaseMutex(&scp->mx);
+    }
+
+    if (code) {
+        cm_ReleaseUser(userp);
+        smb_FreeTran2Packet(outp);
+        return code;
+    }
+
+    /* now do a single case sensitive lookup for the file in question */
+    code = cm_Lookup(scp, maskp, 0, userp, &req, &targetscp);
+
+    /* if a case sensitive match failed, we try a case insensitive one
+       next. */
+    if (code == CM_ERROR_NOSUCHFILE) {
+        code = cm_Lookup(scp, maskp, CM_FLAG_CASEFOLD, userp, &req, &targetscp);
+    }
+
+    if (code == 0 && targetscp->fid.vnode == 0) {
+        cm_ReleaseSCache(targetscp);
+        code = CM_ERROR_NOSUCHFILE;
+    }
+
+    if (code) {
+        /* if we can't find the directory entry, this block will
+           return CM_ERROR_NOSUCHFILE, which we will pass on to
+           smb_ReceiveTran2SearchDir(). */
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        smb_FreeTran2Packet(outp);
+        return code;
+    }
+
+    /* now that we have the target in sight, we proceed with filling
+       up the return data. */
+
+    op = origOp = outp->datap;
+    bytesInBuffer = 0;
+
+    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
+        /* skip over resume key */
+        op += 4;
+    }
+
+    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO
+        && targetscp->fid.vnode != 0
+        && !cm_Is8Dot3(maskp)) {
+
+        cm_dirFid_t dfid;
+        dfid.vnode = targetscp->fid.vnode;
+        dfid.unique = targetscp->fid.unique;
+
+        cm_Gen8Dot3NameInt(maskp, &dfid, shortName, &shortNameEnd);
+        NeedShortName = 1;
+    } else {
+        NeedShortName = 0;
+    }
+
+    /* Eliminate entries that don't match requested attributes */
+    if (smb_hideDotFiles && !(attribute & SMB_ATTR_HIDDEN) &&
+        smb_IsDotFile(maskp)) {
+
+        code = CM_ERROR_NOSUCHFILE;
+        osi_Log0(smb_logp, "T2SDSingle skipping hidden file");
+        goto skip_file;
+
+    }
+
+    if (!(attribute & SMB_ATTR_DIRECTORY) &&
+        (targetscp->fileType == CM_SCACHETYPE_DIRECTORY ||
+         targetscp->fileType == CM_SCACHETYPE_DFSLINK ||
+         targetscp->fileType == CM_SCACHETYPE_INVALID)) {
+
+        code = CM_ERROR_NOSUCHFILE;
+        osi_Log0(smb_logp, "T2SDSingle skipping directory or bad link");
+        goto skip_file;
+
+    }
+
+    /* Check if the name will fit */
+    if (infoLevel < 0x101)
+        ohbytes = 23;           /* pre-NT */
+    else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
+        ohbytes = 12;           /* NT names only */
+    else
+        ohbytes = 64;           /* NT */
+
+    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO)
+        ohbytes += 26;          /* Short name & length */
+
+    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
+        ohbytes += 4;           /* if resume key required */
+    }
+
+    if (infoLevel != SMB_INFO_STANDARD
+        && infoLevel != SMB_FIND_FILE_DIRECTORY_INFO
+        && infoLevel != SMB_FIND_FILE_NAMES_INFO)
+        ohbytes += 4;           /* EASIZE */
+
+    /* add header to name & term. null */
+    onbytes = strlen(maskp);
+    orbytes = ohbytes + onbytes + 1;
+
+    /* now, we round up the record to a 4 byte alignment, and we make
+     * sure that we have enough room here for even the aligned version
+     * (so we don't have to worry about an * overflow when we pad
+     * things out below).  That's the reason for the alignment
+     * arithmetic below.
+     */
+    if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
+        align = (4 - (orbytes & 3)) & 3;
+    else
+        align = 0;
+
+    if (orbytes + align > maxReturnData) {
+
+        /* even though this request is unlikely to succeed with a
+           failover, we do it anyway. */
+        code = CM_ERROR_NOSUCHFILE;
+        osi_Log1(smb_logp, "T2 dir search exceed max return data %d",
+                 maxReturnData);
+        goto skip_file;
+    }
+
+    /* this is one of the entries to use: it is not deleted and it
+     * matches the star pattern we're looking for.  Put out the name,
+     * preceded by its length.
+     */
+    /* First zero everything else */
+    memset(origOp, 0, ohbytes);
+
+    if (infoLevel <= SMB_FIND_FILE_DIRECTORY_INFO)
+        *(origOp + ohbytes - 1) = (unsigned char) onbytes;
+    else if (infoLevel == SMB_FIND_FILE_NAMES_INFO)
+        *((u_long *)(op + 8)) = onbytes;
+    else
+        *((u_long *)(op + 60)) = onbytes;
+    strcpy(origOp+ohbytes, maskp);
+    if (smb_StoreAnsiFilenames)
+        CharToOem(origOp+ohbytes, origOp+ohbytes);
+
+    /* Short name if requested and needed */
+    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO) {
+        if (NeedShortName) {
+            strcpy(op + 70, shortName);
+            if (smb_StoreAnsiFilenames)
+                CharToOem(op + 70, op + 70);
+            *(op + 68) = (char)(shortNameEnd - shortName);
+        }
+    }
+
+    /* NextEntryOffset and FileIndex */
+    if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
+        int entryOffset = orbytes + align;
+        *((u_long *)op) = 0;
+        *((u_long *)(op+4)) = 0;
+    }
+
+    if (infoLevel != SMB_FIND_FILE_NAMES_INFO) {
+        curPatchp = malloc(sizeof(*curPatchp));
+        osi_QAdd((osi_queue_t **) &dirListPatchesp,
+                 &curPatchp->q);
+        curPatchp->dptr = op;
+        if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO)
+            curPatchp->dptr += 8;
+
+        if (smb_hideDotFiles && smb_IsDotFile(maskp)) {
+            curPatchp->flags = SMB_DIRLISTPATCH_DOTFILE;
+        } else {
+            curPatchp->flags = 0;
+        }
+
+        curPatchp->fid.cell = targetscp->fid.cell;
+        curPatchp->fid.volume = targetscp->fid.volume;
+        curPatchp->fid.vnode = targetscp->fid.vnode;
+        curPatchp->fid.unique = targetscp->fid.unique;
+
+        /* temp */
+        curPatchp->dep = NULL;
+    }   
+
+    if (searchFlags & TRAN2_FIND_FLAG_RETURN_RESUME_KEYS) {
+        /* put out resume key */
+        *((u_long *)origOp) = 0;
+    }
+
+    /* Adjust byte ptr and count */
+    origOp += orbytes;	/* skip entire record */
+    bytesInBuffer += orbytes;
+
+    /* and pad the record out */
+    while (--align >= 0) {
+        *origOp++ = 0;
+        bytesInBuffer++;
+    }
+
+    /* apply the patches */
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp, &req);
+
+    outp->parmsp[0] = 0;
+    outp->parmsp[1] = 1;        /* number of names returned */
+    outp->parmsp[2] = 1;        /* end of search */
+    outp->parmsp[3] = 0;        /* nothing wrong with EAS */
+    outp->parmsp[4] = 0;
+
+    outp->totalParms = 10;      /* in bytes */
+
+    outp->totalData = bytesInBuffer;
+
+    osi_Log0(smb_logp, "T2SDSingle done.");
+
+    smb_SendTran2Packet(vcp, outp, opx);
+
+ skip_file:
+    smb_FreeTran2Packet(outp);
+    cm_ReleaseSCache(scp);
+    cm_ReleaseSCache(targetscp);
+    cm_ReleaseUser(userp);
+
+    return code;
+}
+
+
 long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     int attribute;
@@ -4193,8 +4590,6 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         maxCount = p->parmsp[1];
         infoLevel = p->parmsp[3];
         searchFlags = p->parmsp[2];
-        dsp = smb_NewDirSearch(1);
-        dsp->attribute = attribute;
         pathp = ((char *) p->parmsp) + 12;	/* points to path */
         if (smb_StoreAnsiFilenames)
             OemToChar(pathp,pathp);
@@ -4204,9 +4599,26 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             maskp = pathp;
         else 
             maskp++;	/* skip over backslash */
-        strcpy(dsp->mask, maskp);	/* and save mask */
+
         /* track if this is likely to match a lot of entries */
         starPattern = smb_V3IsStarMask(maskp);
+
+#ifndef NOFINDFIRSTOPTIMIZE
+        if (!starPattern) {
+            /* if this is for a single directory or file, we let the
+               optimized routine handle it. */
+            code = smb_T2SearchDirSingle(vcp, p, opx);
+
+            /* we only failover if we see a CM_ERROR_NOSUCHFILE */
+            if (code != CM_ERROR_NOSUCHFILE) {
+                return code;
+            }
+        }
+#endif
+
+        dsp = smb_NewDirSearch(1);
+        dsp->attribute = attribute;
+        strcpy(dsp->mask, maskp);	/* and save mask */
     }
     else {
         osi_assert(p->opcode == 2);
@@ -4481,7 +4893,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
-                    int now = GetTickCount();
+                    DWORD now = GetTickCount();
                     if (now - req.startTime > RDRtimeout) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;

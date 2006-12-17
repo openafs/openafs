@@ -22,7 +22,7 @@
 
 osi_rwlock_t cm_connLock;
 
-long RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
+DWORD RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 unsigned short ConnDeadtimeout = CM_CONN_CONNDEADTIME;
 unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
 
@@ -86,7 +86,7 @@ void cm_InitConn(void)
 	    RegCloseKey(parmKey);
 	}
 
-	afsi_log("lanmanworkstation : SessTimeout %d", RDRtimeout);
+	afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
 	if (ConnDeadtimeout == 0)
 	    ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
 	afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);

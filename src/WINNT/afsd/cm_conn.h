@@ -16,7 +16,7 @@
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
-extern long           RDRtimeout; 
+extern DWORD          RDRtimeout; 
 
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */
