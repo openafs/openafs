@@ -2125,6 +2125,8 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
     counter = 0;
 
     /* what's the biggest ID allowed in this version of the protocol */
+    /* TODO: do we really want a non v3 dir search request to wrap
+       smb_dirSearchCounter? */
     maxAllowed = isV3 ? 65535 : 255;
     if (smb_dirSearchCounter > maxAllowed)
         smb_dirSearchCounter = 1;

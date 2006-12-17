@@ -179,11 +179,12 @@ char cm_8Dot3Mapping[42] =
 };
 int cm_8Dot3MapSize = sizeof(cm_8Dot3Mapping);
 
-void cm_Gen8Dot3Name(cm_dirEntry_t *dep, char *shortName, char **shortNameEndp)
+void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
+                        char *shortName, char **shortNameEndp)
 {
     char number[12];
     int i, nsize = 0;
-    int vnode = ntohl(dep->fid.vnode);
+    int vnode = ntohl(pfid->vnode);
     char *lastDot;
     int validExtension = 0;
     char tc, *temp, *name;
@@ -199,7 +200,7 @@ void cm_Gen8Dot3Name(cm_dirEntry_t *dep, char *shortName, char **shortNameEndp)
      * Look for valid extension.  There has to be a dot, and
      * at least one of the characters following has to be legal.
      */
-    lastDot = strrchr(dep->name, '.');
+    lastDot = strrchr(longname, '.');
     if (lastDot) {
         temp = lastDot; temp++;
         while (tc = *temp++)
@@ -210,8 +211,7 @@ void cm_Gen8Dot3Name(cm_dirEntry_t *dep, char *shortName, char **shortNameEndp)
     }       
 
     /* Copy name characters */
-    name = dep->name;
-    for (i = 0, name = dep->name;
+    for (i = 0, name = longname;
           i < (7 - nsize) && name != lastDot; ) {
         tc = *name++;
 
