@@ -914,7 +914,7 @@ skipCheck:
   IfFileExists "$INSTDIR\Server\usr\afs\etc\ThisCell" SkipStartup
 
   ; Make the server config wizard auto-start on bootup if this is an install (not an upgrade)
-  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" "AFS Server Wizard" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard"'
+  ; WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" "AFS Server Wizard" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard"'
   
   
 SkipStartup:
@@ -922,10 +922,24 @@ SkipStartup:
   ;nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
   nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
   Delete "$INSTDIR\Common\service.exe"
+
+  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSServer" 
+  strcpy $REG_VALUE   "DependOnGroup" 
+  strcpy $REG_DATA_1  "PNP_TDI"
+  strcpy $REG_DATA_2  ""
+  strcpy $REG_DATA_3  ""
+  strcpy $REG_DATA_4  ""
+  Call RegWriteMultiStr
+  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSServer" 
+  strcpy $REG_VALUE   "DependOnService" 
+  strcpy $REG_DATA_1  "Tcpip"
+  strcpy $REG_DATA_2  ""
+  strcpy $REG_DATA_3  ""
+  strcpy $REG_DATA_4  ""
+  Call RegWriteMultiStr
   
-  CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Server Configuration.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
-  
+  ;CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
+  ;CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Server Configuration.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
