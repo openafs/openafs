@@ -1001,7 +1001,9 @@
                             </Component>
                              <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_EXE" Guid="$(var.cmf_afssvrcfg_EXE_guid)">
                                 <File Id="fileafssvrcfg_EXE" Name="afssv.exe" LongName="afssvrcfg.exe" KeyPath="yes" DiskId="1">
+<!--
 									<Shortcut Id="scSvrCfgWizard" Directory="dirShortCut" Name="SvrCfgWz.lnk" LongName="Server Configuration Wizard.lnk" Description="$(loc.StrCfgWzdDesc)" Arguments="/wizard" Icon="ico_afssvrcfg" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+-->
                                 </File>
                             </Component>
 			    <?if $(env.CPU) = "i386"?>
@@ -1016,6 +1018,8 @@
 									<!-- ServiceConfig does nothing 
                                     <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="5" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
                                     -->
+                                    <ServiceDependency Id="Tcpip" />
+                                    <ServiceDependency Id="PNP_TDI" Group="yes"/>
                                 </ServiceInstall>
                             </Component>
                             <Component Win64="$(var.Win64)" Id="cmf_bosserver_EXE" Guid="$(var.cmf_bosserver_EXE_guid)">
