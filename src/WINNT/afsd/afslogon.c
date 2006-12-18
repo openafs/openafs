@@ -78,9 +78,8 @@ BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
     switch (reason) {
     case DLL_PROCESS_ATTACH:
         /* Initialization Mutex */
-	if (!bInit) {
+	if (!hInitMutex)
 	    hInitMutex = CreateMutex(NULL, FALSE, NULL);
-	}
         break;
 
     case DLL_PROCESS_DETACH:
