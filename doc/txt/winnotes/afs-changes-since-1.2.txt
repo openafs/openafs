@@ -1,3 +1,47 @@
+Since 1.5.12
+
+ * When all buffers are in use, periodically sleep the threads
+   waiting for a buffer to become free while the global buffer
+   lock is not being held in order to permit those threads that
+   can free buffers to do so.
+
+ * Power Management improvements.  Maintain a global flag that 
+   specifies whether or not the service is in a suspend state.
+   Do not panic if Netbios() returns NRC_BRIDGE meaning that the
+   lana is no longer valid.  Instead, stop the listener threads
+   and if all listener threads are stopped, reset the lana_list.
+   Allow the cm_Daemon() thread to periodically check the state
+   of the smb listeners.  If they are all stopped and the service
+   is not suspended, attempt to restart them.  If there are no valid
+   lanas, return to the stopped state.
+
+ * CreateX and NTCreateX use cm_CheckNTOpen() to test whether or not
+   the user is permitted to obtain read or write locks.  This function
+   would obtain the lock and then drop it returning whether or not 
+   the lock could be obtained.  If the lock was in fact required,
+   CreateX/NTCreateX would then obtain it with cm_Lock().  The problem
+   of course being that this pattern results in three RPCs to the 
+   file server (lock, unlock, lock).  This is reduced to one RPC by
+   implementing cm_CheckNTOpenDone() which frees the allocated byte
+   range lock from cm_CheckNTOpen() after the cm_Lock() call is 
+   performed.
+
+ * Optimize the SMB FindFirst processing for the case in which there
+   are no wildcards.   If a cm_Lookup succeeds, generate a response
+   from the stat cache entry we have a callback for.  Its cheaper 
+   than walking each buffer of directory data associated with the
+   directory stat cache entry when we have thousands of directory
+   entries to search.
+
+ * Increase the SMB Ioctl MaxData size to support larger token sizes
+
+ * Disable autorun of the AFS Server Wizard when the AFS Server is 
+   installed.
+
+ * Add AFS Server service dependencies on tcpip and PNP_TDI
+
+ * Remove the AFS Server Configuration Tool shortcut
+
 Since 1.5.11
 
  * Unlike previous versions of the OS, Vista performs a shutdown on
@@ -20,7 +64,7 @@ Since 1.5.11
  * The old dirty buffer synchronization algorithm had a buf_IncrSyncer
    thread walking the all buffer list periodically searching for dirty
    buffers to write to the file server.  This had several negative
-   results.  The alogirithm ate up ever increasing amounts of CPU time
+   results.  The algorithm ate up ever increasing amounts of CPU time
    even when AFS is idle as the size of the cache increases.  Also,
    buffers were written to the file server in an order based upon the
    original buffer allocation which has nothing to do with the order

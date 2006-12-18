@@ -1,60 +1,26 @@
-This file is a rough list of known issues with the 1.5.8 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.13 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
 
 (1) File/Directory access is not integrated with windows security 
 
-(3) SMB LANA list is static.  
-
-(3a) IP address changes cause the service to terminate due to an assertion 
-in smb_Listener() thread.
-
-(3b) New IP addresses do not get bound to the SMB server
-
 (3c) Loopback adapter hack:
   (i)   prevents use of AFS Gateway 
   (ii)  requires installation of loopback adapter
   (iii) the list of hack adapters is incomplete (VMWare, MS TV/Video, ...)
-  (iv)  incompatible with Windows 2000 and earlier
 
 (9) Convert to IFS!!!!!!
 
-(10) Kerberos 5 integration:
-(10f) allow arbitrary cell to realm mappings
-(10g) modify UI to allow user to choose whether to authenticate
-      using Kerberos or AFS 
-(10h) modify UI to allow user to select an existing principal to
-      be used to request AFS tokens
-(10i) modify UI to display Kerberos 5 ticket info (principal, 
-      ticket lifetimes, etc) 
-
-(11) Default cell is system global just like everything else.  Different
-     users logging in via Integrated Logon or using afscreds.exe cannot
-     be automatically prompted for different cells
-
 (12) AFS Integrated Logon:
-(12b) If using Kerberos, need to figure out a means of passing credentials
-      into the user space until such time as I finish the new credential
-      cache service.
 (12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
-
-(13) If a drive mapping is "in use", then afscreds cannot be used to Modify
-     or Delete the Mapping.  If a map to "H:" to \afs\cell\foo" with 
-     description "home" is modified to point to \afs\cell\bar, then the 
-     description must be unique.  "home" cannot be reused.  We need a way 
-     to remove "home" from the submount list.  
-
-     [Actually, an end user should not be able to modify the submount list]
 
 (14) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
      the use of interoperable file names; force the use of paths no longer 
      than 256 characters; force share names to be no longer than 13 
      characters; restrict authentication to ASCII only names and passwords;
      etc.
-
-(15) No auto-restart on service failure
 
 (16) Better EventLog handling
 
@@ -92,23 +58,14 @@ in smb_Listener() thread.
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
 
+(24) Compatibility with Vista User Account Control (UAC)
+
 -------------------------------------------------------------------------
 List of unfunded projects:
 
-   1. No longer use AFS Client Service "cell" as the default cell for individual users
-   2. Prevent panic situation when the root.afs volume is not reachable and 
-      the AFS Client Server is not using Freelance mode
-   3. Prevent panic situation when the IP address to which the SMB server is bound is removed 
-      from the local machine's network configuration
    4. Add support for Named Pipes within the afs filesystem
       (This is not currently a supported feature of AFS; it will require 
       changes to the servers as well as the clients.)
-   5. Replace afscreds.exe with netidmgr.exe to support:
-         1. choosing between Kerberos 5 and Kerberos 4 on a per principal basis
-         2. providing users with the ability to map multiple cells to a single principal
-         3. providing change password functionality on a per principal basis
-         4. no longer include drive mapping
-         5. configuration of afscreds startup options in shortcut
    6. Re-write afs_config.exe to be only "per user" functionality which does not require admin 
       privileges
          1. default cell and principal for the user
@@ -163,4 +120,5 @@ List of unfunded projects:
   26. Implement RX Connection Pools in the Cache Manager allowing more than
       four simultaneous requests to a single server to be processed at a time 
       for a single user
+  27. Support the Vista User Account Control (UAC) interface
   
