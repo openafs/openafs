@@ -9,6 +9,7 @@ OPENAFS_CONFIGURE_COMMON
 AC_OUTPUT(             \
 Makefile               \
 src/config/Makefile.config \
+src/config/Makefile.version \
 src/libafs/Makefile.common \
 src/libafs/Makefile \
 )

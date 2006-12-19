@@ -1,4 +1,4 @@
 make_vnode.pl
 Makefile.config.in
-Makefile.version
+Makefile.version.in
 afsconfig.h.in
