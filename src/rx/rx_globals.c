@@ -29,7 +29,7 @@ RCSID
     ("$Header$");
 
 /* Enable data initialization when the header file is included */
-#define INIT(stuff) = stuff
+#define GLOBALSINIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllexport)
 #define EXT2 __declspec(dllexport)
