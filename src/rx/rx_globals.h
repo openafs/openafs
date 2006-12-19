@@ -19,8 +19,8 @@
 # include "rx.h"
 #endif /* KERNEL */
 
-#ifndef INIT
-#define INIT(x)
+#ifndef GLOBALSINIT
+#define GLOBALSINIT(x)
 #if defined(AFS_NT40_ENV)
 #if defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllimport) extern
@@ -32,7 +32,7 @@
 #define EXT2 extern
 #define EXT extern
 #endif
-#endif /* !INIT */
+#endif /* !GLOBALSINIT */
 
 /* Basic socket for client requests; other sockets (for receiving server requests) are in the service structures */
 EXT osi_socket rx_socket;
@@ -67,32 +67,32 @@ EXT struct clock rx_softAckDelay;
 
 /* Variable to allow introduction of network unreliability */
 #ifdef RXDEBUG
-EXT int rx_intentionallyDroppedPacketsPer100 INIT(0);	/* Dropped on Send */
-EXT int rx_intentionallyDroppedOnReadPer100  INIT(0);	/* Dropped on Read */
+EXT int rx_intentionallyDroppedPacketsPer100 GLOBALSINIT(0);	/* Dropped on Send */
+EXT int rx_intentionallyDroppedOnReadPer100  GLOBALSINIT(0);	/* Dropped on Read */
 #endif
 
 /* extra packets to add to the quota */
-EXT int rx_extraQuota INIT(0);
+EXT int rx_extraQuota GLOBALSINIT(0);
 /* extra packets to alloc (2 windows by deflt) */
-EXT int rx_extraPackets INIT(32);
+EXT int rx_extraPackets GLOBALSINIT(32);
 
-EXT int rx_stackSize INIT(RX_DEFAULT_STACK_SIZE);
+EXT int rx_stackSize GLOBALSINIT(RX_DEFAULT_STACK_SIZE);
 
 /* Time until an unresponsive connection is declared dead */
-EXT int rx_connDeadTime INIT(12);
+EXT int rx_connDeadTime GLOBALSINIT(12);
 /* Set rx default connection dead time; set on both services and connections at creation time */
 #define rx_SetRxDeadTime(seconds)   (rx_connDeadTime = (seconds))
 
 /* Time until we toss an idle connection */
-EXT int rx_idleConnectionTime INIT(700);
+EXT int rx_idleConnectionTime GLOBALSINIT(700);
 /* Time until we toss a peer structure, after all connections using are gone */
-EXT int rx_idlePeerTime INIT(60);
+EXT int rx_idlePeerTime GLOBALSINIT(60);
 
 /* The file server is temporarily salvaging */
-EXT int rx_tranquil INIT(0);
+EXT int rx_tranquil GLOBALSINIT(0);
 
 /* UDP rcv buffer size */
-EXT int rx_UdpBufSize INIT(64 * 1024);
+EXT int rx_UdpBufSize GLOBALSINIT(64 * 1024);
 #define rx_GetMinUdpBufSize()   (64*1024)
 #define rx_SetUdpBufSize(x)     (((x)>rx_GetMinUdpBufSize()) ? (rx_UdpBufSize = (x)):0)
 
@@ -101,8 +101,8 @@ EXT int rx_UdpBufSize INIT(64 * 1024);
  * waiting for a thread exceed the threshold, new calls are aborted
  * with the busy error. 
  */
-EXT int rx_BusyThreshold INIT(-1);	/* default is disabled */
-EXT int rx_BusyError INIT(-1);
+EXT int rx_BusyThreshold GLOBALSINIT(-1);	/* default is disabled */
+EXT int rx_BusyError GLOBALSINIT(-1);
 
 /* These definitions should be in one place */
 #ifdef	AFS_SUN5_ENV
@@ -116,31 +116,31 @@ EXT int rx_BusyError INIT(-1);
 #define RX_FAST_ACK_RATE 1	/* as of 3.4, ask for an ack every 
 				 * other packet. */
 
-EXT int rx_minWindow INIT(1);
-EXT int rx_initReceiveWindow INIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow INIT(32);	/* how much to accept */
-EXT int rx_initSendWindow INIT(8);
-EXT int rx_maxSendWindow INIT(32);
-EXT int rx_nackThreshold INIT(3);	/* Number NACKS to trigger congestion recovery */
-EXT int rx_nDgramThreshold INIT(4);	/* Number of packets before increasing
+EXT int rx_minWindow GLOBALSINIT(1);
+EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
+EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
+EXT int rx_initSendWindow GLOBALSINIT(8);
+EXT int rx_maxSendWindow GLOBALSINIT(32);
+EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
+EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
 					 * packets per datagram */
 #define RX_MAX_FRAGS 4
-EXT int rxi_nSendFrags INIT(RX_MAX_FRAGS);	/* max fragments in a datagram */
-EXT int rxi_nRecvFrags INIT(RX_MAX_FRAGS);
-EXT int rxi_OrphanFragSize INIT(512);
+EXT int rxi_nSendFrags GLOBALSINIT(RX_MAX_FRAGS);	/* max fragments in a datagram */
+EXT int rxi_nRecvFrags GLOBALSINIT(RX_MAX_FRAGS);
+EXT int rxi_OrphanFragSize GLOBALSINIT(512);
 
 #define RX_MAX_DGRAM_PACKETS 6	/* max packets per jumbogram */
 
-EXT int rxi_nDgramPackets INIT(RX_MAX_DGRAM_PACKETS);
+EXT int rxi_nDgramPackets GLOBALSINIT(RX_MAX_DGRAM_PACKETS);
 /* allow n packets between soft acks - must be power of 2 -1, else change
  * macro below */
-EXT int rxi_SoftAckRate INIT(RX_FAST_ACK_RATE);
+EXT int rxi_SoftAckRate GLOBALSINIT(RX_FAST_ACK_RATE);
 /* consume n packets before sending hard ack, should be larger than above,
    but not absolutely necessary.  If it's smaller, than fast receivers will
    send a soft ack, immediately followed by a hard ack. */
-EXT int rxi_HardAckRate INIT(RX_FAST_ACK_RATE + 1);
+EXT int rxi_HardAckRate GLOBALSINIT(RX_FAST_ACK_RATE + 1);
 
-/* EXT int rx_maxWindow INIT(15);   Temporary HACK:  transmit/receive window */
+/* EXT int rx_maxWindow GLOBALSINIT(15);   Temporary HACK:  transmit/receive window */
 
 /* If window sizes become very variable (in terms of #packets), be
  * sure that the sender can get back a hard acks without having to wait for
@@ -150,7 +150,7 @@ EXT int rxi_HardAckRate INIT(RX_FAST_ACK_RATE + 1);
 
 #define	ACKHACK(p,r) { if (((p)->header.seq & (rxi_SoftAckRate))==0) (p)->header.flags |= RX_REQUEST_ACK; }
 
-EXT int rx_nPackets INIT(100);	/* obsolete; use rx_extraPackets now */
+EXT int rx_nPackets GLOBALSINIT(100);	/* obsolete; use rx_extraPackets now */
 
 /*
  * pthreads thread-specific rx info support
@@ -233,9 +233,9 @@ EXT afs_kmutex_t rx_freePktQ_lock;
 
 #if defined(AFS_PTHREAD_ENV)
 #define RX_ENABLE_TSFPQ
-EXT int rx_TSFPQGlobSize INIT(3); /* number of packets to transfer between global and local queues in one op */
-EXT int rx_TSFPQLocalMax INIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
-EXT int rx_TSFPQMaxProcs INIT(0); /* max number of threads expected */
+EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
+EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
+EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 EXT void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
 EXT void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
 EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
@@ -384,37 +384,37 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
 #endif /* AFS_PTHREAD_ENV */
 
 /* Number of free packets */
-EXT int rx_nFreePackets INIT(0);
-EXT int rxi_NeedMorePackets INIT(0);
-EXT int rx_nWaiting INIT(0);
-EXT int rx_nWaited INIT(0);
-EXT int rx_packetReclaims INIT(0);
+EXT int rx_nFreePackets GLOBALSINIT(0);
+EXT int rxi_NeedMorePackets GLOBALSINIT(0);
+EXT int rx_nWaiting GLOBALSINIT(0);
+EXT int rx_nWaited GLOBALSINIT(0);
+EXT int rx_packetReclaims GLOBALSINIT(0);
 
 /* largest packet which we can safely receive, initialized to AFS 3.2 value
  * This is provided for backward compatibility with peers which may be unable
  * to swallow anything larger. THIS MUST NEVER DECREASE WHILE AN APPLICATION
  * IS RUNNING! */
-EXT afs_uint32 rx_maxReceiveSize INIT(OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
+EXT afs_uint32 rx_maxReceiveSize GLOBALSINIT(OLD_MAX_PACKET_SIZE * RX_MAX_FRAGS +
 				      UDP_HDR_SIZE * (RX_MAX_FRAGS - 1));
 
 /* this is the maximum packet size that the user wants us to receive */
 /* this is set by rxTune if required */
-EXT afs_uint32 rx_maxReceiveSizeUser INIT(0xffffffff);
+EXT afs_uint32 rx_maxReceiveSizeUser GLOBALSINIT(0xffffffff);
 
 /* rx_MyMaxSendSize is the size of the largest packet we will send,
  * including the RX header. Just as rx_maxReceiveSize is the
  * max we will receive, including the rx header.
  */
-EXT afs_uint32 rx_MyMaxSendSize INIT(8588);
+EXT afs_uint32 rx_MyMaxSendSize GLOBALSINIT(8588);
 
 /* Maximum size of a jumbo datagram we can receive */
-EXT afs_uint32 rx_maxJumboRecvSize INIT(RX_MAX_PACKET_SIZE);
+EXT afs_uint32 rx_maxJumboRecvSize GLOBALSINIT(RX_MAX_PACKET_SIZE);
 
 /* need this to permit progs to run on AIX systems */
-EXT int (*rxi_syscallp) (afs_uint32 a3, afs_uint32 a4, void *a5)INIT(0);
+EXT int (*rxi_syscallp) (afs_uint32 a3, afs_uint32 a4, void *a5)GLOBALSINIT(0);
 
 /* List of free queue entries */
-EXT struct rx_serverQueueEntry *rx_FreeSQEList INIT(0);
+EXT struct rx_serverQueueEntry *rx_FreeSQEList GLOBALSINIT(0);
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kmutex_t freeSQEList_lock;
 #endif
@@ -424,7 +424,7 @@ EXT struct rx_queue rx_freeCallQueue;
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_freeCallQueue_lock;
 #endif
-EXT afs_int32 rxi_nCalls INIT(0);
+EXT afs_int32 rxi_nCalls GLOBALSINIT(0);
 
 /* Port requested at rx_Init.  If this is zero, the actual port used will be different--but it will only be used for client operations.  If non-zero, server provided services may use the same port. */
 EXT u_short rx_port;
@@ -434,7 +434,7 @@ EXT u_short rx_port;
 EXT fd_set rx_selectMask;
 EXT osi_socket rx_maxSocketNumber;	/* Maximum socket number in the select mask. */
 /* Minumum socket number in the select mask. */
-EXT osi_socket rx_minSocketNumber INIT(0x7fffffff);
+EXT osi_socket rx_minSocketNumber GLOBALSINIT(0x7fffffff);
 #endif
 
 /* This is actually the minimum number of packets that must remain free,
@@ -446,11 +446,11 @@ EXT osi_socket rx_minSocketNumber INIT(0x7fffffff);
 /* value large enough to guarantee that no allocation fails due to RX_PACKET_QUOTAS.
    Make it a little bigger, just for fun */
 #define	RX_MAX_QUOTA	15	/* part of min packet computation */
-EXT int rx_packetQuota[RX_N_PACKET_CLASSES] INIT(RX_PACKET_QUOTAS);
-EXT int meltdown_1pkt INIT(1);	/* prefer to schedule single-packet calls */
-EXT int rxi_doreclaim INIT(1);	/* if discard one packet, discard all */
-EXT int rxi_md2cnt INIT(0);	/* counter of skipped calls */
-EXT int rxi_2dchoice INIT(1);	/* keep track of another call to schedule */
+EXT int rx_packetQuota[RX_N_PACKET_CLASSES] GLOBALSINIT(RX_PACKET_QUOTAS);
+EXT int meltdown_1pkt GLOBALSINIT(1);	/* prefer to schedule single-packet calls */
+EXT int rxi_doreclaim GLOBALSINIT(1);	/* if discard one packet, discard all */
+EXT int rxi_md2cnt GLOBALSINIT(0);	/* counter of skipped calls */
+EXT int rxi_2dchoice GLOBALSINIT(1);	/* keep track of another call to schedule */
 
 /* quota system: each attached server process must be able to make
     progress to avoid system deadlock, so we ensure that we can always
@@ -467,11 +467,11 @@ EXT int rxi_2dchoice INIT(1);	/* keep track of another call to schedule */
     quota to send any packets) */
 /* # to reserve so that thread with input can still make calls (send packets)
    without blocking */
-EXT int rxi_dataQuota INIT(RX_MAX_QUOTA);	/* packets to reserve for active threads */
+EXT int rxi_dataQuota GLOBALSINIT(RX_MAX_QUOTA);	/* packets to reserve for active threads */
 
-EXT afs_int32 rxi_availProcs INIT(0);	/* number of threads in the pool */
-EXT afs_int32 rxi_totalMin INIT(0);	/* Sum(minProcs) forall services */
-EXT afs_int32 rxi_minDeficit INIT(0);	/* number of procs needed to handle all minProcs */
+EXT afs_int32 rxi_availProcs GLOBALSINIT(0);	/* number of threads in the pool */
+EXT afs_int32 rxi_totalMin GLOBALSINIT(0);	/* Sum(minProcs) forall services */
+EXT afs_int32 rxi_minDeficit GLOBALSINIT(0);	/* number of procs needed to handle all minProcs */
 
 EXT int rx_nextCid;		/* Next connection call id */
 EXT int rx_epoch;		/* Initialization time of rx */
@@ -484,8 +484,8 @@ EXT struct rx_stats rx_stats;
 
 EXT struct rx_peer **rx_peerHashTable;
 EXT struct rx_connection **rx_connHashTable;
-EXT struct rx_connection *rx_connCleanup_list INIT(0);
-EXT afs_uint32 rx_hashTableSize INIT(257);	/* Prime number */
+EXT struct rx_connection *rx_connCleanup_list GLOBALSINIT(0);
+EXT afs_uint32 rx_hashTableSize GLOBALSINIT(257);	/* Prime number */
 #ifdef RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_peerHashTable_lock;
 EXT afs_kmutex_t rx_connHashTable_lock;
@@ -532,17 +532,17 @@ EXT int rxdebug_active;
 #endif
 #define rx_Log_event rxevent_debugFile
 
-EXT char *rx_packetTypes[RX_N_PACKET_TYPES] INIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
+EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
 
 #ifndef KERNEL
 /*
  * Counter used to implement connection specific data
  */
-EXT int rxi_keyCreate_counter INIT(0);
+EXT int rxi_keyCreate_counter GLOBALSINIT(0);
 /*
  * Array of function pointers used to destory connection specific data
  */
-EXT rx_destructor_t *rxi_keyCreate_destructor INIT(NULL);
+EXT rx_destructor_t *rxi_keyCreate_destructor GLOBALSINIT(NULL);
 #ifdef RX_ENABLE_LOCKS
 EXT afs_kmutex_t rxi_keyCreate_lock;
 #endif /* RX_ENABLE_LOCKS */
@@ -558,21 +558,21 @@ EXT afs_kmutex_t rxi_keyCreate_lock;
  * server throttles the client by waiting before sending error messages.
  * Disabled if abort thresholds are zero.
  */
-EXT int rxi_connAbortThreshhold INIT(0);
-EXT int rxi_connAbortDelay INIT(3000);
-EXT int rxi_callAbortThreshhold INIT(0);
-EXT int rxi_callAbortDelay INIT(3000);
+EXT int rxi_connAbortThreshhold GLOBALSINIT(0);
+EXT int rxi_connAbortDelay GLOBALSINIT(3000);
+EXT int rxi_callAbortThreshhold GLOBALSINIT(0);
+EXT int rxi_callAbortDelay GLOBALSINIT(3000);
 
 /*
  * Thread specific thread ID used to implement LWP_Index().
  */
 
 #if defined(AFS_PTHREAD_ENV)
-EXT int rxi_fcfs_thread_num INIT(0);
+EXT int rxi_fcfs_thread_num GLOBALSINIT(0);
 EXT pthread_key_t rx_thread_id_key;
 /* keep track of pthread numbers - protected by rx_stats_mutex, 
    except in rx_Init() before mutex exists! */
-EXT int rxi_pthread_hinum INIT(0);
+EXT int rxi_pthread_hinum GLOBALSINIT(0);
 #else
 #define rxi_fcfs_thread_num (0)
 #endif
@@ -581,13 +581,13 @@ EXT int rxi_pthread_hinum INIT(0);
 EXT afs_kmutex_t rx_stats_mutex;	/* used to activate stats gathering */
 #endif
 
-EXT2 int rx_enable_stats INIT(0);
+EXT2 int rx_enable_stats GLOBALSINIT(0);
 
 /*
  * Set this flag to enable the listener thread to trade places with an idle
  * worker thread to move the context switch from listener to worker out of
  * the request path.
  */
-EXT int rx_enable_hot_thread INIT(0);
+EXT int rx_enable_hot_thread GLOBALSINIT(0);
 
 #endif /* AFS_RX_GLOBALS_H */
