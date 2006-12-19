@@ -74,19 +74,24 @@ static BOOL bInit = FALSE;
 
 BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
 {
+    WSADATA wsaData;
     hDLL = dll;
+    
     switch (reason) {
     case DLL_PROCESS_ATTACH:
         /* Initialization Mutex */
-	if (!bInit) {
+	if (!bInitMutex) {
 	    hInitMutex = CreateMutex(NULL, FALSE, NULL);
 	}
+
+	WSAStartup( MAKEWORD(2,2), &wsaData );
         break;
 
     case DLL_PROCESS_DETACH:
 	/* do nothing on unload because we might 
 	 * be reloaded.
 	 */
+        WSACleanup();
 	CloseHandle(hInitMutex);
 	hInitMutex = NULL;
 	bInit = FALSE;
