@@ -3957,9 +3957,9 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 			  sizeof(afs_int32), &tSize);
 	    maxDgramPackets = (afs_uint32) ntohl(tSize);
 	    maxDgramPackets = MIN(maxDgramPackets, rxi_nDgramPackets);
-	    maxDgramPackets =
-		MIN(maxDgramPackets, (int)(peer->ifDgramPackets));
-	    maxDgramPackets = MIN(maxDgramPackets, tSize);
+	    maxDgramPackets = MIN(maxDgramPackets, peer->ifDgramPackets);
+	    if (peer->natMTU < peer->ifMTU)
+		maxDgramPackets = MIN(maxDgramPackets, rxi_AdjustDgramPackets(1, peer->natMTU));
 	    if (maxDgramPackets > 1) {
 		peer->maxDgramPackets = maxDgramPackets;
 		call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
