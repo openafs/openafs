@@ -16,6 +16,12 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #   if BYTE_ORDER == BIG_ENDIAN
 #   define WORDS_BIGENDIAN 1
 #   endif
+#  else
+#   if defined(AUTOCONF_FOUND_BIGENDIAN)
+#    define WORDS_BIGENDIAN 1
+#   else
+#    undef WORDS_BIGENDIAN
+#   endif
 #  endif
 # else
 #  if defined(AUTOCONF_FOUND_BIGENDIAN)
@@ -25,11 +31,11 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #  endif
 # endif
 #else
-#if defined(__BIG_ENDIAN__)
-#define WORDS_BIGENDIAN 1
-#else
-#undef WORDS_BIGENDIAN
-#endif
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# else
+#  undef WORDS_BIGENDIAN
+# endif
 #endif
 
 #undef AFS_AFSDB_ENV
