@@ -20,49 +20,18 @@ RCSID
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 
-/* Setup a pool for creds. Allocate several at a time. */
-#define CRED_ALLOC_STEP 29	/* at 140 bytes/cred = 4060 bytes. */
-
-
-static cred_t *cred_pool = NULL;
-int cred_allocs = 0;
-int ncreds_inuse = 0;
-
-/* Cred locking assumes current single threaded non-preemptive kernel.
- * Also assuming a fast path through both down and up if no waiters. Otherwise,
- * test if no creds in pool before grabbing lock in crfree().
- */
-#if defined(AFS_LINUX24_ENV)
-static DECLARE_MUTEX(linux_cred_pool_lock);
-#else
-static struct semaphore linux_cred_pool_lock = MUTEX;
-#endif
-#define CRED_LOCK() down(&linux_cred_pool_lock)
-#define CRED_UNLOCK() up(&linux_cred_pool_lock)
-
 cred_t *
 crget(void)
 {
     cred_t *tmp;
-    int i;
 
-    CRED_LOCK();
-    if (!cred_pool) {
-	cred_allocs++;
-	cred_pool = (cred_t *) osi_Alloc(CRED_ALLOC_STEP * sizeof(cred_t));
-	if (!cred_pool)
+#if !defined(GFP_NOFS)
+#define GFP_NOFS GFP_KERNEL
+#endif
+    tmp = kmalloc(sizeof(cred_t), GFP_NOFS);
+    if (!tmp)
 	    osi_Panic("crget: No more memory for creds!\n");
 
-	for (i = 0; i < CRED_ALLOC_STEP - 1; i++)
-	    cred_pool[i].cr_next = (cred_t *) &cred_pool[i + 1];
-	cred_pool[i].cr_next = NULL;
-    }
-    tmp = cred_pool;
-    cred_pool = (cred_t *) tmp->cr_next;
-    ncreds_inuse++;
-    CRED_UNLOCK();
-
-    memset(tmp, 0, sizeof(cred_t));
     tmp->cr_ref = 1;
     return tmp;
 }
@@ -78,11 +47,8 @@ crfree(cred_t * cr)
 #if defined(AFS_LINUX26_ENV)
     put_group_info(cr->cr_group_info);
 #endif
-    CRED_LOCK();
-    cr->cr_next = (cred_t *) cred_pool;
-    cred_pool = cr;
-    CRED_UNLOCK();
-    ncreds_inuse--;
+
+    kfree(cr);
 }
 
 
@@ -95,6 +61,7 @@ crdup(cred_t * cr)
     tmp->cr_uid = cr->cr_uid;
     tmp->cr_ruid = cr->cr_ruid;
     tmp->cr_gid = cr->cr_gid;
+    tmp->cr_rgid = cr->cr_rgid;
 
 #if defined(AFS_LINUX26_ENV)
     get_group_info(cr->cr_group_info);
@@ -104,7 +71,6 @@ crdup(cred_t * cr)
     tmp->cr_ngroups = cr->cr_ngroups;
 #endif
 
-    tmp->cr_ref = 1;
     return tmp;
 }
 
