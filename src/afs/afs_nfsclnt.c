@@ -198,7 +198,11 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
 /*    ObtainWriteLock(&afs_xnfsreq); */
     pag = PagInCred(*cred);
+#if defined(AFS_SUN510_ENV)
+    uid = crgetuid(*cred);
+#else
     uid = (*cred)->cr_uid;
+#endif
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
 	uid = pag;
     } else if (pag != NOPAG) {

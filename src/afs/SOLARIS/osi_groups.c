@@ -13,6 +13,12 @@
  * setpag
  *
  */
+
+#include <unistd.h>
+#ifdef AFS_SUN510_ENV
+#include <sys/cred.h>
+#endif
+
 #include <afsconfig.h>
 #include "afs/param.h"
 
@@ -124,8 +130,13 @@ afs_getgroups(struct cred *cred, gid_t * gidset)
     AFS_STATCNT(afs_getgroups);
 
     gidset[0] = gidset[1] = 0;
+#if defined(AFS_SUN510_ENV)
+    savengrps = ngrps = crgetngroups(cred);
+    gp = crgetgroups(cred);
+#else
     savengrps = ngrps = cred->cr_ngroups;
     gp = cred->cr_groups;
+#endif
     while (ngrps--)
 	*gidset++ = *gp++;
     return savengrps;
@@ -137,8 +148,6 @@ static int
 afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
 	      int change_parent)
 {
-    int ngrps;
-    int i;
     gid_t *gp;
 
     AFS_STATCNT(afs_setgroups);
@@ -149,8 +158,13 @@ afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
     }
     if (!change_parent)
 	*cred = (struct cred *)crcopy(*cred);
+#if defined(AFS_SUN510_ENV)
+    crsetgroups(*cred, ngroups, gidset);
+    gp = crgetgroups(*cred);
+#else
     (*cred)->cr_ngroups = ngroups;
     gp = (*cred)->cr_groups;
+#endif
     while (ngroups--)
 	*gp++ = *gidset++;
     mutex_exit(&curproc->p_crlock);
