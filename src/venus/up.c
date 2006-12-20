@@ -56,11 +56,6 @@ RCSID
 
 #define MAXACL 400
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-extern sys_nerr;
-extern char *sys_errlist[];
-#endif
-
 short verbose = 0;
 short renameTargets = 0;
 short oneLevel = 0;
@@ -196,11 +191,11 @@ MakeParent(char *file, afs_int32 owner)
     char *p;
     struct stat s;
 
-    strcpy(parent, file);
+    strlcpy(parent, file, sizeof parent);
 
     p = strrchr(parent, '/');
     if (!p) {
-	strcpy(parent, ".");
+	strlcpy(parent, ".", sizeof parent);
     } else if (p > parent) {
 	*p = '\0';
     } else {
@@ -287,28 +282,22 @@ Copy(char *file1, char *file2, short recursive, int level)
 		fflush(stdout);
 	    }
 
-	    strcpy(tmpfile, file2);	/* Name of temporary file */
-	    strcat(tmpfile, ".UPD");
+	    strlcpy(tmpfile, file2, sizeof tmpfile);	/* Name of temporary file */
+	    strlcat(tmpfile, ".UPD", sizeof tmpfile);
 
 	    /* open file1 for input */
 	    f1 = open(file1, O_RDONLY);
 	    if (f1 < 0) {
-		fprintf(stderr, "Unable to open input file %s, ", file1);
-		if (errno >= sys_nerr)
-		    fprintf(stderr, "error code = %d\n", errno);
-		else
-		    fprintf(stderr, "%s\n", sys_errlist[errno]);
+		fprintf(stderr, "Unable to open input file %s: %s\n",
+			file1, strerror(errno));
 		return 1;
 	    }
 
 	    /* open temporary output file */
 	    f2 = open(tmpfile, (O_WRONLY | O_CREAT | O_TRUNC), s1.st_mode);
 	    if (f2 < 0) {
-		fprintf(stderr, "Unable to open output file %s, ", tmpfile);
-		if (errno >= sys_nerr)
-		    fprintf(stderr, "error code = %d\n", errno);
-		else
-		    fprintf(stderr, "%s\n", sys_errlist[errno]);
+		fprintf(stderr, "Unable to open output file %s: %s\n",
+			tmpfile, strerror(errno));
 		fflush(stdout);
 		close(f1);
 		return 1;
@@ -342,8 +331,8 @@ Copy(char *file1, char *file2, short recursive, int level)
 
 	    /* Rename file2 to file2.old. [-r] */
 	    if (renameTargets && goods2) {
-		strcpy(newName, file2);
-		strcat(newName, ".old");
+		strlcpy(newName, file2, sizeof newName);
+		strlcat(newName, ".old", sizeof newName);
 		if (verbose) {
 		    printf("  Renaming %s to %s\n", file2, newName);
 		    fflush(stdout);
@@ -536,8 +525,8 @@ Copy(char *file1, char *file2, short recursive, int level)
 	    return 1;
 	}
 
-	strcpy(f1, file1);
-	strcpy(f2, file2);
+	strlcpy(f1, file1, sizeof f1);
+	strlcpy(f2, file2, sizeof f2);
 	p1 = f1 + strlen(f1);
 	p2 = f2 + strlen(f2);
 	if (p1 == f1 || p1[-1] != '/')
@@ -554,8 +543,8 @@ Copy(char *file1, char *file2, short recursive, int level)
 	while ((d = readdir(dir)) != NULL) {
 	    if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
 		continue;
-	    strcpy(p1, d->d_name);
-	    strcpy(p2, d->d_name);
+	    strlcpy(p1, d->d_name, sizeof f1 - (p1 - f1));
+	    strlcpy(p2, d->d_name, sizeof f2 - (p2 - f2));
 	    code = Copy(f1, f2, recursive, level + 1);
 	    if (code && !rcode)
 		rcode = 1;	/* remember errors */
@@ -629,7 +618,7 @@ Copy(char *file1, char *file2, short recursive, int level)
 		for (i = 1; i < strlen(file1); i++)
 		    if (file1[i] == '/')
 			break;
-		strcpy(aclspace, &file1[i]);
+		strlcpy(aclspace, &file1[i], sizeof aclspace);
 
 		blob.in_size = 1 + strlen(aclspace);
 		tfd = open(file1, O_RDONLY, 0);
@@ -653,8 +642,8 @@ Copy(char *file1, char *file2, short recursive, int level)
 		/* Now convert the thing. */
 		oacl = (struct OldAcl *)(aclspace + 4);
 		sprintf(tacl, "%d\n%d\n", oacl->nplus, oacl->nminus);
-		strcat(tacl, oacl->data);
-		strcpy(aclspace, tacl);
+		strlcat(tacl, oacl->data, sizeof tacl);
+		strlcpy(aclspace, tacl, sizeof aclspace);
 	    } /*Grab and convert old-style ACL */
 	    else {
 		/* Get a new-style ACL */
@@ -742,7 +731,7 @@ isMountPoint(char *name, struct ViceIoctl *blob)
 	 * No slash appears in the given file name.  Set parent_dir to the current
 	 * directory, and the last component as the given name.
 	 */
-	strcpy(parent_dir, ".");
+	strlcpy(parent_dir, ".", sizeof parent_dir);
 	last_component = true_name;
     }
 
