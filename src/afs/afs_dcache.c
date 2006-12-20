@@ -139,16 +139,19 @@ struct afs_cacheOps *afs_cacheType;
 static afs_int32
 afs_DCGetBucket(struct vcache *avc) 
 {
-  /* This should be replaced with some sort of user configurable function */
-  if (avc->states & CRO) {
-      return 2;
-  } else if (avc->states & CBackup) {
-      return 1;
-  } else {
-    /* RW */
-  }
-  /* main bucket */
-  return 1;
+    if (!splitdcache) 
+	return 1;
+    
+    /* This should be replaced with some sort of user configurable function */
+    if (avc->states & CRO) {
+	return 2;
+    } else if (avc->states & CBackup) {
+	return 1;
+    } else {
+	/* RW */
+    }
+    /* main bucket */
+    return 1;
 }
 
 static void 
@@ -792,7 +795,7 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 	    }
 	} else {
 	    /* found no one in phases 0-5, we're hosed */
-	    if (j == 0)
+	    if (victimPtr == 0)
 		break;
 	}
     }				/* big while loop */
@@ -1050,7 +1053,6 @@ afs_FreeDiscardedDCache(void)
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     afs_AdjustSize(tdc, 0);
-    tdc->f.states &= ~(DRO|DBackup|DRW);
     afs_DCMoveBucket(tdc, 0, 0);
 
     /*
@@ -1059,6 +1061,7 @@ afs_FreeDiscardedDCache(void)
     MObtainWriteLock(&afs_xdcache, 511);
     afs_indexFlags[tdc->index] &= ~IFDiscarded;
     afs_FreeDCache(tdc);
+    tdc->f.states &= ~(DRO|DBackup|DRW);
     ReleaseWriteLock(&tdc->lock);
     afs_PutDCache(tdc);
     MReleaseWriteLock(&afs_xdcache);
@@ -1339,7 +1342,6 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
 		break;		/* leaving refCount high for caller */
 	    }
 	    afs_PutDCache(tdc);
-	    tdc = NULL;
 	}
 	index = afs_dcnextTbl[index];
     }
