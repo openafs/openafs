@@ -368,10 +368,18 @@ afs_getpag_val()
 {
     int pagvalue;
     struct AFS_UCRED *credp = u.u_cred;
-    int gidset0, gidset1;
+    gid_t gidset0, gidset1;
+#ifdef AFS_SUN510_ENV
+    const gid_t *gids;
+
+    gids = crgetgroups(*credp);
+    gidset0 = gids[0];
+    gidset1 = gids[1];
+#else
 
     gidset0 = credp->cr_groups[0];
     gidset1 = credp->cr_groups[1];
+#endif
     pagvalue = afs_get_pag_from_groups(gidset0, gidset1);
     return pagvalue;
 }
@@ -422,6 +430,8 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 	    av->uid = -2;	/* XXX nobody... ? */
 	else
 	    av->uid = acred->cr_uid;	/* bsd creds don't have ruid */
+#elif defined(AFS_SUN510_ENV)
+        av->uid = crgetruid(acred);
 #else
 	av->uid = acred->cr_ruid;	/* default when no pag is set */
 #endif
@@ -483,11 +493,19 @@ PagInCred(const struct AFS_UCRED *cred)
 {
     afs_int32 pag;
     gid_t g0, g1;
+#if defined(AFS_SUN510_ENV)
+    const gid_t *gids;
+    int ngroups;
+#endif
 
     AFS_STATCNT(PagInCred);
     if (cred == NULL || cred == afs_osi_credp) {
 	return NOPAG;
     }
+#if defined(AFS_SUN510_ENV)
+    gids = crgetgroups(cred);
+    ngroups = crgetngroups(cred);
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (cred == NOCRED || cred == FSCRED) {
 	return NOPAG;
@@ -512,7 +530,11 @@ PagInCred(const struct AFS_UCRED *cred)
 	goto out;
     }
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SUN510_ENV)
+    if (ngroups < 2) {
+#else
     if (cred->cr_ngroups < 2) {
+#endif
 	pag = NOPAG;
 	goto out;
     }
@@ -523,6 +545,9 @@ PagInCred(const struct AFS_UCRED *cred)
 #elif defined(AFS_LINUX26_ENV)
     g0 = GROUP_AT(cred->cr_group_info, 0);
     g1 = GROUP_AT(cred->cr_group_info, 1);
+#elif defined(AFS_SUN510_ENV)
+    g0 = gids[0];
+    g1 = gids[1];
 #else
     g0 = cred->cr_groups[0];
     g1 = cred->cr_groups[1];
