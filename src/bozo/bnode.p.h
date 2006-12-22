@@ -126,14 +126,12 @@ struct bozo_bosEntryStats {
 /* max time to wait for fileserver shutdown */
 #define	FSSDTIME	(30 * 60)	/* seconds */
 
-
 /* calls back up to the generic bnode layer */
-extern int bnode_SetTimeout( /* bnode, timeout */ );
-extern int bnode_Init( /* bnode, bnodeops */ );
-extern int bnode_Activate( /* bnode */ );
-extern int bnode_NewProc( /* bnode, execstring, corename, procaddr */ );
-extern int bnode_Init( /* no parms */ );
-extern afs_int32 bnode_Create();
-extern struct bnode *bnode_FindInstance();
+extern int bnode_SetTimeout(register struct bnode *abnode, afs_int32 atimeout);
+extern int bnode_Init(void);
+extern int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName, struct bnode_proc **aproc);
+extern int bnode_InitBnode(register struct bnode *abnode, struct bnode_ops *abnodeops, char *aname);
+extern afs_int32 bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1, char *ap2, char *ap3, char *ap4, char *ap5, char *notifier, int fileGoal, int rewritefile);
+extern struct bnode *bnode_FindInstance(register char *aname);
 extern int bnode_WaitStatus(register struct bnode *abnode, int astatus);
 extern int bnode_SetStat(register struct bnode *abnode, register int agoal);

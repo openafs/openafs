@@ -853,7 +853,7 @@ SBOZO_CreateBnode(acall, atype, ainstance, ap1, ap2, ap3, ap4, ap5, notifier)
 
     code =
 	bnode_Create(atype, ainstance, &tb, ap1, ap2, ap3, ap4, ap5, notifier,
-		     BSTAT_NORMAL);
+		     BSTAT_NORMAL, 1);
     if (!code)
 	bnode_SetStat(tb, BSTAT_NORMAL);
 
