@@ -317,7 +317,7 @@ bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
 afs_int32
 bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1,
 	     char *ap2, char *ap3, char *ap4, char *ap5, char *notifier,
-	     int fileGoal)
+	     int fileGoal, int rewritefile)
 {
     struct bnode_type *type;
     struct bnode *tb;
@@ -360,7 +360,10 @@ bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1,
     tb->fileGoal = fileGoal;
 
     bnode_SetStat(tb, tb->goal);	/* nudge it once */
-    WriteBozoFile(0);
+
+    if (rewritefile != 0)
+	WriteBozoFile(0);
+
     return 0;
 }
 
@@ -740,7 +743,7 @@ hdl_notifier(struct bnode_proc *tp)
 	ec = setsid();
 #elif defined(AFS_DARWIN90_ENV)
 	ec = setpgid(0, 0);
-#elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) 
+#elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV)  
 	ec = setpgrp();
 #else
 	ec = setpgrp(0, 0);

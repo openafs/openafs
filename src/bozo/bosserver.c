@@ -419,7 +419,7 @@ ReadBozoFile(char *aname)
 	code =
 	    bnode_Create(typep, instp, &tb, parms[0], parms[1], parms[2],
 			 parms[3], parms[4], notifier,
-			 goal ? BSTAT_NORMAL : BSTAT_SHUTDOWN);
+			 goal ? BSTAT_NORMAL : BSTAT_SHUTDOWN, 0);
 	if (code)
 	    goto fail;
 
