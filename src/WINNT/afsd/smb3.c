@@ -4143,7 +4143,10 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
    application is using FindFirst(Ex) to get information about a
    single file or directory.  It will attempt to do a single lookup.
    If that fails, then smb_ReceiveTran2SearchDir() will fall back to
-   the usual mechanism. */
+   the usual mechanism. 
+   
+   This function will return either CM_ERROR_NOSUCHFILE or SUCCESS.
+   */
 long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     int attribute;
@@ -4291,34 +4294,33 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
                     userp, tidPathp, &req, &scp);
     cm_FreeSpace(spacep);
 
-    if (code == 0) {
-#ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
-        if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-            cm_ReleaseSCache(scp);
-            cm_ReleaseUser(userp);
-            if ( WANTS_DFS_PATHNAMES(p) )
-                code = CM_ERROR_PATH_NOT_COVERED;
-            else
-                code = CM_ERROR_BADSHARENAME;
-            smb_SendTran2Error(vcp, p, opx, code);
-            smb_FreeTran2Packet(outp);
-            return 0;
-        }
-#endif /* DFS_SUPPORT */
-        osi_Log1(afsd_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
-        lock_ObtainMutex(&scp->mx);
-        if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
-            LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
-            scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
-        }
-        lock_ReleaseMutex(&scp->mx);
-    }
-
     if (code) {
         cm_ReleaseUser(userp);
+	smb_SendTran2Error(vcp, p, opx, code);
         smb_FreeTran2Packet(outp);
-        return code;
+        return 0;
     }
+
+#ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
+    if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+	cm_ReleaseSCache(scp);
+	cm_ReleaseUser(userp);
+	if ( WANTS_DFS_PATHNAMES(p) )
+	    code = CM_ERROR_PATH_NOT_COVERED;
+	else
+	    code = CM_ERROR_BADSHARENAME;
+	smb_SendTran2Error(vcp, p, opx, code);
+	smb_FreeTran2Packet(outp);
+	return 0;
+    }
+#endif /* DFS_SUPPORT */
+    osi_Log1(afsd_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
+    lock_ObtainMutex(&scp->mx);
+    if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
+	 LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
+	scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
+    }
+    lock_ReleaseMutex(&scp->mx);
 
     /* now do a single case sensitive lookup for the file in question */
     code = cm_Lookup(scp, maskp, 0, userp, &req, &targetscp);
@@ -4340,7 +4342,11 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
            smb_ReceiveTran2SearchDir(). */
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-        smb_FreeTran2Packet(outp);
+	if (code != CM_ERROR_NOSUCHFILE) {
+	    smb_SendTran2Error(vcp, p, opx, code);
+	    code = 0;
+	}
+	smb_FreeTran2Packet(outp);
         return code;
     }
 
@@ -4360,8 +4366,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         && !cm_Is8Dot3(maskp)) {
 
         cm_dirFid_t dfid;
-        dfid.vnode = targetscp->fid.vnode;
-        dfid.unique = targetscp->fid.unique;
+        dfid.vnode = htonl(targetscp->fid.vnode);
+        dfid.unique = htonl(targetscp->fid.unique);
 
         cm_Gen8Dot3NameInt(maskp, &dfid, shortName, &shortNameEnd);
         NeedShortName = 1;
@@ -4522,7 +4528,13 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     osi_Log0(smb_logp, "T2SDSingle done.");
 
-    smb_SendTran2Packet(vcp, outp, opx);
+    if (code != CM_ERROR_NOSUCHFILE) {
+	if (code)
+	    smb_SendTran2Error(vcp, p, opx, code);
+	else
+	    smb_SendTran2Packet(vcp, outp, opx);
+	code = 0;
+    }
 
  skip_file:
     smb_FreeTran2Packet(outp);
@@ -4612,7 +4624,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 #ifndef NOFINDFIRSTOPTIMIZE
         if (!starPattern) {
             /* if this is for a single directory or file, we let the
-               optimized routine handle it. */
+               optimized routine handle it.  The only error it 
+	       returns is CM_ERROR_NOSUCHFILE.  The  */
             code = smb_T2SearchDirSingle(vcp, p, opx);
 
             /* we only failover if we see a CM_ERROR_NOSUCHFILE */
