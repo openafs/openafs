@@ -63,18 +63,18 @@ BOOL CALLBACK ConfigServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM 
 
 
 static WIZARD_STATE g_aStates[] = {
-    { sidSTEP_ONE,		IDD_INTRO_PAGE,					(DLGPROC)IntroPageDlgProc, 0 },
-    { sidSTEP_TWO,		IDD_INFO_PAGE,					(DLGPROC)InfoPageDlgProc, 0 },
+    { sidSTEP_ONE,	IDD_INTRO_PAGE,			(DLGPROC)IntroPageDlgProc, 0 },
+    { sidSTEP_TWO,	IDD_INFO_PAGE,			(DLGPROC)InfoPageDlgProc, 0 },
     { sidSTEP_THREE,	IDD_INFO_PAGE2_FIRST_SERVER,	(DLGPROC)InfoPage2DlgProc, 0 },
-	{ sidSTEP_FOUR,		IDD_INFO_PAGE2_NOT_FIRST_SERVER,(DLGPROC)InfoPage2DlgProc, 0 },
-    { sidSTEP_FIVE,		IDD_FILE_SERVER_PAGE,			(DLGPROC)FileServerPageDlgProc, 0 },
-    { sidSTEP_SIX,		IDD_DB_SERVER_PAGE,				(DLGPROC)DBServerPageDlgProc, 0 },
-	{ sidSTEP_SEVEN,	IDD_BACKUP_SERVER_PAGE,			(DLGPROC)BackupPageDlgProc, 0 },
-    { sidSTEP_EIGHT,	IDD_PARTITION_PAGE,				(DLGPROC)PartitionPageDlgProc, 0 },
-	{ sidSTEP_NINE,		IDD_ROOT_VOLUMES_PAGE,			(DLGPROC)RootAfsPageDlgProc, 0 },
-	{ sidSTEP_TEN,		IDD_REPLICATION_PAGE,			(DLGPROC)ReplicationPageDlgProc, 0 },
-	{ sidSTEP_ELEVEN,	IDD_SYS_CONTROL_PAGE,			(DLGPROC)SysControlPageDlgProc, 0 },
-	{ sidSTEP_TWELVE,	IDD_CONFIG_SERVER_PAGE,			(DLGPROC)ConfigServerPageDlgProc, 0 }
+    { sidSTEP_FOUR,	IDD_INFO_PAGE2_NOT_FIRST_SERVER,(DLGPROC)InfoPage2DlgProc, 0 },
+    { sidSTEP_FIVE,	IDD_FILE_SERVER_PAGE,		(DLGPROC)FileServerPageDlgProc, 0 },
+    { sidSTEP_SIX,	IDD_DB_SERVER_PAGE,		(DLGPROC)DBServerPageDlgProc, 0 },
+    { sidSTEP_SEVEN,	IDD_BACKUP_SERVER_PAGE,		(DLGPROC)BackupPageDlgProc, 0 },
+    { sidSTEP_EIGHT,	IDD_PARTITION_PAGE,		(DLGPROC)PartitionPageDlgProc, 0 },
+    { sidSTEP_NINE,	IDD_ROOT_VOLUMES_PAGE,		(DLGPROC)RootAfsPageDlgProc, 0 },
+    { sidSTEP_TEN,	IDD_REPLICATION_PAGE,		(DLGPROC)ReplicationPageDlgProc, 0 },
+    { sidSTEP_ELEVEN,	IDD_SYS_CONTROL_PAGE,		(DLGPROC)SysControlPageDlgProc, 0 },
+    { sidSTEP_TWELVE,	IDD_CONFIG_SERVER_PAGE,		(DLGPROC)ConfigServerPageDlgProc, 0 }
 };
 
 size_t g_nNumStates = sizeof(g_aStates) / sizeof(g_aStates[0]);
@@ -124,75 +124,75 @@ LOGFILE g_LogFile;
  */
 extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pszCmdLineA, int nCmdShow)
 {
-	afs_status_t nStatus;
+    afs_status_t nStatus;
 
-	TaLocale_LoadCorrespondingModule (hInst);
+    TaLocale_LoadCorrespondingModule (hInst);
 
-	// Tell the applib our application's name
-	TCHAR szAppName[cchRESOURCE];
-	AfsAppLib_SetAppName(GetResString(GetAppTitleID(), szAppName));
+    // Tell the applib our application's name
+    TCHAR szAppName[cchRESOURCE];
+    AfsAppLib_SetAppName(GetResString(GetAppTitleID(), szAppName));
 
-	// Open the admin libraries
-	int nResult = afsclient_Init(&nStatus);
-	if (!nResult) {
-		ShowError(0, nStatus, IDS_CANT_INIT_ADMIN_LIBS);
-		return 0;
-	}
+    // Open the admin libraries
+    int nResult = afsclient_Init(&nStatus);
+    if (!nResult) {
+	ShowError(0, nStatus, IDS_CANT_INIT_ADMIN_LIBS);
+	return 0;
+    }
 
-	// Open the log file
-	char szLogPath[MAX_PATH];
-	sprintf(szLogPath, "%s\\%s", AFSDIR_SERVER_LOGS_DIRPATH, LOG_FILE_NAME);
-	if (!g_LogFile.Open(szLogPath))
-		ShowError(0, 0, IDS_CANT_OPEN_LOG_FILE);
+    // Open the log file
+    char szLogPath[MAX_PATH];
+    sprintf(szLogPath, "%s\\%s", AFSDIR_SERVER_LOGS_DIRPATH, LOG_FILE_NAME);
+    if (!g_LogFile.Open(szLogPath))
+	ShowError(0, 0, IDS_CANT_OPEN_LOG_FILE);
 
-	// Register the help file with the applib's help system
-	AfsAppLib_RegisterHelpFile(TEXT("TaAfsCfg.hlp"));
+    // Register the help file with the applib's help system
+    AfsAppLib_RegisterHelpFile(TEXT("TaAfsCfg.hlp"));
 
     /* Start up sockets */
     WSADATA WSAjunk;
     WSAStartup(0x0101, &WSAjunk);
 
-	memset(&g_CfgData, 0, sizeof(CFG_DATA));
+    memset(&g_CfgData, 0, sizeof(CFG_DATA));
 
-	// Get this machine's local name
-	char szLocalName[sizeof(g_CfgData.szLocalName) / sizeof(TCHAR)];
+    // Get this machine's local name
+    char szLocalName[sizeof(g_CfgData.szLocalName) / sizeof(TCHAR)];
     if (gethostname(szLocalName, sizeof(szLocalName)) != 0) {
-   		ShowError(GetFocus(), WSAGetLastError(), IDS_ERROR_LOCAL_HOST_NAME);
-		return 0;
-	}
+	ShowError(GetFocus(), WSAGetLastError(), IDS_ERROR_LOCAL_HOST_NAME);
+	return 0;
+    }
     CopyAnsiToString(g_CfgData.szLocalName, szLocalName);
 
-	// Turn the local name into a host name
+    // Turn the local name into a host name
     struct hostent *pHostEnt = gethostbyname(szLocalName);
     if (!pHostEnt) {
-   		ShowError(GetFocus(), WSAGetLastError(), IDS_ERROR_HOST_NAME);
-		return 0;
-	}
+	ShowError(GetFocus(), WSAGetLastError(), IDS_ERROR_HOST_NAME);
+	return 0;
+    }
     CopyAnsiToString(g_CfgData.szHostname, pHostEnt->h_name, sizeof(g_CfgData.szHostname));
 
-	RegisterFastListClass();
+    RegisterFastListClass();
 
-	// Get current config status
-	BOOL bCanceled = FALSE;
-	DWORD dwStatus = GetCurrentConfig(NULL, bCanceled);
-	if (dwStatus || bCanceled) {
-		if (!bCanceled)
-       		ShowError(GetFocus(), dwStatus, IDS_CONFIG_CHECK_FAILED);
-		return 0;
-	}
-
-	// Run the appropriate interface
-	if ((strstr(_strlwr(pszCmdLineA), "wizard") != 0))
-		RunWizard();
-	else
-		RunCfgTool();
-
-	FreePartitionTable();
-
-	// Disconnect from the config and admin libraries
-	CloseLibHandles(TRUE);
-
+    // Get current config status
+    BOOL bCanceled = FALSE;
+    DWORD dwStatus = GetCurrentConfig(NULL, bCanceled);
+    if (dwStatus || bCanceled) {
+	if (!bCanceled)
+	    ShowError(GetFocus(), dwStatus, IDS_CONFIG_CHECK_FAILED);
 	return 0;
+    }
+
+    // Run the appropriate interface
+    if ((strstr(_strlwr(pszCmdLineA), "wizard") != 0))
+	RunWizard();
+    else
+	RunCfgTool();
+
+    FreePartitionTable();
+
+    // Disconnect from the config and admin libraries
+    CloseLibHandles(TRUE);
+
+    return 0;
 }
 
 /*
@@ -202,40 +202,40 @@ extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pszCmdLin
  */
 BOOL CALLBACK WizStep_Common_DlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
 {
-	// Get the dialog's resource ID
-	int nIDD = GetWindowLong(hRHS, GWL_ID);
+    // Get the dialog's resource ID
+    int nIDD = GetWindowLong(hRHS, GWL_ID);
 	
-	if (AfsAppLib_HandleHelp(nIDD, hRHS, msg, wp, lp))
-		return TRUE;
+    if (AfsAppLib_HandleHelp(nIDD, hRHS, msg, wp, lp))
+	return TRUE;
 	
-	switch (msg) {
-		case WM_INITDIALOG:	MakeBold(hRHS, IDC_TITLE);
-							RedrawGraphic();
-							break;
+    switch (msg) {
+    case WM_INITDIALOG:	MakeBold(hRHS, IDC_TITLE);
+	RedrawGraphic();
+	break;
 
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDCANCEL:
-					QueryCancelWiz();
-					return TRUE;
-			}
-			break;
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDCANCEL:
+	    QueryCancelWiz();
+	    return TRUE;
 	}
+	break;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 BOOL QueryCancelWiz()
 {
-	int nChoice = Message(MB_YESNO, IDS_WIZARD_APP_TITLE, IDS_CANCEL_DESC);
-	if (nChoice == IDYES) {
-		g_LogFile.Write("User has chosen to cancel the program.\r\n");
-		if (g_pWiz)
-			g_pWiz->Show(FALSE);
-		return TRUE;
-	}
+    int nChoice = Message(MB_YESNO, IDS_WIZARD_APP_TITLE, IDS_CANCEL_DESC);
+    if (nChoice == IDYES) {
+	g_LogFile.Write("User has chosen to cancel the program.\r\n");
+	if (g_pWiz)
+	    g_pWiz->Show(FALSE);
+	return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -262,8 +262,8 @@ LPTSTR GetClientNetbiosName()
 {
     static TCHAR szValue[MAX_MACHINE_NAME_LEN + 1] = "";
 
-	if ( szValue[0] == 0 )
-		CopyAnsiToString(GetClientNetbiosNameA(), szValue);
+    if ( szValue[0] == 0 )
+	CopyAnsiToString(GetClientNetbiosNameA(), szValue);
 
     return szValue;
 }
@@ -383,10 +383,10 @@ char *GetClientNetbiosNameA()
 {
     static char szValueA[MAX_MACHINE_NAME_LEN + 1]="";
 	
-	if ( szValueA[0] == 0 )
+    if ( szValueA[0] == 0 )
         lana_GetNetbiosName(szValueA, LANA_NETBIOS_NAME_FULL);
 
-	return szValueA;
+    return szValueA;
 }
 
 char *GetSalvageLogFileNameA()
@@ -401,33 +401,33 @@ char *GetSalvageLogFileNameA()
 
 BOOL GetLibHandles(afs_status_t *pStatus)
 {
-	ASSERT(g_CfgData.szHostname[0]);
+    ASSERT(g_CfgData.szHostname[0]);
 
-	int nResult;
+    int nResult;
 	
-	// ************************* NOTE ********************************
-	// * You MUST have already determined whether or not the host
-	// * and client config info is valid before calling this function.
-	// ***************************************************************
+    // ************************* NOTE ********************************
+    // * You MUST have already determined whether or not the host
+    // * and client config info is valid before calling this function.
+    // ***************************************************************
 
-	// This function can be called at any time to get handles to the cell and
-	// the config library.  It will try to get the most powerful handle to the
-	// cell that it can, and then use that to open the config library.  If the
-	// libraries are already open, it will close them first.  Two handles to
-	// the config library will be opened, one to the server to be configured,
-	// and one to the client machine we are configuring from.  
-	
-	// There are two types of cell handles, NULL and Standard.  A null handle
-	// can make calls to any server except DB servers.  We need this primarily
-	// to talk to the bos server to determine the machine's current configuration,
-	// and to configure the client information if it is not already.  A standard 
-	// handle can talk to any server.  Standard handles can be either authenticated 
-	// or unauthenticated.
+    // This function can be called at any time to get handles to the cell and
+    // the config library.  It will try to get the most powerful handle to the
+    // cell that it can, and then use that to open the config library.  If the
+    // libraries are already open, it will close them first.  Two handles to
+    // the config library will be opened, one to the server to be configured,
+    // and one to the client machine we are configuring from.  
 
-	// Close all current handles
-	CloseLibHandles();
+    // There are two types of cell handles, NULL and Standard.  A null handle
+    // can make calls to any server except DB servers.  We need this primarily
+    // to talk to the bos server to determine the machine's current configuration,
+    // and to configure the client information if it is not already.  A standard 
+    // handle can talk to any server.  Standard handles can be either authenticated 
+    // or unauthenticated.
 
-	g_LogFile.Write("Getting handles to the cell and the config library.\r\n");
+    // Close all current handles
+    CloseLibHandles();
+
+    g_LogFile.Write("Getting handles to the cell and the config library.\r\n");
 
     if (!hClientCell) {
     	// Start by getting a null cell handle and using it to open the client
@@ -448,63 +448,63 @@ BOOL GetLibHandles(afs_status_t *pStatus)
     	}
     }
 
-	// Now we need to get the most powerful cell handle that we can	and use it
-	// to open the config library for the server.
+    // Now we need to get the most powerful cell handle that we can and use it
+    // to open the config library for the server.
 
-	// If the client info is valid and we know what cell the server should be in,
-	// and the client has that cell in its CellServDB, then we can get a Standard cell
-	// handle.  However there is an exception: if this is the first server in the 
-	// cell then there may not yet be an authentication server to talk to.  In that
-	// case we use a null cell handle.
+    // If the client info is valid and we know what cell the server should be in,
+    // and the client has that cell in its CellServDB, then we can get a Standard cell
+    // handle.  However there is an exception: if this is the first server in the 
+    // cell then there may not yet be an authentication server to talk to.  In that
+    // case we use a null cell handle.
     if (g_CfgData.bValidClientInfo &&   // Client config is valid
         g_CfgData.szCellName[0] &&      // We have a cell name
         (!g_CfgData.bFirstServer || g_CfgData.bAuthServerRunning))  // Auth server is running
     {
-		g_LogFile.Write("Opening a non-NULL cell handle to use with the server config library handle.\r\n");
+	g_LogFile.Write("Opening a non-NULL cell handle to use with the server config library handle.\r\n");
 
         // Do we have the user info necessary to authenticate?
         BOOL bHaveUserInfo = g_CfgData.szAdminName[0] && g_CfgData.szAdminPW[0];
 
-		// Open a standard cell handle.  szAdminName and szAdminPW will either be NULL, or
-		// if they have been entered by the user, will be the admin name and password strings.
-		if ((!g_CfgData.bFirstServer || g_CfgData.bAdminPrincipalCreated) && bHaveUserInfo) {
-			g_LogFile.Write("Getting tokens in cell %s for user '%s'.\r\n", GetCellNameA(), GetAdminNameA());
-			nResult = afsclient_TokenGetNew(GetCellNameA(), GetAdminNameA(), GetAdminPWA(), &g_hToken, pStatus);
-		} else {
-			g_LogFile.Write("Getting unauthenticated tokens for cell '%s'.\r\n", GetCellNameA());
-			nResult = afsclient_TokenGetNew(GetCellNameA(), "", "", &g_hToken, pStatus);
-		}
-
-		if (!nResult) {
-			g_LogFile.Write("Failed to get tokens for the specified cell:  %lx.\r\n", (unsigned long)*pStatus);
-			return FALSE;
-		}
-
-		// If the admin name and password are NULL, then this will be an unauthenticated
-		// connection to the cell.
-		g_LogFile.Write("Getting cell handle for cell %s.\r\n", GetCellNameA());
-		nResult = afsclient_CellOpen(GetCellNameA(), g_hToken, &g_hCell, pStatus);
-		if (!nResult) {
-            g_LogFile.Write("Failed to open the cell:  %lx.\r\n", (unsigned long)*pStatus);
-			return FALSE;
-		}
+	// Open a standard cell handle.  szAdminName and szAdminPW will either be NULL, or
+	// if they have been entered by the user, will be the admin name and password strings.
+	if ((!g_CfgData.bFirstServer || g_CfgData.bAdminPrincipalCreated) && bHaveUserInfo) {
+	    g_LogFile.Write("Getting tokens in cell %s for user '%s'.\r\n", GetCellNameA(), GetAdminNameA());
+	    nResult = afsclient_TokenGetNew(GetCellNameA(), GetAdminNameA(), GetAdminPWA(), &g_hToken, pStatus);
 	} else {
+	    g_LogFile.Write("Getting unauthenticated tokens for cell '%s'.\r\n", GetCellNameA());
+	    nResult = afsclient_TokenGetNew(GetCellNameA(), "", "", &g_hToken, pStatus);
+	}
+
+	if (!nResult) {
+	    g_LogFile.Write("Failed to get tokens for the specified cell:  %lx.\r\n", (unsigned long)*pStatus);
+	    return FALSE;
+	}
+
+	// If the admin name and password are NULL, then this will be an unauthenticated
+	// connection to the cell.
+	g_LogFile.Write("Getting cell handle for cell %s.\r\n", GetCellNameA());
+	nResult = afsclient_CellOpen(GetCellNameA(), g_hToken, &g_hCell, pStatus);
+	if (!nResult) {
+            g_LogFile.Write("Failed to open the cell:  %lx.\r\n", (unsigned long)*pStatus);
+	    return FALSE;
+	}
+    } else {
        	g_LogFile.Write("Opening a NULL cell handle to use with the server config library handle.\r\n");
     	nResult = afsclient_NullCellOpen(&g_hCell, pStatus);
     	if (!nResult) {
             g_LogFile.Write("Failed to open a NULL cell handle:  %lx.\r\n", (unsigned long)*pStatus);
-    		return FALSE;
-    	}
+	    return FALSE;
+    	}	
+    }	
+
+    // Get the server handle
+    g_LogFile.Write("Getting config library handle for the server.\r\n");
+    if (!cfg_HostOpen(g_hCell, GetHostnameA(), &g_hServer, pStatus)) {
+        g_LogFile.Write("Failed to get config library handle for the server:  %lx.\r\n", (unsigned long)*pStatus);
+	return FALSE;
     }
 
-	// Get the server handle
-	g_LogFile.Write("Getting config library handle for the server.\r\n");
-	if (!cfg_HostOpen(g_hCell, GetHostnameA(), &g_hServer, pStatus)) {
-        g_LogFile.Write("Failed to get config library handle for the server:  %lx.\r\n", (unsigned long)*pStatus);
-		return FALSE;
-	}
-
-	return TRUE;
+    return TRUE;
 }
 
 BOOL GetHandles(HWND hParentDlg)
@@ -527,72 +527,71 @@ BOOL GetHandles(HWND hParentDlg)
  */
 static void CloseLibHandles(BOOL bExiting)
 {
-     afs_status_t nStatus;
+    afs_status_t nStatus;
 
-	// We will close them in the reverse order of their creation.
+    // We will close them in the reverse order of their creation.
+    if (g_hServer) {
+	cfg_HostClose(g_hServer, &nStatus);
+	g_hServer = 0;
+    }
 
-	if (g_hServer) {
-		cfg_HostClose(g_hServer, &nStatus);
-		g_hServer = 0;
-	}
+    if (g_hCell) {
+	afsclient_CellClose(g_hCell, &nStatus);
+	g_hCell = 0;
+    }
 
-	if (g_hCell) {
-		afsclient_CellClose(g_hCell, &nStatus);
-		g_hCell = 0;
-	}
-
-	if (g_hToken) {
-		afsclient_TokenClose(g_hToken, &nStatus);
-		g_hToken = 0;
-	}
+    if (g_hToken) {
+	afsclient_TokenClose(g_hToken, &nStatus);
+	g_hToken = 0;
+    }
 
     // Only close the client cfg and cell handles if we are exiting.
-	if (bExiting) {
+    if (bExiting) {
         if (g_hClient) {
-    		cfg_HostClose(g_hClient, &nStatus);
-	    	g_hClient = 0;
-        }
+	    cfg_HostClose(g_hClient, &nStatus);
+	    g_hClient = 0;
+        }	
 
     	if (hClientCell) {
-    		afsclient_CellClose(hClientCell, &nStatus);
-    		hClientCell = 0;
+	    afsclient_CellClose(hClientCell, &nStatus);
+	    hClientCell = 0;
     	}
     }
 }
 
 static void SetConfigDefaults()
 {
-	if (g_CfgData.bWizard) {
-		if (g_CfgData.configFS == CS_NULL)
-			g_CfgData.configFS = CS_CONFIGURE;
+    if (g_CfgData.bWizard) {
+	if (g_CfgData.configFS == CS_NULL)
+	    g_CfgData.configFS = CS_CONFIGURE;
 
-		if (g_CfgData.configDB == CS_NULL)
-			g_CfgData.configDB = CS_CONFIGURE;
-		
-		if (g_CfgData.configBak == CS_NULL)
-			g_CfgData.configBak = CS_CONFIGURE;
+	if (g_CfgData.configDB == CS_NULL)
+	    g_CfgData.configDB = CS_CONFIGURE;
 
-		if (g_CfgData.configPartition == CS_NULL)
-			g_CfgData.configPartition = CS_CONFIGURE;
+	if (g_CfgData.configBak == CS_NULL)
+	    g_CfgData.configBak = CS_CONFIGURE;
 
-		if (g_CfgData.configRootVolumes == CS_NULL)
-			g_CfgData.configRootVolumes = CS_CONFIGURE;
+	if (g_CfgData.configPartition == CS_NULL)
+	    g_CfgData.configPartition = CS_CONFIGURE;
 
-		if (g_CfgData.configRep == CS_NULL)
-			g_CfgData.configRep = CS_CONFIGURE;
+	if (g_CfgData.configRootVolumes == CS_NULL)
+	    g_CfgData.configRootVolumes = CS_CONFIGURE;
 
-		if (g_CfgData.configSCS == CS_NULL)
-			g_CfgData.configSCS = CS_DONT_CONFIGURE;
+	if (g_CfgData.configRep == CS_NULL)
+	    g_CfgData.configRep = CS_CONFIGURE;
 
-		if (g_CfgData.configSCC == CS_NULL)
-			g_CfgData.configSCC = CS_DONT_CONFIGURE;
-	}
+	if (g_CfgData.configSCS == CS_NULL)
+	    g_CfgData.configSCS = CS_DONT_CONFIGURE;
 
-	lstrcpy(g_CfgData.szAdminName, TEXT("admin"));
-	lstrcpy(g_CfgData.szAdminUID, TEXT("0"));
+	if (g_CfgData.configSCC == CS_NULL)
+	    g_CfgData.configSCC = CS_DONT_CONFIGURE;
+    }	
 
-	g_CfgData.bUseNextUid = TRUE;
-}
+    lstrcpy(g_CfgData.szAdminName, TEXT("admin"));
+    lstrcpy(g_CfgData.szAdminUID, TEXT("0"));
+
+    g_CfgData.bUseNextUid = TRUE;
+}	
 
 	
 // Prototypes for each property page's dialog proc
@@ -601,60 +600,60 @@ BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 static void RunCfgTool()
 {
-	// If the client info is invalid, then the config tool cannot run.  Inform the user and
-	// ask if they want to run the wizard instead.
-	if (!g_CfgData.bValidClientInfo) {
-		int nChoice = MsgBox(0, IDS_NEED_CLIENT_INFO, GetAppTitleID(), MB_YESNO | MB_ICONSTOP);
-		if (nChoice == IDYES)
-			RunWizard();
-		return;
-	}
+    // If the client info is invalid, then the config tool cannot run.  Inform the user and
+    // ask if they want to run the wizard instead.
+    if (!g_CfgData.bValidClientInfo) {
+	int nChoice = MsgBox(0, IDS_NEED_CLIENT_INFO, GetAppTitleID(), MB_YESNO | MB_ICONSTOP);
+	if (nChoice == IDYES)
+	    RunWizard();
+	return;
+    }	
 
-	// If the server info is invalid, then the config tool cannot run.  The Wizard must be run
-	// to initially configure the server.  Inform the user and ask if they want to run the wizard instead.
-	if (!g_CfgData.bValidServerInfo) {
-		int nChoice = MsgBox(0, IDS_NEED_SERVER_INFO, GetAppTitleID(), MB_OKCANCEL | MB_ICONEXCLAMATION);
-		if (nChoice == IDOK)
-			RunWizard();
-		return;
-	}
+    // If the server info is invalid, then the config tool cannot run.  The Wizard must be run
+    // to initially configure the server.  Inform the user and ask if they want to run the wizard instead.
+    if (!g_CfgData.bValidServerInfo) {
+	int nChoice = MsgBox(0, IDS_NEED_SERVER_INFO, GetAppTitleID(), MB_OKCANCEL | MB_ICONEXCLAMATION);
+	if (nChoice == IDOK)
+	    RunWizard();
+	return;
+    }
 
-	g_CfgData.bWizard = FALSE;
-
-	SetConfigDefaults();
-
-	RegisterConfigToolHelp();
-
-	// Create the prop sheet
-	g_pSheet = PropSheet_Create(IDS_CFG_TOOL_APP_TITLE, TRUE);
-	
-	// Add the pages
-	PropSheet_AddTab(g_pSheet, IDS_PARTITIONS_PAGE_TITLE, IDD_PARTITIONS_PAGE, (DLGPROC)PartitionsPageDlgProc, 0, TRUE, TRUE);
-	PropSheet_AddTab(g_pSheet, IDS_SERVICES_PAGE_TITLE, IDD_SERVICES_PAGE, (DLGPROC)ServicesPageDlgProc, 0, TRUE);
-
-	// Let the user see it
-	PropSheet_ShowModal(g_pSheet);
-}
-
-static void RunWizard()
-{
-	g_CfgData.bWizard = TRUE;
+    g_CfgData.bWizard = FALSE;
 
     SetConfigDefaults();
 
-	RegisterWizardHelp();
-	
-	g_pWiz = new WIZARD;
-	g_pWiz->SetDialogTemplate(IDD_WIZARD, IDC_WIZARD_LEFTPANE, IDC_WIZARD_RIGHTPANE, IDBACK, IDNEXT);
-	g_pWiz->SetGraphic(IDB_GRAPHIC_16, IDB_GRAPHIC_256);
-	g_pWiz->SetStates(g_aStates, g_nNumStates);
-	g_pWiz->SetGraphicCallback(PaintPageGraphic);
+    RegisterConfigToolHelp();
 
-	g_pWiz->SetState(sidSTEP_ONE);
-	g_pWiz->Show();
+    // Create the prop sheet
+    g_pSheet = PropSheet_Create(IDS_CFG_TOOL_APP_TITLE, TRUE);
 
-	delete g_pWiz;
+    // Add the pages
+    PropSheet_AddTab(g_pSheet, IDS_PARTITIONS_PAGE_TITLE, IDD_PARTITIONS_PAGE, (DLGPROC)PartitionsPageDlgProc, 0, TRUE, TRUE);
+    PropSheet_AddTab(g_pSheet, IDS_SERVICES_PAGE_TITLE, IDD_SERVICES_PAGE, (DLGPROC)ServicesPageDlgProc, 0, TRUE);
 
-	g_pWiz = 0;
-}
+    // Let the user see it
+    PropSheet_ShowModal(g_pSheet);
+}	
+
+static void RunWizard()
+{
+    g_CfgData.bWizard = TRUE;
+
+    SetConfigDefaults();
+
+    RegisterWizardHelp();
+
+    g_pWiz = new WIZARD;
+    g_pWiz->SetDialogTemplate(IDD_WIZARD, IDC_WIZARD_LEFTPANE, IDC_WIZARD_RIGHTPANE, IDBACK, IDNEXT);
+    g_pWiz->SetGraphic(IDB_GRAPHIC_16, IDB_GRAPHIC_256);
+    g_pWiz->SetStates(g_aStates, g_nNumStates);
+    g_pWiz->SetGraphicCallback(PaintPageGraphic);
+
+    g_pWiz->SetState(sidSTEP_ONE);
+    g_pWiz->Show();
+
+    delete g_pWiz;
+
+    g_pWiz = 0;
+}	
 

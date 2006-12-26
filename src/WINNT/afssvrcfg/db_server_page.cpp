@@ -49,42 +49,42 @@ static void ShowPageInfo();
  */
 BOOL CALLBACK DBServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	if (WizStep_Common_DlgProc (hwndDlg, msg, wp, lp))
-		return FALSE;
-
-	switch (msg) {
-		case WM_INITDIALOG:
-	         OnInitDialog(hwndDlg);
-		     break;
-
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDNEXT:
-					SavePageInfo();
-					g_pWiz->SetState(sidSTEP_SEVEN);
-					break;
-
-				case IDBACK:
-					SavePageInfo();
-					g_pWiz->SetState(sidSTEP_FIVE);
-					break;
-
-				case IDC_DONT_CONFIG_DB_SERVER:
-					g_CfgData.configDB = CS_DONT_CONFIGURE;
-					EnableSCM(ES_DISABLE);
-					break;
-
-				case IDC_CONFIG_DB_SERVER:
-					g_CfgData.configDB = CS_CONFIGURE;
-					EnableSCM(ES_ENABLE);
-					break;
-			}
-		break;
-
-	}
-
+    if (WizStep_Common_DlgProc (hwndDlg, msg, wp, lp))
 	return FALSE;
-}
+
+    switch (msg) {
+    case WM_INITDIALOG:
+	OnInitDialog(hwndDlg);
+	break;
+
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDNEXT:
+	    SavePageInfo();
+	    g_pWiz->SetState(sidSTEP_SEVEN);
+	    break;
+
+	case IDBACK:
+	    SavePageInfo();
+	    g_pWiz->SetState(sidSTEP_FIVE);
+	    break;
+
+	case IDC_DONT_CONFIG_DB_SERVER:
+	    g_CfgData.configDB = CS_DONT_CONFIGURE;
+	    EnableSCM(ES_DISABLE);
+	    break;
+
+	case IDC_CONFIG_DB_SERVER:
+	    g_CfgData.configDB = CS_CONFIGURE;
+	    EnableSCM(ES_ENABLE);
+	    break;
+	}
+	break;
+
+    }
+
+    return FALSE;
+}	
 
 
 /*
@@ -98,37 +98,37 @@ BOOL CALLBACK DBServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 
-	g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
-	g_pWiz->SetButtonText(IDNEXT, IDS_NEXT);
-	g_pWiz->SetDefaultControl(IDNEXT);
+    g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
+    g_pWiz->SetButtonText(IDNEXT, IDS_NEXT);
+    g_pWiz->SetDefaultControl(IDNEXT);
 
-	if (g_CfgData.bFirstServer) {
-		ConfigMsg(IDS_MUST_CONFIG_DB);
-		g_CfgData.configDB = CS_CONFIGURE;
-		return;
-	}
+    if (g_CfgData.bFirstServer) {
+	ConfigMsg(IDS_MUST_CONFIG_DB);
+	g_CfgData.configDB = CS_CONFIGURE;
+	return;
+    }
 
-	ShowPageInfo();
+    ShowPageInfo();
 
-	switch (g_CfgData.configDB) {
-		case CS_ALREADY_CONFIGURED:
-			ConfigMsg(IDS_ALREADY_A_DB_SERVER);
-			break;
+    switch (g_CfgData.configDB) {
+    case CS_ALREADY_CONFIGURED:
+	ConfigMsg(IDS_ALREADY_A_DB_SERVER);
+	break;
 
-		case CS_DONT_CONFIGURE:
-			SetCheck(hDlg, IDC_DONT_CONFIG_DB_SERVER);
-			EnableSCM(ES_DISABLE);
-			break;
+    case CS_DONT_CONFIGURE:
+	SetCheck(hDlg, IDC_DONT_CONFIG_DB_SERVER);
+	EnableSCM(ES_DISABLE);
+	break;
 
-		case CS_CONFIGURE:
-		default:
-			SetCheck(hDlg, IDC_CONFIG_DB_SERVER);
-			EnableSCM(ES_ENABLE);
-			break;
-	}
-}
+    case CS_CONFIGURE:
+    default:
+	SetCheck(hDlg, IDC_CONFIG_DB_SERVER);
+	EnableSCM(ES_ENABLE);
+	break;
+    }
+}	
 
 
 /*
@@ -138,37 +138,37 @@ static void OnInitDialog(HWND hwndDlg)
 
 static void ConfigMsg(UINT nMsgID)
 {
-	TCHAR szMsg[cchRESOURCE];
+    TCHAR szMsg[cchRESOURCE];
 
-	GetString(szMsg, nMsgID);
+    GetString(szMsg, nMsgID);
 
-	// Hide the controls that are at the same position as the message
-	ShowWnd(hDlg, IDC_DB_SERVER_QUESTION, FALSE);
-	ShowWnd(hDlg, IDC_CONFIG_DB_SERVER, FALSE);
-	ShowWnd(hDlg, IDC_SCM_PROMPT, FALSE);
-	ShowWnd(hDlg, IDC_SYS_CONTROL_MACHINE_LABEL, FALSE);
-	ShowWnd(hDlg, IDC_SYS_CONTROL_MACHINE, FALSE);
-	
-	ShowWnd(hDlg, IDC_DONT_CONFIG_DB_SERVER, FALSE);
-	
-	SetWndText(hDlg, IDC_MSG, szMsg);
-	ShowWnd(hDlg, IDC_MSG);
+    // Hide the controls that are at the same position as the message
+    ShowWnd(hDlg, IDC_DB_SERVER_QUESTION, FALSE);
+    ShowWnd(hDlg, IDC_CONFIG_DB_SERVER, FALSE);
+    ShowWnd(hDlg, IDC_SCM_PROMPT, FALSE);
+    ShowWnd(hDlg, IDC_SYS_CONTROL_MACHINE_LABEL, FALSE);
+    ShowWnd(hDlg, IDC_SYS_CONTROL_MACHINE, FALSE);
+
+    ShowWnd(hDlg, IDC_DONT_CONFIG_DB_SERVER, FALSE);
+
+    SetWndText(hDlg, IDC_MSG, szMsg);
+    ShowWnd(hDlg, IDC_MSG);
 }
 
 static void EnableSCM(ENABLE_STATE enable)
 {
-	SetEnable(hDlg, IDC_SCM_PROMPT, enable);
-	SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE_LABEL, enable);
-	SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE, enable);
-}
+    SetEnable(hDlg, IDC_SCM_PROMPT, enable);
+    SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE_LABEL, enable);
+    SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE, enable);
+}	
 
 static void ShowPageInfo()
 {
-	SetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
-}
+    SetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
+}	
 
 static void SavePageInfo()
 {
-	GetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
-}
+    GetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
+}	
 
