@@ -36,151 +36,151 @@ extern "C" {
  */
 LOGFILE::LOGFILE()
 {
-	m_fp = 0;
+    m_fp = 0;
 }
 
 LOGFILE::~LOGFILE()
 {
-	if (m_fp)
-		Close();
+    if (m_fp)
+	Close();
 }
 
 BOOL LOGFILE::Open(const char *pszLogFilePath, 
-				   LOGFILE_OPEN_MODE eOpenMode,	
-				   LOGFILE_TIMESTAMP_MODE eTimeStampMode)
+		   LOGFILE_OPEN_MODE eOpenMode,	
+		   LOGFILE_TIMESTAMP_MODE eTimeStampMode)
 {
-	char *pszOpenMode;
+    char *pszOpenMode;
 
-	m_eTimeStampMode = eTimeStampMode;
+    m_eTimeStampMode = eTimeStampMode;
 
-	if (eOpenMode == OM_OVERWRITE)
-		pszOpenMode = "w";
-	else
-		pszOpenMode = "a+";
+    if (eOpenMode == OM_OVERWRITE)
+	pszOpenMode = "w";
+    else
+	pszOpenMode = "a+";
 
-	strcpy(m_szPath, pszLogFilePath);
-	
-	m_fp = fopen(pszLogFilePath, pszOpenMode);
-	if (m_fp) {
-		if (m_eTimeStampMode != TSM_NEVER)
-			WriteTimeStamp();
-		fprintf(m_fp, "Log file open.\r\n");
+    strcpy(m_szPath, pszLogFilePath);
 
-		return TRUE;
-	}
+    m_fp = fopen(pszLogFilePath, pszOpenMode);
+    if (m_fp) {
+	if (m_eTimeStampMode != TSM_NEVER)
+	    WriteTimeStamp();
+	fprintf(m_fp, "Log file open.\r\n");
 
-	return FALSE;
-}
+	return TRUE;
+    }
+
+    return FALSE;
+}	
 
 BOOL LOGFILE::Close()
 {
-	int nResult = 0;
+    int nResult = 0;
 	
-	if (m_fp) {
-		if (m_eTimeStampMode != TSM_NEVER)
-			WriteTimeStamp();
-		fprintf(m_fp, "Closing log file.\r\n");
-		nResult = fclose(m_fp);
-		if (nResult == 0)
-			m_fp = 0;
-	}
+    if (m_fp) {
+	if (m_eTimeStampMode != TSM_NEVER)
+	    WriteTimeStamp();
+	fprintf(m_fp, "Closing log file.\r\n");
+	nResult = fclose(m_fp);
+	if (nResult == 0)
+	    m_fp = 0;
+    }
 
-	return (nResult == 0);
+    return (nResult == 0);
 }
 
 BOOL LOGFILE::Write(const char *pszEntry, ...)
 {
-	static BOOL bTimestampNextLine = TRUE;
+    static BOOL bTimestampNextLine = TRUE;
 
-	if (!m_fp)
-		return FALSE;
+    if (!m_fp)
+	return FALSE;
 
-	if (bTimestampNextLine && (m_eTimeStampMode == TSM_EACH_ENTRY))
-		WriteTimeStamp();
-	
-	va_list args;
-	
-	va_start(args, pszEntry);
+    if (bTimestampNextLine && (m_eTimeStampMode == TSM_EACH_ENTRY))
+	WriteTimeStamp();
 
-	int nWritten = vfprintf(m_fp, pszEntry, args);
+    va_list args;
 
-	va_end(args);
+    va_start(args, pszEntry);
 
-	fflush(m_fp);
+    int nWritten = vfprintf(m_fp, pszEntry, args);
 
-	// Don't timestamp next line unless current line ended with a newline
-	bTimestampNextLine = (pszEntry[strlen(pszEntry) - 1] == '\n');
+    va_end(args);
 
-	return (nWritten > 0);
-}
+    fflush(m_fp);
+
+    // Don't timestamp next line unless current line ended with a newline
+    bTimestampNextLine = (pszEntry[strlen(pszEntry) - 1] == '\n');
+
+    return (nWritten > 0);
+}	
 
 BOOL LOGFILE::WriteError(const char *pszMsg, DWORD nErrorCode, ...)
 {
-	if (!m_fp)
-		return FALSE;
+    if (!m_fp)
+	return FALSE;
 
-	if (m_eTimeStampMode == TSM_EACH_ENTRY)
-		WriteTimeStamp();
-	
-	va_list args;
-	
-	va_start(args, nErrorCode);
+    if (m_eTimeStampMode == TSM_EACH_ENTRY)
+	WriteTimeStamp();
 
-	int nWritten = vfprintf(m_fp, pszMsg, args);
-	va_end(args);
+    va_list args;
 
-	if (nWritten < 1)
-		return FALSE;
+    va_start(args, nErrorCode);
 
-	afs_status_t nStatus;
-	const char *pszErrorText;
+    int nWritten = vfprintf(m_fp, pszMsg, args);
+    va_end(args);
 
-	int nResult = util_AdminErrorCodeTranslate(nErrorCode, TaLocale_GetLanguage(), &pszErrorText, &nStatus);
-	if (nResult)
-		fprintf(m_fp, ":  (0x%lx), %s.\r\n", nErrorCode, pszErrorText);
-	else
-		fprintf(m_fp, ":  (0x%lx).\r\n", nErrorCode);
+    if (nWritten < 1)
+	return FALSE;
 
-	fflush(m_fp);
+    afs_status_t nStatus;
+    const char *pszErrorText;
 
-	return (nWritten > 0);
-}
+    int nResult = util_AdminErrorCodeTranslate(nErrorCode, TaLocale_GetLanguage(), &pszErrorText, &nStatus);
+    if (nResult)
+	fprintf(m_fp, ":  (0x%lx), %s.\r\n", nErrorCode, pszErrorText);
+    else
+	fprintf(m_fp, ":  (0x%lx).\r\n", nErrorCode);
+
+    fflush(m_fp);
+
+    return (nWritten > 0);
+}	
 
 BOOL LOGFILE::WriteTimeStamp()
 {
-	if (!m_fp)
-		return FALSE;
+    if (!m_fp)
+	return FALSE;
 
-	char szTime[64], szDate[64];
+    char szTime[64], szDate[64];
 
-	_strtime(szTime);
-	_strdate(szDate);
+    _strtime(szTime);
+    _strdate(szDate);
 
-	fprintf(m_fp, "%s %s:  ", szTime, szDate);
-	
-	return TRUE;
+    fprintf(m_fp, "%s %s:  ", szTime, szDate);
+
+    return TRUE;
 }
 
 BOOL LOGFILE::WriteBoolResult(BOOL bResult)
 {
-	if (!m_fp)
-		return FALSE;
+    if (!m_fp)
+	return FALSE;
 
-	fprintf(m_fp, "%s.\r\n", bResult ? "Yes" : "No");
+    fprintf(m_fp, "%s.\r\n", bResult ? "Yes" : "No");
 
-	fflush(m_fp);
+    fflush(m_fp);
 
-	return TRUE;
+    return TRUE;
 }
 
 BOOL LOGFILE::WriteMultistring(const char *pszMultiStr)
 {
-	if (!m_fp)
-		return FALSE;
+    if (!m_fp)
+	return FALSE;
 
-	for (const char *p = pszMultiStr; *p; p += strlen(p))
-		Write("%s\r\n", p);
+    for (const char *p = pszMultiStr; *p; p += strlen(p))
+	Write("%s\r\n", p);
 
-	return TRUE;
-}
+    return TRUE;
+}	
 

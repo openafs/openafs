@@ -43,16 +43,16 @@ static TCHAR szDrive[4];
 static TCHAR szSize[32];
 
 static rwWindowData arwDialog[] = {
-	{ IDC_TITLE,		raSizeX | raRepaint,	0,	0 },
-	{ IDC_DRIVE_LIST,	raSizeX | raSizeY, 	MAKELONG(350, 150), 0 },
-	{ IDC_ARGS_FRAME,	raSizeX | raMoveY,	0,	0 },
-	{ IDC_NAME_STATIC,	raMoveY | raRepaint,	0,	0 },
-	{ IDC_VICEP_STATIC,	raMoveY | raRepaint,	0,	0 },
-	{ IDC_PARTITION_NAME,	raMoveY | raRepaint,	0,	0 },
-	{ IDC_CREATE,		raMoveX | raMoveY,	0,	0 },
-	{ IDC_CLOSE,		raMoveX | raMoveY,	0,	0 },
-	{ 9,			raMoveX | raMoveY,	0,	0 },
-	{ idENDLIST,		0,			0,	0 }
+    { IDC_TITLE,		raSizeX | raRepaint,	0,	0 },
+    { IDC_DRIVE_LIST,		raSizeX | raSizeY, 	MAKELONG(350, 150), 0 },
+    { IDC_ARGS_FRAME,		raSizeX | raMoveY,	0,	0 },
+    { IDC_NAME_STATIC,		raMoveY | raRepaint,	0,	0 },
+    { IDC_VICEP_STATIC,		raMoveY | raRepaint,	0,	0 },
+    { IDC_PARTITION_NAME,	raMoveY | raRepaint,	0,	0 },
+    { IDC_CREATE,		raMoveX | raMoveY,	0,	0 },
+    { IDC_CLOSE,		raMoveX | raMoveY,	0,	0 },
+    { 9,			raMoveX | raMoveY,	0,	0 },
+    { idENDLIST,		0,			0,	0 }
 };
 
 
@@ -75,9 +75,9 @@ static void CheckEnableButtons();
  */
 BOOL CreatePartition(HWND hParent)
 {	
-	ModalDialog(IDD, hParent, (DLGPROC)DlgProc);
+    ModalDialog(IDD, hParent, (DLGPROC)DlgProc);
 
-	return bCreated;
+    return bCreated;
 }
 
 
@@ -92,44 +92,49 @@ BOOL CreatePartition(HWND hParent)
  */
 static BOOL CALLBACK DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (AfsAppLib_HandleHelp(IDD_CREATE_PARTITION, hwndDlg, uMsg, wParam, lParam))
-		return TRUE;
+    if (AfsAppLib_HandleHelp(IDD_CREATE_PARTITION, hwndDlg, uMsg, wParam, lParam))
+	return TRUE;
 
-	switch (uMsg) {
-		case WM_INITDIALOG:	OnInitDialog(hwndDlg);
-							break;
-				
-		case WM_COMMAND:	switch (LOWORD(wParam)) {
-								case IDC_CLOSE:		OnClose();
-													break;
+    switch (uMsg) {
+    case WM_INITDIALOG:	OnInitDialog(hwndDlg);
+	break;
 
-								case IDC_CREATE:	OnCreate();
-													break;
+    case WM_COMMAND:	
+	switch (LOWORD(wParam)) {
+	case IDC_CLOSE:		
+	    OnClose();
+	    break;
 
-								case IDC_PARTITION_NAME:
-									if (HIWORD(wParam) == EN_CHANGE) {
-										OnPartitionName();
-										SetFocus((HWND)lParam);
-									}
-									break;
-							}
-							break;
-	
-		case WM_NCACTIVATE:	if (wParam)
-								UpdateDriveList();
-							break;
+	case IDC_CREATE:	
+	    OnCreate();
+	    break;
 
-		case WM_NOTIFY:	if ((((LPNMHDR)lParam)->code) == FLN_ITEMSELECT)
-							OnListSelection((LPFLN_ITEMSELECT_PARAMS)lParam);
-						break;
-
-		case WM_SIZE:	if (lParam != 0)
-							ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
-						break;
-
+	case IDC_PARTITION_NAME:
+	    if (HIWORD(wParam) == EN_CHANGE) {
+		OnPartitionName();
+		SetFocus((HWND)lParam);
+	    }
+	    break;
 	}
+	break;
+	
+    case WM_NCACTIVATE:	if (wParam)
+	UpdateDriveList();
+	break;
 
-	return FALSE;
+    case WM_NOTIFY:	
+	if ((((LPNMHDR)lParam)->code) == FLN_ITEMSELECT)
+	    OnListSelection((LPFLN_ITEMSELECT_PARAMS)lParam);
+	break;
+
+    case WM_SIZE:	
+	if (lParam != 0)
+	    ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
+	break;
+
+    }
+
+    return FALSE;
 }
 
 
@@ -139,126 +144,126 @@ static BOOL CALLBACK DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 
-	ResizeWindow(hDlg, arwDialog, rwaFixupGuts);
+    ResizeWindow(hDlg, arwDialog, rwaFixupGuts);
 
-	hDriveList = GetDlgItem(hDlg, IDC_DRIVE_LIST);
+    hDriveList = GetDlgItem(hDlg, IDC_DRIVE_LIST);
 
-	bAutoSetPartitionName = TRUE;
-	hSelectedItem = 0;
+    bAutoSetPartitionName = TRUE;
+    hSelectedItem = 0;
 
-	SetupDriveList(hDriveList);
+    SetupDriveList(hDriveList);
 
-	bCreated = FALSE;
+    bCreated = FALSE;
 }
 
 static void OnClose()
 {
-	EndDialog(hDlg, IDCANCEL);
+    EndDialog(hDlg, IDCANCEL);
 }
 
 static void OnCreate()
 {
-	ASSERT(g_hServer);
+    ASSERT(g_hServer);
 	
-	HLISTITEM hItem = FastList_FindFirstSelected(hDriveList);
-	_ASSERTE(hItem);
+    HLISTITEM hItem = FastList_FindFirstSelected(hDriveList);
+    _ASSERTE(hItem);
 
-	GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szPartitionName, sizeof(szPartitionName));
+    GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szPartitionName, sizeof(szPartitionName));
     if (!Validation_IsValid(szPartitionName, VALID_AFS_PARTITION_NAME))
         return;
 
-	lstrcpy(szDrive, FastList_GetItemText(hDriveList, hItem, 0));
-	lstrcpy(szSize, FastList_GetItemText(hDriveList, hItem, 2));
+    lstrcpy(szDrive, FastList_GetItemText(hDriveList, hItem, 0));
+    lstrcpy(szSize, FastList_GetItemText(hDriveList, hItem, 2));
 
-	// Constuct the device name
-	char szDevNameA[] = "?:";
-	S2A drive(szDrive);
+    // Constuct the device name
+    char szDevNameA[] = "?:";
+    S2A drive(szDrive);
     szDevNameA[0] = ((char*)drive)[0];
 
-	// Construct the partition name
-	char szPartNameA[9] = "/vicep";
-	strncat(szPartNameA, (char *)S2A(szPartitionName), 2);
+    // Construct the partition name
+    char szPartNameA[9] = "/vicep";
+    strncat(szPartNameA, (char *)S2A(szPartitionName), 2);
 
-	if (DoesPartitionExist(A2S(szPartNameA))) {
-		MsgBox(hDlg, IDS_PARTITION_EXISTS, GetAppTitleID(), MB_OK | MB_ICONSTOP);
-		return;
-	}
+    if (DoesPartitionExist(A2S(szPartNameA))) {
+	MsgBox(hDlg, IDS_PARTITION_EXISTS, GetAppTitleID(), MB_OK | MB_ICONSTOP);
+	return;
+    }
 
-	g_LogFile.Write("Adding an AFS partition on device '%s' with name '%s'.\r\n", szDevNameA, szPartNameA);
+    g_LogFile.Write("Adding an AFS partition on device '%s' with name '%s'.\r\n", szDevNameA, szPartNameA);
 
-	afs_status_t nStatus;
-	int nResult = cfg_HostPartitionTableAddEntry(g_hServer, szPartNameA, szDevNameA, &nStatus);
-	if (!nResult) {
-		ShowError(hDlg, nStatus, IDS_CREATE_PARTITION_ERROR);
-		return;
-	}
+    afs_status_t nStatus;
+    int nResult = cfg_HostPartitionTableAddEntry(g_hServer, szPartNameA, szDevNameA, &nStatus);
+    if (!nResult) {
+	ShowError(hDlg, nStatus, IDS_CREATE_PARTITION_ERROR);
+	return;
+    }
 
-	MsgBox(hDlg, IDS_PARTITION_CREATED, GetAppTitleID(), MB_OK);
+    MsgBox(hDlg, IDS_PARTITION_CREATED, GetAppTitleID(), MB_OK);
 
-	bCreated = TRUE;
+    bCreated = TRUE;
 
-	SetWndText(hDlg, IDC_PARTITION_NAME, TEXT(""));
+    SetWndText(hDlg, IDC_PARTITION_NAME, TEXT(""));
 }
 
 static void OnPartitionName()
-{
-	TCHAR szBuf[MAX_PARTITION_NAME_LEN];
-	GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
+{	
+    TCHAR szBuf[MAX_PARTITION_NAME_LEN];
+    GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
 
-	bAutoSetPartitionName = szBuf[0] == 0;
-	
-	CheckEnableButtons();
+    bAutoSetPartitionName = szBuf[0] == 0;
+
+    CheckEnableButtons();
 }
 
 static void OnListSelection(LPFLN_ITEMSELECT_PARAMS pItemParms)
 {
-	ASSERT(pItemParms);
+    ASSERT(pItemParms);
 
-	hSelectedItem = 0;
+    hSelectedItem = 0;
 
-	if (pItemParms->hItem) {
-		LPARAM lParam = FastList_GetItemParam(hDriveList, pItemParms->hItem);
-		if (lParam == 0) {
-			hSelectedItem = pItemParms->hItem;
+    if (pItemParms->hItem) {
+	LPARAM lParam = FastList_GetItemParam(hDriveList, pItemParms->hItem);
+	if (lParam == 0) {
+	    hSelectedItem = pItemParms->hItem;
 
-			if (bAutoSetPartitionName) {
-				TCHAR szName[2];
-				LPCTSTR pDrive = FastList_GetItemText(hDriveList, hSelectedItem, 0);
-				szName[0] = _totlower(pDrive[0]);
-				szName[1] = 0;
-				
-				TCHAR szFullName[6] = TEXT("vice");
-				lstrcat(szFullName, szName);
+	    if (bAutoSetPartitionName) {
+		TCHAR szName[2];
+		LPCTSTR pDrive = FastList_GetItemText(hDriveList, hSelectedItem, 0);
+		szName[0] = _totlower(pDrive[0]);
+		szName[1] = 0;
 
-				if (!DoesPartitionExist(szFullName)) {
-					SetWndText(hDlg, IDC_PARTITION_NAME, szName);
+		TCHAR szFullName[6] = TEXT("vice");
+		lstrcat(szFullName, szName);
 
-					// Must set this to true because the call to SetWndText will cause
-					// a call to OnPartitionName, which would incorrectly think that the
-					// Partition Name had been set by the user rather than by us, thus
-					// setting bAutoSetPartitionName to false.
-					bAutoSetPartitionName = TRUE;
-				}
-			}
+		if (!DoesPartitionExist(szFullName)) {
+		    SetWndText(hDlg, IDC_PARTITION_NAME, szName);
+
+		    // Must set this to true because the call to SetWndText will cause
+		    // a call to OnPartitionName, which would incorrectly think that the
+		    // Partition Name had been set by the user rather than by us, thus
+		    // setting bAutoSetPartitionName to false.
+		    bAutoSetPartitionName = TRUE;
 		}
+	    }
 	}
+    }
 
-	CheckEnableButtons();
-}
+    CheckEnableButtons();
+}	
 
 static void CheckEnableButtons()
 {
-	TCHAR szBuf[MAX_PARTITION_NAME_LEN];
+    TCHAR szBuf[MAX_PARTITION_NAME_LEN];
 
-	GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
+    GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
 	
-	ENABLE_STATE es = ES_ENABLE;
+    ENABLE_STATE es = ES_ENABLE;
 	
-	if ((hSelectedItem == 0) || (szBuf[0] == 0))
-		es = ES_DISABLE;
+    if ((hSelectedItem == 0) || (szBuf[0] == 0))
+	es = ES_DISABLE;
 
-	SetEnable(hDlg, IDC_CREATE, es);
+    SetEnable(hDlg, IDC_CREATE, es);
 }
 

@@ -73,9 +73,9 @@ BOOL CALLBACK SalvageResultsDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp);
  */
 BOOL ShowSalvageResults(HWND hParent)
 {	
-	int nResult = ModalDialog(IDD_SALVAGE_RESULTS, hParent, (DLGPROC)SalvageResultsDlgProc);
+    int nResult = ModalDialog(IDD_SALVAGE_RESULTS, hParent, (DLGPROC)SalvageResultsDlgProc);
 
-	return (nResult == IDOK);
+    return (nResult == IDOK);
 }
 
 
@@ -85,34 +85,34 @@ BOOL ShowSalvageResults(HWND hParent)
  */
 BOOL CALLBACK SalvageResultsDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	if (AfsAppLib_HandleHelp(IDD_SALVAGE_RESULTS, hwndDlg, msg, wp, lp))
-		return TRUE;
+    if (AfsAppLib_HandleHelp(IDD_SALVAGE_RESULTS, hwndDlg, msg, wp, lp))
+	return TRUE;
 
-	switch (msg) {
-		case WM_INITDIALOG:
-			OnInitDialog(hwndDlg);
-			break;
+    switch (msg) {
+    case WM_INITDIALOG:
+	OnInitDialog(hwndDlg);
+	break;
 
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDC_CLOSE:
-                    OnClose();
-					break;
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDC_CLOSE:
+	    OnClose();
+	    break;
 
-                case IDCANCEL:
-                    if (bSalvageComplete)
-                        OnClose();
-			}
-		    break;
-
-		case WM_SIZE:	
-			if (lp != 0)
-				ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
-			break;
+	case IDCANCEL:
+	    if (bSalvageComplete)
+		OnClose();
 	}
+	break;
+
+    case WM_SIZE:	
+	if (lp != 0)
+	    ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
+	break;
+    }
 
     return FALSE;
-}
+}	
 
 
 /*
@@ -126,7 +126,7 @@ BOOL CALLBACK SalvageResultsDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 
     bSalvageComplete = FALSE;
 
@@ -138,11 +138,11 @@ static void OnInitDialog(HWND hwndDlg)
 
     SetMessages(IDS_SALVAGING, IDS_CURRENT_SALVAGE_LOG);
 
-	nResult = bos_ServerOpen(g_hCell, GetHostnameA(), &hServer, &nStatus);
-	if (!nResult) {
-		ShowError(hDlg, nStatus, IDS_BOS_OPEN_FAILED);
-		return;
-	}
+    nResult = bos_ServerOpen(g_hCell, GetHostnameA(), &hServer, &nStatus);
+    if (!nResult) {
+	ShowError(hDlg, nStatus, IDS_BOS_OPEN_FAILED);
+	return;
+    }
 
     // Remove the start menu - we do this so the user can't close
     // the dialog while salvage is being performed.
@@ -151,15 +151,15 @@ static void OnInitDialog(HWND hwndDlg)
     dw &= ~WS_SYSMENU;
     SetWindowLong(hDlg, GWL_STYLE, dw);
 
-	// Create a thread to keep the view of the log up to date
-	DWORD dwThreadID;
-	HANDLE hThread = CreateThread(0, 0, ShowResults, 0, 0, &dwThreadID);
-	CloseHandle(hThread);
+    // Create a thread to keep the view of the log up to date
+    DWORD dwThreadID;
+    HANDLE hThread = CreateThread(0, 0, ShowResults, 0, 0, &dwThreadID);
+    CloseHandle(hThread);
 }
 
 static void OnClose()
 {
-	bos_ServerClose(hServer, &nStatus);
+    bos_ServerClose(hServer, &nStatus);
 
     EndDialog(hDlg, IDOK);
 }
@@ -189,7 +189,7 @@ static char *AddCarriageReturnsToLog(char *pszInBuf, char *& pszOutBuf)
     while (*pInBuf) {
         if (*pInBuf == '\n')
             nNumNLs++;
-		pInBuf++;
+	pInBuf++;
     }
 
     // Allocate enough memory for the log buffer plus CRs plus a NULL
@@ -208,7 +208,7 @@ static char *AddCarriageReturnsToLog(char *pszInBuf, char *& pszOutBuf)
         } else
             *pOutBuf++ = *pInBuf;
 		
-		pInBuf++;
+	pInBuf++;
     }
 
     *pOutBuf = 0;
@@ -234,8 +234,8 @@ static char *GetMaxPartOfLogWeCanShow(char *pszLogBuf)
     while (*psz && (*psz != '\n'))
         psz++;
 
-	if (*psz == '\n')
-		psz++;
+    if (*psz == '\n')
+	psz++;
 
     return psz;
 }    
@@ -261,15 +261,15 @@ static void SaveLogToDisk(char *pszLogBuf, char *pszFileName)
     if (!pszFileName[0])
         return;
 
-	FILE *fp = fopen(pszFileName, "w");
-	if (!fp) {
-		ShowError(hDlg, 0, IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK);
-		return;
-	}
+    FILE *fp = fopen(pszFileName, "w");
+    if (!fp) {
+	ShowError(hDlg, 0, IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK);
+	return;
+    }
 
-	fprintf(fp, "%s", pszLogBuf);
+    fprintf(fp, "%s", pszLogBuf);
 
-	fclose(fp);
+    fclose(fp);
 }
 
 static DWORD WINAPI ShowResults(LPVOID param)
@@ -292,7 +292,8 @@ static DWORD WINAPI ShowResults(LPVOID param)
         // In either case, update the log display for the user
 
         // Get the salvage log as it currently exists
-getlog: nResult = bos_LogGet(hServer, "SalvageLog", &nLogSize, pszLogBuf, &nStatus);
+      getlog: 
+	nResult = bos_LogGet(hServer, "SalvageLog", &nLogSize, pszLogBuf, &nStatus);
         if (!nResult) {
             if (nStatus == ADMMOREDATA) {
                 // If salvage isn't done, then get a bigger buffer than we need to
@@ -334,7 +335,7 @@ getlog: nResult = bos_LogGet(hServer, "SalvageLog", &nLogSize, pszLogBuf, &nStat
 
     if (rc) {
         SetMessages(IDS_SALVAGE_COMPLETE, IDS_FINAL_SALVAGE_LOG);
-		SaveLogToDisk(pszLogBufWithCRs, GetSalvageLogFileNameA());
+	SaveLogToDisk(pszLogBufWithCRs, GetSalvageLogFileNameA());
         MsgBox(hDlg, IDS_SALVAGE_COMPLETE, GetAppTitleID(), MB_OK);
     } else {
         SetMessages(IDS_SALVAGING, IDS_CANT_GET_SALVAGE_LOG);

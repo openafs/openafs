@@ -46,32 +46,38 @@ BOOL Validation_IsValid(TCHAR *pszInput, VALIDATION_TYPE type, BOOL bShowError)
     BOOL bValid;
     int nErrorMsgResID;
 
-	switch (type) {
-		case VALID_AFS_PARTITION_NAME:	bValid = CheckAfsPartitionName(pszInput, nErrorMsgResID);
-                                        break;
+    switch (type) {
+    case VALID_AFS_PARTITION_NAME:
+	bValid = CheckAfsPartitionName(pszInput, nErrorMsgResID);
+	break;
 
-        case VALID_AFS_CELL_NAME:		bValid = CheckAfsCellName(pszInput, nErrorMsgResID);
-                                        break;
+    case VALID_AFS_CELL_NAME: 
+	bValid = CheckAfsCellName(pszInput, nErrorMsgResID);
+	break;
 
-		case VALID_AFS_PASSWORD:		bValid = CheckAfsPassword(pszInput, nErrorMsgResID);
-                                        break;
+    case VALID_AFS_PASSWORD:	 
+	bValid = CheckAfsPassword(pszInput, nErrorMsgResID);
+	break;
 
-		case VALID_AFS_UID:				bValid = CheckAfsUid(pszInput, nErrorMsgResID);
-                                        break;
+    case VALID_AFS_UID:
+	bValid = CheckAfsUid(pszInput, nErrorMsgResID);
+	break;
 
-		case VALID_AFS_SERVER_NAME:		bValid = CheckAfsServerName(pszInput, nErrorMsgResID);
-                                        break;
+    case VALID_AFS_SERVER_NAME:
+	bValid = CheckAfsServerName(pszInput, nErrorMsgResID);
+	break;
 
-		default:						nErrorMsgResID = 0;
-										ASSERT(FALSE);
-										return FALSE;
-	}
+    default:
+	nErrorMsgResID = 0;
+	ASSERT(FALSE);
+	return FALSE;
+    }
 
     if (!bValid && bShowError)
         ShowError(nErrorMsgResID);
 
     return bValid;
-}
+}	
 
 
 
@@ -106,35 +112,35 @@ static BOOL CheckAfsPartitionName(TCHAR *pszPartitionName, int &nErrorMsgResID)
 
     delete pszName;
 
-	return bIsValid;
+    return bIsValid;
 }
 
 static BOOL CheckAfsCellName(TCHAR *pszInput, int &nErrorMsgResID)
-{
-	nErrorMsgResID = 0;
+{	
+    nErrorMsgResID = 0;
 
-	return TRUE;
+    return TRUE;
 }
 
 static BOOL CheckAfsPassword(TCHAR *pszInput, int &nErrorMsgResID)
 {
-	nErrorMsgResID = 0;
+    nErrorMsgResID = 0;
 
-	return TRUE;
-}
+    return TRUE;
+}	
 
 static BOOL CheckAfsUid(TCHAR *pszInput, int &nErrorMsgResID)
 {
-	nErrorMsgResID = 0;
+    nErrorMsgResID = 0;
 
-	return TRUE;
+    return TRUE;
 }
 
 static BOOL CheckAfsServerName(TCHAR *pszInput, int &nErrorMsgResID)
 {
-	nErrorMsgResID = 0;
+    nErrorMsgResID = 0;
 
-	return TRUE;
+    return TRUE;
 }
 
 static void ShowError(int nErrorMsgResID)

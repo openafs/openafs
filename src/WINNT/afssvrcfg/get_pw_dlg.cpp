@@ -49,7 +49,7 @@ BOOL CALLBACK GetPwDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp);
  */
 BOOL GetAfsPrincipalPassword(HWND hParent, TCHAR *&pszServerPW)
 {	
-	int nResult = ModalDialog(IDD_GET_PW, hParent, (DLGPROC)GetPwDlgProc);
+    int nResult = ModalDialog(IDD_GET_PW, hParent, (DLGPROC)GetPwDlgProc);
     if (nResult == IDOK) {
     	pszServerPW = g_CfgData.szServerPW;
         return TRUE;
@@ -57,7 +57,7 @@ BOOL GetAfsPrincipalPassword(HWND hParent, TCHAR *&pszServerPW)
 
     pszServerPW = 0;
 
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -67,32 +67,31 @@ BOOL GetAfsPrincipalPassword(HWND hParent, TCHAR *&pszServerPW)
  */
 BOOL CALLBACK GetPwDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	if (AfsAppLib_HandleHelp(IDD_GET_PW, hwndDlg, msg, wp, lp))
-		return TRUE;
+    if (AfsAppLib_HandleHelp(IDD_GET_PW, hwndDlg, msg, wp, lp))
+	return TRUE;
 
-	switch (msg) {
-		case WM_INITDIALOG:
-			OnInitDialog(hwndDlg);
-			break;
+    switch (msg) {
+    case WM_INITDIALOG:
+	OnInitDialog(hwndDlg);
+	break;
 
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDC_PW:
-					if (HIWORD(wp) == EN_CHANGE)
-						CheckEnableButtons();
-					break;
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDC_PW:
+	    if (HIWORD(wp) == EN_CHANGE)
+		CheckEnableButtons();
+	    break;
 
-				case IDCANCEL:
-					EndDialog(hDlg, IDCANCEL);
-					break;
-					
+	case IDCANCEL:
+	    EndDialog(hDlg, IDCANCEL);
+	    break;
 
-				case IDOK:
-					SaveDlgInfo();
-					EndDialog(hDlg, IDOK);
-					break;
-			}
-		break;
+	case IDOK:
+	    SaveDlgInfo();
+	    EndDialog(hDlg, IDOK);
+	    break;
+	}
+	break;
     }
 
     return FALSE;
@@ -110,7 +109,7 @@ BOOL CALLBACK GetPwDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 }
 
 
@@ -120,24 +119,24 @@ static void OnInitDialog(HWND hwndDlg)
  */
 static void CheckEnableButtons()
 {
-	BOOL bDisable = FALSE;
+    BOOL bDisable = FALSE;
 
-	TCHAR szDummy[cchRESOURCE];
+    TCHAR szDummy[cchRESOURCE];
 
-	bDisable |= lstrlen(GetWndText(hDlg, IDC_PW, szDummy)) == 0;
+    bDisable |= lstrlen(GetWndText(hDlg, IDC_PW, szDummy)) == 0;
 
-	SetEnable(hDlg, IDOK, (ENABLE_STATE)!bDisable);
+    SetEnable(hDlg, IDOK, (ENABLE_STATE)!bDisable);
 }
 
 static void SaveDlgInfo()
 {
-	TCHAR szText[cchRESOURCE];
+    TCHAR szText[cchRESOURCE];
 	
-	lstrncpy(g_CfgData.szServerPW, GetWndText(hDlg, IDC_PW, szText), MAX_SERVER_PW_LEN);
+    lstrncpy(g_CfgData.szServerPW, GetWndText(hDlg, IDC_PW, szText), MAX_SERVER_PW_LEN);
 }
 
 static void ShowPageInfo()
 {
-	SetWndText(hDlg, IDC_PW, g_CfgData.szServerPW);
+    SetWndText(hDlg, IDC_PW, g_CfgData.szServerPW);
 }
 

@@ -67,20 +67,20 @@ BOOL CALLBACK SalvageDlgProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
  */
 BOOL ShowSalvageDlg(HWND hParent, LPCTSTR pszPartitionName)
 {	
-	ASSERT(pszPartitionName);
+    ASSERT(pszPartitionName);
 
-	lstrcpy(szPartitionName, pszPartitionName);
+    lstrcpy(szPartitionName, pszPartitionName);
 
-	int nResult = ModalDialog(IDD_SALVAGE, hParent, (DLGPROC)SalvageDlgProc);
+    int nResult = ModalDialog(IDD_SALVAGE, hParent, (DLGPROC)SalvageDlgProc);
 
     if (nResult != IDOK)
         return FALSE;
 
-	// Create a thread to perform the salvage
-	DWORD dwThreadID;
-	g_CfgData.hSalvageThread = CreateThread(0, 0, Salvage, 0, 0, &dwThreadID);
+    // Create a thread to perform the salvage
+    DWORD dwThreadID;
+    g_CfgData.hSalvageThread = CreateThread(0, 0, Salvage, 0, 0, &dwThreadID);
 
-	return (g_CfgData.hSalvageThread != 0);
+    return (g_CfgData.hSalvageThread != 0);
 }
 
 
@@ -90,46 +90,46 @@ BOOL ShowSalvageDlg(HWND hParent, LPCTSTR pszPartitionName)
  */
 BOOL CALLBACK SalvageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
-	if (AfsAppLib_HandleHelp(IDD_SALVAGE, hwndDlg, msg, wp, lp))
-		return TRUE;
+    if (AfsAppLib_HandleHelp(IDD_SALVAGE, hwndDlg, msg, wp, lp))
+	return TRUE;
 
-	switch (msg) {
-		case WM_INITDIALOG:
-			OnInitDialog(hwndDlg);
-			break;
+    switch (msg) {
+    case WM_INITDIALOG:
+	OnInitDialog(hwndDlg);
+	break;
 
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDC_VOLUME_NAME:
-				case IDC_NUM_PROCESSES:
-				case IDC_LOG_FILE:
-				case IDC_TEMP_DIR:
-					if (HIWORD(wp) == EN_CHANGE)
-						UpdateControls();
-					break;
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDC_VOLUME_NAME:
+	case IDC_NUM_PROCESSES:
+	case IDC_LOG_FILE:
+	case IDC_TEMP_DIR:
+	    if (HIWORD(wp) == EN_CHANGE)
+		UpdateControls();
+	    break;
 
-				case IDC_SERVER:
-				case IDC_PARTITION:
-				case IDC_VOLUME:
-				case IDC_NUM_PROCESSES_CHECKBOX:
-					UpdateControls();
-					break;
+	case IDC_SERVER:
+	case IDC_PARTITION:
+	case IDC_VOLUME:
+	case IDC_NUM_PROCESSES_CHECKBOX:
+	    UpdateControls();
+	    break;
 
-				case IDC_ADVANCED:
-					OnAdvanced();
-					break;
+	case IDC_ADVANCED:
+	    OnAdvanced();
+	    break;
 
-				case IDCANCEL:
-					EndDialog(hDlg, IDCANCEL);
-					break;
+	case IDCANCEL:
+	    EndDialog(hDlg, IDCANCEL);
+	    break;
 
-				case IDOK:
-                    if (OnSalvage())
-						EndDialog(hDlg, IDOK);
-					break;
-			}
-		break;
-    }
+	case IDOK:
+	    if (OnSalvage())
+		EndDialog(hDlg, IDOK);
+	    break;
+	}
+	break;
+    }		
 
     return FALSE;
 }
@@ -146,48 +146,48 @@ BOOL CALLBACK SalvageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 
-	bAdvanced = TRUE;
+    bAdvanced = TRUE;
 
-	TCHAR szNumProcesses[32];
-	_itot(DEFAULT_NUM_PROCESSES, szNumProcesses, 10);
+    TCHAR szNumProcesses[32];
+    _itot(DEFAULT_NUM_PROCESSES, szNumProcesses, 10);
 
-	SetWndText(hDlg, IDC_NUM_PROCESSES, szNumProcesses);
-	SetCheck(hDlg, IDC_NUM_PROCESSES_CHECKBOX);
-	SetWndText(hDlg, IDC_LOG_FILE, A2S(DEFAULT_LOG_FILE));
+    SetWndText(hDlg, IDC_NUM_PROCESSES, szNumProcesses);
+    SetCheck(hDlg, IDC_NUM_PROCESSES_CHECKBOX);
+    SetWndText(hDlg, IDC_LOG_FILE, A2S(DEFAULT_LOG_FILE));
 
-	// If a partition name isn't selected, then only allow the salvage server option
-	if (szPartitionName[0] == 0) {
-		SetEnable(hDlg, IDC_PARTITION, ES_DISABLE);
-		SetEnable(hDlg, IDC_VOLUME, ES_DISABLE);
-		SetCheck(hDlg, IDC_SERVER);
-	} else
-		SetCheck(hDlg, IDC_PARTITION);
+    // If a partition name isn't selected, then only allow the salvage server option
+    if (szPartitionName[0] == 0) {
+	SetEnable(hDlg, IDC_PARTITION, ES_DISABLE);
+	SetEnable(hDlg, IDC_VOLUME, ES_DISABLE);
+	SetCheck(hDlg, IDC_SERVER);
+    } else
+	SetCheck(hDlg, IDC_PARTITION);
 	
-	// Close the Advanced portion of the dialog
-	OnAdvanced();
+    // Close the Advanced portion of the dialog
+    OnAdvanced();
 }
 
 static void OnAdvanced()
 {
     static int nOffset = 0;
 
-	bAdvanced = !bAdvanced;
+    bAdvanced = !bAdvanced;
 
-	ShowAndEnable(hDlg, IDC_ADVANCED_FRAME, bAdvanced);	
-	ShowAndEnable(hDlg, IDC_LOG_FILE, bAdvanced);
-	ShowAndEnable(hDlg, IDC_LOG_FILE_LABEL, bAdvanced);
-	ShowAndEnable(hDlg, IDC_NUM_PROCESSES, bAdvanced);
-	ShowAndEnable(hDlg, IDC_TEMP_DIR, bAdvanced);
-	ShowAndEnable(hDlg, IDC_TEMP_DIR_LABEL, bAdvanced);
-	ShowAndEnable(hDlg, IDC_NUM_PROCESSES_CHECKBOX, bAdvanced);
-	ShowAndEnable(hDlg, IDC_DAMAGED_VOLUMES, bAdvanced);
-	ShowAndEnable(hDlg, IDC_SMALL_BLOCK_READS, bAdvanced);
-	ShowAndEnable(hDlg, IDC_FORCE_SALVAGE, bAdvanced);
-	ShowAndEnable(hDlg, IDC_FORCE_REBUILD, bAdvanced);
-	ShowAndEnable(hDlg, IDC_LIST_DAMAGED_INODES, bAdvanced);
-	ShowAndEnable(hDlg, IDC_LIST_OWNED_INDOES, bAdvanced);
+    ShowAndEnable(hDlg, IDC_ADVANCED_FRAME, bAdvanced);	
+    ShowAndEnable(hDlg, IDC_LOG_FILE, bAdvanced);
+    ShowAndEnable(hDlg, IDC_LOG_FILE_LABEL, bAdvanced);
+    ShowAndEnable(hDlg, IDC_NUM_PROCESSES, bAdvanced);
+    ShowAndEnable(hDlg, IDC_TEMP_DIR, bAdvanced);
+    ShowAndEnable(hDlg, IDC_TEMP_DIR_LABEL, bAdvanced);
+    ShowAndEnable(hDlg, IDC_NUM_PROCESSES_CHECKBOX, bAdvanced);
+    ShowAndEnable(hDlg, IDC_DAMAGED_VOLUMES, bAdvanced);
+    ShowAndEnable(hDlg, IDC_SMALL_BLOCK_READS, bAdvanced);
+    ShowAndEnable(hDlg, IDC_FORCE_SALVAGE, bAdvanced);
+    ShowAndEnable(hDlg, IDC_FORCE_REBUILD, bAdvanced);
+    ShowAndEnable(hDlg, IDC_LIST_DAMAGED_INODES, bAdvanced);
+    ShowAndEnable(hDlg, IDC_LIST_OWNED_INDOES, bAdvanced);
 
     // To show or hide the advanced section, we have to resize the dialog
 
@@ -208,45 +208,45 @@ static void OnAdvanced()
         nOffset = rectDlg.bottom - rectFrame.top - 3;
     }
 
-	int nCurOffset = nOffset;
+    int nCurOffset = nOffset;
 
     if (!bAdvanced)
-		nCurOffset *= -1;
+	nCurOffset *= -1;
 	
     // Adjust dialog position
-	MoveWindow(hDlg, rectDlg.left, rectDlg.top, rectDlg.right - rectDlg.left, rectDlg.bottom - rectDlg.top + nCurOffset, TRUE);
+    MoveWindow(hDlg, rectDlg.left, rectDlg.top, rectDlg.right - rectDlg.left, rectDlg.bottom - rectDlg.top + nCurOffset, TRUE);
 
-	SetWndText(hDlg, IDC_ADVANCED, bAdvanced ? IDS_ADVANCED_OPEN : IDS_ADVANCED_CLOSED);
+    SetWndText(hDlg, IDC_ADVANCED, bAdvanced ? IDS_ADVANCED_OPEN : IDS_ADVANCED_CLOSED);
 }
 
 static void UpdateControls()
 {
-	// Update volume name controls
-	BOOL bVolume = IsButtonChecked(hDlg, IDC_VOLUME);
-	ENABLE_STATE es = bVolume ? ES_ENABLE : ES_DISABLE;
-	SetEnable(hDlg, IDC_VOLUME_NAME, es);
-	SetEnable(hDlg, IDC_VOLUME_NAME_LABEL, es);
-	GetWndText(hDlg, IDC_VOLUME_NAME, szVolumeName);
+    // Update volume name controls
+    BOOL bVolume = IsButtonChecked(hDlg, IDC_VOLUME);
+    ENABLE_STATE es = bVolume ? ES_ENABLE : ES_DISABLE;
+    SetEnable(hDlg, IDC_VOLUME_NAME, es);
+    SetEnable(hDlg, IDC_VOLUME_NAME_LABEL, es);
+    GetWndText(hDlg, IDC_VOLUME_NAME, szVolumeName);
 
-	// Num processes edit control
-	BOOL bParallel = IsButtonChecked(hDlg, IDC_NUM_PROCESSES_CHECKBOX);
-	SetEnable(hDlg, IDC_NUM_PROCESSES, (ENABLE_STATE)bParallel);
-	GetWndText(hDlg, IDC_NUM_PROCESSES, szNumProcesses, NUM_PROCS_BUF_SIZE);
+    // Num processes edit control
+    BOOL bParallel = IsButtonChecked(hDlg, IDC_NUM_PROCESSES_CHECKBOX);
+    SetEnable(hDlg, IDC_NUM_PROCESSES, (ENABLE_STATE)bParallel);
+    GetWndText(hDlg, IDC_NUM_PROCESSES, szNumProcesses, NUM_PROCS_BUF_SIZE);
 
-	GetWndText(hDlg, IDC_LOG_FILE, g_CfgData.szSalvageLogFileName, _MAX_PATH);
-	GetWndText(hDlg, IDC_TEMP_DIR, szTempDir, _MAX_PATH);
+    GetWndText(hDlg, IDC_LOG_FILE, g_CfgData.szSalvageLogFileName, _MAX_PATH);
+    GetWndText(hDlg, IDC_TEMP_DIR, szTempDir, _MAX_PATH);
 
-	// Should OK button be enabled or disabled?
-	BOOL bEnable = TRUE;
+    // Should OK button be enabled or disabled?
+    BOOL bEnable = TRUE;
 
-	if (bVolume)
-		bEnable = !!lstrlen(szVolumeName);
+    if (bVolume)
+	bEnable = !!lstrlen(szVolumeName);
 
-	if (bEnable && bParallel)
-		bEnable = !!lstrlen(szNumProcesses);
+    if (bEnable && bParallel)
+	bEnable = !!lstrlen(szNumProcesses);
 
-	SetEnable(hDlg, IDOK, (ENABLE_STATE)bEnable);
-}
+    SetEnable(hDlg, IDOK, (ENABLE_STATE)bEnable);
+}	
 
 /*
  * Utility Functions _________________________________________________________________
@@ -254,59 +254,59 @@ static void UpdateControls()
  */
 static BOOL OnSalvage()
 {
-	if (IsButtonChecked(hDlg, IDC_SERVER)) {
-		pszPartitionName = 0;
-		pszVolumeName = 0;
-	} else if (IsButtonChecked(hDlg, IDC_PARTITION)) {
-		pszPartitionName = szPartitionName;
-		pszVolumeName = 0;
-	} else if (IsButtonChecked(hDlg, IDC_VOLUME)) {
-		pszPartitionName = szPartitionName;
-		pszVolumeName = szVolumeName;
-	}
+    if (IsButtonChecked(hDlg, IDC_SERVER)) {
+	pszPartitionName = 0;
+	pszVolumeName = 0;
+    } else if (IsButtonChecked(hDlg, IDC_PARTITION)) {
+	pszPartitionName = szPartitionName;
+	pszVolumeName = 0;
+    } else if (IsButtonChecked(hDlg, IDC_VOLUME)) {
+	pszPartitionName = szPartitionName;
+	pszVolumeName = szVolumeName;
+    }
 
-	nNumProcesses = DEFAULT_NUM_PROCESSES;
-	if (IsButtonChecked(hDlg, IDC_NUM_PROCESSES_CHECKBOX)) {
-		nNumProcesses = _ttoi(szNumProcesses);
-		if ((nNumProcesses < MIN_NUM_PROCESSES) || (nNumProcesses > MAX_NUM_PROCESSES)) {
-			ShowError(hDlg, 0, IDS_INVALID_NUM_SALVAGE_PROCESSSES);
-			return FALSE;
-		}
+    nNumProcesses = DEFAULT_NUM_PROCESSES;
+    if (IsButtonChecked(hDlg, IDC_NUM_PROCESSES_CHECKBOX)) {
+	nNumProcesses = _ttoi(szNumProcesses);
+	if ((nNumProcesses < MIN_NUM_PROCESSES) || (nNumProcesses > MAX_NUM_PROCESSES)) {
+	    ShowError(hDlg, 0, IDS_INVALID_NUM_SALVAGE_PROCESSSES);
+	    return FALSE;
 	}
+    }
 
-	if (!g_CfgData.bReuseAdminInfo) {
+    if (!g_CfgData.bReuseAdminInfo) {
         if (!GetAdminInfo(hDlg, GAIO_LOGIN_ONLY))
-    		return FALSE;
+	    return FALSE;
 
         if (!GetHandles(hDlg))
             return FALSE;
-    }
+    }	
 
-	return TRUE;
+    return TRUE;
 }
 
 static DWORD WINAPI Salvage(LPVOID param)
 {
-	afs_status_t nStatus;
-	void *hServer;
-	int nResult; 
+    afs_status_t nStatus;
+    void *hServer;
+    int nResult; 
 
-	nResult = bos_ServerOpen(g_hCell, GetHostnameA(), &hServer, &nStatus);
-	if (!nResult) {
-		ShowError(hDlg, nStatus, IDS_BOS_OPEN_FAILED);
-		return FALSE;
-	}
+    nResult = bos_ServerOpen(g_hCell, GetHostnameA(), &hServer, &nStatus);
+    if (!nResult) {
+	ShowError(hDlg, nStatus, IDS_BOS_OPEN_FAILED);
+	return FALSE;
+    }
 
-	nResult = bos_Salvage(g_hCell, hServer, S2A(pszPartitionName), S2A(pszVolumeName), nNumProcesses, S2A(szTempDir), 0, VOS_NORMAL,
-								BOS_SALVAGE_DAMAGED_VOLUMES, BOS_SALVAGE_DONT_WRITE_INODES, BOS_SALVAGE_DONT_WRITE_ROOT_INODES,
-								BOS_SALVAGE_DONT_FORCE_DIRECTORIES, BOS_SALVAGE_DONT_FORCE_BLOCK_READS, &nStatus);
-	if (!nResult)
+    nResult = bos_Salvage(g_hCell, hServer, S2A(pszPartitionName), S2A(pszVolumeName), nNumProcesses, S2A(szTempDir), 0, VOS_NORMAL,
+			   BOS_SALVAGE_DAMAGED_VOLUMES, BOS_SALVAGE_DONT_WRITE_INODES, BOS_SALVAGE_DONT_WRITE_ROOT_INODES,
+			   BOS_SALVAGE_DONT_FORCE_DIRECTORIES, BOS_SALVAGE_DONT_FORCE_BLOCK_READS, &nStatus);
+    if (!nResult)
     	ShowError(hDlg, nStatus, IDS_SALVAGE_ERROR);
 
     bos_ServerClose(hServer, &nStatus);
     
     g_CfgData.bReuseAdminInfo = nResult;
 
-	return nResult;
+    return nResult;
 }
 

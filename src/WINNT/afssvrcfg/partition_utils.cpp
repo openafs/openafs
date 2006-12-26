@@ -38,67 +38,67 @@ static int cPartitions = 0;					// Count of partitions
  */
 cfg_partitionEntry_t *GetPartitionTable(int &nNumPartitions)
 {
-	nNumPartitions = cPartitions;
+    nNumPartitions = cPartitions;
 
-	return pTable;
+    return pTable;
 }
 
 int GetNumPartitions()
-{
-	return cPartitions;
-}
+{	
+    return cPartitions;
+}	
 
 int ReadPartitionTable(afs_status_t *pStatus)
 {
-	ASSERT(g_hServer);
+    ASSERT(g_hServer);
 
-	FreePartitionTable();
+    FreePartitionTable();
 
-	cPartitions = 0;
-	pTable = 0;
+    cPartitions = 0;
+    pTable = 0;
 	
-	int nResult = cfg_HostPartitionTableEnumerate(g_hServer, &pTable, &cPartitions, pStatus);
+    int nResult = cfg_HostPartitionTableEnumerate(g_hServer, &pTable, &cPartitions, pStatus);
 
-	return nResult;
+    return nResult;
 }
 
 BOOL IsAnAfsPartition(LPCTSTR pszRootDir)
 {
-	for (int ii = 0; ii < cPartitions; ii++) {
+    for (int ii = 0; ii < cPartitions; ii++) {
 
-		TCHAR ch1 = pTable[ii].deviceName[0];
-		if (_istupper(ch1))
-			ch1 = _totlower(ch1);
+	TCHAR ch1 = pTable[ii].deviceName[0];
+	if (_istupper(ch1))
+	    ch1 = _totlower(ch1);
 
-		TCHAR ch2 = pszRootDir[0];
-		if (_istupper(ch2))
-			ch2 = _totlower(ch2);
+	TCHAR ch2 = pszRootDir[0];
+	if (_istupper(ch2))
+	    ch2 = _totlower(ch2);
 
-		if (ch1 == ch2)
-			return TRUE;
-	}
+	if (ch1 == ch2)
+	    return TRUE;
+    }	
 
-	return FALSE;
+    return FALSE;
 }
 
 BOOL DoesPartitionExist(LPCTSTR pszName)
 {
-	for (int ii = 0; ii < cPartitions; ii++) {
-		if (lstrcmp(A2S(pTable[ii].partitionName), pszName) == 0)
-			return TRUE;
-	}
+    for (int ii = 0; ii < cPartitions; ii++) {
+	if (lstrcmp(A2S(pTable[ii].partitionName), pszName) == 0)
+	    return TRUE;
+    }	
 	
-	return FALSE;
+    return FALSE;
 }
 	
 void FreePartitionTable()
 {
-	if (pTable) {
-		afs_status_t nStatus;
-		cfg_PartitionListDeallocate(pTable, &nStatus);
-	}
-	
-	pTable = 0;
-	cPartitions = 0;
-}
+    if (pTable) {
+	afs_status_t nStatus;
+	cfg_PartitionListDeallocate(pTable, &nStatus);
+    }
+
+    pTable = 0;
+    cPartitions = 0;
+}	
 

@@ -61,58 +61,58 @@ BOOL CALLBACK InfoPage2DlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
     if (WizStep_Common_DlgProc (hRHS, msg, wp, lp))
         return FALSE;
 
-	switch (msg) {
-		case WM_INITDIALOG:
-			OnInitDialog(hRHS);
-			break;
+    switch (msg) {
+    case WM_INITDIALOG:
+	OnInitDialog(hRHS);
+	break;
 
-		case WM_COMMAND:
-			switch (LOWORD(wp)) {
-				case IDC_WIZARD:
-					if (HIWORD(wp) == wcIS_STATE_DISABLED) {
-						int nState = g_pWiz->GetState();
-						
-						// Disable step 3 if we are not the first server
-						if (nState == sidSTEP_THREE)
-							return !g_CfgData.bFirstServer;
+    case WM_COMMAND:
+	switch (LOWORD(wp)) {
+	case IDC_WIZARD:
+	    if (HIWORD(wp) == wcIS_STATE_DISABLED) {
+		int nState = g_pWiz->GetState();
 
-						// Disable step 4 if we are the first server
-						if (nState == sidSTEP_FOUR)
-							return g_CfgData.bFirstServer;
-					}
-					break;
+		// Disable step 3 if we are not the first server
+		if (nState == sidSTEP_THREE)
+		    return !g_CfgData.bFirstServer;
 
-				case IDNEXT:
-					SavePageInfo();
-					g_pWiz->SetState (sidSTEP_FIVE);
-					break;
+		// Disable step 4 if we are the first server
+		if (nState == sidSTEP_FOUR)
+		    return g_CfgData.bFirstServer;
+	    }
+	    break;
 
-				case IDBACK:
-					SavePageInfo();
-					g_pWiz->SetState (sidSTEP_TWO);
-					break;
+	case IDNEXT:
+	    SavePageInfo();
+	    g_pWiz->SetState (sidSTEP_FIVE);
+	    break;
 
-				case IDC_USE_NEXT_UID:
-					UseNextUid(TRUE);
-					CheckEnableButtons();
-					break;
+	case IDBACK:
+	    SavePageInfo();
+	    g_pWiz->SetState (sidSTEP_TWO);
+	    break;
 
-				case IDC_USE_THIS_UID:
-					UseNextUid(FALSE);
-					CheckEnableButtons();
-					break;
+	case IDC_USE_NEXT_UID:
+	    UseNextUid(TRUE);
+	    CheckEnableButtons();
+	    break;
 
-				case IDC_ADMIN_NAME:
-				case IDC_ADMIN_PW:
-				case IDC_VERIFY_ADMIN_PW:
-				case IDC_HOSTNAME:
-					if (HIWORD(wp) == EN_CHANGE)
-						CheckEnableButtons();
-					break;
+	case IDC_USE_THIS_UID:
+	    UseNextUid(FALSE);
+	    CheckEnableButtons();
+	    break;
 
-			}
-		break;
-    }
+	case IDC_ADMIN_NAME:
+	case IDC_ADMIN_PW:
+	case IDC_VERIFY_ADMIN_PW:
+	case IDC_HOSTNAME:
+	    if (HIWORD(wp) == EN_CHANGE)
+		CheckEnableButtons();
+	    break;
+
+	}
+	break;
+    }	
 
     return FALSE;
 }
@@ -128,15 +128,15 @@ BOOL CALLBACK InfoPage2DlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
  */
 static void OnInitDialog(HWND hwndDlg)
 {
-	hDlg = hwndDlg;
+    hDlg = hwndDlg;
 
-	g_pWiz->EnableButtons(BACK_BUTTON);
+    g_pWiz->EnableButtons(BACK_BUTTON);
 
-	SetUpDownRange(hDlg, IDC_AFS_UID_SPINNER, MIN_AFS_UID, MAX_AFS_UID);
+    SetUpDownRange(hDlg, IDC_AFS_UID_SPINNER, MIN_AFS_UID, MAX_AFS_UID);
 
-	ShowPageInfo();
+    ShowPageInfo();
 
-	g_pWiz->SetDefaultControl(IDC_ADMIN_NAME);
+    g_pWiz->SetDefaultControl(IDC_ADMIN_NAME);
 }
 
 
@@ -145,73 +145,73 @@ static void OnInitDialog(HWND hwndDlg)
  *
  */
 static void CheckEnableButtons()
-{
-	BOOL bDisable = FALSE;
+{	
+    BOOL bDisable = FALSE;
 
-	TCHAR szDummy[cchRESOURCE];
-	TCHAR szPW[cchRESOURCE];
-	TCHAR szVerifyPW[cchRESOURCE];
+    TCHAR szDummy[cchRESOURCE];
+    TCHAR szPW[cchRESOURCE];
+    TCHAR szVerifyPW[cchRESOURCE];
 
-	bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_NAME, szDummy)) == 0;
+    bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_NAME, szDummy)) == 0;
 
-	bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_PW, szPW)) == 0;
+    bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_PW, szPW)) == 0;
 
-	if (IsWindowEnabled(GetDlgItem(hDlg, IDC_VERIFY_ADMIN_PW))) {
-		GetWndText(hDlg, IDC_VERIFY_ADMIN_PW, szVerifyPW);
-		bDisable |= !lstrlen(szVerifyPW) || lstrcmp(szPW, szVerifyPW);
-	}
+    if (IsWindowEnabled(GetDlgItem(hDlg, IDC_VERIFY_ADMIN_PW))) {
+	GetWndText(hDlg, IDC_VERIFY_ADMIN_PW, szVerifyPW);
+	bDisable |= !lstrlen(szVerifyPW) || lstrcmp(szPW, szVerifyPW);
+    }
 
-	if (IsWindowEnabled(GetDlgItem(hDlg, IDC_ADMIN_UID)))
-		bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_UID, szDummy)) == 0;
+    if (IsWindowEnabled(GetDlgItem(hDlg, IDC_ADMIN_UID)))
+	bDisable |= lstrlen(GetWndText(hDlg, IDC_ADMIN_UID, szDummy)) == 0;
 
-	if (IsWindowEnabled(GetDlgItem(hDlg, IDC_HOSTNAME)))
-		bDisable |= lstrlen(GetWndText(hDlg, IDC_HOSTNAME, szDummy)) == 0;
+    if (IsWindowEnabled(GetDlgItem(hDlg, IDC_HOSTNAME)))
+	bDisable |= lstrlen(GetWndText(hDlg, IDC_HOSTNAME, szDummy)) == 0;
 
-	if (bDisable)
-		g_pWiz->EnableButtons(BACK_BUTTON);
-	else
-		g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
-}
+    if (bDisable)
+	g_pWiz->EnableButtons(BACK_BUTTON);
+    else
+	g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
+}	
 
 static void SavePageInfo()
 {
-	TCHAR szText[cchRESOURCE];
+    TCHAR szText[cchRESOURCE];
 	
-	lstrncpy(g_CfgData.szAdminName, GetWndText(hDlg, IDC_ADMIN_NAME, szText), MAX_ADMIN_NAME_LEN);
-	lstrncpy(g_CfgData.szAdminPW, GetWndText(hDlg, IDC_ADMIN_PW, szText), MAX_ADMIN_PW_LEN);
+    lstrncpy(g_CfgData.szAdminName, GetWndText(hDlg, IDC_ADMIN_NAME, szText), MAX_ADMIN_NAME_LEN);
+    lstrncpy(g_CfgData.szAdminPW, GetWndText(hDlg, IDC_ADMIN_PW, szText), MAX_ADMIN_PW_LEN);
 
-	if (g_pWiz->GetState() == FIRST_SERVER_STEP) {
-		g_CfgData.bUseNextUid = IsButtonChecked(hDlg, IDC_USE_NEXT_UID);
-		if (!g_CfgData.bUseNextUid)
-			lstrncpy(g_CfgData.szAdminUID, GetWndText(hDlg, IDC_ADMIN_UID, szText), MAX_UID_LEN);
-	}
+    if (g_pWiz->GetState() == FIRST_SERVER_STEP) {
+	g_CfgData.bUseNextUid = IsButtonChecked(hDlg, IDC_USE_NEXT_UID);
+	if (!g_CfgData.bUseNextUid)
+	    lstrncpy(g_CfgData.szAdminUID, GetWndText(hDlg, IDC_ADMIN_UID, szText), MAX_UID_LEN);
+    }	
 
-	if (g_pWiz->GetState() == NOT_FIRST_SERVER_STEP)
-		lstrncpy(g_CfgData.szCellServDbHostname, GetWndText(hDlg, IDC_HOSTNAME, szText), MAX_MACHINE_NAME_LEN);
-}
+    if (g_pWiz->GetState() == NOT_FIRST_SERVER_STEP)
+	lstrncpy(g_CfgData.szCellServDbHostname, GetWndText(hDlg, IDC_HOSTNAME, szText), MAX_MACHINE_NAME_LEN);
+}	
 
 static void ShowPageInfo()
 {
-	SetWndText(hDlg, IDC_ADMIN_NAME, g_CfgData.szAdminName);
-	SetWndText(hDlg, IDC_ADMIN_PW, g_CfgData.szAdminPW);
-	SetWndText(hDlg, IDC_VERIFY_ADMIN_PW, g_CfgData.szAdminPW);
-	SetWndText(hDlg, IDC_HOSTNAME, g_CfgData.szCellServDbHostname);
+    SetWndText(hDlg, IDC_ADMIN_NAME, g_CfgData.szAdminName);
+    SetWndText(hDlg, IDC_ADMIN_PW, g_CfgData.szAdminPW);
+    SetWndText(hDlg, IDC_VERIFY_ADMIN_PW, g_CfgData.szAdminPW);
+    SetWndText(hDlg, IDC_HOSTNAME, g_CfgData.szCellServDbHostname);
 
-	if (g_pWiz->GetState() == FIRST_SERVER_STEP) {
-		if (g_CfgData.bUseNextUid)
-			SetCheck(hDlg, IDC_USE_NEXT_UID);
-		else
-			SetCheck(hDlg, IDC_USE_THIS_UID);
-		UseNextUid(g_CfgData.bUseNextUid);
-		SetWndText(hDlg, IDC_ADMIN_UID, g_CfgData.szAdminUID);
-	}
+    if (g_pWiz->GetState() == FIRST_SERVER_STEP) {
+	if (g_CfgData.bUseNextUid)
+	    SetCheck(hDlg, IDC_USE_NEXT_UID);
+	else
+	    SetCheck(hDlg, IDC_USE_THIS_UID);
+	UseNextUid(g_CfgData.bUseNextUid);
+	SetWndText(hDlg, IDC_ADMIN_UID, g_CfgData.szAdminUID);
+    }
 }
 
 static void UseNextUid(BOOL bUseNext)
 {
-	ENABLE_STATE es = bUseNext ? ES_DISABLE : ES_ENABLE;
+    ENABLE_STATE es = bUseNext ? ES_DISABLE : ES_ENABLE;
 	
-	SetEnable(hDlg, IDC_ADMIN_UID, es);
-	SetEnable(hDlg, IDC_AFS_UID_SPINNER, es);
+    SetEnable(hDlg, IDC_ADMIN_UID, es);
+    SetEnable(hDlg, IDC_AFS_UID_SPINNER, es);
 }
 
