@@ -42,6 +42,8 @@ Since 1.5.12
 
  * Remove the AFS Server Configuration Tool shortcut
 
+ * Add Freelance mode awareness to AFS Server Configuration Tool
+
 Since 1.5.11
 
  * Unlike previous versions of the OS, Vista performs a shutdown on
