@@ -173,7 +173,7 @@ if [ $secondpass = yes ]; then
 	if [ $majorvers -ge 8 ]; then
 	    cp InstallationCheck.$majorvers $PKGRES/InstallationCheck
 	    mkdir -p $PKGRES/English.lproj
-	    cp InstallationCheck $PKGRES/English.lproj
+	    cp InstallationCheck.$majorvers $PKGRES/English.lproj
 	    chmod a+x $PKGRES/InstallationCheck
 	fi
 	chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade
