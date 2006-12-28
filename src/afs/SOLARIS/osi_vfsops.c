@@ -238,15 +238,17 @@ afs_swapvp(struct vfs *afsp, struct vnode **avpp, char *nm)
 
 
 #ifdef AFS_SUN510_ENV
-struct fs_operation_def afs_vfsops_template[] = {
-    { VFSNAME_MOUNT,		afs_mount },
-    { VFSNAME_UNMOUNT,		afs_unmount },
-    { VFSNAME_ROOT,		afs_root },
-    { VFSNAME_STATVFS,		afs_statvfs },
-    { VFSNAME_SYNC,		afs_sync },
-    { VFSNAME_VGET,		afs_vget },
-    { VFSNAME_MOUNTROOT,	afs_mountroot },
-    { VFSNAME_FREEVFS,		fs_freevfs },
+/* The following list must always be NULL-terminated */
+const fs_operation_def_t afs_vfsops_template[] = {
+    VFSNAME_MOUNT,		afs_mount,
+    VFSNAME_UNMOUNT,		afs_unmount,
+    VFSNAME_ROOT,		afs_root,
+    VFSNAME_STATVFS,		afs_statvfs,
+    VFSNAME_SYNC,		afs_sync,
+    VFSNAME_VGET,		afs_vget,
+    VFSNAME_MOUNTROOT,  	afs_mountroot,
+    VFSNAME_FREEVFS,		fs_freevfs,
+    NULL,                     NULL
 };
 struct vfsops *afs_vfsopsp;
 #else
