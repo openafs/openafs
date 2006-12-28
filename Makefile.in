@@ -128,7 +128,7 @@ comerr: util
 
 cmd: comerr
 	@case ${SYS_NAME} in \
-	sgi_6* | sun*_5[789] | sun*_510 | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
+	sgi_6* | sun*_5[789] | sun*_51[01] | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
