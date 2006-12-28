@@ -313,17 +313,17 @@ install_libafs:	$(LIBAFS)
 
 install_libafs.mp: $(LIBAFS_MP)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_MP)
+	${INSTALL} -m 644 $(LIBAFS_MP) $(INST_LIBAFS_MP)
 	echo MP Install Complete
 
 install_libafs.ep: $(LIBAFS_EP)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_EP)
+	${INSTALL} -m 644 $(LIBAFS_EP) $(INST_LIBAFS_EP)
 	echo EP Install Complete
 
 install_libafs.bm: $(LIBAFS_BM)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS_BM)
+	${INSTALL} -m 644 $(LIBAFS_BM) $(INST_LIBAFS_BM)
 	echo BM Install Complete
 
 dest_libafs:	$(LIBAFS) 
