@@ -270,7 +270,11 @@ afs_alloc_inode(struct super_block *sb)
 {
     struct vcache *vcp;
 
+#if defined(SLAB_KERNEL)
     vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, SLAB_KERNEL);
+#else
+    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, GFP_KERNEL);
+#endif
     if (!vcp)
 	return NULL;
 
