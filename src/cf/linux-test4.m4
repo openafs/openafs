@@ -727,3 +727,43 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
   fi])
 
+AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/freezer.h existance])
+  AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/freezer.h>],
+[return;],
+      ac_cv_linux_freezer_h_exists=yes,
+      ac_cv_linux_freezer_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_freezer_h_exists)
+  if test "x$ac_cv_linux_freezer_h_exists" = "xyes"; then
+    AC_DEFINE([FREEZER_H_EXISTS], 1, [define if linux/freezer.h exists])
+  fi])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO], [
+  AC_MSG_CHECKING([for todo in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_todo], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.todo);],
+      ac_cv_linux_sched_struct_task_struct_has_todo=yes,
+      ac_cv_linux_sched_struct_task_struct_has_todo=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_todo)])
+
+AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
+  AC_MSG_CHECKING([whether INIT_WORK has a _data argument])
+  AC_CACHE_VAL([ac_cv_linux_init_work_has_data], [
+    AC_TRY_KBUILD(
+[#include <linux/workqueue.h>],
+[ 
+void f(struct work_struct *w) {}
+struct work_struct *w;
+int *i;
+INIT_WORK(w,f,i);],
+      ac_cv_linux_init_work_has_data=yes,
+      ac_cv_linux_init_work_has_data=no)])
+  AC_MSG_RESULT($ac_cv_linux_init_work_has_data)])
+

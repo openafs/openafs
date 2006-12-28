@@ -119,7 +119,11 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 #ifdef PF_FREEZE
 	    current->flags & PF_FREEZE
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
+#else
+	    test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#endif
 #endif
 	    )
 #ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
