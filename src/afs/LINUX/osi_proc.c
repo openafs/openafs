@@ -339,5 +339,8 @@ void
 osi_proc_clean(void)
 {
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+    remove_proc_entry("unixusers", openafs_procfs);
+#endif
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }
