@@ -614,6 +614,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 LINUX_REFRIGERATOR
@@ -621,6 +622,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
+		 LINUX_FREEZER_H_EXISTS
+		 LINUX_INIT_WORK_HAS_DATA
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -690,6 +693,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
 		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
+		 fi
+		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
+		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
@@ -784,6 +790,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
 		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
+		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
 		 fi
@@ -807,6 +816,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
+		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
+		 fi
+		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
+		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
 		 fi
                 :
 		fi

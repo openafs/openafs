@@ -112,6 +112,7 @@ typedef unsigned short etap_event_t;
 #endif
 #ifdef AFS_LINUX22_ENV
 #include "h/sched.h"
+#include "h/freezer.h"
 #include "h/netdevice.h"
 #include "linux/if.h"
 #else
