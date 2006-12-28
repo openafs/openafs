@@ -212,6 +212,7 @@ typedef unsigned short etap_event_t;
 
 #ifdef AFS_SUN510_ENV
 #include <sys/cred_impl.h>
+#include <sys/policy.h>
 #endif
 
 #include "h/socket.h"
