@@ -9,29 +9,39 @@ developer can build an OpenAFS installable package for Windows 2000/XP/2003.
 
 NOTE 1:
 As of the OpenAFS 1.3 release series, Windows platforms released
-prior to Windows 2000 are not being supported.  The InstallShield
-installer is still in the source tree but is no longer supported.
-A new open source installer based on NSIS 2.07 replaces it.
+prior to Windows 2000 are no longer supported.	As of the OpenAFS 1.5
+series, the Windows 9x components are being removed from the source tree.
 
 NOTE 2:
 In this release, in addition to the production quality CIFS-AFS 
 gateway based client service there also exists an experimental
-implementation of an Installable File System (IFS).
-To build the IFS version, follow the directions below, but note that
-only the NSIS installer script has been updated to support it.
-Also, the IFS kernel module must be built separately, using the IFS/DDK
-build environment.
-
+implementation of an Installable File System (IFS).  To build the IFS 
+version, follow the directions below, but note that only the NSIS 
+installer script has been updated to support it.  Also, the IFS kernel 
+module must be built separately, using the IFS/DDK build environment.
+The IFS implementation does not contain a Network Provider interface
+to register an AFS service name.
 
 ***********   Windows 2000/XP/2003 Build Process ****************
 
 Building OpenAFS for Windows requires configuring a Windows
 development system by installing compilation tools and header files.
-Open AFS Software development can be done on Windows 2000 or XP.  The
-target system, where OpenAFS will be installed, should be either
-Windows 2000, Windows XP, or Windows 2003.  The building process is 
-controlled by a nmake file that generates the necessary binaries and 
-binds them into an install package.
+Open AFS Software development can be done on Windows 2000, XP, 2003, 
+or Vista.  The target system, where OpenAFS will be installed, can be 
+one of:
+
+ * Windows 2000
+ * Windows XP
+ * Windows XP SP2
+ * Windows 2003 
+ * Windows 2003 SP1
+ * Windows XP 64
+ * Windows 2003 64
+ * Windows 2003 R2 (32 or 64)
+ * Windows Vista (32 or 64)
+
+The build process is controlled by a nmake file that generates the 
+necessary binaries and binds them into an install package.
 
 The following steps describe how to configure Windows 2000/XP:
 
@@ -40,10 +50,10 @@ The following steps describe how to configure Windows 2000/XP:
    C. Install SDK header files
    D. Configure NTBUILD.BAT
    E. Set program version Level
-   F. Build Win2000 binaries
+   F. Build the binaries
    G. Install NSIS 2.18
    H. Build NSIS Install Package
-   I. Install Wix 2.0
+   I. Install Wix 2.0.4310
    J. Build Wix MSI Install Package
    K. Final Results
    L. Optional Items
@@ -55,15 +65,16 @@ versions are supported:
     Microsoft Visual Studio .NET 
       available via a MSDN subscription
 
-    Microsoft Visual Studio .NET 2003 (recommended)
+    Microsoft Visual Studio .NET 2003
       available via a MSDN subscription
 
     Microsoft Visual Studio .NET 2005 (required for AMD64 builds)
       available via a MSDN subscription
+      (recommended - required for 64-bit builds)
 
 The following Microsoft SDK is required:
 
-    Microsoft Platform SDK for Windows XP SP2 [Core, Data Access and Installer SDKs are required]
+    Microsoft Platform SDK for Windows XP SP2 or Server 2003 SP1 or Vista
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/downlevel.htm [IE required]
       http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
@@ -86,8 +97,8 @@ version is supported:
 The WiX installer requires about 18 MB of storage.  The following 
 version is supported:
 
-    Wix 2.0.2217.0
-      http://prdownloads.sourceforge.net/wix/sources-2.0.2217.0.zip
+    Wix 2.0.4310.0
+      http://prdownloads.sourceforge.net/wix/sources-2.0.4310.0.zip
 
 The InstallShield scripts (although not supported) require version 5.5
 of InstallShiled. Version 6.0 or higher of InstallShield are not 
@@ -133,7 +144,7 @@ base directory (aka %AFSROOT%):
     copy src\ntbuild.bat .
 
 
-The AFS base directory should look something like the following:
+The OpenAFS base directory should look something like the following:
 
   c:\OpenAFS\OpenAFS-1.3.74\
     NTMakefile
@@ -157,9 +168,9 @@ and remove all but the following Options:
 
 STEP C. Install SDK header files.
 
-Files from Microsoft's Platform SDK for Windows XP SP2 is required to
-complete a build on Windows 2000/XP/2003.   You can install the "Core, Data
-Access and Installer SDKs" from
+Files from Microsoft's Platform SDK for Windows XP SP2 or Server 2003 are
+required to complete a build on Windows 2000/XP/2003.   You can install 
+the "Core, Data Access and Installer SDKs" from
 
   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
 
@@ -168,7 +179,7 @@ If you do not which to use IE a complete SDK package is available from
 
   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
-The header files that are required are found from a Microsoft SDK are:
+The header files that are required from a Microsoft SDK/DDK are:
 
    npapi.h    (Windows 2000,XP,2003 builds)
    netcfgx.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
@@ -202,13 +213,25 @@ must be defined to match your configuration:
   MSVCDIR: Set to the short name version of the directory into which
            the visual C++ compiler was installed regardless of version
 
+  MSVCDIR64: On AMD64 systems, set to the 64-bit visual C++ compiler
+
   MSSDKDIR: Set to the short name of the directory into which
             the Platform SDK was installed
 
-  NTDDKDIR: Set the short name of the directory containing the npapi.h file
+  NTDDKDIR: Set to the short name of the INC\WNET DDK directory
+
+  NTDDKDIR2: Set to the short name of the INC\CRT DDK directory
 
   AFSROOT: Set to the short name of the OpenAFS Base directory.  This
            cannot be set to a UNC path.
+
+  SYS_NAME: One of "i386_w2k" or "amd64_w2k"
+
+  APPVER:   0x500 for Windows 2000 and above; 0x502 for AMD64 systems
+
+  _WIN32_IE: Must match APPVER
+
+  MSVCVer:  Set to 8.0 if using Visual Studio 8
 
 
 STEP E. Set version and installation options (optional)
