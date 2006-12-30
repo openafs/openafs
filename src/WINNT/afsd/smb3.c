@@ -2358,7 +2358,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     cm_HoldUser(userp);
     lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
-    osi_Log2(afsd_logp,"smb_ReceiveTran2Open fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveTran2Open fidp 0x%p scp 0x%p", fidp, scp);
     fidp->scp = scp;
     lock_ObtainMutex(&scp->mx);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
@@ -3208,7 +3208,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     lock_ObtainMutex(&fidp->mx);
     delonclose = fidp->flags & SMB_FID_DELONCLOSE;
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReleaseTran2QFileInfo fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReleaseTran2QFileInfo fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
     lock_ObtainMutex(&scp->mx);
@@ -3327,7 +3327,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }
 
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReceiveTran2SetFileInfo fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveTran2SetFileInfo fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
@@ -4308,7 +4308,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 	return 0;
     }
 #endif /* DFS_SUPPORT */
-    osi_Log1(afsd_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
+    osi_Log1(smb_logp,"smb_ReceiveTran2SearchDir scp 0x%p", scp);
     lock_ObtainMutex(&scp->mx);
     if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0 &&
 	 LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
@@ -4317,12 +4317,12 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     lock_ReleaseMutex(&scp->mx);
 
     /* now do a single case sensitive lookup for the file in question */
-    code = cm_Lookup(scp, maskp, 0, userp, &req, &targetscp);
+    code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE, userp, &req, &targetscp);
 
     /* if a case sensitive match failed, we try a case insensitive one
        next. */
     if (code == CM_ERROR_NOSUCHFILE) {
-        code = cm_Lookup(scp, maskp, CM_FLAG_CASEFOLD, userp, &req, &targetscp);
+        code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD, userp, &req, &targetscp);
     }
 
     if (code == 0 && targetscp->fid.vnode == 0) {
@@ -4368,6 +4368,12 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     } else {
         NeedShortName = 0;
     }
+
+    osi_Log4(smb_logp, "T2SDSingle dir vn %u uniq %u name %s (%s)",
+	      htonl(targetscp->fid.vnode),
+	      htonl(targetscp->fid.unique),
+	      osi_LogSaveString(smb_logp, pathp),
+	      NeedShortName ? osi_LogSaveString(smb_logp, shortName) : "");
 
     /* Eliminate entries that don't match requested attributes */
     if (smb_hideDotFiles && !(attribute & SMB_ATTR_HIDDEN) &&
@@ -4737,7 +4743,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     lock_ObtainMutex(&dsp->mx);
     if (dsp->scp) {
         scp = dsp->scp;
-	osi_Log2(afsd_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
+	osi_Log2(smb_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
         cm_HoldSCache(scp);
         code = 0;
     } else {
@@ -4776,7 +4782,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
 #endif /* DFS_SUPPORT */
             dsp->scp = scp;
-	    osi_Log2(afsd_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
+	    osi_Log2(smb_logp,"smb_ReceiveTran2SearchDir dsp 0x%p scp 0x%p", dsp, scp);
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done
              * with this function, we'll drop the one for our own
@@ -5196,7 +5202,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * re-running the query. 
      */
     if (returnedNames == 0 && !starPattern && foundInexact) {
-        osi_Log0(afsd_logp,"T2 Search: No exact matches. Re-running for inexact matches");
+        osi_Log0(smb_logp,"T2 Search: No exact matches. Re-running for inexact matches");
         starPattern = 1;
         goto startsearch;
     }
@@ -5564,7 +5570,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&scp->mx);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
     lock_ReleaseMutex(&scp->mx);
-    osi_Log2(afsd_logp,"smb_ReceiveV3OpenX fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveV3OpenX fidp 0x%p scp 0x%p", fidp, scp);
     /* also the user */
     fidp->userp = userp;
         
@@ -5680,7 +5686,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReceiveV3LockingX fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveV3LockingX fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
@@ -5762,7 +5768,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 wlRequest->vcp = vcp;
                 smb_HoldVC(vcp);
                 wlRequest->scp = scp;
-		osi_Log2(afsd_logp,"smb_ReceiveV3LockingX wlRequest 0x%p scp 0x%p", wlRequest, scp);
+		osi_Log2(smb_logp,"smb_ReceiveV3LockingX wlRequest 0x%p scp 0x%p", wlRequest, scp);
                 cm_HoldSCache(scp);
                 wlRequest->inp = smb_CopyPacket(inp);
                 wlRequest->outp = smb_CopyPacket(outp);
@@ -5921,7 +5927,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReceiveV3GetAttributes fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveV3GetAttributes fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
@@ -5998,7 +6004,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         return CM_ERROR_BADFD;
     }
     scp = fidp->scp;
-    osi_Log2(afsd_logp,"smb_ReceiveV3SetAttributes fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveV3SetAttributes fidp 0x%p scp 0x%p", fidp, scp);
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
         
@@ -7037,7 +7043,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     lock_ObtainMutex(&scp->mx);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
     lock_ReleaseMutex(&scp->mx);
-    osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveNTCreateX fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
 
@@ -7047,7 +7053,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* save parent dir and pathname for delete or change notification */
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
-	osi_Log2(afsd_logp,"smb_ReceiveNTCreateX fidp 0x%p dscp 0x%p", fidp, dscp);
+	osi_Log2(smb_logp,"smb_ReceiveNTCreateX fidp 0x%p dscp 0x%p", fidp, dscp);
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
 	dscp = NULL;
@@ -7678,7 +7684,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     lock_ObtainMutex(&scp->mx);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
     lock_ReleaseMutex(&scp->mx);
-    osi_Log2(afsd_logp,"smb_ReceiveNTTranCreate fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveNTTranCreate fidp 0x%p scp 0x%p", fidp, scp);
 
     fidp->flags = fidflags;
 
@@ -7690,7 +7696,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
         fidp->flags |= SMB_FID_NTOPEN;
         fidp->NTopen_dscp = dscp;
-	osi_Log2(afsd_logp,"smb_ReceiveNTTranCreate fidp 0x%p dscp 0x%p", fidp, dscp);
+	osi_Log2(smb_logp,"smb_ReceiveNTTranCreate fidp 0x%p dscp 0x%p", fidp, dscp);
 	dscp = NULL;
         fidp->NTopen_pathp = strdup(lastNamep);
     }
@@ -7858,7 +7864,7 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
     lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
     scp = fidp->scp;
-    osi_Log3(afsd_logp,"smb_ReceiveNTTranNotifyChange fidp 0x%p scp 0x%p file \"%s\"", 
+    osi_Log3(smb_logp,"smb_ReceiveNTTranNotifyChange fidp 0x%p scp 0x%p file \"%s\"", 
 	      fidp, scp, osi_LogSaveString(smb_logp, fidp->NTopen_wholepathp));
     osi_Log3(smb_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d",
              filter, fid, watchtree);
@@ -8277,7 +8283,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                           osi_LogSaveString(smb_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
                 scp = fidp->scp;
-		osi_Log2(afsd_logp,"smb_ReceiveNTCancel fidp 0x%p scp 0x%p", fidp, scp);
+		osi_Log2(smb_logp,"smb_ReceiveNTCancel fidp 0x%p scp 0x%p", fidp, scp);
                 lock_ObtainMutex(&scp->mx);
                 if (watchtree)
                     scp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;

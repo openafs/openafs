@@ -1474,7 +1474,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
 	    lock_ObtainMutex(&scp->mx);
 	    scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
 	    lock_ReleaseMutex(&scp->mx);
-	    osi_Log2(afsd_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
+	    osi_Log2(smb_logp,"smb_ReleaseFID fidp 0x%p scp 0x%p", fidp, scp);
 	    fidp->scp = NULL;
 	}
         userp = fidp->userp;
@@ -1835,7 +1835,7 @@ void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
 {
     lock_ObtainWrite(&smb_globalLock);
     lock_ObtainMutex(&dsp->mx);
-    osi_Log3(afsd_logp,"smb_DeleteDirSearch cookie %d dsp 0x%p scp 0x%p", 
+    osi_Log3(smb_logp,"smb_DeleteDirSearch cookie %d dsp 0x%p scp 0x%p", 
 	      dsp->cookie, dsp, dsp->scp);
     dsp->flags |= SMB_DIRSEARCH_DELETE;
     if (dsp->scp != NULL) {
@@ -1865,7 +1865,7 @@ void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
         lock_ReleaseMutex(&dsp->mx);
         lock_FinalizeMutex(&dsp->mx);
         scp = dsp->scp;
-	osi_Log3(afsd_logp,"smb_ReleaseDirSearch cookie %d dsp 0x%p scp 0x%p", 
+	osi_Log3(smb_logp,"smb_ReleaseDirSearch cookie %d dsp 0x%p scp 0x%p", 
 		 dsp->cookie, dsp, scp);
         free(dsp);
     } else {
@@ -2000,7 +2000,7 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
         if (!smb_lastDirSearchp) 
             smb_lastDirSearchp = (smb_dirSearch_t *) &dsp->q;
     
-	osi_Log2(afsd_logp,"smb_NewDirSearch cookie %d dsp 0x%p", 
+	osi_Log2(smb_logp,"smb_NewDirSearch cookie %d dsp 0x%p", 
 		 dsp->cookie, dsp);
 	break;
     }	
@@ -3382,7 +3382,7 @@ void smb_WaitingLocksDaemon()
                          wlRequest);
 
                 scp = wlRequest->scp;
-		osi_Log2(afsd_logp,"smb_WaitingLocksDaemon wlRequest 0x%p scp 0x%p", wlRequest, scp);
+		osi_Log2(smb_logp,"smb_WaitingLocksDaemon wlRequest 0x%p scp 0x%p", wlRequest, scp);
 
                 cm_InitReq(&req);
 
@@ -3919,7 +3919,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     lock_ObtainMutex(&dsp->mx);
     if (dsp->scp) {
         scp = dsp->scp;
-	osi_Log2(afsd_logp,"smb_ReceiveCoreSearchDir (1) dsp 0x%p scp 0x%p", dsp, scp);
+	osi_Log2(smb_logp,"smb_ReceiveCoreSearchDir (1) dsp 0x%p scp 0x%p", dsp, scp);
         cm_HoldSCache(scp);
         code = 0;
     } else {
@@ -3951,7 +3951,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 #endif /* DFS_SUPPORT */
 
             dsp->scp = scp;
-	    osi_Log2(afsd_logp,"smb_ReceiveCoreSearchDir (2) dsp 0x%p scp 0x%p", dsp, scp);
+	    osi_Log2(smb_logp,"smb_ReceiveCoreSearchDir (2) dsp 0x%p scp 0x%p", dsp, scp);
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done with this
              * function, we'll drop the one for our own processing.
@@ -4817,7 +4817,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* save a pointer to the vnode */
     fidp->scp = scp;
-    osi_Log2(afsd_logp,"smb_ReceiveCoreOpen fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveCoreOpen fidp 0x%p scp 0x%p", fidp, scp);
     lock_ObtainMutex(&scp->mx);
     scp->flags |= CM_SCACHEFLAG_SMB_FID;
     lock_ReleaseMutex(&scp->mx);
@@ -5175,7 +5175,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
     if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
-                 osi_LogSaveString(afsd_logp, newLastNamep));
+                 osi_LogSaveString(smb_logp, newLastNamep));
 
         /* Check if the old and the new names differ only in case. If so return
          * success, else return CM_ERROR_EXISTS 
@@ -5364,7 +5364,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
     if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
-                 osi_LogSaveString(afsd_logp, newLastNamep));
+                 osi_LogSaveString(smb_logp, newLastNamep));
 
         /* if the existing link is to the same file, then we return success */
         if (!code) {
@@ -7038,7 +7038,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (created)
 	fidp->flags |= SMB_FID_CREATED;
 
-    osi_Log2(afsd_logp,"smb_ReceiveCoreCreate fidp 0x%p scp 0x%p", fidp, scp);
+    osi_Log2(smb_logp,"smb_ReceiveCoreCreate fidp 0x%p scp 0x%p", fidp, scp);
 
     /* save a pointer to the vnode */
     fidp->scp = scp;
@@ -8827,7 +8827,7 @@ void smb_Shutdown(void)
 		    lock_ObtainMutex(&scp->mx);
 		    scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
 		    lock_ReleaseMutex(&scp->mx);
-		    osi_Log2(afsd_logp,"smb_Shutdown fidp 0x%p scp 0x%p", fidp, scp);
+		    osi_Log2(smb_logp,"smb_Shutdown fidp 0x%p scp 0x%p", fidp, scp);
                     cm_ReleaseSCache(scp);
                 }
                 lock_ReleaseMutex(&fidp->mx);
