@@ -1,5 +1,8 @@
 Since 1.5.12
 
+ * Fix computations of short names of mount points.  They were
+   broken as part of the directory search optimization. (1.5.13a)
+
  * When all buffers are in use, periodically sleep the threads
    waiting for a buffer to become free while the global buffer
    lock is not being held in order to permit those threads that
