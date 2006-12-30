@@ -343,6 +343,14 @@ main(argc, argv)
     OpenLog(AFSDIR_SERVER_KALOG_FILEPATH);
     SetupLogSignals();
 #endif
+
+    fprintf(stderr, "%s: WARNING: kaserver is deprecated due to its weak security "
+	    "properties.  Migrating to a Kerberos 5 KDC is advised.  "
+	    "http://www.openafs.org/no-more-des.html\n", whoami);
+    ViceLog(0, ("WARNING: kaserver is deprecated due to its weak security properties.  "
+	    "Migrating to a Kerberos 5 KDC is advised.  "
+	    "http://www.openafs.org/no-more-des.html\n"));
+
     code =
 	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
 				    &cellinfo, &clones);
