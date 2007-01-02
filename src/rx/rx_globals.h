@@ -493,9 +493,7 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 
 #define CONN_HASH(host, port, cid, epoch, type) ((((cid)>>RX_CIDSHIFT)%rx_hashTableSize))
 
-#if 0
 #define PEER_HASH(host, port)  ((host ^ port) % rx_hashTableSize)
-#endif
 
 /* Forward definitions of internal procedures */
 #define	rxi_ChallengeOff(conn)	rxevent_Cancel((conn)->challengeEvent, (struct rx_call*)0, 0);

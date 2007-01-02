@@ -47,11 +47,7 @@ typedef struct {
 #endif
 #endif /* AUTH_DBM_LOG */
 
-void ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
-	    char *realm, int hostaddr, int type);
 #ifdef AUTH_DBM_LOG
-void kalog_log(char *principal, char *instance, char *sprincipal,
-	       char *sinstance, char *realm, int hostaddr, int type);
 #define KALOG(a,b,c,d,e,f,g) kalog_log(a,b,c,d,e,f,g)
 #else
 #define KALOG(a,b,c,d,e,f,g) ka_log(a,b,c,d,e,f,g)

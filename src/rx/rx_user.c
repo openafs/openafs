@@ -94,16 +94,16 @@ pthread_mutex_t rx_if_mutex;
  * failure. Port must be in network byte order.	
  */
 osi_socket
-rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
+rxi_GetHostUDPSocket(u_int ahost, u_short port)
 {
     int binds, code = 0;
     osi_socket socketFd = OSI_NULLSOCKET;
+    struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
     int pmtu=IP_PMTUDISC_DONT;
 #endif
 
-#if 0
 #if !defined(AFS_NT40_ENV) 
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
@@ -116,19 +116,24 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 	goto error;
     }
 #endif
-#endif
-    socketFd = socket(rx_ssfamily(saddr), SOCK_DGRAM, 0);
+    socketFd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (socketFd < 0) {
 	perror("socket");
 	goto error;
     }
 
+    taddr.sin_addr.s_addr = ahost;
+    taddr.sin_family = AF_INET;
+    taddr.sin_port = (u_short) port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
 #define MAX_RX_BINDS 10
     for (binds = 0; binds < MAX_RX_BINDS; binds++) {
 	if (binds)
 	    rxi_Delay(10);
-	code = bind(socketFd, (struct sockaddr *) saddr, salen);
+	code = bind(socketFd, (struct sockaddr *)&taddr, sizeof(taddr));
 	if (!code)
 	    break;
     }
@@ -202,16 +207,7 @@ rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
 osi_socket
 rxi_GetUDPSocket(u_short port)
 {
-    struct sockaddr_storage saddr;
-    struct sockaddr_in *sin = (struct sockaddr_in *) &saddr;
-
-    memset((void *) &saddr, 0, sizeof(saddr));
-
-    sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = htonl(INADDR_ANY);
-    sin->sin_port = port;
-
-    return rxi_GetHostUDPSocket(&saddr, sizeof(struct sockaddr_in));
+    return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
 void
@@ -613,7 +609,7 @@ void
 rxi_InitPeerParams(struct rx_peer *pp)
 {
     afs_uint32 ppaddr;
-    u_short rxmtu, maxmtu = 0;
+    u_short rxmtu;
     int ix;
 
     LOCK_IF_INIT;
@@ -631,48 +627,33 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #ifdef ADAPT_MTU
     /* try to second-guess IP, and identify which link is most likely to
      * be used for traffic to/from this host. */
-    switch (rx_ssfamily(&pp->saddr)) {
-    case AF_INET:
-	ppaddr = ntohl(((struct sockaddr_in * ) &pp->saddr)->sin_addr.s_addr);
-
-	pp->ifMTU = 0;
-	pp->timeout.sec = 2;
-	pp->rateFlag = 2;	/* start timing after two full packets */
-	/* I don't initialize these, because I presume they are bzero'd... 
-	* pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
-	* pp->timeout.usec */
-
-	LOCK_IF;
-	for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
-	    if (maxmtu < myNetMTUs[ix])
-		maxmtu = myNetMTUs[ix] - RX_IPUDP_SIZE;
-	    if ((rxi_NetAddrs[ix] & myNetMasks[ix]) ==
-		(ppaddr & myNetMasks[ix])) {
+    ppaddr = ntohl(pp->host);
+    
+    pp->ifMTU = 0;
+    pp->timeout.sec = 2;
+    pp->rateFlag = 2;         /* start timing after two full packets */
+    /* I don't initialize these, because I presume they are bzero'd... 
+     * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
+     * pp->timeout.usec */
+    
+    LOCK_IF;
+    for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
+	if ((rxi_NetAddrs[ix] & myNetMasks[ix]) == (ppaddr & myNetMasks[ix])) {
 #ifdef IFF_POINTOPOINT
-		if (myNetFlags[ix] & IFF_POINTOPOINT)
-		    pp->timeout.sec = 4;
+	    if (myNetFlags[ix] & IFF_POINTOPOINT)
+		pp->timeout.sec = 4;
 #endif /* IFF_POINTOPOINT */
-		rxmtu = myNetMTUs[ix] - RX_IPUDP_SIZE;
-		if (rxmtu < RX_MIN_PACKET_SIZE)
-		    rxmtu = RX_MIN_PACKET_SIZE;
-	    }
+	    rxmtu = myNetMTUs[ix] - RX_IPUDP_SIZE;
+	    if (rxmtu < RX_MIN_PACKET_SIZE)
+		rxmtu = RX_MIN_PACKET_SIZE;
+	    if (pp->ifMTU < rxmtu)
+		pp->ifMTU = MIN(rx_MyMaxSendSize, rxmtu);
 	}
-	UNLOCK_IF;
-	if (rxmtu)
-	    pp->ifMTU = MIN(rx_MyMaxSendSize, rxmtu);
-	if (!pp->ifMTU) {		/* not local */
-	    pp->timeout.sec = 3;
-	    pp->ifMTU = MIN(rx_MyMaxSendSize, maxmtu ? maxmtu : RX_REMOTE_PACKET_SIZE);
-	}
-	break;
-#ifdef AF_INET6
-    case AF_INET6:
-#endif 
-    default:
-	pp->rateFlag = 2;	/* start timing after two full packets */
-	pp->timeout.sec = 2;
-	pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
-	break;
+    }
+    UNLOCK_IF;
+    if (!pp->ifMTU) {         /* not local */
+	pp->timeout.sec = 3;
+	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
 #else /* ADAPT_MTU */
     pp->rateFlag = 2;		/* start timing after two full packets */

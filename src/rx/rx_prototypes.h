@@ -14,8 +14,6 @@
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
-extern int rx_InitAddrs(struct sockaddr_storage *saddrs, int *types,
-			int *salens, int nelem);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 #endif
@@ -28,11 +26,6 @@ extern struct rx_connection *rx_NewConnection(register afs_uint32 shost,
 					      register struct rx_securityClass
 					      *securityObject,
 					      int serviceSecurityIndex);
-extern struct rx_connection *rx_NewConnectionAddrs(struct sockaddr_storage *,
-						   int *types, int *salens,
-						   int nelem, u_short,
-						   struct rx_securityClass *,
-						   int);
 extern void rx_SetConnDeadTime(register struct rx_connection *conn,
 			       register int seconds);
 extern void rxi_CleanupConnection(struct rx_connection *conn);
@@ -90,27 +83,26 @@ extern void rxi_FreeCall(register struct rx_call *call);
 
 extern char *rxi_Alloc(register size_t size);
 extern void rxi_Free(void *addr, register size_t size);
-extern struct rx_peer *rxi_FindPeer(struct sockaddr_storage *saddr, int slen,
-				    int stype, struct rx_peer *origPeer,
-				    int create);
+extern struct rx_peer *rxi_FindPeer(register afs_uint32 host,
+				    register u_short port,
+				    struct rx_peer *origPeer, int create);
 extern struct rx_connection *rxi_FindConnection(osi_socket socket,
-						struct sockaddr_storage *saddr,
-						int slen, int socktype,
+						register afs_int32 host,
+						register u_short port,
 						u_short serviceId,
 						afs_uint32 cid,
 						afs_uint32 epoch, int type,
 						u_int securityIndex);
 extern struct rx_packet *rxi_ReceivePacket(register struct rx_packet *np,
-					   osi_socket socket,
-					   struct sockaddr_storage *saddr,
-					   int slen, int *tnop,
+					   osi_socket socket, afs_uint32 host,
+					   u_short port, int *tnop,
 					   struct rx_call **newcallp);
 extern int rxi_IsConnInteresting(struct rx_connection *aconn);
 extern struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 					       register struct rx_packet *np,
 					       int istack, osi_socket socket,
-					       struct sockaddr_storage *saddr,
-					       int slen, int *tnop,
+					       afs_uint32 host, u_short port,
+					       int *tnop,
 					       struct rx_call **newcallp);
 extern struct rx_packet *rxi_ReceiveAckPacket(register struct rx_call *call,
 					      struct rx_packet *np,
@@ -344,8 +336,7 @@ extern int rxk_initDone;
 extern int rxk_DelPort(u_short aport);
 extern void rxk_shutdownPorts(void);
 extern osi_socket rxi_GetUDPSocket(u_short port);
-extern osi_socket rxi_GetHostUDPSocket(struct sockaddr_storage *saddr,
-				       int salen);
+extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 #if defined(KERNEL) && defined(AFS_LINUX26_ENV)
 #define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
 #undef osi_Assert
@@ -371,8 +362,8 @@ extern int rxk_FreeSocket(register struct socket *asocket);
 extern osi_socket *rxk_NewSocket(short aport);
 #endif
 #endif
-extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p,
-			  struct sockaddr_storage *saddr, int *slen);
+extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
+			  int *port);
 #ifdef UKERNEL
 extern void rx_ServerProc(void);
 #endif
@@ -405,13 +396,12 @@ extern void afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l,
 
 /* ARCH/rx_knet.c */
 #if defined(KERNEL) && !defined(AFS_SGI_ENV)
-extern int osi_NetSend(osi_socket asocket, struct sockaddr_storage *addr,
-		       int addrlen, struct iovec *dvec, int nvecs,
-		       afs_int32 asize, int istack);
+extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+		       struct iovec *dvec, int nvecs, afs_int32 asize,
+		       int istack);
 #endif
-extern int osi_NetReceive(osi_socket so, struct sockaddr_storage *saddr,
-			  int *slen, struct iovec *dvec, int nvecs,
-			  int *lengthp);
+extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
+			  struct iovec *dvec, int nvecs, int *lengthp);
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);
 #ifndef RXK_LISTENER_ENV
@@ -495,22 +485,22 @@ extern int rxi_FreePackets(int num_pkts, struct rx_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call,
 					     int want);
 extern int rxi_ReadPacket(osi_socket socket, register struct rx_packet *p,
-			  struct sockaddr_storage *saddr, int *slen);
+			  afs_uint32 * host, u_short * port);
 extern struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p,
-					      struct sockaddr_storage *saddr,
-					      int slen, int first);
+					      afs_int32 host, short port,
+					      int first);
 #ifndef KERNEL
-extern int osi_NetSend(osi_socket socket, void *addr, int addrlen,
-		       struct iovec *dvec, int nvecs, int length, int istack);
+extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
+		       int nvecs, int length, int istack);
 #endif
 extern struct rx_packet *rxi_ReceiveDebugPacket(register struct rx_packet *ap,
 						osi_socket asocket,
-						struct sockaddr_storage *saddr,
-						int slen, int istack);
+						afs_int32 ahost, short aport,
+						int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(register struct rx_packet
 						  *ap, osi_socket asocket,
-						  struct sockaddr_storage *,
-						  int slen, int istack);
+						  afs_int32 ahost,
+						  short aport, int istack);
 extern void rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			   struct rx_packet *p, int istack);
 extern void rxi_SendPacketList(struct rx_call *call,

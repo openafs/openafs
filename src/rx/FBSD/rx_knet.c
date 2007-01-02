@@ -19,7 +19,7 @@ RCSID
 
 #ifdef RXK_LISTENER_ENV
 int
-osi_NetReceive(osi_socket asocket, struct sockaddr_storage *saddr, int *slen,
+osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 	       struct iovec *dvec, int nvecs, int *alength)
 {
     struct uio u;
@@ -68,10 +68,8 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_storage *saddr, int *slen,
     *alength -= u.uio_resid;
     if (sa) {
 	if (sa->sa_family == AF_INET) {
-	    if (saddr) {
-		memcpy(saddr, sa, sa->sa_len);
-		*slen = sa->sa_len;
-	    }
+	    if (addr)
+		*addr = *(struct sockaddr_in *)sa;
 	} else
 	    printf("Unknown socket family %d in NetReceive\n", sa->sa_family);
 	FREE(sa, M_SONAME);
@@ -102,8 +100,8 @@ osi_StopListener(void)
 }
 
 int
-osi_NetSend(osi_socket asocket, struct sockaddr_storage *saddr, int salen,
-	    struct iovec *dvec, int nvecs, afs_int32 alength, int istack)
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
+	    int nvecs, afs_int32 alength, int istack)
 {
     register afs_int32 code;
     int i;
@@ -130,8 +128,7 @@ osi_NetSend(osi_socket asocket, struct sockaddr_storage *saddr, int salen,
     u.uio_procp = NULL;
 #endif
 
-    saddr->ss_len = saddr->ss_family == AF_INET6 ?
-		sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
+    addr->sin_len = sizeof(struct sockaddr_in);
 
     if (haveGlock)
 	AFS_GUNLOCK();
@@ -140,11 +137,11 @@ osi_NetSend(osi_socket asocket, struct sockaddr_storage *saddr, int salen,
 #endif
 #ifdef AFS_FBSD50_ENV
     code =
-	sosend(asocket, (struct sockaddr *)saddr, &u, NULL, NULL, 0,
+	sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0,
 	       curthread);
 #else
     code =
-	sosend(asocket, (struct sockaddr *)saddr, &u, NULL, NULL, 0, curproc);
+	sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0, curproc);
 #endif
 #if KNET_DEBUG
     if (code) {

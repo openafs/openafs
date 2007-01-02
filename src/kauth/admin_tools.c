@@ -536,7 +536,7 @@ Unlock(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code, rcode = 0;
     afs_int32 count;
-    char *server;
+    afs_int32 server;
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
 
@@ -552,14 +552,16 @@ Unlock(struct cmd_syndesc *as, char *arock)
 	code = ubik_CallIter(KAM_Unlock, conn, 0, &count, (long) name, (long) instance,
 			     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (code && (code != UNOSERVERS)) {
-	    server = "<unknown>";
+	    server = 0;
 	    if (conn && conn->conns[count - 1]
 		&& conn->conns[count - 1]->peer) {
-		server = rx_AddrStringOf(conn->conns[count - 1]->peer);
+		server = conn->conns[count - 1]->peer->host;
 	    }
 	    com_err(whoami, code,
-		    "so %s.%s may still be locked (on server %s)",
-		    name, instance, server);
+		    "so %s.%s may still be locked (on server %d.%d.%d.%d)",
+		    name, instance, ((server >> 24) & 0xFF),
+		    ((server >> 16) & 0xFF), ((server >> 8) & 0xFF),
+		    (server & 0xFF));
 
 	    if (!rcode) {
 		rcode = code;

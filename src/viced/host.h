@@ -277,9 +277,6 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define rxr_HostOf(aconn) \
     rx_HostOf(rx_PeerOf((struct rx_connection *)(aconn)))
 
-#define rxr_AddrStringOf(aconn) \
-    rx_AddrStringOf(rx_PeerOf((struct rx_connection *)(aconn)))
-
 #define HCPS_INPROGRESS			0x01	/*set when CPS is being updated */
 #define HCPS_WAITING			0x02	/*waiting for CPS to get updated */
 #define ALTADDR				0x04	/*InitCallBack is being done */

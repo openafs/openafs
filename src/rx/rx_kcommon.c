@@ -30,7 +30,7 @@ int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle, struct sockaddr_in * a
 int (*rxk_GetPacketProc) (struct rx_packet **ahandle, int asize);
 #endif
 
-osi_socket *rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen);
+osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
 extern struct interfaceAddr afs_cb_interface;
 
 rxk_ports_t rxk_ports;
@@ -108,29 +108,20 @@ rxk_shutdownPorts(void)
 }
 
 osi_socket
-rxi_GetHostUDPSocket(struct sockaddr_storage *saddr, int salen)
+rxi_GetHostUDPSocket(u_int host, u_short port)
 {
     osi_socket *sockp;
-    sockp = (osi_socket *)rxk_NewSocketHost(saddr, salen);
+    sockp = (osi_socket *)rxk_NewSocketHost(host, port);
     if (sockp == (osi_socket *)0)
 	return OSI_NULLSOCKET;
-    rxk_AddPort(rx_ss2pn(saddr), (char *)sockp);
+    rxk_AddPort(port, (char *)sockp);
     return (osi_socket) sockp;
 }
 
 osi_socket
 rxi_GetUDPSocket(u_short port)
 {
-    struct sockaddr_storage saddr;
-    struct sockaddr_in *sin = (struct sockaddr_in *) &saddr;
-
-    memset((void *) &saddr, 0, sizeof(saddr));
-
-    sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = htonl(INADDR_ANY);
-    sin->sin_port = port;
-
-    return rxi_GetHostUDPSocket(&saddr, sizeof(struct sockaddr_in));
+    return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
 #if !defined(AFS_LINUX26_ENV)
@@ -359,8 +350,9 @@ MyArrivalProc(struct rx_packet *ahandle,
     ahandle->length = asize - RX_HEADER_SIZE;
     rxi_DecodePacketHeader(ahandle);
     ahandle =
-	rxi_ReceivePacket(ahandle, arock, (struct sockaddr_storage *) afrom,
-			  NULL, NULL);
+	rxi_ReceivePacket(ahandle, arock,
+			  afrom->sin_addr.s_addr, afrom->sin_port, NULL,
+			  NULL);
 
     /* free the packet if it has been returned */
     if (ahandle)
@@ -391,7 +383,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 #ifdef	ADAPT_MTU
 #ifndef AFS_SUN5_ENV
 #ifdef AFS_USERSPACE_IP_ADDR
-    i = rxi_Findcbi(rx_HostOf(pp));
+    i = rxi_Findcbi(pp->host);
     if (i == -1) {
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
@@ -421,7 +413,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	(void)rxi_GetIFInfo();
 #endif
 
-    ifn = rxi_FindIfnet(rx_HostOf(pp), NULL);
+    ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -447,7 +439,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     }
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #else /* AFS_SUN5_ENV */
-    mtu = rxi_FindIfMTU(rx_HostOf(pp));
+    mtu = rxi_FindIfMTU(pp->host);
 
     if (mtu <= 0) {
 	pp->timeout.sec = 3;
@@ -851,7 +843,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
  * in network byte order.
  */
 osi_socket *
-rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     register afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
@@ -862,6 +854,7 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
 #if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
     struct mbuf *nam;
 #endif
+    struct sockaddr_in myaddr;
 #ifdef AFS_HPUX110_ENV
     /* prototype copied from kernel source file streams/str_proto.h */
     extern MBLKP allocb_wait(int, int);
@@ -885,7 +878,7 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
     /* we need a file associated with the socket so sosend in NetSend 
      * will not fail */
     /* blocking socket */
-    code = socreate(rx_ssfamily(saddr), &newSocket, SOCK_DGRAM, 0, 0);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, 0);
     fp = falloc();
     if (!fp)
 	goto bad;
@@ -897,24 +890,30 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
     newSocket->so_fp = (void *)fp;
 
 #else /* AFS_HPUX110_ENV */
-    code = socreate(rx_ssfamilty(saddr), &newSocket, SOCK_DGRAM, 0, SS_NOWAIT);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, SS_NOWAIT);
 #endif /* else AFS_HPUX110_ENV */
 #elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
-    code = socreate(rx_ssfamily(saddr), &newSocket, SOCK_DGRAM, IPPROTO_UDP);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
 #elif defined(AFS_FBSD50_ENV)
-    code = socreate(rx_ssfamily(saddr), &newSocket, SOCK_DGRAM, IPPROTO_UDP,
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
 		    afs_osi_credp, curthread);
 #elif defined(AFS_FBSD40_ENV)
-    code = socreate(rx_ssfamily(saddr), &newSocket, SOCK_DGRAM, IPPROTO_UDP,
-		    curproc);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #elif defined(AFS_DARWIN80_ENV)
-    code = sock_socket(rx_ssfamily(saddr), SOCK_DGRAM, IPPROTO_UDP, NULL, NULL,
-		       &newSocket);
+    code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
 #else
-    code = socreate(rx_ssfamily(saddr), &newSocket, SOCK_DGRAM, 0);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
 #endif /* AFS_HPUX102_ENV */
     if (code)
 	goto bad;
+
+    memset(&myaddr, 0, sizeof myaddr);
+    myaddr.sin_family = AF_INET;
+    myaddr.sin_port = aport;
+    myaddr.sin_addr.s_addr = ahost;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    myaddr.sin_len = sizeof(myaddr);
+#endif
 
 #ifdef AFS_HPUX110_ENV
     bindnam = allocb_wait((addrsize + SO_MSGOFFSET + 1), BPRI_MED);
@@ -922,7 +921,7 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
 	setuerror(ENOBUFS);
 	goto bad;
     }
-    memcpy((caddr_t) bindnam->b_rptr + SO_MSGOFFSET, (caddr_t) addr,
+    memcpy((caddr_t) bindnam->b_rptr + SO_MSGOFFSET, (caddr_t) & myaddr,
 	   addrsize);
     bindnam->b_wptr = bindnam->b_rptr + (addrsize + SO_MSGOFFSET + 1);
 
@@ -963,11 +962,11 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD50_ENV)
-    code = sobind(newSocket, (struct sockaddr *) saddr, curthread);
+    code = sobind(newSocket, (struct sockaddr *)&myaddr, curthread);
 #elif defined(AFS_FBSD40_ENV)
-    code = sobind(newSocket, (struct sockaddr *) saddr, curproc);
+    code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
 #else
-    code = sobind(newSocket, (struct sockaddr *) saddr);
+    code = sobind(newSocket, (struct sockaddr *)&myaddr);
 #endif
     if (code) {
 	dpf(("sobind fails (%d)\n", (int)code));
@@ -987,8 +986,8 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
 #endif
 	goto bad;
     }
-    nam->m_len = salen;
-    memcpy(mtod(nam, caddr_t), saddr, salen);
+    nam->m_len = sizeof(myaddr);
+    memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
 #ifdef AFS_SGI65_ENV
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
@@ -1024,16 +1023,7 @@ rxk_NewSocketHost(struct sockaddr_storage *saddr, int salen)
 osi_socket *
 rxk_NewSocket(short aport)
 {
-    struct sockaddr_storage saddr;
-    struct sockaddr_in *sin = (struct sockaddr_in *) &saddr;
-
-    memset((void *) &saddr, 0, sizeof(saddr));
-
-    sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = 0;
-    sin->sin_port = aport;
-
-    return rxk_NewSocketHost(&saddr, sizeof(struct sockaddr_in));
+    return rxk_NewSocketHost(0, aport);
 }
 
 /* free socket allocated by rxk_NewSocket */
@@ -1110,10 +1100,10 @@ afs_rxevent_daemon(void)
 
 /* rxk_ReadPacket returns 1 if valid packet, 0 on error. */
 int
-rxk_ReadPacket(osi_socket so, struct rx_packet *p,
-	       struct sockaddr_storage *saddr, int *slen)
+rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 {
     int code;
+    struct sockaddr_in from;
     int nbytes;
     afs_int32 rlen;
     register afs_int32 tlen;
@@ -1149,8 +1139,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p,
 	AFS_GUNLOCK();
     }
 #endif
-    code = osi_NetReceive(rx_socket, saddr, slen, p->wirevec, p->niovecs,
-			  &nbytes);
+    code = osi_NetReceive(rx_socket, &from, p->wirevec, p->niovecs, &nbytes);
 
 #ifdef RX_KERNEL_TRACE
     if (ICL_SETACTIVE(afs_iclSetp)) {
@@ -1169,26 +1158,18 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p,
 	    if (nbytes <= 0) {
 		MUTEX_ENTER(&rx_stats_mutex);
 		rx_stats.bogusPacketOnRead++;
-		switch (rx_ssfamily(saddr)) {
-		case AF_INET:
-		    rx_stats.bogusHost = rx_ss2sin(saddr)->sin_addr.s_addr;
-		    break;
-		default:
-#ifdef AF_INET6
-		case AF_INET6:
-#endif /* AF_INET6 */
-		    rx_stats.bogusHost = 0xffffffff;
-		}
+		rx_stats.bogusHost = from.sin_addr.s_addr;
 		MUTEX_EXIT(&rx_stats_mutex);
 		dpf(("B: bogus packet from [%x,%d] nb=%d",
-		    ntohl(rx_ss2v4addr(saddr)), ntohs(rx_ss2pn(saddr)),
-		    nbytes));
+		     from.sin_addr.s_addr, from.sin_port, nbytes));
 	    }
 	    return -1;
 	} else {
 	    /* Extract packet header. */
 	    rxi_DecodePacketHeader(p);
 
+	    *host = from.sin_addr.s_addr;
+	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
 		MUTEX_ENTER(&rx_stats_mutex);
 		rx_stats.packetsRead[p->header.type - 1]++;
@@ -1243,8 +1224,8 @@ rxk_Listener(void)
 #endif				/* AFS_SUN5_ENV */
 {
     struct rx_packet *rxp = NULL;
-    struct sockaddr_storage saddr;
-    int code, slen;
+    int code;
+    int host, port;
 
 #ifdef AFS_LINUX20_ENV
     rxk_ListenerPid = current->pid;
@@ -1271,8 +1252,8 @@ rxk_Listener(void)
 	    if (!rxp)
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
-	if (!(code = rxk_ReadPacket(rx_socket, rxp, &saddr, &slen))) {
-	    rxp = rxi_ReceivePacket(rxp, rx_socket, &saddr, slen, 0, 0);
+	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
+	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
 	}
     }
 
