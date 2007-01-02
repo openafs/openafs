@@ -145,10 +145,10 @@ error_message(afs_int32 code)
     }
   oops:
     UNLOCK_ET_LIST;
-    strcpy(buffer, "Unknown code ");
+    strlcpy(buffer, "Unknown code ", sizeof buffer);
     if (table_num) {
-	strcat(buffer, error_table_name(table_num));
-	strcat(buffer, " ");
+	strlcat(buffer, error_table_name(table_num), sizeof buffer);
+	strlcat(buffer, " ", sizeof buffer);
     }
     for (cp = buffer; *cp; cp++);
     if (offset >= 100) {
