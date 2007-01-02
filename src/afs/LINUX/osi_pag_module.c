@@ -17,6 +17,7 @@
 RCSID
     ("$Header$");
 
+#if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -140,3 +141,5 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     return EINVAL;
 }
 #endif
+#endif /* AFS_NONFSTRANS */
+

@@ -423,8 +423,10 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 	return EIO;
 
 #ifdef AFS_LINUX26_ENV
+#if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
 	return code;
+#endif
 #endif
 
     av->uid = PagInCred(acred);

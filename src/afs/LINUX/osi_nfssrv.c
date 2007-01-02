@@ -17,6 +17,7 @@
 RCSID
     ("$Header$");
 
+#if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -253,3 +254,5 @@ void osi_linux_nfssrv_shutdown(void)
     ReleaseWriteLock(&afs_xnfssrv);
     AFS_GUNLOCK();
 }
+#endif /* AFS_NONFSTRANS */
+
