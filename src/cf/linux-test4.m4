@@ -730,8 +730,6 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
   AC_MSG_CHECKING([for linux/freezer.h existance])
   AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
     AC_TRY_KBUILD(
 [#include <linux/freezer.h>],
 [return;],
