@@ -83,7 +83,9 @@ init_module(void)
 
     osi_Init();
 #ifdef AFS_LINUX26_ENV
+#if !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_init();
+#endif
 #endif
 
 #ifndef LINUX_KEYRING_SUPPORT
@@ -122,7 +124,9 @@ cleanup_module(void)
 
     afs_destroy_inodecache();
 #ifdef AFS_LINUX26_ENV
+#if !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_shutdown();
+#endif
 #endif
     osi_linux_free_afs_memory();
 
