@@ -94,7 +94,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up, long rights,
     if (!(scp->unixModeBits & 0400))
         *outRightsp &= ~PRSFS_READ;
     if (!(scp->unixModeBits & 0200))
-        *outRightsp &= ~PRSFS_WRITE;
+        *outRightsp &= ~(PRSFS_WRITE|PRSFS_DELETE);
 
     code = 1;
     /* fall through */
