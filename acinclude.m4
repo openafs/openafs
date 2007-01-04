@@ -594,6 +594,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 
+		 LINUX_KERNEL_COMPILE_WORKS
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
