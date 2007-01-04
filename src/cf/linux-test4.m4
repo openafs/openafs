@@ -755,7 +755,8 @@ AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
   AC_MSG_CHECKING([whether INIT_WORK has a _data argument])
   AC_CACHE_VAL([ac_cv_linux_init_work_has_data], [
     AC_TRY_KBUILD(
-[#include <linux/workqueue.h>],
+[#include <linux/kernel.h>
+#include <linux/workqueue.h>],
 [ 
 void f(struct work_struct *w) {}
 struct work_struct *w;
