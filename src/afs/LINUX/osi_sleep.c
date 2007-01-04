@@ -17,7 +17,9 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
+#if defined(FREEZER_H_EXISTS)
 #include <linux/freezer.h>
+#endif
 
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 
