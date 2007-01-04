@@ -659,6 +659,7 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 	AFS_MD5_Update(&ct, &vnode, 4);
 	AFS_MD5_Final(digest, &ct);
 	memcpy(&ino, digest, sizeof(ino_t));
+	ino ^= (ino ^ vnode) & 1;
     } else {
 	ino = (volume << 16) + vnode;
 	ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
