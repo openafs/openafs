@@ -39,6 +39,7 @@ extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
 extern int cm_enableServerLocks;
+extern int cm_deleteReadOnly;
 
 osi_log_t *afsd_logp;
 
@@ -1069,6 +1070,15 @@ int afsd_InitCM(char **reasonP)
 	afsi_log("EnableServerLocks: server requested");
     	break;
     }
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "DeleteReadOnly", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_deleteReadOnly = (unsigned short) dwValue;
+    } 
+    afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
+    
     RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */

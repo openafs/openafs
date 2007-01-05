@@ -24,6 +24,8 @@
 
 #include "afsd.h"
 
+int cm_deleteReadOnly = 0;
+
 /* called with scp write-locked, check to see if we have the ACL info we need
  * and can get it w/o blocking for any locks.
  *
@@ -93,8 +95,14 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     /* check mode bits */
     if (!(scp->unixModeBits & 0400))
         *outRightsp &= ~PRSFS_READ;
-    if (!(scp->unixModeBits & 0200))
-        *outRightsp &= ~(PRSFS_WRITE|PRSFS_DELETE);
+    if (!(scp->unixModeBits & 0200) && !(rights == (PRSFS_WRITE | PRSFS_LOCK)))
+        *outRightsp &= ~PRSFS_WRITE;
+    if (!(scp->unixModeBits & 0200) && !cm_deleteReadOnly)
+        *outRightsp &= ~PRSFS_DELETE;
+
+    /* if the user can obtain a write-lock, read-locks are implied */
+    if (*outRightsp & PRSFS_WRITE)
+	*outRightsp |= PRSFS_LOCK;
 
     code = 1;
     /* fall through */
