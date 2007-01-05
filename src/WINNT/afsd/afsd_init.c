@@ -561,6 +561,7 @@ int afsd_InitCM(char **reasonP)
     char buf[1024];
     HKEY parmKey;
     DWORD dummyLen;
+    DWORD dwValue;
     DWORD regType;
     long code;
     /*int freelanceEnabled;*/
