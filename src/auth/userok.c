@@ -448,7 +448,7 @@ afsconf_SuperUser(adir, acall, namep)
 		    break;
 	    }
 
-	    if (i=0) {
+	    if (i == 0) {
 		strncpy(lrealms[0], lcell, AFS_REALM_SZ);
 		num_lrealms = 1;
 	    } else {
