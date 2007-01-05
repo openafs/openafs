@@ -681,7 +681,10 @@ pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 	if (oid == ANONYMOUSID)
 	    return PRNOENT;
     }
-    code = ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid, newid);
+    if (newid)
+	code = ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid, *newid);
+    else
+	code = ubik_PR_ChangeEntry(pruclient, 0, id, newname, oid, 0);
     return code;
 }
 
