@@ -20,7 +20,7 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
 SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
 OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
 
-all: aklog @ASETKEY@ klog
+all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
 	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
@@ -34,21 +34,17 @@ klog:	klog.o skipwrap.o ${AFSLIBS}
 #
 # Installation targets
 #
-install: aklog @ASETKEY@
+install: aklog asetkey
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_PROGRAM} aklog ${DESTDIR}${bindir}/aklog
-	set -e ; if test "x@ASETKEY@" != "x"; then \
-		${INSTALL} -d ${DESTDIR}${afssrvbindir} ; \
-		${INSTALL_PROGRAM} asetkey ${DESTDIR}${afssrvbindir}/asetkey ; \
-	fi
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL_PROGRAM} asetkey ${DESTDIR}${afssrvbindir}/asetkey 
 
-dest: aklog @ASETKEY@
+dest: aklog asetkey
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL_PROGRAM} aklog ${DEST}/bin/aklog
-	set -e ; if test "x@ASETKEY@" != "x"; then \
-		${INSTALL} -d ${DEST}/root.server/usr/afs/bin ; \
-		${INSTALL_PROGRAM} asetkey ${DEST}/root.server/usr/afs/bin/asetkey ; \
-	fi
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} asetkey ${DEST}/root.server/usr/afs/bin/asetkey
 
 #
 # Misc. targets

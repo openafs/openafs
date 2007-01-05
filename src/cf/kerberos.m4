@@ -103,15 +103,8 @@ dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb
 	LIBS="$save_LIBS"
 fi
 
-if test "$ac_cv_header_kerberosV_heim_err_h" = "yes"; then
-    ASETKEY=
-else
-    ASETKEY=asetkey
-fi
-
 AC_SUBST(BUILD_KRB5)
 AC_SUBST(KRB5CFLAGS)
 AC_SUBST(KRB5LIBS)
-AC_SUBST(ASETKEY)
 
 ])dnl
