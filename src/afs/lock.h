@@ -86,7 +86,10 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
+#if defined(AFS_SUN57_ENV) 
+#define MyPidxx (curthread->t_tid)
+#else
+#if defined(AFS_OBSD_ENV) || defined(AFS_SUN5_ENV)
 #define MyPidxx (curproc->p_pid)
 #else
 #if defined(AFS_AIX41_ENV)
@@ -123,6 +126,7 @@ extern tid_t thread_self();
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif /* AFS_AIX41_ENV */
+#endif
 #endif
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
