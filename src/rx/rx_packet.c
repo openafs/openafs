@@ -388,13 +388,12 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
     osi_Assert(num_pkts >= 0);
     RX_TS_INFO_GET(rx_ts_info);
 
-    if (!num_pkts) {
-	for (queue_Scan(q, c, nc, rx_packet), num_pkts++) {
-	    rxi_FreeDataBufsTSFPQ(c, 1, 0);
-	}
-    } else {
-	RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
-    }
+    if (!num_pkts) 
+	queue_Count(q, c, nc, rx_packet, num_pkts);
+
+    if (num_pkts)
+        for (queue_Scan(q, c, nc, rx_packet)) 
+            RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
