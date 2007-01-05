@@ -1,4 +1,27 @@
-Since 1.4.2-rc4 (1.4.2 released 7 Oct 2006)
+Since 1.4.2
+
+ * Increase the maximum number of stat cache entries to 262144
+
+ * When offline folders are being used, the CIFS client passes 
+   the name of the entry to be renamed in all uppercase instead
+   of the case specified in the Explorer Shell.  Modify AFS to 
+   permit the rename when there is an inexact match.
+
+ * VICECONNBAD and VICETOKENDEAD should force the use of a new
+   rx connection.  They should not be treated as fatal errors.
+
+ * Fix afslogon.dll to not publish environment variables into 
+   the subprocesses started from winlogon.exe
+
+ * Fix afslogon.dll to initialize and uninitialize winsock so 
+   that Kerberos 4 send_to_kdc() can succeed
+
+ * Add DeleteReadOnly registry value.  When a file has the read-only
+   attribute set in Windows, it cannot be deleted.  DeleteReadOnly
+   when set to a non-zero value permits the deletion.  1.4.3 no 
+   longer permits it by default.
+
+Since 1.4.2-rc4 (1.4.2 released 16 Oct 2006)
 
  * Disable DNS Registrations for the Loopback Adapter and make sure
    that Netbios is turned on during installation.
@@ -18,6 +41,10 @@ Since 1.4.2-rc4 (1.4.2 released 7 Oct 2006)
 
  * in an obscure error case, obtain the correct lock so
    that when we free it we don't panic
+
+ * afscreds: do not permit an attempt to obtain tokens if the
+   afs service could not be started.   this was causing stack
+   overflows on Vista after resuming from a suspend
 
 Since 1.4.2-rc3: (1.4.2-rc4 released 16 Sep 2006)
 
