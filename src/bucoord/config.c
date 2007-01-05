@@ -21,7 +21,6 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-#include <stdio.h>
 #include <errno.h>
 
 #include "bc.h"

@@ -10,12 +10,11 @@
 /* Interface and supporting routines for the backup system's ubik database */
 
 #include <afsconfig.h>
-#include <afs/param.h>
+#include <afs/stds.h>
 
 RCSID
     ("$Header$");
 
-#include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #ifdef AFS_NT40_ENV
@@ -38,6 +37,17 @@ RCSID
 #include "bc.h"
 #include "error_macros.h"
 
+/* protos */
+afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *);
+afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *, afs_int32 );
+afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *) ;
+afs_int32 bcdb_deleteDump(afs_int32, afs_int32, afs_int32, budb_dumpsList *);
+/*note the pinter to the function comes from ubik/ubikclient ubik_Call function.*/
+afs_int32 bcdb_listDumps (int (), afs_int32,afs_int32,afs_int32, budb_dumpsList *,
+ budb_dumpsList *);
+afs_int32 bcdb_DeleteVDP(char *, char *, afs_int32 );
+afs_int32 bcdb_FindClone(afs_int32, char *, afs_int32 *);
+
 extern char *whoami;
 
 /* -------------------------------------
@@ -52,8 +62,7 @@ struct udbHandleS udbHandle;
  * -------------------------------------
  */
 
-bcdb_AddVolume(veptr)
-     register struct budb_volumeEntry *veptr;
+afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *veptr)
 {
     afs_int32 code;
 
@@ -61,9 +70,7 @@ bcdb_AddVolume(veptr)
     return (code);
 }
 
-bcdb_AddVolumes(veptr, count)
-     register struct budb_volumeEntry *veptr;
-     afs_int32 count;
+afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *veptr, afs_int32 count)
 {
     struct budb_volumeList volumeList;
     afs_int32 code;
@@ -75,8 +82,7 @@ bcdb_AddVolumes(veptr, count)
 }
 
 
-bcdb_CreateDump(deptr)
-     register struct budb_dumpEntry *deptr;
+afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
 
@@ -84,11 +90,8 @@ bcdb_CreateDump(deptr)
     return (code);
 }
 
-bcdb_deleteDump(dumpID, fromTime, toTime, dumps)
-     afs_int32 dumpID;
-     afs_int32 fromTime;
-     afs_int32 toTime;
-     budb_dumpsList *dumps;
+afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime, 
+  budb_dumpsList *dumps)
 {
     afs_int32 code;
     budb_dumpsList dumpsList, *dumpsPtr;
@@ -105,12 +108,7 @@ bcdb_deleteDump(dumpID, fromTime, toTime, dumps)
     return (code);
 }
 
-bcdb_listDumps(sflags, groupId, fromTime, toTime, dumps, flags)
-     afs_int32 groupId;
-     afs_int32 fromTime;
-     afs_int32 toTime;
-     budb_dumpsList *dumps;
-     budb_dumpsList *flags;
+afs_int32 bcdb_listDumps (int (*sflags) (), afs_int32 groupId,afs_int32 fromTime, afs_int32 toTime,budb_dumpsList *dumps, budb_dumpsList *flags)
 {
     afs_int32 code, sflag = 0;
     budb_dumpsList dumpsList, *dumpsPtr;
@@ -136,10 +134,7 @@ bcdb_listDumps(sflags, groupId, fromTime, toTime, dumps, flags)
 }
 
 
-bcdb_DeleteVDP(dumpSetName, dumpPath, dumpID)
-     char *dumpSetName;
-     char *dumpPath;
-     afs_int32 dumpID;
+afs_int32 bcdb_DeleteVDP(char *dumpSetName, char *dumpPath, afs_int32 dumpID)
 {
     afs_int32 code;
 
@@ -163,11 +158,7 @@ bcdb_DeleteVDP(dumpSetName, dumpPath, dumpID)
  *      -2 - no clone times found, clone time set to 0
  */
 
-afs_int32
-bcdb_FindClone(dumpID, volName, clonetime)
-     afs_int32 dumpID;
-     char *volName;
-     afs_int32 *clonetime;
+afs_int32 bcdb_FindClone(afs_int32 dumpID, char *volName, afs_int32 *clonetime)
 {
     afs_int32 code;
     code =

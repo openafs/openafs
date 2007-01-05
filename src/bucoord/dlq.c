@@ -8,15 +8,27 @@
  */
 
 #include <afsconfig.h>
-#include <afs/param.h>
+#include <afs/stds.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
 RCSID
     ("$Header$");
-
+#include "bc.h"
 #include <afs/bubasics.h>
+/* protos */
+int dlqEmpty(dlqlinkP );
+int dlqInit(dlqlinkP headptr);
+int dlqLinkf(dlqlinkP, dlqlinkP );
+int dlqLinkb(dlqlinkP, dlqlinkP );
+void dlqUnlink( dlqlinkP );
+int dlqTraverseQueue(dlqlinkP,  int *(), int *());
+int dlqCount(dlqlinkP );
+void dlqMoveb( dlqlinkP, dlqlinkP);
+dlqlinkP dlqUnlinkb(dlqlinkP );
+dlqlinkP dlqUnlinkf(dlqlinkP );
+dlqlinkP dlqFront(dlqlinkP headptr);
 
 #define	DLQ_ASSERT_HEAD(headptr)				\
         if ( (headptr)->dlq_type != DLQ_HEAD )			\
@@ -33,8 +45,7 @@ RCSID
  *	0 - items on queue
  */
 
-dlqEmpty(headptr)
-     dlqlinkP headptr;
+int dlqEmpty(dlqlinkP headptr )
 {
     DLQ_ASSERT_HEAD(headptr);
     if (headptr->dlq_next == headptr)
@@ -42,8 +53,7 @@ dlqEmpty(headptr)
     return (0);
 }
 
-dlqInit(headptr)
-     dlqlinkP headptr;
+int dlqInit(dlqlinkP headptr)
 {
     headptr->dlq_next = headptr;
     headptr->dlq_prev = headptr;
@@ -55,9 +65,7 @@ dlqInit(headptr)
 /* dlqLinkf
  *	link item to front of chain
  */
-dlqLinkf(headptr, entryptr)
-     dlqlinkP headptr;
-     dlqlinkP entryptr;
+int dlqLinkf(dlqlinkP headptr, dlqlinkP entryptr)
 {
     DLQ_ASSERT_HEAD(headptr);
     /* link in as first item in chain */
@@ -72,9 +80,7 @@ dlqLinkf(headptr, entryptr)
  *	link item to end of chain
  */
 
-dlqLinkb(headptr, entryptr)
-     dlqlinkP headptr;
-     dlqlinkP entryptr;
+int dlqLinkb(dlqlinkP headptr, dlqlinkP entryptr)
 {
     DLQ_ASSERT_HEAD(headptr);
     entryptr->dlq_next = headptr;
@@ -89,10 +95,7 @@ dlqLinkb(headptr, entryptr)
  *	move all the items on the fromptr and append to the toptr's list
  */
 
-void
-dlqMoveb(fromptr, toptr)
-     dlqlinkP fromptr;
-     dlqlinkP toptr;
+void dlqMoveb( dlqlinkP fromptr, dlqlinkP toptr)
 {
     dlqlinkP tailptr;
 
@@ -122,9 +125,7 @@ dlqMoveb(fromptr, toptr)
  *	unlink the last item on the queue
  */
 
-dlqlinkP
-dlqUnlinkb(headptr)
-     dlqlinkP headptr;
+dlqlinkP dlqUnlinkb(dlqlinkP headptr)
 {
     dlqlinkP ptr;
     DLQ_ASSERT_HEAD(headptr);
@@ -145,9 +146,7 @@ dlqUnlinkb(headptr)
  *	unlink the item on the front of the queue
  */
 
-dlqlinkP
-dlqUnlinkf(headptr)
-     dlqlinkP headptr;
+dlqlinkP dlqUnlinkf(dlqlinkP headptr) 
 {
     dlqlinkP ptr;
     DLQ_ASSERT_HEAD(headptr);
@@ -169,8 +168,7 @@ dlqUnlinkf(headptr)
  *	unlink the specified item from the queue.
  */
 
-dlqUnlink(ptr)
-     dlqlinkP ptr;
+void dlqUnlink( dlqlinkP ptr)
 {
     /* must not be the queue head */
     if (ptr->dlq_type == DLQ_HEAD) {
@@ -189,9 +187,7 @@ dlqUnlink(ptr)
  *	return point to item at front of queuen
  */
 
-dlqlinkP
-dlqFront(headptr)
-     dlqlinkP headptr;
+dlqlinkP dlqFront(dlqlinkP headptr)
 {
     DLQ_ASSERT_HEAD(headptr);
 
@@ -201,9 +197,7 @@ dlqFront(headptr)
     return (headptr->dlq_next);
 }
 
-int
-dlqCount(headptr)
-     dlqlinkP headptr;
+int dlqCount(dlqlinkP headptr)
 {
     dlqlinkP ptr;
     int count = 0;
@@ -218,10 +212,7 @@ dlqCount(headptr)
     return (count);
 }
 
-dlqTraverseQueue(headptr, fn1, fn2)
-     dlqlinkP headptr;
-     int (*fn1) ();
-     int (*fn2) ();
+int dlqTraverseQueue(dlqlinkP headptr, int (*fn1()), int (*fn2()))
 {
     dlqlinkP ptr, oldPtr;
 

@@ -8,18 +8,15 @@
  */
 
 #include <afsconfig.h>
-#include <afs/param.h>
+#include <afs/stds.h>
 
 RCSID
     ("$Header$");
 
-#include <afs/stds.h>
 #include <sys/types.h>
-#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
-#include <strings.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>

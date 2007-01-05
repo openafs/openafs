@@ -26,13 +26,11 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
-#include <strings.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/param.h>
 #endif
-#include <stdio.h>
 #include <afs/com_err.h>
 
 #include <afs/bubasics.h>

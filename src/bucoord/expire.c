@@ -21,7 +21,6 @@ RCSID
 #include <afs/cmd.h>
 #include <ctype.h>
 #include "bc.h"
-#include <strings.h>
 
 
 #define	MAX_YEAR_VALUE	0
