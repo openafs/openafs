@@ -185,7 +185,8 @@ void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
     int vnode = ntohl(pfid->vnode);
     char *lastDot;
     int validExtension = 0;
-    char tc, *temp, *name;
+    char tc, *temp;
+    const char *name;
 
     /* Unparse the file's vnode number to get a "uniquifier" */
     do {
@@ -256,8 +257,10 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
     long code;
 
     rights = 0;
-    if (openMode != 1) rights |= PRSFS_READ;
-    if (openMode == 1 || openMode == 2 || trunc) rights |= PRSFS_WRITE;
+    if (openMode != 1) 
+	rights |= PRSFS_READ;
+    if (openMode == 1 || openMode == 2 || trunc) 
+	rights |= PRSFS_WRITE;
         
     lock_ObtainMutex(&scp->mx);
 
@@ -3570,7 +3573,7 @@ long cm_LockCheckPerms(cm_scache_t * scp,
     if (lock_type == LockRead)
         rights |= PRSFS_LOCK;
     else if (lock_type == LockWrite)
-        rights |= PRSFS_WRITE;
+        rights |= PRSFS_WRITE | PRSFS_LOCK;
     else {
         /* hmmkay */
         osi_assert(FALSE);
