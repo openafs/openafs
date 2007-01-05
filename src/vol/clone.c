@@ -227,12 +227,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     decRock.vol = V_parentId(rwvp);
 
     /* Read each vnode in the old volume's index file */
-    /* fsyncing the link count file for every inode has a severe 
-       performance penalty, therefore we turn it off temporarily.
-       This assumes we're the only one on that file/volume  -
-       in particular when we force the fsync later!
-    */
-    V_linkHandle(rwvp)->ih_flags|=IH_DELAY_SYNC;
     for (offset = vcp->diskSize;
 	 STREAM_READ(rwvnode, vcp->diskSize, 1, rwfile) == 1;
 	 offset += vcp->diskSize) {
@@ -353,12 +347,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
      * and shouldn't do the idecs.
      */
   error_exit:
-    /* Now take the fsync-bypass away again and force an fsync.
-       Again: assumes we're alone on this file, otherwise we need a lock!
-    */
-    V_linkHandle(rwvp)->ih_flags&=~IH_DELAY_SYNC;
-    IH_CONDSYNC(V_linkHandle(rwvp));
-
     if (rwfile)
 	STREAM_CLOSE(rwfile);
     if (clfilein)

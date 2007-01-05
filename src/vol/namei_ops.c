@@ -604,8 +604,6 @@ namei_icreate(IHandle_t * lh, char *part, int p1, int p2, int p3, int p4)
 
     if (p2 == -1 && p3 == VI_LINKTABLE) {
 	/* hack at tmp to setup for set link count call. */
-	memset((void *)&tfd, 0, sizeof(FdHandle_t));	/* minimalistic still, but a little cleaner */
-	tfd.fd_ih = &tmp;
 	tfd.fd_fd = fd;
 	code = namei_SetLinkCount(&tfd, (Inode) 0, 1, 0);
     }

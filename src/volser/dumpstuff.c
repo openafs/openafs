@@ -1071,13 +1071,7 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 
     tdelo = delo;
     while (1) {
-	int temprc;
-
-	V_linkHandle(avp)->ih_flags |= IH_DELAY_SYNC;	/* Avoid repetitive fdsync()s on linkfile */
-	temprc = ReadVnodes(iodp, vp, 0, b1, s1, b2, s2, tdelo);
-	V_linkHandle(avp)->ih_flags &= ~IH_DELAY_SYNC;	/* normal sync behaviour again */
-	IH_CONDSYNC(V_linkHandle(avp));			/* sync link file */
-	if (temprc) {
+	if (ReadVnodes(iodp, vp, 0, b1, s1, b2, s2, tdelo)) {
 	    error = VOLSERREAD_DUMPERROR;
 	    goto clean;
 	}
