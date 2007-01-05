@@ -28,7 +28,6 @@ RCSID
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <strings.h>
 #endif
 #include <errno.h>
 #include <afs/com_err.h>
@@ -41,7 +40,6 @@ RCSID
 #include <afs/ktime.h>		/* PA */
 #include <time.h>
 
-#include <string.h>
 #include <lock.h>
 #include <afs/butc.h>
 #include <afs/tcdata.h>

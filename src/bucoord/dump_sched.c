@@ -12,7 +12,6 @@
  */
 
 #include <sys/types.h>
-#include <stdio.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -22,7 +21,6 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
-#include <strings.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>

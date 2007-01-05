@@ -8,7 +8,6 @@
  */
 
 #include <sys/types.h>
-#include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
