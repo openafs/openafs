@@ -221,7 +221,6 @@ typedef struct IHandle_s {
 
 /* Flags for the Inode handle */
 #define IH_REALLY_CLOSED		1
-#define IH_DELAY_SYNC			16
 
 /* Hash function for inode handles */
 #define I_HANDLE_HASH_SIZE	1024	/* power of 2 */
@@ -467,7 +466,7 @@ extern afs_sfsize_t ih_size(int fd);
 #define FDH_WRITE(H, B, S) OS_WRITE((H)->fd_fd, B, S)
 #define FDH_SEEK(H, O, F) OS_SEEK((H)->fd_fd, O, F)
 
-#define FDH_SYNC(H) ((H->fd_ih->ih_flags&IH_DELAY_SYNC) ? 0 : OS_SYNC((H)->fd_fd))
+#define FDH_SYNC(H) OS_SYNC((H)->fd_fd)
 #define FDH_TRUNC(H, L) OS_TRUNC((H)->fd_fd, L)
 #define FDH_SIZE(H) OS_SIZE((H)->fd_fd)
 

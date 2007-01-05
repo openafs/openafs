@@ -89,7 +89,7 @@ VPurgeVolume(Error * ec, Volume * vp)
     FSYNC_VolOp(V_id(vp), tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
 }
 
-#define MAXOBLITATONCE	1000
+#define MAXOBLITATONCE	200
 /* delete a portion of an index, adjusting offset appropriately.  Returns 0 if
    things work and we should be called again, 1 if success full and done, and -1
    if an error occurred.  It adjusts offset appropriately on 0 or 1 return codes,
@@ -148,13 +148,10 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     OS_SYNC(afile->str_fd);
 
     /* finally, do the idec's */
-    V_linkHandle(avp)->ih_flags|=IH_DELAY_SYNC;		/* severe performance penalty */
     for (i = 0; i < iindex; i++) {
 	IH_DEC(V_linkHandle(avp), inodes[i], V_parentId(avp));
 	DOPOLL;
     }
-    V_linkHandle(avp)->ih_flags&=~IH_DELAY_SYNC;
-    IH_CONDSYNC(V_linkHandle(avp));
 
     /* return the new offset */
     *aoffset = offset;
