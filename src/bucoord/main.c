@@ -15,7 +15,6 @@ RCSID
 
 #include <afs/stds.h>
 #include <sys/types.h>
-#include <stdio.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
