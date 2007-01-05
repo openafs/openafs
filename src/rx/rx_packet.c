@@ -393,12 +393,6 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
 	    rxi_FreeDataBufsTSFPQ(c, 1, 0);
 	}
     } else {
-	for (queue_Scan(q, c, nc, rx_packet)) {
-	    rxi_FreeDataBufsTSFPQ(c, 1, 0);
-	}
-    }
-
-    if (num_pkts) {
 	RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
     }
 
