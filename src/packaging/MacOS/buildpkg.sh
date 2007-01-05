@@ -216,7 +216,7 @@ if [ $secondpass = yes ]; then
     cp afslogo.jpg $CURDIR/dmg/.background
 #    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
     hdiutil makehybrid -hfs -hfs-volume-name OpenAFS -hfs-openfolder $CURDIR/dmg $CURDIR/dmg -o $CURDIR/TMP.dmg
-    hdiutil convert -format UDZO TMP.dmg -o $CURDIR/OpenAFS.dmg
+    hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS.dmg
     rm $CURDIR/TMP.dmg
     rm -rf $CURDIR/dmg
     # Unfortunately, sudo sets $USER to root, so I can't chown the 
