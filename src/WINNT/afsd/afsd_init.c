@@ -38,6 +38,7 @@ extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
+extern int cm_deleteReadOnly;
 
 osi_log_t *afsd_logp;
 
@@ -1021,6 +1022,14 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
                            (BYTE *) &HardDeadtimeout, &dummyLen);
     afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "DeleteReadOnly", NULL, NULL,
+	                  (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_deleteReadOnly = (unsigned short) dwValue;
+    }
+    afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
 
     RegCloseKey (parmKey);
 
