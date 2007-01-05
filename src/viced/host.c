@@ -1697,7 +1697,7 @@ h_InitHostPackage()
 		break;
 	}
 
-	if (i=0) {
+	if (i == 0) {
 	    ViceLog(0,
 		    ("afs_krb_get_lrealm failed, using %s.\n",
 		     localcellname));

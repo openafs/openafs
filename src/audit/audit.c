@@ -457,7 +457,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 				    break;
 			    }
 
-			    if (i=0)
+			    if (i == 0)
 				strncpy(local_realms[0], "UNKNOWN.LOCAL.REALM", AFS_REALM_SZ);
 			    num_lrealms = i;
                         }
