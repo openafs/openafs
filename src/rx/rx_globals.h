@@ -344,7 +344,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.checkout_xfer++; \
     } while(0)
 /* checkout multiple packets from the thread-specific free packet queue */
-#define RX_TS_FPQ_CHECKOUT2(rx_ts_info_p,num_transfer,q) \
+#define RX_TS_FPQ_QCHECKOUT(rx_ts_info_p,num_transfer,q) \
     do { \
         register int i; \
         register struct rx_packet *p; \
@@ -371,7 +371,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
 /* num_transfer must equal length of (q); it is not a means of checking 
  * in part of (q).  passing num_transfer just saves us instructions 
  * since caller already knows length of (q) for other reasons */
-#define RX_TS_FPQ_CHECKIN2(rx_ts_info_p,num_transfer,q) \
+#define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
         register struct rx_packet *p, *np; \
         for (queue_Scan((q), p, np, rx_packet)) { \
