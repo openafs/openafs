@@ -297,7 +297,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 	USERPRI;
     }
 
-    RX_TS_FPQ_CHECKOUT2(rx_ts_info, num_pkts, q);
+    RX_TS_FPQ_QCHECKOUT(rx_ts_info, num_pkts, q);
 
     return num_pkts;
 }
@@ -393,7 +393,7 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
 
     if (num_pkts)
         for (queue_Scan(q, c, nc, rx_packet)) 
-            RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
+            RX_TS_FPQ_QCHECKIN(rx_ts_info, num_pkts, q);
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
