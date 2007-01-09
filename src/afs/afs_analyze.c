@@ -637,33 +637,39 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	tu = afs_FindUser(areq->uid, tsp->cell->cellNum, READ_LOCK);
 	if (tu) {
 	    if (acode == VICETOKENDEAD) {
-		aconn->forceConnectFS = 1;      /* don't check until new tokens set */
-		shouldRetry = 1;        /* Try again (as root). */
-	    } else if (acode == RXKADEXPIRED)
+		aconn->forceConnectFS = 1;
+	    } else if (acode == RXKADEXPIRED) {
+		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
+		aconn->user->states |= UTokensBad;
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired\n",
 		     tu->vid, aconn->srvr->server->cell->cellName);
-	    else
+	    } else {
+		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
+		aconn->user->states |= UTokensBad;
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
 		     tu->vid, aconn->srvr->server->cell->cellName, acode);
+	    }
 	    afs_PutUser(tu, READ_LOCK);
 	} else {
 	    /* The else case shouldn't be possible and should probably be replaced by a panic? */
 	    if (acode == VICETOKENDEAD) {
-		aconn->forceConnectFS = 1;      /* don't check until new tokens set */
-		shouldRetry = 1;        /* Try again (as root). */
-	    } else if (acode == RXKADEXPIRED)
+		aconn->forceConnectFS = 1;
+	    } else if (acode == RXKADEXPIRED) {
+		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
+		aconn->user->states |= UTokensBad;
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s have expired\n",
 		     areq->uid, aconn->srvr->server->cell->cellName);
-	    else
+	    } else {
+		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
+		aconn->user->states |= UTokensBad;
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d)\n",
 		     areq->uid, aconn->srvr->server->cell->cellName, acode);
+	    }
 	}
-	aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-	aconn->user->states |= UTokensBad;
 	shouldRetry = 1;	/* Try again (as root). */
     }
     /* Check for access violation. */
