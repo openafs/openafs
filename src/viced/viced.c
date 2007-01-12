@@ -1444,16 +1444,22 @@ ReadSysIdFile()
 		 AFSDIR_SERVER_SYSID_FILEPATH, nentries));
 	return EIO;
     }
-    FS_HostAddr_cnt = nentries;
-    for (i = 0; i < nentries; i++) {
-	if (read(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) !=
-	    sizeof(afs_int32)) {
-	    ViceLog(0,
-		    ("%s: Read of addresses failed (%d)\n",
-		     AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	    FS_HostAddr_cnt = 0;	/* reset it */
-	    return EIO;
+    if (FS_HostAddr_cnt == 0) {
+	FS_HostAddr_cnt = nentries;
+	for (i = 0; i < nentries; i++) {
+	    if (read(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) !=
+		sizeof(afs_int32)) {
+		ViceLog(0,
+			("%s: Read of addresses failed (%d)\n",
+			 AFSDIR_SERVER_SYSID_FILEPATH, errno));
+		FS_HostAddr_cnt = 0;	/* reset it */
+		return EIO;
+	    }
 	}
+    } else {
+	ViceLog(1,
+		("%s: address list ignored (NetInfo/NetRestrict override)\n",
+		 AFSDIR_SERVER_SYSID_FILEPATH));
     }
     close(fd);
     return 0;
