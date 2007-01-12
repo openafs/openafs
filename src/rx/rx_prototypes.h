@@ -471,7 +471,7 @@ extern void rxi_MorePacketsNoLock(int apackets);
 extern void rxi_FreeAllPackets(void);
 extern void rx_CheckPackets(void);
 extern void rxi_FreePacketNoLock(struct rx_packet *p);
-extern int rxi_FreeDataBufsNoLock(struct rx_packet *p, int first);
+extern int rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first);
 extern void rxi_RestoreDataBufs(struct rx_packet *p);
 extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
 extern void rxi_FreePacket(struct rx_packet *p);
