@@ -115,8 +115,12 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_int32 ahost, short aport,
 				afs_int32 istack);
 
-static int rxi_FreeDataBufsToQueue(struct rx_packet *p, int first, 
+static int rxi_FreeDataBufsToQueue(struct rx_packet *p, 
+				   afs_uint32 first, 
 				   struct rx_queue * q);
+static int
+rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global);
+
 
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
@@ -388,12 +392,19 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
     osi_Assert(num_pkts >= 0);
     RX_TS_INFO_GET(rx_ts_info);
 
-    if (!num_pkts) 
-	queue_Count(q, c, nc, rx_packet, num_pkts);
+    if (!num_pkts) {
+	for (queue_Scan(q, c, nc, rx_packet), num_pkts++) {
+	    rxi_FreeDataBufsTSFPQ(c, 2, 0);
+	}
+    } else {
+	for (queue_Scan(q, c, nc, rx_packet)) {
+	    rxi_FreeDataBufsTSFPQ(c, 2, 0);
+	}
+    }
 
-    if (num_pkts)
-        for (queue_Scan(q, c, nc, rx_packet)) 
-            RX_TS_FPQ_QCHECKIN(rx_ts_info, num_pkts, q);
+    if (num_pkts) {
+	RX_TS_FPQ_QCHECKIN(rx_ts_info, num_pkts, q);
+    }
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
@@ -799,20 +810,27 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 }
 #endif /* RX_ENABLE_TSFPQ */
 
-/* free continuation buffers off a packet into a queue of buffers */
+/* 
+ * free continuation buffers off a packet into a queue
+ *
+ * [IN] p      -- packet from which continuation buffers will be freed
+ * [IN] first  -- iovec offset of first continuation buffer to free
+ * [IN] q      -- queue into which continuation buffers will be chained
+ *
+ * returns:
+ *   number of continuation buffers freed
+ */
 static int
-rxi_FreeDataBufsToQueue(struct rx_packet *p, int first, struct rx_queue * q)
+rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue * q)
 {
     struct iovec *iov;
     struct rx_packet * cb;
     int count = 0;
 
-    if (first < 2)
-	first = 2;
-    for (; first < p->niovecs; first++, count++) {
+    for (first = MAX(2, first); first < p->niovecs; first++, count++) {
 	iov = &p->wirevec[first];
 	if (!iov->iov_base)
-	    osi_Panic("rxi_PacketIOVToQueue: unexpected NULL iov");
+	    osi_Panic("rxi_FreeDataBufsToQueue: unexpected NULL iov");
 	cb = RX_CBUF_TO_PACKET(iov->iov_base, p);
 	RX_FPQ_MARK_FREE(cb);
 	queue_Append(q, cb);
@@ -823,20 +841,24 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, int first, struct rx_queue * q)
     return count;
 }
 
+/*
+ * free packet continuation buffers into the global free packet pool
+ *
+ * [IN] p      -- packet from which to free continuation buffers
+ * [IN] first  -- iovec offset of first continuation buffer to free
+ *
+ * returns:
+ *   zero always
+ */
 int
-rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
+rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
 {
-    struct iovec *iov, *end;
+    struct iovec *iov;
 
-    if (first != 1)		/* MTUXXX */
-	osi_Panic("FreeDataBufs 1: first must be 1");
-    iov = &p->wirevec[1];
-    end = iov + (p->niovecs - 1);
-    if (iov->iov_base != (caddr_t) p->localdata)	/* MTUXXX */
-	osi_Panic("FreeDataBufs 2: vec 1 must be localdata");
-    for (iov++; iov < end; iov++) {
+    for (first = MAX(2, first); first < p->niovecs; first++) {
+	iov = &p->wirevec[first];
 	if (!iov->iov_base)
-	    osi_Panic("FreeDataBufs 3: vecs 2-niovecs must not be NULL");
+	    osi_Panic("rxi_FreeDataBufsNoLock: unexpected NULL iov");
 	rxi_FreePacketNoLock(RX_CBUF_TO_PACKET(iov->iov_base, p));
     }
     p->length = 0;
@@ -846,23 +868,29 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
 }
 
 #ifdef RX_ENABLE_TSFPQ
-int
-rxi_FreeDataBufsTSFPQ(struct rx_packet *p, int first, int flush_global)
+/*
+ * free packet continuation buffers into the thread-local free pool
+ *
+ * [IN] p             -- packet from which continuation buffers will be freed
+ * [IN] first         -- iovec offset of first continuation buffer to free
+ * [IN] flush_global  -- if nonzero, we will flush overquota packets to the
+ *                       global free pool before returning
+ *
+ * returns:
+ *   zero always
+ */
+static int
+rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 {
-    struct iovec *iov, *end;
+    struct iovec *iov;
     register struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
-    if (first != 1)		/* MTUXXX */
-	osi_Panic("FreeDataBufs 1: first must be 1");
-    iov = &p->wirevec[1];
-    end = iov + (p->niovecs - 1);
-    if (iov->iov_base != (caddr_t) p->localdata)	/* MTUXXX */
-	osi_Panic("FreeDataBufs 2: vec 1 must be localdata");
-    for (iov++; iov < end; iov++) {
+    for (first = MAX(2, first); first < p->niovecs; first++) {
+	iov = &p->wirevec[first];
 	if (!iov->iov_base)
-	    osi_Panic("FreeDataBufs 3: vecs 2-niovecs must not be NULL");
+	    osi_Panic("rxi_FreeDataBufsTSFPQ: unexpected NULL iov");
 	RX_TS_FPQ_CHECKIN(rx_ts_info,RX_CBUF_TO_PACKET(iov->iov_base, p));
     }
     p->length = 0;
@@ -1004,7 +1032,7 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
 void
 rxi_FreePacket(struct rx_packet *p)
 {
-    rxi_FreeDataBufsTSFPQ(p, 1, 0);
+    rxi_FreeDataBufsTSFPQ(p, 2, 0);
     rxi_FreePacketTSFPQ(p, RX_TS_FPQ_FLUSH_GLOBAL);
 }
 #else /* RX_ENABLE_TSFPQ */
@@ -1016,7 +1044,7 @@ rxi_FreePacket(struct rx_packet *p)
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
-    rxi_FreeDataBufsNoLock(p, 1);
+    rxi_FreeDataBufsNoLock(p, 2);
     rxi_FreePacketNoLock(p);
     /* Wakeup anyone waiting for packets */
     rxi_PacketsUnWait();
@@ -2614,22 +2642,19 @@ rxi_PrepareSendPacket(register struct rx_call *call,
     }
     if (len > 0) {
 	osi_Panic("PrepareSendPacket 1\n");	/* MTUXXX */
-    } else {
-        struct rx_queue q;
-	int nb;
-
-	queue_Init(&q);
-
+    } else if (i < p->niovecs) {
 	/* Free any extra elements in the wirevec */
-	for (j = MAX(2, i), nb = p->niovecs - j; j < p->niovecs; j++) {
-	    queue_Append(&q,RX_CBUF_TO_PACKET(p->wirevec[j].iov_base, p));
-	}
-	if (nb)
-	    rxi_FreePackets(nb, &q);
+#if defined(RX_ENABLE_TSFPQ)
+	rxi_FreeDataBufsTSFPQ(p, i, 1 /* allow global pool flush if overquota */);
+#else /* !RX_ENABLE_TSFPQ */
+        MUTEX_ENTER(&rx_freePktQ_lock);
+	rxi_FreeDataBufsNoLock(p, i);
+        MUTEX_EXIT(&rx_freePktQ_lock);
+#endif /* !RX_ENABLE_TSFPQ */
 
-	p->niovecs = MAX(2, i);
-	p->wirevec[MAX(2, i) - 1].iov_len += len;
+	p->niovecs = i;
     }
+    p->wirevec[i - 1].iov_len += len;
     RXS_PreparePacket(conn->securityObject, call, p);
 }
 
