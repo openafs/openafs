@@ -328,9 +328,9 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
 	    ((struct afs_lock *)(tl->addr))->num_waiting;
 #ifdef INSTRUMENT_LOCKS
 	a_result->lock.pid_last_reader =
-	    ((struct afs_lock *)(tl->addr))->pid_last_reader;
+	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_last_reader);
 	a_result->lock.pid_writer =
-	    ((struct afs_lock *)(tl->addr))->pid_writer;
+	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_writer);
 	a_result->lock.src_indicator =
 	    ((struct afs_lock *)(tl->addr))->src_indicator;
 #else
