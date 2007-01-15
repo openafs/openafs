@@ -50,7 +50,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2000-2004"
+VIAddVersionKey "LegalCopyright" "(C)2000-2007"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -1205,14 +1205,21 @@ Function .onInit
   ; Set the default install options
   	Push $0
 
+   Call GetWindowsVersion
+   Pop $R0
+   StrCmp $R0 "Vista" +1 contInstall1
+   MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "This version of OpenAFS for Windows is not compatible with Microsoft Vista.  Please install OpenAFS for Windows version 1.5.14 or higher."
+   Abort
+
+contInstall1:
    Call IsUserAdmin
    Pop $R0
-   StrCmp $R0 "true" contInstall
+   StrCmp $R0 "true" contInstall2
 
    MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "You must be an administrator of this machine to install this software."
    Abort
    
-contInstall:
+contInstall2:
 
    ; Set Install Type text
    InstTypeSetText 0 "AFS Client"
@@ -1236,19 +1243,18 @@ contInstall:
    ; Check that RPC functions are installed (I believe any one of these can be present for
    ; OpenAFS to work)
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
-   StrCmp $R0 "rpcrt4.dll" contInstall2
+   StrCmp $R0 "rpcrt4.dll" +1 contInstall3
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
-   StrCmp $R0 "rpcrt4.dll" contInstall2
+   StrCmp $R0 "rpcrt4.dll" +1 contInstall3
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
-   StrCmp $R0 "rpcrt4.dll" contInstall2
+   StrCmp $R0 "rpcrt4.dll" +1 contInstall3
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_http"
-   StrCmp $R0 "rpcrt4.dll" contInstall2
+   StrCmp $R0 "rpcrt4.dll" +1 contInstall3
    
    MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "An error was detected with your Windows RPC installation. Please make sure Windows RPC is installed before installing OpenAFS."
    Abort
 
-
-contInstall2:
+contInstall3:
    ; If the Loopback is already installed, we mark the option OFF and Read Only
    ; so the user can not select it.
    Call afs.isLoopbackInstalled
@@ -3584,7 +3590,7 @@ FunctionEnd
 ;
 ; Returns on top of stack
 ;
-; Windows Version (95, 98, ME, NT x.x, 2000, XP, 2003)
+; Windows Version (95, 98, ME, NT x.x, 2000, XP, 2003, Vista)
 ; or
 ; '' (Unknown Windows Version)
 ;
@@ -3640,7 +3646,8 @@ Function GetWindowsVersion
 
   StrCmp $R1 '5.0' lbl_winnt_2000
   StrCmp $R1 '5.1' lbl_winnt_XP
-  StrCmp $R1 '5.2' lbl_winnt_2003 lbl_error
+  StrCmp $R1 '5.2' lbl_winnt_2003
+  StrCmp $R1 '6.0' lbl_winnt_vista lbl_error
 
   lbl_winnt_x:
     StrCpy $R0 "NT $R0" 6
@@ -3656,6 +3663,10 @@ Function GetWindowsVersion
 
   lbl_winnt_2003:
     Strcpy $R0 '2003'
+  Goto lbl_done
+
+  lbl_winnt_vista:
+    Strcpy $R0 'Vista'
   Goto lbl_done
 
   lbl_error:
