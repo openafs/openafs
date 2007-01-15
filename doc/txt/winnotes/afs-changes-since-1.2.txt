@@ -1,3 +1,12 @@
+Since 1.5.13
+
+ * Enforce Unix Mode Write bit to prevent file deletion of read only
+   files.
+
+ * The CIFS READ and LIST permissions use the same value 0x0001.
+   When a directory is being accessed, check for PRSFS_LOOKUP 
+   instead of PRSFS_READ.
+
 Since 1.5.12
 
  * Fix computations of short names of mount points.  They were
