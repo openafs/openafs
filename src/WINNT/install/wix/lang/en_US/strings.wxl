@@ -35,6 +35,7 @@
     <String Id="StrCfgWzdDesc">Server Configuration Wizard</String>
 
     <String Id="StrLaunchCond">OpenAFS for Windows is currently only packaged for Windows 2000,XP and 2003</String>
+    <String Id="StrLaunchNoVista">This version of OpenAFS for Windows is not compatible with Microsoft Vista.  Please install OpenAFS for Windows version 1.5.14 or higher.</String>
     <String Id="AdminRequired">Installation of OpenAFS for Windows requires administrative privileges</String>
 
 	<String Id="ErrNPIFailed">Installation of Network Provider failed.  System error [2]</String>

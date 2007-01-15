@@ -47,6 +47,9 @@
         <Condition Message="$(loc.StrLaunchCond)">
          <![CDATA[VersionNT >= 500]]>
         </Condition>
+        <Condition Message="$(loc.StrLaunchNoVista)">
+         <![CDATA[VersionNT < 600]]>
+        </Condition>
         <Condition Message="$(loc.AdminRequired)">Privileged</Condition>
         
         
