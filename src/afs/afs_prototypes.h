@@ -537,7 +537,13 @@ extern int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp);
 extern int AddPag(afs_int32 aval, struct AFS_UCRED **credpp);
 #endif
 extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
+#else
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+extern afs_uint32 afs_get_pag_from_groups(struct group_info *gi);
+#endif
+#endif
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
 
