@@ -1,4 +1,4 @@
-Since 1.4.2
+Since 1.4.2 (1.4.3-rc1 released 15 Jan 2007)
 
  * Increase the maximum number of stat cache entries to 262144
 
@@ -20,6 +20,9 @@ Since 1.4.2
    attribute set in Windows, it cannot be deleted.  DeleteReadOnly
    when set to a non-zero value permits the deletion.  1.4.3 no 
    longer permits it by default.
+
+ * When opening a directory, CIFS read privilege requires PRSFS_LOOKUP
+   not PRSFS_READ.
 
 Since 1.4.2-rc4 (1.4.2 released 16 Oct 2006)
 
