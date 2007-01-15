@@ -2375,7 +2375,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         
     /* compute open mode */
     if (openMode != 1) 
-	fidp->flags |= SMB_FID_OPENREAD;
+	fidp->flags |= SMB_FID_OPENREAD_LISTDIR;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
 
@@ -2436,7 +2436,7 @@ long smb_ReceiveTran2QFSInfoFid(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     fid = p->parmsp[1];
     osi_Log2(smb_logp, "T2 QFSInfoFid InfoLevel 0x%x fid 0x%x - NOT_SUPPORTED", infolevel, fid);
     
-    return CM_ERROR_BADOP;
+    return CM_ERROR_BAD_LEVEL;
 }
 
 long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
@@ -2675,7 +2675,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         return 0;
     }
 
@@ -2957,7 +2957,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	infoLevel != SMB_INFO_QUERY_ALL_EAS) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         return 0;
     }
 
@@ -3190,7 +3190,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         smb_ReleaseFID(fidp);
         return 0;
     }
@@ -3311,7 +3311,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     if (infoLevel > SMB_SET_FILE_END_OF_FILE_INFO || infoLevel < SMB_SET_FILE_BASIC_INFO) {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADOP);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         smb_ReleaseFID(fidp);
         return 0;
     }
@@ -5582,7 +5582,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     /* compute open mode */
     if (openMode != 1) 
-        fidp->flags |= SMB_FID_OPENREAD;
+        fidp->flags |= SMB_FID_OPENREAD_LISTDIR;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
 
@@ -6526,7 +6526,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (desiredAccess & DELETE)
         fidflags |= SMB_FID_OPENDELETE;
     if (desiredAccess & AFS_ACCESS_READ)
-        fidflags |= SMB_FID_OPENREAD;
+        fidflags |= SMB_FID_OPENREAD_LISTDIR;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
     if (createOptions & FILE_DELETE_ON_CLOSE)
@@ -7303,7 +7303,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (desiredAccess & DELETE)
         fidflags |= SMB_FID_OPENDELETE;
     if (desiredAccess & AFS_ACCESS_READ)
-        fidflags |= SMB_FID_OPENREAD;
+        fidflags |= SMB_FID_OPENREAD_LISTDIR;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
     if (createOptions & FILE_DELETE_ON_CLOSE)
@@ -8352,7 +8352,7 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     rename_type = smb_GetSMBParm(inp, 1);
 
     if (rename_type != RENAME_FLAG_RENAME && rename_type != RENAME_FLAG_HARD_LINK) {
-        osi_Log1(smb_logp, "NTRename invalid infolevel [%x]", rename_type);
+        osi_Log1(smb_logp, "NTRename invalid rename_type [%x]", rename_type);
         return CM_ERROR_NOACCESS;
     }
 

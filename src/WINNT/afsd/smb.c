@@ -2844,6 +2844,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 #endif
     else if (code == RXKADUNKNOWNKEY) {
 	NTStatus = 0xC0000322L; /* Bad Kerberos key */
+    } 
+    else if (code == CM_ERROR_BAD_LEVEL) {
+	NTStatus = 0xC0000148L;	/* Invalid Level */
     } else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
@@ -5108,11 +5111,11 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     lock_ObtainMutex(&fidp->mx);
     if ((share & 0xf) == 0)
-        fidp->flags |= SMB_FID_OPENREAD;
+        fidp->flags |= SMB_FID_OPENREAD_LISTDIR;
     else if ((share & 0xf) == 1)
         fidp->flags |= SMB_FID_OPENWRITE;
     else 
-        fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
+        fidp->flags |= (SMB_FID_OPENREAD_LISTDIR | SMB_FID_OPENWRITE);
     lock_ReleaseMutex(&fidp->mx);
 
     lock_ObtainMutex(&scp->mx);
@@ -7369,7 +7372,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     lock_ObtainMutex(&fidp->mx);
     /* always create it open for read/write */
-    fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
+    fidp->flags |= (SMB_FID_OPENREAD_LISTDIR | SMB_FID_OPENWRITE);
 
     /* remember that the file was newly created */
     if (created)
