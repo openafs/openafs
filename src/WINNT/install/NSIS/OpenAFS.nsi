@@ -1303,13 +1303,13 @@ contInstall:
    ; Check that RPC functions are installed (I believe any one of these can be present for
    ; OpenAFS to work)
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
-   StrCmp $R0 "rpcrt4.dll" +1 contInstall2
+   StrCmp $R0 "rpcrt4.dll" contInstall2
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
-   StrCmp $R0 "rpcrt4.dll" +1 contInstall2
+   StrCmp $R0 "rpcrt4.dll" contInstall2
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
-   StrCmp $R0 "rpcrt4.dll" +1 contInstall2
+   StrCmp $R0 "rpcrt4.dll" contInstall2
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_http"
-   StrCmp $R0 "rpcrt4.dll" +1 contInstall2
+   StrCmp $R0 "rpcrt4.dll" contInstall2
    
    MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "An error was detected with your Windows RPC installation. Please make sure Windows RPC is installed before installing OpenAFS."
    Abort
