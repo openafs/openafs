@@ -9,6 +9,11 @@ CFLAGS += $CPPFLAGS
 obj-m += conftest.o
 _ACEOF
     cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
 #include <linux/module.h>
 $1
 
@@ -46,7 +51,7 @@ AC_DEFUN([AC_TRY_KBUILD24], [
 #               [ACTION-IF-SUCCESS], [ACTION-IF-FAILURE])
 #
 AC_DEFUN([AC_TRY_KBUILD], [
-  if test -f $LINUX_KERNEL_PATH/scripts/Makefile.build; then
+  if test $AFS_SYSKVERS -ge 26 ; then
     AC_TRY_KBUILD26([$1], [$2], [$3], [$4])
   else
     AC_TRY_KBUILD24([$1], [$2], [$3], [$4])
@@ -54,6 +59,10 @@ AC_DEFUN([AC_TRY_KBUILD], [
 
 AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
   AC_MSG_CHECKING([for linux kernel module build works])
-  AC_TRY_KBUILD([],[],:,AC_MSG_RESULT(no)
+  AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/fs.h>
+#include <linux/namei.h>],
+    [],:,AC_MSG_RESULT(no)
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
