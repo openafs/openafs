@@ -165,9 +165,10 @@ F  OpenBSD Notes
    --with-bsd-kernel-headers= configure option if your kernel source is not
    in /usr/src/sys.
 
-   If you want to build src/aklog, "setenv KRB5LIBS -lcrypto" and configure
-   with "--with-krb5".  Note that you shouldn't need aklog because heimdal
-   afslog does (almost) the same thing.
+   If you want to build src/aklog, add the following options to your
+   configure.  Note that you shouldn't need aklog because heimdal afslog
+   does (almost) the same thing.
+     --with-krb5 KRB5CFLAGS=-I/usr/include/kerberosV KRB5LIBS=-lcrypto
 
    src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing the
    client.  There is no server package, but I am told that "make install"
