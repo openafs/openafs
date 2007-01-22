@@ -3826,7 +3826,7 @@ MemDumpCmd(struct cmd_syndesc *asp, char *arock)
         return code;
     }
 
-    if (outValue) { 
+    if (!outValue) { 
         printf("AFS memdump created.\n");
         return 0;
     } else {

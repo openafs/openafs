@@ -214,6 +214,21 @@ cm_ShutdownMappedMemory(void)
     cm_config_data_t * config_data_p = (cm_config_data_t *)cm_data.baseAddress;
     int dirty = 0;
 
+    afsi_log("Closing AFS Cache:");
+    afsi_log("  Base Address   = %p", config_data_p);
+    afsi_log("  stats          = %d", cm_data.stats);
+    afsi_log("  chunkSize      = %d", cm_data.chunkSize);
+    afsi_log("  blockSize      = %d", cm_data.blockSize);
+    afsi_log("  bufferSize     = %d", cm_data.bufferSize);
+    afsi_log("  cacheType      = %d", cm_data.cacheType);
+    afsi_log("  currentVolumes = %d", cm_data.currentVolumes);
+    afsi_log("  maxVolumes     = %d", cm_data.maxVolumes);
+    afsi_log("  currentCells   = %d", cm_data.currentCells);
+    afsi_log("  maxCells       = %d", cm_data.maxCells);
+    afsi_log("  hashTableSize  = %d", cm_data.hashTableSize);
+    afsi_log("  currentSCaches = %d", cm_data.currentSCaches);
+    afsi_log("  maxSCaches     = %d", cm_data.maxSCaches);
+
     cm_ShutdownDCache();
     cm_ShutdownSCache();
     cm_ShutdownACLCache();
@@ -393,7 +408,7 @@ cm_ValidateMappedMemory(char * cachePath)
     fprintf(stderr,"  maxVolumes     = %d\n", config_data_p->maxVolumes);
     fprintf(stderr,"  currentCells   = %d\n", config_data_p->currentCells);
     fprintf(stderr,"  maxCells       = %d\n", config_data_p->maxCells);
-    fprintf(stderr,"  hashTableSize  = %d\n", config_data_p->hashTableSize );
+    fprintf(stderr,"  hashTableSize  = %d\n", config_data_p->hashTableSize);
     fprintf(stderr,"  currentSCaches = %d\n", config_data_p->currentSCaches);
     fprintf(stderr,"  maxSCaches     = %d\n", config_data_p->maxSCaches);
     cm_data = *config_data_p;      
@@ -778,8 +793,22 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     config_data_p = (cm_config_data_t *) baseAddress;
 
     if (!newFile) {
-        afsi_log("Reusing existing AFS Cache data: Base Address = %lX",baseAddress);
+        afsi_log("Reusing existing AFS Cache data:");
         cm_data = *config_data_p;      
+
+	afsi_log("  Base Address   = %p",baseAddress);
+	afsi_log("  stats          = %d", config_data_p->stats);
+	afsi_log("  chunkSize      = %d", config_data_p->chunkSize);
+	afsi_log("  blockSize      = %d", config_data_p->blockSize);
+	afsi_log("  bufferSize     = %d", config_data_p->bufferSize);
+	afsi_log("  cacheType      = %d", config_data_p->cacheType);
+	afsi_log("  currentVolumes = %d", config_data_p->currentVolumes);
+	afsi_log("  maxVolumes     = %d", config_data_p->maxVolumes);
+	afsi_log("  currentCells   = %d", config_data_p->currentCells);
+	afsi_log("  maxCells       = %d", config_data_p->maxCells);
+	afsi_log("  hashTableSize  = %d", config_data_p->hashTableSize);
+	afsi_log("  currentSCaches = %d", config_data_p->currentSCaches);
+	afsi_log("  maxSCaches     = %d", config_data_p->maxSCaches);
 
         // perform validation of persisted data structures
         // if there is a failure, start from scratch

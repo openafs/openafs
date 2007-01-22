@@ -746,6 +746,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cm_ReleaseSCache(scp);
         return code;
     }
+    cm_PutVolume(tvp);
 
     /* Copy the junk out, using cp as a roving pointer. */
     cp = ioctlp->inDatap;
@@ -2753,11 +2754,13 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
   
     /* dump all interesting data */
     cm_DumpSCache(hLogFile, cookie, 1);
+    cm_DumpVolumes(hLogFile, cookie, 1);
     cm_DumpBufHashTable(hLogFile, cookie, 1);
     smb_DumpVCP(hLogFile, cookie, 1);
 
     CloseHandle(hLogFile);                          
   
+    inValue = 0;	/* success */
     memcpy(ioctlp->outDatap, &inValue, sizeof(long));
     ioctlp->outDatap += sizeof(long);
   
