@@ -543,9 +543,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     long hash;
     cm_scache_t *scp;
     long code;
-    cm_volume_t *volp = 0;
+    cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
-    char* mp = 0;
+    char* mp = NULL;
     int special; // yj: boolean variable to test if file is on root.afs
     int isRoot;
     extern cm_fid_t cm_rootFid;
@@ -629,6 +629,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 #endif
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
+	cm_GetVolume(scp->volp);	/* grab an additional reference */
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
         scp->dotdotFid.unique=1;
@@ -712,6 +713,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     if (scp == NULL) {
 	osi_Log0(afsd_logp,"cm_GetNewSCache unable to obtain *new* scache entry");
 	lock_ReleaseWrite(&cm_scacheLock);
+	if (volp)
+	    cm_PutVolume(volp);
 	return CM_ERROR_WOULDBLOCK;
     }
     osi_Log2(afsd_logp,"cm_GetNewSCache returns scp 0x%x flags 0x%x", scp, scp->flags);

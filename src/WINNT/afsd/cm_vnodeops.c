@@ -1000,7 +1000,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     long code;
     char *cp;
     char *mpNamep;
-    cm_volume_t *volp;
+    cm_volume_t *volp = NULL;
     cm_cell_t *cellp;
     char mtType;
     cm_fid_t tfid;
@@ -1106,6 +1106,8 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     }
 
   done:
+    if (volp)
+	cm_PutVolume(volp);
     free(cellNamep);
     free(volNamep);
     return code;
@@ -2112,22 +2114,16 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     }	/* while there are still more files to process */
     lock_ObtainMutex(&dscp->mx);
 
-#if 0
-    /* If we did the InlineBulk RPC pull out the return code */
+    /* If we did the InlineBulk RPC pull out the return code and log it */
     if (inlinebulk) {
 	if ((&bb.stats[0])->errorCode) {
-	    cm_Analyze(NULL /*connp was released by the previous cm_Analyze */, 
-			userp, reqp, &dscp->fid, &volSync, NULL, NULL, (&bb.stats[0])->errorCode);
-	    code = cm_MapRPCError((&bb.stats[0])->errorCode, reqp);
+	    osi_Log1(afsd_logp, "cm_TryBulkStat bulk stat error: %d", 
+		     (&bb.stats[0])->errorCode);
 	}
-    } else
-#endif	
-    { 
-	code = 0;
     }
 
-    osi_Log1(afsd_logp, "END cm_TryBulkStat code = 0x%x", code);
-    return code;
+    osi_Log0(afsd_logp, "END cm_TryBulkStat");
+    return 0;
 }       
 
 void cm_StatusFromAttr(AFSStoreStatus *statusp, cm_scache_t *scp, cm_attr_t *attrp)

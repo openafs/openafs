@@ -38,12 +38,14 @@ extern void cm_InitVolume(int newFile, long maxVols);
 extern long cm_GetVolumeByName(struct cm_cell *, char *, struct cm_user *,
 	struct cm_req *, long, cm_volume_t **);
 
+extern long cm_GetVolumeByID(struct cm_cell *cellp, long volumeID,
+	cm_user_t *userp, cm_req_t *reqp, cm_volume_t **outVolpp);
+
+extern void cm_GetVolume(cm_volume_t *volp);
+
 extern void cm_PutVolume(cm_volume_t *volp);
 
 extern long cm_GetROVolumeID(cm_volume_t *volp);
-
-extern long cm_GetVolumeByID(struct cm_cell *cellp, long volumeID,
-	cm_user_t *userp, cm_req_t *reqp, cm_volume_t **outVolpp);
 
 extern void cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
@@ -57,4 +59,6 @@ extern void cm_CheckVolumes(void);
 extern long cm_ValidateVolume(void);
 
 extern long cm_ShutdownVolume(void);
+
+extern int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock);
 #endif /*  __CM_VOLUME_H_ENV__ */
