@@ -20,6 +20,8 @@ RCSID
 #include <sys/adspace.h>	/* for vm_att(), vm_det() */
 #endif
 
+#include <osi/osi_includes.h>
+
 /* osi_Init -- do once per kernel installation initialization.
  *     -- On Solaris this is called from modload initialization.
  *     -- On AIX called from afs_config.
@@ -36,7 +38,9 @@ lock_t afs_event_lock;
 flid_t osi_flid;
 #endif
 
+#if !defined(LIBKTRACE)
 struct AFS_UCRED *afs_osi_credp;
+#endif
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
@@ -83,8 +87,7 @@ osi_Init(void)
 	return;
 #if	defined(AFS_HPUX_ENV)
     osi_InitGlock();
-#else /* AFS_HPUX_ENV */
-#if defined(AFS_GLOBAL_SUNLOCK)
+#elif defined(AFS_GLOBAL_SUNLOCK)
 #if defined(AFS_SGI62_ENV)
     mutex_init(&afs_global_lock, MUTEX_DEFAULT, "afs_global_lock");
 #elif defined(AFS_OSF_ENV)
@@ -104,9 +107,9 @@ osi_Init(void)
     /* Linux initialization in osi directory. Should move the others. */
     mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
 #endif
-#endif /* AFS_GLOBAL_SUNLOCK */
-#endif /* AFS_HPUX_ENV */
+#endif /* !AFS_HPUX_ENV && AFS_GLOBAL_SUNLOCK */
 
+#if !defined(LIBKTRACE)
     if (!afs_osicred_initialized) {
 #if defined(AFS_DARWIN80_ENV)
         afs_osi_ctxtp_initialized = 0;
@@ -131,13 +134,19 @@ osi_Init(void)
 #endif
 	afs_osicred_initialized = 1;
     }
+
 #ifdef AFS_SGI64_ENV
     osi_flid.fl_pid = osi_flid.fl_sysid = 0;
 #endif
 
     init_et_to_sys_error();
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_CacheManager, osi_NULL)));
+#else /* LIBKTRACE */
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_TraceKernel, osi_NULL)));
+#endif /* LIBKTRACE */
 }
 
+#if !defined(LIBKTRACE)
 /* mask signals in afsds */
 void
 afs_osi_MaskSignals(void)
@@ -205,11 +214,10 @@ afs_osi_Invisible(void)
     AFS_STATCNT(osi_Invisible);
 }
 
-
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 /* set the real time */
 void
-afs_osi_SetTime(osi_timeval_t * atv)
+afs_osi_SetTime(afs_timeval_t * atv)
 {
 #if defined(AFS_AIX32_ENV)
     struct timestruc_t t;
@@ -283,9 +291,11 @@ afs_osi_SetTime(osi_timeval_t * atv)
 #endif /* AFS_DARWIN_ENV */
     AFS_STATCNT(osi_SetTime);
 }
-#endif /* AFS_LINUX20_ENV */
+#endif /* !AFS_LINUX20_ENV && !AFS_FBSD_ENV */
+#endif /* !LIBKTRACE */
 
 
+#if !defined(LIBKTRACE)
 void
 shutdown_osi(void)
 {
@@ -302,17 +312,18 @@ shutdown_osi(void)
 	LOCK_INIT(&afs_ftf, "afs_ftf");
     }
 }
+#endif /* !LIBKTRACE */
 
 #ifndef AFS_OBSD_ENV
 int
-afs_osi_suser(void *cr)
+afs_osi_suser(void *credp)
 {
 #if defined(AFS_SUN510_ENV)
-    return (priv_policy(cr, PRIV_SYS_SUSER_COMPAT, B_FALSE, EPERM, NULL) == 0);
+    return (priv_policy(credp, PRIV_SYS_SUSER_COMPAT, B_FALSE, EPERM, NULL) == 0);
 #elif defined(AFS_SUN5_ENV)
-    return afs_suser(cr);
+    return afs_suser(credp);
 #else
     return afs_suser(NULL);
 #endif
 }
-#endif
+#endif /* !AFS_OBSD_ENV */

@@ -18,7 +18,7 @@ RCSID
  *
  * Implements:
  *
- * Functions: AFS_TRYUP, _init, _info, _fini, afs_addmap, afs_delmap,
+ * Functions: _init, _info, _fini, afs_addmap, afs_delmap,
  * afs_vmread, afs_vmwrite, afs_getpage, afs_GetOnePage, afs_putpage,
  * afs_putapage, afs_nfsrdwr, afs_map, afs_PageLeft, afs_pathconf/afs_cntl,
  * afs_ioctl, afs_rwlock, afs_rwunlock, afs_seek, afs_space, afs_dump,
@@ -52,25 +52,6 @@ RCSID
 #include <sys/debug.h>
 #include <sys/fs_subr.h>
 
-/* 
- * XXX Temporary fix for problems with Solaris rw_tryupgrade() lock.
- * It isn't very persistent in getting the upgrade when others are
- * waiting for it and returns 0.  So the UpgradeSToW() macro that the
- * rw_tryupgrade used to map to wasn't good enough and we need to use
- * the following code instead.  Obviously this isn't the proper place
- * for it but it's only called from here for now
- * 
- */
-#ifndef	AFS_SUN54_ENV
-AFS_TRYUP(lock)
-     afs_rwlock_t *lock;
-{
-    if (!rw_tryupgrade(lock)) {
-	rw_exit(lock);
-	rw_enter(lock, RW_WRITER);
-    }
-}
-#endif
 
 
 /* Translate a faultcode_t as returned by some of the vm routines

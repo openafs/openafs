@@ -1,0 +1,64 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+PUBLICHEADERS= \
+		activation.h \
+		activation_impl.h \
+		buffer.h \
+		cursor.h \
+		directory.h \
+		directory_impl.h \
+		directory_mail.h \
+		generator.h \
+		init.h \
+		module.h \
+		module_mail.h \
+		probe.h \
+		probe_impl.h \
+		probe_mail.h \
+		tracepoint.h \
+		tracepoint_impl.h \
+		tracepoint_inline.h \
+		trap.h
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace/generator
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/generator
+DEST_HDR_DIR=${DEST}/include/osi/trace/generator
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+all: \
+	depinstall
+
+depinstall: \
+	depinstall_hdrs
+
+#
+# Installation targets
+#
+install: \
+	install_hdrs
+
+dest: \
+	dest_hdrs
+
+#
+# Build targets
+#
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o *.a AFS_component_version_number.c
+	$(RM) -f core
+

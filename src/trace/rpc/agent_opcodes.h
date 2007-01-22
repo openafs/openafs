@@ -1,0 +1,39 @@
+/*
+ * Copyright 2006, Sine Nomine Associates and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#ifndef _OSI_TRACE_RPC_AGENT_OPCODES_H
+#define _OSI_TRACE_RPC_AGENT_OPCODES_H 1
+
+/*
+ * opcode table
+ */
+#define OSI_TRACE_RPC_OP_PROBE_ENABLE			1
+#define OSI_TRACE_RPC_OP_PROBE_DISABLE			2
+#define OSI_TRACE_RPC_OP_CONSOLE_REGISTER_IP4		3
+#define OSI_TRACE_RPC_OP_CONSOLE_UNREGISTER		4
+#define OSI_TRACE_RPC_OP_CONSOLE_ENABLE			5
+#define OSI_TRACE_RPC_OP_CONSOLE_DISABLE		6
+#define OSI_TRACE_RPC_OP_CONSOLE_INTEREST_REGISTER	7
+#define OSI_TRACE_RPC_OP_CONSOLE_INTEREST_UNREGISTER	8
+#define OSI_TRACE_RPC_OP_CONSOLE_KEEP_ALIVE		9
+#define OSI_TRACE_RPC_OP_PREDICATE_REGISTER		10
+#define OSI_TRACE_RPC_OP_PREDICATE_UNREGISTER		11
+#define OSI_TRACE_RPC_OP_PREDICATE_ATTACH		12
+#define OSI_TRACE_RPC_OP_PREDICATE_DETACH		13
+#define OSI_TRACE_RPC_OP_FILTER_REGISTER		14
+#define OSI_TRACE_RPC_OP_FILTER_UNREGISTER		15
+#define OSI_TRACE_RPC_OP_FILTER_ENABLE			16
+#define OSI_TRACE_RPC_OP_FILTER_DISABLE			17
+#define OSI_TRACE_RPC_OP_PROC_LIST			18
+#define OSI_TRACE_RPC_OP_GET_VERSION			19
+#define OSI_TRACE_RPC_OP_PROC_SELF			20
+#define OSI_TRACE_RPC_OP_AGENT_INFO4			21
+#define OSI_TRACE_RPC_OP_PROC_INFO			22
+
+#endif /* _OSI_TRACE_RPC_AGENT_OPCODES_H */

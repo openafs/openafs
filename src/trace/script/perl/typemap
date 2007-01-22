@@ -1,0 +1,44 @@
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+
+TYPEMAP
+osi_result	T_IV
+osi_fast_int	T_IV
+osi_register_int	T_IV
+osi_int8	T_IV
+osi_int16	T_IV
+osi_int32	T_IV
+afs_int8	T_IV
+afs_int16	T_IV
+afs_int32	T_IV
+osi_fast_uint	T_UV
+osi_register_uint	T_UV
+osi_size_t	T_UV
+osi_uint8	T_UV
+osi_uint16	T_UV
+osi_uint32	T_UV
+afs_uint8	T_UV
+afs_uint16	T_UV
+afs_uint32	T_UV
+
+
+# the following input/output mapping code is pulled from the
+# perlxs man page
+
+INPUT
+T_OSI_PTROBJ
+	if (sv_derived_from($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")) {
+		IV tmp = SvIV((SV *)SvRV($tmp));
+		$var = INT2PTR($type, tmp);
+	}
+	else
+		croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\")
+
+OUTPUT
+T_OSI_PTROBJ
+	sv_setref_pv($arg, \"${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\", (void *)$var);

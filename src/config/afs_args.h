@@ -59,8 +59,8 @@
 #define	AFSCALL_IINC		26
 #define	AFSCALL_IDEC		27
 #define	AFSCALL_CALL		28
-
-#define AFSCALL_ICL             30
+#define AFSCALL_OSI_TRACE       29
+#define AFSCALL_ICL             30      /* DEPRECATED */
 
 /* 64 bit versions of inode system calls. */
 #define AFSCALL_IOPEN64		41
@@ -82,7 +82,7 @@
 					 * address into kernel. */
 #define AFSOP_NFSSTATICADDR2	 34	/* pass address in as hyper. */
 #define AFSOP_SBLOCKSTATICADDR2  35	/* for sblock and sbunlock */
-#endif
+#endif /* AFS_SGI53_ENV */
 #define	AFSOP_GETMASK		 42	/* stand-in for SIOCGIFNETMASK */
 /* For SGI, this can't interfere with any of the 64 bit inode calls. */
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */

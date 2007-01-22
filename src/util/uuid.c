@@ -418,7 +418,7 @@ uuid_get_address(uuid_address_p_t addr)
 void
 uuid__get_os_time(uuid_time_t * os_time)
 {
-    osi_timeval_t tp;
+    afs_timeval_t tp;
 
     osi_GetTime(&tp);
     os_time->hi = tp.tv_sec;

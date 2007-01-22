@@ -4,3 +4,5 @@ cbd
 check_sysid
 fileserver
 fsprobe
+tracepoint_table.c
+tracepoint_table.h

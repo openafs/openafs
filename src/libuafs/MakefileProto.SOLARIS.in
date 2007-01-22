@@ -27,6 +27,19 @@ LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.so
 LIBAFSWEBKRB = nsafs.krb.so
 
+UAFS_OSI_OS_OBJS = \
+	$(UOBJ)/osi_native_cache.o \
+	$(UOBJ)/osi_native_cpu.o
+
+AFSWEB_OSI_OS_OBJS = \
+	$(WEBOBJ)/osi_native_cache.o \
+	$(WEBOBJ)/osi_native_cpu.o
+
+JUAFS_OSI_OS_OBJS = \
+	$(JUAFS)/osi_native_cache.o \
+	$(JUAFS)/osi_native_cpu.o
+
+
 include Makefile.common
 
 $(LIBUAFS): $(UAFSOBJ)

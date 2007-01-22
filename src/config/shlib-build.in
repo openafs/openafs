@@ -8,10 +8,12 @@
 # libtool, please shoot it and start over, possibly by rewriting AFS in Ada.
 
 # We take the following regular arguments: -d <srcdir>, -f <filename>, -l
-# <library>, -M <major>, and -m <minor>.  If -f is given, it overrides -l and
-# specifies the complete filename of the shared library to build.  We then
-# expect a -- option indicating the end of our arguments and the rest of the
-# arguments are passed along verbatim to the linker.
+# <library>, -M <major>, -m <minor>, and -exp <mapfile>.  The -exp should be
+# used to specify the path to the .map, .def, or .exp file, as required by
+# the platform.  If -f is given, it overrides -l and specifies the complete 
+# filename of the shared library to build.  We then expect a -- option 
+# indicating the end of our arguments and the rest of the arguments are 
+# passed along verbatim to the linker.
 
 set -e
 
@@ -24,6 +26,8 @@ major=
 minor=
 srcdir=.
 done=
+ruledir=
+export=
 while [ -z "$done" ] && [ $# -gt 0 ] ; do
     case "$1" in
     -d)
@@ -51,23 +55,31 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
         minor="$1"
         shift
         ;;
+    -exp)
+	shift
+	export="$1"
+	shift
+	;;
+    -r)
+	shift
+	ruledir="$1"
+	shift
     --)
         shift
         done=yes
         ;;
     *)
-        echo 'Usage: shlib-build -l <lib> -M <major> -m <minor> -- ...' >&2
+        echo 'Usage: shlib-build -l <lib> -M <major> -m <minor> -r <lib build rule dir> -- ...' >&2
         exit 1
         ;;
     esac
 done
 if [ -z "$library" ] ; then
-    echo 'Usage: shlib-install -l <lib> -M <major> -m <minor>' >&2
+    echo 'Usage: shlib-install -l <lib> -M <major> -m <minor> -r <lib build rule dir> -- ...' >&2
     exit 1
 fi
 
 # Print out what we're doing while we do it for debugging.
-export=
 if [ -z "$filename" ] ; then
     if [ -z "$major" ] ; then
         filename="$library.$suffix"
@@ -77,17 +89,24 @@ if [ -z "$filename" ] ; then
         soname="$library.$suffix.$major"
     fi
 fi
+if [ -z "$ruledir" ] ; then
+    ruledir="$srcdir" ;
+fi
 case $sysname in
 rs_aix*)
-    if [ -f "$srcdir/$library.exp" ] ; then
-        export="-bE:$srcdir/$library.exp"
+    if [ -z "$export" ] ; then
+	if [ -f "$ruledir/$library.exp" ] ; then
+	    export="-bE:$ruledir/$library.exp" ;
+	fi ;
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"
     ;;
 sun*_5*)
-    if [ -f "$srcdir/$library.map" ] ; then
-        export="-Wl,-M$srcdir/$library.map"
+    if [ -z "$export" ] ; then
+	if [ -f "$ruledir/$library.map" ] ; then
+	    export="-Wl,-M$ruledir/$library.map" ;
+	fi ;
     fi
     if [ -z "$soname" ] ; then
         echo "$linker $export -o $filename $*"
@@ -98,8 +117,10 @@ sun*_5*)
     fi
     ;;
 *_linux*)
-    if [ -f "$srcdir/$library.map" ] ; then
-        export="-Wl,--version-script=$srcdir/$library.map"
+    if [ -z "$export" ] ; then
+	if [ -f "$ruledir/$library.map" ] ; then
+	    export="-Wl,--version-script=$ruledir/$library.map" ;
+	fi ;
     fi
     if [ -z "$soname" ] ; then
         echo "$linker $export -o $filename $*"
@@ -110,8 +131,10 @@ sun*_5*)
     fi
     ;;
 hp_ux*)
-    if [ -f "$srcdir/$library.hp" ] ; then
-        export="-c $srcdir/$library.hp"
+    if [ -z "$export" ] ; then
+	if [ -f "$ruledir/$library.hp" ] ; then
+	    export="-c $ruledir/$library.hp" ;
+	fi ;
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"

@@ -17,9 +17,11 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
-LIBS=${TOP_LIBDIR}/libafsint.a \
+LIBS= \
+	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a

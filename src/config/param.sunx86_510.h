@@ -133,10 +133,12 @@
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
 #define AFS_ENV			1
 #define AFS_USR_SUN5_ENV	1
-#define AFS_USR_SUN6_ENV	1
-#define AFS_USR_SUN7_ENV        1
-#define AFS_USR_SUN8_ENV        1
-#define AFS_USR_SUN9_ENV        1
+#define AFS_USR_SUN55_ENV	1
+#define AFS_USR_SUN56_ENV	1
+#define AFS_USR_SUN57_ENV       1
+#define AFS_USR_SUN58_ENV       1
+#define AFS_USR_SUN59_ENV       1
+#define AFS_USR_SUN510_ENV      1
 
 #define AFS_64BIT_ENV           1
 

@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006, Sine Nomine Associates
  */
 
 /*
@@ -18,6 +20,19 @@
 #define __OPENAFS_AFS_STATS_H__
 
 #include "afs/param.h"
+
+/*
+ * NOTICE:
+ *  cache manager call count xstats are now imported 
+ *  into the osi trace namespace!!!
+ *
+ * AFS_STATCNT() is now a wrapper around osi_stats calls
+ */
+
+#include <osi/osi_includes.h>
+#include <osi/osi_trace.h>
+#include "afs/afs_tracepoint.h"
+
 
 /* the following is to work around a VAX compiler limitation */
 #if defined(vax)
@@ -41,12 +56,13 @@
 
 #define AFS_STATS(arg) arg
 #ifndef KERNEL
-/* NOTE: Ensure this is the same size in user and kernel mode. */
-typedef struct timeval osi_timeval_t;
+/* NOTE: Ensure this is the same size in user and kernel mode. 
+ * this type is DEPRECATED.  see src/osi/osi_time.h */
+typedef struct timeval afs_timeval_t;
 #endif /* !KERNEL */
 
 #define XSTATS_DECLS struct afs_stats_opTimingData *opP = NULL; \
-    osi_timeval_t opStartTime, opStopTime, elapsedTime
+    afs_timeval_t opStartTime, opStopTime, elapsedTime
 
 #define XSTATS_START_TIME(arg) \
   opP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[arg]); \
@@ -871,10 +887,10 @@ struct afs_stats_CMPerf {
 struct afs_stats_opTimingData {
     afs_int32 numOps;		/*Number of operations executed */
     afs_int32 numSuccesses;	/*Number of successful ops */
-    osi_timeval_t sumTime;	/*Sum of sample timings */
-    osi_timeval_t sqrTime;	/*Sum of squares of sample timings */
-    osi_timeval_t minTime;	/*Minimum timing value observed */
-    osi_timeval_t maxTime;	/*Minimum timing value observed */
+    afs_timeval_t sumTime;	/*Sum of sample timings */
+    afs_timeval_t sqrTime;	/*Sum of squares of sample timings */
+    afs_timeval_t minTime;	/*Minimum timing value observed */
+    afs_timeval_t maxTime;	/*Minimum timing value observed */
 };
 
 /*
@@ -897,10 +913,10 @@ struct afs_stats_opTimingData {
 struct afs_stats_xferData {
     afs_int32 numXfers;		/*Number of successful xfers */
     afs_int32 numSuccesses;	/*Number of successful xfers */
-    osi_timeval_t sumTime;	/*Sum of timing values */
-    osi_timeval_t sqrTime;	/*Sum of squares of timing values */
-    osi_timeval_t minTime;	/*Minimum xfer time recorded */
-    osi_timeval_t maxTime;	/*Maximum xfer time recorded */
+    afs_timeval_t sumTime;	/*Sum of timing values */
+    afs_timeval_t sqrTime;	/*Sum of squares of timing values */
+    afs_timeval_t minTime;	/*Minimum xfer time recorded */
+    afs_timeval_t maxTime;	/*Maximum xfer time recorded */
     afs_int32 sumBytes;		/*Sum of KBytes transferred */
     afs_int32 minBytes;		/*Minimum value observed */
     afs_int32 maxBytes;		/*Maximum value observed */
@@ -1149,6 +1165,8 @@ struct afs_stats_CMFullPerf {
 /* extern afs_int32 afs_stats_XferSumBytes[]; */
 
 #ifndef AFS_NOSTATS
+
+#if 0
 /*
  * We define routines to keep running counts and means.  For the
  * running count, we have to concatenate the ``C_'' prefix on to
@@ -1156,6 +1174,10 @@ struct afs_stats_CMFullPerf {
  * field name.
  */
 #define AFS_STATCNT(arg)  ((afs_cmstats.callInfo.C_ ## arg)++)
+#endif
+
+
+#define AFS_STATCNT(stat) osi_stats_CM_XStatCM_##stat##_inc()
 
 #define AFS_MEANCNT(arg, value) \
     (afs_AddToMean(((afs_cmstats.meanInfo).(arg)),value))

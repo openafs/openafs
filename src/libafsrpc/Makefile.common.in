@@ -1,0 +1,260 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+
+COMMON_INCLUDE=
+
+
+LIBAFSRPC_BUILDING_MODE = userspace
+LIBAFSRPC_BUILDING = libafsrpc
+LIBAFSRPC_RULE_DIR = $(TOP_SRCDIR)/libafsrpc/rules
+
+include $(LIBAFSRPC_RULE_DIR)/rules.mk
+include $(LIBAFSRPC_RULE_DIR)/rules.$(MKAFS_OSTYPE).mk
+include $(LIBAFSRPC_RULE_DIR)/libafsrpc.mk
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.SUFFIXES:	.i
+.c.i:
+	$(LIBAFSRPC_CC) $(LIBAFSRPC_ALL_CFLAGS) $(CFLAGS-$@) -P -c $<
+
+.c.o:
+	$(LIBAFSRPC_CC) $(LIBAFSRPC_ALL_CFLAGS) $(CFLAGS-$@) -c $<
+CRULE_NOOPT=	$(LIBAFSRPC_CC) $(LIBAFSRPC_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+CRULE_OPT=	$(LIBAFSRPC_CC) $(LIBAFSRPC_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+
+system:	all
+
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
+
+all:	setup $(COMPDIRS)
+
+# placeholder for any sources that are built prior to compiling libafsrpc
+depsrcs: 
+
+LIBAFSRPC_CC_lwp = ${CC}
+LIBAFSRPC_CC_pthread = ${MT_CC}
+LIBAFSRPC_CC=$(LIBAFSRPC_CC_$(LIBAFSRPC_BUILDING_THR))
+
+LIBAFSRPC_SUFFIX_archive = a
+LIBAFSRPC_SUFFIX_shlib = ${SHLIB_SUFFIX}
+
+LIBAFSRPC_VERSION_archive =
+LIBAFSRPC_VERSION_shlib = .$(LIBAFSRPC_VERSION_MAJOR).$(LIBAFSRPC_VERSION_MINOR)
+
+setup:
+	for t in ${LIBAFSRPC_BUILD_THREADS} ; do \
+		for l in ${LIBAFSRPC_BUILD_LIBS} ; do \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBAFSRPC_BUILD_BITS} ; do \
+				for i in ${LIBAFSRPC_BUILD_INSTRUMENTATION} ; do \
+					LIBAFSRPC_BUILD_DIR="libafsrpc-$$l-$$t-$$i-$$b" ; \
+					echo "Making directory: '$$LIBAFSRPC_BUILD_DIR'..."; \
+					mkdir -p $$LIBAFSRPC_BUILD_DIR ; \
+					$(RM) -f $$LIBAFSRPC_BUILD_DIR/Makefile.common ; \
+					$(RM) -f $$LIBAFSRPC_BUILD_DIR/Makefile ; \
+					$(RM) -f $$LIBAFSRPC_BUILD_DIR/config ; \
+					$(RM) -f $$LIBAFSRPC_BUILD_DIR/$(LIBAFSRPC_MAPFILE) ; \
+					ln -fs ../Makefile.common $$LIBAFSRPC_BUILD_DIR/Makefile.common ; \
+					ln -fs ../Makefile $$LIBAFSRPC_BUILD_DIR/Makefile ; \
+					ln -fs ../config $$LIBAFSRPC_BUILD_DIR/config ; \
+					ln -fs $(LIBAFSRPC_RULE_DIR)/$(LIBAFSRPC_MAPFILE) $$LIBAFSRPC_BUILD_DIR/$(LIBAFSRPC_MAPFILE) ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${LIBAFSRPC_BUILD_THREADS} ; do \
+		LIBAFSRPC_BUILDING_THR=$$t ; \
+		if [ "$$t" = "${LIBAFSRPC_DEFAULT_THREADS}" ] ; then \
+			LIBAFSRPC_THR_ALIAS="" ; \
+		else \
+			LIBAFSRPC_THR_ALIAS="$$t" ; \
+		fi ; \
+		for l in ${LIBAFSRPC_BUILD_LIBS} ; do \
+			LIBAFSRPC_BUILDING_LIB=$$l ; \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBAFSRPC_BUILD_BITS} ; do \
+				LIBAFSRPC_BUILDING_BIT=$$b ; \
+				if [ "$$b" = "${LIBAFSRPC_DEFAULT_BITS}" ] ; then \
+					LIBAFSRPC_BIT_ALIAS="" ; \
+				else \
+					LIBAFSRPC_BIT_ALIAS="$$b" ; \
+				fi ; \
+				for i in ${LIBAFSRPC_BUILD_INSTRUMENTATION} ; do \
+					LIBAFSRPC_BUILDING_INST=$$i ; \
+					if [ "$$i" = "${LIBAFSRPC_DEFAULT_INSTRUMENTATION}" ] ; then \
+						LIBAFSRPC_INST_ALIAS="" ; \
+					else \
+						LIBAFSRPC_INST_ALIAS="$$i" ; \
+					fi ; \
+					LIBAFSRPC_BUILD_DIR="libafsrpc-$$l-$$t-$$i-$$b" ; \
+					LIBAFSRPC_NAME="libafsrpc-$$t-$$i-$$b" ; \
+					echo "Building directory: '$$LIBAFSRPC_BUILD_DIR'..." ; \
+					LIBAFSRPC_ALIAS="" ; \
+					if [ -z "$$LIBAFSRPC_THR_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="libafsrpc-$$i-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_BIT_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc-$$t-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_INST_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc-$$t-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_THR_ALIAS" ] && [ -z "$$LIBAFSRPC_BIT_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_THR_ALIAS" ] && [ -z "$$LIBAFSRPC_INST_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_BIT_ALIAS" ] && [ -z "$$LIBAFSRPC_INST_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc-$$t" ; \
+					fi ; \
+					if [ -z "$$LIBAFSRPC_THR_ALIAS" ] && [ -z "$$LIBAFSRPC_BIT_ALIAS" ] && [ -z "$$LIBAFSRPC_INST_ALIAS" ] ; then \
+						LIBAFSRPC_ALIAS="$$LIBAFSRPC_ALIAS libafsrpc" ; \
+					fi ; \
+					export LIBAFSRPC_BUILDING_LIB ; \
+					export LIBAFSRPC_BUILDING_THR ; \
+					export LIBAFSRPC_BUILDING_BIT ; \
+					export LIBAFSRPC_BUILDING_INST ; \
+					export LIBAFSRPC_BUILD_DIR ; \
+					export LIBAFSRPC_NAME ; \
+					export LIBAFSRPC_ALIAS ; \
+					cd $$LIBAFSRPC_BUILD_DIR || exit 1 ; \
+					$(MAKE) $@_libafsrpc || exit 1 ; \
+					cd ../ ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+std_compdirs_libafsrpc: depsrcs libafsrpc libdir_libafsrpc
+std_instdirs_libafsrpc: install_libafsrpc
+std_destdirs_libafsrpc: dest_libafsrpc
+
+# Below this line are targets when in the COMMON directory:
+LIBAFSRPC_SUFFIX=$(LIBAFSRPC_SUFFIX_$(LIBAFSRPC_BUILDING_LIB))
+LIBAFSRPC_VERSION=$(LIBAFSRPC_VERSION_$(LIBAFSRPC_BUILDING_LIB))
+LIBAFSRPC = $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX)$(LIBAFSRPC_VERSION)
+
+LIBAFSRPC_LIBDIR_PATH = ${TOP_LIBDIR}
+LIBAFSRPC_INST_PATH = ${DESTDIR}${libdir}
+LIBAFSRPC_DEST_PATH = ${DEST}/lib
+
+LIBAFSRPC_LIBDIR = $(LIBAFSRPC_LIBDIR_PATH)/$(LIBAFSRPC)
+LIBAFSRPC_INST = $(LIBAFSRPC_INST_PATH)/$(LIBAFSRPC)
+LIBAFSRPC_DEST = $(LIBAFSRPC_DEST_PATH)/$(LIBAFSRPC)
+
+# Without this line, gmake tries to build libafsrpc.o
+.PHONY: libafsrpc
+
+libafsrpc:	$(LIBAFSRPC)
+libdir_libafsrpc:	$(LIBAFSRPC_LIBDIR)
+install_libafsrpc:	$(LIBAFSRPC_INST)
+dest_libafsrpc:	$(LIBAFSRPC_DEST)
+
+
+$(LIBAFSRPC_LIBDIR): $(LIBAFSRPC)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSRPC_LIBDIR_PATH) && \
+	for l in x $(LIBAFSRPC_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+			ln -sf $(LIBAFSRPC) "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSRPC_LIBDIR_PATH) && \
+	if [ "$(LIBAFSRPC_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+	fi
+
+$(LIBAFSRPC_INST): $(LIBAFSRPC)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSRPC_INST_PATH) && \
+	for l in x $(LIBAFSRPC_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+			ln -sf $(LIBAFSRPC) "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSRPC_INST_PATH) && \
+	if [ "$(LIBAFSRPC_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+	fi
+
+$(LIBAFSRPC_DEST): $(LIBAFSRPC)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSRPC_DEST_PATH) && \
+	for l in x $(LIBAFSRPC_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+			ln -sf $(LIBAFSRPC) "$${l}.$(LIBAFSRPC_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSRPC_DEST_PATH) && \
+	if [ "$(LIBAFSRPC_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX) ; \
+		$(RM) -f $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSRPC) $(LIBAFSRPC_NAME).$(LIBAFSRPC_SUFFIX).$(LIBAFSRPC_VERSION_MAJOR) ; \
+	fi
+
+# for now, ugliness
+# in the future, we'll use rra's new shlib script
+${LIBAFSRPC}: $(LIBAFSRPC_ALL_OBJS)
+	$(RM) -f $@
+	if [ "$(LIBAFSRPC_BUILDING_LIB)" = "shlib" ] ; then \
+		${TOP_OBJDIR}/src/config/shlib-build \
+			-d $(TOP_SRCDIR)/libafsprc \
+			-l ${LIBAFSRPC_NAME} \
+			-M ${LIBAFSRPC_VERSION_MAJOR} \
+			-m ${LIBAFSRPC_VERSION_MINOR} \
+			-exp ${LIBAFSRPC_MAPFILE} \
+			-r . -- \
+			${LIBAFSRPC_ALL_OBJS} ${LIBAFSRPC_DEPS} ; \
+	else \
+		$(AR) crv $@ $(LIBAFSRPC_ALL_OBJS) ; \
+		$(RANLIB) $@ ; \
+	fi
+
+# old shlib build system
+#
+#		case ${SYS_NAME} in \
+#		rs_aix4* | rs_aix5*) \
+#			${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBAFSRPC_ALL_OBJS} -bE:$(LIBAFSRPC_RULE_DIR)/libafsrpc.exp ${LIBAFSRPC_DEPS} ;; \
+#		sun*_5*) \
+#			${SHLIB_LINKER} -h ${LIBAFSRPC_NAME}.${SHLIB_SUFFIX}.${LIBAFSRPC_VERSION_MAJOR} -o ${LIBAFSRPC} ${LIBAFSRPC_ALL_OBJS} ${LIBAFSRPC_DEPS} ${LIBAFSRPC_BIT_CFLAGS} ${LIBAFSRPC_OS_BIT_CFLAGS} ;; \
+#		*_linux*) \
+#			${SHLIB_LINKER} -Wl,-h,${LIBAFSRPC_NAME}.${SHLIB_SUFFIX}.${LIBAFSRPC_VERSION_MAJOR} -Wl,--version-script=$(LIBAFSRPC_RULE_DIR)/$(LIBAFSRPC_MAPFILE) -o ${LIBAFSRPC} ${LIBAFSRPC_ALL_OBJS} ${LIBAFSRPC_DEPS} ;; \
+#		*) \
+#			${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBAFSRPC_ALL_OBJS} ${LIBAFSRPC_DEPS} ;; \
+#		esac ; \
+
+
+clean:
+	-$(RM) -rf libafsrpc*
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

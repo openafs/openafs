@@ -1,0 +1,223 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_assem.o \
+	osi_config.o \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_timeout.o \
+	osi_vm.o
+
+AFSNOIAUTHOBJS = \
+	afs_call.o \
+	afs_pioctl.o \
+	osi_vfsops.o \
+	osi_vnodeops.o
+
+
+# Object files for iauth NFS->AFS authenticator.
+AFSIAUTHOBJS = \
+	afs_call_iauth.o \
+	afs_nfsclnt_iauth.o \
+	afs_pioctl_iauth.o \
+	osi_vfsops_iauth.o \
+	osi_vnodeops_iauth.o
+
+# System specific build commands
+STRIP = /bin/strip
+DBUG  = -g
+#OPT   = -O
+OPT2   = -O
+
+IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
+	-bI:/lib/netinet.exp \
+	-bI:${TOP_LIBDIR}/extras.exp 
+IMPORTS32 = -bI:${TOP_LIBDIR}/export.exp
+IMPORTS64 = -bI:${TOP_LIBDIR}/export64.exp
+KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
+	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
+	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
+	-D_POWER_MP -UKOFF -DAFSDEBUG -DVICE -DNFS -DUFS -DINET -DQUOTA \
+	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
+LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
+	-D0 -T512
+LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
+	-D0 -T512
+LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
+	 -lsys -lcsys  ${KLDOPTS}
+
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD MODLOAD64
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = aix_compdirs
+INSTDIRS = aix_instdirs
+DESTDIRS = aix_destdirs
+
+<rs_aix42>
+KMODS=32 
+<rs_aix50 rs_aix51 rs_aix52 rs_aix53>
+KMODS=32 64
+<all>
+
+include Makefile.common
+
+setup:
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys
+	ln -fs /usr/include/sys h
+	ln -fs /usr/include/net net
+	ln -fs /usr/include/netinet netinet
+	ln -fs /usr/include/rpc rpc
+	ln -fs /usr/include/sys sys
+	ln -fs /usr/include/nfs nfs
+	ln -fs /usr/include/jfs ufs
+	for m in ${KMODS} ; do \
+		KDIR=MODLOAD-$$m ; \
+		mkdir -p $${KDIR} ; \
+		ln -fs ../Makefile $${KDIR}/Makefile ; \
+		ln -fs ../Makefile.common $${KDIR}/Makefile.common ; \
+		ln -fs ../config $${KDIR}/config ; \
+	done
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for m in ${KMODS} ; do \
+		KDIR=MODLOAD-$$m ; \
+		echo Building in directory: $${KDIR} ; \
+		if [ "$$m" = "32" ] ; then \
+			KOPTS="-q32" ; \
+			KLDOPTS="-b32" ; \
+			KASOPTS="32" ; \
+			TARG="afs.ext.32" ; \
+		elif [ "$$m" = "64" ] ; then \
+			KOPTS="-q64 -DAFS_64BIT_KERNEL -D__64BIT_KERNEL" ; \
+			KLDOPTS="-b64" ; \
+			KASOPTS="64" ; \
+			TARG="afs.ext.64" ; \
+		fi ; \
+		cd $${KDIR} ; \
+		$(MAKE) DEST="$${DEST}" KOPTS="$${KOPTS}"  KLDOPTS="$${KLDOPTS}" KASOPTS="$${KASOPTS}" $@_$${TARG} || exit $$?; \
+		cd ../ ; \
+	done
+
+aix_compdirs_afs.ext.32: afs.ext.32
+aix_compdirs_afs.ext.64: afs.ext.64
+aix_instdirs_afs.ext.32: install_afs.ext.32
+aix_instdirs_afs.ext.64: install_afs.ext.64
+aix_destdirs_afs.ext.32: dest_afs.ext.32
+aix_destdirs_afs.ext.64: dest_afs.ext.64
+
+dest_afs.ext.32: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
+	echo Install for 32-bit Kernel Complete
+
+dest_afs.ext.64: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
+	echo Install for 64-bit Kernel Complete
+
+install_afs.ext.32: $(DESTDIR)$(afskerneldir)/afs.ext.32
+	echo Install for 32-bit Kernel Complete
+
+install_afs.ext.64: $(DESTDIR)$(afskerneldir)/afs.ext.64
+	echo Install for 64-bit Kernel Complete
+
+# Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
+# the iauth authentication mechanism. The model was changed by IBM in the
+# middle of an OS release. So iauth is only supported on AIX 4.1.5 and 
+# later 4.1.x (if they are ever made) and AIX 4.2.1 (and later AIX 4.2.x if
+# they are ever made. AIX 4.3 also uses the iauth translator.
+
+LIBKTRACEIAUTH = afs.ext.32.iauth
+
+DEST_LIBKTRACEIAUTH = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBKTRACEIAUTH)
+
+INST_LIBKTRACEIAUTH = ${DESTDIR}${afskerneldir}/$(LIBKTRACEIAUTH)
+
+$(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32: afs.ext.32
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 32 $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64: afs.ext.64
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 64 $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(DESTDIR)$(afskerneldir)/afs.ext.32: afs.ext.32
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 32 $@
+	$(INSTALL) -f $?.map $@.map
+
+$(DESTDIR)$(afskerneldir)/afs.ext.64: afs.ext.64
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 64 $@
+	$(INSTALL) -f $?.map $@.map
+
+$(DEST_LIBKTRACEIAUTH): $(LIBKTRACEIAUTH)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(INST_LIBKTRACEIAUTH): $(LIBKTRACEIAUTH)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
+	
+
+$(LIBKTRACEIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
+	${LD} ${LDSTUFF} -bloadmap:afs.ext.iauth.loadmap \
+		-bmap:afs.ext.iauth.map -o afs.ext.iauth \
+		${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS} ${IMPORTS32}
+
+afs.ext.32: $(AFSAOBJS) $(AFSNOIAUTHOBJS)
+	${LD} ${LDSTUFF} -bloadmap:afs.ext.32.loadmap \
+	 	-bmap:afs.ext.32.map -o afs.ext.32 \
+		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} \
+		${LDFLAGS} ${IMPORTS32}
+
+afs.ext.64: $(AFSAOBJS) $(AFSNOIAUTHOBJS)
+	${LD} ${LDSTUFF64} -b64 -bloadmap:afs.ext.64.loadmap \
+	 	-bmap:afs.ext.64.map -o afs.ext.64 \
+		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} \
+		${LDFLAGS} ${IMPORTS64}
+
+libktrace: $(LIBKTRACE) $(LIBKTRACE64) $(LIBKTRACEIAUTH)
+install_libktrace: $(INST_LIBKTRACE) $(INST_LIBKTRACEIAUTH)
+dest_libktrace: $(DEST_LIBKTRACE) $(DEST_LIBKTRACEIAUTH)
+
+
+osi_assem.o:	osi_assem.s
+	${AS} -a${KASOPTS} -o osi_assem.o osi_assem.s
+osi_assem.s: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem32.s $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem64.s
+	case bit${KASOPTS} in \
+		bit64 ) \
+			cp -p $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem64.s osi_assem.s ;; \
+		* ) \
+			cp -p $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem32.s osi_assem.s ;; \
+	esac
+
+
+# Build rules for iauth objects.
+afs_call_iauth.o:	$(TOP_SRCDIR)/afs/afs_call.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_call_iauth.o
+afs_nfsclnt_iauth.o:	$(TOP_SRCDIR)/afs/afs_nfsclnt.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o
+afs_pioctl_iauth.o:	$(TOP_SRCDIR)/afs/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o
+osi_vfsops_iauth.o: $(TOP_SRCDIR)/afs/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o
+osi_vnodeops_iauth.o:	$(TOP_SRCDIR)/afs/osi_vnodeops.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o

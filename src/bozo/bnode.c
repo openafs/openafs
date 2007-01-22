@@ -44,6 +44,32 @@ RCSID
 #include <afs/fileutil.h>
 #include "bnode.h"
 
+#include <osi/osi_includes.h>
+#include <osi/osi_trace.h>
+#include "tracepoint_table.h"
+
+#if defined(OSI_TRACE_ENABLED)
+/*
+ * for trace enabled build system,
+ * turn on asynchronous messaging
+ * for important bozo events
+ */
+#include <trace/mail.h>
+#include <trace/USERSPACE/mail.h>
+#include <trace/mail/msg.h>
+
+osi_static osi_result
+bnode_start_mail_msg(struct bnode_proc * aproc);
+osi_static osi_result
+bnode_stop_mail_msg(struct bnode_proc * aproc);
+osi_static osi_result
+bnode_crash_mail_msg(struct bnode_proc * aproc);
+#else /* !OSI_TRACE_ENABLED */
+#define bnode_start_mail_msg(x)   (OSI_OK)
+#define bnode_stop_mail_msg(x)    (OSI_OK)
+#define bnode_crash_mail_msg(x)   (OSI_OK)
+#endif /* !OSI_TRACE_ENABLED */
+
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 /* All known versions of AIX lack WCOREDUMP but this works */
 #define WCOREDUMP(x) ((x) & 0x80)
@@ -609,6 +635,12 @@ bproc()
 			    tb->errorSignal = tp->lastSignal;
 			    tb->lastErrorExit = FT_ApproxTime();
 			    RememberProcName(tp);
+
+			    osi_Trace_Bozo_Event(osi_Trace_Bozo_ProbeId(BnodeProcEvents_crash),
+						 osi_Trace_Args3(tp->pid, 
+								 tp->lastSignal,
+								 WCOREDUMP(status)));
+			    (void)bnode_crash_mail_msg(tp);
 			}
 			if (tp->coreName)
 			    bozo_Log("%s:%s exited on signal %d%s\n",
@@ -928,7 +960,10 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     argv[i] = NULL;		/* null-terminated */
 
     cpid = spawnprocve(argv[0], argv, environ, -1);
+
     osi_audit(BOSSpawnProcEvent, 0, AUD_STR, aexecString, AUD_END);
+    osi_Trace_Bozo_Event(osi_Trace_Bozo_ProbeId(BnodeProcEvents_start),
+			 osi_Trace_Args1(cpid));
 
     if (cpid == (pid_t) - 1) {
 	bozo_Log("Failed to spawn process for bnode '%s'\n", abnode->name);
@@ -943,6 +978,9 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     tp->pid = cpid;
     tp->flags = BPROC_STARTED;
     tp->flags &= ~BPROC_EXITED;
+
+    (void)bnode_start_mail_msg(tp);
+
     bnode_Check(abnode);
     return 0;
 }
@@ -956,6 +994,10 @@ bnode_StopProc(register struct bnode_proc *aproc, int asignal)
 
     osi_audit(BOSStopProcEvent, 0, AUD_STR, (aproc ? aproc->comLine : NULL),
 	      AUD_END);
+    osi_Trace_Bozo_Event(osi_Trace_Bozo_ProbeId(BnodeProcEvents_stop),
+			 osi_Trace_Args2(aproc->pid, asignal));
+
+    (void)bnode_stop_mail_msg(aproc);
 
     code = kill(aproc->pid, asignal);
     bnode_Check(aproc->bnode);
@@ -979,3 +1021,149 @@ bnode_Deactivate(register struct bnode *abnode)
     }
     return BZNOENT;
 }
+
+#if defined(OSI_TRACE_ENABLED)
+osi_static osi_result
+bnode_start_mail_msg(struct bnode_proc * aproc)
+{
+    osi_trace_mail_msg_bozo_proc_start_t * req;
+    osi_trace_mail_message_t * msg = osi_NULL;
+    osi_trace_mail_xid_t xid;
+    osi_result code;
+
+    code = osi_trace_mail_xid_alloc(&xid);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto done;
+    }
+
+    code = osi_trace_mail_msg_alloc(sizeof(osi_trace_mail_msg_bozo_proc_start_t),
+				    &msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    req = (osi_trace_mail_msg_bozo_proc_start_t * ) msg->body;
+    req->pid = aproc->pid;
+    req->spare = 0;
+
+    code = osi_trace_mail_prepare_send(msg, 
+				       OSI_TRACE_GEN_RGY_MCAST_CONSUMER, 
+				       xid,
+				       0,
+				       OSI_TRACE_MAIL_MSG_BOZO_PROC_START);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    code = osi_trace_mail_send(msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+ error:
+    if (osi_compiler_expect_true(msg != osi_NULL)) {
+	osi_trace_mail_msg_put(msg);
+    }
+    osi_trace_mail_xid_retire(xid);
+
+ done:
+    return code;
+}
+
+osi_static osi_result
+bnode_stop_mail_msg(struct bnode_proc * aproc)
+{
+    osi_trace_mail_msg_bozo_proc_stop_t * req;
+    osi_trace_mail_message_t * msg = osi_NULL;
+    osi_trace_mail_xid_t xid;
+    osi_result code;
+
+    code = osi_trace_mail_xid_alloc(&xid);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto done;
+    }
+
+    code = osi_trace_mail_msg_alloc(sizeof(osi_trace_mail_msg_bozo_proc_stop_t),
+				    &msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    req = (osi_trace_mail_msg_bozo_proc_stop_t * ) msg->body;
+    req->pid = aproc->pid;
+    req->spare = 0;
+
+    code = osi_trace_mail_prepare_send(msg, 
+				       OSI_TRACE_GEN_RGY_MCAST_CONSUMER, 
+				       xid,
+				       0,
+				       OSI_TRACE_MAIL_MSG_BOZO_PROC_STOP);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    code = osi_trace_mail_send(msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+ error:
+    if (osi_compiler_expect_true(msg != osi_NULL)) {
+	osi_trace_mail_msg_put(msg);
+    }
+    osi_trace_mail_xid_retire(xid);
+
+ done:
+    return code;
+}
+
+osi_static osi_result
+bnode_crash_mail_msg(struct bnode_proc * aproc)
+{
+    osi_trace_mail_msg_bozo_proc_crash_t * req;
+    osi_trace_mail_message_t * msg = osi_NULL;
+    osi_trace_mail_xid_t xid;
+    osi_result code;
+
+    code = osi_trace_mail_xid_alloc(&xid);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto done;
+    }
+
+    code = osi_trace_mail_msg_alloc(sizeof(osi_trace_mail_msg_bozo_proc_crash_t),
+				    &msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    req = (osi_trace_mail_msg_bozo_proc_crash_t * ) msg->body;
+    req->pid = aproc->pid;
+    req->signal = aproc->lastSignal;
+    req->reason = 0;
+    req->spare = 0;
+
+    code = osi_trace_mail_prepare_send(msg, 
+				       OSI_TRACE_GEN_RGY_MCAST_CONSUMER, 
+				       xid,
+				       0,
+				       OSI_TRACE_MAIL_MSG_BOZO_PROC_CRASH);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+    code = osi_trace_mail_send(msg);
+    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	goto error;
+    }
+
+ error:
+    if (osi_compiler_expect_true(msg != osi_NULL)) {
+	osi_trace_mail_msg_put(msg);
+    }
+    osi_trace_mail_xid_retire(xid);
+
+ done:
+    return code;
+}
+
+#endif /* OSI_TRACE_ENABLED */

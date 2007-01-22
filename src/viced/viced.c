@@ -18,6 +18,9 @@
 /* 									 */
 /* ********************************************************************** */
 
+#include <osi/osi.h>
+#include <osi/osi_trace.h>
+#include <viced/tracepoint_table.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -1900,6 +1903,10 @@ main(int argc, char *argv[])
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
+#endif
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Fileserver, osi_NULL)));
+#if defined(OSI_TRACE_ENABLED)
+    osi_Assert(OSI_RESULT_OK(viced_TracePointTableInit()));
 #endif
     osi_audit_init();
 

@@ -1,0 +1,14 @@
+AC_INIT(src/libktrace/Makefile.common.in)
+AM_INIT_AUTOMAKE(openafs-libktrace,devel)
+AC_CONFIG_HEADER(src/config/afsconfig.h)
+define(OPENAFS_CONFIGURE_LIBKTRACE)
+
+AC_PROG_CC
+OPENAFS_CONFIGURE_COMMON
+
+AC_OUTPUT(             \
+Makefile               \
+src/config/Makefile.config \
+src/libktrace/Makefile.common \
+src/libktrace/Makefile \
+)

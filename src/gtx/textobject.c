@@ -5,15 +5,32 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
  * Description:
  *	Implementation of the gator text object.
  *------------------------------------------------------------------------*/
-#define	IGNORE_STDS_H
+
+#include <osi/osi.h>
+
+/*
+ * XXX
+ * the following code is commented out because it breaks the libosi
+ * header files, which are required since we are in the process of
+ * integrating lwp shared locks into libosi.  I'm not sure which
+ * platforms require src/config/stds.h to not be parsed; if we run
+ * into a platform on which this breaks, then we'll need to revisit.
+ */
+#if 0
+#define        IGNORE_STDS_H
 #include <afsconfig.h>
 #include <afs/param.h>
+#endif
+
+
 
 RCSID
     ("$Header$");

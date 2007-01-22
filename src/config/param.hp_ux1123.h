@@ -99,4 +99,17 @@ struct uio;
 #define	EDQUOT		69	/* Disc quota exceeded 		*/
 #endif
 
+/* global defines */
+
+#define OSI_HPUX_ENV	1
+#define	OSI_HPUX90_ENV	1
+#define	OSI_HPUX100_ENV	1
+#define	OSI_HPUX101_ENV	1
+#define	OSI_HPUX102_ENV	1
+#define	OSI_HPUX110_ENV	1
+#define	OSI_HPUX1111_ENV 1
+#define	OSI_HPUX1122_ENV 1
+#define	OSI_HPUX1123_ENV 1
+
+
 #endif /* AFS_PARAM_H */

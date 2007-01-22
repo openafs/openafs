@@ -1,0 +1,111 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
+	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
+DBUG = -O2
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+
+# Name of directory to hold object files and libraries.
+KOBJ = STATIC
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+include Makefile.common
+
+setup:
+	-mkdir $(KOBJ)
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
+	-ln -fs /usr/src/sys/net net
+	-ln -fs /usr/src/sys/i386/include machine
+	-ln -fs /usr/src/sys/netinet netinet
+	-ln -fs /usr/src/sys/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs /usr/src/sys/sys sys
+	-ln -fs /usr/src/sys/ufs/ufs ufs
+	-ln -fs /usr/src/sys/sys h
+	-ln -fs /usr/src/sys/vm vm
+	-touch $(KOBJ)/sec_net.h
+
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.o
+LIBAFSNONFS = libafs.nonfs.o
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+
+
+# libafs:	$(LIBAFS) $(LIBAFSNONFS)
+# libafs:	$(LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFSNONFS)
+libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+install_libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+dest_libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}

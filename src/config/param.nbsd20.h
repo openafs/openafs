@@ -159,4 +159,11 @@ enum vcexcl { NONEXCL, EXCL };
 
 #endif /* !defined(UKERNEL) */
 
+/* global defines */
+
+#define OSI_NBSD_ENV        1
+#define OSI_NBSD15_ENV      1
+#define OSI_NBSD16_ENV      1
+#define OSI_NBSD20_ENV      1
+
 #endif /* AFS_PARAM_COMMON_H */

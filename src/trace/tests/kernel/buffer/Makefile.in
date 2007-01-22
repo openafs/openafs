@@ -1,0 +1,138 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -g -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG ${BIN_CFLAGS}
+BIN_CFLAGS=-DOSI_TRACE_BUFFER_USERSPACE -DOSI_TRACE_DISABLE_CTX_LOCAL_BUFFER
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+TRACE=$(TOP_SRCDIR)/trace
+
+BUFFER_LIB = trace_generator_buffer.a
+BUFFER_LIB_OBJS= \
+	trace_common_options.o \
+	trace_common_record_inline.o \
+	trace_event_event.o \
+	trace_generator.o \
+	trace_generator_activation.o \
+	trace_generator_buffer.o \
+	trace_generator_cursor.o \
+	trace_generator_tracepoint_inline.o \
+	trace_kernel_cursor.o \
+	$(NULL)
+
+BINS= \
+	buffer \
+	$(NULL)
+
+LIBS= \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+
+all: \
+	$(BINS) \
+	$(NULL)
+
+depinstall:
+
+install: \
+	$(NULL)
+
+dest: \
+	$(NULL)
+
+
+buffer_harness.o: buffer_harness.c
+	${CCRULE}
+
+# because certain debuggers are braindead (sunpro i'm looking at you),
+# we must make sure that all _source filenames_ are unique.
+# dbx seems to strip off paths when walking dwarf sections,
+# and becomes very very confused because of an apparent
+# "namespace" conflict in their fairytale flat source file namespace.
+
+trace_common_record_inline.c: ${TRACE}/common/record_inline.c
+	ln -sf $? $@
+
+trace_common_record_inline.o: trace_common_record_inline.c
+	${CCRULE}
+
+trace_common_options.c: ${TRACE}/common/options.c
+	ln -sf $? $@
+
+trace_common_options.o: trace_common_options.c
+	${CCRULE}
+
+trace_event_event.c: ${TRACE}/event/event.c
+	ln -sf $? $@
+
+trace_event_event.o: trace_event_event.c
+	${CCRULE}
+
+trace_event_usertrap.c: ${TRACE}/event/usertrap.c
+	ln -sf $? $@
+
+trace_event_usertrap.o: trace_event_usertrap.c
+	${CCRULE}
+
+trace_generator.c: ${TRACE}/generator/generator.c
+	ln -sf $? $@
+
+trace_generator.o: trace_generator.c
+	${CCRULE}
+
+trace_generator_activation.c: ${TRACE}/generator/activation.c
+	ln -sf $? $@
+
+trace_generator_activation.o: trace_generator_activation.c
+	${CCRULE}
+
+trace_generator_buffer.c: ${TRACE}/generator/buffer.c
+	ln -sf $? $@
+
+trace_generator_buffer.o: trace_generator_buffer.c
+	${CCRULE}
+
+trace_generator_cursor.c: ${TRACE}/generator/cursor.c
+	ln -sf $? $@
+
+trace_generator_cursor.o: trace_generator_cursor.c
+	${CCRULE}
+
+trace_generator_tracepoint_inline.c: ${TRACE}/generator/tracepoint_inline.c
+	ln -sf $? $@
+
+trace_generator_tracepoint_inline.o: trace_generator_tracepoint_inline.c
+	${CCRULE}
+
+trace_kernel_cursor.c: ${TRACE}/KERNEL/cursor.c
+	ln -sf $? $@
+
+trace_kernel_cursor.o: trace_kernel_cursor.c
+	${CCRULE}
+
+${BUFFER_LIB}: ${BUFFER_LIB_OBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${BUFFER_LIB_OBJS}
+	$(RANLIB) $@
+
+buffer: ${BUFFER_LIB} buffer_harness.o
+	${CC} -g ${LDFLAGS} -o $@ buffer_harness.o ${BUFFER_LIB} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+clean:
+	$(RM) -f *.o *.a $(BINS) core AFS_component_version_number.c
+
+include @TOP_OBJDIR@/src/config/Makefile.version

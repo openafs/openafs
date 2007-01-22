@@ -1,0 +1,260 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+
+COMMON_INCLUDE=
+
+
+LIBAFSAUTHENT_BUILDING_MODE = userspace
+LIBAFSAUTHENT_BUILDING = libafsauthent
+LIBAFSAUTHENT_RULE_DIR = $(TOP_SRCDIR)/libafsauthent/rules
+
+include $(LIBAFSAUTHENT_RULE_DIR)/rules.mk
+include $(LIBAFSAUTHENT_RULE_DIR)/rules.$(MKAFS_OSTYPE).mk
+include $(LIBAFSAUTHENT_RULE_DIR)/libafsauthent.mk
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.SUFFIXES:	.i
+.c.i:
+	$(LIBAFSAUTHENT_CC) $(LIBAFSAUTHENT_ALL_CFLAGS) $(CFLAGS-$@) -P -c $<
+
+.c.o:
+	$(LIBAFSAUTHENT_CC) $(LIBAFSAUTHENT_ALL_CFLAGS) $(CFLAGS-$@) -c $<
+CRULE_NOOPT=	$(LIBAFSAUTHENT_CC) $(LIBAFSAUTHENT_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+CRULE_OPT=	$(LIBAFSAUTHENT_CC) $(LIBAFSAUTHENT_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+
+system:	all
+
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
+
+all:	setup $(COMPDIRS)
+
+# placeholder for any sources that are built prior to compiling libafsauthent
+depsrcs: 
+
+LIBAFSAUTHENT_CC_lwp = ${CC}
+LIBAFSAUTHENT_CC_pthread = ${MT_CC}
+LIBAFSAUTHENT_CC=$(LIBAFSAUTHENT_CC_$(LIBAFSAUTHENT_BUILDING_THR))
+
+LIBAFSAUTHENT_SUFFIX_archive = a
+LIBAFSAUTHENT_SUFFIX_shlib = ${SHLIB_SUFFIX}
+
+LIBAFSAUTHENT_VERSION_archive =
+LIBAFSAUTHENT_VERSION_shlib = .$(LIBAFSAUTHENT_VERSION_MAJOR).$(LIBAFSAUTHENT_VERSION_MINOR)
+
+setup:
+	for t in ${LIBAFSAUTHENT_BUILD_THREADS} ; do \
+		for l in ${LIBAFSAUTHENT_BUILD_LIBS} ; do \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBAFSAUTHENT_BUILD_BITS} ; do \
+				for i in ${LIBAFSAUTHENT_BUILD_INSTRUMENTATION} ; do \
+					LIBAFSAUTHENT_BUILD_DIR="libafsauthent-$$l-$$t-$$i-$$b" ; \
+					echo "Making directory: '$$LIBAFSAUTHENT_BUILD_DIR'..."; \
+					mkdir -p $$LIBAFSAUTHENT_BUILD_DIR ; \
+					$(RM) -f $$LIBAFSAUTHENT_BUILD_DIR/Makefile.common ; \
+					$(RM) -f $$LIBAFSAUTHENT_BUILD_DIR/Makefile ; \
+					$(RM) -f $$LIBAFSAUTHENT_BUILD_DIR/config ; \
+					$(RM) -f $$LIBAFSAUTHENT_BUILD_DIR/$(LIBAFSAUTHENT_MAPFILE) ; \
+					ln -fs ../Makefile.common $$LIBAFSAUTHENT_BUILD_DIR/Makefile.common ; \
+					ln -fs ../Makefile $$LIBAFSAUTHENT_BUILD_DIR/Makefile ; \
+					ln -fs ../config $$LIBAFSAUTHENT_BUILD_DIR/config ; \
+					ln -fs $(LIBAFSAUTHENT_RULE_DIR)/$(LIBAFSAUTHENT_MAPFILE) $$LIBAFSAUTHENT_BUILD_DIR/$(LIBAFSAUTHENT_MAPFILE) ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${LIBAFSAUTHENT_BUILD_THREADS} ; do \
+		LIBAFSAUTHENT_BUILDING_THR=$$t ; \
+		if [ "$$t" = "${LIBAFSAUTHENT_DEFAULT_THREADS}" ] ; then \
+			LIBAFSAUTHENT_THR_ALIAS="" ; \
+		else \
+			LIBAFSAUTHENT_THR_ALIAS="$$t" ; \
+		fi ; \
+		for l in ${LIBAFSAUTHENT_BUILD_LIBS} ; do \
+			LIBAFSAUTHENT_BUILDING_LIB=$$l ; \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBAFSAUTHENT_BUILD_BITS} ; do \
+				LIBAFSAUTHENT_BUILDING_BIT=$$b ; \
+				if [ "$$b" = "${LIBAFSAUTHENT_DEFAULT_BITS}" ] ; then \
+					LIBAFSAUTHENT_BIT_ALIAS="" ; \
+				else \
+					LIBAFSAUTHENT_BIT_ALIAS="$$b" ; \
+				fi ; \
+				for i in ${LIBAFSAUTHENT_BUILD_INSTRUMENTATION} ; do \
+					LIBAFSAUTHENT_BUILDING_INST=$$i ; \
+					if [ "$$i" = "${LIBAFSAUTHENT_DEFAULT_INSTRUMENTATION}" ] ; then \
+						LIBAFSAUTHENT_INST_ALIAS="" ; \
+					else \
+						LIBAFSAUTHENT_INST_ALIAS="$$i" ; \
+					fi ; \
+					LIBAFSAUTHENT_BUILD_DIR="libafsauthent-$$l-$$t-$$i-$$b" ; \
+					LIBAFSAUTHENT_NAME="libafsauthent-$$t-$$i-$$b" ; \
+					echo "Building directory: '$$LIBAFSAUTHENT_BUILD_DIR'..." ; \
+					LIBAFSAUTHENT_ALIAS="" ; \
+					if [ -z "$$LIBAFSAUTHENT_THR_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="libafsauthent-$$i-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_BIT_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent-$$t-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_INST_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent-$$t-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_THR_ALIAS" ] && [ -z "$$LIBAFSAUTHENT_BIT_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_THR_ALIAS" ] && [ -z "$$LIBAFSAUTHENT_INST_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_BIT_ALIAS" ] && [ -z "$$LIBAFSAUTHENT_INST_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent-$$t" ; \
+					fi ; \
+					if [ -z "$$LIBAFSAUTHENT_THR_ALIAS" ] && [ -z "$$LIBAFSAUTHENT_BIT_ALIAS" ] && [ -z "$$LIBAFSAUTHENT_INST_ALIAS" ] ; then \
+						LIBAFSAUTHENT_ALIAS="$$LIBAFSAUTHENT_ALIAS libafsauthent" ; \
+					fi ; \
+					export LIBAFSAUTHENT_BUILDING_LIB ; \
+					export LIBAFSAUTHENT_BUILDING_THR ; \
+					export LIBAFSAUTHENT_BUILDING_BIT ; \
+					export LIBAFSAUTHENT_BUILDING_INST ; \
+					export LIBAFSAUTHENT_BUILD_DIR ; \
+					export LIBAFSAUTHENT_NAME ; \
+					export LIBAFSAUTHENT_ALIAS ; \
+					cd $$LIBAFSAUTHENT_BUILD_DIR || exit 1 ; \
+					$(MAKE) $@_libafsauthent || exit 1 ; \
+					cd ../ ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+std_compdirs_libafsauthent: depsrcs libafsauthent libdir_libafsauthent
+std_instdirs_libafsauthent: install_libafsauthent
+std_destdirs_libafsauthent: dest_libafsauthent
+
+# Below this line are targets when in the COMMON directory:
+LIBAFSAUTHENT_SUFFIX=$(LIBAFSAUTHENT_SUFFIX_$(LIBAFSAUTHENT_BUILDING_LIB))
+LIBAFSAUTHENT_VERSION=$(LIBAFSAUTHENT_VERSION_$(LIBAFSAUTHENT_BUILDING_LIB))
+LIBAFSAUTHENT = $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX)$(LIBAFSAUTHENT_VERSION)
+
+LIBAFSAUTHENT_LIBDIR_PATH = ${TOP_LIBDIR}
+LIBAFSAUTHENT_INST_PATH = ${DESTDIR}${libdir}
+LIBAFSAUTHENT_DEST_PATH = ${DEST}/lib
+
+LIBAFSAUTHENT_LIBDIR = $(LIBAFSAUTHENT_LIBDIR_PATH)/$(LIBAFSAUTHENT)
+LIBAFSAUTHENT_INST = $(LIBAFSAUTHENT_INST_PATH)/$(LIBAFSAUTHENT)
+LIBAFSAUTHENT_DEST = $(LIBAFSAUTHENT_DEST_PATH)/$(LIBAFSAUTHENT)
+
+# Without this line, gmake tries to build libafsauthent.o
+.PHONY: libafsauthent
+
+libafsauthent:	$(LIBAFSAUTHENT)
+libdir_libafsauthent:	$(LIBAFSAUTHENT_LIBDIR)
+install_libafsauthent:	$(LIBAFSAUTHENT_INST)
+dest_libafsauthent:	$(LIBAFSAUTHENT_DEST)
+
+
+$(LIBAFSAUTHENT_LIBDIR): $(LIBAFSAUTHENT)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSAUTHENT_LIBDIR_PATH) && \
+	for l in x $(LIBAFSAUTHENT_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+			ln -sf $(LIBAFSAUTHENT) "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSAUTHENT_LIBDIR_PATH) && \
+	if [ "$(LIBAFSAUTHENT_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+	fi
+
+$(LIBAFSAUTHENT_INST): $(LIBAFSAUTHENT)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSAUTHENT_INST_PATH) && \
+	for l in x $(LIBAFSAUTHENT_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+			ln -sf $(LIBAFSAUTHENT) "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSAUTHENT_INST_PATH) && \
+	if [ "$(LIBAFSAUTHENT_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+	fi
+
+$(LIBAFSAUTHENT_DEST): $(LIBAFSAUTHENT)
+	${INSTALL} -f $? $@
+	cd $(LIBAFSAUTHENT_DEST_PATH) && \
+	for l in x $(LIBAFSAUTHENT_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+			ln -sf $(LIBAFSAUTHENT) "$${l}.$(LIBAFSAUTHENT_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBAFSAUTHENT_DEST_PATH) && \
+	if [ "$(LIBAFSAUTHENT_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX) ; \
+		$(RM) -f $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+		ln -s -f $(LIBAFSAUTHENT) $(LIBAFSAUTHENT_NAME).$(LIBAFSAUTHENT_SUFFIX).$(LIBAFSAUTHENT_VERSION_MAJOR) ; \
+	fi
+
+# for now, ugliness
+# in the future, we'll use rra's new shlib script
+${LIBAFSAUTHENT}: $(LIBAFSAUTHENT_ALL_OBJS)
+	$(RM) -f $@
+	if [ "$(LIBAFSAUTHENT_BUILDING_LIB)" = "shlib" ] ; then \
+		${TOP_OBJDIR}/src/config/shlib-build \
+			-d $(TOP_SRCDIR)/libafsprc \
+			-l ${LIBAFSAUTHENT_NAME} \
+			-M ${LIBAFSAUTHENT_VERSION_MAJOR} \
+			-m ${LIBAFSAUTHENT_VERSION_MINOR} \
+			-exp ${LIBAFSAUTHENT_MAPFILE} \
+			-r . -- \
+			${LIBAFSAUTHENT_ALL_OBJS} ${LIBAFSAUTHENT_DEPS} ; \
+	else \
+		$(AR) crv $@ $(LIBAFSAUTHENT_ALL_OBJS) ; \
+		$(RANLIB) $@ ; \
+	fi
+
+# old shlib build system
+#
+#		case ${SYS_NAME} in \
+#		rs_aix4* | rs_aix5*) \
+#			${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBAFSAUTHENT_ALL_OBJS} -bE:$(LIBAFSAUTHENT_RULE_DIR)/libafsauthent.exp ${LIBAFSAUTHENT_DEPS} ;; \
+#		sun*_5*) \
+#			${SHLIB_LINKER} -h ${LIBAFSAUTHENT_NAME}.${SHLIB_SUFFIX}.${LIBAFSAUTHENT_VERSION_MAJOR} -o ${LIBAFSAUTHENT} ${LIBAFSAUTHENT_ALL_OBJS} ${LIBAFSAUTHENT_DEPS} ${LIBAFSAUTHENT_BIT_CFLAGS} ${LIBAFSAUTHENT_OS_BIT_CFLAGS} ;; \
+#		*_linux*) \
+#			${SHLIB_LINKER} -Wl,-h,${LIBAFSAUTHENT_NAME}.${SHLIB_SUFFIX}.${LIBAFSAUTHENT_VERSION_MAJOR} -Wl,--version-script=$(LIBAFSAUTHENT_RULE_DIR)/$(LIBAFSAUTHENT_MAPFILE) -o ${LIBAFSAUTHENT} ${LIBAFSAUTHENT_ALL_OBJS} ${LIBAFSAUTHENT_DEPS} ;; \
+#		*) \
+#			${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBAFSAUTHENT_ALL_OBJS} ${LIBAFSAUTHENT_DEPS} ;; \
+#		esac ; \
+
+
+clean:
+	-$(RM) -rf libafsauthent*
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

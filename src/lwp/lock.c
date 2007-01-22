@@ -28,11 +28,7 @@
 RCSID
     ("$Header$");
 
-#ifdef AFS_PTHREAD_ENV
-#include <afs/assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <assert.h>
-#endif /* AFS_PTHRED_ENV */
+#include <osi/osi_includes.h>
 #include "lwp.h"
 #include "lock.h"
 #include <stdio.h>
@@ -48,11 +44,11 @@ Lock_Init(struct Lock *lock)
     lock->wait_states = 0;
     lock->num_waiting = 0;
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&lock->mutex, (const pthread_mutexattr_t *)0) ==
+    osi_Assert(pthread_mutex_init(&lock->mutex, (const pthread_mutexattr_t *)0) ==
 	   0);
-    assert(pthread_cond_init(&lock->read_cv, (const pthread_condattr_t *)0) ==
+    osi_Assert(pthread_cond_init(&lock->read_cv, (const pthread_condattr_t *)0) ==
 	   0);
-    assert(pthread_cond_init(&lock->write_cv, (const pthread_condattr_t *)0)
+    osi_Assert(pthread_cond_init(&lock->write_cv, (const pthread_condattr_t *)0)
 	   == 0);
 #endif /* AFS_PTHRED_ENV */
 }
@@ -61,12 +57,12 @@ void
 Lock_Destroy(struct Lock *lock)
 {
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_destroy(&lock->mutex) == 0);
-    assert(pthread_cond_destroy(&lock->read_cv) == 0);
-    assert(pthread_cond_destroy(&lock->write_cv) == 0);
+    osi_Assert(pthread_mutex_destroy(&lock->mutex) == 0);
+    osi_Assert(pthread_cond_destroy(&lock->read_cv) == 0);
+    osi_Assert(pthread_cond_destroy(&lock->write_cv) == 0);
 #endif /* AFS_PTHRED_ENV */
 }
-
+
 void
 Afs_Lock_Obtain(struct Lock *lock, int how)
 {
@@ -77,7 +73,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_wait(&lock->read_cv, &lock->mutex) == 0);
+	    osi_Assert(pthread_cond_wait(&lock->read_cv, &lock->mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
@@ -91,7 +87,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= WRITE_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
+	    osi_Assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -105,7 +101,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= SHARED_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
+	    osi_Assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -119,7 +115,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= WRITE_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
+	    osi_Assert(pthread_cond_wait(&lock->write_cv, &lock->mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -130,7 +126,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 
     default:
 	printf("Can't happen, bad LOCK type: %d\n", how);
-	assert(0);
+	osi_Assert(0);
     }
 }
 
@@ -141,7 +137,7 @@ Afs_Lock_WakeupR(struct Lock *lock)
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&lock->read_cv) == 0);
+	osi_Assert(pthread_cond_broadcast(&lock->read_cv) == 0);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
@@ -155,14 +151,14 @@ Afs_Lock_ReleaseR(struct Lock *lock)
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&lock->read_cv) == 0);
+	osi_Assert(pthread_cond_broadcast(&lock->read_cv) == 0);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
     } else {
 	lock->wait_states &= ~EXCL_LOCKS;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&lock->write_cv) == 0);
+	osi_Assert(pthread_cond_broadcast(&lock->write_cv) == 0);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -176,14 +172,14 @@ Afs_Lock_ReleaseW(struct Lock *lock)
     if (lock->wait_states & EXCL_LOCKS) {
 	lock->wait_states &= ~EXCL_LOCKS;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&lock->write_cv) == 0);
+	osi_Assert(pthread_cond_broadcast(&lock->write_cv) == 0);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
     } else {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&lock->read_cv) == 0);
+	osi_Assert(pthread_cond_broadcast(&lock->read_cv) == 0);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
@@ -195,7 +191,7 @@ Afs_Lock_ReleaseW(struct Lock *lock)
  * blocking.  They're trivial to do in a non-preemptive LWP environment.
  */
 
-/* release a write lock and sleep on an address, atomically */
+/* release a read lock and sleep on an address, atomically */
 void
 LWP_WaitProcessR(addr, alock)
      register char *addr;
@@ -215,7 +211,7 @@ LWP_WaitProcessW(addr, alock)
     LWP_WaitProcess(addr);
 }
 
-/* release a write lock and sleep on an address, atomically */
+/* release a shared lock and sleep on an address, atomically */
 void
 LWP_WaitProcessS(addr, alock)
      register char *addr;
@@ -224,4 +220,4 @@ LWP_WaitProcessS(addr, alock)
     ReleaseSharedLock(alock);
     LWP_WaitProcess(addr);
 }
-#endif /* AFS_PTHREAD_ENV */
+#endif /* !AFS_PTHREAD_ENV */

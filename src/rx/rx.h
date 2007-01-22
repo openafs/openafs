@@ -29,6 +29,8 @@
 #define	VOID	char
 #endif
 
+#include <osi/osi_includes.h>
+
 #ifdef	KERNEL
 #include "rx_kmutex.h"
 #include "rx_kernel.h"

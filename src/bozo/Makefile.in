@@ -12,6 +12,12 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+TRACEPOINT_TAB = tracepoint.tab
+TRACEPOINT_HDR = tracepoint_table.h
+TRACEPOINT_SRC = tracepoint_table.c
+TRACEPOINT_OBJ = tracepoint_table.o
+include @TOP_OBJDIR@/src/trace/table-gen.mk
+
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
 INCLS=bnode.h \
@@ -23,7 +29,8 @@ INCLS=bnode.h \
 	${TOP_INCDIR}/afs/ktime.h
 
 # EH 12/18/90 - have to search librx.a twice on Ultrix 4.0
-LIBS=${TOP_LIBDIR}/librx.a \
+LIBS= \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libkauth.a \
@@ -35,15 +42,33 @@ LIBS=${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libprocmgmt.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libprocmgmt.a
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
 
-OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
-bosoprocs.o cronbnodeops.o
+OBJS= \
+	bnode.o \
+	bosint.ss.o \
+	bosint.xdr.o \
+	bosoprocs.o \
+	bosserver.o \
+	cronbnodeops.o \
+	ezbnodeops.o \
+	fsbnodeops.o \
+	${TRACEPOINT_OBJ}
 
-all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h bos_util
+all: \
+	${TRACEPOINT_HDR} \
+	bosserver \
+	${TOP_INCDIR}/afs/bosint.h \
+	bos \
+	${TOP_LIBDIR}/libbos.a \
+	${TOP_INCDIR}/afs/bnode.h \
+	bos_util
 
 ${TOP_INCDIR}/afs/bosint.h: bosint.h
 	${INSTALL_DATA} $? $@
@@ -147,6 +172,7 @@ clean:
 	$(RM) -f  *.a *.o bos bosserver testproc bos_util \
 		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
 		core boserr.c bnode.h AFS_component_version_number.c 
+	$(RM) -f ${TRACEPOINT_SRC} ${TRACEPOINT_HDR}
 
 test: 
 	cd test; $(MAKE) 

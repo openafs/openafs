@@ -28,12 +28,14 @@ INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/xstat_cm.h \
 	afsmonitor.h \
 	afsmon-labels.h
-LIBS=${TOP_LIBDIR}/libxstat_fs.a \
+LIBS= \
+	${TOP_LIBDIR}/libxstat_fs.a \
 	${TOP_LIBDIR}/libxstat_cm.a \
 	${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a

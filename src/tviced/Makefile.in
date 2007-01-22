@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,7 +18,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-CCRULE=${CC} ${CFLAGS} -c $?
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 RX=../rx
 VICED=../viced
@@ -29,32 +30,83 @@ DIR=../dir
 VOL=../vol
 FSINT=../fsint
 
-VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o	
+VICEDOBJS= \
+	viced.o \
+	afsfileprocs.o \
+	host.o \
+	physio.o \
+	callback.o \
+	serialize_state.o \
+	viced_tracepoint_table.o
 
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
+VLSERVEROBJS= \
+	vldbint.cs.o \
+	vldbint.xdr.o
 
-LWPOBJS=lock.o threadname.o
+LWPOBJS= \
+	lock.o \
+	threadname.o
 
-LIBACLOBJS=aclprocs.o netprocs.o
+LIBACLOBJS= \
+	aclprocs.o \
+	netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+UTILOBJS= \
+	assert.o \
+	uuid.o \
+	serverLog.o \
+	fileutil.o \
+	netutils.o \
+	dirpath.o \
+	volparse.o \
+	flipbase64.o \
+	softsig.o
 
-DIROBJS=buffer.o dir.o salvage.o
+DIROBJS= \
+	buffer.o \
+	dir.o \
+	salvage.o
 
-VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
-	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o salvsync-client.o daemon_com.o
+VOLOBJS= \
+	vnode.o \
+	volume.o \
+	vutil.o \
+	partition.o \
+	fssync-server.o \
+	clone.o \
+	devname.o \
+	common.o \
+	ihandle.o \
+	listinodes.o \
+	namei_ops.o \
+	fstab.o \
+	salvsync-client.o \
+	daemon_com.o \
+	vol_tracepoint_table.o
 
-FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+FSINTOBJS= \
+	afsaux.o \
+	afscbint.cs.o \
+	afsint.ss.o \
+	afsint.xdr.o
 
 RXOBJS = rx_pthread.o 
 
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a
+SDBGOBJS = \
+	state_analyzer.o \
+	uuid.o \
+	dirpath.o \
+	fileutil.o \
+	${TOP_LIBDIR}/util.a
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS= \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libosi-pthread-inst.a \
+	${TOP_LIBDIR}/util.a
 
 all: fileserver state_analyzer
 
@@ -74,6 +126,9 @@ physio.o: ${VICED}/physio.c
 	${CCRULE}
 
 callback.o: ${VICED}/callback.c
+	${CCRULE}
+
+viced_tracepoint_table.o: ${VICED}/tracepoint_table.c
 	${CCRULE}
 
 serialize_state.o: ./serialize_state.c
@@ -118,11 +173,12 @@ aclprocs.o: ${LIBACL}/aclprocs.c
 netprocs.o: ${LIBACL}/netprocs.c
 	${CCRULE}
 
+# XXX we're having strange interactions with pruclient killer; disable trace for now
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE}
+	${CCRULE} -DOSI_TRACEPOINT_DISABLE
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE}
+	${CCRULE} -DOSI_TRACEPOINT_DISABLE
 
 buffer.o: ${DIR}/buffer.c
 	${CCRULE}
@@ -155,6 +211,9 @@ salvsync-client.o: ${VOL}/salvsync-client.c
 	${CCRULE}
 
 daemon_com.o: ${VOL}/daemon_com.c
+	${CCRULE}
+
+vol_tracepoint_table.o: ${VOL}/tracepoint_table.c
 	${CCRULE}
 
 clone.o: ${VOL}/clone.c

@@ -1,0 +1,55 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+OBJS = \
+	list.o \
+	$(NULL)
+
+objects= ${OBJS}
+
+LIBS= \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+
+all: \
+	depinstall \
+	${objects} \
+	list \
+	$(NULL)
+
+depinstall:
+
+install:
+
+dest:
+
+list.o: list.c
+	${CCRULE}
+
+list: list.o
+	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
+
+
+clean:
+	$(RM) -f *.o core list
+
+include @TOP_OBJDIR@/src/config/Makefile.version
+

@@ -5,10 +5,20 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
-#ifndef AFS_PARAM_COMMON_H
-#define AFS_PARAM_COMMON_H
+#ifndef	AFS_PARAM_COMMON_H
+#define	AFS_PARAM_COMMON_H
+
+/* global defines */
+
+#define OSI_LINUX_ENV		1
+#define OSI_LINUX20_ENV		1
+#define OSI_LINUX22_ENV		1
+#define OSI_LINUX24_ENV		1
+
 
 #ifndef UKERNEL
 

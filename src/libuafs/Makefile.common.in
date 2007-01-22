@@ -30,6 +30,8 @@ TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+TOP_SRC_OSI = ${TOP_SRCDIR}/osi
+TOP_SRC_TRACE = ${TOP_SRCDIR}/trace
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_SRCDIR} \
@@ -77,8 +79,136 @@ linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
 
 
-CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
-CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $? -o $@
+CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $? -o $@
+
+UAFS_OSI_OBJS = \
+	$(UOBJ)/osi.o \
+	$(UOBJ)/osi_cache.o \
+	$(UOBJ)/osi_common_condvar.o \
+	$(UOBJ)/osi_common_mutex.o \
+	$(UOBJ)/osi_common_object_cache.o \
+	$(UOBJ)/osi_common_rwlock.o \
+	$(UOBJ)/osi_common_shlock.o \
+	$(UOBJ)/osi_common_thread_event.o \
+	$(UOBJ)/osi_common_thread_event_inline.o \
+	$(UOBJ)/osi_common_util.o \
+	$(UOBJ)/osi_legacy_condvar.o \
+	$(UOBJ)/osi_legacy_mutex.o \
+	$(UOBJ)/osi_legacy_rwlock.o \
+	$(UOBJ)/osi_legacy_shlock.o
+
+AFSWEB_OSI_OBJS = \
+	$(WEBOBJ)/osi.o \
+	$(WEBOBJ)/osi_cache.o \
+	$(WEBOBJ)/osi_common_condvar.o \
+	$(WEBOBJ)/osi_common_mutex.o \
+	$(WEBOBJ)/osi_common_object_cache.o \
+	$(WEBOBJ)/osi_common_rwlock.o \
+	$(WEBOBJ)/osi_common_shlock.o \
+	$(WEBOBJ)/osi_common_thread_event.o \
+	$(WEBOBJ)/osi_common_thread_event_inline.o \
+	$(WEBOBJ)/osi_common_util.o \
+	$(WEBOBJ)/osi_legacy_condvar.o \
+	$(WEBOBJ)/osi_legacy_mutex.o \
+	$(WEBOBJ)/osi_legacy_refcnt.o \
+	$(WEBOBJ)/osi_legacy_rwlock.o \
+	$(WEBOBJ)/osi_legacy_shlock.o
+
+JUAFS_OSI_OBJS = \
+	$(JUAFS)/osi.o \
+	$(JUAFS)/osi_cache.o \
+	$(JUAFS)/osi_common_condvar.o \
+	$(JUAFS)/osi_common_mutex.o \
+	$(JUAFS)/osi_common_object_cache.o \
+	$(JUAFS)/osi_common_rwlock.o \
+	$(JUAFS)/osi_common_shlock.o \
+	$(JUAFS)/osi_common_thread_event.o \
+	$(JUAFS)/osi_common_thread_event_inline.o \
+	$(JUAFS)/osi_common_util.o \
+	$(JUAFS)/osi_legacy_condvar.o \
+	$(JUAFS)/osi_legacy_mutex.o \
+	$(JUAFS)/osi_legacy_refcnt.o \
+	$(JUAFS)/osi_legacy_rwlock.o \
+	$(JUAFS)/osi_legacy_shlock.o
+
+UAFS_OSI_TRACE_OBJS = \
+	$(UOBJ)/osi_tracepoint_table.o \
+	$(UOBJ)/afs_tracepoint_table.o \
+	$(UOBJ)/afs_icl_tracepoint_table.o \
+	$(UOBJ)/rx_tracepoint_table.o \
+	$(UOBJ)/ubik_tracepoint_table.o \
+	$(UOBJ)/osi_trace_event_function.o \
+	$(UOBJ)/osi_trace_event_event.o \
+	$(UOBJ)/osi_trace_event_icl.o \
+	$(UOBJ)/osi_trace_event_usertrap.o \
+	$(UOBJ)/osi_trace_activation.o \
+	$(UOBJ)/osi_trace_cursor.o \
+	$(UOBJ)/osi_trace_buffer.o \
+	$(UOBJ)/osi_trace_generator.o \
+	$(UOBJ)/osi_trace_directory.o \
+	$(UOBJ)/osi_trace_directory_mail.o \
+	$(UOBJ)/osi_trace_probe.o \
+	$(UOBJ)/osi_trace_probe_mail.o \
+	$(UOBJ)/osi_trace_syscall_handler.o \
+	$(UOBJ)/osi_trace_syscall.o \
+	$(UOBJ)/osi_trace_gen_rgy.o \
+	$(UOBJ)/osi_trace_mail_common.o \
+	$(UOBJ)/osi_trace_mail_handler.o \
+	$(UOBJ)/osi_trace_mail_header.o \
+	$(UOBJ)/osi_trace_userspace_mail.o
+
+AFSWEB_OSI_TRACE_OBJS = \
+	$(WEBOBJ)/osi_tracepoint_table.o \
+	$(WEBOBJ)/afs_tracepoint_table.o \
+	$(WEBOBJ)/afs_icl_tracepoint_table.o \
+	$(WEBOBJ)/rx_tracepoint_table.o \
+	$(WEBOBJ)/ubik_tracepoint_table.o \
+	$(WEBOBJ)/osi_trace_event_function.o \
+	$(WEBOBJ)/osi_trace_event_event.o \
+	$(WEBOBJ)/osi_trace_event_icl.o \
+	$(WEBOBJ)/osi_trace_event_usertrap.o \
+	$(WEBOBJ)/osi_trace_activation.o \
+	$(WEBOBJ)/osi_trace_cursor.o \
+	$(WEBOBJ)/osi_trace_buffer.o \
+	$(WEBOBJ)/osi_trace_generator.o \
+	$(WEBOBJ)/osi_trace_directory.o \
+	$(WEBOBJ)/osi_trace_directory_mail.o \
+	$(WEBOBJ)/osi_trace_probe.o \
+	$(WEBOBJ)/osi_trace_probe_mail.o \
+	$(WEBOBJ)/osi_trace_syscall_handler.o \
+	$(WEBOBJ)/osi_trace_syscall.o \
+	$(WEBOBJ)/osi_trace_gen_rgy.o \
+	$(WEBOBJ)/osi_trace_mail_common.o \
+	$(WEBOBJ)/osi_trace_mail_handler.o \
+	$(WEBOBJ)/osi_trace_mail_header.o \
+	$(WEBOBJ)/osi_trace_userspace_mail.o
+
+JUAFS_OSI_TRACE_OBJS = \
+	$(JUAFS)/osi_tracepoint_table.o \
+	$(JUAFS)/afs_tracepoint_table.o \
+	$(JUAFS)/afs_icl_tracepoint_table.o \
+	$(JUAFS)/rx_tracepoint_table.o \
+	$(JUAFS)/ubik_tracepoint_table.o \
+	$(JUAFS)/osi_trace_event_function.o \
+	$(JUAFS)/osi_trace_event_event.o \
+	$(JUAFS)/osi_trace_event_icl.o \
+	$(JUAFS)/osi_trace_event_usertrap.o \
+	$(JUAFS)/osi_trace_activation.o \
+	$(JUAFS)/osi_trace_cursor.o \
+	$(JUAFS)/osi_trace_buffer.o \
+	$(JUAFS)/osi_trace_generator.o \
+	$(JUAFS)/osi_trace_directory.o \
+	$(JUAFS)/osi_trace_directory_mail.o \
+	$(JUAFS)/osi_trace_probe.o \
+	$(JUAFS)/osi_trace_probe_mail.o \
+	$(JUAFS)/osi_trace_syscall_handler.o \
+	$(JUAFS)/osi_trace_syscall.o \
+	$(JUAFS)/osi_trace_gen_rgy.o \
+	$(JUAFS)/osi_trace_mail_common.o \
+	$(JUAFS)/osi_trace_mail_handler.o \
+	$(JUAFS)/osi_trace_mail_header.o \
+	$(JUAFS)/osi_trace_userspace_mail.o
 
 UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
@@ -96,7 +226,6 @@ UAFSOBJ = \
 	$(UOBJ)/afs_dcache.o \
 	$(UOBJ)/afs_dir.o		\
 	$(UOBJ)/afs_dynroot.o \
-	$(UOBJ)/afs_icl.o \
 	$(UOBJ)/afs_init.o \
 	$(UOBJ)/afs_lock.o	\
 	$(UOBJ)/afs_mariner.o \
@@ -203,7 +332,11 @@ UAFSOBJ = \
 	$(UOBJ)/Krxstat.xdr.o \
 	$(UOBJ)/rxstat.o \
 	$(UOBJ)/xdr_int32.o \
-	$(UOBJ)/xdr_int64.o
+	$(UOBJ)/xdr_int64.o \
+	$(UAFS_OSI_OBJS) \
+	$(UAFS_OSI_OS_OBJS) \
+	$(UAFS_OSI_TRACE_OBJS) \
+	$(UAFS_OSI_TRACE_OS_OBJS)
 
 AFSWEBOBJ = \
 	$(WEBOBJ)/afs_atomlist.o \
@@ -221,7 +354,6 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
 	$(WEBOBJ)/afs_dynroot.o \
-	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
@@ -328,7 +460,11 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
+	$(WEBOBJ)/rxstat.o \
+	$(AFSWEB_OSI_OBJS) \
+	$(AFSWEB_OSI_OS_OBJS) \
+	$(AFSWEB_OSI_TRACE_OBJS) \
+	$(AFSWEB_OSI_TRACE_OS_OBJS)
 
 
 AFSWEBOBJKRB = \
@@ -347,7 +483,6 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
 	$(WEBOBJ)/afs_dynroot.o \
-	$(WEBOBJ)/afs_icl.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
@@ -450,7 +585,11 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
+	$(WEBOBJ)/rxstat.o \
+	$(AFSWEB_OSI_OBJS) \
+	$(AFSWEB_OSI_OS_OBJS) \
+	$(AFSWEB_OSI_TRACE_OBJS) \
+	$(AFSWEB_OSI_TRACE_OS_OBJS)
 
 JUAFSOBJ = \
 	$(JUAFS)/afs_atomlist.o \
@@ -468,7 +607,6 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_dcache.o \
 	$(JUAFS)/afs_dir.o \
 	$(JUAFS)/afs_dynroot.o \
-	$(JUAFS)/afs_icl.o \
 	$(JUAFS)/afs_init.o \
 	$(JUAFS)/afs_lock.o	\
 	$(JUAFS)/afs_mariner.o \
@@ -573,7 +711,11 @@ JUAFSOBJ = \
 	$(JUAFS)/Krxstat.ss.o \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
-	$(JUAFS)/xdr_int64.o
+	$(JUAFS)/xdr_int64.o \
+	$(JUAFS_OSI_OBJS) \
+	$(JUAFS_OSI_OS_OBJS) \
+	$(JUAFS_OSI_TRACE_OBJS) \
+	$(JUAFS_OSI_TRACE_OS_OBJS)
 
 # Compilation rules
 
@@ -753,8 +895,6 @@ $(UOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE1)
 $(UOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
@@ -833,6 +973,91 @@ $(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
+$(UOBJ)/osi.o: $(TOP_SRC_OSI)/osi.c
+	$(CRULE1)
+$(UOBJ)/osi_cache.o: $(TOP_SRC_OSI)/COMMON/cache.c
+	$(CRULE1)
+$(UOBJ)/osi_common_condvar.o: $(TOP_SRC_OSI)/COMMON/condvar.c
+	$(CRULE1)
+$(UOBJ)/osi_common_mem_local.o: $(TOP_SRC_OSI)/COMMON/mem_local.c
+	$(CRULE1)
+$(UOBJ)/osi_common_mutex.o: $(TOP_SRC_OSI)/COMMON/mutex.c
+	$(CRULE1)
+$(UOBJ)/osi_common_object_cache.o: $(TOP_SRC_OSI)/COMMON/object_cache.c
+	$(CRULE1)
+$(UOBJ)/osi_common_rwlock.o: $(TOP_SRC_OSI)/COMMON/rwlock.c
+	$(CRULE1)
+$(UOBJ)/osi_common_shlock.o: $(TOP_SRC_OSI)/COMMON/shlock.c
+	$(CRULE1)
+$(UOBJ)/osi_common_thread_event.o: $(TOP_SRC_OSI)/COMMON/thread_event.c
+	$(CRULE1)
+$(UOBJ)/osi_common_thread_event_inline.o: $(TOP_SRC_OSI)/COMMON/thread_event_inline.c
+	$(CRULE1)
+$(UOBJ)/osi_common_util.o: $(TOP_SRC_OSI)/COMMON/uutil.c
+	$(CRULE1)
+$(UOBJ)/osi_legacy_condvar.o: $(TOP_SRC_OSI)/LEGACY/kcondvar.c
+	$(CRULE1)
+$(UOBJ)/osi_legacy_mutex.o: $(TOP_SRC_OSI)/LEGACY/kmutex.c
+	$(CRULE1)
+$(UOBJ)/osi_legacy_refcnt.o: $(TOP_SRC_OSI)/LEGACY/refcnt.c
+	$(CRULE1)
+$(UOBJ)/osi_legacy_rwlock.o: $(TOP_SRC_OSI)/LEGACY/krwlock.c
+	$(CRULE1)
+$(UOBJ)/osi_legacy_shlock.o: $(TOP_SRC_OSI)/LEGACY/kshlock.c
+	$(CRULE1)
+$(UOBJ)/osi_native_cache.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucache.c
+	$(CRULE1)
+$(UOBJ)/osi_native_cpu.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucpu.c
+	$(CRULE1)
+$(UOBJ)/osi_tracepoint_table.o: $(TOP_SRC_OSI)/osi_tracepoint_table.c
+	$(CRULE1)
+$(UOBJ)/afs_tracepoint_table.o: $(TOP_SRC_AFS)/afs_tracepoint.c
+	$(CRULE1)
+$(UOBJ)/afs_icl_tracepoint_table.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE1)
+$(UOBJ)/rx_tracepoint_table.o: $(TOP_SRC_RX)/tracepoint_table.c
+	$(CRULE1)
+$(UOBJ)/ubik_tracepoint_table.o: $(TOP_SRCDIR)/ubik/tracepoint_table.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_event_function.o: $(TOP_SRC_TRACE)/event/function.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_event_event.o: $(TOP_SRC_TRACE)/event/event.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_event_icl.o: $(TOP_SRC_TRACE)/event/icl.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_event_usertrap.o: $(TOP_SRC_TRACE)/event/usertrap.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_activation.o: $(TOP_SRC_TRACE)/generator/activation.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_cursor.o: $(TOP_SRC_TRACE)/generator/cursor.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_buffer.o: $(TOP_SRC_TRACE)/generator/buffer.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_generator.o: $(TOP_SRC_TRACE)/generator/generator.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_directory.o: $(TOP_SRC_TRACE)/generator/directory.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_directory_mail.o: $(TOP_SRC_TRACE)/generator/directory_mail.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_probe.o: $(TOP_SRC_TRACE)/generator/probe.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_probe_mail.o: $(TOP_SRC_TRACE)/generator/probe_mail.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_mail_common.o: $(TOP_SRC_TRACE)/mail/common.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_mail_handler.o: $(TOP_SRC_TRACE)/mail/handler.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_mail_header.o: $(TOP_SRC_TRACE)/mail/header.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_userspace_mail.o: $(TOP_SRC_TRACE)/USERSPACE/mail.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_syscall_handler.o: $(TOP_SRC_TRACE)/UKERNEL/syscall.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_syscall.o: $(TOP_SRC_TRACE)/USERSPACE/syscall.c
+	$(CRULE1)
+$(UOBJ)/osi_trace_gen_rgy.o: $(TOP_SRC_TRACE)/USERSPACE/gen_rgy.c
+	$(CRULE1)
+
 
 # These files are for the netscape plugin
 
@@ -1006,8 +1231,6 @@ $(WEBOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE2)
 $(WEBOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE2) -DAFS_NONFSTRANS
-$(WEBOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
@@ -1092,6 +1315,90 @@ $(WEBOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE2)
 $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE2)
+$(WEBOBJ)/osi.o: $(TOP_SRC_OSI)/osi.c
+	$(CRULE2)
+$(WEBOBJ)/osi_cache.o: $(TOP_SRC_OSI)/COMMON/cache.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_condvar.o: $(TOP_SRC_OSI)/COMMON/condvar.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_mem_local.o: $(TOP_SRC_OSI)/COMMON/mem_local.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_mutex.o: $(TOP_SRC_OSI)/COMMON/mutex.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_object_cache.o: $(TOP_SRC_OSI)/COMMON/object_cache.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_rwlock.o: $(TOP_SRC_OSI)/COMMON/rwlock.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_shlock.o: $(TOP_SRC_OSI)/COMMON/shlock.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_thread_event.o: $(TOP_SRC_OSI)/COMMON/thread_event.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_thread_event_inline.o: $(TOP_SRC_OSI)/COMMON/thread_event_inline.c
+	$(CRULE2)
+$(WEBOBJ)/osi_common_util.o: $(TOP_SRC_OSI)/COMMON/uutil.c
+	$(CRULE2)
+$(WEBOBJ)/osi_legacy_condvar.o: $(TOP_SRC_OSI)/LEGACY/kcondvar.c
+	$(CRULE2)
+$(WEBOBJ)/osi_legacy_mutex.o: $(TOP_SRC_OSI)/LEGACY/kmutex.c
+	$(CRULE2)
+$(WEBOBJ)/osi_legacy_refcnt.o: $(TOP_SRC_OSI)/LEGACY/refcnt.c
+	$(CRULE2)
+$(WEBOBJ)/osi_legacy_rwlock.o: $(TOP_SRC_OSI)/LEGACY/krwlock.c
+	$(CRULE2)
+$(WEBOBJ)/osi_legacy_shlock.o: $(TOP_SRC_OSI)/LEGACY/kshlock.c
+	$(CRULE2)
+$(WEBOBJ)/osi_native_cache.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucache.c
+	$(CRULE2)
+$(WEBOBJ)/osi_native_cpu.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucpu.c
+	$(CRULE2)
+$(WEBOBJ)/osi_tracepoint_table.o: $(TOP_SRC_OSI)/osi_tracepoint_table.c
+	$(CRULE2)
+$(WEBOBJ)/afs_tracepoint_table.o: $(TOP_SRC_AFS)/afs_tracepoint.c
+	$(CRULE2)
+$(WEBOBJ)/afs_icl_tracepoint_table.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE2)
+$(WEBOBJ)/rx_tracepoint_table.o: $(TOP_SRC_RX)/tracepoint_table.c
+	$(CRULE2)
+$(WEBOBJ)/ubik_tracepoint_table.o: $(TOP_SRCDIR)/ubik/tracepoint_table.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_event_function.o: $(TOP_SRC_TRACE)/event/function.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_event_event.o: $(TOP_SRC_TRACE)/event/event.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_event_icl.o: $(TOP_SRC_TRACE)/event/icl.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_event_usertrap.o: $(TOP_SRC_TRACE)/event/usertrap.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_activation.o: $(TOP_SRC_TRACE)/generator/activation.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_cursor.o: $(TOP_SRC_TRACE)/generator/cursor.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_buffer.o: $(TOP_SRC_TRACE)/generator/buffer.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_generator.o: $(TOP_SRC_TRACE)/generator/generator.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_directory.o: $(TOP_SRC_TRACE)/generator/directory.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_directory_mail.o: $(TOP_SRC_TRACE)/generator/directory_mail.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_probe.o: $(TOP_SRC_TRACE)/generator/probe.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_probe_mail.o: $(TOP_SRC_TRACE)/generator/probe_mail.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_mail_common.o: $(TOP_SRC_TRACE)/mail/common.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_mail_handler.o: $(TOP_SRC_TRACE)/mail/handler.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_mail_header.o: $(TOP_SRC_TRACE)/mail/header.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_userspace_mail.o: $(TOP_SRC_TRACE)/USERSPACE/mail.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_syscall_handler.o: $(TOP_SRC_TRACE)/UKERNEL/syscall.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_syscall.o: $(TOP_SRC_TRACE)/USERSPACE/syscall.c
+	$(CRULE2)
+$(WEBOBJ)/osi_trace_gen_rgy.o: $(TOP_SRC_TRACE)/USERSPACE/gen_rgy.c
 	$(CRULE2)
 
 # These are for libjuafs.a 
@@ -1267,8 +1574,6 @@ $(JUAFS)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE1)
 $(JUAFS)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS
-$(JUAFS)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
@@ -1346,6 +1651,90 @@ $(JUAFS)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE1)
+$(JUAFS)/osi.o: $(TOP_SRC_OSI)/osi.c
+	$(CRULE1)
+$(JUAFS)/osi_cache.o: $(TOP_SRC_OSI)/COMMON/cache.c
+	$(CRULE1)
+$(JUAFS)/osi_common_condvar.o: $(TOP_SRC_OSI)/COMMON/condvar.c
+	$(CRULE1)
+$(JUAFS)/osi_common_mem_local.o: $(TOP_SRC_OSI)/COMMON/mem_local.c
+	$(CRULE1)
+$(JUAFS)/osi_common_mutex.o: $(TOP_SRC_OSI)/COMMON/mutex.c
+	$(CRULE1)
+$(JUAFS)/osi_common_object_cache.o: $(TOP_SRC_OSI)/COMMON/object_cache.c
+	$(CRULE1)
+$(JUAFS)/osi_common_rwlock.o: $(TOP_SRC_OSI)/COMMON/rwlock.c
+	$(CRULE1)
+$(JUAFS)/osi_common_shlock.o: $(TOP_SRC_OSI)/COMMON/shlock.c
+	$(CRULE1)
+$(JUAFS)/osi_common_thread_event.o: $(TOP_SRC_OSI)/COMMON/thread_event.c
+	$(CRULE1)
+$(JUAFS)/osi_common_thread_event_inline.o: $(TOP_SRC_OSI)/COMMON/thread_event_inline.c
+	$(CRULE1)
+$(JUAFS)/osi_common_util.o: $(TOP_SRC_OSI)/COMMON/uutil.c
+	$(CRULE1)
+$(JUAFS)/osi_legacy_condvar.o: $(TOP_SRC_OSI)/LEGACY/kcondvar.c
+	$(CRULE1)
+$(JUAFS)/osi_legacy_mutex.o: $(TOP_SRC_OSI)/LEGACY/kmutex.c
+	$(CRULE1)
+$(JUAFS)/osi_legacy_refcnt.o: $(TOP_SRC_OSI)/LEGACY/refcnt.c
+	$(CRULE1)
+$(JUAFS)/osi_legacy_rwlock.o: $(TOP_SRC_OSI)/LEGACY/krwlock.c
+	$(CRULE1)
+$(JUAFS)/osi_legacy_shlock.o: $(TOP_SRC_OSI)/LEGACY/kshlock.c
+	$(CRULE1)
+$(JUAFS)/osi_native_cache.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucache.c
+	$(CRULE1)
+$(JUAFS)/osi_native_cpu.o: $(TOP_SRC_OSI)/$(MKAFS_OSTYPE)/ucpu.c
+	$(CRULE1)
+$(JUAFS)/osi_tracepoint_table.o: $(TOP_SRC_OSI)/osi_tracepoint_table.c
+	$(CRULE1)
+$(JUAFS)/afs_tracepoint_table.o: $(TOP_SRC_AFS)/afs_tracepoint.c
+	$(CRULE1)
+$(JUAFS)/afs_icl_tracepoint_table.o: $(TOP_SRC_AFS)/afs_icl.c
+	$(CRULE1)
+$(JUAFS)/rx_tracepoint_table.o: $(TOP_SRC_RX)/tracepoint_table.c
+	$(CRULE1)
+$(JUAFS)/ubik_tracepoint_table.o: $(TOP_SRCDIR)/ubik/tracepoint_table.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_event_function.o: $(TOP_SRC_TRACE)/event/function.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_event_event.o: $(TOP_SRC_TRACE)/event/event.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_event_icl.o: $(TOP_SRC_TRACE)/event/icl.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_event_usertrap.o: $(TOP_SRC_TRACE)/event/usertrap.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_activation.o: $(TOP_SRC_TRACE)/generator/activation.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_cursor.o: $(TOP_SRC_TRACE)/generator/cursor.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_buffer.o: $(TOP_SRC_TRACE)/generator/buffer.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_generator.o: $(TOP_SRC_TRACE)/generator/generator.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_directory.o: $(TOP_SRC_TRACE)/generator/directory.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_directory_mail.o: $(TOP_SRC_TRACE)/generator/directory_mail.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_probe.o: $(TOP_SRC_TRACE)/generator/probe.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_probe_mail.o: $(TOP_SRC_TRACE)/generator/probe_mail.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_mail_common.o: $(TOP_SRC_TRACE)/mail/common.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_mail_handler.o: $(TOP_SRC_TRACE)/mail/handler.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_mail_header.o: $(TOP_SRC_TRACE)/mail/header.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_userspace_mail.o: $(TOP_SRC_TRACE)/USERSPACE/mail.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_syscall_handler.o: $(TOP_SRC_TRACE)/UKERNEL/syscall.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_syscall.o: $(TOP_SRC_TRACE)/USERSPACE/syscall.c
+	$(CRULE1)
+$(JUAFS)/osi_trace_gen_rgy.o: $(TOP_SRC_TRACE)/USERSPACE/gen_rgy.c
 	$(CRULE1)
 
 

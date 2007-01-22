@@ -121,6 +121,7 @@
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
 #define AFS_ENV			1
 #define AFS_USR_SUN5_ENV	1
+#define AFS_USR_SUN55_ENV	1
 
 #include <afs/afs_sysnames.h>
 

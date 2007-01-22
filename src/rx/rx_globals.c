@@ -29,13 +29,13 @@ RCSID
     ("$Header$");
 
 /* Enable data initialization when the header file is included */
-#define GLOBALSINIT(stuff) = stuff
+#define RX_DECL_INIT_VAL(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
-#define EXT __declspec(dllexport)
-#define EXT2 __declspec(dllexport)
+#define RX_DECL_EXT __declspec(dllexport)
+#define RX_DECL_EXT2 __declspec(dllexport)
 #else
-#define EXT
-#define EXT2 
+#define RX_DECL_EXT
+#define RX_DECL_EXT2
 #endif
 
 #ifdef KERNEL

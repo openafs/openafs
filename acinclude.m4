@@ -17,6 +17,12 @@ AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB DNS RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
 [  --disable-pam 			disable PAM support],, enable_pam="yes")
+AC_ARG_ENABLE(osi-instrumentation,
+[  --disable-instrumentation		disable compilation of afs osi instrumentation (defaults to enabled)],, enable_osi_instrumentation="yes"
+)
+AC_ARG_ENABLE(trace-perl-interface,
+[  --enable-trace-perl-interface	enable compilation of trace perl interface (defaults to disabled)],, enable_trace_perl="no"
+)
 AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( bos-new-config,
@@ -47,8 +53,17 @@ AC_ARG_WITH(bsd-kernel-headers,
 AC_ARG_WITH(bsd-kernel-build,
 [  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
 )
+AC_ARG_WITH(ctf-tools,
+[  --with-ctf-tools=path    		use ctfconvert,ctfmerge from path(optional, defaults to PATH search)]
+)
+AC_ARG_ENABLE(ctf-merge,
+[  --enable-ctf-merge			enable binding of CTF data to specific kernel revision (defaults to disabled)],, enable_ctf_merge="no"
+)
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
+)
+AC_ARG_ENABLE(userspace-cm,
+[  --disable-userspace-cm             	disable compilation of the userspace cache manager library (defaults to enabled)],, enable_userspace_cm="yes"
 )
 AC_ARG_ENABLE(redhat-buildsys,
 [  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
@@ -186,6 +201,7 @@ case $system in
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
 		SOLARIS_FS_HAS_FS_ROLLED
+		SOLARIS_USERSPACE_ATOMIC_OPS
                 ;;
         *-sunos*)
 		MKAFS_OSTYPE=SUNOS
@@ -249,18 +265,21 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
+			AFS_PARAM_COMMON="param.obsd_${vM}${vm}.h"
 			;;
 		sparc64-*-openbsd?.?)
 			v=${host#*openbsd}
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="sparc64_obsd${vM}${vm}"
+			AFS_PARAM_COMMON="param.obsd_${vM}${vm}.h"
 			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
+			AFS_PARAM_COMMON="param.fbsd_${vM}${vm}.h"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_SYSNAME="i386_nbsd15"
@@ -327,97 +346,128 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
+			AFS_PARAM_COMMON="param.darwin_12.h"
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
+			AFS_PARAM_COMMON="param.darwin_13.h"
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin5.1*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin5.2*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin5.3*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin5.4*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin5.5*)
 			AFS_SYSNAME="ppc_darwin_14"
+			AFS_PARAM_COMMON="param.darwin_14.h"
 			;;
 		powerpc-apple-darwin6.0*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin6.1*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin6.2*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin6.3*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin6.4*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin6.5*)
 			AFS_SYSNAME="ppc_darwin_60"
+			AFS_PARAM_COMMON="param.darwin_60.h"
 			;;
 		powerpc-apple-darwin7.0*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin7.1*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin7.2*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin7.3*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin7.4*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
+			AFS_PARAM_COMMON="param.darwin_70.h"
 			;;
 		powerpc-apple-darwin8.0*)
 			AFS_SYSNAME="ppc_darwin_80"
+			AFS_PARAM_COMMON="param.darwin_80.h"
 			;;
 		powerpc-apple-darwin8.*)
 			AFS_SYSNAME="ppc_darwin_80"
+			AFS_PARAM_COMMON="param.darwin_80.h"
 			;;
 		i386-apple-darwin8.*)
 			AFS_SYSNAME="x86_darwin_80"
+			AFS_PARAM_COMMON="param.darwin_80.h"
 			;;
 		powerpc-apple-darwin9.*)
 			AFS_SYSNAME="ppc_darwin_90"
+			AFS_PARAM_COMMON="param.darwin_90.h"
 			;;
 		i386-apple-darwin9.*)
 			AFS_SYSNAME="x86_darwin_90"
+			AFS_PARAM_COMMON="param.darwin_90.h"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
+			AFS_PARAM_COMMON="param.sunos_55.h"
 			enable_login="yes"
 			;;
 		sparc-sun-solaris2.6)
 			AFS_SYSNAME="sun4x_56"
+			AFS_PARAM_COMMON="param.sunos_56.h"
 			;;
 		sparc-sun-solaris2.7)
 			AFS_SYSNAME="sun4x_57"
+			AFS_PARAM_COMMON="param.sunos_57.h"
 			;;
 		sparc-sun-solaris2.8)
 			AFS_SYSNAME="sun4x_58"
+			AFS_PARAM_COMMON="param.sunos_58.h"
 			;;
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
+			AFS_PARAM_COMMON="param.sunos_59.h"
 			;;
 		sparc-sun-solaris2.10)
 			AFS_SYSNAME="sun4x_510"
+			AFS_PARAM_COMMON="param.sunos_510.h"
 			;;
 		sparc-sun-solaris2.11)
 			AFS_SYSNAME="sun4x_511"
@@ -428,15 +478,19 @@ else
 			;;
 		i386-pc-solaris2.7)
 			AFS_SYSNAME="sunx86_57"
+			AFS_PARAM_COMMON="param.sunos_57.h"
 			;;
 		i386-pc-solaris2.8)
 			AFS_SYSNAME="sunx86_58"
+			AFS_PARAM_COMMON="param.sunos_58.h"
 			;;
 		i386-pc-solaris2.9)
 			AFS_SYSNAME="sunx86_59"
+			AFS_PARAM_COMMON="param.sunos_59.h"
 			;;
 		i386-pc-solaris2.10)
 			AFS_SYSNAME="sunx86_510"
+			AFS_PARAM_COMMON="param.sunos_510.h"
 			;;
 		i386-pc-solaris2.11)
 			AFS_SYSNAME="sunx86_511"
@@ -455,33 +509,43 @@ else
 			;;
 		ia64-*-linux*)
 			AFS_SYSNAME="ia64_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		powerpc-*-linux*)
 			AFS_SYSNAME="`/bin/arch`_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		powerpc64-*-linux*)
 			AFS_SYSNAME="ppc64_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		alpha*-linux*)
 			AFS_SYSNAME="alpha_linux_XX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		s390-*-linux*)
 			AFS_SYSNAME="s390_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		s390x-*-linux*)
 			AFS_SYSNAME="s390x_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		sparc-*-linux*)
 			AFS_SYSNAME="sparc_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		sparc64-*-linux*)
 			AFS_SYSNAME="sparc64_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			;;
 		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			enable_pam="no"
 			;;
 		power*-ibm-aix4.2*)
@@ -506,6 +570,7 @@ else
 			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
+			AFS_PARAM_COMMON="param.linuxXX.h"
 			enable_pam="no"
 			;;
 		*)
@@ -520,6 +585,8 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
+			_AFS_PARAM_COMMON=`echo $AFS_PARAM_COMMON|sed s/XX/$AFS_SYSKVERS/`
+			AFS_PARAM_COMMON="$_AFS_PARAM_COMMON"
 			save_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
 			AC_TRY_COMPILE(
@@ -1033,6 +1100,35 @@ if test "$enable_fast_restart" = "yes" &&
 	exit 1
 fi
 
+if test "x$enable_osi_instrumentation" = "xyes"; then
+	OSI_INSTRUMENTATION="yes"
+	BUILD_OSI_INSTRUMENTATION="inst"
+else
+	AC_DEFINE(OSI_TRACE_DISABLE, 1, [define if you do not want afs osi instrumentation])
+	OSI_INSTRUMENTATION="no"
+	BUILD_OSI_INSTRUMENTATION=""
+fi
+AC_SUBST(OSI_INSTRUMENTATION)
+AC_SUBST(BUILD_OSI_INSTRUMENTATION)
+
+if test "x$enable_trace_perl" = "xno"; then
+	OSI_TRACE_PERL="no"
+	BUILD_OSI_TRACE_PERL=""
+else
+	OSI_TRACE_PERL="yes"
+	BUILD_OSI_TRACE_PERL="trace_script_perl"
+fi
+AC_SUBST(OSI_TRACE_PERL)
+AC_SUBST(BUILD_OSI_TRACE_PERL)
+
+if test "x$enable_ctf_merge" = "xno" ; then
+	CTFMERGE=""
+fi
+AC_SUBST(CTFMERGE)
+AC_SUBST(CTFMERGE_FLAGS)
+AC_SUBST(CTFCONVERT)
+AC_SUBST(CTFCONVERT_FLAGS)
+
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])
 fi
@@ -1194,12 +1290,21 @@ AC_SUBST(afsbackupdir)
 AC_SUBST(afsbosconfigdir)
 
 if test "x$enable_kernel_module" = "xyes"; then
-ENABLE_KERNEL_MODULE=libafs
+if test "x$enable_osi_instrumentation" = "xyes" ; then
+ENABLE_KERNEL_MODULE="libafs libktrace"
+else
+ENABLE_KERNEL_MODULE="libafs"
+fi
+fi
+
+if test "x$enable_userspace_cm" = "xyes"; then
+ENABLE_LIBUAFS=libuafs
 fi
 
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
+AC_SUBST(ENABLE_LIBUAFS)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(HOST_CPU)
@@ -1217,6 +1322,8 @@ AC_SUBST(IRIX_BUILD_IP35)
 
 OPENAFS_OSCONF
 OPENAFS_KRB5CONF
+PTHREADS_EXTENSIONS
+
 
 TOP_SRCDIR="${srcdir}/src"
 dnl

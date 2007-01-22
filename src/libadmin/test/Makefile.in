@@ -18,7 +18,7 @@ CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
 ########################################################################
 # build tests
 
-AFSCPLIBS =\
+AFSCPLIBS = \
 	$(TOP_LIBDIR)/libafsadminutil.a \
 	$(TOP_LIBDIR)/libclientadmin.a \
 	$(TOP_LIBDIR)/libbosadmin.a \
@@ -28,7 +28,9 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
 	$(TOP_LIBDIR)/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/libosi-pthread-inst.a \
+	$(TOP_LIBDIR)/libafsutil.a \
+	$(TOP_LIBDIR)/libsys.a
 
 AFSCPOBJS =\
 	bos.o \

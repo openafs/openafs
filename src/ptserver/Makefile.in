@@ -11,14 +11,22 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-INCLS=${TOP_INCDIR}/ubik.h \
+INCLS = \
+	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptserver.h ptclient.h ptuser.h ptint.h pterror.h map.h ptprototypes.h
+	ptserver.h \
+	ptclient.h \
+	ptuser.h \
+	ptint.h \
+	pterror.h \
+	map.h \
+	ptprototypes.h \
+	$(NULL)
 
 LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h \
@@ -27,9 +35,14 @@ LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/rxkad.h \
 	${TOP_INCDIR}/afs/auth.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptclient.h ptuser.h ptint.h pterror.h
+	ptclient.h \
+	ptuser.h \
+	ptint.h \
+	pterror.h \
+	$(NULL)
 
-LIBS=${TOP_LIBDIR}/libubik.a \
+LIBS = \
+	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/librxstat.a \
@@ -37,10 +50,12 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/liblwp.a \
+	$(NULL)
 
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \

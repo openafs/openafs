@@ -15,13 +15,13 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
-#define AFS_HPUX_ENV	1
-#define	AFS_HPUX90_ENV	1
-#define	AFS_HPUX100_ENV	1
-#define	AFS_HPUX101_ENV	1
-#define	AFS_HPUX102_ENV	1
-#define	AFS_HPUX110_ENV	1
-#define	AFS_HPUX1111_ENV	1
+#define AFS_HPUX_ENV	        1
+#define	AFS_HPUX90_ENV	        1
+#define	AFS_HPUX100_ENV	        1
+#define	AFS_HPUX101_ENV	        1
+#define	AFS_HPUX102_ENV	        1
+#define	AFS_HPUX110_ENV	        1
+#define	AFS_HPUX1111_ENV        1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
@@ -172,3 +172,19 @@ struct uio;
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */
+
+
+#ifndef AFS_PARAM_COMMON_H
+#define AFS_PARAM_COMMON_H
+
+/* global defines */
+
+#define OSI_HPUX_ENV	        1
+#define	OSI_HPUX90_ENV	        1
+#define	OSI_HPUX100_ENV	        1
+#define	OSI_HPUX101_ENV	        1
+#define	OSI_HPUX102_ENV	        1
+#define	OSI_HPUX110_ENV	        1
+#define	OSI_HPUX1111_ENV        1
+
+#endif /* AFS_PARAM_COMMON_H */

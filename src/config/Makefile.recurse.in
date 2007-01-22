@@ -1,0 +1,47 @@
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+build_recurse: ${RECURSE_DIRS}
+	for dir in x ${RECURSE_DIRS} ; \
+	do \
+		if [ "$${dir}" != "x" ] ; then \
+			(cd $$dir && $(MAKE) all) ; \
+		fi ; \
+	done
+
+depinstall_recurse: ${RECURSE_DIRS}
+	for dir in x ${RECURSE_DIRS} ; \
+	do \
+		if [ "$${dir}" != "x" ] ; then \
+			(cd $$dir && $(MAKE) depinstall) ; \
+		fi ; \
+	done
+
+install_recurse: ${RECURSE_DIRS}
+	for dir in x ${RECURSE_DIRS} ; \
+	do \
+		if [ "$${dir}" != "x" ] ; then \
+			(cd $$dir && $(MAKE) install) ; \
+		fi ; \
+	done
+
+dest_recurse: ${RECURSE_DIRS}
+	for dir in x ${RECURSE_DIRS} ; \
+	do \
+		if [ "$${dir}" != "x" ] ; then \
+			(cd $$dir && $(MAKE) dest) ; \
+		fi ; \
+	done
+
+clean_recurse: ${RECURSE_DIRS}
+	for dir in x ${RECURSE_DIRS} ; \
+	do \
+		if [ "$${dir}" != "x" ] ; then \
+			(cd $$dir && $(MAKE) clean) ; \
+		fi ; \
+	done
+

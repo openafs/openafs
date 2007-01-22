@@ -32,9 +32,6 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-/* probably needed if lock_trace is enabled - should ifdef */
-int afs_trclock = 0;
-
 void Lock_Obtain();
 void Lock_ReleaseR();
 void Lock_ReleaseW();
@@ -42,8 +39,6 @@ void Lock_ReleaseW();
 void
 Lock_Init(register struct afs_lock *lock)
 {
-
-    AFS_STATCNT(Lock_Init);
     lock->readers_reading = 0;
     lock->excl_locked = 0;
     lock->wait_states = 0;
@@ -56,7 +51,7 @@ Lock_Init(register struct afs_lock *lock)
     lock->time_waiting.tv_sec = 0;
     lock->time_waiting.tv_usec = 0;
 }
-
+
 void
 ObtainLock(register struct afs_lock *lock, int how,
 	   unsigned int src_indicator)
@@ -125,7 +120,7 @@ ReleaseLock(register struct afs_lock *lock, int how)
 void
 Afs_Lock_Obtain(register struct afs_lock *lock, int how)
 {
-    osi_timeval_t tt1, tt2, et;
+    afs_timeval_t tt1, tt2, et;
     afs_uint32 us;
 
     AFS_STATCNT(Lock_Obtain);
@@ -184,10 +179,8 @@ Afs_Lock_Obtain(register struct afs_lock *lock, int how)
     afs_stats_AddTo((lock->time_waiting), et);
     us = (et.tv_sec << 20) + et.tv_usec;
 
-    if (afs_trclock) {
-	afs_Trace3(afs_iclSetp, CM_TRACE_LOCKSLEPT, ICL_TYPE_INT32, us,
-		   ICL_TYPE_POINTER, lock, ICL_TYPE_INT32, how);
-    }
+    afs_Trace3(afs_iclSetp, CM_TRACE_LOCKSLEPT, ICL_TYPE_INT32, us,
+	       ICL_TYPE_POINTER, lock, ICL_TYPE_INT32, how);
 }
 
 /* release a lock, giving preference to new readers */
@@ -361,33 +354,3 @@ afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
 }
 #endif
 
-/* Not static - used conditionally if lock tracing is enabled */
-int
-Afs_Lock_Trace(int op, struct afs_lock *alock, int type, char *file, int line)
-{
-    int traceok;
-    struct afs_icl_log *tlp;
-    struct afs_icl_set *tsp;
-
-    if (!afs_trclock)
-	return 1;
-    if ((alock) == &afs_icl_lock)
-	return 1;
-
-    ObtainReadLock(&afs_icl_lock);
-    traceok = 1;
-    for (tlp = afs_icl_allLogs; tlp; tlp = tlp->nextp)
-	if ((alock) == &tlp->lock)
-	    traceok = 0;
-    for (tsp = afs_icl_allSets; tsp; tsp = tsp->nextp)
-	if ((alock) == &tsp->lock)
-	    traceok = 0;
-    ReleaseReadLock(&afs_icl_lock);
-    if (!traceok)
-	return 1;
-
-    afs_Trace4(afs_iclSetp, op, ICL_TYPE_STRING, (long)file, ICL_TYPE_INT32,
-	       (long)line, ICL_TYPE_POINTER, (long)alock, ICL_TYPE_LONG,
-	       (long)type);
-    return 0;
-}

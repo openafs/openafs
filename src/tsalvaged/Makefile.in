@@ -19,7 +19,7 @@ CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
 	-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-CCRULE=${CC} ${CFLAGS} -c $?
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 VICED=../viced
 VLSERVER=../vlserver
@@ -41,7 +41,7 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
 	 namei_ops.o salvsync-server.o salvsync-client.o \
-	 daemon_com.o
+	 daemon_com.o vol_tracepoint_table.o
 
 OBJECTS= ${SALVAGEDOBJS} ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
@@ -49,7 +49,13 @@ FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROB
 
 SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
+LIBS= \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libosi-pthread-inst.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libcmd.a
 
 all: salvageserver fssync-debug salvsync-debug
 
@@ -157,6 +163,9 @@ ihandle.o: ${VOL}/ihandle.c
 	${CCRULE}
 
 namei_ops.o: ${VOL}/namei_ops.c
+	${CCRULE}
+
+vol_tracepoint_table.o: ${VOL}/tracepoint_table.c
 	${CCRULE}
 
 salvageserver: ${OBJECTS} ${LIBS}

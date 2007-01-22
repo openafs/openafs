@@ -1,0 +1,15 @@
+Makefile
+Makefile.common
+MakefileProto.AIX
+MakefileProto.DARWIN
+MakefileProto.DUX
+MakefileProto.FBSD
+MakefileProto.HPUX
+MakefileProto.IRIX
+MakefileProto.LINUX
+MakefileProto.OBSD
+MakefileProto.SOLARIS
+libosi_trace_analyzer-archive-pthread-32
+libosi_trace_analyzer-archive-pthread-64
+libosi_trace_analyzer-shlib-pthread-32
+libosi_trace_analyzer-shlib-pthread-64

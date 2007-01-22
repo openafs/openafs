@@ -7,6 +7,9 @@ autoconf
 echo "Running autoconf for configure-libafs"
 autoconf configure-libafs.in > configure-libafs
 chmod +x configure-libafs
+echo "Running autoconf for configure-libktrace"
+autoconf configure-libktrace.in > configure-libktrace
+chmod +x configure-libktrace
 echo "Running autoheader"
 autoheader
 #echo "Running automake"

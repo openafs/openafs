@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 /*
@@ -66,7 +68,10 @@ init_module(void)
 #endif
 {
     int err;
+
+#if !defined(LIBKTRACE)
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
+#endif
 
 #if !defined(AFS_LINUX24_ENV)
     /* obtain PAGE_OFFSET value */
@@ -82,29 +87,33 @@ init_module(void)
 #endif /* !defined(AFS_LINUX24_ENV) */
 
     osi_Init();
-#ifdef AFS_LINUX26_ENV
-#if !defined(AFS_NONFSTRANS)
+
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS) && !defined(LIBKTRACE)
     osi_linux_nfssrv_init();
 #endif
-#endif
 
-#ifndef LINUX_KEYRING_SUPPORT
+#if !defined(AFS_KERNEL_SYSCALL_DISABLE)
     err = osi_syscall_init();
     if (err)
 	return err;
 #endif
+
+#if !defined(LIBKTRACE)
     err = afs_init_inodecache();
     if (err)
 	return err;
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
-#ifdef LINUX_KEYRING_SUPPORT
+#if defined(LINUX_KEYRING_SUPPORT)
     osi_keyring_init();
 #endif
-#ifdef AFS_LINUX24_ENV
+#endif /* !LIBKTRACE */
+#if defined(AFS_LINUX24_ENV)
+#if !defined(LIBKTRACE)
     osi_proc_init();
+#endif /* !LIBKTRACE */
     osi_ioctl_init();
-#endif
+#endif /* AFS_LINUX24_ENV */
 
     return 0;
 }
@@ -117,24 +126,32 @@ void
 cleanup_module(void)
 #endif
 {
+#if defined(LINUX_KEYRING_SUPPORT) && !defined(LIBKTRACE)
     osi_keyring_shutdown();
-    osi_sysctl_clean();
+#endif
+
+#if !defined(AFS_KERNEL_SYSCALL_DISABLE)
     osi_syscall_clean();
+#endif
+
+#if !defined(LIBKTRACE)
+    osi_sysctl_clean();
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
-#ifdef AFS_LINUX26_ENV
-#if !defined(AFS_NONFSTRANS)
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_shutdown();
 #endif
-#endif
+#endif /* !LIBKTRACE */
+
     osi_linux_free_afs_memory();
 
-#ifdef AFS_LINUX24_ENV
+#if defined(AFS_LINUX24_ENV)
     osi_ioctl_clean();
+#if !defined(LIBKTRACE)
     osi_proc_clean();
-#endif
-    return;
+#endif /* !LIBKTRACE */
+#endif /* AFS_LINUX24_ENV */
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)

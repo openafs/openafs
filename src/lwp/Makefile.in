@@ -16,12 +16,20 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${ARCHFLAGS} ${COMMON_INCL}
 
-LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
+LIBOBJS=lwp.o process.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
 
-all: ${TOP_LIBDIR}/liblwp.a depinstall
+all: \
+	depinstall \
+	${TOP_LIBDIR}/liblwp.a \
+	$(NULL)
 
-depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+depinstall: \
+	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/preempt.h \
+	${TOP_INCDIR}/timer.h \
+	$(NULL)
 
 ${TOP_LIBDIR}/liblwp.a: liblwp.a
 	${INSTALL_DATA} $? $@

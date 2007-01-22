@@ -1,0 +1,318 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	Vol
+	module-dir	vol
+	c-path		tracepoint_table.c
+	h-path		tracepoint_table.h
+	prefix		"vol"
+	init-func	VInitTracePointTable
+	event-tag	osi_Trace_Event_VolPkgEvent_Id
+	description {
+			The tracepoints defined in this table
+			are specific to the OpenAFS volume package
+			implementation, and are thus under the
+			openafs namespace
+	}
+
+	action-table {
+		name	VolumeActions
+		prefix	"volume.actions"
+
+		action {
+			name	preattach
+			suffix	"pre-attach"
+			description "demand-attach only"
+		}
+		action {
+			name	attach
+		}
+		action {
+			name	detach
+		}
+		action {
+			name	offline
+		}
+		action {
+			name	force_offline
+			suffix	"force-offline"
+		}
+		action {
+			name	salvage
+			event {
+				name	schedule
+			}
+			event {
+				name	is_needed
+			}
+			event {
+				name	update_priority
+			}
+		}
+		action {
+			name	get
+		}
+		action {
+			name	put
+		}
+		action {
+			name	hold
+		}
+		action {
+			name	shutdown
+		}
+		action {
+			name	soft_detach
+			suffix	"soft-detach"
+			description "demand-attach only"
+		}
+		action {
+			name	header_update
+			suffix	"header.update"
+		}
+		action {
+			name	header_sync
+			suffix	"header.sync"
+		}
+		action {
+			name	vol_op
+			suffix	"vol-op"
+			event {
+				name	register
+			}
+			event {
+				name	deregister
+			}
+		}
+	}
+
+# the following are split into two tables
+# because table-gen can't yet handle events
+# directly under action table scope
+
+	action-table {
+		name	VolumeStateActions
+		prefix	"volume.state"
+		action {
+			name		wait_change
+			event-default	no
+			event {
+				name	block
+			}
+			event {
+				name	unblock
+			}
+		}
+		action {
+			name		wait_exclusive
+			event-default	no
+			event {
+				name	block
+			}
+			event {
+				name	unblock
+			}
+		}
+	}
+	event-table {
+		name	VolumeState
+		prefix	"volume.state"
+		event {
+			name	change
+		}
+	}
+
+	stats-table {
+		name		VolumeHdrCacheStats
+		prefix		"vol_hdr_cache.stats"
+		type		global
+		synchronization	external
+		description	"volume header cache statistics"
+		stat {
+			name		size
+			suffix		"size"
+			type		integer
+			aggregator	level
+			width		16
+			description	"size of header cache"
+		}
+		stat {
+			name		valid
+			suffix		"valid"
+			type		integer
+			aggregator	level
+			width		16
+			description {
+					number of header cache entries
+					which contain valid data
+			}
+		}
+		stat {
+			name		inuse
+			suffix		"inuse"
+			type		integer
+			aggregator	level
+			width		16
+			description	"number of entries that are in use"
+		}
+		stat {
+			name		loads
+			suffix		"loads"
+			type		integer
+			aggregator	counter
+			width		64
+			description	"number of header loads from disk"
+		}
+		stat {
+			name		gets
+			suffix		"gets"
+			type		integer
+			aggregator	counter
+			width		64
+			description	"total number of cache lookups"
+		}
+		vstat {
+			name		hits
+			suffix		"hits"
+			type		integer
+			width		64
+			equation	"afs.vol.stats.hdr_cache.gets" - "afs.vol.stats.hdr_cache.loads"
+		}
+	}
+	stats-table {
+		name		PartStats
+		prefix		"partition.%s.stats"
+		type		object-local
+		object-type	struct DiskPartition
+		object-member	stats
+		synchronization	external
+		description	"per-partition statistics"
+		stat {
+			name		free
+			suffix		"free"
+			type		integer
+			aggregator	level
+			width		64
+			description	"free space in bytes"
+		}
+		stat {
+			name		capacity
+			suffix		"capacity"
+			type		integer
+			aggregator	level
+			width		64
+			description "size of partition in bytes"
+		}
+	}
+	stats-table {
+		name		VolumeStats
+		prefix		"volume.%u.stats"
+		type		object-local
+		object-type	struct Volume
+		object-member	stats
+
+# VOL_LOCK will synchronize volume stats
+		synchronization	external
+		description	"per-volume statistics"
+		stat {
+			name		preattaches
+			suffix		"preattaches"
+			type		integer
+			aggregator	counter
+			width		16
+		}
+		stat {
+			name		attaches
+			suffix		"attaches"
+			type		integer
+			aggregator	counter
+			width		16
+		}
+		stat {
+			name		detaches
+			suffix		"detaches"
+			type		integer
+			aggregator	counter
+			width		16
+		}
+		stat {
+			name		salvages
+			suffix		"salvages"
+			type		integer
+			aggregator	counter
+			width		16
+		}
+		stat {
+			name		vol_ops
+			suffix		"volume_operations"
+			type		integer
+			aggregator	counter
+			width		16
+		}
+		stat {
+			name		gets
+			suffix		"gets"
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		disk_usage
+			suffix		"disk_usage"
+			type		integer
+			aggregator	level
+			width		64
+		}
+		stat {
+			name		disk_quota
+			suffix		"disk_quota"
+			type		integer
+			aggregator	level
+			width		64
+		}
+		stat {
+			name		last_get
+			suffix		"last_get"
+			type		time
+			subtype		stamp
+			aggregator	last
+			width		32
+		}
+	}
+#	query-table {
+#		name		VolumeInfo
+#		prefix		"volume.%u.query"
+#		index-dims	1
+#		query {
+#			call	VLookupVolume(vid)
+#			fix {
+#				name	vid
+#				type	osi_uint32
+#				pos	0
+#			}
+#		}
+#	}
+# everything below this line is for testing only
+#	stats-table {
+#		name		FooStats
+#		prefix		"foo.%d.stats"
+#		type		context-local
+#		storage-class	static
+#		description	"foobar statistics"
+#		stat {
+#			name		baz
+#			suffix		"baz"
+#			type		integer
+#			aggregator	counter
+#			width		64
+#		}
+#	}
+}

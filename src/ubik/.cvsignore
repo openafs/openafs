@@ -3,6 +3,8 @@ Kubik_int.cs.c
 Kubik_int.h
 Kubik_int.xdr.c
 Makefile
+tracepoint_table.c
+tracepoint_table.h
 ubik.h
 ubik_int.cs.c
 ubik_int.h

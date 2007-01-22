@@ -1,0 +1,160 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o \
+	osi_module.o 
+
+#AFS_OS_NFSOBJS = \
+#	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+KSRC = @BSD_KERNEL_PATH@
+KBLD = @BSD_KERNEL_BUILD@
+KDEFS=-Wall -ansi -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
+	-elf -mpreferred-stack-boundary=2 -fformat-extensions \
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-include ${KBLD}/opt_global.h \
+<i386_fbsd_60>
+	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	-mno-align-long-strings -fno-common -ffreestanding \
+	-I${KBLD} -include opt_global.h -fno-strict-aliasing \
+<all>
+
+
+DBUG = -O2
+#DBUG = -O -g
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+include Makefile.common
+
+setup:
+	-mkdir $(KOBJ)
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
+	-ln -fs ${KSRC}/net net
+	-ln -fs ${KSRC}/@HOST_CPU@/include machine
+	-ln -fs ${KSRC}/netinet netinet
+	-ln -fs ${KSRC}/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs ${KSRC}/sys sys
+	-ln -fs ${KSRC}/ufs/ufs ufs
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/vm vm
+	-touch $(KOBJ)/sec_net.h
+
+
+depsrcs:	vnode_if.h
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafsnfs.ko
+LIBAFSNONFS = libafs.ko
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+
+
+# Without this line, gmake tries to build libafs
+.PHONY: libafs
+
+# libafs:	$(LIBAFS) $(LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
+#libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#install_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#dest_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) -r -o ${LIBAFS}.kld ${AFSAOBJS} ${AFSNFSOBJS}
+	gensetdefs ${LIBAFS}.kld
+	$(MAKE) setdef0.o setdef1.o
+	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	$(LD) -r -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	gensetdefs libafs.kld
+	$(MAKE) setdef0.o setdef1.o
+	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o libafs.kld setdef1.o
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	$(LD) -r -d -warn-common -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	touch export_syms
+	awk -f ${KSRC}/conf/kmod_syms.awk libafs.kld export_syms | xargs -J% objcopy % libafs.kld
+	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS} libafs.kld
+<all>
+
+
+# Object build rules:
+setdef0.o: setdef0.c
+	$(CRULE_NOOPT)
+setdef1.o: setdef1.c
+	$(CRULE_NOOPT)
+
+# vnode_if.h build rules:
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	perl5 ${KSRC}/kern/vnode_if.pl -h ${KSRC}/kern/vnode_if.src
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -q
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -p
+<all>

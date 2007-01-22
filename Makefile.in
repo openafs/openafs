@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -123,7 +124,7 @@ util: procmgmt des
 audit: util rx rxkad
 	${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
-comerr: util
+comerr: util lwp_depinstall
 	${COMPILE_PART1} comerr ${COMPILE_PART2}
 
 cmd: comerr
@@ -137,10 +138,10 @@ cmd: comerr
 lwp: util lwp_depinstall
 	${COMPILE_PART1} lwp ${COMPILE_PART2}
 
-rxgen: config
+rxgen: config 
 	${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: config lwp rxgen rx_depinstall
+rx: config lwp rxgen rx_depinstall osi_depinstall trace_depinstall
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxstat: rx rxstat_depinstall
@@ -170,13 +171,13 @@ afs: config export comerr afs_depinstall
 des: config
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
-sys: cmd comerr afs des rx rxstat fsint sys_depinstall
+sys: cmd comerr afs des rx libosi rxstat fsint sys_depinstall
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: cmd comerr sys des rx rxkad_depinstall
+rxkad: cmd comerr sys des rx libosi rxkad_depinstall
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr comerr des lwp rx sys rxkad audit auth_depinstall
+auth: cmd comerr comerr des lwp rx libosi sys rxkad audit auth_depinstall
 	${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall
@@ -209,7 +210,7 @@ sgiefs:
 vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
-tsalvaged: vol libafsrpc libafsauthent cmd util
+tsalvaged: vol libafsrpc libafsauthent cmd util libosi
 	set -x; \
 	if test "@DEMAND_ATTACH@" = "yes" ; then \
 		case ${SYS_NAME} in \
@@ -230,10 +231,10 @@ tsalvaged: vol libafsrpc libafsauthent cmd util
 vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
-viced: cmd comerr vlserver audit
+viced: cmd comerr vlserver audit libosi
 	${COMPILE_PART1} viced ${COMPILE_PART2}
 
-tviced: cmd comerr viced vlserver libafsrpc libafsauthent
+tviced: cmd comerr viced vlserver libafsrpc libafsauthent libosi
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
@@ -248,7 +249,7 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-tvolser: project tviced usd libafsrpc libafsauthent volser
+tvolser: project tviced usd libafsrpc libafsauthent volser libosi
 	case ${SYS_NAME} in                                             \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
@@ -390,18 +391,182 @@ ${DEST}/bin/dedebug: dedebug
 libafs_setup: config export
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 
-libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
+libafs_deps: \
+		libafs_setup \
+		lwp_depinstall \
+		rx_depinstall \
+		vlserver_depinstall \
+		rxkad_depinstall \
+		fsint_depinstall \
+		libacl_depinstall \
+		afs_depinstall \
+		dir_depinstall \
+		rxstat_depinstall \
+		sys_depinstall \
+		osi_depinstall \
+		trace_depinstall \
+		$(NULL)
+
+libafs: libafs_deps
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
+libafs_tree: libafs_deps
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
 		-os $(MKAFS_OSTYPE) \
 		-t @TOP_OBJDIR@/libafs_tree \
 		-o @TOP_OBJDIR@ \
 		-p @srcdir@
+
+#
+# libktrace build targets
+#
+libktrace_setup: config export
+	src/config/config src/libktrace/MakefileProto.${MKAFS_OSTYPE} src/libktrace/Makefile ${SYS_NAME}
+
+libktrace_deps: \
+		libktrace_setup \
+		lwp_depinstall \
+		rx_depinstall \
+		afs_depinstall \
+		sys_depinstall \
+		osi_depinstall \
+		trace_depinstall \
+		$(NULL)
+
+libktrace: libktrace_deps
+	${COMPILE_PART1} libktrace ${COMPILE_PART2}
+
+libktrace_tree: libktrace_deps
+	${TOP_SRCDIR}/config/make_libktrace_tree.pl \
+		-sn $(SYS_NAME) \
+		-os $(MKAFS_OSTYPE) \
+		-t @TOP_OBJDIR@/libktrace_tree \
+		-o @TOP_OBJDIR@ \
+		-p @srcdir@
+
+#
+# libosi build targets
+#
+libosi_setup: config export
+	src/config/config src/libosi/MakefileProto.${MKAFS_OSTYPE} src/libosi/Makefile ${SYS_NAME}
+
+libosi: \
+		libosi_setup \
+		osi_depinstall \
+		trace_depinstall \
+		$(NULL)
+	${COMPILE_PART1} libosi ${COMPILE_PART2}
+
+#
+# libafsrpc build targets
+#
+libafsrpc_setup: config export
+	src/config/config src/libafsrpc/MakefileProto.${MKAFS_OSTYPE} src/libafsrpc/Makefile ${SYS_NAME}
+
+libafsrpc: \
+		libafsrpc_setup \
+		rx \
+		rxkad \
+		des \
+		$(NULL)
+	${COMPILE_PART1} libafsrpc ${COMPILE_PART2}
+
+#
+# libafsauthent build targets
+#
+libafsauthent_setup: config export
+	src/config/config src/libafsauthent/MakefileProto.${MKAFS_OSTYPE} src/libafsauthent/Makefile ${SYS_NAME}
+
+libafsauthent: \
+		auth \
+		kauth \
+		libafsauthent_setup \
+		libafsrpc \
+		ptserver_depinstall \
+		sys_depinstall \
+		ubik_depinstall \
+		$(NULL)
+	${COMPILE_PART1} libafsauthent ${COMPILE_PART2}
+
+#
+# libosi_trace_agent build targets
+#
+libtrace_agent_setup: config export
+	src/config/config src/libtrace/agent/MakefileProto.${MKAFS_OSTYPE} src/libtrace/agent/Makefile ${SYS_NAME}
+
+libtrace_agent: \
+		libtrace_agent_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		libafsrpc \
+		libtrace_consumer \
+		$(NULL)
+	${COMPILE_PART1} libtrace/agent ${COMPILE_PART2}
+
+
+#
+# libosi_trace_analyzer build targets
+#
+libtrace_analyzer_setup: config export
+	src/config/config src/libtrace/analyzer/MakefileProto.${MKAFS_OSTYPE} src/libtrace/analyzer/Makefile ${SYS_NAME}
+
+libtrace_analyzer: \
+		libtrace_analyzer_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		libtrace_consumer \
+		$(NULL)
+	${COMPILE_PART1} libtrace/analyzer ${COMPILE_PART2}
+
+
+#
+# libosi_trace_common build targets
+#
+libtrace_common_setup: config export
+	src/config/config src/libtrace/common/MakefileProto.${MKAFS_OSTYPE} src/libtrace/common/Makefile ${SYS_NAME}
+
+libtrace_common: \
+		libtrace_common_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		$(NULL)
+	${COMPILE_PART1} libtrace/common ${COMPILE_PART2}
+
+
+#
+# libosi_trace_console build targets
+#
+libtrace_console_setup: config export
+	src/config/config src/libtrace/console/MakefileProto.${MKAFS_OSTYPE} src/libtrace/console/Makefile ${SYS_NAME}
+
+libtrace_console: \
+		libtrace_console_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		libafsrpc \
+		$(NULL)
+	${COMPILE_PART1} libtrace/console ${COMPILE_PART2}
+
+
+#
+# libosi_trace_consumer build targets
+#
+libtrace_consumer_setup: config export
+	src/config/config src/libtrace/consumer/MakefileProto.${MKAFS_OSTYPE} src/libtrace/consumer/Makefile ${SYS_NAME}
+
+libtrace_consumer: \
+		libtrace_consumer_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		libtrace_common \
+		$(NULL)
+	${COMPILE_PART1} libtrace/consumer ${COMPILE_PART2}
 
 #
 # libuafs build targets
@@ -450,7 +615,7 @@ butm: cmd comerr bubasics usd uss
 butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 	${COMPILE_PART1} butc ${COMPILE_PART2}
 
-tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
+tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin libosi
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
@@ -470,49 +635,131 @@ xstat: cmd comerr fsint viced
 afsmonitor: cmd comerr gtx xstat
 	${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
+osi_depinstall: pinstall lwp_depinstall comerr
+	${COMPILE_PART1} osi ${COMPILE_DEPINSTALL}
+
+osi:	osi_bins
+
+osi_bins: libosi
+	${COMPILE_PART1} osi ${COMPILE_PART2}
+
+osi_tests: libosi
+	${COMPILE_PART1} osi/tests ${COMPILE_PART2}
+
+trace_depinstall: pinstall rxgen
+	${COMPILE_PART1} trace ${COMPILE_DEPINSTALL}
+
+trace:	pinstall libosi libtrace libafsrpc libafsauthent
+	${COMPILE_PART1} trace ${COMPILE_PART2}
+
+trace_script: \
+		@BUILD_OSI_TRACE_PERL@ \
+		$(NULL)
+
+trace_script_perl: trace
+	${COMPILE_PART1} trace/script/perl ${COMPILE_PART2}
+
+libtrace: \
+	libtrace_agent \
+	libtrace_analyzer \
+	libtrace_common \
+	libtrace_console \
+	libtrace_consumer \
+	$(NULL)
+
+traceserver:	libosi libafsrpc libafsauthent libtrace
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} trace/traced ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building traceserver for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} trace/traced  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building traceserver for ${SYS_NAME} ;; \
+	esac
+
+trace_tests:	libosi libafsrpc libafsauthent libtrace
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+		${COMPILE_PART1} trace/tests ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building trace tests for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} trace/tests  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building trace tests for ${SYS_NAME} ;; \
+	esac
+
+
 tests: rxtests ubiktests
 
 # pthread based user space RX library
-libafsrpc: rx rxkad des
-	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
-	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
-	esac
+#libafsrpc: rx rxkad des
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+#		${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
+#	*_darwin_[1-6][0-9]) \
+#		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+#	*_darwin_*) \
+#		${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+#	esac
 
-libafsauthent: ubik auth kauth libafsrpc
-	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
-	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
-	esac
+#libafsauthent: ubik auth kauth libafsrpc
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+#		${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
+#	*_darwin_[1-6][0-9]) \
+#		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
+#	*_darwin_*) \
+#		${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
+#	esac
+
+# pthread libraries without osi instrumentation
+#libafsrpc-ni: rx rxkad des
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+#		${COMPILE_PART1} libafsrpc-ni ${COMPILE_PART2} ;; \
+#	*_darwin_[1-6][0-9]) \
+#		echo Not building MT libafsrpc-ni for ${SYS_NAME} ;; \
+#	*_darwin_*) \
+#		${COMPILE_PART1} libafsrpc-ni  ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building MT libafsrpc-ni for ${SYS_NAME} ;; \
+#	esac
+
+#libafsauthent-ni: ubik auth kauth libafsrpc
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+#		${COMPILE_PART1} libafsauthent-ni ${COMPILE_PART2} ;; \
+#	*_darwin_[1-6][0-9]) \
+#		echo Not building MT libafsauthent-ni for ${SYS_NAME} ;; \
+#	*_darwin_*) \
+#		${COMPILE_PART1} libafsauthent-ni  ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building MT libafsauthent-ni for ${SYS_NAME} ;; \
+#	esac
 
 # pthread based user space RX library
-shlibafsrpc: rx rxkad des
-	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
-	esac
+# shlibafsrpc: rx rxkad des libosi
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+#	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
+#	esac
 
-shlibafsauthent: ubik auth kauth shlibafsrpc
-	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building shared libafsauthent for ${SYS_NAME} ;; \
-	esac
+#shlibafsauthent: ubik auth kauth libafsrpc libosi
+#	case ${SYS_NAME} in \
+#	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+#	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+#	*) \
+#		echo Not building shared libafsauthent for ${SYS_NAME} ;; \
+#	esac
 
 kopenafs: config sys
 	${COMPILE_PART1} kopenafs ${COMPILE_PART2}
@@ -555,19 +802,22 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
-finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
-	venus update xstat afsmonitor rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs
+# XXX libuafs disabled for the time being; some type issues need to be resolved...
+#finale: finale_const_deps @ENABLE_KERNEL_MODULE@ @ENABLE_LIBUAFS@
+finale: finale_const_deps @ENABLE_KERNEL_MODULE@
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
-finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log \
-	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
-	venus update xstat afsmonitor rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs
+# XXX libuafs disabled for the time being; some type issues need to be resolved...
+#finale_nolibafs: finale_const_deps @ENABLE_LIBUAFS@
+finale_nolibafs: finale_const_deps
 	${COMPILE_PART1} finale ${COMPILE_PART2}
+
+finale_const_deps: \
+	project cmd comerr afsd butc tbutc audit kauth log \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged libosi \
+	venus update xstat afsmonitor rxdebug \
+	libafsrpc libafsauthent \
+	osi trace trace_script libadmin man-pages platform kopenafs
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
 
@@ -648,12 +898,18 @@ clean2:
 	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
 	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
+	-${COMPILE_PART1} osi ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libosi ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/agent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/analyzer ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/common ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/console ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/consumer ${COMPILE_CLEAN}
+	-${COMPILE_PART1} trace ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
-	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
-	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} kopenafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
@@ -668,12 +924,14 @@ clean2:
 	-${COMPILE_PART1} JAVA/libjafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libktrace ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
+	-(cd src/libktrace; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
-	-/bin/rm -rf libafs_tree ${SYS_NAME}
+	-/bin/rm -rf libafs_tree libktrace_tree ${SYS_NAME}
 
 distclean: clean
 	/bin/rm -rf lib include
@@ -702,6 +960,8 @@ distclean: clean
 	src/comerr/test/Makefile \
 	src/comerr/Makefile \
 	src/config/Makefile \
+	src/config/Makefile.public-header \
+	src/config/Makefile.recurse \
 	src/config/Makefile.version \
 	src/config/Makefile.version-NOCML \
 	src/config/Makefile.config \
@@ -735,7 +995,33 @@ distclean: clean
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/libafsauthent/Makefile \
+	src/libafsauthent/Makefile.common \
+	src/libafsauthent/MakefileProto.${MKAFS_OSTYPE} \
 	src/libafsrpc/Makefile \
+	src/libafsrpc/Makefile.common \
+	src/libafsrpc/MakefileProto.${MKAFS_OSTYPE} \
+	src/libktrace/Makefile \
+	src/libktrace/Makefile.common \
+	src/libktrace/MakefileProto.${MKAFS_OSTYPE} \
+	src/libosi/Makefile \
+	src/libosi/Makefile.common \
+	src/libosi/MakefileProto.${MKAFS_OSTYPE} \
+	src/libtrace/common.mk \
+	src/libtrace/agent/Makefile \
+	src/libtrace/agent/Makefile.common \
+	src/libtrace/agent/Makefile.${MKAFS_OSTYPE} \
+	src/libtrace/analyzer/Makefile \
+	src/libtrace/analyzer/Makefile.common \
+	src/libtrace/analyzer/Makefile.${MKAFS_OSTYPE} \
+	src/libtrace/common/Makefile \
+	src/libtrace/common/Makefile.common \
+	src/libtrace/common/Makefile.${MKAFS_OSTYPE} \
+	src/libtrace/console/Makefile \
+	src/libtrace/console/Makefile.common \
+	src/libtrace/console/Makefile.${MKAFS_OSTYPE} \
+	src/libtrace/consumer/Makefile \
+	src/libtrace/consumer/Makefile.common \
+	src/libtrace/consumer/Makefile.${MKAFS_OSTYPE} \
 	src/libuafs/Makefile \
 	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
@@ -743,6 +1029,14 @@ distclean: clean
 	src/log/Makefile \
 	src/lwp/test/Makefile \
 	src/lwp/Makefile \
+	src/osi/Makefile \
+	src/osi/osi_err.h \
+	src/osi/COMMON/Makefile \
+	src/osi/LEGACY/Makefile \
+	src/osi/LWP/Makefile \
+	src/osi/PTHREAD/Makefile \
+	src/osi/${MKAFS_OSTYPE}/Makefile \
+	src/osi/tests/Makefile \
 	src/pam/Makefile \
 	src/platform/Makefile \
 	src/platform/${MKAFS_OSTYPE}/Makefile \
@@ -762,14 +1056,37 @@ distclean: clean
 	src/rxstat/Makefile \
 	src/scout/Makefile \
 	src/sgistuff/Makefile \
-	src/shlibafsauthent/Makefile \
-	src/shlibafsrpc/Makefile \
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
 	src/tests/Makefile \
 	src/tests/run-tests \
 	src/tests/OpenAFS/Dirpath.pm \
+	src/trace/Makefile \
+	src/trace/table-gen.mk \
+	src/trace/KERNEL/Makefile \
+	src/trace/LWP/Makefile \
+	src/trace/PTHREAD/Makefile \
+	src/trace/UKERNEL/Makefile \
+	src/trace/USERSPACE/Makefile \
+	src/trace/agent/Makefile \
+	src/trace/analyzer/Makefile \
+	src/trace/common/Makefile \
+	src/trace/console/Makefile \
+	src/trace/consumer/Makefile \
+	src/trace/consumer/cache/Makefile \
+	src/trace/db/Makefile \
+	src/trace/encoding/Makefile \
+	src/trace/event/Makefile \
+	src/trace/generator/Makefile \
+	src/trace/mail/Makefile \
+	src/trace/rpc/Makefile \
+	src/trace/rtrace/Makefile \
+	src/trace/script/Makefile \
+	src/trace/script/perl/osi-trace-console/Makefile.PL \
+	src/trace/snmp/Makefile \
+	src/trace/tests/Makefile \
+	src/trace/traced/Makefile \
 	src/tsalvaged/Makefile \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
@@ -796,6 +1113,7 @@ distclean: clean
 	fi
 
 pristine: distclean
-	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
+	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs
+	/bin/rm -f configure-libktrace aclocal.m4
 
 maintainer-clean: pristine

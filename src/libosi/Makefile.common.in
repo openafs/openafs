@@ -1,0 +1,257 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+
+COMMON_INCLUDE=
+
+
+LIBOSI_BUILDING_MODE = userspace
+LIBOSI_BUILDING = libosi
+LIBOSI_RULE_DIR = $(TOP_SRCDIR)/osi/libosi
+
+include $(LIBOSI_RULE_DIR)/rules.mk
+include $(LIBOSI_RULE_DIR)/rules.$(MKAFS_OSTYPE).mk
+include $(LIBOSI_RULE_DIR)/libosi.mk
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.SUFFIXES:	.i
+.c.i:
+	$(LIBOSI_CC) $(LIBOSI_ALL_CFLAGS) $(CFLAGS-$@) -P -c $<
+
+.c.o:
+	$(LIBOSI_CC) $(LIBOSI_ALL_CFLAGS) $(CFLAGS-$@) -c $<
+CRULE_NOOPT=	$(LIBOSI_CC) $(LIBOSI_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+CRULE_OPT=	$(LIBOSI_CC) $(LIBOSI_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+
+system:	all
+
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
+
+all:	setup $(COMPDIRS)
+
+# placeholder for any sources that are built prior to compiling libosi
+depsrcs: 
+
+LIBOSI_CC_lwp = ${CC}
+LIBOSI_CC_pthread = ${MT_CC}
+LIBOSI_CC=$(LIBOSI_CC_$(LIBOSI_BUILDING_THR))
+
+LIBOSI_SUFFIX_archive = a
+LIBOSI_SUFFIX_shlib = ${SHLIB_SUFFIX}
+
+LIBOSI_VERSION_archive =
+LIBOSI_VERSION_shlib = .$(LIBOSI_VERSION_MAJOR).$(LIBOSI_VERSION_MINOR)
+
+setup:
+	for t in ${LIBOSI_BUILD_THREADS} ; do \
+		for l in ${LIBOSI_BUILD_LIBS} ; do \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBOSI_BUILD_BITS} ; do \
+				for i in ${LIBOSI_BUILD_INSTRUMENTATION} ; do \
+					OSI_BUILD_DIR="libosi-$$l-$$t-$$i-$$b" ; \
+					LIBOSI_NAME="libosi-$$t-$$i-$$b" ; \
+					echo "Making directory: '$$OSI_BUILD_DIR'..."; \
+					mkdir -p $$OSI_BUILD_DIR ; \
+					$(RM) -f $$OSI_BUILD_DIR/Makefile.common ; \
+					$(RM) -f $$OSI_BUILD_DIR/Makefile ; \
+					$(RM) -f $$OSI_BUILD_DIR/config ; \
+					$(RM) -f $$OSI_BUILD_DIR/mapfile ; \
+					ln -fs ../Makefile.common $$OSI_BUILD_DIR/Makefile.common ; \
+					ln -fs ../Makefile $$OSI_BUILD_DIR/Makefile ; \
+					ln -fs ../config $$OSI_BUILD_DIR/config ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${LIBOSI_BUILD_THREADS} ; do \
+		LIBOSI_BUILDING_THR=$$t ; \
+		if [ "$$t" = "${LIBOSI_DEFAULT_THREADS}" ] ; then \
+			LIBOSI_THR_ALIAS="" ; \
+		else \
+			LIBOSI_THR_ALIAS="$$t" ; \
+		fi ; \
+		for l in ${LIBOSI_BUILD_LIBS} ; do \
+			LIBOSI_BUILDING_LIB=$$l ; \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBOSI_BUILD_BITS} ; do \
+				LIBOSI_BUILDING_BIT=$$b ; \
+				if [ "$$b" = "${LIBOSI_DEFAULT_BITS}" ] ; then \
+					LIBOSI_BIT_ALIAS="" ; \
+				else \
+					LIBOSI_BIT_ALIAS="$$b" ; \
+				fi ; \
+				for i in ${LIBOSI_BUILD_INSTRUMENTATION} ; do \
+					LIBOSI_BUILDING_INST=$$i ; \
+					if [ "$$i" = "${LIBOSI_DEFAULT_INSTRUMENTATION}" ] ; then \
+						LIBOSI_INST_ALIAS="" ; \
+					else \
+						LIBOSI_INST_ALIAS="$$i" ; \
+					fi ; \
+					LIBOSI_BUILD_DIR="libosi-$$l-$$t-$$i-$$b" ; \
+					LIBOSI_NAME="libosi-$$t-$$i-$$b" ; \
+					echo "Building directory: '$$LIBOSI_BUILD_DIR'..." ; \
+					LIBOSI_ALIAS="" ; \
+					if [ -z "$$LIBOSI_THR_ALIAS" ] ; then \
+						LIBOSI_ALIAS="libosi-$$i-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_BIT_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi-$$t-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_INST_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi-$$t-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_THR_ALIAS" ] && [ -z "$$LIBOSI_BIT_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi-$$i" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_THR_ALIAS" ] && [ -z "$$LIBOSI_INST_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi-$$b" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_BIT_ALIAS" ] && [ -z "$$LIBOSI_INST_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi-$$t" ; \
+					fi ; \
+					if [ -z "$$LIBOSI_THR_ALIAS" ] && [ -z "$$LIBOSI_BIT_ALIAS" ] && [ -z "$$LIBOSI_INST_ALIAS" ] ; then \
+						LIBOSI_ALIAS="$$LIBOSI_ALIAS libosi" ; \
+					fi ; \
+					export LIBOSI_BUILDING_LIB ; \
+					export LIBOSI_BUILDING_THR ; \
+					export LIBOSI_BUILDING_BIT ; \
+					export LIBOSI_BUILDING_INST ; \
+					export LIBOSI_BUILD_DIR ; \
+					export LIBOSI_NAME ; \
+					export LIBOSI_ALIAS ; \
+					cd $$LIBOSI_BUILD_DIR || exit 1 ; \
+					$(MAKE) $@_libosi || exit 1 ; \
+					cd ../ ; \
+				done ; \
+			done ; \
+		done ; \
+	done
+
+std_compdirs_libosi: depsrcs libosi libdir_libosi
+std_instdirs_libosi: install_libosi
+std_destdirs_libosi: dest_libosi
+
+# Below this line are targets when in the COMMON directory:
+LIBOSI_SUFFIX=$(LIBOSI_SUFFIX_$(LIBOSI_BUILDING_LIB))
+LIBOSI_VERSION=$(LIBOSI_VERSION_$(LIBOSI_BUILDING_LIB))
+LIBOSI = $(LIBOSI_NAME).$(LIBOSI_SUFFIX)$(LIBOSI_VERSION)
+
+LIBOSI_LIBDIR_PATH = ${TOP_LIBDIR}
+LIBOSI_INST_PATH = ${DESTDIR}${libdir}/afs
+LIBOSI_DEST_PATH = ${DEST}/lib/afs
+
+LIBOSI_LIBDIR = $(LIBOSI_LIBDIR_PATH)/$(LIBOSI)
+LIBOSI_INST = $(LIBOSI_INST_PATH)/$(LIBOSI)
+LIBOSI_DEST = $(LIBOSI_DEST_PATH)/$(LIBOSI)
+
+# Without this line, gmake tries to build libosi.o
+.PHONY: libosi
+
+libosi:	$(LIBOSI)
+libdir_libosi:	$(LIBOSI_LIBDIR)
+install_libosi:	$(LIBOSI_INST)
+dest_libosi:	$(LIBOSI_DEST)
+
+
+$(LIBOSI_LIBDIR): $(LIBOSI)
+	${INSTALL} -f $? $@
+	cd $(LIBOSI_LIBDIR_PATH) && \
+	for l in x $(LIBOSI_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBOSI_SUFFIX)" ; \
+			ln -sf $(LIBOSI) "$${l}.$(LIBOSI_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBOSI_LIBDIR_PATH) && \
+	if [ "$(LIBOSI_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+	fi
+
+$(LIBOSI_INST): $(LIBOSI)
+	${INSTALL} -f $? $@
+	cd $(LIBOSI_INST_PATH) && \
+	for l in x $(LIBOSI_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBOSI_SUFFIX)" ; \
+			ln -sf $(LIBOSI) "$${l}.$(LIBOSI_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBOSI_INST_PATH) && \
+	if [ "$(LIBOSI_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+	fi
+
+$(LIBOSI_DEST): $(LIBOSI)
+	${INSTALL} -f $? $@
+	cd $(LIBOSI_DEST_PATH) && \
+	for l in x $(LIBOSI_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBOSI_SUFFIX)" ; \
+			ln -sf $(LIBOSI) "$${l}.$(LIBOSI_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBOSI_DEST_PATH) && \
+	if [ "$(LIBOSI_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX) ; \
+		$(RM) -f $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+		ln -s -f $(LIBOSI) $(LIBOSI_NAME).$(LIBOSI_SUFFIX).$(LIBOSI_VERSION_MAJOR) ; \
+	fi
+
+${LIBOSI}: $(LIBOSI_ALL_OBJS)
+	$(RM) -f $@
+	if [ "$(LIBOSI_BUILDING_LIB)" = "shlib" ] ; then \
+		${TOP_OBJDIR}/src/config/shlib-build \
+			-d $(TOP_SRCDIR)/libosi \
+			-l ${LIBOSI_NAME} \
+			-M ${LIBOSI_VERSION_MAJOR} \
+			-m ${LIBOSI_VERSION_MINOR} \
+			-exp $(LIBOSI_MAPFILE) \
+			-r . -- \
+			${LIBOSI_ALL_OBJS} ${LIBOSI_DEPS} ; \
+	else \
+		$(AR) crv $@ $(LIBOSI_ALL_OBJS) ; \
+		$(RANLIB) $@ ; \
+	fi
+
+# old manual shlib build method
+#
+#		case ${SYS_NAME} in \
+#		rs_aix4* | rs_aix5*) \
+#			${SHLIB_LINKER} -o ${LIBOSI} ${LIBOSI_ALL_OBJS} -bE:${TOP_SRCDIR}/osi/libosi/libosi.exp ${LIBOSI_DEPS} ;; \
+#		sun*_5*) \
+#			${SHLIB_LINKER} -h ${LIBOSI_NAME}.${SHLIB_SUFFIX}.${LIBOSI_VERSION_MAJOR} -o ${LIBOSI} ${LIBOSI_ALL_OBJS} ${LIBOSI_DEPS} ${LIBOSI_BIT_CFLAGS} ${LIBOSI_OS_BIT_CFLAGS} ;; \
+#		*_linux*) \
+#			${SHLIB_LINKER} -Wl,-h,${LIBOSI_NAME}.${SHLIB_SUFFIX}.${LIBOSI_VERSION_MAJOR} -Wl,--version-script=${TOP_SRCDIR}/osi/libosi/mapfile -o ${LIBOSI} ${LIBOSI_ALL_OBJS} ${LIBOSI_DEPS} ;; \
+#		*) \
+#			${SHLIB_LINKER} -o ${LIBOSI} ${LIBOSI_ALL_OBJS} ${LIBOSI_DEPS} ;; \
+#		esac ; \
+
+clean:
+	-$(RM) -rf libosi*
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

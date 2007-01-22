@@ -1,0 +1,20 @@
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+#
+# libosi is so bloody huge that it's easier to just
+# let everything be global
+#
+# in addition, the logic necessary to restrict symbols
+# is very complicated due to all the autoconf dependencies
+#
+
+{
+    global:
+	*;
+
+};

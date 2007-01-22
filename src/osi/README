@@ -1,0 +1,111 @@
+Copyright 2005-2007, Sine Nomine Associates and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+
+OpenAFS OSI Framework Readme
+
+\section{Introduction}
+
+OSI is a cross-platform cross-mode system library.  Code which 
+properly uses this library can be compiled for userspace and
+kernelspace with almost no ifdefs (none if you don't need to
+do things like explicitly call syscalls or register syscall 
+handlers).
+
+In addition, OSI provide a clear abstraction for accessing system
+services and high-performance interfaces such as locks, atomic
+operations, memory pools (e.g. solaris slab allocator), common
+data structures and objects (e.g. refcounts, linked lists, etc.)
+
+\section{Using Libosi}
+
+\subsection{Writing Code}
+
+Code which wishes to make use of the osi abstraction can either
+include <osi/osi.h> as the very first include (it will take care
+of things like afsconfig.h and afs/param.h for you), or you can
+place an include directive for <osi/osi_includes.h> anywhere in
+your file.
+
+When you need access to specific APIs, simply include the relevant
+osi header file.  For instance, to use osi mutexes, you would 
+include: <osi/osi_mutex.h>.
+
+\subsection{Linking Against Libosi}
+
+Linking against libosi is fairly straightforward.  However, you
+need to determine exactly which version of the library to link
+against.  On UNIX there are four variables which you need to fix:
+
+* shared or archive object
+* pthreads or LWP
+* instrumented or non-instrumented
+* 32 or 64 bit
+
+Once you have fixed your variables, you can construct a filename,
+and place it into your makefile.  The libosi naming scheme is as
+follows:
+
+libosi-<threading model>-<instrumentation>-<bits>.<object suffix>
+
+As an example, if we wanted to link against the shared, instrumented
+64-bit libosi, we would pass -losi-pthread-inst-64 on the link line.
+
+Certain variables have (platform-specific) default values.  For
+instance, instrumented libosi is always the default.  Thus, you
+could have written the above link line as -losi-pthread-64.  The
+default bit setting is platform dependent.  Most of the time, you
+will not need to explicitly specify whether you want 32 or 64 bit
+code.
+
+\section{OSI Internals}
+
+\subsection{Directory Layout}
+
+\begin{description}
+
+\item[src/osi] The root osi directory contains the header files
+which define the various platform-independent APIs.  These are
+the ONLY header files under the osi hiearchy which are legal to
+directly include in your code.
+
+\item[src/osi/AIX] contains IBM AIX-specific implementations
+
+\item[src/osi/COMMON] contains common support code
+
+\item[src/osi/DARWIN] contains Darwin-specific implementations
+
+\item[src/osi/FBSD] contains FreeBSD-specific implementations
+
+\item[src/osi/HPUX] contains HP UX-specific implementations
+
+\item[src/osi/IRIX] contains SGI IRIX-specific implementations
+
+\item[src/osi/LEGACY] contains fallback implementations of various 
+APIs for use on platforms where native implementations don't exist
+
+\item[src/osi/LINUX] contains Linux-specific implementations
+
+\item[src/osi/LWP] contains LWP-specific implementations
+
+\item[src/osi/NBSD] contains NetBSD-specific implementations
+
+\item[src/osi/OBSD] contains OpenBSD-specific implementations
+
+\item[src/osi/PTHREAD] contains POSIX threads-specific implementations
+
+\item[src/osi/SOLARIS] contains Sun Solaris-specific implementations
+
+\item[src/osi/libosi] contains libosi build rules
+
+\item[src/osi/tests] contains the libosi test suite
+
+\end{description}
+
+
+Last Updated: Tuesday January 9th, 2007
+Author: Tom Keiser <tkeiser@sinenomine.net>

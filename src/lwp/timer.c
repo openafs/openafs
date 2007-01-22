@@ -189,10 +189,9 @@ TM_Insert(struct TM_Elem *tlistPtr, struct TM_Elem *elem)
 		     || !(elem->TimeLeft.tv_sec > p->TimeLeft.tv_sec
 			  || (elem->TimeLeft.tv_sec == p->TimeLeft.tv_sec
 			      && elem->TimeLeft.tv_usec >=
-			      p->TimeLeft.tv_usec))
-		 ) {
-		 next = p;	/* Save ptr to element that will be after this one */
-		 break;}
+			      p->TimeLeft.tv_usec))) {
+		     next = p;	/* Save ptr to element that will be after this one */
+		     break;}
 		 }
     )
 

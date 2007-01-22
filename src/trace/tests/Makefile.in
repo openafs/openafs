@@ -1,0 +1,194 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -g -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+RECURSE_DIRS= \
+	kernel \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
+objects= ${OBJS}
+
+CONSUMER_LIBS= \
+	${TOP_LIBDIR}/libafsauthent-ni.a \
+	${TOP_LIBDIR}/libafsrpc-ni.a \
+	${TOP_LIBDIR}/libosi_trace_consumer.a \
+	${TOP_LIBDIR}/libosi_trace_common.a \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+CONSUMER_CFLAGS=-DOSI_TRACEPOINT_DISABLE
+CONSUMER_CCRULE=${CCRULE} ${CONSUMER_CFLAGS}
+
+GENERATOR_LIBS= \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libosi-pthread-inst.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+GENERATOR_CFLAGS=
+GENERATOR_CCRULE=${CCRULE} ${GENERATOR_CFLAGS}
+
+
+all: \
+	${objects} \
+	enable_probe \
+	disable_probe \
+	gen_rgy_clear \
+	gen_rgy_list \
+	i2n \
+	mail_tap \
+	snarf \
+	usertrap \
+	build_recurse \
+	$(NULL)
+
+depinstall: \
+	depinstall_recurse \
+	$(NULL)
+
+install: \
+	${DESTDIR}${bindir}/disable_probe \
+	${DESTDIR}${bindir}/enable_probe \
+	${DESTDIR}${bindir}/gen_rgy_clear \
+	${DESTDIR}${bindir}/gen_rgy_list \
+	${DESTDIR}${bindir}/i2n \
+	${DESTDIR}${bindir}/mail_tap \
+	${DESTDIR}${bindir}/snarf \
+	${DESTDIR}${bindir}/usertrap \
+	install_recurse \
+	$(NULL)
+
+dest: \
+	${DEST}/bin/disable_probe \
+	${DEST}/bin/enable_probe \
+	${DEST}/bin/gen_rgy_clear \
+	${DEST}/bin/gen_rgy_list \
+	${DEST}/bin/i2n \
+	${DEST}/bin/mail_tap \
+	${DEST}/bin/snarf \
+	${DEST}/bin/usertrap \
+	dest_recurse \
+	$(NULL)
+
+
+enable_probe.o: enable_probe.c
+	${CONSUMER_CCRULE}
+
+disable_probe.o: disable_probe.c
+	${CONSUMER_CCRULE}
+
+usertrap.o: usertrap.c
+	${GENERATOR_CCRULE}
+
+mail_tap.o: mail_tap.c
+	${GENERATOR_CCRULE}
+
+gen_rgy_clear.o: gen_rgy_clear.c
+	${CONSUMER_CCRULE}
+
+gen_rgy_list.o: gen_rgy_list.c
+	${CONSUMER_CCRULE}
+
+i2n.o: i2n.c
+	${CONSUMER_CCRULE}
+
+snarf.o: snarf.c
+	${CONSUMER_CCRULE}
+
+enable_probe: enable_probe.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+disable_probe: disable_probe.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+i2n: i2n.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+gen_rgy_clear: gen_rgy_clear.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+gen_rgy_list: gen_rgy_list.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+usertrap: usertrap.o
+	${CC} ${LDFLAGS} -o $@ $? ${GENERATOR_LIBS} ${MT_LIBS} ${XLIBS}
+
+mail_tap: mail_tap.o
+	${CC} ${LDFLAGS} -o $@ $? ${GENERATOR_LIBS} ${MT_LIBS} ${XLIBS}
+
+snarf: snarf.o
+	${CC} ${LDFLAGS} -o $@ $? ${CONSUMER_LIBS} ${MT_LIBS} ${XLIBS}
+
+
+${DEST}/bin/enable_probe: enable_probe
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/enable_probe: enable_probe
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/disable_probe: disable_probe
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/disable_probe: disable_probe
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/usertrap: usertrap
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/usertrap: usertrap
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/i2n: i2n
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/i2n: i2n
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/gen_rgy_clear: gen_rgy_clear
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/gen_rgy_clear: gen_rgy_clear
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/gen_rgy_list: gen_rgy_list
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/gen_rgy_list: gen_rgy_list
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/mail_tap: mail_tap
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/mail_tap: mail_tap
+	${INSTALL} -ns $? $@
+
+${DEST}/bin/snarf: snarf
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${bindir}/snarf: snarf
+	${INSTALL} -ns $? $@
+
+
+clean: clean_recurse
+	$(RM) -f *.o enable_probe disable_probe core AFS_component_version_number.c
+
+include @TOP_OBJDIR@/src/config/Makefile.version
+

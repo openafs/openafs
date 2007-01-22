@@ -1,0 +1,104 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
+
+CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS}
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+PUBLICHEADERS=	\
+		activation.h \
+		buildenv.h \
+		cursor.h \
+		directory.h \
+		gen_rgy.h \
+		mail.h \
+		query.h \
+		syscall.h \
+		types.h \
+		$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace
+DEST_HDR_DIR=${DEST}/include/osi/trace
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+RECURSE_DIRS= \
+	KERNEL \
+	LWP \
+	PTHREAD \
+	UKERNEL \
+	USERSPACE \
+	agent \
+	analyzer \
+	common \
+	console \
+	consumer \
+	db \
+	encoding \
+	event \
+	generator \
+	mail \
+	rpc \
+	rtrace \
+	script \
+	snmp \
+	tests \
+	traced \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
+OBJS=
+
+OBJECTS=${OBJS}
+
+all:  \
+	depinstall \
+	${OBJECTS} \
+	build_recurse \
+	$(NULL)
+
+depinstall: \
+	depinstall_hdrs \
+	depinstall_recurse \
+	$(NULL)
+
+#
+# Installation targets
+#
+install: \
+	install_hdrs \
+	install_recurse \
+	$(NULL)
+
+dest: \
+	dest_hdrs \
+	dest_recurse \
+	$(NULL)
+
+#
+# Build targets
+#
+${OBJECTS}: ${PUBLICHEADERS} AFS_component_version_number.c
+
+#
+# Misc. targets
+#
+clean: clean_recurse
+	$(RM) -f *.o *.a AFS_component_version_number.c
+	$(RM) -f core
+
+
+include @TOP_OBJDIR@/src/config/Makefile.version

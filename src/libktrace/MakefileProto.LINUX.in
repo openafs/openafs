@@ -1,0 +1,479 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_alloc.o \
+	osi_cred.o \
+	osi_inode.o \
+	osi_module.o \
+	osi_probe.o \
+	osi_sleep.o \
+	osi_syscall.o \
+	osi_vm.o \
+<ppc64_linux26>
+	osi_flush.o \
+<all>
+
+# import flags and build objects from common libosi rules file
+LIBOSI_CFLAGS = \
+	$(LIBOSI_CFLAGS_COMMON) \
+	$(LIBOSI_CFLAGS_kernelspace) \
+	$(LIBOSI_CFLAGS_kernel) \
+	$(NULL)
+LIBOSI_OBJS = \
+	$(LIBOSI_OBJS_COMMON) \
+	$(LIBOSI_OBJS_kernelspace) \
+	$(LIBOSI_OBJS_kernel) \
+	$(NULL)
+
+# instrumentation-specific flags and build objects
+LIBOSI_CFLAGS_inst = \
+	$(LIBOSI_CFLAGS_COMMON_inst) \
+	$(LIBOSI_CFLAGS_kernelspace_inst) \
+	$(LIBOSI_CFLAGS_kernel_inst) \
+	$(NULL)
+LIBOSI_OBJS_inst = \
+	$(LIBOSI_OBJS_COMMON_inst) \
+	$(LIBOSI_OBJS_kernelspace_inst) \
+	$(LIBOSI_OBJS_kernel_inst) \
+	$(NULL)
+
+# non-instrumented libosi flags and build objects
+LIBOSI_CFLAGS_ni = \
+	$(LIBOSI_CFLAGS_COMMON_ni) \
+	$(LIBOSI_CFLAGS_kernelspace_ni) \
+	$(LIBOSI_CFLAGS_kernel_ni) \
+	$(NULL)
+LIBOSI_OBJS_ni = \
+	$(LIBOSI_OBJS_COMMON_ni) \
+	$(LIBOSI_OBJS_kernelspace_ni) \
+	$(LIBOSI_OBJS_kernel_ni) \
+	$(NULL)
+
+# 32-bit libosi flags and build objects
+LIBOSI_CFLAGS_32 = \
+	$(LIBOSI_CFLAGS_COMMON_32) \
+	$(LIBOSI_CFLAGS_kernelspace_32) \
+	$(LIBOSI_CFLAGS_kernel_32) \
+	$(NULL)
+LIBOSI_OBJS_32 = \
+	$(LIBOSI_OBJS_COMMON_32) \
+	$(LIBOSI_OBJS_kernelspace_32) \
+	$(LIBOSI_OBJS_kernel_32) \
+	$(NULL)
+
+# 64-bit libosi flags and build objects
+LIBOSI_CFLAGS_64 = \
+	$(LIBOSI_CFLAGS_COMMON_64) \
+	$(LIBOSI_CFLAGS_kernelspace_64) \
+	$(LIBOSI_CFLAGS_kernel_64) \
+	$(NULL)
+LIBOSI_OBJS_64 = \
+	$(LIBOSI_OBJS_COMMON_64) \
+	$(LIBOSI_OBJS_kernelspace_64) \
+	$(LIBOSI_OBJS_kernel_64) \
+	$(NULL)
+
+
+# import flags and build objects from platform libosi rules file
+LIBOSI_OS_CFLAGS = \
+	$(LIBOSI_OS_CFLAGS_COMMON) \
+	$(LIBOSI_OS_CFLAGS_kernelspace) \
+	$(LIBOSI_OS_CFLAGS_kernel) \
+	$(NULL)
+LIBOSI_OS_OBJS = \
+	$(LIBOSI_OS_OBJS_COMMON) \
+	$(LIBOSI_OS_OBJS_kernelspace) \
+	$(LIBOSI_OS_OBJS_kernel) \
+	$(NULL)
+
+# instrumentation-specific flags and build objects
+LIBOSI_OS_CFLAGS_inst = \
+	$(LIBOSI_OS_CFLAGS_COMMON_inst) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_inst) \
+	$(LIBOSI_OS_CFLAGS_kernel_inst) \
+	$(NULL)
+LIBOSI_OS_OBJS_inst = \
+	$(LIBOSI_OS_OBJS_COMMON_inst) \
+	$(LIBOSI_OS_OBJS_kernelspace_inst) \
+	$(LIBOSI_OS_OBJS_kernel_inst) \
+	$(NULL)
+
+# non-instrumented libosi flags and build objects
+LIBOSI_OS_CFLAGS_ni = \
+	$(LIBOSI_OS_CFLAGS_COMMON_ni) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_ni) \
+	$(LIBOSI_OS_CFLAGS_kernel_ni) \
+	$(NULL)
+LIBOSI_OS_OBJS_ni = \
+	$(LIBOSI_OS_OBJS_COMMON_ni) \
+	$(LIBOSI_OS_OBJS_kernelspace_ni) \
+	$(LIBOSI_OS_OBJS_kernel_ni) \
+	$(NULL)
+
+# 32-bit libosi flags and build objects
+LIBOSI_OS_CFLAGS_32 = \
+	$(LIBOSI_OS_CFLAGS_COMMON_32) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_32) \
+	$(LIBOSI_OS_CFLAGS_kernel_32) \
+	$(NULL)
+LIBOSI_OS_OBJS_32 = \
+	$(LIBOSI_OS_OBJS_COMMON_32) \
+	$(LIBOSI_OS_OBJS_kernelspace_32) \
+	$(LIBOSI_OS_OBJS_kernel_32) \
+	$(NULL)
+
+# 64-bit libosi flags and build objects
+LIBOSI_OS_CFLAGS_64 = \
+	$(LIBOSI_OS_CFLAGS_COMMON_64) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_64) \
+	$(LIBOSI_OS_CFLAGS_kernel_64) \
+	$(NULL)
+LIBOSI_OS_OBJS_64 = \
+	$(LIBOSI_OS_OBJS_COMMON_64) \
+	$(LIBOSI_OS_OBJS_kernelspace_64) \
+	$(LIBOSI_OS_OBJS_kernel_64) \
+	$(NULL)
+
+COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
+
+COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} -DLIBKTRACE
+
+LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+
+# tell libosi build system about our datamodel
+<i386 s390 sparc ppc parisc>
+LIBOSI_BUILDING_BIT = 32
+LIBOSI_BIT_OBJS = $(LIBOSI_OBJS_32)
+LIBOSI_OS_BIT_OBJS = $(LIBOSI_OS_OBJS_32)
+LIBOSI_BIT_CFLAGS = $(LIBOSI_CFLAGS_32)
+LIBOSI_OS_BIT_CFLAGS = $(LIBOSI_OS_CFLAGS_32)
+
+<amd64 alpha s390x sparc64 ppc64 ia64>
+LIBOSI_BUILDING_BIT = 64
+LIBOSI_BIT_OBJS = $(LIBOSI_OBJS_64)
+LIBOSI_OS_BIT_OBJS = $(LIBOSI_OS_OBJS_64)
+LIBOSI_BIT_CFLAGS = $(LIBOSI_CFLAGS_64)
+LIBOSI_OS_BIT_CFLAGS = $(LIBOSI_OS_CFLAGS_64)
+
+<all>
+LIBOSI_INST_OBJS = $(LIBOSI_OBJS_inst)
+LIBOSI_OS_INST_OBJS = $(LIBOSI_OS_OBJS_inst)
+LIBOSI_INST_CFLAGS = $(LIBOSI_CFLAGS_inst)
+LIBOSI_OS_INST_CFLAGS = $(LIBOSI_OS_CFLAGS_inst)
+
+LIBOSI_ALL_OBJS = \
+	$(LIBOSI_OBJS) \
+	$(LIBOSI_OS_OBJS) \
+	$(LIBOSI_BIT_OBJS) \
+	$(LIBOSI_OS_BIT_OBJS) \
+	$(LIBOSI_INST_OBJS) \
+	$(LIBOSI_OS_INST_OBJS) \
+	$(NULL)
+
+LIBOSI_ALL_CFLAGS = \
+	$(LIBOSI_CFLAGS) \
+	$(LIBOSI_OS_CFLAGS) \
+	$(LIBOSI_BIT_CFLAGS) \
+	$(LIBOSI_OS_BIT_CFLAGS) \
+	$(LIBOSI_INST_CFLAGS) \
+	$(LIBOSI_OS_INST_CFLAGS) \
+	$(NULL)
+
+# System specific build commands and flags
+<linux26 linux_26>
+# All the platform-specific and kernel-related things are provided by
+# the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
+CCFLAGS = -Wno-strict-prototypes
+DEFINES = $(COMMON_DEFINES)
+
+<i386_linux22 i386_linux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
+DEFINES = $(COMMON_DEFINES) -DCPU=586
+
+<amd64_linux24 amd64_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel -mno-red-zone
+DEFINES = $(COMMON_DEFINES) 
+
+<i386_umlinux22 i386_umlinux24 i386_umlinux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -Wno-strict-prototypes -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
+DEFINES = $(COMMON_DEFINES) -DCPU=586
+
+<i386_umlinux26>
+EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
+
+<alpha_linux_22 alpha_linux_24 alpha_linux_26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
+DEFINES = $(COMMON_DEFINES)
+
+<s390_linux22 s390_linux24 s390_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
+DEFINES = $(COMMON_DEFINES) -D__s390__ 
+
+<s390x_linux22 s390x_linux24 s390x_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
+DEFINES = $(COMMON_DEFINES) -D__s390x__ 
+
+<sparc_linux22 sparc_linux24>
+LD = ld -m elf32_sparc
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc
+
+<sparc64_linux22 sparc64_linux24>
+CC = sparc64-linux-gcc
+LD = ld -m elf64_sparc
+CCFLAGS = $(COMMON_KERN_CFLAGS) \
+      -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
+
+<ppc_linux22 ppc_linux24 ppc64_linux24 ppc64_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
+DEFINES = $(COMMON_DEFINES) -D__powerpc__
+
+<parisc_linux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -mno-space-regs \
+      -mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
+      -march=1.1 -mschedule=7100
+DEFINES = $(COMMON_DEFINES) -D__linux__
+
+<ia64_linux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
+DEFINES = $(COMMON_DEFINES)
+
+<all>
+INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
+  -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat
+
+CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+MPS = @MPS@
+
+# COMPDIRS is called in Makefile.common to do the actual builds.
+COMPDIRS=linux_compdirs
+INSTDIRS=linux_instdirs
+DESTDIRS=linux_destdirs
+
+include Makefile.common
+
+<linux26 linux_26 umlinux26>
+LINUX_MODULE_EXT=ko
+<all -linux26 -linux_26 -umlinux26>
+LINUX_MODULE_EXT=o
+<all>
+
+LINUX_MODULE_NAME=
+LOCAL_SMP_DEF=
+
+setup:
+	-$(RM) -f h net netinet sys rpc
+	-ln -fs rx rpc
+	for m in ${MPS} ; do \
+		KDIR=$(KOBJ)-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m; \
+		mkdir -p $${KDIR}; \
+		ln -fs ../Makefile $${KDIR}/Makefile.afs ; \
+		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+		ln -fs ../config $${KDIR}/config; \
+	done 
+	
+# Compile SP and MP clients as requested
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	$(RM) -f h 
+	$(RM) -f sys
+	$(RM) -f netinet 
+	if [ -d ${LINUX_KERNEL_PATH}/include2 ] ; then                  \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux h       ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux sys     ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux netinet ; \
+	else                                                            \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux h               ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux sys             ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet         ; \
+	fi
+	$(RM) -f linux 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
+	$(RM) -f net 
+	ln -fs ${LINUX_KERNEL_PATH}/include/net net 
+	$(RM) -f asm-generic
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
+	$(RM) -f asm
+<parisc_linux22 parisc_linux24 parisc_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
+<alpha_linux_22 alpha_linux_24 alpha_linux_26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
+<i386_linux22 i386_linux24 i386_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
+<i386_umlinux22 i386_umlinux24 i386_umlinux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
+	ln -fs ${LINUX_KERNEL_PATH}/arch/um/include/sysdep
+<amd64_linux24 amd64_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
+<s390_linux22 s390_linux24 s390_linux26 s390x_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
+<s390x_linux22 s390x_linux24 s390x_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
+<ppc_linux22 ppc_linux24 ppc_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+<ppc64_linux24 ppc64_linux26>
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
+<sparc_linux22 sparc_linux24 sparc_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
+<sparc64_linux22 sparc64_linux24 sparc64_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
+<ia64_linux24 ia64_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
+<all>
+	for m in ${MPS} ; do \
+		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
+		echo Building in directory: $${KDIR} ; \
+		if [ "$$m" = "MP" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libktrace.mp" ; \
+		elif [ "$$m" = "EP" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libktrace.ep" ; \
+		elif [ "$$m" = "BM" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libktrace.bm" ; \
+		else  \
+			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
+			TARG=libktrace ; \
+		fi ; \
+		cd $${KDIR} ; \
+		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		cd ../ ; \
+<all>
+	done
+
+linux_compdirs_libktrace: depsrcs libktrace
+linux_compdirs_libktrace.mp: depsrcs libktrace.mp
+linux_compdirs_libktrace.ep: depsrcs libktrace.ep
+linux_compdirs_libktrace.bm: depsrcs libktrace.bm
+linux_instdirs_libktrace: install_libktrace
+linux_instdirs_libktrace.mp: install_libktrace.mp
+linux_instdirs_libktrace.ep: install_libktrace.ep
+linux_instdirs_libktrace.bm: install_libktrace.bm
+linux_destdirs_libktrace: dest_libktrace
+linux_destdirs_libktrace.mp: dest_libktrace.mp
+linux_destdirs_libktrace.ep: dest_libktrace.ep
+linux_destdirs_libktrace.bm: dest_libktrace.bm
+
+
+# Below this line are targets when in the COMMON directory:
+# For Linux there is no kernel NFS server.
+LIBKTRACE = libktrace-${CLIENT}.${LINUX_MODULE_EXT}
+LIBKTRACE_MP = libktrace-${CLIENT}.mp.${LINUX_MODULE_EXT}
+LIBKTRACE_EP = libktrace-${CLIENT}.ep.${LINUX_MODULE_EXT}
+LIBKTRACE_BM = libktrace-${CLIENT}.bm.${LINUX_MODULE_EXT}
+
+INST_LIBKTRACE = ${DESTDIR}${afskerneldir}/${LIBKTRACE}
+INST_LIBKTRACE_MP = ${DESTDIR}${afskerneldir}/${LIBKTRACE_MP}
+INST_LIBKTRACE_EP = ${DESTDIR}${afskerneldir}/${LIBKTRACE_EP}
+INST_LIBKTRACE_BM = ${DESTDIR}${afskerneldir}/${LIBKTRACE_BM}
+
+DEST_LIBKTRACE = ${DEST}/root.client/usr/vice/etc/modload/${LIBKTRACE}
+DEST_LIBKTRACE_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBKTRACE_MP}
+DEST_LIBKTRACE_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBKTRACE_EP}
+DEST_LIBKTRACE_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBKTRACE_BM}
+
+
+libktrace:	$(LIBKTRACE) 
+	echo SP Build Complete
+
+libktrace.mp: $(LIBKTRACE_MP)
+	echo MP Build Complete
+
+libktrace.ep: $(LIBKTRACE_EP)
+	echo EP Build Complete
+
+libktrace.bm: $(LIBKTRACE_BM)
+	echo BM Build Complete
+
+<linux26 linux_26 umlinux26>
+${LIBKTRACE} ${LIBKTRACE_MP} ${LIBKTRACE_EP} ${LIBKTRACE_BM}: libktrace.ko
+	cp libktrace.ko $@
+
+.FORCE:
+libktrace.ko: .FORCE
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libktrace/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config $(TOP_SRCDIR)/osi/libosi/rules.mk $(TOP_SRCDIR)/osi/libosi/rules.LINUX.mk Makefile.afs Makefile.common
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libktrace/${KDIR} modules
+        
+<all -linux26 -linux_26 -umlinux26>
+${LIBKTRACE}: $(AFSAOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS)
+
+${LIBKTRACE_MP}: $(AFSAOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS)
+
+${LIBKTRACE_EP}: $(AFSAOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS)
+
+${LIBKTRACE_BM}: $(AFSAOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS)
+<all>
+
+install_libktrace:	$(INST_LIBKTRACE) 
+	echo SP Install Complete
+
+install_libktrace.mp: $(INST_LIBKTRACE_MP)
+	echo MP Install Complete
+
+install_libktrace.ep: $(INST_LIBKTRACE_EP)
+	echo EP Install Complete
+
+install_libktrace.bm: $(INST_LIBKTRACE_BM)
+	echo BM Install Complete
+
+dest_libktrace:	$(DEST_LIBKTRACE) 
+	echo SP Install Complete
+
+dest_libktrace.mp: $(DEST_LIBKTRACE_MP)
+	echo MP Install Complete
+
+dest_libktrace.ep: $(DEST_LIBKTRACE_EP)
+	echo EP Install Complete
+
+dest_libktrace.bm: $(DEST_LIBKTRACE_BM)
+	echo BM Install Complete
+
+$(INST_LIBKTRACE): $(LIBKTRACE)
+	${INSTALL} -f $? $@
+
+$(INST_LIBKTRACE_MP): $(LIBKTRACE_MP)
+	${INSTALL} -f $? $@
+
+$(INST_LIBKTRACE_EP): $(LIBKTRACE_EP)
+	${INSTALL} -f $? $@
+
+$(INST_LIBKTRACE_BM): $(LIBKTRACE_BM)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBKTRACE): $(LIBKTRACE)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBKTRACE_MP): $(LIBKTRACE_MP)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBKTRACE_EP): $(LIBKTRACE_EP)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBKTRACE_BM): $(LIBKTRACE_BM)
+	${INSTALL} -f $? $@

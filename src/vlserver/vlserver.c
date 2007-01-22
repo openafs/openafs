@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -166,6 +167,7 @@ main(argc, argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Vlserver, osi_NULL)));
     osi_audit_init();
 
     /* Parse command line */

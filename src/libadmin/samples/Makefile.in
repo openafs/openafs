@@ -38,14 +38,16 @@ SAMPLEPROGS=\
 	rxstat_query_peer \
 	rxstat_query_process
 
-SAMPLELIBS =\
+SAMPLELIBS = \
 	${TOP_LIBDIR}/libafsadminutil.a \
 	${TOP_LIBDIR}/libclientadmin.a \
 	${TOP_LIBDIR}/libvosadmin.a \
 	${TOP_LIBDIR}/libbosadmin.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/libosi-pthread-inst.a \
+	$(TOP_LIBDIR)/libafsutil.a \
+	$(TOP_LIBDIR)/libsys.a
 
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)

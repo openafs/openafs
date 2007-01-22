@@ -334,10 +334,10 @@ afs_MaybeWakeupTruncateDaemon(void)
  * struct so we need only export one symbol for AIX.
  */
 static struct CTD_stats {
-    osi_timeval_t CTD_beforeSleep;
-    osi_timeval_t CTD_afterSleep;
-    osi_timeval_t CTD_sleepTime;
-    osi_timeval_t CTD_runTime;
+    afs_timeval_t CTD_beforeSleep;
+    afs_timeval_t CTD_afterSleep;
+    afs_timeval_t CTD_sleepTime;
+    afs_timeval_t CTD_runTime;
     int CTD_nSleeps;
 } CTD_stats;
 
@@ -345,7 +345,7 @@ u_int afs_min_cache = 0;
 void
 afs_CacheTruncateDaemon(void)
 {
-    osi_timeval_t CTD_tmpTime;
+    afs_timeval_t CTD_tmpTime;
     u_int counter;
     u_int cb_lowat;
     u_int dc_hiwat =
@@ -1657,7 +1657,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     XSTATS_DECLS;
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
+    afs_timeval_t xferStartTime,	/*FS xfer start time */
       xferStopTime;		/*FS xfer stop time */
     afs_size_t bytesToXfer;	/* # bytes to xfer */
     afs_size_t bytesXferred;	/* # bytes actually xferred */

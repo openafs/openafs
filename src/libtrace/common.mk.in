@@ -1,0 +1,229 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+#
+# common elements of libtrace build system
+#
+
+include $(LIBTRACE_RULE_DIR)/rules.mk
+include $(LIBTRACE_RULE_DIR)/rules.$(MKAFS_OSTYPE).mk
+include $(LIBTRACE_RULE_DIR)/$(LIBTRACE_BUILDING).mk
+
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.SUFFIXES:	.i
+.c.i:
+	$(LIBTRACE_CC) $(LIBTRACE_ALL_CFLAGS) $(CFLAGS-$@) -P -c $<
+
+.c.o:
+	$(LIBTRACE_CC) $(LIBTRACE_ALL_CFLAGS) $(CFLAGS-$@) -c $<
+CRULE_NOOPT=	$(LIBTRACE_CC) $(LIBTRACE_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+CRULE_OPT=	$(LIBTRACE_CC) $(LIBTRACE_ALL_CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+
+system:	all
+
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
+
+all:	setup $(COMPDIRS)
+
+# placeholder for any sources that are built prior to compiling libtrace
+depsrcs: 
+
+LIBTRACE_CC_lwp = ${CC}
+LIBTRACE_CC_pthread = ${MT_CC}
+LIBTRACE_CC=$(LIBTRACE_CC_$(LIBTRACE_BUILDING_THR))
+
+LIBTRACE_PREFIX = $(LIBTRACE_BUILDING)
+
+LIBTRACE_SUFFIX_archive = a
+LIBTRACE_SUFFIX_shlib = ${SHLIB_SUFFIX}
+
+LIBTRACE_VERSION_archive =
+LIBTRACE_VERSION_shlib = .$(LIBTRACE_VERSION_MAJOR).$(LIBTRACE_VERSION_MINOR)
+
+setup:
+	for t in ${LIBTRACE_BUILD_THREADS} ; do \
+		for l in ${LIBTRACE_BUILD_LIBS} ; do \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBTRACE_BUILD_BITS} ; do \
+				TRACE_BUILD_DIR="$(LIBTRACE_PREFIX)-$$l-$$t-$$b" ; \
+				echo "Making directory: '$$TRACE_BUILD_DIR'..."; \
+				mkdir -p $$TRACE_BUILD_DIR ; \
+				$(RM) -f $$TRACE_BUILD_DIR/Makefile.common ; \
+				$(RM) -f $$TRACE_BUILD_DIR/Makefile ; \
+				$(RM) -f $$TRACE_BUILD_DIR/config ; \
+				$(RM) -f $$TRACE_BUILD_DIR/mapfile ; \
+				ln -fs ../Makefile.common $$TRACE_BUILD_DIR/Makefile.common ; \
+				ln -fs ../Makefile $$TRACE_BUILD_DIR/Makefile ; \
+				ln -fs ../config $$TRACE_BUILD_DIR/config ; \
+				ln -fs $(TOP_SRCDIR)/osi/libtrace/mapfile $$TRACE_BUILD_DIR/mapfile ; \
+			done ; \
+		done ; \
+	done
+
+
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${LIBTRACE_BUILD_THREADS} ; do \
+		LIBTRACE_BUILDING_THR=$$t ; \
+		if [ "$$t" = "${LIBTRACE_DEFAULT_THREADS}" ] ; then \
+			LIBTRACE_THR_ALIAS="" ; \
+		else \
+			LIBTRACE_THR_ALIAS="$$t" ; \
+		fi ; \
+		for l in ${LIBTRACE_BUILD_LIBS} ; do \
+			LIBTRACE_BUILDING_LIB=$$l ; \
+			if [ "$$t" = "lwp" ] && [ "$$l" = "shlib" ] ; then \
+				continue ; \
+			fi ; \
+			for b in ${LIBTRACE_BUILD_BITS} ; do \
+				LIBTRACE_BUILDING_BIT=$$b ; \
+				if [ "$$b" = "${LIBTRACE_DEFAULT_BITS}" ] ; then \
+					LIBTRACE_BIT_ALIAS="" ; \
+				else \
+					LIBTRACE_BIT_ALIAS="$$b" ; \
+				fi ; \
+				LIBTRACE_BUILD_DIR="$(LIBTRACE_PREFIX)-$$l-$$t-$$b" ; \
+				LIBTRACE_NAME="$(LIBTRACE_PREFIX)-$$t-$$b" ; \
+				echo "Building directory: '$$LIBTRACE_BUILD_DIR'..." ; \
+				LIBTRACE_ALIAS="" ; \
+				if [ -z "$$LIBTRACE_THR_ALIAS" ] ; then \
+					LIBTRACE_ALIAS="$(LIBTRACE_PREFIX)-$$b" ; \
+				fi ; \
+				if [ -z "$$LIBTRACE_BIT_ALIAS" ] ; then \
+					LIBTRACE_ALIAS="$$LIBTRACE_ALIAS $(LIBTRACE_PREFIX)-$$t" ; \
+				fi ; \
+				if [ -z "$$LIBTRACE_THR_ALIAS" ] && [ -z "$$LIBTRACE_BIT_ALIAS" ] ; then \
+					LIBTRACE_ALIAS="$$LIBTRACE_ALIAS $(LIBTRACE_PREFIX)" ; \
+				fi ; \
+				export LIBTRACE_BUILDING_LIB ; \
+				export LIBTRACE_BUILDING_THR ; \
+				export LIBTRACE_BUILDING_BIT ; \
+				export LIBTRACE_BUILD_DIR ; \
+				export LIBTRACE_NAME ; \
+				export LIBTRACE_ALIAS ; \
+				cd $$LIBTRACE_BUILD_DIR || exit 1 ; \
+				$(MAKE) $@_libtrace || exit 1 ; \
+				cd ../ ; \
+			done ; \
+		done ; \
+	done
+
+std_compdirs_libtrace: depsrcs libtrace libdir_libtrace
+std_instdirs_libtrace: install_libtrace
+std_destdirs_libtrace: dest_libtrace
+
+# Below this line are targets when in the COMMON directory:
+LIBTRACE_SUFFIX=$(LIBTRACE_SUFFIX_$(LIBTRACE_BUILDING_LIB))
+LIBTRACE_VERSION=$(LIBTRACE_VERSION_$(LIBTRACE_BUILDING_LIB))
+LIBTRACE = $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX)$(LIBTRACE_VERSION)
+
+LIBTRACE_LIBDIR_PATH = ${TOP_LIBDIR}
+LIBTRACE_INST_PATH = ${DESTDIR}${libdir}/afs
+LIBTRACE_DEST_PATH = ${DEST}/lib/afs
+
+LIBTRACE_LIBDIR = $(LIBTRACE_LIBDIR_PATH)/$(LIBTRACE)
+LIBTRACE_INST = $(LIBTRACE_INST_PATH)/$(LIBTRACE)
+LIBTRACE_DEST = $(LIBTRACE_DEST_PATH)/$(LIBTRACE)
+
+# Without this line, gmake tries to build libtrace.o
+.PHONY: libtrace
+
+libtrace:	$(LIBTRACE)
+libdir_libtrace:	$(LIBTRACE_LIBDIR)
+install_libtrace:	$(LIBTRACE_INST)
+dest_libtrace:	$(LIBTRACE_DEST)
+
+
+$(LIBTRACE_LIBDIR): $(LIBTRACE)
+	${INSTALL} -f $? $@
+	cd $(LIBTRACE_LIBDIR_PATH) && \
+	for l in x $(LIBTRACE_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBTRACE_SUFFIX)" ; \
+			ln -sf $(LIBTRACE) "$${l}.$(LIBTRACE_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBTRACE_LIBDIR_PATH) && \
+	if [ "$(LIBTRACE_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+	fi
+
+$(LIBTRACE_INST): $(LIBTRACE)
+	${INSTALL} -f $? $@
+	cd $(LIBTRACE_INST_PATH) && \
+	for l in x $(LIBTRACE_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBTRACE_SUFFIX)" ; \
+			ln -sf $(LIBTRACE) "$${l}.$(LIBTRACE_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBTRACE_INST_PATH) && \
+	if [ "$(LIBTRACE_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+	fi
+
+$(LIBTRACE_DEST): $(LIBTRACE)
+	${INSTALL} -f $? $@
+	cd $(LIBTRACE_DEST_PATH) && \
+	for l in x $(LIBTRACE_ALIAS) ; do \
+		if [ "$${l}" != "x" ] ; then \
+			$(RM) -f "$${l}.$(LIBTRACE_SUFFIX)" ; \
+			ln -sf $(LIBTRACE) "$${l}.$(LIBTRACE_SUFFIX)" ; \
+		fi ; \
+	done
+	cd $(LIBTRACE_DEST_PATH) && \
+	if [ "$(LIBTRACE_BUILDING_LIB)" = "shlib" ] ; then \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX) ; \
+		$(RM) -f $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+		ln -s -f $(LIBTRACE) $(LIBTRACE_NAME).$(LIBTRACE_SUFFIX).$(LIBTRACE_VERSION_MAJOR) ; \
+	fi
+
+${LIBTRACE}: $(LIBTRACE_ALL_OBJS)
+	$(RM) -f $@
+	if [ "$(LIBTRACE_BUILDING_LIB)" = "shlib" ] ; then \
+		${TOP_OBJDIR}/src/config/shlib-build \
+			-d $(TOP_SRCDIR)/libtrace \
+			-l ${LIBTRACE_NAME} \
+			-M ${LIBTRACE_VERSION_MAJOR} \
+			-m ${LIBTRACE_VERSION_MINOR} \
+			-exp $(LIBTRACE_MAPFILE) \
+			-r . -- \
+			${LIBTRACE_ALL_OBJS} ${LIBTRACE_DEPS} ; \
+	else \
+		$(AR) crv $@ $(LIBTRACE_ALL_OBJS) ; \
+		$(RANLIB) $@ ; \
+	fi
+
+# old shlib build system
+#
+#		case ${SYS_NAME} in \
+#		rs_aix4* | rs_aix5*) \
+#			${SHLIB_LINKER} -o ${LIBTRACE} ${LIBTRACE_ALL_OBJS} -bE:${LIBTRACE_RULE_DIR}/$(LIBTRACE_PREFIX).exp ${LIBTRACE_DEPS} ;; \
+#		sun*_5*) \
+#			${SHLIB_LINKER} -h ${LIBTRACE_NAME}.${SHLIB_SUFFIX}.${LIBTRACE_VERSION_MAJOR} -o ${LIBTRACE} ${LIBTRACE_ALL_OBJS} ${LIBTRACE_DEPS} ${LIBTRACE_BIT_CFLAGS} ${LIBTRACE_OS_BIT_CFLAGS} ;; \
+#		*_linux*) \
+#			${SHLIB_LINKER} -Wl,-h,${LIBTRACE_NAME}.${SHLIB_SUFFIX}.${LIBTRACE_VERSION_MAJOR} -Wl,--version-script=${LIBTRACE_RULE_DIR}/mapfile -o ${LIBTRACE} ${LIBTRACE_ALL_OBJS} ${LIBTRACE_DEPS} ;; \
+#		*) \
+#			${SHLIB_LINKER} -o ${LIBTRACE} ${LIBTRACE_ALL_OBJS} ${LIBTRACE_DEPS} ;; \
+#		esac ; \
+
+clean:
+	-$(RM) -rf $(LIBTRACE_PREFIX)*
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

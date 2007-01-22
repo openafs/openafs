@@ -1,6 +1,8 @@
 AFS_component_version_number.c
 Makefile
 Makefile.*_*[0123456789]
+Makefile.public-header
+Makefile.recurse
 Makefile.version
 Makefile.version-NOCML
 afsconfig.h

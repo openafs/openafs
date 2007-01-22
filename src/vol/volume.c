@@ -18,6 +18,9 @@
 
  */
 
+#include <osi/osi.h>
+#include <osi/osi_trace.h>
+#include "tracepoint_table.h"
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -433,6 +436,10 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     struct timezone tz;
 
     programType = pt;
+
+#if defined(OSI_TRACE_ENABLED)
+    osi_Assert(OSI_RESULT_OK(VInitTracePointTable()));
+#endif
 
 #ifdef AFS_DEMAND_ATTACH_FS
     memset(&VStats, 0, sizeof(VStats));
@@ -1592,6 +1599,9 @@ VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp,
 
     *ec = 0;
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_preattach_start),
+			osi_Trace_Args3(partp, vp, vid));
+
     /* check to see if pre-attach already happened */
     if (vp && 
 	(V_attachState(vp) != VOL_STATE_UNATTACHED) && 
@@ -1649,6 +1659,9 @@ VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp,
 
     if (LogLevel >= 5)
 	Log("VPreAttachVolumeById_r:  volume %u pre-attached\n", vp->hashid);
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_preattach_finish),
+			osi_Trace_Args4(*ec, partp, vp, vid));
 
   done:
     if (*ec)
@@ -2152,6 +2165,9 @@ private Volume *
 attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * header,
 	struct DiskPartition * partp, register Volume * vp, int isbusy, int mode)
 {
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_attach_start),
+			osi_Trace_Args7(volumeId, path, header, partp, vp, isbusy, mode));
+
     vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
     IH_INIT(vp->vnodeIndex[vLarge].handle, partp->device, header->parent,
 	    header->largeVnodeIndex);
@@ -2308,18 +2324,18 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    FreeVolume(vp);
 	    *ec = VSALVAGE;
 	}
-	return NULL;
+	goto null_return;
     } else if (*ec) {
 	/* volume operation in progress */
 	VOL_LOCK;
-	return NULL;
+	goto null_return;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
         VOL_LOCK;
 	FreeVolume(vp);
-	return NULL;
+	goto null_return;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -2341,7 +2357,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	FreeVolume(vp);
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	return NULL;
+	goto null_return;
     }
 
     VOL_LOCK;
@@ -2361,7 +2377,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    FreeVolume(vp);
 	    *ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	    return NULL;
+	    goto null_return;
 	}
 #endif /* FAST_RESTART */
 
@@ -2375,7 +2391,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    FreeVolume(vp);
 	    Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
 	    *ec = VNOVOL;
-	    return NULL;
+	    goto null_return;
 	}
     }
 
@@ -2396,7 +2412,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
-		return NULL;
+		goto null_return;
 	    }
 	}
     }
@@ -2417,7 +2433,16 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     VLRU_Add_r(vp);
     VChangeState_r(vp, VOL_STATE_ATTACHED);
 #endif
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_attach_finish),
+			osi_Trace_Args7(volumeId, path, header, partp, vp, isbusy, mode));
+
     return vp;
+
+ null_return:
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_attach_abort),
+			osi_Trace_Args7(volumeId, path, header, partp, vp, isbusy, mode));
+    return NULL;
 }
 
 /* Attach an existing volume.
@@ -2469,6 +2494,9 @@ VHold_r(register Volume * vp)
 {
     Error error;
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_hold_start),
+			osi_Trace_Args1(vp));
+
     VCreateReservation_r(vp);
     VWaitExclusiveState_r(vp);
 
@@ -2479,6 +2507,10 @@ VHold_r(register Volume * vp)
     }
     vp->nUsers++;
     VCancelReservation_r(vp);
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_hold_finish),
+			osi_Trace_Args2(vp, error));
+
     return 0;
 }
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -2487,10 +2519,17 @@ VHold_r(register Volume * vp)
 {
     Error error;
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_hold_start),
+			osi_Trace_Args1(vp));
+
     LoadVolumeHeader(&error, vp);
     if (error)
 	return error;
     vp->nUsers++;
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_hold_finish),
+			osi_Trace_Args2(vp, error));
+
     return 0;
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -2583,6 +2622,21 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 #else
 #define VGET_CTR_INC(x)
 #endif
+
+    /* 
+     * if VInit is zero, the volume package dynamic
+     * data structures have not been initialized yet,
+     * and we must immediately return an error
+     */
+    if (osi_compiler_expect_false(VInit == 0)) {
+	vp = osi_NULL;
+	*ec = VOFFLINE;
+	if (client_ec) {
+	    *client_ec = VOFFLINE;
+	}
+	goto not_inited;
+    }
+
 
 #ifdef AFS_DEMAND_ATTACH_FS
     Volume *avp, * rvp = hint;
@@ -2828,6 +2882,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+ not_inited:
     assert(vp || *ec);
     return vp;
 }
@@ -2927,6 +2982,9 @@ VOffline_r(Volume * vp, char *message)
     Error error;
     VolumeId vid = V_id(vp);
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_offline_start),
+			osi_Trace_Args1(vp));
+
     assert(programType != volumeUtility);
     if (!V_inUse(vp)) {
 	VPutVolume_r(vp);
@@ -2953,6 +3011,9 @@ VOffline_r(Volume * vp, char *message)
     if (vp)			/* In case it was reattached... */
 	VPutVolume_r(vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_offline_finish),
+			osi_Trace_Args1(vp));
 }
 
 void
@@ -2984,6 +3045,10 @@ VDetachVolume_r(Error * ec, Volume * vp)
     }
     tpartp = vp->partition;
     volume = V_id(vp);
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_detach_start),
+			osi_Trace_Args3(tpartp, vp, volume));
+
     DeleteVolumeFromHashTable(vp);
     vp->shuttingDown = 1;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3028,6 +3093,9 @@ VDetachVolume_r(Error * ec, Volume * vp)
 	}
     }
 #endif /* FSSYNC_BUILD_CLIENT */
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_detach_finish),
+			osi_Trace_Args1(vp));
 }
 
 void
@@ -3145,7 +3213,12 @@ VUpdateVolume_r(Error * ec, Volume * vp, int flags)
 {
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState state_save;
+#endif
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_header_update_start),
+			osi_Trace_Args2(vp, flags));
+
+#ifdef AFS_DEMAND_ATTACH_FS
     if (flags & VOL_UPDATE_WAIT) {
 	VCreateReservation_r(vp);
 	VWaitExclusiveState_r(vp);
@@ -3182,6 +3255,9 @@ VUpdateVolume_r(Error * ec, Volume * vp, int flags)
 	    VForceOffline_r(vp, VOL_FORCEOFF_NOUPDATE);
 	}
     }
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_header_update_finish),
+			osi_Trace_Args1(vp));
 }
 
 void
@@ -3200,6 +3276,9 @@ VSyncVolume_r(Error * ec, Volume * vp, int flags)
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState state_save;
 #endif
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_header_sync_start),
+			osi_Trace_Args2(vp, flags));
 
     if (flags & VOL_SYNC_WAIT) {
 	VUpdateVolume_r(ec, vp, VOL_UPDATE_WAIT);
@@ -3221,6 +3300,9 @@ VSyncVolume_r(Error * ec, Volume * vp, int flags)
 	VChangeState_r(vp, state_save);
 #endif
     }
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_header_sync_finish),
+			osi_Trace_Args1(vp));
 }
 
 void
@@ -3489,12 +3571,18 @@ VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
     vp->stats.vol_ops++;
     IncUInt64(&VStats.vol_ops);
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_vol_op_register),
+			osi_Trace_Args2(vp, vopinfo));
+
     return 0;
 }
 
 int
 VDeregisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 {
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_vol_op_deregister),
+			osi_Trace_Args2(vp, vopinfo));
+
     if (vp->pending_vol_op) {
 	free(vp->pending_vol_op);
 	vp->pending_vol_op = NULL;
@@ -3561,6 +3649,9 @@ VCheckSalvage(register Volume * vp)
 int
 VRequestSalvage_r(Volume * vp, int reason, int flags)
 {
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_salvage_is_needed),
+			osi_Trace_Args3(vp, reason, flags));
+
 #ifdef SALVSYNC_BUILD_CLIENT
     if (programType != fileServer)
 	return 1;
@@ -3601,6 +3692,10 @@ VUpdateSalvagePriority_r(Volume * vp)
      */
     if ((vp->salvage.scheduled) &&
 	(vp->stats.last_salvage_req < (now-SALVAGE_PRIO_UPDATE_INTERVAL))) {
+
+	osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_salvage_update_priority),
+			    osi_Trace_Args1(vp));
+
 	code = SALVSYNC_SalvageVolume(vp->hashid,
 				      VPartitionPath(vp->partition),
 				      SALVSYNC_RAISEPRIO,
@@ -3646,6 +3741,9 @@ VScheduleSalvage_r(Volume * vp)
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	V_attachFlags(vp) |= VOL_IS_BUSY;
 	VOL_UNLOCK;
+
+	osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeActions_salvage_update_priority),
+			    osi_Trace_Args1(vp));
 
 	/* can't use V_id() since there's no guarantee
 	 * we have the disk data header at this point */
@@ -4135,11 +4233,17 @@ VWaitStateChange_r(Volume * vp)
 {
     VolState state_save = V_attachState(vp);
 
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeStateActions_wait_change_block),
+			osi_Trace_Args1(vp));
+    
     assert(vp->nWaiters || vp->nUsers);
     do {
 	assert(pthread_cond_wait(&V_attachCV(vp), &vol_glock_mutex) == 0);
     } while (V_attachState(vp) == state_save);
     assert(V_attachState(vp) != VOL_STATE_FREED);
+
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeStateActions_wait_change_unblock),
+			osi_Trace_Args1(vp));
 }
 
 /* wait for blocking ops to end */
@@ -4147,8 +4251,16 @@ static void
 VWaitExclusiveState_r(Volume * vp)
 {
     assert(vp->nWaiters || vp->nUsers);
-    while (IsExclusiveState(V_attachState(vp))) {
-	assert(pthread_cond_wait(&V_attachCV(vp), &vol_glock_mutex) == 0);
+    if (IsExclusiveState(V_attachState(vp))) {
+	osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeStateActions_wait_exclusive_block),
+			    osi_Trace_Args1(vp));
+
+	do {
+	    assert(pthread_cond_wait(&V_attachCV(vp), &vol_glock_mutex) == 0);
+	} while (IsExclusiveState(V_attachState(vp)));
+
+	osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeStateActions_wait_exclusive_unblock),
+			    osi_Trace_Args1(vp));
     }
     assert(V_attachState(vp) != VOL_STATE_FREED);
 }
@@ -4167,6 +4279,8 @@ VChangeState_r(Volume * vp, VolState new_state)
 
     V_attachState(vp) = new_state;
     assert(pthread_cond_broadcast(&V_attachCV(vp)) == 0);
+    osi_Trace_Vol_Event(osi_Trace_Vol_ProbeId(VolumeState_change),
+			osi_Trace_Args3(vp, old_state, new_state));
     return old_state;
 }
 

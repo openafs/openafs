@@ -15,8 +15,7 @@
 /* Main program file. Define globals. */
 #define MAIN 1
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -325,6 +324,8 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Salvageserver, osi_NULL)));
+    osi_audit_init();
 
     /* Initialize directory paths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {

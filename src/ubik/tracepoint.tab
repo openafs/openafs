@@ -1,0 +1,83 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	UbikClient
+	module-dir	ubik
+	c-path		ubik_client_tracepoint.c
+	h-path		ubik_client_tracepoint.h
+	prefix		"db.ubik.client"
+	init-func	ubik_client_TracePointTableInit
+	event-tag	osi_Trace_Event_UbikEvent_Id
+	description	"Ubik client probe points"
+
+	action-table {
+		name	Actions
+		prefix	"actions"
+
+		action {
+			name call
+
+			event {
+				name	try_next_server
+			}
+			event {
+				name	need_sync_site
+			}
+			event {
+				name	client_reset
+				description {
+					ubik_client object reset out from
+					under our pending call
+				}
+			}
+		}
+
+	}
+
+	event-table {
+		name	Events
+		prefix	"events"
+
+		event {
+			name	mark_server_up
+		}
+		event {
+			name	mark_server_down
+		}
+		event {
+			name	client_reset
+		}
+		event {
+			name	client_init
+		}
+		event {
+			name	client_destroy
+		}
+		event {
+			name	no_quorum
+		}
+	}
+}
+
+trace-table {
+	module-name	Ubik
+	module-dir	ubik
+	c-path		ubik_server_tracepoint.c
+	h-path		ubik_server_tracepoint.h
+	prefix		"db.ubik"
+	init-func	ubik_TracePointTableInit
+	event-tag	osi_Trace_Event_UbikEvent_Id
+	description	"Ubik server probe points"
+
+	description {
+		nothing here yet
+	}
+}

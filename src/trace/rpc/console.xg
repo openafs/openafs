@@ -1,0 +1,45 @@
+/*
+ * Copyright 2006, Sine Nomine Associates and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "common.xg"
+
+package	Trace_Console_
+prefix S
+statindex 22
+
+#include "console_opcodes.h"
+%#include <trace/rpc/console_opcodes.h>
+
+GetVersion(
+    OUT afs_uint32 * console_version,
+    OUT afs_uint32 * console_build_time
+) multi = OSI_TRACE_RPC_OP_CONSOLE_GET_VERSION;
+
+TimeStamp(
+    IN osi_Trace_rpc_agent_handle * agent_handle,
+    IN afs_uint32 time_sync
+) multi = OSI_TRACE_RPC_OP_CONSOLE_TIMESTAMP;
+
+Trap(
+    IN osi_Trace_rpc_agent_handle * agent_handle,
+    IN afs_uint32 trap_record_format,
+    IN afs_uint32 trap_record_version,
+    IN afs_uint32 reserved0,
+    IN afs_uint32 reserved1,
+    IN osi_Trace_rpc_trap_data * trap_payload
+) multi = OSI_TRACE_RPC_OP_CONSOLE_TRAP;
+
+BulkTrap(
+    IN osi_Trace_rpc_agent_handle * agent_handle,
+    IN afs_uint32 trap_record_format,
+    IN afs_uint32 trap_record_version,
+    IN afs_uint32 reserved0,
+    IN afs_uint32 reserved1,
+    IN osi_Trace_rpc_bulk_trap trap_payloads
+) multi = OSI_TRACE_RPC_OP_CONSOLE_BULK_TRAP;

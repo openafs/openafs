@@ -1,0 +1,54 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+srcdir=@srcdir@
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+BUILDING_INST=@OSI_INSTRUMENTATION@
+
+DEFAULT_INST_yes = inst
+DEFAULT_INST_no = ni
+
+# System specific build commands and flags
+
+LIBAFSRPC_BUILD_LIBS = archive shlib
+LIBAFSRPC_BUILD_THREADS = pthread
+LIBAFSRPC_DEFAULT_THREADS = pthread
+LIBAFSRPC_BUILD_INSTRUMENTATION = \
+	ni \
+	@BUILD_OSI_INSTRUMENTATION@
+LIBAFSRPC_DEFAULT_INSTRUMENTATION = $(DEFAULT_INST_$(BUILDING_INST))
+
+<all -amd64>
+LIBAFSRPC_MAPFILE=$(LIBAFSRPC_RULE_DIR)/mapfile
+
+<amd64>
+LIBAFSRPC_MAPFILE=$(LIBAFSRPC_RULE_DIR)/mapfile.afs_xdr
+
+# Name of directory to hold object files and libraries.
+<i386 parisc ppc sparc s390>
+LIBAFSRPC_BUILD_BITS = 32
+LIBAFSRPC_DEFAULT_BITS = 32
+
+# XXX these may not be entirely correct; I can't remember which
+# userspace datamodels are supported by every lp64 linux kernel port,
+# which is the default userspace datamodel, etc.
+<amd64 ia64 ppc64 s390x sparc64>
+LIBAFSRPC_BUILD_BITS = 64
+LIBAFSRPC_DEFAULT_BITS = 64
+
+<all>
+# COMPDIRS is called in Makefile.common to do the actual builds.
+COMPDIRS=std_compdirs
+INSTDIRS=std_instdirs
+DESTDIRS=std_destdirs
+
+include Makefile.common
+

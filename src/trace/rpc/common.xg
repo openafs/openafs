@@ -1,0 +1,95 @@
+/*
+ * Copyright 2006, Sine Nomine Associates and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+%#ifndef OSI_TRACE_RPC_COMMON_XG
+
+/*
+ * Rx service ids
+ */
+const OSI_TRACE_RPC_SERVICE_AGENT		=	240;
+const OSI_TRACE_RPC_SERVICE_CONSOLE		=	241;
+
+
+/*
+ * important constants
+ */
+const OSI_TRACE_RPC_PROC_VEC_MAX		=	64;
+const OSI_TRACE_RPC_PREDICATE_LEN_MAX		=	512;
+const OSI_TRACE_RPC_FILTER_LEN_MAX		=	16384;
+const OSI_TRACE_RPC_CONSOLE_MH_MAX		=	32;
+const OSI_TRACE_RPC_PROBE_NAME_LEN_MAX		=	256;
+const OSI_TRACE_RPC_PROBE_FILTER_LEN_MAX	=	256;
+
+const OSI_TRACE_RPC_HARDDEADTIME		=	120;
+
+/*
+ * instrumented process support
+ */
+
+/* wire-protocol equivalent of an osi_trace_gen_id_t */
+typedef afs_uint32 osi_Trace_rpc_proc_handle;
+
+struct osi_Trace_rpc_proc_info {
+    osi_Trace_rpc_proc_handle handle;
+    afs_uint32 pid;
+    afs_uint32 programType;
+    afs_uint32 trace_interface_version;
+    afs_uint32 capabilities[8];
+};
+typedef osi_Trace_rpc_proc_info osi_Trace_rpc_proc_info_vec<OSI_TRACE_RPC_PROC_VEC_MAX>;
+
+/*
+ * agent support
+ */
+typedef afsUUID osi_Trace_rpc_agent_handle;
+
+/*
+ * console support
+ */
+typedef afsUUID osi_Trace_rpc_console_handle;
+
+const OSI_TRACE_RPC_CONSOLE_TRANSPORT_RX_UDP	=	1;
+const OSI_TRACE_RPC_CONSOLE_TRANSPORT_RX_TCP	=	2;
+const OSI_TRACE_RPC_CONSOLE_TRANSPORT_SNMP_V1	=	3;
+
+struct osi_Trace_rpc_addr4 {
+    afs_uint32 addr;
+/* wah. using short makes me rather ill, but xdr_afs_uint16 isn't implemented */
+    unsigned short port;         
+    unsigned short transport;
+    afs_uint32 reserved;
+};
+
+struct osi_Trace_rpc_console_options {
+    afs_uint32 reserved[16];
+};
+
+typedef osi_Trace_rpc_addr4 osi_Trace_rpc_bulkaddrs4<OSI_TRACE_RPC_CONSOLE_MH_MAX>;
+
+/*
+ * predicate support
+ */
+typedef afsUUID osi_Trace_rpc_predicate_handle;
+
+/*
+ * filter support
+ */
+typedef afsUUID osi_Trace_rpc_filter_handle;
+
+/*
+ * trace trap support
+ *
+ * 
+ */
+const OSI_TRACE_RPC_TRAP_DATA_LEN_MAX		=	4096;
+const OSI_TRACE_RPC_CONSOLE_BULK_TRAP_MAX	=	16;
+typedef opaque osi_Trace_rpc_trap_data<OSI_TRACE_RPC_TRAP_DATA_LEN_MAX>;
+typedef osi_Trace_rpc_trap_data osi_Trace_rpc_bulk_trap<OSI_TRACE_RPC_CONSOLE_BULK_TRAP_MAX>;
+
+%#endif /* OSI_TRACE_RPC_COMMON_XG */

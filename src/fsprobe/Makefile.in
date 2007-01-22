@@ -25,9 +25,10 @@ LIBS=${TOP_LIBDIR}/libvolser.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/liblwp.a
 
 all: ${TOP_INCDIR}/afs/fsprobe.h ${TOP_LIBDIR}/libfsprobe.a fsprobe_test
 

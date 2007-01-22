@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 /*
@@ -33,7 +35,7 @@ int afs_osicred_initialized = 0;
 struct AFS_UCRED afs_osi_cred;
 
 void
-afs_osi_SetTime(osi_timeval_t * tvp)
+afs_osi_SetTime(afs_timeval_t * tvp)
 {
 #if defined(AFS_LINUX24_ENV)
 
@@ -45,12 +47,12 @@ afs_osi_SetTime(osi_timeval_t * tvp)
     struct timeval tv;
     tv.tv_sec = tvp->tv_sec;
     tv.tv_usec = tvp->tv_usec;
-#endif
+#endif /* !AFS_LINUX26_ENV */
 
     AFS_STATCNT(osi_SetTime);
 
     do_settimeofday(&tv);
-#else
+#else /* !AFS_LINUX24_ENV */
     extern int (*sys_settimeofdayp) (struct timeval * tv,
 				     struct timezone * tz);
 
@@ -62,7 +64,7 @@ afs_osi_SetTime(osi_timeval_t * tvp)
     if (sys_settimeofdayp)
 	(void)(*sys_settimeofdayp) (tvp, NULL);
     TO_KERNEL_SPACE();
-#endif
+#endif /* !AFS_LINUX24_ENV */
 }
 
 struct task_struct *rxk_ListenerTask;
@@ -135,7 +137,7 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink,
     }
     return code;
 }
-#else
+#else /* !AFS_LINUX26_ENV */
 int
 osi_lookupname(char *aname, uio_seg_t seg, int followlink, struct dentry **dpp)
 {
@@ -159,7 +161,7 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink, struct dentry **dpp)
 
     return code;
 }
-#endif
+#endif /* !AFS_LINUX26_ENV */
 
 
 #ifdef AFS_LINUX26_ENV
@@ -213,4 +215,4 @@ void afs_start_thread(void (*proc)(void), char *name)
 {
     kthread_run(afs_thread_wrapper, proc, "%s", name);
 }
-#endif
+#endif /* AFS_LINUX26_ENV */

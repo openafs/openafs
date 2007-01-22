@@ -1,0 +1,62 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
+CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} ${OSI_CFLAGS}
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+PUBLICHEADERS= \
+		init.h \
+		module.h \
+		options.h \
+		probe.h \
+		record.h \
+		record_inline.h \
+		types.h \
+		$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace/common
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/common
+DEST_HDR_DIR=${DEST}/include/osi/trace/common
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+OBJS=
+
+OBJECTS=${OBJS}
+
+
+all:
+
+depinstall: \
+	depinstall_hdrs
+
+#
+# Installation targets
+#
+install: \
+	install_hdrs
+
+dest: \
+	dest_hdrs
+
+#
+# Build targets
+#
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o *.a AFS_component_version_number.c
+	$(RM) -f core

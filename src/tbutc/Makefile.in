@@ -59,9 +59,11 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libafsauthent.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
             ${TOP_LIBDIR}/libcmd.a \
-	    ${TOP_LIBDIR}/util.a \
 	    ${TOP_LIBDIR}/libusd.a \
-	    ${TOP_LIBDIR}/libprocmgmt.a
+	    ${TOP_LIBDIR}/libprocmgmt.a \
+	    ${TOP_LIBDIR}/libosi-pthread-inst.a \
+	    ${TOP_LIBDIR}/util.a \
+	    ${TOP_LIBDIR}/libsys.a
 
 #
 # Build targets

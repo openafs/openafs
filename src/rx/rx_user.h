@@ -63,8 +63,4 @@ typedef afs_int32 osi_socket;
 #define	osi_QuickFree(ptr, size)    osi_Free(ptr, size)
 #define	osi_QuickAlloc(size)	    osi_Alloc(size)
 
-#define osi_Assert(e) (void)((e) || (osi_AssertFailU(#e, __FILE__, __LINE__), 0))
-
-#define	osi_Msg			    fprintf)(stderr,
-
 #endif /* RX_USER_INCLUDE */

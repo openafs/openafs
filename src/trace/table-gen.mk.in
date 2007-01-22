@@ -1,0 +1,19 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+${TRACEPOINT_SRC} ${TRACEPOINT_HDR}: ${TRACEPOINT_TAB}
+	@case ${SYS_NAME} in \
+	sun*_5*) \
+		nawk -f @TOP_OBJDIR@/src/trace/table-gen.awk $? ;; \
+	*) \
+		awk -f @TOP_OBJDIR@/src/trace/table-gen.awk $? ;; \
+	esac
+
+${TRACEPOINT_OBJ}: ${TRACEPOINT_SRC}

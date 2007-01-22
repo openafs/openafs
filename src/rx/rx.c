@@ -109,6 +109,10 @@ extern afs_int32 afs_termState;
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
+#include <osi/osi_includes.h>
+#include <osi/osi_trace.h>
+#include "tracepoint_table.h"
+
 int (*registerProgram) () = 0;
 int (*swapNameProgram) () = 0;
 
@@ -377,7 +381,7 @@ int
 rx_InitHost(u_int host, u_int port)
 {
 #ifdef KERNEL
-    osi_timeval_t tv;
+    afs_timeval_t tv;
 #else /* KERNEL */
     struct timeval tv;
 #endif /* KERNEL */
@@ -407,6 +411,10 @@ rx_InitHost(u_int host, u_int port)
      * environment.
      */
     rxi_InitializeThreadSupport();
+#endif
+
+#if defined(OSI_TRACE_ENABLED)
+    osi_Assert(OSI_RESULT_OK(rxi_InitTracePointTable()));
 #endif
     
     /* Allocate and initialize a socket for client and perhaps server
@@ -795,6 +803,8 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
 
     MUTEX_EXIT(&rx_connHashTable_lock);
     USERPRI;
+    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_new_conn),
+		       osi_Trace_Args1(conn));
     return conn;
 }
 
@@ -1185,6 +1195,8 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
+    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_new_call),
+		       osi_Trace_Args1(call));
     return call;
 }
 
@@ -1566,6 +1578,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	if (call) {
 	    queue_Remove(call);
 	    MUTEX_EXIT(&rx_serverPool_lock);
+	    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_srv_callQ_dequeue), 
+			       osi_Trace_Args1(call));
 	    MUTEX_ENTER(&call->lock);
 
 	    if (call->flags & RX_CALL_WAIT_PROC) {
@@ -1599,6 +1613,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    }
 	    sq->socketp = socketp;
 	    queue_Append(&rx_idleServerQueue, sq);
+	    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_srv_thread_idle),
+			       osi_Trace_Args0());
 #ifndef AFS_AIX41_ENV
 	    rx_waitForPacket = sq;
 #else
@@ -1615,6 +1631,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    } while (!(call = sq->newcall)
 		     && !(socketp && *socketp != OSI_NULLSOCKET));
 	    MUTEX_EXIT(&rx_serverPool_lock);
+	    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_srv_thread_busy),
+			       osi_Trace_Args1(call));
 	    if (call) {
 		MUTEX_ENTER(&call->lock);
 	    }
@@ -1730,6 +1748,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
     if (call) {
 	queue_Remove(call);
+	osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_srv_callQ_dequeue), 
+			   osi_Trace_Args1(call));
 	/* we can't schedule a call if there's no data!!! */
 	/* send an ack if there's no data, if we're missing the
 	 * first packet, or we're missing something between first 
@@ -4108,6 +4128,8 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
 	    queue_Append(&rx_incomingCallQueue, call);
+	    osi_Trace_Rx_Event(osi_Trace_Rx_ProbeId(RxEvents_srv_callQ_enqueue),
+			       osi_Trace_Args1(call));
 	}
     } else {
 	sq = queue_First(&rx_idleServerQueue, rx_serverQueueEntry);

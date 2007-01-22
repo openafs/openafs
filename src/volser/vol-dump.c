@@ -14,8 +14,7 @@
    
    */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -288,6 +287,8 @@ main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_EphemeralUtility, osi_NULL)));
 
     VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
 

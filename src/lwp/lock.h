@@ -20,33 +20,20 @@
 	Include file for using Vice locking routines.
 */
 
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef _AFS_LWP_LOCK_H
+#define _AFS_LWP_LOCK_H
 
 #ifdef KERNEL
 #error Do not include lwp/lock.h for kernel code. Use afs/lock.h instead.
 #endif
 
 
-/* The following macros allow multi statement macros to be defined safely, i.e.
-   - the multi statement macro can be the object of an if statement;
-   - the call to the multi statement macro may be legally followed by a semi-colon.
-   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
-   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
-   both optimized out the constant loop code.  For an example of the use
-   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
-   An alternative to this, using "if(1)" for BEGINMAC is not used because it
-   may generate worse code with pcc, and may generate warning messages with hi-C.
-*/
-
-#define BEGINMAC do {
-#define ENDMAC   } while (0)
+#include <osi/osi_includes.h>
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
-#define LOCK_LOCK(A) assert(pthread_mutex_lock(&(A)->mutex) == 0)
-#define LOCK_UNLOCK(A) assert(pthread_mutex_unlock(&(A)->mutex) == 0)
+#define LOCK_LOCK(A) osi_Assert(pthread_mutex_lock(&(A)->mutex) == 0)
+#define LOCK_UNLOCK(A) osi_Assert(pthread_mutex_unlock(&(A)->mutex) == 0)
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)
@@ -68,8 +55,8 @@ struct Lock {
 extern void Afs_Lock_Obtain(struct Lock *lock, int how);
 extern void Afs_Lock_ReleaseR(struct Lock *lock);
 extern void Afs_Lock_ReleaseW(struct Lock *lock);
-void Lock_Init(struct Lock *lock);
-void Lock_Destroy(struct Lock *lock);
+extern void Lock_Init(struct Lock *lock);
+extern void Lock_Destroy(struct Lock *lock);
 
 #define READ_LOCK	1
 #define WRITE_LOCK	2
@@ -81,17 +68,17 @@ void Lock_Destroy(struct Lock *lock);
 #define EXCL_LOCKS (WRITE_LOCK|SHARED_LOCK)
 
 #define ObtainReadLock(lock)\
-	BEGINMAC \
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    if (!((lock)->excl_locked & WRITE_LOCK) && !(lock)->wait_states)\
 		(lock) -> readers_reading++;\
 	    else\
 		Afs_Lock_Obtain(lock, READ_LOCK); \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #define ObtainReadLockNoBlock(lock, code)\
-        BEGINMAC \
+        osi_Macro_Begin \
             LOCK_LOCK(lock); \
             if (!((lock)->excl_locked & WRITE_LOCK) && !(lock)->wait_states) {\
                 (lock) -> readers_reading++;\
@@ -100,20 +87,20 @@ void Lock_Destroy(struct Lock *lock);
             else\
                 code = -1; \
             LOCK_UNLOCK(lock); \
-        ENDMAC
+        osi_Macro_End
 
 #define ObtainWriteLock(lock)\
-	BEGINMAC \
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    if (!(lock)->excl_locked && !(lock)->readers_reading)\
 		(lock) -> excl_locked = WRITE_LOCK;\
 	    else\
 		Afs_Lock_Obtain(lock, WRITE_LOCK); \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #define ObtainWriteLockNoBlock(lock, code)\
-        BEGINMAC \
+        osi_Macro_Begin \
             LOCK_LOCK(lock); \
             if (!(lock)->excl_locked && !(lock)->readers_reading) {\
                 (lock) -> excl_locked = WRITE_LOCK;\
@@ -122,20 +109,20 @@ void Lock_Destroy(struct Lock *lock);
             else\
                 code = -1; \
             LOCK_UNLOCK(lock); \
-        ENDMAC
+        osi_Macro_End
 
 #define ObtainSharedLock(lock)\
-	BEGINMAC \
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    if (!(lock)->excl_locked && !(lock)->wait_states)\
 		(lock) -> excl_locked = SHARED_LOCK;\
 	    else\
 	        Afs_Lock_Obtain(lock, SHARED_LOCK); \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #define ObtainSharedLockNoBlock(lock, code)\
-        BEGINMAC \
+        osi_Macro_Begin \
             LOCK_LOCK(lock); \
             if (!(lock)->excl_locked && !(lock)->wait_states) {\
                 (lock) -> excl_locked = SHARED_LOCK;\
@@ -144,27 +131,27 @@ void Lock_Destroy(struct Lock *lock);
             else\
                 code = -1; \
             LOCK_UNLOCK(lock); \
-        ENDMAC
+        osi_Macro_End
 
 #define BoostSharedLock(lock)\
-	BEGINMAC \
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    if (!(lock)->readers_reading)\
 		(lock)->excl_locked = WRITE_LOCK;\
 	    else\
 		Afs_Lock_Obtain(lock, BOOSTED_LOCK); \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 /* this must only be called with a WRITE or boosted SHARED lock! */
 #define UnboostSharedLock(lock)\
-	BEGINMAC\
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    (lock)->excl_locked = SHARED_LOCK; \
 	    if((lock)->wait_states) \
 		Afs_Lock_ReleaseR(lock); \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #ifdef notdef
 /* this is what UnboostSharedLock looked like before the hi-C compiler */
@@ -176,12 +163,12 @@ void Lock_Destroy(struct Lock *lock);
 #endif /* notdef */
 
 #define ReleaseReadLock(lock)\
-	BEGINMAC\
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    if (!--(lock)->readers_reading && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 
 #ifdef notdef
@@ -194,12 +181,12 @@ void Lock_Destroy(struct Lock *lock);
 #endif /* notdef */
 
 #define ReleaseWriteLock(lock)\
-	BEGINMAC\
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #ifdef notdef
 /* This is what the previous definition should be, but the hi-C compiler generates
@@ -212,12 +199,12 @@ void Lock_Destroy(struct Lock *lock);
 
 /* can be used on shared or boosted (write) locks */
 #define ReleaseSharedLock(lock)\
-	BEGINMAC\
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 #ifdef notdef
 /* This is what the previous definition should be, but the hi-C compiler generates
@@ -231,14 +218,14 @@ void Lock_Destroy(struct Lock *lock);
 
 /* convert a write lock to a read lock */
 #define ConvertWriteToReadLock(lock)\
-	BEGINMAC\
+	osi_Macro_Begin \
 	    LOCK_LOCK(lock); \
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    (lock)->readers_reading++;\
 	    if ((lock)->wait_states & READ_LOCK) \
 		Afs_Lock_WakeupR(lock) ; \
 	    LOCK_UNLOCK(lock); \
-	ENDMAC
+	osi_Macro_End
 
 /* I added this next macro to make sure it is safe to nuke a lock -- Mike K. */
 #define LockWaiters(lock)\
@@ -250,4 +237,4 @@ void Lock_Destroy(struct Lock *lock);
 #define WriteLocked(lock)\
 	((lock)->excl_locked & WRITE_LOCK)
 
-#endif /* LOCK_H */
+#endif /* _AFS_LWP_LOCK_H */

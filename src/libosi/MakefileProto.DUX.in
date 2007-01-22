@@ -1,0 +1,117 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o 
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+HEADER_RT = @HEADER_RT@
+
+# System specific build commands and flags
+KDEFS=-DLANGUAGE_C -G 4 -I/usr/sys/include -I../include \
+	 -I/usr/sys/${HEADER_RT} -I/usr/sys/BINARY \
+	-DDEC3000_500 -DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DMACH -DUFS \
+	-DRT -DKERNEL -D_KERNEL  -signed  -no_excpt -Wb,-static -Wco,-nofloat \
+	-Olimit 1000 -D__alpha -Umips -UMIPS 
+DBUG = -O2 -g3
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+
+# Name of directory to hold object files and libraries.
+KOBJ = STATIC
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+include Makefile.common
+
+setup:
+	-mkdir $(KOBJ)
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
+	-ln -fs /usr/sys/include/net net
+	-ln -fs /usr/sys/include/machine machine
+	-ln -fs /usr/sys/include/netinet netinet
+	-ln -fs /usr/sys/include/nfs nfs
+	-ln -fs /usr/sys/include/rpc rpc
+	-ln -fs /usr/sys/include/sys sys
+	-ln -fs /usr/sys/include/ufs ufs
+	-ln -fs /usr/sys/include/sys h
+	-ln -fs /usr/sys/include/vm vm
+	-touch $(KOBJ)/sec_net.h
+
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.o
+LIBAFSNONFS = libafs.nonfs.o
+AFSMOD = afs.mod
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+INST_AFSMOD = ${DESTDIR}${afskerneldir}/${AFSMOD}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+DEST_AFSMOD = ${DEST}/root.client/bin/${AFSMOD}
+
+
+.PHONY: libafs install_libafs
+libafs:	${LIBAFSNONFS} ${AFSMOD}
+install_libafs:	${INST_LIBAFSNONFS} ${INST_AFSMOD}
+dest_libafs:	${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
+
+
+${INST_LIBAFS}: ${LIBAFS}
+	$(INSTALL) -f $? $@
+
+${INST_LIBAFSNONFS}: ${LIBAFSNONFS}
+	$(INSTALL) -f $? $@
+
+${INST_AFSMOD}: ${AFSMOD}
+	$(INSTALL) -f $? $@
+
+${DEST_LIBAFS}: ${LIBAFS}
+	$(INSTALL) -f $? $@
+
+${DEST_LIBAFSNONFS}: ${LIBAFSNONFS}
+	$(INSTALL) -f $? $@
+
+${DEST_AFSMOD}: ${AFSMOD}
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
+
+${AFSMOD}: ${LIBAFSNONFS}
+	$(LD) -dc -r -o ${AFSMOD} ${LIBAFSNONFS}

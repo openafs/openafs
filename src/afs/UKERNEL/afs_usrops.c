@@ -220,7 +220,7 @@ afs_suser(void *credp)
  */
 
 void
-afs_osi_SetTime(osi_timeval_t * atv)
+afs_osi_SetTime(afs_timeval_t * atv)
 {
     return;
 }

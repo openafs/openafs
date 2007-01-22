@@ -1,0 +1,50 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	Bozo
+	module-dir	bozo
+	c-path		tracepoint_table.c
+	h-path		tracepoint_table.h
+	prefix		"srv.bosserver"
+	init-func	bosserver_TracePointTableInit
+	event-tag	osi_Trace_Event_BozoEvent_Id
+	description	"bosserver probe points"
+
+	event-table {
+		name	Events
+		prefix	"event"
+		description	"global process events"
+
+		event {
+			name	startup
+			description 	"bosserver startup"
+		}
+		event {
+			name	shutdown
+			description	"bosserver shutdown"
+		}
+	}
+
+	event-table {
+		name	BnodeProcEvents
+		prefix	"bnode.proc.event"
+
+		event {
+			name	start
+		}
+		event {
+			name	stop
+		}
+		event {
+			name	crash
+		}
+	}
+}

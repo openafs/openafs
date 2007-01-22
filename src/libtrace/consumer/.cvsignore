@@ -1,0 +1,15 @@
+Makefile
+Makefile.common
+MakefileProto.AIX
+MakefileProto.DARWIN
+MakefileProto.DUX
+MakefileProto.FBSD
+MakefileProto.HPUX
+MakefileProto.IRIX
+MakefileProto.LINUX
+MakefileProto.OBSD
+MakefileProto.SOLARIS
+libosi_trace_consumer-archive-pthread-32
+libosi_trace_consumer-archive-pthread-64
+libosi_trace_consumer-shlib-pthread-32
+libosi_trace_consumer-shlib-pthread-64

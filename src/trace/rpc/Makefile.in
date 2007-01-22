@@ -1,0 +1,91 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+PUBLICHEADERS= \
+		agent.h \
+		agent_api.h \
+		agent_opcodes.h \
+		console.h \
+		console_api.h \
+		console_opcodes.h \
+		$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace/rpc
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/rpc
+DEST_HDR_DIR=${DEST}/include/osi/trace/rpc
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+OBJS= \
+	agent.cs.o \
+	agent.ss.o \
+	agent.xdr.o \
+	console.cs.o \
+	console.ss.o \
+	console.xdr.o \
+	$(NULL)
+
+objects= ${OBJS}
+
+LIBS=
+
+all:
+
+depinstall: \
+	agent.h \
+	agent.cs.c \
+	agent.ss.c \
+	agent.xdr.c \
+	console.h \
+	console.cs.c \
+	console.ss.c \
+	console.xdr.c \
+	depinstall_hdrs \
+	$(NULL)
+
+install:
+
+dest:
+
+
+#
+# build targets
+#
+agent.cs.c: agent.xg
+	${RXGEN} -x -C -o $@ $?
+
+agent.ss.c: agent.xg
+	${RXGEN} -x -S -o $@ $?
+
+agent.xdr.c: agent.xg
+	${RXGEN} -x -c -o $@ $?
+
+agent.h: agent.xg
+	${RXGEN} -x -h -o $@ $?
+
+console.cs.c: console.xg
+	${RXGEN} -x -C -o $@ $?
+
+console.ss.c: console.xg
+	${RXGEN} -x -S -o $@ $?
+
+console.xdr.c: console.xg
+	${RXGEN} -x -c -o $@ $?
+
+console.h: console.xg
+	${RXGEN} -x -h -o $@ $?
+
+clean:
+	$(RM) -f core *.cs.c *.ss.c *.er.c *.xdr.c agent.h console.h \
+	         AFS_component_version_number.c
+
+include @TOP_OBJDIR@/src/config/Makefile.version

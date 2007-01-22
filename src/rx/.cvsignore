@@ -4,3 +4,6 @@ RX_component_version_number.c
 rxdebug
 rxdumptrace
 rxperf
+tracepoint_table.h
+tracepoint_table.c
+

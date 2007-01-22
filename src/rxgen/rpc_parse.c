@@ -31,6 +31,8 @@
 /*
  * rpc_parse.c, Parser for the RPC protocol compiler 
  * Copyright (C) 1987 Sun Microsystems, Inc.
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -1812,20 +1814,23 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
     proc1_list *plist;
 
     f_print(fout, "{\tafs_int32 rcode, code, newHost, thisHost, i, _ucount;\n");
-    f_print(fout, "\tint chaseCount, pass, needsync, inlist;\n");
+    f_print(fout, "\tint chaseCount, pass, needsync, inlist, tries;\n");
 #if 0 /* goes with block below */
     f_print(fout, "\tint j;\n");
 #endif
     f_print(fout, "\tstruct rx_connection *tc;\n");
     f_print(fout, "\tstruct rx_peer *rxp;\n");
     f_print(fout, "\tshort origLevel;\n\n");
+    f_print(fout, "\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_start),\n");
+    f_print(fout, "\t\t\t osi_Trace_Args2(&%s%s%s, aclient));\n", 
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     f_print(fout, "\tif (!aclient)\n");
     f_print(fout, "\t\treturn UNOENT;\n");
     f_print(fout, "\tLOCK_UBIK_CLIENT(aclient);\n\n");
     f_print(fout, "\t restart:\n");
     f_print(fout, "\torigLevel = aclient->initializationState;\n");
     f_print(fout, "\trcode = UNOSERVERS;\n");
-    f_print(fout, "\tchaseCount = inlist = needsync = 0;\n\n");
+    f_print(fout, "\tchaseCount = inlist = needsync = tries = 0;\n\n");
 #if 0 /* We should do some sort of caching algorithm for this, but I need to think about it - shadow 26 jun 06 */
     f_print(fout, "\tLOCK_UCLNT_CACHE;\n");
     f_print(fout, "\tfor (j = 0; ((j < SYNCCOUNT) && calls_needsync[j]); j++) {\n");
@@ -1892,6 +1897,11 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
     f_print(fout, "\t\tif ((pass == 0) && (aclient->states[_ucount] & CFLastFailed)) {\n");
     f_print(fout, "\t\t\tcontinue;       /* this guy's down */\n");
     f_print(fout, "\t\t}\n");
+    f_print(fout, "\n");
+    f_print(fout, "\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_try_next_server),\n");
+    f_print(fout, "\t\t\t\t osi_Trace_Args6(&%s%s%s, aclient, tc, pass, _ucount, tries));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\n");
     
     f_print(fout, "\t\trcode = %s%s%s(tc\n", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1901,19 +1911,41 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
 	}
     }
     f_print(fout, ");\n");
+    f_print(fout, "\t\ttries++;\n");
     f_print(fout, "\t\tif (aclient->initializationState != origLevel) {\n");
     f_print(fout, "\t\t\t/* somebody did a ubik_ClientInit */\n");
-    f_print(fout, "\t\t\tif (rcode)\n");
+    f_print(fout, "\t\t\tif (rcode) {\n");
+    f_print(fout, "\t\t\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_client_reset),\n");
+    f_print(fout, "\t\t\t\t\t\t\t     osi_Trace_Args2(&%s%s%s, aclient));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     f_print(fout, "\t\t\t\tgoto restart;       /* call failed */\n");
-    f_print(fout, "\t\t\telse\n");
+    f_print(fout, "\t\t\t} else {\n");
     f_print(fout, "\t\t\t\tgoto done;  /* call suceeded */\n");
+    f_print(fout, "\t\t\t}\n");
     f_print(fout, "\t\t}\n");
     f_print(fout, "\t\tif (rcode < 0) {    /* network errors */\n");
+    f_print(fout, "\t\t\tif (!(aclient->states[_ucount] & CFLastFailed)) {\n");
+    f_print(fout, "\t\t\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Events_mark_server_down),\n");
+    f_print(fout, "\t\t\t\t\t\t\t     osi_Trace_Args4(&%s%s%s, aclient, tc, rcode));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t\t\t}\n");
     f_print(fout, "\t\t\taclient->states[_ucount] |= CFLastFailed; /* Mark server down */\n");
     f_print(fout, "\t\t} else if (rcode == UNOTSYNC) {\n");
     f_print(fout, "\t\t\tneedsync = 1;\n");
-    f_print(fout, "\t\t} else if (rcode != UNOQUORUM) {\n");
+    f_print(fout, "\t\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_need_sync_site),\n");
+    f_print(fout, "\t\t\t\t\t\t     osi_Trace_Args3(&%s%s%s, aclient, tc));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t\t} else if (rcode == UNOQUORUM) {\n");
+    f_print(fout, "\t\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Events_no_quorum),\n");
+    f_print(fout, "\t\t\t\t\t\t     osi_Trace_Args3(&%s%s%s, aclient, tc));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t\t} else {\n");
     f_print(fout, "\t\t\t/* either misc ubik code, or misc appl code, or success. */\n");
+    f_print(fout, "\t\t\tif (aclient->states[_ucount] & CFLastFailed) {\n");
+    f_print(fout, "\t\t\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Events_mark_server_up),\n");
+    f_print(fout, "\t\t\t\t\t\t\t     osi_Trace_Args4(&%s%s%s, aclient, tc, rcode));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t\t\t}\n");
     f_print(fout, "\t\t\taclient->states[_ucount] &= ~CFLastFailed;        /* mark server up*/\n");
     f_print(fout, "\t\t\tgoto done;      /* all done */\n");
     f_print(fout, "\t\t}\n");
@@ -1936,6 +1968,15 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
     f_print(fout, "\t\t}\n");
     f_print(fout, "\t}\n");
     f_print(fout, "\tUNLOCK_UBIK_CLIENT(aclient);\n");
+    f_print(fout, "\tif (rcode) {\n");
+    f_print(fout, "\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_abort),\n");
+    f_print(fout, "\t\t\t\t\t     osi_Trace_Args3(&%s%s%s, aclient, rcode));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t} else {\n");
+    f_print(fout, "\t\tosi_Trace_Ubik_Event(osi_Trace_UbikClient_ProbeId(Actions_call_finish),\n");
+    f_print(fout, "\t\t\t\t\t     osi_Trace_Args2(&%s%s%s, aclient));\n",
+	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    f_print(fout, "\t}\n");
     f_print(fout, "\treturn rcode;\n}\n\n");
 }
 

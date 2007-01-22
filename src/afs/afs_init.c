@@ -472,7 +472,6 @@ afs_ResourceInit(int preallocs)
     RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
     RWLOCK_INIT(&afs_xserver, "afs_xserver");
     RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
-    RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
     RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 #ifndef AFS_FBSD_ENV

@@ -176,13 +176,16 @@ extern struct vnodeops *afs_ops;
 
 /* 
  * Time related macros
+ *
+ * these types and interfaces are DEPRECATED
+ * please use the new interface defined in src/osi/osi_time.h
  */
 #define osi_GetuTime(x) osi_GetTime(x)
 
-/* osi_timeval_t exists because SGI 6.x has two sizes of timeval. */
+/* afs_timeval_t exists because SGI 6.x has two sizes of timeval. */
 /** In 64 bit Solaris the timeval structure has members that are 64 bit
   * In the GetTime() interface we expect pointers to afs_int32. So the need to
-  * define osi_timeval_t to have 32 bit members. To make this less ambiguous
+  * define afs_timeval_t to have 32 bit members. To make this less ambiguous
   * we now use 32 bit quantities consistently all over the code.
   * In 64 bit HP-UX the timeval structure has a 64 bit member.
   */
@@ -191,11 +194,11 @@ extern struct vnodeops *afs_ops;
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
-} osi_timeval_t;
+} afs_timeval_t;
 #elif defined(AFS_SUN57_ENV)
-typedef struct timeval32 osi_timeval_t;
+typedef struct timeval32 afs_timeval_t;
 #else
-typedef struct timeval osi_timeval_t;
+typedef struct timeval afs_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
 #define osi_getpid() 		getpid()

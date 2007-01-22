@@ -56,6 +56,7 @@ RCSID
 
 #if defined(AFS_S390X_LINUX24_ENV) 
 #define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
+    do { \
 	if (POINTER2SYSCALL FUNC > 0x7fffffff) { \
 	    TMPPAGE = kmalloc ( PAGE_SIZE, GFP_DMA|GFP_KERNEL );	\
 	    if (POINTER2SYSCALL TMPPAGE > 0x7fffffff) { \
@@ -65,11 +66,13 @@ RCSID
 	    memcpy(TMPPAGE, syscall_jump_code, sizeof(syscall_jump_code)); \
 	    *(void **)(TMPPAGE + 0x0c) = &FUNC; \
 	    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL TMPPAGE; \
-	} else \
-	    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC;
+	} else { \
+	    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC; \
+        } \
+    } while(0)
 #else
 #define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
-    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC;
+    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC
 #endif 
 
 #if defined(AFS_S390X_LINUX24_ENV) && !defined(AFS_LINUX26_ENV)
@@ -89,8 +92,10 @@ static SYSCALLTYPE *afs_sys_call_table;
 static SYSCALLTYPE afs_ni_syscall = 0;
 
 #ifdef AFS_S390X_LINUX24_ENV
+#if !defined(LIBKTRACE)
 static void *afs_sys_setgroups_page = 0;
 static void *afs_sys_setgroups32_page = 0;
+#endif /* !LIBKTRACE */
 static void *afs_syscall_page = 0;
 
 /* Because of how the syscall table is handled, we need to ensure our 
@@ -103,8 +108,9 @@ uint32_t syscall_jump_code[] = {
   0xe3d0f030, 0x00240dd0, 0xa7f40006, 0xffffffff, 0xffffffff, 0xe310d004, 
   0x0004e3d0, 0xf0300004, 0x07f10000, 
 };
-#endif
+#endif /* AFS_S390X_LINUX24_ENV */
 
+#if !defined(LIBKTRACE)
 extern long afs_xsetgroups();
 asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 
@@ -117,19 +123,21 @@ asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 #if !defined(AFS_LINUX24_ENV)
 asmlinkage int (*sys_settimeofdayp) (struct timeval * tv, struct timezone * tz);
 #endif
-
+#endif /* !LIBKTRACE */
 
 /***** AMD64 *****/
 #ifdef AFS_AMD64_LINUX20_ENV
 static SYSCALLTYPE *afs_ia32_sys_call_table;
 static SYSCALLTYPE ia32_ni_syscall = 0;
 
+#if !defined(LIBKTRACE)
 extern int afs32_xsetgroups();
 asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
 #ifdef AFS_LINUX24_ENV
 extern int afs32_xsetgroups32();
 asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 #endif /* __NR_ia32_setgroups32 */
+#endif /* !LIBKTRACE */
 #endif /* AFS_AMD64_LINUX20_ENV */
 
 
@@ -137,13 +145,12 @@ asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 #ifdef AFS_PPC64_LINUX26_ENV
 static SYSCALLTYPE *afs_sys_call_table32;
 static SYSCALLTYPE afs_ni_syscall32 = 0;
+#if !defined(LIBKTRACE)
 static SYSCALLTYPE old_sys_setgroupsp = 0;
 static SYSCALLTYPE old_sys32_setgroupsp = 0;
 
 extern int afs32_xsetgroups();
 asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
-
-asmlinkage long sys_close(unsigned int fd);
 static void sys_setgroups_stub() 
 	__attribute__ ((pure,const,no_instrument_function));
 static void sys_setgroups_stub() 
@@ -157,8 +164,11 @@ static void sys32_setgroups_stub()
 { 
 	printf("*** error! sys32_setgroups_stub called\n");
 }
+#endif /* !LIBKTRACE */
 
-#endif /* AFS_AMD64_LINUX20_ENV */
+asmlinkage long sys_close(unsigned int fd);
+
+#endif /* AFS_PPC64_LINUX26_ENV */
 
 
 /***** SPARC64 *****/
@@ -170,6 +180,7 @@ extern SYSCALLTYPE *afs_sys_call_table32;
 #endif
 static SYSCALLTYPE afs_ni_syscall32 = 0;
 
+#if !defined(LIBKTRACE)
 extern int afs32_xsetgroups();
 #ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
@@ -177,7 +188,7 @@ asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 #else
 asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 				    __kernel_gid_t32 * grouplist);
-#endif
+#endif /* !AFS_SPARC64_LINUX26_ENV */
 #ifdef AFS_LINUX24_ENV
 /* This number is not exported for some bizarre reason. */
 #define __NR_setgroups32      82
@@ -185,11 +196,12 @@ extern int afs32_xsetgroups32();
 #ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 				      __kernel_gid32_t * grouplist);
-#else
+#else /* !AFS_SPARC64_LINUX26_ENV */
 asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 				      __kernel_gid_t32 * grouplist);
-#endif
-#endif
+#endif /* !AFS_SPARC64_LINUX26_ENV */
+#endif /* AFS_LINUX24_ENV */
+#endif /* !LIBKTRACE */
 
 asmlinkage int
 afs_syscall32(long syscall, long parm1, long parm2, long parm3, long parm4,
@@ -242,6 +254,7 @@ afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
                          ".skip 8");
 }
 
+#if !defined(LIBKTRACE)
 asmlinkage long
 afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
@@ -275,6 +288,7 @@ afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 			 "data8 @fptr(afs_xsetgroups)\n\t"
                          ".skip 8");
 }
+#endif /* !LIBKTRACE */
 
 struct fptr {
     void *ip;
@@ -401,8 +415,10 @@ static void * create_stub(struct ppc64_stub *stub,
 }
 
 PPC64_STUB(afs_sys_call_stub);
+#if !defined(LIBKTRACE)
 PPC64_STUB(afs_xsetgroups_stub);
 PPC64_STUB(afs_xsetgroups32_stub);
+#endif /* !LIBKTRACE */
 #endif /* AFS_PPC64_LINUX26_ENV */
 
 
@@ -419,12 +435,14 @@ int osi_syscall_init(void)
      * that we want to special-case even the "common" part.
      */
     unsigned long kernel_gp = 0;
+#if !defined(LIBKTRACE)
     static struct fptr sys_setgroups;
+#endif
 
     afs_sys_call_table = osi_find_syscall_table(0);
     if (afs_sys_call_table) {
 
-#if !defined(AFS_LINUX24_ENV)
+#if !defined(AFS_LINUX24_ENV) && !defined(LIBKTRACE)
 	/* XXX no sys_settimeofday on IA64? */
 #endif
 
@@ -438,9 +456,11 @@ int osi_syscall_init(void)
 
 	/* setup AFS entry point */
 	afs_ni_syscall = afs_sys_call_table[_S(__NR_afs_syscall)];
+
 	afs_sys_call_table[_S(__NR_afs_syscall)] =
 		POINTER2SYSCALL((struct fptr *)afs_syscall_stub)->ip;
 
+#if !defined(LIBKTRACE)
 	/* setup setgroups */
 	sys_setgroupsp = (void *)&sys_setgroups;
 
@@ -450,6 +470,7 @@ int osi_syscall_init(void)
 
 	afs_sys_call_table[_S(__NR_setgroups)] =
 	    POINTER2SYSCALL((struct fptr *)afs_xsetgroups_stub)->ip;
+#endif /* !LIBKTRACE */
     }
 
     /* XXX no 32-bit syscalls on IA64? */
@@ -476,6 +497,7 @@ int osi_syscall_init(void)
 	afs_ni_syscall = afs_sys_call_table[_S(__NR_afs_syscall)];
 	afs_sys_call_table[_S(__NR_afs_syscall)] = POINTER2SYSCALL p;
 
+#if !defined(LIBKTRACE)
 	/* setup setgroups */
     	opd = (struct ppc64_opd*) afs_xsetgroups;
 	p = create_stub(&afs_xsetgroups_stub, opd);
@@ -493,21 +515,24 @@ int osi_syscall_init(void)
     	opd = (struct ppc64_opd*) sys32_setgroups_stub;
 	opd->funcaddr = old_sys32_setgroupsp;
 	opd->r2 = r2;
+#endif /* !LIBKTRACE */
 
         flush_cache((void *)afs_sys_call_table, 2*NR_syscalls*sizeof(void*));
 
+#if !defined(LIBKTRACE)
 	sys_setgroupsp = sys_setgroups_stub;
 	sys32_setgroupsp = sys32_setgroups_stub;
+#endif /* !LIBKTRACE */
     }
 /***** COMMON (except IA64 or PPC64) *****/
-#else /* !AFS_IA64_LINUX20_ENV */
+#else /* !AFS_IA64_LINUX20_ENV && !AFS_PPC64_LINUX26_ENV */
 
     afs_sys_call_table = osi_find_syscall_table(0);
     if (afs_sys_call_table) {
-#if !defined(AFS_LINUX24_ENV)
+#if !defined(AFS_LINUX24_ENV) && !defined(LIBKTRACE)
 	sys_settimeofdayp =
 	    SYSCALL2POINTER afs_sys_call_table[_S(__NR_settimeofday)];
-#endif /* AFS_LINUX24_ENV */
+#endif /* !AFS_LINUX24_ENV && !LIBKTRACE */
 
 	/* check we aren't already loaded */
 	if (SYSCALL2POINTER afs_sys_call_table[_S(__NR_afs_syscall)]
@@ -521,6 +546,7 @@ int osi_syscall_init(void)
 
 	INSERT_SYSCALL(__NR_afs_syscall, afs_syscall_page, afs_syscall)
 
+#if !defined(LIBKTRACE)
 	/* setup setgroups */
 	sys_setgroupsp = SYSCALL2POINTER afs_sys_call_table[_S(__NR_setgroups)];
 	INSERT_SYSCALL(__NR_setgroups, afs_sys_setgroups_page, afs_xsetgroups)
@@ -530,6 +556,7 @@ int osi_syscall_init(void)
 	sys_setgroups32p = SYSCALL2POINTER afs_sys_call_table[__NR_setgroups32];
 	INSERT_SYSCALL(__NR_setgroups32, afs_sys_setgroups32_page, afs_xsetgroups32)
 #endif
+#endif /* !LIBKTRACE */
     }
 #endif /* !AFS_IA64_LINUX20_ENV */
 
@@ -543,19 +570,21 @@ int osi_syscall_init(void)
 	afs_ia32_sys_call_table[__NR_ia32_afs_syscall] =
 	    POINTER2SYSCALL afs_syscall;
 
+#if !defined(LIBKTRACE)
 	/* setup setgroups for IA32 */
 	sys32_setgroupsp =
 	    SYSCALL2POINTER afs_ia32_sys_call_table[__NR_ia32_setgroups];
 	afs_ia32_sys_call_table[__NR_ia32_setgroups] =
 	    POINTER2SYSCALL afs32_xsetgroups;
 
-#if AFS_LINUX24_ENV
+#ifdef AFS_LINUX24_ENV
 	/* setup setgroups32 for IA32 */
 	sys32_setgroups32p =
 	    SYSCALL2POINTER afs_ia32_sys_call_table[__NR_ia32_setgroups32];
 	afs_ia32_sys_call_table[__NR_ia32_setgroups32] =
 	    POINTER2SYSCALL afs32_xsetgroups32;
 #endif /* __NR_ia32_setgroups32 */
+#endif /* !LIBKTRACE */
     }
 #endif /* AFS_AMD64_LINUX20_ENV */
 
@@ -568,6 +597,7 @@ int osi_syscall_init(void)
 	afs_ni_syscall32 = afs_sys_call_table32[__NR_afs_syscall];
 	afs_sys_call_table32[__NR_afs_syscall] = POINTER2SYSCALL afs_syscall32;
 
+#if !defined(LIBKTRACE)
 	/* setup setgroups for 32-bit SPARC */
 	sys32_setgroupsp = SYSCALL2POINTER afs_sys_call_table32[__NR_setgroups];
 	afs_sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs32_xsetgroups;
@@ -579,6 +609,7 @@ int osi_syscall_init(void)
 	afs_sys_call_table32[__NR_setgroups32] =
 	    POINTER2SYSCALL afs32_xsetgroups32;
 #endif
+#endif /* !LIBKTRACE */
     }
 #endif /* AFS_SPARC64_LINUX20_ENV */
     return 0;
@@ -597,6 +628,7 @@ void osi_syscall_clean(void)
 	/* put back the AFS entry point */
 	afs_sys_call_table[_S(__NR_afs_syscall)] = afs_ni_syscall;
 
+#if !defined(LIBKTRACE)
 	/* put back setgroups */
 #if defined(AFS_IA64_LINUX20_ENV)
 	afs_sys_call_table[_S(__NR_setgroups)] =
@@ -617,7 +649,7 @@ void osi_syscall_clean(void)
 	afs_sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroups32p;
 #endif
 #if defined(AFS_S390X_LINUX24_ENV)
-#if defined(__NR_setgroups32) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(__NR_setgroups32)
 	if (afs_sys_setgroups32_page)
 	    kfree(afs_sys_setgroups32_page);
 #endif
@@ -625,7 +657,8 @@ void osi_syscall_clean(void)
 	    kfree(afs_sys_setgroups_page);
 	if (afs_syscall_page)
 	    kfree(afs_syscall_page);
-#endif
+#endif /* AFS_S390X_LINUX24_ENV */
+#endif /* !LIBKTRACE */
     }
 
 
@@ -642,6 +675,7 @@ void osi_syscall_clean(void)
 	afs_ia32_sys_call_table[__NR_ia32_afs_syscall] =
 	    POINTER2SYSCALL ia32_ni_syscall;
 
+#if !defined(LIBKTRACE)
 	/* put back setgroups for IA32 */
 	afs_ia32_sys_call_table[__NR_ia32_setgroups] =
 	    POINTER2SYSCALL sys32_setgroupsp;
@@ -651,8 +685,9 @@ void osi_syscall_clean(void)
 	afs_ia32_sys_call_table[__NR_ia32_setgroups32] =
 	    POINTER2SYSCALL sys32_setgroups32p;
 #endif
+#endif /* !LIBKTRACE */
     }
-#endif
+#endif /* AFS_AMD64_LINUX20_ENV */
 
 
 /***** SPARC64 *****/
@@ -661,15 +696,17 @@ void osi_syscall_clean(void)
 	/* put back AFS entry point for 32-bit SPARC */
 	afs_sys_call_table32[__NR_afs_syscall] = afs_ni_syscall32;
 
-	/* put back setgroups for IA32 */
+#if !defined(LIBKTRACE)
+	/* put back setgroups for 32-bit SPARC */
 	afs_sys_call_table32[__NR_setgroups] =
 	    POINTER2SYSCALL sys32_setgroupsp;
 
 #ifdef AFS_LINUX24_ENV
-	/* put back setgroups32 for IA32 */
+	/* put back setgroups32 for 32-bit SPARC */
 	afs_sys_call_table32[__NR_setgroups32] =
 	    POINTER2SYSCALL sys32_setgroups32p;
 #endif
+#endif /* !LIBKTRACE */
     }
-#endif
+#endif /* AFS_SPARC64_LINUX20_ENV */
 }

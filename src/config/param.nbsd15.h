@@ -1,9 +1,10 @@
+#ifndef	AFS_PARAM_COMMON_H
+#define	AFS_PARAM_COMMON_H
+
+
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 
-
-#ifndef	AFS_PARAM_COMMON_H
-#define	AFS_PARAM_COMMON_H
 
 #ifndef ASSEMBLER
 #include <sys/param.h>
@@ -108,11 +109,16 @@ enum vcexcl { NONEXCL, EXCL };
 #endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
-#endif /* AFS_PARAM_COMMON_H */
-
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */
 
 
 #endif /* !defined(UKERNEL) */
+
+/* global defines */
+
+#define OSI_NBSD_ENV        1
+#define OSI_NBSD15_ENV      1
+
+#endif /* AFS_PARAM_COMMON_H */

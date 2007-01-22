@@ -24,7 +24,16 @@ all: afsd vsys
 # Programs
 #
 
-AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+AFSLIBS= \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a
 
 afsd: afsd.o $(AFSLIBS) $(AFSD_LIBS)
 	${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}

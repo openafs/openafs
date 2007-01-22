@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -47,6 +48,7 @@ RCSID
 #include <afs/afs_args.h>
 #endif
 
+#include "tracepoint_table.h"
 
 #define BOZO_LWP_STACKSIZE	16000
 extern int BOZO_ExecuteRequest();
@@ -750,7 +752,13 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Bosserver, osi_NULL)));
+#if defined(OSI_TRACE_ENABLED)
+    osi_Assert(OSI_RESULT_OK(bosserver_TracePointTableInit()));
+#endif
     osi_audit_init();
+
 #ifdef BOS_RESTRICTED_MODE
     signal(SIGFPE, bozo_insecureme);
 #endif

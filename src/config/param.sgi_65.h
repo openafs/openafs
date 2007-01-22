@@ -208,3 +208,21 @@
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */
+
+
+#ifndef AFS_PARAM_COMMON_H
+#define AFS_PARAM_COMMON_H
+
+/* global defines */
+
+#define OSI_SGI_ENV		1
+#define OSI_SGI51_ENV		1	/* Dist from 5.0.1 */
+#define	OSI_SGI52_ENV		1
+#define	OSI_SGI53_ENV		1
+#define OSI_SGI61_ENV		1
+#define OSI_SGI62_ENV		1
+#define OSI_SGI63_ENV		1
+#define OSI_SGI64_ENV		1
+#define OSI_SGI65_ENV		1
+
+#endif /* AFS_PARAM_COMMON_H */

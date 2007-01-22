@@ -151,6 +151,7 @@ afs_strdup(char *s)
     return n;
 }
 
+#if !defined(LIBKTRACE)
 void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		       int flag)
@@ -183,7 +184,6 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 }				/*print_internet_address */
 
 
-
 /* * * * * * *
  * this code badly needs to be cleaned up...  too many ugly ifdefs.
  * XXX
@@ -203,8 +203,6 @@ afs_warn(a, b, c, d, e, f, g, h, i, j)
 #endif
 #endif
 {
-    AFS_STATCNT(afs_warn);
-
     if (afs_showflags & GAGCONSOLE) {
 #if defined(AFS_AIX_ENV)
 	struct file *fd;
@@ -342,7 +340,7 @@ afs_CheckLocks(void)
     }
     afs_warn("Done.\n");
 }
-
+#endif /* !LIBKTRACE */
 
 int
 afs_noop(void)
@@ -405,7 +403,8 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
-#ifdef AFS_LINUX20_ENV
+#if !defined(LIBKTRACE)
+#if defined(AFS_LINUX20_ENV)
 
 struct afs_md5 {
     unsigned int sz[2];
@@ -574,7 +573,7 @@ swap_u_int32_t (afs_uint32 t)
     temp1 <<= 8;
     return temp1 | temp2;
 }
-#endif
+#endif /* AFSBIG_ENDIAN */
 
 struct x32{
     unsigned int a:32;
@@ -610,7 +609,7 @@ AFS_MD5_Update (struct afs_md5 *m, const void *v, size_t len)
 	    calc(m, temp);
 #else
 	    calc(m, (afs_uint32*)m->save);
-#endif
+#endif /* !AFSBIG_ENDIAN */
 	    offset = 0;
 	}
     }
@@ -667,11 +666,13 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
     return ino;
 }
 
-#else
+#else /* !AFS_LINUX20_ENV */
 
-afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_int32
+afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 {
     return (volume << 16) + vnode;
 }
 
-#endif
+#endif /* !AFS_LINUX20_ENV */
+#endif /* !LIBKTRACE */

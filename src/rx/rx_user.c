@@ -9,6 +9,7 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -208,28 +209,6 @@ osi_socket
 rxi_GetUDPSocket(u_short port)
 {
     return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
-}
-
-void
-osi_Panic(msg, a1, a2, a3) 
-     char *msg; 
-{
-    (osi_Msg "Fatal Rx error: ");
-    (osi_Msg msg, a1, a2, a3);
-    fflush(stderr);
-    fflush(stdout);
-    afs_abort();
-}
-
-/*
- * osi_AssertFailU() -- used by the osi_Assert() macro.
- */
-
-void
-osi_AssertFailU(const char *expr, const char *file, int line)
-{
-    osi_Panic("assertion failed: %s, file: %s, line: %d\n", expr,
-	      file, line);
 }
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)

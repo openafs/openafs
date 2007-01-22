@@ -1,0 +1,34 @@
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table OSI2
+	ec OSI_ERROR_UNSPECIFIED, "unspecified error in osi"
+	ec OSI_ERROR_UNIMPLEMENTED, "call to unimplemented osi interface"
+	ec OSI_ERROR_NOMEM, "osi_mem api unable to allocate more memory"
+	ec OSI_ERROR_NOSYS, "no such system call"
+	ec OSI_ERROR_REQUEST_QUEUED, "request has been queued for asynchronous processing"
+	ec OSI_ERROR_OBJECT_REFERENCED, "object cannot be freed due to existing references in data structures"
+	ec OSI_CACHE_ERROR_FAKED, "cpu cache data falsified"
+	ec OSI_CACHE_ERROR_EXISTS, "cache exists"
+	ec OSI_CACHE_ERROR_ABSENT, "cache absent"
+	ec OSI_CACHE_ERROR_FAIL_PROBE, "cache probe failed"
+	ec OSI_CPU_ERROR_ITERATOR_STOP, "cpu iterator stopped prematurely"
+	ec OSI_MEM_ERROR_FAKED, "memory subsystem data falsified"
+	ec OSI_TRACE_DIRECTORY_ERROR_PROBE_NAME_INVALID, "invalid osi_trace probe name"
+	ec OSI_TRACE_DIRECTORY_ERROR_PROBE_FILTER_INVALID, "invalid osi_trace probe filter"
+	ec OSI_TRACE_ERROR_MAILBOX_EMPTY, "osi_trace mailbox is empty"
+	ec OSI_TRACE_MAIL_ERROR_MAILBOX_SHUT, "osi_trace mailbox is shut"
+	ec OSI_TRACE_MAIL_ERROR_BAD_MCAST_ADDR, "invalid osi_trace_mail multicast address"
+	ec OSI_TRACE_CONSUMER_ERROR_NO_DATA, "osi_trace consumer has no trace data available"
+	ec OSI_TRACE_MAIL_XID_SPACE_EXHAUSTED, "osi_trace mail transaction id namespace exhausted"
+	ec OSI_TRACE_MAIL_ERROR_NO_HANDLER, "no handler registered for this osi_trace_mail message type"
+	ec OSI_TRACE_MAIL_ERROR_BAD_MESSAGE_TYPE, "unknown osi_trace_mail message type"
+	ec OSI_TRACE_ANLY_ERROR_BAD_VAR_TYPE, "invalid osi_trace_anly_var type"
+	ec OSI_TRACE_ANLY_ERROR_VAR_TYPE_UNKNOWN, "osi_trace_anly_var type not registered"
+	ec OSI_TRACE_ANLY_ERROR_VAR_TYPE_REGISTERED, "osi_trace_anly_var type already registered"
+	ec OSI_TRACE_ANLY_ERROR_INVALID_LOGIC_OP, "osi_trace_anly_var invalid logic operation"
+end

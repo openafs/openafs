@@ -68,14 +68,22 @@ typedef unsigned long long afs_uint64;
 #define LTInt64(a,b) ((a) < (b))
 #define AddInt64(a,b,c) *(c) = (afs_int64)(a) + (afs_int64)(b)
 #define AddUInt64(a,b,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b)
+#define AddInt64_32s(a,b32,c) *(c) = (afs_int64)(a) + (afs_int64)(b32)
+#define AddInt64_32u(a,b32,c) *(c) = (afs_int64)(a) + (afs_int64)(b32)
+#define AddUInt64_32s(a,b32,c) *(c) = (afs_uint64)(a) + (afs_uint64)((afs_int64)(b32))
+#define AddUInt64_32u(a,b32,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b32)
 #define SubtractInt64(a,b,c) *(c) = (afs_int64)(a) - (afs_int64)(b)
 #define SubtractUInt64(a,b,c) *(c) = (afs_uint64)(a) - (afs_uint64)(b)
+#define SubtractInt64_32s(a,b32,c) *(c) = (afs_int64)(a) - (afs_int64)(b32)
+#define SubtractInt64_32u(a,b32,c) *(c) = (afs_int64)(a) - (afs_int64)((afs_uint64)(b32))
+#define SubtractUInt64_32s(a,b32,c) *(c) = (afs_uint64)(a) - (afs_uint64)((afs_int64)(b32))
+#define SubtractUInt64_32u(a,b32,c) *(c) = (afs_uint64)(a) - (afs_uint64)(b32)
 #define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
-#define NonZeroInt64(a)                (a)
-#define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
-#define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
-#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
+#define NonZeroInt64(a)                (a != 0)
+#define Int64ToInt32(a)    ((a) & 0xFFFFFFFFL)
+#define FillInt64(t,h,l) ((t) = (h), (t) <<= 32, (t) |= (l))
+#define SplitInt64(t,h,l) ((h) = (t) >> 32, (l) = (t) & 0xFFFFFFFF)
 #else /* AFS_64BIT_ENV */
 typedef long afs_int32;
 typedef unsigned long afs_uint32;
@@ -102,15 +110,31 @@ typedef struct u_Int64 afs_uint64;
 #define LEInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low <= (b).low)))
 #define LTInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low < (b).low)))
 #define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
-#define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
-#define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
+#define AddInt64(a,b,c)  (((c)->high = (a).high + (b).high + ((b).low > ((a).low + (b).low))), \
+			  ((c)->low = (a).low + (b).low))
+#define AddUInt64(a,b,c) AddInt64(a,b,c)
+#define AddInt64_32s(a,b32,c) (((c)->high = (a).high - (((b32) < 0) ? 1 : 0) \
+                                            + ((a).low > ((a).low + (afs_uint32)(b32)))), \
+			       ((c)->low = (a).low + (afs_uint32)(b32)))
+#define AddInt64_32u(a,b32,c) (((c)->high = (a).high + ((a).low > ((a).low + (b32)))), \
+			       ((c)->low = (a).low + (b32)))
+#define AddUInt64_32s(a,b32,c) AddInt64_32s(a,b32,c)
+#define AddUInt64_32u(a,b32,c) AddInt64_32u(a,b32,c)
+#define SubtractInt64(a,b,c) (((c)->high = (a).high - (b).high - ((a).low < (b).low)), \
+			      ((c)->low = (a).low - (b).low))
+#define SubtractUInt64(a,b,c) SubtractInt64(a,b,c)
+#define SubtractInt64_32s(a,b32,c) (((c)->high = (a).high + (((b32) < 0) ? 1 : 0) \
+                                                 - ((a).low < (afs_uint32)(b32))), \
+				    ((c)->low = (a).low - (afs_uint32)(b32)))
+#define SubtractInt64_32u(a,b32,c) (((c)->high = (a).high - ((a).low < (b32))), \
+				    ((c)->low = (a).low - (b32)))
+#define SubtractUInt64_32s(a,b32,c) SubtractInt64_32s(a,b32,c)
+#define SubtractUInt64_32u(a,b32,c) SubtractInt64_32u(a,b32,c)
 #define CompareUInt64(a,b) (((afs_uint32)(a).high - (afs_uint32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
-#define AddUInt64(a, b, c) {  afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
-#define SubtractUInt64(a, b, c) { afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
-#define NonZeroInt64(a)   (a).low || (a).high
+#define NonZeroInt64(a)   ((a).low || (a).high)
 #define Int64ToInt32(a)    (a).low
-#define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
-#define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
+#define FillInt64(t,h,l) ((t).high = (h), (t).low = (l))
+#define SplitInt64(t,h,l) ((h) = (t).high, (l) = (t).low)
 #endif /* AFS_64BIT_ENV */
 
 /* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */

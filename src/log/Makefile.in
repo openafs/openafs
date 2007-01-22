@@ -18,20 +18,28 @@ INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \
 ${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/des.h ${TOP_INCDIR}/rx/rxkad.h \
 ${TOP_INCDIR}/afs/cellconfig.h
 
-LIBRARIES=${TOP_LIBDIR}/libauth.a \
+LIBRARIES= \
+		${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${TOP_LIBDIR}/libdes.a \
-		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
-	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	        ${TOP_LIBDIR}/util.a
-KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
+		${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/libosi-lwp-inst.a \
+		${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/util.a
+KLIBRARIES= \
+		${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${TOP_LIBDIR}/libdes.a \
-		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
-	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	        ${TOP_LIBDIR}/util.a
+		${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/libosi-lwp-inst.a \
+		${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/util.a
 
 #
 # Main targets

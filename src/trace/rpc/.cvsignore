@@ -1,0 +1,10 @@
+AFS_component_version_number.c
+Makefile
+agent.h
+agent.cs.c
+agent.ss.c
+agent.xdr.c
+traced.h
+traced.cs.c
+traced.ss.c
+traced.xdr.c

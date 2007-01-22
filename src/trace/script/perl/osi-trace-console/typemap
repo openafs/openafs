@@ -1,0 +1,20 @@
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# the following input/output mapping code is pulled from the
+# perlxs man page
+
+# this typemap is rather braindead.
+# it will need work someday
+
+TYPEMAP
+osi__trace__rpc__addr4	T_OSI_PTROBJ
+osi_Trace_rpc_proc_handle	T_UV
+osi__trace__rpc__trap__data	T_OSI_PTROBJ
+osi_Trace_rpc_proc_handle *	T_PTR
+osi_Trace_rpc_addr4 *		T_PTR
+osi_trace_console_trap_t *	T_PTR

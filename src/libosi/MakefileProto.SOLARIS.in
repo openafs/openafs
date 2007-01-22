@@ -1,0 +1,53 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+<all>
+LIBOSI_BUILD_LIBS = archive shlib
+LIBOSI_BUILD_THREADS = lwp pthread
+LIBOSI_DEFAULT_THREADS = none
+LIBOSI_BUILD_INSTRUMENTATION = \
+	ni \
+	@BUILD_OSI_INSTRUMENTATION@
+LIBOSI_DEFAULT_INSTRUMENTATION = inst
+
+LIBOSI_MAPFILE = $(LIBOSI_RULE_DIR)/mapfile
+
+# Name of directory to hold object files and libraries.
+<sun4x_55 sun4x_56 sunx86_57 sunx86_58 sunx86_59>
+LIBOSI_BUILD_BITS = 32
+LIBOSI_DEFAULT_BITS = 32
+<all -sun4x_55 -sun4x_56 -sunx86_57 -sunx86_58 -sunx86_59>
+LIBOSI_BUILD_BITS = 32 64
+LIBOSI_DEFAULT_BITS = 32
+
+<all>
+COMPDIRS = std_compdirs
+INSTDIRS = std_instdirs
+DESTDIRS = std_destdirs
+
+<all>
+include Makefile.common
+
+
+# override
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
+LIBOSI_OS_CFLAGS_libosi_64 = -xarch=v9
+
+<sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+LIBOSI_OS_CFLAGS_libosi_64 = -xarch=amd64
+
+<sun4x_510 sun4x_511>
+LIBOSI_OS_CFLAGS_libosi_32 = -xarch=v8plus
+
+<sunx86>
+LIBOSI_OS_CFLAGS_libosi_32 = -xarch=pentium_pro

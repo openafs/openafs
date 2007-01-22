@@ -38,6 +38,13 @@
 #include  <netinet/in.h>
 #include  <netdb.h>
 #include  <arpa/inet.h>
+#ifdef OSI_SUN57_ENV
+/* 
+ * XXX putrid hack becuase 
+ * of the awful #define mess down below
+ */
+#include  <libdevinfo.h>
+#endif /* OSI_SUN57_ENV */
 #endif /* AFS_USR_SUN5_ENV */
 
 
@@ -179,6 +186,9 @@
  * This file contains data types and definitions for running
  * the AFS client in user space. Kernel data structures
  * are renamed from XXXX to usr_XXXX.
+ *
+ * this is absolutely completely wretched and needs
+ * to be rearchitected
  */
 
 #ifdef UKERNEL
@@ -1140,6 +1150,10 @@ extern int usr_crhold(struct usr_ucred *);
 extern int usr_crfree(struct usr_ucred *);
 extern struct usr_ucred *afs_global_ucredp;
 
+#ifdef p_pid
+#undef p_pid
+#endif
+
 struct usr_proc {
     unsigned long p_flag;
     pid_t p_pid;
@@ -1348,6 +1362,9 @@ struct usr_ucred {
 
 #ifdef u_rval1
 #undef u_rval1
+#endif
+#ifdef r_val1
+#undef r_val1
 #endif
 
 struct usr_user {

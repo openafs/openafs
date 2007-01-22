@@ -1,0 +1,31 @@
+# Copyright 2006-2007, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+depinstall_hdrs: ${PUBLICHEADERS}
+	for hdr in x ${PUBLICHEADERS} ; \
+	do \
+		if [ "$${hdr}" != "x" ] ; then \
+			${INSTALL_DATA} $$hdr ${DEPINSTALL_HDR_DIR}/$$hdr ; \
+		fi ; \
+	done
+
+install_hdrs: ${PUBLICHEADERS}
+	for hdr in x ${PUBLICHEADERS} ; \
+	do \
+		if [ "$${hdr}" != "x" ] ; then \
+			${INSTALL_DATA} $$hdr ${INSTALL_HDR_DIR}/$$hdr ; \
+		fi ; \
+	done
+
+dest_hdrs: ${PUBLICHEADERS}
+	for hdr in x ${PUBLICHEADERS} ; \
+	do \
+		if [ "$${hdr}" != "x" ] ; then \
+			${INSTALL_DATA} $$hdr ${DEST_HDR_DIR}/$$hdr ; \
+		fi ; \
+	done
+

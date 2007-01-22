@@ -13,6 +13,7 @@
 #include <time.h>
 /* Include afs installation dir retrieval routines */
 #include <afs/dirpath.h>
+#include <afs/param.h>
 
 /* These macros are return values from extractAddr. They do not represent
  * any valid IP address and so can indicate a failure.
@@ -70,12 +71,12 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 
 /* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-#ifdef AFS_SUN5_ENV
+#ifdef OSI_SUN5_ENV
 #define afs_ctime(C, B, L) ctime_r(C, B, L)
-#else
+#else /* !OSI_SUN5_ENV */
 /* Cast is for platforms which do not prototype ctime_r */
 #define afs_ctime(C, B, L) (char*)ctime_r(C, B)
-#endif /* AFS_SUN5_ENV */
+#endif /* OSI_SUN5_ENV */
 #else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 #define afs_ctime(C, B, S) \
 	((void)strncpy(B, ctime(C), (S-1)), (B)[S-1] = '\0', (B))

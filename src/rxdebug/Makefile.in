@@ -14,8 +14,13 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
 
-LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	       ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libafsutil.a
+LIBS= \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsutil.a
 
 all: rxdebug rxdumptrace
 

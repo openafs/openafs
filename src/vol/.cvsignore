@@ -5,3 +5,5 @@ volinfo
 gi
 fs_conv_sol26
 fssync-debug
+tracepoint_table.c
+tracepoint_table.h

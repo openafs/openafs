@@ -1,0 +1,118 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -g -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@ ${BIN_CFLAGS}
+
+RECURSE_DIRS= \
+	buffer \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
+TRACE=$(TOP_SRCDIR)/trace
+
+GEN_RGY_LIB = trace_kernel_gen_rgy.a
+GEN_RGY_LIB_OBJS= \
+	trace_common_options.o \
+	trace_kernel_gen_rgy.o \
+	trace_kernel_gen_rgy_inline.o \
+	trace_kernel_postmaster.o \
+	trace_mail_common.o \
+	trace_mail_header.o \
+	$(NULL)
+
+POSTMASTER_LIB = trace_kernel_postmaster.a
+POSTMASTER_LIB_OBJS= \
+	trace_common_options.o \
+	trace_kernel_gen_rgy.o \
+	trace_kernel_gen_rgy_inline.o \
+	trace_kernel_postmaster.o \
+	trace_mail_common.o \
+	trace_mail_header.o \
+	$(NULL)
+
+BINS= \
+	gen_rgy \
+	postmaster \
+	$(NULL)
+
+LIBS= \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+
+all: \
+	$(BINS) \
+	build_recurse \
+	$(NULL)
+
+depinstall: \
+	depinstall_recurse \
+
+install: \
+	install_recurse \
+	$(NULL)
+
+dest: \
+	dest_recurse \
+	$(NULL)
+
+
+gen_rgy_harness.o: gen_rgy_harness.c
+	${CCRULE}
+
+postmaster_harness.o: postmaster_harness.c
+	${CCRULE}
+
+trace_common_options.o: ${TRACE}/common/options.c
+	${CCRULE}
+
+trace_kernel_gen_rgy.o: ${TRACE}/KERNEL/gen_rgy.c
+	${CCRULE}
+
+trace_kernel_gen_rgy_inline.o: ${TRACE}/KERNEL/gen_rgy_inline.c
+	${CCRULE}
+
+trace_kernel_postmaster.o: ${TRACE}/KERNEL/postmaster.c
+	${CCRULE}
+
+trace_mail_common.o: ${TRACE}/mail/common.c
+	${CCRULE}
+
+trace_mail_header.o: ${TRACE}/mail/header.c
+	${CCRULE}
+
+${GEN_RGY_LIB}: ${GEN_RGY_LIB_OBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${GEN_RGY_LIB_OBJS}
+	$(RANLIB) $@
+
+${POSTMASTER_LIB}: ${POSTMASTER_LIB_OBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${POSTMASTER_LIB_OBJS}
+	$(RANLIB) $@
+
+gen_rgy: ${GEN_RGY_LIB} gen_rgy_harness.o
+	${CC} -g ${LDFLAGS} -o $@ gen_rgy_harness.o ${GEN_RGY_LIB} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+postmaster: ${POSTMASTER_LIB} postmaster_harness.o
+	${CC} -g ${LDFLAGS} -o $@ postmaster_harness.o ${POSTMASTER_LIB} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+clean: clean_recurse
+	$(RM) -f *.o *.a $(BINS) core AFS_component_version_number.c
+
+include @TOP_OBJDIR@/src/config/Makefile.version

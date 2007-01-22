@@ -8,8 +8,6 @@
 PACKAGE=@PACKAGE@
 VERSION=@VERSION@
 
-AFS_component_version_number.o: AFS_component_version_number.c
-
 AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
 	echo 'char cml_version_number[]="@(#) OpenAFS ${VERSION} built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c
 	echo 'char* AFSVersion = "${PACKAGE} ${VERSION}"; ' >>AFS_component_version_number.c

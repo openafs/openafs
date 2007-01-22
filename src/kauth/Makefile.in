@@ -28,12 +28,13 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libsys.a  \
-	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/liblwp.a \
 	$(DBM)
 
 UKSRCS=authclient.c user.c kautils.h kaserver.h kaaux.c token.c \
@@ -45,12 +46,14 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/liblwp.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
@@ -224,7 +227,7 @@ ka-forwarder: ka-forwarder.o
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
-	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS)
+	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS) ${XLIBS}
 
 #
 # Install targets

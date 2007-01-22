@@ -1,0 +1,66 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	Rx
+	module-dir	rx
+	c-path		tracepoint_table.c
+	h-path		tracepoint_table.h
+	prefix		"rpc.rx"
+	init-func	rxi_InitTracePointTable
+	event-tag	osi_Trace_Event_RxEvent_Id
+	description	"RxRPC probe points"
+
+	event-table {
+		name	RxEvents
+		prefix	"events"
+
+		event {
+			name	new_conn
+			suffix	"conn.new"
+		}
+		event {
+			name	new_call
+			suffix	"call.new"
+		}
+		event {
+			name	destroy_conn
+			suffix	"conn.destroy"
+		}
+		event {
+			name	end_call
+			suffix	"call.end"
+		}
+		event {
+			name	conn_error
+			suffix	"conn.error"
+		}
+		event {
+			name	call_error
+			suffix	"call.error"
+		}
+		event {
+			name	srv_callQ_enqueue
+			suffix	"srv.callQ.enqueue"
+		}
+		event {
+			name	srv_callQ_dequeue
+			suffix	"srv.callQ.dequeue"
+		}
+		event {
+			name	srv_thread_idle
+			suffix	"srv.thread.idle"
+		}
+		event {
+			name	srv_thread_busy
+			suffix	"srv.thread.busy"
+		}
+	}
+}

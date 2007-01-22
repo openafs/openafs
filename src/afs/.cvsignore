@@ -1,7 +1,11 @@
 AFS_component_version_number.c
 Makefile
+afs_icl.c
+afs_icl.h
 afs_trace.h
 afs_trace.msf
+afs_tracepoint.c
+afs_tracepoint.h
 afszcm.cat
 unified_afs.c
 unified_afs.h

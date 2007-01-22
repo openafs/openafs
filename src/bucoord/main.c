@@ -43,6 +43,7 @@ RCSID
 #include <afs/com_err.h>
 #include <lock.h>
 #include <afs/budb.h>
+#include <osi/osi_includes.h>
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
 
@@ -506,6 +507,9 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Backup, osi_NULL)));
+
     Lock_Init(&dispatchLock);
     InitErrTabs();		/* init all the error tables which may be used */
 

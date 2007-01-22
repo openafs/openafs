@@ -1,0 +1,113 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# OpenBSD version by Jim Rees
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+# System specific build commands and flags
+KSRC = @BSD_KERNEL_PATH@
+KFLAGS= -Wall -nostdinc
+<i386_obsd33>
+KFLAGS+= -fno-stack-protector
+<all>
+KDEFS= \
+    ${KFLAGS} \
+    -I/usr/include -I${KSRC}/sys \
+    -DLKM -DDIAGNOSTIC -DFIFO -DNFSCLIENT -DMFS -DFFS -D_KERNEL -DI586_CPU \
+    -DI686_CPU
+DBUG= -O2
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF= ${OPT}
+OPTF2= ${OPT2}
+CFLAGS= ${FSINCLUDES} ${DEFINES} ${KDEFS} ${KOPTS} ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o
+
+#AFS_OS_NFSOBJS = osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = osi_vfsops.o
+
+# This tells Makefile.common to use its single directory build target.
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+TOP_SRCDIR = ../..
+
+include Makefile.common
+
+COMMON_INCLUDE = \
+	-I.. \
+	-I../nfs \
+	-I${TOP_SRCDIR} \
+	-I${TOP_SRCDIR}/afs \
+	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/config \
+	-I${TOP_SRCDIR}/rx \
+	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/rxkad \
+	-I${TOP_SRCDIR}/domestic \
+	-I${TOP_SRCDIR}/util \
+	-I${TOP_SRCDIR}/../include \
+	-I${TOP_SRCDIR}/../include/afs
+
+setup:
+	-mkdir $(KOBJ)
+	-$(RM) -f  $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	-$(RM) -f  h lib
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/lib .
+	-touch $(KOBJ)/sec_net.h
+
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.nfs.o
+LIBAFSNONFS = libafs.o
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+
+
+libafs:	$(LIBAFSNONFS)
+	ls -l libafs.o
+install_libafs:	$(INST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}

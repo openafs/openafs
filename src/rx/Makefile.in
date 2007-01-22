@@ -12,7 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG ${OSI_CFLAGS}
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
@@ -30,7 +30,13 @@ RXOBJS = ${RXOBJS_common}
 
 MULTIOBJS = rx_multi.o
 
-LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
+TRACEPOINT_TAB = tracepoint.tab
+TRACEPOINT_HDR = tracepoint_table.h
+TRACEPOINT_SRC = tracepoint_table.c
+TRACEPOINT_OBJ = tracepoint_table.o
+include @TOP_OBJDIR@/src/trace/table-gen.mk
+
+LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS} ${TRACEPOINT_OBJ}
 
 BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
@@ -39,10 +45,11 @@ LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/util.a
 
 all: \
+	${TRACEPOINT_HDR} \
 	includes \
 	${TOP_LIBDIR}/librx.a
 
-depinstall: includes
+depinstall: includes ${TRACEPOINT_HDR} ${TRACEPOINT_SRC}
 
 RX_component_version_number.c: AFS_component_version_number.c
 	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
@@ -103,7 +110,9 @@ includes: \
 	${TOP_INCDIR}/rx/rx_misc.h \
 	${TOP_INCDIR}/rx/rx_null.h \
 	${TOP_INCDIR}/rx/xdr.h \
-	${TOP_INCDIR}/rx/xdr_prototypes.h
+	${TOP_INCDIR}/rx/xdr_prototypes.h \
+	${TOP_INCDIR}/rx/${TRACEPOINT_HDR} \
+	$(NULL)
 
 ${TOP_LIBDIR}/librx.a: librx.a
 	${INSTALL_DATA} $? $@
@@ -147,6 +156,9 @@ ${TOP_INCDIR}/rx/rx_misc.h: rx_misc.h
 ${TOP_INCDIR}/rx/rx_null.h: rx_null.h
 	${INSTALL_DATA} $? $@
 
+${TOP_INCDIR}/rx/tracepoint_table.h: tracepoint_table.h
+	${INSTALL_DATA} $? $@
+
 ${TOP_INCDIR}/rx/xdr.h: xdr.h
 	${INSTALL_DATA} $? $@
 
@@ -175,6 +187,7 @@ install: librx.a
 	${INSTALL_DATA} rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
 	${INSTALL_DATA} xdr.h ${DESTDIR}${includedir}/rx/xdr.h
 	${INSTALL_DATA} xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DESTDIR}${includedir}/rx/${TRACEPOINT_HDR}
 
 dest: librx.a
 	${INSTALL} -d ${DEST}/lib
@@ -195,11 +208,12 @@ dest: librx.a
 	${INSTALL_DATA} rx_null.h ${DEST}/include/rx/rx_null.h
 	${INSTALL_DATA} xdr.h ${DEST}/include/rx/xdr.h
 	${INSTALL_DATA} xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DEST}/include/rx/${TRACEPOINT_HDR}
 
 #
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o *.a core *_component_version_number.c
+	$(RM) -f *.o *.a core *_component_version_number.c ${TRACEPOINT_SRC} ${TRACEPOINT_HDR}
 
-include ../config/Makefile.version
+include @TOP_OBJDIR@/src/config/Makefile.version

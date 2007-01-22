@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,55 +18,126 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 
 CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} \
-	-I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
+	-I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/src -I${TOP_OBJDIR}/fsint \
 	 ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG -DNINTERFACE
 
 LDFLAGS = ${DBUG} ${XLDFLAGS} ${ARCHFLAGS}
 
-LIBS=${TOP_LIBDIR}/libacl.a	\
+TRACEPOINT_TAB = tracepoint.tab
+TRACEPOINT_HDR = tracepoint_table.h
+TRACEPOINT_SRC = tracepoint_table.c
+TRACEPOINT_OBJ = tracepoint_table.o
+include @TOP_OBJDIR@/src/trace/table-gen.mk
+
+LIBS= \
+	${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/libvldb.a	\
 	${TOP_LIBDIR}/libprot.a	\
 	${TOP_LIBDIR}/libauth.a	\
-	${TOP_LIBDIR}/librxkad.a		\
-	${TOP_LIBDIR}/libubik.a 		\
-	${TOP_LIBDIR}/vlib.a		\
-	${TOP_LIBDIR}/libdir.a	\
-	${TOP_LIBDIR}/util.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libafsint.a	\
-	${TOP_LIBDIR}/librxstat.a	\
-	${TOP_LIBDIR}/librx.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libdes.a		\
-	${TOP_LIBDIR}/libcom_err.a	\
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/vlib.a \
+	${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/librxstat.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libafsutil.a \
+	$(NULL)
 
-headers=${TOP_INCDIR}/lwp.h		\
+headers= \
+	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/afs/acl.h	\
-	${TOP_INCDIR}/afs/errors.h	\
+	${TOP_INCDIR}/afs/errors.h \
 	${TOP_INCDIR}/afs/ptclient.h \
-	${TOP_INCDIR}/lock.h		\
-	${TOP_INCDIR}/afs/volume.h	\
-	${TOP_INCDIR}/afs/vnode.h	\
-	${TOP_INCDIR}/rx/rx.h	\
-	${TOP_INCDIR}/rx/xdr.h	\
-	${TOP_INCDIR}/afs/auth.h	\
-	${TOP_INCDIR}/afs/afsint.h	\
-	viced.h				\
-	host.h				\
-	callback.h			\
-	fs_stats.h
+	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/vnode.h \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/afsint.h \
+	viced.h	\
+	host.h \
+	callback.h \
+	fs_stats.h \
+	$(NULL)
 
-objects=viced.o		\
+objects= \
+	viced.o		\
 	afsfileprocs.o	\
 	host.o		\
 	physio.o	\
-	callback.o	
+	callback.o	\
+	${TRACEPOINT_OBJ} \
+	$(NULL)
 
-all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
+all: \
+	${TRACEPOINT_HDR} \
+	cbd \
+	fsprobe \
+	check_sysid \
+	fileserver \
+	${TOP_INCDIR}/afs/fs_stats.h \
+	${TOP_INCDIR}/afs/viced/tracepoint_table.h \
+	$(NULL)
+
+install: \
+		fileserver \
+		fs_stats.h \
+		${TRACEPOINT_HDR} \
+		$(NULL)
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs/viced
+	${INSTALL_DATA} fs_stats.h ${DESTDIR}$includedir}/afs/fs_stats.h
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DESTDIR}$includedir}/afs/viced/${TRACEPOINT_HDR}
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+		echo "Don't install fileserver for ${SYS_NAME}" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
+		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
+	*_darwin_*) \
+		echo "Don't install fileserver for ${SYS_NAME}" ;; \
+	*) \
+		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
+		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
+	esac
+
+dest: \
+		fileserver \
+		fs_stats.h \
+		${TRACEPOINT_HDR} \
+		$(NULL)
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/include/afs/viced
+	${INSTALL_DATA} fs_stats.h ${DEST}/include/afs/fs_stats.h
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DEST}/include/afs/viced/${TRACEPOINT_HDR}
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+		echo "Don't install fileserver for ${SYS_NAME}" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
+		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
+	*_darwin_*) \
+		echo "Don't install fileserver for ${SYS_NAME}" ;; \
+	*) \
+		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
+		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
+	esac
 
 ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/viced/${TRACEPOINT_HDR}: ${TRACEPOINT_HDR}
 	${INSTALL_DATA} $? $@
 
 ${objects}: ${headers}
@@ -98,40 +170,6 @@ cbd.o: callback.c AFS_component_version_number.c
 cbd: cbd.o
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
 
-install: fileserver fs_stats.h
-	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} fs_stats.h ${DESTDIR}${includedir}/afs/fs_stats.h
-	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
-	*_darwin_*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*) \
-		echo ${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
-	esac
-
-dest: fileserver fs_stats.h
-	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_DATA} fs_stats.h ${DEST}/include/afs/fs_stats.h
-	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
-	*_darwin_*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*) \
-		echo ${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL_PROGRAM} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
-	esac
-
 clean:
 	$(RM) -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
@@ -142,4 +180,5 @@ check-splint::
 	    afsfileprocs.c	\
 	    host.c		\
 	    physio.c	\
-	    callback.c
+	    callback.c \
+	    ${TRACEPOINT_SRC}

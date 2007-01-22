@@ -1,0 +1,360 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+INCLUDE= -I.  -I/usr/include -I${TOP_OBJDIR}/src/config
+
+TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
+TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
+TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
+
+TOP_SRC_AFS = ${TOP_SRCDIR}/afs
+TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
+TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
+TOP_SRC_RX = ${TOP_SRCDIR}/rx
+TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
+TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+
+COMMON_INCLUDE = -I. -I.. -I../nfs \
+	-I${TOP_SRCDIR} \
+	-I${TOP_SRCDIR}/afs \
+	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/config \
+	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/rxkad \
+	-I${TOP_SRCDIR}/rxkad/domestic \
+	-I${TOP_SRCDIR}/util \
+	-I${TOP_OBJDIR}/src \
+	-I${TOP_OBJDIR}/src/afs \
+	-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
+	-I${TOP_OBJDIR}/src/util \
+	-I${TOP_OBJDIR}/src/rxkad \
+	-I${TOP_OBJDIR}/src/config \
+	-I${TOP_OBJDIR}/src/fsint \
+	-I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/osi \
+	-I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs 
+
+LIBOSI_BUILDING_MODE = kernelspace
+LIBOSI_BUILDING = kernel
+LIBOSI_BUILDING_INST = inst
+
+include $(TOP_SRCDIR)/osi/libosi/rules.mk
+include $(TOP_SRCDIR)/osi/libosi/rules.$(MKAFS_OSTYPE).mk
+# make_kbuild_makefile.pl is incapable of handling nested variables
+# of the form $(...$(...)...) which libosi build relies up heavily.
+# until this can be fixed, the following must be included in all
+# the non-linux makefileproto's individually
+#include $(TOP_SRCDIR)/osi/libosi/libosi.mk
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.SUFFIXES:	.i
+LIBKTRACE_CFLAGS = $(COMMON_INCLUDE) $(CFLAGS) -DLIBKTRACE $(LIBOSI_ALL_CFLAGS)
+.c.i:
+	$(CC) $(LIBKTRACE_CFLAGS) -P -c $<
+
+.c.o:
+	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -c $< -o $@
+CRULE_NOOPT=	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -o $@ -c $?
+CRULE_OPT=	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) $(KERN_OPTMZ) -o $@ -c $?
+
+
+system:	all
+
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
+
+all:	setup $(COMPDIRS)
+
+single_compdir single_instdir single_destdir:
+	cd $(KOBJ) ; \
+	echo $(MAKE) DESTDIR=${DESTDIR} $@_libktrace; \
+	$(MAKE) DESTDIR=${DESTDIR}  $@_libktrace
+
+single_compdir_libktrace: depsrcs libktrace
+single_instdir_libktrace: install_libktrace
+single_destdir_libktrace: dest_libktrace
+
+# placeholder for any sources that are built prior to compiling libktrace
+depsrcs: 
+
+AFSAOBJS = \
+	afs_atomlist.o \
+	afs_lhash.o \
+	afs_call.o \
+	afs_lock.o	\
+	afs_osi.o		\
+	afs_osi_alloc.o	\
+	afs_osi_uio.o \
+	afs_stat.o \
+	afs_util.o \
+	AFS_component_version_number.o \
+	$(AFS_OS_OBJS) \
+	$(LIBOSI_ALL_OBJS) \
+	afs_tracepoint_table.o \
+	afs_icl_tracepoint_table.o \
+	rx_tracepoint_table.o \
+	$(NULL)
+
+
+# Compilation rules
+# These files are to be optimized
+base64.o: $(TOP_SRCDIR)/util/base64.c
+	$(CRULE_NOOPT)
+afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
+	$(CRULE_OPT)
+afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
+	$(CRULE_OPT)
+afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
+	$(CRULE_OPT)
+afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
+	$(CRULE_OPT)
+afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE_OPT)
+afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
+	$(CRULE_OPT)
+afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
+	$(CRULE_OPT)
+afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
+	$(CRULE_OPT)
+afs_dynroot.o: 	$(TOP_SRC_AFS)/afs_dynroot.c
+	$(CRULE_OPT)
+afs_init.o: $(TOP_SRC_AFS)/afs_init.c
+	$(CRULE_OPT)
+afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
+	$(CRULE_OPT)
+afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
+	$(CRULE_OPT)
+afs_osi.o: 	$(TOP_SRC_AFS)/afs_osi.c
+	$(CRULE_OPT)
+afs_osi_alloc.o: $(TOP_SRC_AFS)/afs_osi_alloc.c
+	$(CRULE_OPT)
+afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
+	$(CRULE_OPT)
+afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
+	$(CRULE_OPT)
+afs_osi_vget.o: $(TOP_SRC_AFS)/afs_osi_vget.c
+	$(CRULE_NOOPT)
+afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
+	$(CRULE_OPT)
+afs_server.o: $(TOP_SRC_AFS)/afs_server.c
+	$(CRULE_OPT)
+afs_user.o: $(TOP_SRC_AFS)/afs_user.c
+	$(CRULE_OPT)
+afs_util.o: $(TOP_SRC_AFS)/afs_util.c
+	$(CRULE_OPT)
+afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
+	$(CRULE_OPT)
+afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
+	$(CRULE_NOOPT)
+afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
+	$(CRULE_NOOPT)
+afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
+	$(CRULE_NOOPT)
+afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
+	$(CRULE_NOOPT)
+afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
+	$(CRULE_NOOPT)
+afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
+	$(CRULE_NOOPT)
+afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
+	$(CRULE_NOOPT)
+afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
+	$(CRULE_NOOPT)
+afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
+	$(CRULE_NOOPT)
+afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
+	$(CRULE_NOOPT)
+afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
+	$(CRULE_NOOPT)
+afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
+	$(CRULE_NOOPT)
+afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
+	$(CRULE_NOOPT)
+afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
+	$(CRULE_NOOPT)
+afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
+	$(CRULE_NOOPT)
+afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
+	$(CRULE_NOOPT)
+afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
+	$(CRULE_OPT)
+rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
+	$(CRULE_OPT)
+afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
+	$(CRULE_OPT)
+xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE_OPT)
+afs_tracepoint_table.o: $(TOP_SRCDIR)/afs/afs_tracepoint.c
+	$(CRULE_OPT)
+afs_icl_tracepoint_table.o: $(TOP_SRCDIR)/afs/afs_icl.c
+	$(CRULE_OPT)
+rx_tracepoint_table.o: $(TOP_SRCDIR)/rx/tracepoint_table.c
+	$(CRULE_OPT)
+
+# these files are not to be optimized - subject to change.
+afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
+	$(CRULE_NOOPT)
+afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
+	$(CRULE_NOOPT)
+afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
+	$(CRULE_NOOPT)
+afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
+	$(CRULE_NOOPT)
+afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
+	$(CRULE_NOOPT)
+AFS_component_version_number.o: AFS_component_version_number.c
+	$(CRULE_NOOPT)
+afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
+	$(CRULE_NOOPT)
+afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
+	$(CRULE_NOOPT)
+afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
+	$(CRULE_NOOPT)
+fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+	$(CRULE_NOOPT)
+crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE_NOOPT)
+rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
+	$(CRULE_NOOPT)
+rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
+	$(CRULE_NOOPT)
+afs_exporter.o: $(TOP_SRC_AFS)/afs_exporter.c
+	$(CRULE_NOOPT)
+afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
+	$(CRULE_NOOPT)
+afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
+	$(CRULE_NOOPT)
+rx.o: $(TOP_SRC_RX)/rx.c
+	$(CRULE_NOOPT)
+rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
+	$(CRULE_NOOPT)
+rx_event.o: $(TOP_SRC_RX)/rx_event.c
+	$(CRULE_NOOPT)
+rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE_NOOPT)
+rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE_NOOPT)
+rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
+	$(CRULE_NOOPT)
+rx_null.o: $(TOP_SRC_RX)/rx_null.c
+	$(CRULE_NOOPT)
+rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
+	$(CRULE_NOOPT)
+rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
+	$(CRULE_NOOPT)
+xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
+	$(CRULE_NOOPT)
+Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
+	$(CRULE_NOOPT)
+rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
+	$(CRULE_NOOPT)
+Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
+	$(CRULE_NOOPT)
+Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE_NOOPT)
+Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
+	$(CRULE_NOOPT)
+Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
+	$(CRULE_NOOPT)
+afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
+	$(CRULE_NOOPT)
+xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
+	$(CRULE_NOOPT)
+xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
+	$(CRULE_NOOPT)
+xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
+	$(CRULE_NOOPT)
+xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
+	$(CRULE_NOOPT)
+xdr.o: $(TOP_SRC_RX)/xdr.c
+	$(CRULE_NOOPT)
+Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
+	$(CRULE_NOOPT)
+CFLAGS-Kvldbint.xdr.o= -DAFS_UUID_XG
+Kvldbint.xdr.o: ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
+	$(CRULE_NOOPT)
+rx_kmutex.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
+	$(CRULE_NOOPT)
+rx_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
+	$(CRULE_NOOPT)
+rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
+	$(CRULE_NOOPT)
+
+# Files which do not contain NFS translator code.
+CFLAGS-afs_call.o= -DAFS_NONFSTRANS
+afs_call.o: $(TOP_SRC_AFS)/afs_call.c
+	$(CRULE_NOOPT)
+CFLAGS-afs_pioctl.o= -DAFS_NONFSTRANS
+afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE_NOOPT)
+
+# NFS Translator versions of the above code.
+afs_call_nfs.o:	$(TOP_SRC_AFS)/afs_call.c
+	$(CRULE_NOOPT)
+afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE_NOOPT)
+
+# Files which are specific to particular architectures/targets
+# but have common build rules. Place here instead of duplicating
+# in the per-platform Makefiles.
+osi_groups.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_groups.c
+	$(CRULE_NOOPT)
+osi_inode.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_inode.c
+	$(CRULE_NOOPT)
+osi_file.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_file.c
+	$(CRULE_NOOPT)
+osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
+	$(CRULE_NOOPT)
+osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
+	$(CRULE_NOOPT)
+CFLAGS-osi_vfsops_nfs.o= -DAFS_WRAPPER=${LIBKTRACE}_wrapper -DAFS_CONF_DATA=${LIBKTRACE}_conf_data
+osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
+	$(CRULE_NOOPT)
+CFLAGS-osi_vfsops.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBKTRACENONFS}_wrapper -DAFS_CONF_DATA=${LIBKTRACENONFS}_conf_data
+osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
+	$(CRULE_NOOPT)
+osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
+	$(CRULE_NOOPT)
+osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
+	$(CRULE_NOOPT)
+osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
+	$(CRULE_OPT)
+osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
+	$(CRULE_NOOPT)
+osi_probe.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_probe.c
+	$(CRULE_NOOPT)
+osi_syscall.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_syscall.c
+	$(CRULE_NOOPT)
+osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
+	$(CRULE_NOOPT)
+osi_flush.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_flush.s
+	$(CRULE_OPT)
+osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
+	$(CRULE_NOOPT)
+osi_cred.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c
+	$(CRULE_NOOPT)
+osi_idbg.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_idbg.c
+	$(CRULE_NOOPT)
+osi_config.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_config.c
+	$(CRULE_NOOPT)
+osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
+	$(CRULE_NOOPT)
+
+
+
+clean:
+	-$(RM) -rf STATIC* MODLOAD*
+	-$(RM) -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx linux
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

@@ -29,7 +29,7 @@ extern void crset(cred_t * cr);
 
 /* osi_nfssrv.c */
 extern int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr,
-                                 int *code);
+				 int *code);
 extern void osi_linux_nfssrv_init(void);
 extern void osi_linux_nfssrv_shutdown(void);
 extern afs_rwlock_t afs_xnfssrv;
@@ -44,7 +44,7 @@ extern void osi_ioctl_init(void);
 extern void osi_ioctl_clean(void);
 
 /* osi_misc.c */
-extern void afs_osi_SetTime(osi_timeval_t * tvp);
+extern void afs_osi_SetTime(afs_timeval_t * tvp);
 extern int osi_lookupname_internal(char *aname, int followlink,
 				   struct vfsmount **mnt, struct dentry **dpp);
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,

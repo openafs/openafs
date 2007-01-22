@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 #include <afsconfig.h>
@@ -91,6 +93,7 @@ afs_InitSetup(int preallocs)
 
     memset(afs_zeros, 0, AFS_ZEROS);
 
+#if !defined(LIBKTRACE)
     /* start RX */
     if(!afscall_set_rxpck_received)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
@@ -102,12 +105,19 @@ afs_InitSetup(int preallocs)
     rx_SetRxDeadTime(afs_rx_deadtime);
     /* resource init creates the services */
     afs_ResourceInit(preallocs);
+#endif /* !LIBKTRACE */
 
     afs_InitSetup_done = 1;
     afs_osi_Wakeup(&afs_InitSetup_done);
 
     return code;
 }
+
+#if !defined(LIBKTRACE)
+/* 
+ * the rest of the file is cache-manager only 
+ */
+
 #if defined(AFS_DARWIN80_ENV)
 struct afsd_thread_info {
     unsigned long parm;
@@ -233,7 +243,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     AFS_GLOCK();
     thread_deallocate(thread);
 }
-#endif
+#endif /* AFS_DARWIN80_ENV */
 
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
@@ -334,7 +344,7 @@ afsd_thread(void *rock)
 #ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
 #endif
-#endif
+#endif /* !SYS_SETPRIORITY_EXPORTED */
 	AFS_GLOCK();
 	complete(arg->complete);
 	while (afs_initState < AFSOP_START_BKG)
@@ -352,7 +362,7 @@ afsd_thread(void *rock)
 #ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
 #endif
-#endif
+#endif /* !SYS_SETPRIORITY_EXPORTED */
 	AFS_GLOCK();
 	complete(arg->complete);
 	afs_initState = AFSOP_START_AFS;
@@ -441,7 +451,8 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     wait_for_completion(&c);
     AFS_GLOCK();
 }
-#endif
+#endif /* AFS_LINUX24_ENV && COMPLETION_H_EXISTS */
+
 
 /* leaving as is, probably will barf if we add prototypes here since it's likely being called
 with partial list */
@@ -457,31 +468,33 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_SGI61_ENV */
 
     AFS_STATCNT(afs_syscall_call);
+
 #ifdef	AFS_SUN5_ENV
     if (!afs_suser(CRED()) && (parm != AFSOP_GETMTU)
 	&& (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
 	return (EACCES);
-#else
+    }
+#else /* !AFS_SUN5_ENV */
     if (!afs_suser(NULL) && (parm != AFSOP_GETMTU)
 	&& (parm != AFSOP_GETMASK)) {
-	/* only root can run this code */
+        /* only root can run this code */
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 	return (EACCES);
-#else
-#if defined(AFS_OSF_ENV)
+#elif defined(AFS_OSF_ENV)
 	return EACCES;
-#else /* AFS_OSF_ENV */
+#else /* !KERNEL_HAVE_UERROR && !AFS_OSF_ENV */
 	return EPERM;
-#endif /* AFS_OSF_ENV */
-#endif
-#endif
+#endif /* !KERNEL_HAVE_UERROR && !AFS_OSF_ENV */
     }
+#endif /* !AFS_SUN5_ENV */
     AFS_GLOCK();
+
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
+
 #if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
@@ -503,7 +516,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #else /* !RXK_LISTENER_ENV */
 	    afs_initState = AFSOP_START_AFS;
 	    afs_osi_Wakeup(&afs_initState);
-#endif /* RXK_LISTENER_ENV */
+#endif /* !RXK_LISTENER_ENV */
 	    afs_osi_Invisible();
 	    afs_RXCallBackServer();
 	}
@@ -747,7 +760,10 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    goto out;
 	}
 	afs_CacheInit_Done = 1;
-        code = afs_icl_InitLogs();
+#if defined(OSI_TRACE_ENABLED)
+	osi_Assert(OSI_RESULT_OK(afs_init_tracepoint_table()));
+	osi_Assert(OSI_RESULT_OK(afs_icl_tracepoint_init()));
+#endif
 	afs_setTime = cparms.setTimeFlag;
 
 	code =
@@ -763,7 +779,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	get_vfs_context();
 #endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
@@ -771,7 +787,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	put_vfs_context();
 #endif
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
@@ -800,7 +816,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	    get_vfs_context();
 #endif
 	    if (parm == AFSOP_CACHEFILE)
 		code = afs_InitCacheFile(tbuffer, 0);
@@ -811,7 +827,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	    put_vfs_context();
 #endif
 	}
 	osi_FreeSmallSpace(tbuffer);
@@ -987,7 +1003,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_AIX32_ENV */
     } else if (parm == AFSOP_GETMASK) {	/* parm2 == addr in net order */
 	afs_uint32 mask = 0;
-#if	!defined(AFS_SUN5_ENV)
+#if !defined(AFS_SUN5_ENV)
 #ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
@@ -1002,7 +1018,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
 	    code = -1;
-#endif /* else AFS_USERSPACE_IP_ADDR */
+#endif /* !AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mask, (caddr_t) parm3, sizeof(afs_int32),
@@ -1035,7 +1051,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_osi_Free(kmsg, kmsgLen);
 	afs_osi_Free(cellname, cellLen);
     }
-#endif
+#endif /* AFS_AFSDB_ENV */
     else if (parm == AFSOP_SET_DYNROOT) {
 	code = afs_SetDynrootEnable(parm2);
     } else if (parm == AFSOP_SET_FAKESTAT) {
@@ -1052,14 +1068,15 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
   out:
 #ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
     get_vfs_context();
-#endif
+#endif /* AFS_DARWIN80_ENV */
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;
-#else
+#else /* !AFS_LINUX20_ENV */
     return code;
-#endif
+#endif /* !AFS_LINUX20_ENV */
 }
+
 
 /*
  * Initstate in the range 0 < x < 100 are early initialization states.
@@ -1146,19 +1163,21 @@ afs_shutdown(void)
 #ifdef AFS_AFSDB_ENV
     afs_warn("AFSDB... ");
     afs_StopAFSDB();
-    while (afs_termState == AFSOP_STOP_AFSDB)
+    while (afs_termState == AFSOP_STOP_AFSDB) {
 	afs_osi_Sleep(&afs_termState);
+    }
 #endif
-#if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     afs_warn("RxEvent... ");
     /* cancel rx event daemon */
-    while (afs_termState == AFSOP_STOP_RXEVENT)
+    while (afs_termState == AFSOP_STOP_RXEVENT) {
 	afs_osi_Sleep(&afs_termState);
+    }
 #if defined(RXK_LISTENER_ENV)
 #ifndef UKERNEL
     afs_warn("UnmaskRxkSignals... ");
     afs_osi_UnmaskRxkSignals();
-#endif
+#endif /* !UKERNEL */
     /* cancel rx listener */
     afs_warn("RxListener... ");
     osi_StopListener();		/* This closes rx_socket. */
@@ -1166,10 +1185,10 @@ afs_shutdown(void)
 	afs_warn("Sleep... ");
 	afs_osi_Sleep(&afs_termState);
     }
-#endif
-#else
+#endif /* RXK_LISTENER_ENV */
+#else /* !AFS_SUN5_ENV && !RXK_LISTENER_ENV */
     afs_termState = AFSOP_STOP_COMPLETE;
-#endif
+#endif /* !AFS_SUN5_ENV && !RXK_LISTENER_ENV */
     afs_warn("\n");
 
     /* Close file only after daemons which can write to it are stopped. */
@@ -1186,7 +1205,7 @@ afs_shutdown(void)
     shutdown_rx();
     afs_shutdown_BKG();
     shutdown_bufferpackage();
-#endif
+#endif /* notdef */
 #ifdef AFS_AIX51_ENV
     shutdown_daemons();
 #endif
@@ -1211,7 +1230,7 @@ afs_shutdown(void)
 */
     afs_warn(" ALL allocated tables\n");
     afs_shuttingdown = 0;
-#endif
+#endif /* notdef */
 }
 
 void
@@ -1233,3 +1252,4 @@ afs_shutdown_BKG(void)
 {
     AFS_STATCNT(shutdown_BKG);
 }
+#endif /* !LIBKTRACE */

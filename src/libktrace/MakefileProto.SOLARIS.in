@@ -1,0 +1,171 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_module.o \
+	osi_sleep.o \
+	$(NULL)
+
+# System specific build commands and flags
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+#These are redundant
+#LD = /usr/ccs/bin/ld
+#LORDER = /usr/ccs/bin/lorder
+#CC = /opt/SUNWspro/bin/cc
+KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
+
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
+KDEFS_32 = 
+KDEFS_64 = -xarch=v9 
+
+<sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+KDEFS_32 = -xarch=pentium_pro
+KDEFS_64 = -xarch=amd64 -xmodel=kernel
+
+<all>
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+<sun4x_55 sun4x_56>
+KOBJ = MODLOAD
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+KOBJ = MODLOAD32 MODLOAD64
+<sun4x_510 sun4x_511>
+KOBJ = MODLOAD64
+
+# This tells Makefile.common to use it's single directory build target.
+<sun4x_55 sun4x_56>
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+LIBOSI_BUILDING_BIT = 32
+
+<all -sun4x_55 -sun4x_56>
+COMPDIRS = solaris_compdirs
+INSTDIRS = solaris_instdirs
+DESTDIRS = solaris_destdirs
+
+<all>
+include Makefile.common
+include $(TOP_SRCDIR)/osi/libosi/libosi.mk
+
+
+<sun4x_510 sun4x_511 sunx86_510 sunx86_511>
+# override suffix rule; unfortunately, this causes a warning message
+.c.o:
+	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -c $<
+	if [ -n "$(CTFCONVERT)" ] ; then \
+		CTFCONVERT_PERMISSIVE=1 \
+		$(CTFCONVERT) $(CTFCONVERT_FLAGS) -l "${VERSION}" $@ ; \
+	fi
+CRULE_NOOPT= \
+	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -o $@ -c $? && \
+	if [ -n "$(CTFCONVERT)" ] ; then \
+		CTFCONVERT_PERMISSIVE=1 \
+		$(CTFCONVERT) $(CTFCONVERT_FLAGS) -l "${VERSION}" $@ ; \
+	fi
+CRULE_OPT= \
+	$(CC) $(LIBKTRACE_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) $(KERN_OPTMZ) -o $@ -c $? && \
+	if [ -n "$(CTFCONVERT)" ] ; then \
+		CTFCONVERT_PERMISSIVE=1 \
+		$(CTFCONVERT) $(CTFCONVERT_FLAGS) -l "${VERSION}" $@ ; \
+	fi
+<all>
+
+setup:
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet
+	-ln -fs /usr/include/sys h
+	-ln -fs /usr/include/net net
+	-ln -fs /usr/include/netinet netinet
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs /usr/include/sys sys
+	-ln -fs /usr/include/nfs nfs
+	-ln -fs /usr/include/inet inet
+	-ln -fs /usr/include/ufs ufs
+	for t in ${KOBJ} ; do \
+		echo Making directory: $$t; \
+		mkdir -p $$t; \
+		$(RM) -f $$t/Makefile.common $$t/Makefile $$t/config ; \
+		ln -fs ../Makefile.common $$t/Makefile.common ; \
+		ln -fs ../Makefile $$t/Makefile ;\
+		ln -fs ../config $$t/config ;\
+	done
+
+
+## This is the target for a Solaris 7. Here we build both the 32 bit and
+## the 64 bit libktrace in MODLOAD32 and MODLOAD64 directories respectively
+
+<all -sun4x_55 -sun4x_56>
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${KOBJ} ; do \
+		echo Building directory: $$t ; \
+		case $$t in \
+			MODLOAD32) \
+			 ARCH_DEFS="${KDEFS_32}" ; \
+			 LIBOSI_BUILDING_BIT="32" ; \
+			 BITS="" ;; \
+			MODLOAD64) \
+			 ARCH_DEFS="${KDEFS_64}" ; \
+			 LIBOSI_BUILDING_BIT="64" ; \
+			 BITS="64" ;; \
+		esac ; \
+		export ARCH_DEFS ; \
+		export LIBOSI_BUILDING_BIT ; \
+		export BITS ; \
+		cd $$t  ; \
+		$(MAKE) $@_libktrace ; \
+		cd ../ ;\
+	done
+
+solaris_compdirs_libktrace: depsrcs libktrace
+solaris_instdirs_libktrace: install_libktrace
+solaris_destdirs_libktrace: dest_libktrace
+
+<all>
+
+# Below this line are targets when in the COMMON directory:
+LIBKTRACE = libktrace.o
+
+<sun4x_55 sun4x_56>
+INST_LIBKTRACE = ${DESTDIR}${afskerneldir}/${LIBKTRACE}
+
+DEST_LIBKTRACE = ${DEST}/root.client/usr/vice/etc/modload/${LIBKTRACE}
+
+<all -sun4x_55 -sun4x_56>
+INST_LIBKTRACE = ${DESTDIR}${afskerneldir}/libktrace${BITS}.o
+
+DEST_LIBKTRACE = ${DEST}/root.client/usr/vice/etc/modload/libktrace${BITS}.o
+
+<all>
+
+# Without this line, gmake tries to build libktrace.o
+.PHONY: libktrace
+
+libktrace:	$(LIBKTRACE)
+install_libktrace:	$(INST_LIBKTRACE)
+dest_libktrace:	$(DEST_LIBKTRACE)
+
+
+$(INST_LIBKTRACE): $(LIBKTRACE)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBKTRACE): $(LIBKTRACE)
+	${INSTALL} -f $? $@
+
+${LIBKTRACE}: $(AFSAOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS)
+	if [ -n "$(CTFMERGE)" ] ; then \
+		$(CTFMERGE) $(CTFMERGE_FLAGS) -l "${VERSION}" -o $@ $(AFSAOBJS) ; \
+	fi

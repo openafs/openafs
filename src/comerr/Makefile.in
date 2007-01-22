@@ -3,6 +3,8 @@
 #
 # Copyright 1987, 1989 MIT Student Information Processing Board
 # For copyright info, see mit-sipb-cr.h.
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -11,7 +13,21 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
+COMERR_CFLAGS=${CFLAGS} -DOSI_ENV_COMERR_BUILD -DOSI_TRACE_DISABLE
+
+CCRULE=${CC} ${COMERR_CFLAGS} -c $? -o $@
+
+all: \
+	depinstall \
+	compile_et \
+	${TOP_LIBDIR}/libcom_err.a \
+	$(NULL)
+
+depinstall: \
+	${TOP_INCDIR}/afs/com_err.h \
+	${TOP_INCDIR}/afs/error_table.h \
+	${TOP_INCDIR}/afs/mit-sipb-cr.h \
+	$(NULL)
 
 ${TOP_INCDIR}/afs/com_err.h: com_err.h
 	${INSTALL_DATA} $? $@
@@ -32,9 +48,9 @@ et_lex.lex.c: et_lex.lex.l
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
 	*_linux* | *_umlinux* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
+	${CC} ${COMERR_CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
 	* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
+	${CC} ${COMERR_CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
 	esac
 
 libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
@@ -43,9 +59,37 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 #
+# Build targets
+#
+
+compile_et.o: compile_et.c
+	${CCRULE}
+
+# including c files within other c files makes me a sad panda
+error_table.o: error_table.c et_lex.lex.c
+	${CC} ${COMERR_CFLAGS} -c error_table.c -o $@
+
+error_msg.o: error_msg.c
+	${CCRULE}
+
+et_name.o: et_name.c
+	${CCRULE}
+
+com_err.o: com_err.c
+	${CCRULE}
+
+#
 # Installation targets
 #
-install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
+install_deps: \
+		compile_et \
+		com_err.h \
+		error_table.h \
+		mit-sipb-cr.h \
+		libcom_err.a \
+		$(NULL)
+
+install: install_deps
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
@@ -55,7 +99,7 @@ install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL_DATA} mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
 	${INSTALL_DATA} libcom_err.a ${DESTDIR}${libdir}/afs/libcom_err.a
 
-dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
+dest: install_deps
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
@@ -64,6 +108,7 @@ dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL_DATA} error_table.h ${DEST}/include/afs/error_table.h
 	${INSTALL_DATA} mit-sipb-cr.h ${DEST}/include/afs/mit-sipb-cr.h
 	${INSTALL_DATA} libcom_err.a ${DEST}/lib/afs/libcom_err.a
+
 
 clean:
 	$(RM) -f *~ \#* *.bak *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
@@ -74,8 +119,5 @@ clean:
 
 test:
 	cd test; $(MAKE)
-
-compile_et.o:  AFS_component_version_number.c
-error_table.o: et_lex.lex.c
 
 include ../config/Makefile.version

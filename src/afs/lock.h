@@ -156,7 +156,7 @@ struct afs_lock {
     unsigned short readers_reading;	/* # readers actually with read locks */
     unsigned short num_waiting;	/* probably need this soon */
     unsigned short spare;	/* not used now */
-    osi_timeval_t time_waiting;	/* for statistics gathering */
+    afs_timeval_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
     /* the following are useful for debugging 
      ** the field 'src_indicator' is updated only by ObtainLock() and
@@ -183,21 +183,10 @@ typedef struct afs_lock afs_rwlock_t;
 #ifdef KERNEL
 #include "icl.h"
 
-extern int afs_trclock;
-
-#define AFS_LOCK_TRACE_ENABLE 0
-#if AFS_LOCK_TRACE_ENABLE
-#define AFS_LOCK_TRACE(op, lock, type) \
-	if (afs_trclock) Afs_Lock_Trace(op, lock, type, __FILE__, __LINE__);
-#else
-#define AFS_LOCK_TRACE(op, lock, type)
-#endif
-
 #if defined(INSTRUMENT_LOCKS)
 
 #define ObtainReadLock(lock)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
 	if (!((lock)->excl_locked & WRITE_LOCK)) \
             ((lock)->readers_reading)++; \
 	else \
@@ -207,7 +196,6 @@ extern int afs_trclock;
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
 	if (!(lock)->excl_locked && !(lock)->readers_reading)\
 	    (lock) -> excl_locked = WRITE_LOCK;\
 	else\
@@ -220,7 +208,6 @@ extern int afs_trclock;
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
 	if (!(lock)->excl_locked)\
 	    (lock) -> excl_locked = SHARED_LOCK;\
 	else\
@@ -233,7 +220,6 @@ extern int afs_trclock;
 
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
 	if (!(lock)->readers_reading)\
 	    (lock)->excl_locked = WRITE_LOCK;\
 	else\
@@ -245,7 +231,6 @@ extern int afs_trclock;
 /* this must only be called with a WRITE or boosted SHARED lock! */
 #define ConvertWToSLock(lock)\
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
 	    (lock)->excl_locked = SHARED_LOCK; \
 	    if((lock)->wait_states) \
 		Afs_Lock_ReleaseR(lock); \
@@ -253,7 +238,6 @@ extern int afs_trclock;
 
 #define ConvertWToRLock(lock) \
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
@@ -263,7 +247,6 @@ extern int afs_trclock;
 
 #define ConvertSToRLock(lock) \
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
@@ -273,7 +256,6 @@ extern int afs_trclock;
 
 #define ReleaseReadLock(lock)\
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
 	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	if ( (lock)->pid_last_reader == MyPidxx ) \
@@ -282,7 +264,6 @@ extern int afs_trclock;
 
 #define ReleaseWriteLock(lock)\
         BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    (lock)->pid_writer=0; \
@@ -291,7 +272,6 @@ extern int afs_trclock;
 /* can be used on shared or boosted (write) locks */
 #define ReleaseSharedLock(lock)\
         BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    (lock)->pid_writer=0; \
@@ -301,7 +281,6 @@ extern int afs_trclock;
 
 #define ObtainReadLock(lock)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
 	if (!((lock)->excl_locked & WRITE_LOCK)) \
             ((lock)->readers_reading)++; \
 	else \
@@ -310,7 +289,6 @@ extern int afs_trclock;
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
 	if (!(lock)->excl_locked && !(lock)->readers_reading)\
 	    (lock) -> excl_locked = WRITE_LOCK;\
 	else\
@@ -321,7 +299,6 @@ extern int afs_trclock;
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
 	if (!(lock)->excl_locked)\
 	    (lock) -> excl_locked = SHARED_LOCK;\
 	else\
@@ -332,7 +309,6 @@ extern int afs_trclock;
 
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
 	if (!(lock)->readers_reading)\
 	    (lock)->excl_locked = WRITE_LOCK;\
 	else\
@@ -342,7 +318,6 @@ extern int afs_trclock;
 /* this must only be called with a WRITE or boosted SHARED lock! */
 #define ConvertWToSLock(lock)\
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
 	    (lock)->excl_locked = SHARED_LOCK; \
 	    if((lock)->wait_states) \
 		Afs_Lock_ReleaseR(lock); \
@@ -350,7 +325,6 @@ extern int afs_trclock;
 
 #define ConvertWToRLock(lock) \
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    Afs_Lock_ReleaseR(lock);\
@@ -358,7 +332,6 @@ extern int afs_trclock;
 
 #define ConvertSToRLock(lock) \
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    Afs_Lock_ReleaseR(lock);\
@@ -366,14 +339,12 @@ extern int afs_trclock;
 
 #define ReleaseReadLock(lock)\
 	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
 	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	ENDMAC
 
 #define ReleaseWriteLock(lock)\
         BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
         ENDMAC
@@ -381,7 +352,6 @@ extern int afs_trclock;
 /* can be used on shared or boosted (write) locks */
 #define ReleaseSharedLock(lock)\
         BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
         ENDMAC

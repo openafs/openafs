@@ -177,3 +177,18 @@
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */
+
+
+#ifndef AFS_PARAM_COMMON_H
+#define AFS_PARAM_COMMON_H      1
+
+/* global defines */
+
+#define	AFS_AIX_ENV		1
+#define	AFS_AIX32_ENV		1
+#define	AFS_AIX41_ENV		1
+#define AFS_AIX42_ENV		1
+#define AFS_AIX51_ENV		1
+#define AFS_AIX52_ENV		1
+
+#endif /* AFS_PARAM_COMMON_H */

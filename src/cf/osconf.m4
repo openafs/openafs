@@ -1006,14 +1006,45 @@ esac
 
 
 
-dnl pthreads fixes
+dnl
+dnl pthreads
+dnl
+
+dnl fixes to get access to rwlocks
 case $AFS_SYSNAME in
 dnl we'll go ahead and turn on XOPEN2K and ISO_C99
 dnl if this causes problems, we should scale back to _XOPEN_SOURCE=500
 	*linux*)
+		OSI_CFLAGS="-D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
 		MT_CFLAGS="${MT_CFLAGS} -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
 	;;
 esac
+
+
+#
+# libosi support
+#
+case $AFS_SYSNAME in
+	sun*_5[7-9]|sun*_510)
+		OSI_LIBS="${OSI_LIBS} -ldevinfo"
+	;;
+esac
+case $AFS_SYSNAME in
+	sun*_59|sun*_510)
+		OSI_LIBS="${OSI_LIBS} -lumem"
+	;;
+esac
+
+
+#
+# ctf support
+#
+case $AFS_SYSNAME in
+	sun*_510)
+		AC_CTF_TOOLS
+	;;
+esac
+
 
 
 dnl Disable the default for debugging/optimization if not enabled
@@ -1041,6 +1072,21 @@ if test "x$enable_optimize_lwp" = "xno"; then
   LWP_OPTMZ=
 fi
 
+# possibly override cleared fields
+case $AFS_SYSNAME in
+	sun4x_*|sunx86_*)
+		if test "x$enable_debug_kernel" = "xno" ; then
+			if test "$CTFCONVERT" ; then
+				KERN_DBG="-g -Wc,Qiselect-T1"
+			fi
+		else
+			CTFCONVERT_FLAGS="-g"
+		fi
+	;;
+esac
+
+XLIBS="${XLIBS} ${OSI_LIBS}"
+
 AC_SUBST(CCXPG2)
 AC_SUBST(CCOBJ)
 AC_SUBST(AFSD_LIBS)
@@ -1062,6 +1108,8 @@ AC_SUBST(MT_CFLAGS)
 AC_SUBST(MT_LIBS)
 AC_SUBST(MV)
 AC_SUBST(OPTMZ)
+AC_SUBST(OSI_LIBS)
+AC_SUBST(OSI_CFLAGS)
 AC_SUBST(PAM_CFLAGS)
 AC_SUBST(PAM_LIBS)
 AC_SUBST(PAM_DBG)

@@ -15,8 +15,7 @@
  */
 
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -153,6 +152,7 @@ main(int argc, char **argv)
 	exit(2);
     }
 
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_EphemeralUtility, osi_NULL)));
     
     ts = cmd_CreateSyntax("online", VolOnline, 0, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);

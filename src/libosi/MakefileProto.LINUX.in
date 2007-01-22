@@ -1,0 +1,46 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
+
+srcdir=@srcdir@
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# System specific build commands and flags
+
+LIBOSI_BUILD_LIBS = archive shlib
+LIBOSI_BUILD_THREADS = lwp pthread
+LIBOSI_DEFAULT_THREADS = none
+LIBOSI_BUILD_INSTRUMENTATION = \
+	ni \
+	@BUILD_OSI_INSTRUMENTATION@
+LIBOSI_DEFAULT_INSTRUMENTATION = inst
+
+LIBOSI_MAPFILE = $(LIBOSI_RULE_DIR)/mapfile
+
+# Name of directory to hold object files and libraries.
+<i386 parisc ppc sparc s390>
+LIBOSI_BUILD_BITS = 32
+LIBOSI_DEFAULT_BITS = 32
+
+# XXX these may not be entirely correct; I can't remember which
+# userspace datamodels are supported by every lp64 linux kernel port,
+# which is the default userspace datamodel, etc.
+<amd64 ia64 ppc64 s390x sparc64>
+LIBOSI_BUILD_BITS = 64
+LIBOSI_DEFAULT_BITS = 64
+
+<all>
+# COMPDIRS is called in Makefile.common to do the actual builds.
+COMPDIRS=std_compdirs
+INSTDIRS=std_instdirs
+DESTDIRS=std_destdirs
+
+include Makefile.common
+

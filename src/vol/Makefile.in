@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -15,19 +16,31 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
+LIBS= \
+	${TOP_LIBDIR}/libcmd.a \
+	vlib.a \
+	${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/libacl.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a
 
-LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
-	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a
+CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT ${OSI_CFLAGS}
 
-CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
+TRACEPOINT_TAB = tracepoint.tab
+TRACEPOINT_HDR = tracepoint_table.h
+TRACEPOINT_SRC = tracepoint_table.c
+TRACEPOINT_OBJ = tracepoint_table.o
+include @TOP_OBJDIR@/src/trace/table-gen.mk
 
 PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h \
-	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h
+	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h ${TRACEPOINT_HDR}
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-server.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o purge.o \
-	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
+	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o \
+	 ${TRACEPOINT_OBJ}
 
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o fssync-debug.o
 
@@ -103,6 +116,7 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs/vol
 	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/vlib.a
 	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DESTDIR}${afssrvlibexecdir}/salvager
@@ -118,7 +132,8 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} daemon_com.h ${DESTDIR}${includedir}/afs/daemon_com.h
 	${INSTALL_DATA} ihandle.h ${DESTDIR}${includedir}/afs/ihandle.h
 	${INSTALL_DATA} namei_ops.h ${DESTDIR}${includedir}/afs/namei_ops.h
-	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DESTDIR}${includedir}/afs/vol/${TRACEPOINT_HDR}
+	set -x; if test "@DEMAND_ATTACH@" = "yes" ; then \
 		${INSTALL_PROGRAM} fssync-debug \
 			${DESTDIR}${afssrvsbindir}/fssync-debug ; \
 	fi
@@ -131,6 +146,7 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/include/afs/vol
 	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/vlib.a
 	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DEST}/root.server/usr/afs/bin/salvager
@@ -146,6 +162,7 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} daemon_com.h ${DEST}/include/afs/daemon_com.h
 	${INSTALL_DATA} ihandle.h ${DEST}/include/afs/ihandle.h
 	${INSTALL_DATA} namei_ops.h ${DEST}/include/afs/namei_ops.h
+	${INSTALL_DATA} ${TRACEPOINT_HDR} ${DEST}/include/afs/vol/${TRACEPOINT_HDR}
 	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
 		${INSTALL_PROGRAM} fssync-debug \
 			${DEST}/root.server/usr/afs/bin/fssync-debug ; \
@@ -158,7 +175,7 @@ dest: vlib.a salvager volinfo fssync-debug
 #
 # Build targets
 #
-${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h vutils.h salvage.h AFS_component_version_number.c
+${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h vutils.h salvage.h AFS_component_version_number.c ${TRACEPOINT_SRC} ${TRACEPOINT_HDR}
 
 vol-salvage.o vutil.o: volinodes.h
 vol-salvage.o salvager.o: vol-salvage.h
@@ -218,12 +235,14 @@ xfs_size_check: xfs_size_check.c
 #
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
-	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi
+	$(RM) -f core salvager volinfo gi
+	$(RM) -f ${TRACEPOINT_SRC} ${TRACEPOINT_HDR}
 
 test:
 	cd test; $(MAKE)
 
-include ../config/Makefile.version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
 
 check-splint::
 	sh $(HELPER_SPLINT) $(CFLAGS) \

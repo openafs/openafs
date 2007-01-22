@@ -18,6 +18,7 @@
 #define FD_SETSIZE 65536
 #endif
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 

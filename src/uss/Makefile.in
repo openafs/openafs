@@ -30,11 +30,12 @@ LIBS=${TOP_LIBDIR}/libvolser.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a\
-	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
 OBJS =  uss_procs.o \

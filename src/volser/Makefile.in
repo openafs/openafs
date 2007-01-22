@@ -36,6 +36,7 @@ LIBS=\
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libcom_err.a \
@@ -48,11 +49,12 @@ VOLDUMP_LIBS = \
 	../vol/physio.o \
 	../vol/vlib.a \
 	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/libacl.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libdir.a \
-	${TOP_LIBDIR}/liblwp.a  \
-	${TOP_LIBDIR}/libacl.a
+	${TOP_LIBDIR}/liblwp.a
 
 VSOBJS=vsprocs.o vsutils.o lockprocs.o volint.xdr.o volerr.o 
 SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \

@@ -1,0 +1,129 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+PUBLICHEADERS= \
+	osi.h \
+	osi_atomic.h \
+	osi_buildenv.h \
+	osi_cache.h \
+	osi_compiler.h \
+	osi_condvar.h \
+	osi_config.h \
+	osi_counter.h \
+	osi_cpu.h \
+	osi_datamodel.h \
+	osi_err.h \
+	osi_err_static.h \
+	osi_event.h \
+	osi_function.h \
+	osi_impl.h \
+	osi_includes.h \
+	osi_inline.h \
+	osi_kernel.h \
+	osi_lib_fini.h \
+	osi_lib_init.h \
+	osi_list.h \
+	osi_macro.h \
+	osi_mem.h \
+	osi_mutex.h \
+	osi_object_cache.h \
+	osi_object_init.h \
+	osi_options.h \
+	osi_proc.h \
+	osi_prototypes.h \
+	osi_refcnt.h \
+	osi_rwlock.h \
+	osi_shlock.h \
+	osi_signal.h \
+	osi_spinlock.h \
+	osi_spin_rwlock.h \
+	osi_stats.h \
+	osi_string.h \
+	osi_syscall.h \
+	osi_sysincludes.h \
+	osi_thread.h \
+	osi_time.h \
+	osi_trace.h \
+	osi_types.h \
+	osi_util.h \
+	osi_var_args.h \
+	$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi
+DEST_HDR_DIR=${DEST}/include/osi
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+RECURSE_DIRS= \
+	$(MKAFS_OSTYPE) \
+	LWP \
+	PTHREAD \
+	LEGACY \
+	COMMON \
+	tests \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
+TRACEPOINT_TAB = osi_tracepoint.tab
+TRACEPOINT_HDR = osi_tracepoint_table.h
+TRACEPOINT_SRC = osi_tracepoint_table.c
+TRACEPOINT_OBJ = osi_tracepoint_table.o
+include @TOP_OBJDIR@/src/trace/table-gen.mk
+
+
+all:  \
+	depinstall \
+	build_recurse \
+	$(NULL)
+
+depinstall: \
+		${TRACEPOINT_HDR} \
+		${TRACEPOINT_SRC} \
+		depinstall_hdrs \
+		depinstall_recurse \
+		$(NULL)
+
+#
+# Installation targets
+#
+install: \
+	install_hdrs \
+	install_recurse \
+	$(NULL)
+
+dest: \
+	dest_hdrs \
+	dest_recurse \
+	$(NULL)
+
+#
+# Build targets
+#
+
+osi_err.h osi_err.c: osi_err.et osi_err.p.h
+	${COMPILE_ET} -p ${srcdir} osi_err -h osi_err
+
+
+#
+# install targets
+#
+
+#
+# Misc. targets
+#
+clean: clean_recurse
+	$(RM) -f osi_err.h osi_err.c
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core
+	$(RM) -f ${TRACEPOINT_HDR} ${TRACEPOINT_SRC}
+

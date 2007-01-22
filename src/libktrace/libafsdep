@@ -1,0 +1,9 @@
+Makefile.common.in
+Makefile.extradefs
+*.plist
+afs.shutdown
+afs.startup
+redhat.sh
+sgi_master
+sgi_system
+make_kbuild_makefile.pl

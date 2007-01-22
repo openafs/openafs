@@ -108,6 +108,7 @@
  */
 #endif
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -249,6 +250,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Ptserver, osi_NULL)));
     osi_audit_init();
     osi_audit(PTS_StartEvent, 0, AUD_END);
 

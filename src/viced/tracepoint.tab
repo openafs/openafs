@@ -1,0 +1,319 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	FS
+	module-dir	viced
+	c-path		tracepoint_table.c
+	h-path		tracepoint_table.h
+	prefix		"srv.fs"
+	init-func	viced_TracePointTableInit
+	event-tag	osi_Trace_Event_FSEvent_Id
+	description	{
+		Fileserver probe points
+
+		we divide the probe points into several main categories:
+			- rpc probe points trace the SRXAFS_ rpc interface
+			- host probe points trace the host package
+			- callback probe points trace the callback package
+	}
+
+	action-table {
+		name	RPC
+		prefix	"rpc"
+		description SRXAFS_ rpc server stub probe points
+
+		action {
+			name	FetchData
+		}
+		action {
+			name	FetchData64
+		}
+		action {
+			name	FetchACL
+		}
+		action {
+			name	FetchStatus
+		}
+		action {
+			name	StoreData
+		}
+		action {
+			name	StoreData64
+		}
+		action {
+			name	StoreACL
+		}
+		action {
+			name	StoreStatus
+		}
+		action {
+			name	RemoveFile
+		}
+		action {
+			name	CreateFile
+		}
+		action {
+			name	Rename
+		}
+		action {
+			name	Symlink
+		}
+		action {
+			name	Link
+		}
+		action {
+			name	MakeDir
+		}
+		action {
+			name	RemoveDir
+		}
+		action {
+			name	OldSetLock
+		}
+		action {
+			name	OldExtendLock
+		}
+		action {
+			name	OldReleaseLock
+		}
+		action {
+			name	GetStatistics
+		}
+		action {
+			name	GiveUpCallBacks
+		}
+		action {
+			name	GetVolumeInfo
+		}
+		action {
+			name	GetVolumeStatus
+		}
+		action {
+			name	SetVolumeStatus
+		}
+		action {
+			name	GetRootVolume
+		}
+		action {
+			name	CheckToken
+		}
+		action {
+			name	GetTime
+		}
+		action {
+			name	NGetVolumeInfo
+		}
+		action {
+			name	BulkStatus
+		}
+		action {
+			name	SetLock
+		}
+		action {
+			name	ExtendLock
+		}
+		action {
+			name	ReleaseLock
+		}
+		action {
+			name	XStatsVersion
+		}
+		action {
+			name	GetXStats
+		}
+		action {
+			name	Lookup
+		}
+		action {
+			name	FlushCPS
+		}
+		action {
+			name	DFSSymLink
+		}
+		action {
+			name	ResidencyCmd
+		}
+		action {
+			name	InlineBulkStatus
+		}
+		action {
+			name	GiveUpAllCallBacks
+		}
+		action {
+			name	GetCapabilities
+		}
+		action {
+			name	CallBackRxConnAddr
+		}
+	}
+
+	action-table {
+		name	file
+		prefix	"file"
+		description	fileserver action probe points
+
+		action {
+			name	CallPreamble
+		}
+		action {
+			name	CallPostamble
+		}
+		action {
+			name	StoreData
+		}
+		action {
+			name	FetchData
+		}
+		action {
+			name	CopyOnWrite
+		}
+		action {
+			name	CheckVnode
+		}
+	}
+
+	action-table {
+		name	host
+		prefix	"host"
+		description 	host package probe points
+
+		action {
+			name	InitCallBackState
+		}
+		action {
+			name	InitCallBackState3
+		}
+		action {
+			name	MultiProbeAlternateAddress
+
+			event {
+				name	removeAddr
+			}
+		}
+	}
+
+	action-table {
+		name	cbk
+		prefix	"callback"
+		description	callback package probe points
+
+		action {
+			name	BreakDelayedCallBacks
+		}
+	}
+
+	event-table {
+		name	Events
+		prefix	"events"
+		description	miscellaneous fileserver discrete events
+
+	}
+
+	stats-table {
+		name		RPCTiming_Template
+		prefix		NULL
+		type		template
+		description {
+			rpc call statistics
+			timing data template
+		}
+
+		group {
+			name	timing
+
+			stat {
+				name		numCalls
+				type		integer
+				aggregator	counter
+				width		64
+			}
+			stat {
+				name		numSuccesses
+				type		integer
+				aggregator	counter
+				width		64
+			}
+			stat {
+				name		sumTime
+				type		time
+				subtype		elapsed
+				aggregator	sum
+				width		64
+			}
+			stat {
+				name		sqrTime
+				type		time
+				subtype		elapsed
+				aggregator	sumOfSquare
+				width		64
+			}
+			stat {
+				name		minTime
+				type		time
+				subtype		elapsed
+				aggregator	min
+				width		64
+			}
+			stat {
+				name		maxTime
+				type		time
+				subtype		elapsed
+				aggregator	max
+				width		64
+			}
+		}
+	}
+
+# commenting out for now...
+	description {
+	stats-table {
+		name		RPCStats
+		prefix		"rpc.stats"
+		type		context-local
+		storage-class	static
+		description	RPC call statistics
+
+		inherit {
+			name		FetchData
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		FetchData64
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		FetchACL
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		FetchStatus
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		StoreData
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		StoreData64
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		StoreACL
+			template	RPCTiming_Template
+		}
+		inherit {
+			name		StoreStatus
+			template	RPCTiming_Template
+		}
+	}
+	}
+# commented out for now...
+}

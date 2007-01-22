@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <osi/osi.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -5689,6 +5690,8 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Utility, osi_NULL)));
 
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 

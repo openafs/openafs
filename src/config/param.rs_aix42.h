@@ -167,3 +167,16 @@
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */
+
+
+#ifndef AFS_PARAM_COMMON_H
+#define AFS_PARAM_COMMON_H      1
+
+/* global defines */
+
+#define	OSI_AIX_ENV		1
+#define	OSI_AIX32_ENV		1
+#define	OSI_AIX41_ENV		1
+#define OSI_AIX42_ENV		1
+
+#endif /* AFS_PARAM_COMMON_H */

@@ -27,7 +27,8 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/afs/bnode.h \
 	${TOP_INCDIR}/afs/vlserver.h
 
-LIBS=${TOP_LIBDIR}/libubik.a \
+LIBS = \
+	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libauth.a \
@@ -42,7 +43,11 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libdes.a \
-	${XLIBS}
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a \
+	${XLIBS} \
+	$(NULL)
 
 all: translate_et
 

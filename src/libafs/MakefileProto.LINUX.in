@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
 
 srcdir=@srcdir@
 
@@ -12,6 +14,7 @@ INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -59,11 +62,173 @@ AFS_OS_NFSOBJS =
 
 AFS_OS_NONFSOBJS =
 
+
+# import flags and build objects from common libosi rules file
+LIBOSI_CFLAGS = \
+	$(LIBOSI_CFLAGS_COMMON) \
+	$(LIBOSI_CFLAGS_kernelspace) \
+	$(LIBOSI_CFLAGS_kernel) \
+	$(NULL)
+LIBOSI_OBJS = \
+	$(LIBOSI_OBJS_COMMON) \
+	$(LIBOSI_OBJS_kernelspace) \
+	$(LIBOSI_OBJS_kernel) \
+	$(NULL)
+
+# instrumentation-specific flags and build objects
+LIBOSI_CFLAGS_inst = \
+	$(LIBOSI_CFLAGS_COMMON_inst) \
+	$(LIBOSI_CFLAGS_kernelspace_inst) \
+	$(LIBOSI_CFLAGS_kernel_inst) \
+	$(NULL)
+LIBOSI_OBJS_inst = \
+	$(LIBOSI_OBJS_COMMON_inst) \
+	$(LIBOSI_OBJS_kernelspace_inst) \
+	$(LIBOSI_OBJS_kernel_inst) \
+	$(NULL)
+
+# non-instrumented libosi flags and build objects
+LIBOSI_CFLAGS_ni = \
+	$(LIBOSI_CFLAGS_COMMON_ni) \
+	$(LIBOSI_CFLAGS_kernelspace_ni) \
+	$(LIBOSI_CFLAGS_kernel_ni) \
+	$(NULL)
+LIBOSI_OBJS_ni = \
+	$(LIBOSI_OBJS_COMMON_ni) \
+	$(LIBOSI_OBJS_kernelspace_ni) \
+	$(LIBOSI_OBJS_kernel_ni) \
+	$(NULL)
+
+# 32-bit libosi flags and build objects
+LIBOSI_CFLAGS_32 = \
+	$(LIBOSI_CFLAGS_COMMON_32) \
+	$(LIBOSI_CFLAGS_kernelspace_32) \
+	$(LIBOSI_CFLAGS_kernel_32) \
+	$(NULL)
+LIBOSI_OBJS_32 = \
+	$(LIBOSI_OBJS_COMMON_32) \
+	$(LIBOSI_OBJS_kernelspace_32) \
+	$(LIBOSI_OBJS_kernel_32) \
+	$(NULL)
+
+# 64-bit libosi flags and build objects
+LIBOSI_CFLAGS_64 = \
+	$(LIBOSI_CFLAGS_COMMON_64) \
+	$(LIBOSI_CFLAGS_kernelspace_64) \
+	$(LIBOSI_CFLAGS_kernel_64) \
+	$(NULL)
+LIBOSI_OBJS_64 = \
+	$(LIBOSI_OBJS_COMMON_64) \
+	$(LIBOSI_OBJS_kernelspace_64) \
+	$(LIBOSI_OBJS_kernel_64) \
+	$(NULL)
+
+
+# import flags and build objects from platform libosi rules file
+LIBOSI_OS_CFLAGS = \
+	$(LIBOSI_OS_CFLAGS_COMMON) \
+	$(LIBOSI_OS_CFLAGS_kernelspace) \
+	$(LIBOSI_OS_CFLAGS_kernel) \
+	$(NULL)
+LIBOSI_OS_OBJS = \
+	$(LIBOSI_OS_OBJS_COMMON) \
+	$(LIBOSI_OS_OBJS_kernelspace) \
+	$(LIBOSI_OS_OBJS_kernel) \
+	$(NULL)
+
+# instrumentation-specific flags and build objects
+LIBOSI_OS_CFLAGS_inst = \
+	$(LIBOSI_OS_CFLAGS_COMMON_inst) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_inst) \
+	$(LIBOSI_OS_CFLAGS_kernel_inst) \
+	$(NULL)
+LIBOSI_OS_OBJS_inst = \
+	$(LIBOSI_OS_OBJS_COMMON_inst) \
+	$(LIBOSI_OS_OBJS_kernelspace_inst) \
+	$(LIBOSI_OS_OBJS_kernel_inst) \
+	$(NULL)
+
+# non-instrumented libosi flags and build objects
+LIBOSI_OS_CFLAGS_ni = \
+	$(LIBOSI_OS_CFLAGS_COMMON_ni) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_ni) \
+	$(LIBOSI_OS_CFLAGS_kernel_ni) \
+	$(NULL)
+LIBOSI_OS_OBJS_ni = \
+	$(LIBOSI_OS_OBJS_COMMON_ni) \
+	$(LIBOSI_OS_OBJS_kernelspace_ni) \
+	$(LIBOSI_OS_OBJS_kernel_ni) \
+	$(NULL)
+
+# 32-bit libosi flags and build objects
+LIBOSI_OS_CFLAGS_32 = \
+	$(LIBOSI_OS_CFLAGS_COMMON_32) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_32) \
+	$(LIBOSI_OS_CFLAGS_kernel_32) \
+	$(NULL)
+LIBOSI_OS_OBJS_32 = \
+	$(LIBOSI_OS_OBJS_COMMON_32) \
+	$(LIBOSI_OS_OBJS_kernelspace_32) \
+	$(LIBOSI_OS_OBJS_kernel_32) \
+	$(NULL)
+
+# 64-bit libosi flags and build objects
+LIBOSI_OS_CFLAGS_64 = \
+	$(LIBOSI_OS_CFLAGS_COMMON_64) \
+	$(LIBOSI_OS_CFLAGS_kernelspace_64) \
+	$(LIBOSI_OS_CFLAGS_kernel_64) \
+	$(NULL)
+LIBOSI_OS_OBJS_64 = \
+	$(LIBOSI_OS_OBJS_COMMON_64) \
+	$(LIBOSI_OS_OBJS_kernelspace_64) \
+	$(LIBOSI_OS_OBJS_kernel_64) \
+	$(NULL)
+
+
 COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
 
 COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+
+# tell libosi build system about our datamodel
+<i386 s390 sparc ppc parisc>
+LIBOSI_BUILDING_BIT = 32
+LIBOSI_BIT_OBJS = $(LIBOSI_OBJS_32)
+LIBOSI_OS_BIT_OBJS = $(LIBOSI_OS_OBJS_32)
+LIBOSI_BIT_CFLAGS = $(LIBOSI_CFLAGS_32)
+LIBOSI_OS_BIT_CFLAGS = $(LIBOSI_OS_CFLAGS_32)
+
+<amd64 alpha s390x sparc64 ppc64 ia64>
+LIBOSI_BUILDING_BIT = 64
+LIBOSI_BIT_OBJS = $(LIBOSI_OBJS_64)
+LIBOSI_OS_BIT_OBJS = $(LIBOSI_OS_OBJS_64)
+LIBOSI_BIT_CFLAGS = $(LIBOSI_CFLAGS_64)
+LIBOSI_OS_BIT_CFLAGS = $(LIBOSI_OS_CFLAGS_64)
+
+<all>
+LIBOSI_INST_OBJS = $(LIBOSI_OBJS_inst)
+LIBOSI_OS_INST_OBJS = $(LIBOSI_OS_OBJS_inst)
+LIBOSI_INST_CFLAGS = $(LIBOSI_CFLAGS_inst)
+LIBOSI_OS_INST_CFLAGS = $(LIBOSI_OS_CFLAGS_inst)
+
+LIBOSI_ALL_OBJS = \
+	$(LIBOSI_OBJS) \
+	$(LIBOSI_OS_OBJS) \
+	$(LIBOSI_BIT_OBJS) \
+	$(LIBOSI_OS_BIT_OBJS) \
+	$(LIBOSI_INST_OBJS) \
+	$(LIBOSI_OS_INST_OBJS) \
+	$(NULL)
+
+LIBOSI_ALL_CFLAGS = \
+	$(LIBOSI_CFLAGS) \
+	$(LIBOSI_OS_CFLAGS) \
+	$(LIBOSI_BIT_CFLAGS) \
+	$(LIBOSI_OS_BIT_CFLAGS) \
+	$(LIBOSI_INST_CFLAGS) \
+	$(LIBOSI_OS_INST_CFLAGS) \
+	$(NULL)
 
 # System specific build commands and flags
 <linux26 linux_26>
@@ -285,7 +450,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 
 .FORCE:
 libafs.ko afspag.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config $(TOP_SRCDIR)/osi/libosi/rules.LINUX.mk $(TOP_SRCDIR)/osi/libosi/rules.mk Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
 <all -linux26 -linux_26 -umlinux26>

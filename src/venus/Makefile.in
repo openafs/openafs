@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -16,36 +18,49 @@ INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
 	${TOP_INCDIR}/afs/afsutil.h
 
-FSLIBS=${TOP_LIBDIR}/libsys.a \
-	 ${TOP_LIBDIR}/libvldb.a \
-	 ${TOP_LIBDIR}/libubik.a \
-	 ${TOP_LIBDIR}/vlib.a \
-	 ${TOP_LIBDIR}/libauth.a \
-	 ${TOP_LIBDIR}/librxkad.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
-	 ${TOP_LIBDIR}/libcmd.a \
-	 ${TOP_LIBDIR}/libkauth.a \
-	 ${TOP_LIBDIR}/libdes.a \
-	 ${TOP_LIBDIR}/librx.a \
-	 ${TOP_LIBDIR}/libsys.a \
-	 ${TOP_LIBDIR}/liblwp.a \
-	 ${TOP_LIBDIR}/libaudit.a \
-	 $(TOP_LIBDIR)/libafsutil.a
+FSLIBS= \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/vlib.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	$(TOP_LIBDIR)/libafsutil.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a \
+	$(NULL)
 
-CMLIBS=${TOP_LIBDIR}/libsys.a \
-	 ${TOP_LIBDIR}/libafsint.a \
-	 ${TOP_LIBDIR}/librxkad.a \
-	 ${TOP_LIBDIR}/libauth.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
-	 ${TOP_LIBDIR}/libcmd.a \
-	 ${TOP_LIBDIR}/librx.a \
-	 ${TOP_LIBDIR}/libsys.a \
-	 ${TOP_LIBDIR}/liblwp.a \
-	 $(TOP_LIBDIR)/libafsutil.a
+CMLIBS= \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a \
+	$(TOP_LIBDIR)/libafsutil.a \
+	$(NULL)
 
 LIBS = ${FSLIBS} 
 
-all: fs up fstrace cmdebug livesys kdump-build
+all: \
+	fs \
+	up \
+	cmdebug \
+	livesys \
+	kdump-build
+# XXX comment out until build issues are fixed
+#	fstrace \
 
 #
 # Build targets
@@ -258,7 +273,14 @@ kdump-alpha_linux-@LINUX_VERSION@: kdump-alpha_linux-@LINUX_VERSION@.o
 #
 # Install targets
 #
-install: kdump-build fs livesys up fstrace cmdebug
+install: \
+		kdump-build \
+		fs \
+		livesys \
+		up \
+		cmdebug	\
+		$(NULL)
+#		fstrace disabled until libosi_trace_consumer version is finished
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL} -d ${DESTDIR}${sbindir}
@@ -266,35 +288,47 @@ install: kdump-build fs livesys up fstrace cmdebug
 	${INSTALL_PROGRAM} livesys ${DESTDIR}${bindir}/livesys
 	${INSTALL_PROGRAM} fs ${DESTDIR}${afssrvbindir}/fs
 	${INSTALL_PROGRAM} up ${DESTDIR}${bindir}/up
-	${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
+	#${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DESTDIR}${bindir}/cmdebug
-	-set -x; \
+	-set -x ; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
-		${INSTALL_SCRIPT} kdump.sh.sgi_ipnos ${DESTDIR}${sbindir}/kdump; \
-		ln -fs kdump ${DESTDIR}${sbindir}/kdump32; \
-		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP22; \
-		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP32; \
-		for f in kdump.IP??; \
-			do ${INSTALL_PROGRAM} $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.sgi_ipnos ${DESTDIR}${sbindir}/kdump ; \
+		ln -fs kdump ${DESTDIR}${sbindir}/kdump32 ; \
+		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP22 ; \
+		ln -fs kdump.IP20 ${DESTDIR}${sbindir}/kdump.IP32 ; \
+		for f in kdump.IP?? ; \
+			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun*_5[789] | sun*_510 ) \
-		${INSTALL_SCRIPT} kdump.sh.solaris7 ${DESTDIR}${sbindir}/kdump32; \
-		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump;; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.solaris7 ${DESTDIR}${sbindir}/kdump ; \
+		${INSTALL_PROGRAM} ${srcdir}/kdump ${DESTDIR}${sbindir}/kdump32 ;; \
+	*alpha_linux* ) \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DESTDIR}${sbindir}/kdump ; \
+		${INSTALL_PROGRAM} kdump-alpha_linux-${LINUX_VERSION} $@ ;; \
 	*linux* ) \
-		${INSTALL_SCRIPT} kdump.sh.linux ${DESTDIR}${sbindir}/kdump; \
-		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DESTDIR}${sbindir}/kdump ; \
+		${INSTALL_PROGRAM} kdump-linux-${LINUX_VERSION} $@-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
-		${INSTALL_SCRIPT} kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump ; \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
+	*bsd*) \
+		;; \
 	*) \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
 	esac
 	if [ -f kdump64 ]; then \
-		${INSTALL_PROGRAM} kdump64 ${DESTDIR}${sbindir}/kdump; \
+		${INSTALL_PROGRAM} kdump64 ${DESTDIR}${sbindir}/kdump64 ; \
 	fi
 
-dest: kdump-build fs livesys up fstrace cmdebug
+dest: \
+		kdump-build \
+		fs \
+		livesys \
+		up \
+		cmdebug	\
+		$(NULL)
+#		fstrace disabled until libosi_trace_consumer version is finished
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
@@ -302,37 +336,37 @@ dest: kdump-build fs livesys up fstrace cmdebug
 	${INSTALL_PROGRAM} livesys ${DEST}/bin/livesys
 	${INSTALL_PROGRAM} fs ${DEST}/root.server/usr/afs/bin/fs
 	${INSTALL_PROGRAM} up ${DEST}/bin/up
-	${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
+	#${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DEST}/bin/cmdebug
-	-set -x; \
+	-set -x ; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
-		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.sgi_ipnos ${DEST}/etc/kdump; \
-		ln -fs kdump ${DEST}/etc/kdump32; \
-		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP22; \
-		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP32; \
-		for f in kdump.IP??; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.sgi_ipnos ${DEST}/etc/kdump ; \
+		ln -fs kdump ${DEST}/etc/kdump32 ; \
+		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP22 ; \
+		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP32 ; \
+		for f in kdump.IP?? ; \
 			do ${INSTALL_PROGRAM} $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun*_5[789] | sun*_510 ) \
-		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.solaris7 ${DEST}/etc/kdump; \
-		${INSTALL_PROGRAM} ${srcdir}/kdump ${DEST}/etc/kdump32;; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.solaris7 ${DEST}/etc/kdump ; \
+		${INSTALL_PROGRAM} ${srcdir}/kdump ${DEST}/etc/kdump32 ;; \
 	*alpha_linux* ) \
-		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
+		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump ; \
 		${INSTALL_PROGRAM} kdump-alpha_linux-${LINUX_VERSION} ${DEST}/etc/kdump ;; \
 	*linux* ) \
-		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
-		${INSTALL_PROGRAM} kdump-linux-${LINUX_VERSION} ${DEST}/etc/kdump-${LINUX_VERSION} ;; \
+		${INSTALL_SCRIPT} -f ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump ; \
+		${INSTALL_PROGRAM} kdump-linux-${LINUX_VERSION} $@-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
-		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.hp_ux11 ${DEST}/etc/kdump; \
-		${INSTALL_PROGRAM} kdump-build ${DEST}/etc/kdump ;; \
+		${INSTALL_SCRIPT} -f ${srcdir}/kdump.sh.hp_ux11 ${DEST}/etc/kdump ; \
+		${INSTALL_PROGRAM} kdump-linux-${LINUX_VERSION} ${DEST}/etc/kdump-${LINUX_VERSION} ;; \
 	*bsd*) \
 		;; \
 	*) \
 		${INSTALL_PROGRAM} kdump-build ${DEST}/etc/kdump ;; \
 	esac
 	if [ -f kdump64 ]; then \
-		${INSTALL_PROGRAM} kdump64 ${DEST}/etc/kdump; \
+		${INSTALL_PROGRAM} kdump64 ${DEST}/etc/kdump64 ; \
 	fi
 
 #

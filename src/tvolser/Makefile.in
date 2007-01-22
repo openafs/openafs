@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -16,7 +18,7 @@ HELPER_SPLINT=@HELPER_SPLINT@
 CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
-CCRULE=${CC} ${CFLAGS} -c $?
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 VICED=../viced
 VLSERVER=../vlserver
@@ -29,175 +31,239 @@ FSINT=../fsint
 VOLSER=../volser
 RX=../rx
 
-VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o
+VOLSEROBJS= \
+	dumpstuff.o \
+	physio.o \
+	volerr.o \
+	volint.cs.o \
+	volint.ss.o \
+	volint.xdr.o \
+	volmain.o \
+	volprocs.o \
+	voltrans.o \
+	vscommon.o \
+	$(NULL)
 
 VLSERVEROBJS=#vldbint.cs.o vldbint.xdr.o
 
-LWPOBJS=lock.o threadname.o
+LWPOBJS= \
+	lock.o \
+	threadname.o \
+	$(NULL)
 
-LIBACLOBJS=aclprocs.o netprocs.o
+LIBACLOBJS= \
+	aclprocs.o \
+	netprocs.o \
+	$(NULL)
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+UTILOBJS= \
+	assert.o \
+	dirpath.o \
+	fileutil.o \
+	flipbase64.o \
+	netutils.o \
+	serverLog.o \
+	softsig.o \
+	uuid.o \
+	volparse.o \
+	$(NULL)
 
-DIROBJS=buffer.o dir.o salvage.o
+DIROBJS= \
+	buffer.o \
+	dir.o \
+	salvage.o \
+	$(NULL)
 
-VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
-	 clone.o devname.o common.o ihandle.o listinodes.o \
-	 namei_ops.o nuke.o salvsync-client.o daemon_com.o
+VOLOBJS= \
+	clone.o \
+	common.o \
+	daemon_com.o \
+	devname.o \
+	fssync-client.o \
+	ihandle.o \
+	listinodes.o \
+	namei_ops.o \
+	nuke.o \
+	partition.o \
+	purge.o \
+	salvsync-client.o \
+	vnode.o \
+	volume.o \
+	vol_tracepoint_table.o \
+	vutil.o \
+	$(NULL)
 
 FSINTOBJS=# afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 RXOBJS=rx_pthread.o
 
-objects= ${VOLSEROBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+objects= \
+	${VOLSEROBJS} \
+	${VLSERVEROBJS} \
+	${LWPOBJS} \
+	${LIBACLOBJS} \
+	${UTILOBJS} \
+	${DIROBJS} \
+	${VOLOBJS} \
+	${FSINTOBJS} \
+	${RXOBJS} \
+	$(NULL)
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS= \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libosi-pthread-inst.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
 
 all: volserver
-
-COMPILE=${CC} ${CFLAGS} -c $?
 
 rx_pthread.o: ${RX}/rx_pthread.c
 	${COMPILE} -DDPF_FSLOG
 volmain.o: ${VOLSER}/volmain.c
-	${COMPILE}
+	${CCRULE}
 volprocs.o: ${VOLSER}/volprocs.c
-	${COMPILE}
+	${CCRULE}
 physio.o: ${VOLSER}/physio.c
-	${COMPILE}
+	${CCRULE}
 voltrans.o: ${VOLSER}/voltrans.c
-	${COMPILE}
+	${CCRULE}
 volerr.o: ${VOLSER}/volerr.c
-	${COMPILE}
+	${CCRULE}
 volint.cs.o: ${VOLSER}/volint.cs.c
-	${COMPILE}
+	${CCRULE}
 dumpstuff.o: ${VOLSER}/dumpstuff.c
-	${COMPILE}
+	${CCRULE}
 volint.ss.o: ${VOLSER}/volint.ss.c
-	${COMPILE}
+	${CCRULE}
 volint.xdr.o: ${VOLSER}/volint.xdr.c
-	${COMPILE}
+	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
-	${COMPILE}
+	${CCRULE}
 
 uuid.o: ${UTIL}/uuid.c
-	${COMPILE}
+	${CCRULE}
 
 serverLog.o: ${UTIL}/serverLog.c
-	${COMPILE}
+	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${COMPILE}
+	${CCRULE}
 
 volparse.o: ${UTIL}/volparse.c
-	${COMPILE}
+	${CCRULE}
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${COMPILE}
+	${CCRULE}
 
 netutils.o: ${UTIL}/netutils.c
-	${COMPILE}
+	${CCRULE}
 
 dirpath.o: ${UTIL}/dirpath.c
-	${COMPILE}
+	${CCRULE}
 
 softsig.o: ${UTIL}/softsig.c
-	${COMPILE}
+	${CCRULE}
 
 lock.o: ${LWP}/lock.c
-	${COMPILE}
+	${CCRULE}
 
 threadname.o: ${LWP}/threadname.c
-	${COMPILE}
+	${CCRULE}
 
 aclprocs.o: ${LIBACL}/aclprocs.c
-	${COMPILE}
+	${CCRULE}
 
 netprocs.o: ${LIBACL}/netprocs.c
-	${COMPILE}
+	${CCRULE}
 
+# XXX we're having strange interactions with pruclient killer; disable trace for now
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${COMPILE}
+	${CCRULE} -DOSI_TRACEPOINT_DISABLE
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${COMPILE}
+	${CCRULE} -DOSI_TRACEPOINT_DISABLE
 
 buffer.o: ${DIR}/buffer.c
-	${COMPILE}
+	${CCRULE}
 
 dir.o: ${DIR}/dir.c
-	${COMPILE}
+	${CCRULE}
 
 salvage.o: ${DIR}/salvage.c
-	${COMPILE}
+	${CCRULE}
 
 vnode.o: ${VOL}/vnode.c
-	${COMPILE}
+	${CCRULE}
 
 volume.o: ${VOL}/volume.c
-	${COMPILE}
+	${CCRULE}
 
 vutil.o: ${VOL}/vutil.c
-	${COMPILE}
+	${CCRULE}
 
 partition.o: ${VOL}/partition.c
-	${COMPILE}
+	${CCRULE}
 
 nuke.o: ${VOL}/nuke.c
-	${COMPILE}
+	${CCRULE}
 
 fssync-client.o: ${VOL}/fssync-client.c
-	${COMPILE}
+	${CCRULE}
 
 salvsync-client.o: ${VOL}/salvsync-client.c
-	${COMPILE}
+	${CCRULE}
 
 daemon_com.o: ${VOL}/daemon_com.c
-	${COMPILE}
+	${CCRULE}
 
 purge.o: ${VOL}/purge.c
-	${COMPILE}
+	${CCRULE}
 
 clone.o: ${VOL}/clone.c
-	${COMPILE}
+	${CCRULE}
 
 devname.o: ${VOL}/devname.c
-	${COMPILE}
+	${CCRULE}
 
 common.o: ${VOL}/common.c
-	${COMPILE}
+	${CCRULE}
 
 vscommon.o: ${VOLSER}/common.c
-	${COMPILE} -o vscommon.o
+	${CCRULE}
 
 listinodes.o: ${VOL}/listinodes.c
-	${COMPILE}
+	${CCRULE}
 
 ihandle.o: ${VOL}/ihandle.c
-	${COMPILE}
+	${CCRULE}
+
+vol_tracepoint_table.o: ${VOL}/tracepoint_table.c
+	${CCRULE}
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${COMPILE}
+	${CCRULE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${COMPILE}
+	${CCRULE}
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${COMPILE}
+	${CCRULE}
 
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.cs.o: ${FSINT}/afsint.cs.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.ss.o: ${FSINT}/afsint.ss.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${COMPILE}
+	${CCRULE}
 
 volserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}

@@ -77,6 +77,7 @@ configure-stamp:
 	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
 	    $(DEBIAN_OPT_FLAGS)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
+	chmod a+x src/libktrace/make_kbuild_makefile.pl
 	touch configure-stamp
 
 build: configure-stamp build-stamp

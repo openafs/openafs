@@ -1,0 +1,22 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+
+COMMON_INCLUDE=
+
+
+LIBTRACE_BUILDING_MODE = userspace
+LIBTRACE_BUILDING = libosi_trace_common
+LIBTRACE_RULE_DIR = $(TOP_SRCDIR)/trace/common/libcommon
+
+include ${TOP_OBJDIR}/src/libtrace/common.mk

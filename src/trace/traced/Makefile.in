@@ -1,0 +1,91 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DOSI_TRACEPOINT_DISABLE
+
+CCRULE=${CC} ${CFLAGS} -c $? -o $@
+
+PUBLICHEADERS=	\
+		plugin.h \
+		plugin_types.h \
+		$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace/traced
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/traced
+DEST_HDR_DIR=${DEST}/include/osi/trace/traced
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+OBJS= \
+	main.o \
+	plugin.o \
+	$(NULL)
+
+
+objects= ${OBJS}
+
+LIBS= \
+	${TOP_LIBDIR}/libafsauthent-ni.a \
+	${TOP_LIBDIR}/libafsrpc-ni.a \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/libosi_trace_agent.a \
+	${TOP_LIBDIR}/libosi_trace_analyzer.a \
+	${TOP_LIBDIR}/libosi_trace_consumer.a \
+	${TOP_LIBDIR}/libosi_trace_common.a \
+	${TOP_LIBDIR}/libosi-pthread-ni.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	$(NULL)
+
+all: \
+	depinstall \
+	${objects} \
+	traceserver \
+	$(NULL)
+
+depinstall: \
+	depinstall_hdrs \
+	$(NULL)
+
+install: \
+	install_hdrs \
+	${DESTDIR}${afssrvlibexecdir}/traceserver \
+	$(NULL)
+
+dest: \
+	dest_hdrs \
+	${DEST}/root.server/usr/afs/bin/traceserver \
+	$(NULL)
+
+
+main.o: main.c
+	${CCRULE}
+
+plugin.o: plugin.c
+	${CCRULE}
+
+
+traceserver: ${objects} ${LIBS}
+	${CC} ${LDFLAGS} -o $@ ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+${DEST}/root.server/usr/afs/bin/traceserver: traceserver
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${afssrvlibexecdir}/traceserver: traceserver
+	${INSTALL} -ns $? $@
+
+
+clean:
+	$(RM) -f *.o traceserver core AFS_component_version_number.c
+
+include @TOP_OBJDIR@/src/config/Makefile.version

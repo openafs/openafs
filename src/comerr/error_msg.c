@@ -5,6 +5,8 @@
  * of the Massachusetts Institute of Technology
  *
  * For copyright info, see "mit-sipb-cr.h".
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 #include <afsconfig.h>
@@ -18,7 +20,6 @@ RCSID
 #include "error_table.h"
 #include "mit-sipb-cr.h"
 #include <afs/errors.h>
-#include <string.h>
 #include "com_err.h"
 
 static const char copyright[] =
@@ -28,18 +29,17 @@ static char buffer[64];
 
 static struct et_list *_et_list = (struct et_list *)NULL;
 
-#ifdef AFS_PTHREAD_ENV
-#include <pthread.h>
-#include <assert.h>
+#include <osi/osi_includes.h>
+#include <osi/osi_object_init.h>
+#include <osi/osi_mutex.h>
+#include <osi/osi_string.h>
 
 /*
  * This mutex protects the following variables:
  * _et_list
  */
 
-static pthread_mutex_t et_list_mutex;
-static int et_list_done = 0;
-static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
+static osi_mutex_t et_list_mutex;
 
 /*
  * Function to initialize the et_list_mutex
@@ -48,21 +48,24 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
 void
 et_mutex_once(void)
 {
-    assert(!pthread_mutex_init
-	   (&et_list_mutex, (const pthread_mutexattr_t *)0));
-    et_list_done = 1;
+    osi_mutex_options_t opts;
+
+    osi_mutex_options_Init(&opts);
+    osi_mutex_options_Set(&opts, OSI_MUTEX_OPTION_TRACE_ALLOWED, 0);
+    osi_mutex_options_Set(&opts, OSI_MUTEX_OPTION_PREEMPTIVE_ONLY, 1);
+    osi_mutex_Init(&et_list_mutex, &opts);
+    osi_mutex_options_Destroy(&opts);
 }
 
+OSI_OBJECT_INIT_DECL(et_mutex_init, &et_mutex_once);
+
 #define LOCK_ET_LIST \
-	do { \
-	    (et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
-	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
-	} while (0)
-#define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
-#else
-#define LOCK_ET_LIST
-#define UNLOCK_ET_LIST
-#endif /* AFS_PTHREAD_ENV */
+    osi_Macro_Begin \
+        osi_object_init(&et_mutex_init); \
+        osi_mutex_Lock(&et_list_mutex); \
+    osi_Macro_End \
+
+#define UNLOCK_ET_LIST osi_mutex_Unlock(&et_list_mutex)
 
 
 static char *vmsgs[] = {
@@ -145,10 +148,10 @@ error_message(afs_int32 code)
     }
   oops:
     UNLOCK_ET_LIST;
-    strlcpy(buffer, "Unknown code ", sizeof buffer);
+    osi_string_lcpy(buffer, "Unknown code ", sizeof(buffer));
     if (table_num) {
-	strlcat(buffer, error_table_name(table_num), sizeof buffer);
-	strlcat(buffer, " ", sizeof buffer);
+	osi_string_lcat(buffer, error_table_name(table_num), sizeof(buffer));
+	osi_string_lcat(buffer, " ", sizeof(buffer));
     }
     for (cp = buffer; *cp; cp++);
     if (offset >= 100) {

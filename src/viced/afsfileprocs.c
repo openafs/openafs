@@ -25,6 +25,9 @@
  * privilege"? 
  */
 
+#include <osi/osi.h>
+#include <osi/osi_trace.h>
+#include "tracepoint_table.h"
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -311,11 +314,15 @@ CallPreamble(register struct rx_call *acall, int activecall,
     char hoststr[16], hoststr2[16];
     struct ubik_client *uclient;
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CallPreamble_start),
+		       osi_Trace_Args4(acall, activecall, tconn, ahostp));
+
     *ahostp = NULL;
 
     if (!tconn) {
 	ViceLog(0, ("CallPreamble: unexpected null tconn!\n"));
-	return -1;
+	code = -1;
+	goto error;
     }
     *tconn = rx_ConnectionOf(acall);
 
@@ -329,7 +336,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	    h_Release_r(thost);
 	    ViceLog(0, ("CallPreamble: Couldn't get CPS. Fail\n"));
 	    H_UNLOCK;
-	    return -1001;
+	    code = -1001;
+	    goto error;
 	}
 	retry_flag = 0;		/* Retry once */
 
@@ -355,7 +363,8 @@ CallPreamble(register struct rx_call *acall, int activecall,
 	    h_Release_r(thost);
 	    H_UNLOCK;
 	    ViceLog(0, ("CallPreamble: couldn't reconnect to ptserver\n"));
-	    return -1001;
+	    code = -1001;
+	    goto error;
 	}
 
 	tclient->prfail = 2;	/* Means re-eval client's cps */
@@ -409,6 +418,10 @@ CallPreamble(register struct rx_call *acall, int activecall,
     h_Unlock_r(thost);
     H_UNLOCK;
     *ahostp = thost;
+
+ error:
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CallPreamble_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*CallPreamble */
@@ -418,10 +431,14 @@ static afs_int32
 CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 	      struct host *ahost)
 {
+    afs_int32 code;
     struct host *thost;
     struct client *tclient;
     int translate = 0;
     int held;
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CallPostamble_start),
+		       osi_Trace_Args3(aconn, ret, ahost));
 
     H_LOCK;
     tclient = h_FindClient_r(aconn);
@@ -432,8 +449,8 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
     held = h_Held_r(thost);
     if (held)
 	h_Release_r(thost);
-    if (ahost && ahost != thost) {
-	char hoststr[16], hoststr2[16];	
+    if (ahost != thost && ahost) {
+	char hoststr[16], hoststr2[16];
 	ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost %s:%d (%x)\n",
 		afs_inet_ntoa_r(ahost->host, hoststr), ntohs(ahost->port),
 		ahost, 
@@ -441,13 +458,18 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 		thost));
 	h_Release_r(ahost);
     } else if (!ahost) {
-	char hoststr[16];	
+	char hoststr[16];
 	ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%x)\n",
-		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
-		thost));
+		    afs_inet_ntoa_r(thost->host, hoststr), 
+		    (int)ntohs(thost->port),
+		    (osi_uintptr_t)thost));
     }
     H_UNLOCK;
-    return (translate ? sys_error_to_et(ret) : ret);
+
+    code = (translate ? sys_error_to_et(ret) : ret);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CallPostamble_finish),
+		       osi_Trace_Args2(aconn, code));
+    return code;
 }				/*CallPostamble */
 
 /*
@@ -458,12 +480,21 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 static afs_int32
 CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 {
+    afs_int32 code = 0;
     int fileCode = 0;
     afs_int32 local_errorCode, errorCode = -1;
     static struct timeval restartedat = { 0, 0 };
 
-    if (fid->Volume == 0 || fid->Vnode == 0)	/* not: || fid->Unique == 0) */
-	return (EINVAL);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CheckVnode_start),
+		       osi_Trace_Args6(fid->Volume, fid->Vnode, fid->Unique,
+				       volptr, vptr, lock));
+
+    /* not: || fid->Unique == 0) */
+    if (osi_compiler_expect_false(fid->Volume == 0 || fid->Vnode == 0)) {
+	code = (EINVAL);
+	goto error;
+    }
+
     if ((*volptr) == 0) {
 	extern int VInit;
 
@@ -530,7 +561,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			afs_perfstats.fs_nBusies++;
 			FS_UNLOCK;
 		    }
-		    return (busyonrst ? VBUSY : VRESTARTING);
+		    code = (busyonrst ? VBUSY : VRESTARTING);
 		} else {
 		    struct timeval now;
 		    TM_GetTimeOfDay(&now, 0);
@@ -540,11 +571,12 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 			    afs_perfstats.fs_nBusies++;
 			    FS_UNLOCK;
 			}
-			return (busyonrst ? VBUSY : VRESTARTING);
+			code = (busyonrst ? VBUSY : VRESTARTING);
 		    } else {
-			return (VRESTARTING);
+			code = (VRESTARTING);
 		    }
 		}
+		goto error;
 	    }
 	    /* allow read operations on busy volume. 
 	     * must check local_errorCode because demand attach fs
@@ -552,23 +584,33 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 	    else if (local_errorCode == VBUSY && lock == READ_LOCK) {
 		errorCode = 0;
 		break;
-	    } else if (errorCode)
-		return (errorCode);
+	    } else if (errorCode) {
+		code = (errorCode);
+		goto error;
+	    }
 	}
     }
     assert(*volptr);
 
     /* get the vnode  */
     *vptr = VGetVnode(&errorCode, *volptr, fid->Vnode, lock);
-    if (errorCode)
-	return (errorCode);
-    if ((*vptr)->disk.uniquifier != fid->Unique) {
+    if (errorCode) {
+	code = (errorCode);
+	goto error;
+    }
+    if (osi_compiler_expect_false((*vptr)->disk.uniquifier != fid->Unique)) {
 	VPutVnode(&fileCode, *vptr);
 	assert(fileCode == 0);
 	*vptr = 0;
-	return (VNOVNODE);	/* return the right error code, at least */
+	code = (VNOVNODE);	/* return the right error code, at least */
+	goto error;
     }
-    return (0);
+
+ error:
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_CheckVnode_finish),
+		       osi_Trace_Args6(fid->Volume, fid->Vnode, fid->Unique,
+				       code, *volptr, *vptr));
+    return code;
 }				/*CheckVnode */
 
 /*
@@ -2246,8 +2288,14 @@ SRXAFS_FetchData(struct rx_call * acall, struct AFSFid * Fid, afs_int32 Pos,
 		 afs_int32 Len, struct AFSFetchStatus * OutStatus,
 		 struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
-    return common_FetchData64(acall, Fid, Pos, Len, OutStatus, CallBack, 
-                              Sync, 0);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchData_start),
+		       osi_Trace_Args6(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Pos, Len));
+    code = common_FetchData64(acall, Fid, Pos, Len, OutStatus, CallBack, 
+			      Sync, 0);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchData_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }
 
 afs_int32
@@ -2255,10 +2303,13 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
 		   afs_int64 Len, struct AFSFetchStatus * OutStatus,
 		   struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
-    int code;
+    afs_int32 code;
     afs_sfsize_t tPos, tLen;
 
 #ifdef AFS_64BIT_ENV
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchData64_start),
+		       osi_Trace_Args6(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Pos, Len));
+
 #ifndef AFS_LARGEFILE_ENV
     if (Pos + Len > 0x7fffffff)
 	return EFBIG;
@@ -2266,6 +2317,10 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchData64_start),
+		       osi_Trace_Args8(acall, Fid->Volume, Fid->Vnode, Fid->Unique, 
+				       Pos.high, Pos.low, Len.high, Len.low));
+
     if (Pos.high || Len.high)
 	return EFBIG;
     tPos = Pos.low;
@@ -2275,6 +2330,9 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
     code =
 	common_FetchData64(acall, Fid, tPos, tLen, OutStatus, CallBack, Sync,
 			   1);
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchData64_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 }
 
@@ -2285,7 +2343,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
 {
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return error code to caller */
+    afs_int32 errorCode = 0;		/* return error code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2308,6 +2366,9 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchACL_start),
+		       osi_Trace_Args4(acall, Fid->Volume, Fid->Vnode, Fid->Unique));
 
     ViceLog(1,
 	    ("SAFS_FetchACL, Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
@@ -2390,6 +2451,8 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, 
                AUD_ACL, AccessList->AFSOpaque_val, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchACL_finish),
+		       osi_Trace_Args2(acall, errorCode));
     return errorCode;
 }				/*SRXAFS_FetchACL */
 
@@ -2406,7 +2469,7 @@ SAFSS_FetchStatus(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return code to caller */
+    afs_int32 errorCode = 0;		/* return code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2504,6 +2567,9 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_BulkStatus_start),
+		       osi_Trace_Args3(acall, Fids->AFSCBFids_len, Fids->AFSCBFids_val));
 
     ViceLog(1, ("SAFS_BulkStatus\n"));
     FS_LOCK;
@@ -2616,8 +2682,9 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     osi_auditU(acall, BulkFetchStatusEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FIDS, Fids, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_BulkStatus_finish),
+                       osi_Trace_Args2(acall, errorCode));
     return errorCode;
-
 }				/*SRXAFS_BulkStatus */
 
 
@@ -2630,7 +2697,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     afs_int32 nfiles;
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return code to caller */
+    afs_int32 errorCode = 0;		/* return code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2654,6 +2721,9 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_InlineBulkStatus_start),
+		       osi_Trace_Args5(acall, Fids, OutStats, CallBacks, Sync));
 
     ViceLog(1, ("SAFS_InlineBulkStatus\n"));
     FS_LOCK;
@@ -2784,8 +2854,9 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     osi_auditU(acall, InlineBulkFetchStatusEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FIDS, Fids, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_InlineBulkStatus_finish),
+		       osi_Trace_Args2(acall, errorCode));
     return 0;
-
 }				/*SRXAFS_InlineBulkStatus */
 
 
@@ -2813,6 +2884,10 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchStatus_start),
+		       osi_Trace_Args7(acall, Fid->Volume, Fid->Vnode, Fid->Unique,
+				       OutStatus, CallBack, Sync));
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_FetchStatus;
@@ -2845,8 +2920,9 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
     osi_auditU(acall, FetchStatusEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_FetchStatus_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
-
 }				/*SRXAFS_FetchStatus */
 
 static
@@ -2892,6 +2968,11 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	     Fid->Unique));
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_StoreData_start),
+		       osi_Trace_Args10(acall, Fid->Volume, Fid->Vnode, Fid->Unique,
+					InStatus, Pos, Length, FileLength,
+					OutStatus, Sync));
 
     FS_LOCK;
     AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
@@ -3067,6 +3148,8 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     osi_auditU(acall, StoreDataEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(file_StoreData_finish),
+		       osi_Trace_Args2(acall, errorCode));
     return (errorCode);
 }				/*common_StoreData64 */
 
@@ -3076,12 +3159,21 @@ SRXAFS_StoreData(struct rx_call * acall, struct AFSFid * Fid,
 		 afs_uint32 Length, afs_uint32 FileLength,
 		 struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
-    if (FileLength > 0x7fffffff || Pos > 0x7fffffff || 
-	(0x7fffffff - Pos) < Length)
-        return EFBIG;
-
-    return common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
-	                      OutStatus, Sync);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreData_start),
+                       osi_Trace_Args7(acall, Fid->Volume, Fid->Vnode, Fid->Uni$
+                                       Pos, Length, FileLength));
+    if (osi_compiler_expect_false(
+        (FileLength > 0x7fffffff || Pos > 0x7fffffff || 
+	 (0x7fffffff - Pos) < Length)) {
+        code = EFBIG;
+    } else {
+        code = common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
+                                  OutStatus, Sync);
+    }
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreData_finish),
+                       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_StoreData */
 
 afs_int32
@@ -3091,22 +3183,33 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
 		   struct AFSFetchStatus * OutStatus,
 		   struct AFSVolSync * Sync)
 {
-    int code;
+    afs_int32 code;
     afs_fsize_t tPos;
     afs_fsize_t tLength;
     afs_fsize_t tFileLength;
 
 #ifdef AFS_64BIT_ENV
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreData64_start),
+		       osi_Trace_Args7(acall, Fid->Volume, Fid->Vnode, Fid->Unique, 
+				       Pos, Length, FileLength));
 #ifndef AFS_LARGEFILE_ENV
-    if (FileLength > 0x7fffffff)
-	return EFBIG;
+    if (osi_compiler_expect_false(FileLength > 0x7fffffff)) {
+	code = EFBIG;
+	goto error;
+    }
 #endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
 #else /* AFS_64BIT_ENV */
-    if (FileLength.high)
-	return EFBIG;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreData64_start),
+		       osi_Trace_Args10(acall, Fid->Volume, Fid->Vnode, Fid->Unique, 
+					Pos.high, Pos.low, Length.high, Length.low,
+					FileLength.high, FileLength.low));
+    if (osi_compiler_expect_false(FileLength.high)) {
+	code = EFBIG;
+	goto error;
+    }
     tPos = Pos.low;
     tLength = Length.low;
     tFileLength = FileLength.low;
@@ -3115,6 +3218,11 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     code =
 	common_StoreData64(acall, Fid, InStatus, tPos, tLength, tFileLength,
 			   OutStatus, Sync);
+
+ error:
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreData64_finish),
+		       osi_Trace_Args2(acall, code));
+
     return code;
 }
 
@@ -3125,7 +3233,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
     Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int errorCode = 0;		/* return code for caller */
+    afs_int32 errorCode = 0;		/* return code for caller */
     struct AFSStoreStatus InStatus;	/* Input status for fid */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -3149,6 +3257,10 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreACL_start),
+		       osi_Trace_Args4(acall, Fid->Volume, Fid->Vnode, Fid->Unique));
+
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_StoreACL;
 
@@ -3230,6 +3342,8 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     osi_auditU(acall, StoreACLEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_ACL, AccessList->AFSOpaque_val, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreACL_finish),
+		       osi_Trace_Args2(acall, errorCode));
     return errorCode;
 
 }				/*SRXAFS_StoreACL */
@@ -3246,7 +3360,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
     Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int errorCode = 0;		/* return code for caller */
+    afs_int32 errorCode = 0;		/* return code for caller */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3345,6 +3459,9 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreStatus_start),
+		       osi_Trace_Args4(acall, Fid->Volume, Fid->Vnode, Fid->Unique));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_StoreStatus;
 
@@ -3376,6 +3493,8 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
     osi_auditU(acall, StoreStatusEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_StoreStatus_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*SRXAFS_StoreStatus */
@@ -3394,7 +3513,7 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* file to be deleted */
     Volume *volptr = 0;		/* pointer to the volume header */
     AFSFid fileFid;		/* area for Fid from the directory */
-    int errorCode = 0;		/* error code */
+    afs_int32 errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3508,6 +3627,10 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_RemoveFile_start),
+		       osi_Trace_Args7(acall, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+				       Name, OutDirStatus, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_RemoveFile;
 
@@ -3539,6 +3662,8 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     osi_auditU(acall, RemoveFileEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_RemoveFile_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*SRXAFS_RemoveFile */
@@ -3559,7 +3684,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Volume *volptr = 0;		/* pointer to the volume header */
-    int errorCode = 0;		/* error code */
+    afs_int32 errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3675,6 +3800,11 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_CreateFile_start),
+		       osi_Trace_Args11(acall, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+					Name, InStatus, OutFid,
+					OutFidStatus, OutDirStatus, CallBack, Sync));
+
     memset(OutFid, 0, sizeof(struct AFSFid));
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
@@ -3710,8 +3840,10 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     osi_auditU(acall, CreateFileEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, DirFid, AUD_STR, Name, AUD_FID, OutFid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_CreateFile_finish),
+		       osi_Trace_Args5(acall, code,
+				       OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     return code;
-
 }				/*SRXAFS_CreateFile */
 
 
@@ -3731,7 +3863,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     Vnode *newfileptr = 0;	/* vnode of the file to delete */
     Vnode *testvptr = 0;	/* used in directory tree walk */
     Vnode *parent = 0;		/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    afs_int32 errorCode = 0;		/* error code */
     int fileCode = 0;		/* used when writing Vnodes */
     VnodeId testnode;		/* used in directory tree walk */
     AFSFid fileFid;		/* Fid of file to move */
@@ -4165,6 +4297,14 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Rename_start),
+		       osi_Trace_Args12(acall, 
+					OldDirFid->Volume, OldDirFid->Vnode, OldDirFid->Unique,
+					OldName,
+					NewDirFid->Volume, NewDirFid->Vnode, NewDirFid->Unique,
+					NewName,
+					OutOldDirStatus, OutNewDirStatus, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Rename;
 
@@ -4199,6 +4339,8 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, OldDirFid, AUD_STR, OldName, 
                AUD_FID, NewDirFid, AUD_STR, NewName, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Rename_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*SRXAFS_Rename */
@@ -4217,8 +4359,8 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *parentptr = 0;	/* vnode of input Directory */
     Vnode *targetptr = 0;	/* vnode of the new link */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
-    int len, code = 0;
+    afs_int32 errorCode = 0;		/* error code */
+    afs_int32 len, code = 0;
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -4372,6 +4514,11 @@ SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Symlink_start),
+		       osi_Trace_Args11(acall, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+					Name, LinkContents, InStatus, OutFid, OutFidStatus,
+					OutDirStatus, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Symlink;
 
@@ -4406,6 +4553,9 @@ SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
                AUD_ID, t_client ? t_client->ViceId : 0, 
                AUD_FID, DirFid, AUD_STR, Name,
 	       AUD_FID, OutFid, AUD_STR, LinkContents, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Symlink_finish),
+		       osi_Trace_Args5(acall, code, 
+				       OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     return code;
 
 }				/*SRXAFS_Symlink */
@@ -4573,6 +4723,12 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Link_start),
+		       osi_Trace_Args11(acall, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+					Name, 
+					ExistingFid->Volume, ExistingFid->Vnode, ExistingFid->Unique,
+					OutFidStatus, OutDirStatus, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Link;
 
@@ -4607,6 +4763,8 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, DirFid, AUD_STR, Name,
 	       AUD_FID, ExistingFid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_Link_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*SRXAFS_Link */
@@ -4773,6 +4931,13 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_MakeDir_start),
+		       osi_Trace_Args11(acall,
+					DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+					Name, InStatus, OutFid, OutFidStatus,
+					OutDirStatus, CallBack, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_MakeDir;
 
@@ -4807,6 +4972,9 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, DirFid, AUD_STR, Name,
 	       AUD_FID, OutFid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_MakeDir_finish),
+		       osi_Trace_Args5(acall, code, 
+				       OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     return code;
 
 }				/*SRXAFS_MakeDir */
@@ -4937,6 +5105,11 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_RemoveDir_start),
+		       osi_Trace_Args7(acall,
+				       DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+				       Name, OutDirStatus, Sync));
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_RemoveDir;
 
@@ -4968,6 +5141,8 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     osi_auditU(acall, RemoveDirEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_RemoveDir_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 
 }				/*SRXAFS_RemoveDir */
@@ -4983,7 +5158,7 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
 {
     Vnode *targetptr = 0;	/* vnode of input file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    afs_int32 errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -5041,7 +5216,15 @@ afs_int32
 SRXAFS_OldSetLock(struct rx_call * acall, struct AFSFid * Fid,
 		  ViceLockType type, struct AFSVolSync * Sync)
 {
-    return SRXAFS_SetLock(acall, Fid, type, Sync);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldSetLock_start),
+		       osi_Trace_Args6(acall,
+				       Fid->Volume, Fid->Vnode, Fid->Unique,
+				       type, Sync));
+    code = SRXAFS_SetLock(acall, Fid, type, Sync);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldSetLock_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_OldSetLock */
 
 
@@ -5068,6 +5251,11 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_SetLock_start),
+		       osi_Trace_Args6(acall,
+				       Fid->Volume, Fid->Vnode, Fid->Unique,
+				       type, Sync));
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_SetLock;
@@ -5100,6 +5288,8 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
     osi_auditU(acall, SetLockEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0, 
                AUD_FID, Fid, AUD_LONG, type, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_SetLock_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 }				/*SRXAFS_SetLock */
 
@@ -5167,7 +5357,13 @@ afs_int32
 SRXAFS_OldExtendLock(struct rx_call * acall, struct AFSFid * Fid,
 		     struct AFSVolSync * Sync)
 {
-    return SRXAFS_ExtendLock(acall, Fid, Sync);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldExtendLock_start),
+		       osi_Trace_Args5(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Sync));
+    code = SRXAFS_ExtendLock(acall, Fid, Sync);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldExtendLock_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_OldExtendLock */
 
 
@@ -5194,6 +5390,9 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_ExtendLock_start),
+		       osi_Trace_Args5(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Sync));
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_ExtendLock;
@@ -5226,8 +5425,9 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
     osi_auditU(acall, ExtendLockEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_ExtendLock_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
-
 }				/*SRXAFS_ExtendLock */
 
 
@@ -5303,7 +5503,13 @@ afs_int32
 SRXAFS_OldReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
 		      struct AFSVolSync * Sync)
 {
-    return SRXAFS_ReleaseLock(acall, Fid, Sync);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldReleaseLock_start),
+		       osi_Trace_Args5(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Sync));
+    code = SRXAFS_ReleaseLock(acall, Fid, Sync);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_OldReleaseLock_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_OldReleaseLock */
 
 
@@ -5330,6 +5536,9 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_ReleaseLock_start),
+		       osi_Trace_Args5(acall, Fid->Volume, Fid->Vnode, Fid->Unique, Sync));
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_ReleaseLock;
@@ -5362,8 +5571,9 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
     osi_auditU(acall, ReleaseLockEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0, 
                AUD_FID, Fid, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_ReleaseLock_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
-
 }				/*SRXAFS_ReleaseLock */
 
 
@@ -5466,6 +5676,9 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GetStatistics_start),
+		       osi_Trace_Args2(acall, Statistics));
+
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
 	goto Bad_GetStatistics;
 
@@ -5503,6 +5716,8 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
 
     osi_auditU(acall, GetStatisticsEvent, code, 
                AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GetStatistics_finish),
+		       osi_Trace_Args2(acall, code));
     return code;
 }				/*SRXAFS_GetStatistics */
 
@@ -5549,6 +5764,9 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_XStatsVersion_start),
+		       osi_Trace_Args2(a_call, a_versionP));
+
     *a_versionP = AFS_XSTAT_VERSION;
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
@@ -5571,6 +5789,8 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 
     osi_auditU(a_call, XStatsVersionEvent, 0, 
                AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_XStatsVersion_finish),
+		       osi_Trace_Args2(a_call, 0));
     return (0);
 }				/*SRXAFS_XStatsVersion */
 
@@ -5753,6 +5973,11 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GetXStats_start),
+		       osi_Trace_Args6(a_call, a_clientVersionNum,
+				       a_collectionNumber, a_srvVersionNumP,
+				       a_timeP, a_dataP));
+
     /*
      * Record the time of day and the server version number.
      */
@@ -5910,6 +6135,9 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     }
 #endif /* FS_STATS_DETAILED */
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GetXStats_finish),
+		       osi_Trace_Args2(a_call, code));
+
     return (code);
 
 }				/*SRXAFS_GetXStats */
@@ -6010,13 +6238,25 @@ afs_int32
 SRXAFS_GiveUpCallBacks(struct rx_call * acall, struct AFSCBFids * FidArray,
 		       struct AFSCBs * CallBackArray)
 {
-    return common_GiveUpCallBacks(acall, FidArray, CallBackArray);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GiveUpCallBacks_start),
+		       osi_Trace_Args3(acall, FidArray, CallBackArray));
+    code = common_GiveUpCallBacks(acall, FidArray, CallBackArray);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GiveUpCallBacks_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_GiveUpCallBacks */
 
 afs_int32
 SRXAFS_GiveUpAllCallBacks(struct rx_call * acall)
 {
-    return common_GiveUpCallBacks(acall, 0, 0);
+    afs_int32 code;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GiveUpAllCallBacks_start),
+		       osi_Trace_Args1(acall));
+    code = common_GiveUpCallBacks(acall, 0, 0);
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(RPC_GiveUpAllCallBacks_finish),
+		       osi_Trace_Args2(acall, code));
+    return code;
 }				/*SRXAFS_GiveUpAllCallBacks */
 
 

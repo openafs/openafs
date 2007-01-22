@@ -187,3 +187,18 @@ enum vcexcl { NONEXCL, EXCL };
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */
+
+
+#ifndef AFS_PARAM_COMMON_H
+#define AFS_PARAM_COMMON_H
+
+/* global defines */
+
+#define	OSI_OSF_ENV	1
+#define	OSI_OSF20_ENV	1
+#define	OSI_OSF30_ENV	1
+#define	OSI_OSF32_ENV	1
+#define	OSI_OSF32C_ENV	1
+#define	OSI_DUX40_ENV	1
+
+#endif /* AFS_PARAM_COMMON_H */

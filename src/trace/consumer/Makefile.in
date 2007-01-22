@@ -1,0 +1,84 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
+PUBLICHEADERS= \
+		activation.h \
+		config.h \
+		consumer.h \
+		cursor.h \
+		directory.h \
+		gen_rgy.h \
+		gen_rgy_mail.h \
+		i2n.h \
+		i2n_mail.h \
+		i2n_thread.h \
+		init.h \
+		module.h \
+		record_fsa.h \
+		record_queue.h \
+		record_queue_impl.h \
+		record_queue_types.h \
+		record_types.h \
+		$(NULL)
+
+DEPINSTALL_HDR_DIR=${TOP_INCDIR}/osi/trace/consumer
+INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/consumer
+DEST_HDR_DIR=${DEST}/include/osi/trace/consumer
+include @TOP_OBJDIR@/src/config/Makefile.public-header
+
+RECURSE_DIRS= \
+		cache \
+		$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
+OBJS=
+
+OBJECTS=${OBJS}
+
+
+all: \
+	depinstall \
+	${OBJECTS} \
+	build_recurse \
+	$(NULL)
+
+depinstall: \
+	depinstall_hdrs \
+	depinstall_recurse \
+	$(NULL)
+
+#
+# Installation targets
+#
+install: \
+	install_hdrs \
+	install_recurse \
+	$(NULL)
+
+dest: \
+	dest_hdrs \
+	dest_recurse \
+	$(NULL)
+
+#
+# Build targets
+#
+
+#
+# Misc. targets
+#
+clean: clean_recurse
+	$(RM) -f *.o *.a AFS_component_version_number.c
+	$(RM) -f core

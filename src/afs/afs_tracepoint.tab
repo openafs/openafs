@@ -1,0 +1,3887 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+#
+# this file contains several tracepoint table definitions
+#
+# CM defines the main afs cache manager tracepoints
+# icl defines tracepoints specific to the legacy icl tracing framework
+#
+
+trace-table {
+	module-name	CM
+	module-dir	afs
+	c-path		afs_tracepoint.c
+	h-path		afs_tracepoint.h
+	prefix		"cm"
+	init-func	afs_init_tracepoint_table
+	event-tag	osi_Trace_Event_CMEvent_Id
+	description	{
+		cache manager tracepoints
+	}
+
+	stats-table {
+		name		XStatCM
+		prefix		"stats.xstat.cm"
+		type		global
+		synchronization	external
+		description {
+			this is an importation of the old
+			xstat call stats system into the osi
+			trace namespace
+
+			XXX if/when the cache manager becomes
+			MP-scalable, we can switch this over
+			to:
+
+			type		context-local
+			storage-class	dynamic
+			synchronization	implicit
+		}
+
+		stat {
+			name		afs_init
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gop_rdwr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		aix_gnode_rele
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gettimeofday
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		m_cpytoc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		aix_vattr_null
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_ftrunc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_rdwr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_ioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_lockctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_readlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_readdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_select
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_strategy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_symlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_revoke
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_link
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_mkdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_mknod
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_remove
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_rename
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_rmdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_fid
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_lookup
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_open
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_create
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_hold
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_close
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_map
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_rele
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_unmap
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_access
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_getattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_setattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_fclear
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gn_fsync
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		pHash
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DInit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DRead
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		FixupBucket
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_newslot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DRelease
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DFlush
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DFlushEntry
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DVOffset
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DZap
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DNew
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_bufferpackage
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckKnownBad
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_RemoveVCB
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_NewVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FlushActiveVcaches
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_VerifyVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_WriteVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StuffVcache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		CacheStoreProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_TryToSmush
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_AdjustSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StoreWarn
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		CacheFetchProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		UFS_CacheStoreProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		UFS_CacheFetchProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_SimpleVStat
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ProcessFS
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitCacheInfo
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitVolumeInfo
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitCacheFile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CacheInit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_WriteThroughDSlots
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemGetDSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_UFSGetDSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StoreDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StoreMini
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_cache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StoreAllSegments
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InvalidateAllSegments
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_TruncateAllSegments
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckVolSync
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_wakeup
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CFileOpen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CFileTruncate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDownD
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_WriteDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FlushDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDownDSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FlushVCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDownV
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_QueueVCB
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_call
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_call
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		syscall
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		lpioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		lsetpag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckInit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_shutdown
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_BKG
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_afstest
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetCE
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ClearCallBack
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_CallBack
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_InitCallBackState
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_Probe
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_RXCallBackServer
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_CB
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_Chunk
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ChunkBase
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ChunkOffset
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ChunkSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ChunkToBase
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ChunkToSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_SetChunkSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_config
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		mem_freebytes
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		mem_getbytes
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		fpalloc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		kluge_init
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ufdalloc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ufdfree
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		commit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dev_ialloc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ffree
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iget
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iptovp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ilock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		irele
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iput
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_Daemon
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckRootVolume
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		BPath
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		BPrefetch
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		BStore
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BBusy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BQueue
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BRelease
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BackgroundDaemon
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_daemons
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		exporter_add
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		exporter_find
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gfs_kalloc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		IsAfsVnode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SetAfsVnode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gfs_kfree
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gop_lookupname
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gfsvop_getattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gfsvop_rdwr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_uniqtime
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		gfs_vattr_null
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_lock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_unlock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_update
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gclose
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gopen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_greadlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_select
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gbmap
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_getfsdata
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gsymlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_namei
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		printgnode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HaveGFSLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gmount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		AddGFSLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		RemoveGFSLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_grlock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gumount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gget
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_glink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gmkdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_sbupdate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_unlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_grmdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_makenode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_grename
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rele
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syncgp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_getval
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_gfshack
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_trunc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rwgp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_stat
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afsc_link
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		hpsobind
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		hpsoclose
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		hpsocreate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		hpsoreserve
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_vfs_mount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		devtovfs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		igetinode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_iopen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iopen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_iincdec
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_ireadwrite
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iincdec
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ireadwrite
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		oiread
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		AHash
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		QTOA
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindPartByDev
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		aux_init
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetNewPart
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitAuxVolFile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CreateAuxEntry
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetAuxSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetDownAux
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FlushAuxCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetAuxInode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutAuxInode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ReadAuxInode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_WriteAuxInode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_auxcall
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		tmpdbg_auxtbl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		tmpdbg_parttbl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		idec
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iinc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iread
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iwrite
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		getinode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		trygetfs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		iforget
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_icreate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		icreate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Lock_Init
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Lock_Obtain
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Lock_ReleaseR
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Lock_ReleaseW
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BozonLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BozonUnlock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_SleepR
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_SleepS
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_SleepW
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Sleep
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_BozonInit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckBozonLock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckBozonLockBlocking
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		xxxinit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		KernelEntry
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitMemCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_LookupMCE
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemReadBlk
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemReadUIO
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemWriteBlk
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemCacheStoreProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemCacheTruncate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemWriteUIO
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemCacheFetchProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_vnode_pager_create
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		next_KernelEntry
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetNfsClientPag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindNfsClientPag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutNfsClientPag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_reqhandler
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_GC
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_hold
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_stats
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_sysname
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsclient_shutdown
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rfs_readdir_fixup
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rfs_dispatch
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_xnfs_svc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_xdr_putrddirres
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rfs_readdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rfs_rddirfree
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		rfs_dupcreate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		rfs_dupsetattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Nfs2AfsCall
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_sun_xuntext
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Active
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_FlushPages
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_FlushText
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_CallProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_CancelProc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Invisible
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Time
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Alloc
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_SetTime
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Dump
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Free
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_osi
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_UFSOpen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Close
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Stat
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Truncate
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Read
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Write
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_MapStrategy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_osifile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_FreeLargeSpace
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_FreeSmallSpace
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		pkt_iodone
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_osinet
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_cs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_AllocLargeSpace
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_AllocSmallSpace
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_CloseToTheEdge
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_xgreedy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_FreeSocket
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_NewSocket
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		trysblock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_NetSend
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		WaitHack
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_CancelWait
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_InitWaitHandle
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Wakeup
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		osi_Wait
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_Read
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_SetCacheDev
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Die
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_Cpy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_Eq
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_Write
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		dirp_Zap
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetVolumeStatus
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PFlush
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PNewStatMount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetTokens
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PUnlog
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PCheckServers
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PMariner
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PCheckAuth
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PCheckVolNames
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PFindVolume
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		Prefetch
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetCacheSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PRemoveCallBack
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetCacheSize
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PViceAccess
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PListCells
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PNewCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PRemoveMount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HandleIoctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		_AFSIOCTL
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		_VALIDAFSIOCTL
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetCellStatus
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetCellStatus
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PVenusLogging
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PFlushVolumeData
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetSysName
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PExportAfs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HandleClientContext
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_xioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_pioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_syscall_pioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HandlePioctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetAcl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetFID
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetAcl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PBogus
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetFileCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetWSCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PNoop
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetUserCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetTokens
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetVolumeStatus
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ResetAccessCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindUser
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ResetUserConns
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ResourceInit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetCellByIndex
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetCellByName
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetRealCellByIndex
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_NewCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetUser
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutUser
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_SetPrimary
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		CheckVLDB
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetVolume
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetVolumeByName
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		InstallVolumeEntry
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		InstallVolumeInfo
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindServer
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutVolume
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_random
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ranstage
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		RemoveUserConns
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MarinerLog
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_vtoi
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetServer
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_SortServers
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_Conn
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ConnByHost
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ConnByMHosts
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_Analyze
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PutConn
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ResetVolumeInfo
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		StartLogFile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_SetLogFile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		EndLogFile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_dp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		fprf
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		fprint
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		fprintn
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckLocks
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		puttofile
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_AFS
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckCacheResets
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GCUserData
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		VSleep
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckCode
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CopyError
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FinalizeReq
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_cv2string
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FindVolCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetVolCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetVolSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_WriteVolCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_UFSGetVolSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckVolumeNames
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemGetVolSlot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		print_internet_address
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		CheckVLServer
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HaveCallBacksFrom
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ServerDown
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CheckServers
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_AddToMean
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetCMStat
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_getpage
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_putpage
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nfsrdwr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_map
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_cmp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_cntl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_dump
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_realvp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_PageLeft
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afsinit
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_mount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_unmount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_root
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_statfs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_sync
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_vget
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_mountroot
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_swapvp
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_AddMarinerName
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_setpag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		genpag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		getpag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetMariner
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_badop
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_index
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_noop
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_open
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_closex
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_close
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemWrite
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_write
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_UFSWrite
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rdwr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemRead
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_read
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		FIXUPSTUPIDINODE
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_UFSRead
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_CopyOutAttrs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_getattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_VAttrToAS
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_setattr
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		EvalMountPoint
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_access
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		ENameOK
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HandleAtName
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		getsysname
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		strcat
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_lookup
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_create
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_LocalHero
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		FetchWholeEnchilada
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_remove
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_link
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rename
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_InitReq
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_mkdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		BlobScan
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_rmdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		RecLen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		RoundToInt
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_readdir_with_offlist
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DIRSIZ_LEN
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_readdir_move
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_readdir_iter
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		HandleFlock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_readdir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_symlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_HandleLink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MemHandleLink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_UFSHandleLink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_readlink
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_fsync
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_inactive
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_ustrategy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_bread
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_brelse
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_bmap
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_fid
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_strategy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FakeClose
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FakeOpen
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_StoreOnLastReference
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_GetAccessBits
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_AccessOK
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		shutdown_vnodeops
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afsio_copy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afsio_trim
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_page_read
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_page_write
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afsio_skip
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_read1dir
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_get_groups_from_pag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_get_pag_from_groups
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PagInCred
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_getgroups
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		setpag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_setgroups
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_page_in
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_page_out
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		AddPag
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_AdvanceFD
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_lockf
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_xsetgroups
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_nlinks
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		DoLockWarning
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_lockctl
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_xflock
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetSPrefs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetSPrefs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_warn
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_warnuser
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_pagein
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_pageout
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_hp_strategy
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PGetCPrefs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PSetCPrefs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_WhoAreYou
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_DiscardDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_FreeDiscardedDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MaybeFreeDiscardedDCache
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		PFlushMount
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetServerPrefs
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetCellServDB
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetLocalCell
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		afs_MarshallCacheConfig
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetCacheConfig
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetCE64
+			type		integer
+			aggregator	counter
+			width		64
+		}
+		stat {
+			name		SRXAFSCB_GetCellByNum
+			type		integer
+			aggregator	counter
+			width		64
+		}
+	}
+}
+
+
+trace-table {
+	module-name	icl
+	module-dir	afs
+	c-path		afs_icl.c
+	h-path		afs_icl.h
+	prefix		"legacy.icl"
+	init-func	afs_icl_tracepoint_init
+	event-tag	osi_Trace_Event_icl_Id
+	description	{
+				import of old icl (in-core logging) subsystem
+				into osi_Trace namespace
+	}
+
+	event-table {
+		name	legacy_afs_trace
+		prefix	"afs_trace"
+		description	"legacy icl cache manager tracepoint namespace"
+
+		event {
+			name	CM_TRACE_NULL
+		}
+		event {
+			name	CM_TRACE_PAGEIN
+		}
+		event {
+			name	CM_TRACE_PAGEINDONE
+		}
+		event {
+			name	CM_TRACE_PAGEOUT
+		}
+		event {
+			name	CM_TRACE_PAGEOUTDONE
+		}
+		event {
+			name	CM_TRACE_PAGEOUTONE
+		}
+		event {
+			name	CM_TRACE_VMRW
+		}
+		event {
+			name	CM_TRACE_STRATEGYDONE
+		}
+		event {
+			name	CM_TRACE_FLUSHV
+		}
+		event {
+			name	CM_TRACE_GETDOWND
+		}
+		event {
+			name	CM_TRACE_ACTCCORE
+		}
+		event {
+			name	CM_TRACE_WVCACHE
+		}
+		event {
+			name	CM_TRACE_TRYTOSMUSH
+		}
+		event {
+			name	CM_TRACE_STOREPROC
+		}
+		event {
+			name	CM_TRACE_FETCHPROC
+		}
+		event {
+			name	CM_TRACE_SIMPLEVSTAT
+		}
+		event {
+			name	CM_TRACE_PROCESSFS
+		}
+		event {
+			name	CM_TRACE_STOREALL
+		}
+		event {
+			name	CM_TRACE_INVALL
+		}
+		event {
+			name	CM_TRACE_TRUNCALL
+		}
+		event {
+			name	CM_TRACE_GNLINK
+		}
+		event {
+			name	CM_TRACE_GMKDIR
+		}
+		event {
+			name	CM_TRACE_GMKNOD
+		}
+		event {
+			name	CM_TRACE_GREMOVE
+		}
+		event {
+			name	CM_TRACE_GRENAME
+		}
+		event {
+			name	CM_TRACE_GRMDIR
+		}
+		event {
+			name	CM_TRACE_GLOOKUP
+		}
+		event {
+			name	CM_TRACE_GFID
+		}
+		event {
+			name	CM_TRACE_GOPEN
+		}
+		event {
+			name	CM_TRACE_GCREATE
+		}
+		event {
+			name	CM_TRACE_GCLOSE
+		}
+		event {
+			name	CM_TRACE_GMAP
+		}
+		event {
+			name	CM_TRACE_GACCESS
+		}
+		event {
+			name	CM_TRACE_GGETATTR
+		}
+		event {
+			name	CM_TRACE_GSETATTR
+		}
+		event {
+			name	CM_TRACE_GFCLEAR
+		}
+		event {
+			name	CM_TRACE_GFSYNC
+		}
+		event {
+			name	CM_TRACE_GFTRUNC
+		}
+		event {
+			name	CM_TRACE_GRDWR
+		}
+		event {
+			name	CM_TRACE_GLOCKCTL
+		}
+		event {
+			name	CM_TRACE_GIOCTL
+		}
+		event {
+			name	CM_TRACE_GREADLINK
+		}
+		event {
+			name	CM_TRACE_GSYMLINK
+		}
+		event {
+			name	CM_TRACE_GREADDIR
+		}
+		event {
+			name	CM_TRACE_STUFFVCACHE
+		}
+		event {
+			name	CM_TRACE_GETDCACHE1
+		}
+		event {
+			name	CM_TRACE_GETDCACHE2
+		}
+		event {
+			name	CM_TRACE_GETDCACHE3
+		}
+		event {
+			name	CM_TRACE_STOREMINI
+		}
+		event {
+			name	CM_TRACE_STOREDCACHE
+		}
+		event {
+			name	CM_TRACE_STOREDCACHEDONE
+		}
+		event {
+			name	CM_TRACE_STOREALLDONE
+		}
+		event {
+			name	CM_TRACE_PROBEDOWN
+		}
+		event {
+			name	CM_TRACE_PROBEUP
+		}
+		event {
+			name	CM_TRACE_PROBEVOLUME
+		}
+		event {
+			name	CM_TRACE_BKG1
+		}
+		event {
+			name	CM_TRACE_HPSTRAT
+		}
+		event {
+			name	CM_TRACE_HPPAGEOUT
+		}
+		event {
+			name	CM_TRACE_HPPAGEIN
+		}
+		event {
+			name	CM_TRACE_NFSREQH
+		}
+		event {
+			name	CM_TRACE_NFSOUT
+		}
+		event {
+			name	CM_TRACE_NFSIN
+		}
+		event {
+			name	CM_TRACE_NFSIN1
+		}
+		event {
+			name	CM_TRACE_FLUSHPAGES
+		}
+		event {
+			name	CM_TRACE_SYNCVM
+		}
+		event {
+			name	CM_TRACE_PIOCTL
+		}
+		event {
+			name	CM_TRACE_CHECKCODE
+		}
+		event {
+			name	CM_TRACE_CHECKVLDB
+		}
+		event {
+			name	CM_TRACE_GETVOL
+		}
+		event {
+			name	CM_TRACE_ANALYZE
+		}
+		event {
+			name	CM_TRACE_SETPAG
+		}
+		event {
+			name	CM_TRACE_OPEN
+		}
+		event {
+			name	CM_TRACE_CLOSE
+		}
+		event {
+			name	CM_TRACE_WRITE
+		}
+		event {
+			name	CM_TRACE_READ
+		}
+		event {
+			name	CM_TRACE_PARTIALWRITE
+		}
+		event {
+			name	CM_TRACE_GETATTR
+		}
+		event {
+			name	CM_TRACE_SETATTR
+		}
+		event {
+			name	CM_TRACE_ACCESS
+		}
+		event {
+			name	CM_TRACE_LOOKUP
+		}
+		event {
+			name	CM_TRACE_LOOKUP1
+		}
+		event {
+			name	CM_TRACE_CREATE
+		}
+		event {
+			name	CM_TRACE_REMOVE
+		}
+		event {
+			name	CM_TRACE_LINK
+		}
+		event {
+			name	CM_TRACE_RENAME
+		}
+		event {
+			name	CM_TRACE_MKDIR
+		}
+		event {
+			name	CM_TRACE_RMDIR
+		}
+		event {
+			name	CM_TRACE_SYMLINK
+		}
+		event {
+			name	CM_TRACE_READLINK
+		}
+		event {
+			name	CM_TRACE_FSYNC
+		}
+		event {
+			name	CM_TRACE_LOCKDONE
+		}
+		event {
+			name	CM_TRACE_LOCKDOWN
+		}
+		event {
+			name	CM_TRACE_LOCKOBTAIN
+		}
+		event {
+			name	CM_TRACE_LOCKSLEPT
+		}
+		event {
+			name	CM_TRACE_PAGE_READ
+		}
+		event {
+			name	CM_TRACE_PAGE_WRITE
+		}
+		event {
+			name	CM_TRACE_STOREALLDC
+		}
+		event {
+			name	CM_TRACE_STOREALLDCDONE
+		}
+		event {
+			name	CM_TRACE_AVCLOCKER
+		}
+		event {
+			name	CM_TRACE_AVCLOCKEE
+		}
+		event {
+			name	CM_TRACE_SHORTREAD
+		}
+		event {
+			name	CM_TRACE_READFAILED
+		}
+		event {
+			name	CM_TRACE_GETVCDOTDOT
+		}
+		event {
+			name	CM_TRACE_CALLBACK
+		}
+		event {
+			name	CM_TRACE_VREF
+		}
+		event {
+			name	CM_TRACE_TMP_1S3L
+		}
+		event {
+			name	CM_TRACE_TMP_2S2L
+		}
+		event {
+			name	CM_TRACE_NFS3OUT
+		}
+		event {
+			name	CM_TRACE_NFS3IN
+		}
+		event {
+			name	CM_TRACE_NFS3IN1
+		}
+		event {
+			name	CM_TRACE_VGET
+		}
+		event {
+			name	CM_TRACE_VFSROOT
+		}
+		event {
+			name	CM_TRACE_READOP
+		}
+		event {
+			name	CM_TRACE_WRITEOP
+		}
+		event {
+			name	CM_TRACE_READPAGE
+		}
+		event {
+			name	CM_TRACE_UPDATEPAGE
+		}
+		event {
+			name	CM_TRACE_VM_CLOSE
+		}
+		event {
+			name	CM_TRACE_FETCH64
+		}
+		event {
+			name	CM_TRACE_UFSLINK
+		}
+		event {
+			name	CM_TRACE_VMRDWR
+		}
+		event {
+			name	CM_TRACE_READFAST
+		}
+		event {
+			name	CM_TRACE_FETCH64CODE
+		}
+		event {
+			name	CM_TRACE_FETCH64LENG
+		}
+		event {
+			name	CM_TRACE_FETCH64READ
+		}
+		event {
+			name	CM_TRACE_VMWRITE
+		}
+		event {
+			name	CM_TRACE_VMWRITE2
+		}
+		event {
+			name	CM_TRACE_VMSTOREALL
+		}
+		event {
+			name	CM_TRACE_PARTIALWRITE0
+		}
+		event {
+			name	CM_TRACE_DIRECTRDWR
+		}
+		event {
+			name	CM_TRACE_GOPRDWR
+		}
+		event {
+			name	CM_TRACE_GRDWR1
+		}
+		event {
+			name	CM_TRACE_READTDC
+		}
+		event {
+			name	CM_TRACE_MEMFETCH
+		}
+		event {
+			name	CM_TRACE_VMWRITE3
+		}
+		event {
+			name	CM_TRACE_STOREALL2
+		}
+		event {
+			name	CM_TRACE_MEMOPEN
+		}
+		event {
+			name	CM_TRACE_VCACHE2INODE
+		}
+		event {
+			name	CM_TRACE_STOREDATA64
+		}
+		event {
+			name	CM_TRACE_RESIDCMD
+		}
+		event {
+			name	CM_TRACE_PREFETCHCMD
+		}
+		event {
+			name	CM_TRACE_STOREPROC2
+		}
+		event {
+			name	CM_TRACE_ADJUSTSIZE
+		}
+		event {
+			name	CM_TRACE_SETLENGTH
+		}
+		event {
+			name	CM_TRACE_DCACHEWAIT
+		}
+		event {
+			name	CM_TRACE_VNODEREAD
+		}
+		event {
+			name	CM_TRACE_SLEEP
+		}
+		event {
+			name	CM_TRACE_WAKE
+		}
+		event {
+			name	CM_TRACE_DENTRYDELETE
+		}
+		event {
+			name	CM_TRACE_DENTRYIPUT
+		}
+		event {
+			name	CM_TRACE_TRYFLUSHDCACHECHILDREN
+		}
+		event {
+			name	CM_TRACE_DCACHEWAKE
+		}
+		event {
+			name	CM_TRACE_VERSIONNO
+		}
+		event {
+			name	CM_TRACE_TIMESTAMP
+		}
+		event {
+			name	CM_TRACE_RXSLEEP
+		}
+		event {
+			name	CM_TRACE_RXWAKE
+		}
+		event {
+			name	CM_TRACE_GNGETACL
+		}
+		event {
+			name	CM_TRACE_EINVAL
+		}
+		event {
+			name	CM_TRACE_VNODEREAD2
+		}
+		event {
+			name	CM_TRACE_WASHERE
+		}
+		event {
+			name	CM_TRACE_LOCKWAIT
+		}
+		event {
+			name	CM_TRACE_WRITEFAILED
+		}
+		event {
+			name	CM_TRACE_ADJUSTSIZE2
+		}
+	}
+}

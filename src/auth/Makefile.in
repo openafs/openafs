@@ -17,10 +17,17 @@ OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o
 
-LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
-      ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+LIBS= \
+	libauth.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a
+
 INCLS=cellconfig.h auth.h keys.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \

@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 # Common elements for Makefiles for all system types.
 #
@@ -39,18 +41,34 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_OBJDIR}/src/config \
 	-I${TOP_OBJDIR}/src/fsint \
 	-I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/osi \
 	-I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs 
 
+
+LIBOSI_BUILDING_MODE = kernelspace
+LIBOSI_BUILDING = kernel
+LIBOSI_BUILDING_INST = inst
+
+include $(TOP_SRCDIR)/osi/libosi/rules.mk
+include $(TOP_SRCDIR)/osi/libosi/rules.$(MKAFS_OSTYPE).mk
+# make_kbuild_makefile.pl is incapable of handling nested variables
+# of the form $(...$(...)...) which libosi build relies up heavily.
+# until this can be fixed, the following must be included in all
+# the non-linux makefileproto's individually
+#include $(TOP_SRCDIR)/osi/libosi/libosi.mk
+
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 .SUFFIXES:	.i
+LIBAFS_CFLAGS = $(COMMON_INCLUDE) $(CFLAGS) $(LIBOSI_ALL_CFLAGS)
 .c.i:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -P -c $<
+	$(CC) $(LIBAFS_CFLAGS) -P -c $<
 
 .c.o:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -c $<
-CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$@) -o $@ -c $?
-CRULE_OPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+	$(CC) $(LIBAFS_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -c $< -o $@
+CRULE_NOOPT=	$(CC) $(LIBAFS_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -o $@ -c $?
+CRULE_OPT=	$(CC) $(LIBAFS_CFLAGS) $(CFLAGS-$@) $(KERN_DBG) $(KERN_OPTMZ) -o $@ -c $?
+
 
 system:	all
 
@@ -160,7 +178,13 @@ AFSAOBJS = \
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
 	xdr.o		\
-	afs_uuid.o $(AFS_OS_OBJS)
+	afs_uuid.o \
+	$(AFS_OS_OBJS) \
+	$(LIBOSI_ALL_OBJS) \
+	afs_tracepoint_table.o \
+	afs_icl_tracepoint_table.o \
+	rx_tracepoint_table.o \
+	$(NULL)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
 AFSNFSOBJS = \
@@ -321,6 +345,12 @@ afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE_OPT)
 xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE_OPT)
+afs_tracepoint_table.o: $(TOP_SRCDIR)/afs/afs_tracepoint.c
+	$(CRULE_OPT)
+afs_icl_tracepoint_table.o: $(TOP_SRCDIR)/afs/afs_icl.c
+	$(CRULE_OPT)
+rx_tracepoint_table.o: $(TOP_SRCDIR)/rx/tracepoint_table.c
+	$(CRULE_OPT)
 
 # these files are not to be optimized - subject to change.
 afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
@@ -474,6 +504,10 @@ osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 	$(CRULE_OPT)
 osi_ioctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c
 	$(CRULE_NOOPT)
+CFLAGS-osi_module_nfs.o= -DAFS_WRAPPER=${LIBAFS}_wrapper -DAFS_CONF_DATA=${LIBAFS}_conf_data
+osi_module_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
+	$(CRULE_NOOPT)
+CFLAGS-osi_module.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBAFSNONFS}_wrapper -DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
 osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
 	$(CRULE_NOOPT)
 osi_pag_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pag_module.c

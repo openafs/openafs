@@ -1,0 +1,271 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_debug.o \
+	osi_groups.o \
+	osi_inode.o \
+	osi_file.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vnodeops.o \
+	osi_vm.o
+
+AFS_OS_NFSOBJS = \
+<ia64_hpux1123 hp_ux1123>
+	hpux_mod_nfs.modmeta.o \
+<all>
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+<ia64_hpux1123 hp_ux1123>
+	hpux_mod.modmeta.o \
+<all>
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+#
+# Note: the online document
+#
+#	Developing Dynamically Loadable Kernel Modules
+#	Issue 1.0
+#	HP-UX 11.0
+#	October 12, 1998
+#
+# mentioned on http://docs.hp.com/hpux/os/index.html
+# with URL     http://docs.hp.com/hpux/content/dlkm_v1.2.pdf
+#
+# recommends the undocumented +ES1.Xindirect_calls option for both
+# 32-bit and 64-bit kernel code, but it appears to be absolutely vital
+# for compiling 64-bit kernel code.  In 64-bit mode, the ANSI C compiler
+# has the +Z (PIC) option on by default, and there is no documented way
+# to turn it off.  However, kernel code does not work properly when
+# compiled with +Z (i.e. calling a function through a function pointer
+# seems to hang).  When the compiler sees the +ES1.Xindirect_calls
+# option, however, it issues a warning and turns off +Z.
+#
+# for 11.23, see the DDK BE/Sample_makefiles/Makefile.bld
+# for mod drivers.
+#
+# 11.23 uses new compiler, with new options. The same compiler is on pa_risc and ia64 
+#
+<hp_ux110 hp_ux102 hp_ux11i>
+KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
+	-DMP +R500 -Wl,+k $(CPU_KDEFS)
+KDEFS_32 = +DA1.0 +DS1.0
+# add +M2 to $(KDEFS_64) for 64-bit migration warnings
+# warning 478: "+Z" and "+ES1.Xindirect_calls" are mutually exclusive. "+Z" ignored.
+# warning 530: LP64 migration: Casting from loose to strict alignment: Resulting pointer may be misaligned.
+KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
+
+<all>
+
+<ia64_hpux1122>
+KDEFS= +kernel -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
+  -DFINE_GRAINED_PROTO_FILES \
+  -DMP -Wl,+k $(CPU_KDEFS)
+KDEFS_32 =
+KDEFS_64 = +DD64
+
+<ia64_hpux1123>
+ARCH=ipf
+
+<hp_ux1123>
+ARCH=pa
+
+<ia64_hpux1123 hp_ux1123>
+
+CCOPTS_common= -Ae +DD64 +O2
+
+IDENTS_common= -DACLS -DAUDIT -DHPONCPLUS -DIDDS -DIPSEC -DIVT_INTERCEPT \
+    -DLWSYSCALL -DPGPROF -DSTCP -D_CLEAN_BE -D_HPUX_SOURCE -D_KERNEL \
+    -D_LARGEFILE64_SOURCE -D_NO_USER_PROTOS -D_UNSUPPORTED \
+    -D__BIGMSGQUEUE_ENABLED -D__ROSE__ -U__hp9000s700 \
+    -D_XPG4_EXTENDED -D__STDC_EXT__
+
+# Definitions which apply to IPF only
+
+CCOPTS_ipf= +DSitanium2 +kernel +objstatvars +Olit=all +Oshortdata=0 +W863
+
+IDENTS_ipf= -DKERNEL_DEBUGGER -DVARIABLE_UAREA -D_SYSCALL_64 -D__NO_PA_HDRS
+
+LDOPTS_ipf= +noobjdebug
+
+# Definitions which apply to PA only
+
+CCOPTS_pa= +DS2.0 +ES1.Xindirect_calls +ESlit +ESsfc +ESssf \
+	+ordering_unaware +Oentrysched +Ofastaccess +Omultiprocessor \
+	-Wp,-H300000 +Xid
+
+IDENTS_pa= -DCOMB_FLIPPER -DKGDB_ON -DLP64_TMP_NODBG -DNEW_MFCTL_W \
+	-DNEW_RDB -DPARISC -DRDB -DSPP_OBP_BOOT -DSPP_RUNWAY_ERR_ENABLED \
+	-D__NO_EM_HDRS -D__ROSEVILLE__ -D__TEMP64__ -D__hp9000s800
+
+LDOPTS_pa=
+
+
+# above from the Makefile.bld example
+
+LDOPTS= ${LDOPTS_${ARCH}}
+KDEFS= $(CCOPTS_common) $(IDENTS_common) $(CPU_KDEFS) 
+KDEFS_64= ${CCOPTS_${ARCH}} ${IDENTS_${ARCH}}
+
+MODLINK=/opt/ddk/11.23/BE/bin/modlink
+MODMETA=/opt/ddk/11.23/BE/bin/modmeta
+
+<all>
+
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ=STATIC
+
+# This is the hpux multiple directory target.
+COMPDIRS = hpux_compdirs
+INSTDIRS = hpux_instdirs
+DESTDIRS = hpux_destdirs
+
+include Makefile.common
+
+<hp_ux11i hp_ux110 hp_ux102>
+BITS = 64 32
+<ia64_hpux1122 ia64_hpux1123 hp_ux1123>
+BITS = 64
+<all>
+
+setup:
+	-$(RM) -f  h conf net dux machine netinet nfs rpc s200 ufs sys
+<hp_ux102>
+	ln -fs /usr/include/sys h
+<hp_ux110 hp_ux11i ia64_hpux1122>
+	ln -fs /etc/conf/h h
+<hp_ux102 hp_ux110 hp_ux11i ia64_hpux1122>
+	ln -fs /etc/conf conf
+	ln -fs /etc/conf/net net
+	ln -fs /etc/conf/dux dux
+	ln -fs /etc/conf/machine machine
+	ln -fs /etc/conf/netinet netinet
+	ln -fs /etc/conf/nfs nfs
+	ln -fs /usr/include/rpc rpc
+	ln -fs /etc/conf/machine s200
+<hp_ux11i hp_ux110 hp_ux102>
+	ln -fs /etc/conf/ufs ufs
+<ia64_hpux1122>
+	ln -fs /etc/conf/sys ufs
+<ia64_hpux1123 hp_ux1123>
+	ln -fs /usr/include/sys h
+	ln -fs /usr/include/net net
+	ln -fs /usr/include/netinet netinet
+	ln -fs /usr/include/nfs nfs
+	ln -fs /usr/include/rpc rpc
+	ln -fs /usr/include/sys ufs
+<all>
+	ln -fs /usr/include/sys sys
+	for b in $(BITS); do \
+	    for t in $(KOBJ); do \
+		dir=$$t.$$b; \
+		echo Making directory: $$dir; \
+		mkdir -p $$dir; \
+		$(RM) -f $$dir/Makefile $$dir/Makefile.common $$dir/config; \
+		ln -fs ../Makefile $$dir/Makefile; \
+		ln -fs ../Makefile.common $$dir/Makefile.common; \
+		ln -fs ../config $$dir/config; \
+	    done; \
+	done
+	echo Setup complete.
+
+# Compile the clients.
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	if true; then \
+	for b in $(BITS); do \
+	    for t in $(KOBJ); do \
+		dir=$$t.$$b; \
+		echo Building directory: $$dir; \
+		case $$b in \
+		32)	bopts="$(KDEFS_32)"; bsuff="";; \
+		64)	bopts="$(KDEFS_64)"; bsuff="64";; \
+		esac; \
+		cd $$dir; \
+		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" $@_libafs || exit $$?; \
+		cd ..; \
+	    done; \
+	done; \
+	fi
+
+hpux_compdirs_libafs: depsrcs libafs
+hpux_instdirs_libafs: install_libafs
+hpux_destdirs_libafs: dest_libafs
+
+
+# Below this line are targets when in the static directory:
+<all -ia64_hpux1123 -hp_ux1123>
+LIBAFS = libafs$(BITSUFFIX).a
+LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
+<ia64_hpux1123 hp_ux1123>
+LIBAFS = afs$(BITSUFFIX)_nfs
+LIBAFSNONFS =afs$(BITSUFFIX)
+<all>
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/usr/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/bin/${LIBAFSNONFS}
+
+
+libafs: ${LIBAFSNONFS}
+install_libafs: ${INST_LIBAFSNONFS}
+dest_libafs: ${DEST_LIBAFSNONFS}
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+<all -ia64_hpux1123 -hp_ux1123>
+	$(AR) cru $@ $?
+	$(RANLIB) $@
+<ia64_hpux1123 hp_ux1123>
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNFSOBJS)
+<all>
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+<all -ia64_hpux1123 -hp_ux1123>
+	$(AR) cru $@ $?
+	$(RANLIB) $@
+<ia64_hpux1123 hp_ux1123>
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+<all>
+
+<ia64_hpux1123 hp_ux1123>
+hpux_mod.modmeta.c: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta
+	$(MODMETA) ${IDENTS_common} ${IDENTS_ipf} \
+		-DAFSLIB_NAME=${LIBAFSNONFS} \
+		$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta > hpux_mod.modmeta.c
+
+hpux_mod_nfs.modmeta.c: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta
+	$(MODMETA) ${IDENTS_common} ${IDENTS_ipf} \
+		-DAFSLIB_NAME=${LIBAFS} \
+		$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta > hpux_mod_nfs.modmeta.c
+<all>

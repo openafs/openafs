@@ -1,0 +1,155 @@
+/*
+ * Copyright 2006, Sine Nomine Associates and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "common.xg"
+
+package	Agent_
+prefix S
+statindex 21
+
+#include "agent_opcodes.h"
+%#include <trace/rpc/agent_opcodes.h>
+
+/*
+ * general api
+ *
+ * these interfaces do not require an established
+ * console context
+ */
+GetVersion(
+  OUT afs_uint32 * agent_version,
+  OUT afs_uint32 * agent_build_date
+) = OSI_TRACE_RPC_OP_GET_VERSION;
+
+AgentInfo4(
+  OUT osi_Trace_rpc_agent_handle * self,
+  OUT osi_Trace_rpc_bulkaddrs4 * addrs
+) multi = OSI_TRACE_RPC_OP_AGENT_INFO4;
+
+/*
+ * instrumented process query api
+ */
+ProcSelf(
+  OUT osi_Trace_rpc_proc_handle * self
+) = OSI_TRACE_RPC_OP_PROC_SELF;
+
+ProcList(
+  IN osi_Trace_rpc_proc_handle startindex,
+  INOUT afs_uint32 * nentries,
+  OUT osi_Trace_rpc_proc_info_vec * entries
+) = OSI_TRACE_RPC_OP_PROC_LIST;
+
+ProcInfo(
+  IN osi_Trace_rpc_proc_handle index,
+  OUT osi_Trace_rpc_proc_info * info
+) = OSI_TRACE_RPC_OP_PROC_INFO;
+
+
+/*
+ * console registration and control api
+ */
+ConsoleRegisterIP4(
+  IN osi_Trace_rpc_console_handle * handle,
+  IN osi_Trace_rpc_console_options * options,
+  IN afs_uint32 naddrs,
+  IN afs_uint32 spare1,
+  IN osi_Trace_rpc_bulkaddrs4 * addrs
+) multi = OSI_TRACE_RPC_OP_CONSOLE_REGISTER_IP4;
+
+ConsoleUnregister(
+  IN osi_Trace_rpc_console_handle * handle
+) multi = OSI_TRACE_RPC_OP_CONSOLE_UNREGISTER;
+
+ConsoleEnable(
+  IN osi_Trace_rpc_console_handle * handle
+) multi = OSI_TRACE_RPC_OP_CONSOLE_ENABLE;
+
+ConsoleDisable(
+  IN osi_Trace_rpc_console_handle * handle
+) multi = OSI_TRACE_RPC_OP_CONSOLE_DISABLE;
+
+ConsoleKeepAlive(
+  IN osi_Trace_rpc_console_handle * handle
+) multi = OSI_TRACE_RPC_OP_CONSOLE_KEEP_ALIVE;
+
+
+
+/*
+ * probe control api
+ */
+ProbeEnable(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_proc_handle proc_handle,
+  IN string probe_filter<OSI_TRACE_RPC_PROBE_FILTER_LEN_MAX>,
+  OUT afs_uint32 * nhits
+) = OSI_TRACE_RPC_OP_PROBE_ENABLE;
+
+ProbeDisable(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_proc_handle proc_handle,
+  IN string probe_filter<OSI_TRACE_RPC_PROBE_FILTER_LEN_MAX>,
+  OUT afs_uint32 * nhits
+) = OSI_TRACE_RPC_OP_PROBE_DISABLE;
+
+
+/*
+ * predicate control api
+ */
+PredicateRegister(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_predicate_handle * predicate_handle,
+  IN string predicate<OSI_TRACE_RPC_PREDICATE_LEN_MAX>
+) = OSI_TRACE_RPC_OP_PREDICATE_REGISTER;
+
+PredicateUnregister(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_predicate_handle * predicate_handle
+) = OSI_TRACE_RPC_OP_PREDICATE_UNREGISTER;
+
+PredicateAttach(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_predicate_handle * predicate_handle,
+  IN osi_Trace_rpc_proc_handle proc_handle,
+  IN string probe_filter<OSI_TRACE_RPC_PROBE_FILTER_LEN_MAX>,
+  OUT afs_uint32 * nhits
+) = OSI_TRACE_RPC_OP_PREDICATE_ATTACH;
+
+PredicateDetach(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_predicate_handle * predicate_handle,
+  IN osi_Trace_rpc_proc_handle proc_handle,
+  IN string probe_filter<OSI_TRACE_RPC_PROBE_FILTER_LEN_MAX>,
+  OUT afs_uint32 * nhits
+) = OSI_TRACE_RPC_OP_PREDICATE_DETACH;
+
+
+
+/*
+ * filter control api
+ */
+FilterRegister(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_filter_handle * filter_handle,
+  IN string filter<OSI_TRACE_RPC_FILTER_LEN_MAX>
+) = OSI_TRACE_RPC_OP_FILTER_REGISTER;
+
+FilterUnregister(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_filter_handle * filter_handle
+) = OSI_TRACE_RPC_OP_FILTER_UNREGISTER;
+
+FilterEnable(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_filter_handle * filter_handle
+) = OSI_TRACE_RPC_OP_FILTER_ENABLE;
+
+FilterDisable(
+  IN osi_Trace_rpc_console_handle * console_handle,
+  IN osi_Trace_rpc_filter_handle * filter_handle
+) = OSI_TRACE_RPC_OP_FILTER_DISABLE;

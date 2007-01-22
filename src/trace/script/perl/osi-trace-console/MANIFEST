@@ -1,0 +1,8 @@
+Changes
+console.xs
+Makefile.PL
+MANIFEST
+ppport.h
+README
+t/osi-trace-console.t
+lib/osi/trace/console.pm

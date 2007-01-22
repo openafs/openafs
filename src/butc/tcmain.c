@@ -58,6 +58,8 @@ RCSID
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 
+#include <osi/osi_includes.h>
+
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
 
@@ -1177,6 +1179,8 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_BuTC, osi_NULL)));
 
     setlinebuf(stdout);
 

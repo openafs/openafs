@@ -1,0 +1,52 @@
+#
+# Copyright 2006, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+
+trace-table {
+	module-name	OSI
+	module-dir	osi
+	c-path		osi_tracepoint_table.c
+	h-path		osi_tracepoint_table.h
+	prefix		"osi"
+	init-func	osi_TracePointTableInit
+	event-tag	osi_Trace_Event_osi_Id
+	description	"osi probe points"
+
+	action-table {
+		name	mem_cache
+		prefix	"mem.object-cache"
+
+		action {
+			name	create
+		}
+		action {
+			name	destroy
+		}
+		action {
+			name	alloc
+		}
+		action {
+			name	alloc_nosleep
+		}
+		action {
+			name	free
+		}
+	}
+
+	event-table {
+		name	thread
+
+		event {
+			name	create
+		}
+		event {
+			name	exit
+		}
+	}
+}

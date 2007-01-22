@@ -1,0 +1,18 @@
+use 5.008008;
+use ExtUtils::MakeMaker;
+# See lib/ExtUtils/MakeMaker.pm for details of how to influence
+# the contents of the Makefile that is written.
+WriteMakefile(
+    NAME              => 'osi::trace::console',
+    VERSION_FROM      => 'lib/osi/trace/console.pm', # finds $VERSION
+    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
+      (ABSTRACT_FROM  => 'lib/osi/trace/console.pm', # retrieve abstract from module
+       AUTHOR         => 'Tom Keiser <tkeiser@sinenomine.net>') : ()),
+    LIBS              => ['@XLIBS@ -L@TOP_OBJDIR@/lib -losi-pthread-ni -losi_trace_console -losi_trace_common -lafsutil'], # e.g., '-lm'
+    DEFINE            => '-DOSI_PTHREAD_ENV', # e.g., '-DHAVE_SOMETHING'
+    INC               => '-I. -I@TOP_OBJDIR@/include -I@TOP_OBJDIR@/include/osi -I@TOP_OBJDIR@/include/afs -I@TOP_SRCDIR@ -I@TOP_OBJDIR@/src -I@TOP_OBJDIR@/src/config', # e.g., '-I. -I/usr/include/other'
+	# Un-comment this if you add C files to link with later:
+    #OBJECT            => '$(O_FILES)', # link all the C files too
+    TYPEMAPS          => [qw(../typemap typemap)], # bring in our typemaps
+);

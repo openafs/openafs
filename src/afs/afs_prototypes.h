@@ -39,11 +39,12 @@ extern afs_int32 afs_setTime;
 extern char afs_rootVolumeName[64];
 extern void afs_shutdown(void);
 extern void afs_FlushCBs(void);
+
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
 extern void shutdown_afstest(void);
 extern void afs_shutdown_BKG(void);
-extern int afs_syscall_call(long parm, long parm2, long parm3,
+extern int afs_syscall_call(long parm1, long parm2, long parm3,
 			    long parm4, long parm5, long parm6);
 
 
@@ -57,7 +58,7 @@ extern afs_int32 afs_evenZaps;
 extern afs_int32 afs_connectBacks;
 extern unsigned long lastCallBack_vnode;
 extern unsigned int lastCallBack_dv;
-extern osi_timeval_t lastCallBack_time;
+extern afs_timeval_t lastCallBack_time;
 extern struct interfaceAddr afs_cb_interface;
 
 extern int afs_RXCallBackServer(void);
@@ -303,82 +304,6 @@ extern void init_sys_error_to_et(void);
 extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
 
-/* afs_icl.c */
-extern struct afs_icl_set *afs_icl_allSets;
-extern int afs_icl_InitLogs(void);
-extern int afs_icl_CreateLog(char *name, afs_int32 logSize,
-			     struct afs_icl_log **outLogpp);
-extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
-				      afs_uint32 flags,
-				      struct afs_icl_log **outLogpp);
-extern int afs_icl_CopyOut(register struct afs_icl_log *logp,
-			   afs_int32 * bufferp, afs_int32 * bufSizep,
-			   afs_uint32 * cookiep, afs_int32 * flagsp);
-extern int afs_icl_GetLogParms(struct afs_icl_log *logp, afs_int32 * maxSizep,
-			       afs_int32 * curSizep);
-extern int afs_icl_LogHold(register struct afs_icl_log *logp);
-extern int afs_icl_LogHoldNL(register struct afs_icl_log *logp);
-extern int afs_icl_LogUse(register struct afs_icl_log *logp);
-extern int afs_icl_LogFreeUse(register struct afs_icl_log *logp);
-extern int afs_icl_LogSetSize(register struct afs_icl_log *logp,
-			      afs_int32 logSize);
-extern int afs_icl_ZapLog(register struct afs_icl_log *logp);
-extern int afs_icl_LogRele(register struct afs_icl_log *logp);
-extern int afs_icl_LogReleNL(register struct afs_icl_log *logp);
-extern int afs_icl_ZeroLog(register struct afs_icl_log *logp);
-extern int afs_icl_LogFree(register struct afs_icl_log *logp);
-extern struct afs_icl_log *afs_icl_FindLog(char *name);
-extern int
-  afs_icl_EnumerateLogs(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
-extern int afs_icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
-			     struct afs_icl_log *fatalLogp,
-			     struct afs_icl_set **outSetpp);
-extern int afs_icl_CreateSetWithFlags(char *name,
-				      struct afs_icl_log *baseLogp,
-				      struct afs_icl_log *fatalLogp,
-				      afs_uint32 flags,
-				      struct afs_icl_set **outSetpp);
-extern int afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int setValue);
-extern int afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int *getValuep);
-extern int afs_icl_ZeroSet(struct afs_icl_set *setp);
-extern int
-  afs_icl_EnumerateSets(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
-extern int afs_icl_AddLogToSet(struct afs_icl_set *setp,
-			       struct afs_icl_log *newlogp);
-extern int afs_icl_SetSetStat(struct afs_icl_set *setp, int op);
-extern int afs_icl_SetHold(register struct afs_icl_set *setp);
-extern int afs_icl_ZapSet(register struct afs_icl_set *setp);
-extern int afs_icl_SetRele(register struct afs_icl_set *setp);
-extern int afs_icl_SetFree(register struct afs_icl_set *setp);
-extern struct afs_icl_set *afs_icl_FindSet(char *name);
-
-extern int afs_icl_Event4(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2, long p3, long p4);
-extern int afs_icl_Event3(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2, long p3);
-extern int afs_icl_Event2(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1,
-			  long p2);
-extern int afs_icl_Event1(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT, long p1);
-extern int afs_icl_Event0(register struct afs_icl_set *setp,
-			  afs_int32 eventID, afs_int32 lAndT);
-extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
-				 afs_int32 op, afs_int32 types, long p1,
-				 long p2, long p3, long p4);
-extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
-		       long *retval);
-
 
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
@@ -566,7 +491,7 @@ extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
 
 
 /* ARCH/osi_misc.c */
-extern void afs_osi_SetTime(osi_timeval_t * atv);
+extern void afs_osi_SetTime(afs_timeval_t * atv);
 
 /* LINUX/osi_misc.c */
 #ifdef AFS_LINUX20_ENV
@@ -725,7 +650,6 @@ extern int afs_TruncateAllSegments(register struct vcache *avc,
 /* afs_server.c */
 extern afs_rwlock_t afs_xsrvAddr;
 extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_icl_lock;
 extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern struct server *afs_servers[NSERVERS];
 extern int afs_totalServers;

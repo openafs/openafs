@@ -16,12 +16,38 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS} ${ARCHFLAGS}
 SFLAGS=-I${TOP_INCDIR}
-LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
+LIBS= \
+	libsys.a \
+	${TOP_LIBDIR}/librx.a \
+	libsys.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a \
+	${XLIBS} \
+	$(NULL)
 
-OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o \
-	AFS_component_version_number.o
-SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
-RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
+OBJECTS = \
+	afssyscalls.o \
+	setpag.o \
+	glue.o \
+	pioctl.o \
+	AFS_component_version_number.o \
+	$(NULL)
+
+SHLIBOBJS = \
+	picobj/setpag.o \
+	picobj/glue.o \
+	syscall.o \
+	$(NULL)
+
+RMTOBJS = \
+	rmtsysnet.o \
+	rmtsysc.o \
+	rmtsys.cs.o \
+	rmtsys.xdr.o \
+	rmtsys.ss.o \
+	rmtsyss.o \
+	$(NULL)
 
 all: \
     rmtsysd \

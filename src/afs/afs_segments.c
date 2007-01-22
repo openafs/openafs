@@ -170,7 +170,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     int safety;
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
+    afs_timeval_t xferStartTime,	/*FS xfer start time */
       xferStopTime;		/*FS xfer stop time */
     afs_size_t bytesToXfer;	/* # bytes to xfer */
     afs_size_t bytesXferred;	/* # bytes actually xferred */

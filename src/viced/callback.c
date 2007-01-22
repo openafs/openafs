@@ -81,6 +81,9 @@
  * this package to work correctly.  Every 5 minutes is suggested.
  */
 
+#include <osi/osi.h>
+#include <osi/osi_trace.h>
+#include "tracepoint_table.h"
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -983,6 +986,9 @@ BreakDelayedCallBacks_r(struct host *host)
     char hoststr[16];
     struct rx_connection *cb_conn;
 
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(cbk_BreakDelayedCallBacks_start),
+		       osi_Trace_Args1(host));
+
     cbstuff.nbreakers++;
     if (!(host->hostFlags & RESETDONE) && !(host->hostFlags & HOSTDELETED)) {
 	host->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
@@ -990,11 +996,19 @@ BreakDelayedCallBacks_r(struct host *host)
 	rx_GetConnection(cb_conn);
 	if (host->interface) {
 	    H_UNLOCK;
+	    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_InitCallBackState3_start),
+			       osi_Trace_Args2(host, cb_conn));
 	    code =
 		RXAFSCB_InitCallBackState3(cb_conn, &FS_HostUUID);
+	    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_InitCallBackState3_finish),
+			       osi_Trace_Args3(host, cb_conn, code));
 	} else {
 	    H_UNLOCK;
+	    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_InitCallBackState_start),
+			       osi_Trace_Args2(host, cb_conn));
 	    code = RXAFSCB_InitCallBackState(cb_conn);
+	    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_InitCallBackState_finish),
+			       osi_Trace_Args3(host, cb_conn, code));
 	}
 	rx_PutConnection(cb_conn);
 	cb_conn = NULL;
@@ -1080,7 +1094,12 @@ BreakDelayedCallBacks_r(struct host *host)
     /* If we succeeded it's always ok to unset HFE_LATER */
     if (!host->hostFlags & VENUSDOWN)
 	host->hostFlags &= ~HFE_LATER;
-    return (host->hostFlags & VENUSDOWN);
+
+    code = (host->hostFlags & VENUSDOWN);
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(cbk_BreakDelayedCallBacks_finish),
+		       osi_Trace_Args1(code));
+    return code;
 }
 
 /*
@@ -2977,12 +2996,15 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 int
 MultiProbeAlternateAddress_r(struct host *host)
 {
-    int i, j;
+    int i, j, code;
     struct rx_connection **conns;
     struct rx_connection *connSuccess = 0;
     struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
     char hoststr[16];
+
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_MultiProbeAlternateAddress_start),
+		       osi_Trace_Args1(host));
 
     /* nothing more can be done */
     if (!host->interface)
@@ -3059,6 +3081,9 @@ MultiProbeAlternateAddress_r(struct host *host)
              */
             if (multi_error == 1) {
                 /* remove the current alternate address from this host */
+		osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_MultiProbeAlternateAddress_removeAddr),
+				   osi_Trace_Args3(host, interfaces[multi_i].addr, interfaces[multi_i].port));
+
                 H_LOCK;
                 for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
                     if (interfaces[multi_i].addr != host->interface->interface[i].addr &&
@@ -3091,10 +3116,10 @@ MultiProbeAlternateAddress_r(struct host *host)
     free(interfaces);
     free(conns);
 
-    if (connSuccess)
-	return 0;		/* success */
-    else
-	return 1;		/* failure */
+    code = !connSuccess;
+    osi_Trace_FS_Event(osi_Trace_FS_ProbeId(host_MultiProbeAlternateAddress_finish),
+		       osi_Trace_Args2(host, code));
+    return code;
 }
 
 #endif /* !defined(INTERPRET_DUMP) */

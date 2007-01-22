@@ -37,6 +37,10 @@ RCSID
 #endif
 #include <afs/afsutil.h>
 
+#include <osi/osi_includes.h>
+#include <osi/osi_object_init.h>
+#include <osi/osi_mutex.h>
+
 /* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
    Autoconf manual, memcpy is a generally portable fallback. */          
 #ifndef va_copy              
@@ -263,27 +267,27 @@ printbuf(FILE *out, int rec, char *audEvent, char *afsName, afs_int32 hostId,
     fprintf(out, "\n");
 }
 
-#ifdef AFS_PTHREAD_ENV
-static pthread_mutex_t audit_lock;
-static volatile afs_int32   audit_lock_initialized = 0;
-static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
+
+osi_static osi_mutex_t audit_lock;
 
 static void
 osi_audit_init_lock(void)
 {
-    pthread_mutex_init(&audit_lock, NULL);
-    audit_lock_initialized = 1;
+    osi_mutex_options_t opts;
+
+    osi_mutex_options_Init(&opts);
+    osi_mutex_options_Set(&opts, OSI_MUTEX_OPTION_TRACE_ALLOWED, 0);
+    osi_mutex_options_Set(&opts, OSI_MUTEX_OPTION_PREEMPTIVE_ONLY, 1);
+    osi_mutex_Init(&audit_lock, &opts);
+    osi_mutex_options_Destroy(&opts);
 }
-#endif
+
+OSI_OBJECT_INIT_DECL(audit_lock_initializer, &osi_audit_init_lock);
 
 void
 osi_audit_init(void)
 {
-#ifdef AFS_PTHREAD_ENV
-    if (!audit_lock_initialized) {
-	pthread_once(&audit_lock_once, osi_audit_init_lock);
-    }
-#endif /* AFS_PTHREAD_ENV */
+    osi_object_init(&audit_lock_initializer);
 }
 
 /* ************************************************************************** */
@@ -308,7 +312,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     /* i'm pretty sure all the server apps now call osi_audit_init(),
      * but to be extra careful we'll leave this assert in here for a 
      * while to make sure */
-    assert(audit_lock_initialized);
+    osi_object_init_assert(&audit_lock_initializer);
 #endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
@@ -342,9 +346,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     }
 
-#ifdef AFS_PTHREAD_ENV
-    pthread_mutex_lock(&audit_lock);
-#endif
+    osi_mutex_Lock(&audit_lock);
 #ifdef AFS_AIX32_ENV
     bufferPtr = BUFFER;
 
@@ -369,9 +371,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 	fflush(auditout);
     }
 #endif
-#ifdef AFS_PTHREAD_ENV
-    pthread_mutex_unlock(&audit_lock);
-#endif
+    osi_mutex_Unlock(&audit_lock);
 
     return 0;
 }

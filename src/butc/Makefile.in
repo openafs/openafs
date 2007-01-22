@@ -37,16 +37,16 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
         ${TOP_LIBDIR}/libubik.a \
         ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
-        ${TOP_LIBDIR}/libsys.a  \
         ${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
-        ${TOP_LIBDIR}/libsys.a  \
-	${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/libprocmgmt.a \
+	${TOP_LIBDIR}/libosi-lwp-inst.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libusd.a \
-	${TOP_LIBDIR}/libprocmgmt.a
+        ${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/liblwp.a
 
 TESTOBJS=test.o
 
