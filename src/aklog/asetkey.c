@@ -7,10 +7,10 @@
  */
 
 #include <afsconfig.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -31,7 +31,9 @@
 #include <afs/stds.h>
 #include <krb5.h>
 
+#ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
+#endif
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/dirpath.h>
