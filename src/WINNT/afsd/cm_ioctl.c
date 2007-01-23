@@ -1941,6 +1941,10 @@ long cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
      * call.   we just have to use it. 
      */
     scIndex = 2;	/* kerberos ticket */
+#ifdef AFS_RXK5
+need.logic.to.call.rxk5_NewClientSecurityObject.here;
+also.change.declaration.and.logic( sc[3] , sc );
+#endif
     sc[2] = rxkad_NewClientSecurityObject(rxkad_clear, &ucellp->sessionKey,
 					  ucellp->kvno, ucellp->ticketLen,
 					  ucellp->ticketp);

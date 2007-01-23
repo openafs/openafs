@@ -43,6 +43,11 @@ RCSID
 #include <afs/cellconfig.h>
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/keys.h>
@@ -77,7 +82,7 @@ struct ubik_client *cstruct;	/*Required name for above */
  * ------------------------ Private globals -----------------------
  */
 static int initDone = 0;	/*Module initialized? */
-static int NoAuthFlag = 0;	/*Use -noauth? */
+static int AuthFlags = 1;	/*Use -noauth? */
 static struct rx_connection
  *serverconns[VLDB_MAXSERVERS];	/*Connection(s) to VLDB
 				 * server(s) */
@@ -92,7 +97,7 @@ static struct rx_connection
  *	network connections.
  *
  * Arguments:
- *	a_noAuthFlag : Do we need authentication?
+ *	a_AuthFlags  : How much authentication?
  *	a_confDir    : Configuration directory to use.
  *	a_cellName   : Cell we want to talk to.
  *
@@ -108,22 +113,25 @@ static struct rx_connection
  *------------------------------------------------------------------------*/
 
 static afs_int32
-InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
-     int a_noAuthFlag;
-     char *a_confDir;
-     char *a_cellName;
-
+InitThisModule(int a_AuthFlags,
+    char *a_confDir,
+    char *a_cellName)
 {				/*InitThisModule */
 
     static char rn[] = "uss_vol:InitThisModule";
     register afs_int32 code;	/*Return code */
-    struct afsconf_dir *tdir;	/*Ptr to conf dir info */
+    struct afsconf_dir *tdir = 0;	/*Ptr to conf dir info */
     struct afsconf_cell info;	/*Info about chosen cell */
-    struct ktc_principal sname;	/*Service name */
-    struct ktc_token ttoken;	/*Service ticket */
     afs_int32 scIndex;		/*Chosen security index */
     struct rx_securityClass *sc;	/*Generated security object */
     afs_int32 i;		/*Loop index */
+    int force_flags;		/* chosen security source */
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5context = 0;
+    krb5_ccache cc = 0;
+    char* afs_k5_princ = 0;
+#endif
 
     /*
      * Only once, guys, will 'ya?
@@ -144,9 +152,20 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
     code = rx_Init(0);
     if (code) {
 	fprintf(stderr, "%s:  Couldn't initialize Rx.\n", uss_whoami);
-	return (code);
+	goto Done;
     }
     rx_SetRxDeadTime(50);
+
+    /*
+     * Decode security source
+     */
+
+    force_flags = a_AuthFlags & ~15;
+    a_AuthFlags &= 15;
+#ifdef AFS_RXK5
+    if (!force_flags) force_flags |= env_afs_rxk5_default();
+    memset(in_creds, 0, sizeof *in_creds);
+#endif
 
     /*
      * Find out all about our configuration.
@@ -158,21 +177,73 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
     if (!tdir) {
 	fprintf(stderr, "%s: Couldn't open configuration directory (%s).\n",
 		uss_whoami, a_confDir);
-	return (-1);
+	code = -1;
+	goto Done;
     }
     code = afsconf_GetCellInfo(tdir, a_cellName, AFSCONF_VLDBSERVICE, &info);
     if (code) {
-	printf("%s: Can't find VLDB server(s) for cell %s\n", uss_whoami,
+	fprintf(stderr, "%s: Can't find VLDB server(s) for cell %s\n", uss_whoami,
 	       a_cellName);
-	exit(1);
+	goto Done;
     }
 #ifdef USS_VOL_DB
     printf("[%s] Getting tickets if needed\n", rn);
+    scIndex = 1;
+    sc = 0;
 #endif /* USS_VOL_DB */
-    if (!a_noAuthFlag) {
+    if (!a_AuthFlags) {
+	scIndex = 0;
 	/*
 	 * We don't need tickets for unauthenticated connections.
 	 */
+#ifdef AFS_RXK5
+    } else if (a_AuthFlags & FORCE_RXK5) {
+	/* Because rxgk has claimed indexes 3 and 4, the next available index
+	   for rxk5 is 5 */
+	char *what;
+
+	scIndex = 5;
+
+	code = ENOMEM;
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
+
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5context);
+	if(code) goto Failed;
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5context, &cc); /* in MIT is pointer to ctxt? */
+	if(code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
+	if(code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5context, afs_k5_princ,	&in_creds->server);
+	if(code) goto Failed;
+
+	what = "krb5_get_credentials";
+	/* 0 is cc flags */
+	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
+	if(code) goto Failed;
+
+	sc = rxk5_NewClientSecurityObject(rxk5_auth, k5_creds, 0);
+    Failed:
+	if (code) {
+	    if (afs_k5_princ)
+		com_err(uss_whoami, code, "in %s for %s", what, afs_k5_princ);
+	    else
+		com_err(uss_whoami, code, "in %s", what);
+	}
+#endif
+    } else {
+	struct ktc_principal sname;	/*Service name */
+	struct ktc_token ttoken;	/*Service ticket */
+
+	scIndex = 2;	/*Kerberos */
 	strcpy(sname.cell, info.name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
@@ -186,17 +257,17 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
 	    /*
 	     * We got a ticket, go for an authenticated connection.
 	     */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
-		scIndex = 2;	/*Kerberos */
-	    else {
+	    /* 999 = vab; 256 = rxkad.v5 */
+	    if (ttoken.kvno < 0 && ttoken.kvno > 256) {
 		fprintf(stderr, "%s: Funny kvno (%d) in ticket, proceeding\n",
 			uss_whoami, ttoken.kvno);
-		scIndex = 2;
 	    }
+	    sc = (struct rx_securityClass *)
+		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
+					  ttoken.kvno, ttoken.ticketLen,
+					  ttoken.ticket);
 	}			/*Got a ticket */
     } /*Authentication desired */
-    else
-	scIndex = 0;
 
     /*
      * Generate the appropriate security object for the connection.
@@ -204,21 +275,15 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
 #ifdef USS_VOL_DB
     printf("[%s] Generating Rx security object\n", rn);
 #endif /* USS_VOL_DB */
-    switch (scIndex) {
-    case 0:
+    if (!sc) {
+	if (scIndex) {
+	    fprintf(stderr,
+		"%s: Couldn't make security object for index=%d, running unauthenticated.\n",
+		uss_whoami, scIndex);
+	    scIndex = 0;
+	}
 	sc = (struct rx_securityClass *)
 	    rxnull_NewClientSecurityObject();
-	break;
-
-    case 1:
-	break;
-
-    case 2:
-	sc = (struct rx_securityClass *)
-	    rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					  ttoken.kvno, ttoken.ticketLen,
-					  ttoken.ticket);
-	break;
     }
 
     /*
@@ -259,7 +324,7 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
     code = ubik_ClientInit(serverconns, &uconn_vldbP);
     if (code) {
 	fprintf(stderr, "%s: Ubik client init failed.\n", uss_whoami);
-	return (code);
+	goto Done;
     }
 #ifdef USS_VOL_DB
     printf("[%s] VLDB ubik connection structure at 0x%x\n", rn, uconn_vldbP);
@@ -275,7 +340,23 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
      * Success!
      */
     initDone = 1;
-    return (0);
+    code = 0;
+Done:
+#if defined(AFS_RXK5)
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5context) {
+	if (cc)
+	    krb5_cc_close(k5context, cc);
+	if (k5_creds)
+	    krb5_free_creds(k5context, k5_creds);
+	krb5_free_principal(k5context, in_creds->client);
+	krb5_free_principal(k5context, in_creds->server);
+	krb5_free_context(k5context);
+    }
+#endif
+    /* no rxs_Release(sc); because we gave a reference to UV module */
+    if (tdir) afsconf_Close(tdir);
+    return (code);
 
 }				/*InitThisModule */
 
@@ -738,7 +819,7 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
      * trying to perform a volume creation creation.
      */
     if (!initDone) {
-	code = InitThisModule(NoAuthFlag, uss_ConfDir, uss_Cell);
+	code = InitThisModule(AuthFlags, uss_ConfDir, uss_Cell);
 	if (code) {
 	    com_err(uss_whoami, code,
 		    "while inititializing VLDB connection(s)\n");
@@ -949,7 +1030,7 @@ uss_vol_DeleteVol(a_volName, a_volID, a_servName, a_servID, a_partName,
      * proceeding apace.
      */
     if (!initDone) {
-	code = InitThisModule(NoAuthFlag, uss_ConfDir, uss_Cell);
+	code = InitThisModule(AuthFlags, uss_ConfDir, uss_Cell);
 	if (code)
 	    return (code);
     }
@@ -1104,7 +1185,7 @@ uss_vol_GetVolInfoFromMountPoint(a_mountpoint)
      * lives.  Make sure our VLDB stuff has been initialized first.
      */
     if (!initDone) {
-	code = InitThisModule(NoAuthFlag, uss_ConfDir, uss_Cell);
+	code = InitThisModule(AuthFlags, uss_ConfDir, uss_Cell);
 	if (code)
 	    return (code);
     }

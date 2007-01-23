@@ -1021,12 +1021,12 @@ fs_stateCheckHeader(struct fs_state_header * hdr)
 	ViceLog(0, ("fs_stateCheckHeader: wrong endianness\n"));
 	ret = 1;
     }
-#else /* AFSLITTLE_ENDIAN */
+#else /* WORDS_BIGENDIAN */
     else if (hdr->endianness) {
 	ViceLog(0, ("fs_stateCheckHeader: wrong endianness\n"));
 	ret = 1;
     }
-#endif /* AFSLITTLE_ENDIAN */
+#endif /* WORDS_BIGENDIAN */
 
     else if (hdr->stamp.magic != FS_STATE_MAGIC) {
 	ViceLog(0, ("fs_stateCheckHeader: invalid dump header\n"));

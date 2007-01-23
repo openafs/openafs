@@ -78,6 +78,10 @@ pxclient_Initialize(int auth, afs_int32 serverAddr)
 	sc = rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
 					   ttoken.kvno, ttoken.ticketLen,
 					   ttoken.ticket);
+	break;
+    case 3:
+	sc = rxk5_NewClientSecurityObject(rxk5_auth, k5_creds, 0);
+	break;
 #endif /* notdef */
     }
     serverconns[0] =

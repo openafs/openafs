@@ -555,6 +555,7 @@ main(int argc, char **argv)
     }
 #endif
 
+    initialize_rx_error_table();
     rx_Init(0);
 
     ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe unik server");

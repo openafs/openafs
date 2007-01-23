@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -12,7 +12,39 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+<rxk5>
+K5SSL_DEF=@K5SSL_DEF@
+K5SSL_INC=@K5SSL_INC@
 
+AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
+AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+AFS_K5SSL_RC4 = e_rc4.o rc4.o
+#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+
+AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
+	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
+	m_crc32.o \
+	m_md4.o \
+	m_md5.o \
+	md4c.o \
+	md5c.o \
+	m_sha1.o \
+	shs.o
+
+AFS_RXK5_OBJS = \
+	rxk5_tkt.o \
+	rxkad_tkt.o \
+	afs_token.xdr.o \
+	rxk5_client.o \
+	rxk5_common.o \
+	rxk5c.xdr.o \
+	xdr_mem.o
+
+<all>
 # OS specific object files:
 AFS_OS_OBJS = \
 	base64.o \
@@ -23,6 +55,10 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vm.o \
+<rxk5>
+	$(AFS_RXK5_OBJS) \
+	$(AFS_K5SSL_OBJS) \
+<all>
 	osi_vnodeops.o
 
 AFS_OS_NFSOBJS = \
@@ -112,7 +148,7 @@ R10000_KDEFS = -DCRIME -DIP32 -DCRM -D_K32U64 -xansi -D_K32U64 -D_PAGESZ=4096 \
 	-DR4600SC -DTRITON -DR10000 -D_NO_R4000 -g -elf -mips2 -fullwarn \
 	-non_shared -nostdinc -mips2 -o32 \
 	-woff 1685,515,608,658,799,803,852,1048,1233,1499,1501 \
-	-Wf,-XNp12000 -DDEFAULTSEMAMETER=1 
+	-Wf,-XNp12000 -DDEFAULTSEMAMETER=1
 <sgi_64>
 KDEFS= -I/usr/include -I/usr/include/sys -D_KERNEL -DSTATIC=static \
 	-non_shared -elf -xansi \
@@ -183,7 +219,7 @@ IP21_KDEFS = -DIP21 -DEVEREST -DMP -DTFP -TARG:processor=r8000 -Ofast=ip21 $(KDE
 # when -Ofast used on IP24 Indy, the STATIC.*/libafs*.a claims to be 64-bit and /etc/refuses to build the
 # object in the kernel.
 IP22_4K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
-	-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -TARG:platform=ip22_4k:processor=r4000 $(KDEFS_32) 
+	-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -TARG:platform=ip22_4k:processor=r4000 $(KDEFS_32)
 IP22_5K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
 	-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -TARG:platform=ip22_5k:processor=r5000 $(KDEFS_32)
 #IP24 (Indy, Challenge S) is reported by hinv(1) as IP22, CPU's R4000, R4400, R4600, R5000
@@ -225,10 +261,12 @@ LDFLAGS_32 = -n32 -IPA
 
 
 <all>
-DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-OPTF=${OPT} 
-OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(KOPTS) ${DBUG}
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT ${K5SSL_DEF}
+OPTF=${OPT}
+OPTF2=${OPT2}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} ${K5SSL_INC} \
+	   -I${TOP_SRCDIR}/rxk5 \
+	   $(DEFINES) -G 0 $(KDEFS) $(KOPTS) ${DBUG}
 
 # This tells Makefile.common to use it's single directory build target.
 #COMPDIRS = single_compdir
@@ -254,7 +292,7 @@ KOBJ = STATIC MODLOAD
 
 
 setup:
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys 
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys
 	-ln -fs /usr/include/sys h
 	-ln -fs /usr/include/net /usr/include/netinet .
 	-ln -fs /usr/include/rpc /usr/include/sys .

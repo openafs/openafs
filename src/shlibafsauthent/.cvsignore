@@ -1,4 +1,6 @@
 Makefile
 libafsauthent.a.*
+libafsauthent.o.*
+linktest
 libafsauthent.sl*
 libafsauthent.so*

@@ -18,6 +18,9 @@
 #include "afs/afs_args.h"
 #endif
 
+#ifdef AFS_RXK5
+typedef void* rxk5_creds_opaque;
+#endif
 
 /* Upper bound on number of iovecs out uio routines will deal with. */
 #define	AFS_MAXIOVCNT	    16
@@ -281,6 +284,9 @@ struct unixuser {
     afs_int32 tokenTime;	/* last time tokens were set, used for timing out conn data */
     afs_int32 stLen;		/* ticket length (if kerberos, includes kvno at head) */
     char *stp;			/* pointer to ticket itself */
+#ifdef AFS_RXK5
+    rxk5_creds_opaque rxk5creds; /* krb5 creds, if we have them */
+#endif
     struct ClearToken ct;
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
     void *cellinfo;             /* pointer to cell info (PAG manager only) */

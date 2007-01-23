@@ -63,7 +63,6 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 static int
 afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
 {
-    int ngrps;
     int i;
     gid_t *gp;
 

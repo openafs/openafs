@@ -30,6 +30,12 @@ RCSID
 #include "afs/afsint.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <auth/cellconfig.p.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 #include "audit.h"
 #include "lock.h"
 #ifdef AFS_AIX32_ENV
@@ -324,6 +330,9 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     case KANOAUTH:		/* kautils.h   */
     case RXKADNOAUTH:		/* rxkad.h     */
+#ifdef AFS_RXK5 
+    case RXK5NOAUTH:		/* rxk5errors.h*/
+#endif
 	result = AUDIT_FAIL_AUTH;
 	break;
     case EPERM:		/* errno.h     */
@@ -493,7 +502,28 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                     }
                     strcpy(afsName, vname);
                 }
-	    } else {		/* Unauthenticated & unknown */
+	    }
+#ifdef AFS_RXK5 
+	    else if (secClass == 5) { /* authenticated rxk5 */
+	      
+	      /* TODO:  review this */
+	      
+	      char *rxk5_princ;
+	      int lvl, expires, kvno, enctype;
+	      afs_int32 rxk5_auth_r = 0;
+	      
+	      if (code = rxk5_GetServerInfo(conn, &lvl, 
+					    &expires, &rxk5_princ, &kvno, 
+					    &enctype)) {
+		    osi_audit("AFS_Aud_NoAFSId (rxk5)", (-1), AUD_STR, audEvent, AUD_END);
+		    strcpy(afsName, "--NoName--");
+	      } else {
+		memset(afsName, 0, MAXKTCNAMELEN); 
+		strncpy(afsName, rxk5_princ, MAXKTCNAMELEN);
+	      }
+	    }
+#endif      
+	    else {		/* Unauthenticated & unknown */
 		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
                 strcpy(afsName, "--Unknown--");
 	    }

@@ -1,0 +1,210 @@
+#
+# Copyright (c) 2006
+# The Regents of the University of Michigan
+# ALL RIGHTS RESERVED
+#
+# Permission is granted to use, copy, create derivative works
+# and redistribute this software and such derivative works
+# for any purpose, so long as the name of the University of
+# Michigan is not used in any advertising or publicity
+# pertaining to the use or distribution of this software
+# without specific, written prior authorization.  If the
+# above copyright notice or any other identification of the
+# University of Michigan is included in any copy of any
+# portion of this software, then the disclaimer below must
+# also be included.
+#
+# This software is provided as is, without representation
+# from the University of Michigan as to its fitness for any
+# purpose, and without warranty by the University of
+# Michigan of any kind, either express or implied, including
+# without limitation the implied warranties of
+# merchantability and fitness for a particular purpose.  The
+# regents of the University of Michigan shall not be liable
+# for any damages, including special, indirect, incidental, or
+# consequential damages, with respect to any claim arising
+# out of or in connection with the use of the software, even
+# if it has been or is hereafter advised of the possibility of
+# such damages.
+#
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+@ENABLE_DC@DC_FLAGS=-DDC_SUPPORT
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=@SSLINCL@ ${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DUSE_SSL -Wmissing-prototypes $(DC_FLAGS)
+LIBS=@SSLLIBS@ $(LIBCOM_ERR) ${XLIBS}
+
+#FAKEAFS=fakeafs.o
+EXTENDED=crypt.o
+#FAKESSL=evp.o e_rc4.o rc4.o m_sha1.o shs.o m_md4.o md4c.o m_md5.o md5c.o \
+#e_cast.o cast_cbc.o cast_ofb.o cast_cfb.o cast_ecb.o cast.o \
+#e_des.o des_cbc.o des_ofb.o des_cfb.o des_ecb.o des.o \
+#e_des3.o des3_cbc.o des3_ofb.o des3_cfb.o des3_ecb.o \
+#e_aes.o aes_cbc.o aes_ofb.o aes_cfb.o aes_ecb.o rijndael.o $(FAKEAFS)
+#SSL_EXTRA_RC6=e_rc6.o rc6_cbc.o rc6_ofb.o rc6_cfb.o rc6_ecb.o rc6.o
+SSL_EXTRAS=m_crc32.o $(SSL_EXTRA_RC6) $(FAKESSL)
+@ENABLE_DC@DC_EXTRA=k5s_dc.o cci_er.o CCacheIPCUser.o
+KVNO=k5s_sv.o k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_rn.o k5s_ck.o k5s_cg.o k5s_tr.o k5s_a2.o k5s_cs.o k5s_er.o $(DC_EXTRA)
+PARS=k5s_cm.o k5s_in.o k5s_cf.o k5s_rn.o k5s_er.o
+ENC=k5s_ck.o k5s_rn.o
+KLIST=k5s_sv.o k5s_cm.o k5s_cc.o k5s_a1.o k5s_cf.o k5s_in.o k5s_ci.o k5s_si.o k5s_rn.o k5s_ck.o k5s_er.o $(DC_EXTRA)
+KINIT=$(KVNO) k5s_si.o k5s_cn.o k5s_io.o k5s_bl.o k5s_pw.o k5s_pb.o k5s_a4.o $(EXTENDED)
+LIBOBJS=$(KVNO) k5s_a3.o k5s_sc.o k5s_sw.o k5s_kd.o k5s_si.o k5s_hr.o k5s_bl.o k5s_sk.o k5s_mc.o k5s_er.o k5s_io.o k5s_cn.o k5s_pw.o k5s_pb.o k5s_a4.o $(EXTENDED) $(SSL_EXTRAS) $(DC_EXTRA)
+ALL=libk5ssl.a t_enc t_sum t_pars klist kvno
+TESTS=test_sum test_enc
+
+all: $(ALL) ${TOP_LIBDIR}/libk5ssl.a ${TOP_INCDIR}/k5ssl.h
+
+#all: $(ALL)
+
+k5s_er.c k5ssl.h: k5s_er.et k5ssl.p.h
+	$(RM) -f k5s_er.c k5ssl.h
+	$(COMPILE_ET) -p ${srcdir} k5s_er -h k5ssl
+
+t_ssl: t_ssl.o $(SSL_EXTRAS)
+	$(CC) -o t_ssl t_ssl.o $(SSL_EXTRAS) $(LIBS)
+t_ctstest: t_ctstest.o $(CRYPTO)
+	$(CC) -o t_ctstest t_ctstest.o $(CRYPTO) $(LIBS)
+t_ctsrijndael: t_ctsrijndael.o $(CRYPTO)
+	$(CC) -o t_ctsrijndael t_ctsrijndael.o $(CRYPTO) $(LIBS)
+t_cbcrijndael: t_cbcrijndael.o $(CRYPTO)
+	$(CC) -o t_cbcrijndael t_cbcrijndael.o $(CRYPTO) $(LIBS)
+clean:
+	$(RM) -f *.o
+	$(RM) -f k5ssl.h k5s_er.c
+	$(RM) -f t_ssl
+	$(RM) -f t_testrijndael t_ctsrijndael t_ctstest t_timerijndael
+	$(RM) -f klist kvno rcf x s
+	$(RM) -f t_a1 t_a2 t_a3 t_cbcrijndael t_cf t_crc32 t_enc t_pars t_sum
+	$(RM) -f *.a *.o core AFS_component_version_number.c
+	$(RM) -f t_s2k kinit
+	$(RM) -f libk5ssl.a
+	$(RM) -f CCacheIPC.h CCacheIPCServer.c CCacheIPCUser.c
+	$(RM) -f cci_er.c cci_er.h
+t_testrijndael: $(CRYPTO) t_testrijndael.o
+	$(CC) -o t_testrijndael $(CRYPTO) t_testrijndael.o $(LIBS)
+t_timerijndael: $(CRYPTO) t_timerijndael.o cputime.o
+	$(CC) -o t_timerijndael $(CRYPTO) t_timerijndael.o cputime.o $(LIBS)
+VALS=../src/
+test: $(TESTS)
+test_rijndael: t_testrijndael t_ctsrijndael
+	./t_testrijndael $(VALS)ecb_tbl.txt
+	./t_testrijndael $(VALS)ecb_vk.txt
+	./t_testrijndael $(VALS)ecb_vt.txt
+#	./t_testrijndael $(VALS)ecb_e_m.txt
+#	./t_testrijndael $(VALS)ecb_d_m.txt
+#	./t_cbcrijndael $(VALS)cbc_e_m.txt
+#	./t_cbcrijndael $(VALS)cbc_d_m.txt
+	./t_ctsrijndael $(VALS)draft03.txt
+test_crc32: t_crc32
+	./t_crc32 $(VALS)crc32.txt
+test_sum: t_sum
+	./t_sum sum-aes.txt
+	./t_sum sum-base.txt
+	./t_sum sum-des.txt
+	./t_sum sum-des3.txt
+	./t_sum sum-rc4.txt
+	# ./t_sum sum-old.txt
+test_enc: t_enc
+	./t_enc enc-aes.txt
+	./t_enc enc-des.txt
+	./t_enc enc-des3.txt
+	./t_enc enc-rc4.txt
+	# ./t_enc enc-old.txt
+test_enc_F: t_enc
+	./t_enc -F enc-aes.txt
+	./t_enc -F enc-des.txt
+	./t_enc -F enc-des3.txt
+	./t_enc -F enc-rc4.txt
+	# ./t_enc -F enc-old.txt
+t_crc32: t_crc32.o $(SSL_EXTRAS)
+	$(CC) -o t_crc32 t_crc32.o $(SSL_EXTRAS) $(LIBS)
+t_sum: t_sum.o $(ENC) $(SSL_EXTRAS)
+	$(CC) -o t_sum t_sum.o $(ENC) $(SSL_EXTRAS) $(LIBS)
+t_sum.o: k5ssl.h
+t_enc: t_enc.o $(ENC) $(SSL_EXTRAS)
+	$(CC) -o t_enc t_enc.o $(ENC) $(SSL_EXTRAS) $(LIBS)
+t_ctsrijndael2: t_ctsrijndael2.o $(ENC) $(SSL_EXTRAS)
+	$(CC) -o t_ctsrijndael2 t_ctsrijndael2.o $(ENC) $(SSL_EXTRAS) $(LIBS)
+t_ctsrijndael2.o: t_ctsrijndael.c t_ctsrijndael2.c k5ssl.h
+t_ctsrijndael2.o t_ctsrijndael.o t_enc.o t_sum.o x.o: k5ssl.h
+klist.o t_a1.o t_a2.o t_a3.o t_cf.o t_pars.o: k5ssl.h
+t_ctsrc6: t_ctsrc62.o k5s_ck.o $(SSL_EXTRAS)
+	$(CC) -o t_ctsrc6 t_ctsrc6.o k5s_ck.o $(SSL_EXTRAS) $(LIBS)
+t_ctsrc62.o: t_ctsrc6.c t_ctsrc62.c k5ssl.h
+klist: klist.o $(KLIST) $(SSL_EXTRAS)
+	$(CC) -o klist klist.o $(KLIST) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_a1: t_a1.o a1.o bindump.o cm.o in.o k5s_rn.o cf.o $(SSL_EXTRAS)
+	$(CC) -o t_a1 t_a1.o a1.o bindump.o cm.o in.o k5s_rn.o cf.o $(SSL_EXTRAS) -lssl $(LIBS)
+t_a2: t_a2.o a1.o bindump.o $(PARS) k5s_ck.o $(SSL_EXTRAS)
+	$(CC) -o t_a2 t_a2.o a1.o bindump.o $(PARS) k5s_ck.o $(SSL_EXTRAS) -lssl $(LIBS) $(K5LIBS)
+t_a3: t_a3.o sc.o a1.o bindump.o cm.o k5s_rn.o in.o cf.o k5s_ck.o $(SSL_EXTRAS)
+	$(CC) -o t_a3 t_a3.o sc.o a1.o bindump.o cm.o k5s_rn.o in.o cf.o k5s_ck.o $(SSL_EXTRAS) -lssl $(LIBS) $(K5LIBS)
+t_pars: t_pars.o bindump.o $(PARS) $(SSL_EXTRAS)
+	$(CC) -o t_pars t_pars.o bindump.o $(PARS) $(SSL_EXTRAS) $(LIBS)
+t_cf: t_cf.o cf.o
+	$(CC) -o t_cf t_cf.o cf.o
+kvno: kvno.o $(KVNO) $(SSL_EXTRAS)
+	$(CC) -o kvno kvno.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+kinit: kinit.o $(KINIT) $(SSL_EXTRAS)
+	$(CC) -o kinit kinit.o $(KINIT) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_s2k: t_s2k.o libk5ssl.a
+	$(CC) -o t_s2k t_s2k.o libk5ssl.a $(LIBS) $(K5LIBS)
+t_w: t_w.o tr.o in.o cf.o k5s_rn.o cm.o
+	$(CC) -o t_w t_w.o tr.o in.o cf.o k5s_rn.o cm.o $(LIBS) $(K5LIBS)
+t_e: t_e.o tr.o in.o cf.o k5s_rn.o cm.o
+	$(CC) -o t_e t_e.o tr.o in.o cf.o k5s_rn.o cm.o $(LIBS)
+t_a4: t_a4.o sc.o a1.o bindump.o cm.o k5s_rn.o in.o cf.o k5s_ck.o a2.o $(SSL_EXTRAS)
+	$(CC) -o t_a4 t_a4.o sc.o a1.o bindump.o cm.o k5s_rn.o in.o cf.o k5s_ck.o a2.o $(SSL_EXTRAS) -lssl $(LIBS) $(K5LIBS)
+t_testdes: t_testdes.o $(FAKESSL)
+	$(CC) -o t_testdes t_testdes.o $(FAKESSL) $(DESLIB) $(LIBS)
+t_timedes: t_timedes.o cputime.o $(FAKESSL)
+	$(CC) -o t_timedes t_timedes.o cputime.o $(FAKESSL) $(DESLIB) $(LIBS)
+t_locate: t_locate.o $(KVNO) $(SSL_EXTRAS)
+	$(CC) $(LOADFLAGS) -o t_locate t_locate.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+t_hr: t_hr.o $(KVNO) k5s_hr.o $(SSL_EXTRAS)
+	$(CC) $(LOADFLAGS) -o t_hr t_hr.o k5s_hr.o $(KVNO) $(SSL_EXTRAS) $(LIBS) $(K5LIBS)
+
+libk5ssl.a: $(LIBOBJS)
+	rm -f libk5ssl.a
+	ar qcv libk5ssl.a $(LIBOBJS)
+	ranlib libk5ssl.a
+
+depinstall: ${TOP_INCDIR}/k5ssl.h
+
+install: ${DESTDIR}${libdir}/libk5ssl.a ${DESTDIR}${includedir}/k5ssl.h
+${DESTDIR}${libdir}/libk5ssl.a: libk5ssl.a
+	${INSTALL} $? $@
+${DESTDIR}${includedir}/k5ssl.h: ${srcdir}/k5ssl.h
+	${INSTALL} $? $@
+${TOP_LIBDIR}/libk5ssl.a: libk5ssl.a
+	${INSTALL} $? $@
+${TOP_INCDIR}/k5ssl.h: ${srcdir}/k5ssl.h
+	${INSTALL} $? $@
+
+#
+# darwin cache only
+# EXPERIMENTAL; unsafe for real use
+#
+
+CCacheIPC.h CCacheIPCServer.c CCacheIPCUser.c: ccache.defs
+	mig ccache.defs
+k5s_dc.o CCacheIPCServer.o CCacheIPCUser.o: cc.types.h CCacheIPC.h
+k5s_dc.o: k5s_im.h k5ssl.h cci_er.h
+
+cci_er.c cci_er.h: cci_er.et
+	$(RM) -f cci_er.c cci_er.h
+	$(COMPILE_ET) -p ${srcdir} cci_er
+
+#
+# Misc dependencies
+#
+
+k5s_ck.o: k5ssl.h
+k5s_a1.o k5s_cc.o k5s_cf.o k5s_cm.o k5s_in.o k5s_rn.o k5s_sc.o k5s_sv.o: k5ssl.h
+k5s_si.o k5s_ci.o: k5ssl.h
+
+k5s_cc.o k5s_cg.o k5s_ck.o k5s_cn.o k5s_cs.o k5s_mc.o \
+k5s_pb.o k5s_pw.o k5s_cf.o k5s_in.o: k5s_im.h

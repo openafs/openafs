@@ -50,6 +50,11 @@ RCSID
 #include <des.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <errno.h>
 #include "budb.h"
 #include "budb_errs.h"
@@ -1416,6 +1421,8 @@ CreateDump(call, dump)
     afs_int32 kvno;
     Date expiration;		/* checked by Security Module */
     struct ktc_principal principal;
+    afs_int32 secClass;
+    afs_int32 authenticated = 0;
 
     if (!callPermitted(call))
 	return BUDB_NOTPERMITTED;
@@ -1427,20 +1434,66 @@ CreateDump(call, dump)
     if (eval)
 	return eval;
 
-    eval =
+    secClass = rx_SecurityClassOf(rx_ConnectionOf(call));
+    if (secClass == 2) {
+
+      eval =
 	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, &expiration,
 			    principal.name, principal.instance,
 			    principal.cell, &kvno);
 
-    if (eval) {
+      if (eval) {
 	if (eval != RXKADNOAUTH)
-	    ABORT(eval);
-
+	  ABORT(eval);
+	
 	strcpy(principal.name, "");
 	strcpy(principal.instance, "");
 	strcpy(principal.cell, "");
 	expiration = 0;
-    } else {
+
+      } else {
+	authenticated = 1;
+      }
+    }
+
+#ifdef AFS_RXK5
+    else if (secClass == 5) {
+
+      char *rxk5_princ;
+      int expires;
+      char *afsname = 0, *k4realm, *k4instance;
+      
+      eval = rxk5_GetServerInfo(call->conn, 0,
+				&expires, &rxk5_princ, 0, 0);
+      if(eval)
+	goto out;
+
+      expiration = expires;
+      eval = afs_rxk5_parse_name_k5(BU_conf, rxk5_princ, &afsname, 1);
+      if(eval)
+	goto out;
+
+      k4realm = strchr(afsname, '@');
+      if (k4realm) *k4realm++ = 0;
+      k4instance = strchr(afsname, '.');
+      if (k4instance) *k4instance++ = 0;
+
+      memset(&principal, 0, sizeof principal);
+      strcpy(principal.name, afsname);
+      if(k4instance) strcpy(principal.instance, k4instance);
+      if(k4realm) strcpy(principal.cell, k4realm);
+
+    out:
+      
+      if(afsname)
+	free(afsname);
+
+	if (eval && eval != RXK5NOAUTH)
+		ABORT(eval);
+    }
+#endif
+
+    if(authenticated) {
 	/* authenticated. Take user supplied principal information */
 	if (strcmp(dump->dumper.name, "") != 0)
 	    strncpy(principal.name, dump->dumper.name,

@@ -75,17 +75,6 @@ static char **zero_argv;
 static int readPipe;
 static int writePipe;
 
-/* 
- * now I know why this was necessary! - it's a hokie thing - 
- * the call to ka_UserAuthenticateGeneral doesn't compile otherwise
- */
-int
-osi_audit()
-{
-    return 0;
-}
-
-
 main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;

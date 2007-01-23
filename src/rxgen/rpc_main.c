@@ -854,6 +854,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    prefix = &argv[i][j + 1];
 		    goto nextarg;
 		case 'I':
+		case 'D':
 		    if (argv[i][j - 1] != '-')
 			return (0);
 		    IncludeDir[nincludes++] = &argv[i][j - 1];

@@ -24,6 +24,17 @@ RCSID
 #include <afs/auth.h>
 #include <time.h>		/*time(), ctime() */
 #include <pwd.h>
+#ifdef USING_SSL
+#include "k5ssl.h"
+#else
+#include <krb5.h>
+#endif
+#include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
+#include <afs/rxk5_tkt.h>
+#endif
+#include <afs/afs_token.h>
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -46,6 +57,111 @@ RCSID
 
 #include "AFS_component_version_number.c"
 
+/*
+ *  Get AFS token at index ix, using new kernel token interface. 
+ */
+int
+ktc_GetTokenEx(
+    afs_int32 index,
+    char *cell,
+    afs_token **a_token);
+
+int
+print_afs_token(afs_int32 index, afs_token *a_token)
+{
+    rxkad_token *kad_token;
+#ifdef AFS_RXK5
+    rxk5_token *k5_token;
+    krb5_creds *k5creds;
+    char *rxk5_princ;
+    krb5_context k5context;
+#endif
+    time_t current_time;	/*Current time of day */
+    time_t tokenExpireTime;	/*When token expires */
+    char expireMsg[512];
+    char *expireString;		/*Char string of expiration time */
+    afs_int32 code;
+    char *idtype;
+	    
+    if(!a_token)
+	return EINVAL;
+
+    current_time = time(0);
+    switch(a_token->cu->cu_type) {
+    case CU_KAD:
+	kad_token = &(a_token->cu->cu_u.cu_kad);
+	tokenExpireTime = kad_token->token.endtime;
+	if(tokenExpireTime <= current_time) {
+	    sprintf(expireMsg, "[ >> Expired << ]");
+	} else {
+	    expireString = ctime(&tokenExpireTime);
+	    expireString += 4;	/*Move past the day of week */
+	    expireString[12] = '\0';
+	    sprintf(expireMsg, "[Expires %s]", expireString);
+	}
+	if ((kad_token->token.endtime - kad_token->token.begintime) & 1)
+	    idtype = "AFS ID";
+	else
+	    idtype = "Unix UID";
+	printf("User's (%s %d) tokens for afs@%s", 
+	    idtype,
+	    kad_token->token.viceid,
+	    kad_token->cell_name);
+	if (!a_token->cell)
+	    printf (" index %s", index);
+	else if (strcmp(a_token->cell, kad_token->cell_name))
+	    printf (" cell %s", a_token->cell);
+	printf (" %s\n", expireMsg);
+	break;
+#ifdef AFS_RXK5
+    case CU_K5:
+	k5creds = 0;
+	rxk5_princ = 0;
+	k5context  = rxk5_get_context(0);
+	k5_token  = &(a_token->cu->cu_u.cu_rxk5);
+	tokenExpireTime = k5_token->endtime;
+	if(tokenExpireTime <= current_time) {
+	    sprintf(expireMsg, "[ >> Expired << ]");
+	} else {
+	    expireString = ctime(&tokenExpireTime);
+	    expireString += 4;	/*Move past the day of week */
+	    expireString[12] = '\0';
+	    sprintf(expireMsg, "[Expires %s]", expireString);
+	}
+	code = afs_token_to_k5_creds(a_token, &k5creds);
+	code = krb5_unparse_name(k5context, 
+				     k5creds->client, 
+				     &rxk5_princ);
+	printf("K5 credential for %s", rxk5_princ);
+	if (a_token->cell)
+	    printf (" in cell %s",
+		a_token->cell);
+	else
+	    printf (" index %d", index);
+	printf (" %s\n", expireMsg);
+	if(rxk5_princ)
+	    free(rxk5_princ);
+	if(k5creds)
+	    krb5_free_creds(k5context, k5creds);
+	break;
+#endif
+    default:
+	if (a_token->cell) {
+	    printf ("unknown token type %d for cell %s\n",
+		a_token->cu->cu_type,
+		a_token->cell);
+	} else {
+	    printf ("unknown token type %d index %d\n",
+		a_token->cu->cu_type,
+		index);
+	}
+	/* bad credential type */
+	return -1;
+    }
+
+    return 0;
+}
+
 int
 main(int argc, char **argv)
 {				/*Main program */
@@ -57,6 +173,8 @@ main(int argc, char **argv)
     char UserName[MAXKTCNAMELEN * 2 + 2]; /*Printable user name */
     struct ktc_principal serviceName, clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
+    afs_int32 index;
+    afs_token *a_token;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -86,49 +204,20 @@ main(int argc, char **argv)
     printf("\nTokens held by the Cache Manager:\n\n");
     cellNum = 0;
     current_time = time(0);
-    while (1) {
-	rc = ktc_ListTokens(cellNum, &cellNum, &serviceName);
-	if (rc) {
-	    /* only error is now end of list */
-	    printf("   --End of list--\n");
-	    break;
-	} else {
-	    /* get the ticket info itself */
-	    rc = ktc_GetToken(&serviceName, &token, sizeof(token),
-			      &clientName);
-	    if (rc) {
-		printf
-		    ("tokens: failed to get token info for service %s.%s.%s (code %d)\n",
-		     serviceName.name, serviceName.instance, serviceName.cell,
-		     rc);
-		continue;
-	    }
-	    tokenExpireTime = token.endTime;
-	    strcpy(UserName, clientName.name);
-	    if (clientName.instance[0] != 0) {
-		strcat(UserName, ".");
-		strcat(UserName, clientName.instance);
-	    }
-	    if (UserName[0] == 0)
-		printf("Tokens");
-	    else if (strncmp(UserName, "AFS ID", 6) == 0) {
-		printf("User's (%s) tokens", UserName);
-	    } else if (strncmp(UserName, "Unix UID", 8) == 0) {
-		printf("Tokens");
-	    } else
-		printf("User %s's tokens", UserName);
-	    printf(" for %s%s%s@%s ", serviceName.name,
-		   serviceName.instance[0] ? "." : "", serviceName.instance,
-		   serviceName.cell);
-	    if (tokenExpireTime <= current_time)
-		printf("[>> Expired <<]\n");
-	    else {
-		expireString = ctime(&tokenExpireTime);
-		expireString += 4;	/*Move past the day of week */
-		expireString[12] = '\0';
-		printf("[Expires %s]\n", expireString);
-	    }
+
+    for(index = 0; index < 200; ++index) {
+	rc = ktc_GetTokenEx(index, 0, &a_token);
+	if(!rc && a_token) {
+	    print_afs_token(index, a_token);
+	    free_afs_token(a_token);
 	}
+	if (rc == KTC_NOENT) break;
     }
+    if (rc == -1 && errno) rc = errno;
+    if (rc != KTC_NOENT)
+	com_err("tokens", rc, "while fetching tokens");
+    else
+	printf("   --End of list--\n");
+
     exit(0);
 }				/*Main program */

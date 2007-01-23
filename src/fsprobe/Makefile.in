@@ -12,16 +12,23 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
 
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
+RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 INCLS=fsprobe.h ${RPCINCLS}
 
+# NB: libkauth.a(kaerrors.o) only kauth dependency
 LIBS=${TOP_LIBDIR}/libvolser.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
         ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libvldb.a \
         ${TOP_LIBDIR}/libubik.a \
         ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libsys.a \
+	${RXK5} \
         ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
-        ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libkauth.a \
+        ${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/librx.a \
@@ -51,7 +58,7 @@ fsprobe_callback.o: fsprobe_callback.c ${INCLS}
 
 fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
 	${CC} ${CFLAGS} -o fsprobe_test fsprobe_test.o libfsprobe.a \
-		${LIBS} ${XLIBS}
+		${LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 #
 # Install targets

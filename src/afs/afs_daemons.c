@@ -342,7 +342,6 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
 		&& afs_globalVp) {
-		struct vcache *tvc = afs_globalVp;
 		/* If we had a root fid before and it changed location we reset
 		 * the afs_globalVp so that it will be reevaluated.
 		 * Just decrement the reference count. This only occurs during

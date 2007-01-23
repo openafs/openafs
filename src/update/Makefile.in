@@ -12,25 +12,36 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
+	$(RXK5) \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/util.a \
+
+LIBUTIL=${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a
+
+LIBAUDIT=${TOP_LIBDIR}/libaudit.a
 
 all: upserver upclient
 
 #
 # Build targets
 #
-upclient: client.o update.cs.o utils.o ${LIBS} 
-	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} ${XLIBS}
+upclient: client.o update.cs.o utils.o ${LIBS} ${LIBUTIL}
+	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} \
+	${LIBUTIL} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
-upserver: server.o utils.o update.ss.o ${LIBS}
-	${CC} ${CFLAGS} -o upserver server.o utils.o update.ss.o ${LIBS} ${XLIBS}
+upserver: server.o utils.o update.ss.o ${LIBS} ${LIBAUDIT} ${LIBUTIL}
+	${CC} ${CFLAGS} -o upserver server.o utils.o update.ss.o ${LIBS} \
+	${LIBAUDIT} ${LIBUTIL} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 utils.o: utils.c update.h global.h
 

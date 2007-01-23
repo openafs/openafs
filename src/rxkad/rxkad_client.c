@@ -125,7 +125,7 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 
     LOCK_CUID;
     if (Cuid[0] == 0) {
-	afs_uint32 xor[2];
+	fc_InitializationVector xor[1];
 	tgen.ipAddr = rxi_getaddr();	/* comes back in net order */
 	clock_GetTime(&tgen.time);	/* changes time1 and time2 */
 	tgen.time.sec = htonl(tgen.time.sec);
@@ -142,8 +142,8 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 	if (aobj) {
 	    /* block is ready for encryption with session key, let's go for it. */
 	    tcp = (struct rxkad_cprivate *)aobj->privateData;
-	    memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
-	    fc_cbc_encrypt((char *)&tgen, (char *)&tgen, sizeof(tgen),
+	    memcpy(xor, tcp->ivec, sizeof(xor));
+	    fc_cbc_encrypt(&tgen, &tgen, sizeof(tgen),
 			   tcp->keysched, xor, ENCRYPT);
 	} else {
 	    /* Create a session key so that we can encrypt it */
@@ -176,7 +176,7 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 struct rx_securityClass *
 rxkad_NewClientSecurityObject(rxkad_level level,
 			      struct ktc_encryptionKey *sessionkey,
-			      afs_int32 kvno, int ticketLen, char *ticket)
+			      afs_int32 kvno, int ticketLen, const char *ticket)
 {
     struct rx_securityClass *tsc;
     struct rxkad_cprivate *tcp;
@@ -260,7 +260,7 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
     INC_RXKAD_STATS(challenges[rxkad_LevelIndex(tcp->level)]);
     if (v2) {
 	int i;
-	afs_uint32 xor[2];
+	fc_InitializationVector xor[1];
 	memset((void *)&r_v2, 0, sizeof(r_v2));
 	r_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
 	r_v2.spare = 0;
@@ -277,7 +277,7 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	r_v2.kvno = htonl(tcp->kvno);
 	r_v2.ticketLen = htonl(tcp->ticketLen);
 	r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse(&r_v2);
-	memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
+	memcpy(xor, tcp->ivec, sizeof(xor));
 	fc_cbc_encrypt(&r_v2.encrypted, &r_v2.encrypted,
 		       sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
 	response = (char *)&r_v2;

@@ -13,6 +13,12 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
@@ -31,17 +37,16 @@ INCLS=\
 LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libprot.a \
-	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
@@ -87,7 +92,8 @@ struct_ops.o: budb_errs.h
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 budb.cs.c: budb.rg
 	${RXGEN} -u -C -o $@ ${srcdir}/budb.rg

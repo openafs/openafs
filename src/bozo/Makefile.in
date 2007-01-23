@@ -12,6 +12,12 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
 INCLS=bnode.h \
@@ -32,13 +38,14 @@ LIBS=${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libprocmgmt.a
+
 
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
@@ -91,12 +98,13 @@ bosoprocs.o: bosoprocs.c ${INCLS}
 bos.o: bos.c ${INCLS} AFS_component_version_number.o
 
 bos: bos.o $(LIBS) libbos.a
-	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
+	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS) \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o
 
 bos_util: bos_util.o $(LIBS) 
-	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS}
+	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 ezbnodeops.o: ezbnodeops.c ${INCLS}
 
@@ -108,7 +116,13 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 bosserver: $(OBJS) $(LIBS)
-	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a $(LIBS)  ${XLIBS} 
+	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a \
+	$(LIBS) ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
+depinstall: \
+	boserr.c \
+	${TOP_INCDIR}/afs/bnode.h ${TOP_INCDIR}/afs/bosint.h \
+	bosint.xdr.c bosint.cs.c
 
 #
 # Install targets

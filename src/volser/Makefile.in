@@ -13,6 +13,11 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
 
 VINCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h
@@ -23,6 +28,7 @@ RINCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 
 INTINCLS=volint.h volser.h 
 
+# NB: libkauth.a(kaerrors.o) only kauth dependency
 LIBS=\
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/vlib.a \
@@ -33,12 +39,12 @@ LIBS=\
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/util.a
@@ -63,6 +69,8 @@ all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
+depinstall: volerr.c ${TOP_INCDIR}/afs/volint.h volint.cs.c volint.xdr.c
+
 ${TOP_INCDIR}/afs/volser.h: volser.h
 	${INSTALL_DATA} $? $@
 
@@ -77,11 +85,12 @@ restorevol: restorevol.c
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
-	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
 	${CC} ${DBUG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
-		${LDFLAGS} $(LIBS) ${XLIBS}
+		${LDFLAGS} $(LIBS) ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}
 	${CC} ${CFLAGS} -o voldump vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}

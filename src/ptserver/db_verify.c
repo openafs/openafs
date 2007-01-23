@@ -1440,6 +1440,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
 
     initialize_PT_error_table();
     initialize_U_error_table();
+    initialize_rx_error_table();
 
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
     memset(&misc, 0, sizeof(misc));

@@ -15,10 +15,14 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
 
 CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
-	 ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG -DNINTERFACE
+	 ${KRB5CFLAGS}  ${XCFLAGS} \
+	${ARCHFLAGS} -DRXDEBUG -DNINTERFACE
 
 LDFLAGS = ${DBUG} ${XLDFLAGS} ${ARCHFLAGS}
 
@@ -27,6 +31,7 @@ LIBS=${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/libprot.a	\
 	${TOP_LIBDIR}/libauth.a	\
 	${TOP_LIBDIR}/librxkad.a		\
+	${RXK5} \
 	${TOP_LIBDIR}/libubik.a 		\
 	${TOP_LIBDIR}/vlib.a		\
 	${TOP_LIBDIR}/libdir.a	\
@@ -37,7 +42,6 @@ LIBS=${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/librx.a		\
 	${TOP_LIBDIR}/libsys.a	\
 	${TOP_LIBDIR}/libdes.a		\
-	${TOP_LIBDIR}/libcom_err.a	\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafsutil.a
 
@@ -80,23 +84,23 @@ fileserver: ${objects} ${headers} ${LIBS}
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	    ${CC} -K ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} ;; \
 	*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} ;; \
 	esac
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c ${srcdir}/fsprobe.c
 
 fsprobe: fsprobe.o
-	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} 
+	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 cbd.o: callback.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o ${srcdir}/callback.c
 
 cbd: cbd.o
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 install: fileserver fs_stats.h
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

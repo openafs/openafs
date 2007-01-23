@@ -35,7 +35,7 @@ RCSID
 
 extern struct vlheader cheader;
 struct vlheader xheader;
-extern afs_uint32 HostAddress[];
+extern afs_uint32 vl_HostAddress[];
 extern int maxnservers;
 struct extentaddr extentaddr;
 extern struct extentaddr *ex_addr[];
@@ -334,10 +334,10 @@ CheckInit(trans, builddb)
 	vldbversion = ntohl(cheader.vital_header.vldbversion);
 
 	if (!ubcode && (vldbversion != 0)) {
-	    memcpy(HostAddress, cheader.IpMappedAddr,
+	    memcpy(vl_HostAddress, cheader.IpMappedAddr,
 		   sizeof(cheader.IpMappedAddr));
-	    for (i = 0; i < MAXSERVERID + 1; i++) {	/* cvt HostAddress to host order */
-		HostAddress[i] = ntohl(HostAddress[i]);
+	    for (i = 0; i < MAXSERVERID + 1; i++) {	/* cvt vl_HostAddress to host order */
+		vl_HostAddress[i] = ntohl(vl_HostAddress[i]);
 	    }
 
 	    code = readExtents(trans);
@@ -362,7 +362,7 @@ CheckInit(trans, builddb)
 	    cheader.vital_header.eofPtr = htonl(sizeof(cheader));
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
 		cheader.IpMappedAddr[i] = 0;
-		HostAddress[i] = 0;
+		vl_HostAddress[i] = 0;
 	    }
 	    code = vlwrite(trans, 0, (char *)&cheader, sizeof(cheader));
 	    if (code) {
@@ -469,11 +469,11 @@ FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
     }
 
     for (i = 0; i < MAXSERVERID + 1; i++) {
-	if ((HostAddress[i] & 0xff000000) == 0xff000000) {
-	    if ((base = (HostAddress[i] >> 16) & 0xff) > VL_MAX_ADDREXTBLKS) {
+	if ((vl_HostAddress[i] & 0xff000000) == 0xff000000) {
+	    if ((base = (vl_HostAddress[i] >> 16) & 0xff) > VL_MAX_ADDREXTBLKS) {
 		ERROR_EXIT(VL_INDEXERANGE);
 	    }
-	    if ((index = HostAddress[i] & 0x0000ffff) > VL_MHSRV_PERBLK) {
+	    if ((index = vl_HostAddress[i] & 0x0000ffff) > VL_MHSRV_PERBLK) {
 		ERROR_EXIT(VL_INDEXERANGE);
 	    }
 	    exp = &ex_addr[base][index];
@@ -490,7 +490,7 @@ FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
     if (createit) {
 	if (hostslot == -1) {
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
-		if (!HostAddress[i])
+		if (!vl_HostAddress[i])
 		    break;
 	    }
 	    if (i > MAXSERVERID)
@@ -520,7 +520,7 @@ FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
 				(char *)&tuuid, sizeof(tuuid));
 		    if (code)
 			ERROR_EXIT(VL_IO);
-		    HostAddress[i] =
+		    vl_HostAddress[i] =
 			0xff000000 | ((base << 16) & 0xff0000) | (j & 0xffff);
 		    *expp = exp;
 		    *basep = base;
@@ -531,7 +531,7 @@ FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
 			if (code)
 			    ERROR_EXIT(VL_IO);
 		    }
-		    cheader.IpMappedAddr[i] = htonl(HostAddress[i]);
+		    cheader.IpMappedAddr[i] = htonl(vl_HostAddress[i]);
 		    code =
 			vlwrite(trans,
 				DOFFSET(0, &cheader,

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,6 +27,12 @@ RCSID
 #include "rx/rxkad.h"
 #include "afs/auth.h"
 #include "afs/cellconfig.h"
+#ifdef AFS_RXK5
+#undef u	/* ukernel defines u */
+#include "rx/rxk5.h"
+#include "rxk5_utilafs.h"
+#endif
+#include "afs/afs_token.h"
 #include "afs/afsutil.h"
 #include "afs/ptclient.h"
 #include "afs/ptuser.h"
@@ -53,6 +59,12 @@ RCSID
 #include <rx/rxkad.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include "rx/rxk5.h"
+#include "rxk5_utilafs.h"
+#endif
+#include "afs_token.h"
+#include <errno.h>
 #include <afs/afsutil.h>
 #include "ptclient.h"
 #include "ptuser.h"
@@ -70,22 +82,43 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
+    afs_int32 force_flags;
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5context = 0;
+    krb5_ccache cc = 0;
+    char* afs_k5_princ = 0;
+#endif
     static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
-    struct ktc_token ttoken;
     afs_int32 scIndex;
     static struct afsconf_cell info;
     afs_int32 i;
-    char cellstr[64];
+    char cellstr[MAXCELLCHARS];
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
+    int say_noauth = 0;
+
+    force_flags = secLevel & (FORCE_RXK5|FORCE_RXKAD);
+    secLevel &= ~(FORCE_RXK5|FORCE_RXKAD);
+#if defined(AFS_RXK5)
+    memset(in_creds, 0, sizeof *in_creds);
+    if (!force_flags) {
+	force_flags |= env_afs_rxk5_default();
+    }
+#endif
 
     initialize_PT_error_table();
     initialize_RXK_error_table();
     initialize_ACFG_error_table();
     initialize_KTC_error_table();
+    initialize_U_error_table();
+#if defined(AFS_RXK5)
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
 
 #if defined(UKERNEL)
     if (!cell) {
@@ -93,16 +126,17 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     }
 #else /* defined(UKERNEL) */
     if (!cell) {
-        if (!tdir) 
+        if (!tdir)
             tdir = afsconf_Open(confDir);
 	if (!tdir) {
 	    if (confDir && strcmp(confDir, ""))
 		fprintf(stderr,
-			"libprot: Could not open configuration directory: %s.\n",
-			confDir);
+		    "%s: Could not open configuration directory: %s.\n",
+		    whoami, confDir);
             else
 		fprintf(stderr,
-			"libprot: No configuration directory specified.\n");
+		    "%s: No configuration directory specified.\n",
+		    whoami);
 	    return -1;
 	}
         gottdir = 1;
@@ -163,7 +197,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
      * want, don't get a new one. Unless the security level is 2 in
      * which case we will get one (and re-read the key file).
      */
-    if (pruclient && (lastLevel == secLevel) && (secLevel != 2)) {
+    if (pruclient && (lastLevel == secLevel|force_flags) && (secLevel&15 != 2)) {
 	return 0;
     }
 
@@ -173,56 +207,118 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	return code;
     }
 
-    scIndex = secLevel;
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
+    scIndex = 1;
+    sc = 0;
+
+
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
-    if ((secLevel == 2) && (afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
+    if (secLevel == 0) {
+	scIndex = 0;
+    } else if (secLevel == 2) {
 	/* If secLevel is two assume we're on a file server and use
 	 * ClientAuthSecure if possible. */
-	code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-	if (code)
+	code = afsconf_ClientAuthEx(tdir, &sc, &scIndex,
+		FORCE_SECURE | force_flags);
+	if (code) {
 	    fprintf(stderr,
 		    "libprot: clientauthsecure returns %d %s"
 		    " (so trying noauth)\n", code, error_message(code));
-	if (code)
 	    scIndex = 0;	/* use noauth */
-	if (scIndex != 2)
-	    /* if there was a problem, an unauthenticated conn is returned */
-	    sc[scIndex] = sc[2];
+	} else if (!scIndex) {
+	    code = EDOM;	/* XXX */
+	    say_noauth = 1;
+	}
+#if defined(AFS_RXK5)
+    } else if (secLevel && (force_flags & FORCE_RXK5)) {
+	/* Because rxgk has claimed indexes 3 and 4, the next available index
+	   for rxk5 is 5 */
+	char *what;
+
+	scIndex = 5;
+
+	code = ENOMEM;
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
+
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5context);
+	if(code) goto Failed;
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5context, &cc); /* in MIT is pointer to ctxt? */
+	if(code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
+	if(code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5context, afs_k5_princ,	&in_creds->server);
+	if(code) goto Failed;
+
+	what = "krb5_get_credentials";
+	/* 0 is cc flags */
+	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
+	if(code) goto Failed;
+
+	sc = rxk5_NewClientSecurityObject(rxk5_auth, k5_creds, 0);
+    Failed:
+	if (code) {
+	    if (afs_k5_princ)
+		com_err(whoami, code, "in %s for %s", what, afs_k5_princ);
+	    else
+		com_err(whoami, code, "in %s", what);
+	    code = 0;
+	}
+#endif
     } else if (secLevel > 0) {
-	struct ktc_principal sname;
-	strcpy(sname.cell, info.name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+	struct afs_token *atoken = 0;
+	struct ktc_token ttoken;
+
+	code = ktc_GetTokenEx(0, info.name, &atoken);
 	if (code)
-	    scIndex = 0;
-	else {
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-		/* this is a kerberos ticket, set scIndex accordingly */
-		scIndex = 2;
-	    else {
+	    ;
+#if defined(AFS_RXK5)
+	else if (atoken->cu->cu_type == CU_K5) {
+	    scIndex = 5;
+	    code = afstoken_to_v5cred(atoken, in_creds);
+	    if (!code)
+		sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+	}
+#endif
+	else if (atoken->cu->cu_type == CU_KAD) {
+	    scIndex = 2;
+	    code = afstoken_to_token(atoken, &ttoken, sizeof ttoken);
+	    if (code) goto SkipSc;
+	    if (ttoken.kvno < 0 || ttoken.kvno > 256) {
+/* in AFS 3.0, this meant:
+		scIndex = 1;
+		sc = rxvab_NewClientSecurityObject(&ttoken.sessionKey,
+		    ttoken.ticket, 0);
+   Now you know... */
 		fprintf(stderr,
 			"libprot: funny kvno (%d) in ticket, proceeding\n",
 			ttoken.kvno);
-		scIndex = 2;
 	    }
-	    sc[2] =
+	    sc =
 		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
 					      ttoken.kvno, ttoken.ticketLen,
 					      ttoken.ticket);
+	} else {
+	    com_err(whoami, 0, "unknown token type %d", atoken->cu->cu_type);
 	}
+SkipSc:
+	if (atoken) free_afs_token(atoken);
     }
-
-    if (scIndex == 1)
-	return PRBADARG;
-    if ((scIndex == 0) && (sc[0] == 0))
-	sc[0] = rxnull_NewClientSecurityObject();
-    if ((scIndex == 0) && (secLevel != 0))
+    if (!sc) {
+	say_noauth |= !!scIndex;
+	scIndex = 0;
+	sc = rxnull_NewClientSecurityObject();
+    }
+    if (say_noauth)
 	com_err(whoami, code,
 		"Could not get afs tokens, running unauthenticated.");
 
@@ -230,17 +326,30 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+			     info.hostAddr[i].sin_port, PRSRV, sc,
 			     scIndex);
 
     code = ubik_ClientInit(serverconns, &pruclient);
     if (code) {
 	com_err(whoami, code, "ubik client init failed.");
-	return code;
+	rxs_Release(sc);
+    } else {
+	lastLevel = secLevel|force_flags;
+	code = rxs_Release(sc);
     }
-    lastLevel = scIndex;
 
-    code = rxs_Release(sc[scIndex]);
+#if defined(AFS_RXK5)
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5context) {
+	if (cc)
+	    krb5_cc_close(k5context, cc);
+	if (k5_creds)
+	    krb5_free_creds(k5context, k5_creds);
+	krb5_free_principal(k5context, in_creds->client);
+	krb5_free_principal(k5context, in_creds->server);
+	krb5_free_context(k5context);
+    }
+#endif
     return code;
 }
 
@@ -274,7 +383,7 @@ pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 
 }
 
-int 
+int
 pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
 {
     register afs_int32 code;

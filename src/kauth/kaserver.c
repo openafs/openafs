@@ -203,6 +203,9 @@ main(argc, argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
     osi_audit_init();
 
     if (argc == 0) {

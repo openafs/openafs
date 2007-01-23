@@ -197,7 +197,8 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
-			    fc_KeySchedule * aschedule, afs_int32 * aivec);
+			    fc_KeySchedule * aschedule,
+			    fc_InitializationVector * aivec);
 static afs_int32 FreeObject(struct rx_securityClass *aobj);
 
 /* this call sets up an endpoint structure, leaving it in *network* byte
@@ -219,11 +220,12 @@ rxkad_SetupEndpoint(struct rx_connection *aconnp,
 
 /* setup xor information based on session key */
 int
-rxkad_DeriveXORInfo(struct rx_connection *aconnp, fc_KeySchedule * aschedule,
-		    char *aivec, char *aresult)
+rxkad_DeriveXORInfo(struct rx_connection *aconnp, const fc_KeySchedule * aschedule,
+		    const fc_InitializationVector *aivec,
+                    fc_InitializationVector *aresult)
 {
     struct rxkad_endpoint tendpoint;
-    afs_uint32 xor[2];
+    fc_InitializationVector xor[1];
 
     rxkad_SetupEndpoint(aconnp, &tendpoint);
     memcpy((void *)xor, aivec, 2 * sizeof(afs_int32));
@@ -277,7 +279,7 @@ rxkad_SetLevel(struct rx_connection *conn, rxkad_level level)
  */
 static afs_int32
 ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
-	   afs_int32 * aivec)
+	   fc_InitializationVector * aivec)
 {
     afs_uint32 word[2];
     register afs_uint32 t;
@@ -289,8 +291,8 @@ ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
 	| ((apacket->header.seq & 0x3fffffff));
     word[1] = htonl(t);
     /* XOR in the ivec from the per-endpoint encryption */
-    word[0] ^= aivec[0];
-    word[1] ^= aivec[1];
+    word[0] ^= aivec->d[0];
+    word[1] ^= aivec->d[1];
     /* encrypts word as if it were a character string */
     fc_ecb_encrypt(word, word, aschedule, ENCRYPT);
     t = ntohl(word[1]);
@@ -427,7 +429,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     int nlen = 0;
     u_int word;			/* so we get unsigned right-shift */
     int checkCksum;
-    afs_int32 *preSeq;
+    fc_InitializationVector *preSeq;
     afs_int32 code;
 
     tconn = rx_ConnectionOf(acall);
@@ -519,7 +521,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     int nlen = 0;
     int word;
     afs_int32 code;
-    afs_int32 *preSeq;
+    fc_InitializationVector *preSeq;
 
     tconn = rx_ConnectionOf(acall);
     len = rx_GetDataSize(apacket);

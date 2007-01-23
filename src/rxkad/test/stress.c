@@ -295,6 +295,7 @@ main(argc, argv)
     initialize_RKS_error_table();
     initialize_CMD_error_table();
     initialize_KTC_error_table();
+    initialize_rx_error_table();
 
     code = rx_Init(0);
     rx_SetRxDeadTime(120);

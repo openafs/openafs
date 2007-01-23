@@ -3,3 +3,5 @@ Makefile
 compile_et
 et_lex.lex.c
 y.tab.h
+afserror.c
+afserror.h

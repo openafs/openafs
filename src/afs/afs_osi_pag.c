@@ -421,14 +421,16 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
     int code;
+#endif
 
     AFS_STATCNT(afs_InitReq);
     memset(av, 0, sizeof(*av));
     if (afs_shuttingdown)
 	return EIO;
 
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
 	return code;

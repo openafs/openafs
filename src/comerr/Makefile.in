@@ -36,10 +36,12 @@ compile_et:	compile_et.o error_table.o
 	* ) \
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
 	esac
+afserror.c afserror.h: afserror.et compile_et
+	./compile_et -p ${srcdir} afserror
 
-libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
+libcom_err.a: error_msg.o et_name.o com_err.o afserror.o AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o
+	$(AR) crv $@ error_msg.o et_name.o com_err.o afserror.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 #
@@ -70,6 +72,7 @@ clean:
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr *.o libcom_err.a \
 		com_err.o compile_et et.ar TAGS y.tab.c lex.yy.c error_table.c \
 		et_lex.lex.c test1.h test1.c test2.h test2.c \
+		afserror.c afserror.h \
 		eddep makedep core AFS_component_version_number.c
 
 test:

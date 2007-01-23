@@ -82,7 +82,7 @@ init_module(void)
 #endif /* !defined(AFS_LINUX24_ENV) */
 
     osi_Init();
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
 #if !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_init();
 #endif
@@ -123,7 +123,7 @@ cleanup_module(void)
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
 #if !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_shutdown();
 #endif

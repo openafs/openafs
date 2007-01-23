@@ -13,6 +13,7 @@
 	afsconf_CheckAuth;
 	afsconf_ClientAuth;
 	afsconf_ClientAuthSecure;
+	afsconf_ClientAuthEx;
 	afsconf_Close;
 	afsconf_DeleteKey;
 	afsconf_DeleteUser;
@@ -54,6 +55,7 @@
 	ktc_ForgetAllTokens;
 	ktc_ForgetToken;
 	ktc_GetToken;
+	ktc_GetTokenEx;
 	ktc_ListTokens;
 	ktc_OldPioctl;
 	ktc_SetToken;

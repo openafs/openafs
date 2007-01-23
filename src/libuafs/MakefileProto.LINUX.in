@@ -40,6 +40,10 @@ LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.so
 LIBAFSWEBKRB = nsafs.krb.so
 
+UOBJ    =../UAFS
+JUAFS   =../JUAFS
+WEBOBJ=../AFSWEB
+
 include Makefile.common
 
 $(LIBUAFS): $(UAFSOBJ)

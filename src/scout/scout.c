@@ -2352,6 +2352,9 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
     /*
      * Set up the commands we understand.
      */

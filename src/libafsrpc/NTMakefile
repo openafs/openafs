@@ -39,7 +39,8 @@ RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\
 LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
 	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\md4.obj $(OUT)\md5.obj $(OUT)\AFS_component_version_number.obj
 
-LIBRXKAD_REGOBJS = $(OUT)\fcrypt.obj $(OUT)\crypt_conn.obj
+#LIBRXKAD_REGOBJS = $(OUT)\fcrypt.obj $(OUT)\crypt_conn.obj
+LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
 
 DESOBJS_INT = $(OUT)\des.obj $(OUT)\cbc_encrypt.obj $(OUT)\pcbc_encrypt.obj $(OUT)\cksum.obj $(OUT)\new_rnd_key.obj \
 	$(OUT)\key_sched.obj $(OUT)\debug_decl.obj $(OUT)\quad_cksum.obj $(OUT)\key_parity.obj \

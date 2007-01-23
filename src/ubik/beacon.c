@@ -53,8 +53,8 @@ static nServers;		/* total number of servers */
 static char amIMagic = 0;	/* is this host the magic host */
 char amIClone = 0;		/* is this a clone which doesn't vote */
 static char ubik_singleServer = 0;
-int (*ubik_CRXSecurityProc) ();
-char *ubik_CRXSecurityRock;
+int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
+void *ubik_CRXSecurityRock;
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
 static verifyInterfaceAddress();

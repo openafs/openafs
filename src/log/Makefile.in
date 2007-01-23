@@ -12,26 +12,39 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+@ENABLE_RXK5@KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
+CFLAGS=${COMMON_CFLAGS} ${KRB5CFLAGS} ${XCFLAGS} ${ARCHFLAGS}
+
 PROGRAMS=	unlog tokens tokens.krb kseal
 
 INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \
 ${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/des.h ${TOP_INCDIR}/rx/rxkad.h \
 ${TOP_INCDIR}/afs/cellconfig.h
 
-LIBRARIES=${TOP_LIBDIR}/libauth.a \
+#@ENABLE_RXK5@KLUDGE=-u format_afs_krb5_creds_buf -u afsconf_Open
+
+LIBRARIES= ${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
-		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
+		${RXK5} \
 		${TOP_LIBDIR}/libsys.a \
-	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/librx.a \
+	        ${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/libdes.a \
 	        ${TOP_LIBDIR}/util.a
-KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
+KLIBRARIES= ${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
-		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
+		${RXK5} \
 		${TOP_LIBDIR}/libsys.a \
-	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/librx.a \
+	        ${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/libdes.a \
 	        ${TOP_LIBDIR}/util.a
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 
 #
 # Main targets
@@ -42,16 +55,21 @@ all: unlog tokens tokens.krb kseal
 # Build targets
 #
 kseal: kseal.o ${LIBRARIES}
-	${CC} -o kseal kseal.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	${CC} -o kseal kseal.o $(KLUDGE) ${LIBRARIES} ${KRB5LIBS} $(LIBCOM_ERR) \
+	${XLIBS} ${CFLAGS}
+
 
 unlog: unlog.o ${LIBRARIES}
-	${CC} -o unlog unlog.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	${CC} -o unlog unlog.o $(KLUDGE) ${LIBRARIES} ${KRB5LIBS} $(LIBCOM_ERR) \
+	${XLIBS} ${CFLAGS}
 
 tokens: tokens.o ${LIBRARIES}
-	${CC} -o tokens tokens.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	${CC} -o tokens tokens.o $(KLUDGE) ${LIBRARIES} ${KRB5LIBS} $(LIBCOM_ERR) \
+	${XLIBS} ${CFLAGS}
 
 tokens.krb: tokens.o ${KLIBRARIES}
-	${CC} -o tokens.krb tokens.o ${KLIBRARIES} ${XLIBS} ${CFLAGS}
+	${CC} -o tokens.krb tokens.o $(KLUDGE) ${LIBRARIES} ${KRB5LIBS} $(LIBCOM_ERR) \
+	${XLIBS} ${CFLAGS}
 
 kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c

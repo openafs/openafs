@@ -57,14 +57,14 @@ struct rxkad_cprivate {
     rxkad_level level;		/* minimum security level of client */
     afs_int32 kvno;		/* key version of ticket */
     afs_int32 ticketLen;	/* length of ticket */
-    fc_KeySchedule keysched;	/* the session key */
-    fc_InitializationVector ivec;	/* initialization vector for cbc */
+    fc_KeySchedule keysched[1];	/* the session key */
+    fc_InitializationVector ivec[1];	/* initialization vector for cbc */
     char ticket[MAXKTCTICKETLEN];	/* the ticket for the server */
 };
 
 /* Per connection client-side info */
 struct rxkad_cconn {
-    fc_InitializationVector preSeq;	/* used in computing checksum */
+    fc_InitializationVector preSeq[1];	/* used in computing checksum */
     struct connStats stats;
     char cksumSeen;		/* rx: header.spare is a checksum */
 };
@@ -88,9 +88,9 @@ struct rxkad_sconn {
     afs_uint32 expirationTime;	/* when the ticket expires */
     afs_int32 challengeID;	/* unique challenge */
     struct connStats stats;	/* per connection stats */
-    fc_KeySchedule keysched;	/* session key */
-    fc_InitializationVector ivec;	/* initialization vector for cbc */
-    fc_InitializationVector preSeq;	/* used in computing checksum */
+    fc_KeySchedule keysched[1];	/* session key */
+    fc_InitializationVector ivec[1];	/* initialization vector for cbc */
+    fc_InitializationVector preSeq[1];	/* used in computing checksum */
     struct rxkad_serverinfo *rock;	/* info about client if saved */
 };
 

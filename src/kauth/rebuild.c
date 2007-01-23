@@ -654,6 +654,7 @@ main(argc, argv)
 {
     struct cmd_syndesc *ts;
 
+    initialize_rx_error_table();
     setlinebuf(stdout);
 
     ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "KADB check");

@@ -12,7 +12,7 @@
 static char *rcsid_aklog_h = "$Id$";
 #endif /* lint || SABER */
 
-#include <krb5.h>
+/* #include <krb5.h> */
 #include "linked_list.h"
 #include <afsconfig.h>
 
@@ -103,5 +103,7 @@ struct afsconf_cell {
 #define AKLOG_DIALOG_NAME		"aklog"
 
 #endif /* WINDOWS */
+
+int afs_krb5_skip_ticket_wrapper(char *, size_t, char **, size_t *);
 
 #endif /* __AKLOG_H__ */

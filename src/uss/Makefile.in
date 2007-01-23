@@ -12,10 +12,14 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 all: uss
 
 CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
-	-I${TOP_INCDIR} -I. ${XCFLAGS} ${ARCHFLAGS}
+	-I${TOP_INCDIR} ${KRB5CFLAGS} -I. ${XCFLAGS} ${ARCHFLAGS}
 
 #
 # Build targets
@@ -27,13 +31,13 @@ LIBS=${TOP_LIBDIR}/libvolser.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a\
 	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
@@ -48,7 +52,8 @@ OBJS =  uss_procs.o \
 	y.tab.o 
 
 uss: uss.o ${OBJS} 
-	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS}
+	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) $(XLIBS)
 
 uss.o:  uss.c AFS_component_version_number.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss.c

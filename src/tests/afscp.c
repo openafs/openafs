@@ -11,18 +11,26 @@
 #include <sys/stat.h>
 #include <netdb.h>
 
+#include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/afsint.h>
 #include <sys/ioctl.h>
 #include <afs/venus.h>
 #include <afs/cellconfig.h>
 #include <afs/afs.h>
+#include <afs/afsutil.h>
 
 /*#include <rx/rxkad.h>*/
 #include <rx/rx_null.h>
 
 /*#include <krb.h>*/
 #include <afs/com_err.h>
+
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 
 struct VenusFid {
     afs_int32 Cell;
@@ -156,14 +164,84 @@ do_rx_Init(void)
 }
 
 struct rx_securityClass *
-get_sc(char *cellname)
+get_sc(char *cellname, int security_class)
 {
 #if 0
     char realm[REALM_SZ];
     CREDENTIALS c;
 #endif
 
+#ifdef AFS_RXK5
+int code;
+char* rxk5_keytab;
+krb5_creds *k5_creds, in_creds[1];
+krb5_context k5context;
+krb5_ccache cc;
+
+#else
     return rxnull_NewClientSecurityObject();
+#endif
+
+    if(security_class == 5) {
+	struct afsconf_dir *tdir;
+	struct afsconf_cell info[1];
+	char *afs_k5_princ;
+    
+        code = krb5_init_context(&k5context);
+    	if(code) {
+	    printf("Error krb5_init_context - %d (%s)\n", code, error_message(code));
+	    exit(1);
+    	}
+	
+        memset(&cc, 0, sizeof cc);
+        code = krb5_cc_default(k5context, &cc);
+        if(code) {
+	    printf("Error krb5_cc_default - %d (%s)\n", code, error_message(code));
+	    exit(1);
+    	}
+	
+    	memset(in_creds, 0, sizeof *in_creds);
+    	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
+    	if(code) {
+	    printf("Error krb5_cc_get_principal - %d (%s)\n", code, error_message(code));
+	    exit(1);
+    	}
+	tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+	if (!tdir) {
+	    printf ("Problem with <%s>?\n", AFSDIR_CLIENT_ETC_DIRPATH);
+	    exit(1);
+	}
+	code = afsconf_GetCellInfo(tdir, cellname, 0, info);
+	if (code) {
+	    printf ("Error afsconf_GetCellInfo - %d (%s)\n", code, error_message(code));
+	    exit(1);
+	}
+    	afs_k5_princ = get_afs_krb5_svc_princ(info);
+	afsconf_Close(tdir);
+	if (!afs_k5_princ) {
+	    printf ("get_afs_krb5_svc_princ failed (no memory?)\n");
+	    exit(1);
+	}
+    	code = krb5_parse_name(k5context, afs_k5_princ,	&in_creds->server);
+    	if(code) {
+	    printf("Error krb5_parse_name - %d (%s)\n", code, error_message(code));
+	    exit(1);
+    	}
+	free(afs_k5_princ);		
+						
+    	// 0 is cc flags
+    	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
+    	if(code) {
+	    printf("Error krb5_get_credentials - %d (%s)\n", code, error_message(code));
+	    exit(1);
+    	}
+	return rxk5_NewClientSecurityObject(rxk5_crypt, k5_creds, 0);
+
+
+    } else {
+    	return rxnull_NewClientSecurityObject();
+    }
+
 #if 0
 
     ucstring(realm, cellname, REALM_SZ);
@@ -185,8 +263,13 @@ get_sc(char *cellname)
 
 #define scindex_NULL 0
 #define scindex_RXKAD 2
-
+#ifdef AFS_RXK5
+#define scindex_RXK5 5
+#define scindex scindex_RXK5
+#else
 #define scindex scindex_RXKAD
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -212,14 +295,25 @@ main(int argc, char **argv)
     int code, fetchcode, storecode, printcallerrs;
     int slcl = 0, dlcl = 0;
     int sfd, dfd, unauth = 0;
+#ifdef AFS_RXK5
+    int rxk5 = 0;
+#endif
 
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
 
 
     blksize = 8 * 1024;
+#ifdef AFS_RXK5
+    rxk5 = env_afs_rxk5_default() != FORCE_RXKAD;
+#endif
 
-    while ((ch = getopt(argc, argv, "ioub:")) != -1) {
+#ifdef AFS_RXK5
+#define RXK5_OPT_STRING "k45"
+#else
+#define RXK5_OPT_STRING /**/
+#endif
+    while ((ch = getopt(argc, argv, "io" RXK5_OPT_STRING "ub:")) != -1) {
 	switch (ch) {
 	case 'b':
 	    blksize = atoi(optarg);
@@ -233,6 +327,15 @@ main(int argc, char **argv)
 	case 'u':
 	    unauth = 1;
 	    break;
+#ifdef AFS_RXK5
+	case '4':
+	    rxk5 = 0;
+	    break;
+	case 'k':
+	case '5':
+	    rxk5 = 1;
+	    break;
+#endif
 	default:
 	    printf("Unknown option '%c'\n", ch);
 	    exit(1);
@@ -242,11 +345,19 @@ main(int argc, char **argv)
 
     if (argc - optind < 2) {
 	fprintf(stderr,
-		"Usage: afscp [-i|-o]] [-b xfersz] [-u] source dest\n");
+		"Usage: afscp [-i|-o]] [-b xfersz] [-u] "
+#ifdef AFS_RXK5
+		"[-k5] [-k4] "
+#endif
+		"source dest\n");
 	fprintf(stderr, "  -b   Set block size\n");
 	fprintf(stderr, "  -i   Source is local (copy into AFS)\n");
 	fprintf(stderr, "  -o   Dest is local (copy out of AFS)\n");
 	fprintf(stderr, "  -u   Run unauthenticated\n");
+#ifdef AFS_RXK5
+	fprintf(stderr, "  -k5  Use rxk5\n");
+	fprintf(stderr, "  -k4  Use rxkad\n");
+#endif
 	fprintf(stderr, "source and dest can be paths or specified as:\n");
 	fprintf(stderr, "     @afs:cellname:servername:volume:vnode:uniq\n");
 	exit(1);
@@ -289,14 +400,19 @@ main(int argc, char **argv)
     }
 
     if (!slcl) {
+    
+#ifdef AFS_RXK5
+	if(rxk5) {
+	    sscindex = scindex_RXK5;
+	} else
+#endif
 	sscindex = scindex_RXKAD;
-	if (unauth || (ssc = get_sc(scell)) == NULL) {
+	if (unauth || (ssc = get_sc(scell, sscindex)) == NULL) {
 	    ssc = rxnull_NewClientSecurityObject();
 	    sscindex = scindex_NULL;
 	    /*printf("Cannot get authentication for cell %s; running unauthenticated\n", scell); */
 	}
-	sscindex = scindex_NULL;
-
+	
 	if ((sconn =
 	     rx_NewConnection(ssrv, htons(AFSCONF_FILEPORT), 1, ssc,
 			      sscindex))
@@ -315,18 +431,22 @@ main(int argc, char **argv)
 	    dsc = NULL;
 	} else {
 	    if (slcl || strcmp(scell, dcell)) {
+#ifdef AFS_RXK5
+		if(rxk5) {
+	    	    dscindex = scindex_RXK5;
+		} else
+#endif
 		dscindex = scindex_RXKAD;
-		if (unauth || (dsc = get_sc(dcell)) == NULL) {
+		if (unauth || (dsc = get_sc(dcell, sscindex)) == NULL) {
 		    dsc = rxnull_NewClientSecurityObject();
 		    dscindex = scindex_NULL;
 		    /*printf("Cannot get authentication for cell %s; running unauthenticated\n", dcell); */
 		}
-		dscindex = scindex_NULL;
 	    } else {
 		dsc = ssc;
 		dscindex = sscindex;
 	    }
-
+	    		    
 	    if ((dconn =
 		 rx_NewConnection(dsrv, htons(AFSCONF_FILEPORT), 1, dsc,
 				  dscindex))

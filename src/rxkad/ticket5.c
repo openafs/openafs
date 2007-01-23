@@ -197,13 +197,13 @@ static int
 
 
 int
-tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
+tkt_DecodeTicket5(const char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (char *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
-		  char *cell, char *session_key, afs_int32 * host,
-		  afs_int32 * start, afs_int32 * end)
+		  char *cell, struct ktc_encryptionKey *session_key,
+		  afs_int32 * host, afs_uint32 * start, afs_uint32 * end)
 {
-    char plain[MAXKRB5TICKETLEN];
+    unsigned char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
     Ticket t5;			/* Must free */
     EncTicketPart decr_part;	/* Must free */
@@ -222,14 +222,14 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	return RXKADBADTICKET;	/* no ticket */
 
     if (serv_kvno == RXKAD_TKT_TYPE_KERBEROS_V5) {
-	code = decode_Ticket(ticket, ticket_len, &t5, &siz);
+	code = decode_Ticket((const unsigned char*) ticket, ticket_len, &t5, &siz);
 	if (code != 0)
 	    goto cleanup;
 
 	if (t5.tkt_vno != 5)
 	    goto bad_ticket;
     } else {
-	code = decode_EncryptedData(ticket, ticket_len, &t5.enc_part, &siz);
+	code = decode_EncryptedData((const unsigned char*) ticket, ticket_len, &t5.enc_part, &siz);
 	if (code != 0)
 	    goto cleanup;
     }

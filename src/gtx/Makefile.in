@@ -14,6 +14,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+
 INCLS=gtxobjects.h \
 	gtxwindows.h \
 	gtxcurseswin.h \
@@ -35,14 +37,12 @@ LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${XLIBS}
+EXTRA_LIBS=$(LIBCOM_ERR) ${TXLIBS} ${XLIBS}
 
 KEYMAP_SRCS=keymap.c input.c frame.c
 

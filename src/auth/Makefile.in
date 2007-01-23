@@ -12,23 +12,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
+@ENABLE_RXK5@K5OBJS=rxk5_utilafs.o rxk5_tkt.o
+KADOBJS=rxkad_tkt.o
+
 OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o
+    acfg_errors.o ktc_errors.o afs_token.xdr.o $(K5OBJS) $(KADOBJS)
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o
+    acfg_errors.o ktc_errors.o afs_token.xdr.o $(K5OBJS) $(KADOBJS)
 
 LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
+      ${TOP_LIBDIR}/librxkad.a ${RXK5} ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
-INCLS=cellconfig.h auth.h keys.h
+      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a \
+      ${RXK5} ${TOP_LIBDIR}/librx.a
+INCLS=cellconfig.h auth.h keys.h afs_token.h afs_token_protos.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
-       ktc.c authcon.c ktc_errors.c
+       ktc.c authcon.c ktc_errors.c afs_token.xdr.c afs_token.h \
+	afs_token_protos.h
 
 all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey
 
-depinstall: ${TOP_INCDIR}/afs/keys.h \
+depinstall: 
+	${TOP_INCDIR}/afs/rxk5_tkt.h \
+	${TOP_INCDIR}/afs/rxk5_utilafs.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/afs_token.h \
+	${TOP_INCDIR}/afs/afs_token_protos.h \
+	afs_token.xdr.c \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/auth.h \
 	${TOP_INCDIR}/afs/ktc.h
@@ -74,7 +91,8 @@ libauth.krb.a: $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 copyauth: copyauth.o ${LIBS}
-	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS} ${XLIBS}
+	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) $(XLIBS)
 
 setkey: setkey.o ${LIBS}
 	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS} ${XLIBS}
@@ -91,6 +109,16 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 	$(RM) -f auth.h ktc_errors.c
 	${COMPILE_ET} -p ${srcdir} ktc_errors -h auth
 
+@ENABLE_RXK5@AFS_TOKEN_RXK5_DEFINE=-DAFS_RXK5
+
+afs_token.xdr.c: afs_token.xg
+	$(RXGEN) -c -o afs_token.xdr.c afs_token.xg $(AFS_TOKEN_RXK5_DEFINE)
+
+afs_token.h: afs_token.xg
+	$(RXGEN) -h -o afs_token.h afs_token.xg $(AFS_TOKEN_RXK5_DEFINE)
+
+afs_token.xdr.o: afs_token.h afs_token.xdr.c
+
 #
 # Install targets
 #
@@ -99,7 +127,11 @@ install: copyauth libauth.a libauth.krb.a auth.h cellconfig.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libauth.a ${DESTDIR}${libdir}/afs/libauth.a
 	${INSTALL_DATA} libauth.krb.a ${DESTDIR}${libdir}/afs/libauth.krb.a
+	${INSTALL_DATA} rxk5_utilafs.h ${DESTDIR}${includedir}/afs/rxk5_utilafs.h
+	${INSTALL_DATA} rxk5_tkt.h ${DESTDIR}${includedir}/afs/rxk5_tkt.h
 	${INSTALL_DATA} keys.h ${DESTDIR}${includedir}/afs/keys.h
+	${INSTALL_DATA} afs_token.h ${DESTDIR}${includedir}/afs/afs_token.h
+	${INSTALL_DATA} afs_token_protos.h ${DESTDIR}${includedir}/afs/afs_token_protos.h
 	${INSTALL_DATA} cellconfig.h ${DESTDIR}${includedir}/afs/cellconfig.h
 	${INSTALL_DATA} auth.h ${DESTDIR}${includedir}/afs/auth.h
 	${INSTALL_DATA} ktc.h ${DESTDIR}${includedir}/afs/ktc.h
@@ -110,7 +142,11 @@ dest: copyauth libauth.a libauth.krb.a auth.h cellconfig.h
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libauth.a ${DEST}/lib/afs/libauth.a
 	${INSTALL_DATA} libauth.krb.a ${DEST}/lib/afs/libauth.krb.a
+	${INSTALL_DATA} rxk5_utilafs.h ${DEST}/include/afs/rxk5_utilafs.h
+	${INSTALL_DATA} rxk5_tkt.h ${DEST}/include/afs/rxk5_tkt.h
 	${INSTALL_DATA} keys.h ${DEST}/include/afs/keys.h
+	${INSTALL_DATA} afs_token.h ${DEST}/include/afs/afs_token.h
+	${INSTALL_DATA} afs_token_protos.h ${DEST}/include/afs/afs_token_protos.h
 	${INSTALL_DATA} cellconfig.h ${DEST}/include/afs/cellconfig.h
 	${INSTALL_DATA} auth.h ${DEST}/include/afs/auth.h
 	${INSTALL_DATA} ktc.h ${DEST}/include/afs/ktc.h
@@ -122,8 +158,19 @@ dest: copyauth libauth.a libauth.krb.a auth.h cellconfig.h
 test: 
 	cd test; $(MAKE)
 
+k5forgetest: k5forgetest.o libauth.a
+	$(CC) -o k5forgetest k5forgetest.o ${KRB5LIBS} libauth.a
+
+t_unit:  t_unit.o libauth.a
+	$(CC) -o t_unit t_unit.o ${KRB5LIBS} libauth.a
+
+t_name: t_name.o libauth.a
+	$(CC) -o t_name t_name.o libauth.a ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libafsutil.a ${KRB5LIBS}
+
 clean:
 	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core \
+	afs_token.xdr.c afs_token.h \
+	k5forgetest t_unit t_name \
 	AFS_component_version_number.c
 
 include ../config/Makefile.version

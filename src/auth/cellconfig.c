@@ -18,6 +18,7 @@ RCSID
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "rx/rxkad.h"
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -59,6 +60,7 @@ RCSID
 #endif
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
+#include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"
 #ifdef AFS_NT40_ENV
@@ -251,7 +253,6 @@ afsconf_FindService(register const char *aname)
 static int
 TrimLine(char *abuffer, int abufsize)
 {
-    char tbuffer[256];
     register char *tp;
     register int tc;
 
@@ -261,8 +262,8 @@ TrimLine(char *abuffer, int abufsize)
 	    break;
 	tp++;
     }
-    strlcpy(tbuffer, tp, sizeof tbuffer);
-    strlcpy(abuffer, tbuffer, abufsize);
+    if (tp != abuffer)
+	memmove(abuffer, tp, strlen(tp) + 1);
     return 0;
 }
 
@@ -1277,7 +1278,9 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 
 /* get latest key */
 afs_int32
-afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
+afsconf_GetLatestKey(struct afsconf_dir * adir,
+    afs_int32 * avno,
+    struct ktc_encryptionKey *akey)
 {
     register int i;
     int maxa;
@@ -1306,7 +1309,7 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
     }
     if (bestk) {		/* found any  */
 	if (akey)
-	    memcpy(akey, bestk->key, 8);	/* copy out latest key */
+	    memcpy(akey->data, bestk->key, 8);	/* copy out latest key */
 	if (avno)
 	    *avno = bestk->kvno;	/* and kvno to caller */
 	UNLOCK_GLOBAL_MUTEX;
@@ -1316,13 +1319,32 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
     return AFSCONF_NOTFOUND;	/* didn't find any keys */
 }
 
+/* see if we have a keyfile (so should still do rxkad on the server) */
+int
+have_afs_keyfile(struct afsconf_dir *adir)
+{
+    register int maxa;
+    register afs_int32 code;
+
+    LOCK_GLOBAL_MUTEX;
+    if ((code = afsconf_Check(adir))) {
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
+    }
+    maxa = adir->keystr->nkeys;
+
+    UNLOCK_GLOBAL_MUTEX;
+    return !!maxa;
+}
+
 /* get a particular key */
 int
-afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, char *akey)
+afsconf_GetKey(void *rock, afs_int32 avno, struct ktc_encryptionKey *akey)
 {
     register int i, maxa;
     register struct afsconf_key *tk;
     register afs_int32 code;
+    struct afsconf_dir *adir = rock;
 
     LOCK_GLOBAL_MUTEX;
     code = afsconf_Check(adir);
@@ -1334,7 +1356,7 @@ afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, char *akey)
 
     for (tk = adir->keystr->key, i = 0; i < maxa; i++, tk++) {
 	if (tk->kvno == avno) {
-	    memcpy(akey, tk->key, 8);
+	    memcpy(akey->data, tk->key, 8);
 	    UNLOCK_GLOBAL_MUTEX;
 	    return 0;
 	}

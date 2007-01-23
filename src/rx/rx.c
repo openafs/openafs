@@ -3463,6 +3463,8 @@ rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
 	MUTEX_EXIT(&conn->conn_data_lock);
 }
 
+#ifdef RXDEBUG
+#ifdef AFS_NT40_ENV
 static const char *
 rx_ack_reason(int reason)
 {
@@ -3489,6 +3491,8 @@ rx_ack_reason(int reason)
 	return "unknown!!";
     }
 }
+#endif
+#endif
 
 
 /* rxi_ComputePeerNetStats

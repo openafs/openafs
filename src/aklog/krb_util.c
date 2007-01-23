@@ -19,7 +19,12 @@ static char rcsid_send_to_kdc_c[] =
 #endif
 #include <afs/stds.h>
 #include "aklog.h"
+#include "afsconfig.h"
+#if USING_SSL
+#include "k5ssl/k5ssl.h"
+#else
 #include <krb5.h>
+#endif
 
 #ifndef MAX_HSTNM
 #define MAX_HSTNM 100
@@ -32,7 +37,12 @@ static char rcsid_send_to_kdc_c[] =
 #else /* !WINDOWS */
 
 #include <afs/param.h>
+#if 0
 #include <afs/cellconfig.h>
+#else
+/* hack so this builds in clean environment */
+#include <auth/cellconfig.p.h>
+#endif
 
 #endif /* WINDOWS */
 
@@ -40,6 +50,7 @@ static char rcsid_send_to_kdc_c[] =
 
 #define S_AD_SZ sizeof(struct sockaddr_in)
 
+/* XXX returns static storage, so not thread safe. */
 char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig)
 {
     static char krbrlm[REALM_SZ+1];

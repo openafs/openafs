@@ -166,6 +166,10 @@ main(argc, argv)
     struct timeval tv;		/*Time structure */
     int sleep_secs;		/*Number of seconds to sleep */
 
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+
     printf("\n\nTest of the fsprobe facility.\n\n");
 
     /*

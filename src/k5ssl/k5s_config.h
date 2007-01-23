@@ -1,0 +1,15 @@
+
+#if defined(KERNEL) && !defined(UKERNEL)
+#define USE_FAKESSL 1
+#endif
+
+#define KRB5_AES_SUPPORT 1
+#define KRB5_DES3_SUPPORT 1
+#define KRB5_DES_SUPPORT 1
+#define KRB5_RC4_SUPPORT 1
+#define KRB5_CAST_SUPPORT 0
+#define KRB5_RC6_SUPPORT 0
+#define KRB5_ECEKE_SUPPORT 0
+
+#define KRB5_DES_SUPPORT 1
+

@@ -1,0 +1,73 @@
+=head1 NAME
+
+afs.keytab - Contains AFS server encryption keys
+
+=head1 DESCRIPTION
+
+The F<afs.keytab> file defines the server encryption keys that the AFS server
+processes running on the machine use to decrypt the tickets presented by
+clients using rxk5.  AFS server processes
+perform privileged actions only for clients that possess a ticket
+encrypted with one of the entries from the file.
+The file must reside in the
+F</usr/afs/etc> directory on every server machine.
+If the keytab does not exist when a server process starts up,
+that process will decide not to accept any authentication, at least via rxk5.
+This is almost never desirable.
+For more detailed
+information on mutual authentication and server encryption keys, see the
+I<OpenAFS Administration Guide>.
+
+Each key has a corresponding a key version number that distinguishes it
+from the other keys. The tickets that clients present are also marked with
+a service principal and key version number to tell the server process which
+key to use to decrypt it. The F<afs.keytab> file must always include the
+same principals, keys, and key versions as the corresponding entries in
+the realm's kerberos 5 database.
+
+The F<afs.keytab> file is in binary format, so always use the appropriate
+commands from kerberos to administer it:
+
+=over 4
+
+=item *
+
+The B<kadmin> command to define a new key.
+
+=item *
+
+The B<klist> command to display the keys.
+
+=item *
+
+The B<ktutil> command to remove a key from the file.
+
+=back
+
+This file should contain service principals that are named
+afs-k5/I<cell-name>@I<realm-name> .
+cell-name should be in lower-case; realm-name should be your kerberos
+5 realm, normally the upper-case version of the cell name.
+
+You can update the keytab at any time, even while server processes are running.
+You may need to restart server processes if the keytab did not exist
+when they were started.
+
+In cells that use the Update Server to distribute the contents of the
+F</usr/afs/etc> directory, it is customary to edit only the copy of the
+file stored on the system control machine. Otherwise, edit the file on
+each server machine individually.
+
+=head1 SEE ALSO
+
+L<klist(1)>,
+L<kadmin(8)>,
+L<ktutil(8)>,
+L<upclient(8)>,
+L<upserver(8)>
+
+I<OpenAFS Administration Guide>
+
+=head1 COPYRIGHT
+
+See L<umich.copyright(8)>.

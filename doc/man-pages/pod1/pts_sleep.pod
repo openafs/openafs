@@ -1,0 +1,73 @@
+=head1 NAME
+
+pts sleep - pause for time
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts sleep>
+    S<<< [B<-delay> <I<seconds>>] >>>
+    [B<-help>]
+
+B<pts sl>
+    S<<< [B<-delay> <I<seconds>>] >>>
+    [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts sleep> command can be used to cause a delay
+of the indicated number of seconds.
+This is mainly used with B<pts source> or B<pts interactive>
+commands to insert a programmed delay between other commands.
+This is useful when performing many operations that do not
+need to be completed in a particularly timely fashion,
+to give users with more timely needs better service.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-delay> <I<seconds>>
+
+Indicate the number of seconds to dawdle, before proceeding.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example will remove jones from system:administrators, wait
+5 seconds, and then add smith to the same group.
+
+   % cat >/tmp/something.pt <<EOF
+   removeuser kkryza students:k
+   adduser tifair students:t
+   removeuser yizhan students:y
+   sleep 5
+   adduser mafha students:m
+   removeuser shortjer students:s
+   adduser ruimata students:r
+   sleep 5
+   adduser seotw students:s
+   EOF
+   % pts source /tmp/something.pt
+   % 
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_interactive(1)>,
+L<pts_source(1)>
+
+=head1 COPYRIGHT
+
+See L<umich.copyright(8)>.

@@ -1,0 +1,121 @@
+#
+# Copyright (c) 2007
+# The Regents of the University of Michigan
+# ALL RIGHTS RESERVED
+#
+# Permission is granted to use, copy, create derivative works
+# and redistribute this software and such derivative works
+# for any purpose, so long as the name of the University of
+# Michigan is not used in any advertising or publicity
+# pertaining to the use or distribution of this software
+# without specific, written prior authorization.  If the
+# above copyright notice or any other identification of the
+# University of Michigan is included in any copy of any
+# portion of this software, then the disclaimer below must
+# also be included.
+#
+# This software is provided as is, without representation
+# from the University of Michigan as to its fitness for any
+# purpose, and without warranty by the University of
+# Michigan of any kind, either express or implied, including
+# without limitation the implied warranties of
+# merchantability and fitness for a particular purpose.  The
+# regents of the University of Michigan shall not be liable
+# for any damages, including special, indirect, incidental, or
+# consequential damages, with respect to any claim arising
+# out of or in connection with the use of the software, even
+# if it has been or is hereafter advised of the possibility of
+# such damages.
+#
+
+error_table krb5
+index 3
+ec KRB5KDC_ERR_BAD_PVNO, "Requested protocol version not supported"
+index 6
+ec KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN, "Client not found in Kerberos database"
+ec KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN, "Server not found in Kerberos database"
+index 17
+ec KRB5KDC_ERR_TRTYPE_NOSUPP, "KDC has no support for transited type"
+index 25
+ec KRB5KDC_ERR_PREAUTH_REQUIRED, "Additional pre-authentication required"
+index 31
+ec KRB5KRB_AP_ERR_BAD_INTEGRITY, "Decrypt integrity check failed"
+index 38
+ec KRB5KRB_AP_ERR_BADADDR, "Incorrect net address"
+index 40
+ec KRB5KRB_AP_ERR_MSG_TYPE, "Invalid message type"
+index 43
+ec KRB5KRB_AP_ERR_ILL_CR_TKT, "Illegal cross-realm ticket"
+index 50
+ec KRB5KRB_AP_ERR_INAPP_CKSUM, "Inappropriate type of checksum in message"
+index 52
+ec KRB5KRB_ERR_RESPONSE_TOO_BIG, "Response too big for UDP, retry with TCP"
+index 60
+ec KRB5KRB_ERR_GENERIC, "Generic error"
+index 134
+ec KRB5_PARSE_MALFORMED, "Illegal character in component name"
+ec KRB5_CONFIG_CANTOPEN, "Can't open Kerberos configuration file"
+index 140
+ec KRB5_CC_UNKNOWN_TYPE, "Unknown credential cache type"
+ec KRB5_CC_NOTFOUND, "Matching credential not found"
+ec KRB5_CC_END,	"End of credential cache reached"
+index 145
+ec KRB5KRB_AP_ERR_TKT_INVALID, "Ticket has invalid flag set"
+index 147
+ec KRB5_KDCREP_MODIFIED, "KDC reply did not match expectations"
+ec KRB5_KDCREP_SKEW, "Clock skew too great in KDC reply"
+index 150
+ec KRB5_PROG_ETYPE_NOSUPP, "Encryption type not supported"
+index 154
+ec KRB5_REALM_UNKNOWN, "Cannot find KDC for requested realm"
+index 156
+ec KRB5_KDC_UNREACH, "Cannot contact any KDC for requested realm"
+index 178
+ec KRB5_CRYPTO_INTERNAL, "Cryptosystem internal error"
+ec KRB5_KT_BADNAME, "Key table name malformed"
+ec KRB5_KT_UNKNOWN_TYPE, "Unknown key table type"
+ec KRB5_KT_NOTFOUND, "Key table entry not found"
+ec KRB5_KT_END, "End of key table reached"
+ec KRB5_KT_NOWRITE, "Cannot write to specified key table"
+ec KRB5_KT_IOERR, "Error writing to key table"
+index 187
+ec KRB5DES_WEAK_KEY, "Weak DES key"
+ec KRB5_BAD_ENCTYPE, "Bad encryption type"
+ec KRB5_BAD_KEYSIZE, "Key size is incompatible with encryption type"
+ec KRB5_BAD_MSIZE, "Message size is incompatible with encryption type"
+ec KRB5_CC_TYPE_EXISTS, "Credentials cache type is already registered."
+ec KRB5_KT_TYPE_EXISTS, "Key table type is already registered."
+index 199
+ec KRB5_CC_FORMAT, "Bad format in credentials cache"
+ec KRB5_CC_NOT_KTYPE, "No credentials found with supported encryption types"
+index 212
+ec KRB5_CCACHE_BADVNO, "Unsupported credentials cache format version number"
+ec KRB5_KEYTAB_BADVNO, "Unsupported key table format version number"
+index 219
+ec KRB5KRB_AP_ERR_V4_REPLY, "KDC appears to be version 4 only"
+ec KRB5_REALM_CANT_RESOLVE, "Cannot resolve network address for KDC in requested realm"
+index 223
+ec KRBKRB5_GET_IN_TKT_LOOP, "Looping detected inside krb5_get_init_creds"
+ec KRB5_CONFIG_NODEFREALM, "Configuration file does not specify default realm"
+index 229
+ec KRB5_KT_NAME_TOOLONG, "Keytab name too long"
+ec KRB5_KT_KVNONOTFOUND, "Key version number for principal in key table is incorrect"
+index 235
+ec KRB5_KT_FORMAT, "Bad keytab file format"
+index 237
+ec KRB5_CONFIG_ETYPE_NOSUPP, "No supported encryption types (check config file)"
+index 243
+ec KRB5_ERR_NUMERIC_REALM, "Cannot determine realm for numeric host address"
+ec KRB5_ERR_BAD_S2K_PARAMS, "Invalid string2key parameters from KDC"
+index 248
+ec KRB5_DELTAT_BADFORMAT, "Invalid format of kerberos time difference"
+end
+error_table asn1
+ec ASN1_BAD_TIMEFORMAT, "ASN.1 failed call to system time library"
+index 9
+ec ASN1_PARSE_ERROR, "ASN.1 parse error"
+end
+error_table prof
+index 29
+ec PROF_BAD_INTEGER, "Invalid integer value"
+end

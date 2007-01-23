@@ -48,7 +48,7 @@ connect_buserver()
      * Connect to buserver 
      */
     cellName[0] = '\0';
-    code = udbClientInit(0, 0, cellName);
+    code = udbClientInit(0, cellName);
     if (code) {
 	printf("Error in udbClientInit call\n");
 	ERROR(code);

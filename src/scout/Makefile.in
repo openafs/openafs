@@ -12,6 +12,12 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/gtxwindows.h \
 	${TOP_INCDIR}/afs/gtxcurseswin.h \
@@ -24,7 +30,8 @@ INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/cmd.h
- 
+
+# NB: libkauth.a(kaerrors.o) only kauth dependency
 LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libfsprobe.a \
 	${TOP_LIBDIR}/libvolser.a \
@@ -32,6 +39,7 @@ LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
@@ -41,7 +49,6 @@ LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libaudit.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/util.a
 
@@ -53,7 +60,7 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 #
 # Installation targets

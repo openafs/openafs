@@ -77,12 +77,6 @@ static int zero_argc;
 static char **zero_argv;
 
 int
-osi_audit(void)
-{
-    return 0;
-}
-
-int
 main(int argc, char *argv[])
 {
     struct cmd_syndesc *ts;

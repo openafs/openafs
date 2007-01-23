@@ -12,6 +12,12 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
              ${TOP_INCDIR}/lock.h  \
@@ -25,14 +31,13 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libsys.a \
+	${RXK5} \
 	${TOP_LIBDIR}/librxstat.a \
-	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(DBM)
 
@@ -43,19 +48,20 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libauth.krb.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/librx.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
-all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb ka-forwarder \
+KA_SERVER=kaserver rebuild kdb
+KA_CLIENTS=kas kpwvalid klog klog.krb knfs kpasswd
+all: $(KA_SERVER) $(KA_CLIENTS) \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
 	depinstall
@@ -84,8 +90,8 @@ ${TOP_INCDIR}/afs/kaport.h: kaport.h
 test tests: all
 	cd test; $(MAKE)
 
-kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS) 
-	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS)
+	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${TOP_LIBDIR}/libaudit.a ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
@@ -165,19 +171,22 @@ krb_tf.o: krb_tf.c ${INCLS}
 
 kas: kauth.h kautils.h admin_tools.o libkauth.a $(LIBS) kas.o kkids.o
 	${CC} ${LDFLAGS} -o kas kas.o admin_tools.o kkids.o libkauth.a \
-			${LIBS} ${XLIBS}
+		${LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klog: AFS_component_version_number.o kauth.h kautils.h libkauth.a $(LIBS) \
 	klog.o
-	${CC} ${LDFLAGS} -o klog klog.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klog klog.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klog.o: klog.c kauth.h kautils.h AFS_component_version_number.o
 
 klog.krb: kauth.h kautils.h libkauth.krb.a $(KLIBS) klog.o
-	${CC} ${LDFLAGS} -o klog.krb klog.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klog.krb klog.o libkauth.krb.a ${KLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 knfs: kauth.h kautils.h libkauth.a $(LIBS) knfs.o
-	${CC} ${LDFLAGS} -o knfs knfs.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o knfs knfs.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 knfs.o: knfs.c AFS_component_version_number.o
 
@@ -185,22 +194,23 @@ klogin.o: klogin.c ${INCLS} AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/klogin.c -DKAUTH
 
 klogin: libkauth.a $(LIBS) klogin.o
-	${CC} ${LDFLAGS} -o klogin klogin.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klogin klogin.o libkauth.a ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klogin.krb: libkauth.a $(KLIBS) klogin.o
-	${CC} ${LDFLAGS} -o klogin.krb klogin.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klogin.krb klogin.o libkauth.krb.a ${KLIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kpasswd.o: kauth.h kautils.h ${INCLS} kpasswd.c AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/kpasswd.c 
 
 kpasswd: kauth.h kautils.h libkauth.a $(LIBS) kpasswd.o kkids.o
-	${CC} ${LDFLAGS} -o kpasswd kpasswd.o kkids.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kpasswd kpasswd.o kkids.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kpwvalid.o: kpwvalid.c AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/kpwvalid.c
 
 kpwvalid: kpwvalid.o $(LIBS)
-	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/user.c -o user.krb.o
@@ -209,14 +219,14 @@ user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/user.c
 
 kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
-	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
-	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS)
+	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS) $(LIBCOM_ERR) ${XLIBS}
 
 ka-forwarder: ka-forwarder.o
 	${CC} -o $@ ${CFLAGS} ka-forwarder.o ${LIBS} ${XLIBS}
@@ -224,7 +234,7 @@ ka-forwarder: ka-forwarder.o
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
-	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS)
+	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 #
 # Install targets

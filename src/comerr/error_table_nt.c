@@ -973,7 +973,12 @@ yyparse(YYPARSE_PARAM)
 extern FILE *hfile, *cfile, *msfile;
 extern int use_msf;
 
-static afs_int32 gensym_n = 0;
+/* I'm not sure this matters, but since I just
+ *  changed compile_et to perhaps generate static symbols
+ *  et1, et2, I'll bump this count to 100. (try compile_et on afserror.et)
+ * mdw Wed Aug  2 16:10:46 EDT 2006
+ */
+static afs_int32 gensym_n = 100;
 
 char *
 gensym(const char *x)

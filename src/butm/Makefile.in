@@ -12,6 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 INCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 LIBS=${TOP_LIBDIR}/libbubasics.a \
@@ -19,7 +20,6 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libbutm.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
@@ -38,7 +38,7 @@ file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c
 test_ftm.o: test_ftm.c ${INCLS} AFS_component_version_number.c
 
 test_ftm: test_ftm.o libbutm.a
-	${CC} ${LDFLAGS} -o test_ftm test_ftm.o libbutm.a ${LIBS}
+	${CC} ${LDFLAGS} -o test_ftm test_ftm.o libbutm.a ${LIBS} $(LIBCOM_ERR)
 
 test: test_ftm
 	echo 'Usage: ./test_ftm -conf config -tape xxx *'

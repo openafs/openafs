@@ -64,6 +64,8 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    initialize_rx_error_table();
+
     blob.in = space;
     blob.out = space;
     blob.out_size = MAXSIZE;

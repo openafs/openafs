@@ -1018,6 +1018,7 @@ init_krb_udp()
 #if MAIN
     initialize_ka_error_table();
     initialize_rxk_error_table();
+    initialize_rx_error_table();
     while (1)			/* don't just stand there, run it */
 	IOMGR_Sleep(60);
 #else

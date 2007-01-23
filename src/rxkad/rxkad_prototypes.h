@@ -26,12 +26,13 @@ extern afs_int32 rxkad_EncryptPacket(const struct rx_connection *conn,
 
 
 /* domestic/fcrypt.c */
-extern int fc_keysched(struct ktc_encryptionKey *key,
-		       fc_KeySchedule schedule);
-extern afs_int32 fc_ecb_encrypt(void * clear, void * cipher,
-				fc_KeySchedule schedule, int encrypt);
-extern afs_int32 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
-				fc_KeySchedule key, afs_uint32 * iv,
+extern int fc_keysched(const struct ktc_encryptionKey *key,
+		       fc_KeySchedule * schedule);
+extern afs_int32 fc_ecb_encrypt(const void * clear, void * cipher,
+				const fc_KeySchedule * schedule, int encrypt);
+extern afs_int32 fc_cbc_encrypt(const void *input, void *output, afs_int32 length,
+				const fc_KeySchedule * key,
+				fc_InitializationVector * iv,
 				int encrypt);
 
 /* rxkad_client.c */
@@ -43,7 +44,7 @@ extern struct rx_securityClass *rxkad_NewClientSecurityObject(rxkad_level
 							      *sessionkey,
 							      afs_int32 kvno,
 							      int ticketLen,
-							      char *ticket);
+							      const char *ticket);
 extern int rxkad_GetResponse(struct rx_securityClass *aobj,
 			     struct rx_connection *aconn,
 			     struct rx_packet *apacket);
@@ -58,8 +59,9 @@ extern afs_uint32 rxkad_CksumChallengeResponse(struct
 					       rxkad_v2ChallengeResponse
 					       *v2r);
 extern int rxkad_DeriveXORInfo(struct rx_connection *aconnp,
-			       fc_KeySchedule * aschedule, char *aivec,
-			       char *aresult);
+			       const fc_KeySchedule * aschedule,
+			       const fc_InitializationVector *aivec,
+			       fc_InitializationVector *aresult);
 extern void rxkad_SetLevel(struct rx_connection *conn, rxkad_level level);
 extern int rxkad_Close(struct rx_securityClass *aobj);
 extern int rxkad_NewConnection(struct rx_securityClass *aobj,
@@ -83,13 +85,13 @@ extern char *rxkad_LevelToString(rxkad_level level);
 
 /* rxkad_server.c */
 extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
-							      level, char
+							      level, void
 							      *get_key_rock,
 							      int (*get_key)
 
 
 							       
-							      (char
+							      (void
 							       *get_key_rock,
 							       int kvno,
 							       struct
@@ -124,11 +126,12 @@ extern afs_int32 rxkad_GetServerInfo(struct rx_connection *aconn,
 
 
 /* ticket.c */
-extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
+extern int tkt_DecodeTicket(const char *asecret, afs_int32 ticketLen,
 			    struct ktc_encryptionKey *key, char *name,
-			    char *inst, char *cell, char *sessionKey,
-			    afs_int32 * host, afs_int32 * start,
-			    afs_int32 * end);
+			    char *inst, char *cell,
+			    struct ktc_encryptionKey *sessionKey,
+			    afs_int32 * host, afs_uint32 * start,
+			    afs_uint32 * end);
 extern int tkt_MakeTicket(char *ticket, int *ticketLen,
 			  struct ktc_encryptionKey *key, char *name,
 			  char *inst, char *cell, afs_uint32 start,
@@ -141,12 +144,13 @@ extern afs_uint32 life_to_time(afs_uint32 start, unsigned char life);
 extern unsigned char time_to_life(afs_uint32 start, afs_uint32 end);
 
 /* ticket5.c */
-extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
+extern int tkt_DecodeTicket5(const char *ticket, afs_int32 ticket_len,
 			     int (*get_key) (char *, int,
 					     struct ktc_encryptionKey *),
 			     char *get_key_rock, int serv_kvno, char *name,
-			     char *inst, char *cell, char *session_key,
-			     afs_int32 * host, afs_int32 * start,
-			     afs_int32 * end);
+			     char *inst, char *cell,
+			     struct ktc_encryptionKey *session_key,
+			     afs_int32 * host, afs_uint32 * start,
+			     afs_uint32 * end);
 
 #endif

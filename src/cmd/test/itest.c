@@ -64,6 +64,7 @@ main(argc, argv)
     char *tv[100];
 
     initialize_CMD_error_table();
+    initialize_rx_error_table();
 
     ts = cmd_CreateSyntax("apple", cproc1, NULL, "describe apple");
 

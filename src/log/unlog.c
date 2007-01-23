@@ -57,6 +57,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/cmd.h>
+#include "afs_token.h"
 
 #undef VIRTUE
 #undef VICE
@@ -73,27 +74,28 @@ struct tokenInfo {
 int 
 CommandProc(struct cmd_syndesc *as, char *arock)
 {
-#define	MAXCELLS 20		/* XXX */
     struct cmd_item *itp;
-    afs_int32 code, i = 0;
-    char *cells[20];
+    afs_int32 code, i;
+    char **cells;
 
     if (as->parms[0].items) {	/* A cell is provided */
-	for (itp = as->parms[0].items; itp; itp = itp->next) {
-	    if (i > MAXCELLS) {
-		printf
-		    ("The maximum number of cells (%d) is exceeded; the rest are ignored\n",
-		     MAXCELLS);
-		break;
-	    }
+	for (i = 0, itp = as->parms[0].items; itp; itp = itp->next)
+	    ++i;
+	cells = (char **) malloc(i * sizeof *cells);
+	if (!cells) {
+	    com_err("unlog", ENOMEM, "could not allocate %d cells", i);
+	    return ENOMEM;
+	}
+	for (i = 0, itp = as->parms[0].items; itp; itp = itp->next) {
 	    cells[i++] = itp->data;
 	}
 	code = unlog_ForgetCertainTokens(cells, i);
+	free(cells);
     } else
 	code = ktc_ForgetAllTokens();
     if (code) {
-	printf("unlog: could not discard tickets, code %d\n", code);
-	exit(1);
+	com_err("unlog", code, "could not discard tickets");
+	return code;
     }
     return 0;
 }
@@ -121,6 +123,8 @@ main(int argc, char *argv[])
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    initialize_ktc_error_table();
+    initialize_rx_error_table();
 
     ts = cmd_CreateSyntax(NULL, CommandProc, 0,
 			  "Release Kerberos authentication");
@@ -130,6 +134,11 @@ main(int argc, char *argv[])
     exit(code != 0);
 }				/*Main routine */
 
+struct token_list {
+    struct token_list *next;
+    struct afs_token *afst;
+    int deleted;
+};
 
 /*
  * Problem: only the KTC gives you the ability to selectively destroy
@@ -143,46 +152,33 @@ main(int argc, char *argv[])
 int
 unlog_ForgetCertainTokens(char **list, int listSize)
 {
-    unsigned count, index, index2;
+    unsigned count;
     afs_int32 code;
-    struct ktc_principal serviceName;
-    struct tokenInfo *tokenInfoP;
+    afs_token *afstoken;
+    struct token_list *token_list, **tokenp, *p;
 
     /* normalize all the names in the list */
     unlog_NormalizeCellNames(list, listSize);
 
-    /* figure out how many tokens exist */
-    count = 0;
-    do {
-	code = ktc_ListTokens(count, &count, &serviceName);
-    } while (!code);
-
-    tokenInfoP =
-	(struct tokenInfo *)malloc((sizeof(struct tokenInfo) * count));
-    if (!tokenInfoP) {
-	perror("unlog_ForgetCertainTokens -- osi_Alloc failed");
-	exit(1);
-    }
-
-    for (code = index = index2 = 0; (!code) && (index < count); index++) {
-	code =
-	    ktc_ListTokens(index2, &index2, &(tokenInfoP + index)->service);
-
-	if (!code) {
-	    code =
-		ktc_GetToken(&(tokenInfoP + index)->service,
-			     &(tokenInfoP + index)->token,
-			     sizeof(struct ktc_token),
-			     &(tokenInfoP + index)->client);
-
-	    if (!code)
-		(tokenInfoP + index)->deleted =
-		    unlog_CheckUnlogList(list, listSize,
-					 &(tokenInfoP + index)->client);
+    tokenp = &token_list;
+    token_list = 0;
+    /* get the tokens out of the kernel */
+    for (count = 0; ; ++count) {
+	code = ktc_GetTokenEx(count, 0, &afstoken);
+	if (code) break;
+	p = malloc(sizeof *p);
+	if (!p) {
+	    com_err("unlog", ENOMEM, "can't allocate token link store");
+	    exit(1);
 	}
+	p->next = 0;
+	p->afst = afstoken;
+	p->deleted = unlog_CheckUnlogList(list, listSize, afstoken->cell);
+	*tokenp = p;
+	tokenp = &p->next;
     }
 
-    unlog_VerifyUnlog(list, listSize, tokenInfoP, count);
+    unlog_VerifyUnlog(list, listSize, token_list);
     code = ktc_ForgetAllTokens();
 
     if (code) {
@@ -190,16 +186,12 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	exit(1);
     }
 
-    for (code = index = 0; index < count; index++) {
-	if (!((tokenInfoP + index)->deleted)) {
-	    code =
-		ktc_SetToken(&(tokenInfoP + index)->service,
-			     &(tokenInfoP + index)->token,
-			     &(tokenInfoP + index)->client, 0);
-	    if (code) {
-		fprintf(stderr, "Couldn't re-register token, code = %d\n",
-			code);
-	    }
+    for (p = token_list; p; p = p->next) {
+	if (p->deleted) continue;
+	code = ktc_SetTokenEx(p->afst);
+	if (code) {
+	com_err("unlog", code,
+	    "so couldn't re-register token in cell %s", p->afst->cell);
 	}
     }
     return 0;
@@ -209,10 +201,10 @@ unlog_ForgetCertainTokens(char **list, int listSize)
  * 0 if not in list, 1 if in list
  */
 int
-unlog_CheckUnlogList(char **list, int count, struct ktc_principal *principal)
+unlog_CheckUnlogList(char **list, int count, char *cell)
 {
     do {
-	if (strcmp(*list, principal->cell) == 0)
+	if (strcmp(*list, cell) == 0)
 	    return 1;
 	list++;
 	--count;
@@ -273,18 +265,19 @@ unlog_NormalizeCellNames(char **list, int size)
  * prints warning messages for those cells without such entries.
  */
 int
-unlog_VerifyUnlog(char **cellList, int cellListSize, struct tokenInfo *tokenList, int tokenListSize)
+unlog_VerifyUnlog(char **cellList, int cellListSize, struct token_list *tokenList)
 {
+    struct token_list *p;
     int index;
-
     for (index = 0; index < cellListSize; index++) {
-	int index2;
 	int found;
 
-	for (found = index2 = 0; !found && index2 < tokenListSize; index2++)
-	    found =
-		strcmp(cellList[index],
-		       (tokenList + index2)->client.cell) == 0;
+	found = 0;
+	for (p = tokenList; p; p = p->next) {
+	    if (strcmp(cellList[index], p->afst->cell)) continue;
+	    found = 1;
+	    break;
+	}
 
 	if (!found)
 	    fprintf(stderr, "unlog: Warning - no tokens held for cell %s\n",

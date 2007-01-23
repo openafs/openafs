@@ -39,13 +39,11 @@ static char *rcsid =
 #include <pwd.h>
 #endif /* WINDOWS */
 
-/* on AIX AFS has an unresolved reference to osi_audit. We will define
- * it here as extern. It also trys to call the ntohl and htonl routines
- * as routines rather then macros. We need a real routine here. 
- * We do this before the ntohl and htonl macros are defined in net/in.h
+/* on AIX AFS trys to call the ntohl and htonl routines as routines
+ * rather then macros. We need a real routine here.  We do this before
+ * the ntohl and htonl macros are defined in net/in.h
+* XXX is this still true?  If so should fix.
  */
-int osi_audit()
-    { return(0);}
 
 #if 0
 #ifdef _AIX
@@ -61,7 +59,6 @@ u_long ntohl(u_long x)
 #endif /* 0 */
 
 #include <afs/stds.h>
-#include <krb5.h>
 
 #ifdef WINDOWS
 
@@ -79,7 +76,6 @@ u_long ntohl(u_long x)
 #include <sys/ioccom.h>
 #endif
 #include <afs/auth.h>
-#include <afs/cellconfig.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/ptserver.h>
@@ -87,10 +83,18 @@ u_long ntohl(u_long x)
 #include <afs/dirpath.h>
 #endif /* WINDOWS */
 
+#include <afs/cellconfig.h>	/* XXX does windows have this? */
+#ifdef AFS_RXK5
+#include "rxk5_utilafs.h"
+#else
+#include <krb5.h>
+#endif
+
 #include "aklog.h"
 #include "linked_list.h"
 
 #define AFSKEY "afs"
+#define AFS_K5_KEY "afs-k5"
 #define AFSINST ""
 
 #ifndef AFS_TRY_FULL_PRINC
@@ -203,7 +207,9 @@ static int get_user_realm(krb5_context, char *);
 #if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define krb5_524_convert_creds krb524_convert_creds_kdc
 #elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+#if 0
 #error "You must have one of krb5_524_convert_creds or krb524_convert_creds_kdc available"
+#endif
 #endif
 
 #endif /* WINDOWS */
@@ -217,6 +223,10 @@ extern char *sys_errlist[];
 #define strerror(x) sys_errlist[x]
 #endif /* HAVE_STRERROR */
 
+#define DO524_NO 1
+#define DO524_YES 2
+#define DO524_LOCAL 3
+
 static char *progname = NULL;	/* Name of this program */
 static int dflag = FALSE;	/* Give debugging information */
 static int noauth = FALSE;	/* If true, don't try to get tokens */
@@ -226,7 +236,10 @@ static int noprdb = FALSE;	/* Skip resolving name to id? */
 static int linked = FALSE;  /* try for both AFS nodes */
 static int afssetpag = FALSE; /* setpag for AFS */
 static int force = FALSE;	/* Bash identical tokens? */
-static int do524 = FALSE;	/* Should we do 524 instead of rxkad2b? */
+static int do524 = DO524_NO;	/* Should we do 524 instead of rxkad2b? */
+#ifdef AFS_RXK5
+static int rxk5;		/* Use rxk5 enctype selection and settoken behavior */
+#endif
 static linked_list zsublist;	/* List of zephyr subscriptions */
 static linked_list hostlist;	/* List of host addresses */
 static linked_list authedcells;	/* List of cells already logged to */
@@ -377,7 +390,6 @@ cm_SearchCellFile_CallBack(void *rock /* cellconfig */,
     
 #endif /* WINDOWS */
 
-
 /* 
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -521,7 +533,15 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 * a configure option.
 	 */
 
-	strcpy(name, AFSKEY);
+#ifdef AFS_RXK5
+	if(rxk5) {
+	    strcpy(name, AFS_K5_KEY);
+	} else {
+#endif	/* AFS_RXK5 */
+	    strcpy(name, AFSKEY);
+#ifdef AFS_RXK5
+	}
+#endif
 
 	if (AFS_TRY_FULL_PRINC || strcasecmp(cell_to_use, realm_of_cell) != 0) {
 	    strncpy(primary_instance, cell_to_use, sizeof(primary_instance));
@@ -589,10 +609,15 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	/*
  	 * The default is to use rxkad2b, which means we put in a full
 	 * V5 ticket.  If the user specifies -524, we talk to the
-	 * 524 ticket converter.
+	 * 524 ticket converter.  If the user specifies -unwrap, we
+	 * construct a encpart only 2b style ticket.
 	 */
 
-	if (! do524) {
+#if defined(HAVE_KRB5_524_CONVERT_CREDS) || defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+	if (do524 != DO524_YES) {
+#else
+	{
+#endif
 	    char *p;
 	    int len;
 
@@ -615,13 +640,32 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
 
 	    memset(&atoken, 0, sizeof(atoken));
-	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+	    if (do524 == DO524_NO)
+		atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+	    else
+		atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
 	    atoken.startTime = v5cred->times.starttime;;
 	    atoken.endTime = v5cred->times.endtime;
 	    memcpy(&atoken.sessionKey, get_cred_keydata(v5cred),
 		   get_cred_keylen(v5cred));
-	    atoken.ticketLen = v5cred->ticket.length;
-	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+	    if (do524 == DO524_NO) {
+		atoken.ticketLen = v5cred->ticket.length;
+		memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+	    } else {
+		krb5_data enc_part[1];
+		if (afs_krb5_skip_ticket_wrapper(v5cred->ticket.data,
+			v5cred->ticket.length,
+			&enc_part->data, &enc_part->length)) {
+		    fprintf(stderr, "%s: Couldn't decode %s AFS tickets:\n",
+			    progname, cell_to_use);
+		    return(AKLOG_KERBEROS);
+		}
+		atoken.ticketLen = enc_part->length;
+		memcpy(atoken.ticket, enc_part->data, atoken.ticketLen);
+	    }
+#if !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+	}
+#else
 	} else {
     	    CREDENTIALS cred;
 
@@ -657,6 +701,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    atoken.ticketLen = cred.ticket_st.length;
 	    memcpy(atoken.ticket, cred.ticket_st.dat, atoken.ticketLen);
 	}
+#endif
 	
 	if (!force &&
 	    !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
@@ -801,12 +846,25 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 */
 	write(2,"",0); /* dummy write */
 #ifndef WINDOWS
-	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
-	    fprintf(stderr, 
+#ifdef AFS_RXK5
+	if(rxk5) {	
+	  if ((status = ktc_SetK5Token(context, &aserver, v5cred, viceId, afssetpag))) {
+	    	fprintf(stderr, 
 		    "%s: unable to obtain tokens for cell %s (status: %d).\n",
 		    progname, cell_to_use, status);
-	    status = AKLOG_TOKEN;
+	    	status = AKLOG_TOKEN;
+	    }
+	} else {
+#endif	/* AFS_RXK5 */
+	    if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
+	    	fprintf(stderr, 
+		    "%s: unable to obtain tokens for cell %s (status: %d).\n",
+		    progname, cell_to_use, status);
+	    	status = AKLOG_TOKEN;
+	    }
+#ifdef AFS_RXK5
 	}
+#endif	/* AFS_RXK5 */
 #else /* WINDOWS */
 	/* Note switched 2nd and 3rd args */
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
@@ -1178,7 +1236,15 @@ static void usage(void)
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
 	    "[[-p | -path] pathname]\n",
 	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
-	    "    [-linked] [-524]\n");
+	    "    [-linked]"
+#if defined(HAVE_KRB5_524_CONVERT_CREDS) || defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+	    " [-524]"
+#endif
+#ifdef AFS_RXK5
+	    " [-k5]"
+	    " [-k4]"
+#endif
+	    "\n");
     fprintf(stderr, "    -d gives debugging information.\n");
     fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
     fprintf(stderr, "    pathname is the name of a directory to which ");
@@ -1190,7 +1256,14 @@ static void usage(void)
     fprintf(stderr, "    -force means replace identical tickets. \n");
     fprintf(stderr, "    -linked means if AFS node is linked, try both. \n");
     fprintf(stderr, "    -setpag set the AFS process authentication group.\n");
+#if defined(HAVE_KRB5_524_CONVERT_CREDS) || defined(HAVE_KRB524_CONVERT_CREDS_KDC)
     fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
+#endif
+    fprintf(stderr, "    -unwrap means do the 524 conversion locally\n");
+#ifdef AFS_RXK5
+    fprintf(stderr, "    -k5 means do rxk5 (kernel uses V5 tickets)\n");
+    fprintf(stderr, "    -k4 means do rxkad (kernel uses V4 or 2b tickets)\n");
+#endif	/* AFS_RXK5 */
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
@@ -1244,6 +1317,11 @@ void aklog(int argc, char *argv[])
 	initialize_ktc_error_table ();
 #endif
 
+#ifdef AFS_RXK5
+     /* Select for rxk5 unless AFS_RXK5_DEFAULT envvar is not 1|yes */
+    rxk5 = env_afs_rxk5_default() != FORCE_RXKAD;
+#endif
+
     /* Initialize list of cells to which we have authenticated */
     (void)ll_init(&authedcells);
 
@@ -1263,9 +1341,19 @@ void aklog(int argc, char *argv[])
 		linked++;
 	else if (strcmp(argv[i], "-force") == 0)
 	    force++;
+#if defined(HAVE_KRB5_524_CONVERT_CREDS) || defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 	else if (strcmp(argv[i], "-524") == 0)
-	    do524++;
-    else if (strcmp(argv[i], "-setpag") == 0)
+	    do524 = DO524_YES;
+#endif
+	else if (strcmp(argv[i], "-unwrap") == 0)
+	    do524 = DO524_LOCAL;
+#ifdef AFS_RXK5
+	else if (strcmp(argv[i], "-k4") == 0)
+	    rxk5 = 0;
+	else if (strcmp(argv[i], "-k5") == 0)
+	    rxk5 = 1;
+#endif	/* AFS_RXK5 */
+        else if (strcmp(argv[i], "-setpag") == 0)
 	    afssetpag++;
 	else if (((strcmp(argv[i], "-cell") == 0) ||
 		  (strcmp(argv[i], "-c") == 0)) && !pmode)
@@ -1511,23 +1599,6 @@ void aklog(int argc, char *argv[])
     exit(status);
 }
 
-#ifndef HAVE_ADD_TO_ERROR_TABLE
-
-#define error_table error_table_compat
-#include <afs/error_table.h>
-#undef error_table
-
-#ifndef HAVE_ADD_ERROR_TABLE
-void add_error_table (const struct error_table *);
-#endif /* !HAVE_ADD_ERROR_TABLE */
-
-void
-add_to_error_table(struct et_list *new_table)
-{
-	add_error_table((struct error_table *) new_table->table);
-}
-#endif /* HAVE_ADD_TO_ERROR_TABLE */
-
 static int isdir(char *path, unsigned char *val)
 {
     struct stat statbuf;
@@ -1574,10 +1645,48 @@ static krb5_error_code get_credv5(krb5_context context,
 
     increds.client = client_principal;
     increds.times.endtime = 0;
-	/* Ask for DES since that is what V4 understands */
-    get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
-
-    r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+    
+#ifdef AFS_RXK5
+    if(rxk5) {
+    	/* Get the strongest credentials this KDC can issue for the princ, and the
+	   cache manager supports */
+	   
+	/* Todo: add pioctl GetCapabilities call to fetch the cache-manager supported
+	   enctypes at runtime (skipping this for now, because we know which enctypes
+	   K5SSL supports */
+	   int enc_ix;
+	   int enctypes_pref_order[6] = { ENCTYPE_AES256_CTS_HMAC_SHA1_96,
+	   				  ENCTYPE_AES128_CTS_HMAC_SHA1_96,
+					  ENCTYPE_DES3_CBC_SHA1,
+#ifndef USING_HEIMDAL
+#define ENCTYPE_ARCFOUR_HMAC_MD5 ENCTYPE_ARCFOUR_HMAC
+#define ENCTYPE_ARCFOUR_HMAC_MD5_56 ENCTYPE_ARCFOUR_HMAC_EXP
+#endif
+					  ENCTYPE_ARCFOUR_HMAC_MD5,
+					  ENCTYPE_ARCFOUR_HMAC_MD5_56,
+					  ENCTYPE_DES_CBC_CRC };
+					  
+	    for(enc_ix = 0; enc_ix < 6; ++enc_ix) {
+	    	get_creds_enctype((&increds)) = enctypes_pref_order[enc_ix];
+		/* odd name for the ccache var, but apparently, just the usual one */
+		r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+		if(!r) {
+		    if(dflag) {
+		        printf("Successful get_greds_enctype with enctype == %d\n", 
+				enctypes_pref_order[enc_ix]);
+		    }
+		    break;
+		}
+	    }				  
+	   
+    } else {
+#endif	/* AFS_RXK5 */
+    	/* Ask for DES since that is what V4 understands */
+    	get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
+    	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+#ifdef AFS_RXK5
+    }
+#endif	/* AFS_RXK5 */
 
     return r;
 }

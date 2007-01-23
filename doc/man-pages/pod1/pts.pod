@@ -136,6 +136,7 @@ L<pts_createuser(1)>,
 L<pts_delete(1)>,
 L<pts_examine(1)>,
 L<pts_help(1)>,
+L<pts_interactive(1)>,
 L<pts_listentries(1)>,
 L<pts_listmax(1)>,
 L<pts_listowned(1)>,
@@ -143,7 +144,9 @@ L<pts_membership(1)>,
 L<pts_removeuser(1)>,
 L<pts_rename(1)>,
 L<pts_setfields(1)>,
-L<pts_setmax(1)>
+L<pts_setmax(1)>,
+L<pts_sleep(1)>,
+L<pts_source(1)>
 
 =head1 COPYRIGHT
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,6 +57,11 @@ RCSID
 #include <afs/auth.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include "rxk5.h"
+#include "rxk5errors.h"
+#include "afs/rxk5_utilafs.h"
+#endif
 #include <afs/keys.h>
 #include <ubik.h>
 #include <fcntl.h>
@@ -86,8 +91,8 @@ int GlobalVolType;
 int VolumeChanged;		/* XXXX */
 static char busyFlags[MAXHELPERS];
 struct volser_trans *QI_GlobalWriteTrans = 0;
-extern void AFSVolExecuteRequest();
-extern void RXSTATS_ExecuteRequest();
+extern int AFSVolExecuteRequest();
+extern int RXSTATS_ExecuteRequest();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
@@ -113,26 +118,24 @@ threadNum(void)
 }
 #endif
 
-static afs_int32
+static void
 MyBeforeProc(struct rx_call *acall)
 {
     VTRANS_LOCK;
     runningCalls++;
     VTRANS_UNLOCK;
-    return 0;
 }
 
-static afs_int32
+static void
 MyAfterProc(struct rx_call *acall, afs_int32 code)
 {
     VTRANS_LOCK;
     runningCalls--;
     VTRANS_UNLOCK;
-    return 0;
 }
 
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
- * if we're idle and there are no active transactions 
+ * if we're idle and there are no active transactions
  */
 static void
 TryUnlock()
@@ -147,9 +150,17 @@ TryUnlock()
         VTRANS_UNLOCK;
 }
 
+#ifdef AFS_PTHREAD_ENV
+#define DUMMY_PTHREAD_T		void *
+#define DUMMY_PTHREAD_ARG	void *x
+#else
+#define DUMMY_PTHREAD_T		int
+#define DUMMY_PTHREAD_ARG	/**/
+#endif
+
 /* background daemon for timing out transactions */
-static void
-BKGLoop()
+static DUMMY_PTHREAD_T
+BKGLoop(DUMMY_PTHREAD_ARG)
 {
     struct timeval tv;
     int loop = 0;
@@ -174,8 +185,8 @@ BKGLoop()
 
 /* Background daemon for sleeping so the volserver does not become I/O bound */
 afs_int32 TTsleep, TTrun;
-static void
-BKGSleep()
+static DUMMY_PTHREAD_T
+BKGSleep(DUMMY_PTHREAD_ARG)
 {
     struct volser_trans *tt;
 
@@ -235,13 +246,19 @@ vol_rxstat_userok(struct rx_call *call)
 }
 
 #include "AFS_component_version_number.c"
-int 
+int
 main(int argc, char **argv)
 {
     register afs_int32 code;
-    struct rx_securityClass *(securityObjects[3]);
+#ifdef AFS_RXK5
+    char* rxk5_keytab;
+    afs_int32 afs_rxk5_p = 0;
+#define RXSC_LEN 6
+#else
+#define RXSC_LEN 3
+#endif
+    struct rx_securityClass *securityObjects[RXSC_LEN];
     struct rx_service *service;
-    struct ktc_encryptionKey tkey;
     int rxpackets = 100;
     char commandLine[150];
     int i;
@@ -252,8 +269,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -264,6 +281,9 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
+#endif
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
 #endif
     osi_audit_init();
     osi_audit(VS_StartEvent, 0, AUD_END);
@@ -310,11 +330,11 @@ main(int argc, char **argv)
 
 #ifndef AFS_NT40_ENV
 	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
+
+	    if ((lstat(fileName, &statbuf) == 0)
 		&& (S_ISFIFO(statbuf.st_mode))) {
 		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
+	    } else
 #endif
 	    {
 		strcpy(oldName, fileName);
@@ -336,14 +356,14 @@ main(int argc, char **argv)
 	    rxJumbograms = 0;
 	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		exit(1); 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       rxMaxMTU, RX_MIN_PACKET_SIZE,
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
 	    }
@@ -438,19 +458,19 @@ main(int argc, char **argv)
     if (rxBind) {
 	afs_int32 ccode;
 #ifndef AFS_NT40_ENV
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
-#endif	
+        } else
+#endif
 	{
-            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+            ccode = rx_getAllAddr((afs_int32*)SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 
@@ -498,16 +518,35 @@ main(int argc, char **argv)
 	      AFSDIR_SERVER_ETC_DIRPATH);
 	VS_EXIT(1);
     }
-    afsconf_GetKey(tdir, 999, &tkey);
     securityObjects[0] = rxnull_NewServerSecurityObject();
     securityObjects[1] = (struct rx_securityClass *)0;	/* don't bother with rxvab */
     securityObjects[2] =
-	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+	rxkad_NewServerSecurityObject(0, (char*) tdir,
+		(int(*)(unsigned char *, int,
+			struct ktc_encryptionKey*))afsconf_GetKey, NULL);
     if (securityObjects[0] == (struct rx_securityClass *)0)
 	Abort("rxnull_NewServerSecurityObject");
+
+#ifdef AFS_RXK5
+    /* if not rxgk */
+    securityObjects[3] = 0;
+    securityObjects[4] = 0;
+    /* rxk5 */
+    securityObjects[5] = 0;
+    if(have_afs_rxk5_keytab(tdir->name)) {
+	afs_rxk5_p = 1;
+	rxk5_keytab = get_afs_rxk5_keytab(tdir->name);
+	securityObjects[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+							  rxk5_keytab,
+							  rxk5_default_get_key,
+							  0,
+							  0);
+	/* rxk5 now owns the keytab filename memory */
+    }
+#endif
     service =
-	rx_NewServiceHost(host, 0, VOLSERVICE_ID, "VOLSER", securityObjects, 3,
-		      AFSVolExecuteRequest);
+	rx_NewServiceHost(host, 0, VOLSERVICE_ID, "VOLSER",
+		      securityObjects, RXSC_LEN, AFSVolExecuteRequest);
     if (service == (struct rx_service *)0)
 	Abort("rx_NewService");
     rx_SetBeforeProc(service, MyBeforeProc);
@@ -523,8 +562,8 @@ main(int argc, char **argv)
 #endif
 
     service =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects, 3,
-		      RXSTATS_ExecuteRequest);
+	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects,
+		      RXSC_LEN, RXSTATS_ExecuteRequest);
     if (service == (struct rx_service *)0)
 	Abort("rx_NewService");
     rx_SetMinProcs(service, 2);

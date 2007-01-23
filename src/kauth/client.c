@@ -330,6 +330,7 @@ ka_Init(int flags)
     initialize_RXK_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
+    initialize_rx_error_table();
     code = ka_CellConfig(AFSDIR_CLIENT_ETC_DIRPATH);
     UNLOCK_GLOBAL_MUTEX;
     if (code)

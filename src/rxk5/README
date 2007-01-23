@@ -1,0 +1,222 @@
+	RXK5
+
+"rxk5" is a kerberos 5 based replacement for rxkad.
+This is desirable because rxkad only works with des,
+which is an increasingly insecure choice.
+The goal here is to provide the highest quality cryptography
+possible using code and standards that exist today.
+A key subgoal of this is to keep the code footprint as small
+as possible.  Less code should produce better code reliabliity,
+and should also facilitate running this code inside a kernel
+environment, such as the AFS cache manager.
+
+There is an active effort in the openafs community to
+replace rxkad with rxgk.  rxgk has some very interesting
+theoretical ideas, which would be very nice to realize in
+practice.  However, it depends on software and standards that
+are themselves not yet done.  rxk5 and rxgk are not mutually
+exclusive; it is very possible that the future back end code
+of rxgk will be the same as rxk5.
+
+The place to discuss this is: openafs-info@openafs.org .
+
+This version of code is fully functional as part of an (experimental)
+version of openafs.
+
+rxk5 comes with a standalone test client & server for testing/demonstration
+purposes.
+To try this:
+/1/ acquire a keytab.  For instance,
+	Keytab name: FILE:/home/mdw/keytab.test
+	KVNO Principal
+	---- ----------------------------------------
+	   3 rx5k/test@DOGS.UMICH.EDU
+/2/ run the server:
+	./testserver -f /home/mdw/keytab.test
+
+To run the client:
+/1/ kinit
+	kinit mdw@DOGS.UMICH.EDU
+/2/ client:
+	./testclient -k rx5k/test@DOGS.UMICH.EDU
+by default, the client connects to localhost.  To connect
+to a server on a different machine,
+	./testclient -k rx5k/test@DOGS.UMICH.EDU -h spam.ifs.umich.edu
+	fib 7
+
+possible kerberos libraries:
+	heimdal
+	I've used 0.6.4 in the past.  I currently use "CVS head"
+	as of 20060410, which I recommend in preference to 0.6.4
+	or 0.7.2.
+	configure openafs with:
+		--enable-rxk5
+		--with-krb5-conf=.../krb5-conf
+
+	MIT k5
+	not recommended for now.  The MIT folks have indicated
+	they may be willing to support a suitable interface
+	in some future version of MIT k5.  For now, do not use
+	unless you are willing to patch, build, and support kerberos.
+	See note below on placeholder function "krb5_danish_surprise".
+	configure openafs with:
+		--enable-rxk5
+		--with-krb5-conf=.../krb5-conf
+
+	shishi
+	"alpha" quality.  Shishi is GPL not LGPL; so there
+	are probably severe licensing problems if you share
+	code built with this.  Only recommended for personal
+	experimental use.  This logic only been tested standalone,
+	not with the rest of openafs, and is not currently maintained.
+	So, there is no configuration support in openafs for this.
+
+	k5ssl (standalone)
+	k5ssl is now a seprate piece of openafs.  Implements the basic kerberos
+	5 crypto and data handling functions needed by rxk5.  k5s_ck.c
+	is the basic cryptographical layer - equivalent to Heimdal's
+	"lib/krb5/crypto.c", except for using the EVP_* functions in
+	openssl and omitting all support for string to key functions.
+	When combined with the cryptographic primitives also provided by
+	k5ssl, this is sufficient to support all kerberos 5 functions
+	needed by rxk5 in the openafs cache manager.  Since this
+	this is the only kerberos 5 library available to rxk5 inside
+	the kernel, there is no special configuration logic.
+
+	k5ssl + openafs
+	The remainder of k5ssl includes support for keytabs, credentials caches,
+	asn.1 glue for tickets, logic to parse and unparse principals,
+	configuration file support, and logic to get service tickets (from
+	a kdc).  When combined with the cryptographic primitives and asn.1
+	logic in openssl's "crypto" library, this supports the full
+	functionality of rxk5, plus nearly all other functions required
+	by openafs (except krb524.)
+	configure openafs with:
+		--with-ssl [=path...]
+		--with-krb5
+
+Known problems with rxk5:
+
+/1/ long tickets won't work.
+	This is probably not a real
+	problem yet except for microsoft active directory.
+	[ Update: recent editions of microsoft active directory can be
+	  configured not to supply a "PAC", which fixes this problem.
+	  Set NO_AUTH_DATA_REQUIRED in the UserAccountControl property 
+	  of the active directory service entry.  (maybe using
+	  mmc + ADSI edit?) ]
+
+	I believe this can be fixed by modifying the challenge
+	response protocol in rx to permit 2 special exceptions,
+		MORE = "call me again: I have more data",
+			C and S
+		AGAIN = "send another challenge".
+			S only
+	All but the last packet could be tagged with
+	RX_MORE_PACKETS and all including the last packet
+	need the byte offset recorded somewhere.
+	It would be up to the authentication mechanism to
+	return the special errors, manage the piecewise
+	construction of the challenge or response,
+	and manage the fragmentation reassembly on
+	the other end.  Yes this is duplicating
+	logic that calls have.
+	The MORE option permits oversize data elements
+	while working with the packet starvation algorithms
+	in rx.  The AGAIN would permit the construction
+	of more forth & backs to handle better capability
+	negotiation.  This is not needed here (yet) and
+	is merely for the sake of completeness.
+/2/ enctype is just that of the session key.
+	I think this is the kdc's problem.  "aklog" should
+	probably ask the cache manager what encryption types
+	it supports and present the union of those encryption
+	types to the kdc.  This doesn't need to be solved here.
+/3/ cktype is picked arbitrarily.
+	for rxk5_auth, it is necessary to pick a cktype that
+	parallels the enctype.  
+	Ideally, the first element from the union
+	of the results on krb5_c_keyed_checksum_types
+	on the two sides would be used.  Unfortunately, the
+	client has to pick the correct choice, checksum
+	data and send it to the server BEFORE the server even thinks
+	to send a challenge.  So the server is just going to have to
+	swallow whatever the client picks or fail.
+	I believe most modern crypto systems have exactly
+	one "right" choice, so this may not matter.
+	(But should I *check* to make sure that choice
+	is presented on the server side?)
+	Right now, for heimdal/shishi, rxk5i_select_ctype
+	just has appropriate defaults hard-coded; probably
+	I should just do the same thing for mit.
+/4/ prf (pseudorandomfunction).  DK_CUSTOM is intended to allow
+	old clients to connect to new servers.  This should
+	indicate a replacement to rxk5i_derive_key, which has
+	in its favor,
+		it's simple.
+		it actually does some cryptography.
+		it's likely to work.
+	on the other hand,
+		it should be an hmac.
+		instead of nfold:
+			truncate to shrink
+			extra counter + iterate to expand
+		it should be the per-crypto prf from the
+		cryptosystem profile.
+		it should use some common standard interface
+		(which does not yet exist) in krb5
+/5/ for MIT kerberos 5; the function krb5_danish_surprise is a
+	placeholder name for logic to call
+		krb5_decrypt_tkt_part
+		check transited data
+		check flags & TKT_FLG_INVALID
+	this follows similar logic in krb5/src/lib/krb5/krb/rd_req_dec.c
+	A nearly identical function called krb5_decrypt_ticket is
+	available in Heimdal.
+
+	The MIT kerberos folks do not currently offer a public API
+	with the same functionality, but it is to be hoped this
+	will become available in the future.
+
+	The supplied source is supplied as an example but is
+	intended for use only with k5ssl.  Vendor distributions of
+	MIT kerberos do not make the necessary lower-level entry
+	points available.
+
+	The name was selected as something unlikely to be confused with
+	any real part of kerberos; it has no other significance.
+
+Testing notes:
+past versions of rxk5 have worked on darwin, solaris8, linux, obsd, aix.
+this code has been tested with openafs on i386 linux 2.4, 2.6, and has
+mostly linked on solaris and aix.
+should work with: des,des3,aes,rc4
+The following afs systems appear to work:
+pts, bos, vos, cm,
+ptserver, bosserver, vlserver, volserver, fileserver.
+
+Testing strategy:
+/1/ try t_enc, t_sum.  This tests basic cryptographic algorithms.
+	note that supplied des vectors fail with heimdal due to ivec
+	handling differences within heimdal.
+/2/ try testclient, testserver.  This tests rxk5 operation.
+/3/ try pts, ptserver.  This tests rxk5 + openafs.
+/4/ cm -- maybe try k5ssl: t_sum_lk.c t_sum_mem.c t_enc_lk.c
+/5/ try out cm full function.
+
+I want to think the words and advice of
+Matt Benjamin <matt@linuxbox.com>
+Jeffrey Hutzelman <jhutz@cmu.edu>
+Love <lha@stacken.kth.se>,
+Michael Shiplett <walrus@monkey.org>
+without whom this would not be nearly as good.
+Matt Benjamin <matt@linuxbox.com> has put much work into making
+this work with openafs.
+Any fault remains with me.
+
+				-Marcus Watts
+				UM ITCS Umich Systems Group
+				Thu May 19 15:42:11 EDT 2005
+				Updated Mon Jun  6 16:30:10 EDT 2005
+				Updated Wed Jul 13 02:09:21 EDT 2005
+				Updated Mon Sep  4 01:43:06 EDT 2006

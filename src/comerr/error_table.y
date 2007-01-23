@@ -1,6 +1,7 @@
 %{
 #include <afsconfig.h>
 #include <afs/param.h>
+#include "compiler.h"
 
 RCSID("$Header$");
 
@@ -60,25 +61,35 @@ void add_ec_val(const char *name, const char *val, const char *description);
 void put_ecs(void);
 void set_table_num(char *string);
 void set_table_fun(char *astring);
+void set_id(const char *, const char *);
+void set_base(const char *);
+void set_prefix(const char *);
+void add_index(const char *);
 
 %}
 %union {
 	char *dynstr;
 }
 
-%token ERROR_TABLE ERROR_CODE_ENTRY END
-%token <dynstr> STRING QUOTED_STRING
+%token ERROR_TABLE ERROR_CODE_ENTRY END INDEX PREFIX ID BASE NL
+%token <dynstr> STRING QUOTED_STRING NUMBER
 %type <dynstr> ec_name description table_id table_fun header
 %{
 %}
-%start error_table
+%start error_tables
 %%
 
-error_table	:	ERROR_TABLE header error_codes END
-			{ table_name = ds($2);
+error_tables	: | error_tables error_table ;
+
+error_table	:	maybe_blank_lines
+			ERROR_TABLE header maybe_blank_lines
+			error_codes END maybe_blank_lines
+			{ table_name = ds($3);
 			  current_token = table_name;
 			  put_ecs(); }
 		;
+
+maybe_blank_lines : | maybe_blank_lines NL ;
 
 header          :       table_fun table_id
                         { current_token = $1;
@@ -90,7 +101,7 @@ header          :       table_fun table_id
                         }
                 ;
 
-table_fun       :       STRING
+table_fun       :       NUMBER
                         { current_token = $1;
                           set_table_fun($1);
                           $$ = $1; }
@@ -103,8 +114,8 @@ table_id	:	STRING
 			  $$ = $1; }
 		;
 
-error_codes	:	error_codes ec_entry
-		|	ec_entry
+error_codes	:	error_codes ec_entry NL
+		|	ec_entry NL
 		;
 
 ec_entry	:	ERROR_CODE_ENTRY ec_name ',' description
@@ -117,6 +128,26 @@ ec_entry	:	ERROR_CODE_ENTRY ec_name ',' description
 			  free($4);
 			  free($6);
 			}
+		|	INDEX NUMBER
+			{ add_index($2);
+			  free($2);
+			}
+		|	PREFIX STRING
+			{ set_prefix($2);
+			  free($2);
+			}
+		/*
+		|	ID STRING STRING
+			{ set_id($2, $3);
+			  free($2);
+			  free($3);
+			}
+		*/
+		|	BASE NUMBER
+			{ set_base($2);
+			  free($2);
+			}
+		|
 		;
 
 ec_name		:	STRING
@@ -142,6 +173,8 @@ description	:	QUOTED_STRING
 
 extern FILE *hfile, *cfile, *msfile;
 extern int use_msf;
+char st_prefix[] = "";
+char *prefix = st_prefix;
 
 static afs_int32 gensym_n = 0;
 
@@ -163,8 +196,9 @@ char *
 ds(const char *string)
 {
 	char *rv;
-	rv = (char *)malloc(strlen(string)+1);
-	strcpy(rv, string);
+	rv = (char *)malloc(strlen(prefix)+strlen(string)+1);
+	strcpy(rv, prefix);
+	strcat(rv, string);
 	return(rv);
 }
 
@@ -209,14 +243,14 @@ void add_ec_val(const char *name, const char *val, const char *description)
 {
 	const int ncurrent = atoi(val);
 	if (ncurrent < current) {
-		printf("Error code %s (%d) out of order", name,
+		fprintf(stderr,"Error code %s (%d) out of order", name,
 		       current);
 		return;
 	}
       
 	while (ncurrent > current) {
 	     if (!msfile)
-		 fputs("\t(char *)NULL,\n", cfile);
+		 fputs("\t(char *)0,\n", cfile);
 	     current++;
 	 }
         if (msfile) {
@@ -239,6 +273,57 @@ void add_ec_val(const char *name, const char *val, const char *description)
 	error_codes[current] = (char *)NULL;
 } 
 
+void add_index(const char *val)
+{
+	const int ncurrent = atoi(val);
+	if (ncurrent < current) {
+		fprintf(stderr,"Index (%d) attempt to go backwards",
+		       current);
+		return;
+	}
+      
+	if (error_codes == (char **)NULL) {
+		error_codes = (char **)malloc((ncurrent + 1) * sizeof(char *));
+	} else {
+		error_codes = (char **)realloc((char *)error_codes,
+				       (ncurrent + 1)*sizeof(char *));
+	}
+	while (ncurrent > current) {
+	     if (!msfile)
+		 fputs("\t(char *)0,\n", cfile);
+	     error_codes[current++] = (char *)NULL;
+	 }
+}
+
+/*
+void set_id(const char *id, const char *text)
+{
+}
+*/
+
+void set_prefix(const char *val)
+{
+	char *new;
+
+	if (*val) {
+		new = malloc(strlen(val)+2);
+		strcpy(new, val);
+		strcat(new, "_");
+	} else {
+		new = malloc(1);
+		*new = 0;
+	}
+	if (prefix != st_prefix) {
+		free(prefix);
+	}
+	prefix = new;
+}
+
+void set_base(const char *base)
+{
+	table_number = atoi(base);
+}
+
 void put_ecs(void)
 {
 	int i;
@@ -247,6 +332,7 @@ void put_ecs(void)
 		  fprintf(hfile, "#define %-40s (%ldL)\n",
 			  error_codes[i], (long int) table_number + i);
 	}
+	put_ecs_postlog();
 }
 
 /*
@@ -307,6 +393,14 @@ void set_table_num(char *string)
 		string++;
 	}
 	table_number = table_number << ERRCODE_RANGE;
+	current = 0;
+	if (error_codes)
+		error_codes[current] = (char *)NULL;
+        if (!msfile) {
+	    fprintf(cfile,
+		"static const char * const text%s[] = {\n",
+		cot_suffix(count_of_tables));	/* } */
+	}
 }
 
 void set_table_fun(char *astring)

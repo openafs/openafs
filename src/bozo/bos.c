@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -40,6 +40,11 @@ RCSID
 #include <rx/xdr.h>
 #include <afs/auth.h>
 #include <rx/rxkad.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include "rxk5_utilafs.h"
+#endif
+#include "afs_token.h"
 #include <afs/cellconfig.h>
 #include <stdio.h>
 #include <afs/cmd.h>
@@ -77,13 +82,6 @@ struct MRAFSSalvageParms {
     afs_int32 OptRxDebug;
     afs_uint32 OptResidencies;
 };
-
-/* dummy routine for the audit work.  It should do nothing since audits */
-/* occur at the server level and bos is not a server. */
-osi_audit()
-{
-    return 0;
-}
 
 /* keep those lines small */
 static char *
@@ -158,8 +156,6 @@ DateOf(atime)
 }
 
 /* global stuff from main for communicating with GetConn */
-static struct rx_securityClass *sc[3];
-static int scIndex;
 
 /* use the syntax descr to get a connection, authenticated appropriately.
  * aencrypt is set if we want to encrypt the data on the wire.
@@ -176,10 +172,18 @@ GetConn(as, aencrypt)
     afs_int32 addr;
     register struct afsconf_dir *tdir;
     int encryptLevel;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    int localauth;
+    int force_flags, localauth;
     const char *confdir;
+    struct afsconf_cell info;
+    int say_noauth = 0;
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5context = 0;
+    krb5_ccache cc = 0;
+    char *afs_k5_princ = 0;
+#endif
+    struct rx_securityClass *sc;
+    int scIndex;
 
     hostname = as->parms[0].items->data;
     th = hostutil_GetHostByName(hostname);
@@ -191,11 +195,24 @@ GetConn(as, aencrypt)
 
     /* get tokens for making authenticated connections */
     localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
+    force_flags = (FORCE_SECURE & -(!!aencrypt));
+#ifdef AFS_RXK5
+    memset(in_creds, 0, sizeof *in_creds);
+/* -k5 */
+    force_flags |= (FORCE_RXK5 & -(as->parms[ADDPARMOFFSET + 3].items != 0));
+/* -k4 */
+    force_flags |= (FORCE_RXKAD & -(as->parms[ADDPARMOFFSET + 4].items != 0));
+    if (!(force_flags & (FORCE_RXKAD|FORCE_RXK5)))
+	force_flags |= env_afs_rxk5_default();
+#endif
     confdir =
 	(localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
     tdir = afsconf_Open(confdir);
-    if (tdir) {
-	struct afsconf_cell info;
+    if (!tdir) {
+	printf("bos: can't open cell database (%s)\n", confdir);
+	exit(1);
+    }
+    {
 	char *tname;
 
 	if (as->parms[ADDPARMOFFSET].items)
@@ -206,76 +223,141 @@ GetConn(as, aencrypt)
 	 * local cell */
 	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
 	if (code) {
-	    com_err("bos", code, "(can't find cell '%s' in cell database)",
-		    (tname ? tname : "<default>"));
+	    com_err("bos", code, "(can't find cell '%s' in cell database '%s')",
+		    (tname ? tname : "<default>"), confdir);
 	    exit(1);
-	} else
-	    strcpy(sname.cell, info.name);
-    } else {
-	printf("bos: can't open cell database (%s)\n", confdir);
-	exit(1);
+	}
     }
-    sname.instance[0] = 0;
-    strcpy(sname.name, "afs");
-    sc[0] = rxnull_NewClientSecurityObject();
-    sc[1] = 0;
-    sc[2] = 0;
-    scIndex = 0;
+    sc = 0;
+    scIndex = 1;
+    if (as->parms[ADDPARMOFFSET + 1].items) {	/* not -noauth */
+	scIndex = 0;
+    } else if (localauth) {	/* -localauth */
+	code = afsconf_ClientAuthEx(tdir, &sc, &scIndex, force_flags);
+	if (code)
+	    com_err("bos", code, "(calling ClientAuth)");
+	say_noauth = !scIndex;
+#ifdef AFS_RXK5
+    } else if (force_flags & FORCE_RXK5) {
+	/* Because rxgk has claimed indexes 3 and 4, the next available index
+	   for rxk5 is 5 */
+	char *what;
 
-    if (!as->parms[ADDPARMOFFSET + 1].items) {	/* not -noauth */
-	if (as->parms[ADDPARMOFFSET + 2].items) {	/* -localauth */
-	    code = afsconf_GetLatestKey(tdir, 0, 0);
-	    if (code)
-		com_err("bos", code, "(getting key from local KeyFile)");
-	    else {
-		if (aencrypt)
-		    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-		else
-		    code = afsconf_ClientAuth(tdir, &sc[2], &scIndex);
-		if (code)
-		    com_err("bos", code, "(calling ClientAuth)");
-		else if (scIndex != 2)	/* this shouldn't happen */
-		    sc[scIndex] = sc[2];
+	scIndex = 5;
+
+	code = ENOMEM;
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
+
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5context);
+	if(code) goto Failed;
+
+	/* use cached credentials, if any */
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5context, &cc);
+	if (code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
+	if (code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5context, afs_k5_princ, &in_creds->server);
+	if (code) goto Failed;
+
+	what = "krb5_get_credentials";
+	/* 0 is cc flags */
+	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
+	if (code) goto Failed;
+
+	sc = rxk5_NewClientSecurityObject(rxk5_auth + !!aencrypt,
+	    k5_creds, 0);
+    Failed:
+	if(code) {
+	    if (afs_k5_princ)
+		com_err("bos", code, "in %s for %s", what, afs_k5_princ);
+	    else
+		com_err("bos", code, "in %s", what);
+	}
+#endif
+    } else {		/* not -localauth, check for tickets */
+	struct ktc_token ttoken;
+	struct afs_token *atoken = 0;
+
+	code = ktc_GetTokenEx(0, info.name, &atoken);
+	if (code) {
+	    com_err("bos", code, "(getting tickets)");
+#ifdef AFS_RXK5
+	} else if (atoken->cu->cu_type == CU_K5) {
+	    scIndex = 5;
+	    code = afstoken_to_v5cred(atoken, in_creds);
+	    if (!code)
+		sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+#endif
+	} else if (atoken->cu->cu_type == CU_KAD) {
+	    scIndex = 2;
+	    code = afstoken_to_token(atoken, &ttoken, sizeof ttoken);
+	    if (code) goto SkipSc;
+
+	    /* have tickets, will travel */
+	    if (ttoken.kvno < 0 && ttoken.kvno > 256) {
+/* formerly vab */
+		fprintf(stderr,
+			"bos: funny kvno (%d) in ticket, proceeding\n",
+			ttoken.kvno);
 	    }
-	} else {		/* not -localauth, check for tickets */
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	    if (code == 0) {
-		/* have tickets, will travel */
-		if (ttoken.kvno >= 0 && ttoken.kvno <= 256);
-		else {
-		    fprintf(stderr,
-			    "bos: funny kvno (%d) in ticket, proceeding\n",
-			    ttoken.kvno);
-		}
-		/* kerberos tix */
-		if (aencrypt)
-		    encryptLevel = rxkad_crypt;
-		else
-		    encryptLevel = rxkad_clear;
-		sc[2] = (struct rx_securityClass *)
-		    rxkad_NewClientSecurityObject(encryptLevel,
-						  &ttoken.sessionKey,
-						  ttoken.kvno,
-						  ttoken.ticketLen,
-						  ttoken.ticket);
-		scIndex = 2;
-	    } else
-		com_err("bos", code, "(getting tickets)");
+	    /* kerberos tix */
+	    if (aencrypt)
+		encryptLevel = rxkad_crypt;
+	    else
+		encryptLevel = rxkad_clear;
+	    sc = rxkad_NewClientSecurityObject(encryptLevel,
+					      &ttoken.sessionKey,
+					      ttoken.kvno,
+					      ttoken.ticketLen,
+					      ttoken.ticket);
+	    say_noauth = !scIndex;
+	} else {
+	    fprintf(stderr,
+		"bos: unknown token type %d\n",
+		atoken->cu->cu_type);
 	}
-	if ((scIndex == 0) || (sc[scIndex] == 0)) {
-	    fprintf(stderr, "bos: running unauthenticated\n");
-	    scIndex = 0;
-	}
+SkipSc:
+	if (atoken) free_afs_token(atoken);
     }
+    if (!sc) {
+	say_noauth = !!scIndex;
+	scIndex = 0;
+	sc = rxnull_NewClientSecurityObject();
+    }
+
+    afsconf_Close(tdir);
+
+    if (say_noauth)
+	fprintf(stderr, "bos: running unauthenticated\n");
     tconn =
-	rx_NewConnection(addr, htons(AFSCONF_NANNYPORT), 1, sc[scIndex],
+	rx_NewConnection(addr, htons(AFSCONF_NANNYPORT), 1, sc,
 			 scIndex);
     if (!tconn) {
 	fprintf(stderr, "bos: could not create rx connection\n");
 	exit(1);
     }
-    rxs_Release(sc[scIndex]);
-
+    rxs_Release(sc);
+#ifdef AFS_RXK5
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5context) {
+	if (cc)
+	    krb5_cc_close(k5context, cc);
+	if (k5_creds)
+	    krb5_free_creds(k5context, k5_creds);
+	krb5_free_principal(k5context, in_creds->client);
+	krb5_free_principal(k5context, in_creds->server);
+	krb5_free_context(k5context);
+    }
+#endif
     return tconn;
 }
 
@@ -1227,9 +1309,9 @@ StopServer(as)
 #define PARMBUFFERSSIZE 32
 
 static afs_int32
-DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2, 
-	  char * aoutName, afs_int32 showlog, char * parallel, 
-	  char * atmpDir, char * orphans, int dafs, 
+DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
+	  char * aoutName, afs_int32 showlog, char * parallel,
+	  char * atmpDir, char * orphans, int dafs,
 	  struct MRAFSSalvageParms * mrafsParm)
 {
     register afs_int32 code;
@@ -1329,7 +1411,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     /* For DAFS, specifying a single volume does not result in a standard
      * salvager call.  Instead, it simply results in a SALVSYNC call to the
      * online salvager daemon.  This interface does not give us the same rich
-     * set of call flags.  Thus, we skip these steps for DAFS single-volume 
+     * set of call flags.  Thus, we skip these steps for DAFS single-volume
      * calls */
     if (!dafs || (*aparm2 == 0)) {
 	/* add the parallel option if given */
@@ -1958,7 +2040,13 @@ add_std_args(ts)
     /* + 1 */ cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL,
 			  "don't authenticate");
     /* + 2 */ cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
-			  "create tickets from KeyFile");
+			  "create tickets from KeyFile or keytab");
+#ifdef AFS_RXK5
+    /* + 3 */ cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL,
+			  "use rxk5 security");
+    /* + 4 */ cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL,
+			  "use rxkad security");
+#endif
 }
 
 #include "AFS_component_version_number.c"
@@ -1973,8 +2061,8 @@ main(argc, argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -2007,6 +2095,10 @@ main(argc, argv)
      * system */
     initialize_CMD_error_table();
     initialize_BZ_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
 
     ts = cmd_CreateSyntax("start", StartServer, 0, "start running a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");

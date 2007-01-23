@@ -397,6 +397,7 @@ PrintError(char *msg, afs_int32 errcode)
 	    initialize_ACFG_error_table();
 	    initialize_CMD_error_table();
 	    initialize_VL_error_table();
+	    initialize_rx_error_table();
 
 	    offset = errcode & ((1 << ERRCODE_RANGE) - 1);
 	    fprintf(STDERR, "%s: %s\n", error_table_name(errcode),

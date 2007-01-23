@@ -229,11 +229,19 @@ osi_AssertFailK(const char *expr, const char *file, int line)
     static const char msg2[] = ", line: ";
     static const char msg3[] = "\n";
 
+#ifdef AFS_LINUX22_ENV
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+    char buf[1008];
+#else
+    char buf[112];
+#endif
+#else
     /*
      * These buffers add up to 1K, which is a pleasantly nice round
      * value, but probably not vital.
      */
     char buf[1008];
+#endif
     char linebuf[16];
 
     /* check line number conversion */

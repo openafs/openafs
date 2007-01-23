@@ -12,6 +12,9 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+
 CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 
@@ -45,70 +48,92 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libbosadmin.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
+	${RXK5T} \
 	$(TOP_LIBDIR)/libafsutil.a
 
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 cm_list_cells: cm_list_cells.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 cm_local_cell: cm_local_cell.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 cm_server_prefs: cm_server_prefs.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_basic_stats: rxdebug_basic_stats.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_conns: rxdebug_conns.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_peers: rxdebug_peers.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_rx_stats: rxdebug_rx_stats.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_supported_stats: rxdebug_supported_stats.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxdebug_version: rxdebug_version.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_clear_peer: rxstat_clear_peer.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_clear_process: rxstat_clear_process.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_disable_peer: rxstat_disable_peer.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_disable_process: rxstat_disable_process.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_enable_peer: rxstat_enable_peer.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_enable_process: rxstat_enable_process.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_get_peer: rxstat_get_peer.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_get_process: rxstat_get_process.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_get_version: rxstat_get_version.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_query_peer: rxstat_query_peer.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 rxstat_query_process: rxstat_query_process.o $(SAMPLELIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
+	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) \
+	$(MT_LIBS) $(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) $(RXK5T)
 
 #######################################################################
 all test tests: $(SAMPLEPROGS)

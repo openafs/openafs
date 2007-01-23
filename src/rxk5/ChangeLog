@@ -1,0 +1,38 @@
+As of Wed Jul 13 02:08:04 EDT 2005
+	Included "k5crypto.c" and associated test logic.  In the
+	future will use this to support using openssl "directly".
+As of Tue Jul 12 02:54:04 EDT 2005
+	MIT k5 "support": replace krb5_decrypt_tkt_part and associated logic
+	with placeholder function named krb5_danish_surprise.
+As of Fri Jun 24 05:15:59 EDT 2005
+	configure
+	compile_et.pl
+	more portability & gcc -Wall cleanup
+	rxk5_clear (WIRE protocol change!)
+	rxkad 2b test support - no private mit functions
+	comerr_add2 - mit to afs error table adapter routine
+	better error codes
+	improved test connection logic
+	rxkad_level is a short
+As of Fri Jun 17 22:08:54 EDT 2005
+	Don't share MAXKTCTICKETLEN
+	inc rxstats level by 1 for rxdebug
+	fail safely after incomplete setup
+	pthreads locking for k5_context initialization
+	correct padding calculation for des-cbc-crc too
+As of Mon Jun  6 16:03:23 EDT 2005
+	shishi support
+	heimdal support
+	test server/client can also do rxkad 2b
+	some code cleanup to make gcc -Wall more quiet
+	rxk5_NewClientSecurityObject small api change
+As of Mon May 30 17:29:28 EDT 2005
+	security: check enc_part2->flags & TKT_FLG_INVALID
+	security: encryption padding adjust - bounds check
+	local copy of krb5_nfold.
+	krb5_free_keytab_entry_contents not krb5_kt_free_entry
+	tested on more architectures.
+	code cleanup (unused variables, things that displease gcc -Wall, ...)
+	more consistent use of rxk5i_    
+	test: server: print peer's ipaddr, ticket info.
+	test: fibonacci results are now unsigned.

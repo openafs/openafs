@@ -183,7 +183,7 @@ afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 }
 
 
-char *prdir = "/dev/null";
+struct afsconf_dir *prdir;
 struct prheader cheader;
 int pr_realmNameLen;
 char *pr_realmName;

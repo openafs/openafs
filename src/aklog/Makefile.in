@@ -9,27 +9,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-OPTMZ = @KRB5CFLAGS@ -DALLOW_REGISTER
-AKLIBS = ${LIBS} @KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a 
+KRB5LIBS=@KRB5LIBS@
+
+COMERR = ../comerr
+
+OPTMZ = ${KRB5CFLAGS} -DALLOW_REGISTER
+AKLIBS = ${LIBS} 
 AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
 	  ${TOP_LIBDIR}/libsys.a \
-	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a \
+	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a ${RXK5} \
 	  ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
 	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a
 
-SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
-OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
+SRCS=	aklog.c aklog_main.c krb_util.c linked_list.c skipwrap.c
+OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o afserror.o skipwrap.o
 
 all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${AFSLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 asetkey: asetkey.o ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	${CC} -o $@ ${CFLAGS} asetkey.o ${LIBS} ${AFSLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
 
 klog:	klog.o skipwrap.o ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${AKLIBS} ${AFSLIBS} ${TOP_LIBDIR}/libcmd.a ${XLIBS}
+	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${LIBS} ${AFSLIBS} \
+	${TOP_LIBDIR}/libcmd.a ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
+afserror.o: $(COMERR)/afserror.c
+	$(CC) $(CFLAGS) -c $(COMERR)/afserror.c
 
 #
 # Installation targets
@@ -37,12 +50,14 @@ klog:	klog.o skipwrap.o ${AFSLIBS}
 install: aklog asetkey
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_PROGRAM} aklog ${DESTDIR}${bindir}/aklog
+	${INSTALL_PROGRAM} klog ${DESTDIR}${bindir}/klog
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL_PROGRAM} asetkey ${DESTDIR}${afssrvbindir}/asetkey 
 
 dest: aklog asetkey
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL_PROGRAM} aklog ${DEST}/bin/aklog
+	${INSTALL_PROGRAM} klog ${DEST}/bin/klog
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL_PROGRAM} asetkey ${DEST}/root.server/usr/afs/bin/asetkey
 

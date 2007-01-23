@@ -1,0 +1,162 @@
+	RXK5
+
+"rxk5" is a kerberos 5 based replacement for rxkad.
+See src/rxk5/README for more detailed information on rxk5 design.
+
+To use rxk5 with openafs,
+/1/ build (see notes below)
+/2/ install on servers.
+/3/ create a service principal:
+
+	afs-k5/<cell-name>@<realm-name>
+
+	make sure you only select encryption types supported by your
+	servers.
+
+/4/ extract and install this service principal's key in:
+	${afsconfdir}/afs.keytab
+		(where ${afsconfdir} might be something like
+		/etc/openaf/server or /usr/afs/etc)
+	on each db server and file server in your cell.
+	You must do this by hand: there are no provisions (yet?)
+	in bosserver to maintain keytabs or k5 principals or
+	k5 configuration.
+
+	If you don't want to support rxkad, remove your
+	KeyFile.  You can run both rxkad & rxk5 in parallel,
+	in which case, you should not remove this file.
+	You can remove it later after you have finished migrating
+	all of your clients.
+
+/5/ if you are supporting multiple "local" kerberos realms,
+	create ${afsconfdir}/krb.conf
+	and list all your local kerberos realm realms on the first
+	line.  Your preferred realm should probably be listed first.
+	If you do not have this file, your local realm is
+	your cell name upper-cased.  When mapping names into
+	pt names, this file controls which ones are not considered
+	to be "foreign" principals, so you want to get this right.
+
+/6/ UserList file: ${afsconfdir}/UserList .
+	For now for rxk5: if you have names with instances: you
+	must list them as user/foo or user/foo@realm .
+	There are a number of issues with this; this logic
+	may change in the future.
+
+/7/ for openafs + rxk5, it's more important to make sure that
+	afs host to realm mapping work right for all your cell db servers.
+	This is particularly an issue on the clients, but
+	many of the choices are global.
+
+	* If possible: your realm-name should be the uppercase of your cell name.
+
+	* If possible: your kerberos realm should at least be upper-case.
+
+	* If possible: your db servers should have dns names exactly like:
+		<hostname>.<realm-name>
+
+	Especially if the above aren't true then:
+
+	* dns configuration:
+
+	In DNS, you should have host realm mapping txt records,
+	something like:
+	_kerberos.<xxx> TXT REALM-NAME
+	where <xxx> matches the last N elements of your host name.
+	(the krb5 library will start with the fqdn of your "first
+	db server, then strip leading elements off one by one
+	until a _kerberos record is found.
+	The realm-name should NOT be . terminated, and case matters.
+
+	you may also want:
+	afsdb records for your cell pointing to your db servers.
+	_kerberos._udp.<realm> srv records for your kerberos kdcs.
+
+	* krb5.conf configuration:
+
+	[domain_realm] stanza:
+	For your local environment, you should use this to map
+	your local domains into your local kerberos realms,
+	perhaps also favoured foreign domains & realms.
+	Listing this can speed performance and improve security.
+
+	[libdefaults] stanza:
+	Do NOT have this line: default_etypes = des-cbc-crc
+
+	With dns_lookup_realm = 0,
+	you will disable DNS host_realm mappings.  This is
+	the default with MIT.If you set this to 1, you enable
+	this, which is the default with Heimdal.  Enabling this
+	might slow down host realm mapping logic, but give better
+	data for cells outside your local environment.
+
+Client side, run-time.
+Tools generally support the following:
+
+-localauth -k5		use local keytab, be "god", rxk5
+-localauth -k4		use local keyfile, be "god", rxkad
+-localauth		keytab if possible, else keyfile, else noauth
+-k5			use k5 credentials cache, rxk5
+-ktc (?)		use ktc, rxk5 or rxkad.	XXX not yet implemented.
+-noauth			none of the above
+
+Tools default to either -k5 or -ktc.
+XXX may be compile time option?
+To alter the default, set
+AFS_RXK5_DEFAULT
+if set to 1 or yes, forces use of k5 credentials cache,
+otherwise, forces use of ktc.
+See notes above on host to realm mapping before defaulting
+to -k5.  If you need to use "-k" on aklog, -k5 on other
+commands will not work.
+XXX why can't other tools look for afs-k5/<cell-name>@arbitrary-realm?
+
+Build configuration.
+
+OS & hardware choices:
+rxk5 + openafs has been developed and should work best on i386 linux 2.4, 2.6.
+Building and testing for other unix-like architectures is in progress;
+solaris or aix may be possibilities for you.  Windows is its own special
+case; in principle this should be no problem, but the necessary modifications
+are a separate effort not yet begun.  openafs + rxk5 on windows will likely
+require some future version of mit kerberos.
+
+possible kerberos libraries:
+	heimdal
+	I've used 0.6.4 in the past.  I currently use "CVS head"
+	as of 20060410, which I recommend in preference to 0.6.4
+	or 0.7.2.
+	configure openafs with:
+		--enable-rxk5
+		--with-krb5-conf=.../krb5-conf
+
+	MIT k5
+	not recommended for now.  The MIT folks have indicated
+	they may be willing to support a suitable interface
+	in some future version of MIT k5.  For now, do not use
+	unless you are willing to patch, build, and support kerberos.
+	See note in src/rxk5/README for more information.
+
+	shishi
+	"alpha" quality.  Shishi is GPL not LGPL; so there
+	are probably severe licensing problems if you share
+	code built with this.  You'll have to patch openafs to
+	make this work; run-time configuration will be special as well.
+	If you succeed and find it useful: please submit BSD or IPL
+	compatible patches and documentation to the openafs community.
+
+	k5ssl (standalone)
+	k5ssl is a partial kerberos implementation inside of openafs.
+	It's always used inside the cache manager with its own private
+	crypto library.  If you supply real openssl libraries, this
+	can also be used with the rest of openafs.  Since openssl
+	supports hardware accelleration, this may be particularly useful
+	and attractive for the afs server.  Note that the 524 functionality
+	of aklog is not available with k5ssl.
+	configure openafs with:
+		--with-ssl [=path...]
+		--with-krb5
+
+					-Marcus Watts
+					University of Michigan ITCS UMCE
+					Mon Sep  4 03:34:05 EDT 2006

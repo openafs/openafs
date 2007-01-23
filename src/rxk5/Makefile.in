@@ -1,0 +1,168 @@
+#
+# Copyright (c) 2005
+# The Regents of the University of Michigan
+# ALL RIGHTS RESERVED
+#
+# Permission is granted to use, copy, create derivative works
+# and redistribute this software and such derivative works
+# for any purpose, so long as the name of the University of
+# Michigan is not used in any advertising or publicity
+# pertaining to the use or distribution of this software
+# without specific, written prior authorization.  If the
+# above copyright notice or any other identification of the
+# University of Michigan is included in any copy of any
+# portion of this software, then the disclaimer below must
+# also be included.
+#
+# This software is provided as is, without representation
+# from the University of Michigan as to its fitness for any
+# purpose, and without warranty by the University of
+# Michigan of any kind, either express or implied, including
+# without limitation the implied warranties of
+# merchantability and fitness for a particular purpose.  The
+# regents of the University of Michigan shall not be liable
+# for any damages, including special, indirect, incidental, or
+# consequential damages, with respect to any claim arising
+# out of or in connection with the use of the software, even
+# if it has been or is hereafter advised of the possibility of
+# such damages.
+#
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=@CC@
+RANLIB=@RANLIB@
+AR=@AR@
+SIZE=@SIZE@
+
+#RXK5_PFX=${TOP_SRCDIR}/rxk5/
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+
+INCLDIR=@includedir@
+LIBDIR=@libdir@
+
+COMERR_ADD=
+THREADFLAGS=-UAFS_PTHREAD_ENV
+
+AFSLIBS= ${TOP_LIBDIR}/librxkad.a \
+        ${TOP_LIBDIR}/librxstat.a \
+        ${TOP_LIBDIR}/librx.a \
+        ${TOP_LIBDIR}/liblwp.a \
+        ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/util.a \
+        ${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/libafsutil.a
+
+LIBS=$(AFSLIBS) $(KRB5LIBS) $(DESLIB) $(LIBCOM_ERR) $(AFSUTIL) $(XLIBS)
+
+#E=bindump.o
+X=rxk5c.xdr.o rxk5_common.o rxk5errors.o@K5SUPPORT@ $E
+O=$X rxk5_client.o rxk5_server.o rxk5_info.o rxk5_getkey.o
+C=$X rxk5_client.o
+S=$X               rxk5_server.o rxk5_info.o rxk5_getkey.o
+#H=
+@IF_RXKAD@W=rsk_wrapper.o readkey.so
+
+K5FLAGS=-DCONFIG_RXK5 -DKRB5_AES_SUPPORT  -DKRB5_DES3_SUPPORT  -DKRB5_DES_SUPPORT  -DKRB5_RC4_SUPPORT -DCONFIG_K5
+
+CFLAGS=$(DEFS) $(INCPATH) $(K5FLAGS) $(AFSINCLUDEFLAG) \
+	$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS) $(THREADFLAGS)
+
+RXK5_IMPDEP=$(RXK5_PFX)rxk5.h $(RXK5_PFX)rxk5imp.h rxk5errors.h rxk5c.h
+
+
+all: \
+	includes \
+	${TOP_LIBDIR}/librxk5.a
+
+librxk5.a: $O
+	rm -f librxk5.a
+	@AR@ qcv librxk5.a $O
+	$(RANLIB) librxk5.a
+
+rxk5c.xdr.c: $(RXK5_PFX)rxk5c.xg
+	$(RXGEN) -c -o rxk5c.xdr.c $(RXK5_PFX)rxk5c.xg
+
+rxk5c.h: $(RXK5_PFX)rxk5c.xg
+	$(RXGEN) -h -o rxk5c.h $(RXK5_PFX)rxk5c.xg
+
+testconn.o testclient.o testprocs.o testserver.o test.xdr.o test.ss.o: test.h
+rxk5c.xdr.o: rxk5c.h
+
+rxk5errors.c rxk5errors.h: $(RXK5_PFX)rxk5errors.et
+	$(COMPILE_ET) $(RXK5_PFX)rxk5errors.et
+
+rxk5_common.o rxk5_client.o rxk5_server.o: ${RXK5_IMPDEP}
+
+clean:
+	rm -f rxk5c.h rxk5c.h.gch rxk5c.xdr.c rxk5errors.h rxk5errors.h.gch $O
+	rm -f librxk5.a libtrxk5.a rxk5errors.c
+	rm -f test.ss.c test.cs.c test.xdr.c test.h
+	rm -f test.ss.o test.cs.o test.xdr.o
+	rm -f nfold.o danish.o
+	rm -f testprocs.o testserver.o
+	rm -f testclient testserver
+	rm -f str.o testclient.o
+	rm -f comerr_add.o comerr_add2.o servconn.o testconn.o
+	rm -f bindump.o
+	rm -f testnfold testnfold.o
+	rm -f rsk_wrapper.o readkey.o
+	rm -f t_enc.o t_sum.o
+
+distclean: clean
+	rm -f Makefile
+
+testserver: test.ss.o test.xdr.o testserver.o testprocs.o $(COMERR_ADD) $S $H $W
+	$(CC) -o testserver testserver.o test.ss.o test.xdr.o testprocs.o $S $(COMERR_ADD) $H $W $(LIBS)
+test.ss.c test.cs.c test.h test.xdr.c: $(RXK5_PFX)test.xg
+	$(RXGEN) $(RXK5_PFX)test.xg
+testprocs.o testserver.o: test.h
+testclient: test.cs.o test.xdr.o testclient.o $(COMERR_ADD) str.o testconn.o servconn.o $C $H
+	$(CC) -o testclient testclient.o test.cs.o test.xdr.o $(COMERR_ADD) str.o testconn.o servconn.o $C $H $(LIBS)
+servconn.o testclient.o str.o: $(RXK5_PFX)str.h
+testconn.o: rxk5errors.h $(RXK5_PFX)rxk5.h
+servconn.o testconn.o: $(RXK5_PFX)servconn.h
+testnfold: testnfold.o nfold.o bindump.o
+	$(CC) -o testnfold testnfold.o nfold.o bindump.o
+
+#
+# Install targets
+#
+
+includes: \
+	${TOP_INCDIR}/rx/rxk5.h \
+	${TOP_INCDIR}/rx/rxk5imp.h \
+	${TOP_INCDIR}/rx/rxk5c.h \
+	${TOP_INCDIR}/rx/rxk5errors.h
+
+${TOP_LIBDIR}/librxk5.a: librxk5.a
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxk5.h: $(RXK5_PFX)rxk5.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxk5imp.h: $(RXK5_PFX)rxk5imp.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxk5c.h: rxk5c.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxk5errors.h: rxk5errors.h
+	${INSTALL} $? $@
+
+depinstall: includes rxk5c.xdr.c rxk5errors.c
+
+install: librxk5.a rxk5errors.h
+	${INSTALL} librxk5.a ${DESTDIR}${libdir}/librxk5.a 
+	${INSTALL} $(RXK5_PFX)rxk5.h ${DESTDIR}${includedir}/rx/rxk5.h 
+	${INSTALL} $(RXK5_PFX)rxk5imp.h ${DESTDIR}${includedir}/rx/rxk5imp.h 
+	${INSTALL} rxk5errors.h ${DESTDIR}${includedir}/rx/rxk5errors.h
+
+dest: librxk5.a rxk5errors.h
+	${INSTALL} librxk5.a ${DEST}/lib/librxk5.a 
+	${INSTALL} $(RXK5_PFX)rxk5.h ${DEST}/include/rx/rxk5.h 
+	${INSTALL} $(RXK5_PFX)rxk5imp.h ${DEST}/include/rx/rxk5imp.h 
+	${INSTALL} rxk5errors.h ${DEST}/include/rx/rxk5errors.h
