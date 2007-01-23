@@ -288,6 +288,7 @@ main(int argc, char **argv)
     initialize_vl_error_table();
     initialize_vols_error_table();
     initialize_xFil_error_table();
+    initialize_rx_error_table();
     r = xfopen(&input_file, O_RDONLY, input_path);
     if (r) {
 	com_err(argv0, r, "opening %s", input_path);

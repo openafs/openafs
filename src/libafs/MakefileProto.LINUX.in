@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -9,6 +9,39 @@ srcdir=@srcdir@
 
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+<rxk5>
+K5SSL_DEF=@K5SSL_DEF@
+K5SSL_INC=@K5SSL_INC@
+
+AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
+AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+AFS_K5SSL_RC4 = e_rc4.o rc4.o
+#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+
+AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
+	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
+	m_crc32.o \
+	m_md4.o \
+	m_md5.o \
+	md4c.o \
+	md5c.o \
+	m_sha1.o \
+	shs.o
+
+AFS_RXK5_OBJS = \
+	rxk5_tkt.o \
+	rxkad_tkt.o \
+	afs_token.xdr.o \
+	rxk5_client.o \
+	rxk5_common.o \
+	rxk5c.xdr.o \
+	xdr_mem.o
+
+<all>
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_alloc.o \
@@ -26,14 +59,17 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 <ppc64_linux26>
 	osi_flush.o \
-<linux26 linux_26>
+<nfssrv>
 	osi_export.o \
 	osi_nfssrv.o \
-<linux24 linux_24 linux26 linux_26>
+<linux24 linux_24 linux26 linux_26 umlinux26>
 	osi_ioctl.o \
 	osi_proc.o \
+<rxk5>
+	$(AFS_RXK5_OBJS) \
+	$(AFS_K5SSL_OBJS) \
 <all>
-	osi_vnodeops.o 
+	osi_vnodeops.o
 
 AFS_OS_PAGOBJS = \
 	osi_alloc.o \
@@ -48,85 +84,40 @@ AFS_OS_PAGOBJS = \
 	osi_flush.o \
 <linux24 linux_24 linux26 linux_26>
 	osi_ioctl.o \
+<rxk5>
+	rxk5_common.o rxk5_tkt.o xdr_mem.o rxk5c.xdr.o \
+	$(AFS_K5SSL_OBJS) \
 <all>
-	osi_pag_module.o 
+	osi_pag_module.o
 
 AFS_OS_NFSOBJS =
 
 AFS_OS_NONFSOBJS =
 
-COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
+CC = @LINUX_KCC@
 
-COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_KCFLAGS@ -Wno-strict-prototypes
+
+COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${K5SSL_DEF}
 
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 
 # System specific build commands and flags
-<linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by
-# the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
-CCFLAGS = -Wno-strict-prototypes
+#  the kernel build system.
+#
+#  For 2.2, 2.4, configure logic will suck those flags out of the kernel's
+#  make files and fill in LINUX_KCFLAGS, to go into COMMON_KERN_CFLAGS.
+#
+#  For 2.6, configure logic will either empty out LINUX_KCFLAGS or
+#  for UML set it to -I$LINUX_KERNEL_PATH/arch/um/include .
+# Or at least, that's the theory and I'm sticking to it.
+
+CCFLAGS = $(COMMON_KERN_CFLAGS) ${K5SSL_INC}
 DEFINES = $(COMMON_DEFINES)
-
-# CFLAGS_* and AFLAGS_* will be copied into the kbuild makefile
-CFLAGS_afs_pag_user.o = -DAFS_PAG_MANAGER
-
-<i386_linux22 i386_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
-DEFINES = $(COMMON_DEFINES) -DCPU=586
-
-<amd64_linux24 amd64_linux26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel -mno-red-zone
-DEFINES = $(COMMON_DEFINES) 
-
-<i386_umlinux22 i386_umlinux24 i386_umlinux26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -Wno-strict-prototypes -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
-DEFINES = $(COMMON_DEFINES) -DCPU=586
-
-<i386_umlinux26>
-EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
-
-<alpha_linux_22 alpha_linux_24 alpha_linux_26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
-DEFINES = $(COMMON_DEFINES)
-
-<s390_linux22 s390_linux24 s390_linux26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
-DEFINES = $(COMMON_DEFINES) -D__s390__ 
-
-<s390x_linux22 s390x_linux24 s390x_linux26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
-DEFINES = $(COMMON_DEFINES) -D__s390x__ 
-
-<sparc_linux22 sparc_linux24>
-LD = ld -m elf32_sparc
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
-DEFINES = $(COMMON_DEFINES) -DCPU=sparc
-
-<sparc64_linux22 sparc64_linux24>
-CC = sparc64-linux-gcc
-LD = ld -m elf64_sparc
-CCFLAGS = $(COMMON_KERN_CFLAGS) \
-      -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
-DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
-
-<ppc_linux22 ppc_linux24 ppc64_linux24 ppc64_linux26>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
-DEFINES = $(COMMON_DEFINES) -D__powerpc__
-
-<parisc_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -mno-space-regs \
-      -mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
-      -march=1.1 -mschedule=7100
-DEFINES = $(COMMON_DEFINES) -D__linux__
-
-<ia64_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
-DEFINES = $(COMMON_DEFINES)
-
-<all>
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
-  -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat
+  -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat \
+  ${K5SSL_INC} -I${TOP_SRCDIR}/rxk5
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 
@@ -159,14 +150,14 @@ setup:
 		ln -fs ../Makefile $${KDIR}/Makefile.afs ; \
 		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
 		ln -fs ../config $${KDIR}/config; \
-	done 
+	done
 	
 # Compile SP and MP clients as requested
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
-	$(RM) -f h 
+	$(RM) -f h
 	$(RM) -f sys
-	$(RM) -f netinet 
+	$(RM) -f netinet
 	if [ -d ${LINUX_KERNEL_PATH}/include2 ] ; then                  \
 	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux h       ; \
 	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux sys     ; \
@@ -176,10 +167,10 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	    ln -fs ${LINUX_KERNEL_PATH}/include/linux sys             ; \
 	    ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet         ; \
 	fi
-	$(RM) -f linux 
-	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
-	$(RM) -f net 
-	ln -fs ${LINUX_KERNEL_PATH}/include/net net 
+	$(RM) -f linux
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux
+	$(RM) -f net
+	ln -fs ${LINUX_KERNEL_PATH}/include/net net
 	$(RM) -f asm-generic
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
@@ -199,9 +190,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 <s390x_linux22 s390x_linux24 s390x_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
 <ppc_linux22 ppc_linux24 ppc_linux26>
-	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm
 <ppc64_linux24 ppc64_linux26>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm
 <sparc_linux22 sparc_linux24 sparc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24 sparc64_linux26>
@@ -263,7 +254,7 @@ DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
 DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
 
-libafs:	$(LIBAFS) 
+libafs:	$(LIBAFS)
 	echo SP Build Complete
 
 libafs.mp: $(LIBAFS_MP)
@@ -281,9 +272,9 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 
 .FORCE:
 libafs.ko afspag.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
-        
+	env @LINUX_SETENV_UM@ @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+	env @LINUX_SETENV_UM@ $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules V=1
+
 <all -linux26 -linux_26 -umlinux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
@@ -302,7 +293,7 @@ ${LIBAFS_BM}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 <all>
 
-install_libafs:	$(INST_LIBAFS) 
+install_libafs:	$(INST_LIBAFS)
 	echo SP Install Complete
 
 install_libafs.mp: $(INST_LIBAFS_MP)
@@ -314,7 +305,7 @@ install_libafs.ep: $(INST_LIBAFS_EP)
 install_libafs.bm: $(INST_LIBAFS_BM)
 	echo BM Install Complete
 
-dest_libafs:	$(DEST_LIBAFS) 
+dest_libafs:	$(DEST_LIBAFS)
 	echo SP Install Complete
 
 dest_libafs.mp: $(DEST_LIBAFS_MP)

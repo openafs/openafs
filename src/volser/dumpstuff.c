@@ -535,11 +535,11 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
-#if defined(AFS_AIX52_ENV) && defined(AFS_LARGEFILE_ENV)
+#ifdef HAVE_FSTATFS64	/* was AFS_AIX52_ENV && AFS_LARGEFILE_ENV */
     struct statfs64 tstatfs;
-#else /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#else /* !HAVE_FSTATFS64 */
     struct statfs tstatfs;
-#endif /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#endif /* !HAVE_FSTATFS64 */
     int statfs_code;
 #endif
 
@@ -555,11 +555,11 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     /* Unfortunately in AIX valuable fields such as st_blksize are 
      * gone from the stat structure.
      */
-#if defined(AFS_AIX52_ENV) && defined(AFS_LARGEFILE_ENV)
+#ifdef HAVE_FSTATFS64	/* was AFS_AIX52_ENV && AFS_LARGEFILE_ENV */
     statfs_code = fstatfs64(handleP->fd_fd, &tstatfs);
-#else /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#else /* !HAVE_FSTATFS64 */
     statfs_code = fstatfs(handleP->fd_fd, &tstatfs);
-#endif /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#endif /* !HAVE_FSTATFS64 */
     if (statfs_code != 0) {
         Log("DumpFile: fstatfs returned error code %d on descriptor %d\n", errno, handleP->fd_fd);
 	return VOLSERDUMPERROR;

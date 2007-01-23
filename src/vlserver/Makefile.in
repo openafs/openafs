@@ -8,6 +8,12 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
              ${TOP_INCDIR}/lock.h  \
@@ -21,11 +27,11 @@ LIBS=\
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libafsutil.a
@@ -39,6 +45,7 @@ all: \
 	${TOP_LIBDIR}/libvldb.a depinstall
 
 depinstall: \
+	vldbint.cs.c vldbint.xdr.c \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
 	${TOP_INCDIR}/afs/vl_opcodes.h \
 	${TOP_INCDIR}/afs/vlserver.h \
@@ -46,23 +53,24 @@ depinstall: \
 	${TOP_INCDIR}/afs/cnvldb.h 
 
 vldb_check: vldb_check.o ${LIBS}
-	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} ${XLIBS} 
+	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 vldb_check.o: vldb_check.c AFS_component_version_number.o
 
 cnvldb: cnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
 sascnvldb: sascnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
-	$(CC) ${CFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+	$(CC) ${CFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o \
+	vldbint.ss.o vldbint.xdr.o $(LIBS) \
+	${TOP_LIBDIR}/libaudit.a ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
 vlutils.o: vlutils.c ${INCLS}
@@ -99,7 +107,8 @@ libvldb.a: $(OBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 vlclient: vlclient.o libvldb.a $(LIBS)
-	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libcmd.a
+	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) \
+	${TOP_LIBDIR}/libcmd.a ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 

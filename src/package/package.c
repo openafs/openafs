@@ -334,6 +334,7 @@ main(int argc, char **argv)
      * Set up the appropriate error tables.
      */
     initialize_CMD_error_table();
+    initialize_rx_error_table();
 
     /*
      * Parse command line switches & execute the command, then get the

@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -8,6 +8,39 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+<rxk5>
+K5SSL_DEF=@K5SSL_DEF@
+K5SSL_INC=@K5SSL_INC@
+
+AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
+AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+AFS_K5SSL_RC4 = e_rc4.o rc4.o
+#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+
+AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
+	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
+	m_crc32.o \
+	m_md4.o \
+	m_md5.o \
+	md4c.o \
+	md5c.o \
+	m_sha1.o \
+	shs.o
+
+AFS_RXK5_OBJS = \
+	rxk5_tkt.o \
+	rxkad_tkt.o \
+	afs_token.xdr.o \
+	rxk5_client.o \
+	rxk5_common.o \
+	rxk5c.xdr.o \
+	xdr_mem.o
+
+<all>
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_assem.o \
@@ -18,6 +51,10 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_timeout.o \
+<rxk5>
+	$(AFS_RXK5_OBJS) \
+	$(AFS_K5SSL_OBJS) \
+<all>
 	osi_vm.o
 
 AFSNOIAUTHOBJS = \
@@ -47,14 +84,14 @@ OPT2   = -O
 
 IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
 	-bI:/lib/netinet.exp \
-	-bI:${TOP_LIBDIR}/extras.exp 
+	-bI:${TOP_LIBDIR}/extras.exp
 IMPORTS32 = -bI:${TOP_LIBDIR}/export.exp
 IMPORTS64 = -bI:${TOP_LIBDIR}/export64.exp
 KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
 	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
 	-D_POWER_MP -UKOFF -DAFSDEBUG -DVICE -DNFS -DUFS -DINET -DQUOTA \
-	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
+	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL ${K5SSL_DEF}
 LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 	-D0 -T512
 LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
@@ -62,7 +99,9 @@ LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
 LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
 	 -lsys -lcsys  ${KLDOPTS}
 
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} ${K5SSL_INC} \
+	-I${TOP_SRCDIR}/rxk5 \
+	$(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD MODLOAD64
@@ -73,7 +112,7 @@ INSTDIRS = aix_instdirs
 DESTDIRS = aix_destdirs
 
 <rs_aix42>
-KMODS=32 
+KMODS=32
 <rs_aix50 rs_aix51 rs_aix52 rs_aix53>
 KMODS=32 64
 <all>
@@ -138,7 +177,7 @@ install_afs.ext.64: $(DESTDIR)$(afskerneldir)/afs.ext.64
 
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
 # the iauth authentication mechanism. The model was changed by IBM in the
-# middle of an OS release. So iauth is only supported on AIX 4.1.5 and 
+# middle of an OS release. So iauth is only supported on AIX 4.1.5 and
 # later 4.1.x (if they are ever made) and AIX 4.2.1 (and later AIX 4.2.x if
 # they are ever made. AIX 4.3 also uses the iauth translator.
 

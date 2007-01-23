@@ -103,6 +103,7 @@
         afs_xdr_reference;
         afs_xdr_wrapstring;
         afs_xdr_pointer;
+	afs_xdrmem_create;
 	xdr_afsUUID;
 	xdr_afs_int32;
 	xdr_afs_uint32;
@@ -138,6 +139,31 @@
 	RXSTATS_ClearProcessRPCStats;
 	RXSTATS_ClearPeerRPCStats;
 	TM_GetTimeOfDay;
+	rx_justReceived;
+	rx_almostSent;
+	rx_SetEpoch;
+	rx_SlowReadPacket;
+	rx_SlowWritePacket;
+	rxi_Alloc;
+	rxi_CallError;
+	rxi_ConnectionError;
+	rxi_Free;
+	rxi_GetCallNumberVector;
+	rxi_RoundUpPacket;
+	rxk5_NewClientSecurityObject;
+	rxk5_NewServerSecurityObject;
+	rxk5_get_context;
+	rxk5_GetServerInfo;
+	rxk5_GetServerInfo2;
+	rxk5_default_get_key;
+	crypt;
+	lcstring;
+	stolower;
+	strcompose;
+	ucstring;
+	add_error_table;
+	remove_error_table;
+	AssertionFailed;
 
     local:
 	*;

@@ -9,8 +9,12 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 HELPER_SPLINT=@HELPER_SPLINT@
 
+KRB5LIBS=@KRB5LIBS@
+
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS}  ${KRB5CFLAGS} \
+	-I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG \
+	-DFSSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -48,7 +52,7 @@ RXOBJS=rx_pthread.o
 objects= ${VOLSEROBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${RXK5T} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
 all: volserver
 
@@ -196,7 +200,8 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${COMPILE}
 
 volserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} \
+	${XLIBS} ${KRB5LIBS}
 
 ${DEST}/root.server/usr/afs/bin/volserver: volserver
 	${INSTALL} -ns $? $@

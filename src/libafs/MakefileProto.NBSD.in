@@ -8,7 +8,39 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+<rxk5>
+K5SSL_DEF=@K5SSL_DEF@
+K5SSL_INC=@K5SSL_INC@
 
+AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
+AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+AFS_K5SSL_RC4 = e_rc4.o rc4.o
+#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+
+AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
+	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
+	m_crc32.o \
+	m_md4.o \
+	m_md5.o \
+	md4c.o \
+	md5c.o \
+	m_sha1.o \
+	shs.o
+
+AFS_RXK5_OBJS = \
+	rxk5_tkt.o \
+	rxkad_tkt.o \
+	afs_token.xdr.o \
+	rxk5_client.o \
+	rxk5_common.o \
+	rxk5c.xdr.o \
+	xdr_mem.o
+
+<all>
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_groups.o \
@@ -17,6 +49,10 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vm.o \
+<rxk5>
+	$(AFS_RXK5_OBJS) \
+	$(AFS_K5SSL_OBJS) \
+<all>
 	osi_vnodeops.o
 
 AFS_OS_NFSOBJS = \
@@ -28,11 +64,12 @@ AFS_OS_NONFSOBJS = \
 
 # System specific build commands and flags
 KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
+	${K5SSL_INC} -I${TOP_SRCDIR}/rxk5 \
 	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
 DBUG = -O2
-DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-OPTF=${OPT} 
-OPTF2=${OPT2} 
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT ${K5SSL_DEF}
+OPTF=${OPT}
+OPTF2=${OPT2}
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 

@@ -1799,17 +1799,10 @@ InitETTables()
     initialize_VL_error_table();
     initialize_PT_error_table();
     initialize_U_error_table();
+    initialize_rx_error_table();
 
 }				/*InitETTables */
 
-
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
-    return 0;
-}
 
 #include "AFS_component_version_number.c"
 

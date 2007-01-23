@@ -58,14 +58,6 @@ int CommandProc();
 static int zero_argc;
 static char **zero_argv;
 
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
-    return 0;
-}
-
 main(argc, argv)
      int argc;
      char *argv[];

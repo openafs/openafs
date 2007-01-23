@@ -20,6 +20,8 @@ DES	=../des
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
 
+KRB5LIBS=@KRB5LIBS@
+
 TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
 TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
 TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
@@ -30,6 +32,11 @@ TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+TOP_SRC_K5SSL = ${TOP_SRCDIR}/k5ssl
+TOP_SRC_RXK5 = ${TOP_SRCDIR}/rxk5
+
+@ENABLE_RXK5@INCL_SRC_RXK5 = -I${TOP_SRCDIR}/rxk5 \
+@ENABLE_RXK5@	      -I${TOP_SRCDIR}/k5ssl
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_SRCDIR} \
@@ -46,12 +53,52 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_OBJDIR}/src/afs \
         -I${TOP_OBJDIR}/src/util \
         -I${TOP_OBJDIR}/src/rxkad \
+	${INCL_SRC_RXK5} \
         -I${TOP_OBJDIR}/src/config \
         -I${TOP_OBJDIR}/src/fsint \
         -I${TOP_OBJDIR}/src/vlserver \
 	-I${TOP_OBJDIR}/src/libuafs \
         -I${TOP_INCDIR} \
         -I${TOP_INCDIR}/afs 
+
+@NEED_NFOLD@UOBJ_NFOLD=$(UOBJ)/nfold.o
+@NEED_NFOLD@WEBOBJ_NFOLD=$(WEBOBJ)/nfold.o
+@NEED_NFOLD@JUAFS_NFOLD=$(JUAFS)/nfold.o
+@ENABLE_RXK5@AFS_RXK5_UOBJS = \
+@ENABLE_RXK5@	$(UOBJ)/rxk5_client.o \
+@ENABLE_RXK5@	$(UOBJ)/rxk5_common.o \
+@ENABLE_RXK5@	$(UOBJ)/rxk5c.xdr.o \
+@ENABLE_RXK5@	$(UOBJ)/rxk5errors.o \
+@ENABLE_RXK5@	$(UOBJ_NFOLD) \
+@ENABLE_RXK5@	$(UOBJ)/rxk5_utilafs.o \
+@ENABLE_RXK5@	$(UOBJ)/rxk5_tkt.o \
+@ENABLE_RXK5@	$(UOBJ)/xdr_mem.o
+@ENABLE_RXK5@
+@ENABLE_RXK5@AFS_RXK5_WOBJS = \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5_client.o \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5_common.o \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5c.xdr.o \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5errors.o \
+@ENABLE_RXK5@	$(WEBOBJ_NFOLD) \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5_utilafs.o \
+@ENABLE_RXK5@	$(WEBOBJ)/rxk5_tkt.o \
+@ENABLE_RXK5@	$(WEBOBJ)/xdr_mem.o
+@ENABLE_RXK5@
+@ENABLE_RXK5@AFS_RXK5_JUOBJS = \
+@ENABLE_RXK5@	$(JUAFS)/rxk5_client.o \
+@ENABLE_RXK5@	$(JUAFS)/rxk5_common.o \
+@ENABLE_RXK5@	$(JUAFS)/rxk5_utilafs.o \
+@ENABLE_RXK5@	$(JUAFS)/rxk5_tkt.o \
+@ENABLE_RXK5@	$(JUAFS)/rxk5errors.o \
+@ENABLE_RXK5@	$(JUAFS_NFOLD) \
+@ENABLE_RXK5@	$(JUAFS)/rxk5c.xdr.o
+
+#AFS_FCRYPT_UOBJS=$(UOBJ)/fcrypt.o $(UOBJ)/crypt_conn.o
+#AFS_FCRYPT_WOBJS=$(WEBOBJ)/fcrypt.o $(WEBOBJ)/crypt_conn.o
+#AFS_FCRYPT_JUOBJS=$(JUAFS)/fcrypt.o $(JUAFS)/crypt_conn.o
+AFS_FCRYPT_UOBJS=$(UOBJ)/bg-fcrypt.o
+AFS_FCRYPT_WOBJS=$(WEBOBJ)/bg-fcrypt.o
+AFS_FCRYPT_JUOBJS=$(JUAFS)/bg-fcrypt.o
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
@@ -62,7 +109,7 @@ webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${RXK5} ${RXK5UTIL} ${TOP_LIBDIR}/libafsutil.a ${KRB5LIBS} $(TEST_LIBS) $(XLIBS)
 
 install: \
 	${DESTDIR}${libdir}/$(LIBUAFS) \
@@ -80,8 +127,8 @@ dest: \
 	${DEST}/root.perf/lib/$(LIBJUAFS)
 
 
-CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
-CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE1=	$(CC) $(COMMON_INCLUDE) $(KRB5CFLAGS) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE2=	$(CC) $(COMMON_INCLUDE) $(KRB5CFLAGS) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 
 UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
@@ -91,6 +138,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_axscache.o  \
 	$(UOBJ)/afs_buffer.o	\
 	$(UOBJ)/afs_callback.o	\
+	$(UOBJ)/afs_capabilities.o	\
 	$(UOBJ)/afs_cbqueue.o    \
 	$(UOBJ)/afs_cell.o \
 	$(UOBJ)/afs_chunk.o		\
@@ -146,7 +194,7 @@ UAFSOBJ = \
 	$(UOBJ)/Kvice.xdr.o \
 	$(UOBJ)/xdr_arrayn.o \
 	$(UOBJ)/Kvice.cs.o \
-	$(UOBJ)/fcrypt.o \
+	${AFS_FCRYPT_UOBJS} \
 	$(UOBJ)/rx.o \
 	$(UOBJ)/rx_rdwr.o \
 	$(UOBJ)/rx_clock.o \
@@ -165,7 +213,6 @@ UAFSOBJ = \
 	$(UOBJ)/Kvldbint.cs.o \
 	$(UOBJ)/Kvldbint.xdr.o \
 	$(UOBJ)/Kcallback.ss.o \
-	$(UOBJ)/crypt_conn.o \
 	$(UOBJ)/AFS_component_version_number.o \
 	$(UOBJ)/afs_exporter.o \
 	$(UOBJ)/rxkad_client.o \
@@ -175,6 +222,7 @@ UAFSOBJ = \
 	$(UOBJ)/fileutil.o \
 	$(UOBJ)/netutils.o \
 	$(UOBJ)/et_name.o \
+	$(UOBJ)/afserror.o \
 	$(UOBJ)/com_err.o \
 	$(UOBJ)/error_msg.o \
 	$(UOBJ)/uerrors.o \
@@ -206,7 +254,10 @@ UAFSOBJ = \
 	$(UOBJ)/Krxstat.xdr.o \
 	$(UOBJ)/rxstat.o \
 	$(UOBJ)/xdr_int32.o \
-	$(UOBJ)/xdr_int64.o
+	$(UOBJ)/xdr_int64.o \
+	$(UOBJ)/rxkad_tkt.o \
+	$(UOBJ)/afs_token.xdr.o \
+	${AFS_RXK5_UOBJS}
 
 AFSWEBOBJ = \
 	$(WEBOBJ)/afs_atomlist.o \
@@ -216,6 +267,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
 	$(WEBOBJ)/afs_callback.o \
+	$(WEBOBJ)/afs_capabilities.o \
 	$(WEBOBJ)/afs_cbqueue.o \
 	$(WEBOBJ)/afs_cell.o \
 	$(WEBOBJ)/afs_chunk.o \
@@ -271,7 +323,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
-	$(WEBOBJ)/fcrypt.o \
+	${AFS_FCRYPT_WOBJS} \
 	$(WEBOBJ)/rx.o \
 	$(WEBOBJ)/rx_rdwr.o \
 	$(WEBOBJ)/rx_clock.o \
@@ -290,7 +342,6 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
 	$(WEBOBJ)/Kcallback.ss.o \
-	$(WEBOBJ)/crypt_conn.o \
 	$(WEBOBJ)/AFS_component_version_number.o \
 	$(WEBOBJ)/afs_exporter.o \
 	$(WEBOBJ)/rxkad_client.o \
@@ -300,6 +351,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/fileutil.o \
 	$(WEBOBJ)/netutils.o \
 	$(WEBOBJ)/et_name.o \
+	$(WEBOBJ)/afserror.o \
 	$(WEBOBJ)/com_err.o \
 	$(WEBOBJ)/error_msg.o \
 	$(WEBOBJ)/uerrors.o \
@@ -331,8 +383,10 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
-
+	$(WEBOBJ)/rxstat.o \
+	$(WEBOBJ)/rxkad_tkt.o \
+	$(WEBOBJ)/afs_token.xdr.o \
+	${AFS_RXK5_WOBJS}
 
 AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_atomlist.o \
@@ -394,7 +448,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
-	$(WEBOBJ)/fcrypt.o \
+	${AFS_FCRYPT_WOBJS} \
 	$(WEBOBJ)/rx.o \
 	$(WEBOBJ)/rx_rdwr.o \
 	$(WEBOBJ)/rx_clock.o \
@@ -413,7 +467,6 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
 	$(WEBOBJ)/Kcallback.ss.o \
-	$(WEBOBJ)/crypt_conn.o \
 	$(WEBOBJ)/AFS_component_version_number.o \
 	$(WEBOBJ)/afs_exporter.o \
 	$(WEBOBJ)/rxkad_client.o \
@@ -423,6 +476,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/fileutil.o \
 	$(WEBOBJ)/netutils.o \
 	$(WEBOBJ)/et_name.o \
+	$(WEBOBJ)/afserror.o \
 	$(WEBOBJ)/com_err.o \
 	$(WEBOBJ)/error_msg.o \
 	$(WEBOBJ)/uerrors.o \
@@ -453,7 +507,8 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
+	$(WEBOBJ)/rxstat.o \
+	${AFS_RXK5_WOBJS}
 
 JUAFSOBJ = \
 	$(JUAFS)/afs_atomlist.o \
@@ -518,7 +573,7 @@ JUAFSOBJ = \
 	$(JUAFS)/Kvice.xdr.o \
 	$(JUAFS)/xdr_arrayn.o \
 	$(JUAFS)/Kvice.cs.o \
-	$(JUAFS)/fcrypt.o \
+	${AFS_FCRYPT_JUOBJS} \
 	$(JUAFS)/rx.o \
 	$(JUAFS)/rx_rdwr.o \
 	$(JUAFS)/rx_clock.o \
@@ -536,7 +591,6 @@ JUAFSOBJ = \
 	$(JUAFS)/Kvldbint.cs.o \
 	$(JUAFS)/Kvldbint.xdr.o \
 	$(JUAFS)/Kcallback.ss.o \
-	$(JUAFS)/crypt_conn.o \
 	$(JUAFS)/AFS_component_version_number.o \
 	$(JUAFS)/afs_exporter.o \
 	$(JUAFS)/rxkad_client.o \
@@ -546,6 +600,7 @@ JUAFSOBJ = \
 	$(JUAFS)/fileutil.o \
 	$(JUAFS)/netutils.o \
 	$(JUAFS)/et_name.o \
+	$(JUAFS)/afserror.o \
 	$(JUAFS)/com_err.o \
 	$(JUAFS)/error_msg.o \
 	$(JUAFS)/uerrors.o \
@@ -576,7 +631,10 @@ JUAFSOBJ = \
 	$(JUAFS)/Krxstat.ss.o \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
-	$(JUAFS)/xdr_int64.o
+	$(JUAFS)/xdr_int64.o \
+	$(JUAFS)/rxkad_tkt.o \
+	$(JUAFS)/afs_token.xdr.o \
+	${AFS_RXK5_JUOBJS}
 
 # Compilation rules
 
@@ -664,6 +722,8 @@ $(UOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE1)
 $(UOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE1)
+$(UOBJ)/afs_capabilities.o: $(TOP_SRC_AFS)/afs_capabilities.c
+	$(CRULE1)
 $(UOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE1)
 $(UOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
@@ -683,6 +743,8 @@ $(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 $(UOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE1)
 $(UOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE1)
+$(UOBJ)/bg-fcrypt.o: $(TOP_SRC_RXKAD)/bg-fcrypt.c
 	$(CRULE1)
 $(UOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)
@@ -802,7 +864,15 @@ $(UOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
 	$(CRULE1)
 $(UOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
 	$(CRULE1)
+$(UOBJ)/afs_token.xdr.o: $(TOP_SRCDIR)/auth/afs_token.xdr.c
+	$(CRULE1)
 $(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
+	$(CRULE1)
+$(UOBJ)/rxk5_utilafs.o: $(TOP_SRCDIR)/auth/rxk5_utilafs.c
+	$(CRULE1)
+$(UOBJ)/rxk5_tkt.o: $(TOP_SRCDIR)/auth/rxk5_tkt.c
+	$(CRULE1)
+$(UOBJ)/rxkad_tkt.o: $(TOP_SRCDIR)/auth/rxkad_tkt.c
 	$(CRULE1)
 $(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
 	$(CRULE1)
@@ -813,6 +883,8 @@ $(UOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 $(UOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
 	$(CRULE1)
 $(UOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
+	$(CRULE1)
+$(UOBJ)/afserror.o: $(TOP_SRCDIR)/comerr/afserror.c
 	$(CRULE1)
 $(UOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
 	$(CRULE1)
@@ -836,6 +908,19 @@ $(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
+
+$(UOBJ)/rxk5_client.o: $(TOP_SRC_RXK5)/rxk5_client.c
+	   $(CRULE1)
+$(UOBJ)/rxk5_common.o: $(TOP_SRC_RXK5)/rxk5_common.c
+	   $(CRULE1)
+$(UOBJ)/rxk5c.xdr.o: $(TOP_SRC_RXK5)/rxk5c.xdr.c
+	   $(CRULE1)
+$(UOBJ)/rxk5errors.o: $(TOP_SRC_RXK5)/rxk5errors.c
+	   $(CRULE1)
+$(UOBJ)/xdr_mem.o:  $(TOP_SRC_RX)/xdr_mem.c
+	   $(CRULE1)
+$(UOBJ)/nfold.o: $(TOP_SRC_RXK5)/nfold.c
+	   $(CRULE1)
 
 # These files are for the netscape plugin
 
@@ -921,6 +1006,8 @@ $(WEBOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE2)
 $(WEBOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE2)
+$(WEBOBJ)/afs_capabilities.o: $(TOP_SRC_AFS)/afs_capabilities.c
+	$(CRULE2)
 $(WEBOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE2)
 $(WEBOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
@@ -940,6 +1027,8 @@ $(WEBOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 $(WEBOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE2)
 $(WEBOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE2)
+$(WEBOBJ)/bg-fcrypt.o: 	$(TOP_SRC_RXKAD)/bg-fcrypt.c
 	$(CRULE2)
 $(WEBOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE2)
@@ -1068,6 +1157,14 @@ $(WEBOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
 	$(CRULE2)
 $(WEBOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE2)
+$(WEBOBJ)/rxk5_utilafs.o: $(TOP_SRCDIR)/auth/rxk5_utilafs.c
+	$(CRULE2)
+$(WEBOBJ)/rxk5_tkt.o: $(TOP_SRCDIR)/auth/rxk5_tkt.c
+	$(CRULE2)
+$(WEBOBJ)/rxkad_tkt.o: $(TOP_SRCDIR)/auth/rxkad_tkt.c
+	$(CRULE2)
+$(WEBOBJ)/afs_token.xdr.o: $(TOP_SRCDIR)/auth/afs_token.xdr.c
+	$(CRULE2)
 $(WEBOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
 	$(CRULE1)
 $(WEBOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
@@ -1077,6 +1174,8 @@ $(WEBOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 $(WEBOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
 	$(CRULE1)
 $(WEBOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
+	$(CRULE2)
+$(WEBOBJ)/afserror.o: $(TOP_SRCDIR)/comerr/afserror.c
 	$(CRULE2)
 $(WEBOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
 	$(CRULE2)
@@ -1096,6 +1195,19 @@ $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE2)
 $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE2)
+
+$(WEBOBJ)/rxk5_client.o: $(TOP_SRC_RXK5)/rxk5_client.c
+	   $(CRULE2)
+$(WEBOBJ)/rxk5_common.o: $(TOP_SRC_RXK5)/rxk5_common.c
+	   $(CRULE2)
+$(WEBOBJ)/rxk5c.xdr.o: $(TOP_SRC_RXK5)/rxk5c.xdr.c
+	   $(CRULE2)
+$(WEBOBJ)/rxk5errors.o: $(TOP_SRC_RXK5)/rxk5errors.c
+	   $(CRULE2)
+$(WEBOBJ)/xdr_mem.o:  $(TOP_SRC_RX)/xdr_mem.c
+	   $(CRULE2)
+$(WEBOBJ)/nfold.o: $(TOP_SRC_RXK5)/nfold.c
+	   $(CRULE2)
 
 # These are for libjuafs.a 
 # Used for linking with libafsauthent and libafsrpc
@@ -1182,6 +1294,8 @@ $(JUAFS)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE1)
 $(JUAFS)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE1)
+$(JUAFS)/afs_capabilities.o: $(TOP_SRC_AFS)/afs_capabilities.c
+	$(CRULE1)
 $(JUAFS)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE1)
 $(JUAFS)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
@@ -1201,6 +1315,8 @@ $(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 $(JUAFS)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE1)
 $(JUAFS)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE1)
+$(JUAFS)/bg-fcrypt.o: 	$(TOP_SRC_RXKAD)/bg-fcrypt.c
 	$(CRULE1)
 $(JUAFS)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)
@@ -1318,6 +1434,14 @@ $(JUAFS)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
 	$(CRULE1)
 $(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
+$(JUAFS)/rxk5_utilafs.o: $(TOP_SRCDIR)/auth/rxk5_utilafs.c
+	$(CRULE1)
+$(JUAFS)/rxk5_tkt.o: $(TOP_SRCDIR)/auth/rxk5_tkt.c
+	$(CRULE1)
+$(JUAFS)/rxkad_tkt.o: $(TOP_SRCDIR)/auth/rxkad_tkt.c
+	$(CRULE1)
+$(JUAFS)/afs_token.xdr.o: $(TOP_SRCDIR)/auth/afs_token.xdr.c
+	$(CRULE1)
 $(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
 	$(CRULE1)
 $(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
@@ -1327,6 +1451,8 @@ $(JUAFS)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 $(JUAFS)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
 	$(CRULE1)
 $(JUAFS)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
+	$(CRULE1)
+$(JUAFS)/afserror.o: $(TOP_SRCDIR)/comerr/afserror.c
 	$(CRULE1)
 $(JUAFS)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
 	$(CRULE1)
@@ -1351,6 +1477,18 @@ $(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
 
+$(JUAFS)/rxk5_client.o: $(TOP_SRC_RXK5)/rxk5_client.c
+	   $(CRULE1)
+$(JUAFS)/rxk5_common.o: $(TOP_SRC_RXK5)/rxk5_common.c
+	   $(CRULE1)
+$(JUAFS)/rxk5c.xdr.o: $(TOP_SRC_RXK5)/rxk5c.xdr.c
+	   $(CRULE1)
+$(JUAFS)/rxk5errors.o: $(TOP_SRC_RXK5)/rxk5errors.c
+	   $(CRULE1)
+$(JUAFS)/xdr_mem.o:  $(TOP_SRC_RX)/xdr_mem.c
+	   $(CRULE1)
+$(JUAFS)/nfold.o: $(TOP_SRC_RXK5)/nfold.c
+	   $(CRULE1)
 
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx

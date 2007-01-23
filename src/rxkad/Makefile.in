@@ -15,8 +15,10 @@ INCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	rxkad.h rxkad_prototypes.h fcrypt.h v5gen.h \
 	hash.h md4.h md5.h
 
+#FCRYPT=fcrypt.o crypt_conn.o
+FCRYPT=bg-fcrypt.o
 OBJS=rxkad_client.o rxkad_server.o rxkad_common.o rxkad_errs.o \
-	fcrypt.o crypt_conn.o ticket.o ticket5.o crc.o \
+	$(FCRYPT) ticket.o ticket5.o crc.o \
 	md4.o md5.o
 
 fc_test_OBJS=fc_test.o
@@ -87,6 +89,8 @@ crc.o: crc.c ${INCLS}
 md4.o: md4.c ${INCLS}
  
 md5.o: md5.c ${INCLS}
+
+bg-fcrypt.o: bg-fcrypt.c ${INCLS}
 
 fcrypt.o: ${srcdir}/domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/fcrypt.c

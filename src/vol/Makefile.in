@@ -213,6 +213,7 @@ xfs_size_check: xfs_size_check.c
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
 	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
+	$(RM) -f fssync-debug
 
 test:
 	cd test; $(MAKE)

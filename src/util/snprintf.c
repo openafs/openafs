@@ -511,7 +511,7 @@ afs_snprintf(char *p, size_t avail, const char *fmt, ...)
 
 #if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_VSNPRINTF)
 
-#if defined(AFS_AIX51_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_AIX42_ENV) || defined(AFS_NT40_ENV)
 int
 vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 #else
@@ -530,7 +530,7 @@ vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 #ifndef AFS_NT40_ENV
 #if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_SNPRINTF)
 
-#ifdef AFS_AIX51_ENV
+#ifdef AFS_AIX42_ENV
 int
 snprintf(char *p, size_t avail, const char *fmt, ...)
 #else

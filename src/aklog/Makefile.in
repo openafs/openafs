@@ -5,30 +5,45 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-OPTMZ = @KRB5CFLAGS@ -DALLOW_REGISTER
-AKLIBS = ${LIBS} @KRB5LIBS@
-AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
-	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a \
-	  ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
-	  ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdes.a \
-	  ${TOP_LIBDIR}/libafsutil.a
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a 
+KRB5LIBS=@KRB5LIBS@
 
-SRCS=	aklog.c aklog_main.c  krb_util.c linked_list.c
-OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
+COMERR = ../comerr
+OPTMZ = ${KRB5CFLAGS} -DALLOW_REGISTER
+AKLIBS = ${LIBS}
+AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
+	  ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a \
+	  ${RXK5} ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
+	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a
 
-all: aklog asetkey
+SRCS=	aklog.c aklog_main.c linked_list.c skipwrap.c krb_util.c
+OBJS=   aklog.o aklog_main.o linked_list.o afserror.o skipwrap.o krb_util.o
+
+all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${AFSLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
 
 asetkey: asetkey.o ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	${CC} -o $@ ${CFLAGS} asetkey.o ${LIBS} ${AFSLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
+klog:	klog.o skipwrap.o ${AFSLIBS}
+	${CC} -o $@ ${CFLAGS} klog.o skipwrap.o ${LIBS} ${AFSLIBS} \
+	${TOP_LIBDIR}/libcmd.a \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} 
+
+afserror.o: $(COMERR)/afserror.c
+	$(CC) $(CFLAGS) -c $(COMERR)/afserror.c
 
 #
 # Installation targets
 #
 install: \
-	${DESTDIR}${bindir}/aklog ${DESTDIR}${afssrvbindir}/asetkey
+	${DESTDIR}${bindir}/aklog ${DESTDIR}${afssrvbindir}/asetkey ${DESTDIR}${bindir}/klog
 
 ${DESTDIR}${bindir}/aklog: aklog
 	${INSTALL} $? $@
@@ -36,8 +51,11 @@ ${DESTDIR}${bindir}/aklog: aklog
 ${DESTDIR}${afssrvbindir}/asetkey: asetkey
 	${INSTALL} $? $@
 
+${DESTDIR}${bindir}/klog: klog
+	${INSTALL} $? $@
+
 dest: \
-	${DEST}/bin/aklog ${DEST}/root.server/usr/afs/bin/asetkey
+	${DEST}/bin/aklog ${DEST}/root.server/usr/afs/bin/asetkey ${DEST}/bin/klog
 
 ${DEST}/bin/aklog: aklog
 	${INSTALL} $? $@
@@ -45,11 +63,14 @@ ${DEST}/bin/aklog: aklog
 ${DEST}/root.server/usr/afs/bin/asetkey: asetkey
 	${INSTALL} $? $@
 
+${DEST}/bin/klog: klog
+	${INSTALL} $? $@
+
 #
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o ${OBJS} aklog asetkey
+	$(RM) -f *.o ${OBJS} aklog asetkey klog
 
 include ../config/Makefile.version
 

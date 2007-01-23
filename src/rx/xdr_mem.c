@@ -26,13 +26,96 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+#ifndef	NeXT
+
 #include <afsconfig.h>
+
+#ifdef KERNEL
+#include "afs/param.h"
+#else
 #include <afs/param.h>
+#endif
+
+#if defined(KERNEL)
+#include "afs/sysincludes.h"    /*Standard vendor system headers */
+#if !defined(UKERNEL)
+#include "h/types.h"
+#include "h/uio.h"
+#ifdef	AFS_OSF_ENV
+#include <net/net_globals.h>
+#endif	/* AFS_OSF_ENV */
+#ifdef AFS_LINUX20_ENV
+#include "h/socket.h"
+#else
+#include "rpc/types.h"
+#endif
+#ifdef AFS_OSF_ENV
+#undef kmem_alloc
+#undef kmem_free
+#undef mem_alloc
+#undef mem_free
+#undef register
+#endif	/* AFS_OSF_ENV */
+#ifdef AFS_LINUX22_ENV
+#ifndef quad_t
+#define quad_t __quad_t
+#define u_quad_t __u_quad_t
+#endif
+#endif
+#include "rx/xdr.h"
+#else	/* !UKERNEL */
+#include "rpc/types.h"
+#include "rpc/xdr.h"
+#endif	/* !UKERNEL */
+
+#else	/* KERNEL */
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#ifndef AFS_NT40_ENV
+#include <netinet/in.h>
+#endif
+#include "xdr.h"
+#endif	/* KERNEL */
+
+/*
+ * this section should be shared with xdr_rx.c
+ */
+#if defined(KERNEL)
+/*
+ * kernel version needs to agree with <rpc/xdr.h>
+ * except on Linux which does XDR differently from everyone else
+ */
+# if defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_XDRS_T void *
+# else
+#  define AFS_XDRS_T XDR *
+# endif
+# if defined(AFS_SUN57_ENV)
+#  define AFS_RPC_INLINE_T rpc_inline_t
+# elif defined(AFS_DUX40_ENV)
+#  define AFS_RPC_INLINE_T int
+# elif defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_RPC_INLINE_T afs_int32
+# elif defined(AFS_LINUX20_ENV)
+#  define AFS_RPC_INLINE_T int32_t *
+# else
+#  define AFS_RPC_INLINE_T long
+# endif
+#else	/* KERNEL */
+/*
+ * user version needs to agree with "xdr.h" -- ie, <rx/xdr.h>
+ */
+# define AFS_XDRS_T void *
+# define AFS_RPC_INLINE_T afs_int32
+#endif
+
+#ifndef INT_MAX
+#define INT_MAX	(~0u>>1)
+#endif
 
 RCSID
     ("$Header$");
-
-#ifndef	NeXT
 
 /*
  * xdr_mem.h, XDR implementation using memory buffers.
@@ -45,31 +128,35 @@ RCSID
  *
  */
 
-#include "xdr.h"
-#ifndef AFS_NT40_ENV
-#include <netinet/in.h>
-#else
-#include <limits.h>
-#endif
-
 static bool_t xdrmem_getint32();
 static bool_t xdrmem_putint32();
 static bool_t xdrmem_getbytes();
 static bool_t xdrmem_putbytes();
 static u_int xdrmem_getpos();
 static bool_t xdrmem_setpos();
-static afs_int32 *xdrmem_inline();
+static AFS_RPC_INLINE_T *xdrmem_inline();
 static void xdrmem_destroy();
 
 static struct xdr_ops xdrmem_ops = {
+#if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
+    xdrmem_getint64,
+    xdrmem_putint64,
+#endif
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrmem_getint32,
     xdrmem_putint32,
+#endif
     xdrmem_getbytes,
     xdrmem_putbytes,
     xdrmem_getpos,
     xdrmem_setpos,
     xdrmem_inline,
-    xdrmem_destroy
+    xdrmem_destroy,
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    0,
+    xdrmem_getint32,
+    xdrmem_putint32,
+#endif
 };
 
 /*
@@ -89,6 +176,38 @@ static void
 xdrmem_destroy(void)
 {
 }
+
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
+static bool_t
+xdrmem_getint64(register XDR * xdrs, long * lp)
+{
+    if (xdrs->x_handy < sizeof(long))
+	return (FALSE);
+    else
+	xdrs->x_handy -= sizeof(long);
+    *lp = ntohl(0[(afs_int32 *) xdrs->x_private]);
+    *lp <<= 32;
+    *lp += ntohl(1[(afs_int32 *) xdrs->x_private]);
+    xdrs->x_private += sizeof(long);
+    return (TRUE);
+}
+
+static bool_t
+xdrmem_putint64(register XDR * xdrs, long * lp)
+{
+    afs_int32 t;
+    if (xdrs->x_handy < sizeof(long))
+	return (FALSE);
+    else
+	xdrs->x_handy -= sizeof(long);
+    t = (*lp >> 32); t = htonl(t);
+    0[(afs_int32 *) xdrs->x_private] = t;
+    t = (*lp); t = htonl(t);
+    1[(afs_int32 *) xdrs->x_private] = t;
+    xdrs->x_private += sizeof(long);
+    return (TRUE);
+}
+#endif
 
 static bool_t
 xdrmem_getint32(register XDR * xdrs, afs_int32 * lp)
@@ -141,7 +260,7 @@ xdrmem_putbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 static u_int
 xdrmem_getpos(register XDR * xdrs)
 {
-    return ((u_int)(xdrs->x_private - xdrs->x_base));
+    return ((char *)xdrs->x_private - (char *)xdrs->x_base);
 }
 
 static bool_t
@@ -157,14 +276,14 @@ xdrmem_setpos(register XDR * xdrs, u_int pos)
     return (TRUE);
 }
 
-static afs_int32 *
+static AFS_RPC_INLINE_T *
 xdrmem_inline(register XDR * xdrs, int len)
 {
-    afs_int32 *buf = 0;
+    AFS_RPC_INLINE_T * buf = 0;
 
     if (len >= 0 && xdrs->x_handy >= len) {
 	xdrs->x_handy -= len;
-	buf = (afs_int32 *) xdrs->x_private;
+	buf = (AFS_RPC_INLINE_T *) xdrs->x_private;
 	xdrs->x_private += len;
     }
     return (buf);

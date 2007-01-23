@@ -1,0 +1,49 @@
+#
+# Copyright (c) 2005
+# The Regents of the University of Michigan
+# ALL RIGHTS RESERVED
+#
+# Permission is granted to use, copy, create derivative works 
+# and redistribute this software and such derivative works 
+# for any purpose, so long as the name of the University of 
+# Michigan is not used in any advertising or publicity 
+# pertaining to the use or distribution of this software 
+# without specific, written prior authorization.  If the 
+# above copyright notice or any other identification of the 
+# University of Michigan is included in any copy of any 
+# portion of this software, then the disclaimer below must 
+# also be included.
+#
+# This software is provided as is, without representation 
+# from the University of Michigan as to its fitness for any 
+# purpose, and without warranty by the University of 
+# Michigan of any kind, either express or implied, including 
+# without limitation the implied warranties of 
+# merchantability and fitness for a particular purpose.  The 
+# regents of the University of Michigan shall not be liable 
+# for any damages, including special, indirect, incidental, or 
+# consequential damages, with respect to any claim arising 
+# out of or in connection with the use of the software, even 
+# if it has been or is hereafter advised of the possibility of 
+# such damages.
+#
+
+error_table RXK5
+  ec RXK5INCONSISTENCY, "Security module structure inconsistent"
+  ec RXK5PACKETSHORT, "Packet too short for security challenge"
+  ec RXK5LEVELFAIL, "Security level negotiation failed"
+  ec RXK5TICKETLEN, "Ticket length too long or too short"
+  ec RXK5OUTOFSEQUENCE, "packet had bad sequence number"
+  ec RXK5NOAUTH, "caller not authorized"
+  ec RXK5BADKEY, "illegal key: bad parity or weak"
+  ec RXK5BADTICKET, "security object was passed a bad ticket"
+  ec RXK5UNKNOWNKEY, "ticket contained unknown key version number"
+  ec RXK5EXPIRED, "authentication expired"
+  ec RXK5SEALEDINCON, "sealed data inconsistent"
+  ec RXK5DATALEN, "user data too long"
+  ec RXK5ILLEGALLEVEL, "invalid rxk5 level requested"
+  ec RXK5WRONGVERS, "incompatible version of rxk5"
+  ec RXK5NOSECDATA, "setup failed - no security data"
+  ec RXK5BADCKTYPE, "invalid checksum type"
+  ec RXK5CKSUMLEN, "checksum length wrong"
+end

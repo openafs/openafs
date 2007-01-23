@@ -1,0 +1,80 @@
+=head1 NAME
+
+pts source - read pts commands from a file.
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts source>
+    S<<< [B<-file> <I<file name>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-help>]
+
+B<pts so>
+    S<<< [B<-file> <I<file name>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts source> command reads additional pts commands
+from the specified file and executes them, one at a time.
+All commands will reuse the same rx connection, if possible,
+which is advantageous if the plan is to submit many thousands
+of pts commands.
+
+It is possible to nest multiple invocations of B<source>
+and to intersperse uses of B<interactive>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-file> <I<input file>>
+
+Indicates the file from which commands are to be read.
+For more details, see
+L<pts(1)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example will remove jones from system:administrators, wait
+5 seconds, and then add smith to the same group.
+
+   % cat >/tmp/something.pt <<EOF
+   removeuser jones system:administrators
+   sleep 5
+   adduser smith system:administrators
+   EOF
+   % pts source /tmp/something.pt
+   % 
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_interactive(1)>,
+L<pts_sleep(1)>
+
+=head1 COPYRIGHT
+
+See L<umich.copyright(8)>.

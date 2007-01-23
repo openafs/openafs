@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -21,6 +21,9 @@ TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+TOP_SRC_RXK5 = ${TOP_SRCDIR}/rxk5
+TOP_SRC_AUTH = ${TOP_SRCDIR}/auth
+TOP_SRC_K5SSL = ${TOP_SRCDIR}/k5ssl
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_SRCDIR} \
@@ -40,7 +43,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_OBJDIR}/src/fsint \
 	-I${TOP_OBJDIR}/src/vlserver \
 	-I${TOP_INCDIR} \
-	-I${TOP_INCDIR}/afs 
+	-I${TOP_INCDIR}/afs
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 .SUFFIXES:	.i
@@ -69,8 +72,10 @@ single_instdir_libafs: install_libafs
 single_destdir_libafs: dest_libafs
 
 # placeholder for any sources that are built prior to compiling libafs
-depsrcs: 
+depsrcs:
 
+#FCRYPT=fcrypt.o crypt_conn.o
+FCRYPT=bg-fcrypt.o
 AFSAOBJS = \
 	afs_atomlist.o \
 	afs_lhash.o \
@@ -78,6 +83,7 @@ AFSAOBJS = \
 	afs_axscache.o  \
 	afs_buffer.o	\
 	afs_callback.o	\
+	afs_capabilities.o \
 	afs_cbqueue.o    \
 	afs_cell.o \
 	afs_chunk.o		\
@@ -132,7 +138,7 @@ AFSAOBJS = \
 	xdr_int32.o	\
 	xdr_int64.o	\
 	Kvice.cs.o	\
-	fcrypt.o		\
+	$(FCRYPT)	\
 	rx.o		\
 	rx_rdwr.o	\
 	rx_clock.o	\
@@ -153,7 +159,6 @@ AFSAOBJS = \
 	Krxstat.ss.o	\
 	Krxstat.xdr.o	\
 	rxstat.o	\
-	crypt_conn.o	\
 	AFS_component_version_number.o\
 	afs_exporter.o	\
 	rxkad_client.o	\
@@ -327,6 +332,8 @@ afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE_NOOPT)
 afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE_NOOPT)
+afs_capabilities.o: $(TOP_SRC_AFS)/afs_capabilities.c
+	$(CRULE_NOOPT)
 afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE_NOOPT)
 afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
@@ -352,6 +359,8 @@ afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE_NOOPT)
 crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE_NOOPT)
+bg-fcrypt.o: 	$(TOP_SRC_RXKAD)/bg-fcrypt.c
 	$(CRULE_NOOPT)
 rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE_NOOPT)
@@ -415,6 +424,8 @@ xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
 	$(CRULE_NOOPT)
 xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE_NOOPT)
+xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
+	$(CRULE_NOOPT)
 xdr.o: $(TOP_SRC_RX)/xdr.c
 	$(CRULE_NOOPT)
 Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
@@ -428,6 +439,110 @@ rx_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 	$(CRULE_NOOPT)
 rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
 	$(CRULE_NOOPT)
+
+# Rxk5 and K5SSL
+aes_cbc.o: $(TOP_SRC_K5SSL)/aes_cbc.c
+	   $(CRULE_OPT)
+aes_cfb.o: $(TOP_SRC_K5SSL)/aes_cfb.c
+	   $(CRULE_OPT)
+aes_ecb.o: $(TOP_SRC_K5SSL)/aes_ecb.c
+	   $(CRULE_OPT)
+aes_ofb.o: $(TOP_SRC_K5SSL)/aes_ofb.c
+	   $(CRULE_OPT)
+cast_cbc.o: $(TOP_SRC_K5SSL)/cast_cbc.c
+	   $(CRULE_OPT)
+cast_cfb.o: $(TOP_SRC_K5SSL)/cast_cfb.c
+	   $(CRULE_OPT)
+cast_ecb.o: $(TOP_SRC_K5SSL)/cast_ecb.c
+	   $(CRULE_OPT)
+cast.o: $(TOP_SRC_K5SSL)/cast.c
+	   $(CRULE_OPT)
+cast_ofb.o: $(TOP_SRC_K5SSL)/cast_ofb.c
+	   $(CRULE_OPT)
+des3_cbc.o: $(TOP_SRC_K5SSL)/des3_cbc.c
+	   $(CRULE_OPT)
+des3_cfb.o: $(TOP_SRC_K5SSL)/des3_cfb.c
+	   $(CRULE_OPT)
+des3_ecb.o: $(TOP_SRC_K5SSL)/des3_ecb.c
+	   $(CRULE_OPT)
+des3_ofb.o: $(TOP_SRC_K5SSL)/des3_ofb.c
+	   $(CRULE_OPT)
+des_cbc.o: $(TOP_SRC_K5SSL)/des_cbc.c
+	   $(CRULE_OPT)
+des_cfb.o: $(TOP_SRC_K5SSL)/des_cfb.c
+	   $(CRULE_OPT)
+des_ecb.o: $(TOP_SRC_K5SSL)/des_ecb.c
+	   $(CRULE_OPT)
+des.o: $(TOP_SRC_K5SSL)/des.c
+	   $(CRULE_OPT)
+des_ofb.o: $(TOP_SRC_K5SSL)/des_ofb.c
+	   $(CRULE_OPT)
+e_aes.o: $(TOP_SRC_K5SSL)/e_aes.c
+	   $(CRULE_OPT)
+e_cast.o: $(TOP_SRC_K5SSL)/e_cast.c
+	   $(CRULE_OPT)
+e_des3.o: $(TOP_SRC_K5SSL)/e_des3.c
+	   $(CRULE_OPT)
+e_des.o: $(TOP_SRC_K5SSL)/e_des.c
+	   $(CRULE_OPT)
+e_rc4.o: $(TOP_SRC_K5SSL)/e_rc4.c
+	   $(CRULE_OPT)
+e_rc6.o: $(TOP_SRC_K5SSL)/e_rc6.c
+	   $(CRULE_OPT)
+k5s_ck.o: $(TOP_SRC_K5SSL)/k5s_ck.c
+	   $(CRULE_OPT)
+k5s_evp.o: $(TOP_SRC_K5SSL)/k5s_evp.c
+	   $(CRULE_OPT)
+k5s_rn.o: $(TOP_SRC_K5SSL)/k5s_rn.c
+	   $(CRULE_OPT)
+k5s_cm.o: $(TOP_SRC_K5SSL)/k5s_cm.c
+	   $(CRULE_OPT)
+k5s_in.o: $(TOP_SRC_K5SSL)/k5s_in.c
+	   $(CRULE_OPT)
+rxk5_tkt.o: $(TOP_SRC_AUTH)/rxk5_tkt.c
+	   $(CRULE_OPT)
+rxkad_tkt.o: $(TOP_SRC_AUTH)/rxkad_tkt.c
+	   $(CRULE_OPT)
+afs_token.xdr.o: $(TOP_SRC_AUTH)/afs_token.xdr.c
+	   $(CRULE_OPT)
+m_crc32.o: $(TOP_SRC_K5SSL)/m_crc32.c
+	   $(CRULE_OPT)
+md4c.o: $(TOP_SRC_K5SSL)/md4c.c
+	   $(CRULE_OPT)
+md5c.o: $(TOP_SRC_K5SSL)/md5c.c
+	   $(CRULE_OPT)
+m_md4.o: $(TOP_SRC_K5SSL)/m_md4.c
+	   $(CRULE_OPT)
+m_md5.o: $(TOP_SRC_K5SSL)/m_md5.c
+	   $(CRULE_OPT)
+m_sha1.o: $(TOP_SRC_K5SSL)/m_sha1.c
+	   $(CRULE_OPT)
+rc4.o: $(TOP_SRC_K5SSL)/rc4.c
+	   $(CRULE_OPT)
+rc6_cbc.o: $(TOP_SRC_K5SSL)/rc6_cbc.c
+	   $(CRULE_OPT)
+rc6_cfb.o: $(TOP_SRC_K5SSL)/rc6_cfb.c
+	   $(CRULE_OPT)
+rc6_ecb.o: $(TOP_SRC_K5SSL)/rc6_ecb.c
+	   $(CRULE_OPT)
+rc6.o: $(TOP_SRC_K5SSL)/rc6.c
+	   $(CRULE_OPT)
+rc6_ofb.o: $(TOP_SRC_K5SSL)/rc6_ofb.c
+	   $(CRULE_OPT)
+rijndael.o: $(TOP_SRC_K5SSL)/rijndael.c
+	   $(CRULE_OPT)
+shs.o: $(TOP_SRC_K5SSL)/shs.c
+	   $(CRULE_OPT)
+rxk5_client.o: $(TOP_SRC_RXK5)/rxk5_client.c
+	   $(CRULE_OPT)
+rxk5c.xdr.o: $(TOP_SRC_RXK5)/rxk5c.xdr.c
+	$(CRULE_OPT)
+rxk5_common.o: $(TOP_SRC_RXK5)/rxk5_common.c
+	   $(CRULE_OPT)
+t_enc_lk.o: $(TOP_SRC_K5SSL)/t_enc_lk.c
+	   $(CRULE_OPT)
+t_sum_lk.o: $(TOP_SRC_K5SSL)/t_sum_lk.c
+	   $(CRULE_OPT)
 
 # Files which do not contain NFS translator code.
 CFLAGS-afs_call.o= -DAFS_NONFSTRANS

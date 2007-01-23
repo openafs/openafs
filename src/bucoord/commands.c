@@ -57,7 +57,7 @@ extern struct ubik_client *cstruct;
 extern int bc_Dumper();		/* function to do dumps */
 extern int bc_Restorer();	/* function to do restores */
 extern char *whoami;
-extern struct ktc_token ttoken;
+extern Date token_exptime;
 extern char *tailCompPtr();
 extern statusP createStatusNode();
 
@@ -998,11 +998,11 @@ bc_JobsCmd(as, arock)
 	}
 
 	/* Print token expiration time */
-	if ((ttoken.endTime > prevTime)
-	    && (ttoken.endTime <= youngest->scheduledDump) && as
-	    && (ttoken.endTime != NEVERDATE)) {
-	    if (ttoken.endTime > time(0)) {
-		compactDateString(&ttoken.endTime, ds, 50);
+	if ((token_exptime > prevTime)
+	    && (token_exptime <= youngest->scheduledDump) && as
+	    && (token_exptime != NEVERDATE)) {
+	    if (token_exptime > time(0)) {
+		compactDateString(&token_exptime, ds, 50);
 		printf("       %16s: TOKEN EXPIRATION\n", ds);
 	    } else {
 		printf("       TOKEN HAS EXPIRED\n");
@@ -1022,11 +1022,11 @@ bc_JobsCmd(as, arock)
     }
 
     /* Print token expiration time if havn't already */
-    if ((ttoken.endTime == NEVERDATE) && as)
+    if ((token_exptime == NEVERDATE) && as)
 	printf("     : TOKEN NEVER EXPIRES\n");
-    else if ((ttoken.endTime > prevTime) && as) {
-	if (ttoken.endTime > time(0)) {
-	    compactDateString(&ttoken.endTime, ds, 50);
+    else if ((token_exptime > prevTime) && as) {
+	if (token_exptime > time(0)) {
+	    compactDateString(&token_exptime, ds, 50);
 	    printf("       %16s: TOKEN EXPIRATION\n", ds);
 	} else {
 	    printf("     : TOKEN HAS EXPIRED\n");
@@ -1817,7 +1817,7 @@ bc_DumpCmd(as, arock)
 		strcat(statusPtr->cmdLine, " -n");
 
 	    printf("Add scheduled dump as job %d\n", statusPtr->jobNumber);
-	    if ((atTime > ttoken.endTime) && (ttoken.endTime != NEVERDATE))
+	    if ((atTime > token_exptime) && (token_exptime != NEVERDATE))
 		com_err(whoami, 0,
 			"Warning: job %d starts after expiration of AFS token",
 			statusPtr->jobNumber);

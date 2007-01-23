@@ -26,6 +26,12 @@ RCSID
 #endif
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
+#include "afs_token.h"
 #include <ubik.h>
 #include <afs/volser.h>
 #include <afs/afsutil.h>
@@ -802,118 +808,168 @@ bc_CheckTextVersion(ctPtr)
 /* vldbClientInit 
  *      Initialize a client for the vl ubik database.
  */
-vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
-     int noAuthFlag;
-     int localauth;
-     char *cellName;
-     struct ubik_client **cstruct;
-     struct ktc_token *ttoken;
+afs_int32
+vldbClientInit(int authflags,
+    char *cellName,
+    struct ubik_client **cstruct,
+    Date *good_until)
 {
     afs_int32 code = 0;
+    const char *confname = 0;
     struct afsconf_dir *acdir;
-    struct rc_securityClass *sc;
+    struct rx_securityClass *sc = 0;
     afs_int32 i, scIndex = 0;	/* Index of Rx security object - noauth */
     struct afsconf_cell info;
-    struct ktc_principal sname;
     struct rx_connection *serverconns[VLDB_MAXSERVERS];
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5_context = 0;
+    krb5_ccache cc = 0;
+    char *afs_k5_princ = 0;
+#endif
+    int force_flags;
 
+#ifdef AFS_RXK5
+    memset(in_creds, 0, sizeof *in_creds);
+#endif
+    force_flags = authflags & ~15;
+    authflags &= 15;
+    if (authflags == 2)
+	confname = AFSDIR_SERVER_ETC_DIRPATH;
+    else
+	confname = AFSDIR_CLIENT_ETC_DIRPATH;
 
     /* Find out about the given cell */
     acdir =
-	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		      AFSDIR_CLIENT_ETC_DIRPATH));
+	afsconf_Open(confname);
     if (!acdir) {
 	com_err(whoami, 0, "Can't open configuration directory '%s'",
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH));
+		confname);
 	ERROR(BC_NOCELLCONFIG);
     }
 
-    if (!cellName[0]) {
-	char cname[64];
-
-	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
-	if (code) {
-	    com_err(whoami, code,
-		    "; Can't get the local cell name - check %s/%s",
-		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
-	    ERROR(code);
-	}
-	strcpy(cellName, cname);
-    }
+    if (cellName && !cellName[0])
+	cellName = 0;	/* must mean local cell */
 
     code = afsconf_GetCellInfo(acdir, cellName, AFSCONF_VLDBSERVICE, &info);
     if (code) {
-	com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
+	if (cellName)
+	    com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
 		cellName,
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
+		confname, AFSDIR_CELLSERVDB_FILE);
+	else
+	    com_err(whoami, code, "; Can't find local cell's hosts in %s/%s",
+		    confname, AFSDIR_CELLSERVDB_FILE);
 	ERROR(BC_NOCELLCONFIG);
     }
 
     /*
      * Grab tickets if we care about authentication.
      */
-    ttoken->endTime = 0;
-    if (localauth) {
-	code = afsconf_GetLatestKey(acdir, 0, 0);
+    *good_until = 0;
+    scIndex = 1;
+    if (!authflags) {
+	scIndex = 0;
+	*good_until = NEVERDATE;
+    }
+    else if (authflags == 2) {
+	code = afsconf_ClientAuthEx(acdir, &sc, &scIndex, force_flags);
 	if (code) {
-	    com_err(whoami, code, "; Can't get key from local key file");
+	    com_err(whoami, code, "; Calling ClientAuth");
 	    ERROR(code);
-	} else {
-	    code = afsconf_ClientAuth(acdir, &sc, &scIndex);
-	    if (code) {
-		com_err(whoami, code, "; Calling ClientAuth");
-		ERROR(code);
-	    }
-
-	    ttoken->endTime = NEVERDATE;
 	}
-    } else {
-	if (!noAuthFlag) {
-	    strcpy(sname.cell, info.name);
-	    sname.instance[0] = 0;
-	    strcpy(sname.name, "afs");
-
-	    code =
-		ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), NULL);
-	    if (code) {
-		com_err(whoami, code, 0,
-			"; Can't get AFS tokens - running unauthenticated");
-	    } else {
-		if ((ttoken->kvno < 0) || (ttoken->kvno > 255))
-		    com_err(whoami, 0,
-			    "Funny kvno (%d) in ticket, proceeding",
-			    ttoken->kvno);
-
-		scIndex = 2;
-	    }
+	*good_until = NEVERDATE;
+	if (!scIndex) {
+	    com_err(whoami, 0,
+		    "localauth failed - running unauthenticated");
 	}
+#ifdef AFS_RXK5
+    } else if (force_flags & FORCE_RXK5) {
+	char *what;
+	scIndex = 5;
+	code = ENOMEM;
 
-	switch (scIndex) {
-	case 0:
-	    sc = rxnull_NewClientSecurityObject();
-	    break;
-	case 2:
-	    sc = (struct rx_securityClass *)
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
+
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5_context);
+	if(code) goto Failed;
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5_context, &cc); /* in MIT is pointer to ctxt? */
+	if(code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5_context, cc, &in_creds->client);
+	if(code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5_context, afs_k5_princ, &in_creds->server);
+	if(code) goto Failed;
+
+	what = "krb5_get_credentials";
+	/* 0 is cc flags */
+	code = krb5_get_credentials(k5_context, 0, cc, in_creds, &k5_creds);
+	if(code) goto Failed;
+
+	sc = rxk5_NewClientSecurityObject(rxk5_auth, k5_creds, 0);
+	if (sc)
+	    *good_until = k5_creds->times.endtime;
+    Failed:
+	if (!code)
+	    ;
+	else if (afs_k5_princ)
+	    com_err(whoami, code, "; %s for %s", what, afs_k5_princ);
+	else
+	    com_err(whoami, code, "; %s", what);
+#endif
+    } else if (authflags) {
+	struct ktc_token ttoken[1];
+	struct afs_token *atoken = 0;
+
+	code = ktc_GetTokenEx(0, info.name, &atoken);
+	if (code) {
+	    com_err(whoami, code,
+                        "; Can't get AFS tokens - running unauthenticated");
+	    scIndex = 0;
+#ifdef AFS_RXK5
+	} else if (atoken->cu->cu_type == CU_K5) {
+	    scIndex = 5;
+	    code = afstoken_to_v5cred(atoken, in_creds);
+	    if (!code)
+		sc = rxk5_NewClientSecurityObject(rxk5_auth, in_creds, 0);
+#endif
+	} else if (atoken->cu->cu_type == CU_KAD) {
+	    scIndex = 2;
+	    code = afstoken_to_token(atoken, &ttoken, sizeof ttoken);
+	    if (code) goto SkipSc;
+/* 999 meant vab.  256 means k5+des for rxkad. */
+	    if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
+		com_err(whoami, 0,
+			"Funny kvno (%d) in ticket, proceeding",
+			ttoken->kvno);
+
+	    sc = 
 		rxkad_NewClientSecurityObject(rxkad_clear,
 					      &ttoken->sessionKey,
 					      ttoken->kvno, ttoken->ticketLen,
 					      ttoken->ticket);
-	    break;
-	default:
-	    com_err(whoami, 0, "Unsupported authentication type %d", scIndex);
-	    ERROR(-1);
-	    break;
+	    if (sc)
+		*good_until = ttoken->endTime;
+	} else {
+	    com_err(whoami, 0, "unknown token type %d", atoken->cu->cu_type);
 	}
+SkipSc:
+	if (atoken) free_afs_token(atoken);
     }
-
     if (!sc) {
-	com_err(whoami, 0,
-		"Can't create a security object with security index %d",
-		scIndex);
-	ERROR(-1);
+	if (scIndex) {
+	    com_err(whoami, code, "Unsupported authentication type %d", scIndex);
+	    ERROR(-1);
+	}
+	sc = rxnull_NewClientSecurityObject();
     }
 
     /* tell UV module about default authentication */
@@ -939,10 +995,24 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 	com_err(whoami, code, "; Can't initialize ubik connection to vldb");
 	ERROR(code);
     }
+    code = rxs_Release(sc);
+    sc = 0;
 
   error_exit:
+    if (sc)
+	rxs_Release(sc);
     if (acdir)
 	afsconf_Close(acdir);
+#ifdef AFS_RXK5
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5_context) {
+	if (cc) krb5_cc_close(k5_context, cc);
+	if (k5_creds) krb5_free_creds(k5_context, k5_creds);
+	krb5_free_principal(k5_context, in_creds->client);
+	krb5_free_principal(k5_context, in_creds->server);
+	krb5_free_context(k5_context);
+    }
+#endif
     return (code);
 }
 
@@ -951,113 +1021,150 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
  */
 
 afs_int32
-udbClientInit(noAuthFlag, localauth, cellName)
-     int noAuthFlag;
-     int localauth;
-     char *cellName;
+udbClientInit(int authflags, char *cellName)
 {
-    struct ktc_principal principal;
-    struct ktc_token token;
     struct afsconf_cell info;
-    struct afsconf_dir *acdir;
+    struct afsconf_dir *acdir = 0;
     int i;
     afs_int32 code = 0;
+    int force_flags;
+    const char *confname;
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5_context = 0;
+    krb5_ccache cc = 0;
+    char* afs_k5_princ = 0;
+#endif
+
+#ifdef AFS_RXK5
+    memset(in_creds, 0, sizeof *in_creds);
+#endif
+    force_flags = authflags & ~15;
+    authflags &= 15;
+
+    if ((authflags & 15) == 2)
+	confname = AFSDIR_SERVER_ETC_DIRPATH;
+    else
+	confname = AFSDIR_CLIENT_ETC_DIRPATH;
 
     acdir =
-	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		      AFSDIR_CLIENT_ETC_DIRPATH));
+	afsconf_Open(confname);
     if (!acdir) {
 	com_err(whoami, 0, "Can't open configuration directory '%s'",
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH));
+		confname);
 	ERROR(BC_NOCELLCONFIG);
     }
 
-    if (!cellName[0]) {
-	char cname[64];
-
-	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
-	if (code) {
-	    com_err(whoami, code,
-		    "; Can't get the local cell name - check %s/%s",
-		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
-	    ERROR(code);
-	}
-	strcpy(cellName, cname);
-    }
+    if (cellName && !cellName[0])
+	cellName = 0;	/* NULL or "" => local cell */
 
     code = afsconf_GetCellInfo(acdir, cellName, 0, &info);
     if (code) {
-	com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
-		cellName,
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
+	if (cellName)
+	    com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
+		cellName, confname, AFSDIR_CELLSERVDB_FILE);
+	else
+	    com_err(whoami, code, "; Can't find local cell's hosts in %s/%s",
+		confname, AFSDIR_CELLSERVDB_FILE);
 	ERROR(BC_NOCELLCONFIG);
     }
 
-    udbHandle.uh_scIndex = RX_SCINDEX_NULL;
+    udbHandle.uh_scIndex = RX_SCINDEX_VAB;
+    udbHandle.uh_secobj = 0;
 
-    if (localauth) {
-	code = afsconf_GetLatestKey(acdir, 0, 0);
+    if (!authflags) {
+	udbHandle.uh_scIndex = RX_SCINDEX_NULL;
+    } else if (authflags == 2) {
+	code =
+	    afsconf_ClientAuthEx(acdir, &udbHandle.uh_secobj,
+			       &udbHandle.uh_scIndex, force_flags);
 	if (code) {
-	    com_err(whoami, code, "; Can't get key from local key file");
+	    com_err(whoami, code, "; Calling ClientAuth");
 	    ERROR(-1);
-	} else {
-	    code =
-		afsconf_ClientAuth(acdir, &udbHandle.uh_secobj,
-				   &udbHandle.uh_scIndex);
-	    if (code) {
-		com_err(whoami, code, "; Calling ClientAuth");
-		ERROR(-1);
-	    }
 	}
+	if (!udbHandle.uh_scIndex) {
+	    com_err(whoami, 0,
+		    "localauth failed - running unauthenticated");
+	}
+#ifdef AFS_RXK5
+    } else if (force_flags & FORCE_RXK5) {
+	/* Because rxgk has claimed indexes 3 and 4, the next available index
+	   for rxk5 is 5 */
+	char *what;
+
+	udbHandle.uh_scIndex = RX_SCINDEX_K5;	/* Kerberos 5 */
+
+	code = ENOMEM;
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
+
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5_context);
+	if(code) goto Failed;
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5_context, &cc); /* in MIT is pointer to ctxt? */
+	if(code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5_context, cc, &in_creds->client);
+	if(code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5_context, afs_k5_princ, &in_creds->server);
+	if(code) goto Failed;
+
+	what = "krb5_get_credentials";
+	/* 0 is cc flags */
+	code = krb5_get_credentials(k5_context, 0, cc, in_creds, &k5_creds);
+	if(code) goto Failed;
+
+	udbHandle.uh_secobj = rxk5_NewClientSecurityObject(rxk5_auth, k5_creds, 0);
+    Failed:
+	if (code) {
+	    if (afs_k5_princ)
+		com_err(whoami, code, "in %s for %s", what, afs_k5_princ);
+	    else
+		com_err(whoami, code, "in %s", what);
+	}
+#endif
     } else {
-	if (!noAuthFlag) {
-	    /* setup principal */
-	    strcpy(principal.cell, info.name);
-	    principal.instance[0] = 0;
-	    strcpy(principal.name, "afs");
+	struct ktc_principal principal;
+	struct ktc_token token;
+	/* setup principal */
+	udbHandle.uh_scIndex = RX_SCINDEX_KAD;	/* Kerberos */
+	strcpy(principal.cell, info.name);
+	principal.instance[0] = 0;
+	strcpy(principal.name, "afs");
 
-	    /* get token */
-	    code = ktc_GetToken(&principal, &token, sizeof(token), NULL);
-	    if (code) {
-		com_err(whoami, code,
-			"; Can't get tokens - running unauthenticated");
-	    } else {
-		if ((token.kvno < 0) || (token.kvno > 255))
-		    com_err(whoami, 0,
-			    "Unexpected kvno (%d) in ticket - proceeding",
-			    token.kvno);
-		udbHandle.uh_scIndex = RX_SCINDEX_KAD;	/* Kerberos */
-	    }
-	}
+	/* get token */
+	code = ktc_GetToken(&principal, &token, sizeof(token), NULL);
+	if (code) {
+	    com_err(whoami, code,
+		    "; Can't get tokens - running unauthenticated");
+	    udbHandle.uh_scIndex = RX_SCINDEX_NULL;
+	} else {
+	    /* 999 = vab, 256 = rxkad.k5 */
+	    if ((token.kvno < 0) || (token.kvno > 256))
+		com_err(whoami, 0,
+			"Unexpected kvno (%d) in ticket - proceeding",
+			token.kvno);
 
-	switch (udbHandle.uh_scIndex) {
-	case 0:
-	    udbHandle.uh_secobj = rxnull_NewClientSecurityObject();
-	    break;
-
-	case 2:
-	    udbHandle.uh_secobj = (struct rx_securityClass *)
+	    udbHandle.uh_secobj =
 		rxkad_NewClientSecurityObject(rxkad_clear, &token.sessionKey,
 					      token.kvno, token.ticketLen,
 					      token.ticket);
-	    break;
-
-	default:
-	    com_err(whoami, 0, "Unsupported authentication type %d",
-		    udbHandle.uh_scIndex);
-	    ERROR(-1);
-	    break;
 	}
     }
-
     if (!udbHandle.uh_secobj) {
-	com_err(whoami, 0,
-		"Can't create a security object with security index %d",
-		udbHandle.uh_secobj);
-	ERROR(-1);
+	if (udbHandle.uh_scIndex) {
+	    com_err(whoami, 0,
+		    "Can't create a security object with security index %d",
+		    udbHandle.uh_secobj);
+	    ERROR(-1);
+	}
+	udbHandle.uh_secobj = rxnull_NewClientSecurityObject();
     }
 
     if (info.numServers > MAXSERVERS) {
@@ -1105,8 +1212,21 @@ udbClientInit(noAuthFlag, localauth, cellName)
     }
 
   error_exit:
+#if defined(AFS_RXK5)
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5_context) {
+	if (cc)
+	    krb5_cc_close(k5_context, cc);
+	if (k5_creds)
+	    krb5_free_creds(k5_context, k5_creds);
+	krb5_free_principal(k5_context, in_creds->client);
+	krb5_free_principal(k5_context, in_creds->server);
+	krb5_free_context(k5_context);
+    }
+#endif
     if (acdir)
 	afsconf_Close(acdir);
+/* no rxs_Release(udbHandle.uh_secobj) -- why else make it global? */
     return (code);
 }
 
@@ -1295,7 +1415,8 @@ ubik_Call_SingleServer(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8,
  *	n - error.
  */
 
-udbLocalInit()
+afs_int32
+udbLocalInit(void)
 {
     afs_int32 serverList[MAXSERVERS];
     char hostname[256];
@@ -1318,8 +1439,7 @@ udbLocalInit()
     }
 
     udbHandle.uh_scIndex = RX_SCINDEX_NULL;
-    udbHandle.uh_secobj = (struct rx_securityClass *)
-	rxnull_NewClientSecurityObject();
+    udbHandle.uh_secobj = rxnull_NewClientSecurityObject();
 
     for (i = 0; serverList[i] != 0; i++) {
 	udbHandle.uh_serverConn[i] =

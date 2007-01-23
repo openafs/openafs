@@ -110,14 +110,6 @@ char rpassword[NMAX + 1];
 char name[NMAX + 1];
 char *rhost;
 
-int
-osi_audit(void)
-{
-    /* this sucks but it works for now.
-     */
-    return 0;
-}
-
 
 #include "AFS_component_version_number.c"
 

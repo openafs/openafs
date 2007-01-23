@@ -8,6 +8,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/lock.h  \
@@ -23,33 +25,32 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/afs/bnode.h \
 	${TOP_INCDIR}/afs/vlserver.h
 
-LIBS=${TOP_LIBDIR}/libubik.a \
+# NB: libkauth.a(kaerrors.o) only kauth dependency
+LIBS=${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libprot.a \
+	${TOP_LIBDIR}/libbos.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libvldb.a \
-	${TOP_LIBDIR}/libbos.a \
-	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/libvolser.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libkauth.a \
-	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libdes.a \
 	${XLIBS}
 
 all: translate_et
 
 translate_et: translate_et.o ${INCLS}
-	${CC} ${LDFLAGS} -o translate_et translate_et.o ${LIBS}
+	${CC} ${LDFLAGS} -o translate_et translate_et.o ${LIBS} $(LIBCOM_ERR)
 
 translate_et.o: AFS_component_version_number.c
 
 test: translate_et
-	echo -n > /tmp/translate_et.output
-	-./translate_et >> /tmp/translate_et.output 2>&1
+	-./translate_et > /tmp/translate_et.output 2>&1
 	./translate_et 55 >> /tmp/translate_et.output
 	./translate_et 110 >> /tmp/translate_et.output
 	./translate_et 255 >> /tmp/translate_et.output

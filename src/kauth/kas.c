@@ -71,6 +71,7 @@ main(int argc, char *argv[])
     initialize_KA_error_table();
     initialize_ACFG_error_table();
     initialize_U_error_table();
+    initialize_rx_error_table();
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */

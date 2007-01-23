@@ -61,6 +61,7 @@ InitErrTabs(void)
     initialize_CMD_error_table();
     initialize_VL_error_table();
     initialize_VOLS_error_table();
+    initialize_rx_error_table();
 #endif
     return;
 }

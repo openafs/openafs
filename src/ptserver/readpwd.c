@@ -30,16 +30,6 @@ RCSID
 #include <afs/afsutil.h>
 #include "ptclient.h"
 
-int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-
 #include "AFS_component_version_number.c"
 
 int

@@ -56,11 +56,6 @@ extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
  * - For every malloc call the corresponding free.
  */
 
-int osi_audit(void)
-{
-   return 0;
-}
-
 /*JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_callDebugger
   (JNIEnv *env, jobject obj)
 {

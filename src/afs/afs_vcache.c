@@ -47,6 +47,12 @@ RCSID
 #include "afs/afs_cbqueue.h"
 #include "afs/afs_osidnlc.h"
 
+#ifdef AFS_AIX42_ENV /* I don't know why AIX exports freeVCList... */
+#define STATIC_BUT_FOR_AIX	/**/
+#else
+#define STATIC_BUT_FOR_AIX	static
+#endif
+
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
 afs_int32 afs_maxvcount = 0;	/* max number of vcache entries */
 afs_int32 afs_vcount = 0;	/* number of vcache in use now */
@@ -65,7 +71,7 @@ afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
 #if !defined(AFS_LINUX22_ENV)
-static struct vcache *freeVCList;	/*Free list for stat cache entries */
+STATIC_BUT_FOR_AIX struct vcache *freeVCList;	/*Free list for stat cache entries */
 struct vcache *ReclaimedVCList;	/*Reclaimed list for stat entries */
 static struct vcache *Initial_freeVCList;	/*Initial list for above */
 #endif
@@ -670,7 +676,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #endif
     {
 	int i;
-	char *panicstr;
 
 	i = 0;
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
@@ -2942,7 +2947,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 void
 afs_vcacheInit(int astatSize)
 {
+#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
     register struct vcache *tvp;
+#endif
     int i;
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
     if (!afs_maxvcount) {

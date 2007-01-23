@@ -509,6 +509,7 @@ main(argc, argv)
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
     initialize_KA_error_table();
+    initialize_rx_error_table();
 
     ts = cmd_CreateSyntax(0, Main, 0, "Main program");
     /* 0 */ cmd_AddParm(ts, "-patient", CMD_FLAG, CMD_OPTIONAL,

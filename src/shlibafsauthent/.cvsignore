@@ -1,2 +1,4 @@
 Makefile
 libafsauthent.so.1.0
+libafsauthent.o.*
+linktest

@@ -1037,6 +1037,10 @@ main(argc, argv)
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     ts = cmd_CreateSyntax("initcmd", handleit, 0, "initialize the program");
     cmd_AddParm(ts, "-cellpath", CMD_LIST, CMD_OPTIONAL,

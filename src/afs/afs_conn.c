@@ -45,6 +45,16 @@ RCSID
 #include <inet/ip.h>
 #endif
 
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#ifdef USING_SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#include <afs/rxk5_tkt.h>
+#endif
+
 /* Exported variables */
 afs_rwlock_t afs_xconn;		/* allocation lock for new things */
 afs_rwlock_t afs_xinterface;	/* for multiple client address */
@@ -213,18 +223,36 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (tu->vid != UNDEFVID) {
 	    int level;
 
+	    isec = 2;
 	    if (cryptall) {
+#if 0
+		/* this is a myth.  See note in viced/viced.c */
+		if (service == 1) isec = 3;
+#endif
 		level = rxkad_crypt;
 	    } else {
 		level = rxkad_clear;
 	    }
-	    isec = 2;
+#ifdef AFS_RXK5
+	    /* rxk5_clear, rxk5_auth, and rxk5_crypt have the same values as
+	     rxkad_clear, rxkad_auth, and rxkad_crypt */
+	    if(tu->rxk5creds) {
+	      rxk5_creds *rxk5creds = (rxk5_creds*) tu->rxk5creds;
+	      isec = 5;
+	      if(level == rxkad_clear) 
+		level = rxkad_auth;
+	      csec = rxk5_NewClientSecurityObject(level, rxk5creds->k5creds, 0);
+	    } else {
+#endif
 	    /* kerberos tickets on channel 2 */
 	    csec = rxkad_NewClientSecurityObject(level,
                                                  (struct ktc_encryptionKey *)tu->ct.HandShakeKey,
 						 /* kvno */
 						 tu->ct.AuthHandle, tu->stLen,
 						 tu->stp);
+#ifdef AFS_RXK5
+	}
+#endif
 	}
 	if (isec == 0)
 	    csec = rxnull_NewClientSecurityObject();

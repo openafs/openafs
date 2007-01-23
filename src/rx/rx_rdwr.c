@@ -557,7 +557,6 @@ int
 rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 	      int nbytes)
 {
-    struct rx_packet *rp;
     int requestCount;
     int nextio;
 

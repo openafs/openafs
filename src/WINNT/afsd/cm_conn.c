@@ -759,10 +759,18 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         port = htons(7000);
         serviceID = 1;
     }
+#ifdef AFS_RXK5
+need.logic.to.call.rxk5_NewClientSecurityObject.here;
+#endif
     if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
-        secIndex = 2;
+	secIndex = 2;
         if (cryptall) {
             tcp->cryptlevel = rxkad_crypt;
+#if 0
+	/* this is a myth.  See note in viced/viced.c */
+	    if (serverp->type == CM_SERVER_FILE)
+		secIndex = 3;	/* ! */
+#endif
         } else {
             tcp->cryptlevel = rxkad_clear;
         }

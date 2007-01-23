@@ -640,6 +640,11 @@ SBOZO_ListKeys(acall, an, akvno, akey, akeyinfo)
     char caller[MAXKTCNAMELEN];
     rxkad_level enc_level = rxkad_clear;
 
+    if(rx_SecurityClassOf(rx_ConnectionOf(acall)) > 2 /* not rxkad */) {
+      code = BZACCESS;
+      goto fail;
+    }
+
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) {
 	code = BZACCESS;
 	goto fail;
@@ -693,6 +698,11 @@ SBOZO_AddKey(acall, an, akey)
     char caller[MAXKTCNAMELEN];
     rxkad_level enc_level = rxkad_clear;
     int noauth;
+
+    if(rx_SecurityClassOf(rx_ConnectionOf(acall)) > 2 /* not rxkad */) {
+      code = BZACCESS;
+      goto fail;
+    }
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) {
 	code = BZACCESS;

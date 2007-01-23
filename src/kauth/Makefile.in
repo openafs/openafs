@@ -8,6 +8,12 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
              ${TOP_INCDIR}/lock.h  \
@@ -21,14 +27,13 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libsys.a \
+	${RXK5} \
 	${TOP_LIBDIR}/librxstat.a \
-	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(DBM)
 
@@ -39,20 +44,20 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libauth.krb.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/librx.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
-
-all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb \
+@ENABLE_KA_SERVER@KA_SERVER=kaserver rebuild kdb
+@ENABLE_KA_CLIENTS@KA_CLIENTS=kas kpwvalid klog klog.krb knfs kpasswd
+all: $(KA_SERVER) $(KA_CLIENTS) \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
 	depinstall
@@ -66,8 +71,8 @@ depinstall: \
 test tests: all
 	cd test; $(MAKE)
 
-kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS) 
-	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS)
+	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${TOP_LIBDIR}/libaudit.a ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
@@ -147,19 +152,22 @@ krb_tf.o: krb_tf.c ${INCLS}
 
 kas: kauth.h kautils.h admin_tools.o libkauth.a $(LIBS) kas.o kkids.o
 	${CC} ${LDFLAGS} -o kas kas.o admin_tools.o kkids.o libkauth.a \
-			${LIBS} ${XLIBS}
+		${LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klog: AFS_component_version_number.o kauth.h kautils.h libkauth.a $(LIBS) \
 	klog.o
-	${CC} ${LDFLAGS} -o klog klog.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klog klog.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klog.o: klog.c kauth.h kautils.h AFS_component_version_number.o
 
 klog.krb: kauth.h kautils.h libkauth.krb.a $(KLIBS) klog.o
-	${CC} ${LDFLAGS} -o klog.krb klog.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klog.krb klog.o libkauth.krb.a ${KLIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 knfs: kauth.h kautils.h libkauth.a $(LIBS) knfs.o
-	${CC} ${LDFLAGS} -o knfs knfs.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o knfs knfs.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 knfs.o: knfs.c AFS_component_version_number.o
 
@@ -167,22 +175,23 @@ klogin.o: klogin.c ${INCLS} AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/klogin.c -DKAUTH
 
 klogin: libkauth.a $(LIBS) klogin.o
-	${CC} ${LDFLAGS} -o klogin klogin.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klogin klogin.o libkauth.a ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 klogin.krb: libkauth.a $(KLIBS) klogin.o
-	${CC} ${LDFLAGS} -o klogin.krb klogin.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o klogin.krb klogin.o libkauth.krb.a ${KLIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kpasswd.o: kauth.h kautils.h ${INCLS} kpasswd.c AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/kpasswd.c 
 
 kpasswd: kauth.h kautils.h libkauth.a $(LIBS) kpasswd.o kkids.o
-	${CC} ${LDFLAGS} -o kpasswd kpasswd.o kkids.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kpasswd kpasswd.o kkids.o libkauth.a ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kpwvalid.o: kpwvalid.c AFS_component_version_number.o
 	${CC} ${CFLAGS} -c ${srcdir}/kpwvalid.c
 
 kpwvalid: kpwvalid.o $(LIBS)
-	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/user.c -o user.krb.o
@@ -191,19 +200,19 @@ user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/user.c
 
 kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
-	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
-	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS)
+	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS) $(LIBCOM_ERR) ${XLIBS}
 
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
-	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS)
+	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 #
 # Install targets
@@ -223,23 +232,27 @@ ${TOP_INCDIR}/afs/kauth.h: kauth.h
 ${TOP_INCDIR}/afs/kaport.h: kaport.h
 	${INSTALL} $? $@
 
+@ENABLE_KA_SERVER@INSTALL_KA_SERVER=${DESTDIR}${afssrvlibexecdir}/kaserver \
+@ENABLE_KA_SERVER@	${DESTDIR}${afssrvsbindir}/kdb \
+@ENABLE_KA_SERVER@	${DESTDIR}${afssrvsbindir}/kadb_check
+
+@ENABLE_KA_CLIENTS@INSTALL_KA_CLIENTS=${DESTDIR}${sbindir}/kas \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${sbindir}/kpwvalid \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${afssrvsbindir}/kas \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${afssrvsbindir}/kpwvalid \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${bindir}/klog@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${bindir}/klog.krb \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${afssrvbindir}/klog@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${afssrvbindir}/klog.krb \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${bindir}/knfs \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${bindir}/kpasswd@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DESTDIR}${bindir}/kpwvalid
+
 install: \
-	${DESTDIR}${afssrvlibexecdir}/kaserver \
-	${DESTDIR}${sbindir}/kas \
-	${DESTDIR}${sbindir}/kpwvalid \
-	${DESTDIR}${afssrvsbindir}/kas \
-	${DESTDIR}${afssrvsbindir}/kpwvalid \
-	${DESTDIR}${bindir}/klog \
-	${DESTDIR}${bindir}/klog.krb \
-	${DESTDIR}${afssrvbindir}/klog \
-	${DESTDIR}${afssrvbindir}/klog.krb \
-	${DESTDIR}${bindir}/knfs \
-	${DESTDIR}${bindir}/kpasswd \
-	${DESTDIR}${bindir}/kpwvalid \
+	$(INSTALL_KA_SERVER) \
+	$(INSTALL_KA_CLIENTS) \
 	${DESTDIR}${libdir}/afs/libkauth.a \
 	${DESTDIR}${libdir}/afs/libkauth.krb.a \
-	${DESTDIR}${afssrvsbindir}/kadb_check \
-	${DESTDIR}${afssrvsbindir}/kdb \
 	${DESTDIR}${includedir}/afs/kautils.h \
 	${DESTDIR}${includedir}/afs/kauth.h \
 	${DESTDIR}${includedir}/afs/kaport.h
@@ -259,14 +272,14 @@ ${DESTDIR}${afssrvsbindir}/kas: kas
 ${DESTDIR}${afssrvsbindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
 
-${DESTDIR}${bindir}/klog: klog
-	${INSTALL} -s $? $@
+${DESTDIR}${bindir}/klog@KAUTH_KLOG_SUFFIX@: klog
+	${INSTALL} -f -s $? $@
 
 ${DESTDIR}${bindir}/klog.krb: klog.krb
 	${INSTALL} -s $? $@
 
-${DESTDIR}${afssrvbindir}/klog: klog
-	${INSTALL} -s $? $@
+${DESTDIR}${afssrvbindir}/klog@KAUTH_KLOG_SUFFIX@: klog
+	${INSTALL} -f -s $? $@
 
 ${DESTDIR}${afssrvbindir}/klog.krb: klog.krb
 	${INSTALL} -s $? $@
@@ -274,8 +287,8 @@ ${DESTDIR}${afssrvbindir}/klog.krb: klog.krb
 ${DESTDIR}${bindir}/knfs: knfs
 	${INSTALL} -s $? $@
 
-${DESTDIR}${bindir}/kpasswd: kpasswd
-	${INSTALL} -s $? $@
+${DESTDIR}${bindir}/kpasswd@KAUTH_KLOG_SUFFIX@: kpasswd
+	${INSTALL} -f -s $? $@
 
 ${DESTDIR}${bindir}/kpwvalid: kpwvalid
 	${INSTALL} $? $@
@@ -301,23 +314,27 @@ ${DESTDIR}${includedir}/afs/kauth.h: kauth.h
 ${DESTDIR}${includedir}/afs/kaport.h: kaport.h
 	${INSTALL} $? $@
 
+@ENABLE_KA_SERVER@DEST_KA_SERVER=${DEST}/root.server/usr/afs/bin/kaserver \
+@ENABLE_KA_SERVER@	${DEST}/etc/kdb \
+@ENABLE_KA_SERVER@	${DEST}/etc/kadb_check
+
+@ENABLE_KA_CLIENTS@DEST_KA_CLIENTS=${DEST}/etc/kas \
+@ENABLE_KA_CLIENTS@	${DEST}/etc/kpwvalid \
+@ENABLE_KA_CLIENTS@	${DEST}/root.server/usr/afs/bin/kas \
+@ENABLE_KA_CLIENTS@	${DEST}/root.server/usr/afs/bin/kpwvalid \
+@ENABLE_KA_CLIENTS@	${DEST}/bin/klog@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DEST}/bin/klog.krb \
+@ENABLE_KA_CLIENTS@	${DEST}/root.server/usr/afs/bin/klog@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DEST}/root.server/usr/afs/bin/klog.krb \
+@ENABLE_KA_CLIENTS@	${DEST}/bin/knfs \
+@ENABLE_KA_CLIENTS@	${DEST}/bin/kpasswd@KAUTH_KLOG_SUFFIX@ \
+@ENABLE_KA_CLIENTS@	${DEST}/bin/kpwvalid
+
 dest: \
-	${DEST}/root.server/usr/afs/bin/kaserver \
-	${DEST}/etc/kas \
-	${DEST}/etc/kpwvalid \
-	${DEST}/root.server/usr/afs/bin/kas \
-	${DEST}/root.server/usr/afs/bin/kpwvalid \
-	${DEST}/bin/klog \
-	${DEST}/bin/klog.krb \
-	${DEST}/root.server/usr/afs/bin/klog \
-	${DEST}/root.server/usr/afs/bin/klog.krb \
-	${DEST}/bin/knfs \
-	${DEST}/bin/kpasswd \
-	${DEST}/bin/kpwvalid \
+	$(DEST_KA_SERVER) \
+	$(DEST_KA_CLIENTS) \
 	${DEST}/lib/afs/libkauth.a \
 	${DEST}/lib/afs/libkauth.krb.a \
-	${DEST}/etc/kdb \
-	${DEST}/etc/kadb_check \
 	${DEST}/include/afs/kautils.h \
 	${DEST}/include/afs/kauth.h \
 	${DEST}/include/afs/kaport.h
@@ -331,8 +348,8 @@ ${DEST}/etc/kas ${DEST}/root.server/usr/afs/bin/kas: kas
 ${DEST}/bin/kpwvalid ${DEST}/etc/kpwvalid ${DEST}/root.server/usr/afs/bin/kpwvalid: kpwvalid 
 	${INSTALL} $? $@
 
-${DEST}/bin/klog ${DEST}/root.server/usr/afs/bin/klog: klog 
-	${INSTALL} -s $? $@
+${DEST}/bin/klog@KAUTH_KLOG_SUFFIX@ ${DEST}/root.server/usr/afs/bin/klog@KAUTH_KLOG_SUFFIX@: klog
+	${INSTALL} -f -s $? $@
 
 ${DEST}/bin/klog.krb ${DEST}/root.server/usr/afs/bin/klog.krb: klog.krb 
 	${INSTALL} -s $? $@
@@ -340,8 +357,8 @@ ${DEST}/bin/klog.krb ${DEST}/root.server/usr/afs/bin/klog.krb: klog.krb
 ${DEST}/bin/knfs: knfs 
 	${INSTALL} -s $? $@
 
-${DEST}/bin/kpasswd: kpasswd 
-	${INSTALL} -s $? $@
+${DEST}/bin/kpasswd@KAUTH_KLOG_SUFFIX@: kpasswd 
+	${INSTALL} -f -s $? $@
 
 ${DEST}/lib/afs/libkauth.a: libkauth.a 
 	${INSTALL} $? $@

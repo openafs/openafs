@@ -182,6 +182,9 @@ struct cm_initparams {
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 #define VIOC_DISCON		_CVICEIOCTL(5)	/* set/get discon mode */
+#define VIOC_GETCAPABILITES	_CVICEIOCTL(6)	/* cache manager capabilities */
+#define VIOC_GETTOKNEW		_CVICEIOCTL(7)	/* fetch tokens (K5, ...) */
+#define VIOC_SETTOKNEW		_CVICEIOCTL(8)	/* set tokens (K5, ...) */
 
 /* OpenAFS-specific 'O' pioctl's */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */

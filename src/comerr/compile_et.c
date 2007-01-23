@@ -41,6 +41,7 @@ extern char *current_token;
 extern int table_number, current;
 char buffer[BUFSIZ];
 char *table_name = (char *)NULL;
+char *file_table_name;
 FILE *hfile, *cfile, *msfile;
 int version = 1;
 int use_msf = 0;
@@ -96,7 +97,6 @@ static const char *const language_names[] = {
 static const char *const c_src_prolog[] = {
     "#include <afs/param.h>\n",
     "#include <afs/error_table.h>\n",
-    "static const char * const text[] = {\n",
     0,
 };
 
@@ -109,7 +109,6 @@ static const char *const krc_src_prolog[] = {
     "#endif\n\n",
     "#include <afs/param.h>\n",
     "#include <afs/error_table.h>\n",
-    "static const char * const text[] = {\n",
     0,
 };
 
@@ -152,7 +151,6 @@ main(int argc, char **argv)
     int got_language = 0;
     char *got_include = 0;
     char *got_prefix = ".";
-    char lcname[6];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -365,51 +363,91 @@ main(int argc, char **argv)
 
     /* parse it */
     yyparse();
-    fclose(yyin);		/* bye bye input file */
 
-    if (!use_msf) {
+    put_final_postlog();
+
+    fclose(yyin);		/* bye bye input file */
+    fclose(hfile);		/* bye bye include file */
+    if (use_msf)
+	fclose(msfile);
+    return 0;
+}
+
+char *cot_suffix(int n)
+{
+    static char buf[16];
+    if (!n) return "";
+    sprintf(buf, "%d", n);
+    return buf;
+}
+
+put_ecs_postlog()
+{
+    char lcname[6];
+
+    if (!use_msf) {	/* { */
+	char *cot = cot_suffix(count_of_tables);
 	fputs("    0\n};\n\n", cfile);
 	fprintf(cfile,
-		"static const struct error_table et = { text, %ldL, %d };\n\n",
-		(long int)table_number, current);
-	fputs("static struct et_list etlink = { 0, &et};\n\n", cfile);
-	fprintf(cfile, "void initialize_%s_error_table(void) {\n",
-		table_name);
-	fputs("    add_to_error_table(&etlink);\n", cfile);
-	fputs("}\n", cfile);
-	fclose(cfile);
+		"static const struct error_table et%s = { text%s, %ldL, %d };\n\n",
+		cot, cot,
+		(long int)table_number,
+		current);
+	fprintf(cfile,
+		"static struct et_list etlink%s = { 0, &et%s};\n\n",
+		cot, cot);
 
 
-	fprintf(hfile, "extern void initialize_%s_error_table(void);\n",
-		table_name);
+	if (!count_of_tables)
+	    fprintf(hfile, "extern void initialize_%s_error_table(void);\n",
+		    table_name);
     } else {
-	fprintf(hfile, "#define initialize_%s_error_table(void)\n",
-		table_name);
+	if (!count_of_tables)
+	    fprintf(hfile, "#define initialize_%s_error_table(void)\n",
+		    table_name);
     }
 
     fprintf(hfile, "#define ERROR_TABLE_BASE_%s (%ldL)\n", table_name,
 	    (long int)table_number);
     /* compatibility... */
     fprintf(hfile, "\n/* for compatibility with older versions... */\n");
-    fprintf(hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
-	    table_name, table_name);
+    if (!count_of_tables)
+	fprintf(hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
+		table_name, table_name);
     fprintf(hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", table_name,
 	    table_name);
-    fprintf(hfile, "\n/* for compatibility with other users... */\n");
     lcstring(lcname, table_name, sizeof(lcname));
-    fprintf(hfile, "#define ERROR_TABLE_BASE_%s (%ldL)\n", lcname,
-	    (long int)table_number);
-    fprintf(hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
-	    lcname, table_name);
-    fprintf(hfile,
-	    "#define initialize_%s_error_table initialize_%s_error_table\n",
-	    lcname, table_name);
-    fprintf(hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", lcname,
-	    lcname);
-    fclose(hfile);		/* bye bye include file */
-    if (use_msf)
-	fclose(msfile);
-    return 0;
+    if (strcmp(table_name, lcname)) {
+	fprintf(hfile, "\n/* for compatibility with other users... */\n");
+	fprintf(hfile, "#define ERROR_TABLE_BASE_%s (%ldL)\n", lcname,
+		(long int)table_number);
+	if (!count_of_tables) {
+	    fprintf(hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
+		    lcname, table_name);
+	    fprintf(hfile,
+		    "#define initialize_%s_error_table initialize_%s_error_table\n",
+		    lcname, table_name);
+	}
+	fprintf(hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", lcname,
+		lcname);
+    }
+    if (!count_of_tables)
+	file_table_name = table_name;
+    ++count_of_tables;
+}
+
+put_final_postlog()
+{
+    int i;
+
+    if (use_msf) return;
+    fprintf(cfile, "void initialize_%s_error_table(void) {\n",
+	    file_table_name);
+    for (i = 0; i < count_of_tables; ++i) {
+	fprintf(cfile, "    add_to_error_table(&etlink%s);\n", cot_suffix(i));
+    }
+    fputs("}\n", cfile);
+    fclose(cfile);
 }
 
 void

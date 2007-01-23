@@ -46,22 +46,14 @@ RCSID
 #include "ptclient.h"
 #include "pterror.h"
 #include <afs/afsutil.h>
+#ifdef AFS_RXK5	
+#include <afs/rxk5_utilafs.h>
+#endif
 
 #undef FOREIGN
 
 char *whoami;
 int force = 0;
-
-#if defined(SUPERGROUPS)
-
-/*
- *  Add new pts commands:
- *
- *      Interactive - allow the pts command to be run interactively.
- *      Quit        - quit interactive mode.
- *      Source      - allow input to come from a file(s).
- *      Sleep       - pause for a specified number of seconds.
- */
 
 static int finished;
 static FILE *source;
@@ -71,6 +63,13 @@ struct sourcestack {
     struct sourcestack *s_next;
     FILE *s_file;
 } *shead;
+
+struct myrock {
+    int sec;
+    int authtype;
+    char const*confdir;
+    char cell[MAXCELLCHARS];
+};
 
 int
 Interactive(struct cmd_syndesc *as, char *arock)
@@ -140,54 +139,76 @@ popsource()
     return 1;
 }
 
-#endif /* SUPERGROUPS */
-
-int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-
 int
 GetGlobals(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     char *cell;
-    afs_int32 sec = 1;
+    afs_int32 sec;
+    afs_int32 authtype;
+    struct myrock *rock = (struct myrock *) arock;
+    int changed;
+    char const *confdir;
 
     whoami = as->a0name;
 
     if (!strcmp(as->name, "help"))
 	return 0;
-    if (as->parms[16].items)
+    cell = 0;
+    changed = !rock->confdir;
+    if (*rock->cell)
+	cell = rock->cell;
+    if (as->parms[16].items) {	changed = 1,
 	cell = as->parms[16].items->data;
-    else
-	cell = 0;
-    if (as->parms[17].items)
+    }
+    sec = rock->sec;
+    authtype = rock->authtype;
+    if (as->parms[17].items)	changed = 1,	/* -noauth */
 	sec = 0;
+    if (as->parms[20].items)	changed = 1,	/* -localauth */
+	sec = 2;
+    if (as->parms[21].items)	changed = 1,	/* -auth */
+	sec = 1;
+	
+#ifdef AFS_RXK5	
+    if (as->parms[22].items)	changed = 1,	/* -k5 */
+	authtype = FORCE_RXK5;
+    if (as->parms[23].items)	changed = 1,	/* -k4 */
+	authtype = FORCE_RXKAD;
+#endif	
 
-    if (as->parms[18].items) {	/* testing? */
-	code = pr_Initialize(sec, AFSDIR_SERVER_ETC_DIRPATH, cell);
-    } else {
-	code = pr_Initialize(sec, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+    if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
+	changed = 1,
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+    } else
+	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+
+    if (!changed)
+	code = 0;
+    else {
+	CleanUp(as, arock);
+	code = pr_Initialize(sec | authtype, confdir, cell);
     }
     if (code) {
 	com_err(whoami, code, "while initializing");
 	return code;
     }
+    rock->sec = sec;
+    rock->authtype = authtype;
+    rock->confdir = confdir;
+    if (cell && cell != rock->cell)
+	strncpy(rock->cell, cell, MAXCELLCHARS-1);
+
+    force = 0;
     if (as->parms[19].items)
 	force = 1;
+		
     return code;
 }
 
 int
 CleanUp(struct cmd_syndesc *as, char *arock)
 {
-#if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
 	return 0;
     if (pruclient) {
@@ -195,13 +216,6 @@ CleanUp(struct cmd_syndesc *as, char *arock)
 	pr_End();
 	rx_Finalize();
     }
-#else
-    if (!strcmp(as->name, "help"))
-	return 0;
-    /* Need to shutdown the ubik_client & other connections */
-    pr_End();
-    rx_Finalize();
-#endif /* SUPERGROUPS */
 
     return 0;
 }
@@ -236,12 +250,10 @@ CreateGroup(struct cmd_syndesc *as, char *arock)
 			id);
 		return code;
 	    }
-#if defined(SUPERGROUPS)
 	    if (id == 0) {
 		printf("0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
-#endif
 	    idi = idi->next;
 	} else
 	    id = 0;
@@ -736,7 +748,7 @@ ListEntries(struct cmd_syndesc *as, char *arock)
 	    pr_ListEntries(flag, startindex, &nentries, &entriesp,
 			   &nextstartindex);
 	if (code) {
-	    com_err(whoami, code, "; unable to list entries\n");
+	    com_err(whoami, code, "; unable to list entries");
 	    if (entriesp)
 		free(entriesp);
 	    break;
@@ -1004,6 +1016,16 @@ add_std_args(register struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-test", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, test_help);
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"Continue oper despite reasonable errors");
+    cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, 
+    		"use local authentication");
+    cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
+	"use user credentials for security (default)");
+#ifdef AFS_RXK5
+    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, 
+    		"use rxk5 security");
+    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, 
+    		"use rxkad security");
+#endif	
 }
 
 /*
@@ -1022,16 +1044,15 @@ main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-#if defined(SUPERGROUPS)
     char line[2048];
     char *cp, *lastp;
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
-#endif
 #ifdef WIN32
     WSADATA WSAjunk;
 #endif
+    struct myrock myrock[1];
 
 #ifdef WIN32
     WSAStartup(0x0101, &WSAjunk);
@@ -1051,6 +1072,9 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    memset(myrock, 0, sizeof *myrock);
+    myrock->sec = 1;
 
     ts = cmd_CreateSyntax("creategroup", CreateGroup, 0,
 			  "create a new group");
@@ -1137,8 +1161,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-#if defined(SUPERGROUPS)
-
     ts = cmd_CreateSyntax("interactive", Interactive, 0,
 			  "enter interactive mode");
     add_std_args(ts);
@@ -1155,11 +1177,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-#endif /* SUPERGROUPS */
+    cmd_SetBeforeProc(GetGlobals, (char *) myrock);
 
-    cmd_SetBeforeProc(GetGlobals, 0);
-
-#if defined(SUPERGROUPS)
     finished = 1;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
@@ -1199,11 +1218,4 @@ main(int argc, char **argv)
     }
     CleanUp(NULL, NULL);
     exit(0);
-
-#else /* SUPERGROUPS */
-
-    cmd_SetAfterProc(CleanUp, 0);
-    code = cmd_Dispatch(argc, argv);
-    exit(code != 0);
-#endif /* SUPERGROUPS */
 }

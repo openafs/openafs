@@ -8,11 +8,14 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-LIBS1=${TOP_LIBDIR}/libubik.a        ${TOP_LIBDIR}/libprot.a
-LIBS2=${TOP_LIBDIR}/librxkad.a       ${TOP_LIBDIR}/libaudit.a \
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a 
+
+LIBS1=${TOP_LIBDIR}/libprot.a
+LIBS2=${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/librxkad.a       ${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/librx.a          ${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a
 
 LIBS=${TOP_LIBDIR}/libkauth.a ${LIBS1} ${TOP_LIBDIR}/libauth.a ${LIBS2}
@@ -39,11 +42,11 @@ siad_krb.o: siad.c
 
 libafssiad.so: siad.o
 	$(LD) $(LDFLAGS) -shared -no_archive -o libafssiad.so \
-		 siad.o ${LIBS} -none -lc
+		 siad.o ${LIBS} $(LIBCOM_ERR) -none -lc
 
 libafssiad.krb.so: siad_krb.o
 	$(LD) $(LDFLAGS) -shared -no_archive -o libafssiad.krb.so \
-		 siad_krb.o ${KLIBS} ${LIBS} -none -lc
+		 siad_krb.o ${KLIBS} $(LIBCOM_ERR) -none -lc
 
 test-reauth: test-reauth.o
 	$(CC) $(CFLAGS) -o test-reauth test-reauth.o -lc

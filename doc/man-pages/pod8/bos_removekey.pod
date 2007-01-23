@@ -32,6 +32,14 @@ lifetime has passed since the current key was defined using the B<kas
 setpassword> and B<bos addkey> commands. This ensures that no clients
 still possess tickets encrypted with the obsolete key.
 
+KeyFile entries can only be used with rxkad, des, kerberos 4, and fcrypt,
+so provide less security overall.
+You should only use this if the lesser security is acceptable and you
+have older clients that only work with rxkad.
+Otherwise, create and use a keytab with stronger encryption types,
+for use with rxk5.
+See L<afs.keytab(5)> for more information.
+
 =head1 OPTIONS
 
 =over 4
@@ -95,6 +103,7 @@ included.
 
 =head1 SEE ALSO
 
+L<afs.keytab(5)>,
 L<KeyFile(5)>,
 L<UserList(5)>,
 L<bos(8)>,

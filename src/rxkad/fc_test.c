@@ -50,18 +50,18 @@ typedef afs_uint32 u_int32;
 
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
-const unsigned char key1[8] =
+const struct ktc_encryptionKey key1[1] =
     { 0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87 };
-const char ciph1[] = {
+const unsigned char ciph1[] = {
     0x00, 0xf0, 0xe, 0x11, 0x75, 0xe6, 0x23, 0x82, 0xee, 0xac, 0x98, 0x62,
     0x44, 0x51, 0xe4, 0x84, 0xc3, 0x59, 0xd8, 0xaa, 0x64, 0x60, 0xae, 0xf7,
     0xd2, 0xd9, 0x13, 0x79, 0x72, 0xa3, 0x45, 0x03, 0x23, 0xb5, 0x62, 0xd7,
     0xc, 0xf5, 0x27, 0xd1, 0xf8, 0x91, 0x3c, 0xac, 0x44, 0x22, 0x92, 0xef
 };
 
-const unsigned char key2[8] =
+const struct ktc_encryptionKey key2[1] =
     { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
-const char ciph2[] = {
+const unsigned char ciph2[] = {
     0xca, 0x90, 0xf5, 0x9d, 0xcb, 0xd4, 0xd2, 0x3c, 0x01, 0x88, 0x7f, 0x3e,
     0x31, 0x6e, 0x62, 0x9d, 0xd8, 0xe0, 0x57, 0xa3, 0x06, 0x3a, 0x42, 0x58,
     0x2a, 0x28, 0xfe, 0x72, 0x52, 0x2f, 0xdd, 0xe0, 0x19, 0x89, 0x09, 0x1c,
@@ -79,10 +79,10 @@ const char ciph2[] = {
 int
 main(void)
 {
-    int32 sched[ROUNDS];
+    fc_KeySchedule sched[1];
     char ciph[100], clear[100];
     u_int32 data[2];
-    u_int32 iv[2];
+    fc_InitializationVector iv[1];
     struct rx_connection conn;
     struct rx_securityClass obj;
     struct rxkad_cprivate cpriv;
@@ -159,34 +159,37 @@ main(void)
 	struct timeval start, stop;
 	int i;
 
+#define INT_MILLION 1000000
+#define FLOAT_MILLION 1e6
+#define COUNT 1
 	fc_keysched(key1, sched);
 	gettimeofday(&start, 0);
-	for (i = 0; i < 1000000; i++)
+	for (i = 0; i < INT_MILLION*COUNT; i++)
 	    fc_keysched(key1, sched);
 	gettimeofday(&stop, 0);
 	printf("fc_keysched    = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
-		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
+		(stop.tv_usec - start.tv_usec) / FLOAT_MILLION) / COUNT);
 
 	fc_ecb_encrypt(data, data, sched, ENCRYPT);
 	gettimeofday(&start, 0);
-	for (i = 0; i < 1000000; i++)
+	for (i = 0; i < INT_MILLION*COUNT; i++)
 	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
 	gettimeofday(&stop, 0);
 	printf("fc_ecb_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
-		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
+		(stop.tv_usec - start.tv_usec) / FLOAT_MILLION) / COUNT);
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 		       ENCRYPT);
 	gettimeofday(&start, 0);
-	for (i = 0; i < 100000; i++)
+	for (i = 0; i < (INT_MILLION*COUNT)/10; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 			   ENCRYPT);
 	gettimeofday(&stop, 0);
 	printf("fc_cbc_encrypt = %2.2f us\n",
-	       (stop.tv_sec - start.tv_sec +
-		(stop.tv_usec - start.tv_usec) / 1e6) * 10);
+	       ((stop.tv_sec - start.tv_sec +
+		(stop.tv_usec - start.tv_usec) / FLOAT_MILLION) * 10)/COUNT);
 
     }
 

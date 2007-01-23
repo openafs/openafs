@@ -8,6 +8,9 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=$(TOP_LIBDIR)/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+
 CC = ${MT_CC}
 CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
 
@@ -23,6 +26,7 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libptsadmin.a \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
+	${RXK5T} \
 	$(TOP_LIBDIR)/libcmd.a \
 	$(TOP_LIBDIR)/libafsutil.a
 
@@ -36,7 +40,8 @@ AFSCPOBJS =\
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
-	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
+	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} \
+	$(XLIBS) ${KRB5LIBS} $(LIBCOM_ERR) ${RXK5T}
 
 #######################################################################
 all test tests: afscp

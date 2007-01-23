@@ -51,18 +51,6 @@ static char *lineProgress;
 
 #define WHITESPACE " \t\n"
 
-#ifndef AFS_PTHREAD_ENV
-int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-#endif /* !AFS_PTHREAD_ENV */
-
 int
 GetToken(format, l)
      char *format;
@@ -202,6 +190,7 @@ main(argc, argv)
     whoami = argv[0];
 
     initialize_PT_error_table();
+    initialize_rx_error_table();
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     cell = 0;

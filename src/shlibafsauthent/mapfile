@@ -13,6 +13,7 @@
 	afsconf_CheckAuth;
 	afsconf_ClientAuth;
 	afsconf_ClientAuthSecure;
+	afsconf_ClientAuthEx;
 	afsconf_Close;
 	afsconf_DeleteKey;
 	afsconf_DeleteUser;
@@ -84,6 +85,21 @@
 	setpag;
 	afs_snprintf;
 	LogThreadNum;
+	initialize_RXK_error_table;
+	initialize_rx_error_table;
+	pr_SIdToName;
+	initialize_RXK5_error_table;
+	initialize_ACFG_error_table;
+	initialize_KTC_error_table;
+	initialize_KA_error_table;
+	initialize_PT_error_table;
+	afs_realm_of_cell;
+	xdr_afs_token;
+	xdr_rxk5_principal;
+	free_afs_token;
+	make_afs_token_rxk5;
+	encode_afs_token;
+	parse_afs_token;
 
     local:
 	*;

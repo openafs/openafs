@@ -55,7 +55,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
 		    const fc_InitializationVector * ivec, const int inlen,
 		    struct rx_packet *packet)
 {
-    afs_uint32 xor[2];
+    fc_InitializationVector xor[1];
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;	/* s & c have type at same offset */
     char *data;
@@ -66,7 +66,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
     ADD_RXKAD_STATS(bytesDecrypted[rxkad_TypeIndex(tp->type)],len);
-    memcpy((void *)xor, (void *)ivec, sizeof(xor));
+    memcpy(xor, ivec, sizeof(xor));
     for (i = 0; len; i++) {
 	data = rx_data(packet, i, tlen);
 	if (!data || !tlen)
@@ -89,7 +89,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
 		    const fc_InitializationVector * ivec, const int inlen,
 		    struct rx_packet * packet)
 {
-    afs_uint32 xor[2];
+    fc_InitializationVector xor[1];
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;	/* s & c have type at same offset */
     char *data;
@@ -107,7 +107,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
      */
     rx_PutInt32(packet, 1 * sizeof(afs_int32), 0);
 
-    memcpy((void *)xor, (void *)ivec, sizeof(xor));
+    memcpy(xor, ivec, sizeof(xor));
     for (i = 0; len; i++) {
 	data = rx_data(packet, i, tlen);
 	if (!data || !tlen)

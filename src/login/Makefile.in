@@ -20,19 +20,21 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+
 AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+	   ${TOP_LIBDIR}/util.a
 
 KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.krb.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+	   ${TOP_LIBDIR}/util.a
 
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a
@@ -43,14 +45,14 @@ all: login login.krb
 
 login:	${OBJS} ${AFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} $(LIBCOM_ERR) ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} $(LIBCOM_ERR) ${XLIBS} ;;\
 	esac 
 
 login.krb: ${KOBJS} ${KAFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} $(LIBCOM_ERR) ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} $(LIBCOM_ERR) ${XLIBS} ;;\
 	esac 
 
 libutil.a : ${UTILOBJS}

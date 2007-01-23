@@ -20,7 +20,7 @@
 typedef unsigned char des_cblock[8];	/* crypto-block size */
 /* Key schedule */
 typedef struct des_ks_struct {
-    des_cblock _;
+    int _[8/sizeof(int)];
 } des_key_schedule[16];
 
 #define DES_KEY_SZ 	(sizeof(des_cblock))

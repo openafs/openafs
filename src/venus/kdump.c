@@ -239,7 +239,9 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #include <ufs/ufs/inode.h>
 #include <ufs/ffs/fs.h>
 #else
+#if !defined(AFS_OBSD_ENV)
 #include "sys/vfs.h"
+#endif
 #ifdef AFS_LINUX20_ENV
 #ifndef UIO_MAXIOV
 #define UIO_MAXIOV 1		/* don't care */
@@ -344,7 +346,7 @@ typedef enum _spustate {	/* FROM /etc/conf/h/_types.h */
 #ifdef	AFS_SUN5_ENV
 #include "sys/fs/ufs_inode.h"
 #else
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
 #include "ufs/inode.h"
 #endif
 #endif
@@ -427,6 +429,12 @@ typedef struct {
 } afs_kmutex_t;
 typedef void *afs_kcondvar_t;
 #endif /* AFS_LINUX20_ENV */
+
+#ifdef AFS_OBSD_ENV
+typedef struct {
+    void *opaque;
+} afs_kmutex_t;
+#endif	/* AFS_OBSD_ENV */
 
 #include <afs/exporter.h>
 /*#include "afs/osi.h"*/

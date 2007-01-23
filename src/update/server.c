@@ -48,6 +48,11 @@ RCSID
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #ifdef	AFS_AIX_ENV
@@ -143,17 +148,32 @@ AuthOkay(struct rx_call *call, char *name)
     int i;
     rxkad_level level;
     afs_int32 code;
+    afs_int32 secClass;
     int matches;
+
+    secClass = rx_SecurityClassOf(rx_ConnectionOf(call));
 
     /* Must be in 'UserList' to use */
     if (!afsconf_SuperUser(cdir, call, NULL))
 	return 0;
 
-    if (rx_SecurityClassOf(rx_ConnectionOf(call)) == 2) {
+    if (secClass == 2) {
 	code = rxkad_GetServerInfo(call->conn, &level, 0, 0, 0, 0, 0);
 	if (code)
 	    return 0;
-    } else
+    }
+#ifdef AFS_RXK5
+    else if(secClass == 5) {
+      char *rxk5_princ;
+      int expires, kvno, enctype;
+      
+      code = rxk5_GetServerInfo(call->conn, &level, 
+				&expires, &rxk5_princ, &kvno, &enctype);
+      if (code)
+	return 0;	
+    }
+#endif
+    else
 	level = 0;
 
     matches = 0;
@@ -171,14 +191,6 @@ AuthOkay(struct rx_call *call, char *name)
     return 1;			/* okay or no dirs */
 }
 
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
-    return 0;
-}
-
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
 #endif
@@ -186,7 +198,12 @@ osi_audit()
 int
 main(int argc, char *argv[])
 {
-    struct rx_securityClass *securityObjects[3];
+#ifdef AFS_RXK5
+#define MAX_SC_LEN 6
+#else
+#define MAX_SC_LEN 3
+#endif
+    struct rx_securityClass *securityObjects[MAX_SC_LEN];
     struct rx_service *service;
     afs_uint32 host = htonl(INADDR_ANY);
 
@@ -210,6 +227,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    initialize_rx_error_table();
     whoami = argv[0];
 
 #ifdef AFS_NT40_ENV
@@ -313,21 +331,33 @@ main(int argc, char *argv[])
      * then sometimes require full encryption. */
 
     /* rxnull and rxvab are no longer supported */
+    memset(securityObjects, 0, MAX_SC_LEN * sizeof *securityObjects);
     securityObjects[0] = rxnull_NewServerSecurityObject();
 
-    securityObjects[1] = (struct rx_securityClass *)0;
-
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(cdir)) {
+#endif
     securityObjects[2] =
 	rxkad_NewServerSecurityObject(rxkad_clear, cdir, afsconf_GetKey, 0);
     if (securityObjects[2] == (struct rx_securityClass *)0)
 	Quit("rxkad_NewServerSecurityObject");
+#ifdef AFS_RXK5
+    }
+    if (have_afs_rxk5_keytab(cdir->name) && !(securityObjects[5] =
+	    rxk5_NewServerSecurityObject(rxk5_auth,
+		get_afs_rxk5_keytab(cdir->name),
+		rxk5_default_get_key, 0, 0))) {
+	Quit("rxk5_NewServerSecurityObject");
+    }
+
+#endif
 
     /* Instantiate a single UPDATE service.  The rxgen-generated procedure
      * which is called to decode requests is passed in here
      * (UPDATE_ExecuteRequest). */
     service =
 	rx_NewServiceHost(host, 0, UPDATE_SERVICEID, "UPDATE", securityObjects,
-			  3, UPDATE_ExecuteRequest);
+			  MAX_SC_LEN, UPDATE_ExecuteRequest);
     if (service == (struct rx_service *)0)
 	Quit("rx_NewService");
     rx_SetMaxProcs(service, 2);

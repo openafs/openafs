@@ -45,6 +45,11 @@ RCSID
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <afs/auth.h>
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
@@ -367,7 +372,12 @@ main(argc, argv)
     char  clones[MAXHOSTSPERCELL];
 
     struct rx_service *tservice;
-    struct rx_securityClass *sca[3];
+#ifdef AFS_RXK5
+#define MAX_SC_LEN 6
+#else
+#define MAX_SC_LEN 3
+#endif
+    struct rx_securityClass *sca[MAX_SC_LEN];
 
     extern int afsconf_ServerAuth();
     extern int afsconf_CheckAuth();
@@ -403,6 +413,10 @@ main(argc, argv)
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
     initialize_BUDB_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
     initializeArgHandler();
 
     /* Initialize dirpaths */
@@ -555,17 +569,28 @@ main(argc, argv)
 	ERROR(code);
     }
 
+    memset(sca, 0, MAX_SC_LEN * sizeof *sca);
     sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
     sca[RX_SCINDEX_VAB] = 0;
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(BU_conf))
+#endif
     sca[RX_SCINDEX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_clear, BU_conf, afsconf_GetKey,
 				      NULL);
+#ifdef AFS_RXK5
+    if (have_afs_rxk5_keytab(BU_conf->name))
+    sca[RX_SCINDEX_K5] =
+	rxk5_NewServerSecurityObject(rxk5_auth,
+	    get_afs_rxk5_keytab(BU_conf->name),
+	    rxk5_default_get_key, 0, 0);
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
     tservice =
-	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, 3,
+	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, MAX_SC_LEN,
 		      BUDB_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	LogError(0, "Could not create backup database rx service\n");

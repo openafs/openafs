@@ -14,7 +14,11 @@ CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
 # Really the xdr stuff should be in its own directory.
 #
-XDROBJS_common = xdr.o xdr_array.o xdr_rx.o xdr_afsuuid.o
+XDROBJS_common = xdr.o \
+	xdr_array.o \
+	xdr_rx.o \
+	xdr_mem.o \
+	xdr_afsuuid.o
 
 XDROBJS = xdr_arrayn.o ${XDROBJS_common}
 

@@ -29,7 +29,11 @@
 #endif /* HAVE_STRING_H */
 
 #include <afs/stds.h>
+#ifdef USING_SSL
+#include "k5ssl.h"
+#else
 #include <krb5.h>
+#endif
 
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>

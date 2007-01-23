@@ -333,6 +333,7 @@ main(int argc, char **argv)
     initialize_UB_error_table();
     initialize_UBsp_error_table();
     initialize_AVds_error_table();
+    initialize_rx_error_table();
     r = xfopen(&X, input_path, O_RDONLY, 0);
     if (r) {
 	com_err(argv0, r, "opening %s", input_path);

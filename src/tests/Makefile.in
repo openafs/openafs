@@ -3,8 +3,13 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 SHELL		= /bin/sh
 
-CFLAGS		= ${DBG} ${OPTMZ} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
-LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
+CFLAGS=${DBG} ${OPTMZ} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${KRB5CFLAGS} ${XCFLAGS} ${ARCHFLAGS}
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
+LDFLAGS=${XLDFLAGS} ${ARCHFLAGS} ${KRB5LIBS}
 
 INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
 INCLIBS=-L${SRCDIR}/lib/afs -L${TOP_LIBDIR}
@@ -18,11 +23,11 @@ LIBS=\
 	${TOP_LIBDIR}/libvldb.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${XLIBS}
 
 OBJS_afsdump_scan    = afsdump_scan.o repair.o
@@ -37,19 +42,19 @@ TARGETS = libxfiles.a libdumpscan.a \
           afsdump_scan afsdump_dirlist afsdump_extract dumptool
 
 afsdump_scan: libxfiles.a libdumpscan.a $(OBJS_afsdump_scan)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_scan $(OBJS_afsdump_scan) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_scan $(OBJS_afsdump_scan) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 afsdump_xsed: libxfiles.a libdumpscan.a $(OBJS_afsdump_xsed)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_xsed $(OBJS_afsdump_xsed) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_xsed $(OBJS_afsdump_xsed) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 afsdump_dirlist: libxfiles.a libdumpscan.a afsdump_dirlist.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_dirlist afsdump_dirlist.o $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_dirlist afsdump_dirlist.o $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 afsdump_extract: libxfiles.a libdumpscan.a afsdump_extract.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_extract afsdump_extract.o $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_extract afsdump_extract.o $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 null-search: libxfiles.a libdumpscan.a null-search.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o null-search null-search.c $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o null-search null-search.c $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 dumptool: dumptool.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o dumptool dumptool.c
@@ -109,7 +114,7 @@ SYS_LIBS	= ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a $
 
 AUTH_LIBS	= ${TOP_LIBDIR}/libauth.a ${SYS_LIBS}
 
-INT_LIBS	= ${TOP_LIBDIR}/libafsint.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a 
+INT_LIBS	= ${TOP_LIBDIR}/libafsint.a ${TOP_LIBDIR}/libsys.a ${RXK5} ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a 
 
 TEST_PROGRAMS = write-ro-file hello-world read-vs-mmap read-vs-mmap2	 \
 		mmap-and-read large-dir large-dir2 large-dir3 mountpoint \
@@ -168,175 +173,175 @@ OpenAFS/OS.pm: OpenAFS/OS-$(MKAFS_OSTYPE).pm
 	$(CP) OpenAFS/OS-$(MKAFS_OSTYPE).pm OpenAFS/OS.pm
 
 fsx: fsx.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ fsx.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ fsx.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-rand: write-rand.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-rand.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-rand.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-ro-file: write-ro-file.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-ro-file.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-ro-file.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-large: write-large.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-large.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-large.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 read-vs-mmap: read-vs-mmap.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ read-vs-mmap.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ read-vs-mmap.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 read-vs-mmap2: read-vs-mmap2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ read-vs-mmap2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ read-vs-mmap2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mmap-vs-read: mmap-vs-read.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mmap-vs-read.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mmap-vs-read.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mmap-vs-read2: mmap-vs-read2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mmap-vs-read2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mmap-vs-read2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 read-write: read-write.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ read-write.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ read-write.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mmap-and-read: mmap-and-read.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mmap-and-read.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mmap-and-read.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 large-dir: large-dir.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ large-dir.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ large-dir.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 large-dir2: large-dir2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ large-dir2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ large-dir2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 large-dir3: large-dir3.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ large-dir3.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ large-dir3.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 fchmod: fchmod.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ fchmod.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ fchmod.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 truncate: truncate.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ truncate.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ truncate.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 make-page: make-page.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ make-page.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ make-page.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 still-there-p: still-there-p.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ still-there-p.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ still-there-p.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 intr-read: intr-read.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ intr-read.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ intr-read.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 blocks-new-file: blocks-new-file.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ blocks-new-file.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ blocks-new-file.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 asu: asu.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ asu.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ asu.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 test-setgroups: test-setgroups.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ test-setgroups.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ test-setgroups.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 test-setpag: test-setpag.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ test-setpag.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ test-setpag.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 hardlink1: hardlink1.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ hardlink1.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ hardlink1.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 hardlink2: hardlink2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ hardlink2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ hardlink2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 hardlink4: hardlink4.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ hardlink4.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ hardlink4.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mkdir2: mkdir2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mkdir2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mkdir2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mkdir3: mkdir3.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mkdir3.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mkdir3.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 create-files: create-files.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ create-files.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ create-files.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 create-symlinks: create-symlinks.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ create-symlinks.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ create-symlinks.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 create-dirs: create-dirs.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ create-dirs.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ create-dirs.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 create-remove: create-remove.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ create-remove.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ create-remove.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 dup2-and-unlog: dup2-and-unlog.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ dup2-and-unlog.o  $(EXTRA_OBJS) $(AUTH_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ dup2-and-unlog.o  $(EXTRA_OBJS) $(AUTH_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 readdir-vs-lstat: readdir-vs-lstat.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ readdir-vs-lstat.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ readdir-vs-lstat.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 symlink: symlink.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ symlink.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ symlink.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 echo-n: echo-n.o $(EXTRA_OBJS)
 	$(CC) $(LDFLAGS) -o $@ echo-n.o $(EXTRA_OBJS)
 
 test-parallel1: test-parallel1.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ test-parallel1.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ test-parallel1.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 test-parallel2: test-parallel2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ test-parallel2.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ test-parallel2.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 create-stat: create-stat.o fs_lib.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ create-stat.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ create-stat.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 kill-softly: kill-softly.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ kill-softly.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ kill-softly.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 kill-softer: kill-softer.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ kill-softer.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ kill-softer.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 rm-rf: rm-rf.o fs_lib.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ rm-rf.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ rm-rf.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 exit-wo-close: exit-wo-close.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ exit-wo-close.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ exit-wo-close.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 strange-characters-c: strange-characters-c.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ strange-characters-c.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ strange-characters-c.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 pine: pine.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ pine.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ pine.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 append-over-page: append-over-page.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ append-over-page.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ append-over-page.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-ucc: write-ucc.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-ucc.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-ucc.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 utime-dir: utime-dir.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ utime-dir.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ utime-dir.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 utime-file: utime-file.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ utime-file.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ utime-file.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mmap-shared-write: mmap-shared-write.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mmap-shared-write.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mmap-shared-write.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 rename5: rename5.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ rename5.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ rename5.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 rename6: rename6.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ rename6.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ rename6.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write3: write3.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write3.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write3.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 rename-under-feet: rename-under-feet.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ rename-under-feet.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ rename-under-feet.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-closed: write-closed.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-closed.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-closed.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 write-closed2: write-closed2.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ write-closed2.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ write-closed2.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 truncate-files: truncate-files.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ truncate-files.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ truncate-files.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 mmap-cat: mmap-cat.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ mmap-cat.o $(EXTRA_OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ mmap-cat.o $(EXTRA_OBJS) $(LIBS) $(KRB5LIBS) $(LIBCOM_ERR)
 
 run-tests: run-tests.in
 	(cd ../..; CONFIG_FILES=src/tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_OBJDIR@/config.status)
@@ -346,7 +351,8 @@ run-tests: run-tests.in
 #	$(CC) -c $(CPPFLAGS) $(DEFS) -I$(srcdir) -I. $(REALCFLAGS) $<
 
 afscp: afscp.o afscp_callback.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ afscp.o afscp_callback.o $(EXTRA_OBJS) $(INT_LIBS) ${XLIBS}
+	$(CC) $(LDFLAGS) -o $@ afscp.o afscp_callback.o $(EXTRA_OBJS) \
+	$(AUTH_LIBS) $(INT_LIBS) ${XLIBS} ${KRB5LIBS} $(LIBCOM_ERR)
 
 hello-world:   hello-world.in
 	sed -e "s!%CC%!$(CC)!" $(srcdir)/hello-world.in > $@

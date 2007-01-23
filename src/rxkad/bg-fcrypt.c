@@ -42,19 +42,29 @@ RCSID
 
 #define DEBUG 0
 #ifdef KERNEL
-#ifndef UKERNEL
 #include "afs/stds.h"
+#ifndef UKERNEL
 #include "h/types.h"
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
+#include "h/systm.h"
+#endif
+#if defined(AFS_LINUX20_ENV)
+#include "h/socket.h"
+#endif
+#if !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
 #endif
 #else /* UKERNEL */
 #include "afs/sysincludes.h"
-#include "afs/stds.h"
 #endif /* UKERNEL */
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
+#else
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif
+#include <rx/rx.h>
+
 
 #include "afs/longc_procs.h"
 
@@ -70,8 +80,8 @@ RCSID
 #include <rx/rx.h>
 #endif /* KERNEL */
 
-#include "fcrypt.h"
 #include "rxkad.h"
+#include "fcrypt.h"
 #include "fcrypt.h"
 #include "private_data.h"
 #include <des/stats.h>
@@ -97,7 +107,12 @@ RCSID
  * calls to memcpy in this code anyway.
  */
 #if defined(KERNEL) && !defined(__GNUC__)
-#define memcpy(to, from, n) bcopy((from), (to), (n))
+# ifndef AFS_AIX42_ENV
+#  ifdef memcpy
+#   undef memcpy
+#  endif
+#  define memcpy(to, from, n) bcopy((from), (to), (n))
+# endif
 #endif
 
 /* Rotate 32 bit word left */
@@ -192,7 +207,7 @@ static const afs_uint32 sbox0[256] = {
 };
 
 #undef Z
-#define Z(x) NTOH((x << 27) | (x >> 5))
+#define Z(x) NTOH(((x&31u) << 27) | (x >> 5))
 static const afs_uint32 sbox1[256] = {
     Z(0x77), Z(0x14), Z(0xa6), Z(0xfe), Z(0xb2), Z(0x5e), Z(0x8c), Z(0x3e),
     Z(0x67), Z(0x6c), Z(0xa1),
@@ -370,7 +385,7 @@ static const afs_uint32 sbox3[256] = {
 
 static inline void
 fc_ecb_enc(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
-	   const afs_int32 sched[MAXROUNDS])
+	   const afs_uint32 sched[MAXROUNDS])
 {
 #if !defined(UNROLL_LOOPS)
     {
@@ -407,7 +422,7 @@ fc_ecb_enc(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
 
 static inline void
 fc_ecb_dec(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
-	   const afs_int32 sched[MAXROUNDS])
+	   const afs_uint32 sched[MAXROUNDS])
 {
     sched = &sched[MAXROUNDS - 1];
 
@@ -446,7 +461,7 @@ fc_ecb_dec(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
 
 static inline void
 fc_cbc_enc(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
-	   const afs_int32 sched[MAXROUNDS], afs_uint32 * iv)
+	   const afs_uint32 sched[MAXROUNDS], afs_uint32 * iv)
 {
     afs_int32 xor0 = iv[0], xor1 = iv[1];
 
@@ -470,7 +485,7 @@ fc_cbc_enc(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
 
 static inline void
 fc_cbc_dec(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
-	   const afs_int32 sched[MAXROUNDS], afs_uint32 * iv)
+	   const afs_uint32 sched[MAXROUNDS], afs_uint32 * iv)
 {
     afs_int32 xor0 = iv[0], xor1 = iv[1];
 
@@ -500,25 +515,26 @@ fc_cbc_dec(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
 }
 
 afs_int32
-fc_ecb_encrypt(afs_uint32 * in, afs_uint32 * out, fc_KeySchedule sched,
+fc_ecb_encrypt(const void * in, void * out, const fc_KeySchedule * sched,
 	       int encrypt)
 {
     INC_RXKAD_STATS(fc_encrypts[encrypt]);
     if (encrypt)
-	fc_ecb_enc(in[0], in[1], out, sched);
+	fc_ecb_enc(0[(afs_uint32 *)in], 1[(afs_uint32 *)in], out, sched->d);
     else
-	fc_ecb_dec(in[0], in[1], out, sched);
+	fc_ecb_dec(0[(afs_uint32 *)in], 1[(afs_uint32 *)in], out, sched->d);
     return 0;
 }
 
 afs_int32
-fc_cbc_encrypt(afs_uint32 * in, afs_uint32 * out, afs_int32 length,
-	       fc_KeySchedule sched, afs_uint32 * iv, int encrypt)
+fc_cbc_encrypt(const void * in, void * out, afs_int32 length,
+	       const fc_KeySchedule * sched, fc_InitializationVector * iv,
+	       int encrypt)
 {
     if (encrypt)
-	fc_cbc_enc(in, out, length, sched, iv);
+	fc_cbc_enc((const afs_uint32 *)in, (afs_uint32 *)out, length, sched->d, iv->d);
     else
-	fc_cbc_dec(in, out, length, sched, iv);
+	fc_cbc_dec((const afs_uint32 *)in, (afs_uint32 *)out, length, sched->d, iv->d);
     return 0;
 }
 
@@ -545,13 +561,14 @@ fc_cbc_encrypt(afs_uint32 * in, afs_uint32 * out, afs_int32 length,
  * from different implementations. Keep them in the same module!
  */
 int
-fc_keysched(void *key_, fc_KeySchedule sched)
+fc_keysched(const struct ktc_encryptionKey *key_, fc_KeySchedule * sched_)
 {
-    const unsigned char *key = key_;
+    const unsigned char *key = key_->data;
+    afs_uint32 *sched = sched_->d;
 
     /* Do we have 56 bit longs or even longer longs? */
-#if ((1ul << 31) << 1) && defined(ULONG_MAX) && ((ULONG_MAX >> 55) != 0) && ((1ul << 55) != 0)
-    unsigned long k;		/* k holds all 56 non parity bits */
+#if 0 || defined(AFS_64BIT_ENV)
+    afs_uint64 k;		/* k holds all 56 non parity bits */
 
     /* Compress out parity bits */
     k = (*key++) >> 1;
@@ -674,10 +691,10 @@ fc_keysched(void *key_, fc_KeySchedule sched)
  */
 afs_int32
 rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
-		    const fc_KeySchedule * sched, const afs_uint32 * iv,
+		    const fc_KeySchedule * sched, const fc_InitializationVector * iv,
 		    int len, struct rx_packet * packet)
 {
-    afs_uint32 ivec[2];
+    fc_InitializationVector ivec[1];
     struct iovec *frag;
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;	/* s & c have type at same offset */
@@ -702,7 +719,7 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 	    return RXKADDATALEN;	/* Length mismatch */
 	if (len < iov_len)
 	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_enc(iov_bas, iov_bas, iov_len, sched, ivec);
+	fc_cbc_enc(iov_bas, iov_bas, iov_len, sched->d, ivec->d);
 	len -= iov_len;
     }
     return 0;
@@ -710,10 +727,10 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 
 afs_int32
 rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
-		    const fc_KeySchedule * sched, const afs_uint32 * iv,
+		    const fc_KeySchedule * sched, const fc_InitializationVector * iv,
 		    int len, struct rx_packet * packet)
 {
-    afs_uint32 ivec[2];
+    fc_InitializationVector ivec[1];
     struct iovec *frag;
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;	/* s & c have type at same offset */
@@ -729,7 +746,7 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
 	    return RXKADDATALEN;	/* Length mismatch */
 	if (len < iov_len)
 	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_dec(iov_bas, iov_bas, iov_len, sched, ivec);
+	fc_cbc_dec(iov_bas, iov_bas, iov_len, sched->d, ivec->d);
 	len -= iov_len;
     }
     return 0;

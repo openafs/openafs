@@ -11,7 +11,9 @@ any action for any user who logs into the machine's local file system or
 issues a remote command that affects the machine's AFS server functioning,
 such as commands from the AFS command suites. Because failure to check
 authorization exposes the machine's AFS server functionality to attack,
-there are normally only two circumstances in which the file is present:
+this is almost never desirable.
+In older releases of AFS, there were two
+circumstances in which this file might be present:
 
 =over 4
 
@@ -19,11 +21,17 @@ there are normally only two circumstances in which the file is present:
 
 During installation of the machine, as instructed in the I<IBM AFS Quick
 Beginnings>.
+There is an alternate way to install a cell which uses pt_util(8)
+to create the initial protection database, which does not require
+the use of noauth mode.
 
 =item *
 
 During correction of a server encryption key emergency, as discussed in
 the I<IBM AFS Administration Guide>.
+That procedure is obselete; see afs.keytab(5) for better information.
+If you have root or any other administrative access to the server, including
+physical access, you do not need this procedure.
 
 =back
 

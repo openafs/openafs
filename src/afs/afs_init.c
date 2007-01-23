@@ -16,6 +16,15 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#ifdef USING_SSL
+#include <k5ssl.h>
+#endif
+#include <afs_capabilities.h>
+void rxk5_OnetimeInit();
+#endif
+
 RCSID
     ("$Header$");
 
@@ -480,6 +489,13 @@ afs_ResourceInit(int preallocs)
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
+    
+#ifdef AFS_RXK5
+    /* initialize Rxk5 rwlocks */
+    rxk5_OnetimeInit();
+    /* capabilities string table */
+    afs_InitCapabilities();
+#endif
 
     afs_CellInit();
     afs_InitCBQueue(1);		/* initialize callback queues */

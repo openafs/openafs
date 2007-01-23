@@ -67,7 +67,7 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	        -bE:afssetpag.exp;; \
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
+	        -o ${LIBAFSSETPAG} ${SHLIBOBJS} -lc;; \
 	*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac

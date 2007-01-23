@@ -1371,9 +1371,11 @@ static int check_writable(unsigned long address)
 #endif
     if (pmd_none(*pmd))
 	return 0;
+#ifndef CONFIG_UML
     if (pmd_large(*pmd))
 	pte = (pte_t *)pmd;
     else
+#endif
 	pte = pte_offset_kernel(pmd, address);
     if (pte_none(*pte) || !pte_present(*pte) || !pte_write(*pte))
 	return 0;

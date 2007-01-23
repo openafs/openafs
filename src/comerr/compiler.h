@@ -8,6 +8,8 @@ enum lang {
     lang_CPP			/* C++ */
 };
 
+int count_of_tables;		/* count of tables */
+char *cot_suffix();		/* convert to table suffix */
 int debug;			/* dump debugging info? */
 char *filename;			/* error table source */
 enum lang language;

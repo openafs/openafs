@@ -11,7 +11,7 @@ ac_cv_solaris_ufsvfs_has_dqrwlock=yes,
 ac_cv_solaris_ufsvfs_has_dqrwlock=no)])
 AC_MSG_RESULT($ac_cv_solaris_ufsvfs_has_dqrwlock)
 if test "$ac_cv_solaris_ufsvfs_has_dqrwlock" = "yes"; then
-  AC_DEFINE(HAVE_VFS_DQRWLOCK, 1, [define if struct ufsvfs has vfs_dqrwlock])
+  AC_DEFINE([HAVE_VFS_DQRWLOCK], 1, [define if struct ufsvfs has vfs_dqrwlock])
 fi
 ])
 

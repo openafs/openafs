@@ -1,11 +1,12 @@
-AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.5.14)
+AC_INIT(openafs,1.5.14)
+AC_CONFIG_SRCDIR(src/config/stds.h)
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
-if test -d 'doc/man-pages' ; then
+if test -e 'doc/man-pages/Makefile.in' ; then
     MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"
 else
     MAN_MAKEFILE=
@@ -49,6 +50,7 @@ src/fsint/Makefile \
 src/fsprobe/Makefile \
 src/gtx/Makefile \
 src/JAVA/libjafs/Makefile \
+src/k5ssl/Makefile \
 src/kauth/Makefile \
 src/kauth/test/Makefile \
 src/libacl/Makefile \
@@ -95,6 +97,7 @@ src/rx/simple.example/Makefile \
 src/rx/test/Makefile \
 src/rxdebug/Makefile \
 src/rxgen/Makefile \
+src/rxk5/Makefile \
 src/rxkad/Makefile \
 src/rxkad/test/Makefile \
 src/rxstat/Makefile \

@@ -8,6 +8,9 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+@ENABLE_RXK5@KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
 
 CFLAGS=${OPTIMIZE} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 CCRULE=${CC} ${CFLAGS} -c $? -o $@
@@ -18,12 +21,12 @@ AFSLIBS = \
 		${TOP_LIBDIR}/libubik.a \
 		${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
+		${RXK5} \
 		${TOP_LIBDIR}/libsys.a \
 		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libcom_err.a \
 		${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libaudit.a
 
@@ -33,12 +36,12 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/libubik.a \
 		${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
+		${RXK5} \
 		${TOP_LIBDIR}/libsys.a \
 		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libcom_err.a \
 		${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libaudit.a
 
@@ -66,13 +69,13 @@ all: $(AUTHLIBS)
 install install.noversion:
 
 clean:
-	$(RM) -f $(AUTHLIBS) $(AUTHFILES) so_locations
+	$(RM) -f ${AUTH_OBJS} aix_ktc_krb.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
+	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} ${LDFLAGS}
 
 afs_dynamic_kerbauth: ${AUTH_KRB_OBJS} ${KAFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
+	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} ${LDFLAGS}
 
 aix_auth_common.o: ${srcdir}/aix_auth_common.c
 	${CCRULE}

@@ -830,6 +830,9 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 	return 1;
     if (gid == AUTHUSERID && aid != ANONYMOUSID)
 	return 1;
+    /* check -localauth case */
+    if (gid == SYSADMINID && aid == SYSADMINID)
+	return 1;
     if ((gid == 0) || (aid == 0))
 	return 0;
 #if defined(SUPERGROUPS)

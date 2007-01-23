@@ -139,6 +139,10 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#endif
 #include <lock.h>
 #include <ubik.h>
 #include <afs/cellconfig.h>
@@ -158,9 +162,6 @@ struct afsconf_dir *prdir;
 #if defined(SUPERGROUPS)
 extern afs_int32 depthsg;
 #endif
-
-extern int afsconf_ServerAuth();
-extern int afsconf_CheckAuth();
 
 int pr_realmNameLen;
 char *pr_realmName;
@@ -217,19 +218,21 @@ main(int argc, char **argv)
     register struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
-    struct rx_securityClass *sc[3];
+
+#if defined(AFS_RXK5)
+#define MAX_SC_LEN 6
+#else
+#define MAX_SC_LEN 3
+#endif	
+    struct rx_securityClass *sc[MAX_SC_LEN];
     extern int RXSTATS_ExecuteRequest();
     extern int PR_ExecuteRequest();
-#if 0
-    struct ktc_encryptionKey tkey;
-#endif
-    int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = htonl(INADDR_ANY);
 
     const char *pr_dbaseName;
-    char *whoami = "ptserver";
+    static char whoami[] = "ptserver";
 
     int a;
     char arg[100];
@@ -248,6 +251,9 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
+#endif
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
 #endif
     osi_audit_init();
     osi_audit(PTS_StartEvent, 0, AUD_END);
@@ -457,7 +463,7 @@ main(int argc, char **argv)
 
     /* get list of servers */
     code =
-	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, &clones);
+	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, clones);
     if (code) {
 	com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
@@ -465,25 +471,14 @@ main(int argc, char **argv)
     pr_realmName = info.name;
     pr_realmNameLen = strlen(pr_realmName);
 
-#if 0
-    /* get keys */
-    code = afsconf_GetKey(prdir, 999, &tkey);
-    if (code) {
-	com_err(whoami, code,
-		"couldn't get bcrypt keys from key file, ignoring.");
-    }
+    if (!have_afs_keyfile(prdir)
+#if defined(AFS_RXK5)
+	&& !have_afs_rxk5_keytab(prdir->name)
 #endif
-    {
-	afs_int32 kvno;		/* see if there is a KeyFile here */
-	struct ktc_encryptionKey key;
-	code = afsconf_GetLatestKey(prdir, &kvno, &key);
-	kerberosKeys = (code == 0);
-	if (!kerberosKeys)
-	    printf
-		("ptserver: can't find any Kerberos keys, code = %d, ignoring\n",
-		 code);
-    }
-    if (kerberosKeys) {
+	    ) {
+	fprintf(stderr, "ptserver: can't find any Kerberos key stores\n");
+	ViceLog(0, ("ptserver: no Kerberos key store on startup."));
+    } else {
 	/* initialize ubik */
 	ubik_CRXSecurityProc = afsconf_ClientAuth;
 	ubik_CRXSecurityRock = (char *)prdir;
@@ -492,6 +487,7 @@ main(int argc, char **argv)
 	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
 	ubik_CheckRXSecurityRock = (char *)prdir;
     }
+
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry
      * being deleted in one of its CoEntries.  If a CoEntry is freed its
@@ -534,12 +530,21 @@ main(int argc, char **argv)
     pt_hook_write();
 #endif
 
+    memset(sc, 0, sizeof *sc);
     sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = 0;
-    if (kerberosKeys) {
+#if defined(AFS_RXK5)
+    if (have_afs_keyfile(prdir))
+#endif
 	sc[2] = rxkad_NewServerSecurityObject(0, prdir, afsconf_GetKey, NULL);
-    } else
-	sc[2] = sc[0];
+	
+#if defined(AFS_RXK5)
+    /* rxk5 */
+    if(have_afs_rxk5_keytab(prdir->name)) {
+	sc[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+	    get_afs_rxk5_keytab(prdir->name), 
+	    rxk5_default_get_key, 0, 0);
+    }
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
@@ -549,7 +554,7 @@ main(int argc, char **argv)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", sc, 3,
+	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", sc, MAX_SC_LEN,
 		      PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");
@@ -559,7 +564,7 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, lwps);
 
     tservice =
-	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, MAX_SC_LEN,
 		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");

@@ -69,7 +69,7 @@ int ROUNDS = 16;
 #define XPRT_FCRYPT
 
 int
-fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
+fc_keysched(const struct ktc_encryptionKey *key, fc_KeySchedule *schedule)
 {
     unsigned char *keychar = (unsigned char *)key;
     afs_uint32 kword[2];
@@ -96,14 +96,14 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
     kword[0] <<= 7;
     kword[0] += (*keychar) >> 1;
 
-    schedule[0] = kword[0];
+    schedule->d[0] = kword[0];
     for (i = 1; i < ROUNDS; i++) {
 	/* rotate right 3 */
 	temp = kword[0] & ((1 << 11) - 1);	/* get 11 lsb */
 	kword[0] =
 	    (kword[0] >> 11) | ((kword[1] & ((1 << 11) - 1)) << (32 - 11));
 	kword[1] = (kword[1] >> 11) | (temp << (56 - 32 - 11));
-	schedule[i] = kword[0];
+	schedule->d[i] = kword[0];
     }
     INC_RXKAD_STATS(fc_key_scheds);
     return 0;
@@ -111,13 +111,14 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
 afs_int32
-fc_ecb_encrypt(void * clear, void * cipher,
-	       fc_KeySchedule schedule, int encrypt)
+fc_ecb_encrypt(const void * clear, void * cipher,
+	       const fc_KeySchedule *schedule_, int encrypt)
 {
     afs_uint32 L, R;
     volatile afs_uint32 S, P;
     volatile unsigned char *Pchar = (unsigned char *)&P;
     volatile unsigned char *Schar = (unsigned char *)&S;
+    afs_int32 *schedule = schedule_->d;
     int i;
 
 #ifndef WORDS_BIGENDIAN
@@ -200,8 +201,9 @@ fc_ecb_encrypt(void * clear, void * cipher,
   afs_uint32 *xor; * 8 bytes of initialization vector *
 */
 afs_int32
-fc_cbc_encrypt(void *input, void *output, afs_int32 length,
-	       fc_KeySchedule key, afs_uint32 * xor, int encrypt)
+fc_cbc_encrypt(const void *input, void *output, afs_int32 length,
+	       const fc_KeySchedule *key, fc_InitializationVector * xor,
+	       int encrypt)
 {
     afs_uint32 i, j;
     afs_uint32 t_input[2];
@@ -219,8 +221,8 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 		*(t_in_p + j) = 0;
 
 	    /* do the xor for cbc into the temp */
-	    xor[0] ^= t_input[0];
-	    xor[1] ^= t_input[1];
+	    xor->d[0] ^= t_input[0];
+	    xor->d[1] ^= t_input[1];
 	    /* encrypt */
 	    fc_ecb_encrypt(xor, t_output, key, encrypt);
 
@@ -229,8 +231,8 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	    output=(char *)output + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
-	    xor[0] = t_input[0] ^ t_output[0];
-	    xor[1] = t_input[1] ^ t_output[1];
+	    xor->d[0] = t_input[0] ^ t_output[0];
+	    xor->d[1] = t_input[1] ^ t_output[1];
 
 
 	}
@@ -247,16 +249,16 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	    fc_ecb_encrypt(t_input, t_output, key, encrypt);
 
 	    /* do the xor for cbc into the output */
-	    t_output[0] ^= xor[0];
-	    t_output[1] ^= xor[1];
+	    t_output[0] ^= xor->d[0];
+	    t_output[1] ^= xor->d[1];
 
 	    /* copy temp output */
 	    memcpy(output, t_output, sizeof(t_output));
 	    output=((char *)output) + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
-	    xor[0] = t_input[0] ^ t_output[0];
-	    xor[1] = t_input[1] ^ t_output[1];
+	    xor->d[0] = t_input[0] ^ t_output[0];
+	    xor->d[1] = t_input[1] ^ t_output[1];
 	}
     }
     return 0;

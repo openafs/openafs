@@ -1,0 +1,127 @@
+#
+# Copyright (c) 2007
+# The Regents of the University of Michigan
+# ALL RIGHTS RESERVED
+#
+# Permission is granted to use, copy, create derivative works
+# and redistribute this software and such derivative works
+# for any purpose, so long as the name of the University of
+# Michigan is not used in any advertising or publicity
+# pertaining to the use or distribution of this software
+# without specific, written prior authorization.  If the
+# above copyright notice or any other identification of the
+# University of Michigan is included in any copy of any
+# portion of this software, then the disclaimer below must
+# also be included.
+#
+# This software is provided as is, without representation
+# from the University of Michigan as to its fitness for any
+# purpose, and without warranty by the University of
+# Michigan of any kind, either express or implied, including
+# without limitation the implied warranties of
+# merchantability and fitness for a particular purpose.  The
+# regents of the University of Michigan shall not be liable
+# for any damages, including special, indirect, incidental, or
+# consequential damages, with respect to any claim arising
+# out of or in connection with the use of the software, even
+# if it has been or is hereafter advised of the possibility of
+# such damages.
+#
+
+#
+# range for "r" values
+# actual error range is 0,200+
+#
+error_table ccER
+index 201
+ec ccERIteratorEnd, "(ipc) Iterator end"
+ec CCERBadParam, "(ipc) Invalid argument"
+ec CCERNoMem, "(ipc) Out of memory"
+ec CCERInvalidContext, "(ipc) Invalid credentials cache context"
+ec CCERInvalidCCache, "(ipc) Invalid credentials cache"
+ec CCERInvalidString, "(ipc) Invalid credentials cache string"
+ec CCERInvalidCredentials, "(ipc) Invalid credentials"
+ec CCERInvalidCCacheIterator, "(ipc) Invalid credentials cache iterator"
+ec CCERInvalidCredentialsIterator, "(ipc) Invalid credentials iterator"
+ec CCERInvalidLock, "(ipc) Invalid iterator/lock"
+ec CCERBadName, "(ipc) Invalid credentials cache name"
+ec CCERBadCredentialsVersion, "(ipc) Invalid credentials cache version"
+ec CCERBadAPIVersion, "(ipc) Invalid CCAPI version"
+ec CCERContextLocked, "(ipc) CC context is already locked"
+ec CCERContextUnlocked, "(ipc) CC context is already unlocked"
+ec CCERCCacheLocked, "(ipc) CC is already locked"
+ec CCERCCacheUnlocked, "(ipc) CC is already unlocked"
+ec CCERBadLockType, "(ipc) Invalid credentials cache lock type"
+ec CCERNeverDefault, "(ipc) CC has never been the default cache"
+ec CCERCredentialsNotFound, "(ipc) Credentials not found"
+ec CCERCCacheNotFound, "(ipc) CC not found"
+ec CCERContextNotFound, "(ipc) CC context not found"
+ec CCERServerUnavailable, "(ipc) CC server unavailable"
+ec CCERServerInsecure, "(ipc) CC server for this bootstrap is owned by another user"
+ec CCERServerCantBecomeUID, "(ipc) CC server failed to change effective uids"
+ec CCERTimeOffsetNotSet, "(ipc) CC time offset not set"
+end
+
+#
+# range for "ke" values
+#actual range 1+
+# belongs elsewhere???
+error_table mach
+index 1
+ec MACH_KERN_INVALID_ADDRESS, "(mach) Invalid address"
+ec MACH_KERN_PROTECTION_FAILURE, "Protection failure"
+ec MACH_KERN_NO_SPACE, "(mach) No room in memorY"
+ec MACH_KERN_INVALID_ARGUMENT, "(mach) Invalid argument"
+ec MACH_KERN_FAILURE, "(mach) Something failed"
+ec MACH_KERN_RESOURCE_SHORTAGE, "(mach) Resource shortage"
+ec MACH_KERN_NOT_RECEIVER, "(mach) Not receiver"
+ec MACH_KERN_NO_ACCESS, "(mach) No access"
+ec MACH_KERN_MEMORY_FAILURE, "(mach) Memory was destroyed"
+ec MACH_KERN_MEMORY_ERROR, "(mach) Memory not available just now"
+ec MACH_KERN_ALREADY_IN_SET, "(mach) Already in port set"
+ec MACH_KERN_NOT_IN_SET, "(mach) Not in port set"
+ec MACH_KERN_NAME_EXISTS, "(mach) Name already assigned to right"
+ec MACH_KERN_ABORTED, "(mach) Operation aborted"
+ec MACH_KERN_INVALID_NAME, "(mach) No right by that name"
+ec MACH_KERN_INVALID_TASK, "(mach) No such task"
+ec MACH_KERN_INVALID_RIGHT, "(mach) Invalid right"
+ec MACH_KERN_INVALID_VALUE, "(mach) Blatant range falure"
+ec MACH_KERN_UREFS_OVERFLOW, "(mach) User-references overflow"
+ec MACH_KERN_INVALID_CAPABILITY, "(mach) Improper port capability"
+ec MACH_KERN_RIGHT_EXISTS, "(mach) Right already assigned"
+ec MACH_KERN_INVALID_HOST, "(mach) No such host"
+ec MACH_KERN_MEMORY_PRESENT, "(mach) Memory already present"
+ec MACH_KERN_MEMORY_DATA_MOVED, "(mach) Memory moving"
+ec MACH_KERN_MEMORY_RESTART_COPY, "(mach) Restart copy"
+ec MACH_KERN_INVALID_PROCESSOR_SET, "(mach) Invalid processor set"
+ec MACH_KERN_POLICY_LIMIT, "(mach) Thread scheduling policy limit"
+ec MACH_KERN_INVALID_POLICY, "(mach) Policy not enabled"
+ec MACH_KERN_INVALID_OBJECT, "(mach) Uninitialized meory memory object"
+ec MACH_KERN_ALREADY_WAITING, "(mach) Another thread already awaits that event"
+ec MACH_KERN_DEFAULT_SET, "(mach) Can't destroy default processor set"
+ec MACH_KERN_EXCEPTION_PROTECTED, "(mach) Exception protected"
+ec MACH_KERN_INVALID_LEDGER, "(mach) Need ledger"
+ec MACH_KERN_INVALID_MEMORY_CONTROL, "(mach) Not a valid memory control"
+ec MACH_KERN_INVALID_SECURITY, "(mach) Not a valid host security"
+ec MACH_KERN_NOT_DEPRESSED, "(mach) Thread isn't depressed"
+ec MACH_KERN_TERMINATED, "(mach) Object terminated"
+ec MACH_KERN_LOCK_SET_DESTROYED, "(mach) Lock set destroyed"
+ec MACH_KERN_LOCK_UNSTABLE, "(mach) Lock unstable"
+ec MACH_KERN_LOCK_OWNED, "(mach) Lock owned by another thread"
+ec MACH_KERN_LOCK_OWNED_SELF, "(mach) Lock owned by self"
+ec MACH_KERN_SEMAPHORE_DESTROYED, "(mach) Semaphore destroyed"
+ec MACH_KERN_RPC_SERVER_TERMINATED, "(mach) Server terminated"
+ec MACH_KERN_RPC_TERMINATE_ORPHAN, "(mach) Terminate orphan"
+ec MACH_KERN_RPC_CONTINUE_ORPHAN, "(mach) Continue orphan"
+ec MACH_KERN_NOT_SUPPORTED, "(mach) Empty thread activation"
+ec MACH_KERN_NODE_DOWN, "(mach) Node down"
+ec MACH_KERN_NOT_WAITING, "(mach) Thread wasn't waiting"
+ec MACH_KERN_OPERATION_TIMED_OUT, "(mach) Operation timed out"
+index 1100
+ec MACH_BOOTSTRAP_NOT_PRIVILEGED, "(bootstrap) Bootstrap not privileged"
+ec MACH_BOOTSTRAP_NAME_IN_USE, "(bootstrap) Name in use"
+ec MACH_BOOTSTRAP_UNKNOWN_SERVICE, "(bootstrap) Unknown service"
+ec MACH_BOOTSTRAP_SERVICE_ACTIVE, "(bootstrap) Service active"
+ec MACH_BOOTSTRAP_BAD_COUNT, "(bootstrap) Bad count"
+ec MACH_BOOTSTRAP_NO_MEMORY, "(bootstrap) Out of memory"
+end

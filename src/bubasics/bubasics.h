@@ -80,6 +80,7 @@
 #define RX_SCINDEX_NULL	0	/* No security */
 #define RX_SCINDEX_VAB 	1	/* vice tokens, with bcrypt */
 #define RX_SCINDEX_KAD	2	/* Kerberos/DES */
+#define RX_SCINDEX_K5	5	/* Kerberos5 */
 
 /* maximums for various text strings 
  * DON'T alter these values until all disk/tape structures can be handled

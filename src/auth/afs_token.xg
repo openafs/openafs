@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2006
+ * The Regents of the University of Michigan
+ * ALL RIGHTS RESERVED
+ *
+ * Permission is granted to use, copy, create derivative works 
+ * and redistribute this software and such derivative works 
+ * for any purpose, so long as the name of the University of 
+ * Michigan is not used in any advertising or publicity 
+ * pertaining to the use or distribution of this software 
+ * without specific, written prior authorization.  If the 
+ * above copyright notice or any other identification of the 
+ * University of Michigan is included in any copy of any 
+ * portion of this software, then the disclaimer below must 
+ * also be included.
+ *
+ * This software is provided as is, without representation 
+ * from the University of Michigan as to its fitness for any 
+ * purpose, and without warranty by the University of 
+ * Michigan of any kind, either express or implied, including 
+ * without limitation the implied warranties of 
+ * merchantability and fitness for a particular purpose.  The 
+ * regents of the University of Michigan shall not be liable 
+ * for any damages, including special, indirect, incidental, or 
+ * consequential damages, with respect to any claim arising 
+ * out of or in connection with the use of the software, even 
+ * if it has been or is hereafter advised of the possibility of 
+ * such damages.
+ */
+
+#if 1	/* AFS_RXKAD */
+/*
+ *	this is an rx grammar that looks something
+ *	like the thing afs uses to store clear tokens
+ *	into the kernel.
+ */
+
+/* since this is a const, it will show up in rxkad_token.h */
+const MAX_TICKET = 12000;	/* not 344 */
+
+/* since this is a define, it won't get copied into rxkad_token.h */
+#define MAX_CELL 64
+
+/* this structure was probably used with rxvab */
+struct n_clear_token {
+	int kvno;
+	opaque m_key[8];
+	int viceid;
+	int begintime;
+	int endtime;
+};
+
+/* and here is all but the cellnumber machinery of what
+ * rxkad gettoken/settoken handle
+ * note that ticket & cell_name are variable sized so will
+ *  contain pointers to allocated storage.  (look at old.hy to
+ *  see what happens.)
+ * clear_token is not a primitive type but uses the immediately
+ *  preceeding logic to handle it; maybe that's what you
+ *  really meant by 'stackable'.
+ */
+struct rxkad_token {
+	opaque ticket<MAX_TICKET>;
+	n_clear_token token;
+	int primary_flag;
+	string cell_name<MAX_CELL>;
+};
+#endif	/* AFS_RXKAD */
+
+#ifdef AFS_RXK5
+/* these turn into #defines */
+const MAX_COMPONENTS = 16;
+const MAX_NAME = 128;
+const MAX_REALM = 64;
+const MAX_STRING = 256;
+const MAX_K5_TICKET = 16384;
+const MAX_KEY_LENGTH = 64;
+
+/* new token flags */
+const  KTC_EX_SETPAG = 0x00000001; /* set tokens in new pag */
+
+/* some things that look like heimdal/mit/... */
+/* we could use the real heimdal/mit types in core yet use the same
+ * wire format when serialized -- if we wanted to write xdr by hand.
+ * look at fun.xdr.c xdr_k5_principal to see what xdr calls we have to make
+ * to get the same wire format; the rest is just munging field names & stuff.
+ * but careful if you do this!  krb5_principal is a pointer and that has
+ * a number of subtle but important implications.  "k5_principal" here is
+ * really much more like MIT's "krb5_principal_data" type.
+ */
+typedef string component<MAX_STRING>;
+struct rxk5_principal {
+	component name<MAX_COMPONENTS>;
+	string realm<MAX_REALM>;
+};
+struct rxk5_key {
+	int keytype;
+	opaque m_key<MAX_KEY_LENGTH>;
+};
+
+/* this is the data format_afs_krb5_creds_buf handles */
+struct rxk5_token {
+	int viceid;
+	rxk5_principal server;
+	rxk5_principal client;
+	rxk5_key session;
+	int authtime;
+	int starttime;
+	int endtime;
+	int flags;
+	opaque k5ticket<MAX_K5_TICKET>;
+};
+#endif
+
+const CU_NOAUTH = 0;
+const CU_KAD = 2;
+const CU_K5 = 5;
+const MAX_CELL_CHARS = 64;
+
+union cu switch (int cu_type) {
+case CU_KAD:
+	rxkad_token cu_kad;
+#ifdef AFS_RXK5
+case CU_K5:
+	rxk5_token cu_rxk5;
+#endif
+default:
+	int cu_dummy;
+};
+
+struct afs_token {
+        int flags;
+	int nextcellnumber;
+	string cell<MAX_CELL_CHARS>;
+	cu cu[1];
+};

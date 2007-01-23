@@ -10,6 +10,12 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h ${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/afs/keys.h \
@@ -20,6 +26,7 @@ INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 
 HACKS=${TOP_LIBDIR}/libdir.a
 
+# NB: libkauth.a(kaerrors.o) is the only kauth dependency
 LIBS=${TOP_LIBDIR}/libbudb.a \
 	$(TOP_LIBDIR)/libbxdb.a \
 	${TOP_LIBDIR}/libbubasics.a \
@@ -33,13 +40,13 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
         ${TOP_LIBDIR}/libubik.a \
         ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
+	${RXK5} \
         ${TOP_LIBDIR}/libsys.a  \
         ${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
         ${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/libprocmgmt.a
@@ -52,15 +59,17 @@ SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 all: butc read_tape
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
+	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} $(LIBCOM_ERR) ${XLIBS} -o butc_test
 
 tdump: tdump.c AFS_component_version_number.c
 	${CC} ${CFLAGS} ${srcdir}/tdump.c -o tdump
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
-	  rs_aix*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} /usr/lib/libc_r.a -o butc;; \
-	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} -o butc;; \
+	  rs_aix*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} /usr/lib/libc_r.a -o butc;; \
+	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} -o butc;; \
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c

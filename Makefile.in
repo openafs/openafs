@@ -10,11 +10,22 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+# things that depend on KAUTH have more complicated dependencies
+#  on libkauth
+KAUTH=kauth
+# things that depend on KAERRORS only need kaerrors.o from kauth
+KAERRORS=kauth
+
 # Enable build+install of obsolete and insecure packages
 # Set to anything other than YES, or comment out to disable the build
 WITH_OBSOLETE=@WITH_OBSOLETE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
+
+# Build rxk5 if selected
+### old: @ENABLE_RXK5@RXK5=@RXK5@
+@ENABLE_RXK5@RXK5=rxk5
+@ENABLE_RXK5@MAYBE_RXK5_DEPINSTALL=rxk5_depinstall
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -121,7 +132,7 @@ procmgmt: pinstall
 util: procmgmt des
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
-audit: util rx rxkad
+audit: util rx rxkad ${RXK5} auth_depinstall
 	${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
@@ -177,7 +188,13 @@ sys: cmd comerr afs des rx rxstat fsint sys_depinstall
 rxkad: cmd comerr sys des rx rxkad_depinstall
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr comerr des lwp rx sys rxkad audit auth_depinstall
+trxk5: comerr rx rxk5_depinstall @ENABLE_SSL@ k5ssl
+	${COMPILE_PART1} trxk5 ${COMPILE_PART2}
+
+rxk5: cmd comerr sys des rx rxk5_depinstall @ENABLE_SSL@ k5ssl
+	${COMPILE_PART1} rxk5 ${COMPILE_PART2}
+
+auth: cmd comerr comerr des lwp rx sys rxkad ${RXK5} audit auth_depinstall
 	${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall
@@ -191,7 +208,7 @@ ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
-dauth: cmd comerr ubik cmd auth kauth comerr
+dauth: cmd comerr ubik cmd auth $(KAUTH) comerr
 	${COMPILE_PART1} dauth ${COMPILE_PART2}
 
 libacl: cmd comerr ptserver libacl_depinstall
@@ -249,7 +266,7 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	esac
 
-volser: cmd comerr tviced usd kauth audit
+volser: cmd comerr tviced usd $(KAERRORS) audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
@@ -268,7 +285,7 @@ venus: cmd comerr volser ptserver
 	${COMPILE_PART1} venus ${COMPILE_PART2}
 	${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
-afsd: cmd comerr sys kauth
+afsd: cmd comerr sys auth
 	${COMPILE_PART1} afsd ${COMPILE_PART2}
 
 null: cmd comerr
@@ -283,19 +300,19 @@ ${TOP_LIBDIR}/libtermlib.a:
 		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	esac
 
-gtx: cmd comerr null auth kauth ${TOP_LIBDIR}/libtermlib.a
+gtx: cmd comerr null auth ${TOP_LIBDIR}/libtermlib.a
 	${COMPILE_PART1} gtx ${COMPILE_PART2}
 
-fsprobe: cmd comerr util fsint volser
+fsprobe: cmd comerr util fsint volser $(KAERRORS)
 	${COMPILE_PART1} fsprobe ${COMPILE_PART2}
 
-scout: cmd comerr gtx fsprobe
+scout: cmd comerr gtx fsprobe $(KAERRORS)
 	${COMPILE_PART1} scout ${COMPILE_PART2}
 
-uss: des kauth cmd comerr rx vlserver vol volser
+uss: des $(KAUTH) cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: cmd comerr audit auth kauth volser
+bozo: cmd comerr audit auth $(KAUTH) volser
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
 vfsck:	vol
@@ -307,7 +324,7 @@ vfsck:	vol
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-pam: cmd comerr kauth rxkad
+pam: cmd comerr $(KAUTH) rxkad
 	set -x; \
 	if test "@HAVE_PAM@" = "yes"; then \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ; \
@@ -315,7 +332,7 @@ pam: cmd comerr kauth rxkad
 		echo Skipping pam for ${SYS_NAME} ; \
 	fi
 
-tsm41: cmd comerr kauth rxkad
+tsm41: cmd comerr $(KAUTH) rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	rs_aix* ) \
@@ -324,7 +341,7 @@ tsm41: cmd comerr kauth rxkad
 		echo Skipping tsm41 for ${SYS_NAME} ;; \
 	esac
 
-sia: cmd comerr kauth rxkad
+sia: cmd comerr $(KAUTH) rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	alpha_dux* ) \
@@ -333,7 +350,7 @@ sia: cmd comerr kauth rxkad
 		echo Skipping sia for ${SYS_NAME} ;; \
 	esac
 
-sgistuff: cmd comerr kauth rxkad
+sgistuff: cmd comerr $(KAUTH) rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	sgi_* ) \
@@ -342,18 +359,18 @@ sgistuff: cmd comerr kauth rxkad
 		echo Skipping sgistuff for ${SYS_NAME} ;; \
 	esac
 
-aklog: comerr ptserver
+aklog: comerr ptserver @ENABLE_SSL@ k5ssl
+@ENABLE_KRB5@	${COMPILE_PART1} aklog ${COMPILE_PART2}
+@DISABLE_KRB5@	echo Skipping aklog for ${SYS_NAME}
+
+k5ssl: comerr
 	set -x; \
-	if test "@BUILD_KRB5@" = "yes"; then \
-		${COMPILE_PART1} aklog ${COMPILE_PART2} ; \
-	else \
-		echo Skipping aklog for ${SYS_NAME} ; \
-	fi
+	${COMPILE_PART1} k5ssl ${COMPILE_PART2} \
 
 platform: 
 	${COMPILE_PART1} platform ${COMPILE_PART2}
 
-login: cmd comerr kauth rxkad pam sia tsm41 sgistuff aklog
+login: cmd comerr $(KAUTH) rxkad pam sia tsm41 sgistuff aklog
 	set -x; \
 	if test "@BUILD_LOGIN@" = "yes"; then \
 		${COMPILE_PART1} login ${COMPILE_PART2} ; \
@@ -380,13 +397,16 @@ rx_depinstall: pinstall
 rxkad_depinstall: pinstall comerr
 	${COMPILE_PART1} rxkad ${COMPILE_DEPINSTALL}
 
+rxk5_depinstall: pinstall comerr rxgen
+	${COMPILE_PART1} rxk5 ${COMPILE_DEPINSTALL}
+
 ubik_depinstall: pinstall comerr rxgen
 	${COMPILE_PART1} ubik ${COMPILE_DEPINSTALL}
 
 vlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
 
-auth_depinstall: pinstall comerr
+auth_depinstall: pinstall comerr rxgen
 	${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
 
 fsint_depinstall: pinstall rxgen
@@ -404,7 +424,7 @@ afs_depinstall: pinstall comerr
 dir_depinstall: pinstall
 	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
 
-sys_depinstall: pinstall
+sys_depinstall: pinstall rxgen
 	${COMPILE_PART1} sys ${COMPILE_DEPINSTALL}
 
 kauth_depinstall: pinstall rxgen comerr
@@ -412,6 +432,12 @@ kauth_depinstall: pinstall rxgen comerr
 
 ptserver_depinstall: pinstall rxgen comerr
 	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
+
+bozo_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} bozo ${COMPILE_DEPINSTALL}
+
+volser_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} volser ${COMPILE_DEPINSTALL}
 
 ${DEST}/bin/dedebug: dedebug
 	${INSTALL} -s $? $@
@@ -421,13 +447,15 @@ ${DEST}/bin/dedebug: dedebug
 # libafs build targets
 #
 libafs_setup: config export
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME} ${RXK5} ${NFSSRV}
 
-libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall \
+		rxkad_depinstall ${MAYBE_RXK5_DEPINSTALL} fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall \
+		rxkad_depinstall ${MAYBE_RXK5_DEPINSTALL} fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
@@ -445,10 +473,11 @@ UKERNELDIR= \
   afsweb 
 
 libuafs_setup: config export
-	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
+	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME} ${RXK5}
 
 libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
-		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
+		auth_depinstall dir_depinstall libacl_depinstall \
+		rxkad_depinstall ${MAYBE_RXK5_DEPINSTALL} \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
 		rxstat_depinstall lwp_depinstall sys_depinstall des
 	set -x; \
@@ -459,7 +488,7 @@ libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
 	esac
 
-afsweb: kauth dauth 
+afsweb: $(KAUTH)
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
 
 update: cmd comerr auth
@@ -477,10 +506,10 @@ usd: cmd comerr
 bubasics: cmd comerr comerr rx
 	${COMPILE_PART1} bubasics ${COMPILE_PART2}
 
-butm: cmd comerr bubasics usd uss
+butm: cmd comerr bubasics usd
 	${COMPILE_PART1} butm ${COMPILE_PART2}
 
-butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
+butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx $(KAERRORS)
 	${COMPILE_PART1} butc ${COMPILE_PART2}
 
 tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
@@ -491,10 +520,10 @@ tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 		echo Not building MT butc for ${SYS_NAME} ;; \
 	esac
 
-budb: cmd comerr bubasics uss
+budb: ptserver ubik cmd comerr bubasics
 	${COMPILE_PART1} budb ${COMPILE_PART2}
 
-bucoord: cmd comerr bubasics budb volser
+bucoord: cmd comerr bubasics budb butm $(KAERRORS) volser
 	${COMPILE_PART1} bucoord ${COMPILE_PART2}
 
 xstat: cmd comerr fsint viced
@@ -506,7 +535,7 @@ afsmonitor: cmd comerr gtx xstat
 tests: rxtests ubiktests
 
 # pthread based user space RX library
-libafsrpc: rx rxkad des
+libafsrpc: rx rxkad des @ENABLE_RXK5@ rxk5_depinstall
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
@@ -518,7 +547,7 @@ libafsrpc: rx rxkad des
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-libafsauthent: ubik auth kauth libafsrpc
+libafsauthent: ubik auth $(KAUTH) kauth_depinstall libafsrpc ptserver_depinstall
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
@@ -531,7 +560,7 @@ libafsauthent: ubik auth kauth libafsrpc
 	esac
 
 # pthread based user space RX library
-shlibafsrpc: rx rxkad des
+shlibafsrpc: rx rxkad des @ENABLE_RXK5@ rxk5_depinstall
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
@@ -539,7 +568,7 @@ shlibafsrpc: rx rxkad des
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-shlibafsauthent: ubik auth kauth shlibafsrpc
+shlibafsauthent: ubik auth $(KAUTH) kauth_depinstall shlibafsrpc ptserver_depinstall
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
@@ -559,7 +588,7 @@ libadmin_real:
 	${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
 
-libadmin: libafsauthent bozo
+libadmin: libafsauthent bozo_depinstall vlserver_depinstall volser_depinstall
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
@@ -585,14 +614,14 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
-finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
+finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit $(KAERRORS) log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
-finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
+finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit $(KAUTH) log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
@@ -639,10 +668,12 @@ clean2:
 	-${COMPILE_PART1} des ${COMPILE_CLEAN}
 	-${COMPILE_PART1} sys ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxk5 ${COMPILE_CLEAN}
 	-${COMPILE_PART1} auth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ubik ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ptserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} kauth ${COMPILE_CLEAN}
+	-${COMPILE_PART1} k5ssl ${COMPILE_CLEAN}
 	-${COMPILE_PART1} dauth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libacl ${COMPILE_CLEAN}
 	-${COMPILE_PART1} dir ${COMPILE_CLEAN}
@@ -754,6 +785,7 @@ distclean: clean
 	src/gtx/Makefile \
 	src/kauth/test/Makefile \
 	src/kauth/Makefile \
+	src/k5ssl/Makefile \
 	src/libacl/test/Makefile \
 	src/libacl/Makefile \
 	src/libadmin/adminutil/Makefile \
@@ -803,6 +835,7 @@ distclean: clean
 	src/rxgen/Makefile \
 	src/rxkad/Makefile \
 	src/rxkad/test/Makefile \
+	src/rxk5/Makefile \
 	src/rxstat/Makefile \
 	src/scout/Makefile \
 	src/sgistuff/Makefile \

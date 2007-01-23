@@ -50,12 +50,19 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
+#ifdef AFS_RXK5
+#include "rxk5_utilafs.h"
+#endif
 #include "volser.h"
 #include "volint.h"
 #include "lockdata.h"
 
 struct ubik_client *cstruct;
 static rxkad_level vsu_rxkad_level = rxkad_clear;
+
+#ifdef AFS_RXK5
+static afs_int32 vsu_rxk5;
+#endif
 
 static void
 ovlentry_to_nvlentry(oentryp, nentryp)
@@ -389,6 +396,9 @@ vsu_SetCrypt(cryptflag)
 {
     if (cryptflag) {
 	vsu_rxkad_level = rxkad_crypt;
+#ifdef AFS_RXK5
+	/* nothing special needs to be done here, because rxkad_crypt == rxk5_crypt, etc */
+#endif
     } else {
 	vsu_rxkad_level = rxkad_auth;
     }

@@ -119,6 +119,7 @@ main(argc, argv)
 
     whoami = argv[0];
     initialize_BUTM_error_table();
+    initialize_rx_error_table();
     if (argc < 2)
 	goto usage;
 

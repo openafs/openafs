@@ -111,13 +111,6 @@ int rxBind = 0;
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
-/* dummy routine for the audit work.  It should do nothing since audits */
-/* occur at the server level and bos is not a server. */
-osi_audit()
-{
-    return 0;
-}
-
 static afs_int32
 SafeATOL(register char *anum)
 {
@@ -835,9 +828,9 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
     struct rx_service *service;
-    struct ktc_token ttoken;
+    Date when_token_expires;
     char cellName[64];
-    int localauth;
+    int authflags;
     /*process arguments */
     afs_int32 portOffset = 0;
 #ifdef AFS_PTHREAD_ENV
@@ -867,6 +860,10 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     initialize_VOLS_error_table();
     initialize_BUDB_error_table();
     initialize_BUCD_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
 
     if (as->parms[0].items) {
 	portOffset = SafeATOL(as->parms[0].items->data);
@@ -1030,7 +1027,13 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     if (as->parms[4].items)
 	autoQuery = 0;
 
-    localauth = (as->parms[5].items ? 1 : 0);
+    authflags = (as->parms[5].items ? 2 : 1);
+#ifdef AFS_RXK5
+    if (as->parms[9].items) authflags |= FORCE_RXKAD;	/* -k4 */
+    if (as->parms[10].items) authflags |= FORCE_RXK5;	/* -k5 */
+    if (!(authflags & (FORCE_RXK5|FORCE_RXKAD)))
+	authflags |= env_afs_rxk5_default();
+#endif
     rxBind = (as->parms[8].items ? 1 : 0);
 
     if (rxBind) {
@@ -1061,7 +1064,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     rx_SetRxDeadTime(150);
 
     /* Establish connection with the vldb server */
-    code = vldbClientInit(0, localauth, cellName, &cstruct, &ttoken);
+    code = vldbClientInit(authflags, cellName, &cstruct, &when_token_expires);
     if (code) {
 	TapeLog(0, 0, code, 0, "Can't access vldb\n");
 	return code;
@@ -1100,7 +1103,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
     rx_SetMaxProcs(service, 4);
 
     /* Establish connection to the backup database */
-    code = udbClientInit(0, localauth, cellName);
+    code = udbClientInit(authflags, cellName);
     if (code) {
 	TapeLog(0, 0, code, 0, "Can't access backup database\n");
 	exit(1);
@@ -1144,7 +1147,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
 
     TLog(0, "Starting Tape Coordinator: Port offset %u   Debug level %u\n",
 	 portOffset, debugLevel);
-    t = ttoken.endTime;
+    t = when_token_expires;
     TLog(0, "Token expires: %s\n", cTIME(&t));
 
     rx_StartServer(1);		/* Donate this process to the server process pool */
@@ -1196,6 +1199,10 @@ main(int argc, char **argv)
 		"Force multiple XBSA server support");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind Rx socket");
+#ifdef AFS_RXK5
+    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security");
+    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use rxk5 security");
+#endif
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {

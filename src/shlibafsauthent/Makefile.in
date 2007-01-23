@@ -15,9 +15,16 @@ LIBAFSAUTHENTMINOR=0
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+#TODO: -fPIC version of rxk5 will be supplied, igesse
+KRB5LIBS=@KRB5LIBS@
+
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} ${SHLIB_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
+CFLAGS=${COMMON_CFLAGS} \
+	${MT_CFLAGS} ${SHLIB_CFLAGS} -I../auth -I../kauth \
+	-I../ptserver -I../sys
+K5CFLAGS = ${CFLAGS} ${KRB5CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
+K5CCRULE = ${CC} ${K5CFLAGS} -c $?
 
 AUDIT= ../audit
 AUTH = ../auth
@@ -25,13 +32,17 @@ KAUTH = ../kauth
 UBIK = ../ubik
 UTIL = ../util
 RXKAD = ../rxkad
+RXK5 = ../rxk5
+COMERR = ../comerr
 PTSERVER = ../ptserver
 SYS = ../sys
 
 AUDITOBJS = audit.o
 
 AUTHOBJS = \
+	afs_token.xdr.o \
 	cellconfig.o \
+	rxkad_tkt.o \
 	ktc.o \
 	userok.o \
 	writeconfig.o \
@@ -65,10 +76,17 @@ UTILOBJS = \
 	dirpath.o \
 	serverLog.o \
 	snprintf.o \
+	strlcpy.o \
 	fileutil.o
 
 RXKADOBJS = \
 	rxkad_errs.o
+
+@ENABLE_RXK5@RXK5OBJS = \
+@ENABLE_RXK5@	krb_util.o rxk5_utilafs.o rxk5_tkt.o \
+@ENABLE_RXK5@	rxk5errors.o
+
+COMERROBJS = afserror.o
 
 SYSOBJS = \
 	rmtsysc.o \
@@ -94,54 +112,75 @@ LIBOBJS = \
 	${UBIKOBJS} \
 	${UTILOBJS} \
 	${RXKADOBJS} \
+	${RXK5OBJS} \
+	${COMERROBJS} \
 	${PTSERVEROBJS} \
 	${SYSOBJS}
 
 LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
 
-${DEST}/lib/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
-	${INSTALL} ${LIBAFSAUTHENT} ${DEST}/lib/${LIBAFSAUTHENT}
-	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
-
 all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 
 install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
 
+TEST_CFLAGS=@MT_CFLAGS@ $(COMMON_CFLAGS) $(INCLUDES)
+TEST_LDFLAGS=@LDFLAGS@
+TEST_LIBS=-L${TOP_LIBDIR} -lafsrpc ${KRB5LIBS} @MT_LIBS@ @XLIBS@
+
+linktest: ${LIBAFSAUTHENT}
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) ${LIBAFSAUTHENT} $(TEST_LIBS)
+
+${DEST}/lib/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
+	${INSTALL} ${LIBAFSAUTHENT} ${DEST}/lib/${LIBAFSAUTHENT}
+	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
+
 ${LIBAFSAUTHENT}: ${LIBOBJS}
 	case ${SYS_NAME} in \
 	rs_aix4*) \
-		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	sun*_5*) \
-		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	*) \
-		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS} ${KRB5LIBS} ;; \
 	esac
 
 audit.o: ${AUDIT}/audit.c
+	${K5CCRULE}
+
+afs_token.xdr.o: ${AUTH}/afs_token.xdr.c
 	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c
 	${CCRULE}
 
 ktc.o: ${AUTH}/ktc.c
-	${CCRULE}
+	${K5CCRULE}
 
 userok.o: ${AUTH}/userok.c
-	${CCRULE}
+	${K5CCRULE}
 
 writeconfig.o: ${AUTH}/writeconfig.c
 	${CCRULE}
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE}
+	${K5CCRULE}
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
+	${CCRULE}
+
+rxk5_utilafs.o: ${AUTH}/rxk5_utilafs.c
+	${K5CCRULE}
+
+rxk5_tkt.o: ${AUTH}/rxk5_tkt.c
+	${K5CCRULE}
+
+rxkad_tkt.o: ${AUTH}/rxkad_tkt.c
 	${CCRULE}
 
 kauth.xdr.o: ${KAUTH}/kauth.xdr.c
@@ -181,7 +220,7 @@ ubikclient.o: ${UBIK}/ubikclient.c
 	${CCRULE}
 
 uinit.o: ${UBIK}/uinit.c
-	${CCRULE}
+	${K5CCRULE}
 
 uerrors.o: ${UBIK}/uerrors.c
 	${CCRULE}
@@ -204,6 +243,9 @@ serverLog.o: ${UTIL}/serverLog.c
 snprintf.o: ${UTIL}/snprintf.c
 	${CCRULE}
 
+strlcpy.o: ${UTIL}/strlcpy.c
+	${CCRULE}
+
 fileutil.o: ${UTIL}/fileutil.c
 	${CCRULE}
 
@@ -211,6 +253,15 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 	${CCRULE}
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
+	${CCRULE}
+
+rxk5errors.o: ${RXK5}/rxk5errors.c
+	${K5CCRULE}
+
+krb_util.o: ${TOP_SRCDIR}/aklog/krb_util.c
+	${K5CCRULE}
+
+afserror.o: ${COMERR}/afserror.c
 	${CCRULE}
 
 ptclient.o: ${PTSERVER}/ptclient.c
@@ -227,11 +278,11 @@ ptuser.o: ${PTSERVER}/ptuser.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} | sed s/-g//`; shift; \
+		set X `echo ${K5CCRULE} | sed s/-g//`; shift; \
 		"$$@" \
 		;; \
 	*) \
-		${CCRULE} \
+		${K5CCRULE} \
 		;; \
 	esac
 
@@ -269,14 +320,14 @@ setpag.o: ${SYS}/setpag.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent*
+	$(RM) -f *.o *.a libafsauthent* linktest
 
-${DESTDIR}${libdir}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
+${DESTDIR}${libdir}/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-${TOP_LIBDIR}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
+${TOP_LIBDIR}/${LIBAFSAUTHENT}: linktest ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}

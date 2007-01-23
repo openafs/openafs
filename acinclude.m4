@@ -5,6 +5,49 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
+AH_VERBATIM([RCSID],
+[#define RCSID(msg) \
+static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }])
+AH_BOTTOM([/* __BIG_ENDIAN__ is a darwinism, for fat binaries */
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if defined(ENDIANESS_IN_SYS_PARAM_H) && !defined(KERNEL)
+#  include <sys/types.h>
+#  include <sys/param.h>
+#  if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  endif
+# endif
+#else
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# endif
+#endif
+#if defined(KERNEL) && !defined(UKERNEL) /* all builds use K5SSL in the kernel */
+# define USING_SSL 1
+# define FAKESSL 1
+#else
+# ifdef COMPILED_WITH_HEIMDAL
+#  define USING_HEIMDAL 1
+# endif
+# ifdef COMPILED_WITH_SHISHI
+#  define USING_SHISHI 1
+# endif
+# ifdef COMPILED_WITH_MIT
+#  define USING_MIT 1
+# endif
+# ifdef COMPILED_WITH_SSL
+#  define USING_SSL 1
+# endif
+#endif
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif])
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -23,6 +66,10 @@ AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
+AC_ARG_ENABLE( ka-server,
+[  --enable-ka-server		enable kaserver (k4 kdc)],, enable_ka_server="no")
+AC_ARG_ENABLE( ka-clients,
+[  --disable-ka-clients		disable building ka (afs k4) tools],, enable_ka_clients="yes")
 AC_ARG_ENABLE( largefile-fileserver,
 [  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
 AC_ARG_ENABLE( namei-fileserver,
@@ -85,7 +132,8 @@ AC_ARG_ENABLE(debug-pam,
 AC_ARG_ENABLE(optimize-pam,
 [  --disable-optimize-pam		disable optimization for compilation of the PAM code (defaults to enabled)],, enable_optimize_pam="yes"
 )
-
+AC_ARG_ENABLE( rxk5,
+[  --enable-rxk5		enable support for rxk5 security class],, enable_rxk5="no")
 
 enable_login="no"
 
@@ -116,7 +164,7 @@ case $system in
 
 		MKAFS_OSTYPE=LINUX
 		if test "x$enable_redhat_buildsys" = "xyes"; then
-		 AC_DEFINE(ENABLE_REDHAT_BUILDSYS, 1, [define if you have redhat buildsystem])
+		 AC_DEFINE([ENABLE_REDHAT_BUILDSYS], 1, [define if you have redhat buildsystem])
 		fi
 		if test "x$enable_kernel_module" = "xyes"; then
 		 if test "x$with_linux_kernel_headers" != "x"; then
@@ -198,7 +246,7 @@ case $system in
 		MKAFS_OSTYPE=HPUX
                 AC_MSG_RESULT(hp_ux)
 		if test -f "/usr/old/usr/include/ndir.h"; then
-		 AC_DEFINE(HAVE_USR_OLD_USR_INCLUDE_NDIR_H, 1, [define if you have old ndir.h])
+		 AC_DEFINE([HAVE_USR_OLD_USR_INCLUDE_NDIR_H], 1, [define if you have old ndir.h])
 		fi
                 ;;
         *-irix*)
@@ -553,7 +601,7 @@ else
 			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
 			AC_TRY_COMPILE(
 			 [#include <linux/autoconf.h>],
-			 [#ifndef CONFIG_USERMODE
+			 [#if !defined(CONFIG_USERMODE) && !defined(CONFIG_UML)
 			  #error not UML
 			  #endif],
 			 ac_cv_linux_is_uml=yes,)
@@ -571,30 +619,23 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		# Add (sub-) architecture-specific paths needed by conftests
 		case $AFS_SYSNAME  in
-			*_umlinux26)
-				UMLINUX26_FLAGS="-I$LINUX_KERNEL_PATH/arch/um/include"
-				UMLINUX26_FLAGS="$UMLINUX26_FLAGS -I$LINUX_KERNEL_PATH/arch/um/kernel/tt/include"
- 				UMLINUX26_FLAGS="$UMLINUX26_FLAGS -I$LINUX_KERNEL_PATH/arch/um/kernel/skas/include"
-				CPPFLAGS="$CPPFLAGS $UMLINUX26_FLAGS"
+			*_umlinux*)
+				LINUX_SETENV_UM="ARCH=um"
+			;;
 		esac
 
 		if test "x$enable_kernel_module" = "xyes"; then
-		 if test "x$enable_debug_kernel" = "xno"; then
-			LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
-		 fi
-		 OPENAFS_GCC_SUPPORTS_MARCH
-		 AC_SUBST(P5PLUS_KOPTS)
-		 OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE
-		 OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING
-		 OPENAFS_GCC_SUPPORTS_NO_COMMON
-		 OPENAFS_GCC_SUPPORTS_PIPE
-		 AC_SUBST(LINUX_GCC_KOPTS)
+		 LINUX_KERNEL_GET_KCC
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
+		 if test "x$enable_debug_kernel" = "xno"; then
+			LINUX_KCFLAGS="$LINUX_KCFLAGS -fomit-frame-pointer"
+		 fi
 
 		 LINUX_KERNEL_COMPILE_WORKS
+		 LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
@@ -681,163 +722,163 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                    fi
                  fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
-		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+		  AC_DEFINE([HAVE_IN_SYSTM_H], 1, [define if you have in_systm.h header file])
 	         fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
-		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
+		  AC_DEFINE([HAVE_MM_INLINE_H], 1, [define if you have mm_inline.h header file])
 	         fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
-		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+		  AC_DEFINE([HAVE_IN_SYSTM_H], 1, [define if you have in_systm.h header file])
 	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+		  AC_DEFINE([EXPORTED_SYS_CHDIR], 1, [define if your linux kernel exports sys_chdir])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_open" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_OPEN, 1, [define if your linux kernel exports sys_open])
+		  AC_DEFINE([EXPORTED_SYS_OPEN], 1, [define if your linux kernel exports sys_open])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
+		  AC_DEFINE([EXPORTED_SYS_CLOSE], 1, [define if your linux kernel exports sys_close])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
+		  AC_DEFINE([EXPORTED_SYS_WAIT4], 1, [define if your linux kernel exports sys_wait4])
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
+                  AC_DEFINE([EXPORTED_SYS_CALL_TABLE],1,[define if linux exports sys_call_table])
                  fi
                  if test "x$ac_cv_linux_exports_ia32_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE)
+                  AC_DEFINE([EXPORTED_IA32_SYS_CALL_TABLE],1,[specific to amd64/i386])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL)
+                  AC_DEFINE([EXPORTED_KALLSYMS_SYMBOL],1,[define if linux exports kallsyms_symbol_to_address])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
+                  AC_DEFINE([EXPORTED_KALLSYMS_ADDRESS],1,[define if linux exports kallsyms_address_to_symbol])
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
-		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
+		  AC_DEFINE([COMPLETION_H_EXISTS], 1, [define if completion_h exists])
 		 fi
 		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
 		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
-		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
+		  AC_DEFINE([DEFINED_FOR_EACH_PROCESS], 1, [define if for_each_process defined])
 		 fi
 		 if test "x$ac_cv_linux_defines_prev_task" = "xyes" ; then
-		  AC_DEFINE(DEFINED_PREV_TASK, 1, [define if prev_task defined])
+		  AC_DEFINE([DEFINED_PREV_TASK], 1, [define if prev_task defined])
 		 fi
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
-		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
+		  AC_DEFINE([INODE_SETATTR_NOT_VOID], 1, [define if your setattr return return non-void])
 		 fi
 		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
-		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
+		  AC_DEFINE([WRITE_INODE_NOT_VOID], 1, [define if your sops.write_inode returns non-void])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
-		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
+		  AC_DEFINE([STRUCT_SUPER_HAS_ALLOC_INODE], 1, [define if your struct super_operations has alloc_inode])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])
+		  AC_DEFINE([STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK], 1, [define if your struct address_space has page_lock])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_gfp_mask" = "xyes"; then 
-		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_GFP_MASK, 1, [define if your struct address_space has gfp_mask])
+		  AC_DEFINE([STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], 1, [define if your struct address_space has gfp_mask])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM, 1, [define if your struct inode has truncate_sem])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_TRUNCATE_SEM], 1, [define if your struct inode has truncate_sem])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_alloc_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_ALLOC_SEM, 1, [define if your struct inode has alloc_sem])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_ALLOC_SEM], 1, [define if your struct inode has alloc_sem])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_blksize" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_BLKSIZE, 1, [define if your struct inode has i_blksize])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_BLKSIZE], 1, [define if your struct inode has i_blksize])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_DEVICES], 1, [define if you struct inode has i_devices])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_SECURITY], 1, [define if you struct inode has i_security])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_MUTEX], 1, [define if you struct inode has i_mutex])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_SB_LIST], 1, [define if you struct inode has i_sb_list])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
+		  AC_DEFINE([STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS], 1, [define if your struct inode has data_buffers])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_LOCK, 1, [define if your struct inode has inotify_lock])
+		  AC_DEFINE([STRUCT_INODE_HAS_INOTIFY_LOCK], 1, [define if your struct inode has inotify_lock])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_SEM, 1, [define if your struct inode has inotify_sem])
+		  AC_DEFINE([STRUCT_INODE_HAS_INOTIFY_SEM], 1, [define if your struct inode has inotify_sem])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
-		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
+		  AC_DEFINE([RECALC_SIGPENDING_TAKES_VOID], 1, [define if your recalc_sigpending takes void])
 		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
+		  AC_DEFINE([LINUX_KERNEL_IS_SELINUX], 1, [define if your linux kernel uses SELinux features])
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
+		  AC_DEFINE([LINUX_KERNEL_SOCK_CREATE_V], 1, [define if your linux kernel uses 5 arguments for sock_create])
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
+		  AC_DEFINE([HAVE_KERNEL_PAGE_FOLLOW_LINK], 1, [define if your linux kernel provides page_follow_link])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
+		  AC_DEFINE([HAVE_KERNEL_LINUX_SYSCALL_H], 1, [define if your linux kernel has linux/syscall.h])
 		 fi
 		 if test "x$ac_linux_seq_file" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_LINUX_SEQ_FILE_H, 1, [define if your linux kernel has linux/seq_file.h])
+		  AC_DEFINE([HAVE_KERNEL_LINUX_SEQ_FILE_H], 1, [define if your linux kernel has linux/seq_file.h])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_PARENT], 1, [define if your struct task_struct has parent])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_real_parent" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_REAL_PARENT, 1, [define if your struct task_struct has real_parent])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_REAL_PARENT], 1, [define if your struct task_struct has real_parent])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sigmask_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, 1, [define if your struct task_struct has sigmask_lock])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK], 1, [define if your struct task_struct has sigmask_lock])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_SIGHAND], 1, [define if your struct task_struct has sighand])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_SIG], 1, [define if your struct task_struct has sig])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_rlim" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_RLIM, 1, [define if your struct task_struct has rlim])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_RLIM], 1, [define if your struct task_struct has rlim])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_signal_rlim" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM, 1, [define if your struct task_struct has signal->rlim])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], 1, [define if your struct task_struct has signal->rlim])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
+		  AC_DEFINE([STRUCT_TASK_STRUCT_HAS_EXIT_STATE], 1, [define if your struct task_struct has exit_state])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
 		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
-		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
+		  AC_DEFINE([GET_SB_HAS_STRUCT_VFSMOUNT], 1, [define if your get_sb_nodev needs a struct vfsmount argument])
 		 fi
 		 if test "x$ac_cv_linux_statfs_takes_dentry" = "xyes"; then
 		  AC_DEFINE(STATFS_TAKES_DENTRY, 1, [define if your statfs takes a dentry argument])
 		 fi
 		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
-		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
+		  AC_DEFINE([AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL], 1, [define if your aops.writepage takes a struct writeback_control argument])
 		 fi
 		 if test "x$ac_cv_linux_func_refrigerator_takes_pf_freeze" = "xyes" ; then
-		  AC_DEFINE(LINUX_REFRIGERATOR_TAKES_PF_FREEZE, 1, [define if your refrigerator takes PF_FREEZE])
+		  AC_DEFINE([LINUX_REFRIGERATOR_TAKES_PF_FREEZE], 1, [define if your refrigerator takes PF_FREEZE])
 		 fi
 		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
+		  AC_DEFINE([IOP_CREATE_TAKES_NAMEIDATA], 1, [define if your iops.create takes a nameidata argument])
 		 fi
 		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
+		  AC_DEFINE([IOP_LOOKUP_TAKES_NAMEIDATA], 1, [define if your iops.lookup takes a nameidata argument])
 		 fi
 		 if test "x$ac_cv_linux_func_i_permission_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_PERMISSION_TAKES_NAMEIDATA, 1, [define if your iops.permission takes a nameidata argument])
+		  AC_DEFINE([IOP_PERMISSION_TAKES_NAMEIDATA], 1, [define if your iops.permission takes a nameidata argument])
 		 fi
 		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
+		  AC_DEFINE([DOP_REVALIDATE_TAKES_NAMEIDATA], 1, [define if your dops.d_revalidate takes a nameidata argument])
 		 fi
 		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
 		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
@@ -851,6 +892,7 @@ esac
 
 case $AFS_SYSNAME in
 	*_darwin*)
+		AC_DARWIN_EXP_DC
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
                 dnl the test below fails on darwin, even if the CPPFLAGS below
@@ -860,7 +902,7 @@ case $AFS_SYSNAME in
                 dnl really, such a thing isn't guaranteed to work on any 
                 dnl platform until the kernel cflags from MakefileProto are
                 dnl known to configure
-	        AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
+	        AC_DEFINE([HAVE_STRUCT_BUF], 1, [define if you have a struct buf])
 		;;
         *)
 AC_MSG_CHECKING(for definition of struct buf)
@@ -878,7 +920,7 @@ AC_CACHE_VAL(ac_cv_have_struct_buf, [
 dnl CPPFLAGS="$save_CPPFLAGS"
 AC_MSG_RESULT($ac_cv_have_struct_buf)
 if test "$ac_cv_have_struct_buf" = yes; then
-	AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
+	AC_DEFINE([HAVE_STRUCT_BUF], 1, [define if you have a struct buf])
 fi
 ;;
 esac
@@ -893,7 +935,7 @@ AC_TRY_COMPILE( [#include <sys/types.h>
 a->sa_len=0;], ac_cv_sockaddr_len=yes, ac_cv_sockaddr_len=no)
 AC_MSG_RESULT($ac_cv_sockaddr_len)])
 if test "$ac_cv_sockaddr_len" = "yes"; then
-   AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN, 1, [define if you struct sockaddr sa_len])
+   AC_DEFINE([STRUCT_SOCKADDR_HAS_SA_LEN], 1, [define if you struct sockaddr sa_len])
 fi
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
@@ -903,7 +945,7 @@ else
   if test "$ac_cv_func_socket" = no; then
     for lib in socket inet; do
         if test "$HAVE_SOCKET" != 1; then
-                AC_CHECK_LIB(${lib}, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET, 1, [define if you have socket]))
+                AC_CHECK_LIB(${lib}, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE([HAVE_SOCKET], 1, [define if you have socket]))
         fi
     done
   fi
@@ -913,7 +955,7 @@ else
   if test "$ac_cv_func_connect" = no; then
     for lib in nsl; do
         if test "$HAVE_CONNECT" != 1; then
-                AC_CHECK_LIB(${lib}, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT, 1, [define if you have connect]))
+                AC_CHECK_LIB(${lib}, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE([HAVE_CONNECT], 1, [define if you have connect]))
         fi
     done
   fi
@@ -922,7 +964,7 @@ else
   if test "$ac_cv_func_gethostbyname" = no; then
         for lib in dns nsl resolv; do
           if test "$HAVE_GETHOSTBYNAME" != 1; then
-            AC_CHECK_LIB(${lib}, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME, 1, [define if you have gethostbyname]))
+            AC_CHECK_LIB(${lib}, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE([HAVE_GETHOSTBYNAME], 1, [define if you have gethostbyname]))
           fi
         done    
   fi    
@@ -941,7 +983,7 @@ else
   #include <resolv.h>
   ], [static int i; i = 0;],
   [AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H)],
+   AC_DEFINE([HAVE_ARPA_NAMESER_COMPAT_H],1,[define if arpa/nameser_compat.h is to be used.])],
   [AC_MSG_RESULT(no)
    ])
 
@@ -959,13 +1001,16 @@ else
       done    
       if test "$ac_cv_func_res_search" = yes; then
         LIB_res_search="-l$lib"       
-	AC_DEFINE(HAVE_RES_SEARCH, 1, [])
+	AC_DEFINE([HAVE_RES_SEARCH], 1, [have res_search])
         AC_MSG_RESULT([yes, in lib$lib])
+        if test "$ac_cv_func_res_nclose" = yes; then
+	  AC_DEFINE([HAVE_RES_NCLOSE], 1, [have res_ninit/res_nsearch/res_nclose too])
+	fi
       else
         AC_MSG_RESULT(no)
       fi
   else
-    AC_DEFINE(HAVE_RES_SEARCH, 1, [])
+    AC_DEFINE([HAVE_RES_SEARCH], 1, [have res_search])
     AC_MSG_RESULT(yes)
   fi
   
@@ -1026,21 +1071,34 @@ else
 	esac
 fi
 
-# Fast restart
 if test "$enable_supergroups" = "yes"; then
-	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
+	AC_DEFINE([SUPERGROUPS], 1, [define if you want to have support for nested pts groups])
 fi
 
+if test "$enable_rxk5" = "yes"; then
+	K5SSL_DEF="-DUSE_K5SSL -DUSE_FAKESSL"
+	K5SSL_INC='-I${TOP_SRCDIR}/k5ssl'
+	AC_DEFINE([AFS_RXK5], 1, [define if you want the option to use rxk5 for rx security])
+	DISABLE_RXK5='#'
+else
+	ENABLE_RXK5='#'
+fi
+AC_SUBST(K5SSL_DEF)
+AC_SUBST(K5SSL_INC)
+AC_SUBST(ENABLE_RXK5)
+AC_SUBST(DISABLE_RXK5)
+
+# Fast restart
 if test "$enable_fast_restart" = "yes"; then
-	AC_DEFINE(FAST_RESTART, 1, [define if you want to have fast restart])
+	AC_DEFINE([FAST_RESTART], 1, [define if you want to have fast restart])
 fi
 
 if test "$enable_bitmap_later" = "yes"; then
-	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
+	AC_DEFINE([BITMAP_LATER], 1, [define if you want to salvager to check bitmasks later])
 fi
 
 if test "$enable_demand_attach_fs" = "yes"; then
-	AC_DEFINE(DEMAND_ATTACH_ENABLE, 1, [define if you want the demand attach fileserver])
+	AC_DEFINE([DEMAND_ATTACH_ENABLE], 1, [define if you want the demand attach fileserver])
 	DEMAND_ATTACH="yes"
 else
 	DEMAND_ATTACH="no"
@@ -1054,28 +1112,61 @@ if test "$enable_fast_restart" = "yes" &&
 fi
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then
-	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])
+	AC_DEFINE([FULL_LISTVOL_SWITCH], 1, [define if you want to want listvol switch])
 fi
 
 if test "$enable_bos_restricted_mode" = "yes"; then
-	AC_DEFINE(BOS_RESTRICTED_MODE, 1, [define if you want to want bos restricted mode])
+	AC_DEFINE([BOS_RESTRICTED_MODE], 1, [define if you want to want bos restricted mode])
 fi
 
 if test "$enable_bos_new_config" = "yes"; then
-	AC_DEFINE(BOS_NEW_CONFIG, 1, [define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup])
+	AC_DEFINE([BOS_NEW_CONFIG], 1, [define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup])
 fi
 
 if test "$enable_largefile_fileserver" = "yes"; then
-	AC_DEFINE(AFS_LARGEFILE_ENV, 1, [define if you want large file fileserver])
+	AC_DEFINE([AFS_LARGEFILE_ENV], 1, [define if you want large file fileserver])
 fi
 
+if test "$enable_ka_server" = "yes"; then
+	AC_DEFINE([AFS_ENABLE_KA_SERVER], 1, [define if you want to build kaserver])
+	DISABLE_KA_SERVER='#'
+else
+	ENABLE_KA_SERVER='#'
+fi
+
+if test "$enable_ka_clients" = "yes"; then
+	AC_DEFINE([AFS_ENABLE_KA_CLIENTS], 1, [define if you want to build ka client tools])
+	DISABLE_KA_CLIENTS='#'
+else
+	ENABLE_KA_CLIENTS='#'
+fi
+if test "$enable_ka_server" = "yes" || test "$enable_ka_clients" = "yes";
+then
+	DISABLE_KAUTH='#'
+else
+	ENABLE_KAUTH='#'
+fi
+
+AC_SUBST(ENABLE_KA_SERVER)
+AC_SUBST(DISABLE_KA_SERVER)
+AC_SUBST(ENABLE_KA_CLIENTS)
+AC_SUBST(DISABLE_KA_CLIENTS)
+AC_SUBST(ENABLE_KAUTH)
+AC_SUBST(DISABLE_KAUTH)
+
 if test "$enable_namei_fileserver" = "yes"; then
-	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+	AC_DEFINE([AFS_NAMEI_ENV], 1, [define if you want to want namei fileserver])
 fi
 
 if test "$enable_afsdb" = "yes"; then
 	LIB_AFSDB="$LIB_res_search"
-	AC_DEFINE(AFS_AFSDB_ENV, 1, [define if you want to want search afsdb rr])
+	AC_DEFINE([AFS_AFSDB_ENV], 1, [define if you want to want search afsdb rr])
+fi
+
+if test "$enable_cm_capabilities" = "yes"; then
+	CM_CAPABILITIES="cm_capabilities"
+	AC_SUBST(CM_CAPABILITIES)
+	AC_DEFINE([AFS_CM_CAPABILITIES], 1, [define to enable support for a GetCapabilities pioctl])
 fi
 
 dnl check for tivoli
@@ -1134,12 +1225,12 @@ if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \
 	test "$ac_cv_func_regexec" = "yes" && \
 	test "$ac_cv_func_regerror" = "yes"; then
-    AC_DEFINE(HAVE_POSIX_REGEX, 1, [define if you have POSIX regex library])
+    AC_DEFINE([HAVE_POSIX_REGEX], 1, [define if you have POSIX regex library])
     AC_MSG_RESULT(yes)
 else
     AC_MSG_RESULT(no)
 fi
-	
+
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 
@@ -1156,10 +1247,11 @@ main()
 }], ac_cv_sizeof_time_t=`cat conftestval`, ac_cv_sizeof_time_t=0)
 ])
 AC_MSG_RESULT($ac_cv_sizeof_time_t)
-AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t)
+AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t, [define to be sizeof(time_t)])
 
 AC_CHECK_FUNCS(timegm)
 AC_CHECK_FUNCS(daemon)
+AC_CHECK_FUNCS(fstatfs64)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 
@@ -1221,8 +1313,10 @@ AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
+AC_SUBST(LINUX_SETENV_UM)
 
 OPENAFS_OSCONF
+OPENAFS_SSL
 OPENAFS_KRB5CONF
 
 TOP_SRCDIR="${srcdir}/src"

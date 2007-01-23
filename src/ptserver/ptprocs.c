@@ -62,6 +62,11 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#ifdef AFS_RXK5
+#include "rxk5.h"
+#include "rxk5errors.h"
+#include <errno.h>
+#endif
 #include <afs/auth.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -201,7 +206,46 @@ WhoIsThis(acall, at, aid)
 	    lcstring(vname, vname, sizeof(vname));
 	    code = NameToID(at, vname, aid);
 	}
+    } 
+#ifdef AFS_RXK5
+    else if(code == 5) {
+	int lvl, expires, kvno, enctype;
+	char *client, *server;
+	
+	if (code = rxk5_GetServerInfo2(acall->conn, &lvl, 
+				      &expires, &client, &server, &kvno, 
+				      &enctype)) {
+	    goto done;
+	} else if (!strcmp(client, server)) {
+	    *aid = SYSADMINID;	/* special case for the fileserver */
+	} else {
+	    /* 
+	     * Map service K5 principal from rxk5_GetServerInfo to
+	     * a K4 name:
+	     * 
+	     * If length > 64 return error.  If name has no slash and no dot, 
+	     * leave name part alone.  If name has 1 slash (blah/fleem@REALM)
+	     * change slash to a dot.  If name has more than one slash, or
+	     * contains dots, return error.
+	     *
+	     * Not sure about foreign cells.  Need something here.
+	     * 
+	     * Suggest rework prdb to store K5 names natively, and map
+	     * those to K4, in future.
+	     */	
+	    char* avname;
+
+	    if(afs_rxk5_parse_name_k5(prdir, client, &avname, 1)) {
+	        code = RXK5NOAUTH;
+		goto done;
+	    }
+
+	    code = NameToID(at, avname, aid);
+	
+	    free(avname);
+      	}
     }
+#endif
   done:
     if (code && !pr_noAuth)
 	return -1;
@@ -2331,6 +2375,46 @@ WhoIsThisWithName(acall, at, aid, aname)
 	    code = NameToID(at, vname, aid);
 	}
     }
+#ifdef AFS_RXK5
+    else if(code == 5) {
+	int lvl, expires, kvno, enctype;
+	char *client, *server;
+	
+	if (code = rxk5_GetServerInfo2(acall->conn, &lvl, 
+				      &expires, &client, &server, &kvno, 
+				      &enctype)) {
+	    goto done;
+	} else if (!strcmp(client, server)) {
+	    strcpy(aname, AUTH_SUPERUSER);	/* this is a lie */
+	    *aid = SYSADMINID;	/* special case for the fileserver */
+	} else {
+	    /* 
+	     * Map service K5 principal from rxk5_GetServerInfo to
+	     * a K4 name:
+	     * 
+	     * If length > 64 return error.  If name has no slash and no dot, 
+	     * leave name part alone.  If name has 1 slash (blah/fleem@REALM)
+	     * change slash to a dot.  If name has more than one slash, or
+	     * contains dots, return error.
+	     *
+	     * Not sure about foreign cells.  Need something here.
+	     * 
+	     * Suggest rework prdb to store K5 names natively, and map
+	     * those to K4, in future.
+	     */	
+	    char *avname;
+
+	    if (afs_rxk5_parse_name_k5(prdir, client, &avname, 1)) {
+		code = RXK5NOAUTH;
+		goto done;
+	    }
+	    code = NameToID(at, avname, aid);
+	    strcpy(aname, avname);
+
+	    free(avname);
+      	}
+    }
+#endif
   done:
     if (code && !pr_noAuth)
 	return -1;

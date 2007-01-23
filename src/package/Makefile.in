@@ -10,6 +10,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+
 CFLAGS   = ${COMMON_CFLAGS} -DKFLAG -DANDREW -DVICE -UDEBUG
 
 OBJS =  package.o \
@@ -33,7 +35,6 @@ TEST_OBJS = test.o \
 
 LIBS=${TOP_LIBDIR}/libsys.a \
         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
         ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a \
@@ -45,10 +46,10 @@ include ../config/Makefile.version
 all	: package package_test
 
 package	: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(NON_SHARED) ${LIBS}
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(NON_SHARED) ${LIBS} $(LIBCOM_ERR)
 
 package_test : $(TEST_OBJS)
-	$(CC) $(CFLAGS) -o package_test $(TEST_OBJS) ${LIBS}
+	$(CC) $(CFLAGS) -o package_test $(TEST_OBJS) ${LIBS} $(LIBCOM_ERR)
 
 package.o: package.c AFS_component_version_number.o
 test.o: test.c AFS_component_version_number.o

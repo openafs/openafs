@@ -46,6 +46,12 @@ RCSID
 #endif
 #include <inet/ip.h>
 #endif
+#ifdef AFS_RXK5
+#ifndef ERROR_TABLE_BASE_RXK5
+/* shouldn't -- but seems reason for below is no compile_et... */
+#define ERROR_TABLE_BASE_RXK5	(1233320448L)
+#endif
+#endif
 
 
 /* shouldn't do it this way, but for now will do */
@@ -409,6 +415,9 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	shouldRetry = 1;
 	acode = 0;
     } else if (acode == VICETOKENDEAD
+#ifdef AFS_RXK5
+	       || (acode & ~0xff) == ERROR_TABLE_BASE_RXK5
+#endif
 	       || (acode & ~0xff) == ERROR_TABLE_BASE_RXK) {
 	/* any rxkad error is treated as token expiration */
 	struct unixuser *tu;

@@ -85,14 +85,16 @@ struct ubik_stats ubik_stats;
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 afs_int32 ubik_epochTime = 0;
 afs_int32 urecovery_state = 0;
-int (*ubik_SRXSecurityProc) ();
-char *ubik_SRXSecurityRock;
+int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **, afs_int32);
+void *ubik_SRXSecurityRock;
 struct ubik_server *ubik_servers;
 short ubik_callPortal;
 
 static int BeginTrans();
 
-struct rx_securityClass *ubik_sc[3];
+#define MAX_UBIK_SC	6
+struct rx_securityClass *ubik_sc[MAX_UBIK_SC];
+afs_int32 ubik_sc_len;
 
 /* perform an operation at a quorum, handling error conditions.  return 0 if
     all worked, otherwise mark failing server as down and return UERROR
@@ -195,7 +197,6 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     register afs_int32 code;
     PROCESS junk;
     afs_int32 secIndex;
-    struct rx_securityClass *secClass;
 
     struct rx_service *tservice;
     extern int VOTE_ExecuteRequest(), DISK_ExecuteRequest();
@@ -203,6 +204,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     extern int rx_stackSize;
 
     initialize_U_error_table();
+    initialize_rx_error_table();
 
     tdb = (struct ubik_dbase *)malloc(sizeof(struct ubik_dbase));
     tdb->pathName = (char *)malloc(strlen(pathName) + 1);
@@ -229,16 +231,14 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     /* initialize RX */
     ubik_callPortal = myPort;
     /* try to get an additional security object */
-    ubik_sc[0] = rxnull_NewServerSecurityObject();
-    ubik_sc[1] = 0;
-    ubik_sc[2] = 0;
+    memset(ubik_sc, 0, MAX_UBIK_SC * sizeof *ubik_sc);
     if (ubik_SRXSecurityProc) {
-	code =
-	    (*ubik_SRXSecurityProc) (ubik_SRXSecurityRock, &secClass,
-				     &secIndex);
-	if (code == 0) {
-	    ubik_sc[secIndex] = secClass;
-	}
+	ubik_sc_len =
+	    (*ubik_SRXSecurityProc) (ubik_SRXSecurityRock, ubik_sc,
+				     MAX_UBIK_SC);
+    } else {
+	if (ubik_sc[0] = rxnull_NewServerSecurityObject())
+	    ubik_sc_len = 1;
     }
     /* for backwards compat this should keep working as it does now 
        and not host bind */
@@ -246,7 +246,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     if (code < 0)
 	return code;
     tservice =
-	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, 3,
+	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, ubik_sc_len,
 		      VOTE_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ubik_dprint("Could not create VOTE rx service!\n");
@@ -256,7 +256,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     rx_SetMaxProcs(tservice, 3);
 
     tservice =
-	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, 3,
+	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, ubik_sc_len,
 		      DISK_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ubik_dprint("Could not create DISK rx service!\n");

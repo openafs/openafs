@@ -39,7 +39,7 @@ struct vfsmount *afs_cacheMnt;
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
 extern struct export_operations afs_export_ops;
 #endif
 extern afs_rwlock_t afs_xvcache;
@@ -146,7 +146,7 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
     sb->s_export_op = &afs_export_ops;
 #endif
 #if defined(MAX_NON_LFS)

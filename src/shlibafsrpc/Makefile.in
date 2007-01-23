@@ -21,11 +21,16 @@ CC=${MT_CC}
 INCLUDES=-I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
 	-I../rxkad -I${srcdir}/../rxkad -I../rxstat -I../fsint
 CFLAGS = ${COMMON_CFLAGS} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} ${SHLIB_CFLAGS}
+K5CFLAGS = ${CFLAGS} ${KRB5CFLAGS}
+@ENABLE_RXK5@KRB5LIBS=@KRB5LIBS@
+
 SFLAGS=-P -I${TOP_INCDIR}
 
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
+K5CCRULE = ${CC} ${K5CFLAGS} -c $?
 RXKAD = ../rxkad
+RXK5 = ../rxk5
 RXSTAT = ../rxstat
 FSINT = ../fsint
 DES = ../des
@@ -45,7 +50,8 @@ UTILOBJS =\
 COMERROBJS =\
 	error_msg.o \
 	et_name.o \
-	com_err.o
+	com_err.o \
+	afserror.o
 
 XDROBJS =\
 	xdr.o \
@@ -57,6 +63,7 @@ XDROBJS =\
 	xdr_afsuuid.o \
 	xdr_update.o \
 	xdr_refernce.o \
+	xdr_mem.o \
 	AFS_component_version_number.o
 
 RXOBJS =\
@@ -87,6 +94,9 @@ FSINTOBJS =\
 	afscbint.xdr.o \
 	afsaux.o
 
+#FCRYPT=fcrypt.o crypt_conn.o
+FCRYPT=bg-fcrypt.o
+
 RXKADOBJS =\
 	rxkad_client.o \
 	rxkad_server.o \
@@ -96,8 +106,15 @@ RXKADOBJS =\
 	crc.o \
 	md4.o \
 	md5.o \
-	fcrypt.o \
-	crypt_conn.o
+	${FCRYPT}
+
+@ENABLE_RXK5@RXK5OBJS =\
+@ENABLE_RXK5@	rxk5_client.o \
+@ENABLE_RXK5@	rxk5_server.o \
+@ENABLE_RXK5@	rxk5_common.o \
+@ENABLE_RXK5@	rxk5_info.o \
+@ENABLE_RXK5@	rxk5_getkey.o \
+@ENABLE_RXK5@	rxk5c.xdr.o @K5SUPPORT@
 
 DESOBJS =\
 	des.o \
@@ -124,6 +141,7 @@ LIBOBJS = \
 	${DESOBJS} \
 	${XDROBJS} \
 	${RXKADOBJS} \
+	${RXK5OBJS} \
 	${COMERROBJS} \
 	${UTILOBJS} \
 	${SYSOBJS} \
@@ -138,7 +156,14 @@ all: ${TOP_LIBDIR}/${LIBAFSRPC}
 
 install: ${DESTDIR}${libdir}/${LIBAFSRPC}
 
-${DEST}/lib/${LIBAFSRPC}: ${LIBAFSRPC}
+TEST_CFLAGS=@MT_CFLAGS@ $(COMMON_CFLAGS) $(INCLUDES)
+TEST_LDFLAGS=@LDFLAGS@
+TEST_LIBS=@MT_LIBS@ @XLIBS@
+
+linktest: ${LIBAFSRPC}
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) ${LIBAFSRPC} ${KRB5LIBS} $(TEST_LIBS)
+
+${DEST}/lib/${LIBAFSRPC}: linktest ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
@@ -148,13 +173,13 @@ ${LIBAFSRPC}: ${LIBOBJS}
 	rs_aix4* | rs_aix5*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:${srcdir}/afsrpc.exp ${MT_LIBS};; \
 	sun*_5*) \
-		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} $(KRB5LIBS) ${MT_LIBS};; \
 	amd64_linux*) \
 		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile.afs_xdr -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*_linux*) \
 		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*) \
-		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} $(KRB5LIBS) ${MT_LIBS};; \
 	esac
 
 rx_event.o: ${RX}/rx_event.c
@@ -225,6 +250,33 @@ fcrypt.o: ${RXKAD}/domestic/fcrypt.c
 
 crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
 	${CCRULE}
+
+bg-fcrypt.o: ${RXKAD}/bg-fcrypt.c
+	${CCRULE}
+
+rxk5_client.o: ${RXK5}/rxk5_client.c
+	${K5CCRULE}
+
+rxk5_server.o: ${RXK5}/rxk5_server.c
+	${K5CCRULE}
+
+rxk5_common.o: ${RXK5}/rxk5_common.c
+	${K5CCRULE}
+
+rxk5_info.o: ${RXK5}/rxk5_info.c
+	${K5CCRULE}
+
+rxk5_getkey.o: ${RXK5}/rxk5_getkey.c
+	${K5CCRULE}
+
+rxk5c.xdr.o: ${RXK5}/rxk5c.xdr.c
+	${K5CCRULE}
+
+nfold.o: ${RXK5}/nfold.c
+	${K5CCRULE}
+
+danish.o: ${RXK5}/danish.c
+	${K5CCRULE}
 
 AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
 	${CCRULE}
@@ -348,6 +400,9 @@ error_msg.o: ${COMERR}/error_msg.c
 et_name.o: ${COMERR}/et_name.c
 	${CCRULE}
 
+afserror.o: ${COMERR}/afserror.c
+	${CCRULE}
+
 com_err.o: ${COMERR}/com_err.c
 	${CCRULE}
 
@@ -411,14 +466,14 @@ afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o libafsrpc*
+	$(RM) -f *.o libafsrpc* linktest
 
-${DESTDIR}${libdir}/${LIBAFSRPC}: ${LIBAFSRPC}
+${DESTDIR}${libdir}/${LIBAFSRPC}: linktest ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
-${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
+${TOP_LIBDIR}/${LIBAFSRPC}: linktest ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}

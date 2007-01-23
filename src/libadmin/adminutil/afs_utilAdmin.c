@@ -81,6 +81,7 @@ init_once(void)
     initialize_AU_error_table();
     initialize_AV_error_table();
     initialize_VOLS_error_table();
+    initialize_rx_error_table();
     error_init_done = 1;
 }
 

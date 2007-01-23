@@ -8,6 +8,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
 	${TOP_INCDIR}/afs/afsutil.h
@@ -18,9 +22,8 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/vlib.a \
 	 ${TOP_LIBDIR}/libauth.a \
 	 ${TOP_LIBDIR}/librxkad.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
+	 ${RXK5} \
 	 ${TOP_LIBDIR}/libcmd.a \
-	 ${TOP_LIBDIR}/libkauth.a \
 	 ${TOP_LIBDIR}/libdes.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
@@ -31,8 +34,8 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
 	 ${TOP_LIBDIR}/librxkad.a \
+	 ${RXK5} \
 	 ${TOP_LIBDIR}/libauth.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
@@ -47,7 +50,7 @@ all: fs up fstrace cmdebug livesys kdump-build
 # Build targets
 #
 cacheout: cacheout.o
-	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${XLIBS} ${CMLIBS}
+	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${CMLIBS} $(LIBCOM_ERR) $(XLIBS)
 
 cacheout.o: cacheout.c
 
@@ -73,28 +76,29 @@ ${DEST}/bin/dedebug: dedebug
 up.o: up.c AFS_component_version_number.c
 
 up: up.o
-	${CC} ${CFLAGS} -o up up.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o up up.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) \
+	${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.c $(LIBS)
-	${CC} ${CFLAGS} -o livesys ${srcdir}/livesys.c $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o livesys ${srcdir}/livesys.c $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 twiddle: twiddle.c $(LIBS)
-	${CC} ${CFLAGS} -o twiddle ${srcdir}/twiddle.c $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o twiddle ${srcdir}/twiddle.c $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 gcpags: gcpags.c $(LIBS)
-	${CC} ${CFLAGS} -o gcpags ${srcdir}/gcpags.c $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o gcpags ${srcdir}/gcpags.c $(LIBS) $(LIBCOM_ERR) ${XLIBS}
 
 whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
 
 whatfid: whatfid.o ${LIBS}
-	${CC} ${CFLAGS} -o whatfid whatfid.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o whatfid whatfid.o ${LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
@@ -123,12 +127,12 @@ fstrace: fstrace.o
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
 cmdebug: cmdebug.o ${CMLIBS}
-	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} $(LIBCOM_ERR) ${XLIBS}
 
 dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
 
 dedebug: dedebug.o ${CMLIBS}
-	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} $(LIBCOM_ERR) ${XLIBS}
 
 
 

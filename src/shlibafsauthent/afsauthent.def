@@ -86,3 +86,5 @@ EXPORTS
 	VOTE_function_names				@84 DATA
 	rx_Finalize					@85
 	pr_End						@86
+; how to coordinate number space?
+	afsconf_ClientAuthSecure			@87

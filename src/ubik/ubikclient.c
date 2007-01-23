@@ -205,6 +205,7 @@ ubik_ClientInit(register struct rx_connection **serverconns,
     register struct ubik_client *tc;
 
     initialize_U_error_table();
+    initialize_rx_error_table();
 
     if (*aclient) {		/* the application is doing a re-initialization */
 	LOCK_UBIK_CLIENT((*aclient));

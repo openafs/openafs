@@ -214,6 +214,7 @@ CommandProc(register struct cmd_syndesc *a_as)
 
     Initdb();
     initialize_PT_error_table();
+    initialize_rx_error_table();
 
     if (wflag) {
 	struct usr_list *u;

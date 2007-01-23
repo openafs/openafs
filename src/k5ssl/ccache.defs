@@ -1,0 +1,104 @@
+/*
+ * Copyright (c) 2007
+ * The Regents of the University of Michigan
+ * ALL RIGHTS RESERVED
+ *
+ * Permission is granted to use, copy, create derivative works
+ * and redistribute this software and such derivative works
+ * for any purpose, so long as the name of the University of
+ * Michigan is not used in any advertising or publicity
+ * pertaining to the use or distribution of this software
+ * without specific, written prior authorization.  If the
+ * above copyright notice or any other identification of the
+ * University of Michigan is included in any copy of any
+ * portion of this software, then the disclaimer below must
+ * also be included.
+ *
+ * This software is provided as is, without representation
+ * from the University of Michigan as to its fitness for any
+ * purpose, and without warranty by the University of
+ * Michigan of any kind, either express or implied, including
+ * without limitation the implied warranties of
+ * merchantability and fitness for a particular purpose.  The
+ * regents of the University of Michigan shall not be liable
+ * for any damages, including special, indirect, incidental, or
+ * consequential damages, with respect to any claim arising
+ * out of or in connection with the use of the software, even
+ * if it has been or is hereafter advised of the possibility of
+ * such damages.
+ */
+
+/*
+ * compact standalone description of darwin ccache IPC
+ * (believed true as of Kerberos-65.10; internal (unstable) interface,
+ * probably subject to change without notice.)
+ */
+
+#include <mach/std_types.defs>
+
+import "cc.types.h";
+
+subsystem CCacheIPC 128;
+
+type CCIInt32 = int32;
+type CCIUInt32 = unsigned32;
+type GloballyUniqueID = unsigned32;
+type String = array [] of char;
+type RawData = array [] of char;
+type CCITime = CCIUInt32;
+type ContextID = GloballyUniqueID;
+type CCacheID = GloballyUniqueID;
+type CredentialsID = GloballyUniqueID;
+type CCIResult = CCIInt32;
+type CCIPID = CCIInt32;
+type CCacheInName = String;
+type CCacheOutName = String;
+type CCacheInPrincipal = String;
+type CCacheOutPrincipal = String;
+type FlattenedInCredentials = RawData;
+type FlattenedOutCredentials = RawData;
+type CCacheIDArray = array [] of CCacheID;
+type CredentialsIDArray = array [] of CredentialsID;
+
+/* CCacheIPC.defs */
+routine InternalIPC_TellServerToQuit(p: mach_port_t; out r: CCIResult);
+routine InternalIPC_GetServerPID(p: mach_port_t; out j: CCIPID; out r: CCIResult);
+
+/* Context.defs */
+
+routine ContextIPC_GetChangeTime(p: mach_port_t; x: ContextID; out t: CCITime; out r: CCIResult);
+routine ContextIPC_OpenCCache(p: mach_port_t; x: ContextID; s: CCacheInName; out c: CCacheID; out r: CCIResult);
+routine ContextIPC_OpenDefaultCCache(p: mach_port_t; x: ContextID; out c: CCacheID; out r: CCIResult);
+routine ContextIPC_GetDefaultCCacheName(p: mach_port_t; x: ContextID; out s: CCacheOutName, dealloc; out r: CCIResult);
+routine ContextIPC_CreateCCache(p: mach_port_t; x: ContextID; s: CCacheInName; v: CCIUInt32; n: CCacheInPrincipal; out c: CCacheID; out r: CCIResult);
+routine ContextIPC_CreateDefaultCCache(p: mach_port_t; x: ContextID; v: CCIUInt32; n: CCacheInPrincipal; out c: CCacheID; out r: CCIResult);
+routine ContextIPC_CreateNewCCache(p: mach_port_t; x: ContextID; v: CCIUInt32; n: CCacheInPrincipal; out c: CCacheID; out r: CCIResult);
+routine ContextIPC_GetCCacheIDs(p: mach_port_t; x: ContextID; out i: CCacheIDArray, dealloc; out r: CCIResult);
+routine ContextIPC_GetGlobalContextID(p: mach_port_t; out x: ContextID; out r: CCIResult);
+routine ContextIPC_Compare(p: mach_port_t; x: ContextID; t: ContextID; out e: CCIUInt32; out r: CCIResult);
+
+/* CCache.defs */
+
+routine CCacheIPC_Destroy (p: mach_port_t; c: CCacheID; out r: CCIResult);
+routine CCacheIPC_SetDefault (p: mach_port_t; c: CCacheID; out r: CCIResult);
+routine CCacheIPC_GetCredentialsVersion(p: mach_port_t; c: CCacheID; out v: CCIUInt32; out r: CCIResult);
+routine CCacheIPC_GetPrincipal(p: mach_port_t; c: CCacheID; v: CCIUInt32; out n: CCacheOutPrincipal, dealloc; out r: CCIResult);
+routine CCacheIPC_GetName(p: mach_port_t; c: CCacheID; out n: CCacheOutName, dealloc; out r: CCIResult);
+routine CCacheIPC_SetPrincipal(p: mach_port_t; c: CCacheID; v: CCIUInt32; n: CCacheInPrincipal; out r: CCIResult);
+routine CCacheIPC_CompatSetPrincipal(p: mach_port_t; c: CCacheID; v: CCIUInt32; n: CCacheInPrincipal; out r: CCIResult);
+routine CCacheIPC_StoreCredentials(p: mach_port_t; c: CCacheID; t: FlattenedInCredentials; out r: CCIResult);
+routine CCacheIPC_RemoveCredentials(p: mach_port_t; c: CCacheID; i: CredentialsID; out r: CCIResult);
+routine CCacheIPC_GetLastDefaultTime(p: mach_port_t; c: CCacheID; out t: CCITime; out r: CCIResult);
+routine CCacheIPC_GetChangeTime(p: mach_port_t; c: CCacheID; out t: CCITime; out r: CCIResult);
+routine CCacheIPC_Move(p: mach_port_t; c: CCacheID; d: CCacheID; out r: CCIResult);
+routine CCacheIPC_GetCredentialsIDs(p: mach_port_t; c: CCacheID; out a: CredentialsIDArray, dealloc; out r: CCIResult);
+routine CCacheIPC_Compare(p: mach_port_t; c: CCacheID; t: CCacheID; out e: CCIUInt32; out r: CCIResult);
+routine CCacheIPC_GetKDCTimeOffset(p: mach_port_t; c: CCacheID; v: CCIUInt32; out t: CCITime; out r: CCIResult);
+routine CCacheIPC_SetKDCTimeOffset(p: mach_port_t; c: CCacheID; v: CCIUInt32; t: CCITime; out r: CCIResult);
+routine CCacheIPC_ClearKDCTimeOffset(p: mach_port_t; c: CCacheID; v: CCIUInt32; out r: CCIResult);
+
+/* Credentials.defs */
+
+routine CredentialsIPC_GetVersion(p: mach_port_t; c: CredentialsID; out v: CCIUInt32; out r: CCIResult);
+routine CredentialsIPC_Compare(p: mach_port_t; c: CredentialsID; t: CredentialsID; out e: CCIUInt32; out r: CCIResult);
+routine CredentialsIPC_FlattenCredentials(p: mach_port_t; c: CredentialsID; out t: FlattenedOutCredentials, dealloc; out r: CCIResult);

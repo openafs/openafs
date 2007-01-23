@@ -9,6 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 
 UKSRCS=nsafs.h nsafs.c securehash.c
 
@@ -157,8 +158,8 @@ LIBS=${kauthlib} ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libprot.a \
        ${authlib} ${rxkadlib} ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
        ${TOP_LIBDIR}/libsys.a  \
        ${TOP_LIBDIR}/liblwp.a ${deslib} ${cmdlib} \
-       ${TOP_LIBDIR}/libcom_err.a ${utilib} \
-       $(DBM) $(XLIBS)
+       ${utilib} \
+       $(DBM)
 
 AR=ar
 ARFLAGS=rv
@@ -172,7 +173,7 @@ OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 
 
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB) $(DCE_ADK_LIB)
-	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(DCE_ADK_LIB) $(XLIBS)
+	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(LIBCOM_ERR) $(DCE_ADK_LIB) $(XLIBS)
 
 weblog_starter: apache_afs_weblog.o weblog_errors.h 
 	$(CC) -o $@ apache_afs_weblog.o 

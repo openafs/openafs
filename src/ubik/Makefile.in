@@ -8,6 +8,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+
+CFLAGS=$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS)
+
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
 	ubikclient.o uerrors.o uinit.o
@@ -17,7 +21,7 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
-     ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
+     ${TOP_LIBDIR}/libcmd.a \
      ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
 all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client
@@ -28,13 +32,13 @@ depinstall: \
 	${TOP_INCDIR}/ubik_int.h
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
-	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)
+	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS) $(LIBCOM_ERR)
 
 utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik.a 
-	${CC} ${CFLAGS} -o utst_client utst_client.o utst_int.cs.o utst_int.xdr.o libubik.a $(LIBS)
+	${CC} ${CFLAGS} -o utst_client utst_client.o utst_int.cs.o utst_int.xdr.o libubik.a $(LIBS) $(LIBCOM_ERR)
 
 udebug: udebug.o libubik.a 
-	${CC} ${CFLAGS} -o udebug udebug.o libubik.a $(LIBS)
+	${CC} ${CFLAGS} -o udebug udebug.o libubik.a $(LIBS) $(LIBCOM_ERR)
 
 ubik_int.cs.c: ubik_int.xg
 	${RXGEN} -x -C -o $@ ${srcdir}/ubik_int.xg

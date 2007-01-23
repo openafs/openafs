@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -8,7 +8,39 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+<rxk5>
+K5SSL_DEF=@K5SSL_DEF@
+K5SSL_INC=@K5SSL_INC@
 
+AFS_K5SSL_AES = e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+#AFS_K5SSL_CAST = e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+AFS_K5SSL_DES3 = e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o des.o
+AFS_K5SSL_DES = e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+AFS_K5SSL_RC4 = e_rc4.o rc4.o
+#AFS_K5SSL_RC6 = e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+
+AFS_K5SSL_OBJS = k5s_ck.o k5s_evp.o k5s_rn.o k5s_cm.o k5s_in.o \
+	$(AFS_K5SSL_AES) $(AFS_K5SSL_CAST) \
+	$(AFS_K5SSL_DES) $(AFS_K5SSL_DES3) \
+	$(AFS_K5SSL_RC4) $(AFS_K5SSL_RC6) \
+	m_crc32.o \
+	m_md4.o \
+	m_md5.o \
+	md4c.o \
+	md5c.o \
+	m_sha1.o \
+	shs.o
+
+AFS_RXK5_OBJS = \
+	rxk5_tkt.o \
+	rxkad_tkt.o \
+	afs_token.xdr.o \
+	rxk5_client.o \
+	rxk5_common.o \
+	rxk5c.xdr.o \
+	xdr_mem.o
+
+<all>
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_debug.o \
@@ -18,6 +50,10 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vnodeops.o \
+<rxk5>
+	$(AFS_RXK5_OBJS) \
+	$(AFS_K5SSL_OBJS) \
+<all>
 	osi_vm.o
 
 AFS_OS_NFSOBJS = \
@@ -57,7 +93,7 @@ AFS_OS_NONFSOBJS = \
 # for 11.23, see the DDK BE/Sample_makefiles/Makefile.bld
 # for mod drivers.
 #
-# 11.23 uses new compiler, with new options. The same compiler is on pa_risc and ia64 
+# 11.23 uses new compiler, with new options. The same compiler is on pa_risc and ia64
 #
 <hp_ux110 hp_ux102 hp_ux11i>
 KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
@@ -117,7 +153,7 @@ LDOPTS_pa=
 # above from the Makefile.bld example
 
 LDOPTS= ${LDOPTS_${ARCH}}
-KDEFS= $(CCOPTS_common) $(IDENTS_common) $(CPU_KDEFS) 
+KDEFS= $(CCOPTS_common) $(IDENTS_common) $(CPU_KDEFS)
 KDEFS_64= ${CCOPTS_${ARCH}} ${IDENTS_${ARCH}}
 
 MODLINK=/opt/ddk/11.23/BE/bin/modlink
@@ -125,10 +161,12 @@ MODMETA=/opt/ddk/11.23/BE/bin/modmeta
 
 <all>
 
-DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
-OPTF=${OPT} 
-OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS ${K5SSL_DEF}
+OPTF=${OPT}
+OPTF2=${OPT2}
+CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_OBJDIR}/src/config ${FSINCLUDES} \
+	   -I${TOP_SRCDIR}/rxk5 ${K5SSL_INC} \
+	   $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ=STATIC

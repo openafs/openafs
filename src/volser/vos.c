@@ -62,6 +62,9 @@ RCSID
 #include <signal.h>
 #endif
 #include "volser_prototypes.h"
+#ifdef AFS_RXK5	
+#include <afs/rxk5_utilafs.h>
+#endif
 
 #ifdef HAVE_POSIX_REGEX
 #include <regex.h>
@@ -77,12 +80,21 @@ struct tqHead {
     struct tqElem *next;
 };
 
+#ifdef AFS_RXK5
+#define RXK5_PARMS \
+cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use rxk5 security");\
+cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security");
+#else
+#define RXK5_PARMS /**/
+#endif
+
 #define COMMONPARMS     cmd_Seek(ts, 12);\
 cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
 cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
 cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
+RXK5_PARMS
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
@@ -5629,6 +5641,7 @@ MyBeforeProc(as, arock)
     register char *tcell;
     register afs_int32 code;
     register afs_int32 sauth;
+    int force_flags;
 
     /* Initialize the ubik_client connection */
     rx_SetRxDeadTime(90);
@@ -5638,12 +5651,17 @@ MyBeforeProc(as, arock)
     tcell = NULL;
     if (as->parms[12].items)	/* if -cell specified */
 	tcell = as->parms[12].items->data;
-    if (as->parms[14].items)	/* -serverauth specified */
+    if (as->parms[14].items)	/* -localauth specified */
 	sauth = 1;
-    if (as->parms[16].items)	/* -crypt specified */
+    if (as->parms[16].items)	/* -encrypt specified */
 	vsu_SetCrypt(1);
+    force_flags = FORCE_NOAUTH & -(as->parms[13].items != 0);	/* -noauth */
+#ifdef AFS_RXK5
+    force_flags |= (FORCE_RXK5 & -(as->parms[17].items != 0));	/* -k5 */
+    force_flags |= (FORCE_RXKAD & -(as->parms[18].items != 0));	/* -k4 */
+#endif
     if ((code =
-	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
+	 vsu_ClientInit(force_flags, confdir, tcell, sauth,
 			&cstruct, UV_SetSecurity))) {
 	fprintf(STDERR, "could not initialize VLDB library (code=%lu) \n",
 		(unsigned long)code);
@@ -5654,14 +5672,6 @@ MyBeforeProc(as, arock)
 	verbose = 1;
     else
 	verbose = 0;
-    return 0;
-}
-
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
     return 0;
 }
 
@@ -5689,6 +5699,17 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    initialize_CMD_error_table();
+    initialize_KTC_error_table();
+    initialize_KA_error_table();
+    initialize_ACFG_error_table();
+    initialize_U_error_table();
+    initialize_VL_error_table();
+    initialize_VOLS_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
 
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 

@@ -38,7 +38,7 @@ afs_getgrset(char *userName)
 }
 
 struct group *
-afs_getgrgid(int id)
+afs_getgrgid(gid_t id)
 {
     return NULL;
 }
@@ -49,14 +49,14 @@ afs_getgrnam(char *name)
     return NULL;
 }
 
-int
-afs_getpwnam(int id)
+struct passwd *
+afs_getpwuid(uid_t id)
 {
     return NULL;
 }
 
-int
-afs_getpwuid(char *name)
+struct passwd *
+afs_getpwnam(const char * name)
 {
     return NULL;
 }

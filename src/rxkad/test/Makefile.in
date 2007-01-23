@@ -8,6 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 
 CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
@@ -21,7 +22,6 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
 LIBRPC = ../../librpc/libafsrpc.so
@@ -76,7 +76,7 @@ th_stress_s.o: stress_s.c ${HEADERS}
 stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
 		stress.ss.o stress_errs.o 
 	$(CC) $(CFLAGS) -o stress stress.o stress.xdr.o stress_c.o \
-		stress_s.o stress.cs.o stress.ss.o stress_errs.o ${LIBS}
+		stress_s.o stress.cs.o stress.ss.o stress_errs.o ${LIBS} $(LIBCOM_ERR)
 
 th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
 		th_stress.cs.o th_stress.ss.o stress_errs.o \

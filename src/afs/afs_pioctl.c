@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#include "afs_capabilities.h"
+
 RCSID
     ("$Header$");
 
@@ -24,6 +26,19 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/vice.h"
 #include "rx/rx_globals.h"
+
+#ifdef AFS_RXK5
+#ifdef USING_SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#include <rx/rxk5.h>
+#include <afs/rxk5_tkt.h>
+#else
+#include <afs/afs_token.h>
+#include <afs/afs_token_protos.h>
+#endif
 
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
@@ -91,6 +106,9 @@ DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PNFSNukeCreds);
+DECL_PIOCTL(PGetCapabilities);
+DECL_PIOCTL(PGetTokensNew);
+DECL_PIOCTL(PSetTokensNew);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -193,6 +211,11 @@ static int (*(CpioctlSw[])) () = {
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
+	PBogus,			/* 4 */
+	PBogus,			/* 5 -- get/set disconnected */
+	PGetCapabilities,	/* 6 - query cache manager capabilities string table */
+	PGetTokensNew,		/* 7 -- get tokens */
+	PSetTokensNew,		/* 8 -- set tokens */
 };
 
 static int (*(OpioctlSw[])) () = {
@@ -1346,6 +1369,8 @@ DECL_PIOCTL(PSetTokens)
 	return EINVAL;
     }
     memcpy((char *)&clear, ain, sizeof(struct ClearToken));
+    if (clear.ViceId == UNDEFVID)
+	return EINVAL;
     if (clear.AuthHandle == -1)
 	clear.AuthHandle = 999;	/* more rxvab compat stuff */
     ain += sizeof(struct ClearToken);
@@ -1394,13 +1419,20 @@ DECL_PIOCTL(PSetTokens)
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
 	}
-    }
+    } /* } } */
     /* now we just set the tokens */
     tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
     tu->vid = clear.ViceId;
     if (tu->stp != NULL) {
 	afs_osi_Free(tu->stp, tu->stLen);
     }
+#ifdef AFS_RXK5
+    if (tu->rxk5creds) {
+	krb5_context k5context = rxk5_get_context(0);
+	rxk5_free_creds(k5context, (rxk5_creds*) tu->rxk5creds);
+	tu->rxk5creds = 0;
+    }
+#endif
     tu->stp = (char *)afs_osi_Alloc(stLen);
     tu->stLen = stLen;
     memcpy(tu->stp, stp, stLen);
@@ -1781,6 +1813,13 @@ DECL_PIOCTL(PUnlog)
 	if (tu->uid == areq->uid) {
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
+#ifdef AFS_RXK5
+	    if(tu->rxk5creds) {
+	      krb5_context  k5context = rxk5_get_context(0);
+	      rxk5_free_creds(k5context, (rxk5_creds*) tu->rxk5creds);
+	      tu->rxk5creds = NULL;	      
+	    }
+#endif
 	    /* security is not having to say you're sorry */
 	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
@@ -3909,7 +3948,7 @@ DECL_PIOCTL(PCallBackAddr)
 
 DECL_PIOCTL(PNFSNukeCreds)
 {
-    afs_uint32 addr, code;
+    afs_uint32 addr;
     register afs_int32 i;
     register struct unixuser *tu;
 
@@ -3957,4 +3996,369 @@ DECL_PIOCTL(PNFSNukeCreds)
     }
     ReleaseWriteLock(&afs_xuser);
     return 0;
+}
+
+DECL_PIOCTL(PGetCapabilities)
+{
+	char *rsltStr;
+	afs_int32 rsltLen;
+
+	AFS_STATCNT(PGetCapabilities);
+
+	rsltStr  = afs_GetCapabilities(ain,  &rsltLen);
+	memcpy(aout,  rsltStr, rsltLen); /* todo: max aout is AFS_LRALLOCSIZ */
+	*aoutSize = rsltLen; 
+	osi_Free(rsltStr, rsltLen);
+
+	return 0;
+}
+
+DECL_PIOCTL(PGetTokensNew)
+{
+    afs_int32 code;
+    register struct unixuser *tu;
+    register struct cell *tcell;
+    register afs_int32 i;
+    afs_token *a_token;
+#ifdef AFS_RXK5
+    krb5_context k5_context;
+#endif
+    int bufsize;
+    afs_int32 iterator, style;
+    void *buf;
+
+    AFS_STATCNT(PGetTokensNew);
+
+    if (!afs_resourceinit_flag) /* afs daemons haven't started yet */
+	return EIO;	/* Inappropriate ioctl for device */
+
+    /* presumably, redundant */
+    *aoutSize = 0;
+
+    /* If no input parameter, return tokens for cell 1.
+     * If input parameter is just an integer, return the parm'th tokens
+     * for this unix uid.  Return EDOM if counter out of range.
+     * if input parameter is integer 0 followed by string,
+     * ignore the 0 and look look by cell name.
+     * If no tokens for the particular cell, return ENOTCONN.
+     * Tokens are returned to the client as an XDR-encoded afs_token structure,
+     * a variant record discriminated by the token type.  The primary cell indicator 
+     * and cell name are always sent in the afs_token structure.
+     */
+
+    a_token = 0;    
+    if (!ainSize)
+	style = 0;
+    else if (ainSize == sizeof(afs_int32))
+	style = 1;
+    else if (ainSize > sizeof(afs_int32))
+	style = 2;
+    else
+	return EINVAL;
+    if (style) {
+	memcpy((char *)&iterator, ain, sizeof(afs_int32));
+    }
+    if (style < 2) {
+	i = UHash(areq->uid);
+	ObtainReadLock(&afs_xuser);
+	for (tu = afs_users[i]; tu; tu = tu->next) {
+	    if (style) {
+		if (tu->uid == areq->uid && (tu->states & UHasTokens)) {
+		    if (iterator-- == 0)
+			break;  /* are we done yet? */
+		}
+	    } else {
+		if (tu->uid == areq->uid && afs_IsPrimaryCellNum(tu->cell))
+		    break;
+	    }
+	}
+	if (tu) {
+	    /*
+	     * No need to hold a read lock on each user entry
+	     */
+	    tu->refCount++;
+	}
+	ReleaseReadLock(&afs_xuser);
+    } else {
+	if (iterator) return EINVAL;	/* mbz */
+	if (ain[ainSize - 1]) return EINVAL;	/* not 0 terminated */
+	tcell = afs_GetCellByName(ain+sizeof(afs_int32), READ_LOCK);
+	if (tcell) {
+	    i = tcell->cellNum;
+	    afs_PutCell(tcell, READ_LOCK);
+	    tu = afs_GetUser(areq->uid, i, READ_LOCK);
+	    if (tu && !(tu->states & UHasTokens)) {
+		code = ENOTCONN;
+		goto Failed;
+	    }
+	} else tu = 0;
+    }
+    if (!tu) {
+	return EDOM;
+    }
+    /* if we get here, we have creds */
+#ifdef AFS_RXK5
+    if(tu->rxk5creds) {
+	/* expired? */
+	if(((rxk5_creds*) tu->rxk5creds)->k5creds->times.endtime < osi_Time()) {
+	    code = ENOTCONN;
+	    goto Failed;
+	}
+	k5_context = rxk5_get_context(0);
+	code = make_afs_token_rxk5(
+	    k5_context, 
+	    ((rxk5_creds*) tu->rxk5creds)->cell,
+	    ((rxk5_creds*) tu->rxk5creds)->ViceId,
+	    ((rxk5_creds*) tu->rxk5creds)->k5creds,
+	    &a_token);
+	if(code) {
+	    afs_warn("PGetTokensNew: trouble serializing rxk5creds (oops)\n");
+	    code = EINVAL;
+	    goto Failed;
+	}
+    } else {
+#endif /* AFS_RXK5 */
+	/* no creds or, perhaps, expired? */
+	if (((tu->states & UHasTokens) == 0)
+		    || (tu->ct.EndTimestamp < osi_Time())) {
+	    tu->states |= (UTokensBad | UNeedsReset);
+	    code = ENOTCONN;
+	    goto Failed;
+	}
+	/* make an rxkad_token */
+	tcell = afs_GetCell(tu->cell, READ_LOCK);
+	if (!tcell) {
+	    code = ESRCH;
+	    goto Failed;
+	}
+	code = make_afs_token_rxkad_k(		  
+	    tcell->cellName,
+	    (n_clear_token *) &tu->ct,	/* XXX ugh */
+	    tu->stp,
+	    tu->stLen,
+	    ((tu->states & UPrimary) == 1) ? 1 : 0,
+	    &a_token);
+	afs_PutCell(tcell, READ_LOCK);
+	if(code) {
+	    afs_warn("PGetTokensNew: trouble serializing rxkad creds (oops)\n");
+	    code = EINVAL;
+	    goto Failed;
+	}
+#ifdef AFS_RXK5
+    }
+#endif
+    /* send token if we have one */
+    if(a_token) {
+	buf = aout;
+	bufsize = AFS_LRALLOCSIZ;
+	code = encode_afs_token(a_token, buf, &bufsize);
+	*aoutSize = bufsize;
+	free_afs_token(a_token);
+    }
+    /* we have tu */
+Failed:
+    afs_PutUser(tu, READ_LOCK);
+    return code;
+}
+
+DECL_PIOCTL(PSetTokensNew)
+{
+    afs_int32 i;
+    register struct unixuser *tu;
+    register struct cell *tcell;
+    afs_int32 primflag;
+    struct vrequest treq;
+    int code, rslt;
+    afs_token *a_token;
+#ifdef AFS_RXK5
+    rxk5_creds *rxk5creds;
+    krb5_context k5context = 0;
+    rxk5_token *k5_token;
+#endif
+    afs_int32 set_parent_pag;
+    rxkad_token *kad_token;
+
+    AFS_STATCNT(PSetTokensNew);
+
+    primflag = 0;
+    rslt = 666;
+    if (!afs_resourceinit_flag) /* afs daemons haven't started yet */
+	return EIO;	/* Inappropriate ioctl for device */
+
+    a_token = 0;
+#ifdef AFS_RXK5
+    rxk5creds = 0;
+    k5_token = 0;
+#endif
+    kad_token = 0;
+    set_parent_pag = 0;
+
+    code = parse_afs_token(ain, ainSize, &a_token);
+    if(code)
+	return EINVAL;
+
+    switch(a_token->cu->cu_type) {
+    case CU_NOAUTH:
+	tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
+	break;
+    case CU_KAD:
+	/* rxkad */
+	kad_token = &(a_token->cu->cu_u.cu_kad);
+	if (kad_token->token.viceid == UNDEFVID)
+	    return EINVAL;
+	if (kad_token->ticket.ticket_len > (unsigned) MAXKTCTICKETLEN)
+	    return EINVAL;
+	/* for rxkad, do what we always did */
+	primflag = kad_token->primary_flag;
+	if ((primflag & 0x8000) != 0) {	/* XXX Use Constant XXX */
+	    primflag &= ~0x8000;
+	    set_parent_pag = 1;
+	}
+	tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
+	/* except apparently the only way to trigger primary cell
+	   behavior was to not send a flag and cell name --
+	   check if this should be emulated as a flag */
+	break;
+#ifdef AFS_RXK5
+    case CU_K5:
+	/* rxk5 */
+	k5context  = rxk5_get_context(0);
+	k5_token = &(a_token->cu->cu_u.cu_rxk5);
+	if((a_token->flags & KTC_EX_SETPAG) != 0) {
+	    set_parent_pag = 1;
+	}
+	if((a_token->cell) && strlen(a_token->cell) > 0) {
+	    /* normally, we'll be here */
+	    tcell = afs_GetCellByName(a_token->cell, READ_LOCK);
+	    primflag = 0;
+	}
+	else {
+	    tcell = afs_GetPrimaryCell(READ_LOCK);
+	    primflag = 1;
+	}
+	code = afs_token_to_rxk5_creds(a_token, &rxk5creds);
+	if(code) {
+	    afs_warn("PSetTokensNew: failed converting afs_token to rxk5creds");
+	    return EINVAL;
+	}
+	break;
+#endif /* AFS_RXK5 */
+    default:
+	afs_warn("Unknown credential type %d passed to PSetTokensNew\n",
+	    a_token->cu->cu_type);
+	return EINVAL;
+    }
+
+    if (!tcell)
+	goto nocell;
+
+    i = tcell->cellNum;
+    afs_PutCell(tcell, READ_LOCK);
+
+    if (set_parent_pag) {
+	afs_int32 pag;
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
+	struct proc *p = current_proc();	/* XXX */
+#else
+	struct proc *p = curproc;	/* XXX */
+#endif
+#ifndef AFS_DARWIN80_ENV
+	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
+	    p->p_pid, p->p_comm);
+#endif
+	if (!setpag(p, acred, -1, &pag, 1)) {
+#else
+#ifdef	AFS_OSF_ENV
+	if (!setpag(u.u_procp, acred, -1, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
+#else
+	if (!setpag(acred, -1, &pag, 1)) {
+#endif
+#endif
+	    afs_InitReq(&treq, *acred);
+	    areq = &treq;
+	}
+    }	/* } } */
+
+    tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* Index i has the cell # */
+    /* If the user has creds, discard  */
+    if (tu->stp != NULL) {
+	afs_osi_Free(tu->stp, tu->stLen);
+    }
+    tu->stLen = 0;
+    tu->stp = 0;
+#ifdef AFS_RXK5
+    if(tu->rxk5creds != NULL) {
+	rxk5_free_creds(k5context, (rxk5_creds*) tu->rxk5creds);
+	tu->rxk5creds = NULL;
+    }
+#endif
+    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+
+    switch(a_token->cu->cu_type) {
+    case CU_KAD:
+	/* rxkad token */ 
+	if(kad_token->token.kvno  == -1)
+	    tu->ct.AuthHandle = 999;
+	else
+	    tu->ct.AuthHandle = kad_token->token.kvno;
+	memcpy(tu->ct.HandShakeKey, kad_token->token.m_key, 8);
+	tu->ct.ViceId = kad_token->token.viceid;
+	tu->ct.BeginTimestamp = kad_token->token.begintime;
+	tu->ct.EndTimestamp = kad_token->token.endtime;
+	tu->vid = tu->ct.ViceId;
+	/* and the ticket */
+	tu->stLen = kad_token->ticket.ticket_len;
+	tu->stp = (char *) afs_osi_Alloc(tu->stLen);
+	memcpy(tu->stp, kad_token->ticket.ticket_val, tu->stLen);
+	break;
+#ifdef AFS_RXK5
+    case CU_K5:
+	/* rxk5 */
+	tu->vid = 555;	/* ignore: rxk5creds->ViceId */
+	tu->rxk5creds = (rxk5_creds_opaque) rxk5creds;    
+	rxk5creds = 0;
+	break;
+#endif /* AFS_RXK5 */
+    case CU_NOAUTH:
+	tu->vid = UNDEFVID;
+	tu->states &= ~UHasTokens;
+	tu->tokenTime = 0;
+	goto Release;
+    }
+
+#ifndef AFS_NOSTATS
+    afs_stats_cmfullperf.authent.TicketUpdates++;
+    afs_ComputePAGStats();
+#endif /* AFS_NOSTATS */
+    rslt = 0;
+    tu->states |= UHasTokens;
+    tu->states &= ~UTokensBad;
+    afs_SetPrimary(tu, primflag);
+    tu->tokenTime = osi_Time();
+Release:
+    afs_ResetUserConns(tu);
+    afs_PutUser(tu, WRITE_LOCK);
+
+    goto out;
+
+nocell:
+    {
+	int t1;    
+	t1 = afs_initState;
+	if (t1 < 101)
+	    rslt = EIO;
+	else
+	    rslt = ESRCH;
+    }
+
+out:
+    if(a_token)
+	    free_afs_token(a_token);
+#ifdef AFS_RXK5
+    if(rxk5creds)
+	rxk5_free_creds(k5context, rxk5creds);
+#endif
+
+    return rslt;
 }

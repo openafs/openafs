@@ -16,11 +16,14 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 CC=${MT_CC}
 CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../rxkad \
 	-I../fsint -DRXDEBUG ${MT_CFLAGS}
+K5CFLAGS = ${CFLAGS} ${KRB5CFLAGS}
 
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ${srcdir}/../rx
 CCRULE = ${CC} ${CFLAGS} -c 
+K5CCRULE = ${CC} ${K5CFLAGS} -c $?
 RXKAD = ${srcdir}/../rxkad
+RXK5 = ../rxk5
 RXSTAT = ${srcdir}/../rxstat
 FSINT = ${srcdir}/../fsint
 DES = ${srcdir}/../des
@@ -40,7 +43,8 @@ UTILOBJS =\
 COMERROBJS =\
 	error_msg.o \
 	et_name.o \
-	com_err.o
+	com_err.o \
+	afserror.o
 
 XDROBJS =\
 	xdr.o \
@@ -52,6 +56,7 @@ XDROBJS =\
 	xdr_afsuuid.o \
 	xdr_update.o \
 	xdr_refernce.o \
+	xdr_mem.o \
 	AFS_component_version_number.o
 
 RXOBJS =\
@@ -82,6 +87,9 @@ FSINTOBJS =\
 	afscbint.xdr.o \
 	afsaux.o
 
+#FCRYPT=	fcrypt.o crypt_conn.o
+FCRYPT=	bg-fcrypt.o
+
 RXKADOBJS =\
 	rxkad_client.o \
 	rxkad_server.o \
@@ -91,8 +99,15 @@ RXKADOBJS =\
 	crc.o \
 	md4.o \
 	md5.o \
-	fcrypt.o \
-	crypt_conn.o
+	$(FCRYPT)
+
+@ENABLE_RXK5@RXK5OBJS =\
+@ENABLE_RXK5@	rxk5_client.o \
+@ENABLE_RXK5@	rxk5_server.o \
+@ENABLE_RXK5@	rxk5_common.o \
+@ENABLE_RXK5@	rxk5_info.o \
+@ENABLE_RXK5@	rxk5_getkey.o \
+@ENABLE_RXK5@	rxk5c.xdr.o @K5SUPPORT@
 
 DESOBJS =\
 	des.o \
@@ -119,6 +134,7 @@ LIBOBJS = \
 	${DESOBJS} \
 	${XDROBJS} \
 	${RXKADOBJS} \
+	${RXK5OBJS} \
 	${COMERROBJS} \
 	${UTILOBJS} \
 	${SYSOBJS} \
@@ -131,8 +147,8 @@ all: ${TOP_LIBDIR}/libafsrpc.a
 
 install: ${DESTDIR}${libdir}/libafsrpc.a
 
-${DEST}/lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${DEST}/lib/libafsrpc.a: libafsrpc.a linktest
+	${INSTALL} libafsrpc.a $@
 
 libafsrpc.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -213,6 +229,34 @@ fcrypt.o: ${RXKAD}/domestic/fcrypt.c
 
 crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
 	${CCRULE} ${RXKAD}/domestic/crypt_conn.c
+
+bg-fcrypt.o: ${RXKAD}/bg-fcrypt.c
+	${CCRULE} ${RXKAD}/bg-fcrypt.c
+
+rxk5_client.o: ${RXK5}/rxk5_client.c
+	${K5CCRULE}
+
+rxk5_server.o: ${RXK5}/rxk5_server.c
+	${K5CCRULE}
+
+rxk5_common.o: ${RXK5}/rxk5_common.c
+	${K5CCRULE}
+
+rxk5_info.o: ${RXK5}/rxk5_info.c
+	${K5CCRULE}
+
+rxk5_getkey.o: ${RXK5}/rxk5_getkey.c
+	${K5CCRULE}
+
+rxk5c.xdr.o: ${RXK5}/rxk5c.xdr.c
+	${K5CCRULE}
+
+nfold.o: ${RXK5}/nfold.c
+	${K5CCRULE}
+
+danish.o: ${RXK5}/danish.c
+	${K5CCRULE}
+
 
 AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
@@ -336,6 +380,9 @@ error_msg.o: ${COMERR}/error_msg.c
 et_name.o: ${COMERR}/et_name.c
 	${CCRULE} ${COMERR}/et_name.c
 
+afserror.o: ${COMERR}/afserror.c
+	${CCRULE} ${COMERR}/afserror.c
+
 com_err.o: ${COMERR}/com_err.c
 	${CCRULE} ${COMERR}/com_err.c
 
@@ -398,14 +445,24 @@ afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} ${FSINT}/afsaux.c
 
+linktest.o: linktest.c
+	${K5CCRULE}
+
 clean:
-	$(RM) -f *.o libafsrpc*
+	$(RM) -f *.o libafsrpc* linktest
 
-${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a linktest
+	${INSTALL} libafsrpc.a $@
 
-${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a linktest
+	${INSTALL} libafsrpc.a $@
+
+TEST_CFLAGS=@MT_CFLAGS@ $(COMMON_CFLAGS) ${KRB5CFLAGS} $(INCLUDES)
+TEST_LDFLAGS=@LDFLAGS@
+TEST_LIBS=@KRB5LIBS@ @MT_LIBS@ @XLIBS@
+
+linktest: libafsrpc.a
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) libafsrpc.a ${KRB5LIBS} $(TEST_LIBS)
 
 dest: ${DEST}/lib/libafsrpc.a
 

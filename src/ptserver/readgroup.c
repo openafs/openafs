@@ -50,16 +50,6 @@ report_error(afs_int32 code, char *name, char *gname)
     }
 }
 
-int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-
 #include "AFS_component_version_number.c"
 
 int
@@ -95,7 +85,7 @@ main(int argc, char **argv)
 		strncpy(buf, argv[i], 150);
 	}
     }
-    code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
+    code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, cellname);
     free(cellname);
     if (code) {
 	fprintf(stderr, "pr_Initialize failed .. exiting.\n");

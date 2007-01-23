@@ -424,6 +424,7 @@ main(argc, argv)
     initialize_U_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
+    initialize_rx_error_table();
 
     ts = cmd_CreateSyntax(NULL, CommandProc, 0,
 			  "obtain Kerberos authentication");

@@ -10,8 +10,12 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+KRB5LIBS=@KRB5LIBS@
+
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS} ${KRB5CFLAGS} \
+	-I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG \
+	-DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -50,7 +54,7 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 
 SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${RXK5T} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
 all: fileserver state_analyzer
 
@@ -200,7 +204,8 @@ state_analyzer.o: state_analyzer.c
 	${CCRULE}
 
 fileserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
+	${MT_LIBS} ${XLIBS} ${KRB5LIBS}
 
 state_analyzer: ${SDBGOBJS}
 	${CC} ${LDFLAGS} -o state_analyzer ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
