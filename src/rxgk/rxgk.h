@@ -37,12 +37,7 @@
 #define __RXGK_H
 
 #include <gssapi/gssapi.h>
-
-#define USAGE_ENCRYPT 100
-#define USAGE_CHECK 101
-#define USAGE_CLIENT 102
-#define USAGE_SERVER 103
-#define USAGE_RESPONSE 104
+#include <rxgk/rxgk_proto.h>
 
 typedef int rxgk_level;
 #define RXGK_M_AUTH_ONLY	0

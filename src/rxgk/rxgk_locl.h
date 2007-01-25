@@ -39,9 +39,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#ifdef HAVE_AFSCONFIG_H
-#include <afsconfig.h>
-#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -98,10 +95,10 @@ extern int rx_epoch, rx_nextCid;
 krb5_context rxgk_krb5_context;
 
 typedef struct key_stuff {
-    krb5_keyblock	ks_key;
-    uint32_t		ks_recv_seqnum;
-    krb5_keyblock	ks_skey;
-    krb5_crypto		ks_crypto;	/* rx session key */
+//    krb5_keyblock	ks_key;
+//    uint32_t		ks_recv_seqnum;
+//    krb5_keyblock	ks_skey;
+//    krb5_crypto		ks_crypto;	/* rx session key */
     krb5_crypto		ks_scrypto;	/* rx stream key */
 } key_stuff;
 
@@ -114,22 +111,16 @@ extern int rxgk_key_contrib_size;
 
 int
 rxgk_prepare_packet(struct rx_packet *pkt, struct rx_connection *con,
-		     int level, key_stuff *k, end_stuff *e);
+		    int level, key_stuff *k, end_stuff *e,
+		    int keyusage_enc, int keyusage_mic);
 
 int
 rxgk_check_packet(struct rx_packet *pkt, struct rx_connection *con,
-		   int level, key_stuff *k, end_stuff *e);
+		  int level, key_stuff *k, end_stuff *e,
+		  int keyusage_enc, int keyusage_mic);
 
-/* Per connection specific server data */
-typedef struct serv_con_data {
-    end_stuff e;
-    key_stuff k;
-    uint32_t expires;
-    char nonce[20];
-    rxgk_level cur_level;	/* Starts at min_level and can only increase */
-    char authenticated;
-    struct rxgk_ticket *ticket;
-} serv_con_data;
+int
+rxgk_crypto_init(struct rxgk_keyblock *tk, key_stuff *k);
 
 /* rxgk */
 
@@ -218,5 +209,10 @@ rxgk_decrypt_buffer(RXGK_Token *in, RXGK_Token *out,
 
 int
 rxgk_get_server_ticket_key(struct rxgk_keyblock *key);
+
+int
+rxgk_derive_transport_key(struct rxgk_keyblock *k0,
+			  struct rxgk_keyblock *tk,
+			  uint32_t epoch, uint32_t cid, int64_t start_time);
 
 #endif /* __RXGK_LOCL_H */
