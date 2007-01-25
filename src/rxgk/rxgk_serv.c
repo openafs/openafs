@@ -52,6 +52,18 @@ typedef struct rxgk_serv_class {
     struct rxgk_server_params params;
 } rxgk_serv_class;
 
+/* Per connection specific server data */
+typedef struct serv_con_data {
+    end_stuff e;
+    key_stuff k;
+    uint32_t expires;
+    char nonce[20];
+    rxgk_level cur_level;	/* Starts at min_level and can only increase */
+    char authenticated;
+    struct rxgk_ticket ticket;
+    struct rxgk_keyblock tk;
+} serv_con_data;
+
 extern krb5_crypto rxgk_crypto;
 
 static int
@@ -151,17 +163,17 @@ server_CheckResponse(struct rx_securityClass *obj_,
 		     struct rx_packet *pkt)
 {
     int ret;
-#if 0
     serv_con_data *cdat = (serv_con_data *) con->securityData;
     struct RXGK_Response_Crypt rc;
-#endif
     struct RXGK_Response r;
-    struct rxgk_ticket c;
     char response[RXGK_RESPONSE_MAX_SIZE];
     size_t len, len2;
+    RXGK_Token rc_clear, rc_crypt;
+    struct rxgk_keyblock k0;
+    const char *p;
+    int i;
 
     memset(&r, 0, sizeof(r));
-    memset(&c, 0, sizeof(c));
     
     len = rx_SlowReadPacket(pkt, 0, sizeof(response), response);
     if (len <= 0)
@@ -173,75 +185,60 @@ server_CheckResponse(struct rx_securityClass *obj_,
 	goto out;
     }
 
-    ret = rxgk_decrypt_ticket(&r.rr_authenticator, &c);
+    ret = rxgk_decrypt_ticket(&r.rr_authenticator, &cdat->ticket);
     if (ret) {
 	ret = RXGKPACKETSHORT;
 	goto out;
     }
 
-    return 0;
+    k0.data = cdat->ticket.key.val;
+    k0.length = cdat->ticket.key.len;
+    k0.enctype = cdat->ticket.enctype;
 
-#if 0
-    ret = rxgk_decode_auth_token(r.rr_authenticator.val,
-				 r.rr_authenticator.len,
-				 &c);
-    if (ret)
-	goto out;
+    ret = rxgk_derive_transport_key(&k0, &cdat->tk,
+				    con->epoch, con->cid, r.start_time);
+    if (ret) {
+	return ret;
+    }
 
-#if 0
-    ret = rxgk_random_to_key(c.ac_enctype, c.ac_key.val, c.ac_key.len,
-			     &cdat->k.ks_key);
-    if (ret)
-	goto out;
+    rc_crypt.val = r.rr_ctext.val;
+    rc_crypt.len = r.rr_ctext.len;
 
-    ret = krb5_crypto_init(rxgk_krb5_context,
-			   &cdat->k.ks_key,
-			   cdat->k.ks_key.keytype, 
-			   &cdat->k.ks_crypto);
-    if (ret)
-	goto out2;
+    ret = rxgk_decrypt_buffer(&rc_crypt, &rc_clear,
+			      &cdat->tk, RXGK_CLIENT_ENC_RESPONSE);
+    if (ret) {
+	free(cdat->tk.data);
+	return RXGKPACKETSHORT;
+    }
 
+    len = rc_clear.len;
+    p = ydr_decode_RXGK_Response_Crypt(&rc, rc_clear.val, &len);
+    if (p == NULL)
+	return RXGKPACKETSHORT;
 
-    {
-	krb5_data data;
+    if (rc.epoch != con->epoch ||
+	rc.cid != (con->cid & RX_CIDMASK)) {
+	return RXGKPACKETSHORT;
+    }
 
-	ret = krb5_decrypt(rxgk_krb5_context, 
-			   cdat->k.ks_crypto, RXGK_CLIENT_ENC_CHALLENGE, 
-			   r.rr_ctext.val, r.rr_ctext.len, &data);
-	if (ret)
-	    goto out2;
-
-	len = data.length;
-	if (ydr_decode_RXGK_Response_Crypt(&rc, data.data, &len) == NULL) {
-	    krb5_data_free(&data);
-	    goto out2;
+    for (i = 0; i < RX_MAXCALLS; i++) {
+	if (rc.call_numbers[i] < 0) {
+	    return RXGKSEALEDINCON;
 	}
-
-	krb5_data_free(&data);
     }
 
-    if (rc.epoch != con->epoch
-	|| rc.cid != (con->cid & RX_CIDMASK)
+    rxi_SetCallNumberVector(con, rc.call_numbers);
+
+    if (memcmp(rc.nonce, cdat->nonce, sizeof(rc.nonce)) != 0) {
+	return RXGKSEALEDINCON;
+    }
+
+    ret = rxgk_crypto_init(&cdat->tk, &cdat->k);
+
+    if (ret)
+	return ret;
+
 #if 0
-	|| rc.security_index != con->securityIndex
-#endif
-	) {
-	ret = RXGKSEALEDINCON;
-	goto out2;
-    }
-
-    {
-	int i;
-	for (i = 0; i < RX_MAXCALLS; i++)
-	{
-	    if (rc.call_numbers[i] < 0) {
-		ret = RXGKSEALEDINCON;
-		goto out2;
-	    }
-	}
-
-    }
-
     if (rc.nonce != cdat->nonce + 1) {
 	ret = RXGKOUTOFSEQUENCE;
 	goto out2;
@@ -259,12 +256,6 @@ server_CheckResponse(struct rx_securityClass *obj_,
 	ret = RXGKLEVELFAIL;
 	goto out2;
     }
-
-    ret = krb5_crypto_init (context, &cdat->k.ks_skey,
-			    cdat->k.ks_skey.keytype,
-			    &cdat->k.ks_scrypto);
-    if (ret)
-	goto out2;
 
     rxi_SetCallNumberVector(con, rc.call_numbers);
 
@@ -284,8 +275,6 @@ server_CheckResponse(struct rx_securityClass *obj_,
     }
 
 #endif
-
-#endif
  out:  
 
 #if 0
@@ -303,16 +292,12 @@ server_PreparePacket(struct rx_securityClass *obj_,
 		     struct rx_call *call,
 		     struct rx_packet *pkt)
 {
-#if 0
     struct rx_connection *con = rx_ConnectionOf(call);
     serv_con_data *cdat = (serv_con_data *) con->securityData;
-    key_stuff *k = &cdat->k;
-    end_stuff *e = &cdat->e;
-    
-    return rxgk_prepare_packet(pkt, con, cdat->cur_level, k, e);
-#else
-    return 0;
-#endif
+
+    return rxgk_prepare_packet(pkt, con, cdat->cur_level, &cdat->k, &cdat->e,
+			       RXGK_SERVER_ENC_PACKET,
+			       RXGK_SERVER_MIC_PACKET);
 }
 
 /*
@@ -323,19 +308,15 @@ server_CheckPacket(struct rx_securityClass *obj_,
 		   struct rx_call *call,
 		   struct rx_packet *pkt)
 {
-#if 0
     struct rx_connection *con = rx_ConnectionOf(call);
     serv_con_data *cdat = (serv_con_data *) con->securityData;
-    key_stuff *k = &cdat->k;
-    end_stuff *e = &cdat->e;
 
     if (time(0) > cdat->expires)	/* Use fast time package instead??? */
 	return RXGKEXPIRED;
 
-    return rxgk_check_packet(pkt, con, cdat->cur_level, k, e);
-#else
-    return 0;
-#endif
+    return rxgk_check_packet(pkt, con, cdat->cur_level, &cdat->k, &cdat->e,
+			     RXGK_CLIENT_ENC_PACKET,
+			     RXGK_CLIENT_MIC_PACKET);
 }
 
 static int
@@ -424,6 +405,10 @@ rxgk_NewServerSecurityObject(rxgk_level min_level,
 			     struct rxgk_server_params *params)
 {
     rxgk_serv_class *obj;
+
+    if (rxgk_krb5_context == NULL) {
+	krb5_init_context(&rxgk_krb5_context);
+    }
 
     if (gss_service_name == NULL)
 	return NULL;

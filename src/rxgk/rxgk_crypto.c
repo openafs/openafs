@@ -130,8 +130,35 @@ rxgk_set_conn(struct rx_connection *con, int enctype, int enc)
 #define GETCONTEXT rxgk_krb5_context
 
 int
+rxgk_crypto_init(struct rxgk_keyblock *tk, key_stuff *k)
+{
+    int ret;
+
+    krb5_keyblock tk_kb;
+
+    ret = krb5_keyblock_init(GETCONTEXT, tk->enctype,
+			     tk->data, tk->length,
+			     &tk_kb);
+
+    if (ret)
+	return EINVAL;
+
+    ret = krb5_crypto_init (GETCONTEXT, &tk_kb,
+			    tk->enctype,
+			    &k->ks_scrypto);
+
+    krb5_free_keyblock(GETCONTEXT, &tk_kb);
+
+    if (ret)
+	return EINVAL;
+
+    return 0;
+}
+
+int
 rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
-		    int level, key_stuff *k, end_stuff *e)
+		    int level, key_stuff *k, end_stuff *e,
+		    int keyusage_enc, int keyusage_mic)
 {
     int len = rx_GetDataSize(p);
     int off = rx_GetSecurityHeaderSize(conn);
@@ -190,7 +217,7 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
 
 #ifdef SHISHI_KRB5
 	/* XXX confounders? */
-	code = shishi_checksum(GETCONTEXT, key->sk, USAGE_CHECK, cktype,
+	code = shishi_checksum(GETCONTEXT, key->sk, keyusage_mic, cktype,
 			       scratch->data, scratch->length,
 			       &computed->data, &computed->length);
 	if (code) { 
@@ -202,12 +229,12 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
 	    code = RXGKSEALEDINCON;
 	}
 #elif defined(MIT_KRB5)
-	if ((code = krb5_c_verify_checksum(GETCONTEXT, key, USAGE_CHECK,
+	if ((code = krb5_c_verify_checksum(GETCONTEXT, key, keyusage_mic,
 					   scratch, cksum, &valid)))
 	    goto PrChDone;
 	if (valid == 0) code = RXGKSEALEDINCON;
 #else
-	if ((code = krb5_verify_checksum(GETCONTEXT, k->ks_scrypto, USAGE_CHECK,
+	if ((code = krb5_verify_checksum(GETCONTEXT, k->ks_scrypto, keyusage_mic,
 					 scratch->data, scratch->length, cksum)))
 	    goto PrChDone;
 #endif
@@ -247,7 +274,7 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
 	}
 #ifdef USING_SHISHI
 	code = shishi_encrypt(GETCONTEXT,
-			      key->sk, USAGE_ENCRYPT,
+			      key->sk, keyusage_enc,
 			      plain->data, plain->length,
 			      &cipher->data, &cipher->length);
 	if (code) { 
@@ -262,9 +289,9 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
 	    goto PrEncPrChDone;
 	}
 #elif defined(MIT_KRB5)
-	code = krb5_c_encrypt(GETCONTEXT, key, USAGE_ENCRYPT, 0, plain, cipher);
+	code = krb5_c_encrypt(GETCONTEXT, key, keyusage_enc, 0, plain, cipher);
 #else
-	code = krb5_encrypt(GETCONTEXT, k->ks_scrypto, USAGE_ENCRYPT,
+	code = krb5_encrypt(GETCONTEXT, k->ks_scrypto, keyusage_enc,
 			    plain->data, plain->length,
 			    cipher);
 #endif
@@ -276,8 +303,9 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
 	cs = rx_GetDataSize(p);
 
 	if (cs && cs != CIPHTEXTLEN) {
-	    printf ("rxgk_preparepacket failed to write: got r=%d; gave len=%d\n",
-		    cs, CIPHTEXTLEN);
+	    printf("rxgk_preparepacket failed to write: "
+		   "got r=%lu; gave len=%lu\n",
+		   (unsigned long)cs, (unsigned long)CIPHTEXTLEN);
 	    code = RXGKINCONSISTENCY;
 	    goto PrEncPrChDone;
 	}
@@ -302,7 +330,8 @@ rxgk_prepare_packet(struct rx_packet *p, struct rx_connection *conn,
  */
 int
 rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
-		  int level, key_stuff *k, end_stuff *e)
+		  int level, key_stuff *k, end_stuff *e,
+		  int keyusage_enc, int keyusage_mic)
 {
     int len = rx_GetDataSize(p);
     int off = rx_GetSecurityHeaderSize(conn);
@@ -328,7 +357,8 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 	CIPHTEXTDAT = ALLOCFUNC(CIPHTEXTLEN);
 #if !defined(MIT_KRB5)
 	if (!CIPHTEXTDAT) {
-	    printf ("rxgk_checkpacket: NOALLOC %d\n",cipher->length);
+	    printf ("rxgk_checkpacket: NOALLOC %lu\n",
+		    (unsigned long)cipher->length);
 	    code = RXGKINCONSISTENCY;
 	    goto ChEncPrChDone;
 	}
@@ -346,7 +376,7 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 #endif
 	rx_packetread(p, 0, CIPHTEXTLEN, CIPHTEXTDAT);
 #ifdef SHISHI_KRB5
-        code = shishi_decrypt(GETCONTEXT, key->sk, USAGE_ENCRYPT,
+        code = shishi_decrypt(GETCONTEXT, key->sk, keyusage_enc,
 			      cipher->data, cipher->length,
 			      &plain->data, &plain->length);
 	if (code) { 
@@ -354,10 +384,10 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 	    goto ChEncPrChDone;
 	}
 #elif MIT_KRB5
-	if ((code = krb5_c_decrypt(GETCONTEXT, key, USAGE_ENCRYPT, 0, cipher, plain)))
+	if ((code = krb5_c_decrypt(GETCONTEXT, key, keyusage_enc, 0, cipher, plain)))
 	    goto ChEncPrChDone;
 #else
-	code = krb5_decrypt(GETCONTEXT, k->ks_scrypto, USAGE_ENCRYPT,
+	code = krb5_decrypt(GETCONTEXT, k->ks_scrypto, keyusage_enc,
 			    cipher->data, cipher->length,
 			    plain);
 	if (code) 
@@ -379,7 +409,8 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 	scratch->length = len;
 	scratch->data = ALLOCFUNC(scratch->length);
 	if (!scratch->data) {
-	    printf ("rxgk_checkpacket: alloc failed %d\n", scratch->length);
+	    printf ("rxgk_checkpacket: alloc failed %lu\n", 
+		    (unsigned long)scratch->length);
 	    code = RXGKINCONSISTENCY;
 	    goto ChChDone;
 	}
@@ -402,7 +433,7 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 
 #ifdef SHISHI_KRB5
 	/* XXX confounders? */
-	code = shishi_checksum(GETCONTEXT, key->sk, USAGE_CHECK, cktype,
+	code = shishi_checksum(GETCONTEXT, key->sk, keyusage_mic, cktype,
 			       scratch->data, scratch->length,
 			       &computed->data, &computed->length);
 	if (code) { 
@@ -414,12 +445,12 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 	    code = RXGKSEALEDINCON;
 	}
 #elif defined(MIT_KRB5)
-	if ((code = krb5_c_verify_checksum(GETCONTEXT, key, USAGE_CHECK,
+	if ((code = krb5_c_verify_checksum(GETCONTEXT, key, keyusage_mic,
 					   scratch, cksum, &valid)))
 	    goto ChChDone;
 	if (valid == 0) code = RXGKSEALEDINCON;
 #else
-	if ((code = krb5_verify_checksum(GETCONTEXT, k->ks_scrypto, USAGE_CHECK,
+	if ((code = krb5_verify_checksum(GETCONTEXT, k->ks_scrypto, keyusage_mic,
 					 scratch->data, scratch->length, 
 					 cksum)))
 	    goto ChChDone;
@@ -441,3 +472,89 @@ rxgk_check_packet(struct rx_packet *p, struct rx_connection *conn,
 	printf ("rxgk_checkpacket err=%d\n", code);
     return code;
 }
+
+int
+rxgk_encrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage)
+{
+    int i;
+    int x;
+
+    out->len = in->len + 4;
+    out->val = malloc(out->len);
+
+    out->val[0] = 1;
+    out->val[1] = 2;
+    out->val[2] = 3;
+    out->val[3] = 4;
+
+    /* XXX add real crypto */
+    x = keyusage;
+    for (i = 0; i < in->len; i++) {
+	x += i * 3 + ((unsigned char *)key->data)[i%key->length];
+	out->val[i+4] = in->val[i] ^ x;
+    }
+    
+    return 0;
+}
+
+int
+rxgk_decrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage)
+{
+    int i;
+    int x;
+
+    if (in->len < 4) {
+	return EINVAL;
+    }
+
+    if (in->val[0] != 1 ||
+	in->val[0] != 1 ||
+	in->val[0] != 1 ||
+	in->val[0] != 1) {
+	return EINVAL;
+    }
+
+    out->len = in->len - 4;
+    out->val = malloc(out->len);
+
+    /* XXX add real crypto */
+    x = keyusage;
+    for (i = 0; i < out->len; i++) {
+	x += i * 3 + ((unsigned char *)key->data)[i%key->length];
+	out->val[i] = in->val[i+4] ^ x;
+    }
+
+    return 0;
+}
+
+int
+rxgk_derive_transport_key(struct rxgk_keyblock *k0,
+			  struct rxgk_keyblock *tk,
+			  uint32_t epoch, uint32_t cid, int64_t start_time)
+{
+    int i;
+    uint32_t x;
+    /* XXX get real key */
+
+    if (k0->enctype != RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96) {
+	return EINVAL;
+    }
+
+    tk->length = 32;
+    tk->enctype = RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96;
+    
+    tk->data = malloc(tk->length);
+    if (tk->data == NULL)
+	return ENOMEM;
+
+    x = epoch * 4711 + cid * 33 + start_time;
+    for (i = 0; i < tk->length; i++) {
+	x += i * 3 + ((unsigned char *)k0->data)[i%k0->length];
+	((unsigned char *)tk->data)[i] = 0x23 + x * 47;
+    }
+
+    return 0;
+}
+
