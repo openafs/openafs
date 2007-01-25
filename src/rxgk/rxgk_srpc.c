@@ -16,373 +16,180 @@ RCSID("$Id$");
 #include "rxgk_proto.h"
 #include "rxgk_proto.ss.h"
 
-/* XXX need to pthread lock these */
-krb5_context gk_context;
-static krb5_keyblock gk_key;
-krb5_crypto gk_crypto;
-static int gk_kvno;
-
 static int
-get_key(const char *keytab_string, const char *p, int enctype, int kvno,
-	krb5_keyblock *key)
+encrypt_clientinfo(struct RXGK_ClientInfo *clientinfo, RXGK_Token *opaque,
+		   gss_ctx_id_t ctx)
 {
-    krb5_error_code ret;
-    krb5_keytab keytab;
-    krb5_principal princ;
-    char keytab_buf[256];
-    krb5_keytab_entry ktentry;
+    char *ret;
+    size_t len;
+    gss_buffer_desc buffer;
+    gss_buffer_desc encrypted_buffer;
+    OM_uint32 major_status, minor_status;
 
-    ret = krb5_parse_name(gk_context, p, &princ);
-    if (ret)
-	return ret;
+    len = RXGK_CLIENTINFO_MAX_SIZE;
+    buffer.value = malloc(len);
 
-    if (keytab_string == NULL) {
-	ret = krb5_kt_default_name (gk_context, keytab_buf,sizeof(keytab_buf));
-	if (ret)
-	    krb5_err(gk_context, 1, ret, "resolving keytab %s", keytab_string);
-	keytab_string = keytab_buf;
+    ret = ydr_encode_RXGK_ClientInfo(clientinfo, buffer.value, &len);
+    if (ret == NULL) {
+	return errno;
     }
-    ret = krb5_kt_resolve(gk_context, keytab_string, &keytab);
-    if (ret)
-	krb5_err(gk_context, 1, ret, "resolving keytab %s", keytab_string);
 
-    ret = krb5_kt_get_entry (gk_context, keytab, princ, kvno,
-			     enctype, &ktentry);
-    if (ret)
-	krb5_err(gk_context, 1, ret, "krb5_kt_get_entry %s", p);
+    buffer.length = RXGK_CLIENTINFO_MAX_SIZE - len;
 
-    krb5_copy_keyblock_contents(gk_context, &ktentry.keyblock, key);
-    /* ktentry.vno */
-
-    krb5_kt_free_entry(gk_context, &ktentry);
-	
-    krb5_kt_close(gk_context, keytab);
-
-    krb5_free_principal(gk_context, princ);
-
-    return ret;
-}
-
-int
-rxgk_default_get_key(void *data, const char *p, int enctype, int kvno, 
-		     krb5_keyblock *key)
-{
-    int ret;
-
-    ret = rxgk_server_init();
-    if (ret)
-	return ret;
-
-    return get_key(NULL, p, enctype, kvno, key);
-}
-
-
-int
-rxgk_server_init(void)
-{
-    static int inited = 0;
-    int ret;
-
-    if (inited)
-	return 0;
-
-    if (krb5_init_context(&gk_context))
+    major_status = gss_wrap(&minor_status,
+			    ctx,
+			    1,
+			    GSS_C_QOP_DEFAULT,
+			    &buffer,
+			    NULL,
+			    &encrypted_buffer);
+    if (GSS_ERROR(major_status)) {
+	_rxgk_gssapi_err(major_status, minor_status, GSS_C_NO_OID);
+	free(buffer.value);
 	return EINVAL;
-
-    ret = get_key(NULL, "gkkey@L.NXS.SE", 0, 0, &gk_key); /* XXX */
-    if (ret) {
-	krb5_free_context(gk_context);
-	gk_context = NULL;
-	return ret;
     }
 
-    ret = krb5_crypto_init(gk_context, &gk_key, gk_key.keytype,
-			   &gk_crypto);
-    if (ret) {
-	krb5_free_keyblock_contents(gk_context, &gk_key);
-	krb5_free_context(gk_context);
-	gk_context = NULL;
-	return ret;
+    free(buffer.value);
+    opaque->val = malloc(encrypted_buffer.length);
+    opaque->len = encrypted_buffer.length;
+    memcpy(opaque->val, encrypted_buffer.value, encrypted_buffer.length);
+    
+    major_status = gss_release_buffer(&minor_status, &encrypted_buffer);
+    if (GSS_ERROR(major_status)) {
+	_rxgk_gssapi_err(major_status, minor_status, GSS_C_NO_OID);
+	free(opaque->val);
+	return EINVAL;
     }
-
-
-    inited = 1;
 
     return 0;
+
 }
 
 static int
-build_auth_token(krb5_context context, const char *princ, 
-		 int32_t start, int32_t end,
-		 krb5_keyblock *key,
-		 int session_enctype, 
-		 void *session_key, size_t session_key_size,
-		 int32_t *auth_token_kvno, RXGK_Token *auth_token)
-{
-    struct RXGK_AUTH_CRED cred;
-    krb5_data data;
-    void *ptr;
-    int sz, ret;
+choose_enctype(const RXGK_Enctypes *client_enctypes,
+	       const RXGK_Enctypes *server_enctypes,
+	       int32_t *chosen_enctype) {
 
-    sz = RXGK_AUTH_CRED_MAX_SIZE;
-    ptr = malloc(sz);
-    if (ptr == NULL)
-	return ENOMEM;
-
-    cred.ac_version = RXGK_KEY_VERSION;
-    strlcpy(cred.ac_principal, princ, sizeof(cred.ac_principal));
-    cred.ac_starttime = start;
-    cred.ac_endtime = end;
-    cred.ac_enctype = session_enctype;
-    cred.ac_key.len = session_key_size;
-    cred.ac_key.val = session_key;
-
-    if (ydr_encode_RXGK_AUTH_CRED(&cred, ptr, &sz) == NULL) {
-	free(ptr);
+    if (client_enctypes->len == 0) {
 	return EINVAL;
     }
-    sz = RXGK_AUTH_CRED_MAX_SIZE - sz;
 
-    ret = krb5_encrypt(context, gk_crypto, 0, ptr, sz, &data);
-    if (ret) {
-	free(ptr);
-	return ret;
-    }
-    
-    if (data.length > RXGK_AUTH_CRED_MAX_SIZE) {
-	free(ptr);
-	return EINVAL;
-    }
-    
-    memcpy(ptr, data.data, data.length);
-
-    auth_token->len = data.length;
-    auth_token->val = ptr;
-    *auth_token_kvno = gk_kvno;
-    
-    krb5_data_free(&data);
-
+    /* XXX actually do matching */
+    *chosen_enctype = RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96;
     return 0;
 }
 
 int
-rxgk_decode_auth_token(void *val, size_t len, RXGK_AUTH_CRED *c)
+SRXGK_GSSNegotiate(struct rx_call *call,
+		   const struct RXGK_client_start *client_start,
+		   const RXGK_Token *input_token_buffer,
+		   const RXGK_Token *opaque_in,
+		   RXGK_Token *output_token_buffer,
+		   RXGK_Token *opaque_out,
+		   uint32_t *gss_status,
+		   RXGK_Token *rxgk_info)
 {
-    krb5_data data;
-    size_t sz;
-    int ret;
+    gss_buffer_desc input_token, output_token;
+    OM_uint32 major_status, minor_status;
+    gss_ctx_id_t ctx;
+    struct rxgk_server_params *params;
+    char servernonce[RXGK_MAX_NONCE];
+    int retval;
 
-    memset(c, 0, sizeof(*c));
+    output_token_buffer->val = NULL;
+    output_token_buffer->len = 0;
 
-    ret = krb5_decrypt(gk_context, gk_crypto, 0, val, len, &data);
-    if (ret)
-	return ret;
-
-    sz = data.length;
-    if (ydr_decode_RXGK_AUTH_CRED(c, data.data, &sz) == NULL) {
-	if (c->ac_key.val)
-	    free(c->ac_key.val);
-	memset(c, 0, sizeof(*c));
-	ret = RXGKBADTICKET;
-    }
-
-    krb5_data_free(&data);
-
-    return ret;
-}
-
-/* XXX share */
-
-static int
-decode_v5(krb5_context context,
-	  int (*get_key)(void *appl_data, const char *p, int enctype,
-			 int kvno, krb5_keyblock *key),
-	  void *appl_data,
-	  const char *princ,
-	  char *ticket,
-	  int32_t ticket_len,
-	  /* OUT parms */
-	  krb5_principal *p,
-	  krb5_keyblock *key,
-	  int32_t *starts,
-	  int32_t *expires)
-{
-    krb5_keyblock serv_key;
-    int code;
-    size_t siz;
-
-    Ticket t5;			/* Must free */
-    EncTicketPart decr_part;	/* Must free */
-    krb5_data plain;		/* Must free */
-    krb5_crypto crypto;		/* Must free */
-
-    memset(&t5, 0x0, sizeof(t5));
-    memset(&decr_part, 0x0, sizeof(decr_part));
-    krb5_data_zero(&plain);
-    memset(&serv_key, 0, sizeof(serv_key));
-    crypto = NULL;
-
-    code = decode_Ticket(ticket, ticket_len, &t5, &siz);
-    if (code != 0)
-	goto bad_ticket;
-
-    code = (*get_key)(appl_data, princ, 
-		      t5.enc_part.etype, t5.tkt_vno, &serv_key);
-    if (code)
-	goto unknown_key;
+    opaque_out->val = NULL;
+    opaque_out->len = 0;
     
-    code = krb5_crypto_init (context, &serv_key, t5.enc_part.etype,
-			     &crypto);
-    krb5_free_keyblock_contents(context, &serv_key);
-    if (code)
-	goto bad_ticket;
+    rxgk_info->val = NULL;
+    rxgk_info->len = 0;
 
-    /* Decrypt ticket */
-    code = krb5_decrypt(context,
-			crypto,
-			0,
-			t5.enc_part.cipher.data,
-			t5.enc_part.cipher.length,
-			&plain);
+    /* the GSS-API context is stored on the server rock */
+    ctx = rx_getConnRock(call->conn);
+    params = (struct rxgk_server_params *) rx_getServiceRock(call->conn->service);
 
-    if (code)
-	goto bad_ticket;
-    
-    /* Decode ticket */
-    code = decode_EncTicketPart(plain.data, plain.length, &decr_part, &siz);
-    if (code != 0)
-	goto bad_ticket;
-    
-    /* principal */
-    code = principalname2krb5_principal(p, decr_part.cname, decr_part.crealm);
-    if (code)
-	goto bad_ticket;
-    
-    /* Extract session key */
-    code = krb5_copy_keyblock_contents(context, &decr_part.key, key);
-    if (code)
-	goto bad_ticket;
+    input_token.value = input_token_buffer->val;
+    input_token.length = input_token_buffer->len;
 
-    /* Check lifetimes and host addresses, flags etc */
-    {
-	time_t now = time(0);	/* Use fast time package instead??? */
-	time_t start = decr_part.authtime;
-	if (decr_part.starttime)
-	    start = *decr_part.starttime;
-	if (start - now > context->max_skew || decr_part.flags.invalid)
-	    goto no_auth;
-	if (now > decr_part.endtime)
-	    goto tkt_expired;
-	*starts = start;
-	*expires = decr_part.endtime;
-    }
-    
-#if 0
-    /* Check host addresses */
-#endif
-    
- cleanup:
-    free_Ticket(&t5);
-    free_EncTicketPart(&decr_part);
-    krb5_data_free(&plain);
-    if (crypto)
-	krb5_crypto_destroy(context, crypto);
-    if (code) {
-	krb5_free_principal(context, *p);
-	*p = NULL;
-    }
-    return code;
-    
- unknown_key:
-    code = RXGKUNKNOWNKEY;
-    goto cleanup;
- no_auth:
-    code = RXGKNOAUTH;
-    goto cleanup;
- tkt_expired:
-    code = RXGKEXPIRED;
-    goto cleanup;
- bad_ticket:
-    code = RXGKBADTICKET;
-    goto cleanup;
-}
-
-int
-SRXGK_EstablishKrb5Context(struct rx_call *call,
-			   const RXGK_Token *token,
-			   const RXGK_Token *challage_token,
-			   RXGK_Token *reply_token,
-			   int32_t *auth_token_kvno,
-			   RXGK_Token *auth_token)
-{
-    krb5_principal principal;
-    krb5_keyblock key;
-    int32_t starts, expires;
-    char *cprinc, *sprinc;
-    void *session_key;
-    size_t session_key_size;
-    int session_enctype;
-    int ret;
-
-    ret = rxgk_server_init();
-    if (ret)
-	return ret;
-
-    if ((sprinc = rx_getServiceRock(call->conn->service)) == NULL)
-	return EINVAL;
-
-    session_key = NULL;
-
-    key.keyvalue.data = NULL;
-
-    auth_token->len = reply_token->len = 0;
-    auth_token->val = reply_token->val = NULL;
-
-    ret = decode_v5(gk_context, rxgk_default_get_key, NULL, sprinc, 
-		    token->val, token->len,
-		    &principal, &key, &starts, &expires);
-    if (ret)
+    major_status = gss_accept_sec_context(&minor_status,
+					  &ctx,
+					  GSS_C_NO_CREDENTIAL,
+					  &input_token,
+					  GSS_C_NO_CHANNEL_BINDINGS,
+					  NULL,
+					  NULL,
+					  &output_token,
+					  NULL,
+					  NULL,
+					  NULL);
+    *gss_status = major_status;
+    if (GSS_ERROR(major_status)) {
+	_rxgk_gssapi_err(major_status, minor_status, GSS_C_NO_OID);
+	gss_delete_sec_context(&minor_status, &ctx, NULL);
 	goto out;
-
-    ret = rxk5_mutual_auth_server(gk_context,
-				  &key,
-				  challage_token,
-				  &session_enctype,
-				  &session_key, 
-				  &session_key_size,
-				  reply_token);
-    if (ret)
-	goto out;
-
-    ret = krb5_unparse_name(gk_context, principal, &cprinc);
-    if (ret)
-	goto out;
-
-    ret = build_auth_token(gk_context, cprinc, starts, expires, &key,
-			   session_enctype, session_key, session_key_size,
-			   auth_token_kvno, auth_token);
-
-    free(cprinc);
-
- out:
-    if (session_key) {
-	memset(session_key, 0, session_key_size);
-	free(session_key);
-    }
-    if (key.keyvalue.data != NULL)
-	krb5_free_keyblock_contents(gk_context, &key);
-
-    if (ret) {
-	if (reply_token->val)
-	    free(reply_token->val);
-	reply_token->len = 0;
-	reply_token->val = NULL;
-
-	if (auth_token->val)
-	    free(auth_token->val);
-	auth_token->len = 0;
-	auth_token->val = NULL;
     }
 
-    return ret;
+    /* copy out the buffer */
+    output_token_buffer->val = malloc(output_token.length);
+    if (output_token_buffer->val == NULL) {
+	gss_release_buffer(&minor_status, &output_token);
+	goto out;
+    }
+    output_token_buffer->len = output_token.length;
+    memcpy(output_token_buffer->val,
+	   output_token.value, output_token.length);
+    gss_release_buffer(&minor_status, &output_token);
+
+    if (major_status != GSS_S_COMPLETE) {
+	retval = 0;
+	goto out;
+    }
+
+    RXGK_Ticket_Crypt ticket;
+    struct RXGK_ClientInfo clientinfo;
+    RXGK_Token encrypted_info;
+
+    int32_t chosen_enctype;
+    
+    retval = choose_enctype(&client_start->sp_enctypes,
+			    &params->enctypes, &chosen_enctype);
+    if (retval) {
+	gss_delete_sec_context(&minor_status, &ctx, NULL);
+	goto out;
+    }
+    
+    memset(&clientinfo, 0, sizeof(clientinfo));
+    
+    clientinfo.ci_server_nonce.val = servernonce;
+    clientinfo.ci_server_nonce.len = sizeof(servernonce);
+
+    retval = rxgk_make_ticket(params, ctx, 
+			      clientinfo.ci_server_nonce.val, 
+			      clientinfo.ci_server_nonce.len,
+			      client_start->sp_client_nonce.val,
+			      client_start->sp_client_nonce.len,
+			      &ticket, chosen_enctype);
+    if (retval) {
+	gss_delete_sec_context(&minor_status, &ctx, NULL);
+	goto out;
+    }
+    
+    clientinfo.ci_ticket = ticket;
+
+    retval = encrypt_clientinfo(&clientinfo, &encrypted_info, ctx);
+    if (retval) {
+	free(ticket.val);
+	gss_delete_sec_context(&minor_status, &ctx, NULL);
+	goto out;
+    }
+    
+    *rxgk_info = encrypted_info;
+    
+    gss_delete_sec_context(&minor_status, &ctx, NULL);
+
+out:
+    rx_setConnRock(call->conn, ctx);
+
+    return retval;
 }

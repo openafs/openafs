@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995 - 2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2004, 2007 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -38,16 +38,16 @@ RCSID("$Id$");
 /* Security object specific client data */
 typedef struct rxgk_clnt_class {
     struct rx_securityClass klass;
-    krb5_context context;
     rxgk_level level;
-    krb5_keyblock krb_key;
+    struct {
+	int32_t enctype;
+	int32_t len;
+	void *data;
+    } session_key;
     key_stuff k;
     int32_t kvno;
     RXGK_Token ticket;
     uint32_t serviceId;
-#if 0
-    RXGK_rxtransport_key contrib;
-#endif
 } rxgk_clnt_class;
 
 /* Per connection specific client data */
@@ -63,7 +63,6 @@ client_NewConnection(struct rx_securityClass *obj_, struct rx_connection *con)
 {
     rxgk_clnt_class *obj = (rxgk_clnt_class *) obj_;
     clnt_con_data *cdat;
-    int ret;
     
     assert(con->securityData == 0);
     obj->klass.refCount++;
@@ -75,74 +74,9 @@ client_NewConnection(struct rx_securityClass *obj_, struct rx_connection *con)
     rx_nextCid += RX_MAXCALLS;
     con->epoch = rx_epoch;
     con->cid = rx_nextCid;
-    cdat->auth_token.len = 0;
-    cdat->auth_token.val = NULL;
+    cdat->auth_token.len = obj->ticket.len;
+    cdat->auth_token.val = obj->ticket.val;
 
-    ret = rxgk5_get_auth_token(obj->context,
-			       rx_HostOf(con->peer), rx_PortOf(con->peer),
-			       obj->serviceId,
-			       &obj->ticket, &cdat->auth_token, 
-			       &obj->krb_key, 
-			       &obj->k.ks_key,
-			       &cdat->auth_token_kvno);
-    if (ret) {
-	osi_Free(cdat, sizeof(clnt_con_data));
-	return ret;
-    }
-
-    /* XXX derive crypto key */
-
-    ret = krb5_crypto_init(obj->k.ks_context,
-			   &obj->k.ks_key, obj->k.ks_key.keytype,
-			   &obj->k.ks_crypto);
-    if (ret)
-	goto out;
-
-#if 0
-    obj->contrib.server_keycontribution.val = "";
-    obj->contrib.server_keycontribution.len = 0;
-
-    obj->contrib.client_keycontribution.len = rxgk_key_contrib_size;
-    obj->contrib.client_keycontribution.val = malloc(rxgk_key_contrib_size);
-    if (obj->contrib.client_keycontribution.val == NULL)
-	goto out;
-
-    {
-	int i;
-
-	for (i = 0; i < rxgk_key_contrib_size; i++)
-	    obj->contrib.client_keycontribution.val[i] = arc4random(); /*XXX*/
-    }
-
-    ret = rxgk_derive_transport_key(obj->k.ks_context,
-				    &obj->k.ks_key,
-				    &obj->contrib,
-				    &obj->k.ks_skey);
-    if (ret)
-	return ret;
-#endif
-
-    ret = krb5_crypto_init (obj->context, &obj->k.ks_skey,
-			    obj->k.ks_skey.keytype,
-			    &obj->k.ks_scrypto);
-    if (ret)
-	return ret;
-
-    ret = rxgk_set_conn(con, obj->k.ks_key.keytype, 
-			obj->level == rxgk_crypt ? 1 : 0);
-
- out:
-    if (ret) {
-	if (obj->k.ks_crypto)
-	    krb5_crypto_destroy(obj->k.ks_context, obj->k.ks_crypto);
-	obj->k.ks_crypto = NULL;
-	krb5_free_keyblock_contents(obj->k.ks_context, &obj->k.ks_skey);
-	memset(&obj->k.ks_skey, 0, sizeof(obj->k.ks_skey));
-	osi_Free(cdat->auth_token.val, cdat->auth_token.len);
-	osi_Free(cdat, sizeof(clnt_con_data));
-	return ret;
-    }
-    
     return 0;
 }
 
@@ -181,22 +115,15 @@ client_GetResponse(const struct rx_securityClass *obj_,
 		   const struct rx_connection *con,
 		   struct rx_packet *pkt)
 {
-    rxgk_clnt_class *obj = (rxgk_clnt_class *) obj_;
-    clnt_con_data *cdat = (clnt_con_data *)con->securityData;
-    key_stuff *k = &obj->k;
     struct RXGK_Challenge c;
     struct RXGK_Response r;
-    struct RXGK_Response_Crypt rc;
-    char bufrc[RXGK_RESPONSE_CRYPT_SIZE];
-    char bufr[RXGK_RESPONSE_MAX_SIZE];
-    krb5_data data;
+    clnt_con_data *cdat = (clnt_con_data *)con->securityData;
     size_t len;
-    int ret;
+    char bufr[RXGK_RESPONSE_MAX_SIZE];
     char *p;
-    
+
     memset(&r, 0, sizeof(r));
-    memset(&rc, 0, sizeof(rc));
-    
+
     /* Get challenge */
     if (rx_SlowReadPacket(pkt, 0, sizeof(c), &c) != sizeof(c))
 	return RXGKPACKETSHORT;
@@ -204,46 +131,37 @@ client_GetResponse(const struct rx_securityClass *obj_,
     if (ntohl(c.rc_version) != RXGK_VERSION)
 	return RXGKINCONSISTENCY;
     
-    if (ntohl(c.rc_min_level) > obj->level)
-	return RXGKLEVELFAIL;
-    
-    if (c.rc_opcode == htonl(RXKG_OPCODE_CHALLENGE)) {
-	;
-    } else if (c.rc_opcode == htonl(RXKG_OPCODE_REKEY)) {
-	/* XXX decode ydr_encode_RXGK_ReKey_Crypt info */
+    r.rr_version = RXGK_VERSION;
+    r.rr_authenticator.val = cdat->auth_token.val;
+    r.rr_authenticator.len = cdat->auth_token.len;
+    r.rr_ctext.val = NULL;
+    r.rr_ctext.len = 0;
+
+    len = sizeof(bufr);
+    p = ydr_encode_RXGK_Response(&r, bufr, &len);
+    len = sizeof(bufr) - len;
+
+    if (p == NULL)
 	return RXGKINCONSISTENCY;
+
+    if (rx_SlowWritePacket(pkt, 0, len, bufr) != len)
+	return RXGKPACKETSHORT;
+    rx_SetDataSize(pkt, len);
+
 #if 0
-	ret = rxgk_derive_transport_key(obj->k.ks_context,
-					&obj->k.ks_key,
-					&obj->contrib,
-					&obj->k.ks_skey);
-	if (ret)
-	    return ret;
-	
-	ret = krb5_crypto_init (obj->context, &obj->k.ks_skey,
-				obj->k.ks_skey.keytype,
-				&obj->k.ks_scrypto);
-	if (ret)
-	    return ret;
-#endif
-    } else
-	return RXGKINCONSISTENCY;
+    rxgk_clnt_class *obj = (rxgk_clnt_class *) obj_;
+    key_stuff *k = &obj->k;
+    struct RXGK_Response_Crypt rc;
+    char bufrc[RXGK_RESPONSE_CRYPT_SIZE];
+    krb5_data data;
+    int ret;
     
-    rc.nonce = ntohl(c.rc_nonce) + 1;
+    memset(&rc, 0, sizeof(rc));
+    
+    memcpy(rc.nonce, c.rc_nonce, sizeof(rc.nonce));
     rc.epoch = con->epoch;
     rc.cid = con->cid & RX_CIDMASK;
     rxi_GetCallNumberVector(con, rc.call_numbers);
-#if 0
-    rc.security_index = con->securityIndex;
-#endif
-    rc.level = obj->level;
-#if 0
-    rc.last_seq = 0; /* XXX */
-#endif
-    rc.key_version = 0;
-#if 0
-    rc.contrib = obj->contrib; /* XXX copy_RXGK_rxtransport_key */
-#endif
     
     {
 	int i;
@@ -258,69 +176,58 @@ client_GetResponse(const struct rx_securityClass *obj_,
 	return RXGKINCONSISTENCY;
     len = sizeof(bufrc) - len;
 
-    ret = krb5_encrypt(obj->context, k->ks_crypto, 
+    ret = krb5_encrypt(rxgk_krb5_context, k->ks_crypto, 
 		       RXGK_CLIENT_ENC_CHALLENGE, bufrc, len, &data);
     if (ret)
 	return ret;
 
-    r.rr_version = RXGK_VERSION;
-    r.rr_auth_token_kvno = cdat->auth_token_kvno;
-    r.rr_auth_token.val = cdat->auth_token.val;
-    r.rr_auth_token.len = cdat->auth_token.len;
-    r.rr_ctext.val = data.data;
-    r.rr_ctext.len = data.length;
-
-    len = sizeof(bufr);
-    p = ydr_encode_RXGK_Response(&r, bufr, &len);
-    len = sizeof(bufr) - len;
     krb5_data_free(&data);
 
-    if (p == NULL)
-	return RXGKINCONSISTENCY;
-
-    if (rx_SlowWritePacket(pkt, 0, len, bufr) != len)
-	return RXGKPACKETSHORT;
-    rx_SetDataSize(pkt, len);
-
+#endif
     return 0;
 }
 
 /*
  * Checksum and/or encrypt packet.
  */
-static
-int
+static int
 client_PreparePacket(struct rx_securityClass *obj_,
 		     struct rx_call *call,
 		     struct rx_packet *pkt)
 {
+#if 0
     rxgk_clnt_class *obj = (rxgk_clnt_class *) obj_;
     key_stuff *k = &obj->k;
     struct rx_connection *con = rx_ConnectionOf(call);
     end_stuff *e = &((clnt_con_data *) con->securityData)->e;
     
     return rxgk_prepare_packet(pkt, con, obj->level, k, e);
+#else
+    return 0;
+#endif
 }
 
 /*
  * Verify checksums and/or decrypt packet.
  */
-static
-int
+static int
 client_CheckPacket(struct rx_securityClass *obj_,
 		   struct rx_call *call,
 		   struct rx_packet *pkt)
 {
+#if 0
     rxgk_clnt_class *obj = (rxgk_clnt_class *) obj_;
     key_stuff *k = &obj->k;
     struct rx_connection *con = rx_ConnectionOf(call);
     end_stuff *e = &((clnt_con_data *) con->securityData)->e;
     
     return rxgk_check_packet(pkt, con, obj->level, k, e);
+#else
+    return 0;
+#endif
 }
 
-static
-int
+static int
 client_GetStats(const struct rx_securityClass *obj,
 		const struct rx_connection *con,
 		struct rx_securityObjectStats *st)
@@ -341,8 +248,7 @@ client_GetStats(const struct rx_securityClass *obj,
     return 0;
 }
 
-static
-struct rx_securityOps client_ops = {
+static struct rx_securityOps client_ops = {
     client_Close,
     client_NewConnection,
     client_PreparePacket,
@@ -362,26 +268,16 @@ struct rx_securityOps client_ops = {
 
 int rxgk_EpochWasSet = 0;
 
-int rxgk_min_level = rxgk_crypt; /* rxgk_{auth,crypt} */ /* XXX */
-
 struct rx_securityClass *
-rxgk_k5_NewClientSecurityObject(/*rxgk_level*/ int level,
-				krb5_keyblock *key,
-				int32_t kvno,
-				int ticket_len,
-				void *ticket,
-				uint32_t serviceId,
-				krb5_context context)
+rxgk_NewClientSecurityObject (rxgk_level level,
+			      RXGK_Ticket_Crypt *token, 
+			      struct rxgk_keyblock *key)
 {
     rxgk_clnt_class *obj;
     static int inited = 0;
-    int ret;
-    
-    if (level < rxgk_min_level)
-	level = rxgk_min_level;	/* Boost security level */
     
     if (!inited) {
-	rx_SetEpoch(arc4random());
+	rx_SetEpoch(17);
 	inited = 1;
     }
     
@@ -389,29 +285,22 @@ rxgk_k5_NewClientSecurityObject(/*rxgk_level*/ int level,
     obj->klass.refCount = 1;
     obj->klass.ops = &client_ops;
     
-    obj->klass.privateData = (char *) obj;
+    obj->klass.privateData = (char *)obj;
     
-    obj->context = context;
     obj->level = level;
-    obj->kvno = kvno;
-    obj->serviceId = serviceId;
     
-    ret = krb5_copy_keyblock_contents(context, key, &obj->krb_key);
-    if (ret) {
+    obj->session_key.enctype = key->enctype;
+    obj->session_key.len = key->length;
+    obj->session_key.data = malloc(key->length);
+    if (obj->session_key.data == NULL) {
 	osi_Free(obj, sizeof(rxgk_clnt_class));
 	return NULL;
     }
+    memcpy(obj->session_key.data, key->data, key->length);
 
-    memset(&obj->k.ks_key, 0, sizeof(obj->k.ks_key));
-    obj->k.ks_crypto = NULL;
-
-    memset(&obj->k.ks_skey, 0, sizeof(obj->k.ks_skey));
-    obj->k.ks_scrypto = NULL;
-    obj->k.ks_context = context;
-
-    obj->ticket.len = ticket_len;
-    obj->ticket.val = osi_Alloc(ticket_len);
-    memcpy(obj->ticket.val, ticket, obj->ticket.len);
+    obj->ticket.len = token->len;
+    obj->ticket.val = osi_Alloc(token->len);
+    memcpy(obj->ticket.val, token->val, obj->ticket.len);
     
     return &obj->klass;
 }

@@ -34,26 +34,3 @@
 #include "rxgk_locl.h"
 
 RCSID("$Id$");
-
-int32_t
-rxgk_GetServerInfo(struct rx_connection *con,
-		   rxgk_level *level,
-		   uint32_t *expiration,
-		   char *name, size_t name_size,
-		   char *cell, size_t cell_size,
-		   int32_t *kvno)
-{
-    serv_con_data *cdat = (serv_con_data *) con->securityData;
-
-    if (cdat && cdat->authenticated
-	&& (time(0) < cdat->expires))
-    {
-	if (level)
-	    *level = cdat->cur_level;
-	if (expiration)
-	    *expiration = cdat->expires;
-	return 0;
-    }
-  else
-    return RXGKNOAUTH;
-}

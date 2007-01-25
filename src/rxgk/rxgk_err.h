@@ -1,0 +1,35 @@
+/* Generated from rxgk_err.et */
+
+#ifndef __rxgk_err_h__
+#define __rxgk_err_h__
+
+struct et_list;
+
+void initialize_RXGK_error_table_r(struct et_list **);
+
+void initialize_RXGK_error_table(void);
+#define init_RXGK_err_tbl initialize_RXGK_error_table
+
+typedef enum RXGK_error_number{
+	RXGKINCONSISTENCY = 1233242880,
+	RXGKPACKETSHORT = 1233242881,
+	RXGKLEVELFAIL = 1233242882,
+	RXGKTICKETLEN = 1233242883,
+	RXGKOUTOFSEQUENCE = 1233242884,
+	RXGKNOAUTH = 1233242885,
+	RXGKBADKEY = 1233242886,
+	RXGKBADTICKET = 1233242887,
+	RXGKUNKNOWNKEY = 1233242888,
+	RXGKEXPIRED = 1233242889,
+	RXGKSEALEDINCON = 1233242890,
+	RXGKDATALEN = 1233242891,
+	RXGKILLEGALLEVEL = 1233242892,
+	RXGKWRONGVERS = 1233242893,
+	RXGKNOSECDATA = 1233242894,
+	RXGKBADCKTYPE = 1233242895,
+	RXGKCKSUMLEN = 1233242896
+} RXGK_error_number;
+
+#define ERROR_TABLE_BASE_RXGK 1233242880
+
+#endif /* __rxgk_err_h__ */

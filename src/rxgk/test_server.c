@@ -17,6 +17,8 @@
 #include "rxgk_proto.ss.h"
 #include "test.ss.h"
 
+#include "roken.h"
+
 RCSID("$Id$");
 
 /*
@@ -44,23 +46,33 @@ main(int argc, char **argv)
     PROCESS pid;
     int port = htons(TEST_DEFAULT_PORT);
     int ret;
+    struct rxgk_server_params params;
+
+    setprogname(argv[0]);
 
     LWP_InitializeProcessSupport (LWP_NORMAL_PRIORITY, &pid);
+
+    if (argc != 2)
+	errx(1, "argv != 2");
+
+    rxgk_set_log(rxgk_log_stdio, NULL);
 
     ret = rx_Init (port);
     if (ret)
 	errx (1, "rx_Init failed");
 
+    memset(&params, 0, sizeof(params));
+
+    params.connection_lifetime = 60*60;
+    params.bytelife = 30;
+    params.enctypes.len = 0;
+    params.enctypes.val = NULL;
+
     secureindex = 5;
     memset(secureobj, 0, sizeof(secureobj));
     secureobj[4] = 
-	rxgk_NewServerSecurityObject(rxgk_auth,
-				     "afs@L.NXS.SE",
-				     NULL,
-				     rxgk_default_get_key,
-				     NULL,
-				     TEST_RXGK_SERVICE);
-    
+	rxgk_NewServerSecurityObject(RXGK_WIRE_ENCRYPT, argv[1], &params);
+
     service = rx_NewService (0,
 			     TEST_SERVICE_ID,
 			     "rxgk-test", 

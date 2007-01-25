@@ -39,6 +39,9 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#ifdef HAVE_AFSCONFIG_H
+#include <afsconfig.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +50,21 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#ifdef SHISHI_KRB5
+#include <shishi.h>
+#elif defined(KSSL_KRB5) /* XXX to be removed */
+#include "k5ssl.h"
+#else
+#if HAVE_PARSE_UNITS_H
+#include "parse_units.h"
+#endif
+#undef u
 #include <krb5.h>
+#endif
+
+#include <errno.h>
+#include "rxgk_err.h"
+
 #include "rxgk_proto.h"
 
 #ifdef NDEBUG
@@ -78,8 +95,9 @@ extern int rx_epoch, rx_nextCid;
 #define rxgk_expired 4
 #define rxgk_checksummed 8
 
+krb5_context rxgk_krb5_context;
+
 typedef struct key_stuff {
-    krb5_context	ks_context;
     krb5_keyblock	ks_key;
     uint32_t		ks_recv_seqnum;
     krb5_keyblock	ks_skey;
@@ -104,16 +122,18 @@ rxgk_check_packet(struct rx_packet *pkt, struct rx_connection *con,
 
 /* Per connection specific server data */
 typedef struct serv_con_data {
-  end_stuff e;
-  key_stuff k;
-  uint32_t expires;
-  uint32_t nonce;
-  rxgk_level cur_level;	/* Starts at min_level and can only increase */
-  char authenticated;
+    end_stuff e;
+    key_stuff k;
+    uint32_t expires;
+    char nonce[20];
+    rxgk_level cur_level;	/* Starts at min_level and can only increase */
+    char authenticated;
+    struct rxgk_ticket *ticket;
 } serv_con_data;
 
 /* rxgk */
 
+#if 0
 int
 rxgk5_get_auth_token(krb5_context context, uint32_t addr, int port, 
 		     uint32_t serviceId,
@@ -121,6 +141,7 @@ rxgk5_get_auth_token(krb5_context context, uint32_t addr, int port,
 		     RXGK_Token *auth_token, krb5_keyblock *key,
 		     krb5_keyblock *skey,
 		     int32_t *kvno);
+#endif
 
 int
 rxk5_mutual_auth_client_generate(krb5_context context, krb5_keyblock *key,
@@ -141,11 +162,11 @@ rxk5_mutual_auth_server(krb5_context context, krb5_keyblock *key,
 int
 rxgk_set_conn(struct rx_connection *, int, int);
 
-int
-rxgk_decode_auth_token(void *data, size_t len, struct RXGK_AUTH_CRED *c);
-
 void
 rxgk_getheader(struct rx_packet *pkt, struct rxgk_header_data *h);
+
+int
+rxgk_decode_auth_token(void *data, size_t len, struct rxgk_ticket *ticket);
 
 int
 rxgk_server_init(void);
@@ -160,5 +181,42 @@ rxgk_derive_transport_key(krb5_context context,
 
 int
 rxgk_random_to_key(int, void *, int, krb5_keyblock *);
+
+int
+rxgk_make_ticket(struct rxgk_server_params *params,
+		 gss_ctx_id_t ctx,
+		 const void *snonce, size_t slength,
+		 const void *cnonce, size_t clength,
+		 RXGK_Ticket_Crypt *token,
+		 int32_t enctype);
+
+int
+rxgk_encrypt_ticket(struct rxgk_ticket *ticket, RXGK_Ticket_Crypt *opaque);
+
+int
+rxgk_decrypt_ticket(RXGK_Ticket_Crypt *opaque, struct rxgk_ticket *ticket);
+
+void
+_rxgk_gssapi_err(OM_uint32, OM_uint32, gss_OID);
+
+int
+rxgk_derive_k0(gss_ctx_id_t ctx,
+	       const void *snonce, size_t slength,
+	       const void *cnonce, size_t clength,
+	       int32_t enctype, struct rxgk_keyblock *key);
+
+void
+print_chararray(char *val, unsigned len);
+
+int
+rxgk_encrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage);
+
+int
+rxgk_decrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage);
+
+int
+rxgk_get_server_ticket_key(struct rxgk_keyblock *key);
 
 #endif /* __RXGK_LOCL_H */

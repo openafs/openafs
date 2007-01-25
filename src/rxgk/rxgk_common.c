@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 - 2004, Stockholms universitet
+ * Copyright (c) 2002 - 2004, 2007, Stockholms universitet
  * (Stockholm University, Stockholm Sweden)
  * All rights reserved.
  * 
@@ -19,274 +19,6 @@ RCSID("$Id$");
  *
  */
 
-int rxgk_key_contrib_size = 16;
-
-/*
- *
- */
-
-int
-rxk5_mutual_auth_client_generate(krb5_context context, krb5_keyblock *key,
-				 uint32_t number,
-				 RXGK_Token *challage_token)
-{
-    krb5_crypto crypto;
-    krb5_data data;
-    RXGK_CHALLENGE_TOKEN ct;
-    char buf[RXGK_CHALLENGE_TOKEN_MAX_SIZE];
-    size_t sz;
-    int ret;
-
-    data.data = NULL;
-
-    ret = krb5_crypto_init (context, key, key->keytype, &crypto);
-    if (ret)
-	return ret;
-    
-    ct.ct_version = RXGK_CR_TOKEN_VERSION;
-    ct.ct_nonce = number;
-    ct.ct_enctype.val = malloc(sizeof(ct.ct_enctype.val[0]));
-    ct.ct_enctype.len = 1;
-    if (ct.ct_enctype.val == NULL) {
-	ret = ENOMEM;
-	goto out;
-    }
-    ct.ct_enctype.val[0] = RXGK_CRYPTO_DES_CBC_CRC;
-    
-    sz = RXGK_CHALLENGE_TOKEN_MAX_SIZE;
-    if (ydr_encode_RXGK_CHALLENGE_TOKEN(&ct, buf, &sz) == NULL) {
-	ret = ENOMEM;
-	goto out;
-    }
-    sz = RXGK_CHALLENGE_TOKEN_MAX_SIZE - sz;
-
-    ret = krb5_encrypt(context, crypto, 0, buf, sz, &data);
-    if (ret)
-	goto out;
-    
-    challage_token->val = malloc(data.length);
-    if (challage_token->val == NULL) {
-	ret = ENOMEM;
-	goto out;
-    }
-
-    challage_token->len = data.length;
-    memcpy(challage_token->val, data.data, data.length);
-
- out:
-    ydr_free_RXGK_CHALLENGE_TOKEN(&ct);
-    if (data.data)
-	krb5_data_free(&data);
-    krb5_crypto_destroy(context, crypto);
-    return ret;
-}
-
-/*
- *
- */
-
-int
-rxk5_mutual_auth_client_check(krb5_context context, krb5_keyblock *key,
-			      uint32_t number,
-			      const RXGK_Token *challage_token,
-			      krb5_keyblock *rxsession_key)
-{
-    krb5_crypto crypto;
-    krb5_data data;
-    RXGK_REPLY_TOKEN rt;
-    size_t sz;
-    int ret;
-
-    memset(&rt, 0, sizeof(rt));
-    memset(rxsession_key, 0, sizeof(*rxsession_key));
-
-    ret = krb5_crypto_init (context, key, key->keytype, &crypto);
-    if (ret)
-	return ret;
-    
-    /* Decrypt ticket */
-    data.data = NULL;
-    ret = krb5_decrypt(context, crypto, 0,
-		       challage_token->val, challage_token->len,
-		       &data);
-    if (ret)
-	goto out;
-
-    sz = data.length;
-    if (ydr_decode_RXGK_REPLY_TOKEN(&rt, data.data, &sz) == NULL) {
-	ret = RXGKSEALEDINCON;
-	goto out;
-    }
-
-    if (rt.rt_nonce != number + 1) {
-	ret = RXGKSEALEDINCON;
-	goto out2;
-    }
-
-    if (rt.rt_error != 0) {
-	ret = rt.rt_error;
-	goto out2;
-    }
-
-#if 1
-    /* XXX check rt_enctype */
-    ret = rxgk_random_to_key(rt.rt_enctype, 
-			     rt.rt_key.val, rt.rt_key.len,
-			     rxsession_key);
-#else
-    ret = krb5_copy_keyblock_contents(context, key, rxsession_key);
-#endif
-
- out2:
-    ydr_free_RXGK_REPLY_TOKEN(&rt);
- out:
-    if (data.data)
-	krb5_data_free(&data);
-    krb5_crypto_destroy(context, crypto);
-
-    return ret;
-}
-
-/*
- *
- */
-
-int
-rxk5_mutual_auth_server(krb5_context context, krb5_keyblock *key,
-			const RXGK_Token *challage_token,
-			int *session_enctype, 
-			void **session_key, size_t *session_key_size,
-			RXGK_Token *reply_token)
-{
-    krb5_crypto crypto;
-    krb5_data data;
-    krb5_keyblock keyblock;
-    RXGK_CHALLENGE_TOKEN ct;
-    RXGK_REPLY_TOKEN rt;
-    char buf[RXGK_REPLY_TOKEN_MAX_SIZE];
-    size_t sz;
-    int ret;
-
-    memset(&rt, 0, sizeof(rt));
-    memset(&ct, 0, sizeof(ct));
-
-    *session_enctype = 0;
-    *session_key = NULL;
-    *session_key_size = 0;
-
-    keyblock.keyvalue.data = NULL;
-
-    sz = RXGK_CHALLENGE_TOKEN_MAX_SIZE - sz;
-
-    ret = krb5_crypto_init (context, key, key->keytype, &crypto);
-    if (ret)
-	return ret;
-    
-    /* Decrypt ticket */
-    data.data = NULL;
-    ret = krb5_decrypt(context, crypto, 0,
-		       challage_token->val, challage_token->len,
-		       &data);
-    if (ret)
-	goto out;
-
-    sz = data.length;
-    if (ydr_decode_RXGK_CHALLENGE_TOKEN(&ct, data.data, &sz) == NULL) {
-	memset(&ct, 0, sizeof(ct));
-	ret = ENOMEM;
-	goto out;
-    }
-    sz = data.length - sz;
-
-    krb5_data_free(&data);
-    data.data = NULL;
-
-    if (ct.ct_version < RXGK_CR_TOKEN_VERSION) {
-	ret = RXGKSEALEDINCON;
-	goto out;
-    } else
-	ret = 0;
-
-    /* XXX choose best enctype, not just the one we use now */
-    { 
-	int i;
-
-	for (i = 0; i < ct.ct_enctype.len ; i++) {
-	    if (ct.ct_enctype.val[i] == key->keytype)
-		break;
-	}
-
-	if (i == ct.ct_enctype.len)
-	    ret = RXGKSEALEDINCON;
-    }
-
-    rt.rt_version = RXGK_CR_TOKEN_VERSION;
-    rt.rt_nonce = ct.ct_nonce + 1;
-
-    rt.rt_key.len = 0;
-    rt.rt_key.val = NULL;
-    rt.rt_error = ret;
-
-    if (ret == 0) {
-	ret = krb5_generate_random_keyblock(context, 
-					    key->keytype,
-					    &keyblock);
-	if (ret == 0) {
-	    rt.rt_enctype = keyblock.keytype;
-	    rt.rt_key.len = keyblock.keyvalue.length;
-	    rt.rt_key.val = keyblock.keyvalue.data;
-
-	    *session_enctype = keyblock.keytype;
-	    *session_key_size = keyblock.keyvalue.length;
-	    *session_key = malloc(keyblock.keyvalue.length);
-	    if (*session_key == NULL)
-		abort();
-	    memcpy(*session_key, keyblock.keyvalue.data, 
-		   keyblock.keyvalue.length);
-	} else {
-	    rt.rt_error = ret;
-	}
-    }
-
-    sz = RXGK_REPLY_TOKEN_MAX_SIZE;
-    if (ydr_encode_RXGK_REPLY_TOKEN(&rt, buf, &sz) == 0) {
-	ret = ENOMEM;
-	goto out;
-    }
-    sz = RXGK_REPLY_TOKEN_MAX_SIZE - sz;
-
-    memset(rt.rt_key.val, 0, rt.rt_key.len);
-
-    data.data = NULL;
-    ret = krb5_encrypt(context, crypto, 0, buf, sz, &data);
-    if (ret)
-	goto out;
-    
-    reply_token->val = malloc(data.length);
-    if (reply_token->val == NULL) {
-	ret = ENOMEM;
-	goto out;
-    }
-
-    reply_token->len = data.length;
-    memcpy(reply_token->val, data.data, data.length);
-
- out:
-    ydr_free_RXGK_CHALLENGE_TOKEN(&ct);
-    /* ydr_free_RXGK_REPLY_TOKEN(&rt); */
-
-    if (data.data)
-	krb5_data_free(&data);
-    if (keyblock.keyvalue.data)
-	krb5_free_keyblock_contents(context, &keyblock);
-    krb5_crypto_destroy(context, crypto);
-    return ret;
-}
-
-/*
- *
- */
-
 void
 rxgk_getheader(struct rx_packet *pkt, struct rxgk_header_data *h)
 {
@@ -299,94 +31,190 @@ rxgk_getheader(struct rx_packet *pkt, struct rxgk_header_data *h)
   h->channel_and_seq = htonl(t);
 }
 
-/*
- *
- */
 
-#if 0
-int
-rxgk_derive_transport_key(krb5_context context,
-			  krb5_keyblock *rx_conn_key,
-			  RXGK_rxtransport_key *keycontrib,
-			  krb5_keyblock *rkey)
+static rxgk_logf logfunc = NULL;
+static void *logctx = NULL;
+
+void
+rxgk_set_log(rxgk_logf func, void *ctx)
 {
-    krb5_error_code ret;
-
-    /* XXX heimdal broken doesn't implement derive key for des encrypes */
-
-    switch (rx_conn_key->keytype) {
-    case RXGK_CRYPTO_DES_CBC_CRC:
-    case RXGK_CRYPTO_DES_CBC_MD4:
-    case RXGK_CRYPTO_DES_CBC_MD5:
-	ret = krb5_copy_keyblock_contents(context, rx_conn_key, rkey);
-	if (ret)
-	    abort();
-
-	break;
-    default: {
-	char rxk_enc[RXGK_RXTRANSPORT_KEY_MAX_SIZE];
-	size_t sz;
-	krb5_keyblock *key;
-	
-	sz = RXGK_RXTRANSPORT_KEY_MAX_SIZE;
-	if (ydr_encode_RXGK_rxtransport_key(keycontrib, rxk_enc, &sz) == NULL)
-	    return EINVAL;
-	
-	sz = RXGK_RXTRANSPORT_KEY_MAX_SIZE - sz;
-
-	ret = krb5_derive_key (context,
-			       rx_conn_key,
-			       rx_conn_key->keytype,
-			       rxk_enc,
-			       sz,
-			       &key);
-	if (ret)
-	    abort();
-	
-	ret = krb5_copy_keyblock_contents(context, key, rkey);
-	if (ret)
-	    abort();
-	
-	krb5_free_keyblock(context, key);
-	break;
-    }
-    }
-
-    return ret;
+    logfunc = func;
+    logctx = ctx;
 }
-#endif
 
-/*
- *
- */
+void
+rxgk_log_stdio(void *ctx, const char *fmt, ...)
+{
+    FILE *out = ctx;
+    va_list va;
 
+    if (out == NULL)
+	out = stderr;
 
-/* XXX replace me */
+    va_start(va, fmt);
+    vfprintf(out, fmt, va);
+    va_end(va);
+}
+
+void
+_rxgk_gssapi_err(OM_uint32 maj_stat, OM_uint32 min_stat, gss_OID mech)
+{
+    OM_uint32 junk;
+    gss_buffer_desc maj_error_message;
+    gss_buffer_desc min_error_message;
+    OM_uint32 msg_ctx = 0;
+
+    if (logfunc == NULL)
+	return;
+
+    maj_error_message.value = NULL;
+    min_error_message.value = NULL;
+	
+    gss_display_status(&junk, maj_stat, GSS_C_GSS_CODE,
+		       mech, &msg_ctx, &maj_error_message);
+    gss_display_status(&junk, min_stat, GSS_C_MECH_CODE,
+		       mech, &msg_ctx, &min_error_message);
+    (*logfunc)(logctx,
+	       "gss-code: %.*s\nmech-code: %.*s\n", 
+	       (int)maj_error_message.length, 
+	       (char *)maj_error_message.value, 
+	       (int)min_error_message.length, 
+	       (char *)min_error_message.value);
+    
+    gss_release_buffer(&junk, &maj_error_message);
+    gss_release_buffer(&junk, &min_error_message);
+}
 
 int
-rxgk_random_to_key(int enctype, 
-		   void *random_data, int random_sz,
-		   krb5_keyblock *key)
+rxgk_derive_k0(gss_ctx_id_t ctx,
+	       const void *snonce, size_t slength,
+	       const void *cnonce, size_t clength,
+	       int32_t enctype, struct rxgk_keyblock *key)
 {
-    memset(key, 0, sizeof(*key));
+    gss_buffer_desc prf_in, prf_out;
+    OM_uint32 major_status, minor_status;
+    unsigned char *nonces;
 
-    switch (enctype) {
-    case RXGK_CRYPTO_DES_CBC_CRC:
-    case RXGK_CRYPTO_DES_CBC_MD4:
-    case RXGK_CRYPTO_DES_CBC_MD5:
-	if (random_sz != 8)
-	    return RXGKINCONSISTENCY;
-	break;
-    default:
-	    return RXGKINCONSISTENCY;
+    if (enctype != RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96)
+	return EINVAL;
+
+    key->length = 32;
+    key->enctype = enctype;
+    
+    key->data = malloc(key->length);
+    if (key->data == NULL)
+	return ENOMEM;
+
+    nonces = malloc(clength + slength);
+    memcpy(nonces, snonce, slength);
+    memcpy(&nonces[slength], cnonce, clength);
+
+    prf_in.value = nonces;
+    prf_in.length = clength + slength;
+
+    prf_out.value = NULL;
+    prf_out.length = 0;
+
+    major_status = gss_pseudo_random(&minor_status, ctx, GSS_C_PRF_KEY_FULL,
+				     &prf_in, key->length, &prf_out);
+    free(nonces);
+    if (major_status != GSS_S_COMPLETE || prf_out.length != key->length) {
+	gss_release_buffer(&minor_status, &prf_out);
+	free(key->data);
+	memset(key, 0, sizeof(*key));
+	return EINVAL;
     }
 
-    key->keyvalue.data = malloc(random_sz);
-    if (key->keyvalue.data == NULL)
+    memcpy(key->data, prf_out.value, key->length);
+
+    gss_release_buffer(&minor_status, &prf_out);
+
+    return 0;
+}
+
+void
+print_chararray(char *val, unsigned len)
+{
+    int i;
+
+    for (i = 0; i < len; i++) {
+	fprintf(stderr, " %02x", (unsigned char)val[i]);
+    }
+    fprintf(stderr, "\n");    
+}
+
+int
+rxgk_encrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage)
+{
+    int i;
+    int x;
+
+    out->len = in->len + 4;
+    out->val = malloc(out->len);
+
+    out->val[0] = 1;
+    out->val[1] = 2;
+    out->val[2] = 3;
+    out->val[3] = 4;
+
+    /* XXX add real crypto */
+    x = keyusage;
+    for (i = 0; i < in->len; i++) {
+	x += i * 3 + ((unsigned char *)key->data)[i%key->length];
+	out->val[i+4] = in->val[i] ^ x;
+    }
+    
+    return 0;
+}
+
+int
+rxgk_decrypt_buffer(RXGK_Token *in, RXGK_Token *out,
+		    struct rxgk_keyblock *key, int keyusage)
+{
+    int i;
+    int x;
+
+    if (in->len < 4) {
+	return EINVAL;
+    }
+
+    if (in->val[0] != 1 ||
+	in->val[0] != 1 ||
+	in->val[0] != 1 ||
+	in->val[0] != 1) {
+	return EINVAL;
+    }
+
+    out->len = in->len - 4;
+    out->val = malloc(out->len);
+
+    /* XXX add real crypto */
+    x = keyusage;
+    for (i = 0; i < out->len; i++) {
+	x += i * 3 + ((unsigned char *)key->data)[i%key->length];
+	out->val[i] = in->val[i+4] ^ x;
+    }
+
+    return 0;
+}
+
+int
+rxgk_get_server_ticket_key(struct rxgk_keyblock *key)
+{
+    int i;
+    /* XXX get real key */
+
+    key->length = 32;
+    key->enctype = RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96;
+    
+    key->data = malloc(key->length);
+    if (key->data == NULL)
 	return ENOMEM;
-    memcpy(key->keyvalue.data, random_data, random_sz);
-    key->keyvalue.length = random_sz;
-    key->keytype = enctype;
+
+    for (i = 0; i < key->length; i++) {
+	((unsigned char *)key->data)[i] = 0x23 + i * 47;
+    }
 
     return 0;
 }
