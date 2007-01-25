@@ -5978,6 +5978,20 @@ rxs_Release(struct rx_securityClass *aobj)
     return RXS_Close(aobj);
 }
 
+int rxs_GetAuthData (struct rx_connection * aconn,
+		     afs_int64 *expires, afs_int32 *level,
+		     int *nnames, struct rx_securityName *names)
+{
+    return RXS_GetAuthData(rx_SecurityObjectOf(aconn), aconn,
+			   expires, level, nnames, names);
+}
+
+void rxs_FreeSecurityName(struct rx_securityName *name)
+{
+    if (name->name)
+	free(name->name);
+}
+
 #ifdef ADAPT_WINDOW
 #define	RXRATE_PKT_OH	(RX_HEADER_SIZE + RX_IPUDP_SIZE)
 #define	RXRATE_SMALL_PKT    (RXRATE_PKT_OH + sizeof(struct rx_ackPacket))

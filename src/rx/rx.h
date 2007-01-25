@@ -695,6 +695,13 @@ struct rx_securityObjectStats {
     afs_int32 sparel[8];
 };
 
+struct rx_securityName {
+    afs_int32 usage;
+    afs_int32 type;
+    afs_int32 length;
+    unsigned char *name;
+};
+
 /* XXXX (rewrite this description) A security class object contains a set of
  * procedures and some private data to implement a security model for rx
  * connections.  These routines are called by rx as appropriate.  Rx knows
@@ -735,13 +742,65 @@ struct rx_securityClass {
 	int (*op_GetStats) (struct rx_securityClass * aobj,
 			    struct rx_connection * aconn,
 			    struct rx_securityObjectStats * astats);
-	int (*op_Spare1) (void);
+	int (*op_GetAuthData) (struct rx_securityClass * aobj,
+			    struct rx_connection * aconn,
+			    afs_int64 *expires, afs_int32 *level,
+			    int *nnames, struct rx_securityName *names);
 	int (*op_Spare2) (void);
 	int (*op_Spare3) (void);
     } *ops;
     VOID *privateData;
     int refCount;
 };
+
+/* The GetAuthData op is used by application servers to obtain information
+ * about the authenticated client and the connection in a mechanism
+ * independent way.  It returns the following information:
+ * - If 'expires' is non-NULL, it is filled in with a timestamp indicating
+ *   when the client's credentials expire; after this time, the connection
+ *   becomes unusable.  A value of 0 means the credentials do not expire.
+ * - If 'level' is non-NULL, it is filled in with a mechansim-independent
+ *   indication of the level of protection provided by the connection (one
+ *   of the RX_LEVEL_* values defined below).
+ * - If both 'nnames' and 'names' are non-NULL, then 'names' points at an
+ *   array of rx_securityName structures, which are filled in to reflect
+ *   the authenticated identity of the caller.  On entry, *names contains
+ *   the number of entries in the array; no more than that number of names
+ *   will be filled in.  On return, *names is set to the total number of
+ *   names which apply to the connection, even if that is more than could
+ *   be returned.
+ * - The return value is 0 on success, or an error code on failure or if
+ *   there is an authentication problem with the connection.
+ *
+ * Each returned name is represented by an rx_securityName structure, which
+ * specifies the name usage (RX_NAMEUSE_*), type (RX_NAMETYPE_*), and the
+ * name itself, which is represented as a byte string whose format depends
+ * on the name type.
+ *
+ * Gee, I wish we had a better place for internal documentation than
+ * comments in a header file.  --jhutz, 25-Jan-2007
+ */
+
+/* Name usage tags */
+#define RX_NAMEUSE_USER   0  /* User (the normal case) */
+#define RX_NAMEUSE_HOST   1  /* Host managing the connection
+
+/* Name types */
+#define RX_NAMETYPE_NULL  0  /* No name */
+#define RX_NAMETYPE_KRB4  1  /* Kerberos V4 principal (string) */
+#define RX_NAMETYPE_KRB5  2  /* Kerberos V5 principal (XXX what format?) */
+#define RX_NAMETYPE_GSS   3  /* GSS-API exported name */
+
+
+/* Class-independent protection levels */
+#define RX_LEVEL_UNKNOWN -1  /* Unknown level */
+#define RX_LEVEL_NULL     0  /* No authentication */
+#define RX_LEVEL_CLEAR    1  /* Authentication but (almost) no protection */
+#define RX_LEVEL_AUTH     2  /* auth + protection of headers and some data */
+#define RX_LEVEL_INTEG    3  /* auth + full integrity protection */
+#define RX_LEVEL_BIND     4  /* auth + channel bindings */
+#define RX_LEVEL_CRYPT    5  /* auth + integrity protection and encryption */
+
 
 #define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
 
@@ -757,6 +816,7 @@ struct rx_securityClass {
 #define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
 #define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
+#define RXS_GetAuthData(obj,conn,exp,level,n,names) RXS_OP(obj,GetAuthData,(obj,conn,exp,level,n,names))
 
 
 

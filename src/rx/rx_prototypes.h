@@ -170,6 +170,11 @@ extern void rxi_ComputeRoundTripTime(register struct rx_packet *p,
 				     register struct rx_peer *peer);
 extern void rxi_ReapConnections(void);
 extern int rxs_Release(struct rx_securityClass *aobj);
+extern int rxs_GetAuthData (struct rx_connection * aconn,
+		     afs_int64 *expires, afs_int32 *level,
+		     int *nnames, struct rx_securityName *names);
+extern void rxs_FreeSecurityName(struct rx_securityName *);
+
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_stats *s, int size,
 			       afs_int32 freePackets, char version);

@@ -460,3 +460,49 @@ rxkad_GetServerInfo(struct rx_connection * aconn, rxkad_level * level,
     } else
 	return RXKADNOAUTH;
 }
+
+int
+rxkad_GetAuthData(struct rx_securityClass *aobj,
+		  struct rx_connection *aconn,
+		  afs_int64 *expires, afs_int32 *level,
+		  int *nnames, struct rx_securityName *names)
+{
+    struct rxkad_sconn *sconn;
+
+    sconn = (struct rxkad_sconn *)aconn->securityData;
+    if (sconn && sconn->authenticated && sconn->rock
+	&& (time(0) < sconn->expirationTime)) {
+	if (expires)
+	    *expires = sconn->expirationTime;
+	if (level) {
+	    switch (sconn->level) {
+		case rxkad_clear: *level = RX_LEVEL_CLEAR;   break;
+		case rxkad_auth:  *level = RX_LEVEL_AUTH;    break;
+		case rxkad_crypt: *level = RX_LEVEL_CRYPT;   break;
+		default:          *level = RX_LEVEL_UNKNOWN; break;
+	    }
+	}
+	if (names && nnames && *nnames < 1) {
+	    *nnames = 1;
+	} else if (names && nnames) {
+	    int lname = strlen(sconn->rock->client.name);
+	    int linst = strlen(sconn->rock->client.instance);
+	    int lcell = strlen(sconn->rock->client.cell);
+	    char *x;
+
+	    names[0].type   = RX_NAMETYPE_KRB4;
+	    names[0].length = lname + linst + lcell + (linst ? 3 : 2);
+	    x = names[0].name = osi_Alloc(names[0].length);
+
+	    strcpy(x, sconn->rock->client.name); x += lname;
+	    if (linst) {
+		*x = '.'; x++;
+		strcpy(x, sconn->rock->client.instance); x += linst;
+	    }
+	    *x = '@'; x++;
+	    ucstring(x, sconn->rock->client.cell, lcell + 1);
+	    *nnames = 1;
+	}
+    } else
+	return RXKADNOAUTH;
+}
