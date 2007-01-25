@@ -37,7 +37,8 @@ CFLAGS=$(DEFS) $(INCPATH) $(K5FLAGS) $(AFSINCLUDEFLAG) \
 
 all: \
 	includes \
-	${TOP_LIBDIR}/librxk5.a
+	${TOP_LIBDIR}/librxgkclient.a \
+	${TOP_LIBDIR}/librxgkserver.a
 
 librxgkclient.a: $C
 	-$(RM) -f librxgkclient.a
