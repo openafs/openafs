@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# Copyright (c) 2007 Kungliga Tekniska Högskolan
+# (Royal Institute of Technology, Stockholm, Sweden). 
+# All rights reserved. 
+#
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions 
+# are met: 
+#
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer. 
+#
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in the 
+#    documentation and/or other materials provided with the distribution. 
+#
+# 3. Neither the name of the Institute nor the names of its contributors 
+#    may be used to endorse or promote products derived from this software 
+#    without specific prior written permission. 
+#
+# THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND 
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE 
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS 
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
+# SUCH DAMAGE. 
+#
+# $Id$
+#
+
+# /usr/heimdal/sbin/ktutil -k FILE:keytab add -p rxgk/afs.test.h5l.se@TEST.H5L.SE -e aes256-cts-hmac-sha1-96 -V 2 -w serverpassword
+
+srcdir="@srcdir@"
+objdir="@objdir@"
+
+R=TEST.H5L.SE
+
+enctype=aes256-cts-hmac-sha1-96
+
+server=rxgk/afs.test.h5l.se@TEST.H5L.SE
+client=user@TEST.H5L.SE
+cachefile="${objdir}/cache.krb5"
+cache="FILE:${cachefile}"
+keytabfile=${srcdir}/keytab
+keytab="FILE:${keytabfile}"
+
+kimpersonate="${TESTS_ENVIRONMENT} kimpersonate -k ${keytab} --ccache=${cache}"
+klist="${TESTS_ENVIRONMENT} klist --cache=${cache}"
+
+test_server="${TESTS_ENVIRONMENT} ${objdir}/test_server"
+test_client="${TESTS_ENVIRONMENT} ${objdir}/test_client"
+
+KRB5_CONFIG="${objdir}/krb5.conf"
+export KRB5_CONFIG
+
+KRB5CCNAME=${cache}
+export KRB5CCNAME
+
+PATH=${PATH}:/usr/heimdal/libexec
+
+rm "${cachefile}"
+
+serverpid=
+
+trap "kill \${serverpid}; echo signal killing server; exit 1;" EXIT
+
+echo "kimpersonate";
+${kimpersonate} -c ${client} -s ${server} -t ${enctype} || exit 1
+
+${klist} > /dev/null || exit 1
+
+echo "starting server";
+${test_server} ${server} > server-log 2>&1 &
+serverpid=$!
+
+sleep 2
+
+echo "starting client";
+${test_client} ${server} > client-log 2>&1 || { echo "client failed"; exit 1; }
+
+
+kill "${serverpid}" > /dev/null 2>/dev/null
+
+trap "" EXIT
+
+exit 0
+

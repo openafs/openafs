@@ -1,0 +1,125 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+
+INCLDIR=@includedir@
+LIBDIR=@libdir@
+
+AFSLIBS= ${TOP_LIBDIR}/librxkad.a \
+        ${TOP_LIBDIR}/librxstat.a \
+        ${TOP_LIBDIR}/librx.a \
+        ${TOP_LIBDIR}/liblwp.a \
+        ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/util.a \
+        ${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/libafsutil.a
+
+LIBS=$(AFSLIBS) $(KRB5LIBS) $(DESLIB) $(LIBCOM_ERR) $(AFSUTIL) $(XLIBS)
+
+X=rxgk_proto.ydr.o rxgk_common.o rxgk_err.o
+C=$X rxgk_clnt.o rxgk_info.o rxgk_crpc.o rxgk_crypto.o rxgk_common.o
+S=$X rxgk_serv.o rxgk_info.o rxgk_srpc.o rxgk_crypto.o rxgk_common.o rxgk_ticket.o 
+#H=
+
+K5FLAGS=-DHAVE_AFSCONFIG_H
+
+CFLAGS=$(DEFS) $(INCPATH) $(K5FLAGS) $(AFSINCLUDEFLAG) \
+	$(COMMON_CFLAGS) $(KRB5CFLAGS) $(XCFLAGS) $(THREADFLAGS)
+
+all: \
+	includes \
+	${TOP_LIBDIR}/librxgkclient.a \
+	${TOP_LIBDIR}/librxgkserver.a
+
+librxgkclient.a: $C
+	-$(RM) -f librxgkclient.a
+	$(AR) crv librxgkclient.a $C
+	$(RANLIB) librxgkclient.a
+
+librxgkserver.a: $S
+	-$(RM) -f librxgkserver.a
+	$(AR) crv librxgkserver.a $S
+	$(RANLIB) librxgkserver.a
+
+#rxgk_proto.xdr.c: rxgk_proto.xg
+#	$(RXGEN) -c -o rxgk_proto.xdr.c rxgk_proto.xg
+
+rxgk_proto.h: rxgk_proto.xg
+	$(RXGEN) -x -h -o rxgk_proto.h rxgk_proto.xg
+
+rxgk_proto.cs.c: rxgk_proto.xg rxgk_proto.h
+	$(RXGEN) -x -C -o rxgk_proto.cs.c rxgk_proto.xg
+
+rxgk_proto.ss.c: rxgk_proto.xg rxgk_proto.h
+	$(RXGEN) -x -S -o rxgk_proto.ss.c rxgk_proto.xg
+
+rxgk_proto.xdr.c: rxgk_proto.xg rxgk_proto.h
+	$(RXGEN) -x -c -o rxgk_proto.xdr.c rxgk_proto.xg
+
+testconn.o testclient.o testprocs.o testserver.o test.xdr.o test.ss.o: test.h
+
+rxgk_err.c rxgk_err.h: rxgk_err.et
+	$(COMPILE_ET) rxgk_err.et
+
+clean:
+	rm -f *.o rxgk_proto.cs.c rxgk_proto.ss.c rxgk_proto.xdr.c rxgk_proto.h
+
+distclean: clean
+	rm -f Makefile
+
+test_server: test.ss.o test.xdr.o test_server.o $(COMERR_ADD) $S $H $W
+	$(CC) -o testserver test_server.o test.ss.o test.xdr.o $S $(COMERR_ADD) $H $W $(LIBS)
+test.ss.c test.cs.c test.h test.xdr.c: test.xg
+	$(RXGEN) test.xg
+test_client: test.cs.o test.xdr.o test_client.o $(COMERR_ADD) $C $H
+	$(CC) -o test_client test_client.o test.cs.o test.xdr.o $(COMERR_ADD) $C $H $(LIBS)
+
+#
+# Install targets
+#
+
+includes: \
+	${TOP_INCDIR}/rx/rxgk_locl.h \
+	${TOP_INCDIR}/rx/rxgk_proto.h \
+	${TOP_INCDIR}/rx/rxgk_err.h 
+
+${TOP_LIBDIR}/librxgkclient.a: librxgkclient.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/librxgkserver.a: librxgkserver.a
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxgk_locl.h: rxgk_locl.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxgk_proto.h: rxgk_proto.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxgk_err.h: rxgk_err.h
+	${INSTALL} $? $@
+
+depinstall: includes rxgk_proto.xdr.c rxgk_err.c
+
+install: librxgkclient.a librxgkserver.a
+	${INSTALL} librxgkclient.a ${DESTDIR}${libdir}/librxgkclient.a 
+	${INSTALL} librxgkserver.a ${DESTDIR}${libdir}/librxgkserver.a 
+	${INSTALL} rxgk_err.h ${DESTDIR}${includedir}/rx/rxgk_err.h 
+	${INSTALL} rxgk_locl.h ${DESTDIR}${includedir}/rx/rxgk_locl.h 
+	${INSTALL} rxgk_proto.h ${DESTDIR}${includedir}/rx/rxgk_proto.h
+
+dest: librxgkclient.a librxgkserver.a
+	${INSTALL} librxgkclient.a ${DEST}/lib/librxgkclient.a 
+	${INSTALL} librxgkserver.a ${DEST}/lib/librxgkserver.a 
+	${INSTALL} rxgk_err.h ${DEST}/include/rx/rxgk_err.h 
+	${INSTALL} rxgk_locl.h ${DEST}/include/rx/rxgk_locl.h 
+	${INSTALL} rxgk_proto.h ${DEST}/include/rx/rxgk_proto.h
+

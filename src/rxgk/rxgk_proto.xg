@@ -1,0 +1,202 @@
+/* hej emacs det h{r {r en -*- c -*- fil */
+
+/*
+ * Copyright (c) 2002 - 2004, Stockholms Universitet
+ * (Stockholm University, Stockholm Sweden)
+ * All rights reserved.
+ * 
+ * Redistribution is not permitted
+ */
+
+/* $Id$ */
+
+package RXGK_
+
+const RXGK_MAX_TOKEN_LEN = 65536;
+const RXGK_MAX_AUTHTOKEN = 256;
+
+/* ctext is limited by mtu since its part of responce */
+const RXGK_MAX_CTEXT	 = 768; 
+
+const RXGK_SERVICE_ID   = 34567;
+
+#define RXGK_ESTABLISH_GSS_CONTEXT	1
+#define RXGK_COMBINE_RXGK_AUTH		2
+
+typedef opaque RXGK_Token<RXGK_MAX_TOKEN_LEN>;
+
+/*
+ *
+ */
+
+const RXGK_KEY_VERSION		= 1;
+const RXGK_KEY_MAXSIZE		= 256;
+const RXGK_KEY_MAXPRINCIPAL	= 640;
+const RXGK_KEY_ENCTYPES		= 25;
+const RXGK_MAX_LEVELS		= 25;
+const RXGK_MAX_NONCE		= 64;
+
+
+
+const RXGK_KEY_MAX_COMBINE	= 20;
+const RXGK_EXT_EXTENSION_SIZE	= 2048;
+
+/*
+ * Challange token in the 
+ */
+
+const RXGK_CR_TOKEN_VERSION	= 1;
+
+/*
+ *
+ */
+
+struct RXGK_Challenge {
+    afs_int32 rc_version;
+    opaque rc_nonce[20];
+};
+
+typedef opaque RXGK_Ticket_Crypt<RXGK_MAX_AUTHTOKEN>;
+
+struct RXGK_Response {
+    afs_int32 rr_version;
+    RXGK_Ticket_Crypt rr_authenticator;
+    opaque rr_ctext<RXGK_MAX_CTEXT>;
+};
+
+struct RXGK_Response_Crypt {
+    opaque nonce[20];
+    afs_uint32 epoch;
+    afs_uint32 cid;
+    afs_uint32 start_time;
+    afs_int32 call_numbers[4];
+};
+
+/*
+ * Rx auth cred equivalent
+ */
+
+const RXGK_EXT_EXTENSION_COMBINE = 1;
+
+struct rxgk_combine_principal {
+    opaque combineprincipal<RXGK_KEY_MAXPRINCIPAL>;
+};
+
+struct rxgk_extension {
+    afs_uint32 id;
+    opaque data<RXGK_EXT_EXTENSION_SIZE>;
+};
+
+struct rxgk_ticket {
+    afs_int32 ticketversion;
+    afs_int32 enctype;
+    opaque key<RXGK_KEY_MAXSIZE>;
+    afs_int32 level;
+    afs_int64 starttime;
+    afs_int32 lifetime;
+    afs_int32 bytelife;
+    afs_int64 expirationtime;
+    opaque ticketprincipal<RXGK_KEY_MAXPRINCIPAL>;
+    struct rxgk_extension ext<8>; /* XXX size */
+};
+
+/*
+ * This is part of the rxs challange/response exchange.  Its somewhat
+ * complicated since it support rekeying of a data stream.
+ */
+
+const RXGK_VERSION = 1;
+
+
+/*
+ * Kerberos crypto framework enctypes 
+ */
+
+const RXGK_CRYPTO_DES_CBC_CRC		= 1;
+const RXGK_CRYPTO_DES_CBC_MD4		= 2;
+const RXGK_CRYPTO_DES_CBC_MD5		= 4;
+
+const RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96 = 16;
+
+const RXGK_CLIENT_TO_SERVER		= 0;
+const RXGK_SERVER_TO_CLIENT		= 1;
+/*
+const RXGK_CLIENT_ENC_CHALLENGE		= 1026;
+const RXGK_SERVER_ENC_REKEY		= 1026;
+const RXGK_CLIENT_ENC_PACKETS		= 1027;
+const RXGK_CLIENT_CKSUM_PACKETS		= 1028;
+const RXGK_SERVER_ENC_PACKETS		= 1029;
+const RXGK_SERVER_CKSUM_PACKETS		= 1030;
+*/
+
+const RXGK_CLIENT_ENC_PACKET		= 1026;
+const RXGK_CLIENT_MIC_PACKET		= 1027;
+const RXGK_SERVER_ENC_PACKET		= 1028;
+const RXGK_SERVER_MIC_PACKET		= 1029;
+const RXGK_CLIENT_ENC_RESPONSE		= 1030;
+const RXGK_CLIENT_COMBINE_ORIG		= 1032;
+const RXGK_SERVER_COMBINE_NEW		= 1034;
+const RXGK_SERVER_ENC_TICKET		= 1036;
+
+
+/*
+ * In packet protection since header isn't checksum-ed
+ */
+
+struct rxgk_header_data {
+    afs_uint32 call_number;
+    afs_uint32 channel_and_seq;
+};
+
+
+/*
+ * GSS key neg
+ */
+
+/* XXX limit arrays */
+
+typedef afs_int32 RXGK_Enctypes<RXGK_KEY_ENCTYPES>;
+
+struct RXGK_client_start { 
+    RXGK_Enctypes sp_enctypes;
+    afs_int32 sp_levels<RXGK_MAX_LEVELS>;
+    afs_int32 sp_lifetime;
+    afs_int32 sp_bytelife;  /* max bytes in log 2 */
+    afs_int32 sp_nametag;
+    opaque sp_client_nonce<RXGK_MAX_NONCE>;
+};
+
+struct RXGK_ClientInfo {
+    afs_int32 ci_error_code;
+    afs_int32 ci_enctype;
+    afs_int32 ci_level;
+    afs_int32 ci_lifetime;
+    afs_int32 ci_bytelife;
+    afs_int64 ci_expiration;
+    opaque ci_mic<1024>; /* MIC over startparam */ /* XXX size */
+    RXGK_Ticket_Crypt ci_ticket;
+    opaque ci_server_nonce<RXGK_MAX_NONCE>;
+};
+
+const RXGK_WIRE_AUTH_ONLY	= 0;
+const RXGK_WIRE_INTEGRITY	= 1;
+const RXGK_WIRE_BIND		= 2;
+const RXGK_WIRE_ENCRYPT		= 3;
+
+/*
+ * opaque_in and opaque_out is to allow multi-round trip GSS mech to
+ * keep state in the opaque and be state-less.
+ *
+ * input_token_buffer and output_token_buffer are both GSS context
+ * tokens.
+ *
+ * gss_status is the gss return code.
+ */
+
+GSSNegotiate(IN RXGK_client_start *client_start,
+	     IN RXGK_Token *input_token_buffer,
+	     IN RXGK_Token *opaque_in,
+	     OUT RXGK_Token *output_token_buffer,
+	     OUT RXGK_Token *opaque_out,
+	     OUT afs_uint32 *gss_status,
+	     OUT RXGK_Token *rxgk_info) = RXGK_ESTABLISH_GSS_CONTEXT;

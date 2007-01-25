@@ -1,0 +1,11 @@
+# $Id$
+
+[libdefaults]
+	default_realm = TEST.H5L.SE
+	no-addresses = TRUE
+	default_keytab_name = @srcdir@/keytab
+
+[realms]
+	TEST.H5L.SE = {
+		kdc = localhost:8888
+	}
