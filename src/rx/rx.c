@@ -5982,6 +5982,13 @@ int rxs_GetAuthData (struct rx_connection * aconn,
 		     afs_int64 *expires, afs_int32 *level,
 		     int *nnames, struct rx_securityName *names)
 {
+    /* Default answers, in case the op is unimplemented */
+    if (expires)
+	ZeroInt64(*expires);
+    if (level)
+	*level = RX_LEVEL_NULL;
+    if (names && nnames)
+	*nnames = 0;
     return RXS_GetAuthData(rx_SecurityObjectOf(aconn), aconn,
 			   expires, level, nnames, names);
 }

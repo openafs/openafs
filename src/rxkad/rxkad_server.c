@@ -473,7 +473,7 @@ rxkad_GetAuthData(struct rx_securityClass *aobj,
     if (sconn && sconn->authenticated && sconn->rock
 	&& (time(0) < sconn->expirationTime)) {
 	if (expires)
-	    *expires = sconn->expirationTime;
+	    FillInt64(*expires, 0, sconn->expirationTime);
 	if (level) {
 	    switch (sconn->level) {
 		case rxkad_clear: *level = RX_LEVEL_CLEAR;   break;
