@@ -40,6 +40,13 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_AFSCONFIG_H
+#include <afsconfig.h>
+#endif
+#ifdef HAVE_AFS_PARAM_H
+#include <afs/param.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>

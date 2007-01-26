@@ -4,8 +4,33 @@
  * Copyright (c) 2002 - 2004, Stockholms Universitet
  * (Stockholm University, Stockholm Sweden)
  * All rights reserved.
- * 
- * Redistribution is not permitted
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the university nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /* $Id$ */
@@ -60,6 +85,7 @@ typedef opaque RXGK_Ticket_Crypt<RXGK_MAX_AUTHTOKEN>;
 
 struct RXGK_Response {
     afs_int32 rr_version;
+    afs_int64 start_time;
     RXGK_Ticket_Crypt rr_authenticator;
     opaque rr_ctext<RXGK_MAX_CTEXT>;
 };
@@ -68,7 +94,6 @@ struct RXGK_Response_Crypt {
     opaque nonce[20];
     afs_uint32 epoch;
     afs_uint32 cid;
-    afs_uint32 start_time;
     afs_int32 call_numbers[4];
 };
 
@@ -116,7 +141,7 @@ const RXGK_CRYPTO_DES_CBC_CRC		= 1;
 const RXGK_CRYPTO_DES_CBC_MD4		= 2;
 const RXGK_CRYPTO_DES_CBC_MD5		= 4;
 
-const RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96 = 16;
+const RXGK_CRYPTO_AES256_CTS_HMAC_SHA1_96 = 18;
 
 const RXGK_CLIENT_TO_SERVER		= 0;
 const RXGK_SERVER_TO_CLIENT		= 1;

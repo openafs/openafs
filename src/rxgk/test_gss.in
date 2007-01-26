@@ -64,7 +64,7 @@ export KRB5CCNAME
 
 PATH=${PATH}:/usr/heimdal/libexec
 
-rm "${cachefile}"
+rm -f "${cachefile}"
 
 serverpid=
 

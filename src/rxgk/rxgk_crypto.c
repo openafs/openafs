@@ -147,7 +147,7 @@ rxgk_crypto_init(struct rxgk_keyblock *tk, key_stuff *k)
 			    tk->enctype,
 			    &k->ks_scrypto);
 
-    krb5_free_keyblock(GETCONTEXT, &tk_kb);
+    krb5_free_keyblock_contents(GETCONTEXT, &tk_kb);
 
     if (ret)
 	return EINVAL;
@@ -529,6 +529,17 @@ rxgk_decrypt_buffer(RXGK_Token *in, RXGK_Token *out,
     return 0;
 }
 
+static void
+print_key(char *name, struct rxgk_keyblock *key)
+{
+    int i;
+
+    fprintf(stderr, "type: %s", name);
+    for (i = 0; i < key->length; i++)
+	fprintf(stderr, " %02x", ((unsigned char*)key->data)[i]);
+    fprintf(stderr, "\n");    
+}
+
 int
 rxgk_derive_transport_key(struct rxgk_keyblock *k0,
 			  struct rxgk_keyblock *tk,
@@ -554,6 +565,9 @@ rxgk_derive_transport_key(struct rxgk_keyblock *k0,
 	x += i * 3 + ((unsigned char *)k0->data)[i%k0->length];
 	((unsigned char *)tk->data)[i] = 0x23 + x * 47;
     }
+
+    print_key("k0: ", k0);
+    print_key("tk: ", tk);
 
     return 0;
 }
