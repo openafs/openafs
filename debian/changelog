@@ -1,3 +1,10 @@
+openafs (1.4.2-5) unstable; urgency=low
+
+  * Translation updates:
+    - Chinese, thanks Chun Tian (binghe).  (Closes: #406063)
+
+ -- Russ Allbery <rra@debian.org>  Sun, 28 Jan 2007 13:43:16 -0800
+
 openafs (1.4.2-4) unstable; urgency=low
 
   * Update documentation to note that enabling v4 support or running
