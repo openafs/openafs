@@ -263,8 +263,16 @@ and its F<public> subdirectory).
 =head1 PRIVILEGE REQUIRED
 
 The issuer must have the C<a> (administer) permission on the directory's
-ACL; the directory's owner and the members of the system:administrators
-group have the right implicitly, even if it does not appear on the ACL.
+ACL, a member of the system:administrators group, or, as a special case,
+must be the UID owner of the top-level directory of the volume containing
+this directory.  The last provision allows the UID owner of a volume to
+repair accidental ACL errors without requiring intervention by a member of
+system:administrators.
+
+Earlier versions of OpenAFS also extended implicit administer permission
+to the owner of any directory.  In current versions of OpenAFS, only the
+owner of the top-level directory of the volume has this special
+permission.
 
 =head1 SEE ALSO
 
