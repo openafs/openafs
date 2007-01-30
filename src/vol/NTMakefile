@@ -40,7 +40,6 @@ LIBOBJS =\
 	$(OUT)\clone.obj \
 	$(OUT)\fssync-client.obj \
 	$(OUT)\fssync-server.obj \
-	$(OUT)\fssync-debug.obj \
 	$(OUT)\daemon_com.obj \
 	$(OUT)\ntops.obj \
 	$(OUT)\nuke.obj \
@@ -77,6 +76,7 @@ EXEC_LIBS = \
 SALVAGER = $(DESTDIR)\root.server\usr\afs\bin\salvager.exe
 
 SALVAGER_EXEOBJS =\
+	$(OUT)\salvager.obj \
 	$(OUT)\vol-salvage.obj \
 	$(OUT)\physio.obj \
 	$(OUT)\AFS_component_version_number.obj \
@@ -87,6 +87,20 @@ $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
+
+############################################################################
+# build fssync-debug
+FSSYNC_DEBUG = $(DESTDIR)\root.server\usr\afs\bin\fssync-debug.exe
+
+FSSYNC_DEBUG_EXEOBJS =\
+	$(OUT)\fssync-debug.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\fssync-debug.res
+
+$(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
+	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
 
 ############################################################################
 # build volinfo
