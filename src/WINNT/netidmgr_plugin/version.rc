@@ -30,7 +30,7 @@
 
 #ifndef LANGVER
 
-#define STR_FILEDESC "OpenAFS Plugin for NetIDMgr"
+#define STR_FILEDESC "OpenAFS Plugin for Network Identity Manager"
 #define STR_INTNAME  "afscred"
 #define STR_ORIGNAME "afscred.dll"
 
@@ -68,9 +68,9 @@
         VALUE "FileDescription", STR_FILEDESC
         VALUE "FileVersion",     AFSPLUGIN_VERSION_STR
         VALUE "InternalName",    STR_INTNAME
-        VALUE "LegalCopyright",  "(C) 2005,2006 Secure Endpoints Inc."
+        VALUE "LegalCopyright",  "(C) 2005-2007 Secure Endpoints Inc."
         VALUE "OriginalFilename", STR_ORIGNAME
-        VALUE "ProductName",     "OpenAFS Plugin for NetIDMgr"
+        VALUE "ProductName",     "OpenAFS Plugin for Network Identity Manager"
         VALUE "ProductVersion",  AFSPLUGIN_VERSION_STR
 #ifndef LANGVER
         VALUE NIMV_MODULE,       "OpenAFS"
