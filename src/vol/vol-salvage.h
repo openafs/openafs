@@ -202,7 +202,7 @@ typedef struct {
 } childJob_t;
 
 /* Child job this process is running. */
-extern childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
+extern childJob_t myjob;
 
 extern int nt_SalvagePartition(char *partName, int jobn);
 extern int nt_SetupPartitionSalvage(void *datap, int len);
