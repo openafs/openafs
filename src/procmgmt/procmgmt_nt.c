@@ -141,13 +141,11 @@ DefaultActionHandler(int signo)
     case SIGHUP:
     case SIGINT:
     case SIGKILL:
+    case SIGQUIT:
     case SIGTERM:
-    case SIGUSR1:
-    case SIGUSR2:
 	/* default action is "exit" */
 	ExitProcess(PMGT_SIGSTATUS_ENCODE(signo));
 	break;
-    case SIGQUIT:
     case SIGILL:
     case SIGABRT:
     case SIGFPE:
@@ -161,6 +159,8 @@ DefaultActionHandler(int signo)
 	RaiseException((DWORD) PMGT_SIGSTATUS_ENCODE(signo),
 		       EXCEPTION_NONCONTINUABLE, 0, NULL);
 	break;
+    case SIGUSR1:
+    case SIGUSR2:
     case SIGCHLD:
 	/* default action is "ignore" */
 	break;
