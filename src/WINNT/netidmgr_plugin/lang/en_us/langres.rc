@@ -57,9 +57,9 @@ STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "AFS Token Options",IDC_STATIC,7,7,286,11,SS_SUNKEN | NOT WS_GROUP
-    CONTROL         "Obtain &AFS tokens",IDC_NCAFS_OBTAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,19,74,12
-    GROUPBOX        "Token for",IDC_STATIC,7,32,286,54
+    LTEXT           "AFS Credential Options",IDC_STATIC,7,7,286,11,SS_SUNKEN | NOT WS_GROUP
+    CONTROL         "Obtain &AFS credentials",IDC_NCAFS_OBTAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,19,74,12
+    GROUPBOX        "Credential for",IDC_STATIC,7,32,286,54
     LTEXT           "&Cell",IDC_STATIC,12,41,42,10
     COMBOBOX        IDC_NCAFS_CELL,57,38,152,12,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "&Realm",IDC_STATIC,12,57,42,10
@@ -76,7 +76,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "Obtain AFS tokens for new identities",IDC_CFG_OBTAIN,
+    CONTROL         "Obtain AFS credentials for new identities",IDC_CFG_OBTAIN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,133,10
 END
 
@@ -85,8 +85,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "Obtain &AFS tokens",IDC_NCAFS_OBTAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,74,12
-    GROUPBOX        "Token for",IDC_STATIC,7,18,221,56
+    CONTROL         "Obtain &AFS credentials",IDC_NCAFS_OBTAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,74,12
+    GROUPBOX        "Credential for",IDC_STATIC,7,18,221,56
     LTEXT           "&Cell",IDC_STATIC,13,28,42,10
     COMBOBOX        IDC_NCAFS_CELL,57,25,109,12,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "&Realm",IDC_STATIC,13,44,42,10
@@ -113,9 +113,9 @@ BEGIN
     EDITTEXT        IDC_CFG_VERSION,68,54,172,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Company",IDC_CFG_LBL_COMPANY,14,75,31,8
     EDITTEXT        IDC_CFG_COMPANY,68,72,172,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "Open AFS Control Panel ...",IDC_CFG_CPL,128,161,112,14
+    PUSHBUTTON      "OpenAFS Control Panel ...",IDC_CFG_CPL,128,161,112,14
     GROUPBOX        "Startup options",IDC_CFG_STARTGRP,7,99,241,48
-    CONTROL         "Prevent AFSCreds.exe from starting automatically everytime you log in to Windows.",IDC_CFG_STARTAFSCREDS,
+    CONTROL         "Prevent AFSCreds.exe from starting automatically when you log in to Windows.",IDC_CFG_STARTAFSCREDS,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,108,226,22
 END
 
@@ -186,16 +186,16 @@ IDI_NC_NOTOWNED         ICON                    "..\\..\\images\\nc_notowned.ico
 
 STRINGTABLE 
 BEGIN
-    IDS_AFS_SHORT_DESC      "AFS tokens"
-    IDS_AFS_LONG_DESC       "AFS tokens"
+    IDS_AFS_SHORT_DESC      "AFS credentials"
+    IDS_AFS_LONG_DESC       "AFS credentials"
     IDS_AFS_NAME            "AFS"
     IDS_NCAFS_COL_CELL      "Cell"
     IDS_NCAFS_COL_REALM     "Realm"
     IDS_NCAFS_COL_METHOD    "Method"
     IDS_NC_METHOD_AUTO      "(Automatic)"
-    IDS_NC_METHOD_KRB5      "Kerberos 5"
-    IDS_NC_METHOD_KRB4      "Kerberos 4"
-    IDS_NC_METHOD_KRB524    "Krb524"
+    IDS_NC_METHOD_KRB5      "Kerberos v5"
+    IDS_NC_METHOD_KRB4      "Kerberos v4"
+    IDS_NC_METHOD_KRB524    "Kerberos v5 to v4"
     IDS_NC_REALM_AUTO       "(Automatic)"
 END
 
@@ -211,9 +211,9 @@ BEGIN
                             "The realm name you entered contains invalid characters."
     IDS_NC_TT_CANT_UPDATE   "Can't update token"
     IDS_AFS_CREDTEXT_DIS    "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: AFS is disabled. (click <a id=""AfsCred:Enable"">here</a> to enable)</p>"
-    IDS_AFS_CREDTEXT_0      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: No tokens selected</p>"
-    IDS_AFS_CREDTEXT_1      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: Token for cell %s</p>"
-    IDS_AFS_CREDTEXT_N      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: Tokens for cells %s</p>"
+    IDS_AFS_CREDTEXT_0      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: No credentials selected</p>"
+    IDS_AFS_CREDTEXT_1      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: Credential for cell %s</p>"
+    IDS_AFS_CREDTEXT_N      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: Credentials for cells %s</p>"
     IDS_ATTR_CELL_SHORT_DESC "Cell"
     IDS_ATTR_REALM_SHORT_DESC "Realm"
     IDS_ATTR_METHOD_SHORT_DESC "Method"
@@ -232,28 +232,28 @@ BEGIN
     IDS_CFG_MAIN_SHORT      "AFS"
     IDS_CFG_SVCSTATUS       "Status is unknown,Stopped,Starting ...,Stopping ...,Running,Continuing ...,Pausing ...,Paused,Status is unknown"
     IDS_NC_METHODL_AUTO     "(Automatically determine method)"
-    IDS_NC_METHODL_KRB5     "Kerberos 5"
-    IDS_NC_METHODL_KRB4     "Kerberos 4"
-    IDS_NC_METHODL_KRB524   "Krb524"
+    IDS_NC_METHODL_KRB5     "Kerberos v5"
+    IDS_NC_METHODL_KRB4     "Kerberos v4"
+    IDS_NC_METHODL_KRB524   "Kerberos v5 to v4"
     IDS_NC_METHOD_INVALID   "(Invalid method identifier)"
-    IDS_NC_TT_CONFLICT      "Tokens for cell %s are already listed for identity %s.\nDo you want to keep the token for this cell for other identities?"
-    IDS_NC_TT_PROBLEM       "Problem with new token"
-    IDS_NC_TT_CONFLICTM     "Tokens for cell %s are already listed for identity %s.\nDo you want to keep the token for other identities as well as this one?"
+    IDS_NC_TT_CONFLICT      "Credentials for cell %s are already listed for identity %s.\nDo you want to keep the credentials for this cell for other identities?"
+    IDS_NC_TT_PROBLEM       "Problem with new credential"
+    IDS_NC_TT_CONFLICTM     "Credentials for cell %s are already listed for identity %s.\nDo you want to keep the credentials for other identities as well as this one?"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_NC_TT_DETAILS       "Details about token"
-    IDS_NC_TT_CONFLICTD     "This token already exists under a different identity."
-    IDS_NC_TT_EXPIRED       "Currently existing token has expired."
-    IDS_NC_TT_EXISTS        "This token already exists for this identity."
-    IDS_NC_TT_NEW           "This is a new token for this identity."
+    IDS_NC_TT_DETAILS       "Details about credential"
+    IDS_NC_TT_CONFLICTD     "This credential already exists under a different identity."
+    IDS_NC_TT_EXPIRED       "Currently existing credential has expired."
+    IDS_NC_TT_EXISTS        "This credential already exists for this identity."
+    IDS_NC_TT_NEW           "This is a new credential for this identity."
     IDS_CFG_CANTSTART       "The AFS service could not be started.\n\n"
     IDS_CFG_CANTSTOP        "The AFS service could not be stopped.\n\n"
     IDS_ERR_CELLCONFIG      "Could not locate configuration information for cell %1!S!."
     IDS_ERR_NOSERVICE       "The AFS service is not running.  If OpenAFS is installed, you can start the service using the AFS configuration panel."
     IDS_ERR_CELLCONFIG_S    "The error code returned was %2!d!."
-    IDS_ERR_GENERAL         "Tokens could not be obtained for cell %1!S!."
+    IDS_ERR_GENERAL         "Credentials could not be obtained for cell %1!S!."
 END
 
 #endif    // English (U.S.) resources
