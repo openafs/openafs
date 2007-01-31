@@ -3311,7 +3311,10 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }
 
     lock_ObtainMutex(&fidp->mx);
-    if (infoLevel == SMB_SET_FILE_DISPOSITION_INFO && !(fidp->flags & SMB_FID_OPENDELETE)) {
+    if (infoLevel == SMB_SET_FILE_DISPOSITION_INFO && 
+	!(fidp->flags & SMB_FID_OPENDELETE)) {
+	osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo !SMB_FID_OPENDELETE fidp 0x%p scp 0x%p fidp->flags 0x%x", 
+		  fidp, scp, fidp->flags);
 	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
@@ -3320,6 +3323,8 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     if ((infoLevel == SMB_SET_FILE_ALLOCATION_INFO || 
 	 infoLevel == SMB_SET_FILE_END_OF_FILE_INFO)
          && !(fidp->flags & SMB_FID_OPENWRITE)) {
+	osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo !SMB_FID_OPENWRITE fidp 0x%p scp 0x%p fidp->flags 0x%x", 
+		  fidp, scp, fidp->flags);
 	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
@@ -3409,6 +3414,9 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
             code = 0;
     }
     else if (infoLevel == SMB_SET_FILE_DISPOSITION_INFO) {
+	int delflag = *((char *)(p->datap));
+	osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo Delete? %d fidp 0x%p scp 0x%p", 
+		 delflag, fidp, scp);
         if (*((char *)(p->datap))) {	/* File is Deleted */
             code = cm_CheckNTDelete(fidp->NTopen_dscp, scp, userp,
                                      &req);
@@ -3416,6 +3424,9 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		lock_ObtainMutex(&fidp->mx);
                 fidp->flags |= SMB_FID_DELONCLOSE;
 		lock_ReleaseMutex(&fidp->mx);
+	    } else {
+		osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo CheckNTDelete fidp 0x%p scp 0x%p code 0x%x", 
+			 fidp, scp, code);
 	    }
 	}               
         else {  
@@ -5750,6 +5761,13 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         code = cm_Lock(scp, LockType, LOffset, LLength, key, (Timeout != 0),
                         userp, &req, &lockp);
+
+	if (code == CM_ERROR_NOACCESS && LockType == LockWrite && 
+	    (fidp->flags & (SMB_FID_OPENREAD_LISTDIR | SMB_FID_OPENWRITE)) == SMB_FID_OPENREAD_LISTDIR)
+	{
+	    code = cm_Lock(scp, LockRead, LOffset, LLength, key, (Timeout != 0),
+			    userp, &req, &lockp);
+	}
 
         if (code == CM_ERROR_WOULDBLOCK && Timeout != 0) {
             smb_waitingLock_t * wLock;

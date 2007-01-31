@@ -479,11 +479,11 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
     int BeyondPage = 0, HaveDot = 0, HaveDotDot = 0;
 
     /* First check permissions */
-    lock_ObtainMutex(&dscp->mx);
-    code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_DELETE,
+    lock_ObtainMutex(&scp->mx);
+    code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_DELETE,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    lock_ReleaseMutex(&dscp->mx);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseMutex(&scp->mx);
     if (code)
         return code;
 

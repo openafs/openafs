@@ -653,7 +653,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         lock_ReleaseMutex(&cm_Freelance_Lock);
 
         scp->owner=0x0;
-        scp->unixModeBits=0x1ff;
+        scp->unixModeBits=0777;
         scp->clientModTime=FakeFreelanceModTime;
         scp->serverModTime=FakeFreelanceModTime;
         scp->parentUnique = 0x1;
@@ -1298,7 +1298,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->Owner = 0x0;
         statusp->CallerAccess = 0x9;
         statusp->AnonymousAccess = 0x9;
-        statusp->UnixModeBits = 0x1ff;
+        statusp->UnixModeBits = 0777;
         statusp->ParentVnode = 0x1;
         statusp->ParentUnique = 0x1;
         statusp->ResidencyMask = 0;

@@ -88,13 +88,24 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
         *outRightsp = trights;
     }
 
-    /* check mode bits */
-    if (!(scp->unixModeBits & 0400))
-        *outRightsp &= ~PRSFS_READ;
-    if (!(scp->unixModeBits & 0200) && !(rights == (PRSFS_WRITE | PRSFS_LOCK)))
-        *outRightsp &= ~PRSFS_WRITE;
-    if (!(scp->unixModeBits & 0200) && !cm_deleteReadOnly)
-        *outRightsp &= ~PRSFS_DELETE;
+    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+	/* check mode bits */
+	if ((scp->unixModeBits & 0400) == 0) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing READ scp 0x%p unix 0x%x", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_READ;
+	}
+	if ((scp->unixModeBits & 0200) == 0 && (rights != (PRSFS_WRITE | PRSFS_LOCK))) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing WRITE scp 0x%p unix 0%o", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_WRITE;
+	}
+	if ((scp->unixModeBits & 0200) == 0 && !cm_deleteReadOnly) {
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing DELETE scp 0x%p unix 0%o", 
+		      scp, scp->unixModeBits);
+	    *outRightsp &= ~PRSFS_DELETE;
+	}
+    }
 
     /* if the user can obtain a write-lock, read-locks are implied */
     if (*outRightsp & PRSFS_WRITE)
