@@ -80,6 +80,12 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
      * Otherwise, if we an explicit acl entry, we're also in good shape,
      * and can definitively answer.
      */
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && aclScp == cm_data.rootSCachep)
+    {
+    	*outRightsp = aclScp->anyAccess;
+    } else
+#endif
     if ((~aclScp->anyAccess & rights) == 0) {
         *outRightsp = rights;
     } else {
