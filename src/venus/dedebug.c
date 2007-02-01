@@ -23,6 +23,7 @@ RCSID("$Header$");
 #endif
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
+#include <afs/com_err.h>
 #include <rx/rx.h>
 #include <lock.h>
 

@@ -32,6 +32,7 @@ RCSID
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
+#include <afs/com_err.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
