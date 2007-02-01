@@ -1,3 +1,54 @@
+Since 1.5.14
+
+ * A reference leak was discovered in the mountpoint traversal 
+   functionality which resulted in cm_volume_t objects not becoming
+   eligible for re-use.  This will trigger a panic condition when
+   more than the maximum number of volumes is accessed.
+
+ * Fixed the success test for the "fs memdump" operation.  Success
+   is now reported as such.  Added cm_volume_t object information 
+   to the dump file.
+
+ * A data corruption error has been fixed.  Write requests
+   queued for background processing were not retried upon failure.
+   This leads to inconsistencies between the contents of the file
+   in the local cache and the contents of the file on the file 
+   server.  
+
+   The implemented fix is to re-queue any request that has failed
+   due to timeout, volume busy, volume offline, server busy, or
+   server offline.  Requests are not processed while all servers
+   for a volume are inaccessible.  When servers become accessible
+   the background request will be retried.
+
+   This fix does not address the possibility that the credentials
+   necessary to perform a write request might expire between the
+   time the request is queued and when the request can be processed
+   due to server accessibility.
+
+ * The Freelance volume does not support per user ACLs.  The
+   cm_HaveAccessRights function did not handle this special case.
+   Requests for privileges greater than read|lookup would result
+   in afsd_service.exe entering an infinite loop.  ISOBuster is
+   known to cause this behavior.
+
+ * When deleting files, the SMB Server would attempt to obtain
+   the access permissions for the parent directory instead of 
+   for the file itself.  This would result in an incorrect 
+   assessment of whether or not the file can be deleted.
+
+ * The Network Identity Manager AFS plug-in has had its string
+   tables updated for consistency with the language used by NIM.
+   All credentials are referred to as credentials instead of tokens.
+
+ * The AFS Salvager was not properly being built on Windows.
+   This is relevant only if the AFS servers are in use.
+
+ * The default signal handlers for the AFS servers incorrectly
+   processed SIGQUIT.  Instead of stopping the server, an
+   exception was raised.
+
+
 Since 1.5.13
 
  * Enforce Unix Mode Write bit to prevent file deletion of read only
