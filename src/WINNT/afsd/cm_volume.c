@@ -377,7 +377,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, long volumeID, cm_user_t *userp,
 {
     cm_volume_t *volp;
     char volNameString[100];
-    long code;
+    long code = 0;
 
     lock_ObtainWrite(&cm_volumeLock);
     for(volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
@@ -397,17 +397,18 @@ long cm_GetVolumeByID(cm_cell_t *cellp, long volumeID, cm_user_t *userp,
     if (volp) {
 	lock_ObtainMutex(&volp->mx);
         
+	code = 0;
 	if (volp->flags & CM_VOLUMEFLAG_RESET) {
 	    code = cm_UpdateVolume(cellp, userp, reqp, volp);
-	    if (code == 0) {
+	    if (code == 0)
 		volp->flags &= ~CM_VOLUMEFLAG_RESET;
-	    }
 	}
-	else
-	    code = 0;
 	lock_ReleaseMutex(&volp->mx);
-	if (code	 == 0)
+	if (code == 0)
 	    *outVolpp = volp;
+	else
+	    cm_PutVolume(volp);
+
 	return code;
     }
         
@@ -423,11 +424,8 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 			 long flags, cm_volume_t **outVolpp)
 {
     cm_volume_t *volp;
-    long code;
+    long code = 0;
         
-    /* initialize this */
-    code = 0;
-
     lock_ObtainWrite(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
 	if (cellp == volp->cellp && strcmp(volumeNamep, volp->namep) == 0) {
@@ -484,6 +482,9 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 
     if (code == 0)
 	*outVolpp = volp;
+    else
+	cm_PutVolume(volp);
+
     lock_ReleaseMutex(&volp->mx);
     return code;
 }	
