@@ -532,7 +532,7 @@ Section "!AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\aklog.exe"
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
-  File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afsd_service.exe" "$INSTDIR\Client\Program\afsd_service.exe" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
