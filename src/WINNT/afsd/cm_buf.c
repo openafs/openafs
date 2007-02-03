@@ -1570,7 +1570,9 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
         {
             if (bp->refCount)
             {
-                StringCbPrintfA(output, sizeof(output), "vnode=%d, unique=%d), size=%d refCount=%d\r\n", 
+                StringCbPrintfA(output, sizeof(output), 
+				"%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
+				"vnode=%d, unique=%d), size=%d refCount=%d\r\n", 
                         cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
                         bp->fid.vnode, bp->fid.unique, bp->size, bp->refCount);
                 WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
