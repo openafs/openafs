@@ -96,16 +96,16 @@ class EXPORTED WIZARD
       void GeneratePalette (RGBQUAD *pargb = NULL);
       LPWIZARD_STATE FindState (int stFind);
 
-      static BOOL CALLBACK Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp);
-      static BOOL CALLBACK Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp);
       void Background_OnInitDialog (HWND hBkg);
       void Background_OnSize (void);
       void Background_OnDestroy (void);
       void Background_OnClose (void);
       BOOL Background_OnPaint (void);
 
-      static BOOL CALLBACK Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-      static BOOL CALLBACK Template_LeftPaneHook (HWND hLHS, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK Template_LeftPaneHook (HWND hLHS, UINT msg, WPARAM wp, LPARAM lp);
       BOOL Template_ForwardMessage (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
       void Template_OnInitDialog (HWND hWnd);
       BOOL Template_OnPaintLHS (HWND hLHS);

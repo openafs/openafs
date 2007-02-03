@@ -57,9 +57,9 @@ LONG procListbox = 0;
  *
  */
 
-BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp);
 
-BOOL CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void CheckList_OnDrawItem (HWND hList, int id, LPDRAWITEMSTRUCT lpds);
 void CheckList_OnDrawCheckbox (HWND hList, int id, LPDRAWITEMSTRUCT lpds);
@@ -158,7 +158,7 @@ BOOL IsCheckList (HWND hList)
 }
 
 
-BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
     HRESULT hResult;
 
@@ -225,11 +225,11 @@ BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
    else
       hResult = (BOOL)DefWindowProc (hList, msg, wp, lp);
 
-    return (hResult?TRUE:FALSE);
+    return (hResult);
 }
 
 
-BOOL CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID procOld = Subclass_FindNextHook (hDlg, CheckList_DialogProc);
 
@@ -272,7 +272,7 @@ BOOL CALLBACK CheckList_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (procOld)
-      return (BOOL)CallWindowProc ((WNDPROC)procOld, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)procOld, hDlg, msg, wp, lp);
    else
       return FALSE;
 }

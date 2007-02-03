@@ -735,12 +735,12 @@ BEGIN
     IDS_SVRCOL_SERVER       "Address"
     IDS_SVRCOL_COMMENT      "Server Name"
     IDS_TIP_DRIVES          "Tip: You can connect a network drive mapping by checking the box next to the mapping's drive letter."
-    IDS_MAP_LETTER          "Drive *:"
+    IDS_MAP_LETTER          "*:"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DRIVE_MAP           "Drive %1: \t%2"
+    IDS_DRIVE_MAP           "%1: \t%2"
     IDS_ERROR_MAP           "Error Mapping Network Drive"
     IDS_ERROR_MAP_DESC      "AFS was unable to map the network drive to the specified path in AFS. Check to make sure the drive letter is not currently in use.\n\nError: 0x%1."
     IDS_ERROR_UNMAP         "Error Mapping Network Drive"

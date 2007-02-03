@@ -98,9 +98,9 @@ static size_t           cTime = 0;
 
 #define cszTIMECLASS TEXT("Time")
 
-BOOL CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK TimeEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK TimeEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void Time_SendCallback (TimeInfo *pti, WORD eln, LPARAM lp);
 
@@ -158,7 +158,7 @@ void Time_SendCallback (TimeInfo *pti, WORD eln, LPARAM lp)
 }
 
 
-BOOL CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp)
 {
    TimeInfo *pti = NULL;
 
@@ -271,7 +271,7 @@ BOOL CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return (BOOL)DefWindowProc (hTime, msg, wp, lp);
+   return DefWindowProc (hTime, msg, wp, lp);
 }
 
 
@@ -513,7 +513,7 @@ BOOL Time_OnSetTime (TimeInfo *pti, WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, TimeDlgProc);
    size_t iTime;
@@ -539,7 +539,7 @@ BOOL CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                else
                   clr = GetSysColor (COLOR_BTNFACE);
                SetBkColor ((HDC)wp, clr);
-               return (BOOL)(INT_PTR)CreateSolidBrush (clr);
+               return (HRESULT)(INT_PTR)CreateSolidBrush (clr);
                }
             }
          break;
@@ -606,13 +606,13 @@ BOOL CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
-BOOL CALLBACK TimeEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK TimeEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 {
    TimeInfo *pti = NULL;
 
@@ -642,9 +642,9 @@ BOOL CALLBACK TimeEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, TimeEditProc);
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
+      return DefWindowProc (hEdit, msg, wp, lp);
 }
 
 

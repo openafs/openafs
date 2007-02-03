@@ -33,7 +33,7 @@ extern "C" {
  *
  */
 
-BOOL CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID idLanguage);
+HRESULT CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID idLanguage);
 
 
 /*
@@ -162,7 +162,7 @@ void AfsAppLib_AnimateIcon (HWND hIcon, int *piFrameLast)
 }
 
 
-BOOL CALLBACK AnimationHook (HWND hIcon, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK AnimationHook (HWND hIcon, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hIcon, AnimationHook);
 
@@ -181,9 +181,9 @@ BOOL CALLBACK AnimationHook (HWND hIcon, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hIcon, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hIcon, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hIcon, msg, wp, lp);
+      return DefWindowProc (hIcon, msg, wp, lp);
 }
 
 
@@ -208,7 +208,7 @@ void AfsAppLib_StopAnimation (HWND hIcon)
  *
  */
 
-BOOL CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID idLanguage)
+HRESULT CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID idLanguage)
 {
    DWORD idClient;
    if ((idClient = (DWORD)AfsAppLib_GetAdminServerClientID()) != 0)

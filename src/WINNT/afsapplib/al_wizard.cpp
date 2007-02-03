@@ -649,7 +649,7 @@ BOOL WIZARD::SendStateCommand (int st, WIZARD_COMMAND wc)
 }
 
 
-BOOL CALLBACK WIZARD::Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK WIZARD::Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG)
       SetWindowLongPtr (hWnd, DWLP_USER, lp);
@@ -676,7 +676,7 @@ BOOL CALLBACK WIZARD::Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM l
 }
 
 
-BOOL CALLBACK WIZARD::Template_LeftPaneHook (HWND hLHS, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK WIZARD::Template_LeftPaneHook (HWND hLHS, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hLHS, WIZARD::Template_LeftPaneHook);
 
@@ -928,7 +928,7 @@ void GetRectInParent (HWND hWnd, RECT *pr)
 }
 
 
-BOOL CALLBACK WIZARD::Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK WIZARD::Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG)
       SetWindowLongPtr (hBkg, DWLP_USER, lp);
@@ -975,7 +975,7 @@ BOOL CALLBACK WIZARD::Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM
 }
 
 
-BOOL CALLBACK WIZARD::Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK WIZARD::Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hBkg, WIZARD::Background_PaintHook);
 
@@ -996,9 +996,9 @@ BOOL CALLBACK WIZARD::Background_PaintHook (HWND hBkg, UINT msg, WPARAM wp, LPAR
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hBkg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hBkg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hBkg, msg, wp, lp);
+      return DefWindowProc (hBkg, msg, wp, lp);
 }
 
 

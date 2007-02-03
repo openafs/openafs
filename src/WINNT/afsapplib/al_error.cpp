@@ -21,7 +21,7 @@ extern "C" {
 
 void cdecl vErrorDialog (BOOL fFatal, DWORD dwStatus, LONG idError, LPTSTR pszFmt, va_list arg);
 
-BOOL CALLBACK Error_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK Error_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void OnCreateErrorDialog (WPARAM wp, LPARAM lp);
 
@@ -134,7 +134,7 @@ void OnCreateErrorDialog (WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK Error_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK Error_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    switch (msg)
       {

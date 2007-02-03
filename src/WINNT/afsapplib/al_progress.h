@@ -115,8 +115,8 @@ class PROGRESSDISPLAY
       void Finish (DWORD dwStatus = 0);
       void PROGRESSDISPLAY::OnUpdate (void);
 
-      static BOOL CALLBACK ProgressDisplay_StubProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-      static BOOL CALLBACK ProgressDisplay_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK ProgressDisplay_StubProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+      static HRESULT CALLBACK ProgressDisplay_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
       static DWORD WINAPI PROGRESSDISPLAY::ThreadProc (PVOID lp);
 
       BOOL m_fFinished;

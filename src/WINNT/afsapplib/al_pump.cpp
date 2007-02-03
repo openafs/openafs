@@ -67,7 +67,7 @@ static LPCRITICAL_SECTION pcsData = NULL;
  *
  */
 
-BOOL CALLBACK Modeless_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK Modeless_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, Modeless_HookProc);
 
@@ -84,9 +84,9 @@ BOOL CALLBACK Modeless_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
@@ -193,7 +193,7 @@ void AfsAppLib_MainPump (void)
  *
  */
 
-BOOL CALLBACK WindowData_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK WindowData_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hWnd, WindowData_HookProc);
 
@@ -214,9 +214,9 @@ BOOL CALLBACK WindowData_HookProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hWnd, msg, wp, lp);
+      return DefWindowProc (hWnd, msg, wp, lp);
 }
 
 

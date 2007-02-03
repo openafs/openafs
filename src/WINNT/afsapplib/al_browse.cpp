@@ -61,7 +61,7 @@ typedef struct BROWSEDIALOGPARAMS {
 } BROWSEDIALOGPARAMS, *LPBROWSEDIALOGPARAMS;
 
 
-BOOL CALLBACK DlgProc_Browse (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK DlgProc_Browse (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void DlgProc_Browse_OnInitDialog (HWND hDlg, BROWSEDIALOGPARAMS *pbdp);
 void DlgProc_Browse_OnNone (HWND hDlg, BROWSEDIALOGPARAMS *pbdp);
 void DlgProc_Browse_SelectedEntry (HWND hDlg, BROWSEDIALOGPARAMS *pbdp);
@@ -138,7 +138,7 @@ BOOL AfsAppLib_ShowBrowseDialog (LPBROWSEDLG_PARAMS lpp)
 #define WM_THREADSTART (WM_USER +101)
 #define WM_THREADDONE  (WM_USER +102)
 
-BOOL CALLBACK DlgProc_Browse (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK DlgProc_Browse (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    BROWSEDIALOGPARAMS *pbdp;
 

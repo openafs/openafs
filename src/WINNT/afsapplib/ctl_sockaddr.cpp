@@ -97,9 +97,9 @@ static size_t            cSockAddr = 0;
 
 #define cszSOCKADDRCLASS TEXT("SockAddr")
 
-BOOL CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 void SockAddr_SendCallback (SockAddrInfo *psai, WORD eln, LPARAM lp);
 
@@ -156,7 +156,7 @@ void SockAddr_SendCallback (SockAddrInfo *psai, WORD san, LPARAM lp)
 }
 
 
-BOOL CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp)
 {
    SockAddrInfo *psai = NULL;
 
@@ -236,7 +236,7 @@ BOOL CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp)
          }
       }
 
-   return (BOOL)DefWindowProc (hSockAddr, msg, wp, lp);
+   return DefWindowProc (hSockAddr, msg, wp, lp);
 }
 
 
@@ -445,7 +445,7 @@ BOOL SockAddr_OnSetAddr (SockAddrInfo *psai, WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, SockAddrDlgProc);
    size_t iSockAddr;
@@ -472,7 +472,7 @@ BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                else
                   clr = GetSysColor (COLOR_BTNFACE);
                SetBkColor ((HDC)wp, clr);
-               return (BOOL)(INT_PTR)CreateSolidBrush (clr);
+               return (HRESULT)(INT_PTR)CreateSolidBrush (clr);
                }
             }
          break;
@@ -510,13 +510,13 @@ BOOL CALLBACK SockAddrDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
 }
 
 
-BOOL CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 {
    SockAddrInfo *psai = NULL;
 
@@ -556,9 +556,9 @@ BOOL CALLBACK SockAddrEditProc (HWND hEdit, UINT msg, WPARAM wp, LPARAM lp)
 
    PVOID oldProc = Subclass_FindNextHook (hEdit, SockAddrEditProc);
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hEdit, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hEdit, msg, wp, lp);
+      return DefWindowProc (hEdit, msg, wp, lp);
 }
 
 
