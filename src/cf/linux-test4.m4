@@ -761,3 +761,14 @@ INIT_WORK(w,f,i);],
       ac_cv_linux_init_work_has_data=no)])
   AC_MSG_RESULT($ac_cv_linux_init_work_has_data)])
 
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_FLOCK], [
+  AC_MSG_CHECKING([for flock in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_flock], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.flock(NULL, 0, NULL);],
+      ac_cv_linux_fs_struct_fop_has_flock=yes,
+      ac_cv_linux_fs_struct_fop_has_flock=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_flock)])

@@ -89,7 +89,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #if defined(AFS_SUN57_ENV)
 typedef kthread_t * afs_lock_tracker_t;
 #define MyPidxx (curthread)
-#define MyPidxx2Pid(x) (ttoproc(x)->p_pid)
+#define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)
 #elif defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
 typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (curproc->p_pid)
@@ -104,7 +104,7 @@ extern tid_t thread_self();
 #if defined(AFS_HPUX101_ENV)
 typedef struct proc * afs_lock_tracker_t;
 #define MyPidxx (u.u_procp)
-#define MyPidxx2Pid(x) ((afs_int32)p_pid(x))
+#define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
 #else
 #if defined(AFS_SGI64_ENV)
 #if defined(AFS_SGI65_ENV)
@@ -120,7 +120,7 @@ typedef unsigned int afs_lock_tracker_t;
 #ifdef AFS_LINUX20_ENV
 typedef struct task_struct * afs_lock_tracker_t;
 #define MyPidxx (current)
-#define MyPidxx2Pid(x) ((x)->pid)
+#define MyPidxx2Pid(x) (x? (x)->pid : 0)
 #else
 #if defined(AFS_DARWIN_ENV)
 #if defined(AFS_DARWIN80_ENV)

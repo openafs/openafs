@@ -490,7 +490,8 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     AFS_GUNLOCK();
 
 #ifdef AFS_LINUX24_ENV
-    if (code == 0 && (cmd == F_SETLK || cmd == F_SETLKW)) {
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+        (cmd == F_SETLK || cmd == F_SETLKW)) {
 #ifdef AFS_LINUX26_ENV
        struct file_lock flp2;
        flp2 = *flp;
@@ -499,8 +500,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #else
        code = posix_lock_file(fp, flp, 0);
 #endif 
-       osi_Assert(code != -EAGAIN); /* there should be no conflicts */
-       if (code) {
+       if (code && flp->fl_type != F_UNLCK) {
            struct AFS_FLOCK flock2;
            flock2 = flock;
            flock2.l_type = F_UNLCK;
@@ -520,6 +520,59 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     return -code;
 
 }
+
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+static int
+afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
+    int code = 0;
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
+    cred_t *credp = crref();
+    struct AFS_FLOCK flock;
+    /* Convert to a lock format afs_lockctl understands. */
+    memset((char *)&flock, 0, sizeof(flock));
+    flock.l_type = flp->fl_type;
+    flock.l_pid = flp->fl_pid;
+    flock.l_whence = 0;
+    flock.l_start = 0;
+    flock.l_len = OFFSET_MAX;
+
+    /* Safe because there are no large files, yet */
+#if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
+    if (cmd == F_GETLK64)
+	cmd = F_GETLK;
+    else if (cmd == F_SETLK64)
+	cmd = F_SETLK;
+    else if (cmd == F_SETLKW64)
+	cmd = F_SETLKW;
+#endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
+
+    AFS_GLOCK();
+    code = afs_lockctl(vcp, &flock, cmd, credp);
+    AFS_GUNLOCK();
+
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+        (cmd == F_SETLK || cmd == F_SETLKW)) {
+       struct file_lock flp2;
+       flp2 = *flp;
+       flp2.fl_flags &=~ FL_SLEEP;
+       code = flock_lock_file_wait(fp, &flp2);
+       if (code && flp->fl_type != F_UNLCK) {
+           struct AFS_FLOCK flock2;
+           flock2 = flock;
+           flock2.l_type = F_UNLCK;
+           AFS_GLOCK();
+           afs_lockctl(vcp, &flock2, F_SETLK, credp);
+           AFS_GUNLOCK();
+       }
+    }
+    /* Convert flock back to Linux's file_lock */
+    flp->fl_type = flock.l_type;
+    flp->fl_pid = flock.l_pid;
+
+    crfree(credp);
+    return -code;
+}
+#endif
 
 /* afs_linux_flush
  * essentially the same as afs_fsync() but we need to get the return
@@ -612,6 +665,9 @@ struct file_operations afs_file_fops = {
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
   .lock =	afs_linux_lock,
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+  .flock =	afs_linux_flock,
+#endif
 };
 
 

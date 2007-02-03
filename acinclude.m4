@@ -606,6 +606,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
+		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_SELINUX
@@ -829,6 +830,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
+		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
 		 fi
                 :
 		fi
