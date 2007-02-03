@@ -33,7 +33,7 @@ extern void OnCoverWindow (WPARAM wp, LPARAM lp);
 extern void OnExpiredCredentials (WPARAM wp, LPARAM lp);
 extern void OnCreateErrorDialog (WPARAM wp, LPARAM lp);
 
-BOOL CALLBACK AfsAppLib_MainHook (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK AfsAppLib_MainHook (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 
 /*
@@ -69,7 +69,7 @@ HWND AfsAppLib_GetMainWindow (void)
 }
 
 
-BOOL CALLBACK AfsAppLib_MainHook (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK AfsAppLib_MainHook (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hWnd, AfsAppLib_MainHook);
 
@@ -93,8 +93,8 @@ BOOL CALLBACK AfsAppLib_MainHook (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp)==NULL?FALSE:TRUE);
+      return (CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp));
    else
-      return (DefWindowProc (hWnd, msg, wp, lp)==NULL?FALSE:TRUE);
+      return (DefWindowProc (hWnd, msg, wp, lp));
 }
 

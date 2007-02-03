@@ -96,7 +96,7 @@ void           FindSplitterMinMax         (HWND, SplitterData *, LONG,
 
 void FindResizeLimits (HWND hWnd, LONG *pcxMin, LONG *pcxMax, LONG *pcyMin, LONG *pcyMax, rwWindowData * = 0);
 
-BOOL CALLBACK Resize_DialogProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK Resize_DialogProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 
 /*
@@ -894,7 +894,7 @@ void FindResizeLimits (HWND hWnd, LONG *pcxMin, LONG *pcxMax, LONG *pcyMin, LONG
 }
 
 
-BOOL CALLBACK Resize_DialogProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK Resize_DialogProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID fnNext = Subclass_FindNextHook (hWnd, Resize_DialogProc);
 

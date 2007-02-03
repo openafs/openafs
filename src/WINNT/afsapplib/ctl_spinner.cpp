@@ -101,9 +101,9 @@ static LONG             oldSpinnerProc = 0;
 
 #define cszSPINNERCLASS TEXT("Spinner")
 
-BOOL CALLBACK SpinnerProc (HWND hSpin, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK SpinnerDialogProc (HWND hSpin, UINT msg, WPARAM wp, LPARAM lp);
-BOOL CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SpinnerProc (HWND hSpin, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SpinnerDialogProc (HWND hSpin, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp);
 
 void SpinnerSendCallback (SpinnerInfo *psi, WORD spm, LPARAM lp);
 
@@ -259,7 +259,7 @@ void Spinner_OnDestroy (SpinnerInfo *psi)
 }
 
 
-BOOL CALLBACK SpinnerProc (HWND hSpinner, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SpinnerProc (HWND hSpinner, UINT msg, WPARAM wp, LPARAM lp)
 {
    EnterCriticalSection (&csSpinners);
 
@@ -321,13 +321,13 @@ BOOL CALLBACK SpinnerProc (HWND hSpinner, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldSpinnerProc == 0)
-      return (BOOL)DefWindowProc (hSpinner, msg, wp, lp);
+      return DefWindowProc (hSpinner, msg, wp, lp);
    else
-      return (BOOL)CallWindowProc ((WNDPROC)(LONG_PTR)oldSpinnerProc, hSpinner, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)(LONG_PTR)oldSpinnerProc, hSpinner, msg, wp, lp);
 }
 
 
-BOOL CALLBACK SpinnerDialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SpinnerDialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hDlg, SpinnerDialogProc);
    SpinnerInfo *psi;
@@ -416,14 +416,14 @@ BOOL CALLBACK SpinnerDialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc == 0)
-      return (BOOL)DefWindowProc (hDlg, msg, wp, lp);
+      return DefWindowProc (hDlg, msg, wp, lp);
    else
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hDlg, msg, wp, lp);
 }
 
 
 
-BOOL CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp)
 {
    PVOID oldProc = Subclass_FindNextHook (hBuddy, SpinnerBuddyProc);
 
@@ -501,9 +501,9 @@ BOOL CALLBACK SpinnerBuddyProc (HWND hBuddy, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return (BOOL)CallWindowProc ((WNDPROC)oldProc, hBuddy, msg, wp, lp);
+      return CallWindowProc ((WNDPROC)oldProc, hBuddy, msg, wp, lp);
    else
-      return (BOOL)DefWindowProc (hBuddy, msg, wp, lp);
+      return DefWindowProc (hBuddy, msg, wp, lp);
 }
 
 

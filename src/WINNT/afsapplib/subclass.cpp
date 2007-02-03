@@ -21,7 +21,7 @@ extern "C" {
  *
  */
 
-LONG CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp);
 
 
 /*
@@ -214,7 +214,7 @@ PVOID Subclass_FindNextHook (HWND hTarget, PVOID wndProc)
 }
 
 
-LONG CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp)
 {
    size_t iTarget;
    for (iTarget = 0; iTarget < nTargets; ++iTarget)

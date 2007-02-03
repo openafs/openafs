@@ -53,7 +53,7 @@ typedef struct // COVERPARAMS
 
 void OnCoverWindow (WPARAM wp, LPARAM lp);
 
-BOOL CALLBACK Cover_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+HRESULT CALLBACK Cover_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 
 /*
@@ -156,7 +156,7 @@ void OnCoverWindow (WPARAM wp, LPARAM lp)
 }
 
 
-BOOL CALLBACK Cover_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
+HRESULT CALLBACK Cover_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    switch (msg)
       {
