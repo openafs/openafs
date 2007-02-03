@@ -1549,21 +1549,21 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&cm_scacheLock);
   
-    sprintf(output, "%s - dumping scache - cm_data.currentSCaches=%d, cm_data.maxSCaches=%d\n", cookie, cm_data.currentSCaches, cm_data.maxSCaches);
+    sprintf(output, "%s - dumping scache - cm_data.currentSCaches=%d, cm_data.maxSCaches=%d\r\n", cookie, cm_data.currentSCaches, cm_data.maxSCaches);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (scp = cm_data.scacheLRULastp; scp; scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
     {
         if (scp->refCount != 0)
         {
-            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
+            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
                     cookie, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                     scp->refCount);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
   
-    sprintf(output, "%s - dumping cm_data.hashTable - cm_data.hashTableSize=%d\n", cookie, cm_data.hashTableSize);
+    sprintf(output, "%s - dumping cm_data.hashTable - cm_data.hashTableSize=%d\r\n", cookie, cm_data.hashTableSize);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (i = 0; i < cm_data.hashTableSize; i++)
@@ -1572,7 +1572,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         {
             if (scp->refCount != 0)
             {
-                sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
+                sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
                          cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
                          scp->fid.unique, scp->refCount);
                 WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
@@ -1580,7 +1580,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         }
     }
 
-    sprintf(output, "%s - Done dumping scache.\n", cookie);
+    sprintf(output, "%s - Done dumping scache.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)

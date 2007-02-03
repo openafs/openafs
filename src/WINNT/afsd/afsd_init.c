@@ -180,8 +180,8 @@ afsi_start()
 
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
     GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
-    StringCbCatA(t, sizeof(t), ": Create log file\n");
-    StringCbCatA(u, sizeof(u), ": Created log file\n");
+    StringCbCatA(t, sizeof(t), ": Create log file\r\n");
+    StringCbCatA(u, sizeof(u), ": Created log file\r\n");
     WriteFile(afsi_file, t, (DWORD)strlen(t), &zilch, NULL);
     WriteFile(afsi_file, u, (DWORD)strlen(u), &zilch, NULL);
     p = "PATH=";
@@ -190,7 +190,7 @@ afsi_start()
     code = GetEnvironmentVariable("PATH", path, code);
     WriteFile(afsi_file, p, (DWORD)strlen(p), &zilch, NULL);
     WriteFile(afsi_file, path, (DWORD)strlen(path), &zilch, NULL);
-    WriteFile(afsi_file, "\n", (DWORD)1, &zilch, NULL);
+    WriteFile(afsi_file, "\r\n", (DWORD)1, &zilch, NULL);
     free(path);
 
     /* Initialize C RTL Code Page conversion functions */

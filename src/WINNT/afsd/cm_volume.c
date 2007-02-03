@@ -656,7 +656,7 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
         lock_ObtainRead(&cm_volumeLock);
     }
   
-    sprintf(output, "%s - dumping volumes - cm_data.currentVolumes=%d, cm_data.maxVolumes=%d\n", cookie, cm_data.currentVolumes, cm_data.maxVolumes);
+    sprintf(output, "%s - dumping volumes - cm_data.currentVolumes=%d, cm_data.maxVolumes=%d\r\n", cookie, cm_data.currentVolumes, cm_data.maxVolumes);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->nextp)
@@ -672,14 +672,14 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
 		    scprefs++;
 	    }
 
-            sprintf(output, "%s cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u scpRefs=%u\n", 
+            sprintf(output, "%s cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u scpRefs=%u\r\n", 
                     cookie, volp->cellp->name, volp->namep, volp->rwID, volp->roID, volp->bkID, volp->flags, 
 		    volp->dotdotFid.cell, volp->dotdotFid.volume, volp->dotdotFid.vnode, volp->dotdotFid.unique,
 		    volp->refCount, scprefs);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
-    sprintf(output, "%s - Done dumping volumes.\n", cookie);
+    sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock) {
