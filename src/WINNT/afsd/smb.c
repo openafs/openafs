@@ -8945,94 +8945,94 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&smb_rctLock);
   
-    sprintf(output, "begin dumping smb_vc_t\n");
+    sprintf(output, "begin dumping smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\n");
+        sprintf(output, "begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\n");
+        sprintf(output, "done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
-    sprintf(output, "done dumping smb_vc_t\n");
+    sprintf(output, "done dumping smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
-    sprintf(output, "begin dumping DEAD smb_vc_t\n");
+    sprintf(output, "begin dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_deadVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\n");
+        sprintf(output, "begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\n");
+        sprintf(output, "done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
-    sprintf(output, "done dumping DEAD smb_vc_t\n");
+    sprintf(output, "done dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
-    sprintf(output, "begin dumping DEAD smb_vc_t\n");
+    sprintf(output, "begin dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_deadVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\r\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
-        sprintf(output, "begin dumping smb_fid_t\n");
+        sprintf(output, "begin dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\r\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
-        sprintf(output, "done dumping smb_fid_t\n");
+        sprintf(output, "done dumping smb_fid_t\r\n");
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
-    sprintf(output, "done dumping DEAD smb_vc_t\n");
+    sprintf(output, "done dumping DEAD smb_vc_t\r\n");
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)

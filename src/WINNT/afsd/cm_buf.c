@@ -1560,7 +1560,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&buf_globalLock);
   
-    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_HashTable - buf_hashSize=%d\n", 
+    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_HashTable - buf_hashSize=%d\r\n", 
                     cookie, cm_data.buf_hashSize);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
@@ -1570,7 +1570,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
         {
             if (bp->refCount)
             {
-                StringCbPrintfA(output, sizeof(output), "vnode=%d, unique=%d), size=%d refCount=%d\n", 
+                StringCbPrintfA(output, sizeof(output), "vnode=%d, unique=%d), size=%d refCount=%d\r\n", 
                         cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
                         bp->fid.vnode, bp->fid.unique, bp->size, bp->refCount);
                 WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
@@ -1578,7 +1578,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
         }
     }
   
-    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_HashTable.\n", cookie);
+    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_HashTable.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     if (lock)
