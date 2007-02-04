@@ -646,7 +646,7 @@ void cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p
     long length;
     osi_hyper_t base;
     long code;
-    cm_buf_t *bp;
+    cm_buf_t *bp = NULL;
     int cpff = 0;			/* cleared prefetch flag */
     cm_req_t req;
 
@@ -666,6 +666,8 @@ void cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p
     if (code || (bp->cmFlags & CM_BUF_CMFETCHING)) {
         scp->flags &= ~CM_SCACHEFLAG_PREFETCHING;
         lock_ReleaseMutex(&scp->mx);
+	if (bp)
+	    buf_Release(bp);
         return;
     }
 

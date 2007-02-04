@@ -937,15 +937,15 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseRead(&scp->bufCreateLock);
 
     lock_ObtainMutex(&scp->mx);
-    if (code) {
+    if (code)
         return code;
-    }
+
     while (1) {
         code = cm_SyncOp(scp, bufp, userp, reqp, 0,
                           CM_SCACHESYNC_READ | CM_SCACHESYNC_NEEDCALLBACK);
-        if (code) {
+        if (code)
             goto done;
-        }
+
 	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
 
@@ -954,9 +954,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
         /* otherwise load buffer */
         code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
-        if (code) {
+        if (code)
             goto done;
-        }
     }
     /* locked, has callback, has valid data in buffer */
     if ((tlen = scp->length.LowPart) > 1000) 

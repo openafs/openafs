@@ -768,11 +768,12 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 
 	/* does this fix the problem below?  it's a simple solution. */
 	if (!cm_data.buf_freeListEndp)
-	    {
+	{
 	    lock_ReleaseWrite(&buf_globalLock);
+	    osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List is empty - sleeping 200ms");
 	    Sleep(200);
 	    goto retry;
-	    }
+	}
 
         /* for debugging, assert free list isn't empty, although we
          * really should try waiting for a running tranasction to finish
@@ -874,17 +875,12 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                 cm_data.buf_fileHashTablepp[i] = bp;
             }
 
-            /* prepare to return it.  Start by giving it a good
-             * refcount */
-            bp->refCount = 1;
-                        
-            /* and since it has a non-zero ref count, we should move
-             * it from the lru queue.  It better be still there,
-             * since we've held the global (big) lock since we found
-             * it there.
+            /* we should move it from the lru queue.  It better still be there,
+             * since we've held the global (big) lock since we found it there.
              */
             osi_assertx(bp->flags & CM_BUF_INLRU,
                          "buf_GetNewLocked: LRU screwup");
+
             if (cm_data.buf_freeListEndp == bp) {
                 /* we're the last guy in this queue, so maintain it */
                 cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
@@ -892,13 +888,19 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
             bp->flags &= ~CM_BUF_INLRU;
 
-            /* finally, grab the mutex so that people don't use it
+            /* grab the mutex so that people don't use it
              * before the caller fills it with data.  Again, no one	
              * should have been able to get to this dude to lock it.
              */
-            osi_assertx(lock_TryMutex(&bp->mx),
-                         "buf_GetNewLocked: TryMutex failed");
+	    if (!lock_TryMutex(&bp->mx)) {
+	    	osi_Log2(afsd_logp, "buf_GetNewLocked bp 0x%p cannot be mutex locked.  refCount %d should be 0",
+			 bp, bp->refCount);
+		osi_panic("buf_GetNewLocked: TryMutex failed",__FILE__,__LINE__);
+	    }
 
+	    /* prepare to return it.  Give it a refcount */
+            bp->refCount = 1;
+                        
             lock_ReleaseWrite(&buf_globalLock);
             *bufpp = bp;
 
@@ -908,7 +910,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             return 0;
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
-		Sleep(100);		/* give some time for a buffer to be freed */
+	osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List has no buffers with a zero refcount - sleeping 100ms");
+	Sleep(100);		/* give some time for a buffer to be freed */
     }	/* while loop over everything */
     /* not reached */
 } /* the proc */
@@ -1349,7 +1352,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 
     buf_HoldLocked(bufp);
     lock_ReleaseWrite(&buf_globalLock);
-    for(; bufp; bufp = nbufp) {
+    while (bufp) {
         lock_ObtainMutex(&bufp->mx);
 
         bufEnd.HighPart = 0;
@@ -1426,6 +1429,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 	}
 	buf_ReleaseLocked(bufp);
 	lock_ReleaseWrite(&buf_globalLock);
+	bufp = nbufp;
     }
 
 #ifdef TESTING
@@ -1620,19 +1624,42 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     {
         for (bp = cm_data.buf_hashTablepp[i]; bp; bp=bp->hashp) 
         {
-            if (bp->refCount)
-            {
-                StringCbPrintfA(output, sizeof(output), 
-				"%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
-				"vnode=%d, unique=%d), size=%d refCount=%d\r\n", 
-                        cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
-                        bp->fid.vnode, bp->fid.unique, bp->size, bp->refCount);
-                WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-            }
+	    StringCbPrintfA(output, sizeof(output), 
+			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
+			    "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
+			     bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+	    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
   
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_HashTable.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_freeListEndp\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+	StringCbPrintfA(output, sizeof(output), 
+			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
+			 "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
+			 bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_FreeListEndp.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_dirtyListEndp\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    for(bp = cm_data.buf_dirtyListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+	StringCbPrintfA(output, sizeof(output), 
+			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
+			 "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
+			 bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+    StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_dirtyListEndp.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     if (lock)
