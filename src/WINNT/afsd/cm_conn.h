@@ -123,4 +123,6 @@ extern struct rx_connection * cm_GetRxConn(cm_conn_t *connp);
 
 extern void cm_ForceNewConnections(cm_server_t *serverp);
 
+extern long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp);
+
 #endif /*  __CM_CONN_H_ENV__ */

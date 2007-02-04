@@ -1155,7 +1155,7 @@ long cm_IoctlGag(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlCheckVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-    cm_CheckVolumes();
+    cm_RefreshVolumes();
     return 0;
 }       
 

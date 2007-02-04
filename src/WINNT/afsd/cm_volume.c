@@ -587,7 +587,7 @@ long cm_GetROVolumeID(cm_volume_t *volp)
     return id;
 }
 
-void cm_CheckVolumes(void)
+void cm_RefreshVolumes(void)
 {
     cm_volume_t *volp;
 
@@ -613,7 +613,7 @@ void cm_CheckVolumes(void)
 ** Finds all volumes that reside on this server and reorders their
 ** RO list according to the changed rank of server.
 */
-void cm_ChangeRankVolume(cm_server_t       *tsp)
+void cm_ChangeRankVolume(cm_server_t *tsp)
 {	
     int 		code;
     cm_volume_t*	volp;

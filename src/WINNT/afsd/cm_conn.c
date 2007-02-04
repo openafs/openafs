@@ -844,11 +844,57 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     return 0;
 }
 
+long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
+{
+    long code;
+    cm_req_t req;
+    cm_serverRef_t **serverspp;
+    cm_serverRef_t *tsrp;
+    cm_server_t *tsp;
+    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+
+    cm_InitReq(&req);
+
+    code = cm_GetServerList(fidp, userp, &req, &serverspp);
+    if (code)
+        return 0;
+
+    lock_ObtainWrite(&cm_serverLock);
+    for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
+        tsp = tsrp->server;
+        cm_GetServerNoLock(tsp);
+        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+	    allDown = 0;
+            if (tsrp->status == busy) {
+		allOffline = 0;
+                someBusy = 1;
+            } else if (tsrp->status == offline) {
+		allBusy = 0;
+		someOffline = 1;
+            } else {
+		allOffline = 0;
+                allBusy = 0;
+            }
+        }
+        cm_PutServerNoLock(tsp);
+    }   
+    lock_ReleaseWrite(&cm_serverLock);
+    cm_FreeServerList(serverspp);
+
+    if (allDown)
+	return 0;
+    else if (allBusy) 
+	return 0;
+    else if (allOffline || (someBusy && someOffline))
+	return 0;
+    else
+	return 1;
+}
+
 long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
              cm_conn_t **connpp)
 {
     long code;
-
     cm_serverRef_t **serverspp;
 
     code = cm_GetServerList(fidp, userp, reqp, &serverspp);
