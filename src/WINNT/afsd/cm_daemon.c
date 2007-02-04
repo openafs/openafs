@@ -95,6 +95,8 @@ void cm_BkgDaemon(long parm)
         osi_assert(cm_bkgQueueCount-- > 0);
         lock_ReleaseWrite(&cm_daemonLock);
 
+	osi_Log1(afsd_logp,"cm_BkgDaemon processing request 0x%p", rp);
+
 #ifdef DEBUG_REFCOUNT
 	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
@@ -111,7 +113,10 @@ void cm_BkgDaemon(long parm)
         lock_ObtainWrite(&cm_daemonLock);
 
 	switch ( code ) {
-	case CM_ERROR_TIMEDOUT:
+	case 0: /* success */
+	    osi_Log1(afsd_logp,"cm_BkgDaemon SUCCESS: request 0x%p", rp);
+	    break;
+	case CM_ERROR_TIMEDOUT:	/* or server restarting */
 	case CM_ERROR_RETRY:
 	case CM_ERROR_WOULDBLOCK:
 	case CM_ERROR_ALLBUSY:
@@ -124,7 +129,7 @@ void cm_BkgDaemon(long parm)
 	    osi_QAddT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **)&cm_bkgListEndp, &rp->q);
 	    break;
 	default:
-	    osi_Log2(afsd_logp,"cm_BkgDaemon failed request dropped 0x%p code 0x%x",
+	    osi_Log2(afsd_logp,"cm_BkgDaemon FAILED: request dropped 0x%p code 0x%x",
 		     rp, code);
 	}
     }
