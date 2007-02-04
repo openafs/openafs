@@ -1210,7 +1210,9 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     /* now update the buffer pointer */
     if (flags & CM_SCACHESYNC_FETCHDATA) {
-        /* ensure that the buffer isn't already in the I/O list */
+	int release = 0;
+
+	/* ensure that the buffer isn't already in the I/O list */
         for(qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
             if (tbufp == bufp) 
@@ -1219,11 +1221,9 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	if (qdp) {
 	    osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
 	    osi_QDFree(qdp);
+	    release = 1;
 	}
         if (bufp) {
-	    int release = 0;
-	    if (bufp->cmFlags & CM_BUF_CMFETCHING)
-		release = 1;
             bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
             if (bufp->flags & CM_BUF_WAITING) {
                 osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
@@ -1236,6 +1236,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     /* now update the buffer pointer */
     if (flags & CM_SCACHESYNC_STOREDATA) {
+	int release = 0;
         /* ensure that the buffer isn't already in the I/O list */
         for(qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
@@ -1245,11 +1246,9 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	if (qdp) {
 	    osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
 	    osi_QDFree(qdp);
+	    release = 1;
 	}
         if (bufp) {
-	    int release = 0;
-	    if (bufp->cmFlags & CM_BUF_CMSTORING)
-		release = 1;
             bufp->cmFlags &= ~CM_BUF_CMSTORING;
             if (bufp->flags & CM_BUF_WAITING) {
                 osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
@@ -1554,8 +1553,8 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
     {
         if (scp->refCount != 0)
         {
-            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
-                    cookie, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+            sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
+                    cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                     scp->refCount);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
