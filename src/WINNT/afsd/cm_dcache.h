@@ -37,7 +37,7 @@ extern long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep,
 extern long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 	cm_bulkIO_t *biop, cm_user_t *up, cm_req_t *reqp);
 
-extern void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore);
+extern void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed);
 
 extern long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp,
 	long inSize, cm_bulkIO_t *biop, cm_user_t *userp, cm_req_t *reqp);

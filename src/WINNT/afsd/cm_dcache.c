@@ -101,7 +101,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     if (biod.length == 0) {
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
         lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseBIOD(&biod, 1);	/* should be a NOOP */
+        cm_ReleaseBIOD(&biod, 1, 0);	/* should be a NOOP */
         return 0;
     }
 
@@ -305,7 +305,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             scp->flags |= CM_SCACHEFLAG_OVERQUOTA;
     }
     lock_ReleaseMutex(&scp->mx);
-    cm_ReleaseBIOD(&biod, 1);
+    cm_ReleaseBIOD(&biod, 1, code);
 
     return code;
 }
@@ -1211,7 +1211,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 /* release a bulk I/O structure that was setup by cm_SetupFetchBIOD or by
  * cm_SetupStoreBIOD
  */
-void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
+void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
 {
     cm_scache_t *scp;		/* do not release; not held in biop */
     cm_buf_t *bufp;
@@ -1252,7 +1252,10 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
 		    osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%p] bp 0x%p", scp, bufp);
 		    osi_Wakeup((LONG_PTR) bufp);
 		}
-		bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+		if (failed)
+		    bufp->flags &= ~CM_BUF_WRITING;
+		else
+		    bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
 	    }
 
 	    lock_ReleaseMutex(&scp->mx);
@@ -1342,7 +1345,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
             bufp->dataVersion = scp->dataVersion;
         }
         lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseBIOD(&biod, 0);
+        cm_ReleaseBIOD(&biod, 0, 0);
         lock_ObtainMutex(&scp->mx);
         return 0;
     }
@@ -1649,7 +1652,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
     /* release scatter/gather I/O structure (buffers, locks) */
     lock_ReleaseMutex(&scp->mx);
-    cm_ReleaseBIOD(&biod, 0);
+    cm_ReleaseBIOD(&biod, 0, code);
     lock_ObtainMutex(&scp->mx);
 
     if (code == 0) 
