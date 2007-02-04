@@ -65,6 +65,7 @@ void cm_IpAddrDaemon(long parm)
 void cm_BkgDaemon(long parm)
 {
     cm_bkgRequest_t *rp;
+    afs_int32 code;
 
     rx_StartClientThread();
 
@@ -77,24 +78,55 @@ void cm_BkgDaemon(long parm)
         }
                 
         /* we found a request */
-        rp = cm_bkgListEndp;
-        cm_bkgListEndp = (cm_bkgRequest_t *) osi_QPrev(&rp->q);
-        osi_QRemove((osi_queue_t **) &cm_bkgListp, &rp->q);
+        for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
+	{
+	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
+		break;
+	}
+	if (rp == NULL) {
+	    /* we couldn't find a request that we could process at the current time */
+	    lock_ReleaseWrite(&cm_daemonLock);
+	    Sleep(1000);
+	    lock_ObtainWrite(&cm_daemonLock);
+	    continue;
+	}
+
+        osi_QRemoveHT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **) &cm_bkgListEndp, &rp->q);
         osi_assert(cm_bkgQueueCount-- > 0);
         lock_ReleaseWrite(&cm_daemonLock);
 
 #ifdef DEBUG_REFCOUNT
 	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-        (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
+        code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
 #ifdef DEBUG_REFCOUNT                
 	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-	cm_ReleaseUser(rp->userp);
-        cm_ReleaseSCache(rp->scp);
-        free(rp);
+	if (code == 0) {
+	    cm_ReleaseUser(rp->userp);
+	    cm_ReleaseSCache(rp->scp);
+	    free(rp);
+	}
 
         lock_ObtainWrite(&cm_daemonLock);
+
+	switch ( code ) {
+	case CM_ERROR_TIMEDOUT:
+	case CM_ERROR_RETRY:
+	case CM_ERROR_WOULDBLOCK:
+	case CM_ERROR_ALLBUSY:
+	case CM_ERROR_ALLDOWN:
+	case CM_ERROR_ALLOFFLINE:
+	case CM_ERROR_PARTIALWRITE:
+	    osi_Log2(afsd_logp,"cm_BkgDaemon re-queueing failed request 0x%p code 0x%x",
+		     rp, code);
+	    cm_bkgQueueCount++;
+	    osi_QAddT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **)&cm_bkgListEndp, &rp->q);
+	    break;
+	default:
+	    osi_Log2(afsd_logp,"cm_BkgDaemon failed request dropped 0x%p code 0x%x",
+		     rp, code);
+	}
     }
     lock_ReleaseWrite(&cm_daemonLock);
 }
@@ -337,7 +369,7 @@ void cm_Daemon(long parm)
 
         if (now > lastVolCheck + cm_daemonCheckVolInterval) {
             lastVolCheck = now;
-            cm_CheckVolumes();
+            cm_RefreshVolumes();
 	    now = osi_Time();
         }
 

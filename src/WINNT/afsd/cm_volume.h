@@ -54,7 +54,7 @@ extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume
 
 extern void cm_ChangeRankVolume(cm_server_t *tsp);
 
-extern void cm_CheckVolumes(void);
+extern void cm_RefreshVolumes(void);
 
 extern long cm_ValidateVolume(void);
 
