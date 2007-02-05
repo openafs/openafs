@@ -95,7 +95,7 @@ afs_uint64 ComputeSizeOfSCache(DWORD stats);
 afs_uint64 ComputeSizeOfSCacheHT(DWORD stats);
 afs_uint64 ComputeSizeOfDNLCache(void);
 afs_uint64 ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize);
-afs_uint64 ComputeSizeOfDataHT(void);
+afs_uint64 ComputeSizeOfDataHT(afs_uint64 cacheBlocks);
 afs_uint64 ComputeSizeOfDataHeaders(afs_uint64 cacheBlocks);
 afs_uint64 ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, afs_uint64 cacheBlocks, DWORD blockSize);
 PSECURITY_ATTRIBUTES CreateCacheFileSA();

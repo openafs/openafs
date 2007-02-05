@@ -87,10 +87,10 @@ ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize)
 }
 
 afs_uint64 
-ComputeSizeOfDataHT(void)
+ComputeSizeOfDataHT(afs_uint64 cacheBlocks)
 {
     afs_uint64 size;
-    size = osi_PrimeLessThan(CM_BUF_HASHSIZE) * sizeof(cm_buf_t *);
+    size = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1)) * sizeof(cm_buf_t *);
     return size;
 }
 
@@ -115,7 +115,7 @@ ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunk
                +  ComputeSizeOfSCacheHT(stats)
                +  ComputeSizeOfDNLCache()
                +  ComputeSizeOfDataBuffers(cacheBlocks, blockSize) 
-               +  2 * ComputeSizeOfDataHT() 
+               +  2 * ComputeSizeOfDataHT(cacheBlocks) 
                +  ComputeSizeOfDataHeaders(cacheBlocks);
     return size;    
 }
@@ -837,7 +837,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.buf_nbuffers = cacheBlocks;
         cm_data.buf_nOrigBuffers = 0;
         cm_data.buf_blockSize = CM_BUF_BLOCKSIZE;
-        cm_data.buf_hashSize = CM_BUF_HASHSIZE;
+        cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1));
 
         cm_data.mountRootGen = time(NULL);
 
@@ -855,9 +855,9 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.dnlcBaseAddress = (cm_nc_t *) baseAddress;
         baseAddress += ComputeSizeOfDNLCache();
         cm_data.buf_hashTablepp = (cm_buf_t **) baseAddress;
-        baseAddress += ComputeSizeOfDataHT();
+        baseAddress += ComputeSizeOfDataHT(cacheBlocks);
         cm_data.buf_fileHashTablepp = (cm_buf_t **) baseAddress;
-        baseAddress += ComputeSizeOfDataHT();
+        baseAddress += ComputeSizeOfDataHT(cacheBlocks);
         cm_data.bufHeaderBaseAddress = (cm_buf_t *) baseAddress;
         baseAddress += ComputeSizeOfDataHeaders(cacheBlocks);
         cm_data.bufDataBaseAddress = (char *) baseAddress;
