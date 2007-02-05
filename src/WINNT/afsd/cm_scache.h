@@ -288,6 +288,7 @@ typedef struct cm_scache {
 						 * used to see if we're merging
 						 * in old info.
                                                  */
+#define CM_MERGEFLAG_STOREDATA		2	/* Merge due to storedata op */
 
 /* hash define.  Must not include the cell, since the callback revocation code
  * doesn't necessarily know the cell in the case of a multihomed server
