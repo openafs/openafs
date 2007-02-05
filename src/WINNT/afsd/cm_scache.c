@@ -1368,6 +1368,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         if (!(scp->flags & CM_SCACHEFLAG_RO))
             return;
     }       
+
     scp->serverModTime = statusp->ServerModTime;
 
     if (!(scp->mask & CM_SCACHEMASK_CLIENTMODTIME)) {
@@ -1382,7 +1383,6 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     scp->serverLength.HighPart = statusp->Length_hi;
 
     scp->linkCount = statusp->LinkCount;
-    scp->dataVersion = statusp->DataVersion;
     scp->owner = statusp->Owner;
     scp->group = statusp->Group;
     scp->unixModeBits = statusp->UnixModeBits & 07777;
@@ -1413,6 +1413,23 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     if (userp != NULL) {
         cm_AddACLCache(scp, userp, statusp->CallerAccess);
     }
+
+    if ((flags & CM_MERGEFLAG_STOREDATA) &&
+	statusp->DataVersion - scp->dataVersion == 1) {
+	afs_uint32 i;
+	cm_buf_t *bp;
+
+	for (i = 0; i < cm_data.buf_hashSize; i++)
+	{
+	    for(bp = cm_data.buf_hashTablepp[i]; bp; bp=bp->hashp) {
+		if (cm_FidCmp(&scp->fid, &bp->fid) == 0 && 
+		    bp->dataVersion == scp->dataVersion)
+		    bp->dataVersion = statusp->DataVersion;
+	    }
+	}
+
+    }
+    scp->dataVersion = statusp->DataVersion;
 }
 
 /* note that our stat cache info is incorrect, so force us eventually
