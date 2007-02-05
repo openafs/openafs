@@ -47,11 +47,6 @@ extern int buf_cacheType;
 /* backup over pointer to the buffer */
 #define BUF_OVERTOBUF(op) ((cm_buf_t *)(((char *)op) - ((long)(&((cm_buf_t *)0)->over))))
 
-#ifdef notdef
-/* pretend we have logs, too */
-typedef char cm_log_t;
-#endif
-
 #define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 
 /* represents a single buffer */
@@ -75,10 +70,6 @@ typedef struct cm_buf {
     unsigned long refCount;	/* reference count (buf_globalLock) */
     long idCounter;		/* counter for softrefs; bumped at each recycle */
     long dirtyCounter;	        /* bumped at each dirty->clean transition */
-#ifdef notdef
-    cm_log_t *logp;	        /* log for this buffer, if any */
-    osi_hyper_t lsn;	        /* lsn to force to (last LSN changing this buffer) */
-#endif /* notdef */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
 #ifdef DEBUG
@@ -86,7 +77,6 @@ typedef struct cm_buf {
                                 /* the fid at the time of fid assignment. */
 #endif
     long flags;		        /* flags we're using */
-    long size;		        /* size in bytes of this buffer */
     char *datap;		/* data in this buffer */
     unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
@@ -156,8 +146,6 @@ extern void buf_HoldLocked(cm_buf_t *);
 extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
-
-extern HANDLE buf_GetFileHandle(long);
 
 extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 

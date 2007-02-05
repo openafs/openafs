@@ -307,7 +307,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             cm_data.buf_nOrigBuffers = cm_data.buf_nbuffers;
  
             /* lower hash size to a prime number */
-            cm_data.buf_hashSize = osi_PrimeLessThan(CM_BUF_HASHSIZE);
+	    cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cm_data.buf_nbuffers/7 + 1));
  
             /* create hash table */
             memset((void *)cm_data.buf_hashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
@@ -502,7 +502,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
  */
 cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
 {
-    long i;
+    afs_uint32 i;
     cm_buf_t *bp;
 
     i = BUF_HASH(&scp->fid, offsetp);
@@ -634,8 +634,8 @@ void buf_Recycle(cm_buf_t *bp)
      * have any lock conflicts, so we can grab the buffer lock out of
      * order in the locking hierarchy.
      */
-    osi_Log2( buf_logp, "buf_Recycle recycles 0x%p, off 0x%x",
-              bp, bp->offset.LowPart);
+    osi_Log3( buf_logp, "buf_Recycle recycles 0x%p, off 0x%x:%08x",
+              bp, bp->offset.HighPart, bp->offset.LowPart);
 
     osi_assert(bp->refCount == 0);
     osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)));
@@ -918,8 +918,8 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
      */
     lock_ReleaseMutex(&bp->mx);
     *bufpp = bp;
-    osi_Log3(buf_logp, "buf_GetNew returning bp 0x%p for scp 0x%p, offset 0x%x",
-              bp, scp, offsetp->LowPart);
+    osi_Log4(buf_logp, "buf_GetNew returning bp 0x%p for scp 0x%p, offset 0x%x:%08x",
+              bp, scp, offsetp->HighPart, offsetp->LowPart);
     return 0;
 }
 
@@ -1060,8 +1060,8 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
     }
     lock_ReleaseWrite(&buf_globalLock);
 
-    osi_Log3(buf_logp, "buf_Get returning bp 0x%p for scp 0x%p, offset 0x%x",
-              bp, scp, offsetp->LowPart);
+    osi_Log4(buf_logp, "buf_Get returning bp 0x%p for scp 0x%p, offset 0x%x:%08x",
+              bp, scp, offsetp->HighPart, offsetp->LowPart);
 #ifdef TESTING
     buf_ValidateBufQueues();
 #endif /* TESTING */
@@ -1184,7 +1184,7 @@ void buf_SetDirty(cm_buf_t *bp)
  */
 long buf_CleanAndReset(void)
 {
-    long i;
+    afs_uint32 i;
     cm_buf_t *bp;
     cm_req_t req;
 
@@ -1556,7 +1556,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     int zilch;
     cm_buf_t *bp;
     char output[1024];
-    int i;
+    afs_uint32 i;
   
     if (cm_data.buf_hashTablepp == NULL)
         return -1;
@@ -1574,9 +1574,12 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
         {
 	    StringCbPrintfA(output, sizeof(output), 
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
-			    "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			    "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
-			     bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			     bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			     bp->cmFlags, bp->refCount);
 	    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
@@ -1589,9 +1592,12 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
-			 "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
-			 bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			 bp->cmFlags, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_FreeListEndp.\r\n", cookie);
@@ -1602,9 +1608,12 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     for(bp = cm_data.buf_dirtyListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
-			 "vnode=%d, unique=%d), size=%d flags=0x%x, refCount=%d\r\n", 
+			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%d, "
+			 "flags=0x%x, cmFlags=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
-			 bp->fid.vnode, bp->fid.unique, bp->size, bp->flags, bp->refCount);
+			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			 bp->cmFlags, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_dirtyListEndp.\r\n", cookie);
