@@ -1414,16 +1414,13 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 
     if ((flags & CM_MERGEFLAG_STOREDATA) &&
 	statusp->DataVersion - scp->dataVersion == 1) {
-	afs_uint32 i;
 	cm_buf_t *bp;
 
-	for (i = 0; i < cm_data.buf_hashSize; i++)
+	for (bp = cm_data.buf_fileHashTablepp[BUF_FILEHASH(&scp->fid)]; bp; bp=bp->fileHashp)
 	{
-	    for(bp = cm_data.buf_hashTablepp[i]; bp; bp=bp->hashp) {
-		if (cm_FidCmp(&scp->fid, &bp->fid) == 0 && 
-		    bp->dataVersion == scp->dataVersion)
-		    bp->dataVersion = statusp->DataVersion;
-	    }
+	    if (cm_FidCmp(&scp->fid, &bp->fid) == 0 && 
+		bp->dataVersion == scp->dataVersion)
+		bp->dataVersion = statusp->DataVersion;
 	}
 
     }
