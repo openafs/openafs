@@ -114,8 +114,6 @@ void Mount_OnInitDialog (HWND hDlg)
 
 void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 {
-    char dbgstr[128];
-
     DRIVEMAPLIST List;
     memset(&List, 0, sizeof(DRIVEMAPLIST));
     QueryDriveMapList (&List);
@@ -163,7 +161,6 @@ void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 
 void Mount_OnSelect (HWND hDlg)
 {
-    char dbgstr[128];
     BOOL fServiceRunning = IsServiceRunning();
 
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
@@ -180,7 +177,6 @@ void Mount_OnSelect (HWND hDlg)
 
 void Mount_OnCheck (HWND hDlg)
 {
-    char dbgstr[128];
    DRIVEMAPLIST List;
    QueryDriveMapList (&List);
 
@@ -213,7 +209,6 @@ void Mount_OnCheck (HWND hDlg)
 
 void Mount_OnRemove (HWND hDlg)
 {
-    char dbgstr[128];
     HWND hList = GetDlgItem (hDlg, IDC_LIST);
     int iItemSel = LB_GetSelected(hList);
    int iDriveSel = Mount_DriveFromItem (hDlg, iItemSel);
@@ -253,7 +248,6 @@ void Mount_OnAdd (HWND hDlg)
 
 void Mount_OnEdit (HWND hDlg)
 {
-    char dbgstr[128];
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
    int iItemSel = LB_GetSelected(hList);
    int iDriveSel = Mount_DriveFromItem (hDlg, iItemSel);
@@ -338,7 +332,6 @@ void Mount_AdjustMapping (HWND hDlg, int iDrive)
 
 int Mount_DriveFromItem (HWND hDlg, int iItem)
 {
-    char dbgstr[128];
     TCHAR szItem[ 1024 ] = TEXT("");
     SendDlgItemMessage (hDlg, IDC_LIST, LB_GETTEXT, iItem, (LPARAM)szItem);
 
@@ -397,7 +390,6 @@ BOOL CALLBACK Mapping_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Mapping_OnInitDialog (HWND hDlg)
 {
-    char dbgstr[128];
    PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fill in the combo box
@@ -453,7 +445,6 @@ void Mapping_OnInitDialog (HWND hDlg)
 
 void Mapping_OnOK (HWND hDlg)
 {
-    char dbgstr[128];
    PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    int iItem = SendDlgItemMessage (hDlg, IDC_MAP_LETTER, CB_GETCURSEL, 0, 0);
