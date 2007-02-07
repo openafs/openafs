@@ -1402,7 +1402,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     cm_dnlcRemove(dscp, namep);
     cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) 
-        cm_MergeStatus(dscp, &newDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, 0);
     else if (code == CM_ERROR_NOSUCHFILE) {
 	/* windows would not have allowed the request to delete the file 
 	 * if it did not believe the file existed.  therefore, we must 
@@ -2100,7 +2100,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bb.callbacks[j],
                                             CM_CALLBACK_MAINTAINCOUNT);
-                cm_MergeStatus(scp, &bb.stats[j], &volSync, userp, 0);
+                cm_MergeStatus(dscp, scp, &bb.stats[j], &volSync, userp, 0);
             }       
             lock_ReleaseMutex(&scp->mx);
             cm_ReleaseSCache(scp);
@@ -2310,13 +2310,14 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
     if (code == 0)
-        cm_MergeStatus(scp, &afsOutStatus, &volSync, userp,
+        cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp,
                         CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
 	
     /* if we're changing the mode bits, discard the ACL cache, 
      * since we changed the mode bits.
      */
-    if (afsInStatus.Mask & AFS_SETMODE) cm_FreeAllACLEnts(scp);
+    if (afsInStatus.Mask & AFS_SETMODE) 
+	cm_FreeAllACLEnts(scp);
     lock_ReleaseMutex(&scp->mx);
     return code;
 }       
@@ -2393,7 +2394,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2412,7 +2413,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
             lock_ObtainMutex(&scp->mx);
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newFileStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
                                 userp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newFileCallback, 0);
@@ -2527,7 +2528,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2545,7 +2546,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newDirStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
                                 userp, 0);
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newDirCallback, 0);
@@ -2621,7 +2622,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2685,7 +2686,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2703,7 +2704,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         if (code == 0) {
             lock_ObtainMutex(&scp->mx);
             if (!cm_HaveCallback(scp)) {
-                cm_MergeStatus(scp, &newLinkStatus, &volSync,
+                cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
                                 userp, 0);
             }       
             lock_ReleaseMutex(&scp->mx);
@@ -2767,7 +2768,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, namep); 
-        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
 
@@ -2924,7 +2925,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     lock_ObtainMutex(&oldDscp->mx);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
-        cm_MergeStatus(oldDscp, &updatedOldDirStatus, &volSync,
+        cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                         userp, 0);
     }
     lock_ReleaseMutex(&oldDscp->mx);
@@ -2934,7 +2935,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         lock_ObtainMutex(&newDscp->mx);
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         if (code == 0) {
-            cm_MergeStatus(newDscp, &updatedNewDirStatus, &volSync,
+            cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, 0);
         }
         lock_ReleaseMutex(&newDscp->mx);
