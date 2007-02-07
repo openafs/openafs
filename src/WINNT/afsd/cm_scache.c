@@ -1281,7 +1281,9 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
  * handled after the callback breaking is done, but only one of whose calls
  * started before that, can cause old info to be merged from the first call.
  */
-void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
+void cm_MergeStatus(cm_scache_t *dscp, 
+		    cm_scache_t *scp, AFSFetchStatus *statusp, 
+		    AFSVolSync *volsyncp,
                     cm_user_t *userp, afs_uint32 flags)
 {
     // yj: i want to create some fake status for the /afs directory and the
@@ -1315,6 +1317,24 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     if (statusp->errorCode != 0) {	
 	scp->flags |= CM_SCACHEFLAG_EACCESS;
 	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
+
+	scp->serverModTime = 0;
+	scp->clientModTime = 0;
+	scp->length.LowPart = 0;
+	scp->length.HighPart = 0;
+	scp->serverLength.LowPart = 0;
+	scp->serverLength.HighPart = 0;
+	scp->linkCount = 0;
+	scp->owner = 0;
+	scp->group = 0;
+	scp->unixModeBits = 0;
+	scp->anyAccess = 0;
+	scp->dataVersion = 0;
+
+	scp->parentVnode = dscp->fid.vnode;
+	scp->parentUnique = dscp->fid.unique;
+
+	return;
     } else {
 	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
     }

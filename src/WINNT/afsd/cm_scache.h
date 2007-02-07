@@ -328,8 +328,11 @@ extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
 
 extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, afs_uint32);
 
-extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVolSync *,
-	struct cm_user *, afs_uint32 flags);
+extern void cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp, 
+			   struct AFSFetchStatus * statusp, 
+			   struct AFSVolSync * volsyncp,
+			   struct cm_user *userp, 
+			   afs_uint32 flags);
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 
