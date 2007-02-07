@@ -1315,7 +1315,6 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     if (statusp->errorCode != 0) {	
 	scp->flags |= CM_SCACHEFLAG_EACCESS;
 	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
-	return;
     } else {
 	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
     }
