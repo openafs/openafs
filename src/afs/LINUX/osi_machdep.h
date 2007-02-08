@@ -28,6 +28,16 @@
 
 #undef getuerror
 
+#ifdef STRUCT_TASK_STRUCT_HAS_TGID
+#define getpid() current->tgid
+#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#define getppid() current->real_parent->tgid
+#elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
+#define getppid() current->parent->tgid
+#else
+#define getppid() current->p_opptr->tgid
+#endif
+#else /* !STRUCT_TASK_STRUCT_HAS_TGID */
 #define getpid() current->pid
 #ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
 #define getppid() current->real_parent->pid
@@ -36,6 +46,7 @@
 #else
 #define getppid() current->p_opptr->pid
 #endif
+#endif /* STRUCT_TASK_STRUCT_HAS_TGID */
 
 #ifdef RECALC_SIGPENDING_TAKES_VOID
 #define RECALC_SIGPENDING(X) recalc_sigpending()
