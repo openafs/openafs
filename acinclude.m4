@@ -33,6 +33,8 @@ AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
+AC_ARG_ENABLE( unix-sockets,
+[  --enable-unix-sockets               enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
 AC_ARG_ENABLE( full-vos-listvol-switch,
 [  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
@@ -1024,6 +1026,14 @@ fi
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
+
+if test "$enable_unix_sockets" = "yes"; then
+       AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
+       USE_UNIX_SOCKETS="yes"
+else
+       USE_UNIX_SOCKETS="no"
+fi
+AC_SUBST(USE_UNIX_SOCKETS)
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])

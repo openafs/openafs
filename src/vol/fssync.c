@@ -48,6 +48,7 @@ static int newVLDB = 1;
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/afsutil.h>
 
 RCSID
     ("$Header$");
@@ -93,6 +94,10 @@ RCSID
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+
+#ifdef USE_UNIX_SOCKETS
+#include <sys/un.h>
+#endif
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
@@ -159,7 +164,11 @@ struct Lock FSYNC_handler_lock;
 int
 FSYNC_clientInit(void)
 {
+#ifdef USE_UNIX_SOCKETS
+    struct sockaddr_un addr;
+#else /* USE_UNIX_SOCKETS */
     struct sockaddr_in addr;
+#endif /* USE_UNIX_SOCKETS */
     /* I can't believe the following is needed for localhost connections!! */
     static time_t backoff[] =
 	{ 3, 3, 3, 5, 5, 5, 7, 15, 16, 24, 32, 40, 48, 0 };
@@ -260,6 +269,23 @@ FSYNC_fsInit(void)
 #endif /* AFS_PTHREAD_ENV */
 }
 
+#ifdef USE_UNIX_SOCKETS
+static int
+getport(struct sockaddr_un *addr)
+{
+    int sd;
+    char tbuffer[AFSDIR_PATH_MAX]; 
+
+    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
+               "fssync.sock", NULL);
+
+    memset(addr, 0, sizeof(*addr));
+    addr->sun_family = AF_UNIX;
+    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
+    assert((sd = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0);
+    return sd;
+}
+#else  /* USE_UNIX_SOCKETS */
 static int
 getport(struct sockaddr_in *addr)
 {
@@ -276,19 +302,27 @@ getport(struct sockaddr_in *addr)
 
     return sd;
 }
+#endif
 
 static fd_set FSYNC_readfds;
 
 static void
 FSYNC_sync()
 {
+#ifdef USE_UNIX_SOCKETS
+    struct sockaddr_un addr;
+#else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in addr;
+#endif /* USE_UNIX_SOCKETS */
     int on = 1;
     extern VInit;
     int code;
     int numTries;
 #ifdef AFS_PTHREAD_ENV
     int tid;
+#endif
+#ifdef USE_UNIX_SOCKETS
+    char tbuffer[AFSDIR_PATH_MAX]; 
 #endif
 
 #ifndef AFS_NT40_ENV
@@ -303,6 +337,13 @@ FSYNC_sync()
     pthread_setspecific(rx_thread_id_key, (void *)tid);
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef USE_UNIX_SOCKETS
+    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
+               "fssync.sock", NULL);
+    /* ignore errors */
+    remove(tbuffer);
+#endif /* USE_UNIX_SOCKETS */
 
     while (!VInit) {
 	/* Let somebody else run until level > 0.  That doesn't mean that 
