@@ -147,6 +147,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 
     /* invalidate so next merge works fine;
      * also initialize some flags */
+    scp->fileType = 0;
     scp->flags &= ~(CM_SCACHEFLAG_STATD
 		     | CM_SCACHEFLAG_DELETED
 		     | CM_SCACHEFLAG_RO
@@ -577,7 +578,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             return 0;
         }
     }
-        
+
     // yj: when we get here, it means we don't have an scp
     // so we need to either load it or fake it, depending
     // on whether the file is "special", see below.
@@ -1315,6 +1316,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
     if (statusp->errorCode != 0) {	
 	scp->flags |= CM_SCACHEFLAG_EACCESS;
 	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
+
+	scp->fileType = 0;	/* unknown */
 
 	scp->serverModTime = 0;
 	scp->clientModTime = 0;
