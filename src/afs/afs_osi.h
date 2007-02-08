@@ -212,7 +212,11 @@ typedef struct timeval osi_timeval_t;
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	curproc
 #else
+#ifdef AFS_LINUX_ENV
+#define osi_ThreadUnique()	(current->pid)
+#else
 #define osi_ThreadUnique()	getpid()
+#endif
 #endif
 
 

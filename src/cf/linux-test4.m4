@@ -333,6 +333,18 @@ printk("%d\n", _tsk.parent);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID], [
+  AC_MSG_CHECKING([for tgid in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_tgid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.tgid);],
+      ac_cv_linux_sched_struct_task_struct_has_tgid=yes,
+      ac_cv_linux_sched_struct_task_struct_has_tgid=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_tgid)])
+
+
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
   AC_MSG_CHECKING([for real_parent in struct task_struct])
   AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_real_parent], [
