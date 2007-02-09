@@ -43,11 +43,12 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     int didLock;
     long trights;
 
+#if 0
     if (scp->flags & CM_SCACHEFLAG_EACCESS) {
     	*outRightsp = 0;
 	return 1;
     }
-
+#endif
     didLock = 0;
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
         aclScp = scp;
