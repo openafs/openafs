@@ -28,7 +28,6 @@ all: config mkvers \
 
 Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
-	$(CP) Makefile.version-NOCML.in Makefile.version.in
 	if	[ -r SRC/../CML/state ] ; \
 	then	$(CP) ${srcdir}/Makefile.version-CML Makefile.version ; \
 	else	$(CP) Makefile.version-NOCML Makefile.version ; \
