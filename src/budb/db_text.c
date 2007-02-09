@@ -31,7 +31,6 @@ RCSID
 #endif
 #include <sys/types.h>
 #include <ubik.h>
-#include <afs/auth.h>
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"

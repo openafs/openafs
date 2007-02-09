@@ -36,7 +36,6 @@ RCSID
 #include <string.h>
 #include <des.h>
 #include <afs/cellconfig.h>
-#include <afs/auth.h>
 #include <errno.h>
 #include "budb.h"
 #include "budb_errs.h"

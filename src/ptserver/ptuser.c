@@ -24,7 +24,6 @@ RCSID
 #include "afs/stds.h"
 #include "rx/rx.h"
 #include "rx/xdr.h"
-#include "rx/rxkad.h"
 #include "afs/auth.h"
 #include "afs/cellconfig.h"
 #include "afs/afsutil.h"
@@ -50,7 +49,6 @@ RCSID
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#include <rx/rxkad.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>

@@ -26,7 +26,6 @@ RCSID
 #include <stdio.h>
 #include <pwd.h>
 #include <afs/com_err.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include "kauth.h"

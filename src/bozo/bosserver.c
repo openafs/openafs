@@ -37,7 +37,7 @@ RCSID
 #include <rx/rx_globals.h>
 #include "bosint.h"
 #include "bnode.h"
-#include <afs/auth.h>
+#include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>

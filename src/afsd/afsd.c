@@ -133,7 +133,6 @@ RCSID
 #include <netinet/in.h>
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
-#include <afs/auth.h>
 #include <ctype.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>

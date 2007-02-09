@@ -106,7 +106,6 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 
-#include <afs/auth.h>
 #include <signal.h>
 #include <afs/partition.h>
 #include "viced_prototypes.h"

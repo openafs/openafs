@@ -39,7 +39,6 @@ RCSID
 #include <sys/stat.h>
 #include <rx/xdr.h>
 #include <afs/auth.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <stdio.h>
 #include <afs/cmd.h>

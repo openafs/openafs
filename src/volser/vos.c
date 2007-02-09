@@ -46,7 +46,6 @@ RCSID
 #include <rx/rx_globals.h>
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/afsutil.h>
@@ -54,7 +53,6 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 #include <afs/usd.h>
-#include <rx/rxkad.h>
 #include "volser.h"
 #include "volint.h"
 #include "lockdata.h"

@@ -16,7 +16,6 @@ RCSID
 #include <afs/com_err.h>
 #include <rx/rxkad.h>
 #include <afs/kautils.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <afs/vlserver.h>

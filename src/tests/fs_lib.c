@@ -49,7 +49,6 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 
