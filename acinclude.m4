@@ -644,12 +644,15 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
+		 LINUX_FREEZER_H_EXISTS
+		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
+		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
+		 fi
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
-		 LINUX_FREEZER_H_EXISTS
 		 LINUX_INIT_WORK_HAS_DATA
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
@@ -846,9 +849,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
-		 fi
-		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
-		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
 		 fi
 		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])

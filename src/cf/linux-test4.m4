@@ -588,7 +588,10 @@ AC_DEFUN([LINUX_REFRIGERATOR], [
   AC_MSG_CHECKING([whether refrigerator takes PF_FREEZE])
   AC_CACHE_VAL([ac_cv_linux_func_refrigerator_takes_pf_freeze], [
     AC_TRY_KBUILD(
-[#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef FREEZER_H_EXISTS
+#include <linux/freezer.h>
+#endif],
 [refrigerator(PF_FREEZE);],
       ac_cv_linux_func_refrigerator_takes_pf_freeze=yes,
       ac_cv_linux_func_refrigerator_takes_pf_freeze=no)])
