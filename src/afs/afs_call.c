@@ -279,7 +279,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
 struct afsd_thread_info {
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
 #endif
     unsigned long parm;
@@ -414,13 +414,13 @@ afsd_thread(void *rock)
 }
 
 void
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
 #else
 afsd_launcher(void *rock)
 #endif
 {
-#if !defined(INIT_WORK_HAS_DATA)
+#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
 #endif
 
