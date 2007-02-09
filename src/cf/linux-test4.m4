@@ -1,3 +1,17 @@
+AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
+  AC_MSG_CHECKING([for exported tasklist_lock])
+  AC_CACHE_VAL([ac_cv_linux_exports_tasklist_lock], [
+    AC_TRY_KBUILD(
+[
+#include <linux/sched.h>],
+[
+extern rwlock_t tasklist_lock __attribute__((weak)); 
+],
+      ac_cv_linux_exports_tasklist_lock=yes,
+      ac_cv_linux_exports_tasklist_lock=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)])
+
+
 AC_DEFUN([LINUX_CONFIG_H_EXISTS], [
   AC_MSG_CHECKING([for linux/config.h existance])
   AC_CACHE_VAL([ac_cv_linux_config_h_exists], [
