@@ -727,8 +727,8 @@ afs_klog(khm_handle identity,
     char	RealmName[128];
     char	CellName[128];
     char	ServiceName[128];
-	khm_handle	confighandle;
-	khm_int32	supports_krb4 = 1;
+    khm_handle	confighandle;
+    khm_int32	supports_krb4 = 1;
 
     /* signalling */
     BOOL        bGotCreds = FALSE; /* got creds? */
@@ -767,7 +767,7 @@ afs_klog(khm_handle identity,
     }
 
     StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
-                  afs_realm_of_cell(&ak_cellconfig));
+                  afs_realm_of_cell(&ak_cellconfig, FALSE));
 
     if (strlen(service) == 0)
         StringCbCopyA(ServiceName, sizeof(ServiceName), "afs");
@@ -844,7 +844,24 @@ afs_klog(khm_handle identity,
         r = pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
         r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
-        if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+	if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+	      r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
+	     !RealmName[0]) {
+	    StringCbCopyA(RealmName, sizeof(RealmName), 
+			  afs_realm_of_cell(&ak_cellconfig, TRUE));
+
+            pkrb5_free_principal(context, increds.server);
+	    r = (*pkrb5_build_principal)(context, &increds.server,
+					 (int) strlen(RealmName),
+					 RealmName,
+					 ServiceName,
+					 CellName,
+					 0);
+            if (r == 0)
+                r = pkrb5_get_credentials(context, 0, k5cc, 
+                                          &increds, &k5creds);
+	}
+	if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
             r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
             /* Next try Service@REALM */
             pkrb5_free_principal(context, increds.server);
@@ -1168,7 +1185,7 @@ afs_klog(khm_handle identity,
 /* afs_realm_of_cell():               */
 /**************************************/
 static char *
-afs_realm_of_cell(afs_conf_cell *cellconfig)
+afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 {
     char krbhst[MAX_HSTNM]="";
     static char krbrlm[REALM_SZ+1]="";
@@ -1179,36 +1196,45 @@ afs_realm_of_cell(afs_conf_cell *cellconfig)
     if (!cellconfig)
         return 0;
 
-    if ( pkrb5_init_context ) {
-        r = pkrb5_init_context(&ctx); 
-        if ( !r )
-            r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
-        if ( !r && realmlist && realmlist[0] ) {
-            StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
-            pkrb5_free_host_realm(ctx, realmlist);
-        }
-        if (ctx)
-            pkrb5_free_context(ctx);
-    }
+    if (referral_fallback) {
+	char * p;
+	p = strchr(cellconfig->hostName[0], '.');
+	if (p++)
+	    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
+	else
+	    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
+	strupr(krbrlm);
+    } else {
+	if ( pkrb5_init_context ) {
+	    r = pkrb5_init_context(&ctx); 
+	    if ( !r )
+		r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
+	    if ( !r && realmlist && realmlist[0] ) {
+		StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
+		pkrb5_free_host_realm(ctx, realmlist);
+	    }
+	    if (ctx)
+		pkrb5_free_context(ctx);
+	}
 
-    if ( !krbrlm[0] ) {
-        StringCbCopyA(krbrlm, sizeof(krbrlm), 
-                      (char *)(*pkrb_realmofhost)(cellconfig->hostName[0]));
-        if ((*pkrb_get_krbhst)(krbhst, krbrlm, 1) != KSUCCESS)
-            krbrlm[0] = '\0';
-    }
+	if (r) {
+	    if (pkrb_get_krbhst && pkrb_realmofhost) {
+		StringCbCopyA(krbrlm, sizeof(krbrlm), 
+			       (char *)(*pkrb_realmofhost)(cellconfig->hostName[0]));
+		if ((*pkrb_get_krbhst)(krbhst, krbrlm, 1) != KSUCCESS)
+		    krbrlm[0] = '\0';
+	    }
 
-    if ( !krbrlm[0] ) {
-        char *s = krbrlm;
-        char *t = cellconfig->name;
-        int c;
-
-        while (c = *t++)
-        {
-            if (islower(c)) c=toupper(c);
-            *s++ = c;
-        }
-        *s++ = 0;
+	    if ( !krbrlm[0] ) {
+		char * p;
+		p = strchr(cellconfig->hostName[0], '.');
+		if (p++)
+		    StringCbCopyA(krbrlm, sizeof(krbrlm), p);
+		else
+		    StringCbCopyA(krbrlm, sizeof(krbrlm), cellconfig->name);
+		strupr(krbrlm);
+	    }
+	}
     }
     return(krbrlm);
 }
