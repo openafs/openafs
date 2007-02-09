@@ -626,6 +626,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
+		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 LINUX_FREEZER_H_EXISTS
@@ -839,6 +840,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
 		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
+		 fi
+		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
 		 fi
                 :
 		fi
