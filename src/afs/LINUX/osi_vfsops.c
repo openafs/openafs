@@ -416,7 +416,8 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 
     AFS_STATCNT(afs_statfs);
 
-    statp->f_type = 0;		/* Can we get a real type sometime? */
+    /* hardcode in case that which is giveth is taken away */
+    statp->f_type = 0x5346414F;
 #if defined(STATFS_TAKES_DENTRY)
     statp->f_bsize = dentry->d_sb->s_blocksize;
 #else
