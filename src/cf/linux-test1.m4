@@ -61,8 +61,7 @@ AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
   AC_MSG_CHECKING([for linux kernel module build works])
   AC_TRY_KBUILD(
 [#include <linux/sched.h>
-#include <linux/fs.h>
-#include <linux/namei.h>],
+#include <linux/fs.h>],
     [],:,AC_MSG_RESULT(no)
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
