@@ -279,8 +279,8 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                         "user %s in cell %s (status: %d).\n", progname,
                         username, cell_to_use, *status);
             } else {
-                printf("created cross-cell entry for %s at %s\n",
-                        username, cell_to_use);
+                printf("created cross-cell entry for %s (Id %d) at %s\n",
+                        username, viceId, cell_to_use);
 #ifdef AFS_ID_TO_NAME
                 strncpy(username_copy, username, BUFSIZ);
                 snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
@@ -412,75 +412,92 @@ int krb_get_admhst(char *h,char *r, int n);
 
 static char *afs_realm_of_cell(struct afsconf_cell *cellconfig)
 {
-	char krbhst[MAX_HSTNM];
-	static char krbrlm[REALM_SZ+1];
+    char krbhst[MAX_HSTNM];
+    static char krbrlm[REALM_SZ+1];
 
-	if (!cellconfig)
-		return 0;
+    if (!cellconfig)
+	return 0;
 
-	strcpy(krbrlm, (char *) krb_realmofhost(cellconfig->hostName[0]));
+    strcpy(krbrlm, (char *) krb_realmofhost(cellconfig->hostName[0]));
 
-	if (krb_get_admhst(krbhst, krbrlm, 1) != KSUCCESS)
+    if (krb_get_admhst(krbhst, krbrlm, 1) != KSUCCESS)
+    {
+	char *s = krbrlm;
+	char *t = cellconfig->name;
+	int c;
+
+	while (c = *t++)
 	{
-		char *s = krbrlm;
-		char *t = cellconfig->name;
-		int c;
-
-		while (c = *t++)
-		{
-			if (islower(c))
-				c = toupper(c);
-			*s++ = c;
-		}
-		*s++ = 0;
+	    if (islower(c))
+		c = toupper(c);
+	    *s++ = c;
 	}
-	return krbrlm;
+	*s++ = 0;
+    }
+    return krbrlm;
 }
 
-static char *afs_realm_of_cell5(krb5_context context, struct afsconf_cell *cellconfig)
+
+/* As of MIT Kerberos 1.6, krb5_get_host_realm() will return the NUL-string 
+ * if there is no domain_realm mapping for the hostname's domain.  This is 
+ * used as a trigger indicating that referrals should be used within the
+ * krb5_get_credentials() call.  However, if the KDC does not support referrals
+ * that will result in a KRB5_ERR_HOST_REALM_UNKNOWN error and we will have
+ * to manually fallback to mapping the domain of the host as a realm name.
+ * Hence, the new fallback parameter.
+ */
+static char *afs_realm_of_cell5(krb5_context context, struct afsconf_cell *cellconfig, int fallback)
 {
-	char ** krbrlms = 0;
-	static char krbrlm[REALM_SZ+1];
-	krb5_error_code status;
+    char ** krbrlms = 0;
+    static char krbrlm[REALM_SZ+1];
+    krb5_error_code status;
 
-	if (!cellconfig)
-		return 0;
+    if (!cellconfig)
+	return 0;
 
-	status = krb5_get_host_realm( context, cellconfig->hostName[0], &krbrlms );
-
-	if (status == 0 && krbrlms && krbrlms[0]) {
-		strcpy(krbrlm, krbrlms[0]);
+    if (fallback) {
+	char * p;
+	p = strchr(cellconfig->hostName[0], '.');
+	if (p++)
+	    strcpy(krbrlm, p);
+	else
+	    strcpy(krbrlm, cellconfig->name);
+	strupr(krbrlm);
     } else {
-		strcpy(krbrlm, cellconfig->name);
-		strupr(krbrlm);
+	status = krb5_get_host_realm( context, cellconfig->hostName[0], &krbrlms );
+	if (status == 0 && krbrlms && krbrlms[0]) {
+	    strcpy(krbrlm, krbrlms[0]);
+	} else {
+	    strcpy(krbrlm, cellconfig->name);
+	    strupr(krbrlm);
 	}
 
 	if (krbrlms)
-		krb5_free_host_realm( context, krbrlms );
-
-	return krbrlm;
-}
+	    krb5_free_host_realm( context, krbrlms );
+    }
+    return krbrlm;
+}	
 
 static char *copy_cellinfo(cellinfo_t *cellinfo)
 {
-	cellinfo_t *new_cellinfo;
+    cellinfo_t *new_cellinfo;
 
-	if (new_cellinfo = (cellinfo_t *)malloc(sizeof(cellinfo_t)))
-		memcpy(new_cellinfo, cellinfo, sizeof(cellinfo_t));
+    if (new_cellinfo = (cellinfo_t *)malloc(sizeof(cellinfo_t)))
+	memcpy(new_cellinfo, cellinfo, sizeof(cellinfo_t));
 
-	return ((char *)new_cellinfo);
+    return ((char *)new_cellinfo);
 }
 
 
 static char *copy_string(char *string)
 {
-	char *new_string;
+    char *new_string;
 
-	if (new_string = (char *)calloc(strlen(string) + 1, sizeof(char)))
-		(void) strcpy(new_string, string);
+    if (new_string = (char *)calloc(strlen(string) + 1, sizeof(char)))
+	(void) strcpy(new_string, string);
 
-	return (new_string);
-}
+    return (new_string);
+}	
 
 
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig,
@@ -591,14 +608,6 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     if (dflag)
         printf("Authenticating to cell %s.\n", cell_to_use);
 
-    if (realm && realm[0])
-        strcpy(realm_of_cell, realm);
-    else
-        strcpy(realm_of_cell,
-                (usev5)? 
-                afs_realm_of_cell5(context, &ak_cellconfig) : 
-                afs_realm_of_cell(&ak_cellconfig));
-
     /* We use the afs.<cellname> convention here... */
     strcpy(name, AFSKEY);
     strncpy(instance, cell_to_use, sizeof(instance));
@@ -612,6 +621,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     if (usev5) 
     { /* using krb5 */
         int retry = 1;
+	int realm_fallback = 0;
 
         if ( strchr(name,'.') != NULL ) {
             fprintf(stderr, "%s: Can't support principal names including a dot.\n",
@@ -620,24 +630,43 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         }
 
       try_v5:
-        if (dflag)
+	if (realm && realm[0])
+	    strcpy(realm_of_cell, realm);
+	else
+	    strcpy(realm_of_cell,
+		    afs_realm_of_cell5(context, &ak_cellconfig, realm_fallback));
+
+	if (dflag)
             printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
         status = get_v5cred(context, name, instance, realm_of_cell, 
                             use524 ? &c : NULL, &v5cred);
-        if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
+	if (status == KRB5_ERR_HOST_REALM_UNKNOWN) {
+	    realm_fallback = 1;
+	    goto try_v5;
+	} else if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
+	    if (!realm_of_cell[0]) {
+		realm_fallback = 1;
+		goto try_v5;
+	    }
             if (dflag)
                 printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
             status = get_v5cred(context, name, "", realm_of_cell, 
                                 use524 ? &c : NULL, &v5cred);
-        }
+	}
         if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
             retry = 0;
+	    realm_fallback = 0;
             goto try_v5;
         }       
     }       
     else 
     {
-        /*
+	if (realm && realm[0])
+	    strcpy(realm_of_cell, realm);
+	else
+	    strcpy(realm_of_cell, afs_realm_of_cell(&ak_cellconfig));
+
+	/*
          * Try to obtain AFS tickets.  Because there are two valid service
          * names, we will try both, but trying the more specific first.
          *
