@@ -77,7 +77,6 @@ RCSID
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
 #include <rx/rx.h>
-#include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/afs_args.h>
 #include <afs/vlserver.h>

@@ -41,7 +41,6 @@ RCSID
 #include <rx/rx.h>
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>

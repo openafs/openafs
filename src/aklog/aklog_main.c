@@ -66,7 +66,6 @@ u_long ntohl(u_long x)
 #ifdef WINDOWS
 
 #include <afs/auth.h>
-#include <rx/rxkad.h>
 #include <afs/dirpath.h>
 
 #else /* !WINDOWS */

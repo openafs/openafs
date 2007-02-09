@@ -48,7 +48,6 @@ RCSID
 #include <ubik.h>
 #include <afs/afsint.h>
 #include <afs/cmd.h>
-#include <rx/rxkad.h>
 
 /*
   Get the appropriate type of ubik client structure out from the system.

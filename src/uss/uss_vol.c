@@ -41,7 +41,6 @@ RCSID
 #include <afs/vlserver.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
-#include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/volser.h>
 #include <afs/volint.h>

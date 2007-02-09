@@ -55,7 +55,6 @@ RCSID
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <afs/auth.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>

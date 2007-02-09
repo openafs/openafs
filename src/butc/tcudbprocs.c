@@ -35,7 +35,6 @@ RCSID
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>

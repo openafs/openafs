@@ -22,7 +22,6 @@
 #include <rx/rx_globals.h>
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>

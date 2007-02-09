@@ -53,7 +53,6 @@ RCSID
 #include <afs/acl.h>
 #include <afs/ptclient.h>
 #include <afs/prs_fs.h>
-#include <afs/auth.h>
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>

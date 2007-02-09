@@ -42,7 +42,6 @@ RCSID
 #undef VICE
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <rx/rxkad.h>

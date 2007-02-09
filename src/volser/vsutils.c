@@ -43,7 +43,6 @@ RCSID
 #include <rx/rx_globals.h>
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -407,15 +406,6 @@ vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
      char *confDir;
      afs_int32 sauth;
 {
-    afs_int32 code, scIndex, i;
-    struct afsconf_cell info;
-    struct afsconf_dir *tdir;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    struct rx_securityClass *sc;
-    static struct rx_connection *serverconns[VLDB_MAXSERVERS];
-    char cellstr[64];
-
     return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
 			   secproc, "vsu_ClientInit", vsu_rxkad_level,
 			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
