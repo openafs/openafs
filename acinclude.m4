@@ -839,7 +839,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
-		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
+		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
 		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
