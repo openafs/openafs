@@ -492,21 +492,19 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
         (cmd == F_SETLK || cmd == F_SETLKW)) {
 #ifdef AFS_LINUX26_ENV
-       struct file_lock flp2;
-       flp2 = *flp;
-       flp2.fl_flags &=~ FL_SLEEP;
-       code = posix_lock_file(fp, &flp2);
+	flp->fl_flags &=~ FL_SLEEP;
+	code = posix_lock_file(fp, flp);
 #else
-       code = posix_lock_file(fp, flp, 0);
+	code = posix_lock_file(fp, flp, 0);
 #endif 
-       if (code && flp->fl_type != F_UNLCK) {
-           struct AFS_FLOCK flock2;
-           flock2 = flock;
-           flock2.l_type = F_UNLCK;
-           AFS_GLOCK();
-           afs_lockctl(vcp, &flock2, F_SETLK, credp);
-           AFS_GUNLOCK();
-       }
+	if (code && flp->fl_type != F_UNLCK) {
+	    struct AFS_FLOCK flock2;
+	    flock2 = flock;
+	    flock2.l_type = F_UNLCK;
+	    AFS_GLOCK();
+	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
+	    AFS_GUNLOCK();
+	}
     }
 #endif
     /* Convert flock back to Linux's file_lock */
@@ -551,18 +549,16 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
 
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
         (cmd == F_SETLK || cmd == F_SETLKW)) {
-       struct file_lock flp2;
-       flp2 = *flp;
-       flp2.fl_flags &=~ FL_SLEEP;
-       code = flock_lock_file_wait(fp, &flp2);
-       if (code && flp->fl_type != F_UNLCK) {
-           struct AFS_FLOCK flock2;
-           flock2 = flock;
-           flock2.l_type = F_UNLCK;
-           AFS_GLOCK();
-           afs_lockctl(vcp, &flock2, F_SETLK, credp);
-           AFS_GUNLOCK();
-       }
+	flp->fl_flags &=~ FL_SLEEP;
+	code = flock_lock_file_wait(fp, flp);
+	if (code && flp->fl_type != F_UNLCK) {
+	    struct AFS_FLOCK flock2;
+	    flock2 = flock;
+	    flock2.l_type = F_UNLCK;
+	    AFS_GLOCK();
+	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
+	    AFS_GUNLOCK();
+	}
     }
     /* Convert flock back to Linux's file_lock */
     flp->fl_type = flock.l_type;
