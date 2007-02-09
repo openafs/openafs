@@ -414,12 +414,11 @@ OldSetToken(aserver, atoken, aclient, flags)
     return 0;
 }
 
-
-ktc_SetToken(aserver, atoken, aclient, flags)
-     struct ktc_principal *aserver;
-     struct ktc_principal *aclient;
-     struct ktc_token *atoken;
-     afs_int32 flags;
+int
+ktc_SetToken(struct ktc_principal *aserver,
+    struct ktc_token *atoken,
+    struct ktc_principal *aclient,
+    afs_int32 flags)
 {
     int ncode, ocode;
 
@@ -689,9 +688,10 @@ ktc_ForgetToken(aserver)
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
  * success.  */
 
-ktc_ListTokens(aprevIndex, aindex, aserver)
-     int aprevIndex, *aindex;
-     struct ktc_principal *aserver;
+int
+ktc_ListTokens(int aprevIndex,
+    int *aindex,
+    struct ktc_principal *aserver)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -841,7 +841,7 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 /* discard all tokens from this user's cache */
 
 static int
-NewForgetAll()
+NewForgetAll(void)
 {
 #ifndef NO_AFS_CLIENT
     TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
@@ -850,7 +850,7 @@ NewForgetAll()
 }
 
 static int
-OldForgetAll()
+OldForgetAll(void)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
@@ -872,7 +872,7 @@ OldForgetAll()
 }
 
 int
-ktc_ForgetAllTokens()
+ktc_ForgetAllTokens(void)
 {
     int ncode, ocode;
 
