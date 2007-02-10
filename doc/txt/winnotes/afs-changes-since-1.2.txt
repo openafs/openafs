@@ -21,6 +21,10 @@ Since 1.5.14
    for a volume are inaccessible.  When servers become accessible
    the background request will be retried.
 
+   In addition, if a background write fails, do not mark the buffers
+   as clean.  Failure to preserve the dirty flag prevents the buffers
+   from being written to the file server in the future.
+
    This fix does not address the possibility that the credentials
    necessary to perform a write request might expire between the
    time the request is queued and when the request can be processed
@@ -47,6 +51,56 @@ Since 1.5.14
  * The default signal handlers for the AFS servers incorrectly
    processed SIGQUIT.  Instead of stopping the server, an
    exception was raised.
+
+ * Fix another volume refcount leak.  This one was triggered by
+   an inability to contact the vlservers in order to update the 
+   file server list.
+
+ * Fix checklist control used by the drive mappings tabs in 
+   afscreds.exe and afs_control.exe.
+
+ * Improve output of "fs memdump" related to buffer management.
+
+ * Fix refcount leak of cm_buf_t objects when prefetching buffers
+   already in the process of being fetched.
+
+ * Improve cache performance by computing the buffer hash table
+   size based upon the number of buffers so that the average 
+   number of entries in a bucket is seven.
+
+ * Improve cache performance of read/write data by locally 
+   updating the dataVersion of all buffers associated with the
+   file on each StoreData or StoreStatus operation provided that
+   the dataVersion was incremented by one and the dataVersion of
+   the buffer matched the original dataVersion of the cached 
+   status information for the file.
+
+ * When the status for a file/directory cannot be obtained 
+   during a InlineBulkStat RPC, the EACCESS error state is 
+   recorded within the stat cache object.  If we later call
+   cm_AccessCheck() we should not attempt a new FetchStatus
+   call, simply return the allAccess rights since we know that
+   the FetchStatus will fail.  When the parent directory is
+   accessed with better rights or when the ACLs change the
+   next InlineBulkStatus will clear the flag.
+
+ * When recycling cm_scache_t objects, make sure that we 
+   clear all of the previous fields.  It is no longer the
+   case that we can assume that the stat cache object is being
+   obtained only after a successful FetchStatus call.  
+   InlineBulkStatus will allocate stat cache objects for which
+   the no status information is available.
+
+ * When a file is being opened with the OPEN_ALWAYS disposition,
+   do not require write permissions when the file already exists
+   unless of course the file is being opened requesting write 
+   access.
+
+ * When a file has been opened for read-only access, if the 
+   application requests an exclusive lock, obtain a read-lock
+   instead of a write-lock.  The purpose of the exclusive lock
+   in this situation is to prevent changes to the file and the
+   full file read lock will provide this guarrantee.
 
 
 Since 1.5.13
