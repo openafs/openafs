@@ -207,7 +207,7 @@ void cm_Gen8Dot3NameInt(const char * longname, cm_dirFid_t * pfid,
                 break;
         if (tc)
             validExtension = 1;
-    }       
+    }
 
     /* Copy name characters */
     for (i = 0, name = longname;
@@ -351,8 +351,11 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (desiredAccess & AFS_ACCESS_READ)
         rights |= (scp->fileType == CM_SCACHETYPE_DIRECTORY ? PRSFS_LOOKUP : PRSFS_READ);
 
-    if ((desiredAccess & AFS_ACCESS_WRITE)
-         || createDisp == 4)
+    /* We used to require PRSFS_WRITE if createDisp was 4
+       (OPEN_ALWAYS) even if AFS_ACCESS_WRITE was not requested.
+       However, we don't need to do that since the existence of the
+       scp implies that we don't need to create it. */
+    if (desiredAccess & AFS_ACCESS_WRITE)
         rights |= PRSFS_WRITE;
 
     lock_ObtainMutex(&scp->mx);

@@ -5722,6 +5722,14 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     NumberOfUnlocks = smb_GetSMBParm(inp, 6);
     NumberOfLocks = smb_GetSMBParm(inp, 7);
 
+    if (!(fidp->flags & SMB_FID_OPENWRITE) &&
+        !(LockType & LOCKING_ANDX_SHARED_LOCK)) {
+        /* somebody wants exclusive locks on a file that they only
+           opened for reading.  We downgrade this to a shared lock. */
+        osi_Log0(smb_logp, "smb_ReceiveV3Locking reinterpreting exclusive lock as shared for read-only fid");
+        LockType |= LOCKING_ANDX_SHARED_LOCK;
+    }
+
     if ((LockType & LOCKING_ANDX_CANCEL_LOCK) ||
         (LockType & LOCKING_ANDX_CHANGE_LOCKTYPE)) {
 
@@ -6368,7 +6376,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     BOOL foundscp;
     cm_req_t req;
     int created = 0;
-    cm_lock_data_t *ldp = NULL;									       
+    cm_lock_data_t *ldp = NULL;
 
     cm_InitReq(&req);
 
@@ -7024,7 +7032,12 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.HighPart = 0;
         LLength.LowPart = SMB_FID_QLOCK_LENGTH;
 
-        if (fidflags & SMB_FID_SHARE_READ) {
+        /* If we are not opening the file for writing, then we don't
+           try to get an exclusive lock.  Noone else should be able to
+           get an exclusive lock on the file anyway, although someone
+           else can get a shared lock. */
+        if ((fidflags & SMB_FID_SHARE_READ) ||
+            !(fidflags & SMB_FID_OPENWRITE)) {
             sLockType = LOCKING_ANDX_SHARED_LOCK;
         } else {
             sLockType = 0;
@@ -7667,7 +7680,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         LLength.HighPart = 0;
         LLength.LowPart = SMB_FID_QLOCK_LENGTH;
 
-        if (fidflags & SMB_FID_SHARE_READ) {
+        /* Similar to what we do in handling NTCreateX.  We get a
+           shared lock if we are only opening the file for reading. */
+        if ((fidflags & SMB_FID_SHARE_READ) ||
+            !(fidflags & SMB_FID_OPENWRITE)) {
             sLockType = LOCKING_ANDX_SHARED_LOCK;
         } else {
             sLockType = 0;
