@@ -157,7 +157,7 @@ extern int pioctl(char *, afs_int32, struct ViceIoctl *, afs_int32);
  * Other prototypes
  */
 
-extern char *afs_realm_of_cell(krb5_context, struct afsconf_cell *);
+extern char *afs_realm_of_cell(krb5_context, struct afsconf_cell *, int);
 static int isdir(char *, unsigned char *);
 static krb5_error_code get_credv5(krb5_context context, char *, char *,
 				  char *, krb5_creds **);
@@ -484,20 +484,24 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
 	}
 	else {
-	    char *realm = afs_realm_of_cell(context, &ak_cellconfig);
+	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, FALSE);
 
-	    if (!realm) {
+	    if (!afs_realm) {
 		fprintf(stderr, 
 			"%s: Couldn't figure out realm for cell %s.\n",
 			progname, cell_to_use);
 		exit(AKLOG_MISC);
 	    }
 
-	    strcpy(realm_of_cell, realm);
+	    strcpy(realm_of_cell, afs_realm);
 
 	    if (dflag) {
-		printf("We've deduced that we need to authenticate to"
-		       " realm %s.\n", realm_of_cell);
+		if (realm_of_cell[0])
+		    printf("We've deduced that we need to authenticate to"
+			   " realm %s.\n", realm_of_cell);
+		else
+		    printf("We've deduced that we need to authenticate "
+			   "using referrals.\n");
 	    }
 	}
 
@@ -551,18 +555,50 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 */
 
 	if (dflag) {
-	    printf("Getting tickets: %s/%s@%s\n", name,
+	    printf("Getting tickets: %s%s%s@%s\n", name,
+		   primary_instance[0] ? "/" : "", 
 		   primary_instance, realm_of_cell);
 	}
 
 	status = get_credv5(context, name, primary_instance, realm_of_cell,
 			    &v5cred);
 
+	if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) &&
+	    !realm_of_cell[0]) {
+	    char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, TRUE);
+
+	    if (!afs_realm) {
+		fprintf(stderr, 
+			"%s: Couldn't figure out realm for cell %s.\n",
+			progname, cell_to_use);
+		exit(AKLOG_MISC);
+	    }
+
+	    strcpy(realm_of_cell, afs_realm);
+
+	    if (strcasecmp(cell_to_use, realm_of_cell) == 0) {
+		try_secondary = 1;
+		secondary_instance[0] = '\0';
+	    }
+
+	    if (dflag) {
+		printf("We've deduced that we need to authenticate to"
+			" realm %s.\n", realm_of_cell);
+		printf("Getting tickets: %s%s%s@%s\n", name,
+			primary_instance[0] ? "/" : "", 
+			primary_instance, realm_of_cell);
+	    }
+
+	    status = get_credv5(context, name, primary_instance, realm_of_cell,
+				 &v5cred);
+
+	}
 	if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || status == KRB5KRB_ERR_GENERIC) {
 	    if (try_secondary) {
 		if (dflag) {
 		    printf("Principal not found, trying alternate "
-			   "service name: %s/%s@%s\n", name,
+			   "service name: %s%s%s@%s\n", name,
+			    secondary_instance[0] ? "/" : "",
 			    secondary_instance, realm_of_cell);
 		}
 		status = get_credv5(context, name, secondary_instance,
@@ -767,8 +803,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 			    error_message(status), username, cell_to_use,
 			    status);
 		} else {
-		    printf("created cross-cell entry for %s at %s\n",
-			   username, cell_to_use);
+		    printf("created cross-cell entry for %s (Id %d) at %s\n",
+			   username, id, cell_to_use);
 		    sprintf(username, "AFS ID %d", (int) id);
 		}
 	    }
