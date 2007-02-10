@@ -19,7 +19,7 @@ w\:* {behavior:url(#default#VML);}
 .shape {behavior:url(#default#VML);}
 </style>
 <![endif]-->
-<title>OpenAFS for Windows 1.5.14 Release Notes</title>
+<title>OpenAFS for Windows 1.5.15 Release Notes</title>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
  name="PostalCode"/>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
@@ -583,7 +583,7 @@ strict'>
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.5.14<br>
+<p class=MsoTitle>OpenAFS for Windows 1.5.15<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
@@ -1547,8 +1547,9 @@ use.</p>
 lock semantics on top of AFS lock semantics it is important to understand how
 AFS file locks work.&nbsp; In Windows there are no special privileges
 associated with obtaining file locks.&nbsp; If you can read or execute a file,
-then you can obtain a read lock.&nbsp; If you can write or create a file, then
-you can obtain a write lock.&nbsp; In AFS if you can write to a file, then you
+then you can obtain shared and exclusive locks.&nbsp; In general, a Windows shared
+lock equates to an AFS read lock and a Windows exclusive lock equates to an AFS 
+write lock.&nbsp; In AFS if you can write to a file, then you
 can obtain a write lock.&nbsp; However, in AFS if you can read a file it does
 not mean that you can obtain a read lock on it.&nbsp;&nbsp; The ability to
 obtain read locks is granted only if you have the lock (or ‘k’) privilege.&nbsp;
@@ -1561,28 +1562,41 @@ out of read-only volumes the file server will deny all requests for read and
 write locks because the contents of the volume cannot be changed by the client.</p>
 
 <p class=MsoNormal>Since Microsoft Windows applications almost always attempt
-to obtain a temporary read lock when accessing files the OpenAFS Client’s
+to obtain a temporary exclusive lock when accessing files the OpenAFS Client’s
 CIFS-AFS gateway implements the following semantics in order to reduce the
 inconvenience on end users.&nbsp; </p>
 
 <ul style='margin-top:0pt' type=disc>
  <li class=MsoNormal style='mso-list:l0 level1 lfo3;tab-stops:list 36.0pt'>If
      the file is located on a read-only volume and the application requests a
-     read lock, the CIFS-AFS server will grant the lock request without asking
+     shared lock, the CIFS-AFS server will grant the lock request without asking
      the AFS file server.</li>
  <li class=MsoNormal style='mso-list:l0 level1 lfo3;tab-stops:list 36.0pt'>If
-     the file is located on a read-only volume and the application requests a write
-     lock, the CIFS-AFS server will refuse the lock request and return a read
-     only error.</li>
+     the file is located on a read-only volume and the application opens the 
+     file with write access and requests an exclusive lock, the CIFS-AFS server 
+     will refuse the lock request and return a read only error.</li>
  <li class=MsoNormal style='mso-list:l0 level1 lfo3;tab-stops:list 36.0pt'>If
-     the file is located on a read-write volume and the application requests a
-     write lock, the CIFS-AFS server will request a lock from the AFS file
+     the file is located on a read-only volume and the application opens the 
+     file with only read access and requests an exclusive lock, the CIFS-AFS server 
+     will fulfill the lock request with a read lock.</li>
+ <li class=MsoNormal style='mso-list:l0 level1 lfo3;tab-stops:list 36.0pt'>If
+     the file is located on a read-write volume and the application requests an
+     exclusive lock, the CIFS-AFS server will request a write lock from the AFS file
      server.&nbsp; If granted by the file server, then the CIFS-AFS server will
-     grant the lock request.&nbsp; Otherwise, the request will be denied either
-     with an access denied or an in use error.</li>
+     grant the lock request.&nbsp; 
+
+     If the request is denied due to an access denied error and the user has the 
+     lookup, read and lock privileges and the file was opened for read only access, 
+     then the CIFS-AFS server will request a read lock from the file server.&nbsp;
+
+     If the request is denied due to an access denied error and the user has the 
+     lookup and read privileges but not the lock privilege, then the CIFS-AFS 
+     server will grant the request even though the AFS file server said ‘no’.&nbsp; 
+     If the user does not have at least those permissions, the CIFS-AFS server 
+     will deny the request.</li>
  <li class=MsoNormal style='mso-list:l0 level1 lfo3;tab-stops:list 36.0pt'>If
      the file is located on a read-write volume and the application requests a
-     read lock, the CIFS-AFS server will request a lock from the AFS file
+     shared lock, the CIFS-AFS server will request a read lock from the AFS file
      server.&nbsp; If granted by the file server, then the CIFS-AFS server
      grants the lock request.&nbsp; If the request is denied due to an access
      denied error and the user has the lookup and read privileges but not the
@@ -2123,6 +2137,12 @@ style='mso-spacerun:yes'>  </span>Future updates to OpenAFS will incorporate
 the necessary privilege separation, until that time some functions such as the
 Start and Stop Service features of the AFS System Tray tool and the AFS Control
 Panel will not work unless they are “Run as Administrator”.</p>
+
+<p class=MsoBodyText>
+The help files provided with OpenAFS are in .HLP format.  <a href="http://support.microsoft.com/kb/917607">
+Windows Vista does not include a help engine for this format.</a>  <a href="http://www.secure-endpoints.com>
+Secure Endpoints Inc.</a> is funding the development of compatible HtmlHelp (.CHM) files.
+</p>
 
 <h1><a name="_Toc154229405"></a><a name="_Toc152605084"></a><a
 name="_Toc115416145"></a><a name="_Toc139993133"></a><a name="_Toc126872210"></a><a
