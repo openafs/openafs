@@ -555,9 +555,9 @@ static probectl main_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -653,9 +653,9 @@ static probectl ia32_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -792,9 +792,9 @@ static probectl sct32_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -887,9 +887,9 @@ static probectl emu_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
