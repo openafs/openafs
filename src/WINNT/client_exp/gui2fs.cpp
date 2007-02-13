@@ -1307,7 +1307,9 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
     register char *cellName;
     char localCellName[128];
     struct afsconf_cell info;
+#if 0
     struct vldbentry vldbEntry;
+#endif
     struct ViceIoctl blob;
     char * parent;
     char path[1024] = "";
