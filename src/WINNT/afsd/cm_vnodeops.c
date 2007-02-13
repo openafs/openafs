@@ -1655,14 +1655,6 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                  * is a symlink, we have more to do.
                  */
                 *cp++ = 0;	/* add null termination */
-		if (!strcmp(".",component)) {
-                    code = 0;
-                    if (dirScp) {
-                        cm_ReleaseSCache(dirScp);
-                        dirScp = NULL;
-                    }
-                    break;
-		}
 		extraFlag = 0;
 		if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
 		    extraFlag = CM_FLAG_NOMOUNTCHASE;
