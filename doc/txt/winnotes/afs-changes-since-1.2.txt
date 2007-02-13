@@ -44,6 +44,7 @@ Since 1.5.14
  * The Network Identity Manager AFS plug-in has had its string
    tables updated for consistency with the language used by NIM.
    All credentials are referred to as credentials instead of tokens.
+   Drop-down combo boxes now in fact drop down.
 
  * The AFS Salvager was not properly being built on Windows.
    This is relevant only if the AFS servers are in use.
