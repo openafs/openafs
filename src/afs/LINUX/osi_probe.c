@@ -247,9 +247,6 @@ extern asmlinkage long sys_exit (int) __attribute__((weak));
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
 #endif
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
-#if defined(EXPORTED_TASKLIST_LOCK) 
-extern rwlock_t tasklist_lock __attribute__((weak));
-#endif
 
 
 /* Structures used to control probing.  We put all the details of which
@@ -517,7 +514,7 @@ static probectl main_probe = {
     (unsigned long)&sys_close,
 #elif defined(AFS_AMD64_LINUX20_ENV)
     /* On this platform, it's in a different section! */
-    (unsigned long)&tasklist_lock,
+    (unsigned long)&generic_ro_fops,
 #else
     (unsigned long)&init_mm,
 #endif
@@ -539,7 +536,7 @@ static probectl main_probe = {
     0x1fffff,
     0x30000,
 #elif defined(AFS_AMD64_LINUX20_ENV)
-    (unsigned long)(&tasklist_lock) - 0x30000,
+    (unsigned long)(&generic_ro_fops) - 0x30000,
     0,
     0x6000,
 #elif defined(AFS_PPC64_LINUX26_ENV)
