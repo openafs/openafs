@@ -70,29 +70,7 @@ $(LIBFILE): $(LIBOBJS)
 # Not yet
 #rxdumptrace.exe: rx_trace.c
 
-# build rxdebug.
-RXDEBUG = $(DESTDIR)\etc\rxdebug.exe
-RXDOBJS = $(OUT)\rxdebug.obj \
-	  $(OUT)\rxdebug.res
-
-LIBDIR  = $(DESTDIR)\lib
-RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
-	  $(LIBDIR)\afsrx.lib \
-	  $(LIBDIR)\afslwp.lib \
-	  $(LIBDIR)\afs\afsutil.lib \
-          $(LIBDIR)\afs\afsreg.lib
-
-$(OUT)\rxdebug.res: rxdebug.rc $(VERSFILE).h
-	$(RC) /Fo$*.RES $(*F).rc 
-
-$(OUT)\rxdebug.obj: rxdebug.c
-
-$(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
-	$(EXECONLINK) iphlpapi.lib
-        $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP)
-
-install: $(LIBFILE) $(INCFILES) $(RXDEBUG)
+install: $(LIBFILE) $(INCFILES)
 
 install9x: $(LIBFILE) $(INCFILES)
 

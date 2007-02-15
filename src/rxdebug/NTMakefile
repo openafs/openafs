@@ -1,0 +1,45 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=rxdebug
+!include ..\config\NTMakefile.$(SYS_NAME)
+
+!include ..\config\NTMakefile.version
+
+# Additional debugging flag for RX.
+AFSDEV_AUXCDEFINES = -DRXDEBUG
+
+# build rxdebug.
+RXDEBUG = $(DESTDIR)\etc\rxdebug.exe
+RXDOBJS = $(OUT)\rxdebug.obj \
+	  $(OUT)\AFS_component_version_number.obj \
+	  $(OUT)\rxdebug.res
+
+LIBDIR  = $(DESTDIR)\lib
+RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
+	  $(LIBDIR)\afsrx.lib \
+	  $(LIBDIR)\afslwp.lib \
+	  $(LIBDIR)\afs\afsutil.lib \
+          $(LIBDIR)\afs\afsreg.lib
+
+$(OUT)\rxdebug.res: rxdebug.rc $(VERSFILE).h
+	$(RC) /Fo$*.RES $(*F).rc 
+
+$(OUT)\rxdebug.obj: rxdebug.c
+
+$(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
+	$(EXECONLINK) iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+
+install: $(RXDEBUG)
+
+clean::
+	$(DEL) $(RXDOBJS) $(RXDEBUG)
+
+mkdir:
+	
