@@ -6335,17 +6335,19 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      void *outputData, size_t outputLength)
 {
     static afs_int32 counter = 100;
-    time_t endTime;
+    time_t waitTime, waitCount, startTime, endTime;
     struct rx_header theader;
     char tbuffer[1500];
     register afs_int32 code;
-    struct timeval tv;
+    struct timeval tv_now, tv_wake, tv_delta;
     struct sockaddr_in taddr, faddr;
     int faddrLen;
     fd_set imask;
     register char *tp;
 
-    endTime = time(0) + 20;	/* try for 20 seconds */
+    startTime = time(0);
+    waitTime = 1;
+    waitCount = 5;
     LOCK_RX_DEBUG;
     counter++;
     UNLOCK_RX_DEBUG;
@@ -6374,29 +6376,54 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 		   (struct sockaddr *)&taddr, sizeof(struct sockaddr_in));
 
 	/* see if there's a packet available */
-	FD_ZERO(&imask);
-	FD_SET(socket, &imask);
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	code = select((int)(socket + 1), &imask, 0, 0, &tv);
-	if (code == 1 && FD_ISSET(socket, &imask)) {
-	    /* now receive a packet */
-	    faddrLen = sizeof(struct sockaddr_in);
-	    code =
-		recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
-			 (struct sockaddr *)&faddr, &faddrLen);
-
-	    if (code > 0) {
-		memcpy(&theader, tbuffer, sizeof(struct rx_header));
-		if (counter == ntohl(theader.callNumber))
-		    break;
+	gettimeofday(&tv_wake,0);
+	tv_wake.tv_sec += waitTime;
+	for (;;) {
+	    FD_ZERO(&imask);
+	    FD_SET(socket, &imask);
+	    tv_delta.tv_sec = tv_wake.tv_sec;
+	    tv_delta.tv_usec = tv_wake.tv_usec;
+	    gettimeofday(&tv_now, 0);
+	    
+	    if (tv_delta.tv_usec < tv_now.tv_usec) {
+		/* borrow */
+		tv_delta.tv_usec += 1000000;
+		tv_delta.tv_sec--;
 	    }
+	    tv_delta.tv_usec -= tv_now.tv_usec;
+	    
+	    if (tv_delta.tv_sec < tv_now.tv_sec) {
+		/* time expired */
+		break;
+	    }
+	    tv_delta.tv_sec -= tv_now.tv_sec;
+	    
+	    code = select(socket + 1, &imask, 0, 0, &tv_delta);
+	    if (code == 1 && FD_ISSET(socket, &imask)) {
+		/* now receive a packet */
+		faddrLen = sizeof(struct sockaddr_in);
+		code =
+		    recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
+			     (struct sockaddr *)&faddr, &faddrLen);
+		
+		if (code > 0) {
+		    memcpy(&theader, tbuffer, sizeof(struct rx_header));
+		    if (counter == ntohl(theader.callNumber))
+			goto success;
+		    continue;
+		}
+	    }
+	    break;
 	}
 
 	/* see if we've timed out */
-	if (endTime < time(0))
-	    return -1;
+	if (!--waitCount) {
+            return -1;
+	}
+	waitTime <<= 1;
     }
+    
+ success:
     code -= sizeof(struct rx_header);
     if (code > outputLength)
 	code = outputLength;
