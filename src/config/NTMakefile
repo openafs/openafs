@@ -173,6 +173,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\rx\test))
 		$(MKDIR) $(OJT)\rx\test
 !	ENDIF
+!	IF (!EXIST($(OJT)\rxdebug))
+		$(MKDIR) $(OJT)\rxdebug
+!	ENDIF
 !	IF (!EXIST($(OJT)\rxgen))
 		$(MKDIR) $(OJT)\rxgen
 !	ENDIF
