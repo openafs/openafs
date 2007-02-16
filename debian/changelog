@@ -1,3 +1,9 @@
+openafs (1.4.2-6) unstable; urgency=low
+
+  * Apply upstream fix for segfaults in pts rename.  (Closes: #409184)
+
+ --
+
 openafs (1.4.2-5) unstable; urgency=low
 
   * Translation updates:
