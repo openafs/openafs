@@ -59,9 +59,12 @@ extern "C" {
 static const char *szNetbiosNameValue = "NetbiosName";
 static const char *szIsGatewayValue = "IsGateway";
 static const char *szLanAdapterValue = "LanAdapter";
+#ifdef USE_FINDLANABYNAME
 static const char *szNoFindLanaByName = "NoFindLanaByName";
+#endif
 static const char *szForceLanaLoopback = "ForceLanaLoopback";
 
+#ifdef USE_FINDLANABYNAME
 // Use the IShellFolder API to get the connection name for the given Guid.
 static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSize)
 {
@@ -362,6 +365,7 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
     free(bindpaths);
     return lanainfo;
 }
+#endif
 
 extern "C" lana_number_t lana_FindLoopback(void)
 {
@@ -656,9 +660,9 @@ extern "C" void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* nam
 
 extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
 {
-	HKEY hkCfg;
+    HKEY hkCfg;
     TCHAR name[MAX_NB_NAME_LENGTH];
-	DWORD dummyLen;
+    DWORD dummyLen;
 
     memset(name, 0, sizeof(name));
     if (GetVersion() >= 0x80000000) // not WindowsNT
@@ -669,12 +673,12 @@ extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
             return;
         }
 
-		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
-			dummyLen = sizeof(name);
-			if(RegQueryValueEx(hkCfg,TEXT("Gateway"),NULL,NULL,(LPBYTE) name,&dummyLen) == ERROR_SUCCESS)
-				name[0] = _T('\0');
-			RegCloseKey(hkCfg);
-		}
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
+	    dummyLen = sizeof(name);
+	    if(RegQueryValueEx(hkCfg,TEXT("Gateway"),NULL,NULL,(LPBYTE) name,&dummyLen) == ERROR_SUCCESS)
+		name[0] = _T('\0');
+	    RegCloseKey(hkCfg);
+	}
 
         if (_tcslen(name) == 0)
         {
@@ -682,13 +686,13 @@ extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
             return;
         }
 
-		_tcscpy(pszName, name);
+	_tcscpy(pszName, name);
         _tcscat(pszName, TEXT("-afs"));
         return;
     }
 
     lana_GetUncServerName(name,type);
-	_tcslwr(name);
+    _tcslwr(name);
     _tcscpy(pszName, name);
     return;
 }
