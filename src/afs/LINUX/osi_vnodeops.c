@@ -998,6 +998,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
 		unlock_kernel();
 #endif
+		crfree(credp);
 		return alias;
 	    }
 	}
