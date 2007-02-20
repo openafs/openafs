@@ -59,9 +59,12 @@ extern "C" {
 static const char *szNetbiosNameValue = "NetbiosName";
 static const char *szIsGatewayValue = "IsGateway";
 static const char *szLanAdapterValue = "LanAdapter";
+#ifdef USE_FINDLANABYNAME
 static const char *szNoFindLanaByName = "NoFindLanaByName";
+#endif
 static const char *szForceLanaLoopback = "ForceLanaLoopback";
 
+#ifdef USE_FINDLANABYNAME
 // Use the IShellFolder API to get the connection name for the given Guid.
 static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSize)
 {
@@ -362,6 +365,7 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
     free(bindpaths);
     return lanainfo;
 }
+#endif
 
 extern "C" lana_number_t lana_FindLoopback(void)
 {
@@ -522,136 +526,153 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
 //      LANA_NETBIOS_NAME_FULL : Return full netbios name
 extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags) {
     HKEY hkConfig;
-	DWORD dummyLen;
-	LONG rv;
-	int regLana;
-	int regGateway, regNoFindLanaByName;
-	TCHAR regNbName[MAX_NB_NAME_LENGTH];
-	TCHAR nbName[MAX_NB_NAME_LENGTH];
-	TCHAR hostname[MAX_COMPUTERNAME_LENGTH+1];
+    DWORD dummyLen;
+    LONG rv;
+    int regLana;
+    int regGateway;
+#ifdef USE_FINDLANABYNAME
+    int regNoFindLanaByName;
+#endif
+    TCHAR regNbName[MAX_NB_NAME_LENGTH] = "AFS";
+    TCHAR nbName[MAX_NB_NAME_LENGTH];
+    TCHAR hostname[MAX_COMPUTERNAME_LENGTH+1];
 
-	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
-	if(rv == ERROR_SUCCESS) {
-		if(!(flags & LANA_NETBIOS_NAME_IN) || !pLana) {
-			dummyLen = sizeof(regLana);
-			rv = RegQueryValueEx(hkConfig, szLanAdapterValue, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
-			if(rv != ERROR_SUCCESS) regLana = -1;
-		} else
-			regLana = *pLana;
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
+    if(rv == ERROR_SUCCESS) {
+	if(!(flags & LANA_NETBIOS_NAME_IN) || !pLana) {
+	    dummyLen = sizeof(regLana);
+	    rv = RegQueryValueEx(hkConfig, szLanAdapterValue, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
+	    if(rv != ERROR_SUCCESS) 
+		regLana = -1;
+	} else
+	    regLana = *pLana;
 
-		if(!(flags & LANA_NETBIOS_NAME_IN) || !pIsGateway) {
-			dummyLen = sizeof(regGateway);
-			rv = RegQueryValueEx(hkConfig, szIsGatewayValue, NULL, NULL, (LPBYTE) &regGateway, &dummyLen);
-			if(rv != ERROR_SUCCESS) regGateway = 0;
-		} else
-			regGateway = *pIsGateway;
+	if(!(flags & LANA_NETBIOS_NAME_IN) || !pIsGateway) {
+	    dummyLen = sizeof(regGateway);
+	    rv = RegQueryValueEx(hkConfig, szIsGatewayValue, NULL, NULL, (LPBYTE) &regGateway, &dummyLen);
+	    if(rv != ERROR_SUCCESS) 
+		regGateway = 0;
+	} else
+	    regGateway = *pIsGateway;
 
-		dummyLen = sizeof(regNoFindLanaByName);
-		rv = RegQueryValueEx(hkConfig, szNoFindLanaByName, NULL, NULL, (LPBYTE) &regNoFindLanaByName, &dummyLen);
-		if(rv != ERROR_SUCCESS) regNoFindLanaByName = 0;
+#ifdef USE_FINDLANABYNAME
+	dummyLen = sizeof(regNoFindLanaByName);
+	rv = RegQueryValueEx(hkConfig, szNoFindLanaByName, NULL, NULL, (LPBYTE) &regNoFindLanaByName, &dummyLen);
+	if(rv != ERROR_SUCCESS) 
+	    regNoFindLanaByName = 0;
+#endif
 
-		// Do not care if the call fails for insufficient buffer size.  We are not interested
-		// in netbios names over 15 chars.
-		dummyLen = sizeof(regNbName);
-		rv = RegQueryValueEx(hkConfig, szNetbiosNameValue, NULL, NULL, (LPBYTE) &regNbName, &dummyLen);
-		if(rv != ERROR_SUCCESS) regNbName[0] = 0;
-		else regNbName[15] = 0;
+	// Do not care if the call fails for insufficient buffer size.  We are not interested
+	// in netbios names over 15 chars.
+	dummyLen = sizeof(regNbName);
+	rv = RegQueryValueEx(hkConfig, szNetbiosNameValue, NULL, NULL, (LPBYTE) &regNbName, &dummyLen);
+	if(rv != ERROR_SUCCESS) 
+	    strcpy(regNbName, "AFS");
+	else 
+	    regNbName[15] = 0;
 
-		RegCloseKey(hkConfig);
+	RegCloseKey(hkConfig);
+    } else {
+	if(flags & LANA_NETBIOS_NAME_IN) {
+	    regLana = (pLana)? *pLana: -1;
+	    regGateway = (pIsGateway)? *pIsGateway: 0;
 	} else {
-		if(flags & LANA_NETBIOS_NAME_IN) {
-			regLana = (pLana)? *pLana: -1;
-			regGateway = (pIsGateway)? *pIsGateway: 0;
-		} else {
-			regLana = -1;
-			regGateway = 0;
-		}
-        regNoFindLanaByName = 0;
-		regNbName[0] = 0;
+	    regLana = -1;
+	    regGateway = 0;
 	}
+#ifdef USE_FINDLANABYNAME 
+        regNoFindLanaByName = 0;
+#endif
+	strcpy(regNbName, "AFS");
+    }
 
     if(regLana < 0 || regLana > MAX_LANA) 
         regLana = -1;
 
-	if(regLana == -1) {
-		LANAINFO *lanaInfo = NULL;
+    if(regLana == -1) {
+	LANAINFO *lanaInfo = NULL;
         int nLana = LANA_INVALID;
 
+#ifdef USE_FINDLANABYNAME
         if (!regNoFindLanaByName)
             lanaInfo = lana_FindLanaByName("AFS");
-		if(lanaInfo != NULL) {
+#endif
+	if(lanaInfo != NULL) {
             nLana = lanaInfo[0].lana_number;
-			free(lanaInfo);
-		} else
-			nLana = LANA_INVALID;
+	    free(lanaInfo);
+	} else
+	    nLana = LANA_INVALID;
 
-		if(nLana == LANA_INVALID && !regGateway) {
-			nLana = lana_FindLoopback();
-		}
-		if(nLana != LANA_INVALID) 
-            regLana = nLana;
+	if(nLana == LANA_INVALID && !regGateway) {
+	    nLana = lana_FindLoopback();
 	}
+	if(nLana != LANA_INVALID) 
+            regLana = nLana;
+	}	
 
-	if(regNbName[0] &&
-       (regLana >=0 && lana_IsLoopback((lana_number_t) regLana,FALSE))) {
+    if(regNbName[0] &&
+	(regLana >=0 && lana_IsLoopback((lana_number_t) regLana,FALSE))) 	
+    {
         strncpy(nbName,regNbName,15);
         nbName[16] = 0;
         strupr(nbName);
+    } else {
+	char * dot;
+
+	if(flags & LANA_NETBIOS_NAME_SUFFIX) {
+	    strcpy(nbName,"-AFS");
 	} else {
-		char * dot;
-
-		if(flags & LANA_NETBIOS_NAME_SUFFIX) {
-			strcpy(nbName,"-AFS");
-		} else {
-			dummyLen = sizeof(hostname);
-			// assume we are not a cluster.
-			rv = GetComputerName(hostname, &dummyLen);
-			if(!SUCCEEDED(rv)) { // should not happen, but...
-				return rv;
-			}
-			strncpy(nbName, hostname, 11);
-			nbName[11] = 0;
-			if(dot = strchr(nbName,'.'))
-				*dot = 0;
-			strcat(nbName,"-AFS");
-		}
+	    dummyLen = sizeof(hostname);
+	    // assume we are not a cluster.
+	    rv = GetComputerName(hostname, &dummyLen);
+	    if(!SUCCEEDED(rv)) { // should not happen, but...
+		return rv;
+	    }
+	    strncpy(nbName, hostname, 11);
+	    nbName[11] = 0;
+	    if(dot = strchr(nbName,'.'))
+		*dot = 0;
+	    strcat(nbName,"-AFS");
 	}
+    }
 
-	if(pLana) *pLana = regLana;
-	if(pIsGateway) *pIsGateway = regGateway;
+    if(pLana) 
+	*pLana = regLana;
+    if(pIsGateway) 
+	*pIsGateway = regGateway;
 
-	strcpy(buffer, nbName);
+    strcpy(buffer, nbName);
 
-	return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 extern "C" void lana_GetUncServerNameDynamic(int lanaNumber, BOOL isGateway, TCHAR *name, int type) {
-	char szName[MAX_NB_NAME_LENGTH];
-	lana_number_t lana = (lana_number_t) lanaNumber;
-	int gateway = (int) isGateway;
+    char szName[MAX_NB_NAME_LENGTH];
+    lana_number_t lana = (lana_number_t) lanaNumber;
+    int gateway = (int) isGateway;
 
-	if(SUCCEEDED(lana_GetUncServerNameEx(szName, &lana, &gateway, LANA_NETBIOS_NAME_IN | type))) {
+    if(SUCCEEDED(lana_GetUncServerNameEx(szName, &lana, &gateway, LANA_NETBIOS_NAME_IN | type))) {
 #ifdef _UNICODE
-		mbswcs(name,szName,MAX_NB_NAME_LENGTH);
+	mbswcs(name,szName,MAX_NB_NAME_LENGTH);
 #else
-		strncpy(name,szName,MAX_NB_NAME_LENGTH);
+	strncpy(name,szName,MAX_NB_NAME_LENGTH);
 #endif
-	} else
-		*name = _T('\0');
+    } else
+	*name = _T('\0');
 }
 
 extern "C" void lana_GetUncServerName(TCHAR *name, int type) {
-	char szName[MAX_NB_NAME_LENGTH];
+    char szName[MAX_NB_NAME_LENGTH];
 
-	if(SUCCEEDED(lana_GetUncServerNameEx(szName,NULL,NULL,type))) {
+    if(SUCCEEDED(lana_GetUncServerNameEx(szName,NULL,NULL,type))) {
 #ifdef _UNICODE
-		mbswcs(name,szName,MAX_NB_NAME_LENGTH);
-#else
-		strncpy(name,szName,MAX_NB_NAME_LENGTH);
+	mbswcs(name,szName,MAX_NB_NAME_LENGTH);
+#else	
+	strncpy(name,szName,MAX_NB_NAME_LENGTH);
 #endif
-	} else {
-        *name = _T('\0');
-	}
+    } else {
+	*name = _T('\0');
+    }
 }
 
 extern "C" void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* name)
@@ -663,9 +684,9 @@ extern "C" void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* nam
 
 extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
 {
-	HKEY hkCfg;
+    HKEY hkCfg;
     TCHAR name[MAX_NB_NAME_LENGTH];
-	DWORD dummyLen;
+    DWORD dummyLen;
 
     memset(name, 0, sizeof(name));
     if (GetVersion() >= 0x80000000) // not WindowsNT
@@ -676,12 +697,12 @@ extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
             return;
         }
 
-		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
-			dummyLen = sizeof(name);
-			if(RegQueryValueEx(hkCfg,TEXT("Gateway"),NULL,NULL,(LPBYTE) name,&dummyLen) == ERROR_SUCCESS)
-				name[0] = _T('\0');
-			RegCloseKey(hkCfg);
-		}
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
+	    dummyLen = sizeof(name);
+	    if(RegQueryValueEx(hkCfg,TEXT("Gateway"),NULL,NULL,(LPBYTE) name,&dummyLen) == ERROR_SUCCESS)
+		name[0] = _T('\0');
+	    RegCloseKey(hkCfg);
+	}
 
         if (_tcslen(name) == 0)
         {
@@ -689,13 +710,13 @@ extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
             return;
         }
 
-		_tcscpy(pszName, name);
+	_tcscpy(pszName, name);
         _tcscat(pszName, TEXT("-afs"));
         return;
     }
 
     lana_GetUncServerName(name,type);
-	_tcslwr(name);
+    _tcslwr(name);
     _tcscpy(pszName, name);
     return;
 }
