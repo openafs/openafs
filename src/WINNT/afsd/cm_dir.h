@@ -10,8 +10,13 @@
 #ifndef __CM_DIR_ENV__
 #define __CM_DIR_ENV__ 1
 
+/* These data structures are derived from src/dir/dir.h and should not 
+ * be changed as they describe AFS3 wire protocol.
+ *
+ */
+
 #define CM_DIR_PAGESIZE		2048		/* bytes per page */
-#define CM_DIR_NHASHENT		256		/* entries in the hash tbl == NHSIZE */
+#define CM_DIR_NHASHENT		128		/* entries in the dir hash tbl */
 #define CM_DIR_MAXPAGES		128		/* max pages in a dir */
 #define CM_DIR_BIGMAXPAGES	1023		/* new big max pages */
 #define CM_DIR_EPP		64		/* dir entries per page */
@@ -35,10 +40,10 @@ typedef struct cm_dirFid {
 typedef struct cm_pageHeader {
 	/* A page header entry. */
 	unsigned short pgcount;	/* number of pages, or 0 if old-style */
-	unsigned short tag;		/* 1234 in network byte order */
+	unsigned short tag;		/* '1234' in network byte order */
 	char freeCount;	/* unused, info in dirHeader structure */
 	char freeBitmap[CM_DIR_EPP/8];
-	char padding[32-(5+CM_DIR_EPP/8)];	/* pad to one 32-byte entry */
+	char padding[CM_DIR_CHUNKSIZE-(5+CM_DIR_EPP/8)];/* pad to one 32-byte entry */
 } cm_pageHeader_t;
 
 /* a total of 13 32-byte entries, 1 for the header that in all pages, and
@@ -56,11 +61,11 @@ typedef struct cm_dirHeader {
  */
 typedef struct cm_dirEntry {
 	/* A directory entry */
-	char flag;
+	char flag;	/* this must be FFIRST (1) */
 	char length;	/* currently unused */
 	unsigned short next;
 	cm_dirFid_t fid;
-	char name[16];
+	char name[1];	/* the real length is determined with strlen() */
 } cm_dirEntry_t;
 
 #ifdef UNUSED
