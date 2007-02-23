@@ -662,8 +662,8 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 	ino ^= (ino ^ vnode) & 1;
     } else {
 	ino = (volume << 16) + vnode;
-	ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     }
+    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
 
