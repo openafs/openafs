@@ -6,6 +6,7 @@ AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
 #include <linux/sched.h>],
 [
 extern rwlock_t tasklist_lock __attribute__((weak)); 
+read_lock(&tasklist_lock);
 ],
       ac_cv_linux_exports_tasklist_lock=yes,
       ac_cv_linux_exports_tasklist_lock=no)])
