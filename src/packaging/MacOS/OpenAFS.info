@@ -1,5 +1,5 @@
 Title OpenAFS
-Version 1.4.3fc2
+Version 1.4.3fc3
 Description The OpenAFS distributed filesystem. This package installs an almost-ready-to-run client for OpenAFS. see http://www.openafs.org for more information.
 DefaultLocation /
 Diskname (null)
