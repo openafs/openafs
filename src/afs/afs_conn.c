@@ -339,14 +339,6 @@ ForceNewConnections(struct srvAddr *sap)
     if (!sap)
 	return;			/* defensive check */
 
-    /* if client is not multihomed, do nothing */
-    ObtainReadLock(&afs_xinterface);
-    if (afs_cb_interface.numberOfInterfaces <= 1) {
-	ReleaseReadLock(&afs_xinterface);
-	return;
-    }
-    ReleaseReadLock(&afs_xinterface);
-
     ObtainWriteLock(&afs_xconn, 413);
     for (tc = sap->conns; tc; tc = tc->next)
 	tc->forceConnectFS = 1;
