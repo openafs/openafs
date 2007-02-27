@@ -20,14 +20,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 
 #include <nb30.h>
 
-#include "afsdicon.h"
-
 #include "cm.h"
-
-#include "krb.h"
-#include "krb_prot.h"
-/*#include <crypt.h>*/
-#include <afs/prs_fs.h>
 
 #include <osi.h>
 #include "cm_config.h"
@@ -59,6 +52,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 
 #include <afs/vldbint.h>
 #include <afs/afsint.h>
+#include <afs/prs_fs.h>
 
 #define AFS_DAEMON_SERVICE_NAME AFSREG_CLT_SVC_NAME
 #define AFS_DAEMON_EVENT_NAME   AFSREG_CLT_SW_NAME
