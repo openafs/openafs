@@ -1,3 +1,14 @@
+Since 1.4.3-rc2 (1.4.3-rc3 released 28 Feb 2007)
+
+ * disable ability to find lana by name.  
+
+ * return the correct error code when attempting to remove a
+   directory that still contains entries
+ 
+Since 1.4.3-rc1 (1.4.3-rc2 released 13 Feb 2007)
+
+ * no changes
+
 Since 1.4.2 (1.4.3-rc1 released 15 Jan 2007)
 
  * Increase the maximum number of stat cache entries to 262144
