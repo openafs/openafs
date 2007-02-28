@@ -64,7 +64,6 @@ static const char *szNoFindLanaByName = "NoFindLanaByName";
 #endif
 static const char *szForceLanaLoopback = "ForceLanaLoopback";
 
-#ifdef USE_FINDLANABYNAME
 // Use the IShellFolder API to get the connection name for the given Guid.
 static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSize)
 {
@@ -365,7 +364,6 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
     free(bindpaths);
     return lanainfo;
 }
-#endif
 
 extern "C" lana_number_t lana_FindLoopback(void)
 {
