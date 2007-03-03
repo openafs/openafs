@@ -2096,7 +2096,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
         /* sanity check */
         if(checkserv.tinterval<0) {
             printf("Warning: The negative -interval is ignored; treated as an inquiry\n");
-            checkserv.tinterval=0;
+            checkserv.tinterval=-1;
         } else if(checkserv.tinterval> 600) {
             printf("Warning: The maximum -interval value is 10 mins (600 secs)\n");
             checkserv.tinterval=600;	/* 10 min max interval */
@@ -2105,7 +2105,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
         checkserv.tinterval = -1;	/* don't change current interval */
     }
 
-    if ( checkserv.tinterval != 0 ) {
+    if ( checkserv.tinterval >= 0 ) {
 #ifdef WIN32
         if ( !IsAdmin() ) {
             fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
