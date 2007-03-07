@@ -510,7 +510,7 @@ typedef struct smb_dispatch {
 
 /* prototypes */
 
-extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
+extern void smb_Init(osi_log_t *logp, int useV3,
 	int nThreads
         , void *aMBfunc
   );

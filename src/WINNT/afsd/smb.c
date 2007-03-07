@@ -60,6 +60,8 @@ osi_mutex_t  smb_ListenerLock;
 char smb_LANadapter;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 
+BOOL isGateway = FALSE;
+
 /* for debugging */
 long smb_maxObsConcurrentCalls=0;
 long smb_concurrentCalls=0;
@@ -8156,9 +8158,39 @@ int smb_NetbiosInit(void)
     int delname_tried=0;
     int len;
     int lana_found = 0;
+    lana_number_t lanaNum;
 
     /* setup the NCB system */
     ncbp = GetNCB();
+
+    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
+    if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
+        smb_LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
+
+        if (smb_LANadapter != -1)
+	    afsi_log("LAN adapter number %d", smb_LANadapter);
+        else
+	    afsi_log("LAN adapter number not determined");
+
+        if (isGateway)
+	    afsi_log("Set for gateway service");
+
+        afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
+    } else {
+        /* something went horribly wrong.  We can't proceed without a netbios name */
+        char buf[128];
+        StringCbPrintfA(buf,sizeof(buf),"Netbios name could not be determined: %li", code);
+        osi_panic(buf, __FILE__, __LINE__);
+    }
+
+    /* remember the name */
+    len = (int)strlen(cm_NetbiosName);
+    if (smb_localNamep)
+        free(smb_localNamep);
+    smb_localNamep = malloc(len+1);
+    strcpy(smb_localNamep, cm_NetbiosName);
+    afsi_log("smb_localNamep is >%s<", smb_localNamep);
+
 
     if (smb_LANadapter == -1) {
         ncbp->ncb_command = NCBENUM;
@@ -8366,7 +8398,7 @@ void smb_StopListeners(void)
     Sleep(1000);	/* give the listener threads a chance to exit */
 }
 
-void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
+void smb_Init(osi_log_t *logp, int useV3,
               int nThreads
               , void *aMBfunc
   )
@@ -8375,7 +8407,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     thread_t phandle;
     int lpid;
     INT_PTR i;
-    int len;
     struct tm myTime;
     EVENT_HANDLE retHandle;
     char eventName[MAX_PATH];
@@ -8385,7 +8416,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_MBfunc = aMBfunc;
 
     smb_useV3 = useV3;
-    smb_LANadapter = LANadapt;
 
     /* Initialize smb_localZero */
     myTime.tm_isdst = -1;		/* compute whether on DST or not */
@@ -8409,12 +8439,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     /* initialize the remote debugging log */
     smb_logp = logp;
         
-    /* remember the name */
-    len = (int)strlen(snamep);
-    smb_localNamep = malloc(len+1);
-    strcpy(smb_localNamep, snamep);
-    afsi_log("smb_localNamep is >%s<", smb_localNamep);
-
     /* and the global lock */
     lock_InitializeRWLock(&smb_globalLock, "smb global lock");
     lock_InitializeRWLock(&smb_rctLock, "smb refct and tree struct lock");

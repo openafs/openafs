@@ -76,8 +76,6 @@ char cm_CachePath[MAX_PATH];
 DWORD cm_CachePathLen;
 DWORD cm_ValidateCache = 1;
 
-BOOL isGateway = FALSE;
-
 BOOL reportSessionStartups = FALSE;
 
 cm_initparams_v1 cm_initParams;
@@ -566,7 +564,6 @@ int afsd_InitCM(char **reasonP)
     long code;
     /*int freelanceEnabled;*/
     WSADATA WSAjunk;
-    lana_number_t lanaNum;
     int i;
     char *p, *q; 
     int cm_noIPAddr;         /* number of client network interfaces */
@@ -1079,25 +1076,6 @@ int afsd_InitCM(char **reasonP)
     
     RegCloseKey (parmKey);
 
-    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
-    if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
-        LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
-
-        if (LANadapter != -1)
-            afsi_log("LAN adapter number %d", LANadapter);
-        else
-            afsi_log("LAN adapter number not determined");
-
-        if (isGateway)
-            afsi_log("Set for gateway service");
-
-        afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
-    } else {
-        /* something went horribly wrong.  We can't proceed without a netbios name */
-        StringCbPrintfA(buf,sizeof(buf),"Netbios name could not be determined: %li", code);
-        osi_panic(buf, __FILE__, __LINE__);
-    }
-
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
         
     /* get network related info */
@@ -1321,7 +1299,7 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
     /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
-    smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
+    smb_Init(afsd_logp, smb_UseV3, numSvThreads, aMBfunc);
     afsi_log("smb_Init complete");
 
     return 0;
