@@ -3680,7 +3680,7 @@ afsmon_execute()
 	    }
 	    strncpy(curr_FS->hostName, he->h_name, HOST_NAME_LEN);	/* complete name */
 	    memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    curr_skt->sin_family = AF_INET;		/*Internet family */
 #else
 	    curr_skt->sin_family = htons(AF_INET);	/*Internet family */
