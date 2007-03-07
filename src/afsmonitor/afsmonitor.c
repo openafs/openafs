@@ -3680,11 +3680,7 @@ afsmon_execute()
 	    }
 	    strncpy(curr_FS->hostName, he->h_name, HOST_NAME_LEN);	/* complete name */
 	    memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    curr_skt->sin_family = AF_INET;		/*Internet family */
-#else
-	    curr_skt->sin_family = htons(AF_INET);	/*Internet family */
-#endif
 	    curr_skt->sin_port = htons(7000);	/*FileServer port */
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	    curr_skt->sin_len = sizeof(struct sockaddr_in);
