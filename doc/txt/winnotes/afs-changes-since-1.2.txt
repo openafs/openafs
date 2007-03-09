@@ -1,3 +1,27 @@
+Since 1.5.15
+
+ * Removing a directory that contained entries was failing with
+   the wrong error code being returned to the CIFS client.
+
+ * rxdebug -long 
+
+ * rxdebug exponential back-off.  don't take down a server that
+   is already struggling to respond.
+
+ * Network Identity Manager plug-in registers help on the Help
+   menu if it is supported by NIM.  (KFW 3.2 and above)
+
+ * Plug-n-play networking did not always work after coming back
+   from a Windows Suspend.  The AFS client service failed to 
+   re-compute the LAN adapter to bind to and instead attempted
+   to bind to all LAN adapters.  This would polute the public
+   network with the name "AFS" which could lead to conflicts 
+   between machines.
+
+ * Build installers using Microsoft Hotfixes provided at
+   http://tinyurl.com/243svk for Visual Studio C RunTime Library
+   Daylight Savings Time issues.  
+
 Since 1.5.14
 
  * A reference leak was discovered in the mountpoint traversal 
