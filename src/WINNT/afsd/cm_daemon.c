@@ -31,7 +31,7 @@
 
 /* in seconds */
 long cm_daemonCheckDownInterval  = 180;
-long cm_daemonCheckUpInterval    = 600;
+long cm_daemonCheckUpInterval    = 240;
 long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
 long cm_daemonCheckLockInterval  = 60;

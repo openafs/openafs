@@ -43,6 +43,7 @@ typedef struct cm_req {
 
 /* flags in cm_req structure */
 #define	CM_REQ_NORETRY		0x1
+#define CM_REQ_NEW_CONN_FORCED  0x2
 
 /*
  * Vice2 error codes

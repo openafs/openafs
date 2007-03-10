@@ -168,6 +168,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     long timeUsed, timeLeft;
     long code;
     char addr[16];
+    int forcing_new = 0;
 
     osi_Log2(afsd_logp, "cm_Analyze connp 0x%p, code 0x%x",
              connp, errorCode);
@@ -194,10 +195,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         cbrp->serverp = serverp;
         lock_ReleaseWrite(&cm_callbackLock);
     }
-
-    /* If not allowed to retry, don't */
-    if (reqp->flags & CM_REQ_NORETRY)
-        goto out;
 
     /* if timeout - check that it did not exceed the HardDead timeout
      * and retry */
@@ -487,7 +484,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
         lock_ObtainMutex(&serverp->mx);
-        serverp->flags |= CM_SERVERFLAG_DOWN;
+	if (reqp->flags & CM_REQ_NEW_CONN_FORCED)
+	    serverp->flags |= CM_SERVERFLAG_DOWN;
+	else {
+	    reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+	    forcing_new = 1;
+	}
         lock_ReleaseMutex(&serverp->mx);
 	cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
@@ -611,7 +613,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
     }
 
-    if (retry && dead_session)
+    /* If not allowed to retry, don't */
+    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY))
+	retry = 0;
+    else if (retry && dead_session)
         retry = 0;
 
   out:
