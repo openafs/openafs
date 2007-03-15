@@ -15,6 +15,11 @@
 #ifndef OSI_MACHDEP_H_
 #define OSI_MACHDEP_H_
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
+#define AFS_LINUX26_ONEGROUP_ENV 1
+#endif
+
 /* Only needed for xdr.h in glibc 2.1.x */
 #ifndef quad_t
 #define quad_t __quad_t

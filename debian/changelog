@@ -1,5 +1,9 @@
-openafs (1.4.2-6) unstable; urgency=low
+openafs (1.4.2-6) unstable; urgency=medium
 
+  * Apply upstream fix to use a single high-numbered group for the PAG on
+    2.6 kernels and sort the group properly.  Fixes AFS-caused group
+    ordering problems that could lead the kernel to ignore some group
+    membership for users.  (Closes: #414911)
   * Apply upstream fix for segfaults in pts rename.  (Closes: #409184)
   * Translation updates:
     - Dutch, thanks cobaco.  (Closes: #413701)
