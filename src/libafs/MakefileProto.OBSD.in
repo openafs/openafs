@@ -16,7 +16,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
-KFLAGS= -Wall -nostdinc
+KFLAGS= -Wall -march=i486 -fno-builtin-printf -fno-builtin-log -nostdinc
 <i386_obsd33>
 KFLAGS+= -fno-stack-protector
 <all>
