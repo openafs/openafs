@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 5), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev, libkrb5-dev
+Build-Depends: debhelper (>= 5), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev, libkrb5-dev, autoconf
 Standards-Version: 3.7.2
 
 Package: openafs-client

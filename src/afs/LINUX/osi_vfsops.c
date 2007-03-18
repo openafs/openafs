@@ -64,11 +64,12 @@ int afs_fill_super(struct super_block *sb, void *data, int silent);
  * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
  */
 #if defined(AFS_LINUX26_ENV)
-static struct super_block *
 #ifdef GET_SB_HAS_STRUCT_VFSMOUNT
+int
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data, struct vfsmount *mnt)
 #else
+static struct superblock *
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data)
 #endif
@@ -385,7 +386,11 @@ afs_put_super(struct super_block *sbp)
  */
 #if defined(AFS_LINUX26_ENV)
 int
+#if defined(STATFS_TAKES_DENTRY)
+afs_statfs(struct dentry *dentry, struct kstatfs *statp)
+#else
 afs_statfs(struct super_block *sbp, struct kstatfs *statp)
+#endif
 #elif defined(AFS_LINUX24_ENV)
 int
 afs_statfs(struct super_block *sbp, struct statfs *statp)
@@ -409,7 +414,11 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
     AFS_STATCNT(afs_statfs);
 
     statp->f_type = 0;		/* Can we get a real type sometime? */
+#if defined(STATFS_TAKES_DENTRY)
+    statp->f_bsize = dentry->d_sb->s_blocksize;
+#else
     statp->f_bsize = sbp->s_blocksize;
+#endif
     statp->f_blocks = statp->f_bfree = statp->f_bavail = statp->f_files =
 	statp->f_ffree = 9000000;
     statp->f_fsid.val[0] = AFS_VFSMAGIC;

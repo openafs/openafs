@@ -608,6 +608,19 @@ AC_DEFUN([LINUX_GET_SB_HAS_STRUCT_VFSMOUNT], [
       ac_cv_linux_get_sb_has_struct_vfsmount=no)])
   AC_MSG_RESULT($ac_cv_linux_get_sb_has_struct_vfsmount)])
 
+AC_DEFUN([LINUX_STATFS_TAKES_DENTRY], [
+  AC_MSG_CHECKING([for dentry in statfs])
+  AC_CACHE_VAL([ac_cv_linux_statfs_takes_dentry], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>
+#include <linux/statfs.h>],
+[
+extern int vfs_statfs(struct dentry *, struct kstatfs *);
+],
+      ac_cv_linux_statfs_takes_dentry=yes,
+      ac_cv_linux_statfs_takes_dentry=no)])
+  AC_MSG_RESULT($ac_cv_linux_statfs_takes_dentry)])
+
 AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
   AC_MSG_CHECKING([for linux kernel keyring support])
   AC_CACHE_VAL([ac_cv_linux_keyring_support], [

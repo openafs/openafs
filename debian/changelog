@@ -5,6 +5,10 @@ openafs (1.4.2-6) unstable; urgency=medium
     ordering problems that could lead the kernel to ignore some group
     membership for users.  (Closes: #414911)
   * Apply upstream fix for segfaults in pts rename.  (Closes: #409184)
+  * Apply upstream fix to show reasonable free space numbers for AFS in
+    df.  Without this fix, some programs which use df to check free space
+    may think that directories in AFS are full and prevent the user from
+    attempting to write files.  (Closes: #415294)
   * Translation updates:
     - Dutch, thanks cobaco.  (Closes: #413701)
     - Portuguese, thanks Miguel Figueiredo.  (Closes: #414800)
