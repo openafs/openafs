@@ -45,7 +45,7 @@ cm_PingServer(cm_server_t *tsp)
     long code;
     int wasDown = 0;
     cm_conn_t *connp;
-    struct rx_connection * callp;
+    struct rx_connection * rxconnp;
     long secs;
     long usecs;
     Capabilities caps = {0, 0};
@@ -89,11 +89,11 @@ cm_PingServer(cm_server_t *tsp)
 	}
 	else {
 	    /* file server */
-	    callp = cm_GetRxConn(connp);
-	    code = RXAFS_GetCapabilities(callp, &caps);
+	    rxconnp = cm_GetRxConn(connp);
+	    code = RXAFS_GetCapabilities(rxconnp, &caps);
 	    if (code == RXGEN_OPCODE)
-		code = RXAFS_GetTime(callp, &secs, &usecs);
-	    rx_PutConnection(callp);
+		code = RXAFS_GetTime(rxconnp, &secs, &usecs);
+	    rx_PutConnection(rxconnp);
 	}
 	if (wasDown)
 	    rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
