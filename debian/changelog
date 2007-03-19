@@ -1,5 +1,10 @@
 openafs (1.4.2-6) unstable; urgency=medium
 
+  * SECURITY: Apply upstream patch to disable setuid status on all cells
+    by default.  Prior versions of AFS defaulted to honoring setuid bits
+    in the local cell, but since unauthenticated file access in AFS is
+    unencrypted, an attacker could forge packets from an AFS file server
+    to synthesize a setuid binary in AFS.
   * Apply upstream fix to use a single high-numbered group for the PAG on
     2.6 kernels and sort the group properly.  Fixes AFS-caused group
     ordering problems that could lead the kernel to ignore some group
@@ -13,7 +18,7 @@ openafs (1.4.2-6) unstable; urgency=medium
     - Dutch, thanks cobaco.  (Closes: #413701)
     - Portuguese, thanks Miguel Figueiredo.  (Closes: #414800)
 
- --
+ -- Russ Allbery <rra@debian.org>  Wed, 14 Mar 2007 18:37:12 -0700
 
 openafs (1.4.2-5) unstable; urgency=low
 

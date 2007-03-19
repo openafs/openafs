@@ -159,11 +159,16 @@ install: build
 
 # Build architecture-independent files here.  Pass -i to all debhelper
 # commands in this target to reduce clutter.
+#
+# Also install debian/openafs-client.NEWS in the openafs-modules-source
+# package.
 binary-indep: DH_OPTIONS=-i
 binary-indep: build install binary-source
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
+	install -m 644 debian/openafs-client.NEWS \
+	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 	dh_installdocs -XQuickStartWindows -Xwinnotes
 	dh_installexamples
 	dh_link
