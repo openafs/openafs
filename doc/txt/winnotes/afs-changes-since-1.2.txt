@@ -1,3 +1,34 @@
+Since 1.5.16
+
+ * CellServDB update - GCO Public CellServDB 09 Mar 2007
+
+ * AFS Server Manager and AFS Account Manager data cache
+   moved from HKCU\Software\TransarcCorporation to 
+   HKCU\Software\OpenAFS to prevent crashes due to data
+   format changes.
+
+ * Reduce the default UP server probe time from 10 minutes
+   to 5 minutes to match UNIX.  This will not solve the NAT
+   port mapping timeout issue because most NATs default to
+   a value less that 5 minutes and this value ensures that
+   the afs client server will start probes 5 minutes after
+   the last probe set ended.  The probe period for any one
+   server is therefore longer than 5 minutes.  The more
+   servers in the list the longer the time between probes.
+
+ * Before marking a server as down in cm_Analyze, retry the
+   request using a new rx connection to the server.  If the
+   cache manager is behind a NAT, it is possible that the 
+   response from the server is being sent to the original   
+   address:port from which the rx connection was established.
+   This will appear to the cache manager as the server being
+   down when in fact it is not.  Forcing the use of a new rx  
+   connection will result in the server responding to the    
+   most recent address:port assigned to the client by the NAT.
+
+   If the server is in fact down, it will simply take a little
+   longer to notice it.   
+
 Since 1.5.15
 
  * Removing a directory that contained entries was failing with
@@ -21,6 +52,9 @@ Since 1.5.15
  * Build installers using Microsoft Hotfixes provided at
    http://tinyurl.com/243svk for Visual Studio C RunTime Library
    Daylight Savings Time issues.  
+
+ * "fs checkserver" does not require admin privileges unless 
+   the probe interval is being changed.
 
 Since 1.5.14
 
@@ -99,15 +133,6 @@ Since 1.5.14
    the dataVersion was incremented by one and the dataVersion of
    the buffer matched the original dataVersion of the cached 
    status information for the file.
-
- * When the status for a file/directory cannot be obtained 
-   during a InlineBulkStat RPC, the EACCESS error state is 
-   recorded within the stat cache object.  If we later call
-   cm_AccessCheck() we should not attempt a new FetchStatus
-   call, simply return the allAccess rights since we know that
-   the FetchStatus will fail.  When the parent directory is
-   accessed with better rights or when the ACLs change the
-   next InlineBulkStatus will clear the flag.
 
  * When recycling cm_scache_t objects, make sure that we 
    clear all of the previous fields.  It is no longer the
@@ -199,8 +224,8 @@ Since 1.5.11
    are not reliably delivered so it is possible the afs service will
    not be accessible.  However, this is the best we can do.
 
- * don't allow environment variables we set to be inherited by child
-   processes
+ * don't allow environment variables we set in afslogon.dll to be 
+   inherited by child processes
 
  * force an rx connection reset if VICECONNBAD or VICETOKENDEAD are
    received
@@ -217,7 +242,7 @@ Since 1.5.11
    The new algorithm maintains a dirty buffer list.  Items are added
    when the buffer is originally marked dirty.  A buffer is only
    removed from the list by the buf_IncrSyncer when the buffer is no
-   longer dirty.  If the list is empty the thread goes back to thread
+   longer dirty.  If the list is empty the thread goes back to sleep
    immediately without additional processing requirements.
 
 Since 1.5.10:
@@ -687,7 +712,21 @@ Since 1.4.1 rc5: 1.4.1 rc6 released (2 Feb 2006)
    which must have been added for debugging because its used 
    was never thread safe and it truly served no purpose.
 
-Since 1.4.1 rc4: 1.4.1 rc5 released (18 Jan 2006)
+Since 1.4.1 rc4: 1.4.1 rc5 released (25 Jan 2006)
+
+ * Re-enabled LogoffTokenTransfer and LogoffTokenTransferTimeout
+   registry settings.  Default is ON and 120 seconds.  If set to 
+   OFF, tokens will not be destroyed.
+
+ * Fixed a number of race conditions and reference count problems
+   associated with global queues.
+
+ * Added a method to detect abandoned smb virtual circuits so their
+   associated file handles, locks, user tokens, and smb session
+   resources can be released.
+
+ * Added a mechanism to allow user tokens to be preserved 
+   during integrated login and be freed after logoff.
 
  * Check access permissions to the file before the file is 
    truncated.
