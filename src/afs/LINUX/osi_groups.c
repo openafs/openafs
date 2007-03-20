@@ -617,13 +617,36 @@ struct key_type key_type_afs_pag =
     .destroy     = afs_pag_destroy,
 };
 
+#ifdef EXPORTED_TASKLIST_LOCK
+extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
+
 void osi_keyring_init(void)
 {
     struct task_struct *p;
-
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+      read_lock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_lock();
+#endif
     p = find_task_by_pid(1);
     if (p && p->user->session_keyring)
 	__key_type_keyring = p->user->session_keyring->type;
+#ifdef EXPORTED_TASKLIST_LOCK
+    if (&tasklist_lock)
+       read_unlock(&tasklist_lock);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
+    else
+#endif
+      rcu_read_unlock();
+#endif
 
     register_key_type(&key_type_afs_pag);
 }
