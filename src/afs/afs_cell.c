@@ -751,8 +751,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	AFS_MD5_String(tc->cellHandle, tc->cellName, strlen(tc->cellName));
 	RWLOCK_INIT(&tc->lock, "cell lock");
 	newc = 1;
-	if (afs_thiscell && !strcmp(acellName, afs_thiscell))
-	    aflags &= ~CNoSUID;
+	aflags |= CNoSUID;
     }
     ObtainWriteLock(&tc->lock, 688);
 
