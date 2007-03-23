@@ -963,8 +963,28 @@ main(int argc, char **argv, char **envp)
     /* Write current state of directory permissions to log file */
     DirAccessOK();
 
+    if (rxBind) {
+	afs_int32 ccode;
+	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
+	    AFSDIR_SERVER_NETINFO_FILEPATH) {
+	    char reason[1024];
+	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+	                          ADDRSPERSITE, reason,
+	                          AFSDIR_SERVER_NETINFO_FILEPATH,
+	                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1)
+            host = SHostAddrs[0];
+    }
+
     for (i = 0; i < 10; i++) {
-	code = rx_Init(htons(AFSCONF_NANNYPORT));
+	if (rxBind) {
+	    code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
+	} else {
+	    code = rx_Init(htons(AFSCONF_NANNYPORT));
+	}
 	if (code) {
 	    bozo_Log("can't initialize rx: code=%d\n", code);
 	    sleep(3);
@@ -1037,23 +1057,6 @@ main(int argc, char **argv, char **envp)
 
     if (rxMaxMTU != -1) {
 	rx_SetMaxMTU(rxMaxMTU);
-    }
-
-    if (rxBind) {
-	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
-            AFSDIR_SERVER_NETINFO_FILEPATH) {
-            char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else
-	{
-            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
-        }
-        if (ccode == 1)
-            host = SHostAddrs[0];
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,
