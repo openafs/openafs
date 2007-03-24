@@ -10,7 +10,17 @@
 #ifndef __SMB_H_ENV__
 #define __SMB_H_ENV__ 1
 
+#if _WIN32_WINNT < 0x0501
+#define AFS_WIN32_WINNT _WIN32_WINNT
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <ntsecapi.h>
+#ifdef AFS_WIN32_WINNT
+#undef _WIN32_WINNT
+#define _WIN32_WINNT AFS_WIN32_WINNT
+#undef AFS_WIN32_WINNT
+#endif
 
 /* Support largefiles by default */
 #define AFS_LARGEFILES
