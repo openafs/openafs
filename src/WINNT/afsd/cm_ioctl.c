@@ -939,9 +939,11 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     volume = scp->fid.volume;
 
     cellp = cm_FindCellByID(scp->fid.cell);
-    osi_assert(cellp);
 
     cm_ReleaseSCache(scp);
+
+    if (!cellp)
+	return CM_ERROR_NOSUCHCELL;
 
     code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
     if (code) return code;
