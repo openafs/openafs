@@ -20,13 +20,19 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.7 2006/09/27 21:14:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.8 2007/01/15 15:52:46 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
 #ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
+#endif
+
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+#define NUMPAGGROUPS 1
+#else
+#define NUMPAGGROUPS 2
 #endif
 
 #if defined(AFS_LINUX26_ENV)
@@ -160,26 +166,53 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     gid_t g0, g1;
     struct group_info *tmp;
     int i;
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    int j;
+#endif
     int need_space = 0;
 
     group_info = afs_getgroups(*cr);
-    if (group_info->ngroups < 2
-	||  afs_get_pag_from_groups(GROUP_AT(group_info, 0),
-				    GROUP_AT(group_info, 1)) == NOPAG) 
+    if (group_info->ngroups < NUMPAGGROUPS
+	||  afs_get_pag_from_groups(
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+	    group_info
+#else
+	    GROUP_AT(group_info, 0) ,GROUP_AT(group_info, 1)
+#endif
+				    ) == NOPAG) 
 	/* We will have to make sure group_info is big enough for pag */
-      need_space = 2;
+	need_space = NUMPAGGROUPS;
 
     tmp = groups_alloc(group_info->ngroups + need_space);
     
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    for (i = 0, j = 0; i < group_info->ngroups; ++i) {
+	int ths = GROUP_AT(group_info, i);
+	int last = i > 0 ? GROUP_AT(group_info, i-1) : 0;
+	if ((ths >> 24) == 'A')
+	    continue;
+	if (last <= *newpag && ths > *newpag) {
+	   GROUP_AT(tmp, j) = *newpag;
+	   j++;
+	}
+	GROUP_AT(tmp, j) = ths;
+	j++;
+    }
+    if (j != i + need_space)
+        GROUP_AT(tmp, j) = *newpag;
+#else
     for (i = 0; i < group_info->ngroups; ++i)
       GROUP_AT(tmp, i + need_space) = GROUP_AT(group_info, i);
+#endif
     put_group_info(group_info);
     group_info = tmp;
 
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     afs_get_groups_from_pag(*newpag, &g0, &g1);
     GROUP_AT(group_info, 0) = g0;
     GROUP_AT(group_info, 1) = g1;
+#endif
 
     afs_setgroups(cr, group_info, change_parent);
 
@@ -524,15 +557,18 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (datalen != sizeof(afs_uint32) || !data)
 	goto error;
 
-    if (current->group_info->ngroups < 2)
+    if (current->group_info->ngroups < NUMPAGGROUPS)
 	goto error;
 
     /* ensure key being set matches current pag */
-
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    pag = afs_get_pag_from_groups(current->group_info);
+#else
     g0 = GROUP_AT(current->group_info, 0);
     g1 = GROUP_AT(current->group_info, 1);
 
     pag = afs_get_pag_from_groups(g0, g1);
+#endif
     if (pag == NOPAG)
 	goto error;
 

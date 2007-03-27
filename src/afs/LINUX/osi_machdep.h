@@ -15,6 +15,11 @@
 #ifndef OSI_MACHDEP_H_
 #define OSI_MACHDEP_H_
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
+#define AFS_LINUX26_ONEGROUP_ENV 1
+#endif
+
 /* Only needed for xdr.h in glibc 2.1.x */
 #ifndef quad_t
 #define quad_t __quad_t
@@ -23,6 +28,16 @@
 
 #undef getuerror
 
+#ifdef STRUCT_TASK_STRUCT_HAS_TGID
+#define getpid() current->tgid
+#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#define getppid() current->real_parent->tgid
+#elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
+#define getppid() current->parent->tgid
+#else
+#define getppid() current->p_opptr->tgid
+#endif
+#else /* !STRUCT_TASK_STRUCT_HAS_TGID */
 #define getpid() current->pid
 #ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
 #define getppid() current->real_parent->pid
@@ -31,6 +46,7 @@
 #else
 #define getppid() current->p_opptr->pid
 #endif
+#endif /* STRUCT_TASK_STRUCT_HAS_TGID */
 
 #ifdef RECALC_SIGPENDING_TAKES_VOID
 #define RECALC_SIGPENDING(X) recalc_sigpending()
@@ -123,7 +139,6 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define uprintf printk
 
 
-#define PAGESIZE PAGE_SIZE
 #ifndef NGROUPS
 #define NGROUPS NGROUPS_SMALL
 #endif

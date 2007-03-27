@@ -1,7 +1,10 @@
-# Openafs Spec $Revision: 1.1.2.1 $
+# Openafs Spec $Revision: 1.1.2.2 $
 
 %define afsvers 1.4.2
 %define pkgvers 1.4.2
+# for beta/rc releases make pkgrel 0.X.<tag>
+# for real releases make pkgrel 1 (or more for extra releases)
+#%define pkgrel 0.1.rc1
 %define pkgrel 1
 
 %if %{?osvers:0}%{!?osvers:1}
@@ -65,6 +68,9 @@
 # Define the location of your init.d directory
 %define initdir /etc/init.d
 
+#determine if the kernel provides an arch-specific Provides
+%define kprovidesarch %(%{kversis} provideskernelarch %{ksrcdir} %{_target_cpu})
+
 # Define the location of the PAM security module directory
 %define pamdir /%{_lib}/security
 
@@ -88,9 +94,7 @@
 %define kdepend kernel-source
 %define up_package 1
 %define smp_package 1
-%define largesmp_package 1
 %define smp_ext smp
-%define largesmp_ext largesmp
 
 %define bigmem_package %(%{kversis} find %{ksrcdir} %{_target_cpu} bigmem) 
 %if %{bigmem_package}
@@ -102,17 +106,22 @@
 %define hugemem_ext hugemem
 %endif
 
-%define kvariations up smp largesmp %{?bigmem_ext:%{bigmem_ext}} %{?hugemem_ext:%{hugemem_ext}}
+%define kvariations up smp %{?bigmem_ext:%{bigmem_ext}} %{?hugemem_ext:%{hugemem_ext}}
 
 #######################################################################
 # 2.6
 %else
 %if %{kvers_is_26}
 %define kvariations up
+%ifarch s390x
+%define ktype "smp"
+%define up_package 1
+%else
 %define up_package %(%{kversis} "%{ktype}" "")
 %define smp_package %(%{kversis} "%{ktype}" "smp")
-%define largesmp_package %(%{kversis} "%{ktype}" "largesmp")
 %define hugemem_package %(%{kversis} "%{ktype}" "hugemem")
+%define largesmp_package %(%{kversis} "%{ktype}" "largesmp")
+%endif
 
 %if !%{up_package} && !%{smp_package} && !%{hugemem_package} && !%{largesmp_package}
 %error "unknown kernel type: %{ktype}"
@@ -140,19 +149,26 @@
 # you'll need to tweak that last bit.
 %if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
 
-%ifarch x86_64 ia64
+%ifarch x86_64 ia64 s390 s390x
 %define build_userspace 1
 %define build_modules 1
+%ifarch x86_64 ia64
+%define build_authlibs 1
+%else
+%define build_authlibs 0
+%endif
 %endif
 
 %ifarch %{ix86}
 %define build_userspace 0
 %define build_modules 1
+%define build_authlibs 1
 %endif
 
 %ifarch i386
 %define build_userspace 1
 %define build_modules 0
+%define build_authlibs 1
 %endif
 
 %endif
@@ -179,7 +195,10 @@ URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Derek Atkins <warlord@MIT.EDU>
 Group: Networking/Filesystems
-BuildRequires: %{?kdepend:%{kdepend}, } pam-devel
+BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel
+%if %{build_userspace}
+BuildRequires: autoconf
+%endif
 ExclusiveArch: %{ix86} x86_64 ia64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
@@ -299,6 +318,7 @@ administrative management.
 This package provides basic server support to host files in an AFS
 Cell.
 
+%if %{build_authlibs}
 %package authlibs
 Summary: OpenAFS authentication shared libraries
 Group: Networking/Filesystems
@@ -313,9 +333,12 @@ This package provides a shared version of libafsrpc and libafsauthent.
 None of the programs included with OpenAFS currently use these shared 
 libraries; however, third-party software that wishes to perform AFS 
 authentication may link against them.
+%endif
 
 %package authlibs-devel
+%if %{build_authlibs}
 Requires: openafs-authlibs = %{PACKAGE_VERSION}
+%endif
 Requires: openafs-devel = %{PACKAGE_VERSION}
 Summary: OpenAFS shared library development
 Group: Development/Filesystems
@@ -408,7 +431,7 @@ you are using KAserver instead of Krb5.
 Summary: OpenAFS programs to use with krb5
 Requires: openafs = %{PACKAGE_VERSION}
 Group: Networking/Filesystems
-BuildRequires: krb5-devel
+BuildRequires: krb5-devel, autoconf, automake
 
 %description krb5
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -438,9 +461,13 @@ krb4 lookalike services.
 %package kernel
 Summary: OpenAFS Kernel Module (compiled for UP)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
-Requires: kernel = %{kversion}
 Group: Networking/Filesystems
+Provides: openafs-kernel = %{PACKAGE_VERSION}
+%if %{kprovidesarch}
+Requires: kernel-%{_target_cpu} = %{kversion}
+%else
+Requires: /boot/config-%{kernvers}
+%endif
 
 %description kernel
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -456,7 +483,11 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 Summary: OpenAFS Kernel Module (compiled for SMP)
 Release: %{modpkgrel}
 Provides: openafs-kernel = %{PACKAGE_VERSION}
-Requires: kernel-smp = %{kversion}
+%if %{kprovidesarch}
+Requires: kernel-smp-%{_target_cpu} = %{kversion}
+%else
+Requires: /boot/config-%{kernvers}%{?smp_ext:%{smp_ext}}
+%endif
 Group: Networking/Filesystems
 
 %description kernel-smp
@@ -473,7 +504,11 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 Summary: OpenAFS Kernel Module (compiled for LARGESMP)
 Release: %{modpkgrel}
 Provides: openafs-kernel = %{PACKAGE_VERSION}
-Requires: kernel-largesmp = %{kversion}
+%if %{kprovidesarch}
+Requires: kernel-largesmp-%{_target_cpu} = %{kversion}
+%else
+Requires: /boot/config-%{kernvers}%{?largesmp_ext:%{largesmp_ext}}
+%endif
 Group: Networking/Filesystems
 
 %description kernel-largesmp
@@ -490,7 +525,11 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 Summary: OpenAFS Kernel Module (compiled for SMP & big memory support)
 Release: %{modpkgrel}
 Provides: openafs-kernel = %{PACKAGE_VERSION}
-Requires: kernel-bigmem = %{kversion}
+%if %{kprovidesarch}
+Requires: kernel-bigmem-%{_target_cpu} = %{kversion}
+%else
+Requires: /boot/config-%{kernvers}%{?bigmem_ext:%{bigmem_ext}}
+%endif
 Group: Networking/Filesystems
 
 %description kernel-bigmem
@@ -507,7 +546,11 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 Summary: OpenAFS Kernel Module (compiled for SMP & huge memory support)
 Release: %{modpkgrel}
 Provides: openafs-kernel = %{PACKAGE_VERSION}
-Requires: kernel-hugemem = %{kversion}
+%if %{kprovidesarch}
+Requires: kernel-hugemem-%{_target_cpu} = %{kversion}
+%else
+Requires: /boot/config-%{kernvers}%{?hugemem_ext:%{hugemem_ext}}
+%endif
 Group: Networking/Filesystems
 
 %description kernel-hugemem
@@ -876,8 +919,8 @@ ln -sf pam_afs.krb.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so
 # Populate /usr/vice/etc
 uve=$RPM_BUILD_ROOT%{_prefix}/vice/etc
 install -p -m 644 %{SOURCE2} $uve/ThisCell
-install -p -m 644 %{SOURCE3} $uve/CellServDB
-install -p -m 644 %{SOURCE4} $uve/SuidCells
+install -p -m 644 %{SOURCE3} $uve/CellServDB.dist
+install -p -m 644 %{SOURCE4} $uve/SuidCells.dist
 install -p -m 644 %{SOURCE5} $uve/cacheinfo
 
 #
@@ -1041,6 +1084,11 @@ for f in afs2k5db fakeka ; do
   rm -f $RPM_BUILD_ROOT%{_sbindir}/$f
 done
 
+%if !%{build_authlibs}
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so
+rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so
+%endif
+
 %endif
 
 %if %{build_modules}
@@ -1057,7 +1105,7 @@ do
     fi
 
     srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
-    dstdir=$RPM_BUILD_ROOT${kvar}/kernel/fs/openafs
+    dstdir=$RPM_BUILD_ROOT${kvar}/fs/openafs
 
     mkdir -p ${dstdir}
 
@@ -1098,6 +1146,16 @@ if [ ! -d /afs ]; then
 	chmod 0755 /afs
 fi
 
+# Create the CellServDB and SuidCells
+[ -f /usr/vice/etc/CellServDB.local ] || touch /usr/vice/etc/CellServDB.local
+[ -f /usr/vice/etc/SuidCells.local ] || touch /usr/vice/etc/SuidCells.local
+
+( cd /usr/vice/etc ; \
+  cat CellServDB.local CellServDB.dist > CellServDB ; \
+  chmod 644 CellServDB ; \
+  cat SuidCells.local SuidCells.dist > SuidCells ; \
+  chmod 644 SuidCells )
+
 echo
 echo The AFS cache is configured for 100 MB. Edit the
 echo /usr/vice/etc/cacheinfo file to change this before
@@ -1117,11 +1175,13 @@ echo
 chkconfig --add openafs-server
 %{initdir}/openafs-server condrestart
 
+%if %{build_authlibs}
 %post authlibs
 /sbin/ldconfig
 
 %postun authlibs
 /sbin/ldconfig
+%endif
 
 %preun
 if [ $1 = 0 ] ; then
@@ -1132,6 +1192,9 @@ fi
 if [ $1 = 0 ] ; then
         %{initdir}/openafs-client stop
         chkconfig --del openafs-client
+
+        rm -f /usr/vice/etc/CellServDB /usr/vice/etc/SuidCells
+        rm -f /usr/vice/etc/CellServDB.local /usr/vice/etc/SuidCells.local
 fi
 
 %preun server
@@ -1209,8 +1272,8 @@ fi
 %dir %{_prefix}/vice
 %dir %{_prefix}/vice/cache
 %dir %{_prefix}/vice/etc
-%config %{_prefix}/vice/etc/CellServDB
-%config %{_prefix}/vice/etc/SuidCells
+%{_prefix}/vice/etc/CellServDB.dist
+%{_prefix}/vice/etc/SuidCells.dist
 %config %{_prefix}/vice/etc/ThisCell
 %config %{_prefix}/vice/etc/cacheinfo
 %{_bindir}/cmdebug
@@ -1292,17 +1355,21 @@ fi
 %{_mandir}/man8/volserver.*
 #%{_mandir}/man8/vldb_convert.*
 
+%if %{build_authlibs}
 %files authlibs
 %defattr(-,root,root)
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
+%endif
 
 %files authlibs-devel
 %defattr(-,root,root)
 %{_libdir}/libafsauthent.a
-%{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.a
+%if %{build_authlibs}
+%{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
+%endif
 
 %files devel
 %defattr(-,root,root)
@@ -1363,25 +1430,25 @@ fi
 %if %{up_package}
 %files kernel
 %defattr(-,root,root)
-%{kxmoddir}/kernel/fs/openafs/openafs.*
+%{kxmoddir}/fs/openafs/openafs.*
 %endif
 
 %if %{smp_package}
 %files kernel-smp
 %defattr(-,root,root)
-%{kxmoddir}%{?smp_ext:%{smp_ext}}/kernel/fs/openafs/openafs.*
+%{kxmoddir}%{?smp_ext:%{smp_ext}}/fs/openafs/openafs.*
 %endif
 
 %if %{largesmp_package}
 %files kernel-largesmp
 %defattr(-,root,root)
-%{kxmoddir}%{?largesmp_ext:%{largesmp_ext}}/kernel/fs/openafs/openafs.*
+%{kxmoddir}%{?largesmp_ext:%{largesmp_ext}}/fs/openafs/openafs.*
 %endif
  
 %if %{bigmem_package}
 %files kernel-bigmem
 %defattr(-,root,root)
-%{kxmoddir}%{?bigmem_ext:%{bigmem_ext}}/kernel/fs/openafs/openafs.*
+%{kxmoddir}%{?bigmem_ext:%{bigmem_ext}}/fs/openafs/openafs.*
 %endif
 
 %if %{hugemem_package}
@@ -1398,10 +1465,59 @@ fi
 ###
 ##############################################################################
 %changelog
+* Fri Dec 01 2006  Derrick Brashear <shadow@dementia.org> 1.4.2-2
+- integrate s390x changes
+- allow for building libafs*.a and not libafs*.so into packages, for platforms
+  that won't build the .so files.
+
 * Sun Aug 20 2006  Derrick Brashear <shadow@dementia.org> 1.4.2-1
 - update to 1.4.2
 - use installed aklog manpage.
 - moduleparam patch obsoleted.
+
+* Tue Aug 22 2006  Derek Atkins <warlord@MIT.EDU> 1.4.2-0.1.rc1
+- update to 1.4.2-rc1
+- hand-apply lee damon's changes to support largesmp kernels from RHEL4
+  (but only add support for 2.6 kernels.  No need for the 2.4 kernels).
+- don't need the posixlock patch anymore.
+
+* Wed Jul 12 2006  Derek Atkins <warlord@MIT.EDU> 1.4.2-0.beta2
+- update to 1.4.2-beta2
+- add linux2.4 posixlock API patch
+
+* Mon Jun 26 2006  Derek Atkins <warlord@MIT.EDU>
+- moduleparam and krb524 patches no longer required in OA-CVS
+
+* Wed May 17 2006  Derek Atkins <warlord@MIT.EDU>
+- change non-target-cpu kernel dep to a file dep
+- make sure we use the proper kernel version for the dependency.
+
+* Tue May 16 2006  Derek Atkins <warlord@MIT.EDU>
+- allow users to specify local CellServDB and SuidCells entries
+  don't overwrite user's changes.  Provide a .dist an let users
+  make entries in a ".local"
+- build the CellServDB and SuidCells at client startup and at
+  client install-time
+- add provideskernelarch functionality to openafs-kvers-is.sh
+- use that functionality to Require kernel{,-<type>}-targetcpu
+  to get better package safety due to RPM bugs where the kernel
+  release isn't used so you can install the kernel module against
+  any kernel of the same major version.
+
+* Mon May 15 2006  Derek Atkins <warlord@MIT.EDU>
+- update the README in openafs-kernel-source
+- fix openafs-kvers-is.sh from Alexander Bergolth's patch.
+- move kernel module from .../kernel/fs/openafs to .../fs/openafs/
+
+* Fri Apr 21 2006  Derek Atkins <warlord@MIT.EDU>
+- build requires autoconf and automake for krb5support
+  and autoconf for standard package
+- dont setup the krb5 migration kit (or patches) if we don't care.
+- require ncurses-devel to build
+
+* Wed Apr 19 2006  Derek Atkins <warlord@MIT.EDU> 1.4.1-3
+- look for krb524 functions in libkrb524 if we can't find them
+  in the standard locations.
 
 * Tue Apr 18 2006  Derek Atkins <warlord@MIT.EDU> 1.4.1-2
 - fix the module_param_array macro for Linux 2.6.9.

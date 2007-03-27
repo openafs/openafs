@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.11 2006/10/10 20:29:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.14 2006/12/30 16:56:39 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -478,7 +478,7 @@ GetCellUnix(struct afsconf_dir *adir)
 {
     char *rc;
     char tbuffer[256];
-    char *p;
+    char *start, *p;
     afsconf_FILE *fp;
     
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
@@ -488,12 +488,20 @@ GetCellUnix(struct afsconf_dir *adir)
     }
     rc = fgets(tbuffer, 256, fp);
     fclose(fp);
+    if (rc == NULL)
+        return -1;
 
-    p = strchr(tbuffer, '\n');
-    if (p)
-	*p = '\0';
+    start = tbuffer;
+    while (*start != '\0' && isspace(*start))
+        start++;
+    p = start;
+    while (*p != '\0' && !isspace(*p))
+        p++;
+    *p = '\0';
+    if (*start == '\0')
+        return -1;
 
-    adir->cellName = strdup(tbuffer);
+    adir->cellName = strdup(start);
     return 0;
 }
 
@@ -852,12 +860,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     char host[256];
     int server_num = 0;
     int minttl = 0;
+    int try_init = 0;
 
     /* The resolver isn't always MT-safe.. Perhaps this ought to be
      * replaced with a more fine-grained lock just for the resolver
      * operations.
      */
 
+ retryafsdb:
     if ( ! strchr(acellName,'.') ) {
        cellnamelength=strlen(acellName);
        dotcellname=malloc(cellnamelength+2);
@@ -865,7 +875,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
        dotcellname[cellnamelength]='.';
        dotcellname[cellnamelength+1]=0;
        LOCK_GLOBAL_MUTEX;
-	    len = res_search(dotcellname, C_IN, T_AFSDB, answer, sizeof(answer));
+       len = res_search(dotcellname, C_IN, T_AFSDB, answer, sizeof(answer));
        if ( len < 0 ) {
           len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
        }
@@ -873,11 +883,17 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
        free(dotcellname);
     } else {
        LOCK_GLOBAL_MUTEX;
-	    len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
+       len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
        UNLOCK_GLOBAL_MUTEX;
     }
-    if (len < 0)
+    if (len < 0) {
+	if (try_init < 1) {
+	    try_init++;
+	    res_init();
+	    goto retryafsdb;
+	}
 	return AFSCONF_NOTFOUND;
+    }
 
     p = answer + sizeof(HEADER);	/* Skip header */
     code = dn_expand(answer, answer + len, p, host, sizeof(host));

@@ -33,6 +33,8 @@ AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
+AC_ARG_ENABLE( unix-sockets,
+[  --enable-unix-sockets               enable use of unix domain sockets for fssync],, enable_unix_sockets="yes")
 AC_ARG_ENABLE( full-vos-listvol-switch,
 [  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
@@ -433,6 +435,9 @@ else
 		sparc-sun-solaris2.10)
 			AFS_SYSNAME="sun4x_510"
 			;;
+		sparc-sun-solaris2.11)
+			AFS_SYSNAME="sun4x_511"
+			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
 			enable_login="yes"
@@ -448,6 +453,9 @@ else
 			;;
 		i386-pc-solaris2.10)
 			AFS_SYSNAME="sunx86_510"
+			;;
+		i386-pc-solaris2.11)
+			AFS_SYSNAME="sunx86_511"
 			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
@@ -573,6 +581,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 
+		 LINUX_KERNEL_COMPILE_WORKS
+		 LINUX_CONFIG_H_EXISTS
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
@@ -580,6 +590,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
+		 LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS
 		 LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
@@ -597,6 +608,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
+		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_SELINUX
@@ -612,12 +624,22 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
+		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
+		 LINUX_STATFS_TAKES_DENTRY
+		 LINUX_FREEZER_H_EXISTS
+		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
+		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
+		 fi
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
+		 LINUX_INIT_WORK_HAS_DATA
+		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
@@ -687,6 +709,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
 		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
+		 fi
+		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
+		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
 		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
@@ -781,8 +806,17 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
 		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_tgid" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TGID, 1, [define if your struct task_struct has tgid])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
+		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
+		 fi
+		 if test "x$ac_cv_linux_statfs_takes_dentry" = "xyes"; then
+		  AC_DEFINE(STATFS_TAKES_DENTRY, 1, [define if your statfs takes a dentry argument])
 		 fi
 		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
 		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
@@ -801,6 +835,18 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
+		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
+		  echo flock support is currently disabled in OpenAFS 1.4 for Linux
+		 fi
+		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
+		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
+		 fi
+		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
 		 fi
                 :
 		fi
@@ -988,6 +1034,14 @@ fi
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
+
+if test "$enable_unix_sockets" = "yes"; then
+       AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
+       USE_UNIX_SOCKETS="yes"
+else
+       USE_UNIX_SOCKETS="no"
+fi
+AC_SUBST(USE_UNIX_SOCKETS)
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH AKLOG 1 "OpenAFS" "31/Jul/2006" "AFS Command Reference"
+.TH AKLOG 1 "OpenAFS" "9/Nov/2006" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -210,6 +210,17 @@ service and then storing it as a token.  By default, it obtains that
 ticket from the realm corresponding to that cell (the upcase version of
 the cell name), but a different realm for a particular cell can be
 specified with \fB\-k\fR.  \fB\-k\fR cannot be used in \fB\-path\fR mode (see below).
+.PP
+When using \fBaklog\fR, be aware that AFS uses the Kerberos v4 principal
+naming format, not the Kerberos v5 format, when referring to principals in
+PTS ACLs, \fIUserList\fR, and similar locations.  AFS will internally map
+Kerberos v5 principal names to the Kerberos v4 syntax by removing any
+portion of the instance after the first period (generally the domain name
+of a host principal), changing any \f(CW/\fR to \f(CW.\fR, and changing an initial
+principal part of \f(CWhost\fR to \f(CWrcmd\fR.  In other words, to create a PTS
+entry for the Kerberos v5 principal \f(CWuser/admin\fR, refer to it as
+\f(CWuser.admin\fR, and for the principal \f(CWhost/shell.example.com\fR, refer to
+it as \f(CWrcmd.shell\fR.
 .SH "OPTIONS"
 .Ip "\fB\-524\fR" 4
 Normally, \fBaklog\fR generates native K5 tokens.  This flag tells \fBaklog\fR
@@ -267,7 +278,9 @@ access all of the directories.  Normally, this flag isn't necessary;
 .Ip "\fB\-setpag\fR" 4
 When setting tokens, attempt to put the parent process in a new \s-1PAG\s0.  This
 is usually used as part of the login process but can be used any time to
-create a new \s-1AFS\s0 authentication context.
+create a new \s-1AFS\s0 authentication context.  Note that this in some cases
+relies on dangerous and tricky manipulations of kernel records and will
+not work on all platforms or with all Linux kernels.
 .Ip "\fB\-zsubs\fR" 4
 Prints out the Zephyr subscription information to get alerts regarding all
 of the file servers required to access a particular path.  The output is

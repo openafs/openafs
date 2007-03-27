@@ -639,7 +639,11 @@ afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname)
     struct afs_dynSymlink *tps;
     int found = 0;
 
+#if defined(AFS_SUN510_ENV)
+    if (crgetruid(acred))
+#else
     if (acred->cr_uid)
+#endif
 	return EPERM;
 
     ObtainWriteLock(&afs_dynSymlinkLock, 97);

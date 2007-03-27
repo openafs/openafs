@@ -28,6 +28,9 @@
 /* define if completion_h exists */
 #undef COMPLETION_H_EXISTS
 
+/* define if config.h exists */
+#undef CONFIG_H_EXISTS
+
 /* define if for_each_process defined */
 #undef DEFINED_FOR_EACH_PROCESS
 
@@ -58,8 +61,14 @@
 /* define if your linux kernel exports sys_wait4 */
 #undef EXPORTED_SYS_WAIT4
 
+/* define if tasklist_lock exported */
+#undef EXPORTED_TASKLIST_LOCK
+
 /* define if you want to have fast restart */
 #undef FAST_RESTART
+
+/* define if you have linux/freezer.h */
+#undef FREEZER_H_EXISTS
 
 /* define if you want to want listvol switch */
 #undef FULL_LISTVOL_SWITCH
@@ -337,6 +346,9 @@
 /* Define to 1 if you have the <winsock2.h> header file. */
 #undef HAVE_WINSOCK2_H
 
+/* define if INIT_WORK takes a data (3rd) argument */
+#undef INIT_WORK_HAS_DATA
+
 /* define if your setattr return return non-void */
 #undef INODE_SETATTR_NOT_VOID
 
@@ -391,6 +403,9 @@
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
 
+/* define if register_sysctl_table has no insert_at head flag */
+#undef REGISTER_SYSCTL_TABLE_NOFLAG
+
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
@@ -399,8 +414,11 @@
    release 3. */
 #undef SETVBUF_REVERSED
 
-/* The size of `long', as computed by sizeof. */
+/* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
+
+/* define if your statfs takes a dentry argument */
+#undef STATFS_TAKES_DENTRY
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
@@ -422,6 +440,9 @@
 
 /* define if your struct inode has alloc_sem */
 #undef STRUCT_INODE_HAS_I_ALLOC_SEM
+
+/* define if your struct inode has i_blkbits */
+#undef STRUCT_INODE_HAS_I_BLKBITS
 
 /* define if your struct inode has i_blksize */
 #undef STRUCT_INODE_HAS_I_BLKSIZE
@@ -474,8 +495,17 @@
 /* define if your struct task_struct has signal->rlim */
 #undef STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 
+/* define if your struct task_struct has tgid */
+#undef STRUCT_TASK_STRUCT_HAS_TGID
+
+/* define if your struct task_struct has todo */
+#undef STRUCT_TASK_STRUCT_HAS_TODO
+
 /* define if you want to have support for nested pts groups */
 #undef SUPERGROUPS
+
+/* define if you want to use UNIX sockets for fssync. */
+#undef USE_UNIX_SOCKETS
 
 /* Version number of package */
 #undef VERSION
@@ -510,7 +540,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
+/* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define to `int' if <sys/types.h> does not define. */
@@ -532,6 +562,12 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #   if BYTE_ORDER == BIG_ENDIAN
 #   define WORDS_BIGENDIAN 1
 #   endif
+#  else
+#   if defined(AUTOCONF_FOUND_BIGENDIAN)
+#    define WORDS_BIGENDIAN 1
+#   else
+#    undef WORDS_BIGENDIAN
+#   endif
 #  endif
 # else
 #  if defined(AUTOCONF_FOUND_BIGENDIAN)
@@ -541,11 +577,11 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #  endif
 # endif
 #else
-#if defined(__BIG_ENDIAN__)
-#define WORDS_BIGENDIAN 1
-#else
-#undef WORDS_BIGENDIAN
-#endif
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# else
+#  undef WORDS_BIGENDIAN
+# endif
 #endif
 
 #undef AFS_AFSDB_ENV

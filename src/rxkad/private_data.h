@@ -56,7 +56,7 @@ struct rxkad_cprivate {
     rxkad_type type;		/* always client */
     rxkad_level level;		/* minimum security level of client */
     afs_int32 kvno;		/* key version of ticket */
-    afs_int16 ticketLen;	/* length of ticket */
+    afs_int32 ticketLen;	/* length of ticket */
     fc_KeySchedule keysched;	/* the session key */
     fc_InitializationVector ivec;	/* initialization vector for cbc */
     char ticket[MAXKTCTICKETLEN];	/* the ticket for the server */

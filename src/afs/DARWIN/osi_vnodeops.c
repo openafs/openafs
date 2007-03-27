@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.20 2006/03/02 06:36:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.21 2007/02/15 00:29:51 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -354,6 +354,7 @@ afs_vop_lookup(ap)
     }
 #ifdef AFS_DARWIN80_ENV
     if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+	DROPNAME();
 	*ap->a_vpp = 0;
 	return error;
     }
@@ -438,8 +439,9 @@ afs_vop_create(ap)
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
         if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
-             *ap->a_vpp=0;
-             return error;
+	    DROPNAME();
+	    *ap->a_vpp=0;
+	    return error;
         }
 #endif
 	*ap->a_vpp = AFSTOV(vcp);

@@ -32,11 +32,11 @@ DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 #CC = /opt/SUNWspro/bin/cc
 KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510>
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
 KDEFS_32 = 
 KDEFS_64 = -xarch=v9 
 
-<sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 KDEFS_32 = 
 KDEFS_64 = -xarch=amd64 -xmodel=kernel
 
@@ -44,20 +44,20 @@ KDEFS_64 = -xarch=amd64 -xmodel=kernel
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510>
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sun4x_511 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510 -sunx86_511>
 KOBJ = MODLOAD
-<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 KOBJ = MODLOAD32 MODLOAD64
-<sun4x_510>
+<sun4x_510 sun4x_511>
 KOBJ = MODLOAD64
 
 # This tells Makefile.common to use it's single directory build target.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510>
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sun4x_511 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510 -sunx86_511>
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
 DESTDIRS = single_destdir
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 COMPDIRS = solaris_compdirs
 INSTDIRS = solaris_instdirs
 DESTDIRS = solaris_destdirs
@@ -89,7 +89,7 @@ setup:
 ## This is the target for a Solaris 7. Here we build both the 32 bit and
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
@@ -125,7 +125,7 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.o
 

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.8.2.5 2006/08/20 22:16:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_file.c,v 1.8.2.6 2006/11/09 23:26:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -202,7 +202,6 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;
-	astat->blksize = tvattr.va_blocksize;
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }

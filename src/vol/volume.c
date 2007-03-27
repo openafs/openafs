@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.8 2006/08/24 20:21:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.9 2006/10/22 02:02:01 jaltman Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -317,7 +317,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	    dpq = (diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
 	    assert(dpq != NULL);
 	    dpq->diskP = diskP;
-	    queue_Prepend(&params,dpq);
+	    queue_Append(&params,dpq);
 	}
 
 	assert(pthread_attr_init(&attrs) == 0);

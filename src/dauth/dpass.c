@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dauth/Attic/dpass.c,v 1.7 2003/07/15 23:14:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dauth/Attic/dpass.c,v 1.7.2.1 2006/10/22 02:08:33 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -109,7 +109,7 @@ CommandProc(as, arock)
 		    cell_p);
 	} else {
 	    strncpy(cell, cellinfo.name, sizeof(cell) - 1);
-	    cell[sizeof(cell)] = '\0';
+	    cell[sizeof(cell)-1] = '\0';
 	    cell_p = cell;
 	}
     } else {

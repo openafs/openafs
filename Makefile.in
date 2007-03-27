@@ -129,7 +129,7 @@ comerr: util
 
 cmd: comerr
 	@case ${SYS_NAME} in \
-	sgi_6* | sun*_5[789] | sun*_510 | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
+	sgi_6* | sun*_5[789] | sun*_51[01] | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
@@ -699,7 +699,7 @@ clean2:
 distclean: clean
 	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
-	src/config/afsconfig.h \
+	src/config/afsconfig.h src/config/stamp-h1 \
 	Makefile \
 	src/afs/Makefile \
 	src/afsd/Makefile \
@@ -756,6 +756,7 @@ distclean: clean
 	src/libafs/Makefile \
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+	src/libafs/afs.${MKAFS_OSTYPE}.plist \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
 	src/libuafs/Makefile \

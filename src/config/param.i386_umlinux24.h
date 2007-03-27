@@ -35,9 +35,7 @@
 
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
 
-#include <linux/config.h>
 #ifdef CONFIG_SMP
 #undef CONFIG_SMP
 #endif

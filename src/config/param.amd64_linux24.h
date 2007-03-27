@@ -41,9 +41,7 @@
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
 
-#include <linux/config.h>
 #ifdef CONFIG_SMP
 #undef CONFIG_SMP
 #endif
@@ -89,7 +87,7 @@
 #endif
 #endif /* KERNEL */
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
+#define USE_UCONTEXT           /* should be in afsconfig.h */
 
 #endif /* _PARAM_AMD64_LINUX20_H_ */
 
@@ -160,7 +158,7 @@
 #define CMSERVERPREF
 #endif
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
+#define USE_UCONTEXT           /* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */
 

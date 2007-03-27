@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.7 2005/11/02 00:28:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.8 2006/12/01 18:49:28 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -54,6 +54,24 @@ RCSID
 #define SYSCALL2POINTER (void *)
 #endif
 
+#if defined(AFS_S390X_LINUX24_ENV) 
+#define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
+	if (POINTER2SYSCALL FUNC > 0x7fffffff) { \
+	    TMPPAGE = kmalloc ( PAGE_SIZE, GFP_DMA|GFP_KERNEL );	\
+	    if (POINTER2SYSCALL TMPPAGE > 0x7fffffff) { \
+		printf("Cannot allocate page for FUNC syscall jump vector\n"); \
+		return EINVAL; \
+	    } \
+	    memcpy(TMPPAGE, syscall_jump_code, sizeof(syscall_jump_code)); \
+	    *(void **)(TMPPAGE + 0x0c) = &FUNC; \
+	    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL TMPPAGE; \
+	} else \
+	    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC;
+#else
+#define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
+    afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC;
+#endif 
+
 #if defined(AFS_S390X_LINUX24_ENV) && !defined(AFS_LINUX26_ENV)
 #define _S(x) ((x)<<1)
 #elif defined(AFS_IA64_LINUX20_ENV)
@@ -69,6 +87,23 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
 
 static SYSCALLTYPE *afs_sys_call_table;
 static SYSCALLTYPE afs_ni_syscall = 0;
+
+#ifdef AFS_S390X_LINUX24_ENV
+static void *afs_sys_setgroups_page = 0;
+static void *afs_sys_setgroups32_page = 0;
+static void *afs_syscall_page = 0;
+
+/* Because of how the syscall table is handled, we need to ensure our 
+   syscalls are within the first 2gb of address space. This means we need
+   self-modifying code we can inject to call our handlers if the module 
+   is loaded high. If keyrings had advanced as fast as false protection
+   this would be unnecessary. */
+
+uint32_t syscall_jump_code[] = {
+  0xe3d0f030, 0x00240dd0, 0xa7f40006, 0xffffffff, 0xffffffff, 0xe310d004, 
+  0x0004e3d0, 0xf0300004, 0x07f10000, 
+};
+#endif
 
 extern long afs_xsetgroups();
 asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
@@ -483,16 +518,17 @@ int osi_syscall_init(void)
 
 	/* setup AFS entry point */
 	afs_ni_syscall = afs_sys_call_table[_S(__NR_afs_syscall)];
-	afs_sys_call_table[_S(__NR_afs_syscall)] = POINTER2SYSCALL afs_syscall;
+
+	INSERT_SYSCALL(__NR_afs_syscall, afs_syscall_page, afs_syscall)
 
 	/* setup setgroups */
 	sys_setgroupsp = SYSCALL2POINTER afs_sys_call_table[_S(__NR_setgroups)];
-	afs_sys_call_table[_S(__NR_setgroups)] = POINTER2SYSCALL afs_xsetgroups;
+	INSERT_SYSCALL(__NR_setgroups, afs_sys_setgroups_page, afs_xsetgroups)
 
 #if defined(__NR_setgroups32)
 	/* setup setgroups32 */
 	sys_setgroups32p = SYSCALL2POINTER afs_sys_call_table[__NR_setgroups32];
-	afs_sys_call_table[__NR_setgroups32] = POINTER2SYSCALL afs_xsetgroups32;
+	INSERT_SYSCALL(__NR_setgroups32, afs_sys_setgroups32_page, afs_xsetgroups32)
 #endif
     }
 #endif /* !AFS_IA64_LINUX20_ENV */
@@ -579,6 +615,16 @@ void osi_syscall_clean(void)
 #if defined(__NR_setgroups32) && !defined(AFS_IA64_LINUX20_ENV)
 	/* put back setgroups32 */
 	afs_sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroups32p;
+#endif
+#if defined(AFS_S390X_LINUX24_ENV)
+#if defined(__NR_setgroups32) && !defined(AFS_IA64_LINUX20_ENV)
+	if (afs_sys_setgroups32_page)
+	    kfree(afs_sys_setgroups32_page);
+#endif
+	if (afs_sys_setgroups_page)
+	    kfree(afs_sys_setgroups_page);
+	if (afs_syscall_page)
+	    kfree(afs_syscall_page);
 #endif
     }
 

@@ -10,6 +10,15 @@
 #include <afs/budb_client.h>
 #include <afs/afsutil.h>
 
+#ifdef HAVE_STDIO_H
+#include <stdio.h>
+#endif /* HAVE_STDIO_H */
+#if defined(HAVE_STRING_H)
+# include <string.h>
+#elif defined(HAVE_STRINGS_H)
+# include <strings.h>
+#endif /* HAVE_STRING_H */
+
 /*
  * Represents a host in the config database.
  */

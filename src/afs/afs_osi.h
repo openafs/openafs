@@ -41,7 +41,6 @@ struct osi_socket {
 
 struct osi_stat {
     afs_int32 size;		/* file size in bytes */
-    afs_int32 blksize;		/* optimal transfer size in bytes */
     afs_int32 mtime;		/* modification date */
     afs_int32 atime;		/* access time */
 };
@@ -213,7 +212,11 @@ typedef struct timeval osi_timeval_t;
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	curproc
 #else
+#ifdef AFS_LINUX_ENV
+#define osi_ThreadUnique()	(current->pid)
+#else
 #define osi_ThreadUnique()	getpid()
+#endif
 #endif
 
 

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.10 2006/09/22 11:20:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.12 2007/02/26 17:59:21 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -170,7 +170,11 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 #ifdef PF_FREEZE
 	    current->flags & PF_FREEZE
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
+#else
+            test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#endif
 #endif
 	    )
 #ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
@@ -200,24 +204,34 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 
     return code;
 }
+#ifdef EXPORTED_TASKLIST_LOCK
 extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
 void
 osi_StopListener(void)
 {
     struct task_struct *listener;
     extern int rxk_ListenerPid;
 
+#ifdef EXPORTED_TASKLIST_LOCK
     if (&tasklist_lock)
       read_lock(&tasklist_lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
     else
+#endif
       rcu_read_lock();
 #endif
     listener = find_task_by_pid(rxk_ListenerPid);
+#ifdef EXPORTED_TASKLIST_LOCK
     if (&tasklist_lock)
        read_unlock(&tasklist_lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#ifdef EXPORTED_TASKLIST_LOCK
     else
+#endif
       rcu_read_unlock();
 #endif
     while (rxk_ListenerPid) {

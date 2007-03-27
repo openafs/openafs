@@ -15,26 +15,42 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dsstub.c,v 1.6.2.1 2005/04/03 18:48:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dsstub.c,v 1.6.2.2 2007/01/05 03:34:09 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
-#include <strings.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-#include <stdio.h>
 #include <dirent.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>
 #include <afs/bubasics.h>
 #include <afs/volser.h>
+#include "bc.h"
 
-#define	dprintf			/* debug */
+/* protos */
+
+static char * TapeName(register char *);
+static char * DumpName(register afs_int32 adumpID);
+static FILE * OpenDump(afs_int32 , char * );
+FILE * OpenTape(char * , char * );
+static afs_int32 ScanForChildren(afs_int32 );
+static afs_int32 DeleteDump(afs_int32 );
+static afs_int32 DeleteTape(char * );
+char * tailCompPtr(char *);
+afs_int32 ScanDumpHdr(register FILE *, char *, char *, afs_int32 *, afs_int32 *,
+  afs_int32 *, afs_int32 *);
+static afs_int32 ScanTapeHdr(register FILE *, afs_int32 *, afs_int32 *, afs_int32 *);
+afs_int32 ScanTapeVolume(FILE *, char *, afs_int32 *, char *, afs_int32 *, afs_int32 *,
+   afs_int32 *, afs_int32 *);
+afs_int32 ScanVolClone(FILE *, char *, afs_int32 *);
+static int SeekDump(register FILE *afile, afs_int32 apos);
+
 
 /* basic format of a tape file is a file, whose name is "T<tapename>.db", and
  * which contains the fields
@@ -57,9 +73,8 @@ static afs_int32 DeleteDump();
 afs_int32 ScanDumpHdr();
 
 /* return the tape file name corresponding to a particular tape */
-static char *
-TapeName(atapeName)
-     register char *atapeName;
+
+static char * TapeName(register char *atapeName)
 {
     static char tbuffer[AFSDIR_PATH_MAX];
 
@@ -72,9 +87,8 @@ TapeName(atapeName)
 }
 
 /* return the dump file name corresponding to a particular dump ID */
-static char *
-DumpName(adumpID)
-     register afs_int32 adumpID;
+
+static char * DumpName(register afs_int32 adumpID)
 {
     static char tbuffer[AFSDIR_PATH_MAX];
     char buf[AFSDIR_PATH_MAX];
@@ -86,10 +100,7 @@ DumpName(adumpID)
     return tbuffer;
 }
 
-static FILE *
-OpenDump(adumpID, awrite)
-     char *awrite;
-     afs_int32 adumpID;
+static FILE * OpenDump(afs_int32 adumpID, char * awrite)
 {
     register char *tp;
     register FILE *tfile;
@@ -104,10 +115,7 @@ OpenDump(adumpID, awrite)
  * 	non-static for recoverDB
  */
 
-FILE *
-OpenTape(atapeName, awrite)
-     char *awrite;
-     char *atapeName;
+FILE * OpenTape(char * atapeName, char * awrite)
 {
     register char *tp;
     register FILE *tfile;
@@ -117,9 +125,8 @@ OpenTape(atapeName, awrite)
 }
 
 /* scan for, and delete, all dumps whose parent dump ID is aparentID */
-static afs_int32
-ScanForChildren(aparentID)
-     afs_int32 aparentID;
+
+static afs_int32 ScanForChildren(afs_int32 aparentID)
 {
     DIR *tdir;
     register struct dirent *tde;
@@ -162,9 +169,7 @@ ScanForChildren(aparentID)
     return 0;
 }
 
-static afs_int32
-DeleteDump(adumpID)
-     afs_int32 adumpID;
+static afs_int32 DeleteDump(afs_int32 adumpID)
 {
     register char *tp;
     register afs_int32 code;
@@ -176,9 +181,7 @@ DeleteDump(adumpID)
     return code;
 }
 
-static afs_int32
-DeleteTape(atapeName)
-     char *atapeName;
+static afs_int32 DeleteTape(char * atapeName)
 {
     register char *tp;
     register afs_int32 code;
@@ -192,9 +195,7 @@ DeleteTape(atapeName)
  *	pointer to it
  */
 
-char *
-tailCompPtr(pathNamePtr)
-     char *pathNamePtr;
+char * tailCompPtr(char *pathNamePtr)
 {
     char *ptr;
     ptr = strrchr(pathNamePtr, '/');
@@ -222,14 +223,7 @@ tailCompPtr(pathNamePtr)
  *	alevel - level of dump (0 = full, 1+ are incrementals)
  */
 afs_int32
-ScanDumpHdr(afile, aname, dumpName, aparent, aincTime, acreateTime, alevel)
-     register FILE *afile;
-     char *aname;
-     char *dumpName;
-     afs_int32 *aparent;
-     afs_int32 *acreateTime;
-     afs_int32 *aincTime;
-     afs_int32 *alevel;
+ScanDumpHdr(register FILE *afile, char *aname, char *dumpName, afs_int32 *aparent, afs_int32 *aincTime, afs_int32 *acreateTime, afs_int32 *alevel)
 {
     char tbuffer[256];
     char *tp;
@@ -253,12 +247,7 @@ ScanDumpHdr(afile, aname, dumpName, aparent, aincTime, acreateTime, alevel)
 }
 
 /* scan a tape header out of a tape file, leaving the file ptr positioned just past the header */
-static afs_int32
-ScanTapeHdr(afile, adumpID, aseq, adamage)
-     register FILE *afile;
-     afs_int32 *adumpID;
-     afs_int32 *aseq;
-     afs_int32 *adamage;
+static afs_int32 ScanTapeHdr(register FILE *afile, afs_int32 *adumpID, afs_int32 *aseq, afs_int32 *adamage)
 {
     char tbuffer[256];
     char *tp;
@@ -282,14 +271,7 @@ ScanTapeHdr(afile, adumpID, aseq, adamage)
  *	-1 for error
  */
 
-afs_int32
-ScanTapeVolume(afile, avolName, avolID, atapeName, apos, aseq, alastp,
-	       cloneTime)
-     FILE *afile;
-     char *avolName;
-     afs_int32 *avolID;
-     char *atapeName;
-     afs_int32 *apos, *aseq, *alastp, *cloneTime;
+afs_int32 ScanTapeVolume(FILE *afile, char *avolName, afs_int32 *avolID, char *atapeName, afs_int32 *apos, afs_int32 *aseq, afs_int32 *alastp, afs_int32 *cloneTime)
 {
     char tbuffer[256];
     register afs_int32 code;
@@ -318,11 +300,7 @@ ScanTapeVolume(afile, avolName, avolID, atapeName, apos, aseq, alastp,
  *	-1 - volume with volName not found
  */
 
-afs_int32
-ScanVolClone(tdump, volName, cloneTime)
-     FILE *tdump;
-     char *volName;
-     afs_int32 *cloneTime;
+afs_int32 ScanVolClone(FILE *tdump, char *volName, afs_int32 *cloneTime)
 {
     char avolName[256], atapeName[256];
     afs_int32 retval, avolID, apos, aseq, alastp;
@@ -341,10 +319,7 @@ ScanVolClone(tdump, volName, cloneTime)
 }
 
 /* seek a dump file (after a header scan has been done) to position apos */
-static
-SeekDump(afile, apos)
-     register FILE *afile;
-     afs_int32 apos;
+static int SeekDump(register FILE *afile, afs_int32 apos)
 {
     register afs_int32 i;
     register char *tp;

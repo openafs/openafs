@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.25 2006/09/16 19:19:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.26 2007/02/09 01:30:33 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -423,7 +423,7 @@ get_page_offset(void)
     struct task_struct *p, *q;
 
     /* search backward thru the circular list */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
     read_lock(&tasklist_lock);
 #endif
     /* search backward thru the circular list */
@@ -433,14 +433,14 @@ get_page_offset(void)
     for (p = current; p; p = p->prev_task) {
 #endif
 	if (p->pid == 1) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
 	    read_unlock(&tasklist_lock);
 #endif
 	    return p->addr_limit.seg;
 	}
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#if defined(EXPORTED_TASKLIST_LOCK) 
     read_unlock(&tasklist_lock);
 #endif
     return 0;
