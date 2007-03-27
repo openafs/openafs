@@ -24,27 +24,30 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/bosserver
+DAEMON_ARGS=""
 NAME=bosserver
 DESC="AFS Server"
 
-
+# Make sure we don't leave file descriptors open.
 exec 3>/dev/null
 exec </dev/null
 
-test -f $DAEMON || exit 0
+# Exit if the package is not installed.
+[ -x "$DAEMON" ] || exit 0
 
-
+# Read configuration if it is present.
+[ -r /etc/default/openafs-fileserver ] && . /etc/default/openafs-fileserver
 
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON
+		--exec $DAEMON -- $DAEMON_ARGS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-    bos shutdown localhost -wait -localauth
+	bos shutdown localhost -wait -localauth
 	start-stop-daemon --stop --quiet  \
 		--user root --name bosserver
 	echo "$NAME."
@@ -72,7 +75,7 @@ case "$1" in
             bos restart localhost -localauth -bos
         else
             start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-                --exec $DAEMON
+                --exec $DAEMON -- $DAEMON_ARGS
         fi
 	sleep 1
 	echo "$NAME."

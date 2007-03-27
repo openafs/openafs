@@ -4,6 +4,8 @@ openafs (1.4.4-1) experimental; urgency=low
     - Support newer Linux kernels.  (Closes: #409797, #410120)
     - Add aklog fallbacks for null realms to support the referral
       capability in MIT Kerberos 1.6 and later.  (Closes: #410314)
+  * Apply patch from Thomas Sesselmann to support setting options to pass
+    to bosserver in /etc/default/openafs-fileserver.  (Closes: #409357)
 
  --
 
