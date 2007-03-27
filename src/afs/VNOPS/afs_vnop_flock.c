@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.6 2006/06/02 21:23:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.10 2007/03/10 16:08:08 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -25,6 +25,10 @@ RCSID
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
 #include "afs/unified_afs.h"
+
+
+
+
 
 /* Static prototypes */
 static int HandleGetLock(register struct vcache *avc,
@@ -547,6 +551,10 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	af->l_len = 0;		/* since some systems indicate it as EOF */
 #endif
 #endif
+    /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU; bottom 32 bits
+     * sometimes get masked off by OS */
+    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffe))
+	af->l_len = 0;
     /* next line makes byte range locks always succeed,
      * even when they should block */
     if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
@@ -571,7 +579,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);

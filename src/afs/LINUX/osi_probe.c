@@ -59,7 +59,9 @@
 #include "afsincludes.h"
 #endif
 #include <linux/version.h>
+#ifdef CONFIG_H_EXISTS
 #include <linux/config.h>
+#endif
 #include <linux/linkage.h>
 #include <linux/init.h>
 #include <linux/unistd.h>
@@ -245,7 +247,6 @@ extern asmlinkage long sys_exit (int) __attribute__((weak));
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
 #endif
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
-extern rwlock_t tasklist_lock __attribute__((weak));
 
 
 /* Structures used to control probing.  We put all the details of which
@@ -513,7 +514,7 @@ static probectl main_probe = {
     (unsigned long)&sys_close,
 #elif defined(AFS_AMD64_LINUX20_ENV)
     /* On this platform, it's in a different section! */
-    (unsigned long)&tasklist_lock,
+    (unsigned long)&generic_ro_fops,
 #else
     (unsigned long)&init_mm,
 #endif
@@ -535,7 +536,7 @@ static probectl main_probe = {
     0x1fffff,
     0x30000,
 #elif defined(AFS_AMD64_LINUX20_ENV)
-    (unsigned long)(&tasklist_lock) - 0x30000,
+    (unsigned long)(&generic_ro_fops) - 0x30000,
     0,
     0x6000,
 #elif defined(AFS_PPC64_LINUX26_ENV)
@@ -554,9 +555,9 @@ static probectl main_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -652,9 +653,9 @@ static probectl ia32_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -791,9 +792,9 @@ static probectl sct32_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -886,9 +887,9 @@ static probectl emu_probe = {
 
 #ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
-    (unsigned long)scsi_command_size,
+    (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
-    0x30000,
+    0x40000,
 #else
     0, 0, 0, 0,
 #endif
@@ -1010,7 +1011,12 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 	ptr = aptr;
 #endif
 	if ((unsigned long)ptr < init_mm.start_code ||
-		(unsigned long)ptr > init_mm.end_data) {
+#if defined(AFS_AMD64_LINUX20_ENV)
+		(unsigned long)ptr > init_mm.brk)
+#else
+		(unsigned long)ptr > init_mm.end_data)
+#endif
+	{
 /*	     printk("address 0x%lx (from 0x%lx %d) is out of range in check_table. wtf?\n", (unsigned long)x, (unsigned long)ptr, i);*/
 	     continue;
 	}
@@ -1119,8 +1125,13 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 	printk("<7>osi_probe: %s                      try_harder\n", P->symbol);
 #endif
     for (offset = 0; offset < datalen; offset++, ptr++) {
-	if ((unsigned long)ptr < init_mm.start_code ||
-		(unsigned long)ptr > init_mm.end_data) {
+	 if ((unsigned long)ptr < init_mm.start_code ||
+#if defined(AFS_AMD64_LINUX20_ENV)
+		(unsigned long)ptr > init_mm.brk)
+#else
+		(unsigned long)ptr > init_mm.end_data)
+#endif
+	{
 /*	     printk("address 0x%lx (from 0x%lx %d) is out of range in check_table. wtf?\n", (unsigned long)x, (unsigned long)ptr, i);*/
 	     continue;
 	}

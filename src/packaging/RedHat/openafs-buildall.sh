@@ -4,7 +4,7 @@
 #
 # Written by:  Derek Atkins <warlord@MIT.EDU>
 #
-# $Revision: 1.1.2.1 $
+# $Revision: 1.1.2.2 $
 #
 
 # Define where the Specfile is located.
@@ -15,19 +15,27 @@ buildopts=
 
 ############################################################################
 #  Figure out the release version
-rhrel=`cat /etc/redhat-release`
+[ -f /etc/redhat-release ] && rhrel=`cat /etc/redhat-release`
+[ -f /etc/SuSE-release ] && rhrel=`head -1  /etc/SuSE-release`
+
 if [ `echo $rhrel | grep -c 'Fedora Core'` = 1 ] ; then
   ostype='fc'
+  osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
 elif [ `echo $rhrel | grep -c 'Red Hat Enterprise Linux'` = 1 ] ; then
   ostype='rhel'
   excludearch=i586
+  osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
 elif [ `echo $rhrel | grep -c 'Red Hat Linux'` = 1 ] ; then
   ostype='rh'
+  osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
+elif [ `echo $rhrel | grep -c 'SUSE LINUX'` = 1 ] ; then
+  ostype='suse'
+  specdir=/usr/src/packages/SPECS 
+  osrel=`grep VERSION /etc/SuSE-release|awk '{print $3}'`
 else
   echo "Unknown Linux Release: $rhrel"
   exit 1
 fi
-osrel=`echo $rhrel | sed -e 's/^.*release \([^ ]*\).*$/\1/' -e 's/\.//g'`
 osvers="$ostype$osrel"
 
 ############################################################################
@@ -35,13 +43,14 @@ osvers="$ostype$osrel"
 # kernel version is "close enough" to tell us whether it's a
 # 2.4 or 2.6 kernel.
 kvers=`uname -r`
+kbase=/usr/src/linux-
+
 case $kvers in
   2.4.*)
-    kbase=/usr/src/linux-
     kv=2.4.
     ;;
   2.6.*)
-    kbase=/usr/src/kernels/
+    [ -d /usr/src/kernels ] && kbase=/usr/src/kernels/
     kv=2.6.
     ;;
   *)
@@ -49,7 +58,6 @@ case $kvers in
     exit 1
     ;;
 esac
-
 ############################################################################
 # Now build the packages and all the kernel modules
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/expire.c,v 1.6 2003/07/15 23:14:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/expire.c,v 1.6.2.1 2007/01/05 03:34:09 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -21,7 +21,6 @@ RCSID
 #include <afs/cmd.h>
 #include <ctype.h>
 #include "bc.h"
-#include <strings.h>
 
 
 #define	MAX_YEAR_VALUE	0

@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dump.c,v 1.12.2.1 2005/04/03 18:15:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dump.c,v 1.12.2.2 2007/01/05 03:34:09 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -23,7 +23,6 @@ RCSID
 #include <winsock2.h>
 #else
 #include <sys/param.h>
-#include <strings.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>

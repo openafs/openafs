@@ -1,5 +1,5 @@
 /*
- * $Id: asetkey.c,v 1.4.2.5 2006/08/02 19:53:20 shadow Exp $
+ * $Id: asetkey.c,v 1.4.2.6 2007/01/05 03:22:00 shadow Exp $
  *
  * asetkey - Manipulates an AFS KeyFile
  *
@@ -11,6 +11,12 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif /* HAVE_MEMORY_H */
@@ -29,6 +35,13 @@
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/dirpath.h>
+
+#ifdef HAVE_KRB5_CREDS_KEYBLOCK
+#define USING_MIT 1
+#endif
+#ifdef HAVE_KRB5_CREDS_SESSION
+#define USING_HEIMDAL 1
+#endif
 
 int
 main(int argc, char *argv[])
@@ -82,13 +95,26 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (key->length != 8) {
+#ifdef USING_HEIMDAL
+#define deref_key_length(key) \
+	  key->keyvalue.length
+
+#define deref_key_contents(key) \
+	key->keyvalue.data
+#else
+#define deref_key_length(key) \
+	  key->length
+
+#define deref_key_contents(key) \
+	key->contents
+#endif
+	if (deref_key_length(key) != 8) {
 		fprintf(stderr, "Key length should be 8, but is really %d!\n",
-		       key->length);
+			deref_key_length(key));
 		exit(1);
 	}
 
-	code = afsconf_AddKey(tdir, kvno, (char *) key->contents, 1);
+	code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
 	if (code) {
 	    fprintf(stderr, "%s: failed to set key, code %d.\n", argv[0], code);
 	    exit(1);

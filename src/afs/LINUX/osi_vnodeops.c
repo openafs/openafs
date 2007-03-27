@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.46 2006/10/10 22:01:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.51 2007/02/20 18:06:24 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -101,7 +101,6 @@ static ssize_t
 afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 {
     ssize_t code = 0;
-    int code2 = 0;
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
     struct vrequest treq;
     cred_t *credp = crref();
@@ -472,24 +471,22 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     AFS_GUNLOCK();
 
 #ifdef AFS_LINUX24_ENV
-    if (code == 0 && (cmd == F_SETLK || cmd == F_SETLKW)) {
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+        (cmd == F_SETLK || cmd == F_SETLKW)) {
 #ifdef AFS_LINUX26_ENV
-       struct file_lock flp2;
-       flp2 = *flp;
-       flp2.fl_flags &=~ FL_SLEEP;
-       code = posix_lock_file(fp, &flp2);
+	flp->fl_flags &=~ FL_SLEEP;
+	code = posix_lock_file(fp, flp);
 #else
-       code = posix_lock_file(fp, flp, 0);
+	code = posix_lock_file(fp, flp, 0);
 #endif 
-       osi_Assert(code != -EAGAIN); /* there should be no conflicts */
-       if (code) {
-           struct AFS_FLOCK flock2;
-           flock2 = flock;
-           flock2.l_type = F_UNLCK;
-           AFS_GLOCK();
-           afs_lockctl(vcp, &flock2, F_SETLK, credp);
-           AFS_GUNLOCK();
-       }
+	if (code && flp->fl_type != F_UNLCK) {
+	    struct AFS_FLOCK flock2;
+	    flock2 = flock;
+	    flock2.l_type = F_UNLCK;
+	    AFS_GLOCK();
+	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
+	    AFS_GUNLOCK();
+	}
     }
 #endif
     /* Convert flock back to Linux's file_lock */
@@ -502,6 +499,57 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     return -code;
 
 }
+
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+static int
+afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
+    int code = 0;
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
+    cred_t *credp = crref();
+    struct AFS_FLOCK flock;
+    /* Convert to a lock format afs_lockctl understands. */
+    memset((char *)&flock, 0, sizeof(flock));
+    flock.l_type = flp->fl_type;
+    flock.l_pid = flp->fl_pid;
+    flock.l_whence = 0;
+    flock.l_start = 0;
+    flock.l_len = OFFSET_MAX;
+
+    /* Safe because there are no large files, yet */
+#if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
+    if (cmd == F_GETLK64)
+	cmd = F_GETLK;
+    else if (cmd == F_SETLK64)
+	cmd = F_SETLK;
+    else if (cmd == F_SETLKW64)
+	cmd = F_SETLKW;
+#endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
+
+    AFS_GLOCK();
+    code = afs_lockctl(vcp, &flock, cmd, credp);
+    AFS_GUNLOCK();
+
+    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+        (cmd == F_SETLK || cmd == F_SETLKW)) {
+	flp->fl_flags &=~ FL_SLEEP;
+	code = flock_lock_file_wait(fp, flp);
+	if (code && flp->fl_type != F_UNLCK) {
+	    struct AFS_FLOCK flock2;
+	    flock2 = flock;
+	    flock2.l_type = F_UNLCK;
+	    AFS_GLOCK();
+	    afs_lockctl(vcp, &flock2, F_SETLK, credp);
+	    AFS_GUNLOCK();
+	}
+    }
+    /* Convert flock back to Linux's file_lock */
+    flp->fl_type = flock.l_type;
+    flp->fl_pid = flock.l_pid;
+
+    crfree(credp);
+    return -code;
+}
+#endif
 
 /* afs_linux_flush
  * essentially the same as afs_fsync() but we need to get the return
@@ -594,6 +642,9 @@ struct file_operations afs_file_fops = {
   .release =	afs_linux_release,
   .fsync =	afs_linux_fsync,
   .lock =	afs_linux_lock,
+#ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
+  .flock =	afs_linux_flock,
+#endif
 };
 
 
@@ -947,6 +998,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
 		unlock_kernel();
 #endif
+		crfree(credp);
 		return alias;
 	    }
 	}
@@ -1313,7 +1365,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     clear_bit(PG_error, &pp->flags);
 #endif
 
-    setup_uio(&tuio, &iovec, (char *)address, offset, PAGESIZE, UIO_READ,
+    setup_uio(&tuio, &iovec, (char *)address, offset, PAGE_SIZE, UIO_READ,
 	      AFS_UIOSYS);
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -1331,7 +1383,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 
     if (!code) {
 	if (tuio.uio_resid)	/* zero remainder of page */
-	    memset((void *)(address + (PAGESIZE - tuio.uio_resid)), 0,
+	    memset((void *)(address + (PAGE_SIZE - tuio.uio_resid)), 0,
 		   tuio.uio_resid);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 	flush_dcache_page(pp);

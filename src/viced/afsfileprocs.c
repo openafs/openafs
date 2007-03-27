@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.37 2006/09/26 02:13:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.39 2007/02/26 18:52:48 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7481,6 +7481,8 @@ init_sys_error_to_et(void)
     sys2et[EDQUOT] = UAEDQUOT;
     sys2et[ENOMEDIUM] = UAENOMEDIUM;
     sys2et[EMEDIUMTYPE] = UAEMEDIUMTYPE;
+
+    sys2et[EIO] = UAEIO;
 }
 
 /* NOTE:  2006-03-01

@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.13.2.1 2004/10/18 07:12:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.13.2.2 2007/01/12 05:23:43 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -132,9 +132,10 @@ extract_Addr(char *line, int maxSize)
 */
 
 int
-parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
-		     afs_uint32 * mtu, afs_uint32 maxAddrs,
-		     afs_uint32 * nAddrs, char reason[], const char *fileName)
+parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
+			 afs_uint32 * mtu, afs_uint32 maxAddrs,
+			 afs_uint32 * nAddrs, char reason[], 
+			 const char *fileName, const char *fileName_ni)
 {
     FILE *fp;
     char line[MAX_NETFILE_LINE];
@@ -161,6 +162,14 @@ parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
 	sprintf(reason, "No existing IP interfaces found");
 	return -1;
     }
+    i = 0;
+    if ((neaddrs < MAXIPADDRS) && fileName_ni) 
+	i = ParseNetInfoFile_int(&(eAddrs[neaddrs]), &(eMask[neaddrs]), 
+				 &(eMtu[neaddrs]), MAXIPADDRS-neaddrs, reason,
+				 fileName_ni, 1);
+
+    if (i > 0)
+	neaddrs += i;
 
     if ((fp = fopen(fileName, "r")) == 0) {
 	sprintf(reason, "Could not open file %s for reading:%s", fileName,
@@ -223,7 +232,14 @@ parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
     return (usedfile ? 0 : 1);	/* 0=>used the file.  1=>didn't use file */
 }
 
-
+int
+parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
+			 afs_uint32 * mtu, afs_uint32 maxAddrs,
+			 afs_uint32 * nAddrs, char reason[], 
+			 const char *fileName)
+{
+    return parseNetRestrictFile_int(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName, NULL);
+}
 
 /*
  * this function reads in stuff from InterfaceAddr file in
@@ -234,8 +250,9 @@ parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
  * interface addresses. Pulled out from afsd.c
  */
 int
-ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
-		 int max, char reason[], const char *fileName)
+ParseNetInfoFile_int(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
+		     int max, char reason[], const char *fileName, 
+		     int fakeonly)
 {
 
     afs_uint32 existingAddr[MAXIPADDRS], existingMask[MAXIPADDRS],
@@ -327,12 +344,13 @@ ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
 		    "afs:Too many interfaces. The current kernel configuration supports a maximum of %d interfaces\n",
 		    max);
 	} else if (fake) {
-	    fprintf(stderr, "Client (2) also has address %s\n", line);
+	    if (!fake) 
+		fprintf(stderr, "Client (2) also has address %s\n", line);
 	    final[count] = addr;
 	    mask[count] = 0xffffffff;
 	    mtu[count] = htonl(1500);
 	    count++;
-	} else {
+	} else if (!fakeonly) {
 	    final[count] = existingAddr[i];
 	    mask[count] = existingMask[i];
 	    mtu[count] = existingMtu[i];
@@ -354,7 +372,12 @@ ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
     return count;
 }
 
-
+int
+ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
+		 int max, char reason[], const char *fileName)
+{
+    return ParseNetInfoFile_int(final, mask, mtu, max, reason, fileName, 0);
+}
 
 /*
  * Given two arrays of addresses, masks and mtus find the common ones
@@ -439,8 +462,8 @@ parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[], afs_uint32 mtubuf[],
 	ParseNetInfoFile(addrbuf1, maskbuf1, mtubuf1, MAXIPADDRS, reason,
 			 niFileName);
     code =
-	parseNetRestrictFile(addrbuf2, maskbuf2, mtubuf2, MAXIPADDRS,
-			     &nAddrs2, reason, nrFileName);
+	parseNetRestrictFile_int(addrbuf2, maskbuf2, mtubuf2, MAXIPADDRS,
+			     &nAddrs2, reason, nrFileName, niFileName);
     if ((nAddrs1 < 0) && (code)) {
 	/* both failed */
 	return -1;

@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.10 2005/10/23 06:31:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.11 2006/11/10 00:08:57 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -144,9 +144,9 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_flags = 0;
 #endif
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
-    attrs->va_blksize = PAGESIZE;	/* XXX Was 8192 XXX */
+    attrs->va_blksize = AFS_BLKSIZE;	/* XXX Was 8192 XXX */
 #else
-    attrs->va_blocksize = PAGESIZE;	/* XXX Was 8192 XXX */
+    attrs->va_blocksize = AFS_BLKSIZE;	/* XXX Was 8192 XXX */
 #endif
     attrs->va_rdev = 1;
 #if defined(AFS_HPUX110_ENV)

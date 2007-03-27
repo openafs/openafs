@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/kreltime.c,v 1.8.2.3 2006/07/31 21:12:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/kreltime.c,v 1.8.2.4 2006/10/22 01:51:57 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

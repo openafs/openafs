@@ -1,3 +1,32 @@
+AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
+  AC_MSG_CHECKING([for exported tasklist_lock])
+  AC_CACHE_VAL([ac_cv_linux_exports_tasklist_lock], [
+    AC_TRY_KBUILD(
+[
+#include <linux/sched.h>],
+[
+extern rwlock_t tasklist_lock __attribute__((weak)); 
+read_lock(&tasklist_lock);
+],
+      ac_cv_linux_exports_tasklist_lock=yes,
+      ac_cv_linux_exports_tasklist_lock=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)])
+
+
+AC_DEFUN([LINUX_CONFIG_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/config.h existance])
+  AC_CACHE_VAL([ac_cv_linux_config_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/config.h>],
+[return;],
+      ac_cv_linux_config_h_exists=yes,
+      ac_cv_linux_config_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_config_h_exists)
+  if test "x$ac_cv_linux_config_h_exists" = "xyes"; then
+    AC_DEFINE([CONFIG_H_EXISTS], 1, [define if linux/config.h exists])
+  fi])
+
+
 AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
   AC_MSG_CHECKING([for linux/completion.h existance])
   AC_CACHE_VAL([ac_cv_linux_completion_h_exists], [
@@ -162,6 +191,21 @@ printk("%d\n", _inode.i_blksize);],
       ac_cv_linux_fs_struct_inode_has_i_blksize=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blksize)])
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS], [
+  AC_MSG_CHECKING([for i_blkbits in struct inode])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_blkbits], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printk("%d\n", _inode.i_blkbits);],
+      ac_cv_linux_fs_struct_inode_has_i_blkbits=yes,
+      ac_cv_linux_fs_struct_inode_has_i_blkbits=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blkbits)
+  if test "x$ac_cv_linux_fs_struct_inode_has_i_blkbits" = "xyes"; then
+    AC_DEFINE(STRUCT_INODE_HAS_I_BLKBITS, 1, [define if your struct inode has i_blkbits])
+  fi])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
   AC_MSG_CHECKING([for i_cdev in struct inode])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_cdev], [
@@ -302,6 +346,18 @@ printk("%d\n", _tsk.parent);],
       ac_cv_linux_sched_struct_task_struct_has_parent=yes,
       ac_cv_linux_sched_struct_task_struct_has_parent=no)])
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)])
+
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID], [
+  AC_MSG_CHECKING([for tgid in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_tgid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.tgid);],
+      ac_cv_linux_sched_struct_task_struct_has_tgid=yes,
+      ac_cv_linux_sched_struct_task_struct_has_tgid=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_tgid)])
 
 
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
@@ -533,7 +589,10 @@ AC_DEFUN([LINUX_REFRIGERATOR], [
   AC_MSG_CHECKING([whether refrigerator takes PF_FREEZE])
   AC_CACHE_VAL([ac_cv_linux_func_refrigerator_takes_pf_freeze], [
     AC_TRY_KBUILD(
-[#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef FREEZER_H_EXISTS
+#include <linux/freezer.h>
+#endif],
 [refrigerator(PF_FREEZE);],
       ac_cv_linux_func_refrigerator_takes_pf_freeze=yes,
       ac_cv_linux_func_refrigerator_takes_pf_freeze=no)])
@@ -630,8 +689,8 @@ AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
 #include <linux/keyctl.h>],
 [#ifdef CONFIG_KEYS
 request_key(NULL, NULL, NULL);
-#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH)
-#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH"
+#if !defined(KEY_POS_VIEW) || !defined(KEY_POS_SEARCH) || !defined(KEY_POS_SETATTR) 
+#error "Your linux/key.h does not contain KEY_POS_VIEW or KEY_POS_SEARCH or KEY_POS_SETATTR"
 #endif
 #else
 #error rebuild your kernel with CONFIG_KEYS
@@ -689,4 +748,66 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
   if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
   fi])
+
+AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/freezer.h existance])
+  AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/freezer.h>],
+[return;],
+      ac_cv_linux_freezer_h_exists=yes,
+      ac_cv_linux_freezer_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_freezer_h_exists)
+  if test "x$ac_cv_linux_freezer_h_exists" = "xyes"; then
+    AC_DEFINE([FREEZER_H_EXISTS], 1, [define if linux/freezer.h exists])
+  fi])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO], [
+  AC_MSG_CHECKING([for todo in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_todo], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.todo);],
+      ac_cv_linux_sched_struct_task_struct_has_todo=yes,
+      ac_cv_linux_sched_struct_task_struct_has_todo=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_todo)])
+
+AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
+  AC_MSG_CHECKING([whether INIT_WORK has a _data argument])
+  AC_CACHE_VAL([ac_cv_linux_init_work_has_data], [
+    AC_TRY_KBUILD(
+[#include <linux/kernel.h>
+#include <linux/workqueue.h>],
+[ 
+void f(struct work_struct *w) {}
+struct work_struct *w;
+int *i;
+INIT_WORK(w,f,i);],
+      ac_cv_linux_init_work_has_data=yes,
+      ac_cv_linux_init_work_has_data=no)])
+  AC_MSG_RESULT($ac_cv_linux_init_work_has_data)])
+
+
+AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_FLOCK], [
+  AC_MSG_CHECKING([for flock in struct file_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_flock], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_operations _fop;
+_fop.flock(NULL, 0, NULL);],
+      ac_cv_linux_fs_struct_fop_has_flock=yes,
+      ac_cv_linux_fs_struct_fop_has_flock=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_flock)])
+
+AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
+  AC_MSG_CHECKING([whether register_sysctl_table has an insert_at_head flag argument])
+  AC_CACHE_VAL([ac_cv_linux_register_sysctl_table_noflag], [
+    AC_TRY_KBUILD(
+[#include <linux/sysctl.h>],
+[ctl_table *t;
+register_sysctl_table (t);],
+      ac_cv_linux_register_sysctl_table_noflag=yes,
+      ac_cv_linux_register_sysctl_table_noflag=no)])
+  AC_MSG_RESULT($ac_cv_linux_register_sysctl_table_noflag)])
 

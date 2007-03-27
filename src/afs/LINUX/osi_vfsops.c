@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.18 2006/10/06 13:30:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.23 2007/02/09 01:25:48 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -103,8 +103,7 @@ struct file_system_type afs_fs_type = {
 
 #if defined(AFS_LINUX26_ENV)
 struct backing_dev_info afs_backing_dev_info = {
-	.ra_pages	= (VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE,
-	.state		= 0,
+    .ra_pages		= 0, /* disable readahead, afs does prefetch */
 };
 
 int
@@ -271,7 +270,11 @@ afs_alloc_inode(struct super_block *sb)
 {
     struct vcache *vcp;
 
+#if defined(SLAB_KERNEL)
     vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, SLAB_KERNEL);
+#else
+    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, GFP_KERNEL);
+#endif
     if (!vcp)
 	return NULL;
 
@@ -413,7 +416,11 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 
     AFS_STATCNT(afs_statfs);
 
-    statp->f_type = 0;		/* Can we get a real type sometime? */
+    /* hardcode in case that which is giveth is taken away */
+    statp->f_type = 0x5346414F;
+#if defined(STATFS_TAKES_DENTRY)
+    statp->f_bsize = dentry->d_sb->s_blocksize;
+#else
 #if defined(STATFS_TAKES_DENTRY)
     statp->f_bsize = dentry->d_sb->s_blocksize;
 #else
@@ -496,6 +503,9 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_ino = vp->va_nodeid;
     ip->i_nlink = vp->va_nlink;
     ip->i_blocks = vp->va_blocks;
+#ifdef STRUCT_INODE_HAS_I_BLKBITS
+    ip->i_blkbits = AFS_BLKBITS;
+#endif
 #ifdef STRUCT_INODE_HAS_I_BLKSIZE
     ip->i_blksize = vp->va_blocksize;
 #endif

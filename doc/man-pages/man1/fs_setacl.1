@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_SETACL 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH FS_SETACL 1 "OpenAFS" "29/Jan/2007" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -388,8 +388,16 @@ and its \fIpublic\fR subdirectory).
 .Ve
 .SH "PRIVILEGE REQUIRED"
 The issuer must have the \f(CWa\fR (administer) permission on the directory's
-ACL; the directory's owner and the members of the system:administrators
-group have the right implicitly, even if it does not appear on the ACL.
+ACL, a member of the system:administrators group, or, as a special case,
+must be the UID owner of the top-level directory of the volume containing
+this directory.  The last provision allows the UID owner of a volume to
+repair accidental ACL errors without requiring intervention by a member of
+system:administrators.
+.PP
+Earlier versions of OpenAFS also extended implicit administer permission
+to the owner of any directory.  In current versions of OpenAFS, only the
+owner of the top-level directory of the volume has this special
+permission.
 .SH "SEE ALSO"
 the \fIfs_copyacl(1)\fR manpage,
 the \fIfs_listacl(1)\fR manpage,

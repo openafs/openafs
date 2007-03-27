@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.7 2006/09/27 21:14:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.8 2007/01/15 15:52:46 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -169,7 +169,6 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 #ifdef AFS_LINUX26_ONEGROUP_ENV
     int j;
 #endif
-
     int need_space = 0;
 
     group_info = afs_getgroups(*cr);
@@ -562,7 +561,9 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
 	goto error;
 
     /* ensure key being set matches current pag */
-
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+    pag = afs_get_pag_from_groups(current->group_info);
+#else
 #ifdef AFS_LINUX26_ONEGROUP_ENV
     pag = afs_get_pag_from_groups(current->group_info);
 #else

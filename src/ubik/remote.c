@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.2 2005/02/21 01:15:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.3 2006/12/15 16:38:22 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -459,6 +459,7 @@ SDISK_GetFile(rxcall, file, version)
     code = rx_Write(rxcall, &tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
 	DBRELE(dbase);
+	ubik_dprint("Rx-write length error=%d\n", code);
 	return BULK_ERROR;
     }
     offset = 0;
@@ -467,11 +468,13 @@ SDISK_GetFile(rxcall, file, version)
 	code = (*dbase->read) (dbase, file, tbuffer, offset, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
+	    ubik_dprint("read failed error=%d\n", code);
 	    return UIOERROR;
 	}
 	code = rx_Write(rxcall, tbuffer, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
+	    ubik_dprint("Rx-write length error=%d\n", code);
 	    return BULK_ERROR;
 	}
 	length -= tlen;
@@ -545,12 +548,14 @@ SDISK_SendFile(rxcall, file, length, avers)
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
+	    ubik_dprint("Rx-read length error=%d\n", code);
 	    code = BULK_ERROR;
 	    goto failed;
 	}
 	code = (*dbase->write) (dbase, file, tbuffer, offset, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
+	    ubik_dprint("write failed error=%d\n", code);
 	    code = UIOERROR;
 	    goto failed;
 	}

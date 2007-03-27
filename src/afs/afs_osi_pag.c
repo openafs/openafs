@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.7 2006/08/17 13:56:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.10 2007/02/09 00:32:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -49,6 +49,7 @@ afs_uint32 pagCounter = 0;
 #else
 #define NUMPAGGROUPS 2
 #endif
+/* Local variables */
 
  /* Local variables */
 
@@ -375,10 +376,17 @@ afs_getpag_val()
 {
     int pagvalue;
     struct AFS_UCRED *credp = u.u_cred;
-    int gidset0, gidset1;
+    gid_t gidset0, gidset1;
+#ifdef AFS_SUN510_ENV
+    const gid_t *gids;
 
+    gids = crgetgroups(*credp);
+    gidset0 = gids[0];
+    gidset1 = gids[1];
+#else
     gidset0 = credp->cr_groups[0];
     gidset1 = credp->cr_groups[1];
+#endif
     pagvalue = afs_get_pag_from_groups(gidset0, gidset1);
     return pagvalue;
 }
@@ -429,6 +437,8 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 	    av->uid = -2;	/* XXX nobody... ? */
 	else
 	    av->uid = acred->cr_uid;	/* bsd creds don't have ruid */
+#elif defined(AFS_SUN510_ENV)
+        av->uid = crgetruid(acred);
 #else
 	av->uid = acred->cr_ruid;	/* default when no pag is set */
 #endif
@@ -452,8 +462,22 @@ afs_get_pag_from_groups(struct group_info *group_info)
     return NOPAG;
 }
 
-#else
+#ifdef AFS_LINUX26_ONEGROUP_ENV
+afs_uint32
+afs_get_pag_from_groups(struct group_info *group_info)
+{
+    afs_uint32 g0 = 0;
+    afs_uint32 i;
 
+    AFS_STATCNT(afs_get_pag_from_groups);
+    for (i = 0; (i < group_info->ngroups && 
+		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
+	if (((g0 >> 24) & 0xff) == 'A')
+	    return g0;
+    }
+    return NOPAG;
+}
+#else
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
@@ -462,6 +486,7 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
     afs_uint32 h, l, ret;
 
     AFS_STATCNT(afs_get_pag_from_groups);
+
     g0 -= 0x3f00;
     g1 -= 0x3f00;
     if (g0 < 0xc000 && g1 < 0xc000) {
@@ -479,7 +504,7 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
     }
     return NOPAG;
 }
-#endif /* AFS_LINUX26_ONEGROUP_ENV */
+#endif
 
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
@@ -510,11 +535,19 @@ PagInCred(const struct AFS_UCRED *cred)
 {
     afs_int32 pag;
     gid_t g0, g1;
+#if defined(AFS_SUN510_ENV)
+    const gid_t *gids;
+    int ngroups;
+#endif
 
     AFS_STATCNT(PagInCred);
     if (cred == NULL || cred == afs_osi_credp) {
 	return NOPAG;
     }
+#if defined(AFS_SUN510_ENV)
+    gids = crgetgroups(cred);
+    ngroups = crgetngroups(cred);
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (cred == NOCRED || cred == FSCRED) {
 	return NOPAG;
@@ -539,7 +572,11 @@ PagInCred(const struct AFS_UCRED *cred)
 	goto out;
     }
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SUN510_ENV)
+    if (ngroups < 2) {
+#else
     if (cred->cr_ngroups < 2) {
+#endif
 	pag = NOPAG;
 	goto out;
     }
@@ -551,6 +588,9 @@ PagInCred(const struct AFS_UCRED *cred)
 #elif defined(AFS_LINUX26_ENV)
     g0 = GROUP_AT(cred->cr_group_info, 0);
     g1 = GROUP_AT(cred->cr_group_info, 1);
+#elif defined(AFS_SUN510_ENV)
+    g0 = gids[0];
+    g1 = gids[1];
 #else
     g0 = cred->cr_groups[0];
     g1 = cred->cr_groups[1];
@@ -565,15 +605,16 @@ out:
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     if (pag == NOPAG) {
 	struct key *key;
-	afs_uint32 pag, newpag;
+	afs_uint32 upag, newpag;
 
 	key = request_key(&key_type_afs_pag, "_pag", NULL);
 	if (!IS_ERR(key)) {
 	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
-
-		pag = (afs_uint32) key->payload.value;
-		if (((pag >> 24) & 0xff) == 'A')
-		    __setpag(&cred, pag, &newpag, 0);
+		upag = (afs_uint32) key->payload.value;
+		if (((upag >> 24) & 0xff) == 'A') {
+		    __setpag(&cred, upag, &newpag, 0);
+		    pag = (afs_int32) upag;
+		}
 	    }
 	    key_put(key);
 	} 

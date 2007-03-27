@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.19 2005/10/13 18:42:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.20 2006/11/10 00:16:29 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -2736,7 +2736,7 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
     if (CheckLock(&afs_xdcache) != -1)
 	osi_Panic("getdslot nolock");
     if (aslot < 0 || aslot >= afs_cacheFiles)
-	osi_Panic("getdslot slot");
+	osi_Panic("getdslot slot %d (of %d)", aslot, afs_cacheFiles);
     tdc = afs_indexTable[aslot];
     if (tdc) {
 	QRemove(&tdc->lruq);	/* move to queue head */

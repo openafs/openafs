@@ -86,37 +86,61 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
+#if defined(AFS_SUN57_ENV)
+typedef kthread_t * afs_lock_tracker_t;
+#define MyPidxx (curthread)
+#define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (curproc->p_pid)
+#define MyPidxx2Pid(x) (x)
 #else
 #if defined(AFS_AIX41_ENV)
+typedef tid_t afs_lock_tracker_t;
 extern tid_t thread_self();
-#define MyPidxx thread_self()
+#define MyPidxx (thread_self())
+#define MyPidxx2Pid(x) ((afs_int32)(x))
 #else /* AFS_AIX41_ENV */
 #if defined(AFS_HPUX101_ENV)
-#define MyPidxx ((int)p_pid(u.u_procp))
+typedef struct proc * afs_lock_tracker_t;
+#define MyPidxx (u.u_procp)
+#define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
 #else
 #if defined(AFS_SGI64_ENV)
 #if defined(AFS_SGI65_ENV)
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx proc_pid(curproc())
+#define MyPidxx2Pid(x) (x)
 #else
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx current_pid()
+#define MyPidxx2Pid(x) (x)
 #endif
 #else /* AFS_SGI64_ENV */
 #ifdef AFS_LINUX20_ENV
-#define MyPidxx current->pid
+typedef struct task_struct * afs_lock_tracker_t;
+#define MyPidxx (current)
+#define MyPidxx2Pid(x) (x? (x)->pid : 0)
 #else
 #if defined(AFS_DARWIN_ENV)
 #if defined(AFS_DARWIN80_ENV)
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (proc_selfpid())
+#define MyPidxx2Pid(x) (x)
 #else
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (current_proc()->p_pid )
+#define MyPidxx2Pid(x) (x)
 #endif
 #else
 #if defined(AFS_FBSD_ENV)
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (curproc->p_pid )
+#define MyPidxx2Pid(x) (x)
 #else
+typedef unsigned int afs_lock_tracker_t;
 #define MyPidxx (u.u_procp->p_pid )
+#define MyPidxx2Pid(x) (x)
 #endif /* AFS_FBSD_ENV */
 #endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
@@ -139,8 +163,8 @@ struct afs_lock {
      ** only for writes/shared  locks. Hence, it indictes where in the
      ** source code the shared/write lock was set.
      */
-    unsigned int pid_last_reader;	/* proceess id of last reader */
-    unsigned int pid_writer;	/* process id of writer, else 0 */
+    afs_lock_tracker_t pid_last_reader;	/* proceess id of last reader */
+    afs_lock_tracker_t pid_writer;	/* process id of writer, else 0 */
     unsigned int src_indicator;	/* third param to ObtainLock() */
 #endif				/* INSTRUMENT_LOCKS */
 };

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosoprocs.c,v 1.19 2003/12/07 22:49:18 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosoprocs.c,v 1.19.2.1 2006/12/21 23:15:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -853,7 +853,7 @@ SBOZO_CreateBnode(acall, atype, ainstance, ap1, ap2, ap3, ap4, ap5, notifier)
 
     code =
 	bnode_Create(atype, ainstance, &tb, ap1, ap2, ap3, ap4, ap5, notifier,
-		     BSTAT_NORMAL);
+		     BSTAT_NORMAL, 1);
     if (!code)
 	bnode_SetStat(tb, BSTAT_NORMAL);
 

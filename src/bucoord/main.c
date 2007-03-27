@@ -11,11 +11,10 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/main.c,v 1.16 2003/12/08 01:45:28 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/main.c,v 1.16.2.1 2007/01/05 03:34:09 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
-#include <stdio.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif

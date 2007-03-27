@@ -101,7 +101,7 @@ install: ${DESTDIR}${includedir}/afs/param.h \
 	${DESTDIR}${includedir}/afs/debug.h
 
 clean:
-	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c param.h.new
+	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c param.h.new Makefile.version.in
 
 dest: ${DEST}/include/afs/param.h \
 	${DEST}/include/afs/stds.h \

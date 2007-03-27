@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH afsd 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH afsd 8 "OpenAFS" "9/Nov/2006" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -431,11 +431,16 @@ If neither argument is used, there are five \s-1VM\s0 daemons.
 This command does not use the syntax conventions of the \s-1AFS\s0 command
 suites. Provide the command name and all option names in full.
 .SH "CAUTIONS"
-Do not use the \fB\-shutdown\fR parameter. It does not shutdown the Cache
-Manager effectively. Instead, halt Cache Manager activity by using the
-standard UNIX \fBumount\fR command to unmount the AFS root directory (by
-convention, \fI/afs\fR). The machine must then be rebooted to reinitialize
-the Cache Manager.
+Before using the \fB\-shutdown\fR parameter, use the standard UNIX \fBumount\fR
+command to unmount the AFS root directory (by convention, \fI/afs\fR).  On
+Linux, unloading the AFS kernel module and then loading it again before
+restarting AFS after \fB\-shutdown\fR is recommended.
+.PP
+AFS has for years had difficulties with being stopped and restarted
+without an intervening reboot.  While most of these issues have been
+ironed out, stopping and restarting AFS is not recommended unless
+necessary and rebooting before restarting AFS is still the safest course
+of action.
 .SH "OPTIONS"
 .Ip "\fB\-blocks\fR <\fIblocks in cache\fR>" 4
 Specifies the number of kilobyte blocks to be made available for caching

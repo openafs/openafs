@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.5 2006/02/18 04:09:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.7 2007/01/25 11:24:30 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -688,6 +688,8 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	 * That the client tried and failed can be determined from the
 	 * fact that there was a downtime incident, but CHasVolRef is not set.
 	 */
+    /* RT 48959 - unclear if this should really go */
+#if 0
 	if (areq->networkError && !(tcell->states & CHasVolRef)) {
 	    int i;
 	    struct server *sp;
@@ -699,6 +701,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 		    afs_MarkServerUpOrDown(sap, 0);
 	    }
 	}
+#endif
 	afs_CopyError(&treq, areq);
 	osi_FreeLargeSpace(tbuffer);
 	afs_PutCell(tcell, READ_LOCK);

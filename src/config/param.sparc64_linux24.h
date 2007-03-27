@@ -41,9 +41,7 @@
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/threads.h>
 
-#include <linux/config.h>
 #if defined(MODULE) && defined(CONFIG_MODVERSIONS)
 #define MODVERSIONS
 #include <linux/modversions.h>

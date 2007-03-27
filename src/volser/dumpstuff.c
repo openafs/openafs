@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.5 2006/10/13 12:46:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.8 2006/12/19 04:51:08 shadow Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -990,7 +990,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
 		FDH_CLOSE(fdP);
-		return 1;
+		return -1;
 	    }
 	    memset((char *)Buf, 0, nVnodes * sizeof(afs_int32));
 	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
@@ -1027,12 +1027,15 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     struct iod iod;
     register struct iod *iodp = &iod;
     afs_int32 *b1 = NULL, *b2 = NULL;
-    int s1 = 0, s2 = 0, delo = incremental, tdelo;
+    int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
 
     iod_Init(iodp, call);
 
     vp = avp;
+    if (V_parentId(vp) == V_id(vp))
+      delo = incremental;
+
     if (!ReadDumpHeader(iodp, &header)) {
 	Log("1 Volser: RestoreVolume: Error reading header file for dump; aborted\n");
 	return VOLSERREAD_DUMPERROR;
@@ -1048,20 +1051,16 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 	delo = ProcessIndex(vp, vLarge, &b1, &s1, 0);
     if (!delo)
 	delo = ProcessIndex(vp, vSmall, &b2, &s2, 0);
-    if (delo) {
-	if (b1)
-	    free((char *)b1);
-	if (b2)
-	    free((char *)b2);
-	b1 = b2 = NULL;
-	s1 = s2 = 0;
+    if (delo < 0) {
+	Log("1 Volser: RestoreVolume: ProcessIndex failed; not restored\n");
+	error = VOLSERREAD_DUMPERROR;
+	goto out;
     }
 
     strncpy(vol.name, cookie->name, VOLSER_OLDMAXVOLNAME);
     vol.type = cookie->type;
     vol.cloneId = cookie->clone;
     vol.parentId = cookie->parent;
-
 
     tdelo = delo;
     while (1) {
@@ -1095,8 +1094,8 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     if (!delo) {
 	delo = ProcessIndex(vp, vLarge, &b1, &s1, 1);
 	if (!delo)
-	    ProcessIndex(vp, vSmall, &b2, &s2, 1);
-	if (delo) {
+	    delo = ProcessIndex(vp, vSmall, &b2, &s2, 1);
+	if (delo < 0) {
 	    error = VOLSERREAD_DUMPERROR;
 	    goto clean;
 	}

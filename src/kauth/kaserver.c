@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.4 2006/06/20 20:35:01 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.5 2006/12/30 17:02:35 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -343,6 +343,14 @@ main(argc, argv)
     OpenLog(AFSDIR_SERVER_KALOG_FILEPATH);
     SetupLogSignals();
 #endif
+
+    fprintf(stderr, "%s: WARNING: kaserver is deprecated due to its weak security "
+	    "properties.  Migrating to a Kerberos 5 KDC is advised.  "
+	    "http://www.openafs.org/no-more-des.html\n", whoami);
+    ViceLog(0, ("WARNING: kaserver is deprecated due to its weak security properties.  "
+	    "Migrating to a Kerberos 5 KDC is advised.  "
+	    "http://www.openafs.org/no-more-des.html\n"));
+
     code =
 	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
 				    &cellinfo, &clones);
