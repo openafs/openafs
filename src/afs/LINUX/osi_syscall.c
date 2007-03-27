@@ -56,9 +56,9 @@ RCSID
 
 #if defined(AFS_S390X_LINUX24_ENV) 
 #define INSERT_SYSCALL(SLOT, TMPPAGE, FUNC) \
-	if (POINTER2SYSCALL FUNC > 0x7fffffff) { \
+	if (SYSCALL2POINTER FUNC > 0x7fffffff) { \
 	    TMPPAGE = kmalloc ( PAGE_SIZE, GFP_DMA|GFP_KERNEL );	\
-	    if (POINTER2SYSCALL TMPPAGE > 0x7fffffff) { \
+	    if (SYSCALL2POINTER TMPPAGE > 0x7fffffff) { \
 		printf("Cannot allocate page for FUNC syscall jump vector\n"); \
 		return EINVAL; \
 	    } \
