@@ -51,8 +51,6 @@ afs_uint32 pagCounter = 0;
 #endif
 /* Local variables */
 
- /* Local variables */
-
 /*
  * Pags are implemented as follows: the set of groups whose long
  * representation is '41XXXXXX' hex are used to represent the pags.
@@ -393,6 +391,7 @@ afs_getpag_val()
 #endif
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
+
 /* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
@@ -447,20 +446,6 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
     return 0;
 }
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-afs_uint32
-afs_get_pag_from_groups(struct group_info *group_info)
-{
-    afs_uint32 g0 = 0;
-    afs_uint32 i;
-    AFS_STATCNT(afs_get_pag_from_groups);
-    for (i = 0; (i < group_info->ngroups && 
-		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
-	if (((g0 >> 24) & 0xff) == 'A')
-	    return g0;
-    }
-    return NOPAG;
-}
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 afs_uint32

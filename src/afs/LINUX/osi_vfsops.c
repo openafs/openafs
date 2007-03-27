@@ -421,9 +421,6 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 #if defined(STATFS_TAKES_DENTRY)
     statp->f_bsize = dentry->d_sb->s_blocksize;
 #else
-#if defined(STATFS_TAKES_DENTRY)
-    statp->f_bsize = dentry->d_sb->s_blocksize;
-#else
     statp->f_bsize = sbp->s_blocksize;
 #endif
     statp->f_blocks = statp->f_bfree = statp->f_bavail = statp->f_files =

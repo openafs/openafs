@@ -149,6 +149,7 @@ clean:
 
 include ../config/Makefile.version
 
+
 ${DESTDIR}${libdir}/libubik.a: libubik.a
 	${INSTALL} $? $@
 

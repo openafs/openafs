@@ -6,6 +6,11 @@ openafs (1.4.4-1) experimental; urgency=low
       capability in MIT Kerberos 1.6 and later.  (Closes: #410314)
   * Apply patch from Thomas Sesselmann to support setting options to pass
     to bosserver in /etc/default/openafs-fileserver.  (Closes: #409357)
+  * Remove the rx_Init calls in the PAM module.  The internal counters
+    that had to be initialized that way have been removed.
+  * Now that we're running regen.sh as part of the build process, only
+    patch the Autoconf source files and not the generated output to make
+    the diff easier to audit.
 
  --
 

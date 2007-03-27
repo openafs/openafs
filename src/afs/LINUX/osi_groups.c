@@ -564,9 +564,6 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
 #ifdef AFS_LINUX26_ONEGROUP_ENV
     pag = afs_get_pag_from_groups(current->group_info);
 #else
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-    pag = afs_get_pag_from_groups(current->group_info);
-#else
     g0 = GROUP_AT(current->group_info, 0);
     g1 = GROUP_AT(current->group_info, 1);
 

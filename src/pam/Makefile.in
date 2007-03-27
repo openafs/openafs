@@ -54,7 +54,6 @@ afs_auth_krb.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
 afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -c ${srcdir}/afs_util.c -o afs_util.o
 
-
 afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
 

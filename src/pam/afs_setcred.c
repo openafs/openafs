@@ -52,7 +52,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int refresh_token = 0;
     int set_expires = 0;	/* the default is to not to set the env variable */
     int use_klog = 0;
-    int i, code;
+    int i;
     struct pam_conv *pam_convp = NULL;
     char my_password_buf[256];
     char *cell_ptr = NULL;
@@ -279,11 +279,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 #ifdef AFS_KERBEROS_ENV
 	    ktc_newpag();
 #endif
-	}
-
-	if ((code = rx_Init(0)) != 0) {
-	    pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
-	    RET(PAM_AUTH_ERR);
 	}
 
 	if (flags & PAM_REFRESH_CRED) {
