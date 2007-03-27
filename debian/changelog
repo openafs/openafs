@@ -12,7 +12,7 @@ openafs (1.4.4-1) experimental; urgency=low
     patch the Autoconf source files and not the generated output to make
     the diff easier to audit.
 
- --
+ -- Russ Allbery <rra@debian.org>  Mon, 26 Mar 2007 18:56:55 -0700
 
 openafs (1.4.2-6) unstable; urgency=medium
 
