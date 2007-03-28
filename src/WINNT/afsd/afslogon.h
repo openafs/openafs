@@ -27,8 +27,9 @@ SOFTWARE.
 #pragma once
 
 #include <windows.h>
+#include <objbase.h>
 #include <npapi.h>
-#if _WIN32_WINNT < 0x0501
+#if (_WIN32_WINNT < 0x0501)
 #define AFS_WIN32_WINNT _WIN32_WINNT
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501

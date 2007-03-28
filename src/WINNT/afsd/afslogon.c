@@ -715,6 +715,13 @@ DWORD APIENTRY NPLogonNotify(
     int retryInterval;
     int sleepInterval;
 
+    /* Are we interactive? */
+    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
+
+    /* Do not do anything if the logon session is not interactive. */
+    if (!interactive)
+	return 0;
+
     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &NPKey);
     LSPsize=sizeof(TraceOption);
@@ -743,9 +750,6 @@ DWORD APIENTRY NPLogonNotify(
     }
 
     IL = (MSV1_0_INTERACTIVE_LOGON *) lpAuthentInfo;
-
-    /* Are we interactive? */
-    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
 
     /* Convert from Unicode to ANSI */
 
@@ -936,13 +940,16 @@ DWORD APIENTRY NPLogonNotify(
 	}
     }
     DebugEvent("while loop exited");
+
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
      * for this user 
      */
+
     if (ISLOGONINTEGRATED(opt.LogonOption) && KFW_is_available()) {
+#ifdef KFW_LOGON
 	sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
 	KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
-
+#endif
 	KFW_AFS_destroy_tickets_for_principal(uname);
     }
 
@@ -991,6 +998,15 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	LPVOID StationHandle,
 	DWORD dwChangeInfo)
 {
+    BOOLEAN interactive;
+
+    /* Are we interactive? */
+    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
+
+    /* Do not do anything if the logon session is not interactive. */
+    if (!interactive)
+	return 0;
+
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
 
@@ -1294,6 +1310,7 @@ GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSess
 
 VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
+#ifdef KFW_LOGON
     WCHAR szUserW[128] = L"";
     char  szUserA[128] = "";
     char szPath[MAX_PATH] = "";
@@ -1408,5 +1425,6 @@ VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     DeleteFile(filename);
 
     DebugEvent0("KFW_Logon_Event - End");
+#endif
 }
 

@@ -12,10 +12,12 @@
             <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
             <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logon" Type="string" Value="AFS_Logon_Event" />
             <Registry Id="reg_afslogon08" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
+	    <!-- KFW includes this functionality - OpenAFS does not need to provide it
             <Registry Id="reg_afslogon09" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Asynchronous" Type="integer" Value="0" />
             <Registry Id="reg_afslogon10" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Impersonate" Type="integer" Value="0" />
             <Registry Id="reg_afslogon11" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
             <Registry Id="reg_afslogon13" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Logon" Type="string" Value="KFW_Logon_Event" />
+	    -->
         </Component>
         <Component Win64="$(var.Win64)" Id="cmf_afscpcc_EXE" Guid="$(var.cmf_afscpcc_EXE_guid)">
             <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" KeyPath="yes"/>
