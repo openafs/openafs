@@ -811,7 +811,7 @@ afs_klog(khm_handle identity,
 
             memset((char *)&increds, 0, sizeof(increds));
 
-            (*pkrb5_cc_get_principal)(context, k5cc, &client_principal);
+            pkrb5_cc_get_principal(context, k5cc, &client_principal);
             i = krb5_princ_realm(context, client_principal)->length;
             if (i > REALM_SZ-1) 
                 i = REALM_SZ-1;
@@ -824,7 +824,7 @@ afs_klog(khm_handle identity,
         }
 
         /* First try Service/Cell@REALM */
-        if (r = (*pkrb5_build_principal)(context, &increds.server,
+        if (r = pkrb5_build_principal(context, &increds.server,
                                          (int) strlen(RealmName),
                                          RealmName,
                                          ServiceName,
@@ -843,6 +843,7 @@ afs_klog(khm_handle identity,
         flags = 0;
         r = pkrb5_cc_set_flags(context, k5cc, flags);
 #endif
+      retry_retcred:
         r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
 	if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
 	      r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
@@ -851,7 +852,7 @@ afs_klog(khm_handle identity,
 			  afs_realm_of_cell(&ak_cellconfig, TRUE));
 
             pkrb5_free_principal(context, increds.server);
-	    r = (*pkrb5_build_principal)(context, &increds.server,
+	    r = pkrb5_build_principal(context, &increds.server,
 					 (int) strlen(RealmName),
 					 RealmName,
 					 ServiceName,
@@ -865,7 +866,7 @@ afs_klog(khm_handle identity,
             r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
             /* Next try Service@REALM */
             pkrb5_free_principal(context, increds.server);
-            r = (*pkrb5_build_principal)(context, &increds.server,
+            r = pkrb5_build_principal(context, &increds.server,
                                          (int) strlen(RealmName),
                                          RealmName,
                                          ServiceName,
@@ -874,6 +875,17 @@ afs_klog(khm_handle identity,
                 r = pkrb5_get_credentials(context, 0, k5cc, 
                                           &increds, &k5creds);
         }
+
+	/* Check to make sure we received a valid ticket; if not remove it
+	* and try again.  Perhaps there are two service tickets for the
+	* same service in the ccache.
+	*/
+	if (k5creds->times.endtime < time(NULL)) {
+	    pkrb5_cc_remove_cred(context, k5cc, 0, k5creds);
+	    pkrb5_free_creds(context, k5creds);
+	    k5creds = NULL;
+	    goto retry_retcred;
+	}
 
         pkrb5_free_principal(context, increds.server);
         pkrb5_free_principal(context, client_principal);
