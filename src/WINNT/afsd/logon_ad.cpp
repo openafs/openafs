@@ -25,13 +25,12 @@ SOFTWARE.
 
 
 //#pragma keyword("interface",on)
-#define interface struct
+//#define interface struct
 #define SECURITY_WIN32
 #include "afslogon.h"
 
 /**/
 #include <security.h>
-#include <ntsecapi.h>
 #include <sddl.h>
 #include <unknwn.h>
 #include <oaidl.h>
