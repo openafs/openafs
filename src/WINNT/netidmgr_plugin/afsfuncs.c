@@ -880,7 +880,7 @@ afs_klog(khm_handle identity,
 	* and try again.  Perhaps there are two service tickets for the
 	* same service in the ccache.
 	*/
-	if (k5creds->times.endtime < time(NULL)) {
+	if (r == 0 && k5creds && k5creds->times.endtime < time(NULL)) {
 	    pkrb5_cc_remove_cred(context, k5cc, 0, k5creds);
 	    pkrb5_free_creds(context, k5creds);
 	    k5creds = NULL;
