@@ -1042,7 +1042,7 @@ rx_GetConnection(register struct rx_connection *conn)
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,
- * after rx_MakeCall returns.  After this time interval, a call to any
+ * after rx_NewCall returns.  After this time interval, a call to any
  * of rx_SendData, rx_ReadData, etc. will fail with RX_CALL_TIMEOUT.
  * For fine grain locking, we hold the conn_call_lock in order to 
  * to ensure that we don't get signalle after we found a call in an active
@@ -1057,7 +1057,7 @@ rx_NewCall(register struct rx_connection *conn)
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_MakeCall(conn %x)\n", conn));
+    dpf(("rx_NewCall(conn %x)\n", conn));
 
     NETPRI;
     clock_GetTime(&queueTime);
@@ -1185,6 +1185,7 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
+    dpf(("rx_NewCall(call %x)\n", call));
     return call;
 }
 
@@ -2079,6 +2080,8 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     register struct rx_call *cp;	/* Call pointer temp */
     register struct rx_call *nxp;	/* Next call pointer, for queue_Scan */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+
+    dpf(("rxi_NewCall(conn %x, channel %d)\n", conn, channel));
 
     /* Grab an existing call structure, or allocate a new one.
      * Existing call structures are assumed to have been left reset by
@@ -4462,6 +4465,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     register int flags;
     register struct rx_peer *peer;
     struct rx_packet *packet;
+
+    dpf(("rxi_ResetCall(call %x, newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
