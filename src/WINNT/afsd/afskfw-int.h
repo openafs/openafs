@@ -63,16 +63,10 @@
 #define SECURITY_WIN32
 #include <security.h>
 #if _WIN32_WINNT < 0x0501
-#define AFS_WIN32_WINNT _WIN32_WINNT
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
 #endif
 #include <ntsecapi.h>
-#ifdef AFS_WIN32_WINNT
-#undef _WIN32_WINNT
-#define _WIN32_WINNT AFS_WIN32_WINNT
-#undef AFS_WIN32_WINNT
-#endif
 #endif /* USE_MS2MIT */
 #include <stdio.h>
 #include <string.h>
