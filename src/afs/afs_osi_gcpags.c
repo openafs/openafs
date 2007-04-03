@@ -226,14 +226,15 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_LINUX22_ENV)
+#ifdef EXPORTED_TASKLIST_LOCK
+extern rwlock_t tasklist_lock __attribute__((weak));
+#endif
 void
 afs_osi_TraverseProcTable()
 {
 #if !defined(LINUX_KEYRING_SUPPORT)
     struct task_struct *p;
 #ifdef EXPORTED_TASKLIST_LOCK
-    extern rwlock_t tasklist_lock __attribute__((weak));
-
     if (&tasklist_lock)
        read_lock(&tasklist_lock);
 #endif
