@@ -1,3 +1,16 @@
+Since 1.5.17
+
+ * Do not stop the afs client service with an assert
+   if the cell name cannot be determined when responding
+   to a "fs whereis" command.
+
+ * Integrated Logon (afslogon.dll).  No longer attempt 
+   to preserve Kerberos 5 tickets for the logon session
+   as that job is now supported by KFW 3.1 and above.
+
+ * The Network Identity Manager plug-in will attempt to
+   remove expired service tickets from the cache.
+
 Since 1.5.16
 
  * CellServDB update - GCO Public CellServDB 09 Mar 2007
