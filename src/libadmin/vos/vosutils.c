@@ -619,7 +619,7 @@ badaddr_once(void)
 
 #ifdef AFS_NT40_ENV
 
-#define cszREG_IGNORE_KEY "Software\\TransarcCorporation\\AFS Control Center"
+#define cszREG_IGNORE_KEY "Software\\OpenAFS\\AFS Control Center"
 #define cszREG_IGNORE_VALUE "IgnoreBadAddrs"
 
     /*
