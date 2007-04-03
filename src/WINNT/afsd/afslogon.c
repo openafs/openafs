@@ -718,9 +718,11 @@ DWORD APIENTRY NPLogonNotify(
     /* Are we interactive? */
     interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
 
+#ifdef DISABLE_NON_INTERACTIVE
     /* Do not do anything if the logon session is not interactive. */
     if (!interactive)
 	return 0;
+#endif
 
     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &NPKey);
