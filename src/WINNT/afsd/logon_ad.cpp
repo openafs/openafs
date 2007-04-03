@@ -29,6 +29,10 @@ SOFTWARE.
 #define SECURITY_WIN32
 #include "afslogon.h"
 
+#if (_WIN32_WINNT < 0x0500)
+#error _WIN32_WINNT < 0x0500
+#endif
+
 /**/
 #include <security.h>
 #include <sddl.h>
