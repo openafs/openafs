@@ -183,6 +183,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
+    char username_copy[BUFSIZ];
     afs_int32 viceId;			/* AFS uid of user */
 #ifdef ALLOW_REGISTER
     afs_int32 id;
@@ -247,6 +248,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             }
 #ifdef ALLOW_REGISTER
         } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
+            int i;
             if (dflag) {
                 printf("doing first-time registration of %s "
                         "at %s\n", username, cell_to_use);
@@ -255,6 +257,12 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
             strcpy(aclient->instance, "");
             strncpy(aclient->cell, c->realm, MAXKTCREALMLEN - 1);
+
+            for ( i=0; aclient->cell[i]; i++ ) {
+                if ( islower(aclient->cell[i]) )
+                    aclient->cell[i] = toupper(aclient->cell[i]);
+            }
+
             if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
                 printf("%s: unable to obtain tokens for cell %s "
                         "(status: %d).\n", progname, cell_to_use, status);
@@ -274,7 +282,15 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                 return;
             }
 
-            if ((*status = pr_CreateUser(username, &id))) {
+            /* copy the name because pr_CreateUser lowercases the realm */
+            strncpy(username_copy, username, BUFSIZ);
+
+            *status = pr_CreateUser(username, &id);
+
+            /* and restore the name to the original state */
+            strncpy(username, username_copy, BUFSIZ);
+
+            if (*status) {
                 printf("%s: unable to create remote PTS "
                         "user %s in cell %s (status: %d).\n", progname,
                         username, cell_to_use, *status);
@@ -282,7 +298,6 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                 printf("created cross-cell entry for %s (Id %d) at %s\n",
                         username, viceId, cell_to_use);
 #ifdef AFS_ID_TO_NAME
-                strncpy(username_copy, username, BUFSIZ);
                 snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
             }
@@ -555,10 +570,10 @@ static int get_v5_user_realm(krb5_context context,char *realm)
 static int auth_to_cell(krb5_context context, char *cell, char *realm)
 {
     int status = AKLOG_SUCCESS;
-    char username[BUFSIZ];	/* To hold client username structure */
+    char username[BUFSIZ];	  /* To hold client username structure */
 
-    char name[ANAME_SZ];		/* Name of afs key */
-    char instance[INST_SZ];	/* Instance of afs key */
+    char name[ANAME_SZ];	  /* Name of afs key */
+    char instance[INST_SZ];	  /* Instance of afs key */
     char realm_of_user[REALM_SZ]; /* Kerberos realm of user */
     char realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
     char local_cell[MAXCELLCHARS+1];
@@ -569,7 +584,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
-
+    int i;
 
     /* try to avoid an expensive call to get_cellconfig */
     if (cell && ll_string_check(&authedcells, cell))
@@ -805,6 +820,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         aclient.cell[len] = '\0';
     } else
 	strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
+
+    for ( i=0; aclient.cell[i]; i++ ) {
+        if ( islower(aclient.cell[i]) )
+            aclient.cell[i] = toupper(aclient.cell[i]);
+    }
 
     if (dflag)
         printf("Getting tokens.\n");
