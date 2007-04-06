@@ -45,9 +45,11 @@ void DebugEvent0(char *a)
         return;
     
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-    ptbuf[0] = a;
-    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-    DeregisterEventSource(h);
+    if (h != INVALID_HANDLE_VALUE) {
+        ptbuf[0] = a;
+        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 1008, NULL, 1, 0, (const char **)ptbuf, NULL);
+        DeregisterEventSource(h);
+    }
 }
 
 #define MAXBUF_ 512
@@ -60,13 +62,15 @@ void DebugEvent(char *b,...)
         return;
 
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-    va_start(marker,b);
-    StringCbVPrintf(buf, MAXBUF_+1,b,marker);
-    buf[MAXBUF_] = '\0';
-    ptbuf[0] = buf;
-    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-    DeregisterEventSource(h);
-    va_end(marker);
+    if (h != INVALID_HANDLE_VALUE) {
+        va_start(marker,b);
+        StringCbVPrintf(buf, MAXBUF_+1,b,marker);
+        buf[MAXBUF_] = '\0';
+        ptbuf[0] = buf;
+        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 1008, NULL, 1, 0, (const char **)ptbuf, NULL);
+        DeregisterEventSource(h);
+        va_end(marker);
+    }
 }
 
 static HANDLE hInitMutex = NULL;
@@ -315,21 +319,24 @@ BOOL IsServiceStartPending (void)
 		if(hkDom) { \
 			dwSize = sizeof(v); \
 			rv = RegQueryValueEx(hkDom, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
-			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkDom with type [%d]", dwType); \
+			if(rv == ERROR_SUCCESS || rv == ERROR_MORE_DATA) \
+                            DebugEvent(#v " found in hkDom with type [%d]", dwType); \
 		} \
-		if(hkDoms && (rv != ERROR_SUCCESS || dwType != t)) { \
+		if(hkDoms && ((rv != ERROR_SUCCESS && rv != ERROR_MORE_DATA) || dwType != t)) { \
 			dwSize = sizeof(v); \
 			rv = RegQueryValueEx(hkDoms, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
-			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkDoms with type [%d]", dwType); \
+			if(rv == ERROR_SUCCESS || rv == ERROR_MORE_DATA) \
+                            DebugEvent(#v " found in hkDoms with type [%d]", dwType); \
 		} \
-		if(hkNp && (rv != ERROR_SUCCESS || dwType != t)) { \
+		if(hkNp && ((rv != ERROR_SUCCESS && rv != ERROR_MORE_DATA) || dwType != t)) { \
 			dwSize = sizeof(v); \
 			rv = RegQueryValueEx(hkNp, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
-			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkNp with type [%d]", dwType); \
+			if(rv == ERROR_SUCCESS || rv == ERROR_MORE_DATA) \
+                            DebugEvent(#v " found in hkNp with type [%d]", dwType); \
 		} \
-		if(rv != ERROR_SUCCESS || dwType != t) { \
+		if((rv != ERROR_SUCCESS && rv != ERROR_MORE_DATA) || dwType != t) { \
 			v = d; \
-			DebugEvent(#v " being set to default"); \
+			DebugEvent0(#v " being set to default"); \
 		} \
 	} while(0)
 
@@ -398,7 +405,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
             hkDoms = NULL;
         }
     } else
-        DebugEvent("Not opening domain key");
+        DebugEvent0("Not opening domain key");
 
     /* Each individual can either be specified on the domain key, the domains key or in the
        net provider key.  They fail over in that order.  If none is found, we just use the 
@@ -485,7 +492,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         strlwr(opt->smbName);
     }
 
-    DebugEvent("Looking up logon script");
+    DebugEvent0("Looking up logon script");
     /* Logon script */
     /* First find out where the key is */
     hkTemp = NULL;
@@ -495,20 +502,22 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         rv = RegQueryValueExW(hkDom, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
     if(rv == ERROR_SUCCESS && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
         hkTemp = hkDom;
-        DebugEvent("Located logon script in hkDom");
+        DebugEvent0("Located logon script in hkDom");
     }
-    else if(hkDoms)
+    else if(hkDoms) {
         rv = RegQueryValueExW(hkDoms, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
-    if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
-        hkTemp = hkDoms;
-        DebugEvent("Located logon script in hkDoms");
-    }
-    /* Note that the LogonScript in the NP key is only used if we are doing high security. */
-    else if(hkNp && ISHIGHSECURITY(opt->LogonOption))
-        rv = RegQueryValueExW(hkNp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
-    if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
-        hkTemp = hkNp;
-        DebugEvent("Located logon script in hkNp");
+        if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
+            hkTemp = hkDoms;
+            DebugEvent0("Located logon script in hkDoms");
+        }
+        /* Note that the LogonScript in the NP key is only used if we are doing high security. */
+        else if(hkNp && ISHIGHSECURITY(opt->LogonOption)) {
+            rv = RegQueryValueExW(hkNp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
+            if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
+                hkTemp = hkNp;
+                DebugEvent0("Located logon script in hkNp");
+            }
+        }
     }
 
     if(hkTemp) {
@@ -524,15 +533,19 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         len ++;
 
         wuname = malloc(len * sizeof(WCHAR));
+        if (!wuname)
+            goto doneLogonScript;
         MultiByteToWideChar(CP_ACP,0,opt->smbName,-1,wuname,(int)(len*sizeof(WCHAR)));
 
         DebugEvent("Username is set for [%S]", wuname);
 
         /* dwSize still has the size of the required buffer in bytes. */
         regscript = malloc(dwSize);
+        if (!regscript)
+            goto doneLogonScript;
         rv = RegQueryValueExW(hkTemp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, (LPBYTE) regscript, &dwSize);
         if(rv != ERROR_SUCCESS) {/* what the ..? */
-            DebugEvent("Can't look up logon script [%d]",rv);
+            DebugEvent("Can't look up logon script rv [%d] size [%d] gle %d",rv, dwSize, GetLastError());
             goto doneLogonScript;
         }
 
@@ -543,12 +556,14 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
 
             dwSize += MAX_PATH * sizeof(WCHAR);  /* make room for environment expansion. */
             regexscript = malloc(dwSize);
+            if (!regexscript)
+                goto doneLogonScript;
             dwReq = ExpandEnvironmentStringsW(regscript, regexscript, dwSize / sizeof(WCHAR));
             free(regscript);
             regscript = regexscript;
             regexscript = NULL;
             if(dwReq > (dwSize / sizeof(WCHAR))) {
-                DebugEvent("Overflow while expanding environment strings.");
+                DebugEvent0("Overflow while expanding environment strings.");
                 goto doneLogonScript;
             }
         }
@@ -558,9 +573,13 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         if(wcsstr(regscript, L"%s")) {
             dwSize += (DWORD)(len * sizeof(WCHAR)); /* make room for username expansion */
             regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
+            if (!regexuscript)
+                goto doneLogonScript;
             hr = StringCbPrintfW(regexuscript, dwSize, regscript, wuname);
         } else {
             regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
+            if (!regexuscript)
+                goto doneLogonScript;
             hr = StringCbCopyW(regexuscript, dwSize, regscript);
         }
 
@@ -577,45 +596,100 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         if(regexscript) free(regexscript);
     }
 
-    DebugEvent("Looking up TheseCells");
-    /* Logon script */
+    DebugEvent0("Looking up TheseCells");
+    /* TheseCells */
     /* First find out where the key is */
     hkTemp = NULL;
     rv = ~ERROR_SUCCESS;
-    dwType = 0;
+    dwSize = 0;
     if (hkDom)
         rv = RegQueryValueEx(hkDom, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
     if (rv == ERROR_SUCCESS && dwType == REG_MULTI_SZ) {
         hkTemp = hkDom;
-        DebugEvent("Located TheseCells in hkDom");
-    } else if (hkDoms)
+        DebugEvent("Located TheseCells in hkDom size %d", dwSize);
+    } else if (hkDoms) {
         rv = RegQueryValueEx(hkDoms, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
-    if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
-        hkTemp = hkDoms;
-        DebugEvent("Located TheseCells in hkDoms");
-    } else if (hkNp)
-        rv = RegQueryValueEx(hkNp, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
-    if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
-        hkTemp = hkNp;
-        DebugEvent("Located TheseCells in hkNp");
+        if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
+            hkTemp = hkDoms;
+            DebugEvent("Located TheseCells in hkDoms size %d", dwSize);
+        } else if (hkNp) {
+            rv = RegQueryValueEx(hkNp, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
+            if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
+                hkTemp = hkNp;
+                DebugEvent("Located TheseCells in hkNp size %d", dwSize);
+            }
+        }
     }
 
     if (hkTemp) {
-        CHAR * thesecells;
+        CHAR * thesecells = NULL;
 
         /* dwSize still has the size of the required buffer in bytes. */
-        thesecells = malloc(dwSize);
-        rv = RegQueryValueEx(hkTemp, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, (LPBYTE) thesecells, &dwSize);
+        thesecells = malloc(dwSize*2);
+        if (!thesecells)
+            goto doneTheseCells;
+        dwSize *= 2;
+        SetLastError(0);
+        rv = RegQueryValueEx(hkTemp, REG_CLIENT_THESE_CELLS_PARM, 0, NULL, (LPBYTE) thesecells, &dwSize);
         if(rv != ERROR_SUCCESS) {/* what the ..? */
-            DebugEvent("Can't look up TheseCells [%d]",rv);
+            DebugEvent("Can't look up TheseCells rv [%d] size [%d] gle [%d]",rv, dwSize, GetLastError());
             goto doneTheseCells;
         }
 
         DebugEvent("Found TheseCells [%s]", thesecells);
         opt->theseCells = thesecells;
+        thesecells = NULL;
 
       doneTheseCells:
-        ;
+        if (thesecells) free(thesecells);
+    }
+
+    DebugEvent0("Looking up Realm");
+    /* Realm */
+    /* First find out where the key is */
+    hkTemp = NULL;
+    rv = ~ERROR_SUCCESS;
+    dwSize = 0;
+    if (hkDom)
+        rv = RegQueryValueEx(hkDom, REG_CLIENT_REALM_PARM, 0, &dwType, NULL, &dwSize);
+    if (rv == ERROR_SUCCESS && dwType == REG_SZ) {
+        hkTemp = hkDom;
+        DebugEvent("Located Realm in hkDom size %d", dwSize);
+    } else if (hkDoms) {
+        rv = RegQueryValueEx(hkDoms, REG_CLIENT_REALM_PARM, 0, &dwType, NULL, &dwSize);
+        if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_SZ) {
+            hkTemp = hkDoms;
+            DebugEvent("Located Realm in hkDoms size %d", dwSize);
+        } else if (hkNp) {
+            rv = RegQueryValueEx(hkNp, REG_CLIENT_REALM_PARM, 0, &dwType, NULL, &dwSize);
+            if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_SZ) {
+                hkTemp = hkNp;
+                DebugEvent("Located Realm in hkNp size %d", dwSize);
+            }
+        }
+    }
+
+    if (hkTemp) {
+        CHAR * realm = NULL;
+
+        /* dwSize still has the size of the required buffer in bytes. */
+        realm = malloc(dwSize*2);
+        if (!realm)
+            goto doneRealm;
+        dwSize *=2;
+        SetLastError(0);
+        rv = RegQueryValueEx(hkTemp, REG_CLIENT_REALM_PARM, 0, NULL, (LPBYTE) realm, &dwSize);
+        if(rv != ERROR_SUCCESS) {/* what the ..? */
+            DebugEvent("Can't look up Realm rv [%d] size [%d] gle [%d]",rv, dwSize, GetLastError());
+            goto doneRealm;
+        }
+
+        DebugEvent("Found Realm [%s]", realm);
+        opt->realm = realm;
+        realm = NULL;
+
+      doneRealm:
+        if (realm) free(realm);
     }
 
   cleanup:
@@ -795,7 +869,7 @@ DWORD APIENTRY NPLogonNotify(
     /* Check for zero length password if integrated logon*/
     if ( ISLOGONINTEGRATED(opt.LogonOption) )  {
         if ( password[0] == 0 ) {
-            DebugEvent("Password is the empty string");
+            DebugEvent0("Password is the empty string");
             code = GT_PW_NULL;
             reason = "zero length password is illegal";
             code=0;
@@ -807,7 +881,7 @@ DWORD APIENTRY NPLogonNotify(
         DebugEvent("About to call cm_GetRootCellName(%s)",cell);
         code = cm_GetRootCellName(cell);
         if (code < 0) { 
-            DebugEvent("Unable to obtain Root Cell");
+            DebugEvent0("Unable to obtain Root Cell");
             code = KTC_NOCELL;
             reason = "unknown cell";
             code=0;
@@ -819,7 +893,7 @@ DWORD APIENTRY NPLogonNotify(
            cell right away because the client service may not have started yet. This call
            also sets the AD_REALM flag in opt.flags if applicable. */
         if (ISREMOTE(opt.flags)) {
-            DebugEvent("Is Remote");
+            DebugEvent0("Is Remote");
             GetAdHomePath(homePath,MAX_PATH,lpLogonId,&opt);
         }
     }
@@ -846,15 +920,11 @@ DWORD APIENTRY NPLogonNotify(
 	    {			
 		if ( KFW_is_available() ) {
 		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
-		    code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
-		    DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-				uname,opt.smbName,cell,code);
-		    if (code == 0 && opt.theseCells) { 
+                    if (opt.realm) {
 			char * principal, *p;
 			size_t len, tlen;
 
-			StringCchLength(cell, MAX_DOMAIN_LENGTH, &tlen);
+			StringCchLength(opt.realm, MAX_DOMAIN_LENGTH, &tlen);
 			len = tlen;
 			StringCchLength(uname, MAX_USERNAME_LENGTH, &tlen);
 			len += tlen + 2;
@@ -865,18 +935,50 @@ DWORD APIENTRY NPLogonNotify(
 			    StringCchCopy(principal, len, uname);
 			    p = principal + tlen;
 			    *p++ = '@';
-			    StringCchCopy(p, len - tlen - 1, cell);
-			    for ( ;*p; p++) {
-				*p = toupper(*p);
-			    }
+                            StringCchCopy(p, len - tlen -1, opt.realm);
+                            code = KFW_AFS_get_cred(principal, cell, password, 0, opt.smbName, &reason);
+                            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+					    principal,opt.smbName,cell,code);
+			    free(principal);
+			}
+                    } else {
+                        code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
+                        DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+                                    uname,opt.smbName,cell,code);
+                    }
+		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
+		    if (code == 0 && opt.theseCells) { 
+			char * principal, *p;
+			size_t len, tlen;
 
+			StringCchLength(opt.realm ? opt.realm : cell, MAX_DOMAIN_LENGTH, &tlen);
+			len = tlen;
+			StringCchLength(uname, MAX_USERNAME_LENGTH, &tlen);
+			len += tlen + 2;
+
+			/* tlen is now the length of uname in characters */
+			principal = (char *)malloc(len * sizeof(char));
+			if ( principal ) {
+			    StringCchCopy(principal, len, uname);
+			    p = principal + tlen;
+			    *p++ = '@';
+                            if (opt.realm) {
+                                StringCchCopy(p, len - tlen -1, opt.realm);
+                            } else {
+                                StringCchCopy(p, len - tlen - 1, cell);
+                                for ( ;*p; p++) {
+                                    *p = toupper(*p);
+                                }
+                            }
 			    p = opt.theseCells;
 			    while ( *p ) {
-				SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
-				code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
-				SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
-				DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-					    principal,opt.smbName,p,code2);
+                                if ( stricmp(p, cell) ) {
+                                    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
+                                    code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+                                    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
+                                    DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+                                               principal,opt.smbName,p,code2);
+                                }
 				p += strlen(p) + 1;
 			    }
 			    free(principal);
@@ -941,7 +1043,7 @@ DWORD APIENTRY NPLogonNotify(
 	    retryInterval -= sleepInterval;
 	}
     }
-    DebugEvent("while loop exited");
+    DebugEvent0("while loop exited");
 
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
      * for this user 
@@ -986,6 +1088,7 @@ DWORD APIENTRY NPLogonNotify(
 
     if (opt.theseCells) free(opt.theseCells);
     if (opt.smbName) free(opt.smbName);
+    if (opt.realm) free(opt.realm);
 
     DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
     return code;

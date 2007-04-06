@@ -45,6 +45,7 @@ SOFTWARE.
 #define REG_CLIENT_TRACE_OPTION_PARM	"TraceOption"
 #define REG_CLIENT_LOGON_OPTION_PARM	"LogonOptions"
 #define REG_CLIENT_LOGON_SCRIPT_PARMW	L"LogonScript"
+#define REG_CLIENT_REALM_PARM           "Realm"
 #define REG_CLIENT_THESE_CELLS_PARM     "TheseCells"
 #define REG_CLIENT_LOGOFF_TOKENS_PARM	"LogoffPreserveTokens"
 #define DEFAULT_RETRY_INTERVAL          60                        /* seconds*/
@@ -76,6 +77,7 @@ typedef struct LogonOptions_type {
 	LPWSTR	logonScript;
 	DWORD	flags; /* LOGON_FLAG_* */
         char *  theseCells;
+        char *  realm;
 } LogonOptions_t;
 
 /* */
