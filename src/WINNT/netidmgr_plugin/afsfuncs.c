@@ -472,7 +472,7 @@ _no_krb5:
 
            ASSUMPTION:
 
-           If Krb5 was used to obatain the token, then there is a Krb5
+           If Krb5 was used to obtain the token, then there is a Krb5
            ticket of the form afs/<cell>@<REALM> or afs@<CELL> still
            in the cache.  This is also true for Krb524 token
            acquisition.
@@ -630,9 +630,7 @@ ViceIDToUsername(char *username,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
-#ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
-#endif /* AFS_ID_TO_NAME */
     long viceId = ANONYMOUSID;		/* AFS uid of user */
     int  status = 0;
 #ifdef ALLOW_REGISTER
@@ -667,18 +665,20 @@ ViceIDToUsername(char *username,
      * automatically register with the ptserver in foreign cells
      */
 
+    /* copy the username because pr_CreateUser will lowercase it */
+    StringCbCopyA(username_copy, BUFSIZ, username);
+
 #ifdef ALLOW_REGISTER
     if (status == 0) {
         if (viceId != ANONYMOUSID) {
 #else /* ALLOW_REGISTER */
 	    if ((status == 0) && (viceId != ANONYMOUSID))
 #endif /* ALLOW_REGISTER */
-    {
+            {
 #ifdef AFS_ID_TO_NAME
-	StringCbCopyA(username_copy, BUFSIZ, username);
-	StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+                StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
-    }
+            }
 #ifdef ALLOW_REGISTER
         } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
             id = 0;
@@ -691,10 +691,10 @@ ViceIDToUsername(char *username,
                 return status;
             status = pr_CreateUser(username, &id);
 	    pr_End();
+            StringCbCopyA(username, BUFSIZ, username_copy);
 	    if (status)
 		return status;
 #ifdef AFS_ID_TO_NAME
-            StringCbCopyA(username_copy, BUFSIZ, username);
             StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
         }
