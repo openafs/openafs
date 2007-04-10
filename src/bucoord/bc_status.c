@@ -118,7 +118,7 @@ cmdDispatch()
 
     code = cmd_ParseLine(internalCmdLine, targv, &targc, MAXV);
     if (code) {
-	printf("Couldn't parse line: '%s'", error_message(code));
+	printf("Couldn't parse line: '%s'", afs_error_message(code));
 	return (1);
     }
     free(internalCmdLine);
@@ -266,8 +266,8 @@ statusWatcher()
 	if (localTaskFlags & ABORT_REQUEST) {
 	    code = TC_RequestAbort(tconn, taskId);
 	    if (code) {
-		com_err("statusWatcher", code, "; Can't post abort request");
-		com_err("statusWatcher", 0, "...Deleting job");
+		afs_com_err("statusWatcher", code, "; Can't post abort request");
+		afs_com_err("statusWatcher", 0, "...Deleting job");
 		if (localTaskFlags & NOREMOVE) {
 		    curPollPtr->flags |= (STARTING | TASK_ERROR);
 		    curPollPtr->scheduledDump = 0;

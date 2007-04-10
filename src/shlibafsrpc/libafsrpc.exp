@@ -84,8 +84,8 @@ rxkad_global_stats_lock
 rxkad_stats_key
 _et_list
 et_list_mutex
-com_err
-error_message
+afs_com_err
+afs_error_message
 rx_socket
 des_pcbc_init
 rx_BusyError

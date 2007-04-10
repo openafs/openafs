@@ -205,7 +205,7 @@ InitThisModule()
 				       sizeof(longPassBuff),	/*Size of above */
 				       &reasonString);
 	    if (code) {
-		com_err(uss_whoami, code, "while getting password ");
+		afs_com_err(uss_whoami, code, "while getting password ");
 #ifdef USS_KAUTH_DB
 		printf("%s: Error code from ka_UserReadPassword(): %d\n", rn,
 		       code);
@@ -226,7 +226,7 @@ InitThisModule()
 		 * to truncate the password to generate the appropriate
 		 * key.
 		 */
-		com_err(uss_whoami, code,
+		afs_com_err(uss_whoami, code,
 			"while getting administrator token (trying shortened password next...)");
 #ifdef USS_KAUTH_DB
 		printf("%s: Error code from ka_GetAdminToken: %d\n", rn,
@@ -240,7 +240,7 @@ InitThisModule()
 				     uss_Cell, &key, 24 * 60 * 60, &token,
 				     0 /*new */ );
 		if (code) {
-		    com_err(uss_whoami, code,
+		    afs_com_err(uss_whoami, code,
 			    "while getting administrator token (possibly wrong password, or not an administrative account)");
 #ifdef USS_KAUTH_DB
 		    printf("%s: Error code from ka_GetAdminToken: %d\n", rn,
@@ -262,7 +262,7 @@ InitThisModule()
 		 * We failed to get an admin token, but the password is
 		 * of a reasonable length, so we're just hosed.
 		 */
-		com_err(uss_whoami, code,
+		afs_com_err(uss_whoami, code,
 			"while getting administrator token (possibly wrong password, or not an administrative account)");
 #ifdef USS_KAUTH_DB
 		printf("%s: Error code from ka_GetAdminToken: %d\n", rn,
@@ -291,7 +291,7 @@ InitThisModule()
 	ka_AuthServerConn(uss_Cell, KA_MAINTENANCE_SERVICE, &token,
 			  &uconn_kauthP);
     if (code) {
-	com_err(uss_whoami, code,
+	afs_com_err(uss_whoami, code,
 		"while establishing Authentication Server connection");
 #ifdef USS_KAUTH_DB
 	printf("%s: Error code from ka_AuthServerConn: %d\n", rn, code);
@@ -399,7 +399,7 @@ uss_kauth_AddUser(a_user, a_passwd)
 			    "%s: Warning: User '%s' already in Authentication DB\n",
 			    uss_whoami, a_user);
 	    } else {
-		com_err(uss_whoami, code,
+		afs_com_err(uss_whoami, code,
 			"while adding user '%s' to Authentication DB",
 			a_user);
 #ifdef USS_KAUTH_DB
@@ -481,7 +481,7 @@ uss_kauth_DelUser(a_user)
 			 uss_whoami, a_user);
 		return (0);
 	    } else {
-		com_err(uss_whoami, code,
+		afs_com_err(uss_whoami, code,
 			"while deleting entry in Authentication DB\n");
 #ifdef USS_KAUTH_DB
 		printf("%s: Error code from KAM_DeleteUser: %d\n", rn, code);
@@ -712,7 +712,7 @@ uss_kauth_SetFields(username, expirestring, reuse, failures, lockout)
 		    "Must specify one of the optional parameters. Continuing...\n");
 
 	if (code) {
-	    com_err(uss_whoami, code, "calling KAM_SetFields for %s.%s",
+	    afs_com_err(uss_whoami, code, "calling KAM_SetFields for %s.%s",
 		    username, instance);
 
 	    return (code);

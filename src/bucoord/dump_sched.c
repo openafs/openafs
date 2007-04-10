@@ -91,7 +91,7 @@ bc_AddDumpCmd(as, arock)
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve dump schedule");
+	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
 	return (code);
     }
 
@@ -102,9 +102,9 @@ bc_AddDumpCmd(as, arock)
 
 	/* validate the name dump name length */
 	if (strlen(dname) >= BU_MAX_DUMP_PATH) {
-	    com_err(whoami, 0, "Dump names must be < %d characters",
+	    afs_com_err(whoami, 0, "Dump names must be < %d characters",
 		    BU_MAX_DUMP_PATH);
-	    com_err(whoami, 0, "Dump %s not added", dname);
+	    afs_com_err(whoami, 0, "Dump %s not added", dname);
 	    code = -1;
 	    continue;
 	}
@@ -113,26 +113,26 @@ bc_AddDumpCmd(as, arock)
 	    bc_CreateDumpSchedule(bc_globalConfig, dname, expDate, expType);
 	if (code) {
 	    if (code == -1)
-		com_err(whoami, 0, "Dump already exists");
+		afs_com_err(whoami, 0, "Dump already exists");
 	    else if (code == -2)
-		com_err(whoami, 0, "Invalid path name '%s'", dname);
+		afs_com_err(whoami, 0, "Invalid path name '%s'", dname);
 	    else if (code == -3)
-		com_err(whoami, 0, "Name specification error");
+		afs_com_err(whoami, 0, "Name specification error");
 	    else
-		com_err(whoami, code, "; Failed to create dump schedule");
+		afs_com_err(whoami, code, "; Failed to create dump schedule");
 	    continue;
 	}
 
 	/* save the new schedule item */
 	code = bc_SaveDumpSchedule();
 	if (code) {
-	    com_err(whoami, code, "Cannot save dump schedule");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save dump schedule");
+	    afs_com_err(whoami, 0,
 		    "Changes are temporary - for this session only");
 	    break;
 	}
 
-	com_err(whoami, 0, "Created new dump schedule %s", dname);
+	afs_com_err(whoami, 0, "Created new dump schedule %s", dname);
     }
 
   error_exit:
@@ -167,7 +167,7 @@ bc_DeleteDumpCmd(as, arock)
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve dump schedule");
+	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
 	return (code);
     }
 
@@ -176,9 +176,9 @@ bc_DeleteDumpCmd(as, arock)
     code = bc_DeleteDumpSchedule(bc_globalConfig, dname);
     if (code) {
 	if (code == -1)
-	    com_err(whoami, 0, "No such dump as %s", dname);
+	    afs_com_err(whoami, 0, "No such dump as %s", dname);
 	else
-	    com_err(whoami, code, "; Failed to delete dump schedule");
+	    afs_com_err(whoami, code, "; Failed to delete dump schedule");
 	goto error_exit;
     }
 
@@ -186,8 +186,8 @@ bc_DeleteDumpCmd(as, arock)
     if (code == 0)
 	printf("backup: deleted dump schedule %s\n", dname);
     else {
-	com_err(whoami, code, "Cannot save dump schedule file");
-	com_err(whoami, 0, "Deletion is temporary - for this session only");
+	afs_com_err(whoami, code, "Cannot save dump schedule file");
+	afs_com_err(whoami, 0, "Deletion is temporary - for this session only");
     }
 
   error_exit:
@@ -275,7 +275,7 @@ bc_ListDumpScheduleCmd(struct cmd_syndesc *as, char *arock)
     /* first check to see if schedules must be updated */
     code = bc_UpdateDumpSchedule();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve dump schedule");
+	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
 	return (code);
     }
 
@@ -334,7 +334,7 @@ bc_SetExpCmd(as, arock)
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve dump schedule");
+	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
 	return (code);
     }
 
@@ -346,15 +346,15 @@ bc_SetExpCmd(as, arock)
 	/* validate the name dump name length */
 	if (strlen(dname) >= BU_MAX_DUMP_PATH) {
 	    code = -1;
-	    com_err(whoami, 0, "Dump names must be < %d characters",
+	    afs_com_err(whoami, 0, "Dump names must be < %d characters",
 		    BU_MAX_DUMP_PATH);
-	    com_err(whoami, 0, "Dump %s not added", dname);
+	    afs_com_err(whoami, 0, "Dump %s not added", dname);
 	    continue;
 	}
 
 	code = FindDump(bc_globalConfig, dname, &parent, &node);
 	if (code) {
-	    com_err(whoami, 0, "Dump level %s not found", dname);
+	    afs_com_err(whoami, 0, "Dump level %s not found", dname);
 	    continue;
 	}
 
@@ -364,8 +364,8 @@ bc_SetExpCmd(as, arock)
 
     code = bc_SaveDumpSchedule();
     if (code) {
-	com_err(whoami, code, "Cannot save dump schedule");
-	com_err(whoami, 0,
+	afs_com_err(whoami, code, "Cannot save dump schedule");
+	afs_com_err(whoami, 0,
 		"Expiration changes effective for this session only");
     }
 
@@ -423,7 +423,7 @@ bc_ParseDumpSchedule()
 	    || (dsversion != BC_SCHEDULE_VERSION)
 	    ) {
 	    /* invalid or unexpected header - error */
-	    com_err(whoami, 0, "Unable to understand dump schedule file");
+	    afs_com_err(whoami, 0, "Unable to understand dump schedule file");
 	    return (BC_INTERNALERROR);
 	}
     }
@@ -437,7 +437,7 @@ bc_ParseDumpSchedule()
 	    sscanf(tbuffer, "%s %s %d %d", dsname, period, &expDate,
 		   &expType);
 	if (code != 4) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Syntax error in dump schedule file, line is: %s",
 		    tbuffer);
 	    return (BC_INTERNALERROR);

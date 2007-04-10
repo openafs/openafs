@@ -221,7 +221,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     if (code || !(lcell = ka_LocalCell())) {
       nocell:
 	if (!Silent)
-	    com_err(rn, code, "Can't get local cell name!");
+	    afs_com_err(rn, code, "Can't get local cell name!");
 	KLOGEXIT(code);
     }
     if (code = ka_CellToRealm(lcell, lrealm, 0))
@@ -254,7 +254,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
 	    if (!Silent) {
-		com_err(rn, code, "could not parse server list");
+		afs_com_err(rn, code, "could not parse server list");
 	    }
 	    return code;
 	}
@@ -353,7 +353,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	strcpy(realm, lcell);
     if (code = ka_CellToRealm(realm, realm, &local)) {
 	if (!Silent)
-	    com_err(rn, code, "Can't convert cell to realm");
+	    afs_com_err(rn, code, "Can't convert cell to realm");
 	KLOGEXIT(code);
     }
 
@@ -391,7 +391,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	code = krb_write_ticket_file(realm);
 	if (!Silent) {
 	    if (code)
-		com_err(rn, code, "writing Kerberos ticket file");
+		afs_com_err(rn, code, "writing Kerberos ticket file");
 	    else
 		fprintf(stderr, "Wrote ticket file to /tmp\n");
 	}

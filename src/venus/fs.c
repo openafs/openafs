@@ -3668,7 +3668,7 @@ Die(int errnum, char *filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
 	else
 	    fprintf(stderr, "%s", pn);
-	fprintf(stderr, ": %s\n", error_message(errnum));
+	fprintf(stderr, ": %s\n", afs_error_message(errnum));
 	break;
     }
 }

@@ -168,7 +168,7 @@ JNIEXPORT jboolean JNICALL Java_org_openafs_jafs_File_setAttributes
         return JNI_TRUE;   /* not really an error */
       } else {
         fprintf(stderr, "File::setAttributes(): uafs_statmountpoint failed "
-                        "for %s (%s)\n", dirName, error_message(errno));
+                        "for %s (%s)\n", dirName, afs_error_message(errno));
         return JNI_FALSE;
       }
     }
@@ -208,7 +208,7 @@ JNIEXPORT jboolean JNICALL Java_org_openafs_jafs_File_setAttributes
         }
         fprintf(stderr, 
             "File::setAttributes(): uafs_stat failed for %s (%s)\n", 
-             dirName, error_message(errno));
+             dirName, afs_error_message(errno));
         return JNI_FALSE;
       }
     }
@@ -427,7 +427,7 @@ JNIEXPORT jlong JNICALL Java_org_openafs_jafs_File_listNative
     dirp = uafs_opendir(dirName);
     if(dirp == NULL) {
       fprintf(stderr, "File::listNative(): uafs_opendir(%s) failed(%s)\n",
-                       dirName, error_message(errno));
+                       dirName, afs_error_message(errno));
       setError(env, &obj, errno);
       //throwAFSSecurityException( env, errno );
       return 0;

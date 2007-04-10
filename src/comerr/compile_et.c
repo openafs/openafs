@@ -375,7 +375,7 @@ main(int argc, char **argv)
 	fputs("static struct et_list etlink = { 0, &et};\n\n", cfile);
 	fprintf(cfile, "void initialize_%s_error_table(void) {\n",
 		table_name);
-	fputs("    add_to_error_table(&etlink);\n", cfile);
+	fputs("    afs_add_to_error_table(&etlink);\n", cfile);
 	fputs("}\n", cfile);
 	fclose(cfile);
 

@@ -104,7 +104,7 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
     if (!error_init_done)
 	pthread_once(&error_init_once, init_once);
     code = (afs_int32) errorCode;
-    *errorTextP = error_message(code);
+    *errorTextP = afs_error_message(code);
     rc = 1;
 
   fail_util_AdminErrorCodeTranslate:

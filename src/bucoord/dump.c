@@ -94,7 +94,7 @@ bc_Dumper(aindex)
     volDesc =
 	(struct tc_dumpDesc *)malloc(count * sizeof(struct tc_dumpDesc));
     if (!volDesc) {
-	com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, "");
 	ERROR(BC_NOMEM);
     }
 
@@ -144,11 +144,11 @@ bc_Dumper(aindex)
     printf("Starting dump\n");
     code = TC_PerformDump(tconn, tcdiPtr, &volArray, &dumpTaskPtr->dumpID);
     if (code) {
-	com_err(whoami, code, "; Failed to start dump");
+	afs_com_err(whoami, code, "; Failed to start dump");
 	ERROR(code);
     }
 
-    com_err(whoami, 0, "Task %u: Dump (%s)", dumpTaskPtr->dumpID,
+    afs_com_err(whoami, 0, "Task %u: Dump (%s)", dumpTaskPtr->dumpID,
 	    tcdiPtr->dumpName);
 
     /* create status monitor block */
@@ -266,7 +266,7 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
 	    break;
 
     if (i >= BC_MAXSIMDUMPS) {
-	com_err(whoami, BC_NOTLOCKED,
+	afs_com_err(whoami, BC_NOTLOCKED,
 		"All of the dump/restore slots are in use, try again later");
 	return (BC_NOTLOCKED);
     }
@@ -305,7 +305,7 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
 			  (void *)i, "helper", &junk);
     if (code) {
 	bc_HandleMisc(code);
-	com_err(whoami, code, "; Can't start thread");
+	afs_com_err(whoami, code, "; Can't start thread");
 
 	/* Cleanup allocated data structures */
 	freeDumpTaskVolumeList(bc_dumpTasks[i].volumes);
@@ -384,7 +384,7 @@ bc_LabelTape(afsname, pname, size, config, port)
 
     code = TC_LabelTape(tconn, &label, &taskId);
     if (code) {
-	com_err(whoami, code, "; Failed to start labeltape");
+	afs_com_err(whoami, code, "; Failed to start labeltape");
 	return (code);
     }
 
@@ -430,7 +430,7 @@ bc_ReadLabel(config, port)
 	    printf("Tape read was unlabelled\n");
 	    return 0;
 	}
-	com_err(whoami, code, "; Failed to start readlabel");
+	afs_com_err(whoami, code, "; Failed to start readlabel");
 	return (code);
     }
 
@@ -468,7 +468,7 @@ bc_ScanDumps(config, dbAddFlag, port)
 
     code = TC_ScanDumps(tconn, dbAddFlag, &taskId);
     if (code) {
-	com_err(whoami, code, "; Failed to start scantape");
+	afs_com_err(whoami, code, "; Failed to start scantape");
 	return (code);
     }
 
@@ -559,7 +559,7 @@ ConnectButc(config, port, tconn)
 
     code = bc_GetConn(config, port, tconn);
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"; Can't connect to tape coordinator at port %d", port);
 	return (code);
     }
@@ -569,10 +569,10 @@ ConnectButc(config, port, tconn)
 	rx_DestroyConnection(*tconn);
 
 	if (code == BC_VERSIONFAIL)
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Backup and butc are not the same version");
 	else
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Can't access tape coordinator at port %d", port);
 
 	return (code);

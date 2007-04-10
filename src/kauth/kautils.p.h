@@ -291,7 +291,7 @@ struct ka_getTicketAnswer {
 };
 
 #ifndef ERROR_TABLE_BASE_KA
-#define ka_ErrorString error_message
+#define ka_ErrorString afs_error_message
 #undef  KAMINERROR
 #define KAMINERROR ERROR_TABLE_BASE_KA
 #define KAMAXERROR (KAMINERROR+255)

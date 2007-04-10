@@ -1697,7 +1697,7 @@ read_DbHeader(struct ubik_trans *tt)
 
     code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
     if (code != 0) {
-	com_err(whoami, code, "Couldn't read header");
+	afs_com_err(whoami, code, "Couldn't read header");
     }
     return code;
 }
@@ -1735,7 +1735,7 @@ Initdb()
     len = sizeof(cheader);
     code = pr_Read(tt, 0, 0, (char *)&cheader, len);
     if (code != 0) {
-	com_err(whoami, code, "couldn't read header");
+	afs_com_err(whoami, code, "couldn't read header");
 	ubik_AbortTrans(tt);
 	return code;
     }
@@ -1762,14 +1762,14 @@ Initdb()
 	for (i = 0; i < sizeof(cheader); i++)
 	    if (bp[i]) {
 		code = PRDBBAD;
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
 		return code;
 	    }
     }
     if (!pr_noAuth) {
 	code = PRDBBAD;
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Can't rebuild database because not running NoAuth");
 	return code;
     }
@@ -1804,7 +1804,7 @@ Initdb()
     if ((code = set_header_word(tt, version, htonl(PRDBVERSION)))
 	|| (code = set_header_word(tt, headerSize, htonl(sizeof(cheader))))
 	|| (code = set_header_word(tt, eofPtr, cheader.headerSize))) {
-	com_err(whoami, code, "couldn't write header words");
+	afs_com_err(whoami, code, "couldn't write header words");
 	ubik_AbortTrans(tt);
 	return code;
     }
@@ -1814,7 +1814,7 @@ Initdb()
     code = CreateEntry		      \
 	(tt, (name), &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
     if (code) {			      \
-	com_err (whoami, code, "couldn't create %s with id %di.", 	\
+	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
 		 (name), (id));	      \
 	ubik_AbortTrans(tt);	      \
 	return code;		      \
@@ -1832,7 +1832,7 @@ Initdb()
      * it back to 0 */
     code = set_header_word(tt, maxID, 0);	/* correct in any byte order */
     if (code) {
-	com_err(whoami, code, "couldn't reset max id");
+	afs_com_err(whoami, code, "couldn't reset max id");
 	ubik_AbortTrans(tt);
 	return code;
     }

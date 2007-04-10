@@ -154,7 +154,7 @@ CommandProc(as, arock)
 	/* These options not compatible with -server */
 	if (cParms->stopServer) {
 	    code = RXKST_BADARGS;
-	    com_err(whoami, code, "stop server not compatible with -client");
+	    afs_com_err(whoami, code, "stop server not compatible with -client");
 	    return code;
 	}
 
@@ -176,7 +176,7 @@ CommandProc(as, arock)
 
 	    code = pthread_attr_init(&tattr);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"can't pthread_attr_init server process");
 		return code;
 	    }
@@ -184,7 +184,7 @@ CommandProc(as, arock)
 	    code =
 		pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"can't pthread_attr_setdetachstate server process");
 		return code;
 	    }
@@ -199,7 +199,7 @@ CommandProc(as, arock)
 			      (opaque) sParms, "Server Process", &pid);
 #endif
 	if (code) {
-	    com_err(whoami, code, "can't create server process");
+	    afs_com_err(whoami, code, "can't create server process");
 	    return code;
 	}
     } else {
@@ -258,7 +258,7 @@ CommandProc(as, arock)
 
 	code = rxkst_StartClient(cParms);
 	if (code) {
-	    com_err(whoami, code, "StartClient returned");
+	    afs_com_err(whoami, code, "StartClient returned");
 	    return code;
 	}
     } else {
@@ -266,7 +266,7 @@ CommandProc(as, arock)
 	    || as->parms[aFASTCALLS].items || as->parms[aSLOWCALLS].items
 	    || as->parms[aCOPIOUSCALLS].items) {
 	    code = RXKST_BADARGS;
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "send/recv len and # calls are client options");
 	    return code;
 	}
@@ -299,14 +299,14 @@ main(argc, argv)
     code = rx_Init(0);
     rx_SetRxDeadTime(120);
     if (code < 0) {
-	com_err(whoami, code, "can't init Rx");
+	afs_com_err(whoami, code, "can't init Rx");
 	exit(1);
     }
 #ifndef AFS_PTHREAD_ENV
     initialProcess = 0;
     code = LWP_CurrentProcess(&initialProcess);
     if (code) {
-	com_err(whoami, code, "LWP initialization failed");
+	afs_com_err(whoami, code, "LWP initialization failed");
 	exit(1);
     }
 #endif

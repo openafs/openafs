@@ -72,7 +72,7 @@ main(argc, argv)
     memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
-	fprintf(stderr, "livesys: %s\n", error_message(code));
+	fprintf(stderr, "livesys: %s\n", afs_error_message(code));
 	return 1;
     }
     input = space;

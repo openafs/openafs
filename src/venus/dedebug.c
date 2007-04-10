@@ -41,7 +41,7 @@ static PrintCacheEntries(struct rx_connection *aconn, int aint32)
 	if (code) {
 	    if (code == 1) break;
 	    printf("cmdebug: failed to get cache entry %d (%s)\n", i,
-		   error_message(code));
+		   afs_error_message(code));
 	    return code;
 	}
 

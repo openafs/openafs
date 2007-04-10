@@ -40,6 +40,7 @@ RCSID
 #include <des.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
+#include <afs/com_err.h>
 #include "kautils.h"
 #include "kaserver.h"
 #include "kalog.h"
@@ -176,7 +177,7 @@ get_time(timeP, tt, admin)
 		} else {
 		    es_Report
 			("in get_time: set_password failed because: %s\n",
-			 error_message(code));
+			 afs_error_message(code));
 		    return code;
 		}
 	    }

@@ -130,7 +130,7 @@ SetFields(conn, name, flags, expiration, lifetime)
 		  lifetime, -1,
 		  /* spares */ 0, 0);
     if (code) {
-	com_err(whoami, code, "calling set fields on %s", name);
+	afs_com_err(whoami, code, "calling set fields on %s", name);
 	CRASH();
     }
 }
@@ -201,7 +201,7 @@ GetTokenLife(name, passwd, expectedLife, match)
     }
     code = ktc_GetToken(&afs, &t, sizeof(t), 0);
     if (code) {
-	com_err(whoami, code, "getting afs token from ktc");
+	afs_com_err(whoami, code, "getting afs token from ktc");
 	CRASH();
     }
     CheckLife(t.endTime, t.startTime, expectedLife, match);
@@ -243,7 +243,7 @@ Main(as, arock)
 	    ka_ParseLoginName(as->parms[12].items->data, name, instance,
 			      newCell);
 	if (code) {
-	    com_err(whoami, code, "parsing user's name '%s'",
+	    afs_com_err(whoami, code, "parsing user's name '%s'",
 		    as->parms[12].items->data);
 	    return code;
 	}
@@ -273,13 +273,13 @@ Main(as, arock)
 
     code = ka_ExpandCell(newCell, newCell, 0 /*local */ );
     if (code) {
-	com_err(whoami, code, "Can't expand cell name");
+	afs_com_err(whoami, code, "Can't expand cell name");
 	return code;
     }
     cell = newCell;
     code = ka_CellToRealm(cell, realm, 0);
     if (code) {
-	com_err(whoami, code, "Can't get realm from cell name");
+	afs_com_err(whoami, code, "Can't get realm from cell name");
 	return code;
     }
 
@@ -299,7 +299,7 @@ Main(as, arock)
 	else if (strlen(passwd) == 0)
 	    code = KANULLPASSWORD;
 	if (code) {
-	    com_err(whoami, code, "reading password");
+	    afs_com_err(whoami, code, "reading password");
 	    return code;
 	}
     }
@@ -313,7 +313,7 @@ Main(as, arock)
 	ap[1] = "-servers";
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
-	    com_err(whoami, code, "could not parse server list");
+	    afs_com_err(whoami, code, "could not parse server list");
 	    return code;
 	}
 	ka_ExplicitCell(cell, serverList);
@@ -326,7 +326,7 @@ Main(as, arock)
     strcpy(afs.cell, cell);
     code = ktc_GetToken(&afs, &oldAFSToken, sizeof(oldAFSToken), &oldClient);
     if (code) {
-	com_err(whoami, code, "saving existing afs token");
+	afs_com_err(whoami, code, "saving existing afs token");
 	return code;
     }
 
@@ -345,7 +345,7 @@ Main(as, arock)
 	    ka_GetAdminToken(name, instance, cell, &key, 3600, &token,
 			     1 /*new */ );
 	if (code) {
-	    com_err(whoami, code, "getting admin token");
+	    afs_com_err(whoami, code, "getting admin token");
 	    return code;
 	}
 	pToken = &token;
@@ -358,7 +358,7 @@ Main(as, arock)
 	    ka_AuthServerConn(cell, KA_MAINTENANCE_SERVICE, pToken,
 			      &ubikConn);
 	if (code) {
-	    com_err(whoami, code, "Getting AuthServer ubik conn");
+	    afs_com_err(whoami, code, "Getting AuthServer ubik conn");
 	    return code;
 	}
 
@@ -383,7 +383,7 @@ Main(as, arock)
 	    ktc_GetToken(&tgs_server, &tgs_token, sizeof(tgs_token),
 			 &tgs_client);
 	if (code) {
-	    com_err(whoami, code, "saving tgs token");
+	    afs_com_err(whoami, code, "saving tgs token");
 	    return code;
 	}
 
@@ -418,7 +418,7 @@ Main(as, arock)
 	/* since the rest should be errors, restore good AFS ticket */
 	code = ktc_SetToken(&afs, &oldAFSToken, &oldClient, 0);
 	if (code) {
-	    com_err(whoami, code, "restoring old afs token");
+	    afs_com_err(whoami, code, "restoring old afs token");
 	    return code;
 	}
 
@@ -439,13 +439,13 @@ Main(as, arock)
 	/* restore old tgs, since GetTicket are prohibited too. */
 	code = ktc_SetToken(&tgs_server, &tgs_token, &tgs_client, 0);
 	if (code) {
-	    com_err(whoami, code, "restoring old tgs token");
+	    afs_com_err(whoami, code, "restoring old tgs token");
 	    return code;
 	}
 	printf("Restoring TGT obtained before NOTGS set\n");
 	code = ka_GetServerToken(AUTH_SUPERUSER, "", cell, 100, 0, 1);
 	if (code != KABADUSER) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "expected BADUSER error, getting AFS token w/ old tgs token but with NOTGS set");
 	    CRASH();
 	} else
@@ -456,7 +456,7 @@ Main(as, arock)
 	    struct ktc_token afsToken;
 	    code = ktc_SetToken(&afs, &oldAFSToken, &oldClient, 0);
 	    if (code) {
-		com_err(whoami, code, "restoring old afs token");
+		afs_com_err(whoami, code, "restoring old afs token");
 		return code;
 	    }
 	    fprintf(stdout, "Waiting for TGS ticket to age (about 5 min)...");
@@ -472,14 +472,14 @@ Main(as, arock)
 	    /* restore old tgs */
 	    code = ktc_SetToken(&tgs_server, &tgs_token, &tgs_client, 0);
 	    if (code) {
-		com_err(whoami, code, "restoring old tgs token");
+		afs_com_err(whoami, code, "restoring old tgs token");
 		return code;
 	    }
 	    code =
 		ka_GetServerToken(AUTH_SUPERUSER, "", cell,
 				  MAXKTCTICKETLIFETIME, &afsToken, 1);
 	    if (code) {
-		com_err(whoami, code, "getting AFS token w/ old tgs token");
+		afs_com_err(whoami, code, "getting AFS token w/ old tgs token");
 		CRASH();
 	    }
 	    CheckLife(afsToken.endTime, afsToken.startTime, 3600 - (5 * 60),
