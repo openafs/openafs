@@ -28,8 +28,10 @@ ASETKEYOBJS = \
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-    $(DESTDIR)\lib\afsauthent.lib \
-    $(DESTDIR)\lib\afs\afskauth.lib
+        $(DESTDIR)\lib\afsauthent.lib \
+        $(DESTDIR)\lib\afs\afskauth.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib
 
 !IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
 OTHERLIBS = \

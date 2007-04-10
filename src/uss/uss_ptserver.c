@@ -90,7 +90,7 @@ InitThisModule()
 			 uss_ConfDir,	/*Config directory */
 			 uss_Cell);	/*Cell to touch */
     if (code) {
-	com_err(uss_whoami, code,
+	afs_com_err(uss_whoami, code,
 		"while initializing Protection Server library");
 	return (code);
     }
@@ -176,7 +176,7 @@ uss_ptserver_AddUser(a_user, a_uid)
 	     */
 	    mappedUserID = id;
 	    if (code = pr_SNameToId(a_user, &mappedUserID)) {
-		com_err(uss_whoami, code,
+		afs_com_err(uss_whoami, code,
 			"while getting uid from Protection Server");
 		return (code);
 	    }
@@ -198,7 +198,7 @@ uss_ptserver_AddUser(a_user, a_uid)
 	    /*
 	     * Got a fatal error.
 	     */
-	    com_err(uss_whoami, code, "while accessing Protection Server");
+	    afs_com_err(uss_whoami, code, "while accessing Protection Server");
 	    return (code);
 	}
     }
@@ -268,7 +268,7 @@ uss_ptserver_DelUser(a_name)
 		    uss_whoami, a_name);
 	} /*User not registered */
 	else {
-	    com_err(uss_whoami, code,
+	    afs_com_err(uss_whoami, code,
 		    "while deleting user from Protection DB");
 	    return (code);
 	}			/*Fatal PTS error */
@@ -326,7 +326,7 @@ uss_ptserver_XlateUser(a_user, a_uidP)
     *a_uidP = 0;
     code = pr_SNameToId(a_user, a_uidP);
     if (code) {
-	com_err(uss_whoami, code, "while getting uid from Protection DB");
+	afs_com_err(uss_whoami, code, "while getting uid from Protection DB");
 	return (code);
     }
     if (*a_uidP == ANONYMOUSID) {

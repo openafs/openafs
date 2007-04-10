@@ -131,14 +131,14 @@ main(argc, argv)
 	    else if (strncmp(argv[i], "-tapename", strlen(argv[i])) == 0)
 		tape = argv[++i];
 	    else {
-		com_err(whoami, 0, "unexpected command argument: '%s'",
+		afs_com_err(whoami, 0, "unexpected command argument: '%s'",
 			argv[i]);
 		goto usage;
 	    }
 	} else {
 	    struct stat buf;
 	    if (stat(argv[i], &buf)) {
-		com_err(whoami, errno, "can't stat filename parameter %s\n",
+		afs_com_err(whoami, errno, "can't stat filename parameter %s\n",
 			argv[i]);
 	    } else {
 		if ((buf.st_mode & S_IFREG) && (buf.st_mode & 0444))
@@ -152,12 +152,12 @@ main(argc, argv)
 	goto usage;
 
     if ((strlen(tape) == 0) || (strlen(tape) >= BU_MAXTAPELEN)) {
-	com_err(whoami, 0, "bogus tape name");
+	afs_com_err(whoami, 0, "bogus tape name");
 	goto usage;
     }
     code = GetDeviceInfo(config, &confInfo);
     if (code) {
-	com_err(whoami, 0, "cant find tape config info");
+	afs_com_err(whoami, 0, "cant find tape config info");
 	goto usage;
     }
 
@@ -169,12 +169,12 @@ main(argc, argv)
     printf("%s: Beginning Dump Tests\n", whoami);
     code = LWP_InitializeProcessSupport(1, &parent_pid);
     if (code) {
-	com_err(whoami, code, "Can't init LWP lib");
+	afs_com_err(whoami, code, "Can't init LWP lib");
 	exit(1);
     }
     code = IOMGR_Initialize();
     if (code) {
-	com_err(whoami, code, "Can't init LWP IOMGR lib");
+	afs_com_err(whoami, code, "Can't init LWP IOMGR lib");
 	exit(1);
     }
     /* Perform normal test */
@@ -182,7 +182,7 @@ main(argc, argv)
 	LWP_CreateProcess(PerformDumpTest, 100000, 0, (void *)&ti,
 			  "BUTM Tester", &pid);
     if (code) {
-	com_err(whoami, code, "libbutm.a: Normal Tests failed!. :-( ");
+	afs_com_err(whoami, code, "libbutm.a: Normal Tests failed!. :-( ");
 	exit(code);
     }
     LWP_WaitProcess(&ti.dumpDone);
@@ -195,7 +195,7 @@ main(argc, argv)
 	    LWP_CreateProcess(PerformDumpTest, 100000, 0, (void *)&ti,
 			      "BUTM Tester", &pid);
 	if (code) {
-	    com_err(whoami, code, "libbutm.a: Appended Tests failed!. :-( ");
+	    afs_com_err(whoami, code, "libbutm.a: Appended Tests failed!. :-( ");
 	    exit(code);
 	}
 
@@ -228,7 +228,7 @@ PerformDumpTest(TestInfo * tip)
 
     info.structVersion = BUTM_MAJORVERSION;
     if (code = butm_file_Instantiate(&info, tip->tc_Infop)) {
-	com_err(whoami, code, "instantiating file tape");
+	afs_com_err(whoami, code, "instantiating file tape");
 	ERROR_EXIT(2);
     }
 
@@ -251,19 +251,19 @@ PerformDumpTest(TestInfo * tip)
     strcpy(label.comment, T_COMMENT);
 
     if (code = butm_Mount(&info, tip->tapeName)) {
-	com_err(whoami, code, "setting up tape");
+	afs_com_err(whoami, code, "setting up tape");
 	ERROR_EXIT(2);
     }
     if (tip->appended) {	/* This is to be an appended dump */
 	code = butm_SeekEODump(&info, tip->nFiles + 1);
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "Can't append: Can't position to end of dump on tape\n");
 	    ERROR_EXIT(code);
 	}
     }
     if ((code = butm_Create(&info, &label, !tip->appended /*Rewind */ ))) {
-	com_err(whoami, code, "Writing tape label");
+	afs_com_err(whoami, code, "Writing tape label");
 	ERROR_EXIT(2);
     }
 
@@ -272,34 +272,34 @@ PerformDumpTest(TestInfo * tip)
 	int len;
 	int fid = open(tip->files[i], O_RDONLY, 0);
 	if (fid < 0) {
-	    com_err(whoami, errno, "opening file to write on tape");
+	    afs_com_err(whoami, errno, "opening file to write on tape");
 	    ERROR_EXIT(3);
 	}
 	if (code = butm_WriteFileBegin(&info)) {
-	    com_err(whoami, code, "beginning butm write file");
+	    afs_com_err(whoami, code, "beginning butm write file");
 	    ERROR_EXIT(3);
 	}
 	while ((len = read(fid, bufferBlock->data, BUTM_BLKSIZE)) > 0) {
 	    if (code = butm_WriteFileData(&info, bufferBlock->data, 1, len)) {
-		com_err(whoami, code, "butm writing file data");
+		afs_com_err(whoami, code, "butm writing file data");
 		ERROR_EXIT(3);
 	    }
 	}
 	if (len < 0) {
-	    com_err(whoami, errno, "reading file data");
+	    afs_com_err(whoami, errno, "reading file data");
 	    ERROR_EXIT(3);
 	}
 	if (code = butm_WriteFileEnd(&info)) {
-	    com_err(whoami, code, "ending butm write file");
+	    afs_com_err(whoami, code, "ending butm write file");
 	    ERROR_EXIT(3);
 	}
 	if (close(fid) < 0) {
-	    com_err(whoami, errno, "closing file");
+	    afs_com_err(whoami, errno, "closing file");
 	    ERROR_EXIT(3);
 	}
     }
     if ((code = butm_WriteEOT(&info)) || (code = butm_Dismount(&info))) {
-	com_err(whoami, code, "finishing up tape");
+	afs_com_err(whoami, code, "finishing up tape");
 	ERROR_EXIT(4);
     }
 
@@ -307,19 +307,19 @@ PerformDumpTest(TestInfo * tip)
 
     label.structVersion = BUTM_MAJORVERSION;
     if (code = butm_Mount(&info, tip->tapeName)) {
-	com_err(whoami, code, "setting up tape");
+	afs_com_err(whoami, code, "setting up tape");
 	ERROR_EXIT(5);
     }
     if (tip->appended) {	/* This is to be an appended dump */
 	code = butm_SeekEODump(&info, tip->nFiles + 1);
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "Can't append: Can't position to end of dump on tape\n");
 	    ERROR_EXIT(code);
 	}
     }
     if (code = butm_ReadLabel(&info, &label, !tip->appended /*rewind */ )) {
-	com_err(whoami, code, "reading tape label");
+	afs_com_err(whoami, code, "reading tape label");
 	ERROR_EXIT(5);
     }
     past = time(0) - label.creationTime;
@@ -359,12 +359,12 @@ PerformDumpTest(TestInfo * tip)
 
 	fid = open(tip->files[i], O_RDONLY, 0);
 	if (fid < 0) {
-	    com_err(whoami, errno, "Opening %dth file to compare with tape",
+	    afs_com_err(whoami, errno, "Opening %dth file to compare with tape",
 		    i + 1);
 	    ERROR_EXIT(6);
 	}
 	if (code = butm_ReadFileBegin(&info)) {
-	    com_err(whoami, code, "Beginning butm %dth read file", i + 1);
+	    afs_com_err(whoami, code, "Beginning butm %dth read file", i + 1);
 	    ERROR_EXIT(6);
 	}
 
@@ -374,13 +374,13 @@ PerformDumpTest(TestInfo * tip)
 	    code = butm_ReadFileData(&info, tbuffer, BUTM_BLKSIZE, &tlen);
 
 	    if (code && code != BUTM_STATUS_EOF) {
-		com_err(whoami, code, "Reading %dth tape data", i + 1);
+		afs_com_err(whoami, code, "Reading %dth tape data", i + 1);
 		ERROR_EXIT(6);
 	    }
 	    memset(fbuffer, 0, BUTM_BLKSIZE);
 	    flen = read(fid, fbuffer, sizeof(fbuffer));
 	    if (flen < 0) {
-		com_err(whoami, errno, "Reading %dth file data", i + 1);
+		afs_com_err(whoami, errno, "Reading %dth file data", i + 1);
 		ERROR_EXIT(6);
 	    }
 	    if (code == BUTM_STATUS_EOF)
@@ -402,11 +402,11 @@ PerformDumpTest(TestInfo * tip)
 	}
 
 	if (code = butm_ReadFileEnd(&info)) {
-	    com_err(whoami, code, "Ending butm %dth read file", i + 1);
+	    afs_com_err(whoami, code, "Ending butm %dth read file", i + 1);
 	    ERROR_EXIT(7);
 	}
 	if (close(fid) < 0) {
-	    com_err(whoami, errno, "Closing %dth file", i + 1);
+	    afs_com_err(whoami, errno, "Closing %dth file", i + 1);
 	    ERROR_EXIT(7);
 	}
     }
@@ -414,12 +414,12 @@ PerformDumpTest(TestInfo * tip)
     if ((info.status & BUTM_STATUS_EOD) == 0) {
 	code = butm_ReadFileBegin(&info);
 	if (code && (code != BUTM_EOD)) {
-	    com_err(whoami, code, "Should have encountered an 'End Of Tape'");
+	    afs_com_err(whoami, code, "Should have encountered an 'End Of Tape'");
 	    ERROR_EXIT(8);
 	}
     }
     if (code = butm_Dismount(&info)) {
-	com_err(whoami, code, "Finishing up tape");
+	afs_com_err(whoami, code, "Finishing up tape");
 	ERROR_EXIT(8);
     }
 

@@ -604,7 +604,7 @@ uss_acl_SetAccess(a_access, a_clear, a_negative)
      */
     code = uss_fs_GetACL(path_field, tmp_str, MAXSIZE);
     if (code) {
-	com_err(uss_whoami, code, "while getting access list for %s",
+	afs_com_err(uss_whoami, code, "while getting access list for %s",
 		path_field);
 #ifdef USS_ACL_DB
 	printf("%s: Error code from uss_fs_GetACL %d, errno %d\n", rn, code,
@@ -674,7 +674,7 @@ uss_acl_SetAccess(a_access, a_clear, a_negative)
 	    printf("\t3. Non-existent user or group on ACL.\n");
 	    return (code);
 	} else {
-	    com_err(uss_whoami, code, "while setting the access list");
+	    afs_com_err(uss_whoami, code, "while setting the access list");
 	    return (code);
 	}
     }
@@ -724,7 +724,7 @@ uss_acl_SetDiskQuota(a_path, a_q)
 
     code = uss_fs_SetVolStat(a_path, tmp_str, sizeof(*status) + 3);
     if (code) {
-	com_err(uss_whoami, code, "while setting disk quota");
+	afs_com_err(uss_whoami, code, "while setting disk quota");
 #ifdef USS_ACL_DB
 	printf("%s: uss_fs_SetVolStat() error code: %d, errno is %d\n", rn,
 	       code, errno);

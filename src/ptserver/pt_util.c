@@ -242,7 +242,7 @@ CommandProc(register struct cmd_syndesc *a_as)
 			    if (code)
 				fprintf(stderr,
 					"Error setting group count on %s: %s\n",
-					name, error_message(code));
+					name, afs_error_message(code));
 			}
 			code = CreateEntry(0, u->name, &uid, 1 /*idflag */ ,
 					   1 /*gflag */ ,
@@ -251,7 +251,7 @@ CommandProc(register struct cmd_syndesc *a_as)
 		    }
 		    if (code)
 			fprintf(stderr, "Error while creating %s: %s\n",
-				u->name, error_message(code));
+				u->name, afs_error_message(code));
 		    continue;
 		}
 		/* Add user to group */
@@ -271,7 +271,7 @@ CommandProc(register struct cmd_syndesc *a_as)
 
 		if (code)
 		    fprintf(stderr, "Error while adding %s to %s: %s\n", mem,
-			    name, error_message(code));
+			    name, afs_error_message(code));
 	    } else {
 		sscanf(buffer, "%s %d/%d %d %d %d", name, &flags, &quota, &id,
 		       &oid, &cid);
@@ -289,7 +289,7 @@ CommandProc(register struct cmd_syndesc *a_as)
 		    usr_head = u;
 		} else if (code) {
 		    fprintf(stderr, "Error while creating %s: %s\n", name,
-			    error_message(code));
+			    afs_error_message(code));
 		} else if ((flags & PRACCESS)
 			   || (flags & (PRGRP | PRQUOTA)) ==
 			   (PRGRP | PRQUOTA)) {
@@ -303,14 +303,14 @@ CommandProc(register struct cmd_syndesc *a_as)
 		    if (code)
 			fprintf(stderr,
 				"Error while setting flags on %s: %s\n", name,
-				error_message(code));
+				afs_error_message(code));
 		}
 	    }
 	}
 	for (u = usr_head; u; u = u->next)
 	    if (u->uid)
 		fprintf(stderr, "Error while creating %s: %s\n", u->name,
-			error_message(PRBADNAM));
+			afs_error_message(PRBADNAM));
     } else {
 	for (i = 0; i < HASHSIZE; i++) {
 	    upos = nflag ? ntohl(prh.nameHash[i]) : ntohl(prh.idHash[i]);

@@ -82,7 +82,7 @@ main(int argc, char *argv[])
 
     code = ka_Init(0);
     if (code) {
-	com_err(whoami, code, "Can't get cell info");
+	afs_com_err(whoami, code, "Can't get cell info");
 	exit(1);
     }
 

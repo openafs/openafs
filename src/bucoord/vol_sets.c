@@ -73,7 +73,7 @@ bc_AddVolEntryCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -81,7 +81,7 @@ bc_AddVolEntryCmd(as, arock)
 
     tset = bc_FindVolumeSet(bc_globalConfig, volSetName);
     if (!tset) {
-	com_err(whoami, code, "; Volume entry not added");
+	afs_com_err(whoami, code, "; Volume entry not added");
 	ERROR(code);
     }
 
@@ -93,7 +93,7 @@ bc_AddVolEntryCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -101,15 +101,15 @@ bc_AddVolEntryCmd(as, arock)
 	bc_AddVolumeItem(bc_globalConfig, volSetName, serverName,
 			 partitionName, volRegExp);
     if (code) {
-	com_err(whoami, code, "; Volume entry not added");
+	afs_com_err(whoami, code, "; Volume entry not added");
 	ERROR(code);
     }
 
     if (!(tset->flags & VSFLAG_TEMPORARY)) {
 	code = bc_SaveVolumeSet();
 	if (code) {
-	    com_err(whoami, code, "Cannot save volume set file");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save volume set file");
+	    afs_com_err(whoami, 0,
 		    "Changes are temporary - for this session only");
 	}
     }
@@ -154,7 +154,7 @@ bc_AddVolSetCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -164,14 +164,14 @@ bc_AddVolSetCmd(as, arock)
 			   flags);
     if (code) {
 	if (code == -1)
-	    com_err(whoami, 0, "Volume set '%s' already exists", ti->data);
+	    afs_com_err(whoami, 0, "Volume set '%s' already exists", ti->data);
 	else
-	    com_err(whoami, 0, "Unknown problem");
+	    afs_com_err(whoami, 0, "Unknown problem");
     } else if (!(flags & VSFLAG_TEMPORARY)) {
 	code = bc_SaveVolumeSet();
 	if (code) {
-	    com_err(whoami, code, "Cannot save new volume set file");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save new volume set file");
+	    afs_com_err(whoami, 0,
 		    "Changes are temporary - for this session only");
 	}
     }
@@ -205,7 +205,7 @@ bc_DeleteVolEntryCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -214,7 +214,7 @@ bc_DeleteVolEntryCmd(as, arock)
 
     tset = bc_FindVolumeSet(bc_globalConfig, vsname);
     if (!tset) {
-	com_err(whoami, 0, "No such volume set as '%s'", vsname);
+	afs_com_err(whoami, 0, "No such volume set as '%s'", vsname);
 	ERROR(code);
     }
 
@@ -226,13 +226,13 @@ bc_DeleteVolEntryCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
     entry = bc_SafeATOI(as->parms[1].items->data);
     if (entry < 0) {
-	com_err(whoami, 0, "Can't parse entry number '%s' as decimal integer",
+	afs_com_err(whoami, 0, "Can't parse entry number '%s' as decimal integer",
 		as->parms[1].items->data);
 	ERROR(BC_BADARG);
     }
@@ -240,12 +240,12 @@ bc_DeleteVolEntryCmd(as, arock)
     code = bc_DeleteVolumeItem(bc_globalConfig, vsname, entry);
     if (code) {
 	if (code == -1) {
-	    com_err(whoami, 0, "No such volume set as '%s'", vsname);
+	    afs_com_err(whoami, 0, "No such volume set as '%s'", vsname);
 	} else if (code == -2) {
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "There aren't %d volume items for this volume set",
 		    entry);
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, 0,
 		    "Use the 'listvolsets' command to examine the volume set");
 	}
 	ERROR(code);
@@ -257,8 +257,8 @@ bc_DeleteVolEntryCmd(as, arock)
 	    printf("backup: deleted volume entry %d from volume set %s\n",
 		   entry, vsname);
 	} else {
-	    com_err(whoami, code, "Cannot save volume set file");
-	    com_err(whoami, 0,
+	    afs_com_err(whoami, code, "Cannot save volume set file");
+	    afs_com_err(whoami, 0,
 		    "Deletion is temporary - for this session only");
 	}
     }
@@ -300,7 +300,7 @@ bc_DeleteVolSetCmd(as, arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -308,9 +308,9 @@ bc_DeleteVolSetCmd(as, arock)
 	code = bc_DeleteVolumeSet(bc_globalConfig, ti->data, &flags);
 	if (code) {
 	    if (code == -1)
-		com_err(whoami, 0, "Can't find volume set '%s'", ti->data);
+		afs_com_err(whoami, 0, "Can't find volume set '%s'", ti->data);
 	    else
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; Unknown problem deleting volume set '%s'",
 			ti->data);
 	} else {
@@ -326,8 +326,8 @@ bc_DeleteVolSetCmd(as, arock)
 	if (c) {
 	    if (!code)
 		code = c;
-	    com_err(whoami, c, "Cannot save updated volume set file");
-	    com_err(whoami, 0, "Deletion effective for this session only");
+	    afs_com_err(whoami, c, "Cannot save updated volume set file");
+	    afs_com_err(whoami, 0, "Deletion effective for this session only");
 	}
 
     }
@@ -374,7 +374,7 @@ bc_ListVolSetCmd(struct cmd_syndesc *as, char *arock)
 
     code = bc_UpdateVolumeSet();
     if (code) {
-	com_err(whoami, code, "; Can't retrieve volume sets");
+	afs_com_err(whoami, code, "; Can't retrieve volume sets");
 	return (code);
     }
 
@@ -387,7 +387,7 @@ bc_ListVolSetCmd(struct cmd_syndesc *as, char *arock)
 		ListVolSet(tset);
 		printf("\n");
 	    } else {
-		com_err(whoami, 0, "Can't find volume set '%s'", ti->data);
+		afs_com_err(whoami, 0, "Can't find volume set '%s'", ti->data);
 		code = 1;
 	    }
 	}
@@ -495,7 +495,7 @@ bc_ParseVolumeSet()
 	    if ((code != 2)
 		|| (strcmp(serverName, "volumeset") != 0)
 		) {
-		com_err(whoami, 0, "Bad volume header line: '%s'", tbuffer);
+		afs_com_err(whoami, 0, "Bad volume header line: '%s'", tbuffer);
 		return (-1);
 	    }
 
@@ -534,13 +534,13 @@ bc_ParseVolumeSet()
 	    tve = (struct bc_volumeEntry *)
 		malloc(sizeof(struct bc_volumeEntry));
 	    if (!tve) {
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec record!");
 		return (-1);
 	    }
 	    memset(tve, 0, sizeof(*tve));
 	    if (bc_ParseHost(serverName, &(tve->server)))
-		com_err(whoami, 0, "Can't get required info on host '%s'",
+		afs_com_err(whoami, 0, "Can't get required info on host '%s'",
 			serverName);
 
 	    /* The above code has filled in the server sockaddr, now fill in
@@ -548,26 +548,26 @@ bc_ParseVolumeSet()
 	     */
 	    tve->serverName = (char *)malloc(strlen(serverName) + 1);
 	    if (!tve->serverName) {
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec server name field!");
 		return (-1);
 	    }
 	    strcpy(tve->serverName, serverName);
 	    tve->partname = (char *)malloc(strlen(partName) + 1);
 	    if (!tve->partname) {
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec partition pattern field!");
 		return (-1);
 	    }
 	    strcpy(tve->partname, partName);
 	    code = bc_GetPartitionID(partName, &tve->partition);
 	    if (code) {
-		com_err(whoami, 0, "Can't parse partition '%s'", partName);
+		afs_com_err(whoami, 0, "Can't parse partition '%s'", partName);
 		return -1;
 	    }
 	    tp = (char *)malloc(strlen(vsname) + 1);
 	    if (!tp) {
-		com_err(whoami, 0,
+		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec volume pattern field!");
 		return (-1);
 	    }

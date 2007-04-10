@@ -52,6 +52,7 @@ RCSID
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
@@ -185,7 +186,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	if (code)
 	    fprintf(stderr,
 		    "libprot: clientauthsecure returns %d %s"
-		    " (so trying noauth)\n", code, error_message(code));
+		    " (so trying noauth)\n", code, afs_error_message(code));
 	if (code)
 	    scIndex = 0;	/* use noauth */
 	if (scIndex != 2)
@@ -221,7 +222,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     if ((scIndex == 0) && (sc[0] == 0))
 	sc[0] = rxnull_NewClientSecurityObject();
     if ((scIndex == 0) && (secLevel != 0))
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"Could not get afs tokens, running unauthenticated.");
 
     memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
@@ -233,7 +234,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 
     code = ubik_ClientInit(serverconns, &pruclient);
     if (code) {
-	com_err(whoami, code, "ubik client init failed.");
+	afs_com_err(whoami, code, "ubik client init failed.");
 	return code;
     }
     lastLevel = scIndex;
