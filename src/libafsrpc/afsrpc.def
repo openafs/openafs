@@ -92,7 +92,7 @@ EXPORTS
 	multi_Select				@97
 	multi_Init				@98
 	multi_Finalize_Ignore			@99
-	add_to_error_table			@100
+	afs_add_to_error_table			@100
 	xdr_afsUUID				@101
 	rx_GetSpecific				@102
 	rx_SetSpecific				@103

@@ -63,7 +63,7 @@ EXPORTS
 	pr_GetCPS					@62
 	pr_Initialize					@63
 	pr_GetHostCPS					@64
-	afs_krb_get_lrealm				@65
+;	afs_krb_get_lrealm				@65
 	pr_NameToId					@66
 	pr_IdToName					@67
 	afs_gettimeofday				@68
