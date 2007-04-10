@@ -1,0 +1,58 @@
+What's in the "doc" subdirectory
+
+** doc/html
+original ibm html doc, no longer used
+
+** doc/man-pages
+pod sources for man pages (converted from original ibm html source).
+
+** doc/xml
+xml sources for manuals (converted from original ibm html source).  there is
+some generated pdf/html content as well for the curious.
+
+Note that doc/xml/AdminReference uses doc/xml/AdminReference/pod2refentry to
+convert the pod man pages to xml for printing.  pod goes directly to html
+just fine.
+
+The reference guide is now built by converting the existing pod documention
+to xml.  however, the indexing information was lost during the initial pod
+conversion.  Someone we will need to try to get that back.
+
+** doc/pdf
+old Transarc (and possibly pre-Transarc) protocol and API documentation for
+which we have no other source
+
+** doc/txt
+doc/examples
+a few other miscellaneous files.
+
+
+From: Russ Allbery
+
+The Administrative Reference has been converted into separate POD man pages
+for each command, since that's basically what it already was (just in HTML).
+Considerable work remains to update that POD documentation to reflect the
+current behavior of OpenAFS (for example, there's no documentation of
+dynroot, no mention of Kerberos v5, many fileserver options are
+undocumented, the afsd switch documentation is out of date, and so forth).
+I've collected as many of those deficiencies as I know of in
+doc/man-pages/README.  Any contributions to correct any of those deficiences
+are very welcome.  This is one easy place to start.
+
+The other reference manuals (the Administrator's Guide, the Quick Start
+Guide, and the User's Guide) are more manual-like in their structure.  After
+some on-list discussion, we picked DocBook as the format to use going
+forward and the existing HTML files have been converted to DocBook with a
+script.  This means that the markup could use a lot of cleaning up and the
+content is even less updated than the man pages.
+
+I did some *very* initial work on the Quick Start Guide, just to get the
+makefile working and to try some simple modifications.  Simon Wilkinson is
+currently working on making more extensive modifications.  If you want to
+work on the Quick Start Guide, please coordinate with him to avoid duplicate
+work.
+
+The Administrator's Guide and User's Guide have not yet been touched.  Of
+those, the latter is probably in the best shape, in that the user commands
+and behavior haven't changed as much.  If you'd like to start working on one
+of those, that would also be great.
