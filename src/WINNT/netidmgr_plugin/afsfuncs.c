@@ -729,6 +729,7 @@ afs_klog(khm_handle identity,
     char	ServiceName[128];
     khm_handle	confighandle;
     khm_int32	supports_krb4 = 1;
+    khm_int32   got524cred = 0;
 
     /* signalling */
     BOOL        bGotCreds = FALSE; /* got creds? */
@@ -1017,6 +1018,7 @@ afs_klog(khm_handle identity,
                 goto end_krb5;
             }
             rc = KSUCCESS;
+	    got524cred = 1;
             bGotCreds = TRUE;
         }
 
@@ -1146,7 +1148,7 @@ afs_klog(khm_handle identity,
         StringCbCopyA(aclient.instance, sizeof(aclient.instance), "");
 
         StringCchCatA(aclient.name, MAXKTCNAMELEN, "@");
-        StringCchCatA(aclient.name, MAXKTCNAMELEN, creds.realm);
+		StringCchCatA(aclient.name, MAXKTCNAMELEN, got524cred ? realm_of_user : creds.realm);
 
         StringCbCopyA(aclient.cell, sizeof(aclient.cell), CellName);
 
