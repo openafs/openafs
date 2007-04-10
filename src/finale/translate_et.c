@@ -74,8 +74,8 @@ main(int argc, char *argv[])
 	code = atoi(argv[i]);
 	offset = code & ((1 << ERRCODE_RANGE) - 1);
 
-	printf("%d (%s).%d = %s\n", (int)code, error_table_name(code),
-	       (int)offset, error_message(code));
+	printf("%d (%s).%d = %s\n", (int)code, afs_error_table_name(code),
+	       (int)offset, afs_error_message(code));
     }
     return 0;
 }

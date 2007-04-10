@@ -111,7 +111,7 @@ ka_GetAFSTicket(char *name, char *instance, char *realm, Date lifetime,
 	    return code;
 	code = pr_Initialize(0, AFSDIR_CLIENT_ETC_DIRPATH, server.cell);
 	if (code) {
-	    com_err(whoami, code, "initializing ptserver in cell '%s'",
+	    afs_com_err(whoami, code, "initializing ptserver in cell '%s'",
 		    server.cell);
 	    return 0;
 	}
@@ -134,7 +134,7 @@ ka_GetAFSTicket(char *name, char *instance, char *realm, Date lifetime,
 	if ((code == 0) && (viceId == ANONYMOUSID))
 	    code = PRNOENT;
 	if (code) {
-	    com_err(whoami, code, "translating %s to id", username);
+	    afs_com_err(whoami, code, "translating %s to id", username);
 	    return 0;
 	}
 
@@ -285,7 +285,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, char *re
 	    *reasonP = "Authentication Server was unavailable";
 	    break;
 	default:
-	    *reasonP = (char *)error_message(code);
+	    *reasonP = (char *)afs_error_message(code);
 	}
     return code;
 }
@@ -322,7 +322,7 @@ ka_UserReadPassword(char *prompt, char *password, int plen, char **reasonP)
 	return 0;
 
     if (reasonP) {
-	*reasonP = (char *)error_message(code);
+	*reasonP = (char *)afs_error_message(code);
     }
     return code;
 }

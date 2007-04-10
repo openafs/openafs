@@ -223,7 +223,7 @@ my_error_cb(afs_uint32 code, int fatal, void *ref, char *msg, ...)
     error_count++;
     if (!quiet) {
 	va_start(alist, msg);
-	com_err_va(argv0, code, msg, alist);
+	afs_com_err_va(argv0, code, msg, alist);
 	va_end(alist);
     }
 }
@@ -290,7 +290,7 @@ main(int argc, char **argv)
     initialize_xFil_error_table();
     r = xfopen(&input_file, O_RDONLY, input_path);
     if (r) {
-	com_err(argv0, r, "opening %s", input_path);
+	afs_com_err(argv0, r, "opening %s", input_path);
 	exit(2);
     }
 
@@ -311,7 +311,7 @@ main(int argc, char **argv)
     }
 
     if (gendump_path && (r = setup_repair())) {
-	com_err(argv0, r, "setting up repair output");
+	afs_com_err(argv0, r, "setting up repair output");
 	xfclose(&input_file);
 	exit(2);
     }
@@ -326,7 +326,7 @@ main(int argc, char **argv)
 	if ((r = xftell(&input_file, &where))
 	    || (r = Path_PreScan(&input_file, &phi, 0))
 	    || (r = xfseek(&input_file, &where))) {
-	    com_err(argv0, r, "- path initialization failed");
+	    afs_com_err(argv0, r, "- path initialization failed");
 	    xfclose(&input_file);
 	    exit(2);
 	}
@@ -353,6 +353,6 @@ main(int argc, char **argv)
     if (verbose && error_count)
 	fprintf(stderr, "*** %d errors\n", error_count);
     if (r && !quiet)
-	fprintf(stderr, "*** FAILED: %s\n", error_message(r));
+	fprintf(stderr, "*** FAILED: %s\n", afs_error_message(r));
     exit(0);
 }

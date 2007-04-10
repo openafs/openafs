@@ -353,7 +353,7 @@ BOOL CAfs::Authencate(CString &msg,const char * name,const char * password)
 		code = krb_write_ticket_file (realm);
 		if (!Silent) {
 			if (code) 
-				com_err (rn, code, "writing Kerberos ticket file");
+				afs_com_err (rn, code, "writing Kerberos ticket file");
 			else {
 				m_pParent->Log("Wrote ticket file to /tmp");
 			}

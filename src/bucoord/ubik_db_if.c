@@ -32,6 +32,7 @@ RCSID
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
 #include <afs/budb.h>
+#include <afs/com_err.h>
 #include <errno.h>
 
 #include "bc.h"
@@ -727,7 +728,7 @@ bc_LockText(ctPtr)
 
 	/* Mention something every 30 seconds */
 	if (++j >= 30) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Waiting for db configuration text unlock");
 	    j = 0;
 	}
@@ -823,7 +824,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		      AFSDIR_CLIENT_ETC_DIRPATH));
     if (!acdir) {
-	com_err(whoami, 0, "Can't open configuration directory '%s'",
+	afs_com_err(whoami, 0, "Can't open configuration directory '%s'",
 		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		 AFSDIR_CLIENT_ETC_DIRPATH));
 	ERROR(BC_NOCELLCONFIG);
@@ -834,7 +835,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 
 	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Can't get the local cell name - check %s/%s",
 		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
@@ -845,7 +846,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 
     code = afsconf_GetCellInfo(acdir, cellName, AFSCONF_VLDBSERVICE, &info);
     if (code) {
-	com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
+	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
 		cellName,
 		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
@@ -859,12 +860,12 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
     if (localauth) {
 	code = afsconf_GetLatestKey(acdir, 0, 0);
 	if (code) {
-	    com_err(whoami, code, "; Can't get key from local key file");
+	    afs_com_err(whoami, code, "; Can't get key from local key file");
 	    ERROR(code);
 	} else {
 	    code = afsconf_ClientAuth(acdir, &sc, &scIndex);
 	    if (code) {
-		com_err(whoami, code, "; Calling ClientAuth");
+		afs_com_err(whoami, code, "; Calling ClientAuth");
 		ERROR(code);
 	    }
 
@@ -879,11 +880,11 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 	    code =
 		ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), NULL);
 	    if (code) {
-		com_err(whoami, code, 0,
+		afs_com_err(whoami, code, 0,
 			"; Can't get AFS tokens - running unauthenticated");
 	    } else {
 		if ((ttoken->kvno < 0) || (ttoken->kvno > 255))
-		    com_err(whoami, 0,
+		    afs_com_err(whoami, 0,
 			    "Funny kvno (%d) in ticket, proceeding",
 			    ttoken->kvno);
 
@@ -903,14 +904,14 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 					      ttoken->ticket);
 	    break;
 	default:
-	    com_err(whoami, 0, "Unsupported authentication type %d", scIndex);
+	    afs_com_err(whoami, 0, "Unsupported authentication type %d", scIndex);
 	    ERROR(-1);
 	    break;
 	}
     }
 
     if (!sc) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Can't create a security object with security index %d",
 		scIndex);
 	ERROR(-1);
@@ -920,7 +921,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
     UV_SetSecurity(sc, scIndex);
 
     if (info.numServers > VLDB_MAXSERVERS) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Warning: %d VLDB servers exist for cell '%s', can only remember the first %d",
 		info.numServers, cellName, VLDB_MAXSERVERS);
 	info.numServers = VLDB_MAXSERVERS;
@@ -936,7 +937,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
     *cstruct = 0;
     code = ubik_ClientInit(serverconns, cstruct);
     if (code) {
-	com_err(whoami, code, "; Can't initialize ubik connection to vldb");
+	afs_com_err(whoami, code, "; Can't initialize ubik connection to vldb");
 	ERROR(code);
     }
 
@@ -967,7 +968,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		      AFSDIR_CLIENT_ETC_DIRPATH));
     if (!acdir) {
-	com_err(whoami, 0, "Can't open configuration directory '%s'",
+	afs_com_err(whoami, 0, "Can't open configuration directory '%s'",
 		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		 AFSDIR_CLIENT_ETC_DIRPATH));
 	ERROR(BC_NOCELLCONFIG);
@@ -978,7 +979,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 
 	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
 	if (code) {
-	    com_err(whoami, code,
+	    afs_com_err(whoami, code,
 		    "; Can't get the local cell name - check %s/%s",
 		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
@@ -989,7 +990,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 
     code = afsconf_GetCellInfo(acdir, cellName, 0, &info);
     if (code) {
-	com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
+	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
 		cellName,
 		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
@@ -1001,14 +1002,14 @@ udbClientInit(noAuthFlag, localauth, cellName)
     if (localauth) {
 	code = afsconf_GetLatestKey(acdir, 0, 0);
 	if (code) {
-	    com_err(whoami, code, "; Can't get key from local key file");
+	    afs_com_err(whoami, code, "; Can't get key from local key file");
 	    ERROR(-1);
 	} else {
 	    code =
 		afsconf_ClientAuth(acdir, &udbHandle.uh_secobj,
 				   &udbHandle.uh_scIndex);
 	    if (code) {
-		com_err(whoami, code, "; Calling ClientAuth");
+		afs_com_err(whoami, code, "; Calling ClientAuth");
 		ERROR(-1);
 	    }
 	}
@@ -1022,11 +1023,11 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	    /* get token */
 	    code = ktc_GetToken(&principal, &token, sizeof(token), NULL);
 	    if (code) {
-		com_err(whoami, code,
+		afs_com_err(whoami, code,
 			"; Can't get tokens - running unauthenticated");
 	    } else {
 		if ((token.kvno < 0) || (token.kvno > 255))
-		    com_err(whoami, 0,
+		    afs_com_err(whoami, 0,
 			    "Unexpected kvno (%d) in ticket - proceeding",
 			    token.kvno);
 		udbHandle.uh_scIndex = RX_SCINDEX_KAD;	/* Kerberos */
@@ -1046,7 +1047,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	    break;
 
 	default:
-	    com_err(whoami, 0, "Unsupported authentication type %d",
+	    afs_com_err(whoami, 0, "Unsupported authentication type %d",
 		    udbHandle.uh_scIndex);
 	    ERROR(-1);
 	    break;
@@ -1054,14 +1055,14 @@ udbClientInit(noAuthFlag, localauth, cellName)
     }
 
     if (!udbHandle.uh_secobj) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Can't create a security object with security index %d",
 		udbHandle.uh_secobj);
 	ERROR(-1);
     }
 
     if (info.numServers > MAXSERVERS) {
-	com_err(whoami, 0,
+	afs_com_err(whoami, 0,
 		"Warning: %d BDB servers exist for cell '%s', can only remember the first %d",
 		info.numServers, cellName, MAXSERVERS);
 	info.numServers = MAXSERVERS;
@@ -1078,7 +1079,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 
     code = ubik_ClientInit(udbHandle.uh_serverConn, &udbHandle.uh_client);
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"; Can't initialize ubik connection to backup database");
 	ERROR(code);
     }
@@ -1100,7 +1101,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	    ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
 		      &udbHandle.uh_instanceId);
     if (code) {
-	com_err(whoami, code, "; Can't access backup database");
+	afs_com_err(whoami, code, "; Can't access backup database");
 	ERROR(code);
     }
 
@@ -1313,7 +1314,7 @@ udbLocalInit()
 
     code = ubik_ParseClientList(3, args, serverList);
     if (code) {
-	com_err(whoami, code, "; udbLocalInit: parsing ubik server list");
+	afs_com_err(whoami, code, "; udbLocalInit: parsing ubik server list");
 	return (-1);
     }
 
@@ -1327,14 +1328,14 @@ udbLocalInit()
 			     BUDB_SERVICE, udbHandle.uh_secobj,
 			     udbHandle.uh_scIndex);
 	if (udbHandle.uh_serverConn[i] == 0) {
-	    com_err(whoami, 0, "connection %d failed", i);
+	    afs_com_err(whoami, 0, "connection %d failed", i);
 	    continue;
 	}
     }
     udbHandle.uh_serverConn[i] = 0;
     code = ubik_ClientInit(udbHandle.uh_serverConn, &udbHandle.uh_client);
     if (code) {
-	com_err(whoami, code, "; in ubik_ClientInit");
+	afs_com_err(whoami, code, "; in ubik_ClientInit");
 	return (code);
     }
 
@@ -1342,7 +1343,7 @@ udbLocalInit()
 	ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
 		  &udbHandle.uh_instanceId);
     if (code) {
-	com_err(whoami, code, "; Can't estblish instance Id");
+	afs_com_err(whoami, code, "; Can't estblish instance Id");
 	return (code);
     }
 

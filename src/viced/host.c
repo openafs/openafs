@@ -52,6 +52,7 @@ RCSID
 #include <afs/prs_fs.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
 #include <stdlib.h>
@@ -307,7 +308,7 @@ hpr_Initialize(struct ubik_client **uclient)
     if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
         code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
         if (code)
-	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, error_message(code)));
+	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
         if (code)
             scIndex = 0;        /* use noauth */
         if (scIndex != 2)

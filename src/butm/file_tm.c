@@ -1752,7 +1752,7 @@ file_Configure(file)
      struct tapeConfig *file;
 {
     if (!file) {
-	com_err(whoami, BUTM_BADCONFIG, "device not specified");
+	afs_com_err(whoami, BUTM_BADCONFIG, "device not specified");
 	return BUTM_BADCONFIG;
     }
 
@@ -1763,13 +1763,13 @@ file_Configure(file)
 
     /* Tape must be large enough to at least fit a label */
     if (config.tapeSize <= 0) {
-	com_err(whoami, BUTM_BADCONFIG, "Tape size bogus: %d Kbytes",
+	afs_com_err(whoami, BUTM_BADCONFIG, "Tape size bogus: %d Kbytes",
 		config.tapeSize);
 	return BUTM_BADCONFIG;
     }
 
     if (strlen(config.tapedir) == 0) {
-	com_err(whoami, BUTM_BADCONFIG, "no tape device specified");
+	afs_com_err(whoami, BUTM_BADCONFIG, "no tape device specified");
 	return BUTM_BADCONFIG;
     }
 

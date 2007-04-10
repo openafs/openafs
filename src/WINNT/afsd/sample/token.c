@@ -276,7 +276,7 @@ bad_lifetime:
        code = krb_write_ticket_file (realm);
        if (!Silent) {
           if (code) 
-              com_err (rn, code, "writing Kerberos ticket file");
+              afs_com_err (rn, code, "writing Kerberos ticket file");
           else fprintf (stderr, "Wrote ticket file to /tmp\n");
       }
    }

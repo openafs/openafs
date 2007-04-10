@@ -33,7 +33,7 @@ void
 LogError(afs_int32 errcode)
 {
     ViceLog(0,
-	    ("%s: %s\n", error_table_name(errcode), error_message(errcode)));
+	    ("%s: %s\n", afs_error_table_name(errcode), afs_error_message(errcode)));
 }
 
 #ifndef AFS_PTHREAD_ENV

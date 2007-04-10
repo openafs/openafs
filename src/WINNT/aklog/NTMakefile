@@ -28,8 +28,10 @@ ASETKEYOBJS = \
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-    $(DESTDIR)\lib\afsauthent.lib \
-    $(DESTDIR)\lib\afs\afskauth.lib
+        $(DESTDIR)\lib\afsauthent.lib \
+        $(DESTDIR)\lib\afs\afskauth.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib
 
 OTHERLIBS = \
     ..\kfw\lib\i386\krbv4w32.lib \

@@ -740,7 +740,7 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
     if (!initDone) {
 	code = InitThisModule(NoAuthFlag, uss_ConfDir, uss_Cell);
 	if (code) {
-	    com_err(uss_whoami, code,
+	    afs_com_err(uss_whoami, code,
 		    "while inititializing VLDB connection(s)\n");
 	    return (code);
 	}

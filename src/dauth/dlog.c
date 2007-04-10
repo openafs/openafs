@@ -548,7 +548,7 @@ CommandProc(as, arock)
 	ap[1] = "-servers";
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
-	    com_err(rn, code, "-- could not parse server list");
+	    afs_com_err(rn, code, "-- could not parse server list");
 	    exit(1);
 	}
     } else {
@@ -560,7 +560,7 @@ CommandProc(as, arock)
 	 */
 	code = afsconf_GetCellInfo(cdir, realm, 0, &cellinfo);
 	if (code) {
-	    com_err(rn, code, "-- unable to get cell info");
+	    afs_com_err(rn, code, "-- unable to get cell info");
 	    exit(1);
 	}
 	strncpy(realm, cellinfo.name, sizeof(realm) - 1);
@@ -688,7 +688,7 @@ CommandProc(as, arock)
      * Check for simple communication failures.
      */
     if (code) {
-	com_err(rn, code, "-- failed to contact authentication service");
+	afs_com_err(rn, code, "-- failed to contact authentication service");
 	exit(1);
     }
 
@@ -719,7 +719,7 @@ CommandProc(as, arock)
 	} else {
 	    code = des_read_pw_string(passwd, sizeof(passwd), "Password:", 0);
 	    if (code) {
-		com_err(rn, code, "-- couldn't read password");
+		afs_com_err(rn, code, "-- couldn't read password");
 		exit(1);
 	    }
 	}
@@ -751,7 +751,7 @@ CommandProc(as, arock)
 			    passwd_key, DECRYPT);
     }
     if (code) {
-	com_err(rn, code, "-- unable to decrypt reply from the DCE KDC");
+	afs_com_err(rn, code, "-- unable to decrypt reply from the DCE KDC");
 	exit(1);
     }
 
@@ -799,7 +799,7 @@ CommandProc(as, arock)
 			kdcrep.endtime, dosetpag);
 
     if (code) {
-	com_err("dlog", code, "-- failed to store tickets");
+	afs_com_err("dlog", code, "-- failed to store tickets");
 	exit(1);
     }
 

@@ -735,12 +735,12 @@ process_udp_auth(ksoc, pkt)
     if (code) {
 	if (code == KANOENT) {
 	    code = KERB_ERR_PRINCIPAL_UNKNOWN;
-	    err_packet(ksoc, pkt, code, (char *)error_message(code));
+	    err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
 	} else if (code == KAPWEXPIRED) {
 	    code = KERB_ERR_NAME_EXP;
 	    err_packet(ksoc, pkt, code, "password has expired");
 	} else
-	    err_packet(ksoc, pkt, code, (char *)error_message(code));
+	    err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
     }
     return 0;
 }
@@ -784,7 +784,7 @@ process_udp_appl(ksoc, pkt)
     if (code) {
 	if (code == KANOENT)
 	    code = KERB_ERR_PRINCIPAL_UNKNOWN;
-	err_packet(ksoc, pkt, code, (char *)error_message(code));
+	err_packet(ksoc, pkt, code, (char *)afs_error_message(code));
 	return -1;
     }
     return 0;

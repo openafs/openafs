@@ -652,7 +652,7 @@ void Die(code, filename)
 #ifdef WIN32
 	fprintf(stderr, ": code 0x%x\n", code);
 #else /* not WIN32 */
-	fprintf(stderr,": %s\n", error_message(code));
+	fprintf(stderr,": %s\n", afs_error_message(code));
 #endif /* not WIN32 */
     }
 } /*Die*/

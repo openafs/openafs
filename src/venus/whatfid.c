@@ -149,6 +149,6 @@ PioctlError(code, filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
 	else
 	    fprintf(stderr, "%s", pn);
-	fprintf(stderr, ": %s\n", error_message(errno));
+	fprintf(stderr, ": %s\n", afs_error_message(errno));
     }
 }				/*Die */

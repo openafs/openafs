@@ -47,6 +47,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include <lock.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <ubik.h>
 #include <sys/stat.h>
 #include "kauth.h"
@@ -330,7 +331,7 @@ main(argc, argv)
     if (!KA_conf) {
 	code = KANOCELLS;
       abort:
-	com_err(whoami, code, "Failed getting cell info");
+	afs_com_err(whoami, code, "Failed getting cell info");
 	exit(1);
     }
 #ifdef        AUTH_DBM_LOG
@@ -356,7 +357,7 @@ main(argc, argv)
 				    &cellinfo, &clones);
     if (servers) {
 	if (code = ubik_ParseServerList(argc, argv, &myHost, serverList)) {
-	    com_err(whoami, code, "Couldn't parse server list");
+	    afs_com_err(whoami, code, "Couldn't parse server list");
 	    exit(1);
 	}
 	cellinfo.hostAddr[0].sin_addr.s_addr = myHost;
@@ -424,7 +425,7 @@ main(argc, argv)
 				  &clones, dbpath, &KA_dbase);
 
     if (code) {
-	com_err(whoami, code, "Ubik init failed");
+	afs_com_err(whoami, code, "Ubik init failed");
 	exit(2);
     }
 

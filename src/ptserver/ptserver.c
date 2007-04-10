@@ -149,6 +149,7 @@ RCSID
 #include "error_macros.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 
 
 /* make	all of these into a structure if you want */
@@ -460,7 +461,7 @@ main(int argc, char **argv)
     code =
 	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, &clones);
     if (code) {
-	com_err(whoami, code, "Couldn't get server list");
+	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
@@ -470,7 +471,7 @@ main(int argc, char **argv)
     /* get keys */
     code = afsconf_GetKey(prdir, 999, &tkey);
     if (code) {
-	com_err(whoami, code,
+	afs_com_err(whoami, code,
 		"couldn't get bcrypt keys from key file, ignoring.");
     }
 #endif
@@ -528,7 +529,7 @@ main(int argc, char **argv)
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
 			      pr_dbaseName, &dbase);
     if (code) {
-	com_err(whoami, code, "Ubik init failed");
+	afs_com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
 #if defined(SUPERGROUPS)

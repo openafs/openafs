@@ -625,7 +625,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
 	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		    progname, cell_to_use);
-		com_err(progname, status, "while getting AFS tickets");
+		afs_com_err(progname, status, "while getting AFS tickets");
 	    return(AKLOG_KERBEROS);
 	}
 
@@ -678,7 +678,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    status = krb5_524_convert_creds(context, v5cred, &cred);
 
 	    if (status) {
-		com_err(progname, status, "while converting tickets "
+		afs_com_err(progname, status, "while converting tickets "
 			"to Kerberos V4 format");
 		return(AKLOG_KERBEROS);
 	    }
@@ -735,7 +735,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    if ((status = get_user_realm(context, realm_of_user))) {
 		fprintf(stderr, "%s: Couldn't determine realm of user:)",
 			progname);
-		com_err(progname, status, " while getting realm");
+		afs_com_err(progname, status, " while getting realm");
 		return(AKLOG_KERBEROS);
 	    }
 	    if (strcmp(realm_of_user, realm_of_cell)) {
@@ -812,7 +812,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		if ((status = pr_CreateUser(username, &id))) {
 		    fprintf(stderr, "%s: %s so unable to create remote PTS "
 			    "user %s in cell %s (status: %d).\n", progname,
-			    error_message(status), username, cell_to_use,
+			    afs_error_message(status), username, cell_to_use,
 			    status);
 		} else {
 		    printf("created cross-cell entry for %s (Id %d) at %s\n",
@@ -1557,23 +1557,6 @@ void aklog(int argc, char *argv[])
 
     exit(status);
 }
-
-#ifndef HAVE_ADD_TO_ERROR_TABLE
-
-#define error_table error_table_compat
-#include <afs/error_table.h>
-#undef error_table
-
-#ifndef HAVE_ADD_ERROR_TABLE
-void add_error_table (const struct error_table *);
-#endif /* !HAVE_ADD_ERROR_TABLE */
-
-void
-add_to_error_table(struct et_list *new_table)
-{
-	add_error_table((struct error_table *) new_table->table);
-}
-#endif /* HAVE_ADD_TO_ERROR_TABLE */
 
 static int isdir(char *path, unsigned char *val)
 {

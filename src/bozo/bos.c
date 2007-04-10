@@ -93,7 +93,7 @@ em(acode)
     else if (acode == -3)
 	return "communications timeout (-3)";
     else
-	return (char *)error_message(acode);
+	return (char *)afs_error_message(acode);
 }
 
 /* get partition id from a name */
@@ -204,7 +204,7 @@ GetConn(as, aencrypt)
 	 * local cell */
 	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
 	if (code) {
-	    com_err("bos", code, "(can't find cell '%s' in cell database)",
+	    afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
 		    (tname ? tname : "<default>"));
 	    exit(1);
 	} else
@@ -224,14 +224,14 @@ GetConn(as, aencrypt)
 	if (as->parms[ADDPARMOFFSET + 2].items) {	/* -localauth */
 	    code = afsconf_GetLatestKey(tdir, 0, 0);
 	    if (code)
-		com_err("bos", code, "(getting key from local KeyFile)");
+		afs_com_err("bos", code, "(getting key from local KeyFile)");
 	    else {
 		if (aencrypt)
 		    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
 		else
 		    code = afsconf_ClientAuth(tdir, &sc[2], &scIndex);
 		if (code)
-		    com_err("bos", code, "(calling ClientAuth)");
+		    afs_com_err("bos", code, "(calling ClientAuth)");
 		else if (scIndex != 2)	/* this shouldn't happen */
 		    sc[scIndex] = sc[2];
 	    }
@@ -258,7 +258,7 @@ GetConn(as, aencrypt)
 						  ttoken.ticket);
 		scIndex = 2;
 	    } else
-		com_err("bos", code, "(getting tickets)");
+		afs_com_err("bos", code, "(getting tickets)");
 	}
 	if ((scIndex == 0) || (sc[scIndex] == 0)) {
 	    fprintf(stderr, "bos: running unauthenticated\n");
@@ -300,7 +300,7 @@ SetAuth(as)
     }
     code = BOZO_SetNoAuthFlag(tconn, flag);
     if (code)
-	com_err("bos", code, "(failed to set authentication flag)");
+	afs_com_err("bos", code, "(failed to set authentication flag)");
     return 0;
 }
 
@@ -368,7 +368,7 @@ Prune(as)
 	flags |= 0xff;
     code = BOZO_Prune(tconn, flags);
     if (code)
-	com_err("bos", code, "(failed to prune server files)");
+	afs_com_err("bos", code, "(failed to prune server files)");
     return code;
 }
 
@@ -1467,7 +1467,7 @@ GetLogCmd(as)
 
   done:
     if (code)
-	com_err("bos", code, "(while reading log)");
+	afs_com_err("bos", code, "(while reading log)");
     return code;
 }
 
