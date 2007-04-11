@@ -39,7 +39,8 @@
   <sect1 id="Header_29">
     <title>Requirements and Configuration Decisions</title>
 
-    <para>The instructions in this chapter assume that you meet the following requirements. <itemizedlist>
+    <para>The instructions in this chapter assume that you meet the following requirements. 
+      <itemizedlist>
         <listitem>
           <para>You are logged onto the machine's console as the local superuser <emphasis role="bold">root</emphasis></para>
         </listitem>
@@ -50,8 +51,18 @@
         </listitem>
 
         <listitem>
-          <para>You can access the data on the AFS CD-ROMs, either through a local CD drive or via an NFS mount of a CD drive
-          attached to a machine that is accessible by network</para>
+          <para>You have either installed the provided OpenAFS packages for 
+          your system, have access to a binary distribution tarball, or have 
+          successfully built OpenAFS from source</para>
+        </listitem>
+
+        <listitem>
+          <para>You have a Kerberos v5 realm running for your site</para>
+        </listitem>
+
+        <listitem>
+          <para>You have a NTP, or similar, time service deployed to ensure 
+          rough clock syncronistation between your clients and servers.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -81,13 +92,6 @@
         <listitem>
           <para>Decide which partitions or logical volumes to configure as AFS server partitions, and choose the directory names on
           which to mount them</para>
-        </listitem>
-
-        <listitem>
-          <para>Decide whether to use the standard AFS authentication and authorization software or Kerberos as obtained from
-          another source. On several system types, the decision determines how you incorporate AFS into the machine's authentication
-          system. If you wish to use Kerberos, contact the AFS Product Support group now to learn about how you must modify the
-          installation procedure.</para>
         </listitem>
 
         <listitem>
@@ -143,7 +147,8 @@
     <title>Overview: Installing Server Functionality</title>
 
     <para>In the first phase of installing your cell's first AFS machine, you install file server and database server functionality
-    by performing the following procedures: <orderedlist>
+    by performing the following procedures: 
+    <orderedlist>
         <listitem>
           <para>Choose which machine to install as the first AFS machine</para>
         </listitem>
@@ -178,7 +183,7 @@
         </listitem>
 
         <listitem>
-          <para>Start the database server processes: Authentication Server, Backup Server, Protection Server, and Volume Location
+          <para>Start the database server processes: Backup Server, Protection Server, and Volume Location
           (VL) Server</para>
         </listitem>
 
@@ -195,10 +200,6 @@
           <para>Start the server portion of the Update Server</para>
         </listitem>
 
-        <listitem>
-          <para>Start the controller process (called <emphasis role="bold">runntp</emphasis>) for the Network Time Protocol Daemon,
-          which synchronizes machine clocks</para>
-        </listitem>
       </orderedlist></para>
   </sect1>
 
@@ -221,34 +222,6 @@
 
   <sect1 id="Header_32">
     <title>Creating AFS Directories</title>
-
-    <indexterm>
-      <primary>CD-ROM</primary>
-
-      <secondary>creating /cdrom directory</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>cdrom directory</primary>
-
-      <secondary>first AFS machine</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>first AFS machine</primary>
-
-      <secondary>/cdrom directory</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>creating</primary>
-
-      <secondary>/cdrom directory</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
 
     <indexterm>
       <primary>usr/afs directory</primary>
@@ -296,15 +269,23 @@
       <secondary>see alphabetized entries without initial slash</secondary>
     </indexterm>
 
-    <para>Create the <emphasis role="bold">/usr/afs</emphasis> and <emphasis role="bold">/usr/vice/etc</emphasis> directories on the
-    local disk, to house server and client files respectively. Subsequent instructions copy files from the AFS CD-ROM into them.
-    Create the <emphasis role="bold">/cdrom</emphasis> directory as a mount point for CD-ROMs, if it does not already exist.</para>
+    <para>If you are installing from packages (such as Debian .deb or 
+    Fedora/SuSe .rpm files), you should now install all of the available 
+    OpenAFS packages for your system type. Typically, these will include 
+    packages for client and server functionality, and a seperate package 
+    containing a suitable kernel module for your running kernel. Consult 
+    the package lists on the OpenAFS website to determine the packages 
+    appropriate for your system.</para>
 
-    <programlisting>
+    <para>If you are installing from a tarfile, or from a locally compiled 
+    source tree you should create the <emphasis role="bold">/usr/afs</emphasis>
+    and <emphasis role="bold">/usr/vice/etc</emphasis> directories on the
+    local disk, to house server and client files respectively. Subsequent 
+    instructions copy files from the distribution tarfile into them. </para>
+<programlisting>
    # <emphasis role="bold">mkdir /usr/afs</emphasis>
    # <emphasis role="bold">mkdir /usr/vice</emphasis>
    # <emphasis role="bold">mkdir /usr/vice/etc</emphasis>
-   # <emphasis role="bold">mkdir /cdrom</emphasis> 
 </programlisting>
   </sect1>
 
@@ -336,8 +317,10 @@
         <listitem>
           <para>Incorporate AFS modifications into the kernel.</para>
 
-          <para>The kernel on every AFS file server and client machine must incorporate AFS extensions. On machines that use a
-          dynamic kernel module loader, it is conventional to alter the machine's initialization script to load the AFS extensions
+          <para>The kernel on every AFS client machine and, on some systems, 
+          the AFS fileservers, must incorporate AFS extensions. On machines 
+          that use a dynamic kernel module loader, it is conventional to 
+          alter the machine's initialization script to load the AFS extensions
           at each reboot. <indexterm>
               <primary>AFS server partition</primary>
 
@@ -405,7 +388,7 @@
           <para>If the machine is to remain an AFS client machine, modify the machine's authentication system so that users obtain
           an AFS token as they log into the local file system. Using AFS is simpler and more convenient for your users if you make
           the modifications on all client machines. Otherwise, users must perform a two-step login procedure (login to the local
-          file system and then issue the <emphasis role="bold">klog</emphasis> command). For further discussion of AFS
+          file system and then issue the <emphasis role="bold">aklog</emphasis> command). For further discussion of AFS
           authentication, see the chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about cell configuration and
           administration issues.</para>
         </listitem>
@@ -482,10 +465,14 @@
       correctly initializes all AFS components, then configure the AIX <emphasis role="bold">inittab</emphasis> file so that the
       script runs automatically at reboot. <orderedlist>
           <listitem>
-            <para>Mount the AFS CD-ROM for AIX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-            mounting CD-ROMs (either locally or remotely via NFS), see your AIX documentation. Then change directory as indicated.
-            <programlisting>
-   # <emphasis role="bold">cd  /cdrom/rs_aix42/root.client/usr/vice/etc</emphasis>
+            <para>Unpack the distribution tarball. The examples below assume 
+            that you have unpacked the files into the 
+            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+            pick a different location, substitute this in all of the following 
+            examples. Once you have unpacked the distribution, 
+            change directory as indicated.
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -641,6 +628,10 @@
     <sect2 id="HDRWQ24">
       <title>Replacing the fsck Program Helper on AIX Systems</title>
 
+      <note><para>The AFS modified fsck program is not required on AIX 5.1 
+      systems, and the <emphasis role="bold">v3fshelper</emphasis> program
+      refered to below is not shipped for these systems.</para></note>
+      
       <para>In this section, you make modifications to guarantee that the appropriate <emphasis role="bold">fsck</emphasis> program
       runs on AFS server partitions. The <emphasis role="bold">fsck</emphasis> program provided with the operating system must never
       run on AFS server partitions. Because it does not recognize the structures that the File Server uses to organize volume data,
@@ -654,11 +645,11 @@
       role="bold">/sbin/helpers/v3fshelper</emphasis>. <orderedlist>
           <listitem>
             <para>Move the AIX <emphasis role="bold">fsck</emphasis> program helper to a safe location and install the version from
-            the AFS distribution in its place. The AFS CD-ROM must still be mounted at the <emphasis role="bold">/cdrom</emphasis>
-            directory. <programlisting>
+            the AFS distribution in its place. 
+<programlisting>
    # <emphasis role="bold">cd /sbin/helpers</emphasis>
    # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
-   # <emphasis role="bold">cp -p /cdrom/rs_aix42/root.server/etc/v3fshelper v3fshelper</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/root.server/etc/v3fshelper v3fshelper</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -716,7 +707,17 @@
         proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
       </note>
 
-      <para>Follow the instructions in this section to incorporate AFS modifications into the AIX secondary authentication system.
+      <para>In modern AFS installations, you should be using Kerberos v5
+      for user login, and obtaining AFS tokens following this authentication
+      step.</para>
+      
+      <para>There are currently no instructions available on configuring AIX to
+      automatically obtain AFS tokens at login. Following login, users can 
+      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
+      command</para>
+      
+<!--
+      Follow the instructions in this section to incorporate AFS modifications into the AIX secondary authentication system.
       <orderedlist>
           <listitem>
             <para>Issue the <emphasis role="bold">ls</emphasis> command to verify that the <emphasis
@@ -725,11 +726,11 @@
    # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
 </programlisting></para>
 
-            <para>If the files do not exist, mount the AFS CD-ROM for AIX (if it is not already), change directory as indicated, and
+            <para>If the files do not exist, change directory as indicated and
             copy them.</para>
 
             <programlisting>
-   # <emphasis role="bold">cd /cdrom/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp  -p  afs_dynamic*  /usr/vice/etc</emphasis>
 </programlisting>
           </listitem>
@@ -780,15 +781,6 @@
                   <para>In the <computeroutput>DCE</computeroutput> stanza, set the <computeroutput>program</computeroutput>
                   attribute as follows.</para>
 
-                  <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
-
-                  <programlisting>
-   DCE:
-        program = /usr/vice/etc/afs_dynamic_auth   
-</programlisting>
-
-                  <para>If you use a Kerberos implementation of AFS authentication:</para>
-
                   <programlisting>
    DCE:
         program = /usr/vice/etc/afs_dynamic_kerbauth
@@ -798,15 +790,6 @@
                 <listitem>
                   <para>In the <computeroutput>AFS</computeroutput> stanza, set the <computeroutput>program</computeroutput>
                   attribute as follows.</para>
-
-                  <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
-
-                  <programlisting>
-   AFS:
-        program = /usr/vice/etc/afs_dynamic_auth   
-</programlisting>
-
-                  <para>If you use a Kerberos implementation of AFS authentication:</para>
 
                   <programlisting>
    AFS:
@@ -821,7 +804,8 @@
             installing an additional file server machine, return to <link linkend="HDRWQ108">Starting Server
             Programs</link>).</para>
           </listitem>
-        </orderedlist></para>
+        </orderedlist>
+        -->
     </sect2>
   </sect1>
 
@@ -869,10 +853,14 @@
           </listitem>
 
           <listitem>
-            <para>Mount the AFS CD-ROM for HP-UX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-            mounting CD-ROMs (either locally or remotely via NFS), see your HP-UX documentation. Then change directory as indicated.
+            <para>Unpack the OpenAFS HP-UX distribution tarball. The examples 
+            below assume that you have unpacked the files into the 
+            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+            pick a different location, substitute this in all of the following 
+            examples. Once you have unpacked the distribution, change directory 
+            as indicated.
             <programlisting>
-   # <emphasis role="bold">cd /cdrom/hp_ux110/root.client</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/root.client</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1113,7 +1101,7 @@
             <para>Copy the AFS-modified version of the <emphasis role="bold">fsck</emphasis> program (the <emphasis
             role="bold">vfsck</emphasis> binary) and related files from the distribution directory to the new AFS-specific command
             directory. <programlisting>
-   # <emphasis role="bold">cp -p /cdrom/hp_ux110/root.server/etc/*  .</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/root.server/etc/*  .</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1202,10 +1190,7 @@
     <sect2 id="HDRWQ35">
       <title>Enabling AFS Login on HP-UX Systems</title>
 
-      <note>
-        <para>If you plan to remove client functionality from this machine after completing the installation, skip this section and
-        proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
-      </note>
+      <note><para>If you plan to remove client functionality from this machine after completing the installation, skip this section and proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para></note>
 
       <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
       integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
@@ -1216,20 +1201,28 @@
       marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
       <computeroutput>sufficient</computeroutput>, and so on).</para>
 
-      <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
-      wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
-      tested configuration.</para>
+      <para>In modern AFS installations, you should be using Kerberos v5
+      for user login, and obtaining AFS tokens subsequent to this authentication
+      step. OpenAFS does not currently distribute a PAM module allowing AFS 
+      tokens to be automatically gained at login. Whilst there are a number of
+      third party modules providing this functionality, it is not know if these 
+      have been tested with HP/UX.</para>
+      
+      <para>Following login, users can 
+      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
+      command</para>
 
+<!--
       <note>
         <para>The instructions specify that you mark each entry as <computeroutput>optional</computeroutput>. However, marking some
         modules as optional can mean that they grant access to the corresponding service even when the user does not meet all of the
         module's requirements. In some operating system revisions, for example, if you mark as optional the module that controls
         login via a dial-up connection, it allows users to login without providing a password. See the <emphasis>OpenAFS Release
         Notes</emphasis> for a discussion of any limitations that apply to this operating system.</para>
+      </note>
 
         <para>Also, with some operating system versions you must install patches for PAM to interact correctly with certain
         authentication programs. For details, see the <emphasis>OpenAFS Release Notes</emphasis>.</para>
-      </note>
 
       <para>The recommended AFS-related entries in the PAM configuration file make use of one or more of the following three
       attributes. <variablelist>
@@ -1265,8 +1258,7 @@
 
       <para>Perform the following steps to enable AFS login. <orderedlist>
           <listitem>
-            <para>Mount the AFS CD-ROM for HP-UX on the <emphasis role="bold">/cdrom</emphasis> directory, if it is not already.
-            Then change directory as indicated. <programlisting>
+            <para>Change directory as indicated. <programlisting>
    # <emphasis role="bold">cd /usr/lib/security</emphasis>
 </programlisting></para>
           </listitem>
@@ -1341,13 +1333,11 @@
          try_first_pass  ignore_root
 </programlisting></para>
           </listitem>
-
-          <listitem>
+-->
             <para>Proceed to <link linkend="HDRWQ50">Starting the BOS Server</link> (or if referring to these instructions while
             installing an additional file server machine, return to <link linkend="HDRWQ108">Starting Server
             Programs</link>).</para>
-          </listitem>
-        </orderedlist></para>
+            
     </sect2>
   </sect1>
 
@@ -1423,10 +1413,14 @@
 
     <para>In preparation for either dynamic loading or kernel building, perform the following procedures: <orderedlist>
         <listitem>
-          <para>Mount the AFS CD-ROM for IRIX on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions on mounting
-          CD-ROMs (either locally or remotely via NFS), see your IRIX documentation. Then change directory as indicated.
-          <programlisting>
-   # <emphasis role="bold">cd  /cdrom/sgi_65/root.client</emphasis>
+          <para>Unpack the OpenAFS IRIX distribution tarball. The examples
+          below assume that you have unpacked the files into the 
+          <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you
+          pick a different location, substitue this in all of the following
+          examples. Once you have unpacked the distribution, change directory
+          as indicated.
+<programlisting>
+   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/root.client</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -1815,6 +1809,18 @@
         proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
       </note>
 
+      <para>Whilst the standard IRIX command-line 
+      <emphasis role="bold">login</emphasis> program and the 
+      graphical <emphasis role="bold">xdm</emphasis> login program both have
+      the ability to grant AFS tokens, this ability relies upon the deprecated
+      kaserver authentication system. As this system is not recommended for
+      new installations, this is not documented here.</para>
+        
+      <para>Users who have been successfully authenticated via Kerberos 5
+      authentication may obtain AFS tokens following login by running the
+      <emphasis role="bold">aklog</emphasis> command.</para>
+       
+<!--
       <para>The standard IRIX command-line <emphasis role="bold">login</emphasis> program and the graphical <emphasis
       role="bold">xdm</emphasis> login program both automatically grant an AFS token when AFS is incorporated into the machine's
       kernel. However, some IRIX distributions use another login utility by default, and it does not necessarily incorporate the
@@ -1830,14 +1836,14 @@
    # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
 </programlisting>
 
-      <para>If the files do not exist, mount the AFS CD-ROM for IRIX (if it is not already), change directory as indicated, and copy
+      <para>If the files do not exist, change directory as indicated, and copy
       them.</para>
 
       <programlisting>
-   # <emphasis role="bold">cd /cdrom/sgi_65/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp  -p  *authlib*  /usr/vice/etc</emphasis>   
 </programlisting>
-
+-->
       <para>After taking any necessary action, proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
     </sect2>
   </sect1>
@@ -1873,7 +1879,13 @@
       <secondary>fsck program replacement not necessary</secondary>
     </indexterm>
 
-    <para>Begin by running the AFS initialization script to call the <emphasis role="bold">insmod</emphasis> program, which
+    <para>Since this guide was originally written, the procedure for starting 
+    OpenAFS has diverged significantly between different Linux distributions. 
+    The instructions that follow are appropriate for both the Fedora and 
+    RedHat Enterprise Linux packages distributed by OpenAFS. Additional 
+    instructions are provided for those building from source.</para>
+
+    <para>Begin by running the AFS client startup scripts, which call the <emphasis role="bold">modprobe</emphasis> program, which
     dynamically loads AFS modifications into the kernel. Then create partitions for storing AFS volumes. You do not need to replace
     the Linux <emphasis role="bold">fsck</emphasis> program. If the machine is to remain an AFS client machine, incorporate AFS into
     the machine's Pluggable Authentication Module (PAM) scheme. <indexterm>
@@ -1905,23 +1917,75 @@
     <sect2 id="HDRWQ42">
       <title>Loading AFS into the Linux Kernel</title>
 
-      <para>The <emphasis role="bold">insmod</emphasis> program is the dynamic kernel loader for Linux. Linux does not support
+      <para>The <emphasis role="bold">modprobe</emphasis> program is the dynamic kernel loader for Linux. Linux does not support
       incorporation of AFS modifications during a kernel build.</para>
 
-      <para>For AFS to function correctly, the <emphasis role="bold">insmod</emphasis> program must run each time the machine
-      reboots, so the AFS initialization script (included on the AFS CD-ROM) invokes it automatically. The script also includes
+      <para>For AFS to function correctly, the <emphasis role="bold">modprobe</emphasis> program must run each time the machine
+      reboots, so your distribution's AFS initialization script invokes it automatically. The script also includes
       commands that select the appropriate AFS library file automatically. In this section you run the script.</para>
 
       <para>In later sections you verify that the script correctly initializes all AFS components, then activate a configuration
-      variable, which results in the script being incorporated into the Linux startup and shutdown sequence. <orderedlist>
+      variable, which results in the script being incorporated into the Linux startup and shutdown sequence.</para> 
+      
+      <para>The procedure for starting up OpenAFS depends upon your distribution</para>
+      <sect3>
+        <title>Fedora and RedHat Enterprise Linux</title>
+        <para>OpenAFS ship RPMS for all current Fedora and RHEL releases.
+        <orderedlist>
           <listitem>
-            <para>Mount the AFS CD-ROM for Linux on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-            mounting CD-ROMs (either locally or remotely via NFS), see your Linux documentation. Then change directory as indicated.
-            <programlisting>
-   # <emphasis role="bold">cd  /cdrom/i386_linux22/root.client/usr/vice/etc</emphasis>
+            <para>Download and install the RPM set for your operating system.
+            RPMs are available from the OpenAFS web site. You will need the 
+            <emphasis role="bold">openafs</emphasis>
+            <emphasis role="bold">openafs-client></emphasis>
+            <emphasis role="bold">openafs-server</emphasis> packages, along with
+            an <emphasis role="bold">openafs-kernel</emphasis> package matching
+            your current, running, kernel.</para>
+            <para>You can find the version of your current kernel by running
+<programlisting>
+  # uname -r
+<replaceable>2.6.20-1.2933.fc6</replaceable>
+</programlisting></para>
+            <para>Once downloaded, the packages may be installed with the
+            <emphasis role="bold">rpm</emphasis> command
+<programlisting>
+  # rpm -U openafs-* openafs-client-* openafs-server-* openafs-kernel-*
 </programlisting></para>
           </listitem>
-
+<!-- If you do this with current RHEL and Fedora releases you end up with
+     a dynroot'd client running - this breaks setting up the root.afs volume
+     as described later in this guide
+          <listitem>
+            <para>Run the AFS initialization script to load AFS extensions into 
+            the kernel. You can ignore any error messages about the inability 
+            to start the BOS Server or the Cache Manager or AFS client.</para>
+<programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/openafs-client  start</emphasis>
+</programlisting>
+          </listitem>
+-->
+        </orderedlist>
+      </para>
+      </sect3>
+      <sect3>
+         <title>Systems packaged as tar files</title>
+         <para>If you are running a system where the OpenAFS Binary Distribution
+         is provided as a tar file, or where you have built the system from
+         source yourself, you need to install the relevant components by hand
+         </para>
+         <orderedlist>
+           
+          <listitem>
+            <para>Unpack the distribution tarball. The examples below assume
+            that you have unpacked the files into the
+            <emphasis role="bold">/tmp/afsdist</emphasis>directory. If you
+            pick a different location, substitute this in all of the following
+            examples. Once you have unpacked the distribution,
+            change directory as indicated.
+<programlisting>
+  # <emphasis role="bold">cd /tmp/afsdist/linux/root.client/usr/vice/etc</emphasis>
+</programlisting></para>
+          </listitem>
+          
           <listitem>
             <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/modload</emphasis> directory.
             The filenames for the libraries have the format <emphasis
@@ -1941,17 +2005,21 @@
 </programlisting></para>
           </listitem>
 
+<!-- I don't think we need to do this for Linux, and it complicates things if
+     dynroot is enabled ...
           <listitem>
             <para>Run the AFS initialization script to load AFS extensions into the kernel. You can ignore any error messages about
-            the inability to start the BOS Server or the Cache Manager or AFS client. <programlisting>
-   # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
-</programlisting></para>
+            the inability to start the BOS Server or the Cache Manager or AFS client.</para>
+<programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/afs start</emphasis>
+</programlisting>
           </listitem>
-        </orderedlist></para>
+-->
+        </orderedlist>
 
       <indexterm>
         <primary>configuring</primary>
-
+   
         <secondary>AFS server partition on first AFS machine</secondary>
 
         <tertiary>Linux</tertiary>
@@ -1980,6 +2048,7 @@
 
         <tertiary>on first AFS machine</tertiary>
       </indexterm>
+    </sect3>
     </sect2>
 
     <sect2 id="HDRWQ43">
@@ -2091,125 +2160,20 @@
       marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
       <computeroutput>sufficient</computeroutput>, and so on).</para>
 
-      <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
-      wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
-      tested configuration.</para>
+      <para>At this time, we recommend that new sites requiring AFS credentials
+      to be gained as part of PAM authentication use Russ Alberry's 
+      pam_afs_session, rather than utilising the bundled pam_afs2 module. 
+      A typical PAM stack should authenticate the user using an external 
+      Kerberos V service, and then use the AFS PAM module to obtain AFS 
+      credentials in the <computeroutput>session</computeroutput> section</para>
 
-      <para>The recommended AFS-related entries in the PAM configuration file make use of one or more of the following three
-      attributes. <variablelist>
-          <varlistentry>
-            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
-
-            <listitem>
-              <para>This is a standard PAM attribute that can be included on entries after the first one for a service; it directs
-              the module to use the password that was provided to the first module. For the AFS module, it means that AFS
-              authentication succeeds if the password provided to the module listed first is the user's correct AFS password. For
-              further discussion of this attribute and its alternatives, see the operating system's PAM documentation.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
-
-            <listitem>
-              <para>This attribute, specific to the AFS PAM module, directs it to ignore not only the local superuser <emphasis
-              role="bold">root</emphasis>, but also any user with UID 0 (zero).</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
-
-            <listitem>
-              <para>This attribute, specific to the AFS PAM module, sets the environment variable PASSWORD_EXPIRES to the expiration
-              date of the user's AFS password, which is recorded in the Authentication Database.</para>
-            </listitem>
-          </varlistentry>
-        </variablelist></para>
-
-      <para>Perform the following steps to enable AFS login. <orderedlist>
-          <listitem>
-            <para>Mount the AFS CD-ROM for Linux on the <emphasis role="bold">/cdrom</emphasis> directory, if it is not already.
-            Then change to the directory for PAM modules, which depends on which Linux distribution you are using.</para>
-
-            <para>If you are using a Linux distribution from Red Hat Software:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cd /lib/security</emphasis>   
-</programlisting>
-
-            <para>If you are using another Linux distribution:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cd /usr/lib/security</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Copy the appropriate AFS authentication library file to the directory to which you changed in the previous step.
-            Create a symbolic link whose name does not mention the version. Omitting the version eliminates the need to edit the PAM
-            configuration file if you later update the library file.</para>
-
-            <para>If you use the AFS Authentication Server (<emphasis role="bold">kaserver</emphasis> process):</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.so.1  .</emphasis>
-   # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>   
-</programlisting>
-
-            <para>If you use a Kerberos implementation of AFS authentication:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.krb.so.1   .</emphasis>
-   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>For each service with which you want to use AFS authentication, insert an entry for the AFS PAM module into the
-            <computeroutput>auth</computeroutput> section of the service's PAM configuration file. (Linux uses a separate
-            configuration file for each service, unlike some other operating systems which list all services in a single file.) Mark
-            the entry as <computeroutput>sufficient</computeroutput> in the second field.</para>
-
-            <para>Place the AFS entry below any entries that impose conditions under which you want the service to fail for a user
-            who does not meet the entry's requirements. Mark these entries <computeroutput>required</computeroutput>. Place the AFS
-            entry above any entries that need to execute only if AFS authentication fails.</para>
-
-            <para>Insert the following AFS entry if using the Red Hat distribution:</para>
-
-            <programlisting>
-   auth  sufficient  /lib/security/pam_afs.so   try_first_pass  ignore_root   
-</programlisting>
-
-            <para>Insert the following AFS entry if using another distribution:</para>
-
-            <programlisting>
-   auth  sufficient  /usr/lib/security/pam_afs.so  try_first_pass  ignore_root   
-</programlisting>
-
-            <para>The following example illustrates the recommended configuration of the configuration file for the <emphasis
-            role="bold">login</emphasis> service (<emphasis role="bold">/etc/pam.d/login</emphasis>) on a machine using the Red Hat
-            distribution.</para>
-
-            <programlisting>
-   #%PAM-1.0
-   auth      required   /lib/security/pam_securetty.so
-   auth      required   /lib/security/pam_nologin.so
-   auth      sufficient /lib/security/pam_afs.so try_first_pass ignore_root
-   auth      required   /lib/security/pam_pwdb.so shadow nullok
-   account   required   /lib/security/pam_pwdb.so
-   password  required   /lib/security/pam_cracklib.so
-   password  required   /lib/security/pam_pwdb.so shadow nullok use_authtok
-   session   required   /lib/security/pam_pwdb.so
-</programlisting>
-          </listitem>
-
+        <orderedlist>
           <listitem>
             <para>Proceed to <link linkend="HDRWQ50">Starting the BOS Server</link> (or if referring to these instructions while
             installing an additional file server machine, return to <link linkend="HDRWQ108">Starting Server
             Programs</link>).</para>
           </listitem>
-        </orderedlist></para>
+        </orderedlist>
     </sect2>
   </sect1>
 
@@ -2260,10 +2224,14 @@
       <para>In later sections you verify that the script correctly initializes all AFS components, then create the links that
       incorporate AFS into the Solaris startup and shutdown sequence. <orderedlist>
           <listitem>
-            <para>Mount the AFS CD-ROM for Solaris on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-            mounting CD-ROMs (either locally or remotely via NFS), see your Solaris documentation. Then change directory as
-            indicated. <programlisting>
-   # <emphasis role="bold">cd  /cdrom/sun4x_56/root.client/usr/vice/etc</emphasis>
+            <para>Unpack the OpenAFS Solaris distribution tarball. The examples
+            below assume that you have unpacked the files into the 
+            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+            pick a diferent location, substitute this in all of the following
+            exmaples. Once you have unpacked the distribution, change directory
+            as indicated. 
+<programlisting>
+   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -2382,7 +2350,7 @@
           <listitem>
             <para>Copy the <emphasis role="bold">vfsck</emphasis> binary to the newly created directory, changing the name as you do
             so. <programlisting>
-   # <emphasis role="bold">cp  /cdrom/sun4x_56/root.server/etc/vfsck  fsck</emphasis>
+   # <emphasis role="bold">cp  /tmp/afsdist/sun4x_56/root.server/etc/vfsck  fsck</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -2632,6 +2600,18 @@
       marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
       <computeroutput>sufficient</computeroutput>, and so on).</para>
 
+      <para>In modern AFS installations, you should be using Kerberos v5
+      for user login, and obtaining AFS tokens subsequent to this authentication
+      step. OpenAFS does not currently distribute a PAM module allowing AFS 
+      tokens to be automatically gained at login. Whilst there are a number of
+      third party modules providing this functionality, it is not know if these 
+      have been tested with HP/UX.</para>
+      
+      <para>Following login, users can 
+      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
+      command</para>
+
+<!--
       <para>The following instructions explain how to alter the entries in the PAM configuration file for each service for which you
       wish to use AFS authentication. Other configurations possibly also work, but the instructions specify the recommended and
       tested configuration.</para>
@@ -2761,7 +2741,8 @@
          try_first_pass  ignore_root
 </programlisting></para>
           </listitem>
-
+-->
+        <orderedlist>
           <listitem>
             <para>Some Solaris distributions include a script that locates and removes unneeded files from various file systems. Its
             conventional location is <emphasis role="bold">/usr/lib/fs/nfs/nfsfind</emphasis>. The script generally uses an argument
@@ -2797,7 +2778,7 @@
             installing an additional file server machine, return to <link linkend="HDRWQ108">Starting Server
             Programs</link>).</para>
           </listitem>
-        </orderedlist></para>
+        </orderedlist>
 
       <indexterm>
         <primary>Basic OverSeer Server</primary>
@@ -2846,13 +2827,15 @@
       </indexterm>
     </sect2>
   </sect1>
-
   <sect1 id="HDRWQ50">
     <title>Starting the BOS Server</title>
 
-    <para>You are now ready to start the AFS server processes on this machine. Begin by copying the AFS server binaries from the
-    CD-ROM to the conventional local disk location, the <emphasis role="bold">/usr/afs/bin</emphasis> directory. The following
-    instructions also create files in other subdirectories of the <emphasis role="bold">/usr/afs</emphasis> directory.</para>
+    <para>You are now ready to start the AFS server processes on this machine. 
+    If you are not working from a packaged distribution, begin by copying the 
+    AFS server binaries from the distribution to the conventional local disk
+    location, the <emphasis role="bold">/usr/afs/bin</emphasis> directory. The 
+    following instructions also create files in other subdirectories of the 
+    <emphasis role="bold">/usr/afs</emphasis> directory.</para>
 
     <para>Then issue the <emphasis role="bold">bosserver</emphasis> command to initialize the Basic OverSeer (BOS) Server, which
     monitors and controls other AFS server processes on its server machine. Include the <emphasis role="bold">-noauth</emphasis>
@@ -2947,14 +2930,9 @@
     role="bold">/usr/afs/etc</emphasis> directory; the links enable the command interpreters to retrieve the information they need.
     Later instructions for installing the client functionality replace the links with actual files. <orderedlist>
         <listitem>
-          <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the AFS CD-ROM for this machine's system type,
-          if it is not already. For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating
-          system documentation.</para>
-        </listitem>
-
-        <listitem>
-          <para>Copy files from the CD-ROM to the local <emphasis role="bold">/usr/afs</emphasis> directory. <programlisting>
-   # <emphasis role="bold">cd /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
+	  <para>If you are not working from a packaged distribution, you may need to copy files from the distribution media to the local <emphasis role="bold">/usr/afs</emphasis> directory. 
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
    # <emphasis role="bold">cp -rp  *  /usr/afs</emphasis>
 </programlisting> <indexterm>
               <primary>commands</primary>
@@ -3127,9 +3105,9 @@
         </listitem>
       </itemizedlist> <note>
         <para>In the following and every instruction in this guide, for the <replaceable>machine name</replaceable> argument
-        substitute the fully-qualified hostname (such as <emphasis role="bold">fs1.abc.com</emphasis>) of the machine you are
+        substitute the fully-qualified hostname (such as <emphasis role="bold">fs1.example.com</emphasis>) of the machine you are
         installing. For the <replaceable>cell name</replaceable> argument substitute your cell's complete name (such as <emphasis
-        role="bold">abc.com</emphasis>).</para>
+        role="bold">example.com</emphasis>).</para>
       </note></para>
 
     <indexterm>
@@ -3146,9 +3124,16 @@
 
     <orderedlist>
       <listitem>
+	<para>If necessary, add the directory containing the <emphasis role="bold">bos</emphasis> command to your path.
+      <programlisting>
+   # <emphasis role="bold">export PATH=$PATH:/usr/afs/bin</emphasis>
+      </programlisting>
+        </para>
+      </listitem>
+
+      <listitem>
         <para>Issue the <emphasis role="bold">bos setcellname</emphasis> command to set the cell name. <programlisting>
-   # <emphasis role="bold">cd /usr/afs/bin</emphasis>
-   # <emphasis role="bold">./bos setcellname</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+   # <emphasis role="bold">bos setcellname</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>cell name</replaceable>&gt; <emphasis
               role="bold">-noauth</emphasis>
 </programlisting></para>
 
@@ -3176,7 +3161,7 @@
       <listitem>
         <para>Issue the <emphasis role="bold">bos listhosts</emphasis> command to verify that the machine you are installing is now
         registered as the cell's first database server machine. <programlisting>
-   # <emphasis role="bold">./bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
    Cell name is <replaceable>cell_name</replaceable>
        Host 1 is <replaceable>machine_name</replaceable>
 </programlisting></para>
@@ -3203,34 +3188,6 @@
       <secondary>database server machine</secondary>
 
       <tertiary>first</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>Authentication Server</primary>
-
-      <secondary>starting</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>first AFS machine</primary>
-
-      <secondary>Authentication Server</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>kaserver process</primary>
-
-      <see>Authentication Server</see>
-    </indexterm>
-
-    <indexterm>
-      <primary>starting</primary>
-
-      <secondary>Authentication Server</secondary>
-
-      <tertiary>first AFS machine</tertiary>
     </indexterm>
 
     <indexterm>
@@ -3363,13 +3320,9 @@
   <sect1 id="HDRWQ52">
     <title>Starting the Database Server Processes</title>
 
-    <para>Next use the <emphasis role="bold">bos create</emphasis> command to create entries for the four database server processes
-    in the <emphasis role="bold">/usr/afs/local/BosConfig</emphasis> file and start them running. The four processes run on database
+    <para>Next use the <emphasis role="bold">bos create</emphasis> command to create entries for the three database server processes
+    in the <emphasis role="bold">/usr/afs/local/BosConfig</emphasis> file and start them running. The three processes run on database
     server machines only: <itemizedlist>
-        <listitem>
-          <para>The Authentication Server (the <emphasis role="bold">kaserver</emphasis> process) maintains the Authentication
-          Database</para>
-        </listitem>
 
         <listitem>
           <para>The Backup Server (the <emphasis role="bold">buserver</emphasis> process) maintains the Backup Database</para>
@@ -3391,11 +3344,12 @@
     </indexterm>
 
     <note>
-      <para>AFS's authentication and authorization software is based on algorithms and other procedures known as
-      <emphasis>Kerberos</emphasis>, as originally developed by Project Athena at the Massachusetts Institute of Technology. Some
-      cells choose to replace the AFS Authentication Server and other security-related protocols with Kerberos as obtained directly
-      from Project Athena or other sources. If you wish to do this, contact the AFS Product Support group now to learn about
-      necessary modifications to the installation.</para>
+      <para>AFS ships with an additional database server named 'kaserver', which
+      was historically used to provide authentication services to AFS cells.
+      kaserver was based on <emphasis>Kerberos v4</emphasis>, as such, it is
+      not recommended for new cells. This guide assumes you have already
+      configured a Kerberos v5 realm for your site, and details the procedures 
+      required to use AFS with this realm.</para>
     </note>
 
     <para>The remaining instructions in this chapter include the <emphasis role="bold">-cell</emphasis> argument on all applicable
@@ -3409,18 +3363,6 @@
 
         <secondary>create</secondary>
       </indexterm> <orderedlist>
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Authentication Server. The current
-          working directory is still <emphasis role="bold">/usr/afs/bin</emphasis>. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver simple /usr/afs/bin/kaserver</emphasis>  \
- <emphasis role="bold">                 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>   
-</programlisting></para>
-
-          <para>You can safely ignore the messages that tell you to add Kerberos to the <emphasis
-          role="bold">/etc/services</emphasis> file; AFS uses a default value that makes the addition unnecessary. You can also
-          ignore messages about the failure of authentication.</para>
-        </listitem>
-
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
    # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  \
@@ -3450,23 +3392,23 @@
     </indexterm>
 
     <indexterm>
-      <primary>afs entry in Authentication Database</primary>
+      <primary>afs entry in Kerberos Database</primary>
     </indexterm>
 
     <indexterm>
-      <primary>Authentication Database</primary>
-    </indexterm>
-
-    <indexterm>
-      <primary>creating</primary>
-
-      <secondary>afs entry in Authentication Database</secondary>
+      <primary>Kerberos Database</primary>
     </indexterm>
 
     <indexterm>
       <primary>creating</primary>
 
-      <secondary>admin account in Authentication Database</secondary>
+      <secondary>afs entry in Kerberos Database</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>admin account in Kerberos Database</secondary>
     </indexterm>
 
     <indexterm>
@@ -3521,8 +3463,7 @@
   <sect1 id="HDRWQ53">
     <title>Initializing Cell Security</title>
 
-    <para>Now initialize the cell's security mechanisms. Begin by creating the following two initial entries in the Authentication
-    Database: <itemizedlist>
+    <para>Now initialize the cell's security mechanisms. Begin by creating the following two entires in your site's Kerberos database: <itemizedlist>
         <listitem>
           <para>A generic administrative account, called <emphasis role="bold">admin</emphasis> by convention. If you choose to
           assign a different name, substitute it throughout the remainder of this document.</para>
@@ -3534,9 +3475,12 @@
         </listitem>
 
         <listitem>
-          <para>The entry for AFS server processes, called <emphasis role="bold">afs</emphasis>. No user logs in under this
-          identity, but the Authentication Server's Ticket Granting Service (TGS) module uses the associated key to encrypt the
-          server tickets that it grants to AFS clients for presentation to server processes during mutual authentication. (The
+          <para>The entry for AFS server processes, called either 
+          <emphasis role="bold">afs</emphasis> or 
+          <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
+          No user logs in under this identity, but it is used to encrypt the
+          server tickets that granted to AFS clients for presentation to 
+          server processes during mutual authentication. (The
           chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about cell configuration and administration describes the
           role of server encryption keys in mutual authentication.)</para>
 
@@ -3550,74 +3494,54 @@
     commands in all of the AFS suites.</para>
 
     <para>The following instructions do not configure all of the security mechanisms related to the AFS Backup System. See the
-    chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about configuring the Backup System. <orderedlist>
-        <indexterm>
-          <primary>commands</primary>
+    chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about configuring the Backup System.</para>
 
-          <secondary>kas (interactive)</secondary>
-        </indexterm>
+    <para>The examples below assume you are using MIT Kerberos. Please refer to the documentation for your KDC's administrative interface if you are using a different vendor</para>
 
-        <indexterm>
-          <primary>kas commands</primary>
-
-          <secondary>interactive mode, entering</secondary>
-        </indexterm>
-
-        <indexterm>
-          <primary>interactive mode for kas</primary>
-
-          <secondary>entering</secondary>
-        </indexterm>
-
+<orderedlist>
         <listitem>
-          <para>Enter <emphasis role="bold">kas</emphasis> interactive mode. Because the machine is in no-authorization checking
-          mode, include the <emphasis role="bold">-noauth</emphasis> flag to suppress the Authentication Server's usual prompt for a
-          password. <programlisting>
-   # <emphasis role="bold">kas  -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis> 
-   ka&gt;
+          <para>Enter <emphasis role="bold">kadmin</emphasis> interactive mode.
+<programlisting>
+   # <emphasis role="bold">kadmin</emphasis>
+Authenticating as principal <replaceable>you</replaceable>/admin@<replaceable>YOUR REALM</replaceable> with password
+Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_password</replaceable>
 </programlisting> <indexterm>
-              <primary>commands</primary>
-
-              <secondary>kas create</secondary>
-            </indexterm> <indexterm>
-              <primary>kas commands</primary>
-
-              <secondary>create</secondary>
-            </indexterm> <indexterm>
               <primary>server encryption key</primary>
 
-              <secondary>in Authentication Database</secondary>
+              <secondary>in Kerberos Database</secondary>
             </indexterm> <indexterm>
               <primary>creating</primary>
 
               <secondary>server encryption key</secondary>
 
-              <tertiary>Authentication Database</tertiary>
+              <tertiary>Kerberos Database</tertiary>
             </indexterm></para>
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ54" />Issue the <emphasis role="bold">kas create</emphasis> command to create Authentication
-          Database entries called <emphasis role="bold">admin</emphasis> and <emphasis role="bold">afs</emphasis>.</para>
+          <para><anchor id="LIWQ54" />Issue the 
+          <emphasis role="bold">add_principal</emphasis> command to create 
+          Kerberos Database entries called 
+          <emphasis role="bold">admin</emphasis> and 
+          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>.</para>
 
-          <para>Do not provide passwords on the command line. Instead provide them as <replaceable>afs_passwd</replaceable> and
-          <replaceable>admin_passwd</replaceable> in response to the <emphasis role="bold">kas</emphasis> command interpreter's
-          prompts as shown, so that they do not appear on the standard output stream.</para>
+          <para>You should make the <replaceable>admin_passwd</replaceable> as
+          long and complex as possible, but keep in mind that administrators 
+          need to enter it often. It must be at least six characters long.</para>
+          <para>Note that when creating the 
+          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis> 
+          entry, the encryption types should be restricted to des-cbc-crc:v4. 
+          For more details regarding encryption types, see the documentation 
+          for your Kerberos installation.
 
-          <para>You need to enter the <replaceable>afs_passwd</replaceable> string only in this step and in Step <link
-          linkend="LIWQ58">7</link>, so provide a value that is as long and complex as possible, preferably including numerals,
-          punctuation characters, and both uppercase and lowercase letters. Also make the <replaceable>admin_passwd</replaceable> as
-          long and complex as possible, but keep in mind that administrators need to enter it often. Both passwords must be at least
-          six characters long.</para>
-
-          <programlisting>
-   ka&gt; <emphasis role="bold">create afs</emphasis> 
-   initial_password:  <replaceable>afs_passwd</replaceable>
-   Verifying, please re-enter initial_password: <replaceable>afs_passwd</replaceable>
-   ka&gt; <emphasis role="bold">create admin</emphasis>
-   initial_password: <replaceable>admin_passwd</replaceable>
-   Verifying, please re-enter initial_password: <replaceable>admin_passwd</replaceable>
+<programlisting>
+   kadmin: <emphasis role="bold">add_principal -randkey -e des-cbc-crc:v4 afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+   Principal "afs/<replaceable>cell name</replaceable>@<replaceable>REALM</replaceable>" created.
+   kadmin:  <emphasis role="bold">add_principal admin</emphasis>
+   Enter password for principal "admin@<replaceable>REALM</replaceable>": <emphasis role="bold"><replaceable>admin_password</replaceable></emphasis>
+   Principal "admin@<replaceable>REALM</replaceable>" created.
 </programlisting>
+          </para>
 
           <indexterm>
             <primary>commands</primary>
@@ -3641,57 +3565,42 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ55" />Issue the <emphasis role="bold">kas examine</emphasis> command to display the <emphasis
-          role="bold">afs</emphasis> entry. The output includes a checksum generated by encrypting a constant with the server
-          encryption key derived from the <replaceable>afs_passwd</replaceable> string. In Step <link linkend="LIWQ59">8</link> you
-          issue the <emphasis role="bold">bos listkeys</emphasis> command to verify that the checksum in its output matches the
-          checksum in this output. <programlisting>
-   ka&gt; <emphasis role="bold">examine afs</emphasis>
-   User data for afs
-    key (0) cksum is <replaceable>checksum</replaceable> . . .
-</programlisting> <indexterm>
-              <primary>commands</primary>
-
-              <secondary>kas setfields</secondary>
-            </indexterm> <indexterm>
-              <primary>kas commands</primary>
-
-              <secondary>setfields</secondary>
-            </indexterm> <indexterm>
-              <primary>admin account</primary>
-
-              <secondary>setting ADMIN flag on Auth. DB entry</secondary>
-            </indexterm></para>
+          <para><anchor id="LIWQ55" />Issue the <emphasis role="bold">kadmin 
+	  get_principal</emphasis> command to display the <emphasis
+          role="bold">afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt; entry. 
+<programlisting>
+  kadmin: <emphasis role="bold">get_principal afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
+  Principal: afs/<replaceable>cell</replaceable>
+  [ ... ]
+  Key: vno 2, DES cbc mode with CRC-32, no salt
+  [ ... ]
+</programlisting>
+</para>
         </listitem>
-
         <listitem>
-          <para><anchor id="LIWQ56" />Issue the <emphasis role="bold">kas setfields</emphasis> command to turn on the
-          <computeroutput>ADMIN</computeroutput> flag in the <emphasis role="bold">admin</emphasis> entry. This enables the
-          <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">kas</emphasis> commands. Then issue
-          the <emphasis role="bold">kas examine</emphasis> command to verify that the <computeroutput>ADMIN</computeroutput> flag
-          appears in parentheses on the first line of the output, as shown in the example. <programlisting>
-   ka&gt; <emphasis role="bold">setfields admin -flags admin</emphasis>
-   ka&gt; <emphasis role="bold">examine admin</emphasis> 
-   User data for admin (ADMIN) . . .
-</programlisting> <indexterm>
-              <primary>commands</primary>
+          <para>Extract the newly created key for <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis> to a keytab on the local machine. We will use <emphasis role="bold">/etc/afs.keytab</emphasis> as the location for this keytab.</para>
 
-              <secondary>kas quit</secondary>
-            </indexterm> <indexterm>
-              <primary>kas commands</primary>
+          <para>The keytab contains the key material that ensures the security of your AFS cell. You should ensure that it is kept in a secure location at all times.</para>
 
-              <secondary>quit</secondary>
-            </indexterm> <indexterm>
-              <primary>interactive mode for kas</primary>
+<programlisting>
+  kadmin: <emphasis role="bold">ktadd -k /etc/afs.keytab -e des-cbc-crc:v4 afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
+Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/etc/afs.keytab
+</programlisting>
+          <para>Make a note of the key version number (kvno) given in the
+          response, as you will need it to load the key into bos in a later
+          step</para>
 
-              <secondary>quitting</secondary>
-            </indexterm></para>
+          <note><para>Note that each time you run 
+          <emphasis role="bold">ktadd</emphasis> a new key is generated
+          for the item being extracted. This means that you cannot run ktadd
+          multiple times and end up with the same key material each time.
+          </para></note>
+
         </listitem>
-
         <listitem>
-          <para>Issue the <emphasis role="bold">kas quit</emphasis> command to leave <emphasis role="bold">kas</emphasis>
+          <para>Issue the <emphasis role="bold">kadmin quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
           interactive mode. <programlisting>
-   ka&gt; <emphasis role="bold">quit</emphasis>
+   kadmin: <emphasis role="bold">quit</emphasis>
 </programlisting> <indexterm>
               <primary>commands</primary>
 
@@ -3732,40 +3641,43 @@
           role="bold">vos</emphasis> commands. <programlisting>
    # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
                 role="bold">-noauth</emphasis>
-</programlisting> <indexterm>
+</programlisting> 
+            <indexterm>
               <primary>commands</primary>
-
-              <secondary>bos addkey</secondary>
-            </indexterm> <indexterm>
-              <primary>bos commands</primary>
-
-              <secondary>addkey</secondary>
-            </indexterm> <indexterm>
+              <secondary>asetkey</secondary>
+            </indexterm>
+            <indexterm>
               <primary>creating</primary>
-
               <secondary>server encryption key</secondary>
-
               <tertiary>KeyFile file</tertiary>
-            </indexterm> <indexterm>
+            </indexterm> 
+            <indexterm>
               <primary>server encryption key</primary>
-
               <secondary>in KeyFile file</secondary>
             </indexterm></para>
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ58" />Issue the <emphasis role="bold">bos addkey</emphasis> command to define the AFS server
-          encryption key in the <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file.</para>
+          <para><anchor id="LIWQ58" />Issue the 
+          <emphasis role="bold">asetkey</emphasis> command to set the AFS 
+          server encryption key in the 
+          <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file. This key 
+          is created from the <emphasis role="bold">/etc/afs.keytab</emphasis> 
+          file created earlier.</para>
 
-          <para>Do not provide the password on the command line. Instead provide it as <replaceable>afs_passwd</replaceable> in
-          response to the <emphasis role="bold">bos</emphasis> command interpreter's prompts, as shown. Provide the same string as
-          in Step <link linkend="LIWQ54">2</link>.</para>
+          <para>asetkey requires the key version number (or kvno) of the 
+          <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
+          key. You should have noted this down when creating the key earlier. 
+          The key version number can also be found by running the 
+          <emphasis role="bold">kvno</emphasis> command</para>
+<programlisting>
+   # <emphasis role="bold">kvno afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+</programlisting>
 
-          <programlisting>
-   # <emphasis role="bold">./bos addkey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno 0 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-              role="bold">-noauth</emphasis>
-   Input key: <replaceable>afs_passwd</replaceable>
-   Retype input key: <replaceable>afs_passwd</replaceable>
+          <para>Once the kvno is known, the key can then be extracted using 
+          asetkey</para>
+<programlisting>
+   # <emphasis role="bold">asetkey</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">/etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
 </programlisting>
 
           <indexterm>
@@ -3790,10 +3702,14 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ59" />Issue the <emphasis role="bold">bos listkeys</emphasis> command to verify that the checksum
-          for the new key in the <emphasis role="bold">KeyFile</emphasis> file is the same as the checksum for the key in the
-          Authentication Database's <emphasis role="bold">afs</emphasis> entry, which you displayed in Step <link
-          linkend="LIWQ55">3</link>. <programlisting>
+          <para><anchor id="LIWQ59" />Issue the 
+          <emphasis role="bold">bos listkeys</emphasis> command to verify that 
+          the key version number for the new key in the 
+          <emphasis role="bold">KeyFile</emphasis> file is the same as the key 
+          version number in the Authentication Database's 
+          <emphasis role="bold">afs/<replaceable>cell name</replaceable></emphasis> 
+          entry, which you displayed in Step <link linkend="LIWQ55">3</link>. 
+<programlisting>
    # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
                 role="bold">-noauth</emphasis>
    key 0 has cksum <replaceable>checksum</replaceable>    
@@ -3802,6 +3718,7 @@
           <para>You can safely ignore any error messages indicating that <emphasis role="bold">bos</emphasis> failed to get tickets
           or that authentication failed.</para>
 
+<!--
           <para>If the keys are different, issue the following commands, making sure that the <replaceable>afs_passwd</replaceable>
           string is the same in each case. The <replaceable>checksum</replaceable> strings reported by the <emphasis role="bold">kas
           examine</emphasis> and <emphasis role="bold">bos listkeys</emphasis> commands must match; if they do not, repeat these
@@ -3825,7 +3742,7 @@
               role="bold">-noauth</emphasis>
    key 1 has cksum <replaceable>checksum</replaceable>
 </programlisting>
-
+-->
           <indexterm>
             <primary>commands</primary>
 
@@ -3855,7 +3772,7 @@
           to accept the default.</para>
 
           <programlisting>
-   # <emphasis role="bold">./pts createuser -name admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; [<emphasis
+   # <emphasis role="bold">pts createuser -name admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; [<emphasis
               role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-noauth</emphasis>
    User admin has id <replaceable>AFS UID</replaceable>
 </programlisting>
@@ -3929,7 +3846,7 @@
                 role="bold">-noauth</emphasis>
 </programlisting></para>
         </listitem>
-      </orderedlist></para>
+      </orderedlist>
 
     <indexterm>
       <primary>File Server</primary>
@@ -4216,7 +4133,9 @@
     <para>Distributing the contents of its <emphasis role="bold">/usr/afs/bin</emphasis> directory to other server machines of its
     system type makes this machine a <emphasis>binary distribution machine</emphasis>. The other server machines of its system type
     run the <emphasis role="bold">upclientbin</emphasis> process (an instance of the client portion of the Update Server) to
-    retrieve the binaries.</para>
+    retrieve the binaries. If your platform has a package management system, 
+    such as 'rpm' or 'apt', running the Update Server to distribute binaries 
+    may interfere with this system.</para>
 
     <para>The binaries in the <emphasis role="bold">/usr/afs/bin</emphasis> directory are not sensitive, so it is not necessary to
     encrypt them before transfer across the network. Include the <emphasis role="bold">-clear</emphasis> argument to the <emphasis
@@ -4241,40 +4160,6 @@
 </programlisting></para>
         </listitem>
       </orderedlist></para>
-
-    <indexterm>
-      <primary>runntp process</primary>
-
-      <secondary>first AFS machine</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>starting</primary>
-
-      <secondary>runntp process</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>first AFS machine</primary>
-
-      <secondary>runntp process</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>NTPD</primary>
-
-      <secondary>first AFS machine</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>time synchronization</primary>
-    </indexterm>
-
-    <indexterm>
-      <primary>clock synchronization</primary>
-    </indexterm>
   </sect1>
 
   <sect1 id="HDRWQ62">
@@ -4285,75 +4170,11 @@
     Administration Guide</emphasis> about administering server machines explains how time skew can disturb Ubik's performance and
     cause service outages in your cell.</para>
 
-    <para>The AFS distribution includes a version of the Network Time Protocol Daemon (NTPD) for synchronizing the clocks on server
-    machines. If a time synchronization program is not already running on the machine, then in this section you start the <emphasis
-    role="bold">runntp</emphasis> process to configure NTPD for use with AFS.</para>
-
-    <note>
-      <para>Do not run the <emphasis role="bold">runntp</emphasis> process if NTPD or another time synchronization protocol is
-      already running on the machine. Some versions of some operating systems run a time synchronization program by default, as
-      detailed in the <emphasis>OpenAFS Release Notes</emphasis>.</para>
-
-      <para>Attempting to run multiple instances of the NTPD causes an error. Running NTPD together with another time
-      synchronization protocol is unnecessary and can cause instability in the clock setting.</para>
-    </note>
-
-    <para>If you run the <emphasis role="bold">runntp</emphasis> process and your cell has reliable network connectivity to machines
-    outside your cell, then it is conventional to configure the first AFS machine to refer to a time source outside the cell. When
-    you later install the <emphasis role="bold">runntp</emphasis> program on other server machines in the cell, it configures NTPD
-    to choose a time source at random from among the database server machines listed in the <emphasis
-    role="bold">/usr/afs/etc/CellServDB</emphasis> file. Time synchronization therefore works in a chained manner: this database
-    server machine refers to a time source outside the cell, the database server machines refer to the machine among them that has
-    access to the most accurate time (NTPD itself includes code for determining this), and each non-database server machine refers
-    to a local database server machine chosen at random from the <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> file. If
-    you ever decide to remove database server functionality from this machine, it is best to transfer responsibility for consulting
-    an external time source to a remaining database server machine.</para>
-
-    <para>If your cell does not have network connectivity to external machines, or if the connectivity is not reliable, include the
-    <emphasis role="bold">-localclock</emphasis> flag to the <emphasis role="bold">runntp</emphasis> command as indicated in the
-    following instructions. The flag tells NTPD to rely on the machine's internal clock when all external time sources are
-    inaccessible. The <emphasis role="bold">runntp</emphasis> command has other arguments that are possibly useful given your cell
-    configuration; see the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
-
-    <para>Choosing an appropriate external time source is important, but involves more considerations than can be discussed here. If
-    you need help in selecting a source, contact the AFS Product Support group.</para>
-
-    <para>As the <emphasis role="bold">runntp</emphasis> process initializes NTPD, trace messages sometimes appear on the standard
-    output stream. You can ignore them, but they can be informative if you understand how NTPD works. <orderedlist>
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the <emphasis role="bold">runntp</emphasis>
-          process. For the <replaceable>host</replaceable> argument, substitute the fully-qualified hostname or IP address of one or
-          more machines outside the cell that are to serve as time sources. Separate each name with a space. <itemizedlist>
-              <listitem>
-                <para>If your cell usually has reliable network connectivity to an external time source, use the following command:
-                <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt;   <emphasis role="bold">runntp simple</emphasis>   \
-        <emphasis role="bold">"/usr/afs/bin/runntp</emphasis> &lt;<replaceable>host</replaceable>&gt;+<emphasis role="bold">"  -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-                      role="bold">-noauth</emphasis>
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>If your cell does not have network connectivity to an external time source, use the following command:
-                <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">runntp simple</emphasis>  \ 
-        <emphasis role="bold">"/usr/afs/bin/runntp -localclock"</emphasis>  <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-                      role="bold">-noauth</emphasis>
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>If your cell has network connectivity to an external time source, but the network connection is frequently
-                interrupted, use the following command: <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">runntp simple</emphasis>  \ 
-         <emphasis role="bold">"/usr/afs/bin/runntp -localclock</emphasis> &lt;<replaceable>host</replaceable>&gt;+<emphasis
-                      role="bold">"</emphasis>  \
-         <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>
-</programlisting></para>
-              </listitem>
-            </itemizedlist></para>
-        </listitem>
-      </orderedlist></para>
+    <para>Historically, AFS used to distribute its own version of the Network 
+Time Protocol Daemon. Whilst this is still provided for existing sites, we 
+recommend that you configure and install your time service independently of 
+AFS. A reliable timeservice will also be required by your Kerberos realm, 
+and so may already be available at your site.</para>
 
     <indexterm>
       <primary>overview</primary>
@@ -4381,8 +4202,10 @@
   <sect1 id="HDRWQ63">
     <title>Overview: Installing Client Functionality</title>
 
-    <para>The machine you are installing is now an AFS file server machine, database server machine, system control machine, and
-    binary distribution machine. Now make it a client machine by completing the following tasks: <orderedlist>
+    <para>The machine you are installing is now an AFS file server machine, 
+    database server machine, system control machine, and binary distribution 
+    machine. Now make it a client machine by completing the following tasks: 
+    <orderedlist>
         <listitem>
           <para>Define the machine's cell membership for client processes</para>
         </listitem>
@@ -4401,7 +4224,7 @@
       </orderedlist></para>
 
     <indexterm>
-      <primary>CD-ROM</primary>
+      <primary>Distribution</primary>
 
       <secondary>copying client files from</secondary>
 
@@ -4428,12 +4251,19 @@
   <sect1 id="HDRWQ64">
     <title>Copying Client Files to the Local Disk</title>
 
-    <para>Before installing and configuring the AFS client, copy the necessary files from the AFS CD-ROM to the local <emphasis
+    <para>You need only undertake the steps in this section, if you are using
+    a tar file distribution, or one built from scratch. Packaged distributions,
+    such as RPMs or DEBs will already have installed the necessary files in
+    the correct locations.</para>
+
+    <para>Before installing and configuring the AFS client, copy the necessary files from the tarball to the local <emphasis
     role="bold">/usr/vice/etc</emphasis> directory. <orderedlist>
         <listitem>
-          <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the AFS CD-ROM for this machine's system type,
-          if it is not already. For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating
-          system documentation.</para>
+          <para>If you have not already done so, unpack the distribution 
+          tarball for this machine's system type into a suitable location on 
+          the filesystem, such as <emphasis role="bold">/tmp/afsdist</emphasis>.
+          If you use a different location, substitue that in the examples that 
+          follow.</para>
         </listitem>
 
         <listitem>
@@ -4453,7 +4283,7 @@
           role="bold">cp</emphasis> command.</para>
 
           <programlisting>
-   # <emphasis role="bold">cd /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp -p  *  /usr/vice/etc</emphasis>
    # <emphasis role="bold">cp -rp  C  /usr/vice/etc</emphasis>
 </programlisting>
@@ -4520,20 +4350,21 @@
     <para>Among other functions, the <emphasis role="bold">ThisCell</emphasis> file on a client machine determines the following:
     <itemizedlist>
         <listitem>
-          <para>The cell in which users authenticate when they log onto the machine, assuming it is using an AFS-modified login
-          utility</para>
+          <para>The cell in which users gain tokens when they log onto the 
+          machine, assuming it is using an AFS-modified login utility</para>
         </listitem>
 
         <listitem>
-          <para>The cell in which users authenticate by default when they issue the <emphasis role="bold">klog</emphasis>
-          command</para>
+          <para>The cell in which users gain tokens by default when they issue
+          the <emphasis role="bold">aklog</emphasis> command</para>
         </listitem>
 
         <listitem>
-          <para>The cell membership of the AFS server processes that the AFS command interpreters on this machine contact by
-          default</para>
+          <para>The cell membership of the AFS server processes that the AFS 
+          command interpreters on this machine contact by default</para>
         </listitem>
-      </itemizedlist> <orderedlist>
+      </itemizedlist> 
+    <orderedlist>
         <listitem>
           <para>Change to the <emphasis role="bold">/usr/vice/etc</emphasis> directory and remove the symbolic link created in <link
           linkend="HDRWQ50">Starting the BOS Server</link>. <programlisting>
@@ -4621,16 +4452,18 @@
     <emphasis role="bold">fs newcell</emphasis> command to update the list in kernel memory directly; see the chapter in the
     <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines.</para>
 
-    <para>The AFS distribution includes the file <emphasis role="bold">CellServDB.sample</emphasis>, and you have already copied it
-    to the <emphasis role="bold">/usr/vice/etc</emphasis> directory. It includes an entry for all AFS cells that agreed to share
-    their database server machine information at the time your AFS CD-ROM was created. The AFS Product Support group also maintains
-    a copy of the file, updating it as necessary. If you are interested in participating in the global AFS namespace, it is a good
-    policy to consult the file occasionally for updates. Ask the AFS Product Support group for a pointer to its location.</para>
+    <para>The AFS distribution includes the file <emphasis role="bold">CellServDB.dist</emphasis>. It includes an entry for all AFS cells that agreed to share
+    their database server machine information at the time the distribution was 
+    created. A copy of this file is maintained at grand.central.org, from where 
+    updates may also be obtained.</para>
 
-    <para>The <emphasis role="bold">CellServDB.sample</emphasis> file can be a good basis for the client <emphasis
-    role="bold">CellServDB</emphasis> file, because all of the entries in it use the correct format. You can add or remove cell
-    entries as you see fit. Later (in <link linkend="HDRWQ91">Enabling Access to Foreign Cells</link>) you perform additional steps
-    that enable the Cache Manager actually to reach the cells.</para>
+    <para>The <emphasis role="bold">CellServDB.dist</emphasis> file can be a 
+    good basis for the client <emphasis role="bold">CellServDB</emphasis> file, 
+    because all of the entries in it use the correct format. You can add or 
+    remove cell entries as you see fit. Depending on your cache manager
+    configuration, additional steps (as detailed in 
+    <link linkend="HDRWQ91">Enabling Access to Foreign Cells</link>) may be
+    required to enable the Cache Manager to actually reach the cells.</para>
 
     <para>In this section, you add an entry for the local cell to the local <emphasis role="bold">CellServDB</emphasis> file. The
     current working directory is still <emphasis role="bold">/usr/vice/etc</emphasis>. <orderedlist>
@@ -4658,9 +4491,9 @@
 </programlisting></para>
 
                 <para>where <replaceable>cell_name</replaceable> is the cell's complete Internet domain name (for example, <emphasis
-                role="bold">abc.com</emphasis>) and <replaceable>organization</replaceable> is an optional field that follows any
+                role="bold">example.com</emphasis>) and <replaceable>organization</replaceable> is an optional field that follows any
                 number of spaces and the number sign (<computeroutput>#</computeroutput>). By convention it names the organization
-                to which the cell corresponds (for example, the ABC Corporation).</para>
+                to which the cell corresponds (for example, the Example Corporation).</para>
               </listitem>
 
               <listitem>
@@ -4672,7 +4505,7 @@
                 <para>where <replaceable>IP_address</replaceable> is the machine's IP address in dotted decimal format (for example,
                 192.12.105.3). Following any number of spaces and the number sign (<computeroutput>#</computeroutput>) is
                 <replaceable>machine_name</replaceable>, the machine's fully-qualified hostname (for example, <emphasis
-                role="bold">db1.abc.com</emphasis>). In this case, the number sign does not indicate a comment;
+                role="bold">db1.example.com</emphasis>). In this case, the number sign does not indicate a comment;
                 <replaceable>machine_name</replaceable> is a required field.</para>
               </listitem>
             </itemizedlist></para>
@@ -4686,10 +4519,10 @@
     <para>The following example shows entries for two cells, each of which has three database server machines:</para>
 
     <programlisting>
-   &gt;abc.com       #ABC Corporation (home cell)
-   192.12.105.3      #db1.abc.com
-   192.12.105.4      #db2.abc.com
-   192.12.105.55     #db3.abc.com
+   &gt;example.com       #Example Corporation (home cell)
+   192.12.105.3      #db1.example.com
+   192.12.105.4      #db2.example.com
+   192.12.105.55     #db3.example.com
    &gt;stateu.edu    #State University cell
    138.255.68.93     #serverA.stateu.edu
    138.255.68.72     #serverB.stateu.edu
@@ -4912,7 +4745,7 @@
     default values. For a discussion of all of the <emphasis role="bold">afsd</emphasis> command's arguments, see its reference page
     in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
-    <para>The <emphasis role="bold">afsd</emphasis> command line in the AFS initialization script on each system type includes an
+    <para>On platforms using the standard 'afs' initialisation script (this does not apply to Fedora or RHEL based distributions), the <emphasis role="bold">afsd</emphasis> command line in the AFS initialization script on each system type includes an
     <computeroutput>OPTIONS</computeroutput> variable. You can use it to set nondefault values for the command's arguments, in one
     of the following ways: <itemizedlist>
         <listitem>
@@ -4978,7 +4811,19 @@
           role="bold">afsd</emphasis> command line in the script, or set no arguments (and so accept default values for all Cache
           Manager parameters).</para>
         </listitem>
-      </itemizedlist> <orderedlist>
+      </itemizedlist>
+
+      <note>
+      <para>If you are running on a Fedora or RHEL based system, the 
+      openafs-client initilization script behaves differently from that 
+      described above. It sources /etc/sysconfig/openafs, in which the
+      AFSD_ARGS variable may be set to contain any, or all, of the afsd options
+      detailed. Note that this script does not support setting an OPTIONS
+      variable, or the SMALL, MEDIUM and LARGE methods of defining cache size
+      </para>
+      </note>
+
+ <orderedlist>
         <listitem>
           <para>Create the local directory on which to mount the AFS filespace, by convention <emphasis role="bold">/afs</emphasis>.
           If the directory already exists, verify that it is empty. <programlisting>
@@ -4994,7 +4839,7 @@
         </listitem>
 
         <listitem>
-          <para>On Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
+          <para>On non-package based Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
           role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory, removing
           the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
    # <emphasis role="bold">cp /usr/vice/etc/afs.conf /etc/sysconfig/afs</emphasis>
@@ -5017,8 +4862,12 @@
                 <para>On IRIX systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
               </listitem>
 
+	          <listitem>
+                <para>On Fedora and RHEL systems, <emphasis role="bold">/etc/sysconfg/openafs</emphasis></para>
+              </listitem>
+              
               <listitem>
-                <para>On Linux systems, <emphasis role="bold">/etc/sysconfig/afs</emphasis> (the <emphasis
+                <para>On non-package based Linux systems, <emphasis role="bold">/etc/sysconfig/afs</emphasis> (the <emphasis
                 role="bold">afsd</emphasis> options file)</para>
               </listitem>
 
@@ -5031,13 +4880,6 @@
           role="bold">afsd</emphasis> command line. If you intend for the machine to remain an AFS client, also set any
           performance-related arguments you wish. <itemizedlist>
               <listitem>
-                <para>Add the <emphasis role="bold">-nosettime</emphasis> flag, because this is a file server machine that is also a
-                client. The flag prevents the machine from picking a file server machine in the cell as its source for the correct
-                time, which client machines normally do. File server machines instead use NTPD (as controlled by the <emphasis
-                role="bold">runntp</emphasis> process) or another protocol to synchronize their clocks.</para>
-              </listitem>
-
-              <listitem>
                 <para>Add the <emphasis role="bold">-memcache</emphasis> flag if the machine is to use a memory cache.</para>
               </listitem>
 
@@ -5047,7 +4889,19 @@
               </listitem>
             </itemizedlist></para>
         </listitem>
-      </orderedlist></para>
+      </orderedlist>
+      <note><para>In order to successfully complete the instructions in the
+      remainder of this guide, it is important that the machine does not have
+      a synthetic root (as discussed in <link linkend="HDRWQ91">Enabling Access
+      to Foreign Cells</link>). As some distributions ship with this enabled, it
+      may be necessary to remove any occurences of the 
+      <emhpasis role="bold">-dynroot</emphasis> and 
+      <emphasis role="bold">-afsdb</emphasis> options from both the AFS 
+      initialisation script and options file. If this functionality is 
+      required it may be renabled as detailed in 
+      <link linkend="HDRWQ91">Enabling Access to Foreign Cells</link>.
+      </para></note>
+      </para>
 
     <indexterm>
       <primary>overview</primary>
@@ -5152,8 +5006,9 @@
     <para>On system types that use a dynamic loader program, you must reboot the machine before running the initialization script,
     so that it can freshly load AFS modifications into the kernel.</para>
 
-    <para>If there are problems during the initialization, attempt to resolve them. The AFS Product Support group can provide
-    assistance if necessary. <orderedlist>
+    <para>If there are problems during the initialization, attempt to resolve them. The OpenAFS mailing lists can provide assistance if necessary. 
+
+     <orderedlist>
         <indexterm>
           <primary>commands</primary>
 
@@ -5327,8 +5182,10 @@
               </listitem>
 
               <listitem>
-                <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
+                <para>Run the AFS initialization scripts. 
+<programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/openafs-client  start</emphasis>
+   # <emphasis role="bold">/etc/rc.d/init.d/openafs-server  start</emphasis>
 </programlisting></para>
               </listitem>
             </orderedlist></para>
@@ -5379,13 +5236,17 @@
           initializations do not take nearly as long, because the <emphasis role="bold">V</emphasis><replaceable>n</replaceable>
           files already exist.</para>
 
-          <para>As a basic test of correct AFS functioning, issue the <emphasis role="bold">klog</emphasis> command to authenticate
-          as the <emphasis role="bold">admin</emphasis> user. Provide the password (<replaceable>admin_passwd</replaceable>) you
+          <para>As a basic test of correct AFS functioning, issue the 
+          <emphasis role="bold">kinit</emphasis> and 
+          <emphasis role="bold">aklog</emphasis> commands to authenticate
+          as the <emphasis role="bold">admin</emphasis> user. 
+          Provide the password (<replaceable>admin_passwd</replaceable>) you
           defined in <link linkend="HDRWQ53">Initializing Cell Security</link>.</para>
 
           <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/klog admin</emphasis>
+   # <emphasis role="bold">kinit admin</emphasis>
    Password:  <replaceable>admin_passwd</replaceable>
+   # <emphasis role="bold">aklog</emphasis>
 </programlisting>
 
           <indexterm>
@@ -5400,14 +5261,14 @@
         </listitem>
 
         <listitem>
-          <para>Issue the <emphasis role="bold">tokens</emphasis> command to verify that the <emphasis role="bold">klog</emphasis>
+          <para>Issue the <emphasis role="bold">tokens</emphasis> command to 
+          verify that the <emphasis role="bold">aklog</emphasis>
           command worked correctly. If it did, the output looks similar to the following example for the <emphasis
-          role="bold">abc.com</emphasis> cell, where <emphasis role="bold">admin</emphasis>'s AFS UID is 1. If the output does not
-          seem correct, resolve the problem. Changes to the AFS initialization script are possibly necessary. The AFS Product
-          Support group can provide assistance as necessary. <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/tokens</emphasis>
+          role="bold">example.com</emphasis> cell, where <emphasis role="bold">admin</emphasis>'s AFS UID is 1. If the output does not
+          seem correct, resolve the problem. Changes to the AFS initialization script are possibly necessary. The OpenAFS mailing lists can provide assistance as necessary. <programlisting>
+   # <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1) tokens for afs@abc.com [Expires May 22 11:52]
+   User's (AFS ID 1) tokens for afs@example.com [Expires May 22 11:52]
        --End of list--
 </programlisting></para>
         </listitem>
@@ -5620,11 +5481,12 @@
 
       <orderedlist>
         <listitem>
-          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis role="bold">afs</emphasis>
-          configuration variable. Based on the instruction in the AFS initialization file that begins with the string
+          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis role="bold">openafs-client</emphasis> and <emphasis role="bold">openafs-server</emphasis>
+          configuration variables. Based on the instruction in the AFS initialization file that begins with the string
           <computeroutput>#chkconfig</computeroutput>, the command automatically creates the symbolic links that incorporate the
           script into the Linux startup and shutdown sequence. <programlisting>
-   # <emphasis role="bold">/sbin/chkconfig  --add afs</emphasis>
+   # <emphasis role="bold">/sbin/chkconfig  --add openafs-client</emphasis>
+   # <emphasis role="bold">/sbin/chkconfig  --add openafs-server</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -6042,6 +5904,11 @@
   <sect1 id="HDRWQ83">
     <title>Storing AFS Binaries in AFS</title>
 
+    <note><para>Sites with existing binary distribution mechanisms, including
+    those which use packaging systems such as RPM, may wish to skip this step,
+    and use tools native to their operating system to manage AFS configuration
+    information.</para></note>
+    
     <para>In the conventional configuration, you make AFS client binaries and configuration files available in the subdirectories of
     the <emphasis role="bold">/usr/afsws</emphasis> directory on client machines (<emphasis role="bold">afsws</emphasis> is an
     acronym for <emphasis role="bold">AFS w</emphasis><emphasis>ork</emphasis><emphasis
@@ -6157,9 +6024,8 @@
         </listitem>
 
         <listitem>
-          <para>Mount the AFS CD-ROM for this machine's system type on the local <emphasis role="bold">/cdrom</emphasis> directory,
-          if it is not already. For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating
-          system documentation. <indexterm>
+          <para>Unpack the distribution tarball into the <emphasis role="bold">/tmp/afsdist</emphasis> directory,
+          if it is not already. <indexterm>
               <primary>copying</primary>
 
               <secondary>AFS binaries into volume</secondary>
@@ -6177,41 +6043,19 @@
         </listitem>
 
         <listitem>
-          <para>Copy the contents of the indicated directories from the CD-ROM into the <emphasis
+          <para>Copy the contents of the indicated directories from the 
+          distribution into the <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory.
           <programlisting>
    # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
                 role="bold">/usr/afsws</emphasis>
-   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/bin  .</emphasis>
-   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/etc  .</emphasis>
-   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/include  .</emphasis>
-   # <emphasis role="bold">cp -rp /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/lib  .</emphasis>
-</programlisting> <indexterm>
-              <primary>requirements</primary>
-
-              <secondary>protecting binaries per AFS license</secondary>
-            </indexterm> <indexterm>
-              <primary>licensing requirements</primary>
-            </indexterm></para>
-        </listitem>
-
-        <listitem>
-          <para>Issue the <emphasis role="bold">fs setacl</emphasis> command to set the ACL on each directory appropriately. To
-          comply with the terms of your AFS License agreement, you must prevent unauthorized users from accessing AFS software. To
-          enable access for locally authenticated users only, set the ACL on the <emphasis role="bold">etc</emphasis>, <emphasis
-          role="bold">include</emphasis>, and <emphasis role="bold">lib</emphasis> subdirectories to grant the <emphasis
-          role="bold">l</emphasis> and <emphasis role="bold">r</emphasis> permissions to the <emphasis
-          role="bold">system:authuser</emphasis> group rather than the <emphasis role="bold">system:anyuser</emphasis> group. The
-          <emphasis role="bold">system:anyuser</emphasis> group must retain the <emphasis role="bold">l</emphasis> and <emphasis
-          role="bold">r</emphasis> permissions on the <emphasis role="bold">bin</emphasis> subdirectory to enable unauthenticated
-          users to access the <emphasis role="bold">klog</emphasis> binary. To ensure that unauthorized users are not accessing AFS
-          software, check periodically that the ACLs on these directories are set properly. <programlisting>
-   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
-                role="bold">/usr/afsws</emphasis>
-   # <emphasis role="bold">fs setacl  -dir etc include lib  -acl  system:authuser rl</emphasis>  \
-              <emphasis role="bold">system:anyuser none</emphasis>
-</programlisting> <indexterm>
+   # <emphasis role="bold">cp -rp /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/bin  .</emphasis>
+   # <emphasis role="bold">cp -rp /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/etc  .</emphasis>
+   # <emphasis role="bold">cp -rp /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/include  .</emphasis>
+   # <emphasis role="bold">cp -rp /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/lib  .</emphasis>
+</programlisting> 
+<indexterm>
               <primary>creating</primary>
 
               <secondary>symbolic link</secondary>
@@ -6309,8 +6153,13 @@
         </listitem>
       </itemizedlist></para>
 
-    <para>The AFS CD-ROM for each system type has a top-level <emphasis role="bold">Documentation</emphasis> directory, with a
-    subdirectory for each document format provided. The different formats are suitable for online viewing, printing, or both.</para>
+    <note><para>OpenAFS Documentation is not currently provided with all 
+    distributions, but may be downloaded separately from the OpenAFS 
+    website</para></note>
+    
+    <para>The OpenAFS Documentation Distribution has a directory for each 
+    document format provided. The different formats are suitable for online 
+    viewing, printing, or both.</para>
 
     <para>This section explains how to create and mount a volume to house the documents, making them available to your users. The
     recommended mount point for the volume is <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
@@ -6376,14 +6225,18 @@
         </listitem>
 
         <listitem>
-          <para>Mount the AFS CD-ROM for any system type on the local <emphasis role="bold">/cdrom</emphasis> directory, if one is
-          not already. For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating system
-          documentation. <indexterm>
+          <para>Unpack the OpenAFS documentation distribution into the 
+          <emphasis role="bold">/tmp/afsdocs</emphasis> directory. You may use
+          a different directory, in which case the location you use should be
+          subsituted in the following examples. For instructions on unpacking
+          the distribution, consult the documentation for your operating
+          system's <emphasis role="bold">tar</emphasis> command.
+          <indexterm>
               <primary>copying</primary>
 
-              <secondary>AFS documentation from CD-ROM</secondary>
+              <secondary>AFS documentation from distribution</secondary>
             </indexterm> <indexterm>
-              <primary>CD-ROM</primary>
+              <primary>OpenAFS Distribution</primary>
 
               <secondary>copying AFS documentation from</secondary>
             </indexterm> <indexterm>
@@ -6391,7 +6244,7 @@
 
               <secondary>copying</secondary>
 
-              <tertiary>AFS documentation from CD-ROM</tertiary>
+              <tertiary>AFS documentation from OpenAFS distribution</tertiary>
             </indexterm> <indexterm>
               <primary>index.htm file</primary>
             </indexterm> <indexterm>
@@ -6402,12 +6255,12 @@
         </listitem>
 
         <listitem>
-          <para>Copy the AFS documents in one or more formats from the CD-ROM into subdirectories of the <emphasis
+          <para>Copy the AFS documents in one or more formats from the unpacked distribution into subdirectories of the <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afsdoc</emphasis> directory. Repeat
           the commands for each format. <programlisting>
    # <emphasis role="bold">mkdir</emphasis> <replaceable>format_name</replaceable>
    # <emphasis role="bold">cd</emphasis> <replaceable>format_name</replaceable>
-   # <emphasis role="bold">cp -rp /cdrom/Documentation/</emphasis><replaceable>format</replaceable>  <emphasis role="bold">.</emphasis>      
+   # <emphasis role="bold">cp -rp /tmp/afsdocs/</emphasis><replaceable>format</replaceable>  <emphasis role="bold">.</emphasis>      
 </programlisting></para>
 
           <para>If you choose to store the HTML version of the documents in AFS, note that in addition to a subdirectory for each
@@ -6680,7 +6533,42 @@
 
   <sect1 id="HDRWQ91">
     <title>Enabling Access to Foreign Cells</title>
-
+    
+    <para>With current OpenAFS releases, there exist a number of mechanisms for
+    providing access to foreign cells. You may add mount points in your AFS
+    filespace for each foreign cell you wish users to access, or you can
+    enable a 'synthetic' AFS root, which contains mountpoints for either all
+    AFS cells defined in the client machine's local 
+    <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis>, or for all cells
+    providing location information in the DNS.
+    </para>
+    
+    <sect2>
+    <title>Enabling a Synthetic AFS root</title>
+    
+    <para>When a synthetic root is enabled, the client cache machine creates its
+    own root.afs volume, rather than using the one provided with your cell. This
+    allows clients to access all cells in the 
+    <emphasis role="bold">CellServDB</emphasis> file and, optionally, all cells
+    registered in the DNS, without requiring system administrator action to 
+    enable this access. Using a synthetic root has the additional advantage that
+    it allows a client to start its AFS service without a network available, as
+    it is no longer necessary to contact a fileserver to obtain the root volume.
+    </para>
+    
+    <para>OpenAFS supports two complimentary mechanisms for creating the 
+    synthetic root. Starting the cache manager with the 
+    <emphasis role="bold">-dynroot</emphasis> option adds all cells listed
+    in <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> to the client's
+    AFS root. Adding the <emphasis role="bold">-afsdb</emphasis> option in
+    addition to this enables DNS lookups for any cells that are not found in
+    the client's CellServDB file. Both of these options are added to the AFS
+    initialisation script, or options file, as detailed in 
+    <link linked="HDRWQ70">Configuring the Cache Manager</link>.
+    </sect2>
+    <sect2>
+    <title>Adding foreign cells to a conventional root volume</root>
+    
     <para>In this section you create a mount point in your AFS filespace for the <emphasis role="bold">root.cell</emphasis> volume
     of each foreign cell that you want to enable your users to access. For users working on a client machine to access the cell,
     there must in addition be an entry for it in the client machine's local <emphasis
@@ -6786,10 +6674,22 @@
 </programlisting></para>
         </listitem>
 
+        <!-- XXX - Add stuff about registering your cell with 
+             grand.central.org, and about configuring your DNS --> 
+             
         <listitem>
-          <para>Please register your cell with the AFS Product Support group at this time. If you do not want to participate in the
-          global AFS namespace, they list your cell in a private <emphasis role="bold">CellServDB</emphasis> file that is not
-          available to other AFS cells.</para>
+          <para>If you wish to participate in the global AFS namespace, and only
+          intend running one database server, please
+          register your cell with grand.central.org at this time.
+          To do so, email the <emphasis role="bold">CellServDB</emphasis> fragment
+          describing your cell to <!-- XXX - where does this get sent -->. If you intend
+          on deploying multiple database servers, please wait until you have installed
+          all of them before registering your cell.</para>
+        </listitem>
+        <listitem>
+          <para>If you wish to allow your cell to be located through DNS lookups,
+          at this time you should also add the necessary configuration to your
+          DNS. <!-- XXX - detail what this is -->         
         </listitem>
       </orderedlist></para>
 
@@ -6868,13 +6768,16 @@
             <replaceable>username</replaceable><emphasis role="bold">.admin</emphasis>. Administrators authenticate under these
             identities only when performing administrative tasks, and destroy the administrative tokens immediately after finishing
             the task (either by issuing the <emphasis role="bold">unlog</emphasis> command, or the <emphasis
-            role="bold">klog</emphasis> command to adopt their regular identity).</para>
+            role="bold">aklog</emphasis> command to adopt their regular identity).</para>
           </listitem>
 
           <listitem>
-            <para>Set a short ticket lifetime for administrator accounts (for example, 20 minutes) by using the <emphasis
-            role="bold">-lifetime</emphasis> argument to the <emphasis role="bold">kas setfields</emphasis> command, which is
-            described in the <emphasis>OpenAFS Administration Reference</emphasis>. Do not however, use a short lifetime for users
+            <para>Set a short ticket lifetime for administrator accounts (for example, 20 minutes) by using the 
+            facilities of your KDC. For instance, with a MIT Kerberos KDC, this
+            can be performed using the 
+            <emphasis role="bold">--max-ticket-life</emphasis> argument to
+            the <emphasis role="bold">kadmin modify_principal</emphasis>
+            command. Do not however, use a short lifetime for users
             who issue long-running <emphasis role="bold">backup</emphasis> commands.</para>
           </listitem>
 

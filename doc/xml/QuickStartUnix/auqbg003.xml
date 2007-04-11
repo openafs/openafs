@@ -8,13 +8,14 @@
   <sect1 id="HDRWQ2">
     <title>Audience and Purpose</title>
 
-    <para>This guide explains how to install and configure <trademark
-    class="registered">AFS</trademark> server and client machines. It
+    <para>This guide explains how to install and configure OpenAFS
+    server and client machines. It
     assumes that the reader is familiar with <trademark
     class="registered">UNIX</trademark> system administration, but not
     AFS.</para>
 
-    <para>The instructions explain how to issue AFS commands in the
+    <para>The instructions explain how to issue 
+    <trademark class="registered">AFS</trademark> commands in the
     context of specific tasks, but do not describe a command's function or
     arguments in detail. Refer to the <citetitle>OpenAFS Administration
     Reference</citetitle> as necessary.</para>

@@ -40,8 +40,10 @@
         <title>Incorporating AFS Into the Kernel</title>
 
         <para>You must incorporate AFS modifications into the kernel of
-        every AFS file server and client machine. Depending on the
-        operating system, you either use a program for dynamic kernel
+        every client machine. On some operating systems you must also 
+        incorporate these modifications into the kernels of server machines. 
+        Depending on 
+        the operating system, you either use a program for dynamic kernel
         loading, build a new static kernel, or can choose between the
         two. For your convenience, the instructions for incorporating AFS
         into the kernel appear in full in every chapter where you need to
@@ -69,14 +71,13 @@
           <itemizedlist>
             <listitem>
               <para>It acts as the <emphasis>system control
-              machine</emphasis> (if your AFS distribution includes the
-              required encryption files), distributing certain
+              machine</emphasis>, distributing certain
               configuration files to the other server machines in the
               cell</para>
             </listitem>
 
             <listitem>
-              <para>It acts as the <emphasis>binary distribution
+              <para>It may act as the <emphasis>binary distribution
               machine</emphasis> for its system type, distributing AFS
               binaries to other server machines of its system type</para>
             </listitem>
@@ -274,10 +275,20 @@
 
       <itemizedlist>
         <listitem>
-          <para>You must have the AFS Binary Distribution for each system type you are installing. Unless otherwise noted, the
-          Binary Distribution includes software for both client and server machines. If you are using the CD-ROM version of the
-          distribution, the machine you are installing must be able to access the CD-ROMs, either through a local CD drive or via an
-          NFS<superscript>(R)</superscript> mount of a CD drive attached to a machine that is accessible by network.</para>
+          <para>You must have a Kerberos 5 realm running for your site, and
+          the ability to create new principals within that realm</para>
+        </listitem>
+
+        <listitem>
+          <para>You must have a NTP, or similar, timeservice running. Each AFS
+          machine should derive its system time from this timeservice</para>
+        </listitem>
+
+        <listitem>
+          <para>You must have an OpenAFS Binary Distribution for each system 
+          type you are installing, or have built a binary from the supplied 
+          source code. Unless otherwise noted, the Binary Distribution 
+          includes software for both client and server machines.</para>
         </listitem>
 
         <listitem>
@@ -299,7 +310,7 @@
         </listitem>
 
         <listitem>
-          <para>No critical processes can be running on the machine you are installing, because you must reboot it during the
+          <para>No critical processes can be running on the machine you are installing, because you may need to reboot it during the
           installation.</para>
         </listitem>
       </itemizedlist>
@@ -331,6 +342,7 @@
 
         <listitem>
           <para>The partition mounted on the <emphasis role="bold">/usr</emphasis> directory must have at least 18 MB of disk space
+	<!-- XXX - Is this still true - how big are our binaries these days? -->
           available for storing the AFS server binaries (stored by convention in the <emphasis role="bold">/usr/afs/bin</emphasis>
           directory). If the machine is also a client, there must be additional local disk space available, as specified in <link
           linkend="HDRWQ12">Client Machine Requirements</link>. The complete set of AFS binaries requires yet more space, but they
@@ -402,18 +414,17 @@
     <title>Supported System Types</title>
 
     <para>The <emphasis>OpenAFS Release Notes</emphasis> for each AFS release list the supported system types. Support for
-    subsequent revisions of an operating system often becomes available between AFS releases. The AFS Product Support group can
-    provide details.</para>
+    subsequent revisions of an operating system often becomes available between AFS releases. The OpenAFS mailing lists can provide information regarding this interim support</para>
 
-    <para>It is the goal of the AFS Development and Product Support groups to support AFS on a wide range of popular system types.
+    <para>It is the goal of OpenAFS to support AFS on a wide range of popular system types.
     Furthermore, each time an operating system vendor releases a new general availability version of a supported operating system,
-    it is a goal to certify and support AFS on it within a short time. Support can be delayed a bit longer if it is necessary to
+    it is a goal to support AFS on it within a short time. Support can be delayed a bit longer if it is necessary to
     generate completely new binaries.</para>
 
     <para>It is not always possible to support AFS on every intermediate version of an operating system or for certain processor
     types. In some cases, platform limitations make certain AFS functionality (such as file server or NFS/AFS translator
     functionality) unavailable on one or more platforms. For a list of limitations, see the <emphasis>OpenAFS Release
-    Notes</emphasis> or ask the AFS Product Support group. <indexterm>
+    Notes</emphasis> or ask on the OpenAFS mailing lists. <indexterm>
         <primary>operating system upgrades</primary>
       </indexterm> <indexterm>
         <primary>upgrading the operating system</primary>
@@ -434,27 +445,29 @@
     <para>Whenever you upgrade an AFS machine to a different operating system, you must take several actions to maintain proper AFS
     functionality. These actions include, but are not necessarily limited to, the following. <itemizedlist>
         <listitem>
-          <para>Unmount the AFS server partitions (mounted at <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
+          <para>On platforms running the inode fileserver, unmount the AFS server partitions (mounted at <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
           directories) on all file server machines, to prevent the vendor-supplied <emphasis role="bold">fsck</emphasis> program
           from running on them when you reboot the machine during installation of the new operating system. Before upgrading the
           operating system, it is prudent to comment out commands in the machine's initialization file that remount the server
           partitions, to prevent them from being remounted until you can replace the standard <emphasis role="bold">fsck</emphasis>
           program with the AFS-modified version. The instructions in this guide for installing AFS server machines explain how to
-          replace the <emphasis role="bold">fsck</emphasis> program.</para>
+          replace the <emphasis role="bold">fsck</emphasis> program. If you are unsure if your platform uses the inode fileserver, it is worth following this advice for all platforms.</para>
         </listitem>
 
         <listitem>
           <para>Protect the AFS-modified versions of commands and configuration files from being overwritten by vendor-supplied
-          versions. These include <emphasis role="bold">vfsck</emphasis> (the AFS version of <emphasis role="bold">fsck</emphasis>),
-          binaries for the UNIX remote services such as <emphasis role="bold">inetd</emphasis>, and configuration files such as the
+          versions. These include <emphasis role="bold">vfsck</emphasis> (the AFS version of <emphasis role="bold">fsck</emphasis>), and configuration files such as the
           one for the Pluggable Authentication Module (PAM). After you have successfully installed the operating system, remember to
           move the AFS-modified commands and files back to the locations where they are accessed during normal functioning.</para>
         </listitem>
 
+<!-- 
+I don't think OpenAFS has ever required the server partitions be reformatted
         <listitem>
           <para>Reformat the server partitions to accommodate AFS-specific information, in certain cases. The upgrade instructions
           that accompany the new AFS binaries for an affected platform always detail the required procedure.</para>
         </listitem>
+-->
       </itemizedlist></para>
 
     <indexterm>
@@ -479,11 +492,12 @@
   </sect1>
 
   <sect1 id="HDRWQ15">
-    <title>The AFS Binary Distribution</title>
+    <title>The OpenAFS Binary Distribution</title>
 
-    <para>The AFS Binary Distribution includes a separate CD-ROM for each supported system type, containing all AFS binaries and
-    files for both server and client machines. The instructions in this guide specify when to mount the CD-ROM and which files or
-    directories to copy to the local disk or into an AFS volume.</para>
+    <para>Binary Distributions for supported systems may be downloaded from the OpenAFS website. The distributions are in the native packaging format for the system in question, and should generally be installed using your system's package management tools.</para>
+
+<para>For those distributions provided as tar files, or those built from source, the instructions in this guide specify how to copy out both binaries and configuration files</para>
+
   </sect1>
 
   <sect1 id="HDRWQ16">

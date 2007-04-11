@@ -17,8 +17,8 @@
     <subtitle>Version 1.4.2</subtitle>
 
     <copyright>
-      <year>2000</year>
-      <holder>IBM Corporation. All Rights Reserved</holder>
+      <year>2000-2007</year>
+      <holder>IBM Corporation and other contributors. All Rights Reserved</holder>
     </copyright>
 
     <legalnotice>
@@ -28,16 +28,16 @@
 
     <revhistory>
       <revision>
-        <revnumber>1.4.2</revnumber>
-        <date>December 2006</date>
+        <revnumber>1.4.4</revnumber>
+        <date>March 2007</date>
       </revision>
     </revhistory>
 
     <abstract>
       <para>This document describes the initial setup of an OpenAFS cell
       and an OpenAFS client.  It is currently being updated for OpenAFS
-      1.4.2 and is still dated and incorrect in some details.  This
-      edition applies to OpenAFS for UNIX, Version 1.4.2, and to all
+      1.4.4 and is still dated and incorrect in some details.  This
+      edition applies to OpenAFS for UNIX, Version 1.4.4, and to all
       subsequent releases and modifications until otherwise indicated in
       new editions.</para>
     </abstract>
