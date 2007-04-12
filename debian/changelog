@@ -2,6 +2,10 @@ openafs (1.4.4.dfsg1-1) unstable; urgency=low
 
   * Repackage upstream source to remove two additional files covered under
     the APSL.  (Closes: #416685)
+  * Build-depend on Automake since we run aclocal during the build.  Not
+    having aclocal caused local patches to osconf.m4 to not be effective,
+    leading to the wrong compiler flags for shared libraries.  Thanks to
+    Frank Lichtenheld for the report.  (Closes: #416398)
 
  --
 
