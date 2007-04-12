@@ -62,7 +62,7 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
 VERSION   = 1.4.4
-DEBVERS   = 1.4.4
+DEBVERS   = 1.4.4.dfsg1
 UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source, merge in the doc tarball, and do the
@@ -78,8 +78,11 @@ get-orig-source:
 	rm -r openafs-$(VERSION)/src/packaging/MacOS
 	rm -r openafs-$(VERSION)/src/platform/DARWIN
 	rm -r openafs-$(VERSION)/src/WINNT
-	tar cf openafs_$(DEBVERS).orig.tar openafs-$(VERSION)
-	rm -r openafs-$(VERSION)
+	rm openafs-$(VERSION)/src/afs/sysctl.h
+	rm openafs-$(VERSION)/src/util/fstab.c
+	mv openafs-$(VERSION) openafs_$(DEBVERS).orig
+	tar cf openafs_$(DEBVERS).orig.tar openafs_$(DEBVERS).orig
+	rm -r openafs_$(DEBVERS).orig
 	gzip -9 openafs_$(DEBVERS).orig.tar
 
 configure: configure-stamp

@@ -11,11 +11,15 @@ Upstream Maintainers:
     openafs-gatekeepers@openafs.org
 
 The upstream source has been repackaged to remove the src/packaging/MacOS
-and src/platform/DARWIN directories, which contained a file
-(afssettings.m) that was covered under the Apple Public Source License
-2.0.  This license is not considered DFSG-free.  Since the repackaging was
-needed anyway, the WINNT directory was also dropped, reducing the size of
-the upstream tarball by 8MB.
+and src/platform/DARWIN directories and the files src/afs/sysctl.h and
+src/util/fstab.c.  These directories and files are only used for building
+on MacOS X and contained content covered by the Apple Public Source
+License 2.0.  This license is not considered DFSG-free.  Since the
+repackaging was needed anyway, the WINNT directory was also dropped,
+reducing the size of the upstream tarball by 8MB.
+
+The upstream openafs-src and openafs-doc tarballs have been combined into
+one source tarball.
 
 The openafs-doc package contains the OpenAFS documentation as distributed
 by the OpenAFS project, which does not include the original source.  These
