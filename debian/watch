@@ -7,10 +7,11 @@
 version=3
 
 # Without the /pages in the URL, one gets the frameset page.
-http://www.openafs.org/pages/release/latest.html \
-    .*/openafs-([^-]+)-src\.tar\.gz
+opts=dversionmangle=s/\.dfsg\d+$// \
+    http://www.openafs.org/pages/release/latest.html \
+        .*/openafs-([^-]+)-src\.tar\.gz
 
 # Release candidates are stashed in another secret place and we change the
 # version number for proper sorting of versions in Debian.
-#opts="uversionmangle=s/\.0-rc/rc/" \
+#opts="uversionmangle=s/-rc/~rc/ dversionmangle=s/\.dfsg\d+$//" \
 #    http://dl.openafs.org/dl/openafs/candidate/ ([^/]+-rc\d+)/

@@ -1,3 +1,9 @@
+openafs (1.4.4.dfsg1-2) unstable; urgency=low
+
+  * Fix the watch file to remove .dfsg\d+ when comparing versions.
+
+ --
+
 openafs (1.4.4.dfsg1-1) unstable; urgency=low
 
   * Repackage upstream source to remove two additional files covered under
