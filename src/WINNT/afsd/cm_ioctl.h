@@ -164,6 +164,8 @@ extern long cm_IoctlRxStatPeer(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlUUIDControl(struct smb_ioctl * ioctlp, struct cm_user *userp);
 
+extern long cm_IoctlPathAvailability(struct smb_ioctl * ioctlp, struct cm_user *userp);
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

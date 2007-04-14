@@ -97,4 +97,5 @@ typedef struct cm_cacheParms {
 #define VIOC_RXSTAT_PROC                0x2e
 #define VIOC_RXSTAT_PEER                0x2f
 #define VIOC_UUIDCTL                    0x30
+#define VIOC_PATH_AVAILABILITY          0x31
 #endif /*  __SMB_IOCONS_H_ENV_ */

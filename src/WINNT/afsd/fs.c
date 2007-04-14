@@ -600,7 +600,7 @@ ParseAcl (char *astr)
 static int
 PrintStatus(VolumeStatus *status, char *name, char *motd, char *offmsg)
 {
-    printf("Volume status for vid = %u named %s\n",status->Vid, name);
+    printf("Volume status for vid = %u named %s is\n",status->Vid, name);
     if (*offmsg != 0)
 	printf("Current offline message is %s\n",offmsg);
     if (*motd != 0)
@@ -611,7 +611,7 @@ PrintStatus(VolumeStatus *status, char *name, char *motd, char *offmsg)
     else 
         printf("unlimited\n");
     printf("Current blocks used are %d\n",status->BlocksInUse);
-    printf("The partition has %d blocks available out of %d\n\n",
+    printf("The partition has %d blocks available out of %d\n",
             status->PartBlocksAvail, status->PartMaxBlocks);
     return 0;
 }
@@ -1489,6 +1489,7 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
     struct cmd_item *ti;
     struct VolumeStatus *status;
     char *name, *offmsg, *motd;
+    long   online_state;
     int error = 0;
     
     SetDotDefault(&as->parms[0].items);
@@ -1525,21 +1526,38 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
 	    pr_SIdToName(owner[0], oname);
 	    printf("Owner %s (%u) Group %u\n", oname, owner[0], owner[1]);
         }
-	
+
 	blob.out = space;
 	blob.out_size = MAXSIZE;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
-	if (code) {
-	    Die(errno, ti->data);
-	    error = 1;
-	    continue;
-	}
-	status = (VolumeStatus *)space;
-	name = (char *)status + sizeof(*status);
-	offmsg = name + strlen(name) + 1;
-	motd = offmsg + strlen(offmsg) + 1;
+	if (code == 0) {
+            status = (VolumeStatus *)space;
+            name = (char *)status + sizeof(*status);
+            offmsg = name + strlen(name) + 1;
+            motd = offmsg + strlen(offmsg) + 1;
 
-	PrintStatus(status, name, motd, offmsg);
+            PrintStatus(status, name, motd, offmsg);
+        } else {
+            Die(errno, ti->data);
+        }
+        online_state = pioctl(ti->data, VIOC_PATH_AVAILABILITY, &blob, 1);
+        switch (online_state) {
+        case 0:
+            printf("Volume is online\n");
+            break;
+        case CM_ERROR_ALLOFFLINE:
+            printf("Volume offline\n");
+            break;
+        case CM_ERROR_ALLDOWN:
+            printf("All Volume servers are down\n");
+            break;
+        case CM_ERROR_ALLBUSY:
+            printf("All volume servers are busy\n");
+            break;
+        default:
+            Die(online_state, ti->data);
+        }
+        printf("\n");
     }
     return error;
 }

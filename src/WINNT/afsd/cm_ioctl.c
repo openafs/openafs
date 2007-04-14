@@ -2768,3 +2768,96 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
   
     return 0;
 }
+
+
+static long 
+cm_CheckServersStatus(cm_serverRef_t *serversp)
+{
+    long code = 0;
+    cm_serverRef_t *tsrp;
+    cm_server_t *tsp;
+    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+
+    if (serversp == NULL) {
+	osi_Log1(afsd_logp, "cm_CheckServersStatus returning 0x%x", CM_ERROR_ALLDOWN);
+	return CM_ERROR_ALLDOWN;
+    }
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsp = tsrp->server) {
+            cm_GetServerNoLock(tsp);
+            lock_ReleaseRead(&cm_serverLock);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                allDown = 0;
+                if (tsrp->status == busy) {
+                    allOffline = 0;
+                    someBusy = 1;
+                } else if (tsrp->status == offline) {
+                    allBusy = 0;
+                    someOffline = 1;
+                } else {
+                    allOffline = 0;
+                    allBusy = 0;
+                    cm_PutServer(tsp);
+                    goto done;
+                }
+            }
+            lock_ObtainRead(&cm_serverLock);
+            cm_PutServerNoLock(tsp);
+        }
+    }   
+    lock_ReleaseRead(&cm_serverLock);
+
+    if (allDown) 
+        code = CM_ERROR_ALLDOWN;
+    else if (allBusy) 
+        code = CM_ERROR_ALLBUSY;
+    else if (allOffline || (someBusy && someOffline))
+        code = CM_ERROR_ALLOFFLINE;
+
+  done:
+    osi_Log1(afsd_logp, "cm_CheckServersStatus returning 0x%x", code);
+    return code;
+}
+
+
+long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    long code;
+    cm_scache_t *scp;
+    cm_cell_t *cellp;
+    cm_volume_t *tvp;
+    cm_serverRef_t **tsrpp;
+    unsigned long volume;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) 
+        return code;
+        
+    volume = scp->fid.volume;
+
+    cellp = cm_FindCellByID(scp->fid.cell);
+
+    cm_ReleaseSCache(scp);
+
+    if (!cellp)
+	return CM_ERROR_NOSUCHCELL;
+
+    code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
+    if (code) 
+        return code;
+	
+    lock_ObtainMutex(&tvp->mx);
+    tsrpp = cm_GetVolServers(tvp, volume);
+    code = cm_CheckServersStatus(*tsrpp);
+    cm_FreeServerList(tsrpp);
+    lock_ReleaseMutex(&tvp->mx);
+    cm_PutVolume(tvp);
+    return 0;
+}       
+
+
