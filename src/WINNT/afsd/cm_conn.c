@@ -610,8 +610,8 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     long timeUsed, timeLeft, hardTimeLeft;
 
     if (serversp == NULL) {
-	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_NOSUCHVOLUME);
-	return CM_ERROR_NOSUCHVOLUME;
+	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_ALLDOWN);
+	return CM_ERROR_ALLDOWN;
     }
 
     *connpp = NULL;
