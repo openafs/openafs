@@ -7,6 +7,8 @@ openafs (1.4.4.dfsg1-2) unstable; urgency=low
     for the debugging help.  (Closes: #411818)
   * Prefer alpha_linux_26 to alpha_linux_24 for the non-kernel build on
     Alpha, now that the source supports it.
+  * Add support for the s390x architecture.  Upstream supports it and
+    there's no reason not to.
   * Fix the watch file to remove .dfsg\d+ when comparing versions.
 
  --

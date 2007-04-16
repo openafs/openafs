@@ -30,6 +30,9 @@ ppc64)
 s390)
     echo s390_linux26
     ;;
+s390x)
+    echo s390x_linux26
+    ;;
 sparc|sparc64)
     echo sparc_linux24
     ;;

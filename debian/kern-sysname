@@ -110,6 +110,16 @@ s390)
         ;;
     esac
     ;;
+s390x)
+    case $KVERS in
+    2.4*)
+        echo s390x_linux24
+        ;;
+    2.6*)
+        echo s390x_linux26
+        ;;
+    esac
+    ;;
 *)
     echo "ERROR: unsupported architecture" >&2
     echo UNKNOWN
