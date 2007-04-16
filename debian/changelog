@@ -1,5 +1,10 @@
 openafs (1.4.4.dfsg1-2) unstable; urgency=low
 
+  * When determining the AFS sysname for kernel module builds, add
+    explicit cases for 2.6 kernels for all architectures that support them
+    (everything except non-64-bit sparc_linux).  Fixes build problems with
+    ia64 and probably other architectures.  Thanks to Ippokratis Pandis
+    for the debugging help.  (Closes: #411818)
   * Fix the watch file to remove .dfsg\d+ when comparing versions.
 
  --

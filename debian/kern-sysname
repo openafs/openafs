@@ -32,7 +32,14 @@ x86_64)
     esac
     ;;
 ia64)
-    echo ia64_linux24
+    case $KVERS in
+    2.4*)
+        echo ia64_linux24
+        ;;
+    2.6*)
+        echo ia64_linux24
+        ;;
+    esac
     ;;
 alpha)
     case $KVERS in
@@ -41,6 +48,9 @@ alpha)
         ;;
     2.4*)
         echo alpha_linux_24
+        ;;
+    2.6*)
+        echo alpha_linux_26
         ;;
     esac
     ;;
@@ -61,6 +71,9 @@ sparc64)
         ;;
     2.4*)
         echo sparc64_linux24
+        ;;
+    2.6*)
+        echo sparc64_linux26
         ;;
     esac
     ;;
@@ -88,7 +101,14 @@ ppc64)
     esac
     ;;
 s390)
-    echo s390_linux24
+    case $KVERS in
+    2.4*)
+        echo s390_linux24
+        ;;
+    2.6*)
+        echo s390_linux26
+        ;;
+    esac
     ;;
 *)
     echo "ERROR: unsupported architecture" >&2
