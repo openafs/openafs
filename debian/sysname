@@ -7,7 +7,7 @@
 
 case `dpkg --print-installation-architecture` in
 alpha)
-    echo alpha_linux_24
+    echo alpha_linux_26
     ;;
 amd64)
     echo amd64_linux26

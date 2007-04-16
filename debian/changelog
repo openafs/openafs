@@ -5,6 +5,8 @@ openafs (1.4.4.dfsg1-2) unstable; urgency=low
     (everything except non-64-bit sparc_linux).  Fixes build problems with
     ia64 and probably other architectures.  Thanks to Ippokratis Pandis
     for the debugging help.  (Closes: #411818)
+  * Prefer alpha_linux_26 to alpha_linux_24 for the non-kernel build on
+    Alpha, now that the source supports it.
   * Fix the watch file to remove .dfsg\d+ when comparing versions.
 
  --
