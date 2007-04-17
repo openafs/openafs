@@ -871,9 +871,9 @@ KFW_AFS_find_cells_for_princ(krb5_context ctx, char * pname, char **cells[], int
 int
 KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
 {
-    krb5_context ctx;
-    char * pname = 0;
-    char * ccname = 0;
+    krb5_context ctx = NULL;
+    char * pname = NULL;
+    char * ccname = NULL;
     krb5_error_code code;
 
     if (!pkrb5_init_context)
@@ -916,9 +916,9 @@ KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
 void
 KFW_import_windows_lsa(void)
 {
-    krb5_context ctx = 0;
-    krb5_ccache  cc = 0;
-    krb5_principal princ = 0;
+    krb5_context ctx = NULL;
+    krb5_ccache  cc = NULL;
+    krb5_principal princ = NULL;
     char * pname = NULL;
     krb5_data *  princ_realm;
     krb5_error_code code;
@@ -1017,14 +1017,14 @@ KFW_import_windows_lsa(void)
 void
 KFW_import_ccache_data(void)
 {
-    krb5_context ctx = 0;
-    krb5_ccache  cc = 0;
-    krb5_principal principal = 0;
+    krb5_context ctx = NULL;
+    krb5_ccache  cc = NULL;
+    krb5_principal principal = NULL;
     krb5_creds creds;
     krb5_error_code code;
     krb5_error_code cc_code;
     krb5_cc_cursor cur;
-    apiCB * cc_ctx = 0;
+    apiCB * cc_ctx = NULL;
     struct _infoNC ** pNCi = NULL;
     int i, j, flags;
 
@@ -1214,11 +1214,11 @@ KFW_AFS_get_cred( char * username,
                   char * smbname,
                   char ** reasonP )
 {
-    krb5_context ctx = 0;
-    krb5_ccache cc = 0;
-    char * realm = 0, * userrealm = 0;
-    krb5_principal principal = 0;
-    char * pname = 0;
+    krb5_context ctx = NULL;
+    krb5_ccache cc = NULL;
+    char * realm = NULL, * userrealm = NULL;
+    krb5_principal principal = NULL;
+    char * pname = NULL;
     krb5_error_code code;
     char local_cell[MAXCELLCHARS+1];
     char **cells = NULL;
@@ -1366,8 +1366,8 @@ KFW_AFS_get_cred( char * username,
 int 
 KFW_AFS_destroy_tickets_for_cell(char * cell)
 {
-    krb5_context		ctx = 0;
-    krb5_error_code		code;
+    krb5_context	ctx = NULL;
+    krb5_error_code	code;
     int count;
     char ** principals = NULL;
 
@@ -1430,12 +1430,12 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
 int 
 KFW_AFS_destroy_tickets_for_principal(char * user)
 {
-    krb5_context		ctx = 0;
-    krb5_error_code		code;
+    krb5_context	ctx = NULL;
+    krb5_error_code	code;
     int count;
     char ** cells = NULL;
-    krb5_principal      princ = 0;
-    krb5_ccache			cc  = 0;
+    krb5_principal      princ = NULL;
+    krb5_ccache		cc  = NULL;
 
     if (!pkrb5_init_context)
         return 0;
@@ -1447,7 +1447,7 @@ KFW_AFS_destroy_tickets_for_principal(char * user)
     }
 
     code = pkrb5_init_context(&ctx);
-    if (code) ctx = 0;
+    if (code) return 0;
 
     code = pkrb5_parse_name(ctx, user, &princ);
     if (code) goto loop_cleanup;
@@ -1484,9 +1484,9 @@ KFW_AFS_destroy_tickets_for_principal(char * user)
 int
 KFW_AFS_renew_expiring_tokens(void)
 {
-    krb5_error_code		        code = 0;
-    krb5_context		        ctx = 0;
-    krb5_ccache			        cc = 0;
+    krb5_error_code     code = 0;
+    krb5_context	ctx = NULL;
+    krb5_ccache		cc = NULL;
     krb5_timestamp now;
     struct principal_ccache_data * pcc_next = princ_cc_data;
     int cell_count;
@@ -1586,8 +1586,8 @@ KFW_AFS_renew_expiring_tokens(void)
 BOOL
 KFW_AFS_renew_token_for_cell(char * cell)
 {
-    krb5_error_code		        code = 0;
-    krb5_context		        ctx = 0;
+    krb5_error_code     code = 0;
+    krb5_context	ctx = NULL;
     int count;
     char ** principals = NULL;
 
@@ -1727,13 +1727,13 @@ KFW_AFS_renew_tokens_for_all_cells(void)
 int
 KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
 {
-    krb5_error_code		        code = 0;
-    krb5_context		        ctx = 0;
-    krb5_ccache			        cc = 0;
-    krb5_principal		        me = 0;
-    krb5_principal              server = 0;
-    krb5_creds			        my_creds;
-    krb5_data                   *realm = 0;
+    krb5_error_code     code = 0;
+    krb5_context	ctx = NULL;
+    krb5_ccache		cc = NULL;
+    krb5_principal	me = NULL;
+    krb5_principal      server = NULL;
+    krb5_creds		my_creds;
+    krb5_data           *realm = NULL;
 
     if (!pkrb5_init_context)
         return 0;
@@ -1844,12 +1844,12 @@ KFW_kinit( krb5_context alt_ctx,
             DWORD                       publicIP
             )
 {
-    krb5_error_code		        code = 0;
-    krb5_context		        ctx = 0;
-    krb5_ccache			        cc = 0;
-    krb5_principal		        me = 0;
-    char*                       name = 0;
-    krb5_creds			        my_creds;
+    krb5_error_code		code = 0;
+    krb5_context		ctx = NULL;
+    krb5_ccache			cc = NULL;
+    krb5_principal		me = NULL;
+    char*                       name = NULL;
+    krb5_creds			my_creds;
     krb5_get_init_creds_opt     options;
     krb5_address **             addrs = NULL;
     int                         i = 0, addr_count = 0;
@@ -2010,8 +2010,8 @@ KFW_kinit( krb5_context alt_ctx,
 int
 KFW_kdestroy(krb5_context alt_ctx, krb5_ccache alt_cc)
 {
-    krb5_context		ctx;
-    krb5_ccache			cc;
+    krb5_context		ctx = NULL;
+    krb5_ccache			cc = NULL;
     krb5_error_code		code;
 
     if (!pkrb5_init_context)
@@ -2640,13 +2640,13 @@ KFW_AFS_klog(
     DWORD       CurrentState;
     char        HostName[64];
     BOOL        try_krb5 = 0;
-    krb5_context  ctx = 0;
-    krb5_ccache   cc = 0;
+    krb5_context  ctx = NULL;
+    krb5_ccache   cc = NULL;
     krb5_creds increds;
-    krb5_creds * k5creds = 0;
+    krb5_creds * k5creds = NULL;
     krb5_error_code code;
-    krb5_principal client_principal = 0;
-    krb5_data * k5data;
+    krb5_principal client_principal = NULL;
+    krb5_data * k5data = NULL;
     int i, retry = 0;
 
     CurrentState = 0;
@@ -3375,13 +3375,13 @@ LoadFuncs(
 
 BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 {
-    krb5_context ctx = 0;
-    krb5_ccache cc = 0;
+    krb5_context ctx = NULL;
+    krb5_ccache cc = NULL;
     krb5_error_code code;
     krb5_data pwdata;
-    const char * realm = 0;
-    krb5_principal principal = 0;
-    char * pname = 0;
+    const char * realm = NULL;
+    krb5_principal principal = NULL;
+    char * pname = NULL;
     char   password[PROBE_PASSWORD_LEN+1];
     BOOL serverReachable = 0;
 
@@ -3452,11 +3452,11 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 BOOL
 KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
 {
-    krb5_context   ctx = 0;
+    krb5_context   ctx = NULL;
     krb5_error_code code;
-    krb5_ccache mslsa_ccache=0;
-    krb5_principal princ = 0;
-    char * pname = 0;
+    krb5_ccache mslsa_ccache=NULL;
+    krb5_principal princ = NULL;
+    char * pname = NULL;
     BOOL success = 0;
 
     if (!KFW_is_available())
@@ -3626,11 +3626,11 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     char filename[MAX_PATH] = "";
     DWORD count;
     char cachename[MAX_PATH + 8] = "FILE:";
-    krb5_context		ctx = 0;
+    krb5_context		ctx = NULL;
     krb5_error_code		code;
-    krb5_principal              princ = 0;
-    krb5_ccache			cc  = 0;
-    krb5_ccache                 ncc = 0;
+    krb5_principal              princ = NULL;
+    krb5_ccache			cc  = NULL;
+    krb5_ccache                 ncc = NULL;
 
     if (!pkrb5_init_context || !user || !szLogonId)
         return;
@@ -3651,7 +3651,7 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     DeleteFile(filename);
 
     code = pkrb5_init_context(&ctx);
-    if (code) ctx = 0;
+    if (code) goto cleanup;
 
     code = pkrb5_parse_name(ctx, user, &princ);
     if (code) goto cleanup;
@@ -3692,11 +3692,11 @@ int
 KFW_AFS_copy_file_cache_to_default_cache(char * filename)
 {
     char cachename[MAX_PATH + 8] = "FILE:";
-    krb5_context		ctx = 0;
+    krb5_context		ctx = NULL;
     krb5_error_code		code;
-    krb5_principal              princ = 0;
-    krb5_ccache			cc  = 0;
-    krb5_ccache                 ncc = 0;
+    krb5_principal              princ = NULL;
+    krb5_ccache			cc  = NULL;
+    krb5_ccache                 ncc = NULL;
     int retval = 1;
 
     if (!pkrb5_init_context || !filename)
@@ -3705,10 +3705,10 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
     if ( strlen(filename) + sizeof("FILE:") > sizeof(cachename) )
         return 1;
 
-    strcat(cachename, filename);
-
     code = pkrb5_init_context(&ctx);
-    if (code) ctx = 0;
+    if (code) return 1;
+
+    strcat(cachename, filename);
 
     code = pkrb5_cc_resolve(ctx, cachename, &cc);
     if (code) goto cleanup;
