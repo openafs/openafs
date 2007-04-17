@@ -790,7 +790,7 @@ DWORD APIENTRY NPLogonNotify(
     int sleepInterval;
 
     /* Are we interactive? */
-    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
+    interactive = (wcsicmp(lpStationName, L"WinSta0") == 0);
 
 #ifdef DISABLE_NON_INTERACTIVE
     /* Do not do anything if the logon session is not interactive. */
@@ -817,8 +817,8 @@ DWORD APIENTRY NPLogonNotify(
     /* MSV1_0_INTERACTIVE_LOGON and KERB_INTERACTIVE_LOGON are equivalent for
      * our purposes */
 
-    if ( wcscmp(lpAuthentInfoType,L"MSV1_0:Interactive") && 
-         wcscmp(lpAuthentInfoType,L"Kerberos:Interactive") )
+    if ( wcsicmp(lpAuthentInfoType,L"MSV1_0:Interactive") && 
+         wcsicmp(lpAuthentInfoType,L"Kerberos:Interactive") )
     {
         DebugEvent("Unsupported Authentication Info Type: %S",
                    lpAuthentInfoType);
@@ -1106,7 +1106,7 @@ DWORD APIENTRY NPPasswordChangeNotify(
     BOOLEAN interactive;
 
     /* Are we interactive? */
-    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
+    interactive = (wcsicmp(lpStationName, L"WinSta0") == 0);
 
     /* Do not do anything if the logon session is not interactive. */
     if (!interactive)
