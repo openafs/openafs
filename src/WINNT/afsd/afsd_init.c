@@ -136,7 +136,7 @@ void afsd_initUpperCaseTable()
 void
 afsi_start()
 {
-    char wd[256];
+    char wd[MAX_PATH+1];
     char t[100], u[100], *p, *path;
     int zilch;
     DWORD code;
@@ -146,13 +146,10 @@ afsi_start()
     DWORD maxLogSize = 100 * 1024;
 
     afsi_file = INVALID_HANDLE_VALUE;
-    code = GetEnvironmentVariable("TEMP", wd, sizeof(wd));
-    if ( code == 0 || code > sizeof(wd) )
-    {
-        code = GetWindowsDirectory(wd, sizeof(wd));
-        if (code == 0) 
-            return;
-    }
+    code = GetTempPath(sizeof(wd)-15, wd);
+    if ( code == 0 || code > (sizeof(wd)-15) )
+        return;         /* unable to create a log */
+
     StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
     GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
     afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
