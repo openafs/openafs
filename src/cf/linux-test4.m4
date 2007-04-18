@@ -644,6 +644,22 @@ struct nameidata _nameidata;
   AC_MSG_RESULT($ac_cv_linux_func_i_permission_takes_nameidata)])
 
 
+AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
+  AC_MSG_CHECKING([whether inode_operations.put_link takes an opaque cookie])
+  AC_CACHE_VAL([ac_cv_linux_func_i_put_link_takes_cookie], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>
+#include <linux/namei.h>],
+[struct inode _inode;
+struct dentry _dentry;
+struct nameidata _nameidata;
+void *cookie;
+(void)_inode.i_op->put_link(&_dentry, &_nameidata, cookie);],
+      ac_cv_linux_func_i_put_link_takes_cookie=yes,
+      ac_cv_linux_func_i_put_link_takes_cookie=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_i_put_link_takes_cookie)])
+
+
 AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA], [
   AC_MSG_CHECKING([whether dentry_operations.d_revalidate takes a nameidata])
   AC_CACHE_VAL([ac_cv_linux_func_d_revalidate_takes_nameidata], [
