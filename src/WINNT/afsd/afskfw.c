@@ -1422,7 +1422,8 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
         }
         free(principals);
     }
-    pkrb5_free_context(ctx);
+    if (ctx)
+		pkrb5_free_context(ctx);
     return 0;
 }
 
@@ -1476,7 +1477,8 @@ KFW_AFS_destroy_tickets_for_principal(char * user)
         free(cells);
     }
 
-    pkrb5_free_context(ctx);
+    if (ctx)
+		pkrb5_free_context(ctx);
     return 0;
 }
 
@@ -1700,7 +1702,8 @@ KFW_AFS_renew_token_for_cell(char * cell)
         code = -1;      // we did not renew the tokens 
 
   cleanup:
-    pkrb5_free_context(ctx);
+    if (ctx) 
+		pkrb5_free_context(ctx);
     return (code ? FALSE : TRUE);
 
 }
