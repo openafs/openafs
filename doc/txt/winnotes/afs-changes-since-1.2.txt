@@ -1,3 +1,51 @@
+Since 1.5.18
+
+ * network identity manager provider:
+
+   - Correct for the fact that pr_CreateUser tampers with the 
+     contents of the username input buffer.
+
+   - Take into account that the krb4 credential data structure
+     does not have separate realm fields for the user and service.
+     When krb524 is used with a cross-realm ticket, the realm
+     describes the service not the user.  
+
+ * Many integrated logon changes:
+
+   - Fix eventlog reporting.  Do not attempt to log an event 
+     if the event source registration fails.  Use DebugEvent0 
+     instead of DebugEvent when there are no parameters.
+
+   - Modify the LOOKUPKEYCHAIN macro to recognize ERROR_MORE_DATA 
+     errors.
+
+   - Fix the reading of Domain specific configuration for 
+     LogonScript and TheseCells.  Previously the dwSize value was 
+     being overwritten so that subsequent RegQueryValueEx call 
+     would fail.
+
+   - Fix a memory leak in the TheseCells reading code.
+
+   - Add support for Domain specific "Realm" specification.  The 
+     realm is the realm to be appended to the username.  When 
+     logging in as a domain or to the local machine, the specified 
+     "Domain" name is not going to be a valid realm name.
+
+   - Construct a proper principal name based upon the domain 
+     specified realm for use in obtaining tokens with KFW.
+
+   - If the domain specified "TheseCells" list includes the 
+     default cell, do not obtain tokens twice.
+
+ * An unprotected call to the Kerberos v5 function, 
+   krb5_free_context(), can result in an invalid memory access
+   exception if the contents of the krb5 profile, krb5.ini, cannot
+   be parsed correctly.  The error is located within the afskfw
+   library which is used by afscreds.exe, afssvrmgr.exe, and 
+   afslogon.dll.  When the error is triggered within afslogon.dll
+   a blue screen condition can occur when the winlogon.exe system
+   process terminates unexpectedly.
+
 Since 1.5.17
 
  * Do not stop the afs client service with an assert
