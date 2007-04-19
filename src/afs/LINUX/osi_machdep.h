@@ -55,14 +55,14 @@
 #endif
 
 #if defined (STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK)
-#define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
+#define SIG_LOCK(X,flags) spin_lock_irqsave(&X->sigmask_lock,flags)
+#define SIG_UNLOCK(X),flags spin_unlock_irqrestore(&X->sigmask_lock,flags)
 #elif defined (STRUCT_TASK_STRUCT_HAS_SIGHAND)
-#define SIG_LOCK(X) spin_lock_irq(&X->sighand->siglock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sighand->siglock)
+#define SIG_LOCK(X,flags) spin_lock_irqsave(&X->sighand->siglock,flags)
+#define SIG_UNLOCK(X,flags) spin_unlock_irqrestore(&X->sighand->siglock,flags)
 #else
-#define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
+#define SIG_LOCK(X,flags) spin_lock_irqsave(&X->sig->siglock,flags)
+#define SIG_UNLOCK(X,flags) spin_unlock_irqrestore(&X->sig->siglock,flags)
 #endif
 
 #if defined (STRUCT_TASK_STRUCT_HAS_RLIM)

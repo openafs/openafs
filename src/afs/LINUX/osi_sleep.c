@@ -240,19 +240,20 @@ void
 afs_osi_Sleep(void *event)
 {
     sigset_t saved_set;
+    unsigned long f;
 
-    SIG_LOCK(current);
+    SIG_LOCK(current,f);
     saved_set = current->blocked;
     sigfillset(&current->blocked);
     RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current);
+    SIG_UNLOCK(current,f);
 
     afs_osi_SleepSig(event);
 
-    SIG_LOCK(current);
+    SIG_LOCK(current,f);
     current->blocked = saved_set;
     RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current);
+    SIG_UNLOCK(current,f);
 }
 
 /* osi_TimedSleep

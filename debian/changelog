@@ -1,5 +1,11 @@
 openafs (1.4.4.dfsg1-2) unstable; urgency=low
 
+  * Debian kernels as of 2.6.20 enable CONFIG_PARAVIRT, which redefines
+    several core kernel calls as redirects through a paravirt.ops table
+    that's marked GPL-only.  This breaks all non-GPL modules that used
+    those (previously generally exported) calls even indirectly.  Apply a
+    hack to switch from spin_lock_irq to spin_lock_irqsave to avoid the
+    paravirt redirection so that the module will build.
   * Enable ucontext for all Linux builds with glibc 2.4 or later, not just
     with i386 and amd64.  Newer versions of glibc change internal
     structures in ways that cause the old LWP code to have stack

@@ -230,6 +230,7 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     struct key *old;
     char desc[20];
     unsigned long not_in_quota;
+    unsigned long f;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
@@ -265,11 +266,11 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     }
 
     /* install the keyring */
-    spin_lock_irq(&task->sighand->siglock);
+    SIG_LOCK(task, f);
     old = task->signal->session_keyring;
     smp_wmb();
     task->signal->session_keyring = keyring;
-    spin_unlock_irq(&task->sighand->siglock);
+    SIG_UNLOCK(task);
 
     if (old)
 	    key_put(old);

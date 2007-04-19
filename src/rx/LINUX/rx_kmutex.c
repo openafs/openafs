@@ -104,11 +104,12 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
     MUTEX_EXIT(l);
 
     if (!sigok) {
-	SIG_LOCK(current);
+	unsigned long f;
+	SIG_LOCK(current,f);
 	saved_set = current->blocked;
 	sigfillset(&current->blocked);
 	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
+	SIG_UNLOCK(current,f);
     }
 
     while(seq == cv->seq) {
@@ -140,10 +141,11 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
     set_current_state(TASK_RUNNING);
 
     if (!sigok) {
-	SIG_LOCK(current);
+	unsigned long f;
+	SIG_LOCK(current, f);
 	current->blocked = saved_set;
 	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
+	SIG_UNLOCK(current, f);
     }
 
     if (isAFSGlocked)
