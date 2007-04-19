@@ -10,6 +10,8 @@ openafs (1.4.4.dfsg1-2) unstable; urgency=low
     with i386 and amd64.  Newer versions of glibc change internal
     structures in ways that cause the old LWP code to have stack
     overflows.  (Closes: #419903)
+  * Apply upstream patch to crashes on contention in afs_xuser when a
+    process in a PAG exits.  Thanks, Chaskiel Grundman.
   * When determining the AFS sysname for kernel module builds, add
     explicit cases for 2.6 kernels for all architectures that support them
     (everything except non-64-bit sparc_linux).  Fixes build problems with

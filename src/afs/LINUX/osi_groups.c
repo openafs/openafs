@@ -595,13 +595,18 @@ static void afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag = key->payload.value;
     struct unixuser *pu;
+    int locked = ISAFS_GLOCK();
 
+    if (!locked)
+	AFS_GLOCK();
     pu = afs_FindUser(pag, -1, READ_LOCK);
     if (pu) {
 	pu->ct.EndTimestamp = 0;
 	pu->tokenTime = 0;
 	afs_PutUser(pu, READ_LOCK);
     }
+    if (!locked)
+	AFS_GUNLOCK();
 }
 
 struct key_type key_type_afs_pag =
