@@ -1091,6 +1091,8 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
             }
             tvc->uncred = credp;
 	    tvc->states |= CUnlinked;
+	} else {
+	    osi_FreeSmallSpace(__name);	
 	}
 	AFS_GUNLOCK();
 
