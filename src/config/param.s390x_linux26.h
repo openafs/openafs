@@ -89,6 +89,11 @@
 #endif
 #endif /* KERNEL */
 
+#ifdef __GLIBC__
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
+#define USE_UCONTEXT
+#endif
+#endif
 #endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */
