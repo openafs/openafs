@@ -270,7 +270,7 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     old = task->signal->session_keyring;
     smp_wmb();
     task->signal->session_keyring = keyring;
-    SIG_UNLOCK(task);
+    SIG_UNLOCK(task, f);
 
     if (old)
 	    key_put(old);
