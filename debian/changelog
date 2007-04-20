@@ -24,7 +24,7 @@ openafs (1.4.4.dfsg1-2) unstable; urgency=low
     there's no reason not to.
   * Fix the watch file to remove .dfsg\d+ when comparing versions.
 
- --
+ -- Russ Allbery <rra@debian.org>  Thu, 19 Apr 2007 13:26:33 -0700
 
 openafs (1.4.4.dfsg1-1) unstable; urgency=low
 
