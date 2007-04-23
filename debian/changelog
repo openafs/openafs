@@ -1,3 +1,10 @@
+openafs (1.4.4.dfsg1-3) unstable; urgency=low
+
+  * When loading a module using the upstream naming convention, don't
+    append the .mp to the module name for modprobe.  (Closes: #420597)
+
+ --
+
 openafs (1.4.4.dfsg1-2) unstable; urgency=low
 
   * Debian kernels as of 2.6.20 enable CONFIG_PARAVIRT, which redefines

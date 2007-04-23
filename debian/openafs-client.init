@@ -95,7 +95,7 @@ EOF
     fi
     LOADED=`/sbin/lsmod | fgrep openafs`
     if [ -z "$LOADED" ] ; then
-        modprobe openafs${MP}
+        modprobe openafs
         status=$?
         if [ $status = 0 ] ; then
             echo -n " openafs"
