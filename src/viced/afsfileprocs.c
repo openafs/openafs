@@ -1725,8 +1725,11 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
 		0;
 	Time += AFS_LOCKWAIT;
 	if (LockingType == LockRead) {
-	    if ( !(rights & PRSFS_LOCK) )
-		return(EACCES);
+	    if ( !(rights & PRSFS_LOCK) && 
+                 !(rights & PRSFS_WRITE) &&
+                 !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)) )
+                    return(EACCES);
+            return(EACCES);
 
 	    if (targetptr->disk.lock.lockCount >= 0) {
 		++(targetptr->disk.lock.lockCount);
