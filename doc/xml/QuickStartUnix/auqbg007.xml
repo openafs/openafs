@@ -1281,8 +1281,9 @@
       <para>In modern AFS installations, you should be using Kerberos v5
       for user login, and obtaining AFS tokens subsequent to this authentication
       step. OpenAFS does not currently distribute a PAM module allowing AFS 
-      tokens to be automatically gained at login. Whilst there are a number of
-      third party modules providing this functionality, it is not know if these 
+      tokens to be automatically gained at login. Some of these, such as
+      pam-krb5 and pam-afs-session from http://www.eyrie.org/~eagle/software/
+      or pam_afs2 from ftp://achilles.ctd.anl.gov/pub/DEE/pam_afs2-0.1.tar,
       have been tested with Solaris.</para>
 
       <para>If you are at a site which still requires 
