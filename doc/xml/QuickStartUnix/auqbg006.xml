@@ -54,8 +54,9 @@
       </listitem>
 
       <listitem>
-        <para>You can access the data on the AFS CD-ROMs, either through a local CD-ROM drive or via an NFS mount of a CD-ROM drive
-        attached to a machine that is accessible by network</para>
+        <para>You can access the data on the OpenAFS Binary Distribution for
+        your operating system, either on the local filesystem or via an NFS
+        mount of the distribution's contents.</para>
       </listitem>
     </itemizedlist></para>
 
@@ -73,14 +74,25 @@
     existing file server machine or is the first file server machine of its system type in your cell. The differences mostly concern
     the source for the needed binaries and files, and what portions of the Update Server you install: <itemizedlist>
         <listitem>
-          <para>On a new system type, you must load files and binaries from the AFS CD-ROM. You install the server portion of the
-          Update Server to make this machine the binary distribution machine for its system type.</para>
+          <para>On a new system type, you must load files and binaries from the 
+          OpenAFS distribution. You may install the server portion of the
+          Update Server to make this machine the binary distribution machine 
+          for its system type.</para>
         </listitem>
 
         <listitem>
-          <para>On an existing system type, you can copy files and binaries from a previously installed file server machine, rather
-          than from the CD-ROM. You install the client portion of the Update Server to accept updates of binaries, because a
-          previously installed machine of this type was installed as the binary distribution machine.</para>
+          <para>On an existing system type, you can copy files and binaries 
+          from a previously installed file server machine, rather
+          than from the OpenAFS distribution. You may install the client 
+          portion of the Update Server to accept updates of binaries, because a
+          previously installed machine of this type was installed as the binary 
+          distribution machine.</para>
+        </listitem>
+        <listitem>
+          <para>On some system types, distribtution of the appropriate binaries
+          may be acheived using the system's own package management system. In
+          these cases, it is recommended that this system is used, rather than
+          installing the binaries by hand.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -93,7 +105,8 @@
 
     <para>To install a new file server machine, perform the following procedures: <orderedlist>
         <listitem>
-          <para>Copy needed binaries and files onto this machine's local disk</para>
+          <para>Copy needed binaries and files onto this machine's local disk,
+          as required.</para>
         </listitem>
 
         <listitem>
@@ -114,42 +127,18 @@
         </listitem>
 
         <listitem>
-          <para>Start the appropriate portion of the Update Server</para>
+          <para>Start the appropriate portion of the Update Server, if 
+          required</para>
         </listitem>
 
         <listitem>
           <para>Start the <emphasis role="bold">fs</emphasis> process, which incorporates three component processes: the File
           Server, Volume Server, and Salvager</para>
         </listitem>
-
-        <listitem>
-          <para>Start the controller process (called <emphasis role="bold">runntp</emphasis>) for the Network Time Protocol Daemon,
-          which synchronizes clocks</para>
-        </listitem>
       </orderedlist></para>
 
     <para>After completing the instructions in this section, you can install database server functionality on the machine according
     to the instructions in <link linkend="HDRWQ114">Installing Database Server Functionality</link>. <indexterm>
-        <primary>CD-ROM</primary>
-
-        <secondary>creating /cdrom directory</secondary>
-
-        <tertiary>server machine after first</tertiary>
-      </indexterm> <indexterm>
-        <primary>cdrom directory</primary>
-
-        <secondary>server machine after first</secondary>
-      </indexterm> <indexterm>
-        <primary>file server machine, additional</primary>
-
-        <secondary>/cdrom directory</secondary>
-      </indexterm> <indexterm>
-        <primary>creating</primary>
-
-        <secondary>/cdrom directory</secondary>
-
-        <tertiary>server machine after first</tertiary>
-      </indexterm> <indexterm>
         <primary>usr/afs directory</primary>
 
         <secondary>server machine after first</secondary>
@@ -196,8 +185,12 @@
     <sect2 id="Header_99">
       <title>Creating AFS Directories and Performing Platform-Specific Procedures</title>
 
+      <para>If your operating systems AFS distribution is supplied as packages,
+      such as .rpms or .debs, you should just install those packages as detailed
+      in the previous chapter.</para>
+      
       <para>Create the <emphasis role="bold">/usr/afs</emphasis> and <emphasis role="bold">/usr/vice/etc</emphasis> directories on
-      the local disk. Subsequent instructions copy files from the AFS distribution CD-ROM into them, at the appropriate point for
+      the local disk. Subsequent instructions copy files from the AFS distribution into them, at the appropriate point for
       each system type.</para>
 
       <programlisting>
@@ -205,7 +198,7 @@
    # <emphasis role="bold">mkdir /usr/afs/bin</emphasis>
    # <emphasis role="bold">mkdir /usr/vice</emphasis>
    # <emphasis role="bold">mkdir /usr/vice/etc</emphasis>
-   # <emphasis role="bold">mkdir /cdrom</emphasis>     
+   # <emphasis role="bold">mkdir /tmp/afsdist</emphasis>     
 </programlisting>
 
       <para>As on the first file server machine, the initial procedures in installing an additional file server machine vary a good
@@ -300,10 +293,14 @@
             </indexterm>
 
             <listitem>
-              <para>Mount the AFS CD-ROM for AIX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-              mounting CD-ROMs (either locally or remotely via NFS), see your AIX documentation. Then change directory as indicated.
-              <programlisting>
-   # <emphasis role="bold">cd  /cdrom/rs_aix42/root.client/usr/vice/etc</emphasis>
+              <para>Unpack the distribution tarball. The examples below assume 
+              that you have unpacked the files into the 
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+              pick a different location, substitute this in all of the following 
+              examples. Once you have unpacked the distribution, 
+              change directory as indicated.
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
             </listitem>
 
@@ -426,12 +423,19 @@
             </listitem>
 
             <listitem>
-              <para>Move the AIX <emphasis role="bold">fsck</emphasis> program helper to a safe location and install the version
-              from the AFS distribution in its place. The AFS CD-ROM must still be mounted at the <emphasis
-              role="bold">/cdrom</emphasis> directory. <programlisting>
+              <para>On systems prior to AIX 5.1, move the AIX 
+              <emphasis role="bold">fsck</emphasis> program helper to a safe 
+              location and install the version from the AFS distribution in 
+              its place. Note that on AIX 5.1, and later, systems this step is
+              not required, and the <emphasis role="bold">v3fshelper</emphasis>
+              program is not shipped for these systems.</para>
+              
+              <para>The AFS binary distribution must still be available in the
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. 
+<programlisting>
    # <emphasis role="bold">cd /sbin/helpers</emphasis>
    # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
-   # <emphasis role="bold">cp -p /cdrom/rs_aix42/root.server/etc/v3fshelper v3fshelper</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/root.server/etc/v3fshelper v3fshelper</emphasis>
 </programlisting></para>
             </listitem>
 
@@ -454,7 +458,8 @@
 
         <para>If the machine's hardware and software configuration exactly matches another HP-UX machine on which AFS is already
         built into the kernel, you can copy the kernel from that machine to this one. In general, however, it is better to build AFS
-        modifications into the kernel on each machine according to the following instructions. <orderedlist>
+        modifications into the kernel on each machine according to the following instructions. 
+          <orderedlist>
             <indexterm>
               <primary>incorporating AFS kernel extensions</primary>
 
@@ -495,10 +500,14 @@
             </listitem>
 
             <listitem>
-              <para>Mount the AFS CD-ROM for HP-UX on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions
-              on mounting CD-ROMs (either locally or remotely via NFS), see your HP-UX documentation. Then change directory as
-              indicated. <programlisting>
-   # <emphasis role="bold">cd /cdrom/hp_ux110/root.client</emphasis>
+              <para>Unpack the OpenAFS HP-UX distribution tarball. The examples 
+              below assume that you have unpacked the files into the 
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+              pick a different location, substitute this in all of the following 
+              examples. Once you have unpacked the distribution, change 
+              directory as indicated.
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/root.client</emphasis>
 </programlisting></para>
             </listitem>
 
@@ -705,7 +714,7 @@
               <para>Copy the AFS-modified version of the <emphasis role="bold">fsck</emphasis> program (the <emphasis
               role="bold">vfsck</emphasis> binary) and related files from the distribution directory to the new AFS-specific command
               directory. <programlisting>
-   # <emphasis role="bold">cp -p /cdrom/hp_ux110/root.server/etc/*  .</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/root.server/etc/*  .</emphasis>
 </programlisting></para>
             </listitem>
 
@@ -796,10 +805,14 @@
             <listitem>
               <para>Prepare for incorporating AFS into the kernel by performing the following procedures. <orderedlist>
                   <listitem>
-                    <para>Mount the AFS CD-ROM for IRIX on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions
-                    on mounting CD-ROMs (either locally or remotely via NFS), see your IRIX documentation. Then change directory as
-                    indicated. <programlisting>
-   # <emphasis role="bold">cd  /cdrom/sgi_65/root.client</emphasis>
+                    <para>Unpack the OpenAFS IRIX distribution tarball. The 
+                    examples below assume that you have unpacked the files into 
+                    the <emphasis role="bold">/tmp/afsdist</emphasis> 
+                    directory. If you pick a different location, substitue this 
+                    in all of the following examples. Once you have unpacked 
+                    the distribution, change directory as indicated.
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/root.client</emphasis>
 </programlisting></para>
                   </listitem>
 
@@ -1150,7 +1163,34 @@
 
         <para>Begin by running the AFS initialization script to call the <emphasis role="bold">insmod</emphasis> program, which
         dynamically loads AFS modifications into the kernel. Then create partitions for storing AFS volumes. You do not need to
-        replace the Linux <emphasis role="bold">fsck</emphasis> program. <orderedlist>
+        replace the Linux <emphasis role="bold">fsck</emphasis> program.</para>
+        
+        <para> The procedure for starting up OpenAFS depends upon your distribution</para>
+          <orderedlist>
+            <listitem>
+              <para>For Fedora and RedHat Enterprise Linux systems (or their
+              derivateds), download and install the RPM set for your operating system
+              from the OpenAFS distribution site. You will need the
+              <emphasis role="bold">openafs</emphasis> and
+              <emphasis role="bold">openafs-server</emphasis> packages, along
+              with an <emphasis role="bold">openafs-kernel</emphasis> package
+              matching your current, running, kernel. If you wish to install
+              client functionality, you will also require the
+              <emphasis role="bold">openafs-client</emphasis> package.</para>
+             
+              <para>You can find the version of your current kernel by running
+<programlisting>
+  # uname -r
+<replaceable>2.6.20-1.2933.fc6</replaceable>
+</programlisting></para>
+ 
+              <para>Once downloaded, the packages may be installed with the
+              <emphasis role="bold">rpm</emphasis> command
+<programlisting>
+  # rpm -U openafs-* openafs-client-* openafs-server-* openafs-kernel-*
+</programlisting></para>
+            </listitem>
+            <listitem>
             <indexterm>
               <primary>incorporating AFS kernel extensions</primary>
 
@@ -1182,16 +1222,17 @@
 
               <tertiary>on add'l server machine</tertiary>
             </indexterm>
-
-            <listitem>
-              <para>Mount the AFS CD-ROM for Linux on the local <emphasis role="bold">/cdrom</emphasis> directory. For instructions
-              on mounting CD-ROMs (either locally or remotely via NFS), see your Linux documentation. Then change directory as
-              indicated. <programlisting>
-   # <emphasis role="bold">cd  /cdrom/i386_linux22/root.client/usr/vice/etc</emphasis>
+              <para>For systems which are provided as a tarball, or built from
+              source, unpack the distribution tarball. The examples below assume
+              that you have unpacked the files into the
+              <emphasis role="bold">/tmp/afsdist</emphasis>directory. If you
+              pick a different location, substitute this in all of the following
+              examples. Once you have unpacked the distribution,
+              change directory as indicated.
+<programlisting>
+  # <emphasis role="bold">cd /tmp/afsdist/linux/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
-            </listitem>
 
-            <listitem>
               <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/modload</emphasis> directory.
               The filenames for the libraries have the format <emphasis
               role="bold">libafs-</emphasis><replaceable>version</replaceable><emphasis role="bold">.o</emphasis>, where
@@ -1200,21 +1241,15 @@
               kernel. <programlisting>
    # <emphasis role="bold">cp -rp  modload  /usr/vice/etc</emphasis>
 </programlisting></para>
-            </listitem>
-
-            <listitem>
+            
               <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
               role="bold">/etc/rc.d/init.d</emphasis> on Linux machines). Note the removal of the <emphasis
               role="bold">.rc</emphasis> extension as you copy the script. <programlisting>
    # <emphasis role="bold">cp -p   afs.rc  /etc/rc.d/init.d/afs</emphasis> 
 </programlisting></para>
             </listitem>
-
             <listitem>
-              <para>Run the AFS initialization script to load AFS extensions into the kernel. You can ignore any error messages
-              about the inability to start the BOS Server or the Cache Manager or AFS client. <programlisting>
-   # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
-</programlisting> <indexterm>
+                <indexterm>
                   <primary>configuring</primary>
 
                   <secondary>AFS server partition on server machine after first</secondary>
@@ -1238,10 +1273,7 @@
                   <secondary>AFS server partition</secondary>
 
                   <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
+                </indexterm>
               <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS
               server partition you are configuring (there must be at least one). Repeat the command for each partition.
               <programlisting>
@@ -1284,7 +1316,7 @@
             <listitem>
               <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
             </listitem>
-          </orderedlist></para>
+          </orderedlist>
       </sect3>
 
       <sect3 id="HDRWQ107">
@@ -1326,10 +1358,14 @@
             </indexterm>
 
             <listitem>
-              <para>Mount the AFS CD-ROM for Solaris on the <emphasis role="bold">/cdrom</emphasis> directory. For instructions on
-              mounting CD-ROMs (either locally or remotely via NFS), see your Solaris documentation. Then change directory as
-              indicated. <programlisting>
-   # <emphasis role="bold">cd  /cdrom/sun4x_56/root.client/usr/vice/etc</emphasis>
+              <para>Unpack the OpenAFS Solaris distribution tarball. The examples
+              below assume that you have unpacked the files into the 
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+              pick a diferent location, substitute this in all of the following
+              exmaples. Once you have unpacked the distribution, change directory
+              as indicated. 
+<programlisting>
+   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
             </listitem>
 
@@ -1630,7 +1666,7 @@
           </indexterm>
 
           <indexterm>
-            <primary>CD-ROM</primary>
+            <primary>Binary Distribution</primary>
 
             <secondary>copying server files from</secondary>
 
@@ -1648,26 +1684,36 @@
           <listitem>
             <para>Copy file server binaries to the local <emphasis role="bold">/usr/afs/bin</emphasis> directory. <itemizedlist>
                 <listitem>
-                  <para>On a machine of an existing system type, you can either load files from the AFS CD-ROM or use a remote file
-                  transfer protocol to copy files from an existing server machine of the same system type. To load from the CD-ROM,
-                  see the instructions just following for a machine of a new system type. If using a remote file transfer protocol,
-                  copy the complete contents of the existing server machine's <emphasis role="bold">/usr/afs/bin</emphasis>
+                  <para>On a machine of an existing system type, you can either 
+                  copy files from the OpenAFS binary distribution or use a 
+                  remote file transfer protocol to copy files from an existing 
+                  server machine of the same system type. To load from the 
+                  binary distribution, see the instructions just following for 
+                  a machine of a new system type. If using a remote file 
+                  transfer protocol, copy the complete contents of the 
+                  existing server machine's 
+                  <emphasis role="bold">/usr/afs/bin</emphasis>
                   directory.</para>
                 </listitem>
 
                 <listitem>
-                  <para>On a machine of a new system type, you must use the following instructions to copy files from the AFS
-                  CD-ROM. <orderedlist>
+                  <para>If you are working from a tarball distribtion, rather
+                  than one distributed in a packaged format, you must use the 
+                  following instructions to copy files from 
+                  the OpenAFS Binary Distribution.
+                   <orderedlist>
                       <listitem>
-                        <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the AFS CD-ROM for this
-                        machine's system type, if it is not already. For instructions on mounting CD-ROMs (either locally or
-                        remotely via NFS), consult the operating system documentation.</para>
+                        <para>Unpack the distribution tarball. The examples 
+                        below assume that you have unpacked the files into the 
+                        <emphasis role="bold">/tmp/afsdist</emphasis> 
+                        directory. If you pick a different location, substitute
+                        this in all of the following examples.</para>
                       </listitem>
 
                       <listitem>
-                        <para>Copy files from the CD-ROM to the local <emphasis role="bold">/usr/afs</emphasis> directory.
+                        <para>Copy files from the distribution to the local <emphasis role="bold">/usr/afs</emphasis> directory.
                         <programlisting>
-   # <emphasis role="bold">cd /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
    # <emphasis role="bold">cp -rp  *  /usr/afs</emphasis>
 </programlisting></para>
                       </listitem>
@@ -1761,10 +1807,15 @@
           </listitem>
 
           <listitem>
-            <para>Copy the contents of the <emphasis role="bold">/usr/afs/etc</emphasis> directory from an existing file server
-            machine, using a remote file transfer protocol such as <emphasis role="bold">ftp</emphasis> or NFS. If you use a system
-            control machine, it is best to copy the contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory. If you
-            choose not to run a system control machine, copy the directory's contents from any existing file server machine.
+            <para>Copy the contents of the 
+            <emphasis role="bold">/usr/afs/etc</emphasis> directory from an 
+            existing file server machine, using a remote file transfer protocol 
+            such as <emphasis role="bold">sftp</emphasis> or 
+            <emphasis role="bold">scp</emphasis>. If you use a system
+            control machine, it is best to copy the contents of its 
+            <emphasis role="bold">/usr/afs/etc</emphasis> directory. If you
+            choose not to run a system control machine, copy the directory's 
+            contents from any existing file server machine.
             <indexterm>
                 <primary>BOS Server</primary>
 
@@ -1878,8 +1929,16 @@
           </listitem>
 
           <listitem>
-            <para><anchor id="LIWQ110" />Create an instance of the Update Server to handle distribution of the file server binaries
-            stored in the <emphasis role="bold">/usr/afs/bin</emphasis> directory. <itemizedlist>
+            <para><anchor id="LIWQ110" />Create an instance of the Update 
+            Server to handle distribution of the file server binaries
+            stored in the <emphasis role="bold">/usr/afs/bin</emphasis> 
+            directory. If your architecture using a package management system
+            such as 'rpm' or 'apt' to maintain its binaries, note that
+            distributing binaries via this system may interfere with your local
+            package management tools.
+            </para>
+            
+            <itemizedlist>
                 <listitem>
                   <para>If this is the first file server machine of its AFS system type, create the <emphasis
                   role="bold">upserver</emphasis> process as an instance of the server portion of the Update Server. It distributes
@@ -1907,14 +1966,14 @@
                   <para>By default, the Update Server performs updates every 300 seconds (five minutes). Use the <emphasis
                   role="bold">-t</emphasis> argument to specify an different number of seconds.</para>
 
-                  <programlisting>
+<programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">upclientbin simple</emphasis>  \ 
         <emphasis role="bold">"/usr/afs/bin/upclient</emphasis> &lt;<replaceable>binary distribution machine</replaceable>&gt;   \
         [<emphasis role="bold">-t</emphasis> &lt;<replaceable>time</replaceable>&gt;] <emphasis role="bold">-clear /usr/afs/bin" -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
                       role="bold">-noauth</emphasis>
 </programlisting>
                 </listitem>
-              </itemizedlist></para>
+              </itemizedlist>
 
             <indexterm>
               <primary>runntp process</primary>
@@ -1944,6 +2003,16 @@
           </listitem>
 
           <listitem>
+          
+            <note>
+              <para>Historically, AFS provided its own version of the
+              Network Time Protocol Daemon. Whilst this is still provided for
+              existing sites, we recommend that you configure and run your
+              own timeservice independently of AFS. The instructions below are
+              provided for those sites still reliant upon OpenAFS's ntp system.
+              </para>
+            </note>
+            
             <para>Start the <emphasis role="bold">runntp</emphasis> process, which configures the Network Time Protocol Daemon
             (NTPD) to choose a database server machine chosen randomly from the local <emphasis
             role="bold">/usr/afs/etc/CellServDB</emphasis> file as its time source. In the standard configuration, the first
@@ -2076,7 +2145,7 @@
       role="bold">/usr/afsws</emphasis> to the appropriate location in the AFS file tree) on this machine itself. If you also want
       to create AFS volumes to house UNIX system binaries for the new system type, see <link linkend="HDRWQ88">Storing System
       Binaries in AFS</link>. <indexterm>
-          <primary>CD-ROM</primary>
+          <primary>Binary Distribution</primary>
 
           <secondary>copying client files from</secondary>
 
@@ -2097,20 +2166,31 @@
           <listitem>
             <para>Copy client binaries and files to the local disk. <itemizedlist>
                 <listitem>
-                  <para>On a machine of an existing system type, you can either load files from the AFS CD-ROM or use a remote file
-                  transfer protocol to copy files from an existing server machine of the same system type. To load from the CD-ROM,
-                  see the instructions just following for a machine of a new system type. If using a remote file transfer protocol,
-                  copy the complete contents of the existing client machine's <emphasis role="bold">/usr/vice/etc</emphasis>
+                  <para>On a machine of an existing system type, you can either 
+                  load files from the OpenAFS Binary Distribution or use a 
+                  remote file transfer protocol to copy files from an existing 
+                  server machine of the same system type. To load from the
+                  binary distribution, see the instructions just following 
+                  for a machine of a new system type. If using a remote file 
+                  transfer protocol, copy the complete contents of the existing 
+                  client machine's 
+                  <emphasis role="bold">/usr/vice/etc</emphasis> 
                   directory.</para>
                 </listitem>
 
                 <listitem>
-                  <para>On a machine of a new system type, you must use the following instructions to copy files from the AFS
-                  CD-ROM. <orderedlist>
+                  <para>On a machine of a new system type, you must use the 
+                  following instructions to copy files from the OpenAFS
+                  Binary Distribution. If your distribution is provided in
+                  a packaged format, then simply installing the packages will
+                  perform the necessary actions.
+                    <orderedlist>
                       <listitem>
-                        <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the AFS CD-ROM for this
-                        machine's system type, if it is not already. For instructions on mounting CD-ROMs (either locally or
-                        remotely via NFS), consult the operating system documentation.</para>
+                        <para>Unpack the distribution tarball. The examples 
+                        below assume that you have unpacked the files into the 
+                        <emphasis role="bold">/tmp/afsdist</emphasis> 
+                        directory. If you pick a different location, substitute
+                        this in all of the following examples.</para>
                       </listitem>
 
                       <listitem>
@@ -2132,7 +2212,7 @@
                         command.</para>
 
                         <programlisting>
-   # <emphasis role="bold">cd /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp -p  *  /usr/vice/etc</emphasis>
    # <emphasis role="bold">cp -rp  C  /usr/vice/etc</emphasis>
 </programlisting>
@@ -2222,9 +2302,14 @@
           </listitem>
 
           <listitem>
-            <para>Create the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file. Use a network file transfer program
-            such as <emphasis role="bold">ftp</emphasis> or NFS to copy it from one of the following sources, which are listed in
-            decreasing order of preference: <itemizedlist>
+            <para>Create the 
+            <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file. 
+            Use a network file transfer program such as 
+            <emphasis role="bold">sftp</emphasis> or 
+            <emphasis role="bold">scp</emphasis> to copy it from 
+            one of the following sources, which are listed in
+            decreasing order of preference: 
+              <itemizedlist>
                 <listitem>
                   <para>Your cell's central <emphasis role="bold">CellServDB</emphasis> source file (the conventional location is
                   <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
@@ -2232,8 +2317,8 @@
                 </listitem>
 
                 <listitem>
-                  <para>The global <emphasis role="bold">CellServDB</emphasis> file maintained by the AFS Product Support
-                  group</para>
+                  <para>The global <emphasis role="bold">CellServDB</emphasis> 
+                  file maintained at grand.central.org</para>
                 </listitem>
 
                 <listitem>
@@ -2241,12 +2326,16 @@
                 </listitem>
 
                 <listitem>
-                  <para>The <emphasis role="bold">CellServDB.sample</emphasis> file included in the
-                  <replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis> directory of each AFS
-                  CD-ROM; add an entry for the local cell by following the instructions in <link linkend="HDRWQ66">Creating the
-                  Client CellServDB File</link></para>
+                  <para>The <emphasis role="bold">CellServDB.sample</emphasis> 
+                  file included in the 
+                  <replaceable>sysname</replaceable><emphasis role="bold">/root.client/usr/vice/etc</emphasis> 
+                  directory of each OpenAFS distribution; add an entry for the 
+                  local cell by following the instructions in 
+                  <link linkend="HDRWQ66">Creating the Client CellServDB File</link>
+                  </para>
                 </listitem>
-              </itemizedlist></para>
+              </itemizedlist>
+            </para>
 
             <indexterm>
               <primary>cache</primary>
@@ -2357,7 +2446,7 @@
           </listitem>
 
           <listitem>
-            <para>On Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
+            <para>On non-packaged Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
             role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory,
             removing the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
    # <emphasis role="bold">cp /usr/vice/etc/afs.conf /etc/sysconfig/afs</emphasis>
@@ -2381,9 +2470,17 @@
                 </listitem>
 
                 <listitem>
-                  <para>On Linux systems, <emphasis role="bold">/etc/sysconfig/afs</emphasis> (the <emphasis
+                  <para>On Fedora and RHEL systems, 
+                  <emphasis role="bold">/etc/sysconfig/openafs</emphasis>. 
+                  Note that this file has a different format from a standard 
+                  afsd options file.</para>
+                </listitem>
+                
+                <listitem>
+                  <para>On non-packaged Linux systems, <emphasis role="bold">/etc/sysconfig/afs</emphasis> (the <emphasis
                   role="bold">afsd</emphasis> options file)</para>
                 </listitem>
+                
 
                 <listitem>
                   <para>On Solaris systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
@@ -2393,10 +2490,11 @@
             <para>Use one of the methods described in <link linkend="HDRWQ70">Configuring the Cache Manager</link> to add the
             following flags to the <emphasis role="bold">afsd</emphasis> command line. If you intend for the machine to remain an
             AFS client, also set any performance-related arguments you wish. <itemizedlist>
+                <!-- nosetime is now the default
                 <listitem>
                   <para>Add the <emphasis role="bold">-nosettime</emphasis> flag, because this is a file server machine that is also
                   a client.</para>
-                </listitem>
+                </listitem> -->
 
                 <listitem>
                   <para>Add the <emphasis role="bold">-memcache</emphasis> flag if the machine is to use a memory cache.</para>
@@ -2405,6 +2503,13 @@
                 <listitem>
                   <para>Add the <emphasis role="bold">-verbose</emphasis> flag to display a trace of the Cache Manager's
                   initialization on the standard output stream.</para>
+                </listitem>
+                <listitem>
+                  <para>Add the <emphasis role="bold">--dynroot</emphasis> or
+                  <emphasis role="bold">--afsdb</emphasis> options if you
+                  wish to have a synthetic AFS root, as discussed in
+                  <link linkend="HDRWQ91">Enabling Access to Foreign Cells</link>
+                  </para>
                 </listitem>
               </itemizedlist></para>
           </listitem>
@@ -2681,6 +2786,42 @@
               <tertiary>on add'l server machine</tertiary>
             </indexterm>
 
+            <para><emphasis role="bold">On Fedora or RHEL Linux systems:</emphasis> 
+              <orderedlist>
+                <listitem>
+                  <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
+ <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Run the OpenAFS initialization scripts. <programlisting>
+   # <emphasis role="bold">/etc/rc.d/init.d/openafs-client  start</emphasis>
+   # <emphasis role="bold">/etc/rc.d/init.d/openafs-server  start</emphasis>
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Issue the <emphasis role="bold">chkconfig</emphasis> 
+                  command to activate the 
+                  <emphasis role="bold">openafs-client</emphasis> and 
+                  <emphasis role="bold">openafs-server</emphasis> configuration 
+                  variables. Based on the instruction in the AFS initialization 
+                  files that begins with the string 
+                  <computeroutput>#chkconfig</computeroutput>, the command 
+                  automatically creates the symbolic links that incorporate the 
+                  script into the Linux startup and shutdown sequence. 
+<programlisting>
+   # <emphasis role="bold">/sbin/chkconfig  --add openafs-client</emphasis>
+   # <emphasis role="bold">/sbin/chkconfig  --add openafs-server</emphasis>
+</programlisting></para>
+                </listitem>
+              </orderedlist>
+            </para>
             <para><emphasis role="bold">On Linux systems:</emphasis> <orderedlist>
                 <listitem>
                   <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
@@ -2693,7 +2834,7 @@
                 </listitem>
 
                 <listitem>
-                  <para>Run the AFS initialization script. <programlisting>
+                  <para>Run the OpenAFS initialization script. <programlisting>
    # <emphasis role="bold">/etc/rc.d/init.d/afs  start</emphasis>
 </programlisting></para>
                 </listitem>
@@ -2766,7 +2907,7 @@
                   <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
                   <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/init.d</emphasis> directories. If
                   you want to avoid potential confusion by guaranteeing that they are always the same, create a link between them.
-                  You can always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+                  You can always retrieve the original script from the OpenAFS Binary Distribution if necessary. <programlisting>
    # <emphasis role="bold">cd /usr/vice/etc</emphasis>
    # <emphasis role="bold">rm afs.rc</emphasis>
    # <emphasis role="bold">ln -s  /etc/init.d/afs  afs.rc</emphasis>
@@ -2806,7 +2947,7 @@
     <title>Installing Database Server Functionality</title>
 
     <para>This section explains how to install database server functionality. Database server machines have two defining
-    characteristics. First, they run the Authentication Server, Protection Server, and Volume Location (VL) Server processes. They
+    characteristics. First, they run the Protection Server, and Volume Location (VL) Server processes. They
     also run the Backup Server if the cell uses the AFS Backup System, as is assumed in these instructions. Second, they appear in
     the <emphasis role="bold">CellServDB</emphasis> file of every machine in the cell (and of client machines in foreign cells, if
     they are to access files in this cell).</para>
@@ -2824,7 +2965,7 @@
           Guide</emphasis> about maintaining server encryption keys.</para>
 
           <para>The instructions in this section assume that the machine on which you are installing database server functionality
-          is already a file server machine. Contact the AFS Product Support group to learn how to install database server
+          is already a file server machine. Contact the OpenAFS mailing list to learn how to install database server
           functionality on a non-file server machine.</para>
         </listitem>
 
@@ -2898,7 +3039,7 @@
           </listitem>
 
           <listitem>
-            <para>Start the database server processes (Authentication Server, Backup Server, Protection Server, and Volume Location
+            <para>Start the database server processes (Backup Server, Protection Server, and Volume Location
             Server)</para>
           </listitem>
 
@@ -2907,8 +3048,15 @@
           </listitem>
 
           <listitem>
-            <para>Notify the AFS Product Support group that you have installed a new database server machine</para>
+            <para>If required, request that grand.central.org add details of 
+            your new database server machine to the global CellServDB</para>
           </listitem>
+          
+          <listitem>
+            <para>If required, add details of your new database server to the
+            AFS database location records in your site's DNS</para>
+          </listitem>
+          
         </orderedlist></para>
 
       <indexterm>
@@ -2945,10 +3093,13 @@
       <orderedlist>
         <listitem>
           <para>You can perform the following instructions on either a server or client machine. Login as an AFS administrator who
-          is listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file on all server machines. <programlisting>
-   % <emphasis role="bold">klog</emphasis> <replaceable>admin_user</replaceable>
+          is listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file on all server machines. 
+<programlisting> 
+   % <emphasis role="bold">kinit</emphasis> <replaceable>admin_user</replaceable>
    Password: <replaceable>admin_password</replaceable>
-</programlisting></para>
+   % <emphasis role="bold">aklog</emphasis>
+</programlisting>
+          </para>
         </listitem>
 
         <listitem>
@@ -3063,19 +3214,8 @@
           option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
           without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
-          newcell</emphasis> command. <indexterm>
-              <primary>Authentication Server</primary>
-
-              <secondary>starting</secondary>
-
-              <tertiary>new db-server machine</tertiary>
-            </indexterm> <indexterm>
-              <primary>starting</primary>
-
-              <secondary>Authentication Server</secondary>
-
-              <tertiary>new db-server machine</tertiary>
-            </indexterm> <indexterm>
+          newcell</emphasis> command. 
+            <indexterm>
               <primary>database server machine</primary>
 
               <secondary>starting database server processes</secondary>
@@ -3093,27 +3233,25 @@
               <tertiary>database server machine</tertiary>
             </indexterm></para>
         </listitem>
-
+        
         <listitem>
-          <para><anchor id="LIWQ118" />Start the Authentication Server (the <emphasis role="bold">kaserver</emphasis> process).
-          <programlisting>
-   % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver simple /usr/afs/bin/kaserver</emphasis>
-</programlisting> <indexterm>
-              <primary>Backup Server</primary>
-
-              <secondary>starting</secondary>
-
-              <tertiary>new db-server machine</tertiary>
-            </indexterm> <indexterm>
-              <primary>starting</primary>
-
-              <secondary>Backup Server</secondary>
-
-              <tertiary>new db-server machine</tertiary>
-            </indexterm></para>
+          <para>If you are running a cell which still relies upon
+          <emphasis role="bold">kaserver</emphasis> see 
+          <link linkend="KAS010">Starting the Authentication Service</link>
+          for an additional installation step.</para>
         </listitem>
 
         <listitem>
+          <indexterm>
+            <primary>Backup Server</primary>
+            <secondary>starting</secondary>
+            <tertiary>new db-server machine</tertiary>
+          </indexterm> <indexterm>
+            <primary>starting</primary>
+            <secondary>Backup Server</secondary>
+            <tertiary>new db-server machine</tertiary>
+          </indexterm>
+
           <para><anchor id="LIWQ119" />Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
           perform other configuration procedures before actually using the AFS Backup System, as detailed in the <emphasis>OpenAFS
           Administration Guide</emphasis>. <programlisting>
@@ -3218,12 +3356,15 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ124" />Send the new database server machine's name and IP address to the AFS Product Support
-          group.</para>
-
-          <para>If you wish to participate in the AFS global name space, your cell's entry appear in a <emphasis
-          role="bold">CellServDB</emphasis> file that the AFS Product Support group makes available to all AFS sites. Otherwise,
-          they list your cell in a private file that they do not share with other AFS sites.</para>
+          <para><anchor id="LIWQ124" />If you wish to participate in the AFS
+          global name space, send the new database server machine's name and 
+          IP address to grand.central.org. Do so, by emailing an updated
+          <emphasis role="bold">CellServDB</emphasis> fragment for your cell
+          to cellservdb@grand.central.org</para>
+          <para>More details on the registration procedures for the
+          CellServDB maintained by grand.central.org are available from
+          <ulink url="http://grand.central.org/csdb.html">
+          http://grand.central.org/csdb.html</ulink></para>
         </listitem>
       </orderedlist>
 
@@ -3267,7 +3408,9 @@
           </listitem>
 
           <listitem>
-            <para>Notify the AFS Product Support group that you are decommissioning a database server machine</para>
+            <para>If you participate in the global AFS namespace, notify
+            grand.central.org that you are decommissioning a database server 
+            machine</para>
           </listitem>
 
           <listitem>
@@ -3307,9 +3450,11 @@
       <orderedlist>
         <listitem>
           <para>You can perform the following instructions on either a server or client machine. Login as an AFS administrator who
-          is listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file on all server machines. <programlisting>
-   % <emphasis role="bold">klog</emphasis> <replaceable>admin_user</replaceable>
+          is listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file on all server machines. 
+<programlisting>
+   % <emphasis role="bold">kinit</emphasis> <replaceable>admin_user</replaceable>
    Password: <replaceable>admin_password</replaceable>
+   % <emphasis role="bold">aklog</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -3325,11 +3470,11 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ126" />Send the revised list of your cell's database server machines to the AFS Product Support
-          group.</para>
+          <para><anchor id="LIWQ126" />If your cell is included in the global
+          <emphasis role="bold">CellServDB</emphasis>, send the revised list of 
+          your cell's database server machines to grand.central.org</para>
 
-          <para>This step is particularly important if your cell is included in the global <emphasis
-          role="bold">CellServDB</emphasis> file. If the administrators in foreign cells do not learn about the change in your cell,
+          <para>If the administrators in foreign cells do not learn about the change in your cell,
           they cannot update the <emphasis role="bold">CellServDB</emphasis> file on their client machines. Users in foreign cells
           continue to send database requests to the decommissioned machine, which creates needless network traffic and activity on
           the machine. Also, the users experience time-out delays while their request is forwarded to a valid database server
@@ -3492,7 +3637,7 @@
           delete</emphasis> command to remove the entries for database server processes from the <emphasis
           role="bold">BosConfig</emphasis> file. This step is unnecessary if you plan to restart the database server functionality
           on this machine in future. <programlisting>
-   % <emphasis role="bold">bos delete</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver buserver ptserver vlserver</emphasis>
+   % <emphasis role="bold">bos delete</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver ptserver vlserver</emphasis>
 </programlisting> <indexterm>
               <primary>commands</primary>
 
@@ -3520,7 +3665,7 @@
 
         <listitem>
           <para><anchor id="LIWQ132" />Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
-          machine in the cell, to restart the Authentication, Backup, Protection, and VL Servers. This forces the election of a Ubik
+          machine in the cell, to restart the Backup, Protection, and VL Servers. This forces the election of a Ubik
           coordinator for each process, ensuring that the remaining database server processes recognize that the machine is no
           longer a database server.</para>
 
@@ -3531,7 +3676,7 @@
           the lowest IP address.</para>
 
           <programlisting>
-   %  <emphasis role="bold">bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver buserver ptserver vlserver</emphasis>    
+   %  <emphasis role="bold">bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver ptserver vlserver</emphasis>    
 </programlisting>
 
           <para>If an error occurs, restart all server processes on the database server machines again by using one of the following

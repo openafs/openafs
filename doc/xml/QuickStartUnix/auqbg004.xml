@@ -21,6 +21,13 @@
   <para>If you are already running a version of AFS, consult the upgrade
   instructions in the <citetitle>OpenAFS Release Notes</citetitle> before
   proceeding with the installation.</para>
+  
+  <para>If you are working with an existing cell that uses
+  <emphasis role="bold">kaserver</emphasis> or external Kerberos v4 for
+  authentication, please see the notes in 
+  <link linkend="KAS001">kaserver and legacy Kerberos 5 authentication</link>
+  and the rest of Appendix B for how the installation
+  steps will differ from those described in the rest of this guide.</para>
 
   <sect1 id="HDRWQ7">
     <title>The Procedures Described in this Guide</title>
@@ -134,7 +141,13 @@
         <title>Building AFS from Source Code</title>
 
         <para>See <link linkend="HDRWQ163">Appendix A, Building AFS from
-        Source Code</link>.
+        Source Code</link></para>
+      </sect3>
+      
+      <sect3 id="Header_17a">
+        <title>Configuring Legacy Components</title>
+        <para>See <link linkend="Legacy">Appendix B, Configuring Legacy
+        Components</link>
           <indexterm>
             <primary>background reading list</primary>
           </indexterm>
@@ -276,12 +289,19 @@
       <itemizedlist>
         <listitem>
           <para>You must have a Kerberos 5 realm running for your site, and
-          the ability to create new principals within that realm</para>
+          the ability to create new principals within that realm. If you are
+          working with an existing cell using <emphasis>kaserver</emphasis>
+          or Kerberos v4 authentication, please see 
+          <link linkend="KAS001">kaserver and legacy Kerberos 4 authentication</link> 
+          for modifications to the following instructions.</para>
         </listitem>
 
         <listitem>
           <para>You must have a NTP, or similar, timeservice running. Each AFS
-          machine should derive its system time from this timeservice</para>
+          machine should derive its system time from this timeservice. If you
+          are working with an existing cell, and wish to use AFS's internal
+          time service, please see Appendix B for modifications to the following
+          instructions.</para>
         </listitem>
 
         <listitem>

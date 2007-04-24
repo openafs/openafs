@@ -13,7 +13,7 @@
 BOOK = auqbg000.xml
 IDX = auqbg009.xml
 SRCS = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
-	auqbg007.xml auqbg008.xml
+	auqbg007.xml auqbg008.xml appendix.xml
 FLAGS = -e no-idref
 
 all: pdf html

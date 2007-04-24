@@ -1,0 +1,1676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appendix id="Legacy">
+  <title>Appendix B. Configuring Legacy Components</title>
+  
+  <para>This chapter describes how to configure a number of deprecated 
+  components in OpenAFS. Whilst these components are not recommended for sites
+  performing new installations, it is recognised that there are a number of
+  installations which have not yet transitioned from using these, for whom
+  continued provision of installation instructions my be useful</para>
+  
+  <sect1 id="KAS001">
+    <title>kaserver and Legacy Kerberos 4 Authentication</title>
+    
+    <para>This section contains instructions for installing server and client
+    machines in sites which use either the deprecated AFS 
+    <emphasis role="bold">kaserver</emphasis> or legacy Kerberos 4 
+    authentication systems</para>
+    
+    <para>This should be used in conjuction with the installation instructures
+    in earlier chapters, whose format it mirrors.</para>
+    
+    <sect2 id="KAS002">
+      <title>Background</title>
+      
+      <para>As detailed in the OpenAFS "No more DES" roadmap, OpenAFS is moving
+      away from the single DES based security models of both 
+      <emphasis role="bold">kaserver</emphasis> and external Kerberos 4 KDCs, 
+      in favour of using external, Kerberos 5 KDCs for authentication.</para>
+      
+      <para>AFS version 3 was designed and implemented during the late 80s and 
+      early 90s when the state of the art in distributed computer 
+      authentication and data security was Kerberos 4 and single DES. The 
+      RXKAD security class was specified to use a single DES key and the kauth 
+      authentication protocol is a derivative of MIT's Kerberos 4 protocol.
+      </para>
+
+      <para>For the better part of the last decade there has been concern 
+      regarding the cryptographic strength of the DES cipher when used as a 
+      building block within systems intended to prove authentication and/or 
+      data integrity and privacy. Kerberos 4 and RXKAD are not extensible and 
+      cannot negotiate non-DES key types. As a result efforts to migrate away 
+      from Kerberos 4 based authentication at higher risk organizations have 
+      been underway since the mid to late 90s. Ken Hornstein issued the first 
+      of his Kerberos 5 migration kits for AFS in May 1999. </para>
+      
+      <para>In March 2003, the continued use of single DES and kauth as the 
+      basis for OpenAFS security became a real-world threat when a significant 
+      Kerberos 4 crossrealm vulnerability was published. The OpenAFS community 
+      was notified in security advisory OPENAFS-SA-2003-001 which can be 
+      found at http://www.openafs.org/security.</para>
+
+      <para>As a result of the mounting concerns regarding the strength of 
+      DES, NIST announced in May 2003 the withdrawal of FIPS 43-3 
+      "Data Encryption Standard (DES)" as well as the associated FIPS 74 and 
+      FIPS 81. In other words, NIST announced that DES and its derivatives 
+      could no longer be used by the United States Government and should no 
+      longer by those that trust its lead.</para>
+
+      <para>In July 2003 MIT announced the end of life of the Kerberos 4 
+      protocol which is distributed for backward compatibility as part of the 
+      MIT Kerberos 5 distribution.</para>
+    </sect2>
+    <sect2 id="KAS003">
+      <title>Using this Appendix</title>
+      
+      <para>This appendix should be read in conjunction with the instructions
+      contained in the earlier chapters. It contains additions and in some 
+      cases, modifications, to the directions contained in those
+      chapters. It is organised into 3 main sections, corresponding to the
+      topics of the earlier chapters.
+      <orderedlist>
+        <listitem>
+          <para>Installing the First AFS Machine</para>
+        </listitem>
+        <listitem>
+          <para>Installing Additional Server Machines</para>
+        </listitem>
+        <listitem>
+          <para>Installing Additonal Client Machines</para>
+        </listitem>
+      </orderedlist></para>
+        
+      <para>There is an additional section on installing AFS login
+      functionality, which is relevant to all machines which are operating as
+      AFS clients</para>
+        
+      <para>In addition, some general substitions should be made
+      <itemizedlist>
+        <listitem>
+          <para>References to <emphasis role="bold">kinit</emphasis>and
+          <emphasis role="bold">aklog</emphasis> should be replaced with
+          a single call to <emphasis role="bold">klog</emphasis></para>
+          <para>For example
+<programlisting>
+   # <emphasis role="bold">kinit admin</emphasis>
+   Password:  <replaceable>admin_passwd</replaceable>
+   # <emphasis role="bold">aklog</emphasis> 
+</programlisting>
+          becomes
+<programlisting>
+   # <emphasis role="bold">kinit admin</emphasis>
+   Password:  <replaceable>admin_passwd</replaceable>
+</programlisting></para>
+        </listitem>
+      </itemizedlist></para>
+    </sect2>
+    <sect2 id="KAS003a">
+      <title>Installing the First AFS machine</title>
+        
+      <para>This section details changes to the installation procedure for the
+      first AFS machine which are required in order to use 
+      <emphasis role="bold">kaserver</emphasis> for authentication. As 
+      detailed above, new sites are strongly discouraged from deploying 
+      kaserver.</para>
+      
+      <para>The structure of this section follows the structure of the
+      earlier chapter.</para>
+        
+      <sect3 id="F">
+        <title>Overview: Installing Server Functionality</title>
+          
+        <para>In adddition to the items described, you must also create
+        the Authentication Server as a database server process. The procedure
+        for creating the initial security mechanisms is also changed.</para>
+      </sect3>
+        
+      <sect3 id="KAS006">
+        <title>Starting the kaserver Database Server Process</title>
+        <indexterm>
+          <primary>Authentication Server</primary>
+          <secondary>starting</secondary>
+          <tertiary>first AFS machine</tertiary>
+        </indexterm>
+        <indexterm>
+          <primary>first AFS machine</primary>
+          <secondary>Authentication Server</secondary>
+        </indexterm>
+        <indexterm>
+          <primary>kaserver process</primary>
+          <see>Authentication Server</see>
+        </indexterm>
+        <indexterm>
+          <primary>starting</primary>
+          <secondary>Authentication Server</secondary>
+          <tertiary>first AFS machine</tertiary>
+        </indexterm>
+          
+        <para>In addition to the database server processes described, you
+        must also use the <emphasis role="bold">bos create</emphasis> command
+        to create an entry for the following process, which runs on database
+        server machines only:
+        <itemizedlist>
+          <listitem>
+            <para>The Authentication Server 
+            (the <emphasis role="bold">kaserver</emphasis> process) maintains 
+            the Authentication Database</para>
+          </listitem>
+        </itemizedlist></para>
+          
+        <para>The following instructions include the 
+        <emphasis role="bold">-cell</emphasis> argument on all applicable
+        commands. Provide the cell name you assigned in 
+        <link linkend="HDRWQ51">Defining Cell Name and Membership for Server
+        Processes</link>. If a command appears on multiple lines, it is 
+        only for legibility. The following commands should run before any of
+        the <emphasis role="bold">bos create</emphasis> commands detailed in
+        <link linkend="HDRWQ52">Starting the Database Server Processes</link>.
+        </para>
+        
+        <orderedlist>
+          <listitem>
+            <para>
+            <indexterm>
+              <primary>commands</primary>
+              <secondary>bos create</secondary>
+            </indexterm>
+            <indexterm>
+              <primary>bos commands</primary>
+              <secondary>create</secondary>
+            </indexterm> 
+            Issue the <emphasis role="bold">bos create</emphasis> 
+            command to start the Authentication Server. The current
+            working directory is still 
+            <emphasis role="bold">/usr/afs/bin</emphasis>. 
+<programlisting>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver simple /usr/afs/bin/kaserver</emphasis>  \
+ <emphasis role="bold">                 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>   
+</programlisting>
+            </para>
+
+            <para>You can safely ignore the messages that tell you to add 
+            Kerberos to the <emphasis role="bold">/etc/services</emphasis> 
+            file; AFS uses a default value that makes the addition 
+            unnecessary. You can also ignore messages about the failure of 
+            authentication.</para>
+          </listitem>
+          <listitem>
+            <para>Return to <link linkend="HDRWQ52">Starting the Database Server
+            Processes</link> and follow the remaining instructions</para>
+           </listitem>
+        </orderedlist>
+      </sect3>
+      <sect3 id="KAS007">
+        <title>Initialising Cell Security with kaserver </title>
+        
+        <note>
+          <para>The following instructions should be followed in place of
+          those in <link linkend="HDRWQ53">Initializing Cell Security</link>
+          </para>
+        </note>
+          
+        <para>Begin by creating the following two initial entries in the 
+        Authentication Database: 
+        <itemizedlist>
+          <listitem>
+            <para>A generic administrative account, called 
+            <emphasis role="bold">admin</emphasis> by convention. If you 
+            choose to assign a different name, substitute it throughout the 
+            remainder of this document.</para>
+              
+            <para>After you complete the installation of the first machine, 
+            you can continue to have all administrators use the 
+            <emphasis role="bold">admin</emphasis> account, or you can create 
+            a separate administrative account for each of them. The latter 
+            scheme implies somewhat more overhead, but provides a more 
+            informative audit trail for administrative operations.</para>
+          </listitem>
+
+          <listitem>
+            <para>The entry for AFS server processes, called 
+            <emphasis role="bold">afs</emphasis>. No user logs in under this
+            identity, but the Authentication Server's Ticket Granting Service 
+            (TGS) module uses the associated key to encrypt the server 
+            tickets that it grants to AFS clients for presentation to server 
+            processes during mutual authentication. (The chapter in the 
+            <emphasis>OpenAFS Administration Guide</emphasis> about cell 
+            configuration and administration describes the role of server 
+            encryption keys in mutual authentication.)</para>
+
+            <para>In Step <link linkend="AppendixLIWQ58">7</link>, you also 
+            place the initial AFS server encryption key into the <emphasis
+            role="bold">/usr/afs/etc/KeyFile</emphasis> file. The AFS server 
+            processes refer to this file to learn the server
+            encryption key when they need to decrypt server tickets.</para>
+          </listitem>
+        </itemizedlist>
+        </para>
+
+          <para>You also issue several commands that enable the new 
+          <emphasis role="bold">admin</emphasis> user to issue privileged
+          commands in all of the AFS suites.</para>
+
+          <para>The following instructions do not configure all of the security 
+          mechanisms related to the AFS Backup System. See the chapter in the 
+          <emphasis>OpenAFS Administration Guide</emphasis> about configuring 
+          the Backup System. 
+          <orderedlist>
+            <indexterm>
+              <primary>commands</primary>
+              <secondary>kas (interactive)</secondary>
+            </indexterm>
+
+            <indexterm>
+              <primary>kas commands</primary>
+              <secondary>interactive mode, entering</secondary>
+            </indexterm>
+
+            <indexterm>
+              <primary>interactive mode for kas</primary>
+              <secondary>entering</secondary>
+            </indexterm>
+            
+            <listitem>
+              <para>Enter <emphasis role="bold">kas</emphasis> interactive 
+              mode. Because the machine is in no-authorization checking
+              mode, include the <emphasis role="bold">-noauth</emphasis> flag
+              to suppress the Authentication Server's usual prompt for a
+              password. 
+<programlisting>
+   # <emphasis role="bold">kas  -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis> 
+   ka&gt;
+</programlisting> 
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>kas create</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>kas commands</primary>
+                <secondary>create</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>server encryption key</primary>
+                <secondary>in Authentication Database</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>creating</primary>
+                <secondary>server encryption key</secondary>
+                <tertiary>Authentication Database</tertiary>
+              </indexterm>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="AppendixLIWQ54" />Issue the 
+              <emphasis role="bold">kas create</emphasis> command to create 
+              Authentication Database entries called 
+              <emphasis role="bold">admin</emphasis> and 
+              <emphasis role="bold">afs</emphasis>.</para>
+
+              <para>Do not provide passwords on the command line. Instead 
+              provide them as <replaceable>afs_passwd</replaceable> and
+              <replaceable>admin_passwd</replaceable> in response to the 
+              <emphasis role="bold">kas</emphasis> command interpreter's
+              prompts as shown, so that they do not appear on the standard 
+              output stream.</para>
+
+              <para>You need to enter the <replaceable>afs_passwd</replaceable> 
+              string only in this step and in Step 
+              <link linkend="AppendixLIWQ58">7</link>, so provide a value that 
+              is as long and complex as possible, preferably including numerals,
+              punctuation characters, and both uppercase and lowercase letters. 
+              Also make the <replaceable>admin_passwd</replaceable> as
+              long and complex as possible, but keep in mind that 
+              administrators need to enter it often. Both passwords must be 
+              at least six characters long.</para>
+
+<programlisting>
+   ka&gt; <emphasis role="bold">create afs</emphasis> 
+   initial_password:  <replaceable>afs_passwd</replaceable>
+   Verifying, please re-enter initial_password: <replaceable>afs_passwd</replaceable>
+   ka&gt; <emphasis role="bold">create admin</emphasis>
+   initial_password: <replaceable>admin_passwd</replaceable>
+   Verifying, please re-enter initial_password: <replaceable>admin_passwd</replaceable>
+</programlisting>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>kas examine</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>kas commands</primary>
+                <secondary>examine</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>displaying</primary>
+                <secondary>server encryption key</secondary>
+                <tertiary>Authentication Database</tertiary>
+              </indexterm>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="AppendixLIWQ55" />Issue the 
+              <emphasis role="bold">kas examine</emphasis> command to display 
+              the <emphasis role="bold">afs</emphasis> entry. The output 
+              includes a checksum generated by encrypting a constant with the 
+              server encryption key derived from the 
+              <replaceable>afs_passwd</replaceable> string. In 
+              Step <link linkend="AppendixLIWQ59">8</link> you issue the 
+              <emphasis role="bold">bos listkeys</emphasis> command to verify 
+              that the checksum in its output matches the checksum in this 
+              output. 
+<programlisting>
+   ka&gt; <emphasis role="bold">examine afs</emphasis>
+   User data for afs
+    key (0) cksum is <replaceable>checksum</replaceable> . . .
+</programlisting> 
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>kas setfields</secondary>
+              </indexterm> 
+              <indexterm>
+                <primary>kas commands</primary>
+                <secondary>setfields</secondary>
+              </indexterm> 
+              <indexterm>
+                <primary>admin account</primary>
+                <secondary>setting ADMIN flag on Auth. DB entry</secondary>
+              </indexterm>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="LIWQ56" />Issue the 
+              <emphasis role="bold">kas setfields</emphasis> command to turn 
+              on the <computeroutput>ADMIN</computeroutput> flag in the  
+              <emphasis role="bold">admin</emphasis> entry. This enables the
+              <emphasis role="bold">admin</emphasis> user to issue privileged 
+              <emphasis role="bold">kas</emphasis> commands. Then issue
+              the <emphasis role="bold">kas examine</emphasis> command to verify 
+              that the <computeroutput>ADMIN</computeroutput> flag
+              appears in parentheses on the first line of the output, as shown 
+              in the example. 
+<programlisting>
+   ka&gt; <emphasis role="bold">setfields admin -flags admin</emphasis>
+   ka&gt; <emphasis role="bold">examine admin</emphasis> 
+   User data for admin (ADMIN) . . .
+</programlisting> 
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>kas quit</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>kas commands</primary>
+                <secondary>quit</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>interactive mode for kas</primary>
+                <secondary>quitting</secondary>
+              </indexterm>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para>Issue the <emphasis role="bold">kas quit</emphasis> 
+              command to leave <emphasis role="bold">kas</emphasis>
+              interactive mode. 
+<programlisting>
+   ka&gt; <emphasis role="bold">quit</emphasis>
+</programlisting>
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>bos adduser</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>bos commands</primary>
+                <secondary>adduser</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>usr/afs/etc/UserList</primary>
+                <see>UserList file</see>
+              </indexterm>
+              <indexterm>
+                <primary>UserList file</primary>
+                <secondary>first AFS machine</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>files</primary>
+                <secondary>UserList</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>creating</primary>
+                <secondary>UserList file entry</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>admin account</primary>
+                <secondary>adding</secondary>
+                <tertiary>to UserList file</tertiary>
+              </indexterm>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="AppendixLIWQ57" />Issue the 
+              <emphasis role="bold">bos adduser</emphasis> command to add the 
+              <emphasis role="bold">admin</emphasis> user to the 
+              <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. 
+              This enables the <emphasis role="bold">admin</emphasis> user to 
+              issue privileged <emphasis role="bold">bos</emphasis> and 
+              <emphasis role="bold">vos</emphasis> commands. 
+<programlisting>
+   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+                role="bold">-noauth</emphasis>
+</programlisting>
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>bos addkey</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>bos commands</primary>
+                <secondary>addkey</secondary>
+              </indexterm>
+              <indexterm>
+                <primary>creating</primary>
+                <secondary>server encryption key</secondary>
+                <tertiary>KeyFile file</tertiary>
+              </indexterm>
+              <indexterm>
+                <primary>server encryption key</primary>
+                <secondary>in KeyFile file</secondary>
+              </indexterm>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="AppendixLIWQ58" />Issue the 
+              <emphasis role="bold">bos addkey</emphasis> command to define 
+              the AFS server encryption key in the 
+              <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file.
+              </para>
+
+              <para>Do not provide the password on the command line. Instead 
+              provide it as <replaceable>afs_passwd</replaceable> in
+              response to the <emphasis role="bold">bos</emphasis> command 
+              interpreter's prompts, as shown. Provide the same string as
+              in Step <link linkend="AppendixLIWQ54">2</link>.</para>
+
+<programlisting>
+   # <emphasis role="bold">./bos addkey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno 0 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
+              role="bold">-noauth</emphasis>
+   Input key: <replaceable>afs_passwd</replaceable>
+   Retype input key: <replaceable>afs_passwd</replaceable>
+</programlisting>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>bos listkeys</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>bos commands</primary>
+                <secondary>listkeys</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>displaying</primary>
+                <secondary>server encryption key</secondary>
+                <tertiary>KeyFile file</tertiary>
+              </indexterm>
+            </listitem>
+
+            <listitem>
+              <para><anchor id="AppendixLIWQ59" />Issue the 
+              <emphasis role="bold">bos listkeys</emphasis> command to verify 
+              that the checksum for the new key in the 
+              <emphasis role="bold">KeyFile</emphasis> file is the same as the 
+              checksum for the key in the Authentication Database's 
+              <emphasis role="bold">afs</emphasis> entry, which you displayed 
+              in Step <link linkend="AppendixLIWQ55">3</link>. 
+<programlisting>
+   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>ce
+ll name</replaceable>&gt; <emphasis
+                role="bold">-noauth</emphasis>
+   key 0 has cksum <replaceable>checksum</replaceable>    
+</programlisting></para>
+
+              <para>You can safely ignore any error messages indicating that 
+              <emphasis role="bold">bos</emphasis> failed to get tickets
+              or that authentication failed.</para>
+
+              <para>If the keys are different, issue the following commands, 
+              making sure that the <replaceable>afs_passwd</replaceable>
+              string is the same in each case. The 
+              <replaceable>checksum</replaceable> strings reported by the 
+              <emphasis role="bold">kas examine</emphasis> and 
+              <emphasis role="bold">bos listkeys</emphasis> commands must 
+              match; if they do not, repeat these instructions until they do, 
+              using the <emphasis role="bold">-kvno</emphasis> argument to 
+              increment the key version number each time.</para>
+
+<programlisting>
+   # <emphasis role="bold">./kas  -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis> 
+   ka&gt; <emphasis role="bold">setpassword afs -kvno 1</emphasis> 
+   new_password: <replaceable>afs_passwd</replaceable>
+   Verifying, please re-enter initial_password: <replaceable>afs_passwd</replaceable>
+   ka&gt; <emphasis role="bold">examine afs</emphasis>
+   User data for afs
+    key (1) cksum is <replaceable>checksum</replaceable> . . .
+   ka&gt; <emphasis role="bold">quit</emphasis>
+   # <emphasis role="bold">./bos addkey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno 1 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+              role="bold">-noauth</emphasis> 
+   Input key: <replaceable>afs_passwd</replaceable>
+   Retype input key: <replaceable>afs_passwd</replaceable>
+   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+              role="bold">-noauth</emphasis>
+   key 1 has cksum <replaceable>checksum</replaceable>
+</programlisting>
+            </listitem>
+            <listitem>
+              <para>Proceed to
+              <link linkend="HDRWQ53a">Initializing the Protection Database</link>
+              to continue with the installation process</para>
+            </listitem>
+          </orderedlist></para>
+        </sect3>
+      </sect2>
+      <sect2 id="KAS009">
+        <title>Installing Additional Server Machines</title>
+        
+        <sect3 id="KAS010">
+          <title>Starting the Authenticxation Service</title>
+          <indexterm>
+            <primary>Authentication Server</primary>
+            <secondary>starting</secondary>
+            <tertiary>new db-server machine</tertiary>
+          </indexterm>
+          <indexterm>
+            <primary>starting</primary>
+            <secondary>Authentication Server</secondary>
+            <tertiary>new db-server machine</tertiary>
+          </indexterm>
+          <para>In addition to the instructions in the main guide, you must
+          also start the Authentication Server on the new database machine,
+          as detailed below</para>
+          
+          <orderedlist>
+            <listitem>
+              <para><anchor id="LIWQ118" />Start the Authentication Server 
+              (the <emphasis role="bold">kaserver</emphasis> process).
+<programlisting>
+   % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">kaserver simple /usr/afs/bin/kaserver</emphasis>
+</programlisting> </para>
+           </listitem>
+           
+           <listitem>
+             <para>Return to <link linkend="LIWQ119">starting the backup server</link></para>
+           </listitem>
+          </orderedlist>
+        </sect3>
+      </sect2>
+
+      <sect2 id="KAS011">  
+        <title>Enabling AFS login with kaserver</title>
+        <para>The authentication system of every machine should be modified so
+        that users obtain an AFS token as they log into the local file system.
+        Using AFS is simpler and more convenient for your users if you make the
+        modifications on all client machines. Otherwise users must perform a two
+        step login procedure (login to the local system, and then issue the
+        <emphasis role="bold">klog</emphasis> command.</para>
+        
+        <para>For convenience, the following sections group this procedure by
+        system type. Proceed to the appropriate section.
+          <itemizedlist>
+            <listitem>
+              <para>
+                <link linkend="KAS012">Enabling AFS Login on AIX Systems</link>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                <link linkend="KAS013">Enabling AFS Login on HP-UX Systems</link>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                <link linkend="KAS014">Enabling AFS Login on IRIX Systems</link>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                <link linkend="KAS015">Enabling AFS Login on Linux Systems</link>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                <link linkend="KAS016">Enabling AFS login on Solaris Systems</link>
+              </para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </sect2>
+      <sect2 id="KAS012">
+        <title>Enabling kaserver based AFS login</title>
+                
+        <para>Now incorporate AFS into the AIX secondary authentication system. 
+          <orderedlist>
+            <listitem>
+              <para>Issue the <emphasis role="bold">ls</emphasis> command to 
+              verify that the <emphasis role="bold">afs_dynamic_auth</emphasis> 
+              and <emphasis role="bold">afs_dynamic_kerbauth</emphasis> 
+              programs are installed in the local 
+              <emphasis role="bold">/usr/vice/etc</emphasis> directory. 
+<programlisting>
+   # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
+</programlisting>
+              </para>
+
+              <para>If the files do not exist, unpack the 
+              OpenAFS Binary Distribution for AIX (if it is not already), 
+              change directory as indicated, and copy them.</para>
+
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp  -p  afs_dynamic*  /usr/vice/etc</emphasis>
+</programlisting>
+            </listitem>
+
+            <listitem>
+              <para>Edit the local 
+              <emphasis role="bold">/etc/security/user</emphasis> file, making 
+              changes to the indicated stanzas:
+                <itemizedlist>
+                  <listitem>
+                    <para>In the default stanza, set the 
+                    <computeroutput>registry</computeroutput> attribute to 
+                    <emphasis role="bold">DCE</emphasis> (not to 
+                    <emphasis role="bold">AFS</emphasis>), as follows: 
+<programlisting>
+   registry = DCE
+</programlisting>
+                    </para>
+                  </listitem>
+
+                  <listitem>
+                    <para>In the default stanza, set the 
+                    <computeroutput>SYSTEM</computeroutput> attribute as 
+                    indicated.</para>
+
+                    <para>If the machine is an AFS client only, set the 
+                    following value:</para>
+<programlisting>
+   SYSTEM = "AFS OR (AFS[UNAVAIL] AND compat[SUCCESS])"   
+</programlisting>
+
+                    <para>If the machine is both an AFS and a DCE client, 
+                    set the following value (it must appear on a single line in
+                    the file):</para>
+<programlisting>
+   SYSTEM = "DCE OR DCE[UNAVAIL] OR AFS OR (AFS[UNAVAIL]  \
+       AND compat[SUCCESS])"
+</programlisting>
+                  </listitem>
+
+                  <listitem>
+                    <para>In the <computeroutput>root</computeroutput> 
+                    stanza, set the <computeroutput>registry</computeroutput>
+                    attribute as follows. It enables the local superuser 
+                    <emphasis role="bold">root</emphasis> to log into the local
+                    file system only, based on the password listed in the 
+                    local password file. 
+<programlisting>
+   root:
+         registry = files
+</programlisting>
+                    </para>
+                  </listitem>
+                </itemizedlist>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para>Edit the local 
+              <emphasis role="bold">/etc/security/login.cfg</emphasis> file, 
+              creating or editing the indicated stanzas: 
+                <itemizedlist>
+                  <listitem>
+                    <para>In the <computeroutput>DCE</computeroutput> stanza, 
+                    set the <computeroutput>program</computeroutput>
+                    attribute as follows.</para>
+
+                    <para>If you use the AFS Authentication Server 
+                    (<emphasis role="bold">kaserver</emphasis> process):</para>
+<programlisting>
+   DCE:
+        program = /usr/vice/etc/afs_dynamic_auth   
+</programlisting>
+
+                    <para>If you use a Kerberos v4 implementation of AFS 
+                    authentication:</para>
+
+<programlisting>
+   DCE:
+        program = /usr/vice/etc/afs_dynamic_kerbauth
+</programlisting>
+                  </listitem>
+
+                  <listitem>
+                    <para>In the <computeroutput>AFS</computeroutput> stanza, 
+                    set the <computeroutput>program</computeroutput>
+                    attribute as follows.</para>
+
+                    <para>If you use the AFS Authentication Server 
+                    (<emphasis role="bold">kaserver</emphasis> process):</para>
+<programlisting>
+   AFS:
+        program = /usr/vice/etc/afs_dynamic_auth   
+</programlisting>
+
+                    <para>If you use a Kerberos v4 implementation of AFS 
+                    authentication:</para>
+<programlisting>
+   AFS:
+        program = /usr/vice/etc/afs_dynamic_kerbauth
+</programlisting>
+                </listitem>
+                </itemizedlist>
+              </para>
+            </listitem>
+            <listitem>
+              <para>Proceed to 
+              <link linkend="HDRWQ50">Starting the BOS Server</link>,
+              if you are installing your first file server machine;
+              <link linkend="HDRWQ108">Starting Server Programs</link>, 
+              if you are installing an additional file server machine; or
+              <link linkend="HDRWQ145">Loading and Creating Client Files</link>
+              if you are installating a client</para>
+            </listitem>
+          </orderedlist>
+        </para>
+      </sect2>
+      <sect2 id="KAS013">
+        <title>Enabling kaserver based AFS Login on HP-UX systems</title>
+        
+        <para>At this point you incorporate AFS into the operating system's 
+        Pluggable Authentication Module (PAM) scheme. PAM integrates all 
+        authentication mechanisms on the machine, including login, to provide 
+        the security infrastructure for authenticated access to and from the 
+        machine.</para>
+
+        <para>Explaining PAM is beyond the scope of this document. It is 
+        assumed that you understand the syntax and meanings of settings in the 
+        PAM configuration file (for example, how the 
+        <computeroutput>other</computeroutput> entry works, the effect of
+        marking an entry as <computeroutput>required</computeroutput>, 
+        <computeroutput>optional</computeroutput>, or
+        <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+        <para>The following instructions explain how to alter the entries in 
+        the PAM configuration file for each service for which you
+        wish to use AFS authentication. Other configurations possibly also 
+        work, but the instructions specify the recommended and
+        tested configuration.</para>
+
+        <note>
+          <para>The instructions specify that you mark each entry as 
+          <computeroutput>optional</computeroutput>. However, marking some
+          modules as optional can mean that they grant access to the 
+          corresponding service even when the user does not meet all of the
+          module's requirements. In some operating system revisions, for 
+          example, if you mark as optional the module that controls
+          login via a dial-up connection, it allows users to login without 
+          providing a password. See the <emphasis>OpenAFS Release
+          Notes</emphasis> for a discussion of any limitations that apply to 
+          this operating system.</para>
+
+          <para>Also, with some operating system versions you must install 
+          patches for PAM to interact correctly with certain
+          authentication programs. For details, see the 
+          <emphasis>OpenAFS Release Notes</emphasis>.</para>
+        </note>
+
+        <para>The recommended AFS-related entries in the PAM configuration 
+        file make use of one or more of the following three
+        attributes. 
+        <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on 
+              entries after the first one for a service; it directs
+              the module to use the password that was provided to the first 
+              module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module 
+              listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see 
+              the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it 
+              to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 0 
+              (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the 
+              environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the 
+              Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        </para>
+
+        <para>Perform the following steps to enable AFS login. 
+        <orderedlist>
+          <listitem>
+            <para>Unpack the OpenAFS Binary Distribution for HP-UX into the 
+            <emphasis role="bold">/tmp/afsdist</emphasis> directory, if it is 
+            not already.
+            Then change directory as indicated. 
+<programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS authentication library file to the 
+            <emphasis role="bold">/usr/lib/security</emphasis> directory. Then
+            create a symbolic link to it whose name does not mention the 
+            version. Omitting the version eliminates the need to edit
+            the PAM configuration file if you later update the library 
+            file.</para>
+
+            <para>If you use the AFS Authentication Server 
+            (<emphasis role="bold">kaserver</emphasis> process) in the cell:</para>
+
+<programlisting>
+   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/lib/pam_afs.so.1  .</emphasis>
+   # <emphasis role="bold">ln -s  pam_afs.so.1  pam_afs.so</emphasis>   
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+<programlisting>
+   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/lib/pam_afs.krb.so.1   .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Edit the 
+            <computeroutput>Authentication management</computeroutput> 
+            section of the HP-UX PAM configuration file,
+            <emphasis role="bold">/etc/pam.conf</emphasis> by convention. The 
+            entries in this section have the value
+            <computeroutput>auth</computeroutput> in their second field.</para>
+
+            <para>First edit the standard entries, which refer to the 
+            HP-UX PAM module (usually, the file <emphasis
+            role="bold">/usr/lib/security/libpam_unix.1</emphasis>) in their 
+            fourth field. For each service for which you want to
+            use AFS authentication, edit the third field of its entry to read 
+            <computeroutput>optional</computeroutput>. The
+            <emphasis role="bold">pam.conf</emphasis> file in the HP-UX 
+            distribution usually includes standard entries for the
+            <emphasis role="bold">login</emphasis> and 
+            <emphasis role="bold">ftp</emphasis> services, for instance.</para>
+
+            <para>If there are services for which you want to use AFS 
+            authentication, but for which the <emphasis
+            role="bold">pam.conf</emphasis> file does not already include a 
+            standard entry, you must create that entry and place the
+            value <computeroutput>optional</computeroutput> in its third field. 
+            For instance, the HP-UX <emphasis role="bold">pam.conf</emphasis> 
+            file does not usually include standard entries for the <emphasis
+            role="bold">remsh</emphasis> or 
+            <emphasis role="bold">telnet</emphasis> services.</para>
+
+            <para>Then create an AFS-related entry for each service, placing it 
+            immediately below the standard entry. The following
+            example shows what the 
+            <computeroutput>Authentication Management</computeroutput> section 
+            looks like after you have you
+            edited or created entries for the services mentioned previously. 
+            Note that the example AFS entries appear on two lines
+            only for legibility.</para>
+
+<programlisting>
+   login   auth  optional  /usr/lib/security/libpam_unix.1
+   login   auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root  setenv_password_expires
+   ftp     auth  optional  /usr/lib/security/libpam_unix.1
+   ftp     auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root
+   remsh   auth  optional  /usr/lib/security/libpam_unix.1
+   remsh   auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root            
+   telnet  auth  optional  /usr/lib/security/libpam_unix.1
+   telnet  auth  optional  /usr/lib/security/pam_afs.so      \
+         try_first_pass  ignore_root  setenv_password_expires
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>If you use the Common Desktop Environment (CDE) on the 
+            machine and want users to obtain an AFS token as they log
+            in, also add or edit the following four entries in the 
+            <computeroutput>Authentication management</computeroutput>
+            section. Note that the AFS-related entries appear on two lines 
+            here only for legibility. 
+<programlisting>
+   dtlogin   auth  optional  /usr/lib/security/libpam_unix.1
+   dtlogin   auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+   dtaction  auth  optional  /usr/lib/security/libpam_unix.1
+   dtaction  auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+</programlisting></para>
+          </listitem>
+          
+          <listitem>
+            <para>Proceed to 
+            <link linkend="HDRWQ50">Starting the BOS Server</link> if you
+            are installing your first file server;
+            <link linkend="HDRWQ108">Starting Server Programs</link> if you
+            are installing an additional file server machine; or
+            <link linkend="HDRWQ145">Loading and Creating Client Files.</link> 
+            if you are installing a client.</para>
+          </listitem>
+        </orderedlist>
+        </para>
+      </sect2>
+      <sect2 id="KAS014">
+        <title>Enabling kaserver based AFS Login on IRIX Systems</title>
+        
+        <para>The standard IRIX command-line 
+        <emphasis role="bold">login</emphasis> program and the graphical 
+        <emphasis role="bold">xdm</emphasis> login program both automatically 
+        grant an AFS token when AFS is incorporated into the machine's
+        kernel. However, some IRIX distributions use another login utility by 
+        default, and it does not necessarily incorporate the required AFS 
+        modifications. If that is the case, you must disable the default 
+        utility if you want AFS users to obtain AFS tokens at login. For 
+        further discussion, see the 
+        <emphasis>OpenAFS Release Notes</emphasis>.</para>
+
+        <para>If you configure the machine to use an AFS-modified login 
+        utility, then the <emphasis role="bold">afsauthlib.so</emphasis> and 
+        <emphasis role="bold">afskauthlib.so</emphasis> files (included in the 
+        AFS distribution) must reside in the 
+        <emphasis role="bold">/usr/vice/etc</emphasis> directory. Issue the 
+        <emphasis role="bold">ls</emphasis> command to verify.</para>
+
+<programlisting>
+   # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
+</programlisting>
+
+        <para>If the files do not exist, unpack the OpenAFS Binary Distribution
+        for IRIX (if it is not already), change directory as indicated, and copy
+        them.</para>
+
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp  -p  *authlib*  /usr/vice/etc</emphasis>   
+</programlisting>
+
+        <para>After taking any necessary action, proceed to 
+        <link linkend="HDRWQ50">Starting the BOS Server</link> if you
+        are installing your first file server;
+        <link linkend="HDRWQ108">Starting Server Programs</link> if you
+        are installing an additional file server machine; or
+        <link linkend="HDRWQ145">Loading and Creating Client Files</link> 
+        if you are installing a client.</para>
+      </sect2>
+      <sect2 id="KAS015">
+        <title>Enabling kaserver based AFS Login on Linux Systems</title>
+        
+        <para>At this point you incorporate AFS into the operating system's 
+        Pluggable Authentication Module (PAM) scheme. PAM integrates all 
+        authentication mechanisms on the machine, including login, to provide 
+        the security infrastructure for authenticated access to and from the 
+        machine.</para>
+
+        <para>Explaining PAM is beyond the scope of this document. It is 
+        assumed that you understand the syntax and meanings of settings in the 
+        PAM configuration file (for example, how the 
+        <computeroutput>other</computeroutput> entry works, the effect of
+        marking an entry as <computeroutput>required</computeroutput>, 
+        <computeroutput>optional</computeroutput>, or
+        <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+        <para>The following instructions explain how to alter the entries in 
+        the PAM configuration file for each service for which you
+        wish to use AFS authentication. Other configurations possibly also 
+        work, but the instructions specify the recommended and
+        tested configuration.</para>
+
+        <para>The recommended AFS-related entries in the PAM configuration 
+        file make use of one or more of the following three
+        attributes. 
+        <variablelist>
+          <title>Authentication Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on 
+              entries after the first one for a service; it directs
+              the module to use the password that was provided to the first 
+              module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module 
+              listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see 
+              the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it 
+              to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 
+              0 (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_uid </computeroutput><emphasis>uid</emphasis></emphasis></term>
+
+            <listitem>
+              <para>This option is an extension of the "ignore_root" switch. 
+              The additional parameter is a limit. Users with a uid
+              up to the given parameter are ignored by 
+              <emphasis>pam_afs.so</emphasis>. Thus, a system administrator 
+              still has the
+              opportunity to add local user accounts to his system by choosing 
+              between "low" and "high" user ids. An example
+              /etc/passwd file for "ignore_uid 100" may have entries like these: 
+<programlisting>
+        .
+        .
+afsuserone:x:99:100::/afs/afscell/u/afsuserone:/bin/bash
+afsusertwo:x:100:100::/afs/afscell/u/afsusertwo:/bin/bash
+localuserone:x:101:100::/home/localuserone:/bin/bash
+localusertwo:x:102:100::/home/localusertwo:/bin/bash
+        .
+        .
+</programlisting> 
+              AFS accounts should be locked in the file /etc/shadow like this: 
+<programlisting>
+        .
+        .
+afsuserone:!!:11500:0:99999:7:::
+afsusertwo:!!:11500:0:99999:7:::
+localuserone:&lt;thelocaluserone'skey&gt;:11500:0:99999:7:::
+localusertwo:&lt;thelocalusertwo'skey&gt;:11500:0:99999:7:::
+        .
+        .
+</programlisting> 
+              There is no need to store a local key in this file since the AFS 
+              password is sent and verfied at the AFS cell server!</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the 
+              environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the 
+              Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>set_token</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Some applications don't call 
+              <emphasis>pam_setcred()</emphasis> in order to retrieve the 
+              appropriate credentials (here the AFS token) for their session. 
+              This switch sets the credentials already in
+              <emphasis>pam_sm_authenticate()</emphasis> obsoleting a call to 
+              <emphasis>pam_setcred()</emphasis>. <emphasis
+              role="bold">Caution: Don't use this switch for applications which 
+              do call <emphasis>pam_setcred()</emphasis>!</emphasis> One 
+              example for an application not calling
+              <emphasis>pam_setcred()</emphasis> are older versions of the 
+              samba server. Nevertheless, using applications with
+              working pam session management is recommended as this setup 
+              conforms better with the PAM definitions.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>refresh_token</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This options is identical to "set_token" except that no 
+              new PAG is generated. This is necessary to handle
+              processes like xlock or xscreensaver. It is not enough to just
+              unlock the screen for a user who
+              reactivated his session by typing in the correct AFS password, but 
+              one may also need fresh tokens with a full lifetime in
+              order to work on, and the new token must be refreshed in the 
+              already existing PAG for the processes that have been
+              started. This is achieved using this option.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>use_klog</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Activating this switch causes authentication to be done by 
+              calling the external program "klog". One program requiring
+              this is for example <emphasis>kdm</emphasis> of KDE 2.x.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>dont_fork</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Usually, the password verification and token establishment 
+              is performed in a sub process. Using this option pam_afs does not 
+              fork and performs all actions in a single process. 
+              <emphasis role="bold">Only use this option in cases where you 
+              notice serious problems caused by the sub process.</emphasis> 
+              This option has been developed in respect to
+              the "mod_auth_pam"-project (see also 
+              <ulink url="http://pam.sourceforge.net/mod_auth_pam/">mod_auth_pam</ulink>). 
+              The mod_auth_pam module enables PAM authentication for the apache 
+              http server package.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist> 
+        <variablelist>
+          <title>Session Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>no_unlog</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Normally the tokens are deleted (in memory) after the 
+              session ends. Using this option causes the tokens to be left
+              untouched. <emphasis role="bold">This behaviour was the default 
+              in pam_afs until openafs-1.1.1!</emphasis></para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>remainlifetime</computeroutput> <emphasis>sec</emphasis></emphasis></term>
+
+            <listitem>
+              <para>The tokens are kept active for <emphasis>sec</emphasis> 
+              seconds before they are deleted. X display managers i.e.
+              are used to inform the applications started in the X session 
+              before the logout and then end themselves. If the token
+              was deleted immediately the applications would have no chance 
+              to write back their settings to i.e. the user's AFS home
+              space. This option may help to avoid the problem.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Perform the following steps to enable AFS login. 
+        <orderedlist>
+          <listitem>
+            <para>Unpack the OpenAFS Binary Distribution for Linux into the 
+            <emphasis role="bold">/tmp/afsdist/</emphasis> directory, if it is 
+            not already.
+            Then change to the directory for PAM modules, which depends on which Linux distribution you are using.</para>
+
+            <para>If you are using a Linux distribution from Red Hat Software:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cd /lib/security</emphasis>
+</programlisting>
+
+            <para>If you are using another Linux distribution:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Copy the appropriate AFS authentication library file to the 
+            directory to which you changed in the previous step.
+            Create a symbolic link whose name does not mention the version. 
+            Omitting the version eliminates the need to edit the PAM
+            configuration file if you later update the library file.</para>
+
+            <para>If you use the AFS Authentication Server 
+            (<emphasis role="bold">kaserver</emphasis> process):</para>
+<programlisting>
+   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.so.1  .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS 
+            authentication:</para>
+<programlisting>
+   # <emphasis role="bold">cp /cdrom/i386_linux22/lib/pam_afs.krb.so.1   .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>For each service with which you want to use AFS 
+            authentication, insert an entry for the AFS PAM module into the
+            <computeroutput>auth</computeroutput> section of the service's 
+            PAM configuration file. (Linux uses a separate
+            configuration file for each service, unlike some other operating 
+            systems which list all services in a single file.) Mark
+            the entry as <computeroutput>sufficient</computeroutput> in the 
+            second field.</para>
+
+            <para>Place the AFS entry below any entries that impose conditions 
+            under which you want the service to fail for a user
+            who does not meet the entry's requirements. Mark these entries 
+            <computeroutput>required</computeroutput>. Place the AFS
+            entry above any entries that need to execute only if AFS 
+            authentication fails.</para>
+
+            <para>Insert the following AFS entry if using the Red Hat 
+            distribution:</para>
+<programlisting>
+   auth  sufficient  /lib/security/pam_afs.so   try_first_pass  ignore_root
+</programlisting>
+
+            <para>Insert the following AFS entry if using another 
+            distribution:</para>
+
+<programlisting>
+   auth  sufficient  /usr/lib/security/pam_afs.so  try_first_pass  ignore_root
+</programlisting>
+
+            <para>Check the PAM config files also for "session" entries. If 
+            there are lines beginning with "session" then please
+            insert this line too:</para>
+
+<programlisting>
+   session  optional  /lib/security/pam_afs.so
+</programlisting>
+
+            <para>or</para>
+
+<programlisting>
+   session  optional  /usr/lib/security/pam_afs.so
+</programlisting>
+
+            <para>This guarantees that the user's tokens are deleted from 
+            memory after his session ends so that no other user
+            coincidently gets those tokens without authorization! The 
+            following examples illustrate the recommended configuration of
+            the configuration file for several services: 
+              <variablelist>
+                <title>Authentication Management</title>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/login</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   #%PAM-1.0
+   auth      required   /lib/security/pam_securetty.so
+   auth      required   /lib/security/pam_nologin.so
+   auth      sufficient /lib/security/pam_afs.so try_first_pass ignore_root
+   #                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   #This enables AFS authentication for every user but root
+   auth      required   /lib/security/pam_pwdb.so shadow nullok
+   account   required   /lib/security/pam_pwdb.so
+   password  required   /lib/security/pam_cracklib.so
+   password  required   /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session   optional   /lib/security/pam_afs.so
+   #Make sure tokens are deleted after the user logs out
+   session   required   /lib/security/pam_pwdb.so
+</programlisting>
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/samba</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   auth       required     /lib/security/pam_afs.so ignore_uid 100 set_token
+   #                                                ^^^^^^^^^^^^^^^^^^^^^^^^
+   #Here, users with uid&gt;100 are considered to belong to the AFS and users
+   #with uid&lt;=100 are ignored by pam_afs. The token is retrieved already in
+   #pam_sm_authenticate() (this is an example pam config for a samba version
+   #that does not call pam_setcred(), it also does no sense to include session
+   #entries here since they would be ignored by this version of samba ).
+   account    required     /lib/security/pam_pwdb.so
+</programlisting>
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/xscreensaver</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 refresh_token
+   #                                                               ^^^^^^^^^^^^^
+   #Avoid generating a new PAG for the new tokens, use the already existing PAG and
+   #establish a fresh token in it.
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+</programlisting>
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/httpd</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   auth       required   /lib/security/pam_afs.so ignore_uid 100 dont_fork
+   #                                                             ^^^^^^^^^
+   #Don't fork for the verification of the password.
+</programlisting>
+                    </para>
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+              <variablelist>
+                <title>Session Management</title>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/su</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so use_authtok
+   session    required     /lib/security/pam_pwdb.so
+   session    optional     /lib/security/pam_afs.so no_unlog
+   #                                                ^^^^^^^^
+   #Don't delete the token in this case, since the user may still
+   #need it (for example if somebody logs in and changes to root
+   #afterwards he may still want to access his home space in AFS).
+   session    required     /lib/security/pam_login_access.so
+   session    optional     /lib/security/pam_xauth.so
+</programlisting>
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>(<emphasis role="bold">/etc/pam.d/xdm</emphasis>)</term>
+
+                  <listitem>
+                    <para>
+<programlisting>
+   auth       required     /lib/security/pam_nologin.so
+   auth       required     /lib/security/pam_login_access.so
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 use_klog
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session    optional     /lib/security/pam_afs.so remainlifetime 10
+   #                                                ^^^^^^^^^^^^^^^^^
+   #Wait 10 seconds before deleting the AFS tokens in order to give
+   #the programs of the X session some time to save their settings
+   #to AFS.
+   session    required     /lib/security/pam_pwdb.so
+</programlisting>
+                     </para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para>
+          </listitem>
+          <listitem>        
+            <para>After taking any necessary action, proceed to 
+            <link linkend="HDRWQ50">Starting the BOS Server</link> if you
+            are installing your first file server;
+            <link linkend="HDRWQ108">Starting Server Programs</link> if you
+            are installing an additional file server machine; or
+            <link linkend="HDRWQ145"></link> if you are installing a client.
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+    </sect2>
+    <sect2 id="KAS016">
+      <title>Enabling kaserver based AFS Login on Solaris Systems</title>
+      
+      <para>At this point you incorporate AFS into the operating system's 
+      Pluggable Authentication Module (PAM) scheme. PAM
+      integrates all authentication mechanisms on the machine, including 
+      login, to provide the security infrastructure for
+      authenticated access to and from the machine.</para>
+
+      <para>Explaining PAM is beyond the scope of this document. It is 
+      assumed that you understand the syntax and meanings of
+      settings in the PAM configuration file (for example, how the 
+      <computeroutput>other</computeroutput> entry works, the effect of
+      marking an entry as <computeroutput>required</computeroutput>, 
+      <computeroutput>optional</computeroutput>, or
+      <computeroutput>sufficient</computeroutput>, and so on).</para>
+
+      <para>The following instructions explain how to alter the entries in the 
+      PAM configuration file for each service for which you
+      wish to use AFS authentication. Other configurations possibly also 
+      work, but the instructions specify the recommended and
+      tested configuration.</para>
+
+      <note>
+        <para>The instructions specify that you mark each entry as 
+        <computeroutput>optional</computeroutput>. However, marking some
+        modules as optional can mean that they grant access to the 
+        corresponding service even when the user does not meet all of the
+        module's requirements. In some operating system revisions, 
+        for example, if you mark as optional the module that controls
+        login via a dial-up connection, it allows users to login without 
+        providing a password. See the <emphasis>OpenAFS Release
+        Notes</emphasis> for a discussion of any limitations that apply to 
+        this operating system.</para>
+
+        <para>Also, with some operating system versions you must install 
+        patches for PAM to interact correctly with certain
+        authentication programs. For details, see the 
+        <emphasis>OpenAFS Release Notes</emphasis>.</para>
+      </note>
+
+      <para>The recommended AFS-related entries in the PAM configuration file 
+      make use of one or more of the following three
+      attributes. 
+        <variablelist>
+          <title>Authentication Management</title>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>try_first_pass</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This is a standard PAM attribute that can be included on 
+              entries after the first one for a service; it directs
+              the module to use the password that was provided to the first 
+              module. For the AFS module, it means that AFS
+              authentication succeeds if the password provided to the module 
+              listed first is the user's correct AFS password. For
+              further discussion of this attribute and its alternatives, see 
+              the operating system's PAM documentation.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ignore_root</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, directs it 
+              to ignore not only the local superuser <emphasis
+              role="bold">root</emphasis>, but also any user with UID 0 
+              (zero).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>setenv_password_expires</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>This attribute, specific to the AFS PAM module, sets the 
+              environment variable PASSWORD_EXPIRES to the expiration
+              date of the user's AFS password, which is recorded in the 
+              Authentication Database.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Perform the following steps to enable AFS login. <orderedlist>
+          <listitem>
+            <para>Unpack the OpenAFS Binary Distribution for Solaris into the 
+            <emphasis role="bold">/cdrom</emphasis> directory, if it is not 
+            already.
+            Then change directory as indicated. 
+<programlisting>
+   # <emphasis role="bold">cd /usr/lib/security</emphasis>
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Copy the AFS authentication library file to the 
+            <emphasis role="bold">/usr/lib/security</emphasis> directory. Then
+            create a symbolic link to it whose name does not mention the 
+            version. Omitting the version eliminates the need to edit
+            the PAM configuration file if you later update the library 
+            file.</para>
+
+            <para>If you use the AFS Authentication Server 
+            (<emphasis role="bold">kaserver</emphasis> process):</para>
+
+<programlisting>
+   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/lib/pam_afs.so.1 .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>   
+</programlisting>
+
+            <para>If you use a Kerberos implementation of AFS authentication:</para>
+
+<programlisting>
+   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/lib/pam_afs.krb.so.1 .</emphasis>
+   # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Edit the 
+            <computeroutput>Authentication management</computeroutput> section 
+            of the Solaris PAM configuration file,
+            <emphasis role="bold">/etc/pam.conf</emphasis> by convention. 
+            The entries in this section have the value
+            <computeroutput>auth</computeroutput> in their second field.</para>
+
+            <para>First edit the standard entries, which refer to the 
+            Solaris PAM module (usually, the file <emphasis
+            role="bold">/usr/lib/security/pam_unix.so.1</emphasis>) in their 
+            fourth field. For each service for which you want to
+            use AFS authentication, edit the third field of its entry to read 
+            <computeroutput>optional</computeroutput>. The
+            <emphasis role="bold">pam.conf</emphasis> file in the Solaris 
+            distribution usually includes standard entries for the
+            <emphasis role="bold">login</emphasis>, 
+            <emphasis role="bold">rlogin</emphasis>, and <emphasis
+            role="bold">rsh</emphasis> services, for instance.</para>
+
+            <para>If there are services for which you want to use AFS 
+            authentication, but for which the <emphasis
+            role="bold">pam.conf</emphasis> file does not already include a 
+            standard entry, you must create that entry and place the
+            value <computeroutput>optional</computeroutput> in its third field. 
+            For instance, the Solaris 
+            <emphasis role="bold">pam.conf</emphasis> file does not usually 
+            include standard entries for the 
+            <emphasis role="bold">ftp</emphasis> or 
+            <emphasis role="bold">telnet</emphasis> services.</para>
+
+            <para>Then create an AFS-related entry for each service, placing it 
+            immediately below the standard entry. The following
+            example shows what the 
+            <computeroutput>Authentication Management</computeroutput> 
+            section looks like after you have you edited or created entries 
+            for the services mentioned previously. Note that the example AFS 
+            entries appear on two lines
+            only for legibility.</para>
+
+<programlisting>
+   login   auth  optional  /usr/lib/security/pam_unix.so.1
+   login   auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+   rlogin  auth  optional  /usr/lib/security/pam_unix.so.1
+   rlogin  auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+   rsh     auth  optional  /usr/lib/security/pam_unix.so.1
+   rsh     auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root            
+   ftp     auth  optional  /usr/lib/security/pam_unix.so.1
+   ftp     auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root
+   telnet  auth  optional  /usr/lib/security/pam_unix.so.1
+   telnet  auth  optional  /usr/lib/security/pam_afs.so       \
+         try_first_pass  ignore_root  setenv_password_expires
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>If you use the Common Desktop Environment (CDE) on the 
+            machine and want users to obtain an AFS token as they log
+            in, also add or edit the following four entries in the 
+            <computeroutput>Authentication management</computeroutput>
+            section. Note that the AFS-related entries appear on two lines 
+            here only for legibility. 
+<programlisting>
+   dtlogin   auth  optional  /usr/lib/security/pam_unix.so.1
+   dtlogin   auth  optional  /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+   dtsession  auth  optional /usr/lib/security/pam_unix.so.1
+   dtsession  auth  optional /usr/lib/security/pam_afs.so     \
+         try_first_pass  ignore_root
+</programlisting>
+            </para>
+          </listitem>
+          <listitem>
+            <para>Proceed to 
+            <link linkend="HDRWQ49a">Editing the File Systems Clean-up Script 
+            on Solaris Systems in the server instructions </link> if you are 
+            installing your first file server;
+            <link linkend="HDRWQ108">Starting Server Programs</link> if you
+            are installing an additional file server machine; or
+            <link linkend="Header_137a">Editing the File Systems Clean-up Script
+            on Solaris Systems in the client instructions</link> if you are 
+            installing a client.</para>
+          </listitem>
+        </orderedlist>
+      </para>
+    </sect2>
+  </sect1>
+</appendix>
