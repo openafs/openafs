@@ -5547,6 +5547,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
 			    (char *)&error, sizeof(error), 0);
 	rxi_FreePacket(packet);
     }
+    CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
     MUTEX_EXIT(&call->lock);
 }
 
