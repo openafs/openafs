@@ -2211,6 +2211,15 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_WRITE,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
                       | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
+
+    /* If we only have 'i' bits, then we should still be able to set
+       the size of a file we created. */
+    if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
+                         | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
+    }
+
     if (code) 
         goto done;
 
@@ -3240,6 +3249,16 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
 #define SERVERLOCKS_ENABLED(scp) (!((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks && SCP_SUPPORTS_BRLOCKS(scp))
 
+#if defined(VICED_CAPABILITY_WRITELOCKACL)
+#define SCP_SUPPORTS_WRITELOCKACL(scp) ((scp)->cbServerp && ((scp->cbServerp->capabilities & VICED_CAPABILITY_WRITELOCKACL)))
+#else
+#define SCP_SUPPORTS_WRITELOCKACL(scp) (0)
+
+/* This should really be defined in any build that this code is being
+   compiled. */
+#error  VICED_CAPABILITY_WRITELOCKACL not defined.
+#endif
+
 static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
 {
     afs_int64 int_begin;
@@ -3542,14 +3561,19 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
    - CM_ERROR_NOACCESS if not
 
    Any other error from cm_SyncOp will be sent down untranslated.
+
+   If CM_ERROR_NOACCESS is returned and lock_type is LockRead, then
+   phas_insert (if non-NULL) will receive a boolean value indicating
+   whether the user has INSERT permission or not.
 */
 long cm_LockCheckPerms(cm_scache_t * scp,
                        int lock_type,
                        cm_user_t * userp,
-                       cm_req_t * reqp)
+                       cm_req_t * reqp,
+                       int * phas_insert)
 {
     long rights = 0;
-    long code = 0;
+    long code = 0, code2 = 0;
 
     /* lock permissions are slightly tricky because of the 'i' bit.
        If the user has PRSFS_LOCK, she can read-lock the file.  If the
@@ -3573,21 +3597,37 @@ long cm_LockCheckPerms(cm_scache_t * scp,
         return 0;
     }
 
+    if (phas_insert)
+        *phas_insert = FALSE;
+
     code = cm_SyncOp(scp, NULL, userp, reqp, rights,
                      CM_SCACHESYNC_GETSTATUS |
                      CM_SCACHESYNC_NEEDCALLBACK);
 
-    if (code == CM_ERROR_NOACCESS &&
-        lock_type == LockWrite &&
-	scp->creator == userp) {
-        /* check for PRSFS_INSERT. */
+    if (phas_insert && scp->creator == userp) {
 
-        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
+        /* If this file was created by the user, then we check for
+           PRSFS_INSERT.  If the file server is recent enough, then
+           this should be sufficient for her to get a write-lock (but
+           not necessarily a read-lock). VICED_CAPABILITY_WRITELOCKACL
+           indicates whether a file server supports getting write
+           locks when the user only has PRSFS_INSERT. 
+           
+           If the file was not created by the user we skip the check
+           because the INSERT bit will not apply to this user even
+           if it is set.
+         */
+
+        code2 = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_INSERT,
                          CM_SCACHESYNC_GETSTATUS |
                          CM_SCACHESYNC_NEEDCALLBACK);
 
-	if (code == CM_ERROR_NOACCESS)
-	    osi_Log0(afsd_logp, "cm_LockCheckPerms user is creator but has no INSERT bits for scp");
+	if (code2 == CM_ERROR_NOACCESS) {
+	    osi_Log0(afsd_logp, "cm_LockCheckPerms user has no INSERT bits");
+        } else {
+            *phas_insert = TRUE;
+            osi_Log0(afsd_logp, "cm_LockCheckPerms user has INSERT bits");
+        }
     }
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -3679,11 +3719,13 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         if (Which == scp->serverLock ||
            (Which == LockRead && scp->serverLock == LockWrite)) {
 
+            int has_insert = 0;
+
             /* we already have the lock we need */
             osi_Log3(afsd_logp, "   we already have the correct lock. exclusives[%d], shared[%d], serverLock[%d]", 
                      scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
 
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
 
             /* special case: if we don't have permission to read-lock
                the file, then we force a clientside lock.  This is to
@@ -3691,12 +3733,19 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                reading files off of directories that don't grant
                read-locks to the user. */
             if (code == CM_ERROR_NOACCESS && Which == LockRead) {
-                osi_Log0(afsd_logp, "   User has no read-lock perms. Forcing client-side lock");
-                force_client_lock = TRUE;
+
+                if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    osi_Log0(afsd_logp, "   User has no read-lock perms, but has INSERT perms.");
+                    code = 0;
+                } else {
+                    osi_Log0(afsd_logp, "   User has no read-lock perms. Forcing client-side lock");
+                    force_client_lock = TRUE;
+                }
             }
 
         } else if ((scp->exclusiveLocks > 0) ||
                    (scp->sharedLocks > 0 && scp->serverLock != LockRead)) {
+            int has_insert = 0;
 
             /* We are already waiting for some other lock.  We should
                wait for the daemon to catch up instead of generating a
@@ -3706,12 +3755,20 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
             /* see if we have permission to create the lock in the
                first place. */
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
             if (code == 0)
 		code = CM_ERROR_WOULDBLOCK;
             else if (code == CM_ERROR_NOACCESS && Which == LockRead) {
-                osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
-                force_client_lock = TRUE;
+
+                if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    osi_Log0(afsd_logp,
+                             "   User has no read-lock perms, but has INSERT perms.");
+                    code = CM_ERROR_WOULDBLOCK;
+                } else {
+                    osi_Log0(afsd_logp,
+                             "   User has no read-lock perms. Forcing client-side lock");
+                    force_client_lock = TRUE;
+                }
             }
 
             /* leave any other codes as-is */
@@ -3719,24 +3776,28 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         } else {
             int newLock;
             int check_data_version = FALSE;
+            int has_insert = 0;
 
             /* first check if we have permission to elevate or obtain
                the lock. */
-            code = cm_LockCheckPerms(scp, Which, userp, reqp);
+            code = cm_LockCheckPerms(scp, Which, userp, reqp, &has_insert);
             if (code) {
-                if (code == CM_ERROR_NOACCESS && Which == LockRead) {
+                if (code == CM_ERROR_NOACCESS && Which == LockRead &&
+                    (!has_insert || !SCP_SUPPORTS_WRITELOCKACL(scp))) {
                     osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
                     force_client_lock = TRUE;
                 }
                 goto check_code;
             }
 
+            /* has_insert => (Which == LockRead, code == CM_ERROR_NOACCESS) */
+
             if (scp->serverLock == LockRead && Which == LockWrite) {
 
                 /* We want to escalate the lock to a LockWrite.
-                   Unfortunately that's not really possible without
-                   letting go of the current lock.  But for now we do
-                   it anyway. */
+                 * Unfortunately that's not really possible without
+                 * letting go of the current lock.  But for now we do
+                 * it anyway. */
 
                 osi_Log0(afsd_logp,
                          "   attempting to UPGRADE from LockRead to LockWrite.");
@@ -3759,17 +3820,20 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             }
 
             /* We need to obtain a server lock of type Which in order
-               to assert this file lock */
+             * to assert this file lock */
 #ifndef AGGRESSIVE_LOCKS
             newLock = Which;
 #else
             newLock = LockWrite;
 #endif
+
             code = cm_IntSetLock(scp, userp, newLock, reqp);
 
-            if (code == CM_ERROR_WOULDBLOCK && newLock != Which) {
+#ifdef AGGRESSIVE_LOCKS
+            if ((code == CM_ERROR_WOULDBLOCK ||
+                 code == CM_ERROR_NOACCESS) && newLock != Which) {
                 /* we wanted LockRead.  We tried LockWrite. Now try
-                   LockRead again */
+                 * LockRead again */
                 newLock = Which;
 
                 /* am I sane? */
@@ -3777,12 +3841,54 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
                 code = cm_IntSetLock(scp, userp, newLock, reqp);
             }
+#endif
+
+            if (code == CM_ERROR_NOACCESS) {
+                if (Which == LockRead) {
+                    if (has_insert && SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                        long tcode;
+                        /* We requested a read-lock, but we have permission to
+                         * get a write-lock. Try that */
+
+                        tcode = cm_LockCheckPerms(scp, LockWrite, userp, reqp, NULL);
+
+                        if (tcode == 0) {
+                            newLock = LockWrite;
+
+                            osi_Log0(afsd_logp, "   User has 'i' perms and the request was for a LockRead.  Trying to get a LockWrite instead");
+
+                            code = cm_IntSetLock(scp, userp, newLock, reqp);
+                        }
+                    } else {
+                        osi_Log0(afsd_logp, "   User has no read-lock perms.  Forcing client-side lock");
+                        force_client_lock = TRUE;
+                    }
+                } else if (Which == LockWrite &&
+                           scp->creator == userp && !SCP_SUPPORTS_WRITELOCKACL(scp)) {
+                    long tcode;
+
+                    /* Special case: if the lock request was for a
+                     * LockWrite and the user owns the file and we weren't
+                     * allowed to obtain the serverlock, we either lost a
+                     * race (the permissions changed from under us), or we
+                     * have 'i' bits, but we aren't allowed to lock the
+                     * file. */
+
+                    /* check if we lost a race... */
+                    tcode = cm_LockCheckPerms(scp, Which, userp, reqp, NULL);
+
+                    if (tcode == 0) {
+                        osi_Log0(afsd_logp, "   User has 'i' perms but can't obtain write locks. Using client-side locks.");
+                        force_client_lock = TRUE;
+                    }
+                }
+            }
 
             if (code == 0 && check_data_version &&
                scp->dataVersion != scp->lockDataVersion) {
                 /* We lost a race.  Although we successfully obtained
-                   a lock, someone modified the file in between.  The
-                   locks have all been technically lost. */
+                 * a lock, someone modified the file in between.  The
+                 * locks have all been technically lost. */
 
                 osi_Log0(afsd_logp,
                          "  Data version mismatch while upgrading lock.");
@@ -4200,6 +4306,17 @@ long cm_Unlock(cm_scache_t *scp,
         scp->lockDataVersion = scp->dataVersion;
         osi_Log1(afsd_logp, "   dataVersion on scp is %d", scp->dataVersion);
 
+        /* before we downgrade, make sure that we have enough
+           permissions to get the read lock. */
+        code = cm_LockCheckPerms(scp, LockRead, userp, reqp, NULL);
+        if (code != 0) {
+
+            osi_Log0(afsd_logp, "  SKIPPING downgrade because user doesn't have perms to get downgraded lock");
+
+            code = 0;
+            goto done;
+        }
+
         code = cm_IntReleaseLock(scp, userp, reqp);
 
         if (code) {
@@ -4525,6 +4642,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     cm_req_t req;
     int newLock = -1;
     int force_client_lock = FALSE;
+    int has_insert = FALSE;
+    int check_data_version = FALSE;
 
     cm_InitReq(&req);
 
@@ -4570,10 +4689,12 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     code = cm_LockCheckPerms(scp, oldFileLock->lockType,
                              oldFileLock->userp,
-                             &req);
+                             &req, &has_insert);
 
     if (code == CM_ERROR_NOACCESS && oldFileLock->lockType == LockRead) {
+        if (!has_insert || !SCP_SUPPORTS_WRITELOCKACL(scp)) {
         force_client_lock = TRUE;
+        }
         code = 0;
     } else if (code) {
         lock_ReleaseMutex(&scp->mx);
@@ -4667,6 +4788,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
+    osi_assert(IS_LOCK_WAITLOCK(oldFileLock));
+
     if (force_client_lock ||
         !SERVERLOCKS_ENABLED(scp) ||
         scp->serverLock == oldFileLock->lockType ||
@@ -4718,9 +4841,66 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         newLock = LockWrite;
 #endif
 
+        if (has_insert) {
+            /* if has_insert is non-zero, then:
+               - the lock a LockRead
+               - we don't have permission to get a LockRead
+               - we do have permission to get a LockWrite
+               - the server supports VICED_CAPABILITY_WRITELOCKACL
+            */
+
+            newLock = LockWrite;
+        }
+
         lock_ReleaseWrite(&cm_scacheLock);
 
+        /* when we get here, either we have a read-lock and want a
+           write-lock or we don't have any locks and we want some
+           lock. */
+
+        if (scp->serverLock == LockRead) {
+
+            osi_assert(newLock == LockWrite);
+
+            osi_Log0(afsd_logp, "  Attempting to UPGRADE from LockRead to LockWrite");
+
+            scp->lockDataVersion = scp->dataVersion;
+            check_data_version = TRUE;
+
+            code = cm_IntReleaseLock(scp, userp, &req);
+
+            if (code)
+                goto pre_syncopdone;
+            else
+                scp->serverLock = -1;
+        }
+
         code = cm_IntSetLock(scp, userp, newLock, &req);
+
+        if (code == 0) {
+            if (scp->dataVersion != scp->lockDataVersion) {
+                /* we lost a race.  too bad */
+
+                osi_Log0(afsd_logp,
+                         "  Data version mismatch while upgrading lock.");
+                osi_Log2(afsd_logp,
+                         "  Data versions before=%d, after=%d",
+                         scp->lockDataVersion,
+                         scp->dataVersion);
+                osi_Log1(afsd_logp,
+                         "  Releasing stale lock for scp 0x%x", scp);
+
+                code = cm_IntReleaseLock(scp, userp, &req);
+
+                scp->serverLock = -1;
+
+                code = CM_ERROR_INVAL;
+
+                cm_LockMarkSCacheLost(scp);
+            } else {
+                scp->serverLock = newLock;
+            }
+        }
 
     pre_syncopdone:
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
@@ -4735,8 +4915,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
             scp->fileLocksT = osi_QPrev(&oldFileLock->fileq);
         osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, &oldFileLock->fileq);
 	lock_ReleaseWrite(&cm_scacheLock);
-    } else if (code == 0 && IS_LOCK_WAITLOCK(oldFileLock)) {
-        scp->serverLock = newLock;
     }
     lock_ReleaseMutex(&scp->mx);
 
