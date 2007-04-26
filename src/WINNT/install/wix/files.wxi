@@ -707,7 +707,7 @@
                                 <File Id="fileauarf284_HTM_$(var.Language)" Name="auarf284.htm" LongName="auarf284.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- CmdRef -->
-                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
+                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
                             <Component Id="cmp_Install_Guide_$(var.Language)" Guid="$(var.DocHtmlInstallGuid)">
                                 <File Id="fileawqbg000_HTM_$(var.Language)" Name="awqbg000.htm" LongName="awqbg000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileawqbg002_HTM_$(var.Language)" Name="awqbg002.htm" LongName="awqbg002.htm" DiskId="1" />
