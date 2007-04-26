@@ -119,6 +119,15 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 	}
     }
 
+    /* if the user can insert, we must assume they can read/write as well
+     * because we do not have the ability to determine if the current user
+     * is the owner of the file. We will have to make the call to the
+     * file server and let the file server tell us if the request should
+     * be denied.
+     */
+    if ((*outRightsp & PRSFS_INSERT) && (scp->creator == userp))
+        *outRightsp |= PRSFS_READ | PRSFS_WRITE;
+
     /* if the user can obtain a write-lock, read-locks are implied */
     if (*outRightsp & PRSFS_WRITE)
 	*outRightsp |= PRSFS_LOCK;
