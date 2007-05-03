@@ -951,7 +951,6 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
-
         if (cm_HaveBuffer(scp, bufp, 0)) 
             break;
 
@@ -961,7 +960,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             goto done;
     }
     /* locked, has callback, has valid data in buffer */
-    if ((tlen = scp->length.LowPart) > 1000) 
+    if ((tlen = scp->length.LowPart) > MOUNTPOINTLEN - 1) 
         return CM_ERROR_TOOBIG;
     if (tlen <= 0) {
         code = CM_ERROR_INVAL;

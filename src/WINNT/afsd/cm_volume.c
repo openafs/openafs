@@ -590,8 +590,11 @@ long cm_GetROVolumeID(cm_volume_t *volp)
 void cm_RefreshVolumes(void)
 {
     cm_volume_t *volp;
+    cm_scache_t *scp;
 
     cm_data.mountRootGen = time(NULL);
+
+    /* force a re-loading of volume data from the vldb */
     lock_ObtainWrite(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
 	volp->refCount++;
@@ -606,7 +609,20 @@ void cm_RefreshVolumes(void)
     }
     lock_ReleaseWrite(&cm_volumeLock);
 
-    /* We should also refresh cached mount points */
+    /* force mount points to be re-evaluated so that 
+     * if the volume location has changed we will pick 
+     * that up
+     */
+    for ( scp = cm_data.scacheLRUFirstp; 
+          scp;
+          scp = (cm_scache_t *) osi_QNext(&scp->q)) {
+        if ( scp->fileType == CM_SCACHETYPE_MOUNTPOINT ) {
+            lock_ObtainMutex(&scp->mx);
+            scp->mountPointStringp[0] = '\0';
+            lock_ReleaseMutex(&scp->mx);
+        }
+    }
+
 }
 
 /*
