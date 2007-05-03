@@ -187,7 +187,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     }
 
     /* discard symlink info */
-    scp->mountPointStringp[0] = 0;
+    scp->mountPointStringp[0] = '\0';
     memset(&scp->mountRootFid, 0, sizeof(cm_fid_t));
     memset(&scp->dotdotFid, 0, sizeof(cm_fid_t));
 
