@@ -616,7 +616,11 @@ void cm_RefreshVolumes(void)
     for ( scp = cm_data.scacheLRUFirstp; 
           scp;
           scp = (cm_scache_t *) osi_QNext(&scp->q)) {
-        if ( scp->fileType == CM_SCACHETYPE_MOUNTPOINT ) {
+        if ( scp->fileType == CM_SCACHETYPE_MOUNTPOINT 
+#ifdef AFS_FREELANCE_CLIENT
+             && !(scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID)
+#endif
+             ) {
             lock_ObtainMutex(&scp->mx);
             scp->mountPointStringp[0] = '\0';
             lock_ReleaseMutex(&scp->mx);
