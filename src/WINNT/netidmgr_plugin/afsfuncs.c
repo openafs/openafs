@@ -650,6 +650,7 @@ ViceIDToUsername(char *username,
 	pr_End();
     }
 
+#ifdef AFS_ID_TO_NAME
     /*
      * This is a crock, but it is Transarc's crock, so
      * we have to play along in order to get the
@@ -659,7 +660,7 @@ ViceIDToUsername(char *username,
      * the code for tokens, this hack (AFS ID %d) will
      * not work if you change %d to something else.
      */
-
+#endif /* AFS_ID_TO_NAME */
     /*
      * This code is taken from cklog -- it lets people
      * automatically register with the ptserver in foreign cells
@@ -692,8 +693,6 @@ ViceIDToUsername(char *username,
             status = pr_CreateUser(username, &id);
 	    pr_End();
             StringCbCopyA(username, BUFSIZ, username_copy);
-	    if (status)
-		return status;
 #ifdef AFS_ID_TO_NAME
             StringCchPrintfA(username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
@@ -727,7 +726,7 @@ afs_klog(khm_handle identity,
     char	RealmName[128];
     char	CellName[128];
     char	ServiceName[128];
-    khm_handle	confighandle;
+    khm_handle	confighandle = NULL;
     khm_int32	supports_krb4 = 1;
     khm_int32   got524cred = 0;
 
@@ -1155,11 +1154,6 @@ afs_klog(khm_handle identity,
         ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
                          &aclient, &aserver, &atoken);
 
-        // NOTE: On WIN32, the order of SetToken params changed...
-        // to   ktc_SetToken(&aserver, &aclient, &atoken, 0)
-        // from ktc_SetToken(&aserver, &atoken, &aclient, 0) on
-        // Unix...  The afscompat ktc_SetToken provides the Unix order
-
         if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0)) {
             afs_report_error(rc, "ktc_SetToken()");
             return(rc);
@@ -1469,4 +1463,39 @@ cleanup:
     CloseServiceHandle(schSCManager); 
  
     return(hr); 
+}
+
+khm_boolean
+afs_check_for_cell_realm_match(khm_handle identity, char * cell) {
+    char local_cell[MAXCELLCHARS];
+    wchar_t wrealm[MAXCELLCHARS];
+    wchar_t idname[KCDB_IDENT_MAXCCH_NAME];
+    wchar_t * atsign;
+    khm_size cb;
+    char * realm;
+    afs_conf_cell cellconfig;
+    int rc;
+
+    ZeroMemory(local_cell, sizeof(local_cell));
+
+    rc = afs_get_cellconfig(cell, &cellconfig, local_cell);
+    if (rc)
+        return FALSE;
+
+    realm = afs_realm_of_cell(&cellconfig, FALSE);
+    if (realm == NULL)
+        return FALSE;
+
+    AnsiStrToUnicode(wrealm, sizeof(wrealm), realm);
+
+    cb = sizeof(idname);
+    idname[0] = L'\0';
+    kcdb_identity_get_name(identity, idname, &cb);
+
+    atsign = wcschr(idname, L'@');
+    if (atsign && atsign[1] && !wcsicmp(atsign + 1, wrealm)) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }
