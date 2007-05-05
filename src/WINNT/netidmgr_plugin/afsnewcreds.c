@@ -535,6 +535,7 @@ afs_check_add_token_to_identity(wchar_t * cell, khm_handle ident,
     return ok_to_add;
 }
 
+
 void 
 afs_cred_get_identity_creds(afs_cred_list * l, 
                             khm_handle ident,
@@ -672,7 +673,8 @@ afs_cred_get_identity_creds(afs_cred_list * l,
 
         khc_open_space(csp_params, L"Cells", 0, &h_gcells);
 
-        if(!cm_GetRootCellName(buf)) {
+        if (!cm_GetRootCellName(buf) &&
+            afs_check_for_cell_realm_match(ident, buf)) {
             AnsiStrToUnicode(wbuf, sizeof(wbuf), buf);
 
             if (afs_check_add_token_to_identity(wbuf, ident, NULL)) {
@@ -752,6 +754,15 @@ afs_cred_get_identity_creds(afs_cred_list * l,
 
                 if (i < l->n_rows)
                     continue;
+
+                {
+                    char cell[MAXCELLCHARS];
+
+                    UnicodeStrToAnsi(cell, sizeof(cell), c_cell);
+
+                    if (!afs_check_for_cell_realm_match(ident, cell))
+                        continue;
+                }
 
                 r = afs_cred_get_new_row(l);
 
