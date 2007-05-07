@@ -739,10 +739,13 @@
   <sect1 id="HDRWQ31">
     <title>Getting Started on HP-UX Systems</title>
 
-    <para>Begin by building AFS modifications into a new kernel; HP-UX does not support dynamic loading. Then create partitions for
-    storing AFS volumes, and install and configure the AFS-modified <emphasis role="bold">fsck</emphasis> program to run on AFS
-    server partitions. If the machine is to remain an AFS client machine, incorporate AFS into the machine's Pluggable
-    Authentication Module (PAM) scheme. <indexterm>
+    <para>Begin by building AFS modifications into a new kernel; HP-UX
+    does not support dynamic loading. Then create partitions for storing
+    AFS volumes, and install and configure the AFS-modified <emphasis
+    role="bold">fsck</emphasis> program to run on AFS server
+    partitions. If the machine is to remain an AFS client machine,
+    incorporate AFS into the machine's Pluggable Authentication Module
+    (PAM) scheme. <indexterm>
         <primary>incorporating AFS kernel extensions</primary>
 
         <secondary>first AFS machine</secondary>
@@ -1119,30 +1122,33 @@
 
       <note><para>If you plan to remove client functionality from this machine after completing the installation, skip this section and proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para></note>
 
-      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
-      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
-      authenticated access to and from the machine.</para>
+      <para>At this point you incorporate AFS into the operating system's
+      Pluggable Authentication Module (PAM) scheme. PAM integrates all
+      authentication mechanisms on the machine, including login, to
+      provide the security infrastructure for authenticated access to and
+      from the machine.</para>
 
       <para>In modern AFS installations, you should be using Kerberos v5
-      for user login, and obtaining AFS tokens subsequent to this authentication
-      step. OpenAFS does not currently distribute a PAM module allowing AFS 
-      tokens to be automatically gained at login. Whilst there are a number of
-      third party modules providing this functionality, it is not know if these 
-      have been tested with HP/UX.</para>
+      for user login, and obtaining AFS tokens subsequent to this
+      authentication step. OpenAFS does not currently distribute a PAM
+      module allowing AFS tokens to be automatically gained at
+      login. Whilst there are a number of third party modules providing
+      this functionality, it is not know if these have been tested with
+      HP/UX.</para>
       
-      <para>Following login, users can 
-      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
-      command</para>
+      <para>Following login, users can obtain tokens by running the
+      <emphasis role="bold">aklog</emphasis> command</para>
 
-      <para>Sites which still require <emphasis role="bold">kaserver</emphasis>
-      or external Kerberos v4 authentication should consult 
-      <link linkend="KAS013">Enabling kaserver based AFS login on HP-UX systems</link>
-      for details of how to enable HP-UX login.</para>
+      <para>Sites which still require <emphasis
+      role="bold">kaserver</emphasis> or external Kerberos v4
+      authentication should consult <link linkend="KAS013">Enabling
+      kaserver based AFS login on HP-UX systems</link> for details of how
+      to enable HP-UX login.</para>
 
-      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS Server</link> 
-      (or if referring to these instructions while installing an additional 
-      file server machine, return to <link linkend="HDRWQ108">Starting Server
-      Programs</link>).</para>      
+      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS
+      Server</link> (or if referring to these instructions while
+      installing an additional file server machine, return to <link
+      linkend="HDRWQ108">Starting Server Programs</link>).</para>
     </sect2>
   </sect1>
 
@@ -1671,10 +1677,13 @@
     RedHat Enterprise Linux packages distributed by OpenAFS. Additional 
     instructions are provided for those building from source.</para>
 
-    <para>Begin by running the AFS client startup scripts, which call the <emphasis role="bold">modprobe</emphasis> program, which
-    dynamically loads AFS modifications into the kernel. Then create partitions for storing AFS volumes. You do not need to replace
-    the Linux <emphasis role="bold">fsck</emphasis> program. If the machine is to remain an AFS client machine, incorporate AFS into
-    the machine's Pluggable Authentication Module (PAM) scheme. <indexterm>
+    <para>Begin by running the AFS client startup scripts, which call the
+    <emphasis role="bold">modprobe</emphasis> program, which dynamically
+    loads AFS modifications into the kernel. Then create partitions for
+    storing AFS volumes. You do not need to replace the Linux <emphasis
+    role="bold">fsck</emphasis> program. If the machine is to remain an
+    AFS client machine, incorporate AFS into the machine's Pluggable
+    Authentication Module (PAM) scheme. <indexterm>
         <primary>incorporating AFS kernel extensions</primary>
 
         <secondary>first AFS machine</secondary>
@@ -1933,30 +1942,92 @@
       <title>Enabling AFS Login on Linux Systems</title>
 
       <note>
-        <para>If you plan to remove client functionality from this machine after completing the installation, skip this section and
-        proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
+        <para>If you plan to remove client functionality from this machine
+        after completing the installation, skip this section and proceed
+        to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
       </note>
 
-      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
-      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
-      authenticated access to and from the machine.</para>
+      <para>At this point you incorporate AFS into the operating system's
+      Pluggable Authentication Module (PAM) scheme.  PAM integrates all
+      authentication mechanisms on the machine, including login, to provide
+      the security infrastructure for authenticated access to and from the
+      machine.</para>
 
-      <para>At this time, we recommend that new sites requiring AFS credentials
-      to be gained as part of PAM authentication use Russ Alberry's 
-      pam_afs_session, rather than utilising the bundled pam_afs2 module. 
-      A typical PAM stack should authenticate the user using an external 
-      Kerberos V service, and then use the AFS PAM module to obtain AFS 
-      credentials in the <computeroutput>session</computeroutput> section</para>
+      <para>You should first configure your system to obtain Kerberos v5
+      tickets as part of the authentication process, and then run an AFS PAM
+      module to obtain tokens from those tickets after authentication.  Many
+      Linux distributions come with a Kerberos v5 PAM module (usually called
+      pam-krb5 or pam_krb5), or you can download and install <ulink
+      url="http://www.eyrie.org/~eagle/software/pam-krb5">Russ Allbery's
+      Kerberos v5 PAM module</ulink>, which is tested regularly with AFS.
+      See the instructions of whatever PAM module you use for how to
+      configure it.</para>
 
-      <para>Sites which still require <emphasis role="bold">kaserver</emphasis>
-      or external Kerberos v4 authentication should consult 
-      <link linkend="KAS015">Enabling kaserver based AFS Login on Linux Systems</link>
-      for details of how to enable AFS login on Linux.</para>
+      <para>Some Kerberos v5 PAM modules do come with native AFS support
+      (usually requiring the Heimdal Kerberos implementation rather than the
+      MIT Kerberos implementation).  If you are using one of those PAM
+      modules, you can configure it to obtain AFS tokens.  It's more common,
+      however, to separate the AFS token acquisition into a separate PAM
+      module.</para>
+
+      <para>The recommended AFS PAM module is <ulink
+      url="http://www.eyrie.org/~eagle/software/pam-afs-session/">Russ
+      Allbery's pam-afs-session module</ulink>.  It should work with any of
+      the Kerberos v5 PAM modules.  To add it to the PAM configuration, you
+      often only need to add configuration to the session group:</para>
+
+      <example>
+        <title>PAM session example</title>
+        <literallayout>session  required  pam_afs_session.so</literallayout>
+      </example>
+
+      <para>If you also want to obtain AFS tokens for <command>scp</command>
+      and similar commands that don't open a session, you will also need to
+      add the AFS PAM module to the auth group so that the PAM
+      <function>setcred</function> call will obtain tokens.  The
+      <literal>pam_afs_session</literal> module will always return success
+      for authentication so that it can be added to the auth group only for
+      <function>setcred</function>, so make sure that it's not marked as
+      <literal>sufficient</literal>.</para>
+
+      <example>
+        <title>PAM auth example</title>
+<literallayout>auth  [success=ok default=1]  pam_krb5.so
+auth  [default=done]          pam_afs_session.so
+auth  required                pam_unix.so try_first_pass</literallayout>
+      </example>
+
+      <para>This example will work if you want to try Kerberos v5 first and
+      then fall back to regular Unix authentication.
+      <literal>success=ok</literal> for the Kerberos PAM module followed by
+      <literal>default=done</literal> for the AFS PAM module will cause a
+      successful Kerberos login to run the AFS PAM module and then skip the
+      Unix authentication module.  <literal>default=1</literal> on the
+      Kerberos PAM module causes failure of that module to skip the next
+      module (the AFS PAM module) and fall back to the Unix module.  If you
+      want to try Unix authentication first and rearrange the order, be sure
+      to use <literal>default=die</literal> instead.</para>
+
+      <para>The PAM configuration is stored in different places in different
+      Linux distributions.  On Red Hat, look in
+      <filename>/etc/pam.d/system-auth</filename>.  On Debian and
+      derivatives, look in <filename>/etc/pam.d/common-session</filename>
+      and <filename>/etc/pam.d/common-auth</filename>.</para>
+
+      <para>For additional configuration examples and the configuration
+      options of the AFS PAM module, see its documentation.  For more
+      details on the available options for the PAM configuration, see the
+      Linux PAM documentation.</para>
+
+      <para>Sites which still require <command>kaserver</command> or
+      external Kerberos v4 authentication should consult <link
+      linkend="KAS015">Enabling kaserver based AFS Login on Linux
+      Systems</link> for details of how to enable AFS login on Linux.</para>
       
-      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS Server</link> 
-      (or if referring to these instructions while installing an additional 
-      file server machine, return to <link linkend="HDRWQ108">Starting Server
-      Programs</link>).</para>
+      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS
+      Server</link> (or if referring to these instructions while installing
+      an additional file server machine, return to <link
+      linkend="HDRWQ108">Starting Server Programs</link>).</para>
     </sect2>
   </sect1>
 
@@ -2351,30 +2422,67 @@
         proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
       </note>
 
-      <para>At this point you incorporate AFS into the operating system's Pluggable Authentication Module (PAM) scheme. PAM
-      integrates all authentication mechanisms on the machine, including login, to provide the security infrastructure for
-      authenticated access to and from the machine.</para>
+      <para>At this point you incorporate AFS into the operating system's
+      Pluggable Authentication Module (PAM) scheme.  PAM integrates all
+      authentication mechanisms on the machine, including login, to provide
+      the security infrastructure for authenticated access to and from the
+      machine.</para>
 
-      <para>Explaining PAM is beyond the scope of this document. It is assumed that you understand the syntax and meanings of
-      settings in the PAM configuration file (for example, how the <computeroutput>other</computeroutput> entry works, the effect of
-      marking an entry as <computeroutput>required</computeroutput>, <computeroutput>optional</computeroutput>, or
+      <para>Explaining PAM is beyond the scope of this document.  It is
+      assumed that you understand the syntax and meanings of settings in the
+      PAM configuration file (for example, how the
+      <computeroutput>other</computeroutput> entry works, the effect of
+      marking an entry as <computeroutput>required</computeroutput>,
+      <computeroutput>optional</computeroutput>, or
       <computeroutput>sufficient</computeroutput>, and so on).</para>
 
-      <para>In modern AFS installations, you should be using Kerberos v5
-      for user login, and obtaining AFS tokens subsequent to this authentication
-      step. OpenAFS does not currently distribute a PAM module allowing AFS 
-      tokens to be automatically gained at login. Whilst there are a number of
-      third party modules providing this functionality, it is not know if these 
-      have been tested with HP/UX.</para>
-      
-      <para>Following login, users can 
-      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
-      command</para>
+      <para>You should first configure your system to obtain Kerberos v5
+      tickets as part of the authentication process, and then run an AFS PAM
+      module to obtain tokens from those tickets after authentication.
+      Current versions of Solaris come with a Kerberos v5 PAM module that
+      will work, or you can download and install <ulink
+      url="http://www.eyrie.org/~eagle/software/pam-krb5">Russ Allbery's
+      Kerberos v5 PAM module</ulink>, which is tested regularly with AFS.
+      See the instructions of whatever PAM module you use for how to
+      configure it.</para>
 
-      <para>Sites which still require <emphasis role="bold">kaserver</emphasis>
-      or external Kerberos v4 authentication should consult 
-      <link linkend="KAS016">Enabling kaserver based AFS Login on Solaris Systems"</link>
-      for details of how to enable AIX login.</para>
+      <para>Some Kerberos v5 PAM modules do come with native AFS support
+      (usually requiring the Heimdal Kerberos implementation rather than the
+      MIT Kerberos implementation).  If you are using one of those PAM
+      modules, you can configure it to obtain AFS tokens.  It's more common,
+      however, to separate the AFS token acquisition into a separate PAM
+      module.</para>
+
+      <para>The recommended AFS PAM module is <ulink
+      url="http://www.eyrie.org/~eagle/software/pam-afs-session/">Russ
+      Allbery's pam-afs-session module</ulink>.  It should work with any of
+      the Kerberos v5 PAM modules.  To add it to the PAM configuration, you
+      often only need to add configuration to the session group in
+      <filename>pam.conf</filename>:</para>
+
+      <example>
+        <title>PAM session example</title>
+<literallayout>login session required pam_afs_session.so</literallayout>
+      </example>
+
+      <para>This example enables PAM authentication only for console login.
+      You may want to add a similar line for the ssh service and for any
+      other login service that you use, including possibly the
+      <literal>other</literal> service (which serves as a catch-all).  You
+      may also want to add options to the AFS PAM session module
+      (particularly <literal>retain_after_close</literal>, which is
+      necessary for some versions of Solaris.</para>
+
+      <para>For additional configuration examples and the configuration
+      options of the AFS PAM module, see its documentation.  For more
+      details on the available options for the PAM configuration, see the
+      <filename>pam.conf</filename> manual page.</para>
+
+      <para>Sites which still require <emphasis
+      role="bold">kaserver</emphasis> or external Kerberos v4 authentication
+      should consult <link linkend="KAS016">Enabling kaserver based AFS
+      Login on Solaris Systems"</link> for details of how to enable AFS
+      login on Solaris.</para>
 
       <para>Proceed to <link linkend="HDRWQ49a">Editing the File Systems 
       Clean-up Script on Solaris Systems</link></para>
