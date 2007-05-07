@@ -511,6 +511,7 @@ Copy(char *file1, char *file2, short recursive, int level)
 	char f1[MAXPATHLEN], f2[MAXPATHLEN];
 	char *p1, *p2;
 	struct dirent *d;
+	struct timeval tv[2];
 
 	if (verbose) {
 	    printf("Level %d: Directory %s to %s\n", level, file1, file2);
@@ -698,6 +699,15 @@ Copy(char *file1, char *file2, short recursive, int level)
 		printf("Not setting acls\n");
 	    }
 	}
+
+        /* preserve access and modification times: ("-x" disables) */
+        if (preserveDate) {
+            tv[0].tv_sec = s1.st_atime;
+            tv[0].tv_usec = 0;
+            tv[1].tv_sec = s1.st_mtime;
+            tv[1].tv_usec = 0;
+            utimes(file2, tv);
+        }
     }
 
     return rcode;
