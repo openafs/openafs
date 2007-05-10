@@ -2783,7 +2783,7 @@ DumpVolume(as)
 
 {
     afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i;
-    char filename[NameLen];
+    char filename[MAXPATHLEN];
     struct nvldbentry entry;
 
     rx_SetRxDeadTime(60 * 10);
@@ -2883,7 +2883,7 @@ RestoreVolume(as)
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
     char prompt;
-    char afilename[NameLen], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
+    char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
 
