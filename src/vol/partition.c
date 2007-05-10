@@ -440,14 +440,14 @@ VAttachPartitions(void)
 	/* but allow zfs too if we're in the NAMEI environment */
 	if (
 #ifdef AFS_NAMEI_ENV
-	((!strcmp(mnt.mnt_fstype, "ufs") &&
-	  !strcmp(mnt.mnt_fstype, "zfs")))
+	    ((!(strcmp(mnt.mnt_fstype, "ufs") &&
+		strcmp(mnt.mnt_fstype, "zfs"))))
 #else
-	(strcmp(mnt.mnt_fstype, "ufs") != 0)
+	    (strcmp(mnt.mnt_fstype, "ufs") != 0)
 #endif
-	|| (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
+	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
-
+	
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
