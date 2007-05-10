@@ -240,6 +240,7 @@
 #define SYS_NAME_ID_i386_obsd38		2607
 #define SYS_NAME_ID_i386_obsd39		2608
 #define SYS_NAME_ID_i386_obsd40         2609
+#define SYS_NAME_ID_i386_obsd41         2610
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
@@ -285,6 +286,4 @@
 #ifdef	AFS_KERBREALM_ENV
 #define	AFS_REALM_SZ		64
 #endif
-/* Specifies the number of equivalent local realm names */
-#define AFS_NUM_LREALMS         4
 #endif /* __AFS_SYSNAMES_INCL_ENV_ */
