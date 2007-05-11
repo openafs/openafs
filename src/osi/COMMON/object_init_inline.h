@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -37,8 +37,8 @@
 #endif
 
 
-#if defined(OSI_PREEMPTIVE_ENV)
-#if defined(OSI_PTHREAD_ENV)
+#if defined(OSI_ENV_PREEMPTIVE)
+#if defined(OSI_ENV_PTHREAD)
 osi_inline_define(
 void
 osi_object_init(osi_object_init_t * once)
@@ -88,7 +88,7 @@ osi_object_init_check(osi_object_init_t * once)
     return (once->initialized == 2);
 }
 )
-#else /* !OSI_IMPLEMENTS_ATOMIC_CAS_FAST */
+#else /* !OSI_OBJECT_INIT_ATOMIC */
 osi_inline_define(
 void
 osi_object_init(osi_object_init_t * once)
@@ -115,8 +115,8 @@ osi_object_init_check(osi_object_init_t * once)
     return once->initialized;
 }
 )
-#endif /* !OSI_IMPLEMENTS_ATOMIC_CAS_FAST */
-#else /* !OSI_PREEMPTIVE_ENV */
+#endif /* !OSI_OBJECT_INIT_ATOMIC */
+#else /* !OSI_ENV_PREEMPTIVE */
 osi_inline_define(
 void
 osi_object_init(osi_object_init_t * once)
@@ -134,7 +134,7 @@ osi_object_init_check(osi_object_init_t * once)
     return once->initialized;
 }
 )
-#endif /* !OSI_PREEMPTIVE_ENV */
+#endif /* !OSI_ENV_PREEMPTIVE */
 
 osi_inline_define(
 void

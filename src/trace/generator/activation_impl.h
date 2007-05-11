@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -18,6 +18,8 @@
  */
 
 #include <trace/activation.h>
+#include <osi/osi_mem_local.h>
+#include <osi/osi_mutex.h>
 
 
 /*

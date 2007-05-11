@@ -179,6 +179,7 @@ struct uio;
 
 /* global defines */
 
+#define OSI_ENV_UNIX	        1
 #define OSI_HPUX_ENV	        1
 #define	OSI_HPUX90_ENV	        1
 #define	OSI_HPUX100_ENV	        1

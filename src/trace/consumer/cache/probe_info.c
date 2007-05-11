@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,17 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_mutex.h>
 #include <osi/osi_string.h>
 #include <osi/osi_object_cache.h>
+#include <osi/osi_event.h>
 #include <trace/mail.h>
 #include <trace/mail/msg.h>
 #include <trace/consumer/cache/probe_info.h>
 #include <trace/consumer/cache/probe_info_impl.h>
-#include <trace/common/options.h>
 
 /*
  * osi tracing framework
@@ -30,10 +29,8 @@ struct osi_trace_consumer_probe_info_cache_directory osi_trace_consumer_probe_in
 
 
 /* static prototypes */
-osi_static int
-osi_trace_consumer_probe_info_cache_ctor(void * buf, void * sdata, int flags);
-osi_static void
-osi_trace_consumer_probe_info_cache_dtor(void * buf, void * sdata);
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(osi_trace_consumer_probe_info_cache_ctor);
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_PROTOTYPE(osi_trace_consumer_probe_info_cache_dtor);
 osi_static osi_result
 osi_trace_consumer_probe_arg_info_cache_alloc(osi_trace_consumer_probe_info_cache_t * probe,
 					      osi_uint32 arg_count);
@@ -46,16 +43,19 @@ __osi_trace_consumer_probe_info_cache_free(void * buf);
 /*
  * probe info object cache element constructor
  */
-osi_static int
-osi_trace_consumer_probe_info_cache_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(osi_trace_consumer_probe_info_cache_ctor)
 {
-    osi_trace_consumer_probe_info_cache_t * probe = buf;
+    osi_trace_consumer_probe_info_cache_t * probe =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
     probe->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_PROBE_INFO;
-    probe->probe_cache_index = *((osi_uint8 *)sdata);
+    probe->probe_cache_index = *((osi_uint8 *)OSI_MEM_OBJECT_CACHE_FUNC_ARG_ROCK);
     osi_mutex_Init(&probe->lock, 
-		   &osi_trace_common_options.mutex_opts);
+		   osi_trace_impl_mutex_opts());
     osi_refcnt_init(&probe->refcnt, 0);
+    osi_event_hook_Init(&probe->hook);
+    osi_event_hook_set_rock(&probe->hook,
+			    probe);
 
     return 0;
 }
@@ -63,11 +63,12 @@ osi_trace_consumer_probe_info_cache_ctor(void * buf, void * sdata, int flags)
 /*
  * probe info object cache element destructor
  */
-osi_static void
-osi_trace_consumer_probe_info_cache_dtor(void * buf, void * sdata)
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_DECL(osi_trace_consumer_probe_info_cache_dtor)
 {
-    osi_trace_consumer_probe_info_cache_t * probe = buf;
+    osi_trace_consumer_probe_info_cache_t * probe =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
+    osi_event_hook_Destroy(&probe->hook);
     osi_mutex_Destroy(&probe->lock);
     osi_refcnt_destroy(&probe->refcnt);
     probe->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_INVALID;
@@ -121,6 +122,9 @@ osi_trace_consumer_probe_arg_info_cache_alloc(osi_trace_consumer_probe_info_cach
     }
     probe->arg_valid = 0;
 
+    /* default to an event probe type */
+    probe->probe_type = OSI_TRACE_PROBE_TYPE_EVENT;
+
  error_sync:
     osi_mutex_Unlock(&probe->lock);
 
@@ -132,6 +136,12 @@ osi_trace_consumer_probe_arg_info_cache_alloc(osi_trace_consumer_probe_info_cach
  *
  * [IN] probe  -- pointer to probe object
  *
+ * preconditions:
+ *   probe->lock held
+ *
+ * postconditions:
+ *   if arg vec was not null, it is freed
+ *
  * returns:
  *   OSI_OK always
  */
@@ -142,12 +152,10 @@ osi_trace_consumer_probe_arg_info_cache_free(osi_trace_consumer_probe_info_cache
     osi_trace_consumer_probe_arg_info_cache_t * arg;
     osi_uint8 idx;
 
-    osi_mutex_Lock(&probe->lock);
     arg = probe->arg_vec;
     idx = probe->arg_cache_index;
     probe->arg_vec = osi_NULL;
     probe->arg_valid = 0;
-    osi_mutex_Unlock(&probe->lock);
 
     if (arg) {
 	osi_mem_object_cache_free(osi_trace_consumer_probe_info_cache.arg_cache[idx].cache,
@@ -216,7 +224,7 @@ osi_trace_consumer_probe_info_cache_alloc(const char * probe_name,
  * [IN] probe  -- opaque pointer to probe info cache object
  *
  * preconditions:
- *   probe->lock not held
+ *   probe->lock held
  *
  * returns:
  *   OSI_OK on success
@@ -233,8 +241,31 @@ __osi_trace_consumer_probe_info_cache_free(void * buf)
 	res = osi_trace_consumer_probe_arg_info_cache_free(probe);
     }
 
+    osi_mutex_Unlock(&probe->lock);
+
     pool = osi_trace_consumer_probe_info_cache.cache[probe->probe_cache_index].cache;
     osi_mem_object_cache_free(pool, probe);
+
+    return res;
+}
+
+/*
+ * subscribe to this probe's event feed
+ *
+ * [IN] probe  -- pointer to probe info cache object
+ * [IN] sub    -- pointer to subscription object 
+ *
+ * returns:
+ *   see osi_event_subscribe()
+ */
+osi_result
+osi_trace_consumer_probe_info_cache_event_subscribe(osi_trace_consumer_probe_info_cache_t * probe,
+						    osi_event_subscription_t * sub)
+{
+    osi_result res;
+
+    res = osi_event_subscribe(&probe->hook,
+			      sub);
 
     return res;
 }
@@ -270,6 +301,7 @@ osi_trace_consumer_probe_info_cache_get(osi_trace_consumer_probe_info_cache_t * 
  *
  * postconditions:
  *   probe->lock not held
+ *   probe deallocated if refcount reaches zero
  *
  * returns:
  *   OSI_OK on success
@@ -279,12 +311,17 @@ osi_result
 osi_trace_consumer_probe_info_cache_put(osi_trace_consumer_probe_info_cache_t * probe)
 {
     osi_result res = OSI_OK;
+    int code;
 
-    (void)osi_refcnt_dec_action(&probe->refcnt,
-				0,
-				&__osi_trace_consumer_probe_info_cache_free,
-				probe,
-				&res);
+    code = osi_refcnt_dec_action(&probe->refcnt,
+				 0,
+				 &__osi_trace_consumer_probe_info_cache_free,
+				 probe,
+				 &res);
+    if (!code) {
+	/* action didn't fire */
+	osi_mutex_Unlock(&probe->lock);
+    }
 
     return res;
 }
@@ -419,8 +456,7 @@ osi_trace_consumer_probe_info_cache_lookup_name(osi_trace_consumer_probe_info_ca
     return res;
 }
 
-osi_result
-osi_trace_consumer_probe_info_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_consumer_probe_info_cache_PkgInit)
 {
     int i;
     osi_result res = OSI_OK;
@@ -452,7 +488,7 @@ osi_trace_consumer_probe_info_cache_PkgInit(void)
 					osi_NULL,
 					osi_NULL,
 					osi_NULL,
-					&osi_trace_common_options.mem_object_cache_opts);
+					osi_trace_impl_mem_object_cache_opts());
 	if (osi_compiler_expect_false(osi_trace_consumer_probe_info_cache.arg_cache[i].cache == osi_NULL)) {
 	    res = OSI_ERROR_NOMEM;
 	    goto error;
@@ -490,7 +526,7 @@ osi_trace_consumer_probe_info_cache_PkgInit(void)
 					&osi_trace_consumer_probe_info_cache_ctor,
 					&osi_trace_consumer_probe_info_cache_dtor,
 					osi_NULL,
-					&osi_trace_common_options.mem_object_cache_opts);
+					osi_trace_impl_mem_object_cache_opts());
 	if (osi_compiler_expect_false(osi_trace_consumer_probe_info_cache.cache[i].cache == osi_NULL)) {
 	    res = OSI_ERROR_NOMEM;
 	    goto error;
@@ -501,8 +537,7 @@ osi_trace_consumer_probe_info_cache_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_trace_consumer_probe_info_cache_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_consumer_probe_info_cache_PkgShutdown)
 {
     osi_result res = OSI_OK;
     int i;

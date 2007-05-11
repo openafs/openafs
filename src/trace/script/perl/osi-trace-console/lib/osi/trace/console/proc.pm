@@ -1,6 +1,6 @@
 package osi::trace::console::proc;
 
-use 5.008008;
+use 5.006;
 use strict;
 use warnings;
 
@@ -20,6 +20,10 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 				   DESTROY,
 				   proc_set,
 				   proc_get,
+				   pid,
+				   program_type,
+				   trace_interface_version,
+				   capabilities,
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -27,6 +31,35 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 	
 );
+
+
+# these fields are given values by the XS boot logic
+our $ProgramType_Library               = undef;
+our $ProgramType_BosServer             = undef;
+our $ProgramType_CacheManager          = undef;
+our $ProgramType_FileServer            = undef;
+our $ProgramType_VolServer             = undef;
+our $ProgramType_Salvager              = undef;
+our $ProgramType_SalvageServer         = undef;
+our $ProgramType_SalvageServerWorker   = undef;
+our $ProgramType_PtServer              = undef;
+our $ProgramType_VLServer              = undef;
+our $ProgramType_KAServer              = undef;
+our $ProgramType_BuServer              = undef;
+our $ProgramType_Utility               = undef;
+our $ProgramType_EphemeralUtility      = undef;
+our $ProgramType_TraceCollector        = undef;
+our $ProgramType_TestSuite             = undef;
+our $ProgramType_TraceKernel           = undef;
+our $ProgramType_Backup                = undef;
+our $ProgramType_BuTC                  = undef;
+our $ProgramType_UpServer              = undef;
+our $ProgramType_UpClient              = undef;
+our $ProgramType_Bos                   = undef;
+our $ProgramType_Vos                   = undef;
+our $ProgramType_AFSD                  = undef;
+our $ProgramType_RMTSYSD               = undef;
+
 
 our $VERSION = '0.01';
 
@@ -74,7 +107,7 @@ Tom Keiser, E<lt>tkeiser@sinenomine.netE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 Sine Nomine Associates and others.
+Copyright (C) 2006-2007 Sine Nomine Associates and others.
 All Rights Reserved.
 
 This software has been released under the terms of the IBM Public
@@ -106,3 +139,26 @@ sub proc_get {
   return $self->{__gen_id};
 }
 
+sub pid {
+  my ($self) = @_;
+
+  return $self->{__i_pid};
+}
+
+sub program_type {
+  my ($self) = @_;
+
+  return $self->{__i_ptype};
+}
+
+sub trace_interface_version {
+  my ($self) = @_;
+
+  return $self->{__i_version};
+}
+
+sub capabilities {
+  my ($self) = @_;
+
+  return $self->{__i_caps};
+}

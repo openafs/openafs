@@ -32,17 +32,29 @@ typedef struct osi_trace_consumer_probe_arg_val_cache {
     osi_time32_t osi_volatile arg_update;
 } osi_trace_consumer_probe_arg_val_cache_t;
 
+/*
+ * provide access to cached values for several different probe variants:
+ *   arg_vec provides access to a "normal" probe's cached arg vector
+ *   anly_var provides access to a libanalyzer var fan-out vector
+ */
+typedef union {
+    osi_trace_consumer_probe_arg_val_cache_t * osi_volatile arg_vec;
+    struct osi_trace_anly_var * osi_volatile anly_var;
+    void * opaque;
+} osi_trace_consumer_probe_arg_val_cache_u;
+
 typedef struct osi_trace_consumer_probe_val_cache {
     osi_trace_consumer_cache_object_header_t hdr;
+
+    /* pointer to associated probe info object */
+    struct osi_trace_consumer_probe_info_cache * osi_volatile probe_info;
 
     /* 
      * BEGIN fields synchronized by lock
      */
-    /* pointer to associated probe info object */
-    struct osi_trace_probe_info_cache * osi_volatile probe_info;
 
     /* probe argument value vector */
-    osi_trace_consumer_probe_arg_val_cache_t * osi_volatile arg_vec;
+    osi_trace_consumer_probe_arg_val_cache_u probe_val;
 
     /* probe value change watcher */
     osi_event_hook_t hook;

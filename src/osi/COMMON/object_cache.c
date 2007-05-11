@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -141,24 +141,20 @@ osi_mem_object_cache_free(osi_mem_object_cache_t * cache, void * buf)
     }
 }
 
-int
-osi_mem_object_cache_dummy_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_DECL(osi_mem_object_cache_dummy_ctor)
 {
     return 0;
 }
-void
-osi_mem_object_cache_dummy_dtor(void * buf, void * sdata)
+OSI_MEM_OBJECT_CACHE_DTOR_DECL(osi_mem_object_cache_dummy_dtor)
 {
     return;
 }
-void
-osi_mem_object_cache_dummy_reclaim(void * sdata)
+OSI_MEM_OBJECT_CACHE_RECLAIM_DECL(osi_mem_object_cache_dummy_reclaim)
 {
     return;
 }
 
-osi_result
-osi_mem_object_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_mem_object_cache_PkgInit)
 {
     osi_result res = OSI_OK;
     osi_size_t align;
@@ -182,12 +178,16 @@ osi_mem_object_cache_PkgInit(void)
 
 }
 
-osi_result
-osi_mem_object_cache_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_mem_object_cache_PkgShutdown)
 {
-    osi_result res = OSI_OK;
+    osi_result res, code = OSI_OK;
 
     res = _osi_mem_object_cache_destroy(&__osi_mem_object_cache_base_cache);
+#if defined(OSI_DEBUG_MEM_OBJECT_CACHE)
+    if (OSI_RESULT_FAIL(res)) {
+	(osi_Msg "WARNING: at least one osi_mem_object_cache was not destroyed during shutdown\n");
+    }
+#endif /* OSI_DEBUG_MEM_OBJECT_CACHE */
 
-    return res;
+    return code;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,10 +13,8 @@
  * initialization/shutdown
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/common/init.h>
-#include <trace/common/options.h>
 #include <trace/gen_rgy.h>
 #include <trace/directory.h>
 #include <trace/mail.h>
@@ -27,12 +25,6 @@ osi_result
 osi_trace_common_PkgInit(void)
 {
     osi_result res;
-
-    res = osi_trace_common_options_PkgInit();
-    if (OSI_RESULT_FAIL(res)) {
-	(osi_Msg "osi_trace_common_PkgInit(): common options initialization failed\n");
-	goto error;
-    }
 
     res = osi_trace_syscall_PkgInit();
     if (OSI_RESULT_FAIL(res)) {
@@ -66,13 +58,13 @@ osi_trace_common_PkgInit(void)
     }
 
     /* XXX we will eventually want this in userspace as well... */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
     res = osi_trace_query_PkgInit();
     if (OSI_RESULT_FAIL(res)) {
 	(osi_Msg "osi_trace_common_PkgInit(): query initialization failed\n");
 	goto error;
     }
-#endif /* OSI_KERNELSPACE_ENV */
+#endif /* OSI_ENV_KERNELSPACE */
 
  error:
     return res;
@@ -84,12 +76,12 @@ osi_trace_common_PkgShutdown(void)
     osi_result res;
 
     /* XXX we will eventually want this in userspace as well... */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
     res = osi_trace_query_PkgShutdown();
     if (OSI_RESULT_FAIL(res)) {
 	goto error;
     }
-#endif /* OSI_KERNELSPACE_ENV */
+#endif /* OSI_ENV_KERNELSPACE */
 
     res = osi_trace_directory_PkgShutdown();
     if (OSI_RESULT_FAIL(res)) {
@@ -112,11 +104,6 @@ osi_trace_common_PkgShutdown(void)
     }
 
     res = osi_trace_syscall_PkgShutdown();
-    if (OSI_RESULT_FAIL(res)) {
-	goto error;
-    }
-
-    res = osi_trace_common_options_PkgShutdown();
     if (OSI_RESULT_FAIL(res)) {
 	goto error;
     }

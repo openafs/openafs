@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -19,19 +19,7 @@
 #include <osi/osi_mutex.h>
 
 
-#if defined(OSI_PTHREAD_ENV) && (defined(__sparcv8plus) || defined(__sparcv9) || defined(__amd64))
-
-/*
- * WARNING
- * this implementation makes certain ISA assumptions.  if you attempt
- * to build on the wrong platform, 64-bit load/store atomicity assumptions
- * go away, and this algorithm becomes prone to races.
- *
- * if you really must build libosi on ia32 or prehistoric sparc,
- * then you'll be using the inline implementation of osi_time_approx_get()
- * from src/osi/SOLARIS/utime_approx_inline.h
- */
-
+#if defined(OSI_IMPLEMENTS_NATIVE_TIME_APPROX)
 
 struct {
     hrtime_t osi_volatile last_update;
@@ -77,8 +65,7 @@ osi_time_approx_get(osi_time_t * ts_out,
     return res;
 }
 
-osi_result
-osi_time_approx_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_time_approx_PkgInit)
 {
     osi_result res;
     osi_mutex_options_t opts;
@@ -96,26 +83,11 @@ osi_time_approx_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_time_approx_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_time_approx_PkgShutdown)
 {
     osi_mutex_Destroy(&osi_time_approx_state.update_lock);
 
     return OSI_OK;
 }
 
-#else /* !OSI_PTHREAD_ENV || !__sparcv8plus && !__sparcv9 && !__amd64 */
-
-osi_result
-osi_time_approx_PkgInit(void)
-{
-    return OSI_OK;
-}
-
-osi_result
-osi_time_approx_PkgShutdown(void)
-{
-    return OSI_OK;
-}
-
-#endif /* !__sparcv8plus && !__sparcv9 && !__amd64 */
+#endif /* OSI_IMPLEMENTS_NATIVE_TIME_APPROX */

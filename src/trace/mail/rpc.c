@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,15 +13,13 @@
  * Remote Procedure Call layer
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_object_cache.h>
 #include <osi/osi_condvar.h>
 #include <osi/osi_mutex.h>
 #include <trace/mail.h>
 #include <trace/mail/rpc.h>
-#include <trace/common/options.h>
 #include <trace/USERSPACE/mail.h>
 
 #include <osi/osi_lib_init.h>
@@ -115,7 +113,7 @@ osi_trace_mail_rpc_callback_cv_cache_ctor(void * buf, void * sdata, int flags)
     cv = (osi_trace_mail_rpc_callback_cv_t *) buf;
 
     osi_condvar_Init(&cv->cv,
-		     &osi_trace_common_options.condvar_opts);
+		     osi_trace_impl_condvar_opts());
 
     return 0;
 }
@@ -650,7 +648,7 @@ osi_trace_mail_rpc_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_rpc_callback_cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
 	goto error;
@@ -664,7 +662,7 @@ osi_trace_mail_rpc_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_rpc_callback_func_cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
 	goto error;
@@ -678,7 +676,7 @@ osi_trace_mail_rpc_PkgInit(void)
 				    &osi_trace_mail_rpc_callback_cv_cache_ctor,
 				    &osi_trace_mail_rpc_callback_cv_cache_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_rpc_callback_cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
 	goto error;
@@ -688,7 +686,7 @@ osi_trace_mail_rpc_PkgInit(void)
     for (i = 0; i < OSI_TRACE_MAIL_RPC_CALLBACK_HASH_BUCKETS; i++) {
 	osi_list_Init(&osi_trace_mail_rpc_callback_registry.hash[i].hash_chain);
 	osi_mutex_Init(&osi_trace_mail_rpc_callback_registry.hash[i].chain_lock,
-		       &osi_trace_common_options.mutex_opts);
+		       osi_trace_impl_mutex_opts());
     }
 
  error:

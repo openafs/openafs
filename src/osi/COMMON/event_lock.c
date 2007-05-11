@@ -41,7 +41,7 @@ osi_event_hook_Init(osi_event_hook_t * hook)
     osi_result res = OSI_OK;
 
     osi_rwlock_Init(&hook->lock,
-		    &osi_common_options.rwlock_opts);
+		    osi_impl_rwlock_opts());
     osi_list_Init(&hook->watchers);
     hook->sdata = osi_NULL;
 
@@ -272,7 +272,7 @@ osi_event_subscription_Init(osi_event_subscription_t * sub)
     osi_result res = OSI_OK;
 
     osi_mutex_Init(&sub->lock,
-		   &osi_common_options.mutex_opts);
+		   osi_impl_mutex_opts());
     sub->hook = osi_NULL;
     sub->sdata = osi_NULL;
     sub->action.type = OSI_EVENT_ACTION_NONE;
@@ -644,9 +644,9 @@ osi_event_PkgInit(void)
     osi_result res = OSI_OK;
 
     osi_mutex_Init(&osi_event_hook_purge_lock,
-		   &osi_common_options.mutex_opts);
+		   osi_impl_mutex_opts());
     osi_condvar_Init(&osi_event_hook_purge_cv,
-		     &osi_common_options.condvar_opts);
+		     osi_impl_condvar_opts());
 
     osi_event_record_cache =
 	osi_mem_object_cache_create("osi_event_record_cache",
@@ -656,7 +656,7 @@ osi_event_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_common_options.mem_object_cache_opts);
+				    osi_impl_mem_object_cache_opts());
     if (osi_event_record_cache == osi_NULL) {
 	res = OSI_FAIL;
 	goto error;
@@ -670,7 +670,7 @@ osi_event_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_common_options.mem_object_cache_opts);
+				    osi_impl_mem_object_cache_opts());
     if (osi_event_record_cache == osi_NULL) {
 	res = OSI_FAIL;
 	goto error;
@@ -684,7 +684,7 @@ osi_event_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_common_options.mem_object_cache_opts);
+				    osi_impl_mem_object_cache_opts());
     if (osi_event_record_cache == osi_NULL) {
 	res = OSI_FAIL;
 	goto error;

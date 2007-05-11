@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,17 +12,6 @@
 #include <osi/osi_mem.h>
 #include <osi/COMMON/thread_event_impl.h>
 
-osi_result
-osi_thread_PkgInit(void)
-{
-    return osi_thread_event_PkgInit();
-}
-
-osi_result
-osi_thread_PkgShutdown(void)
-{
-    return osi_thread_event_PkgShutdown();
-}
 
 osi_result
 osi_thread_create(osi_thread_p * idp,
@@ -54,6 +43,15 @@ osi_thread_create(osi_thread_p * idp,
     }
     attr_inited = 1;
 
+#if 0
+    /* 
+     * on modern platforms, these are deprecated in
+     * favor of attr_setstack().
+     *
+     * i'm leaving these here in case it turns out we
+     * need to support an older platform on which 
+     * attr_setstack() isn't implemented.
+     */
     code = pthread_attr_setstacksize(&attr, stk_len);
     if (osi_compiler_expect_false(code != 0)) {
 	res = OSI_FAIL;
@@ -65,6 +63,13 @@ osi_thread_create(osi_thread_p * idp,
 	res = OSI_FAIL;
 	goto error;
     }
+#else
+    code = pthread_attr_setstack(&attr, stk, stk_len);
+    if (osi_compiler_expect_false(code != 0)) {
+	res = OSI_FAIL;
+	goto error;
+    }
+#endif
 
     if (__osi_thread_run_args_get_opts(args)->detached) {
 	if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0) {

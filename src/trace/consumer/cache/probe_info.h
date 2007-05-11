@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -41,10 +41,11 @@ osi_extern osi_result
 osi_trace_consumer_probe_info_cache_lookup_name(osi_trace_consumer_probe_info_cache_t *,
 						char * name_buf,
 						size_t name_buf_len);
+osi_extern osi_result
+osi_trace_consumer_probe_info_cache_event_subscribe(osi_trace_consumer_probe_info_cache_t *,
+						    osi_event_subscription_t *);
 
-osi_extern osi_result
-osi_trace_consumer_probe_info_cache_PkgInit(void);
-osi_extern osi_result
-osi_trace_consumer_probe_info_cache_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_trace_consumer_probe_info_cache_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_trace_consumer_probe_info_cache_PkgShutdown);
 
 #endif /* _OSI_TRACE_CONSUMER_CACHE_PROBE_INFO_H */

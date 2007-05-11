@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -96,36 +96,23 @@
  *
  */
 
-typedef struct osi_spin_rwlock_options {
-    osi_uint8 preemptive_only;     /* only activate in pre-emptive environments (e.g. no-op for LWP) */
-    osi_uint8 trace_allowed;       /* whether or not lock tracing is allowed */
-    osi_uint8 trace_enabled;       /* enable lock tracing */
-} osi_spin_rwlock_options_t;
-/* defaults:  { 0, 1, 0 } */
-
-typedef enum {
-    OSI_SPIN_RWLOCK_OPTION_PREEMPTIVE_ONLY,
-    OSI_SPIN_RWLOCK_OPTION_TRACE_ALLOWED,
-    OSI_SPIN_RWLOCK_OPTION_TRACE_ENABLED,
-    OSI_SPIN_RWLOCK_OPTION_MAX_ID
-} osi_spin_rwlock_options_param_t;
+#include <osi/COMMON/spin_rwlock_options.h>
 
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_LINUX_ENV)
 #include <osi/LINUX/kspin_rwlock.h>
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 /* no known userspace rw spinlock impls */
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 #include <osi/LEGACY/spin_rwlock.h>
-#include <osi/COMMON/spin_rwlock_options.h>
 
 #if !defined(OSI_IMPLEMENTS_SPIN_RWLOCK_QUERY_WRLOCKHELD)
 #define osi_spin_rwlock_AssertWrLockHeld(x)

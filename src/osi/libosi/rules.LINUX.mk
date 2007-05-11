@@ -1,4 +1,4 @@
-# Copyright 2006, Sine Nomine Associates and others.
+# Copyright 2006-2007, Sine Nomine Associates and others.
 # All Rights Reserved.
 # 
 # This software has been released under the terms of the IBM Public
@@ -10,7 +10,6 @@
 
 LIBOSI_OS_CFLAGS_COMMON = 
 LIBOSI_OS_OBJS_COMMON = \
-	osi_legacy_object_cache.o \
 	$(NULL)
 
 LIBOSI_OS_CFLAGS_kernelspace = 
@@ -24,12 +23,12 @@ LIBOSI_OS_OBJS_kernelspace = \
 	osi_native_kspin_rwlock.o \
 	osi_native_kspin_rwlock_inline.o \
 	osi_native_kspinlock.o \
+	osi_native_ktime_inline.o \
 	osi_native_kutil.o \
 	$(NULL)
 
 LIBOSI_OS_CFLAGS_kernel = 
 LIBOSI_OS_OBJS_kernel = \
-	osi_legacy_ktime_inline.o \
 	$(NULL)
 
 LIBOSI_OS_CFLAGS_userspace = 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,8 +13,7 @@
  * probe point directory
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_string.h>
 #include <trace/consumer/directory.h>
 #include <trace/syscall.h>
@@ -30,7 +29,8 @@ osi_static osi_result osi_trace_directory_N2I_msg(osi_trace_gen_id_t gen,
 osi_static osi_result osi_trace_directory_I2N_msg(osi_trace_gen_id_t gen,
 						  osi_trace_probe_id_t probe_id,
 						  char * probe_name,
-						  size_t buf_len);
+						  osi_size_t buf_len,
+						  osi_bool_t blocking);
 
 osi_static osi_result
 osi_trace_directory_N2I_msg(osi_trace_gen_id_t gen,
@@ -120,11 +120,12 @@ osi_static osi_result
 osi_trace_directory_I2N_msg(osi_trace_gen_id_t gen,
 			    osi_trace_probe_id_t probe_id,
 			    char * probe_name,
-			    size_t buf_len)
+			    osi_size_t buf_len,
+			    osi_bool_t blocking)
 {
     osi_trace_mail_msg_probe_i2n_request_t * req;
     osi_trace_mail_msg_probe_i2n_response_t * res;
-    osi_trace_mail_message_t * msg = osi_NULL;
+    osi_trace_mail_message_t * rmsg, * msg = osi_NULL;
     osi_trace_mail_xid_t xid;
     osi_result code;
 
@@ -149,12 +150,28 @@ osi_trace_directory_I2N_msg(osi_trace_gen_id_t gen,
 	goto error;
     }
 
-    code = osi_trace_mail_send(msg);
-    if (OSI_RESULT_FAIL_UNLIKELY(code)) {
-	goto error;
-    }
+    if (blocking == OSI_TRUE) {
+	code = osi_trace_mail_rpc_call(msg, &rmsg);
+	if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	    goto error;
+	}
+	
+	res = (osi_trace_mail_msg_probe_i2n_response_t *) rmsg->body;
+	code = (osi_result) res->code;
+	if (OSI_RESULT_OK(code)) {
+	    osi_string_ncpy(probe_name, res->probe_name, buf_len);
+	}
+	
+	(void)osi_trace_mail_msg_put(rmsg);
 
-    code = OSI_ERROR_REQUEST_QUEUED;
+    } else {
+	code = osi_trace_mail_send(msg);
+	if (OSI_RESULT_FAIL_UNLIKELY(code)) {
+	    goto error;
+	}
+	
+	code = OSI_ERROR_REQUEST_QUEUED;
+    }
 
  error:
     if (osi_compiler_expect_true(msg != osi_NULL)) {
@@ -170,6 +187,7 @@ osi_trace_directory_I2N_msg(osi_trace_gen_id_t gen,
  * [IN] probe_id       -- id of probe to lookup
  * [INOUT] probe_name  -- address of buffer in which to registered name of probe
  * [IN] buflen         -- length of name buffer
+ * [IN] blocking       -- whether or not to do a blocking query
  *
  * returns:
  *   OSI_OK on success
@@ -181,7 +199,8 @@ osi_result
 osi_trace_directory_I2N(osi_trace_gen_id_t gen,
 			osi_trace_probe_id_t probe_id, 
 			char * probe_name, 
-			size_t buflen)
+			osi_size_t buflen,
+			osi_bool_t blocking)
 {
     osi_result res;
     int rv;
@@ -193,7 +212,7 @@ osi_trace_directory_I2N(osi_trace_gen_id_t gen,
 				(long) buflen,
 				&rv);
     } else {
-	res = osi_trace_directory_I2N_msg(gen, probe_id, probe_name, buflen);
+	res = osi_trace_directory_I2N_msg(gen, probe_id, probe_name, buflen, blocking);
     }
 
     return res;

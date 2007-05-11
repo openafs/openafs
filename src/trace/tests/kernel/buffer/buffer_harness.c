@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_kernel.h>
@@ -19,7 +18,6 @@
 #include <osi/osi_thread.h>
 #include <trace/gen_rgy.h>
 #include <trace/cursor.h>
-#include <trace/common/options.h>
 #include <trace/generator/activation.h>
 #include <trace/generator/buffer.h>
 #include <trace/KERNEL/cursor.h>
@@ -94,7 +92,6 @@ main(int argc, char ** argv)
 
     osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_TraceKernel, &opts)));
 
-    osi_Assert(OSI_RESULT_OK(osi_trace_common_options_PkgInit()));
     osi_Assert(OSI_RESULT_OK(osi_trace_activation_PkgInit()));
     osi_Assert(OSI_RESULT_OK(osi_trace_buffer_PkgInit()));
 
@@ -135,13 +132,13 @@ harness(void)
     osi_counter_init(&miss_counter, 0);
 
     osi_mutex_Init(&reader_lock,
-		   &osi_trace_common_options.mutex_opts);
+		   osi_trace_impl_mutex_opts());
     osi_condvar_Init(&reader_cv,
-		     &osi_trace_common_options.condvar_opts);
+		     osi_trace_impl_condvar_opts());
 
     osi_mutex_Lock(&reader_lock);
     osi_thread_createU(&tid, &read_thread, osi_NULL,
-		       &osi_trace_common_options.thread_opts);
+		       osi_trace_impl_thread_opts());
     do {
 	osi_condvar_Wait(&reader_cv, &reader_lock);
     } while (!reader_online);
@@ -149,7 +146,7 @@ harness(void)
 
     for (i = 0; i < TEST_SEND_THREADS; i++) {
 	osi_thread_createU(&tid, &send_thread, osi_NULL,
-			   &osi_trace_common_options.thread_opts);
+			   osi_trace_impl_thread_opts());
     }
 
     for (i = 0 ; i < 5; i++) {

@@ -57,7 +57,8 @@ main(int argc, char ** argv)
     res = osi_trace_directory_I2N(gen,
 				  probe,
 				  name,
-				  sizeof(name));
+				  sizeof(name),
+				  OSI_TRUE);
 
     if (OSI_RESULT_FAIL(res)) {
         fprintf(stderr, "call failed\n");

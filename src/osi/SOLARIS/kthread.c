@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,17 +13,6 @@
 #include <sys/proc.h>
 #include <osi/COMMON/thread_event_impl.h>
 
-osi_result
-osi_thread_PkgInit(void)
-{
-    return osi_thread_event_PkgInit();
-}
-
-osi_result
-osi_thread_PkgShutdown(void)
-{
-    return osi_thread_event_PkgShutdown();
-}
 
 osi_result
 osi_thread_create(osi_thread_p * thr,

@@ -1,4 +1,4 @@
-# Copyright 2006, Sine Nomine Associates and others.
+# Copyright 2006-2007, Sine Nomine Associates and others.
 # All Rights Reserved.
 # 
 # This software has been released under the terms of the IBM Public
@@ -51,7 +51,7 @@ LIBTRACE_OBJS_ukernel = \
 
 LIBTRACE_CFLAGS_libosi_trace_common = ${COMMON_INCLUDE} ${CFLAGS} ${OSI_CFLAGS} ${ARCHFLAGS} ${XCFLAGS} -DOSI_TRACEPOINT_DISABLE
 LIBTRACE_OBJS_libosi_trace_common = \
-	options.o \
+	record.o \
 	record_inline.o \
 	$(NULL)
 
@@ -145,7 +145,7 @@ LIBTRACE_OBJS_libosi_trace_common_shlib = \
 
 # build rules for OS Interface library
 
-options.o: $(TRACE_SRCDIR)/common/options.c
+record.o: $(TRACE_SRCDIR)/common/record.c
 	$(CRULE_OPT)
 
 record_inline.o: $(TRACE_SRCDIR)/common/record_inline.c

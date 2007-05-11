@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -23,21 +23,30 @@
 
 
 
-osi_extern osi_result osi_trace_console_rgy_register(osi_trace_console_handle_t * handle,
+osi_extern osi_result osi_trace_console_rgy_register(osi_trace_console_handle_t *,
 						     osi_trace_console_addr_t * addr_vec,
-						     size_t addr_vec_len);
-osi_extern osi_result osi_trace_console_rgy_unregister(osi_trace_console_handle_t * handle);
+						     osi_size_t addr_vec_len);
+osi_extern osi_result osi_trace_console_rgy_unregister(osi_trace_console_handle_t *);
 
-osi_extern osi_result osi_trace_console_rgy_enable(osi_trace_console_handle_t * handle);
-osi_extern osi_result osi_trace_console_rgy_disable(osi_trace_console_handle_t * handle);
+osi_extern osi_result osi_trace_console_rgy_enable(osi_trace_console_handle_t *);
+osi_extern osi_result osi_trace_console_rgy_disable(osi_trace_console_handle_t *);
+
+osi_extern osi_result osi_trace_console_rgy_probe_enable(osi_trace_console_handle_t *,
+							 osi_trace_gen_id_t,
+							 const char * filter,
+							 osi_uint32 * nhits);
+osi_extern osi_result osi_trace_console_rgy_probe_disable(osi_trace_console_handle_t *,
+							  osi_trace_gen_id_t,
+							  const char * filter,
+							  osi_uint32 * nhits);
 
 osi_extern osi_result osi_trace_console_trap(osi_trace_gen_id_t,
 					     osi_trace_probe_id_t,
 					     osi_trace_trap_encoding_t,
 					     void * trap_payload,
-					     size_t trap_payload_len);
+					     osi_size_t trap_payload_len);
 
-osi_extern osi_result osi_trace_console_rgy_PkgInit(void);
-osi_extern osi_result osi_trace_console_rgy_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_trace_console_rgy_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_trace_console_rgy_PkgShutdown);
 
 #endif /* _OSI_TRACE_AGENT_CONSOLE_H */

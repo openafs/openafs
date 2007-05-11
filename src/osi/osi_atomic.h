@@ -834,19 +834,19 @@
  */
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #ifdef OSI_SUN510_ENV
 #include <osi/SOLARIS/atomic.h>
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #ifdef OSI_SUN510_ENV
 #include <osi/SOLARIS/atomic.h>
 #endif
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 
 /* pull in atomic ops compat code */

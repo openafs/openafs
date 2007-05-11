@@ -21,7 +21,7 @@ TRACE=$(TOP_SRCDIR)/trace
 
 BUFFER_LIB = trace_generator_buffer.a
 BUFFER_LIB_OBJS= \
-	trace_common_options.o \
+	trace_common_record.o \
 	trace_common_record_inline.o \
 	trace_event_event.o \
 	trace_generator.o \
@@ -63,6 +63,12 @@ buffer_harness.o: buffer_harness.c
 # dbx seems to strip off paths when walking dwarf sections,
 # and becomes very very confused because of an apparent
 # "namespace" conflict in their fairytale flat source file namespace.
+
+trace_common_record.c: ${TRACE}/common/record.c
+	ln -sf $? $@
+
+trace_common_record.o: trace_common_record.c
+	${CCRULE}
 
 trace_common_record_inline.c: ${TRACE}/common/record_inline.c
 	ln -sf $? $@

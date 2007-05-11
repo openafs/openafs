@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,13 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_rwlock.h>
 #include <osi/osi_list.h>
 #include <osi/osi_object_cache.h>
-#include <trace/common/options.h>
+#include <osi/osi_event.h>
 #include <trace/consumer/cache/binary.h>
 #include <trace/consumer/cache/binary_impl.h>
 #include <trace/consumer/cache/probe_info.h>
@@ -30,46 +29,40 @@
 struct osi_trace_consumer_bin_cache_directory osi_trace_consumer_bin_cache;
 
 /* static prototypes */
-osi_static int
-osi_trace_consumer_bin_cache_ctor(void * buf, void * sdata, int flags);
-osi_static void
-osi_trace_consumer_bin_cache_dtor(void * buf, void * sdata);
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(osi_trace_consumer_bin_cache_ctor);
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_PROTOTYPE(osi_trace_consumer_bin_cache_dtor);
 
 
 /*
  * constructor for an osi_trace_consumer_bin_cache_t object
  *
- * [IN] buf    -- newly allocated bin cache object
- * [IN] sdata  -- opaque data pointer
- * [IN] flags  -- implementation-specific flags
- *
  * returns:
  *   0 always
  */
-osi_static int
-osi_trace_consumer_bin_cache_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(osi_trace_consumer_bin_cache_ctor)
 {
-    osi_trace_consumer_bin_cache_t * bin = buf;
+    osi_trace_consumer_bin_cache_t * bin =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
     bin->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_BIN;
     osi_refcnt_init(&bin->refcnt, 0);
     osi_trace_consumer_cache_ptr_vec_Init(&bin->probe_vec);
+    osi_event_hook_Init(&bin->hook);
+    osi_event_hook_set_rock(&bin->hook,
+			    bin);
 
     return 0;
 }
 
 /*
  * destructor for an osi_trace_consumer_bin_cache_t object
- *
- * [IN] buf    -- newly allocated bin cache object
- * [IN] sdata  -- opaque data pointer
- *
  */
-osi_static void
-osi_trace_consumer_bin_cache_dtor(void * buf, void * sdata)
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_DECL(osi_trace_consumer_bin_cache_dtor)
 {
-    osi_trace_consumer_bin_cache_t * bin = buf;
+    osi_trace_consumer_bin_cache_t * bin =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
+    osi_event_hook_Destroy(&bin->hook);
     osi_trace_consumer_cache_ptr_vec_Destroy(&bin->probe_vec);
     osi_refcnt_destroy(&bin->refcnt);
     bin->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_INVALID;
@@ -310,6 +303,28 @@ osi_trace_consumer_bin_cache_unregister_probe(osi_trace_consumer_bin_cache_t * b
 }
 
 /*
+ * subscribe to this bin's event feed
+ *
+ * [IN] bin    -- pointer to bin cache object
+ * [IN] sub    -- pointer to subscription object 
+ *
+ * returns:
+ *   see osi_event_subscribe()
+ */
+osi_result
+osi_trace_consumer_bin_cache_event_subscribe(osi_trace_consumer_bin_cache_t * bin,
+					     osi_event_subscription_t * sub)
+{
+    osi_result res;
+
+    res = osi_event_subscribe(&bin->hook,
+			      sub);
+
+    return res;
+}
+
+
+/*
  * get a ref on a bin cache object
  * 
  * [IN] bin  -- pointer to bin cache object
@@ -333,7 +348,7 @@ osi_trace_consumer_bin_cache_get(osi_trace_consumer_bin_cache_t * bin)
 /*
  * put back a ref on a bin cache object
  * 
- * [IN] gen  -- pointer to bin cache object
+ * [IN] bin  -- pointer to bin cache object
  *
  * returns:
  *   OSI_OK always
@@ -432,8 +447,7 @@ osi_trace_consumer_bin_cache_lookup_probe(osi_trace_consumer_bin_cache_t * bin,
     return res;
 }
 
-osi_result
-osi_trace_consumer_bin_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_consumer_bin_cache_PkgInit)
 {
     int i;
     osi_result res = OSI_OK;
@@ -441,7 +455,7 @@ osi_trace_consumer_bin_cache_PkgInit(void)
     size_t align;
 
     osi_rwlock_Init(&osi_trace_consumer_bin_cache.lock,
-		    &osi_trace_common_options.rwlock_opts);
+		    osi_trace_impl_rwlock_opts());
 
     osi_list_Init(&osi_trace_consumer_bin_cache.bin_list);
     for (i = 0; i < OSI_TRACE_CONSUMER_BIN_CACHE_HASH_BUCKETS; i++) {
@@ -456,7 +470,7 @@ osi_trace_consumer_bin_cache_PkgInit(void)
 				    &osi_trace_consumer_bin_cache_ctor,
 				    &osi_trace_consumer_bin_cache_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_consumer_bin_cache.cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
     }
@@ -465,8 +479,7 @@ osi_trace_consumer_bin_cache_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_trace_consumer_bin_cache_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_consumer_bin_cache_PkgShutdown)
 {
     int i;
     osi_result res, code = OSI_OK;

@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -22,11 +22,14 @@ PUBLICHEADERS= \
 	osi_counter.h \
 	osi_cpu.h \
 	osi_datamodel.h \
+	osi_debug.h \
+	osi_demux.h \
 	osi_err.h \
 	osi_err_static.h \
 	osi_event.h \
 	osi_function.h \
 	osi_impl.h \
+	osi_init.h \
 	osi_includes.h \
 	osi_inline.h \
 	osi_kernel.h \
@@ -35,6 +38,7 @@ PUBLICHEADERS= \
 	osi_list.h \
 	osi_macro.h \
 	osi_mem.h \
+	osi_mem_local.h \
 	osi_mutex.h \
 	osi_object_cache.h \
 	osi_object_init.h \
@@ -47,6 +51,7 @@ PUBLICHEADERS= \
 	osi_signal.h \
 	osi_spinlock.h \
 	osi_spin_rwlock.h \
+	osi_state.h \
 	osi_stats.h \
 	osi_string.h \
 	osi_syscall.h \
@@ -70,6 +75,8 @@ RECURSE_DIRS= \
 	PTHREAD \
 	LEGACY \
 	COMMON \
+	UNIX \
+	data \
 	tests \
 	$(NULL)
 

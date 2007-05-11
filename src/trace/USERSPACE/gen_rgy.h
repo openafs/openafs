@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -26,6 +26,9 @@ osi_extern osi_result osi_trace_gen_rgy_unregister(osi_trace_gen_id_t);
 
 osi_extern osi_result osi_trace_gen_rgy_get(osi_trace_gen_id_t);
 osi_extern osi_result osi_trace_gen_rgy_put(osi_trace_gen_id_t);
+
+osi_extern osi_result osi_trace_gen_rgy_get_by_addr(osi_trace_generator_address_t *,
+						    osi_trace_gen_id_t *);
 
 /* get/set generator address */
 osi_extern osi_result osi_trace_gen_id(osi_trace_gen_id_t *);

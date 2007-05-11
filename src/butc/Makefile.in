@@ -80,8 +80,13 @@ tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
 	${CC} ${CFLAGS} -o read_tape ${srcdir}/read_tape.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libusd.a
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libosi-lwp-inst.a \
+		${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libusd.a \
+		${XLIBS} \
+		$(NULL)
 
 clean:
 	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c

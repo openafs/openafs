@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,8 +13,7 @@
  * kernel postmaster
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_kernel.h>
@@ -23,7 +22,6 @@
 #include <osi/osi_object_cache.h>
 #include <trace/syscall.h>
 #include <trace/directory.h>
-#include <trace/common/options.h>
 #include <trace/KERNEL/postmaster.h>
 #include <trace/KERNEL/postmaster_impl.h>
 #include <trace/KERNEL/gen_rgy.h>
@@ -73,8 +71,10 @@ osi_trace_mailbox_init(osi_trace_mailbox_t * mbox)
     mbox->state = OSI_TRACE_MAILBOX_SHUT;
     mbox->gen_id = 0;
     mbox->tap_active = 0;
-    osi_mutex_Init(&mbox->lock, osi_NULL);
-    osi_condvar_Init(&mbox->cv, osi_NULL);
+    osi_mutex_Init(&mbox->lock,
+		   osi_trace_impl_mutex_opts());
+    osi_condvar_Init(&mbox->cv,
+		     osi_trace_impl_condvar_opts());
 
     return res;
 }
@@ -401,7 +401,7 @@ osi_trace_mail_send(osi_trace_mail_message_t * msg)
 		osi_mutex_Unlock(&mbox->lock);
 	    }
 	}
-	(void)osi_trace_gen_rgy_mailbox_put(mbox);
+	osi_trace_gen_rgy_mailbox_put(mbox);
     }
 
  error:
@@ -469,7 +469,7 @@ osi_trace_mail_check(osi_trace_gen_id_t gen_id,
 	res = OSI_OK;
 
     done:
-	(void)osi_trace_gen_rgy_mailbox_put(mbox);
+	osi_trace_gen_rgy_mailbox_put(mbox);
     }
 
     return res;
@@ -483,6 +483,9 @@ osi_trace_mail_check(osi_trace_gen_id_t gen_id,
  * add a mailbox to the broadcast address
  *
  * [IN] mbox  -- pointer to mailbox
+ *
+ * preconditions:
+ *   mbox->gen->lock held
  *
  * postconditions:
  *   ref acquired on mbox->gen
@@ -504,7 +507,7 @@ osi_trace_mail_bcast_add(osi_trace_mailbox_t * mbox)
 	goto error;
     }
 
-    osi_trace_gen_rgy_get(mbox->gen);
+    osi_trace_gen_rgy_get_nl(mbox->gen);
     node->mbox = mbox;
 
     osi_rwlock_WrLock(&osi_trace_mail_config.lock);
@@ -523,8 +526,12 @@ osi_trace_mail_bcast_add(osi_trace_mailbox_t * mbox)
  *
  * [IN] mbox  -- pointer to mailbox
  *
+ * preconditions:
+ *   caller MUST hold a ref on mbox->gen
+ *   mbox->gen->lock held
+ *
  * postconditions:
- *   ref released on mbox->gen
+ *   ref on mbox->gen released
  *
  * returns:
  *   OSI_OK on success
@@ -556,7 +563,8 @@ osi_trace_mail_bcast_del(osi_trace_mailbox_t * mbox)
     mc->mbox = osi_NULL;
     osi_mem_object_cache_free(osi_trace_mail_mcast_cache,
 			      mc);
-    res = osi_trace_gen_rgy_put(mbox->gen);
+    osi_trace_gen_rgy_put_nl_nz(mbox->gen);
+    res = OSI_OK;
 
  done:
     return res;
@@ -615,7 +623,7 @@ osi_trace_mail_mcast_init(osi_trace_gen_id_t mcast_id)
 osi_result
 osi_trace_mail_mcast_destroy(osi_trace_gen_id_t mcast_id)
 {
-    osi_result res, code = OSI_OK;
+    osi_result code = OSI_OK;
     struct osi_trace_mail_mcast_node * mc, * nmc;
     osi_uint32 i;
     osi_list_head temp_queue;
@@ -645,7 +653,7 @@ osi_trace_mail_mcast_destroy(osi_trace_gen_id_t mcast_id)
 	osi_list_Remove(mc,
 			struct osi_trace_mail_mcast_node,
 			mbox_list);
-	res = osi_trace_gen_rgy_put(mc->mbox->gen);
+	osi_trace_gen_rgy_put(mc->mbox->gen);
 	mc->mbox = osi_NULL;
 	osi_mem_object_cache_free(osi_trace_mail_mcast_cache, mc);
     }
@@ -657,8 +665,12 @@ osi_trace_mail_mcast_destroy(osi_trace_gen_id_t mcast_id)
 /*
  * add a mailbox to a multicast address
  *
- * [IN] mcast_id  -- multicast address id
- * [IN] mbox      -- pointer to mailbox
+ * [IN] mcast_id       -- multicast address id
+ * [IN] mbox           -- pointer to mailbox
+ * [IN] gen_lock_held  -- nonzero if mbox->gen->lock held
+ *
+ * postconditions:
+ *   ref acquired on mbox->gen
  *
  * returns:
  *   OSI_OK on success
@@ -667,7 +679,8 @@ osi_trace_mail_mcast_destroy(osi_trace_gen_id_t mcast_id)
  */
 osi_result
 osi_trace_mail_mcast_add(osi_trace_gen_id_t mcast_id, 
-			 osi_trace_mailbox_t * mbox)
+			 osi_trace_mailbox_t * mbox,
+			 int gen_lock_held)
 {
     osi_result res = OSI_OK;
     struct osi_trace_mail_mcast_node * node;
@@ -687,7 +700,11 @@ osi_trace_mail_mcast_add(osi_trace_gen_id_t mcast_id,
 	res = OSI_ERROR_NOMEM;
 	goto error;
     }
-    osi_trace_gen_rgy_get(mbox->gen);
+    if (gen_lock_held) {
+	osi_trace_gen_rgy_get_nl(mbox->gen);
+    } else {
+	osi_trace_gen_rgy_get(mbox->gen);
+    }
     node->mbox = mbox;
 
     osi_rwlock_WrLock(&osi_trace_mail_config.lock);
@@ -715,8 +732,15 @@ osi_trace_mail_mcast_add(osi_trace_gen_id_t mcast_id,
 /*
  * delete a mailbox from a multicast address
  *
- * [IN] mcast_id  -- multicast address id
- * [IN] mbox      -- pointer to mailbox
+ * [IN] mcast_id       -- multicast address id
+ * [IN] mbox           -- pointer to mailbox
+ * [IN] gen_lock_held  -- nonzero if mbox->gen->lock held
+ *
+ * preconditions:
+ *   caller MUST hold ref on mbox->gen
+ *
+ * postconditions:
+ *   ref on mbox->gen released
  *
  * returns:
  *   OSI_OK on success
@@ -725,9 +749,10 @@ osi_trace_mail_mcast_add(osi_trace_gen_id_t mcast_id,
  */
 osi_result
 osi_trace_mail_mcast_del(osi_trace_gen_id_t mcast_id, 
-			 osi_trace_mailbox_t * mbox)
+			 osi_trace_mailbox_t * mbox,
+			 int gen_lock_held)
 {
-    osi_result res = OSI_OK;
+    osi_result res = OSI_FAIL;
     struct osi_trace_mail_mcast_node * mc, * nmc;
     osi_uint32 i;
 
@@ -740,17 +765,12 @@ osi_trace_mail_mcast_del(osi_trace_gen_id_t mcast_id,
     i = mcast_id - OSI_TRACE_GEN_RGY_MCAST_MIN;
 
     osi_rwlock_WrLock(&osi_trace_mail_config.lock);
-    if (osi_compiler_expect_false(!(osi_trace_mail_config.mcast_usage & (1 << i)))) {
-	res = OSI_FAIL;
-    } else {
+    if (osi_compiler_expect_true(osi_trace_mail_config.mcast_usage & (1 << i))) {
 	for (osi_list_Scan(&osi_trace_mail_config.mcast[i],
 			   mc, nmc,
 			   struct osi_trace_mail_mcast_node,
 			   mbox_list)) {
 	    if (mc->mbox == mbox) {
-		osi_list_Remove(mc,
-				struct osi_trace_mail_mcast_node,
-				mbox_list);
 		goto found;
 	    }
 	}
@@ -759,10 +779,18 @@ osi_trace_mail_mcast_del(osi_trace_gen_id_t mcast_id,
     goto error;
 
  found:
+    osi_list_Remove(mc,
+		    struct osi_trace_mail_mcast_node,
+		    mbox_list);
     osi_rwlock_Unlock(&osi_trace_mail_config.lock);
     mc->mbox = osi_NULL;
     osi_mem_object_cache_free(osi_trace_mail_mcast_cache, mc);
-    res = osi_trace_gen_rgy_put(mbox->gen);
+    if (gen_lock_held) {
+	osi_trace_gen_rgy_put_nl_nz(mbox->gen);
+    } else {
+	osi_trace_gen_rgy_put_nz(mbox->gen);
+    }
+    res = OSI_OK;
 
  error:
     return res;
@@ -814,7 +842,8 @@ osi_trace_mail_tap_add(osi_trace_gen_id_t tappee_id,
 	goto cleanup;
     } else if (tappee_id >= OSI_TRACE_GEN_RGY_MCAST_MIN) {
 	res = osi_trace_mail_mcast_add(tappee_id,
-				       tapper_mbox);
+				       tapper_mbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_NOT_HELD);
 	goto cleanup;
     } else if (tappee_id == OSI_TRACE_GEN_RGY_KERNEL_ID) {
 	osi_rwlock_WrLock(&osi_trace_mail_config.lock);
@@ -904,7 +933,8 @@ osi_trace_mail_tap_del(osi_trace_gen_id_t tappee_id,
 	goto done;
     } else if (tappee_id >= OSI_TRACE_GEN_RGY_MCAST_MIN) {
 	res = osi_trace_mail_mcast_del(tappee_id,
-				       tapper_mbox);
+				       tapper_mbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_NOT_HELD);
 	goto done;
     } else if (tappee_id == OSI_TRACE_GEN_RGY_KERNEL_ID) {
 	osi_rwlock_WrLock(&osi_trace_mail_config.lock);
@@ -1376,7 +1406,7 @@ osi_trace_mail_postmaster_PkgInit(void)
     int i;
 
     osi_rwlock_Init(&osi_trace_mail_config.lock,
-		    &osi_trace_common_options.rwlock_opts);
+		    osi_trace_impl_rwlock_opts());
 
     osi_trace_mail_config.mcast_usage = 0;
 
@@ -1394,7 +1424,7 @@ osi_trace_mail_postmaster_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_mcast_cache == osi_NULL)) {
 	res = OSI_FAIL;
 	goto error;

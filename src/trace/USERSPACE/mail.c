@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_thread.h>
 #include <osi/osi_cpu.h>
 #include <osi/osi_cache.h>
@@ -17,7 +16,6 @@
 #include <trace/syscall.h>
 #include <trace/USERSPACE/mail.h>
 #include <trace/mail/handler.h>
-#include <trace/common/options.h>
 #include <errno.h>
 
 #include <osi/osi_lib_init.h>
@@ -141,7 +139,7 @@ osi_trace_mail_thread_PkgInit(void)
 	res = osi_thread_createU(&tid, 
 				 &osi_trace_mail_receiver, 
 				 osi_NULL,
-				 &osi_trace_common_options.thread_opts);
+				 osi_trace_impl_thread_opts());
     }
 
  error:

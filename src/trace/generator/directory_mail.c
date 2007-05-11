@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -15,8 +15,7 @@
  * mail interface
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/generator/activation.h>
 #include <trace/generator/directory.h>
 #include <osi/osi_mem.h>
@@ -53,9 +52,9 @@ osi_trace_directory_msg_i2n_req(osi_trace_mail_message_t * msg)
     res = (osi_trace_mail_msg_probe_i2n_response_t * ) msg_out->body;
 
     /* perform probe i2n lookup */
+    osi_mem_zero(res, sizeof(*res));
     rcode = osi_trace_directory_I2N(req->probe_id, res->probe_name, sizeof(res->probe_name));
 
-    osi_mem_zero(res, sizeof(*res));
     res->code = rcode;
     res->probe_id = req->probe_id;
 

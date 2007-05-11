@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -27,6 +27,7 @@ PUBLICHEADERS= \
 	kmem_local.h \
 	kmem_object_cache.h \
 	kmem_object_cache_impl.h \
+	kmem_object_cache_impl_types.h \
 	kmem_object_cache_types.h \
 	kmutex.h \
 	kproc.h \
@@ -37,10 +38,13 @@ PUBLICHEADERS= \
 	ktime.h \
 	ktime_inline.h \
 	kvar_args.h \
+	object_cache.h \
+	object_cache_types.h \
 	ucache.h \
 	ucpu.h \
 	umem_object_cache.h \
 	umem_object_cache_impl.h \
+	umem_object_cache_impl_types.h \
 	umem_object_cache_types.h \
 	utime.h \
 	utime_inline.h \

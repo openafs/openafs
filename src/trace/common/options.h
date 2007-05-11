@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,28 +13,27 @@
 /*
  * osi tracing framework
  * common support
- * trace internal default osi object options repository
+ * default osi object options repository
+ *
+ * we are now using the osi implementation-private options
+ * repository, since osi_trace_common_options had merely become
+ * a duplicate
+ *
+ * HOWEVER, you should ALWAYS reference osi_trace_common_*_opts()
+ * within trace code so that we retain the flexibility to fork
+ * the options structures in the future, should it ever become
+ * necessary!
  */
 
-#include <osi/osi_object_cache.h>
-#include <osi/osi_condvar.h>
-#include <osi/osi_mutex.h>
-#include <osi/osi_rwlock.h>
-#include <osi/osi_thread.h>
-#include <osi/osi_shlock.h>
-
-struct osi_trace_common_options {
-    osi_mutex_options_t mutex_opts;
-    osi_condvar_options_t condvar_opts;
-    osi_rwlock_options_t rwlock_opts;
-    osi_shlock_options_t shlock_opts;
-    osi_mem_object_cache_options_t mem_object_cache_opts;
-    osi_thread_options_t thread_opts;
-};
-
-osi_extern struct osi_trace_common_options osi_trace_common_options;
-
-osi_extern osi_result osi_trace_common_options_PkgInit(void);
-osi_extern osi_result osi_trace_common_options_PkgShutdown(void);
+#define osi_trace_impl_mutex_opts()               osi_impl_mutex_opts()
+#define osi_trace_impl_condvar_opts()             osi_impl_condvar_opts()
+#define osi_trace_impl_rwlock_opts()              osi_impl_rwlock_opts()
+#define osi_trace_impl_shlock_opts()              osi_impl_shlock_opts()
+#define osi_trace_impl_spinlock_opts()            osi_impl_spinlock_opts()
+#define osi_trace_impl_spin_rwlock_opts()         osi_impl_spin_rwlock_opts()
+#define osi_trace_impl_mem_object_cache_opts()    osi_impl_mem_object_cache_opts()
+#define osi_trace_impl_thread_opts()              osi_impl_thread_opts()
+#define osi_trace_impl_demux_opts()               osi_impl_demux_opts()
+#define osi_trace_impl_vector_opts()              osi_impl_vector_opts()
 
 #endif /* _OSI_TRACE_COMMON_OPTIONS_H */

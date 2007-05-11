@@ -18,7 +18,7 @@ typedef osi_uint32 osi_mem_local_key_t;
  * in kernelspace, we want cpu-local variables indexed by cpu id.
  * in userspace, we want thread-local variables indexed by thread id.
  */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <osi/osi_cpu.h>
 typedef osi_cpu_id_t osi_mem_local_ctx_id_t;
 #else
@@ -43,12 +43,12 @@ typedef osi_thread_id_t osi_mem_local_ctx_id_t;
 #define OSI_MEM_LOCAL_PAYLOAD_SIZE   (OSI_MEM_LOCAL_BUFFER_SIZE - OSI_MEM_LOCAL_PAYLOAD_OFFSET)
 
 
-#ifdef OSI_USERSPACE_ENV
+#ifdef OSI_ENV_USERSPACE
 #include <osi/osi_list.h>
 #endif
 
 struct osi_mem_local_ctx_header {
-#ifdef OSI_USERSPACE_ENV
+#ifdef OSI_ENV_USERSPACE
     osi_list_element_volatile ctx_list;
 #endif
     osi_mem_local_ctx_id_t ctx_id;

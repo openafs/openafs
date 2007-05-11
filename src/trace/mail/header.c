@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,11 +13,10 @@
  * message header manipulation
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/mail.h>
 #include <trace/gen_rgy.h>
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <trace/KERNEL/gen_rgy.h>
 #endif
 

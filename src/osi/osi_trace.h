@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -46,14 +46,14 @@
  * end-user code.  osi_Init and osi_Shutdown
  * will call them for you
  */
-osi_extern osi_result osi_Trace_PkgInit(void);
-osi_extern osi_result osi_Trace_PkgShutdown(void);
-#if defined(OSI_USERSPACE_ENV)
+OSI_INIT_FUNC_PROTOTYPE(osi_Trace_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_Trace_PkgShutdown);
+#if defined(OSI_ENV_USERSPACE)
 osi_extern osi_result osi_Trace_PkgChildInit(void);
 #endif
 #else /* !OSI_TRACE_ENABLED */
-#define osi_Trace_PkgInit()       (OSI_OK)
-#define osi_Trace_PkgShutdown()   (OSI_OK)
+#define osi_Trace_PkgInit         osi_null_init_func
+#define osi_Trace_PkgShutdown     osi_null_fini_func
 #define osi_Trace_PkgChildInit()  (OSI_OK)
 #endif /* !OSI_TRACE_ENABLED */
 

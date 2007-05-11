@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -23,6 +23,10 @@ PUBLICHEADERS= \
 		init.h \
 		module.h \
 		module_mail.h \
+		module_reg_queue.h \
+		module_reg_queue_impl.h \
+		module_reg_queue_impl_types.h \
+		module_reg_queue_types.h \
 		probe.h \
 		probe_impl.h \
 		probe_mail.h \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/syscall.h>
 #include <trace/gen_rgy.h>
 #include <trace/mail.h>
@@ -45,9 +44,16 @@ osi_trace_gen_rgy_msg_up(osi_trace_mail_message_t * msg)
 osi_static osi_result
 osi_trace_gen_rgy_msg_down(osi_trace_mail_message_t * msg)
 {
-    osi_result code = OSI_OK, rcode;
+    osi_result code = OSI_OK;
     osi_trace_mail_msg_gen_down_t * req;
     osi_trace_gen_id_t gen_id;
+
+    /* we want these messages to come from the kernel only;
+     * this will make it easier for us to harden gen_rgy against attacks */
+    if (msg->envelope.env_src != OSI_TRACE_GEN_RGY_KERNEL_ID) {
+	code = OSI_FAIL;
+	goto error;
+    }
 
     /* parse incoming message */
     req = (osi_trace_mail_msg_gen_down_t *)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -21,29 +21,85 @@
  * can very quickly be allocated and deallocated without rebuilding
  * their immutable state each time (e.g. initializing mutexes, etc.)
  *
- * the following interfaces require
- * defined(OSI_IMPLEMENTS_MEM_OBJECT_CACHE)
+ * types:
  *
  *  osi_mem_object_cache_t * handle;
  *    -- opaque handle to a memory object cache
  *
+ *  osi_mem_object_cache_constructor_t *
+ *    -- object constructor function type
+ *
+ *  osi_mem_object_cache_destructor_t *
+ *    -- object destructor function type
+ *
+ *  osi_mem_object_cache_reclaim_t *
+ *    -- object cache memory reclaim function type
+ *
  *  osi_mem_object_cache_options_t options;
  *    -- options passed in when creating an object cache
  *
+ *
+ * macros:
+ *
+ *  OSI_MEM_OBJECT_CACHE_CTOR_PROTOTYPE(sym)
+ *    -- emit a prototype for a constructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_CTOR_DECL(sym)
+ *    -- emit a declaration for a constructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(sym)
+ *    -- emit a prototype for a static constructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(sym)
+ *    -- emit a declaration for a static constructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_DTOR_PROTOTYPE(sym)
+ *    -- emit a prototype for a destructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_DTOR_DECL(sym)
+ *    -- emit a declaration for a destructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_DTOR_STATIC_PROTOTYPE(sym)
+ *    -- emit a prototype for a static destructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_DTOR_STATIC_DECL(sym)
+ *    -- emit a declaration for a static destructor function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_RECLAIM_PROTOTYPE(sym)
+ *    -- emit a prototype for a reclaim function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_RECLAIM_DECL(sym)
+ *    -- emit a declaration for a reclaim function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_RECLAIM_STATIC_PROTOTYPE(sym)
+ *    -- emit a prototype for a static reclaim function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_RECLAIM_STATIC_DECL(sym)
+ *    -- emit a declaration for a static reclaim function of name $sym$
+ *
+ *  OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF
+ *    -- access the buffer pointer argument
+ *
+ *  OSI_MEM_OBJECT_CACHE_FUNC_ARG_ROCK
+ *    -- access the rock opaque pointer argument
+ *
+ *
+ * interfaces:
+ *
  *  osi_mem_object_cache_t * 
  *  osi_mem_object_cache_create(char * cache_name,
- *                              size_t object_size,
- *                              size_t object_alignment,
- *                              void * spec_data,
- *                              int (*ctor)(void * buf, void * spec_data, int flags),
- *                              void (*dtor)(void * buf, void * spec_data),
- *                              void (*reclaim)(void * spec_data),
+ *                              osi_size_t object_size,
+ *                              osi_size_t object_alignment,
+ *                              void * rock,
+ *                              osi_mem_object_cache_constructor_t *,
+ *                              osi_mem_object_cache_destructor_t *,
+ *                              osi_mem_object_cache_reclaim_t *,
  *                              osi_mem_object_cache_options_t * options);
  *    -- create an object cache
  *       $cache_name$ is a human-readable cache name for debugging purposes
  *       $object_size$ is the size of the objects in the cache
  *       $object_alignment$ (if non-zero) specifies the desired alignment; zero specifies default malloc alignment
- *       $spec_data$ is an opaque pointer to pass to ctor, dtor, and reclaim
+ *       $rock$ is an opaque pointer to pass to ctor, dtor, and reclaim
  *       $ctor$ is a constructor to call when the cache is expanded; can be NULL
  *       $dtor$ is a destructor to call when the cache is shrunk; can be NULL
  *       $reclaim$ is a function which can be called in low memory conditions; can be NULL
@@ -64,44 +120,15 @@
  *    -- set the value of a parameter
  *
  *  void * osi_mem_object_cache_alloc(osi_mem_object_cache_t *);
- *    -- allocate an object from the cache; sleeps on low memory for OSI_KERNELSPACE_ENV
+ *    -- allocate an object from the cache; sleeps on low memory for OSI_ENV_KERNELSPACE
  *
  *  void * osi_mem_object_cache_alloc_nosleep(osi_mem_object_cache_t *);
- *    -- allocate an object from the cache; returns NULL on low memory for OSI_KERNELSPACE_ENV
+ *    -- allocate an object from the cache; returns NULL on low memory for OSI_ENV_KERNELSPACE
  *
  *  void osi_mem_object_cache_free(osi_mem_object_cache_t *, void * buf);
  *    -- free an object from the cache
  */
 
-typedef struct {
-    osi_uint8 trace_allowed;       /* whether or not cache tracing is allowed */
-    osi_uint8 trace_enabled;       /* enable cache tracing */
-} osi_mem_object_cache_options_t;
-/* defaults:  { 1, 0 } */
-
-typedef enum {
-    OSI_MEM_OBJECT_CACHE_OPTION_TRACE_ALLOWED,
-    OSI_MEM_OBJECT_CACHE_OPTION_TRACE_ENABLED,
-    OSI_MEM_OBJECT_CACHE_OPTION_MAX_ID
-} osi_mem_object_cache_options_param_t;
-
-
-/* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
-
-#if defined(OSI_SUN5_ENV)
-#include <osi/SOLARIS/kmem_object_cache.h>
-#endif
-
-#else /* !OSI_KERNELSPACE_ENV */
-
-#if defined(OSI_SUN59_ENV)
-#include <osi/SOLARIS/umem_object_cache.h>
-#endif
-
-#endif /* !OSI_KERNELSPACE_ENV */
-
-#include <osi/LEGACY/object_cache.h>
 #include <osi/COMMON/object_cache.h>
 #include <osi/COMMON/object_cache_options.h>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,6 +12,7 @@
 #include <osi/osi_list.h>
 #include <osi/osi_object_cache.h>
 #include <osi/osi_counter.h>
+#include <osi/tests/harness.h>
 
 struct test_node {
     osi_list_element master_list;
@@ -115,14 +116,6 @@ node_free(struct test_node * node)
 #define IDX_FIRST 0
 #define IDX_LAST  9999
 
-#define CHECKING(x) (osi_Msg x " test: ")
-#define PASS        (osi_Msg "pass\n")
-#define FAIL        \
-    osi_Macro_Begin \
-        (osi_Msg "fail\n"); \
-        goto fail; \
-    osi_Macro_End
-
 osi_static osi_result
 test_list_package_body(void)
 {
@@ -130,13 +123,13 @@ test_list_package_body(void)
     struct test_node * node, * rn, *first, *last;
     osi_uint32 i, prev_idx;
 
-    CHECKING("empty list");
+    OSI_TEST_CHECKING("empty list");
     if (osi_list_IsNotEmpty(&node_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("append");
+    OSI_TEST_CHECKING("append");
     for (i = IDX_FIRST; i <= IDX_LAST; i++) {
 	res = node_alloc(&node);
 	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
@@ -154,12 +147,12 @@ test_list_package_body(void)
 			   struct test_node,
 			   node_list);
 	if (rn != node) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("prepend");
+    OSI_TEST_CHECKING("prepend");
     for (i = IDX_LAST+1; i <= IDX_LAST+100; i++) {
 	res = node_alloc(&node);
 	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
@@ -177,89 +170,89 @@ test_list_package_body(void)
 			    struct test_node,
 			    node_list);
 	if (rn != node) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("first element");
+    OSI_TEST_CHECKING("first element");
     first = osi_list_First(&node_list,
 			   struct test_node,
 			   node_list);
     if (first->index != IDX_FIRST) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("last element");
+    OSI_TEST_CHECKING("last element");
     last = osi_list_Last(&node_list,
 			 struct test_node,
 			 node_list);
     if (last->index != IDX_LAST) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("empty list");
+    OSI_TEST_CHECKING("empty list");
     if (osi_list_IsEmpty(&node_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("count");
+    OSI_TEST_CHECKING("count");
     osi_list_Count(&node_list,
 		   node,
 		   struct test_node,
 		   node_list,
 		   i);
     if (i != ((IDX_LAST - IDX_FIRST)+1)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("forward ordering");
+    OSI_TEST_CHECKING("forward ordering");
     prev_idx = IDX_FIRST-1;
     for (osi_list_Scan_Immutable(&node_list,
 				 node,
 				 struct test_node,
 				 node_list)) {
 	if (node->index != prev_idx+1) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
 	prev_idx = node->index;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("backwards ordering");
+    OSI_TEST_CHECKING("backwards ordering");
     prev_idx = IDX_LAST+1;
     for (osi_list_ScanBackwards_Immutable(&node_list,
 					  node,
 					  struct test_node,
 					  node_list)) {
 	if (node->index != prev_idx-1) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
 	prev_idx = node->index;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("remove last");
+    OSI_TEST_CHECKING("remove last");
     osi_list_Remove(last,
 		    struct test_node,
 		    node_list);
     if (osi_list_IsOnList(last,
 			  struct test_node,
 			  node_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     rn = osi_list_Last(&node_list,
 		       struct test_node,
 		       node_list);
     if (rn == last) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     if (rn->index != (last->index - 1)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     osi_list_Append(&node_list,
 		    last,
@@ -269,27 +262,27 @@ test_list_package_body(void)
 		       struct test_node,
 		       node_list);
     if (rn != last) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("remove first");
+    OSI_TEST_CHECKING("remove first");
     osi_list_Remove(first,
 		    struct test_node,
 		    node_list);
     if (osi_list_IsOnList(first,
 			  struct test_node,
 			  node_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     rn = osi_list_First(&node_list,
 			struct test_node,
 			node_list);
     if (rn == first) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     if (rn->index != (first->index + 1)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     osi_list_Prepend(&node_list,
 		     first,
@@ -299,11 +292,11 @@ test_list_package_body(void)
 			struct test_node,
 			node_list);
     if (rn != first) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("reshuffle");
+    OSI_TEST_CHECKING("reshuffle");
     for (osi_list_Scan(&node_list,
 		       node, rn,
 		       struct test_node,
@@ -338,7 +331,7 @@ test_list_package_body(void)
 				 struct test_node,
 				 node_list)) {
 	if (!(node->index % 7)) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
     }
     for (osi_list_Scan_Immutable(&temp_list,
@@ -346,12 +339,12 @@ test_list_package_body(void)
 				 struct test_node,
 				 node_list)) {
 	if (node->index % 7) {
-	    FAIL;
+	    OSI_TEST_FAIL;
 	}
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("reshuffle count");
+    OSI_TEST_CHECKING("reshuffle count");
     osi_list_Count(&node_list,
 		   node,
 		   struct test_node,
@@ -364,11 +357,11 @@ test_list_package_body(void)
 		   temp_list_len);
     if ((node_list_len + temp_list_len) !=
 	(IDX_LAST - IDX_FIRST) + 101) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
-    CHECKING("bulk remove");
+    OSI_TEST_CHECKING("bulk remove");
     for (osi_list_Scan(&node_list,
 		       node, rn,
 		       struct test_node,
@@ -389,12 +382,12 @@ test_list_package_body(void)
     }
 
     if (osi_list_IsNotEmpty(&node_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
     if (osi_list_IsNotEmpty(&temp_list)) {
-	FAIL;
+	OSI_TEST_FAIL;
     }
-    PASS;
+    OSI_TEST_PASS;
 
  done:
     return res;

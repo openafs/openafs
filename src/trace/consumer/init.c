@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/common/init.h>
 #include <trace/consumer/config.h>
 #include <trace/consumer/i2n.h>
@@ -22,8 +21,7 @@
  * initialization/shutdown
  */
 
-osi_result
-osi_trace_consumer_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_consumer_PkgInit)
 {
     osi_result res;
 
@@ -67,8 +65,7 @@ osi_trace_consumer_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_trace_consumer_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_consumer_PkgShutdown)
 {
     osi_result res;
 
@@ -107,14 +104,11 @@ osi_trace_consumer_PkgShutdown(void)
 }
 
 
-osi_result
-osi_Trace_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_Trace_PkgInit)
 {
     return osi_trace_consumer_PkgInit();
 }
-
-osi_result
-osi_Trace_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_Trace_PkgShutdown)
 {
     return osi_trace_consumer_PkgShutdown();
 }
@@ -123,13 +117,11 @@ osi_Trace_PkgShutdown(void)
  * stubs for subsystems which must be initialized
  * via common init, but don't exist in the consumer
  */
-osi_result
-osi_trace_activation_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_activation_PkgInit)
 {
     return OSI_OK;
 }
-osi_result
-osi_trace_activation_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_activation_PkgShutdown)
 {
     return OSI_OK;
 }

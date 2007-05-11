@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -32,9 +32,13 @@ typedef struct osi_trace_consumer_probe_arg_info_cache {
 typedef struct osi_trace_consumer_probe_info_cache {
     osi_trace_consumer_cache_object_header_t hdr;
 
+    /* probe type metadata */
+    osi_trace_probe_type_t probe_type;
+
     /*
      * BEGIN fields synchronized by lock 
      */
+
     /* probe stability metadata */
     osi_trace_probe_stability_t osi_volatile probe_stability;
 
@@ -48,6 +52,10 @@ typedef struct osi_trace_consumer_probe_info_cache {
     osi_uint8 osi_volatile arg_count;
     osi_uint8 osi_volatile arg_valid;
     osi_uint8 spare1;
+
+    /* probe info change watcher */
+    osi_event_hook_t hook;
+
     /*
      * END fields synchronized by lock
      */

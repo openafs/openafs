@@ -5,11 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 #include <osi/osi.h>
-#include <afsconfig.h>
-#include <afs/param.h>
 
 RCSID
     ("$Header$");
@@ -5691,7 +5691,8 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Utility, osi_NULL)));
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Vos, 
+			     osi_NULL));
 
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 
@@ -6040,6 +6041,8 @@ main(argc, argv)
 	}
 	rx_Finalize();
     }
+
+    osi_AssertOK(osi_PkgShutdown());
 
     exit((code ? -1 : 0));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -68,7 +68,7 @@
  *    -- un-register a thread create event handler; $events$ is a bitmask of osi_thread_event_type_t's
  *
  * the following interface requires
- * defined(OSI_USERSPACE_ENV)
+ * defined(OSI_ENV_USERSPACE)
  *
  *  osi_result osi_thread_createU(osi_thread_p *, (void *)(*proc)(void *), void * args,
  *                                osi_thread_options_t *);
@@ -90,7 +90,7 @@
  *    -- detach the current thread
  *
  * the following interfaces require
- * defined(OSI_KERNELSPACE_ENV)
+ * defined(OSI_ENV_KERNELSPACE)
  *
  *  osi_thread_t -- kernel thread info structure typedef
  *
@@ -102,28 +102,17 @@
  *
  */
 
-typedef struct osi_thread_options {
-    osi_uint8 detached;            /* create thread with detached option enabled */
-    osi_uint8 trace_allowed;       /* whether or not thread tracing is allowed */
-} osi_thread_options_t;
-/* defaults:  { 0, 1 } */
+#include <osi/COMMON/thread_option.h>
+#include <osi/COMMON/thread.h>
 
-typedef enum {
-    OSI_THREAD_OPTION_DETACHED,
-    OSI_THREAD_OPTION_TRACE_ALLOWED,
-    OSI_THREAD_OPTION_MAX_ID
-} osi_thread_options_param_t;
-
-typedef void * osi_thread_func_t(void *);
-
-osi_extern osi_result osi_thread_PkgInit(void);
-osi_extern osi_result osi_thread_PkgShutdown(void);
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/kthread.h>
+#elif defined(OSI_LINUX_ENV)
+#include <osi/LINUX/kthread.h>
 #else
 #include <osi/LEGACY/kthread.h>
 #endif
@@ -134,28 +123,16 @@ osi_extern osi_result osi_thread_PkgShutdown(void);
 
 #else /* !KERNEL */
 
-#if defined(OSI_PTHREAD_ENV)
+#if defined(OSI_ENV_PTHREAD)
 #include <osi/PTHREAD/thread.h>
-#else /* !OSI_PTHREAD_ENV */
+#elif defined(OSI_ENV_LWP)
 #include <osi/LWP/thread.h>
-#endif /* !OSI_PTHREAD_ENV */
+#endif /* OSI_ENV_LWP */
 
 #endif /* !KERNEL */
 
 
-/* thread bind support */
-#include <osi/osi_cpu.h>
-#if defined(OSI_IMPLEMENTS_CPU_BIND)
-#define OSI_IMPLEMENTS_THREAD_BIND 1
-#define osi_thread_bind_current(cpu)  osi_cpu_bind_thread_current(cpu)
-#define osi_thread_unbind_current()   osi_cpu_unbind_thread_current()
-#else /* !OSI_IMPLEMENTS_CPU_BIND */
-#define osi_thread_bind_current(cpu)  (OSI_FAIL)
-#define osi_thread_unbind_current()   (OSI_FAIL)
-#endif /* !OSI_IMPLEMENTS_CPU_BIND */
-
-
+#include <osi/COMMON/thread_bind.h>
 #include <osi/COMMON/thread_event.h>
-#include <osi/COMMON/thread_option.h>
 
 #endif /* _OSI_OSI_THREAD_H */

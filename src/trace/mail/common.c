@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,14 +12,12 @@
  * inter-process asynchronous messaging
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_object_cache.h>
 #include <trace/mail.h>
 #include <trace/gen_rgy.h>
-#include <trace/common/options.h>
 
 osi_mem_object_cache_t * osi_trace_mail_msg_cache = osi_NULL;
 osi_mem_object_cache_t * osi_trace_mail_mq_cache = osi_NULL;
@@ -221,7 +219,7 @@ osi_trace_mail_allocator_PkgInit(void)
 				    &osi_trace_mail_msg_cache_ctor,
 				    &osi_trace_mail_msg_cache_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_msg_cache == osi_NULL)) {
 	res = OSI_FAIL;
 	goto error;
@@ -235,7 +233,7 @@ osi_trace_mail_allocator_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_mail_mq_cache == osi_NULL)) {
 	res = OSI_FAIL;
 	goto error;

@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -24,6 +24,8 @@ PUBLICHEADERS= \
 	plugin_types.h \
 	probe_client.h \
 	proc_client.h \
+	proc_client_impl.h \
+	proc_client_impl_types.h \
 	proc_client_types.h \
 	trap.h \
 	trap_impl.h \

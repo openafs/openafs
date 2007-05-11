@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,12 +17,18 @@ CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} ${
 CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 PUBLICHEADERS= \
+		gen_rgy.h \
+		gen_rgy_types.h \
 		init.h \
 		module.h \
 		options.h \
 		probe.h \
 		record.h \
+		record_impl.h \
 		record_inline.h \
+		record_types.h \
+		trace_impl.h \
+		trace_includes.h \
 		types.h \
 		$(NULL)
 

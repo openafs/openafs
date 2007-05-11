@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,16 +8,14 @@
  */
 
 #ifndef _OSI_SOLARIS_KMEM_OBJECT_CACHE_TYPES_H
-#define	_OSI_SOLARIS_KMEM_OBJECT_CACHE_TYPES_H
+#define _OSI_SOLARIS_KMEM_OBJECT_CACHE_TYPES_H 1
 
 /*
  * osi mem object cache interface
  * solaris kmem slab allocator backend
- * type definitions
+ * public type definitions
  */
 
-#include <sys/kmem.h>
-
-typedef kmem_cache_t * _osi_mem_object_cache_handle_t;
+#include <osi/SOLARIS/object_cache_types.h>
 
 #endif /* _OSI_SOLARIS_KMEM_OBJECT_CACHE_TYPES_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -84,34 +84,30 @@
 #define OSI_CACHE_RESULT_FAIL_PROBE  OSI_RESULT_SUCCESS_CODE(OSI_CACHE_ERROR_FAIL_PROBE)
 
 
-osi_extern osi_result osi_cache_PkgInit(void);
-osi_extern osi_result osi_cache_PkgShutdown(void);
-
-
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #include <osi/COMMON/cache.h>
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/kcache.h>
 #else
-#define osi_cache_PkgInit()         (OSI_CACHE_RESULT_FAKED)
-#define osi_cache_PkgShutdown()     (OSI_CACHE_RESULT_FAKED)
+#define osi_cache_PkgInit         osi_null_init_func
+#define osi_cache_PkgShutdown     osi_null_fini_func
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #include <osi/COMMON/cache.h>
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/ucache.h>
 #else
-#define osi_cache_PkgInit()         (OSI_CACHE_RESULT_FAKED)
-#define osi_cache_PkgShutdown()     (OSI_CACHE_RESULT_FAKED)
+#define osi_cache_PkgInit         osi_null_init_func
+#define osi_cache_PkgShutdown     osi_null_fini_func
 #endif
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 
 #endif /* _OSI_OSI_CACHE_H */

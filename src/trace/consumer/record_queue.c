@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,8 +13,7 @@
  * tracepoint record cache
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/consumer/record_queue.h>
 #include <trace/consumer/record_queue_impl.h>
 #include <osi/osi_mem.h>
@@ -84,6 +83,7 @@ osi_trace_consumer_record_queue_create(osi_trace_consumer_record_queue_t ** queu
     }
 
     queue->record_list_len = 0;
+    queue->waiter_cancel = OSI_FALSE;
 
  error:
     return res;
@@ -175,6 +175,10 @@ osi_trace_consumer_record_queue_dequeue(osi_trace_consumer_record_queue_t * queu
     osi_mutex_Lock(&queue->lock);
     while (!queue->record_list_len) {
 	osi_condvar_Wait(&queue->cv, &queue->lock);
+	if (queue->waiter_cancel == OSI_TRUE) {
+	    res = OSI_ERROR_CANCEL_WAITERS;
+	    goto error_sync;
+	}
     }
     record = osi_list_First(&queue->record_list,
 			    osi_TracePoint_record_queue_t,
@@ -183,6 +187,8 @@ osi_trace_consumer_record_queue_dequeue(osi_trace_consumer_record_queue_t * queu
 		    osi_TracePoint_record_queue_t,
 		    record_list);
     queue->record_list_len--;
+
+ error_sync:
     osi_mutex_Unlock(&queue->lock);
 
     *record_out = record;
@@ -208,11 +214,12 @@ osi_trace_consumer_record_queue_dequeue_nosleep(osi_trace_consumer_record_queue_
 						osi_TracePoint_record_queue_t ** record_out)
 {
     osi_result res = OSI_OK;
-    osi_TracePoint_record_queue_t * record;
+    osi_TracePoint_record_queue_t * record = osi_NULL;
 
     osi_mutex_Lock(&queue->lock);
-    if (!queue->record_list_len) {
-	record = osi_NULL;
+    if (queue->waiter_cancel == OSI_TRUE) {
+	res = OSI_ERROR_CANCEL_WAITERS;
+    } else if (!queue->record_list_len) {
 	res = OSI_FAIL;
     } else {
 	record = osi_list_First(&queue->record_list,
@@ -259,6 +266,24 @@ osi_trace_consumer_record_queue_enqueue_new(osi_TracePoint_record * record)
 
  error:
     return res;
+}
+
+/*
+ * flag that all waiter threads/tasklets should cancel themselves
+ *
+ * [IN] queue
+ *
+ * returns:
+ *   OSI_OK always
+ */
+osi_result
+osi_trace_consumer_record_queue_waiter_cancel(osi_trace_consumer_record_queue_t * queue)
+{
+    osi_mutex_Lock(&queue->lock);
+    queue->waiter_cancel = OSI_TRUE;
+    osi_mutex_Unlock(&queue->lock);
+
+    return OSI_OK;
 }
 
 /*

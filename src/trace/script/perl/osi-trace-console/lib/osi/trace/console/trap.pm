@@ -1,6 +1,6 @@
 package osi::trace::console::trap;
 
-use 5.008008;
+use 5.006;
 use strict;
 use warnings;
 
@@ -18,12 +18,22 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw(
 				   new,
 				   DESTROY,
-				   encoding_get,
-				   encoding_set,
-				   version_get,
-				   version_set,
-				   payload_get,
-				   payload_set
+				   decode,
+				   encoding_type,
+				   encoding_version,
+				   encoded_payload,
+				   timestamp,
+				   pid,
+				   tid,
+				   version,
+				   gen_id,
+				   cpu_id,
+				   probe_id,
+				   probe_name,
+				   tags,
+				   nargs,
+				   raw_args,
+				   
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -82,7 +92,7 @@ Tom Keiser, E<lt>tkeiser@sinenomine.netE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 Sine Nomine Associates and others.
+Copyright (C) 2006-2007 Sine Nomine Associates and others.
 All Rights Reserved.
 
 This software has been released under the terms of the IBM Public
@@ -102,39 +112,86 @@ sub new {
 sub DESTROY {
 }
 
-sub encoding_set {
-  my ($self, $encoding) = @_;
-
-  $self->{__encoding} = $encoding;
-}
-
-sub version_set {
-  my ($self, $version) = @_;
-
-  $self->{__version} = $version;
-}
-
-sub payload_set {
-  my ($self, $payload) = @_;
-
-  $self->{__payload} = $payload;
-}
-
-sub encoding_get {
+sub encoding_type {
   my ($self) = @_;
 
   return $self->{__encoding};
 }
 
-sub version_get {
-  my ($self, $version) = @_;
+sub encoding_version {
+  my ($self) = @_;
 
   return $self->{__version};
 }
 
-sub payload_get {
-  my ($self, $payload) = @_;
+sub encoded_payload {
+  my ($self) = @_;
 
   return $self->{__payload};
 }
 
+sub timestamp {
+  my ($self) = @_;
+
+  return $self->{__p_timestamp};
+}
+
+sub pid {
+  my ($self) = @_;
+
+  return $self->{__p_pid};
+}
+
+sub tid {
+  my ($self) = @_;
+
+  return $self->{__p_tid};
+}
+
+sub version {
+  my ($self) = @_;
+
+  return $self->{__p_version};
+}
+
+sub gen_id {
+  my ($self) = @_;
+
+  return $self->{__p_gen_id};
+}
+
+sub cpu_id {
+  my ($self) = @_;
+
+  return $self->{__p_cpu_id};
+}
+
+sub probe_id {
+  my ($self) = @_;
+
+  return $self->{__p_probe_id};
+}
+
+sub probe_name {
+  my ($self) = @_;
+
+  return $self->{__p_probe_name};
+}
+
+sub tags {
+  my ($self) = @_;
+
+  return $self->{__p_tags};
+}
+
+sub nargs {
+  my ($self) = @_;
+
+  return $self->{__p_nargs};
+}
+
+sub raw_args {
+  my ($self) = @_;
+
+  return $self->{__p_payload};
+}

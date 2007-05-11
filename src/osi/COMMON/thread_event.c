@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -24,15 +24,14 @@ struct osi_thread_event_table osi_thread_event_table;
 
 osi_static osi_result osi_thread_event_fire(osi_thread_event_type_t event);
 
-osi_result
-osi_thread_event_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_thread_event_PkgInit)
 {
     osi_result res = OSI_OK;
 
     osi_list_Init(&osi_thread_event_table.create_events);
     osi_list_Init(&osi_thread_event_table.destroy_events);
     osi_rwlock_Init(&osi_thread_event_table.lock, 
-		    &osi_common_options.rwlock_opts);
+		    osi_impl_rwlock_opts());
 
     osi_thread_run_arg_cache = 
 	osi_mem_object_cache_create("osi_thread_run_arg",
@@ -42,7 +41,7 @@ osi_thread_event_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_common_options.mem_object_cache_opts);
+				    osi_impl_mem_object_cache_opts());
 
     osi_thread_event_cache = 
 	osi_mem_object_cache_create("osi_thread_event",
@@ -52,13 +51,12 @@ osi_thread_event_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_common_options.mem_object_cache_opts);
+				    osi_impl_mem_object_cache_opts());
 
     return res;
 }
 
-osi_result
-osi_thread_event_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_thread_event_PkgShutdown)
 {
     osi_mem_object_cache_destroy(osi_thread_event_cache);
     osi_mem_object_cache_destroy(osi_thread_run_arg_cache);
@@ -135,10 +133,24 @@ osi_thread_event_destroy(osi_thread_event_t * ev)
     return res;
 }
 
+/*
+ * attempt to register a thread event handle on one or more event processing queues
+ *
+ * [IN] ev    -- event handle
+ * [IN] mask  -- mask of thread events to which handle is to be registered
+ *
+ * returns:
+ *   OSI_OK if handle is now bound to the events in the mask
+ *   OSI_FAIL if unknown events are in the mask
+ */
 osi_result
 osi_thread_event_register(osi_thread_event_t * ev, osi_uint32 mask)
 {
     osi_result res = OSI_OK;
+
+    if (mask & ~(OSI_THREAD_EVENT_ALL)) {
+	res = OSI_FAIL;
+    }
 
     osi_rwlock_WrLock(&osi_thread_event_table.lock);
     if ((mask & OSI_THREAD_EVENT_CREATE) &&
@@ -157,10 +169,23 @@ osi_thread_event_register(osi_thread_event_t * ev, osi_uint32 mask)
     return res;
 }
 
+/*
+ * attempt to unregister a thread event handle from one or more event processing queues
+ *
+ * [IN] ev    -- event handle
+ * [IN] mask  -- mask of thread events from which handle is to be unregistered
+ *
+ * returns:
+ *   OSI_OK if handle is no longer bound to any event in the mask
+ */
 osi_result
 osi_thread_event_unregister(osi_thread_event_t * ev, osi_uint32 mask)
 {
     osi_result res = OSI_OK;
+
+    if (mask & ~(OSI_THREAD_EVENT_ALL)) {
+	res = OSI_FAIL;
+    }
 
     osi_rwlock_WrLock(&osi_thread_event_table.lock);
     if ((mask & OSI_THREAD_EVENT_CREATE) &&

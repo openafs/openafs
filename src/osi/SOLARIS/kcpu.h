@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,7 +8,7 @@
  */
 
 #ifndef _OSI_SOLARIS_KCPU_H
-#define _OSI_SOLARIS_KCPU_H
+#define _OSI_SOLARIS_KCPU_H 1
 
 
 #include <sys/types.h>
@@ -25,7 +25,7 @@ osi_extern osi_result osi_cpu_min_id(osi_cpu_id_t *);
 osi_extern osi_result osi_cpu_max_id(osi_cpu_id_t *);
 osi_extern osi_result osi_cpu_list_iterate(osi_cpu_iterator_t *, void *);
 
-#define osi_cpu_current() (CPU->cpu_id)
+#define osi_cpu_current_id() (CPU->cpu_id)
 
 #define OSI_IMPLEMENTS_CPU_BIND 1
 
@@ -36,5 +36,9 @@ osi_extern osi_result osi_cpu_unbind_thread_current(void);
 
 osi_extern osi_result osi_cpu_monitor_register(osi_cpu_monitor_t *, void *);
 osi_extern osi_result osi_cpu_monitor_unregister(osi_cpu_monitor_t *, void *);
+
+
+OSI_INIT_FUNC_PROTOTYPE(osi_cpu_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_cpu_PkgShutdown);
 
 #endif /* _OSI_SOLARIS_KCPU_H */

@@ -128,25 +128,28 @@
 
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
-#if defined(AFS_SUN5_ENV)
+#if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/ktime.h>
+#elif defined(OSI_LINUX_ENV)
+#include <osi/LINUX/ktime.h>
 #else
 #include <osi/LEGACY/ktime.h>
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
-#if defined(AFS_SUN5_ENV)
+#if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/utime.h>
 #include <osi/SOLARIS/utime_approx.h>
 #else
 #include <osi/LEGACY/utime.h>
 #endif
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
+#include <osi/COMMON/time.h>
 #include <osi/COMMON/time_approx.h>
 
 #endif /* _OSI_OSI_TIME_H */

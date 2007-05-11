@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -31,6 +31,7 @@ osi_extern osi_result osi_trace_directory_N2I(osi_trace_gen_id_t gen,
 osi_extern osi_result osi_trace_directory_I2N(osi_trace_gen_id_t gen,
 					      osi_trace_probe_id_t id, 
 					      char * name, 
-					      size_t buflen);
+					      osi_size_t buflen,
+					      osi_bool_t blocking);
 
 #endif /* _OSI_TRACE_CONSUMER_DIRECTORY_H */

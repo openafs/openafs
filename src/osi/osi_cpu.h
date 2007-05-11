@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -38,9 +38,9 @@
  * defined(OSI_CPU_ID_SPARSE_NAMESPACE)
  *
  * the following interface requires
- * defined(KERNEL) && !defined(UKERNEL)
+ * defined(OSI_ENV_KERNELSPACE)
  *
- *  osi_cpu_id_t osi_cpu_current();
+ *  osi_cpu_id_t osi_cpu_current_id();
  *    -- returns the current CPU id
  *
  * the following interfaces require
@@ -79,13 +79,8 @@ typedef enum {
 #define OSI_CPU_RESULT_ITERATOR_STOP  OSI_RESULT_SUCCESS_CODE(OSI_CPU_ERROR_ITERATOR_STOP)
 
 
-/* these are only to be called by osi_Init and osi_Shutdown */
-osi_extern osi_result osi_cpu_PkgInit(void);
-osi_extern osi_result osi_cpu_PkgShutdown(void);
-
-
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/kcpu.h>
@@ -93,7 +88,7 @@ osi_extern osi_result osi_cpu_PkgShutdown(void);
 #include <osi/LEGACY/cpu.h>
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/ucpu.h>
@@ -101,7 +96,7 @@ osi_extern osi_result osi_cpu_PkgShutdown(void);
 #include <osi/LEGACY/cpu.h>
 #endif
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 
 #endif /* _OSI_OSI_CPU_H */

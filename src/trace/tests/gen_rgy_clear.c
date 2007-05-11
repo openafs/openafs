@@ -58,6 +58,15 @@ main(int argc, char ** argv)
     osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
 					     OSI_OPTION_TRACE_GEN_RGY_REGISTRATION,
 					     &val)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
+					     OSI_OPTION_TRACE_CONSUMER_START_I2N_THREAD,
+					     &val)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
+					     OSI_OPTION_TRACE_CONSUMER_START_CACHE_THREAD,
+					     &val)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
+					     OSI_OPTION_TRACE_START_MAIL_THREAD,
+					     &val)));
     osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_TraceCollector, &opts)));
     osi_Assert(OSI_RESULT_OK(osi_Trace_PkgInit()));
 

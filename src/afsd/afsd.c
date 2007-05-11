@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
@@ -54,8 +56,7 @@
   *	-shutdown  Shutdown afs daemons
   *---------------------------------------------------------------------------*/
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -2181,7 +2182,11 @@ mainproc(struct cmd_syndesc *as, char *arock)
 
 main(int argc, char **argv)
 {
+    int code;
     struct cmd_syndesc *ts;
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_AFSD,
+			     osi_NULL));
 
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
@@ -2257,7 +2262,10 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
 		"Percentage RW versus RO in cache (specify as 60/40)");
 
-    return (cmd_Dispatch(argc, argv));
+    code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 }
 
 

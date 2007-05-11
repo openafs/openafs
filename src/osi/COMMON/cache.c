@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -97,91 +97,91 @@ osi_cache_l3_exists(void)
 
 
 osi_result
-osi_cache_l1i_size(size_t * val)
+osi_cache_l1i_size(osi_size_t * val)
 {
     *val = osi_cache_info.l1i_size;
     return (osi_cache_info.l1i_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l1i_line_size(size_t * val)
+osi_cache_l1i_line_size(osi_size_t * val)
 {
     *val = osi_cache_info.l1i_line_size;
     return (osi_cache_info.l1i_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l1i_associativity(size_t * val)
+osi_cache_l1i_associativity(osi_size_t * val)
 {
     *val = osi_cache_info.l1i_associativity;
     return (osi_cache_info.l1i_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l1d_size(size_t * val)
+osi_cache_l1d_size(osi_size_t * val)
 {
     *val = osi_cache_info.l1d_size;
     return (osi_cache_info.l1d_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l1d_line_size(size_t * val)
+osi_cache_l1d_line_size(osi_size_t * val)
 {
     *val = osi_cache_info.l1d_line_size;
     return (osi_cache_info.l1d_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l1d_associativity(size_t * val)
+osi_cache_l1d_associativity(osi_size_t * val)
 {
     *val = osi_cache_info.l1d_associativity;
     return (osi_cache_info.l1d_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l2_size(size_t * val)
+osi_cache_l2_size(osi_size_t * val)
 {
     *val = osi_cache_info.l2_size;
     return (osi_cache_info.l2_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l2_line_size(size_t * val)
+osi_cache_l2_line_size(osi_size_t * val)
 {
     *val = osi_cache_info.l2_line_size;
     return (osi_cache_info.l2_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l2_associativity(size_t * val)
+osi_cache_l2_associativity(osi_size_t * val)
 {
     *val = osi_cache_info.l2_associativity;
     return (osi_cache_info.l2_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l3_size(size_t * val)
+osi_cache_l3_size(osi_size_t * val)
 {
     *val = osi_cache_info.l3_size;
     return (osi_cache_info.l3_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l3_line_size(size_t * val)
+osi_cache_l3_line_size(osi_size_t * val)
 {
     *val = osi_cache_info.l3_line_size;
     return (osi_cache_info.l3_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_l3_associativity(size_t * val)
+osi_cache_l3_associativity(osi_size_t * val)
 {
     *val = osi_cache_info.l3_associativity;
     return (osi_cache_info.l3_probed) ? OSI_OK : OSI_CACHE_RESULT_FAKED;
 }
 
 osi_result
-osi_cache_max_alignment(size_t * val)
+osi_cache_max_alignment(osi_size_t * val)
 {
     *val = osi_cache_info.max_alignment;
     return OSI_OK;

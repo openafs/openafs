@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -11,7 +11,7 @@
  * modular tracepoint table support
  */
 
-#include <osi/osi_impl.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_kernel.h>
 #include <osi/osi_mem.h>
 #include <trace/KERNEL/module.h>

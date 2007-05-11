@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,6 +13,7 @@
 #include <osi/osi_list.h>
 #include <osi/osi_rwlock.h>
 #include <osi/osi_refcnt.h>
+#include <osi/osi_event.h>
 #include <trace/consumer/cache/object_types.h>
 #include <trace/consumer/cache/ptr_vec_types.h>
 
@@ -76,6 +77,13 @@
  * functions.
  */
 
+typedef enum {
+    OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_PROBE_REGISTER,
+    OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_GEN_REGISTER,
+    OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_GEN_UNREGISTER,
+    OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_MAX_ID
+} osi_trace_consumer_gen_cache_event_t;
+
 /* forward declare */
 struct osi_trace_consumer_bin_cache;
 
@@ -94,6 +102,9 @@ typedef struct osi_trace_consumer_gen_cache {
 
     /* vector of probe value cache pointers */
     osi_trace_consumer_cache_ptr_vec_t probe_vec;
+
+    /* gen info change watcher */
+    osi_event_hook_t hook;
 
     /* generator object reference count */
     osi_refcnt_t refcnt;

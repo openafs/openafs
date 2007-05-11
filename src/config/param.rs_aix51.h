@@ -183,6 +183,7 @@
 
 /* global defines */
 
+#define	OSI_ENV_UNIX		1
 #define	OSI_AIX_ENV		1
 #define	OSI_AIX32_ENV		1
 #define	OSI_AIX41_ENV		1

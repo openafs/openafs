@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006, Sine Nomine Associates and others.
+ * Copyright 2005-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -140,36 +140,23 @@
  *
  */
 
-typedef struct osi_shlock_options {
-    osi_uint8 preemptive_only;     /* only activate in pre-emptive environments (e.g. no-op for LWP) */
-    osi_uint8 trace_allowed;       /* whether or not lock tracing is allowed */
-    osi_uint8 trace_enabled;       /* enable lock tracing */
-} osi_shlock_options_t;
-/* defaults:  { 0, 1, 0 } */
+#include <osi/COMMON/shlock_options.h>
 
-typedef enum {
-    OSI_SHLOCK_OPTION_PREEMPTIVE_ONLY,
-    OSI_SHLOCK_OPTION_TRACE_ALLOWED,
-    OSI_SHLOCK_OPTION_TRACE_ENABLED,
-    OSI_SHLOCK_OPTION_MAX_ID
-} osi_shlock_options_param_t;
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #include <osi/LEGACY/kshlock.h>
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
-#if defined(OSI_PTHREAD_ENV)
+#if defined(OSI_ENV_PTHREAD)
 #include <osi/PTHREAD/shlock.h>
-#else /* !OSI_PTHREAD_ENV */
+#elif defined(OSI_ENV_LWP)
 #include <osi/LWP/shlock.h>
-#endif /* !OSI_PTHREAD_ENV */
+#endif /* OSI_ENV_LWP */
 
-#endif /* !OSI_KERNELSPACE_ENV */
-
-#include <osi/COMMON/shlock_options.h>
+#endif /* !OSI_ENV_KERNELSPACE */
 
 #if !defined(OSI_IMPLEMENTS_SHLOCK_QUERY_SHLOCKHELD)
 #define osi_shlock_AssertShLockHeld(x)

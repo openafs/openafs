@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,13 +8,14 @@
  */
 
 #ifndef _OSI_SOLARIS_KCACHE_H
-#define _OSI_SOLARIS_KCACHE_H
+#define _OSI_SOLARIS_KCACHE_H 1
 
 /*
  * Solaris cache hierarchy introspection
  * kernelspace implementation
  */
 
-
+OSI_INIT_FUNC_PROTOTYPE(osi_cache_PkgInit);
+#define osi_cache_PkgShutdown  osi_null_fini_func
 
 #endif /* _OSI_SOLARIS_KCACHE_H */

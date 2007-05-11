@@ -43,6 +43,9 @@ osi_extern osi_result
 osi_trace_consumer_record_queue_dequeue_nosleep(osi_trace_consumer_record_queue_t *,
 						osi_TracePoint_record_queue_t **);
 
+osi_extern osi_result
+osi_trace_consumer_record_queue_waiter_cancel(osi_trace_consumer_record_queue_t *);
+
 /* record queue iteration support */
 typedef osi_result osi_trace_consumer_record_queue_worker_t(osi_trace_consumer_record_queue_t *,
 							    osi_TracePoint_record_queue_t *,

@@ -16,10 +16,10 @@
  * system includes needed by the osi abstraction
  */
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <osi/COMMON/ksysincludes.h>
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 #include <osi/COMMON/usysincludes.h>
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 #endif /* _OSI_OSI_SYSINCLUDES_H */

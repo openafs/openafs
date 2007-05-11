@@ -16,7 +16,6 @@
  */
 
 typedef osi_uint32 osi_trace_probe_id_t;
-typedef osi_uint32 osi_trace_probe_type_t;
 
 typedef enum {
     osi_Trace_Event_Null_Id,

@@ -1,4 +1,4 @@
-# Copyright 2006, Sine Nomine Associates and others.
+# Copyright 2006-2007, Sine Nomine Associates and others.
 # All Rights Reserved.
 # 
 # This software has been released under the terms of the IBM Public
@@ -144,5 +144,5 @@ LIBAFSRPC_ALL_CFLAGS = \
 	$(NULL)
 
 LIBAFSRPC_DEPS = \
-	$(LIBAFSRPC_DEPS_$(LIBAFSRPC_BUILDING)_$(LIBAFSRPC_BUILDING_LIB)_$(LIBAFSRPC_BUILDING_THR)_$(LIBAFSRPC_BUILDING_INST)) \
+	$(LIBAFSRPC_DEPS_$(LIBAFSRPC_BUILDING)_$(LIBAFSRPC_BUILDING_LIB)_$(LIBAFSRPC_BUILDING_THR)_$(LIBAFSRPC_BUILDING_INST)_$(LIBAFSRPC_BUILDING_BIT)) \
 	$(NULL)

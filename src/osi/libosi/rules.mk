@@ -1,4 +1,4 @@
-# Copyright 2006, Sine Nomine Associates and others.
+# Copyright 2006-2007, Sine Nomine Associates and others.
 # All Rights Reserved.
 # 
 # This software has been released under the terms of the IBM Public
@@ -33,6 +33,8 @@ LIBOSI_OBJS_COMMON = \
 	osi_common_condvar_options.o \
 	osi_common_counter.o \
 	osi_common_counter_inline.o \
+	osi_common_demux.o \
+	osi_common_demux_options.o \
 	osi_common_event_lock.o \
 	osi_common_libosi_options.o \
 	osi_common_mutex_options.o \
@@ -73,11 +75,15 @@ LIBOSI_OBJS_kernel = \
 
 LIBOSI_CFLAGS_userspace = 
 LIBOSI_OBJS_userspace = \
+	osi_common_data_heap.o \
+	osi_common_data_heap_options.o \
 	osi_common_uutil.o \
 	osi_common_uproc_inline.o \
-	osi_common_usignal_inline.o \
 	osi_common_usyscall.o \
 	osi_common_usyscall_probe.o \
+	osi_common_data_vector.o \
+	osi_common_data_vector_options.o \
+	osi_unix_usignal_inline.o \
 	$(NULL)
 
 LIBOSI_CFLAGS_ukernel = 
@@ -140,7 +146,7 @@ LIBOSI_CFLAGS_COMMON_inst =
 LIBOSI_OBJS_COMMON_inst = \
 	osi_tracepoint_table.o \
 	trace_common_init.o \
-	trace_common_options.o \
+	trace_common_record.o \
 	trace_common_record_inline.o \
 	trace_event_event.o \
 	trace_event_function.o \
@@ -150,6 +156,7 @@ LIBOSI_OBJS_COMMON_inst = \
 	trace_generator_directory.o \
 	trace_generator_init.o \
 	trace_generator_module.o \
+	trace_generator_module_reg_queue.o \
 	trace_generator_probe.o \
 	trace_generator_tracepoint_inline.o \
 	trace_mail_common.o \
@@ -301,6 +308,14 @@ osi_common_counter.o: $(OSI_SRCDIR)/COMMON/counter.c
 	$(CRULE_OPT)
 osi_common_counter_inline.o: $(OSI_SRCDIR)/COMMON/counter_inline.c
 	$(CRULE_OPT)
+osi_common_data_heap.o: $(OSI_SRCDIR)/COMMON/data/heap.c
+	$(CRULE_OPT)
+osi_common_data_heap_options.o: $(OSI_SRCDIR)/COMMON/data/heap_options.c
+	$(CRULE_OPT)
+osi_common_demux.o: $(OSI_SRCDIR)/COMMON/demux.c
+	$(CRULE_OPT)
+osi_common_demux_options.o: $(OSI_SRCDIR)/COMMON/demux_options.c
+	$(CRULE_OPT)
 osi_common_event_lock.o: $(OSI_SRCDIR)/COMMON/event_lock.c
 	$(CRULE_OPT)
 osi_common_kutil.o: $(OSI_SRCDIR)/COMMON/kutil.c
@@ -343,8 +358,6 @@ osi_common_thread_option.o: $(OSI_SRCDIR)/COMMON/thread_option.c
 	$(CRULE_OPT)
 osi_common_uproc_inline.o: $(OSI_SRCDIR)/COMMON/uproc_inline.c
 	$(CRULE_OPT)
-osi_common_usignal_inline.o: $(OSI_SRCDIR)/COMMON/usignal_inline.c
-	$(CRULE_OPT)
 osi_common_usyscall.o: $(OSI_SRCDIR)/COMMON/usyscall.c
 	$(CRULE_OPT)
 osi_common_usyscall_probe.o: $(OSI_SRCDIR)/COMMON/usyscall_probe.c
@@ -352,6 +365,10 @@ osi_common_usyscall_probe.o: $(OSI_SRCDIR)/COMMON/usyscall_probe.c
 osi_common_util.o: $(OSI_SRCDIR)/COMMON/util.c
 	$(CRULE_OPT)
 osi_common_uutil.o: $(OSI_SRCDIR)/COMMON/uutil.c
+	$(CRULE_OPT)
+osi_common_data_vector.o: $(OSI_SRCDIR)/COMMON/data/vector.c
+	$(CRULE_OPT)
+osi_common_data_vector_options.o: $(OSI_SRCDIR)/COMMON/data/vector_options.c
 	$(CRULE_OPT)
 osi_legacy_counter.o: $(OSI_SRCDIR)/LEGACY/counter.c
 	$(CRULE_OPT)
@@ -368,8 +385,6 @@ osi_legacy_kshlock.o: $(OSI_SRCDIR)/LEGACY/kshlock.c
 osi_legacy_ktime_inline.o: $(OSI_SRCDIR)/LEGACY/ktime_inline.c
 	$(CRULE_OPT)
 osi_legacy_mem_align.o: $(OSI_SRCDIR)/LEGACY/mem_align.c
-	$(CRULE_OPT)
-osi_legacy_object_cache.o: $(OSI_SRCDIR)/LEGACY/object_cache.c
 	$(CRULE_OPT)
 osi_legacy_refcnt.o: $(OSI_SRCDIR)/LEGACY/refcnt.c
 	$(CRULE_OPT)
@@ -423,6 +438,8 @@ osi_native_kspin_rwlock_inline.o: $(OSI_SRCDIR)/$(MKAFS_OSTYPE)/kspin_rwlock_inl
 	$(CRULE_OPT)
 osi_native_kthread.o: $(OSI_SRCDIR)/$(MKAFS_OSTYPE)/kthread.c
 	$(CRULE_OPT)
+osi_native_ktime_inline.o: $(OSI_SRCDIR)/$(MKAFS_OSTYPE)/ktime_inline.c
+	$(CRULE_OPT)
 osi_native_kutil.o: $(OSI_SRCDIR)/$(MKAFS_OSTYPE)/kutil.c
 	$(CRULE_OPT)
 osi_native_ucache.o: $(OSI_SRCDIR)/$(MKAFS_OSTYPE)/ucache.c
@@ -449,13 +466,15 @@ osi_pthread_umem_local.o: $(OSI_SRCDIR)/PTHREAD/umem_local.c
 	$(CRULE_OPT)
 osi_tracepoint_table.o: $(OSI_OBJDIR)/osi_tracepoint_table.c
 	$(CRULE_OPT)
+osi_unix_usignal_inline.o: $(OSI_SRCDIR)/UNIX/usignal_inline.c
+	$(CRULE_OPT)
 
 
 # build rules for OSI Trace Generator library
 
 trace_common_init.o: $(TRACE_SRCDIR)/common/init.c
 	$(CRULE_OPT)
-trace_common_options.o: $(TRACE_SRCDIR)/common/options.c
+trace_common_record.o: $(TRACE_SRCDIR)/common/record.c
 	$(CRULE_OPT)
 trace_common_record_inline.o: $(TRACE_SRCDIR)/common/record_inline.c
 	$(CRULE_OPT)
@@ -484,6 +503,8 @@ trace_generator_init.o: $(TRACE_SRCDIR)/generator/init.c
 trace_generator_module.o: $(TRACE_SRCDIR)/generator/module.c
 	$(CRULE_OPT)
 trace_generator_module_mail.o: $(TRACE_SRCDIR)/generator/module_mail.c
+	$(CRULE_OPT)
+trace_generator_module_reg_queue.o: $(TRACE_SRCDIR)/generator/module_reg_queue.c
 	$(CRULE_OPT)
 trace_generator_probe.o: $(TRACE_SRCDIR)/generator/probe.c
 	$(CRULE_OPT)

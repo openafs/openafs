@@ -83,7 +83,7 @@
  */
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/kproc.h>
@@ -93,11 +93,11 @@
 #include <osi/LEGACY/kproc.h>
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #include <osi/COMMON/uproc.h>
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 
 #include <osi/COMMON/proc.h>

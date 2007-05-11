@@ -1837,6 +1837,10 @@ main(argc, argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Utility,
+			     osi_NULL));
+
     strcpy(uss_whoami, argv[0]);
     yyin = (FILE *) NULL;
 
@@ -2018,4 +2022,7 @@ main(argc, argv)
     if (doUnlog) {
 	code = uss_fs_UnlogToken(uss_Cell);
     }
+
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 }				/*Main routine */

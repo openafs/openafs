@@ -5,11 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-/* These two needed for rxgen output to work */
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -66,6 +66,10 @@ main(int argc, char *argv[])
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     initialize_CMD_error_table();
     initialize_KTC_error_table();
     initialize_KA_error_table();
@@ -76,14 +80,16 @@ main(int argc, char *argv[])
     /* initialize winsock */
     if (afs_winsockInit() < 0) {
 	fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
-	exit(1);
+	code = 1;
+	goto error;
     }
 #endif
 
     code = ka_Init(0);
     if (code) {
 	com_err(whoami, code, "Can't get cell info");
-	exit(1);
+	code = 1;
+	goto error;
     }
 
     /* if there are no arguments or if the first argument is "-cell" or if the
@@ -92,21 +98,25 @@ main(int argc, char *argv[])
 
     ap[0] = argv[0];
     ap[1] = "interactive";
-    if (argc == 1)
+    if (argc == 1) {
 	code = ka_AdminInteractive(2, ap);
-    else if ((strncmp(argv[1], "-admin_username", strlen(argv[1])) == 0)
-	     || (strncmp(argv[1], "-password_for_admin", strlen(argv[1])) ==
-		 0)
-	     || (strncmp(argv[1], "-cell", strlen(argv[1])) == 0)
-	     || (strncmp(argv[1], "-servers", strlen(argv[1])) == 0)
-	     || (strncmp(argv[1], "-noauth", strlen(argv[1])) == 0)
-	     || (strpbrk(argv[1], "@.") != 0)) {
+    } else if ((strncmp(argv[1], "-admin_username", strlen(argv[1])) == 0) ||
+	       (strncmp(argv[1], "-password_for_admin", strlen(argv[1])) == 0) ||
+	       (strncmp(argv[1], "-cell", strlen(argv[1])) == 0) ||
+	       (strncmp(argv[1], "-servers", strlen(argv[1])) == 0) ||
+	       (strncmp(argv[1], "-noauth", strlen(argv[1])) == 0) ||
+	       (strpbrk(argv[1], "@.") != 0)) {
 	for (i = 1; i < argc; i++)
 	    ap[i + 1] = argv[i];
 	code = ka_AdminInteractive(argc + 1, ap);
-    } else
+    } else {
 	code = ka_AdminInteractive(argc, argv);
+    }
+    code = (code != 0) ? 1 : 0;
 
+ error:
     rx_Finalize();
-    exit(code != 0);
+    osi_AssertOK(osi_PkgShutdown());
+
+    return code;
 }

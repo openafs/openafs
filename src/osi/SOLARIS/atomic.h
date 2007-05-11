@@ -11,7 +11,7 @@
 #define	_OSI_SOLARIS_ATOMIC_H
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <sys/atomic.h>
 #else
 #include <atomic.h>

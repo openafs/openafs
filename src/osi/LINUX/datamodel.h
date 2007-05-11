@@ -11,7 +11,7 @@
 #define	_OSI_LINUX_DATAMODEL_H
 
 
-#if (defined(AFS_LINUX_64BIT_KERNEL) && defined(OSI_KERNELSPACE_ENV)) || defined(__osi_arch_alpha) || defined(__osi_arch_ia64) || defined(__osi_arch_amd64) || defined(__osi_arch_ppc64) || defined(__osi_arch_s390x) || defined(__osi_arch_mips64) || defined(__osi_arch_sparc64)
+#if (defined(AFS_LINUX_64BIT_KERNEL) && defined(OSI_ENV_KERNELSPACE)) || defined(__osi_arch_alpha) || defined(__osi_arch_ia64) || defined(__osi_arch_amd64) || defined(__osi_arch_ppc64) || defined(__osi_arch_s390x) || defined(__osi_arch_mips64) || defined(__osi_arch_sparc64)
 #define OSI_DATAMODEL OSI_LP64_ENV
 #define osi_datamodel() OSI_DATAMODEL_LP64
 #define osi_datamodel_int() 32

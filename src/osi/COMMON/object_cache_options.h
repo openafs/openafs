@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -11,6 +11,7 @@
 #define _OSI_COMMON_OBJECT_CACHE_OPTIONS_H 1
 
 #include <osi/osi_mem.h>
+#include <osi/COMMON/object_cache_types.h>
 
 #define osi_mem_object_cache_options_Init(opt) \
     osi_Macro_Begin \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -17,105 +17,51 @@
  * inline getters/setters
  */
 
+#include <trace/common/record_impl.h>
 
 /*
  * due to the ILP32 limitations, direct field access
  * is guarded by the following interfaces:
  *
- *  osi_result osi_TracePoint_record_arg_set(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_set(osi_TracePoint_record_ptr_t *,
  *                                           osi_uint32 arg,
  *                                           osi_register_int value);
  *    -- set value of arg N
  *
- *  osi_result osi_TracePoint_record_arg_add(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_add(osi_TracePoint_record_ptr_t *,
  *                                           osi_register_int value);
  *    -- append new arg
  *
- *  osi_result osi_TracePoint_record_arg_get(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_get(osi_TracePoint_record_ptr_t *,
  *                                           osi_uint32 arg,
  *                                           osi_register_int * value);
  *    -- get value of arg N
  *
- *  osi_result osi_TracePoint_record_arg_set64(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_set64(osi_TracePoint_record_ptr_t *,
  *                                             osi_uint32 arg,
  *                                             osi_int64 value);
- *  osi_result osi_TracePoint_record_arg_add64(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_add64(osi_TracePoint_record_ptr_t *,
  *                                             osi_int64 value);
- *  osi_result osi_TracePoint_record_arg_get64(osi_TracePoint_record *,
+ *  osi_result osi_TracePoint_record_arg_get64(osi_TracePoint_record_ptr_t *,
  *                                             osi_uint32 arg,
  *                                             osi_int64 * value);
  */
-#if (OSI_TYPE_REGISTER_BITS == 32)
-#define OSI_TRACEPOINT_RECORD_ARG(arg) (arg << 1)
 
-#if defined(OSI_ENV_NATIVE_INT64_TYPE)
-#if defined(OSI_BIG_ENDIAN_ENV)
 
-#define __osi_TracePoint_record_arg_set64(record, arg, value) \
-    osi_Macro_Begin \
-        (record)->payload[arg] = ((value) >> 32); \
-        (record)->payload[(arg)+1] = (value) & 0xffffffff; \
-    osi_Macro_End
-#define __osi_TracePoint_record_arg_get64(record, arg, value) \
-    *(value) = (((osi_int64)((record)->payload[arg])) << 32) | \
-	(record)->payload[(arg)+1]
-
-#else /* !OSI_BIG_ENDIAN_ENV */
-
-#define __osi_TracePoint_record_arg_set64(record, arg, value) \
-    osi_Macro_Begin \
-        (record)->payload[(arg)+1] = ((value) >> 32); \
-        (record)->payload[arg] = (value) & 0xffffffff; \
-    osi_Macro_End
-#define __osi_TracePoint_record_arg_get64(record, arg, value) \
-    *(value) = (((osi_int64)((record)->payload[(arg)+1])) << 32) | \
-	(record)->payload[arg]
-
-#endif /* !OSI_BIG_ENDIAN_ENV */
-#else /* !OSI_ENV_NATIVE_INT64_TYPE */
-#if defined(OSI_BIG_ENDIAN_ENV)
-
-#define __osi_TracePoint_record_arg_set64(record, arg, value) \
-    SplitInt64((value), \
-	       (record)->payload[arg], \
-	       (record)->payload[(arg)+1])
-#define __osi_TracePoint_record_arg_get64(record, arg, value) \
-    FillInt64(*(value), \
-	      (record)->payload[arg], \
-	      (record)->payload[(arg)+1])
-
-#else /* !OSI_BIG_ENDIAN_ENV */
-
-#define __osi_TracePoint_record_arg_set64(record, arg, value) \
-    SplitInt64((value), \
-	       (record)->payload[(arg)+1], \
-	       (record)->payload[arg])
-#define __osi_TracePoint_record_arg_get64(record, arg, value) \
-    FillInt64(*(value), \
-	      (record)->payload[(arg)+1], \
-	      (record)->payload[arg])
-
-#endif /* !OSI_BIG_ENDIAN_ENV */
-#endif /* !OSI_ENV_NATIVE_INT64_TYPE */
-
-#else /* (OSI_TYPE_REGISTER_BITS != 32) */
-
-#define OSI_TRACEPOINT_RECORD_ARG(arg) (arg)
-#define __osi_TracePoint_record_arg_set64(record, arg, value) \
-    (record)->payload[arg] = (value)
-#define __osi_TracePoint_record_arg_get64(record, arg, value) \
-    *(value) = (record)->payload[arg]
-
-#endif /* (OSI_TYPE_REGISTER_BITS != 32) */
+/*
+ * INTERNAL
+ * inline methods for getting and setting payload members in
+ * records of the current version
+ */
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_set64(osi_TracePoint_record * record,
-				osi_uint32 arg_in,
-				osi_int64 value)
+_osi_TracePoint_record_arg_set64(osi_TracePoint_record * record,
+				 osi_uint32 arg_in,
+				 osi_int64 value)
 {
     osi_result res = OSI_OK;
-    osi_int32 arg;
+    osi_uint32 arg;
 
     if (osi_compiler_expect_false(arg_in >= OSI_TRACEPOINT_MAX_ARGS)) {
 	res = OSI_FAIL;
@@ -131,19 +77,19 @@ osi_TracePoint_record_arg_set64(osi_TracePoint_record * record,
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_set64(osi_TracePoint_record * record,
-				osi_uint32 arg_in,
-				osi_int64 value)
+_osi_TracePoint_record_arg_set64(osi_TracePoint_record * record,
+				 osi_uint32 arg_in,
+				 osi_int64 value)
 )
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_get64(osi_TracePoint_record * record,
-				osi_uint32 arg_in,
-				osi_int64 * value)
+_osi_TracePoint_record_arg_get64(osi_TracePoint_record * record,
+				 osi_uint32 arg_in,
+				 osi_int64 * value)
 {
     osi_result res = OSI_OK;
-    osi_int32 arg;
+    osi_uint32 arg;
 
     if (osi_compiler_expect_false(arg_in >= OSI_TRACEPOINT_MAX_ARGS)) {
 	res = OSI_FAIL;
@@ -159,25 +105,121 @@ osi_TracePoint_record_arg_get64(osi_TracePoint_record * record,
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_get64(osi_TracePoint_record * record,
-				osi_uint32 arg_in,
-				osi_int64 * value)
+_osi_TracePoint_record_arg_get64(osi_TracePoint_record * record,
+				 osi_uint32 arg_in,
+				 osi_int64 * value)
 )
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_add64(osi_TracePoint_record * record,
-				osi_int64 value)
+_osi_TracePoint_record_arg_add64(osi_TracePoint_record * record,
+				 osi_int64 value)
 {
     osi_uint32 arg = record->nargs++;
-    return osi_TracePoint_record_arg_set64(record,
+    return _osi_TracePoint_record_arg_set64(record,
 					   arg,
 					   value);
 }
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_add64(osi_TracePoint_record * record,
+_osi_TracePoint_record_arg_add64(osi_TracePoint_record * record,
+				 osi_int64 value)
+)
+
+
+/*
+ * PUBLIC
+ * methods for getting and setting payload members
+ */
+
+osi_inline_define(
+osi_result
+osi_TracePoint_record_arg_set64(osi_TracePoint_record_ptr_t * record,
+				osi_uint32 arg_in,
+				osi_int64 value)
+{
+    osi_result res = OSI_OK;
+    osi_uint32 arg;
+
+    if (osi_compiler_expect_false(arg_in >= OSI_TRACEPOINT_MAX_ARGS)) {
+	res = OSI_FAIL;
+	goto error;
+    }
+
+    if (record->version == OSI_TRACEPOINT_RECORD_VERSION) {
+        arg = OSI_TRACEPOINT_RECORD_ARG(arg_in);
+        __osi_TracePoint_record_arg_set64(record->ptr.cur, arg, value);
+    } else {
+        res = osi_TracePoint_record_VX_arg_set64(record, arg_in, value);
+    }
+
+ error:
+    return res;
+}
+)
+osi_inline_prototype(
+osi_result
+osi_TracePoint_record_arg_set64(osi_TracePoint_record_ptr_t * record,
+				osi_uint32 arg_in,
+				osi_int64 value)
+)
+
+osi_inline_define(
+osi_result
+osi_TracePoint_record_arg_get64(osi_TracePoint_record_ptr_t * record,
+				osi_uint32 arg_in,
+				osi_int64 * value)
+{
+    osi_result res = OSI_OK;
+    osi_uint32 arg;
+
+    if (osi_compiler_expect_false(arg_in >= OSI_TRACEPOINT_MAX_ARGS)) {
+	res = OSI_FAIL;
+	goto error;
+    }
+
+    if (record->version == OSI_TRACEPOINT_RECORD_VERSION) {
+        arg = OSI_TRACEPOINT_RECORD_ARG(arg_in);
+        __osi_TracePoint_record_arg_get64(record->ptr.cur, arg, value);
+    } else {
+        res = osi_TracePoint_record_VX_arg_get64(record, arg_in, value);
+    }
+
+ error:
+    return res;
+}
+)
+osi_inline_prototype(
+osi_result
+osi_TracePoint_record_arg_get64(osi_TracePoint_record_ptr_t * record,
+				osi_uint32 arg_in,
+				osi_int64 * value)
+)
+
+osi_inline_define(
+osi_result
+osi_TracePoint_record_arg_add64(osi_TracePoint_record_ptr_t * record,
+				osi_int64 value)
+{
+    osi_result res;
+    osi_uint32 arg;
+
+    if (record->version == OSI_TRACEPOINT_RECORD_VERSION) {
+        arg = record->ptr.cur->nargs++;
+        res = _osi_TracePoint_record_arg_set64(record->ptr.cur,
+					       arg,
+					       value);
+    } else {
+        res = osi_TracePoint_record_VX_arg_add64(record, value);
+    }
+
+    return res;
+}
+)
+osi_inline_prototype(
+osi_result
+osi_TracePoint_record_arg_add64(osi_TracePoint_record_ptr_t * record,
 				osi_int64 value)
 )
 
@@ -192,7 +234,7 @@ osi_TracePoint_record_arg_add64(osi_TracePoint_record * record,
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_set(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_set(osi_TracePoint_record_ptr_t * record,
 			      osi_uint32 arg_in,
 			      osi_register_int value)
 {
@@ -204,14 +246,14 @@ osi_TracePoint_record_arg_set(osi_TracePoint_record * record,
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_set(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_set(osi_TracePoint_record_ptr_t * record,
 			      osi_uint32 arg_in,
 			      osi_register_int value)
 )
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_get(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_get(osi_TracePoint_record_ptr_t * record,
 			      osi_uint32 arg,
 			      osi_register_int * value)
 {
@@ -229,14 +271,14 @@ osi_TracePoint_record_arg_get(osi_TracePoint_record * record,
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_get(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_get(osi_TracePoint_record_ptr_t * record,
 			      osi_uint32 arg_in,
 			      osi_register_int * value)
 )
 
 osi_inline_define(
 osi_result
-osi_TracePoint_record_arg_add(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_add(osi_TracePoint_record_ptr_t * record,
 			      osi_register_int value)
 {
     osi_int64 val_out;
@@ -248,7 +290,7 @@ osi_TracePoint_record_arg_add(osi_TracePoint_record * record,
 )
 osi_inline_prototype(
 osi_result
-osi_TracePoint_record_arg_add(osi_TracePoint_record * record,
+osi_TracePoint_record_arg_add(osi_TracePoint_record_ptr_t * record,
 			      osi_register_int value)
 )
 

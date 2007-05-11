@@ -32,13 +32,26 @@ main(int argc, char ** argv)
     osi_result code;
     osi_uint32 gen_id, nhits;
     int ret;
+    osi_options_t opts;
+    osi_options_val_t val;
 
-    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_TraceCollector, osi_NULL)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Init(osi_ProgramType_TraceCollector, &opts)));
+    val.type = OSI_OPTION_VAL_TYPE_BOOL;
+    val.val.v_bool = OSI_FALSE;
+    osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
+					     OSI_OPTION_TRACE_CONSUMER_START_I2N_THREAD,
+					     &val)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Set(&opts,
+					     OSI_OPTION_TRACE_CONSUMER_START_CACHE_THREAD,
+					     &val)));
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_TraceCollector, &opts)));
+    osi_Assert(OSI_RESULT_OK(osi_options_Destroy(&opts)));
     osi_Assert(OSI_RESULT_OK(osi_Trace_PkgInit()));
 
     if (argc != 3) {
 	usage(argv[0]);
-	exit(-1);
+	ret = -1;
+	goto error;
     }
 
     sscanf(argv[1], "%u", &gen_id);
@@ -55,8 +68,9 @@ main(int argc, char ** argv)
 	ret = 0;
     }
 
+ error:
     osi_Assert(OSI_RESULT_OK(osi_Trace_PkgShutdown()));
     osi_Assert(OSI_RESULT_OK(osi_PkgShutdown()));
 
-    return 0;
+    return ret;
 }

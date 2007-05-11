@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -204,19 +204,23 @@ typedef enum {
     osi_ProgramType_TraceKernel,
     osi_ProgramType_Backup,
     osi_ProgramType_BuTC,
+    osi_ProgramType_UpServer,
+    osi_ProgramType_UpClient,
+    osi_ProgramType_Bos,
+    osi_ProgramType_Vos,
+    osi_ProgramType_AFSD,
+    osi_ProgramType_RMTSYSD,
     osi_ProgramType_Max_Id
 } osi_ProgramType_t;
 #define osi_ProgramType_Min_Id osi_ProgramType_Library
 
-typedef osi_result osi_init_func_t(void);
-typedef osi_result osi_fini_func_t(void);
 
 /* XXX the following type is a hack */
 typedef afs_int64 osi_time64;
 
 /* until we flesh out an osi_file api, just do 
  * this hack for file descriptor abstraction */
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 typedef int osi_fd_t;
 #endif
 

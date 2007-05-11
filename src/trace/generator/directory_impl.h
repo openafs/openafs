@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -104,11 +104,12 @@ struct osi_trace_directory_token_stack {
 
 struct osi_trace_directory_child_walker {
     osi_trace_directory_node_ptr_t ptr;
-    int idx;
-    int min_tok_idx;
-    int max_tok_idx;
-    int traverse_all;
-    int telescoping_wildcard;
+    osi_uint8 idx;
+    osi_uint8 min_tok_idx;
+    osi_uint8 max_tok_idx;
+    osi_uint8 traverse_all : 1;
+    osi_uint8 telescoping_wildcard : 1;
+    osi_uint8 initialized : 1;
 };
 
 struct osi_trace_directory_tree_walker {
@@ -131,5 +132,7 @@ osi_extern osi_result osi_trace_directory_probe_id_alloc(osi_trace_probe_id_t *)
 #if defined(OSI_IMPLEMENTS_ATOMIC_INC_32_NV)
 #define OSI_TRACE_DIRECTORY_ATOMIC_PROBE_ID_ALLOC 1
 #endif
+
+osi_extern osi_result osi_trace_directory_probe_id_max(osi_trace_probe_id_t *);
 
 #endif /* _OSI_TRACE_GENERATOR_PROBE_DIRECTORY_IMPL_H */

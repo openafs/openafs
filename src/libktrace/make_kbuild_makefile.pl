@@ -9,7 +9,7 @@
 # It will include objects listed in ${AFSAOBJS} and ${AFSNONFSOBJS}
 # Appropriate source files for each object will be symlinked into ${KDIR}
 # EXTRA_CFLAGS will be set to ${CFLAGS} ${COMMON_INCLUDE}
-
+#
 # Produces ${KDIR}/Makefile, suitable for use with kbuild
 
 use IO::File;

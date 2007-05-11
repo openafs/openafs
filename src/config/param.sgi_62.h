@@ -191,6 +191,7 @@
 
 /* global defines */
 
+#define	OSI_ENV_UNIX		1
 #define OSI_SGI_ENV		1
 #define OSI_SGI51_ENV		1	/* Dist from 5.0.1 */
 #define	OSI_SGI52_ENV		1

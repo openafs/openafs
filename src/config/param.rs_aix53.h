@@ -185,12 +185,13 @@
 
 /* global defines */
 
-#define	AFS_AIX_ENV		1
-#define	AFS_AIX32_ENV		1
-#define	AFS_AIX41_ENV		1
-#define AFS_AIX42_ENV		1
-#define AFS_AIX51_ENV		1
-#define AFS_AIX52_ENV		1
-#define AFS_AIX53_ENV		1
+#define	OSI_ENV_UNIX		1
+#define	OSI_AIX_ENV		1
+#define	OSI_AIX32_ENV		1
+#define	OSI_AIX41_ENV		1
+#define OSI_AIX42_ENV		1
+#define OSI_AIX51_ENV		1
+#define OSI_AIX52_ENV		1
+#define OSI_AIX53_ENV		1
 
 #endif /* AFS_PARAM_COMMON_H */

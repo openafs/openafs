@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 #include <osi/osi.h>
@@ -61,7 +63,7 @@ __ubik_client_ctor(void * buf, void * sdata, int flags)
 {
     struct ubik_client * tc = buf;
 
-#ifdef OSI_PTHREAD_ENV
+#ifdef OSI_ENV_PTHREAD
     osi_mem_zero(buf, 
 		 offsetof(struct ubik_client, cm));
 
@@ -79,7 +81,7 @@ __ubik_client_dtor(void * buf, void * sdata)
 {
     struct ubik_client * tc = buf;
 
-#ifdef OSI_PTHREAD_ENV
+#ifdef OSI_ENV_PTHREAD
     pthread_mutex_destroy(&tc->cm);
 #endif
 }

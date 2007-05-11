@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -68,9 +69,14 @@ RCSID
 	  authentication services for the cell being used for authentication.
  */
 
-#define KLOGEXIT(code) assert(!code || code >= KAMINERROR); \
-                       rx_Finalize(); \
-                       (!code ? exit(0) : exit((code)-KAMINERROR+1))
+#define KLOGEXIT(code) \
+    osi_Macro_Begin \
+        osi_Assert(!code || code >= KAMINERROR); \
+        rx_Finalize(); \
+        osi_AssertOK(osi_PkgShutdown()); \
+        (!code ? exit(0) : exit((code)-KAMINERROR+1)); \
+    osi_Macro_End
+
 extern int CommandProc(struct cmd_syndesc *as, char *arock);
 
 static int zero_argc;
@@ -104,6 +110,9 @@ main(int argc, char *argv[])
 #endif
     zero_argc = argc;
     zero_argv = argv;
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
 
     ts = cmd_CreateSyntax(NULL, CommandProc, 0,
 			  "obtain Kerberos authentication");

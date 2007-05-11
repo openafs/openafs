@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -48,15 +48,5 @@ typedef struct {
     osi_trace_console_addr_u_t addr;
     struct rx_connection * osi_volatile conn;
 } osi_trace_console_addr_t;
-
-typedef struct {
-    osi_list_element_volatile console_list;
-    osi_trace_console_handle_t osi_volatile console_handle;
-    osi_trace_console_addr_t * osi_volatile console_addr_vec;
-    osi_uint32 osi_volatile flags;
-} osi_trace_console_t;
-
-/* console control flags */
-#define OSI_TRACE_CONSOLE_FLAG_TRAP_ENA       0x1
 
 #endif /* _OSI_TRACE_AGENT_CONSOLE_TYPES_H */

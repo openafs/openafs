@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,18 +13,19 @@
 /* default to sampling every half second */
 #define OSI_TIME_APPROX_SAMP_INTERVAL_DEFAULT 500000
 
+
 /*
  * when no approx time backend exists, just
  * use the regular time acquisition funcs as a backend
  */
-
 #if !defined(OSI_IMPLEMENTS_TIME_APPROX)
-#define OSI_IMPLEMENTS_TIME_APPROX 1
-#define osi_time_approx_get(x, delta) osi_time_get(x)
-#define osi_time_approx_get32(x, delta) osi_time_get32(x)
-#define osi_time_approx_get64(x, delta) osi_time_get64(x)
-#define osi_time_approx_PkgInit() (OSI_OK)
-#define osi_time_approx_PkgShutdown() (OSI_OK)
+#define OSI_IMPLEMENTS_TIME_APPROX         1
+#define OSI_IMPLEMENTS_LEGACY_TIME_APPROX  1
+#define osi_time_approx_get(x, delta)      osi_time_get(x)
+#define osi_time_approx_get32(x, delta)    osi_time_get32(x)
+#define osi_time_approx_get64(x, delta)    osi_time_get64(x)
+#define osi_time_approx_PkgInit            osi_null_init_func
+#define osi_time_approx_PkgShutdown        osi_null_fini_func
 #endif /* !OSI_IMPLEMENTS_TIME_APPROX */
 
 #endif /* _OSI_COMMON_TIME_APPROX_H */

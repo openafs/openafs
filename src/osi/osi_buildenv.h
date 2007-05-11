@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -17,57 +17,79 @@
  *
  * defines:
  *
- *  OSI_KERNELSPACE_ENV
+ *  OSI_ENV_UNIX
+ *    -- code is being compiled on a unix-like platform
+ *
+ *  OSI_ENV_KERNELSPACE
  *    -- code is being compiled for use in the kernel
  *
- *  OSI_USERSPACE_ENV
+ *  OSI_ENV_USERSPACE
  *    -- code is being compiled for use in a userspace context
  *
- *  OSI_SMALLSTACK_ENV
+ *  OSI_ENV_SMALLSTACK
  *    -- code is being compiled for use in an environment
  *       with small stack sizes (e.g. many unix kernels)
  *
- *  OSI_LITTLE_ENDIAN_ENV
+ *  OSI_ENV_LITTLE_ENDIAN
  *    -- code is being compiled on a little-endian architecture
  *
- *  OSI_BIG_ENDIAN_ENV
+ *  OSI_ENV_BIG_ENDIAN
  *    -- code is being compiled on a big-endian architecture
  *
- *  OSI_PTHREAD_ENV
+ *  OSI_ENV_PTHREAD
  *    -- code is being compiled with POSIX threads
  *
- *  OSI_PREEMPTIVE_ENV
+ *  OSI_ENV_NT_THREAD
+ *    -- code is being compiled with Windows NT threads
+ *
+ *  OSI_ENV_PREEMPTIVE
  *    -- code is being compiled in a preemptive threading environment
  *
- *  OSI_LWP_ENV
+ *  OSI_ENV_LWP
  *    -- code is being compiled with legacy non-preemptive threading environment
+ *
+ *  OSI_ENV_COMERR_BUILD
+ *    -- build with static error code table (during comerr bootstrap)
+ *
+ *  OSI_ENV_INLINE_BUILD
+ *    -- build non-static implementation for C99-style inlines
+ *
+ *  OSI_ENV_INLINE_INCLUDE
+ *    -- whether to include inline definition in this compilation unit
+ *       (defaults to true except for OSI_ENV_INLINE_BUILD compilation units)
+ *
+ *  OSI_ENV_DEBUG
+ *    -- one (or more) libosi debugging features are enabled
  */
 
-#if defined(KERNEL) && !defined(UKERNEL)
-#define OSI_KERNELSPACE_ENV 1
-#else
-#define OSI_USERSPACE_ENV 1
+#if defined(OSI_ENV_KERNELSPACE) && !defined(KERNEL)
+#define KERNEL 1
 #endif
 
+#if !defined(OSI_ENV_KERNELSPACE) && !defined(OSI_ENV_USERSPACE)
+#if defined(KERNEL) && !defined(UKERNEL)
+#define OSI_ENV_KERNELSPACE 1
+#else
+#define OSI_ENV_USERSPACE 1
+#endif
+#endif /* !OSI_ENV_KERNELSPACE && !OSI_ENV_USERSPACE */
 
 /* for now, we'll turn this on for all kernels */
-#if defined(OSI_KERNELSPACE_ENV)
-#define OSI_SMALLSTACK_ENV 1
+#if defined(OSI_ENV_KERNELSPACE)
+#define OSI_ENV_SMALLSTACK 1
 #endif
 
 
-#if defined(AFSLITTLE_ENDIAN)
-#define OSI_LITTLE_ENDIAN_ENV 1
-#elif defined(AFSBIG_ENDIAN)
-#define OSI_BIG_ENDIAN_ENV 1
+#if defined(WORDS_BIGENDIAN)
+#define OSI_ENV_BIG_ENDIAN 1
 #else
-#error "platform is of unknown endianness"
+#define OSI_ENV_LITTLE_ENDIAN 1
 #endif
 
-#if !defined(OSI_PTHREAD_ENV) && defined(AFS_PTHREAD_ENV)
-#define OSI_PTHREAD_ENV 1
+#if !defined(OSI_ENV_PTHREAD) && defined(AFS_PTHREAD_ENV)
+#define OSI_ENV_PTHREAD 1
 #endif
-#if defined(OSI_PTHREAD_ENV) && !defined(AFS_PTHREAD_ENV)
+#if defined(OSI_ENV_PTHREAD) && !defined(AFS_PTHREAD_ENV)
 #define AFS_PTHREAD_ENV 1
 #endif
 
@@ -76,19 +98,19 @@
  * build command line, as userspace && !pthread && !ukernel => lwp 
  * is a false implication
  */
-#if !defined(OSI_LWP_ENV) && defined(OSI_USERSPACE_ENV) && !defined(OSI_PTHREAD_ENV) && !defined(UKERNEL)
-#define OSI_LWP_ENV 1
+#if !defined(OSI_ENV_LWP) && defined(OSI_ENV_USERSPACE) && !defined(OSI_ENV_PTHREAD) && !defined(UKERNEL)
+#define OSI_ENV_LWP 1
 #endif
 
-#if defined(OSI_KERNELSPACE_ENV) || defined(OSI_PTHREAD_ENV) || defined(OSI_NT_THREAD_ENV)
-#define OSI_PREEMPTIVE_ENV 1
+#if defined(OSI_ENV_KERNELSPACE) || defined(OSI_ENV_PTHREAD) || defined(OSI_ENV_NT_THREAD)
+#define OSI_ENV_PREEMPTIVE 1
 #endif
 
 #if defined(OSI_BUILD_INLINES)
 #define OSI_ENV_INLINE_BUILD 1
 #endif
 
-#if defined(OSI_PREEMPTIVE_ENV)
+#if defined(OSI_ENV_PREEMPTIVE)
 #define osi_volatile_mt osi_volatile
 #else
 #define osi_volatile_mt

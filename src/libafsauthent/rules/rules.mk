@@ -27,12 +27,22 @@ UTIL_OBJDIR=$(TOP_OBJDIR)/src/util
 
 LIBAFSAUTHENT_VERSION_MAJOR = 1
 LIBAFSAUTHENT_VERSION_MINOR = 0
-LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_inst = \
+LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_inst_32 = \
 	${MT_LIBS} ${OSI_LIBS} \
-	-L$(TOP_OBJDIR)/lib -losi-pthread-inst -lafsrpc-pthread-inst
-LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_ni = \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-inst-32 -lafsrpc-pthread-inst-32 \
+	$(NULL)
+LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_inst_64 = \
 	${MT_LIBS} ${OSI_LIBS} \
-	-L$(TOP_OBJDIR)/lib -losi-pthread-ni -lafsrpc-pthread-ni
+	-L$(TOP_OBJDIR)/lib -losi-pthread-inst-64 -lafsrpc-pthread-inst-64 \
+	$(NULL)
+LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_ni_32 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-ni-32 -lafsrpc-pthread-ni-32 \
+	$(NULL)
+LIBAFSAUTHENT_DEPS_libafsauthent_shlib_pthread_ni_64 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-ni-64 -lafsrpc-pthread-ni-64 \
+	$(NULL)
 
 # core libafsauthent build objects
 # for all builds, kernel, ukernel, and userspace

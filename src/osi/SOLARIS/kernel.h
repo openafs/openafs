@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -28,11 +28,11 @@
 #define osi_kernel_copy_in(src,dst,len,code) \
     ((*(code)) = (copyin(osi_kernel_cast_user_addr(src),(dst),(len))) ? EFAULT : 0)
 #define osi_kernel_copy_out(src,dst,len,code) \
-    ((*(code))= (copyout((src),osi_kernel_cast_user_addr(dst),(len))) ? EFAULT : 0)
+    ((*(code)) = (copyout((src),osi_kernel_cast_user_addr(dst),(len))) ? EFAULT : 0)
 #define osi_kernel_copy_in_string(src,dst,dst_len,str_len,code) \
     ((*(code)) = (copyinstr(osi_kernel_cast_user_addr(src),(dst),(dst_len),(str_len))) ? EFAULT : 0)
 #define osi_kernel_copy_out_string(src,dst,dst_len,str_len,code) \
-    ((*(code)) = (copyoutstr((src),osi_kernel_cast_user_addr(dst),(dst_len),(str_len))) ? EFUALT : 0)
+    ((*(code)) = (copyoutstr((src),osi_kernel_cast_user_addr(dst),(dst_len),(str_len))) ? EFAULT : 0)
 
 #define osi_kernel_handle_copy_in(src,dst,len,code,jump_target) \
     osi_Macro_Begin \

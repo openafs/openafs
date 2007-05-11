@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,7 +8,7 @@
  */
 
 #ifndef _OSI_SOLARIS_KMEM_OBJECT_CACHE_H
-#define	_OSI_SOLARIS_KMEM_OBJECT_CACHE_H
+#define _OSI_SOLARIS_KMEM_OBJECT_CACHE_H 1
 
 /*
  * osi mem object cache interface
@@ -16,6 +16,10 @@
  * public interfaces
  */
 
+#include <osi/SOLARIS/kmem_object_cache_types.h>
+#include <osi/SOLARIS/object_cache.h>
+
 #define OSI_IMPLEMENTS_MEM_OBJECT_CACHE 1
+#define OSI_IMPLEMENTS_NATIVE_MEM_OBJECT_CACHE 1
 
 #endif /* _OSI_SOLARIS_KMEM_OBJECT_CACHE_H */

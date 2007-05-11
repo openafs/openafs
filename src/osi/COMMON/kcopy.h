@@ -16,7 +16,7 @@
  */
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 
 #if defined(CAST_USER_ADDR_T)
@@ -64,7 +64,7 @@
     osi_Macro_End
 #endif /* !OSI_KERNEL_OS_SPEC_UIO_COPY */
 
-#endif /* OSI_KERNELSPACE_ENV */
+#endif /* OSI_ENV_KERNELSPACE */
 
 
 #endif /* _OSI_COMMON_KCOPY_H */

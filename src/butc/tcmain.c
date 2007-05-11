@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -1161,6 +1162,7 @@ WorkerBee(struct cmd_syndesc *as, char *arock)
 int
 main(int argc, char **argv)
 {
+    int code;
     register struct cmd_syndesc *ts;
     register struct cmd_item *ti;
 
@@ -1180,7 +1182,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
 #endif
 
-    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_BuTC, osi_NULL)));
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_BuTC, osi_NULL));
 
     setlinebuf(stdout);
 
@@ -1207,6 +1209,7 @@ main(int argc, char **argv)
 	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
 #endif
 	fprintf(stderr, "Unable to obtain AFS server directory.\n");
+	osi_AssertOK(osi_PkgShutdown());
 	exit(2);
     }
 
@@ -1238,7 +1241,10 @@ main(int argc, char **argv)
 	ts->parms[3].items = (struct cmd_item *)NULL;
 	ts->parms[4].items = (struct cmd_item *)NULL;
 	ts->parms[5].items = (struct cmd_item *)NULL;
-	return WorkerBee(ts, NULL);
+	code = WorkerBee(ts, NULL);
     } else
-	return cmd_Dispatch(argc, argv);
+	code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 }

@@ -172,7 +172,8 @@ typedef struct {
     osi_uint8  module_version_cksum_type;
     osi_uint8  spare1;
     osi_uint16 spare2;
-    osi_uint32 spares[5];
+    osi_uint32 probe_id_max;
+    osi_uint32 spares[4];
 } osi_trace_mail_msg_module_info_res_t;
 
 /* trace module lookup by id message */
@@ -184,7 +185,8 @@ typedef struct {
     osi_uint32 code;
     osi_uint32 module_id;
     osi_uint32 module_version;
-    osi_uint32 spare;
+    osi_uint32 probe_id_offset;
+    osi_uint32 spares[4];
     char module_name[OSI_TRACE_MODULE_NAME_LEN_MAX];
     char module_prefix[OSI_TRACE_MODULE_PREFIX_LEN_MAX];
 } osi_trace_mail_msg_module_lookup_res_t;

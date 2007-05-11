@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -32,7 +32,7 @@ osi_extern osi_result osi_trace_module_lookup_by_prefix(osi_trace_gen_id_t gen,
 							const char * prefix,
 							osi_trace_module_info_t * info);
 
-osi_extern osi_result osi_trace_module_PkgInit(void);
-osi_extern osi_result osi_trace_module_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_trace_module_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_trace_module_PkgShutdown);
 
 #endif /* _OSI_TRACE_CONSUMER_MODULE_RGY_H */

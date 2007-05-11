@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 #ifndef _OSI_COMMON_UTIL_H
@@ -28,6 +28,9 @@
  *  OSI_UTIL_OVERRIDE_ASSERT
  *    -- disable definition of generic osi_Assert() macro
  *
+ *  OSI_UTIL_OVERRIDE_ASSERT_DEBUG
+ *    -- disable definition of generic osi_AssertDebug() macro
+ *
  *  OSI_UTIL_OVERRIDE_ASSERT_FAIL
  *    -- disables compilation of generic osi_util_AssertFail() function
  *
@@ -47,6 +50,9 @@
  *    -- disable definition of generic exit macro
  */
 
+osi_extern const char * osi_ProgramTypeToString(osi_ProgramType_t);
+osi_extern const char * osi_ProgramTypeToShortName(osi_ProgramType_t);
+osi_extern osi_result osi_ProgramTypeFromShortName(const char *, osi_ProgramType_t *);
 
 #if !defined(OSI_UTIL_OVERRIDE_PANIC)
 osi_extern void osi_Panic();
@@ -69,5 +75,17 @@ osi_extern void osi_util_AssertFail(const char * msg,
     osi_Macro_End
 #endif /* !OSI_UTIL_OVERRIDE_ASSERT */
 
+#if !defined(OSI_UTIL_OVERRIDE_ASSERT_DEBUG)
+#if defined(OSI_DEBUG_ASSERT)
+#define osi_AssertDebug(expr) osi_Assert(expr)
+#else /* !OSI_DEBUG_ASSERT */
+#define osi_AssertDebug(expr) ((void)(expr))
+#endif /* !OSI_DEBUG_ASSERT */
+#endif /* !OSI_UTIL_OVERRIDE_ASSERT_DEBUG */
+
+#define osi_AssertOK(expr) osi_Assert(OSI_RESULT_OK(expr))
+#define osi_AssertFAIL(expr) osi_Assert(OSI_RESULT_FAIL(expr))
+#define osi_AssertDebugOK(expr) osi_AssertDebug(OSI_RESULT_OK(expr))
+#define osi_AssertDebugFAIL(expr) osi_AssertDebug(OSI_RESULT_FAIL(expr))
 
 #endif /* _OSI_COMMON_UTIL_H */

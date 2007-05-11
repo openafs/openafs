@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,6 +17,7 @@ CFLAGS=${COMMON_CFLAGS} -g -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
 CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 RECURSE_DIRS= \
+	generator \
 	kernel \
 	$(NULL)
 
@@ -24,9 +25,22 @@ include @TOP_OBJDIR@/src/config/Makefile.recurse
 
 objects= ${OBJS}
 
+BINS = \
+	disable_probe \
+	enable_probe \
+	gen_rgy_clear \
+	gen_rgy_list \
+	i2n \
+	mail_tap \
+	snarf \
+	usertrap \
+	$(NULL)
+
 CONSUMER_LIBS= \
 	${TOP_LIBDIR}/libafsauthent-ni.a \
 	${TOP_LIBDIR}/libafsrpc-ni.a \
+	${TOP_LIBDIR}/libosi_trace_consumer.a \
+	${TOP_LIBDIR}/libosi_trace_analyzer.a \
 	${TOP_LIBDIR}/libosi_trace_consumer.a \
 	${TOP_LIBDIR}/libosi_trace_common.a \
 	${TOP_LIBDIR}/libosi-pthread-ni.a \
@@ -49,14 +63,7 @@ GENERATOR_CCRULE=${CCRULE} ${GENERATOR_CFLAGS}
 
 all: \
 	${objects} \
-	enable_probe \
-	disable_probe \
-	gen_rgy_clear \
-	gen_rgy_list \
-	i2n \
-	mail_tap \
-	snarf \
-	usertrap \
+	$(BINS) \
 	build_recurse \
 	$(NULL)
 
@@ -188,7 +195,7 @@ ${DESTDIR}${bindir}/snarf: snarf
 
 
 clean: clean_recurse
-	$(RM) -f *.o enable_probe disable_probe core AFS_component_version_number.c
+	$(RM) -f *.o $(BINS) core AFS_component_version_number.c
 
 include @TOP_OBJDIR@/src/config/Makefile.version
 

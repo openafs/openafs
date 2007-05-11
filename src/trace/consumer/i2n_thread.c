@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_thread.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_condvar.h>
@@ -16,7 +15,6 @@
 #include <osi/osi_object_cache.h>
 #include <trace/directory.h>
 #include <trace/gen_rgy.h>
-#include <trace/common/options.h>
 #include <trace/consumer/i2n.h>
 #include <trace/consumer/i2n_thread.h>
 #include <trace/consumer/record_queue.h>
@@ -48,6 +46,26 @@ struct {
 typedef struct {
     osi_trace_consumer_i2n_update_t * update_node;
 } osi_trace_consumer_i2n_update_work_t;
+
+typedef enum {
+    OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE,
+    OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE,
+    OSI_TRACE_CONSUMER_I2N_THREAD_STATE_SHUTDOWN_REQUESTED
+} osi_trace_consumer_i2n_thread_state_t;
+
+typedef struct {
+    osi_trace_consumer_i2n_thread_state_t osi_volatile state;
+    osi_mutex_t lock;
+    osi_condvar_t cv;
+} osi_trace_consumer_i2n_thread_t;
+
+osi_trace_consumer_i2n_thread_t osi_trace_consumer_i2n_handler_thread_state = {
+    OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE
+};
+osi_trace_consumer_i2n_thread_t osi_trace_consumer_i2n_unblock_thread_state = {
+    OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE
+};
+
 
 #define OSI_TRACE_CONSUMER_I2N_RECORD_QUEUE_HASH_BUCKETS 64
 #define OSI_TRACE_CONSUMER_I2N_RECORD_QUEUE_HASH_MASK \
@@ -115,10 +133,20 @@ osi_trace_consumer_i2n_handler_thread(void * arg)
     char name_buf[OSI_TRACE_MAX_PROBE_NAME_LEN];
     osi_uint32 hash;
 
-    while (1) {
+    osi_mutex_Lock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+    osi_trace_consumer_i2n_handler_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE;
+    while (osi_trace_consumer_i2n_handler_thread_state.state ==
+	   OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE) {
+	osi_mutex_Unlock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+
 	res = osi_trace_consumer_record_queue_dequeue(osi_trace_consumer_incoming_record_queue,
 						      &rq);
 	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	    if (res != OSI_ERROR_CANCEL_WAITERS) {
+		(osi_Msg "unexpected fatal error code (%d) from osi_trace_consumer_record_queue_dequeue()\n", res);
+	    }
+	    osi_mutex_Lock(&osi_trace_consumer_i2n_handler_thread_state.lock);
 	    goto error;
 	}
 
@@ -138,9 +166,16 @@ osi_trace_consumer_i2n_handler_thread(void * arg)
 	    /* throw it away; we probably have a bogus record */
 	    osi_trace_consumer_record_queue_free_record(rq);
 	}
+
+	osi_mutex_Lock(&osi_trace_consumer_i2n_handler_thread_state.lock);
     }
 
  error:
+    osi_trace_consumer_i2n_handler_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE;
+    osi_condvar_Broadcast(&osi_trace_consumer_i2n_handler_thread_state.cv);
+    osi_mutex_Unlock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+
     return NULL;
 }
 
@@ -158,10 +193,24 @@ osi_trace_consumer_i2n_unblock_thread(void * arg)
 
     osi_mutex_Lock(&osi_trace_consumer_i2n_update.lock);
 
-    while (1) {
+    osi_mutex_Lock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+    osi_trace_consumer_i2n_unblock_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE;
+    while (osi_trace_consumer_i2n_unblock_thread_state.state ==
+	   OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE) {
+	osi_mutex_Unlock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+
 	while (!osi_trace_consumer_i2n_update.update_list_len) {
 	    osi_condvar_Wait(&osi_trace_consumer_i2n_update.cv,
 			     &osi_trace_consumer_i2n_update.lock);
+
+	    /* check for pending cancels */
+	    osi_mutex_Lock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+	    if (osi_trace_consumer_i2n_unblock_thread_state.state !=
+		OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE) {
+		goto error;
+	    }
+	    osi_mutex_Unlock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
 	}
 
 	while (osi_trace_consumer_i2n_update.update_list_len) {
@@ -185,9 +234,16 @@ osi_trace_consumer_i2n_unblock_thread(void * arg)
 	    
 	    osi_mutex_Lock(&osi_trace_consumer_i2n_update.lock);
 	}
+
+	osi_mutex_Lock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
     }
 
  error:
+    osi_trace_consumer_i2n_unblock_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE;
+    osi_condvar_Broadcast(&osi_trace_consumer_i2n_unblock_thread_state.cv);
+    osi_mutex_Unlock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+
     osi_mutex_Unlock(&osi_trace_consumer_i2n_update.lock);
     return NULL;
 }
@@ -255,6 +311,84 @@ osi_trace_consumer_i2n_thread_start(void)
 }
 
 /*
+ * shutdown i2n background worker threads
+ *
+ * returns:
+ *   OSI_OK on success
+ *   OSI_FAIL on thread shutdown failure
+ */
+osi_static osi_result
+osi_trace_consumer_i2n_thread_shutdown(void)
+{
+    osi_result res = OSI_OK;
+    osi_uint32 handler_wait_needed, unblock_wait_needed;
+
+    /*
+     * ask the handler thread to cancel itself
+     */
+    osi_mutex_Lock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+    handler_wait_needed =
+	(osi_trace_consumer_i2n_handler_thread_state.state ==
+	 OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE) ? 1 : 0;
+    osi_trace_consumer_i2n_handler_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_SHUTDOWN_REQUESTED;
+    osi_mutex_Unlock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+
+    /*
+     * ask the unblock thread to cancel itself
+     */
+    osi_mutex_Lock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+    unblock_wait_needed =
+	(osi_trace_consumer_i2n_unblock_thread_state.state ==
+	 OSI_TRACE_CONSUMER_I2N_THREAD_STATE_ONLINE) ? 1 : 0;
+    osi_trace_consumer_i2n_unblock_thread_state.state =
+	OSI_TRACE_CONSUMER_I2N_THREAD_STATE_SHUTDOWN_REQUESTED;
+    osi_mutex_Unlock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+
+    /*
+     * forcibly wakeup the handler thread
+     */
+    osi_trace_consumer_record_queue_waiter_cancel(osi_trace_consumer_incoming_record_queue);
+
+    /* 
+     * forcibly wakeup the unblock thread
+     */
+    osi_mutex_Lock(&osi_trace_consumer_i2n_update.lock);
+    osi_condvar_Broadcast(&osi_trace_consumer_i2n_update.cv);
+    osi_mutex_Unlock(&osi_trace_consumer_i2n_update.lock);
+
+
+    /*
+     * if necessary, wait for the handler thread to shutdown
+     */
+    if (handler_wait_needed) {
+	osi_mutex_Lock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+	while (osi_trace_consumer_i2n_handler_thread_state.state !=
+	       OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE) {
+	    osi_condvar_Wait(&osi_trace_consumer_i2n_handler_thread_state.cv,
+			     &osi_trace_consumer_i2n_handler_thread_state.lock);
+	}
+	osi_mutex_Unlock(&osi_trace_consumer_i2n_handler_thread_state.lock);
+    }
+
+    /*
+     * if necessary, wait for the unblock thread to shutdown
+     */
+    if (unblock_wait_needed) {
+	osi_mutex_Lock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+	while (osi_trace_consumer_i2n_unblock_thread_state.state !=
+	       OSI_TRACE_CONSUMER_I2N_THREAD_STATE_OFFLINE) {
+	    osi_condvar_Wait(&osi_trace_consumer_i2n_unblock_thread_state.cv,
+			     &osi_trace_consumer_i2n_unblock_thread_state.lock);
+	}
+	osi_mutex_Unlock(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+    }
+
+ error:
+    return res;
+}
+
+/*
  * unblock trace records which are pending i2n translation
  *
  * [IN] gen_id
@@ -286,9 +420,10 @@ osi_trace_consumer_i2n_thread_unblock(osi_trace_gen_id_t gen_id,
 		    node,
 		    osi_trace_consumer_i2n_update_t,
 		    update_list);
-    if (!osi_trace_consumer_i2n_update.update_list_len++) {
+    if (!osi_trace_consumer_i2n_update.update_list_len) {
 	osi_condvar_Signal(&osi_trace_consumer_i2n_update.cv);
     }
+    osi_trace_consumer_i2n_update.update_list_len++;
     osi_mutex_Unlock(&osi_trace_consumer_i2n_update.lock);
 
  error:
@@ -300,11 +435,12 @@ osi_trace_consumer_i2n_thread_PkgInit(void)
 {
     osi_result res, code = OSI_OK;
     osi_uint32 i;
+    osi_options_val_t opt;
 
     osi_mutex_Init(&osi_trace_consumer_i2n_update.lock,
-		   &osi_trace_common_options.mutex_opts);
+		   osi_trace_impl_mutex_opts());
     osi_condvar_Init(&osi_trace_consumer_i2n_update.cv,
-		     &osi_trace_common_options.condvar_opts);
+		     osi_trace_impl_condvar_opts());
 
     osi_list_Init(&osi_trace_consumer_i2n_update.update_list);
     osi_trace_consumer_i2n_update.update_list_len = 0;
@@ -317,7 +453,7 @@ osi_trace_consumer_i2n_thread_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_consumer_i2n_update_cache == osi_NULL) {
 	code = OSI_FAIL;
 	goto error;
@@ -330,7 +466,25 @@ osi_trace_consumer_i2n_thread_PkgInit(void)
 	}
     }
 
-    code = osi_trace_consumer_i2n_thread_start();
+    res = osi_config_options_Get(OSI_OPTION_TRACE_CONSUMER_START_I2N_THREAD,
+				 &opt);
+    if (OSI_RESULT_FAIL(res)) {
+	(osi_Msg "failed to get TRACE_CONSUMER_START_I2N_THREAD option value\n");
+	goto error;
+    }
+
+    osi_mutex_Init(&osi_trace_consumer_i2n_handler_thread_state.lock,
+		   osi_trace_impl_mutex_opts());
+    osi_condvar_Init(&osi_trace_consumer_i2n_handler_thread_state.cv,
+		     osi_trace_impl_condvar_opts());
+    osi_mutex_Init(&osi_trace_consumer_i2n_unblock_thread_state.lock,
+		   osi_trace_impl_mutex_opts());
+    osi_condvar_Init(&osi_trace_consumer_i2n_unblock_thread_state.cv,
+		     osi_trace_impl_condvar_opts());
+
+    if (opt.val.v_bool == OSI_TRUE) {
+	code = osi_trace_consumer_i2n_thread_start();
+    }
 
  error:
     return code;
@@ -342,6 +496,8 @@ osi_trace_consumer_i2n_thread_PkgShutdown(void)
     osi_result res, code = OSI_OK;
     osi_uint32 i;
 
+    code = osi_trace_consumer_i2n_thread_shutdown();
+
     for (i = 0; i < OSI_TRACE_CONSUMER_I2N_RECORD_QUEUE_HASH_BUCKETS; i++) {
 	res = osi_trace_consumer_record_queue_destroy(osi_trace_consumer_i2n_record_queue[i]);
 	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
@@ -349,6 +505,10 @@ osi_trace_consumer_i2n_thread_PkgShutdown(void)
 	}
     }
 
+    osi_mutex_Destroy(&osi_trace_consumer_i2n_handler_thread_state.lock);
+    osi_condvar_Destroy(&osi_trace_consumer_i2n_handler_thread_state.cv);
+    osi_mutex_Destroy(&osi_trace_consumer_i2n_unblock_thread_state.lock);
+    osi_condvar_Destroy(&osi_trace_consumer_i2n_unblock_thread_state.cv);
     osi_mutex_Destroy(&osi_trace_consumer_i2n_update.lock);
     osi_condvar_Destroy(&osi_trace_consumer_i2n_update.cv);
     osi_mem_object_cache_destroy(osi_trace_consumer_i2n_update_cache);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -9,9 +9,9 @@
 
 #include <osi/osi_impl.h>
 #include <osi/osi_cache.h>
+#include <osi/osi_string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 
 
 /*
@@ -111,9 +111,9 @@ walk_node(di_node_t node, void * arg)
     osi_result res;
     char * cpu_root = "SUNW,UltraSPARC";
     char nname[20];
-    strlcpy(nname, di_node_name(node), strlen(cpu_root)+1);
+    osi_string_lcpy(nname, di_node_name(node), strlen(cpu_root)+1);
 
-    if (!strcmp(cpu_root, nname)) {
+    if (!osi_string_cmp(cpu_root, nname)) {
 	res = walk_prom_props(node);
     }
 
@@ -203,7 +203,7 @@ walk_node(di_node_t node, void * arg)
 {
     osi_result res;
 
-    if (!strcmp(di_node_name(node), "cpu")) {
+    if (!osi_string_cmp(di_node_name(node), "cpu")) {
 	res = walk_props(node);
     }
 
@@ -220,8 +220,7 @@ walk_node(di_node_t node, void * arg)
 #endif /* !__sparc && !__x86 */
 
 
-osi_result
-osi_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_cache_PkgInit)
 {
     osi_result res = OSI_OK, walk_res = OSI_FAIL;
     di_node_t root;
@@ -249,9 +248,10 @@ osi_cache_PkgInit(void)
     di_prom_fini(handle);
 #endif
 
+    /* compute the max data alignment necessary to
+     * ensure no false sharing on this platform */
     osi_cache_info.max_alignment = 
-	MAX(MAX(osi_cache_info.l1d_line_size,
-		osi_cache_info.l1i_line_size),
+	MAX(osi_cache_info.l1d_line_size,
 	    MAX(osi_cache_info.l2_line_size,
 		osi_cache_info.l3_line_size));
 
@@ -261,18 +261,5 @@ osi_cache_PkgInit(void)
     return res;
 }
 
-#else /* !OSI_SUN57_ENV */
+#endif /* OSI_SUN57_ENV */
 
-osi_result
-osi_cache_PkgInit(void)
-{
-    return OSI_CACHE_RESULT_FAKED;
-}
-
-#endif /* !OSI_SUN57_ENV */
-
-osi_result
-osi_cache_PkgShutdown(void)
-{
-    return OSI_OK;
-}

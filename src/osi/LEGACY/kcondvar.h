@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef _OSI_LEGACY_CONDVAR_H
-#define	_OSI_LEGACY_CONDVAR_H
+#ifndef _OSI_LEGACY_KCONDVAR_H
+#define _OSI_LEGACY_KCONDVAR_H 1
 
 #define OSI_IMPLEMENTS_CONDVAR 1
 #define OSI_IMPLEMENTS_CONDVAR_WAIT_SIG 1
@@ -18,6 +18,11 @@
 typedef struct osi_condvar {
     osi_condvar_options_t opts;
 } osi_condvar_t;
+
+
+/* provide prototype here, since there isn't one in src/afs */
+osi_extern int afs_osi_Wakeup(void * event);
+
 
 #define osi_condvar_Init(l, o) \
     osi_Macro_Begin \
@@ -66,4 +71,4 @@ typedef struct osi_condvar {
 osi_extern int osi_condvar_WaitSig(osi_condvar_t *, osi_mutex_t *);
 
 
-#endif /* _OSI_LEGACY_CONDVAR_H */
+#endif /* _OSI_LEGACY_KCONDVAR_H */

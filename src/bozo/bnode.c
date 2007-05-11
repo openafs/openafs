@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 #include <afsconfig.h>
@@ -655,6 +657,30 @@ bproc()
 			SaveCore(tb, tp);
 		    }
 		    tb->lastAnyExit = FT_ApproxTime();
+
+
+#if defined(OSI_TRACE_ENABLED)
+		    /*
+		     * attempt to unregister any kernel state
+		     * for the dead process
+		     */
+		    {
+			osi_result res;
+			osi_trace_gen_id_t gen_id;
+			osi_trace_generator_address_t gen_addr;
+
+			gen_addr.pid = tp->pid;
+			gen_addr.programType = 0;
+
+			res = osi_trace_gen_rgy_get_by_addr(&gen_addr,
+							    &gen_id);
+			if (OSI_RESULT_OK(res)) {
+			    osi_trace_gen_rgy_unregister(gen_id);
+			    osi_trace_gen_rgy_put(gen_id);
+			}
+		    }
+#endif /* OSI_TRACE_ENABLED */
+
 
 		    if (tb->notifier) {
 			bozo_Log("BNODE: Notifier %s will be called\n",

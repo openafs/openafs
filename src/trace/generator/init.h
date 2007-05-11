@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -17,7 +17,7 @@
  * initialization/shutdown
  */
 
-osi_extern osi_result osi_trace_generator_PkgInit(void);
-osi_extern osi_result osi_trace_generator_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_trace_generator_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_trace_generator_PkgShutdown);
 
 #endif /* _OSI_TRACE_GENERATOR_INIT_H */

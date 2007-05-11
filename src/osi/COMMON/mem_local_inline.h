@@ -17,7 +17,7 @@
  */
 
 
-#if defined(OSI_KERNELSPACE_ENV) && !defined(OSI_MEM_LOCAL_PREEMPT_INTERNAL)
+#if defined(OSI_ENV_KERNELSPACE) && !defined(OSI_MEM_LOCAL_PREEMPT_INTERNAL)
 
 osi_inline_define(
 void *
@@ -33,7 +33,7 @@ void *
 osi_mem_local_get(osi_mem_local_key_t key)
 )
 
-#endif /* OSI_KERNELSPACE_ENV && !OSI_MEM_LOCAL_PREEMPT_INTERNAL */
+#endif /* OSI_ENV_KERNELSPACE && !OSI_MEM_LOCAL_PREEMPT_INTERNAL */
 
 
 #endif /* _OSI_COMMON_MEM_LOCAL_INLINE_H */

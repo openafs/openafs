@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,8 +8,7 @@
  */
 
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/gen_rgy.h>
 #include <trace/event/event.h>
 #include <trace/generator/generator.h>
@@ -28,11 +27,11 @@ osi_result
 osi_TraceFunc_Event(osi_trace_probe_id_t id, osi_Trace_EventType type, int nf, ...)
 {
     osi_result res;
-    va_list args;
+    osi_va_list args;
 
-    va_start(args, nf);
+    osi_va_start(args, nf);
     res = osi_TraceFunc_VarEvent(id, type, nf, args);
-    va_end(args);
+    osi_va_end(args);
 
     return res;
 }
@@ -41,7 +40,7 @@ osi_result
 osi_TraceFunc_VarEvent(osi_trace_probe_id_t probe_id,
 		       osi_Trace_EventType type,
 		       int nf,
-		       va_list args)
+		       osi_va_list args)
 {
     osi_Trace_EventHandle handle;
     int i;
@@ -49,14 +48,15 @@ osi_TraceFunc_VarEvent(osi_trace_probe_id_t probe_id,
     osi_TraceFunc_Prologue();
     osi_TraceBuffer_Allocate(&handle);
 
-    handle.data->probe = (osi_uint32) probe_id;
-    handle.data->tags[0] = (osi_uint8) type;
-    handle.data->tags[1] = (osi_uint8) osi_Trace_Event_Null_Id;
-    handle.data->nargs = nf;
+    osi_Trace_EventHandle_Field_Set(&handle, probe, (osi_uint32) probe_id);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[0], (osi_uint8) type);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[1], (osi_uint8) osi_Trace_Event_Null_Id);
+    osi_Trace_EventHandle_Field_Set(&handle, nargs, (osi_uint8) nf);
 
     for (i=0; i < nf; i++) {
-	osi_TracePoint_record_arg_set(handle.data, i,
-				      va_arg(args, osi_register_int));
+	osi_TracePoint_record_arg_set(osi_Trace_EventHandle_RecordPtr(&handle), 
+				      i,
+				      osi_va_arg(args, osi_register_int));
     }
 
     osi_TraceBuffer_Stamp(&handle);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,18 +7,17 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_rwlock.h>
 #include <osi/osi_list.h>
 #include <osi/osi_object_cache.h>
+#include <osi/osi_event.h>
 #include <trace/consumer/cache/generator.h>
 #include <trace/consumer/cache/generator_impl.h>
 #include <trace/consumer/cache/binary.h>
 #include <trace/consumer/cache/ptr_vec.h>
-#include <trace/common/options.h>
 
 
 /*
@@ -30,10 +29,8 @@
 struct osi_trace_consumer_gen_cache_directory osi_trace_consumer_gen_cache;
 
 /* static prototypes */
-osi_static int
-osi_trace_consumer_gen_cache_ctor(void * buf, void * sdata, int flags);
-osi_static void
-osi_trace_consumer_gen_cache_dtor(void * buf, void * sdata);
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(osi_trace_consumer_gen_cache_ctor);
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_PROTOTYPE(osi_trace_consumer_gen_cache_dtor);
 
 
 /*
@@ -46,14 +43,17 @@ osi_trace_consumer_gen_cache_dtor(void * buf, void * sdata);
  * returns:
  *   0 always
  */
-osi_static int
-osi_trace_consumer_gen_cache_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(osi_trace_consumer_gen_cache_ctor)
 {
-    osi_trace_consumer_gen_cache_t * gen = buf;
+    osi_trace_consumer_gen_cache_t * gen =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
     gen->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_GEN;
     osi_refcnt_init(&gen->refcnt, 0);
     osi_trace_consumer_cache_ptr_vec_Init(&gen->probe_vec);
+    osi_event_hook_Init(&gen->hook);
+    osi_event_hook_set_rock(&gen->hook, 
+			    gen);
     return 0;
 }
 
@@ -64,11 +64,12 @@ osi_trace_consumer_gen_cache_ctor(void * buf, void * sdata, int flags)
  * [IN] sdata  -- opaque data pointer
  *
  */
-osi_static void
-osi_trace_consumer_gen_cache_dtor(void * buf, void * sdata)
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_DECL(osi_trace_consumer_gen_cache_dtor)
 {
-    osi_trace_consumer_gen_cache_t * gen = buf;
+    osi_trace_consumer_gen_cache_t * gen =
+	OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
+    osi_event_hook_Destroy(&gen->hook);
     osi_trace_consumer_cache_ptr_vec_Destroy(&gen->probe_vec);
     osi_refcnt_destroy(&gen->refcnt);
     gen->hdr.type = OSI_TRACE_CONSUMER_CACHE_OBJECT_INVALID;
@@ -259,10 +260,14 @@ osi_trace_consumer_gen_cache_register(osi_trace_consumer_gen_cache_t * gen)
 		     osi_trace_consumer_gen_cache_t, 
 		     gen_list);
 
-    osi_rwlock_Unlock(&osi_trace_consumer_gen_cache.lock);
-
     /* add one ref to account for being on the gen_vec and gen_list */
     osi_refcnt_inc(&gen->refcnt);
+
+    osi_rwlock_Unlock(&osi_trace_consumer_gen_cache.lock);
+
+    (void)osi_event_fire(&gen->hook,
+			 OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_GEN_REGISTER,
+			 osi_NULL);
 
  error:
     return code;
@@ -308,7 +313,9 @@ osi_trace_consumer_gen_cache_unregister(osi_trace_consumer_gen_cache_t * gen)
 
     /* unregister this gen */
     osi_trace_consumer_gen_cache.gen_vec.vec[gen->info.gen_id].opaque = osi_NULL;
-    osi_list_Remove(gen, osi_trace_consumer_gen_cache_t, gen_list);
+    osi_list_Remove(gen, 
+		    osi_trace_consumer_gen_cache_t, 
+		    gen_list);
 
     osi_rwlock_Unlock(&osi_trace_consumer_gen_cache.lock);
 
@@ -356,14 +363,18 @@ osi_trace_consumer_gen_cache_register_probe(osi_trace_consumer_gen_cache_t * gen
     res = osi_trace_consumer_cache_ptr_vec_extend(&gen->probe_vec,
 						  probe_id);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
-	goto error_sync;
+	osi_rwlock_Unlock(&osi_trace_consumer_gen_cache.lock);
+	goto error;
     }
 
     old_probe = gen->probe_vec.vec[probe_id].probe_val;
     gen->probe_vec.vec[probe_id].probe_val = probe;
 
- error_sync:
     osi_rwlock_Unlock(&osi_trace_consumer_gen_cache.lock);
+
+    osi_event_fire(&gen->hook,
+		   OSI_TRACE_CONSUMER_GEN_CACHE_EVENT_PROBE_REGISTER,
+		   probe);
 
     if (old_probe != osi_NULL) {
 	osi_trace_consumer_probe_val_cache_put(old_probe);
@@ -410,6 +421,27 @@ osi_trace_consumer_gen_cache_unregister_probe(osi_trace_consumer_gen_cache_t * g
     }
 
  done:
+    return res;
+}
+
+/*
+ * subscribe to this gen's event feed
+ *
+ * [IN] gen    -- pointer to gen cache object
+ * [IN] sub    -- pointer to subscription object 
+ *
+ * returns:
+ *   see osi_event_subscribe()
+ */
+osi_result
+osi_trace_consumer_gen_cache_event_subscribe(osi_trace_consumer_gen_cache_t * gen,
+					     osi_event_subscription_t * sub)
+{
+    osi_result res;
+
+    res = osi_event_subscribe(&gen->hook,
+			      sub);
+
     return res;
 }
 
@@ -568,9 +600,7 @@ osi_trace_consumer_gen_cache_lookup_probe(osi_trace_gen_id_t gen_id,
 }
 
 
-
-osi_result
-osi_trace_consumer_gen_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_consumer_gen_cache_PkgInit)
 {
     osi_result res;
     size_t align;
@@ -581,7 +611,7 @@ osi_trace_consumer_gen_cache_PkgInit(void)
     }
 
     osi_rwlock_Init(&osi_trace_consumer_gen_cache.lock,
-		    &osi_trace_common_options.rwlock_opts);
+		    osi_trace_impl_rwlock_opts());
 
     osi_list_Init(&osi_trace_consumer_gen_cache.gen_list);
 
@@ -595,7 +625,7 @@ osi_trace_consumer_gen_cache_PkgInit(void)
 				    &osi_trace_consumer_gen_cache_ctor,
 				    &osi_trace_consumer_gen_cache_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_consumer_gen_cache.cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
     }
@@ -604,8 +634,7 @@ osi_trace_consumer_gen_cache_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_trace_consumer_gen_cache_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_consumer_gen_cache_PkgShutdown)
 {
     osi_result res, code = OSI_OK;
     osi_trace_consumer_gen_cache_t * gen;

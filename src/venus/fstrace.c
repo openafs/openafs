@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 /*
@@ -1582,11 +1584,18 @@ SetUpShowSet()
 
 main(ing argc, char ** argv)
 {
+    int code;
     setlocale(LC_ALL, "");
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_TraceCollector,
+			     osi_NULL));
     /* set up user interface then dispatch */
 
-    return (cmd_Dispatch(argc, argv));
+    code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+
+    return code;
 }
 #else
 #include "AFS_component_version_number.c"

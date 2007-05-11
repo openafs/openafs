@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -38,5 +38,17 @@ typedef struct {
 	osi_time32_t ttl; /* for expirable type */
     } u;
 } osi_trace_probe_stability_t;
+
+
+/*
+ * enumerate the various different types of probes
+ */
+typedef enum {
+    OSI_TRACE_PROBE_TYPE_EVENT,        /* "normal" event-driven probes */
+    OSI_TRACE_PROBE_TYPE_STAT,         /* probes which are related to the osi_stats subsystem */
+    OSI_TRACE_PROBE_TYPE_QUERY,        /* probes which are related to trace queries */
+    OSI_TRACE_PROBE_TYPE_ANLY,         /* libanalyzer components */
+    OSI_TRACE_PROBE_TYPE_MAX_ID
+} osi_trace_probe_type_t;
 
 #endif /* _OSI_TRACE_COMMON_PROBE_H */

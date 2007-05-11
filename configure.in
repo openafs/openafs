@@ -89,6 +89,8 @@ src/libtrace/console/Makefile.common \
 src/libtrace/console/MakefileProto.${MKAFS_OSTYPE} \
 src/libtrace/consumer/Makefile.common \
 src/libtrace/consumer/MakefileProto.${MKAFS_OSTYPE} \
+src/libtrace/encoding/Makefile.common \
+src/libtrace/encoding/MakefileProto.${MKAFS_OSTYPE} \
 src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/Makefile \
@@ -97,10 +99,13 @@ src/lwp/Makefile \
 src/lwp/test/Makefile \
 src/osi/Makefile \
 src/osi/COMMON/Makefile \
+src/osi/COMMON/data/Makefile \
 src/osi/LEGACY/Makefile \
 src/osi/LWP/Makefile \
 src/osi/PTHREAD/Makefile \
+src/osi/UNIX/Makefile \
 src/osi/${MKAFS_OSTYPE}/Makefile \
+src/osi/data/Makefile \
 src/osi/tests/Makefile \
 src/pam/Makefile \
 src/platform/Makefile \
@@ -128,6 +133,7 @@ src/tests/run-tests \
 src/tests/OpenAFS/Dirpath.pm \
 src/trace/Makefile \
 src/trace/table-gen.mk \
+src/trace/probe-dump.sh \
 src/trace/KERNEL/Makefile \
 src/trace/LWP/Makefile \
 src/trace/PTHREAD/Makefile \
@@ -141,8 +147,10 @@ src/trace/consumer/Makefile \
 src/trace/consumer/cache/Makefile \
 src/trace/db/Makefile \
 src/trace/encoding/Makefile \
+src/trace/encoding/ascii/Makefile \
 src/trace/event/Makefile \
 src/trace/generator/Makefile \
+src/trace/ltrace/Makefile \
 src/trace/mail/Makefile \
 src/trace/rpc/Makefile \
 src/trace/rtrace/Makefile \
@@ -151,9 +159,11 @@ src/trace/script/perl/Makefile \
 src/trace/script/perl/osi-trace-console/Makefile.PL \
 src/trace/snmp/Makefile \
 src/trace/tests/Makefile \
+src/trace/tests/generator/Makefile \
 src/trace/tests/kernel/Makefile \
 src/trace/tests/kernel/buffer/Makefile \
 src/trace/traced/Makefile \
+src/trace/util/Makefile \
 src/tsalvaged/Makefile \
 src/tsm41/Makefile \
 src/tviced/Makefile \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -16,6 +16,7 @@
  * implementation using traditional synchronization primitives
  */
 
+#include <osi/osi_list.h>
 #include <osi/osi_condvar.h>
 #include <osi/osi_mutex.h>
 

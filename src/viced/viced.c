@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006 Sine Nomine Associates
+ * Portions Copyright (c) 2005-2007 Sine Nomine Associates
  */
 
 /*  viced.c	- File Server main loop					 */
@@ -857,6 +857,8 @@ ShutDownAndCore(int dopanic)
 		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	}
     }
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgShutdown()));
 
     exit(0);
 }

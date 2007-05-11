@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -3320,6 +3321,9 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     /* try to find volume location information */
     ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, 0,
 			  "get client network interface addresses");
@@ -3626,6 +3630,8 @@ defect 3069
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
 	rx_Finalize();
+
+    osi_AssertOK(osi_PkgShutdown());
 
     return code;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -14,8 +14,7 @@
  * trace module registry
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_string.h>
 #include <trace/consumer/module.h>
 #include <trace/syscall.h>
@@ -78,9 +77,11 @@ osi_trace_module_info_msg(osi_trace_gen_id_t gen,
     if (OSI_RESULT_OK(code)) {
 	info->gen_id = rmsg->envelope.env_src;
 	info->programType = res->programType;
+	info->probe_count = res->probe_count;
 	info->module_count = res->module_count;
 	info->module_version_cksum = res->module_version_cksum;
 	info->module_version_cksum_type = res->module_version_cksum_type;
+	info->probe_id_max = res->probe_id_max;
     }
 
     (void)osi_trace_mail_msg_put(rmsg);

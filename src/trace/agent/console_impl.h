@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -19,7 +19,7 @@
  */
 
 osi_extern osi_result osi_trace_console_rgy_console_addr_alloc(osi_trace_console_addr_t **,
-							       size_t addr_vec_len);
+							       osi_size_t addr_vec_len);
 osi_extern osi_result osi_trace_console_rgy_console_addr_free(osi_trace_console_addr_t *);
 
 

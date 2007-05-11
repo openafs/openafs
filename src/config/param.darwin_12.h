@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,6 +12,7 @@
 
 /* global defines */
 
+#define OSI_ENV_UNIX            1
 #define	OSI_DARWIN_ENV		1
 #define	OSI_DARWIN12_ENV	1
 

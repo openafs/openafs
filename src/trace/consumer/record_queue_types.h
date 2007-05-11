@@ -24,6 +24,7 @@
 typedef struct {
     osi_list_head_volatile record_list;
     osi_uint32 osi_volatile record_list_len;
+    osi_bool_t osi_volatile waiter_cancel;
     osi_condvar_t cv;
     osi_mutex_t lock;
 } osi_trace_consumer_record_queue_t;

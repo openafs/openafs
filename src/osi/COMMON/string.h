@@ -12,7 +12,7 @@
 
 #include <util/afsutil.h>
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 #include <string.h>
 #endif
 
@@ -24,19 +24,19 @@
 #define osi_string_cmp(a,b) strcmp(a,b)
 #define osi_string_ncmp(a,b,len) strncmp(a,b,len)
 
-#if defined(OSI_KERNELSPACE_ENV) || defined(HAVE_STRNLEN)
+#if defined(OSI_ENV_KERNELSPACE) || defined(HAVE_STRNLEN)
 #define osi_string_nlen(str,buf_len) strnlen(str,buf_len)
 #else
 #define OSI_IMPLEMENTS_LEGACY_STRING_NLEN 1
 #endif
 
-#if defined(OSI_KERNELSPACE_ENV) || defined(HAVE_STRLCPY)
+#if defined(OSI_ENV_KERNELSPACE) || defined(HAVE_STRLCPY)
 #define osi_string_lcpy(dst,src,dst_len) strlcpy(dst,src,dst_len)
 #else
 #define OSI_IMPLEMENTS_LEGACY_STRING_LCPY 1
 #endif
 
-#if defined(OSI_KERNELSPACE_ENV) || defined(HAVE_STRLCAT)
+#if defined(OSI_ENV_KERNELSPACE) || defined(HAVE_STRLCAT)
 #define osi_string_lcat(dst,src,dst_len) strlcat(dst,src,dst_len)
 #else
 #define OSI_IMPLEMENTS_LEGACY_STRING_LCAT 1

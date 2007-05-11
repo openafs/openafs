@@ -14,7 +14,7 @@
  * platform-independent osi_syscall API
  *
  * the following interfaces require:
- * defined(OSI_KERNELSPACE_ENV) || defined(UKERNEL)
+ * defined(OSI_ENV_KERNELSPACE) || defined(UKERNEL)
  *
  *  void osi_syscall_suser_check(int * retcode);
  *    -- checks for superuser privs and sets return code
@@ -24,7 +24,7 @@
  *       needs to happen
  *
  * the following interfaces require:
- * defined(OSI_USERSPACE_ENV)
+ * defined(OSI_ENV_USERSPACE)
  *
  *  osi_result osi_syscall_mux_call(long call, long p1, long p2, long p3, long p4, int * rval);
  *    -- call into the afs osi syscall mux
@@ -33,7 +33,7 @@
 #include <osi/COMMON/syscall.h>
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #include <osi/COMMON/ksyscall.h>
 

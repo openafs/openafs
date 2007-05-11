@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,8 +13,7 @@
  * message receive handler
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <trace/mail.h>
 #include <trace/mail/msg.h>
@@ -95,6 +94,7 @@ osi_trace_mail_msg_recv_handler(osi_trace_mail_message_t * msg)
  * returns:
  *   OSI_OK on success
  *   OSI_FAIL when an invalid upper level protocol id is passed in
+ *   OSI_FAIL when a null handler pointer is passed in
  */
 osi_result
 osi_trace_mail_msg_handler_register(osi_trace_mail_msg_t proto_type,
@@ -102,7 +102,8 @@ osi_trace_mail_msg_handler_register(osi_trace_mail_msg_t proto_type,
 {
     osi_result res = OSI_OK;
 
-    if (proto_type >= OSI_TRACE_MAIL_MSG_ID_MAX) {
+    if ((proto_type >= OSI_TRACE_MAIL_MSG_ID_MAX) ||
+	(handler == osi_NULL)) {
 	res = OSI_FAIL;
 	goto error;
     }
@@ -122,7 +123,7 @@ osi_trace_mail_msg_handler_register(osi_trace_mail_msg_t proto_type,
  * returns:
  *   OSI_OK on success
  *   OSI_FAIL when the upper level protocol id is invalid,
- *            when no such handler function was registered
+ *            when the passed in handler doesn't match the registered handler
  */
 osi_result
 osi_trace_mail_msg_handler_unregister(osi_trace_mail_msg_t proto_type,
@@ -137,7 +138,7 @@ osi_trace_mail_msg_handler_unregister(osi_trace_mail_msg_t proto_type,
 
     if (osi_trace_mail_handler_table.handler_vec[proto_type] == handler) {
 	osi_trace_mail_handler_table.handler_vec[proto_type] = osi_NULL;
-    } else {
+    } else if (osi_trace_mail_handler_table.handler_vec[proto_type] != osi_NULL) {
 	res = OSI_FAIL;
     }
 

@@ -20,7 +20,6 @@
 
 #include <osi/osi_mutex.h>
 #include <osi/osi_list.h>
-#include <osi/osi_refcnt.h>
 #include <trace/gen_rgy.h>
 #include <trace/KERNEL/postmaster_types.h>
 
@@ -29,6 +28,7 @@
 
 typedef enum {
     OSI_TRACE_GEN_STATE_INVALID,
+    OSI_TRACE_GEN_STATE_GC,
     OSI_TRACE_GEN_STATE_OFFLINE,
     OSI_TRACE_GEN_STATE_ONLINE,
     OSI_TRACE_GEN_STATE_MAX_ID
@@ -41,12 +41,18 @@ typedef struct osi_trace_generator_registration {
      */
     osi_list_element_volatile rgy_list;
     osi_list_element_volatile ptype_list;
-    osi_trace_gen_id_t id;
     /*
      * END sync block
      */
 
-    void * cache_padding0;
+    /*
+     * BEGIN sync block
+     * the following fields are protected by osi_trace_gen_rgy.gc_lock
+     */
+    osi_list_element_volatile gc_list;
+    /*
+     * END sync block
+     */
 
     /*
      * BEGIN sync block
@@ -62,6 +68,7 @@ typedef struct osi_trace_generator_registration {
      * the following fields are IMMUTABLE once the object is registered
      */
     osi_trace_generator_address_t osi_volatile addr;
+    osi_trace_gen_id_t id;
     /*
      * END sync block
      */
@@ -71,19 +78,22 @@ typedef struct osi_trace_generator_registration {
      * the following fields are protected by gen->lock
      */
     osi_trace_generator_state_t osi_volatile state;
+    osi_uint32 osi_volatile refcnt;
     osi_list_head_volatile holds;  /* refs held on other gens */
     /*
      * END sync block
      */
-
-    osi_uint32 cache_padding1[5];
+#if (osi_datamodel_pointer() == 32)
+    osi_uint32 cache_padding1;
+#elif (osi_datamodel_pointer() == 64)
+    osi_uint32 cache_padding1[7];
+#endif
 
     /*
      * BEGIN sync block
      * the following fields are internally synchronized
      */
     osi_trace_mailbox_t mailbox;
-    osi_refcnt_t refcnt;
     /*
      * END sync block
      */

@@ -569,6 +569,21 @@ libtrace_consumer: \
 	${COMPILE_PART1} libtrace/consumer ${COMPILE_PART2}
 
 #
+# libosi_trace_encoding build targets
+#
+libtrace_encoding_setup: config export
+	src/config/config src/libtrace/encoding/MakefileProto.${MKAFS_OSTYPE} src/libtrace/encoding/Makefile ${SYS_NAME}
+
+libtrace_encoding: \
+		libtrace_encoding_setup \
+		osi_depinstall \
+		trace_depinstall \
+		libosi \
+		libtrace_common \
+		$(NULL)
+	${COMPILE_PART1} libtrace/encoding ${COMPILE_PART2}
+
+#
 # libuafs build targets
 #
 
@@ -665,6 +680,7 @@ libtrace: \
 	libtrace_common \
 	libtrace_console \
 	libtrace_consumer \
+	libtrace_encoding \
 	$(NULL)
 
 traceserver:	libosi libafsrpc libafsauthent libtrace
@@ -905,6 +921,7 @@ clean2:
 	-${COMPILE_PART1} libtrace/common ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libtrace/console ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libtrace/consumer ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libtrace/encoding ${COMPILE_CLEAN}
 	-${COMPILE_PART1} trace ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
@@ -1022,6 +1039,9 @@ distclean: clean
 	src/libtrace/consumer/Makefile \
 	src/libtrace/consumer/Makefile.common \
 	src/libtrace/consumer/Makefile.${MKAFS_OSTYPE} \
+	src/libtrace/encoding/Makefile \
+	src/libtrace/encoding/Makefile.common \
+	src/libtrace/encoding/Makefile.${MKAFS_OSTYPE} \
 	src/libuafs/Makefile \
 	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,7 +8,7 @@
  */
 
 #ifndef _OSI_PTHREAD_THREAD_H
-#define	_OSI_PTHREAD_THREAD_H
+#define _OSI_PTHREAD_THREAD_H 1
 
 #define OSI_IMPLEMENTS_THREAD 1
 
@@ -38,5 +38,8 @@ osi_extern osi_result osi_thread_createU(osi_thread_p *,
 
 #define osi_thread_current_id() (pthread_self())
 #define osi_thread_id(x) ((x)->handle)
+
+#define osi_thread_PkgInit      osi_thread_event_PkgInit
+#define osi_thread_PkgShutdown  osi_thread_event_PkgShutdown
 
 #endif /* _OSI_PTHREAD_THREAD_H */

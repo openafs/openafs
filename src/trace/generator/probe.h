@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -32,12 +32,14 @@ typedef struct osi_trace_probe * osi_trace_probe_t;
 /*
  * allocate a probe
  *
- * [OUT] probe -- opaque handle to probe
- * [OUT] id -- new probe's id
+ * [OUT] probe      -- opaque handle to probe
+ * [IN] probe_name  -- new probe's name
+ * [OUT] id         -- new probe's id
  * [IN] mode -- initial probe mode (0 == disable, non-zero == enable)
  */
-osi_extern osi_result osi_trace_probe_register(osi_trace_probe_t *,
-					       osi_trace_probe_id_t *,
+osi_extern osi_result osi_trace_probe_register(osi_trace_probe_t * probe,
+					       const char * probe_name,
+					       osi_trace_probe_id_t * id,
 					       int mode);
 
 /*
@@ -81,14 +83,18 @@ osi_extern osi_result osi_trace_probe_disable_by_id(osi_trace_probe_id_t);
  * enable a group of probes
  *
  * [IN] filter -- probe filter
+ * [OUT] nhits -- filter hit count
  */
-osi_extern osi_result osi_trace_probe_enable_by_filter(const char * filter);
+osi_extern osi_result osi_trace_probe_enable_by_filter(const char * filter,
+						       osi_uint32 * nhits);
 
 /*
  * disable a group of probes
  *
  * [IN] filter -- probe filter
+ * [OUT] nhits -- filter hit count
  */
-osi_extern osi_result osi_trace_probe_disable_by_filter(const char * filter);
+osi_extern osi_result osi_trace_probe_disable_by_filter(const char * filter,
+							osi_uint32 * nhits);
 
 #endif /* _OSI_TRACE_GENERATOR_PROBE_RGY_H */

@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -589,6 +590,9 @@ main(argc, argv)
     }
 #endif
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     ts = cmd_CreateSyntax(NULL, MainCommand, 0, "probe RX server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
@@ -615,5 +619,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-peers", CMD_FLAG, CMD_OPTIONAL, "show peers");
 
     cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+
     exit(0);
 }

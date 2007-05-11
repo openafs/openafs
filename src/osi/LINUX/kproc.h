@@ -61,7 +61,16 @@ osi_proc_datamodel(void)
 }
 
 #define osi_proc_current() (current)
-#define osi_proc_id(x) ((x)->pid)
+/* 
+ * let me translate linux-speak to normal unix kernel-speak
+ * (hopefully making your head hurt a little less)
+ * 
+ * linux speak  ->  unix kernel speak
+ *
+ * tgid  ->  pid
+ * pid   ->  tid
+ */
+#define osi_proc_id(x) ((x)->tgid)
 #define osi_proc_current_id() (osi_proc_id(osi_proc_current()))
 
 #endif /* _OSI_LINUX_KPROC_H */

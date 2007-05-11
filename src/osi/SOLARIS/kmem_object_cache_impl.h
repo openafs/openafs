@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,23 +8,18 @@
  */
 
 #ifndef _OSI_SOLARIS_KMEM_OBJECT_CACHE_IMPL_H
-#define	_OSI_SOLARIS_KMEM_OBJECT_CACHE_IMPL_H
+#define _OSI_SOLARIS_KMEM_OBJECT_CACHE_IMPL_H 1
 
 /*
  * osi mem object cache interface
  * solaris kmem slab allocator backend
- * implementation details
+ * implementation-private details
  */
 
-osi_static osi_inline osi_result
-_osi_mem_object_cache_create(osi_mem_object_cache_t * cache,
-			     char * name,
-			     osi_size_t size, 
-			     osi_size_t align,
-			     void * spec_data,
-			     osi_mem_object_cache_constructor_t * ctor,
-			     osi_mem_object_cache_destructor_t * dtor,
-			     osi_mem_object_cache_reclaim_t * reclaim)
+#include <osi/SOLARIS/kmem_object_cache_impl_types.h>
+#include <osi/SOLARIS/kmem_object_cache_types.h>
+
+_OSI_MEM_OBJECT_CACHE_IMPL_DECL_CREATE()
 {
     osi_result res = OSI_OK;
     cache->handle = kmem_cache_create(name, 
@@ -33,7 +28,7 @@ _osi_mem_object_cache_create(osi_mem_object_cache_t * cache,
 				      ctor, 
 				      dtor, 
 				      reclaim, 
-				      spec_data, 
+				      rock, 
 				      NULL, 
 				      0);
     if (osi_compiler_expect_false(cache->handle == osi_NULL)) {
@@ -42,18 +37,23 @@ _osi_mem_object_cache_create(osi_mem_object_cache_t * cache,
     return res;
 }
 
-osi_static osi_inline osi_result
-_osi_mem_object_cache_destroy(osi_mem_object_cache_t * cache)
+_OSI_MEM_OBJECT_CACHE_IMPL_DECL_DESTROY()
 {
     kmem_cache_destroy(cache->handle);
     return OSI_OK;
 }
 
-#define _osi_mem_object_cache_alloc(cache) \
-    kmem_cache_alloc((cache)->handle, KM_SLEEP)
-#define _osi_mem_object_cache_alloc_nosleep(cache) \
-    kmem_cache_alloc((cache)->handle, KM_NOSLEEP)
-#define _osi_mem_object_cache_free(cache, buf) \
-    kmem_cache_free((cache)->handle, buf)
+_OSI_MEM_OBJECT_CACHE_IMPL_DECL_ALLOC()
+{
+    return kmem_cache_alloc(cache->handle, KM_SLEEP);
+}
+_OSI_MEM_OBJECT_CACHE_IMPL_DECL_ALLOC_NOSLEEP()
+{
+    return kmem_cache_alloc(cache->handle, KM_NOSLEEP);
+}
+_OSI_MEM_OBJECT_CACHE_IMPL_DECL_FREE()
+{
+    kmem_cache_free(cache->handle, buf);
+}
 
 #endif /* _OSI_SOLARIS_KMEM_OBJECT_CACHE_IMPL_H */

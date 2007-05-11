@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_kernel.h>
@@ -19,8 +18,8 @@
 #include <trace/gen_rgy.h>
 #include <trace/mail.h>
 #include <trace/mail/msg.h>
-#include <trace/common/options.h>
 #include <trace/KERNEL/gen_rgy.h>
+#include <trace/KERNEL/gen_rgy_types.h>
 #include <trace/KERNEL/postmaster.h>
 #include <trace/mail/common.h>
 
@@ -103,7 +102,8 @@ main(int argc, char ** argv)
 #define OVERFLOW_GENS 10000
 #define WORKER_THREADS 16
 #define THREAD_PASSES 2
-#define THREAD_ITERATIONS 1000
+#define THREAD_ITERATIONS_P0 1000
+#define THREAD_ITERATIONS_P1 10000
 osi_static osi_trace_gen_id_t gen_vec[TEST_GENS];
 
 osi_static osi_uint32 osi_volatile threads_done = 0;
@@ -327,15 +327,15 @@ harness(void)
     PASS;
 
     threads_done = 0;
-    osi_mutex_Init(&thread_done_lock, &osi_trace_common_options.mutex_opts);
-    osi_condvar_Init(&thread_done_cv, &osi_trace_common_options.condvar_opts);
+    osi_mutex_Init(&thread_done_lock, osi_trace_impl_mutex_opts());
+    osi_condvar_Init(&thread_done_cv, osi_trace_impl_condvar_opts());
 
     {
 	osi_thread_p tid;
 	osi_thread_options_t opts;
 	osi_result res;
 	
-	osi_thread_options_Copy(&opts, &osi_trace_common_options.thread_opts);
+	osi_thread_options_Copy(&opts, osi_trace_impl_thread_opts());
 	osi_thread_options_Set(&opts, OSI_THREAD_OPTION_DETACHED, 1);
 	
 	for (i = 0; i < WORKER_THREADS; i++) {
@@ -379,7 +379,7 @@ worker_thread(void * args)
 
     addr.programType = osi_ProgramType_TraceCollector;
     addr.pid = osi_thread_current_id();
-    for (i = 0; i < THREAD_ITERATIONS; i++) {
+    for (i = 0; i < THREAD_ITERATIONS_P0; i++) {
 	code = osi_trace_gen_rgy_sys_register(&addr, &my_gen_id);
 	if (code) {
 	    THREAD_FAIL_CODE("sys_register", code);
@@ -439,7 +439,7 @@ worker_thread(void * args)
      */
     addr.programType = osi_ProgramType_TraceCollector;
     addr.pid = osi_thread_current_id();
-    for (i = 0 ; i < THREAD_ITERATIONS; i++) {
+    for (i = 0 ; i < THREAD_ITERATIONS_P1; i++) {
 	osi_trace_gen_id_t holds[4];
 	for (j = 0; j < 4; j++) {
 	    holds[j] = (rand() >> 8) & OSI_TRACE_GEN_RGY_MAX_ID_KERNEL;

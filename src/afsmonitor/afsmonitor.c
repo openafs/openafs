@@ -7,6 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  *
  * Portions Copyright (c) 2003 Apple Computer, Inc.
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
@@ -15,8 +16,7 @@
  *-------------------------------------------------------------------------*/
 
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -4182,6 +4182,9 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Utility,
+			     osi_NULL));
+
     /*
      * Set up the commands we understand.
      */
@@ -4212,6 +4215,9 @@ main(argc, argv)
      */
 
     code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+
     if (code)
 	afsmon_Exit(1);
     else

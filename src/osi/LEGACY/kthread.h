@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,14 +8,14 @@
  */
 
 #ifndef _OSI_LEGACY_KTHREAD_H
-#define	_OSI_LEGACY_KTHREAD_H
+#define _OSI_LEGACY_KTHREAD_H 1
 
 
 typedef int osi_thread_id_t;
 typedef int * osi_thread_p;
 
-#define osi_thread_PkgInit() osi_thread_event_PkgInit()
-#define osi_thread_PkgShutdown() osi_thread_event_PkgShutdown()
+#define osi_thread_PkgInit      osi_thread_event_PkgInit
+#define osi_thread_PkgShutdown  osi_thread_event_PkgShutdown
 
 #define osi_thread_create(stk, stk_size, proc, args, args_len, pp, pri)
 #define osi_thread_current_id() 0

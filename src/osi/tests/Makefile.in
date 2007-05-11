@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,22 +17,27 @@ CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
 CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 OBJS = \
-	list.o \
 	$(NULL)
 
 objects= ${OBJS}
 
+PROGS = \
+	cpu \
+	lib_init \
+	list \
+	mem_object_cache \
+	thread_event \
+	$(NULL)
+
 LIBS= \
 	${TOP_LIBDIR}/libosi-pthread-ni.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/util.a \
 	$(NULL)
 
 
 all: \
 	depinstall \
 	${objects} \
-	list \
+	$(PROGS) \
 	$(NULL)
 
 depinstall:
@@ -41,15 +46,39 @@ install:
 
 dest:
 
+cpu.o: cpu.c
+	${CCRULE}
+
+lib_init.o: lib_init.c
+	${CCRULE}
+
 list.o: list.c
 	${CCRULE}
+
+mem_object_cache.o: mem_object_cache.c
+	${CCRULE}
+
+thread_event.o: thread_event.c
+	${CCRULE}
+
+cpu: cpu.o
+	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
+
+lib_init: lib_init.o
+	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
 
 list: list.o
 	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
 
+mem_object_cache: mem_object_cache.o
+	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
+
+thread_event: thread_event.o
+	${CC} ${LDFLAGS} -o $@ $? ${LIBS} ${MT_LIBS} ${XLIBS}
+
 
 clean:
-	$(RM) -f *.o core list
+	$(RM) -f *.o core $(PROGS)
 
 include @TOP_OBJDIR@/src/config/Makefile.version
 

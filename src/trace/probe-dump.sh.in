@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Copyright 2006-2007, Sine Nomine Associates and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+#
+# the following script walks a build tree and compiles the complete
+# list of probe ids
+#
+
+TOP_SRCDIR=@TOP_SRCDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+
+
+find ${TOP_SRCDIR} -type f -name '*.tab' |
+xargs grep 'c-path' |
+awk '{system("dirname " $1); print "/" $3;}' - |
+sed -e "s%${TOP_SRCDIR}%${TOP_OBJDIR}/src%" -e '/.*$/ N' -e 's%\n%%' |
+xargs cat |
+grep 'osi_trace_directory_probe_register' |
+sed -e 's%\([ 	]*osi_trace_directory_probe_register(\)\([^,]*\)\(,.*\)$%\2%' -e 's%"%%g'

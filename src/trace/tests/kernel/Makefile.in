@@ -26,7 +26,6 @@ TRACE=$(TOP_SRCDIR)/trace
 
 GEN_RGY_LIB = trace_kernel_gen_rgy.a
 GEN_RGY_LIB_OBJS= \
-	trace_common_options.o \
 	trace_kernel_gen_rgy.o \
 	trace_kernel_gen_rgy_inline.o \
 	trace_kernel_postmaster.o \
@@ -36,7 +35,6 @@ GEN_RGY_LIB_OBJS= \
 
 POSTMASTER_LIB = trace_kernel_postmaster.a
 POSTMASTER_LIB_OBJS= \
-	trace_common_options.o \
 	trace_kernel_gen_rgy.o \
 	trace_kernel_gen_rgy_inline.o \
 	trace_kernel_postmaster.o \

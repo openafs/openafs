@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_string.h>
@@ -291,7 +290,7 @@ osi_TracePoint_EnableByFilter(osi_trace_gen_id_t gen,
     if (gen == OSI_TRACE_GEN_RGY_KERNEL_ID) {
 	res = osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_ENABLE,
 				(long) filter, 
-				0, 
+				(long) nhits, 
 				0,
 				&rv);
     } else {
@@ -383,7 +382,7 @@ osi_TracePoint_DisableByFilter(osi_trace_gen_id_t gen,
     if (gen == OSI_TRACE_GEN_RGY_KERNEL_ID) {
 	res = osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_DISABLE,
 				(long) filter, 
-				0, 
+				(long) nhits, 
 				0,
 				&rv);
     } else {

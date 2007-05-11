@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006, Sine Nomine Associates and others.
+ * Copyright 2005-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -96,23 +96,11 @@
  *
  */
 
-typedef struct osi_rwlock_options {
-    osi_uint8 preemptive_only;     /* only activate in pre-emptive environments (e.g. no-op for LWP) */
-    osi_uint8 trace_allowed;       /* whether or not lock tracing is allowed */
-    osi_uint8 trace_enabled;       /* enable lock tracing */
-} osi_rwlock_options_t;
-/* defaults:  { 0, 1, 0 } */
-
-typedef enum {
-    OSI_RWLOCK_OPTION_PREEMPTIVE_ONLY,
-    OSI_RWLOCK_OPTION_TRACE_ALLOWED,
-    OSI_RWLOCK_OPTION_TRACE_ENABLED,
-    OSI_RWLOCK_OPTION_MAX_ID
-} osi_rwlock_options_param_t;
+#include <osi/COMMON/rwlock_options.h>
 
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/krwlock.h>
@@ -130,14 +118,12 @@ typedef enum {
 
 #else /* !KERNEL */
 
-#if defined(OSI_PTHREAD_ENV)
+#if defined(OSI_ENV_PTHREAD)
 #include <osi/PTHREAD/rwlock.h>
-#else /* !OSI_PTHREAD_ENV */
+#elif defined(OSI_ENV_LWP)
 #include <osi/LWP/rwlock.h>
-#endif /* !OSI_PTHREAD_ENV */
+#endif /* OSI_ENV_LWP */
 #endif /* !KERNEL */
-
-#include <osi/COMMON/rwlock_options.h>
 
 #if !defined(OSI_IMPLEMENTS_RWLOCK_QUERY_WRLOCKHELD)
 #define osi_rwlock_AssertWrLockHeld(x)

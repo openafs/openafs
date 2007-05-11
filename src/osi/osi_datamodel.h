@@ -41,7 +41,7 @@
 #define OSI_DATAMODEL_IS(x)  (OSI_DATAMODEL == x)
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/datamodel.h>
@@ -55,7 +55,7 @@
 #error "please port the osi_datamodel api to your platform"
 #endif
 
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/datamodel.h>
@@ -69,6 +69,6 @@
 #error "please port the osi_datamodel api to your platform"
 #endif
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 #endif /* _OSI_OSI_DATAMODEL_H */

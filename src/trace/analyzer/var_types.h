@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,7 +13,7 @@
 /*
  * osi tracing framework
  * data analysis library
- * counter component
+ * core component type
  */
 
 #include <osi/osi_list.h>
@@ -30,6 +30,7 @@ typedef enum {
     OSI_TRACE_ANLY_VAR_CLOCK,
     OSI_TRACE_ANLY_VAR_EDGE_TRIGGER,
     OSI_TRACE_ANLY_VAR_LEVEL_TRIGGER,
+    OSI_TRACE_ANLY_VAR_TIMER,
     OSI_TRACE_ANLY_VAR_MAX_ID
 } osi_trace_anly_var_type_t;
 
@@ -42,6 +43,7 @@ struct osi_trace_anly_comparitor_data;
 struct osi_trace_anly_clock_data;
 struct osi_trace_anly_edge_trigger_data;
 struct osi_trace_anly_level_trigger_data;
+struct osi_trace_anly_timer_data;
 
 typedef union {
     void * osi_volatile raw;
@@ -53,12 +55,13 @@ typedef union {
     struct osi_trace_anly_clock_data * osi_volatile clock;
     struct osi_trace_anly_edge_trigger_data * osi_volatile edge_trigger;
     struct osi_trace_anly_level_trigger_data * osi_volatile level_trigger;
+    struct osi_trace_anly_timer_data * osi_volatile timer;
 } osi_trace_anly_var_data_ptr_t;
 
 typedef struct {
-    osi_volatile osi_trace_probe_id_t probe;
-    osi_volatile osi_trace_gen_id_t gen;
-    osi_volatile osi_uint8 arg;
+    osi_trace_probe_id_t osi_volatile probe;
+    osi_trace_gen_id_t osi_volatile gen;
+    osi_uint8 osi_volatile arg;
     struct osi_trace_anly_var * osi_volatile var; /* optional fast-path linkage */
 } osi_trace_anly_fan_in_t;
 
@@ -85,8 +88,9 @@ typedef struct osi_trace_anly_var {
 } osi_trace_anly_var_t;
 
 typedef struct {
-    osi_trace_anly_fan_in_t addr;
-    osi_int64 osi_volatile val;
+    osi_trace_anly_fan_in_t addr; /* fan out source address */
+    osi_uint8 osi_volatile arg;   /* our fan-in arg being updated */
+    osi_int64 osi_volatile val;   /* new value */
 } osi_trace_anly_var_update_t;
 
 typedef struct {

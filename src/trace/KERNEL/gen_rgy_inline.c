@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -15,8 +15,7 @@
  */
 
 #define OSI_BUILD_INLINES 1
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/KERNEL/gen_rgy.h>
 #include <trace/KERNEL/gen_rgy_impl.h>
 #include <trace/KERNEL/gen_rgy_inline.h>

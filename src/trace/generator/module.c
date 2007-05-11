@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,15 +7,14 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mutex.h>
 #include <osi/osi_list.h>
 #include <osi/osi_string.h>
 #include <trace/gen_rgy.h>
-#include <trace/common/options.h>
 #include <trace/generator/module.h>
 #include <trace/generator/module_mail.h>
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <trace/KERNEL/gen_rgy.h>
 #endif
 
@@ -101,11 +100,22 @@ osi_trace_module_unregister(osi_trace_module_header_t * hdr)
     return res;
 }
 
+/*
+ * get global metadata about the module package of the generator
+ *
+ * [OUT] info  -- generator info structure
+ *
+ * returns:
+ *   OSI_OK on success
+ *   see osi_trace_gen_id()
+ *   see osi_trace_directory_probe_id_max()
+ */
 osi_result
 osi_trace_module_info(osi_trace_generator_info_t * info)
 {
-    osi_result res;
+    osi_result res, code = OSI_OK;
     osi_trace_gen_id_t gen_id;
+    osi_trace_probe_id_t max_probe_id;
 
     osi_mutex_Lock(&osi_trace_modules.lock);
     info->probe_count = osi_trace_modules.probe_count;
@@ -116,10 +126,24 @@ osi_trace_module_info(osi_trace_generator_info_t * info)
 
     info->programType = osi_config_programType();
     info->epoch = osi_config_epoch();
-    res = osi_trace_gen_id(&gen_id);
-    info->gen_id = gen_id;
 
-    return res;
+    res = osi_trace_gen_id(&gen_id);
+    if (OSI_RESULT_OK(res)) {
+	info->gen_id = gen_id;
+    } else {
+	info->gen_id = 0;
+	code = res;
+    }
+
+    res = osi_trace_directory_probe_id_max(&max_probe_id);
+    if (OSI_RESULT_OK(res)) {
+	info->probe_id_max = max_probe_id;
+    } else {
+	info->probe_id_max = 0;
+	code = res;
+    }
+
+    return code;
 }
 
 osi_result
@@ -206,7 +230,7 @@ osi_trace_module_PkgInit(void)
     osi_result res;
 
     osi_mutex_Init(&osi_trace_modules.lock,
-		   &osi_trace_common_options.mutex_opts);
+		   osi_trace_impl_mutex_opts());
 
     osi_list_Init(&osi_trace_modules.module_list);
     osi_trace_modules.id_counter = 0;
@@ -214,7 +238,7 @@ osi_trace_module_PkgInit(void)
     osi_trace_modules.module_version_cksum = 0;
     osi_trace_modules.module_version_cksum_type = OSI_TRACE_MODULE_CKSUM_TYPE_SUM;
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     res =  osi_trace_module_msg_PkgInit();
 #else
     res = OSI_OK;
@@ -229,7 +253,7 @@ osi_trace_module_PkgShutdown(void)
     osi_result res;
     osi_trace_module_header_t * mh, * nmh;
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     res = osi_trace_module_msg_PkgShutdown();
 #else
     res = OSI_OK;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -9,6 +9,7 @@
 
 #include <osi/osi_impl.h>
 #include <osi/osi_mem.h>
+#include <osi/osi_mem_local.h>
 #include <osi/osi_cpu.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mutex.h>
@@ -28,7 +29,7 @@ osi_static struct {
 	osi_uintptr_t osi_volatile offset;
     } keys[OSI_MEM_LOCAL_MAX_KEYS];
     osi_uintptr_t osi_volatile buffer_offset;
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     osi_list_head_volatile ctx_list;
 #endif
     osi_mutex_t lock;
@@ -119,7 +120,7 @@ osi_mem_local_key_destroy_ctx(struct osi_mem_local_ctx_data * ldata,
     return OSI_OK;
 }
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 osi_static osi_result
 osi_mem_local_key_destroy_cpu(osi_cpu_id_t id, void * sdata)
 {
@@ -137,7 +138,7 @@ osi_mem_local_key_destroy_cpu(osi_cpu_id_t id, void * sdata)
 
     return res;
 }
-#endif /* OSI_KERNELSPACE_ENV */
+#endif /* OSI_ENV_KERNELSPACE */
 
 osi_result
 osi_mem_local_key_destroy(osi_mem_local_key_t key)
@@ -155,10 +156,10 @@ osi_mem_local_key_destroy(osi_mem_local_key_t key)
 	struct osi_mem_local_key_destruct info;
 	info.dtor = dtor;
 	info.key = key;
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 	osi_cpu_list_iterate(&osi_mem_local_key_destroy_cpu, &info);
 	osi_thread_unbind_current();
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 	{
 	    struct osi_mem_local_ctx_data *ctx;
 	    for (osi_list_Scan_Immutable(&osi_mem_local_key_directory.ctx_list, ctx,
@@ -166,7 +167,7 @@ osi_mem_local_key_destroy(osi_mem_local_key_t key)
 		osi_mem_local_key_destroy_ctx(ctx, &info);
 	    }
 	}
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
     }
     osi_mem_local_key_directory.keys[key].dtor = osi_NULL;
     osi_mutex_Unlock(&osi_mem_local_key_directory.lock);
@@ -202,7 +203,7 @@ osi_mem_local_ctx_init(osi_mem_local_ctx_id_t ctx,
 	align = 32;
     }
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
     /*
      * attempt to bind to the cpu so kmalloc makes better 
      * NUMA locality decisions
@@ -220,7 +221,7 @@ osi_mem_local_ctx_init(osi_mem_local_ctx_id_t ctx,
 
     osi_mutex_Lock(&osi_mem_local_key_directory.lock);
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     osi_list_Append(&osi_mem_local_key_directory.ctx_list, ldata,
 		    struct osi_mem_local_ctx_data, hdr.ctx_list);
 #endif
@@ -247,7 +248,7 @@ osi_mem_local_ctx_init(osi_mem_local_ctx_id_t ctx,
     return OSI_OK;
 }
 
-#if defined(OSI_KERNELSPACE_ENV) && !defined(OSI_MEM_LOCAL_PERCPU_ALLOC)
+#if defined(OSI_ENV_KERNELSPACE) && !defined(OSI_MEM_LOCAL_PERCPU_ALLOC)
 
 osi_static osi_result
 osi_mem_local_cpu_init(osi_cpu_id_t cpuid, void * sdata)
@@ -320,7 +321,7 @@ osi_mem_local_alloc_ctx(struct osi_mem_local_ctx_data * ldata,
     return res;
 }
 
-#ifdef OSI_KERNELSPACE_ENV
+#ifdef OSI_ENV_KERNELSPACE
 /*
  * cpu iterator function
  *
@@ -338,7 +339,7 @@ osi_mem_local_alloc_cpu(osi_cpu_id_t cpuid, void * sdata)
     ldata = osi_mem_local_ctx_get_ctx(cpuid);
     return osi_mem_local_alloc_ctx(ldata, info);
 }
-#endif /* OSI_KERNELSPACE_ENV */
+#endif /* OSI_ENV_KERNELSPACE */
 
 /*
  * allocate space in the main buffer
@@ -377,7 +378,7 @@ osi_mem_local_alloc(osi_mem_local_key_t key, size_t len_in, size_t align_in)
 	struct osi_mem_local_alloc_info info;
 	info.key = key;
 	info.offset = save_offset;
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 	res = osi_cpu_list_iterate(&osi_mem_local_alloc_cpu, &info);
 #else
 	{
@@ -397,7 +398,7 @@ osi_mem_local_alloc(osi_mem_local_key_t key, size_t len_in, size_t align_in)
 /*
  * osi_mem_local context lookup
  */
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 struct osi_mem_local_ctx_data *
 osi_mem_local_ctx_get_ctx(osi_mem_local_ctx_id_t ctxid)
 {
@@ -414,7 +415,7 @@ osi_mem_local_ctx_get_ctx(osi_mem_local_ctx_id_t ctxid)
     osi_mutex_Unlock(&osi_mem_local_key_directory.lock);
     return ret;
 }
-#endif /* OSI_USERSPACE_ENV */
+#endif /* OSI_ENV_USERSPACE */
 
 /*
  * set the context-local value for a key
@@ -444,8 +445,7 @@ osi_mem_local_set(osi_mem_local_key_t key,
  * intialization routines
  */
 
-osi_result
-osi_mem_local_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_mem_local_PkgInit)
 {
     osi_result res;
     osi_cpu_id_t max_id, i;
@@ -465,9 +465,9 @@ osi_mem_local_PkgInit(void)
     osi_mem_local_key_directory.buffer_offset = OSI_MEM_LOCAL_PAYLOAD_OFFSET;
 
     osi_mutex_Init(&osi_mem_local_key_directory.lock, 
-		   &osi_common_options.mutex_opts);
+		   osi_impl_mutex_opts());
 
-#ifdef OSI_KERNELSPACE_ENV
+#ifdef OSI_ENV_KERNELSPACE
     res = osi_mem_local_os_alloc_percpu_buffers();
 #else
     osi_list_Init(&osi_mem_local_key_directory.ctx_list);
@@ -476,8 +476,7 @@ osi_mem_local_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_mem_local_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_mem_local_PkgShutdown)
 {
     osi_result res;
 

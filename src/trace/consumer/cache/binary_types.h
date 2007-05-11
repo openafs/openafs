@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,6 +12,7 @@
 
 #include <osi/osi_list.h>
 #include <osi/osi_rwlock.h>
+#include <osi/osi_event.h>
 #include <trace/consumer/cache/object_types.h>
 #include <trace/consumer/cache/ptr_vec_types.h>
 
@@ -46,6 +47,9 @@ typedef struct osi_trace_consumer_bin_cache {
 
     /* pointers to osi_trace_consumer_probe_info_cache_t objects */
     struct osi_trace_consumer_cache_ptr_vec probe_vec;
+
+    /* binary info change watcher */
+    osi_event_hook_t hook;
 
     osi_refcnt_t refcnt;
 } osi_trace_consumer_bin_cache_t;

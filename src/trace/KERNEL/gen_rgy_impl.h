@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -21,7 +21,7 @@
 #include <trace/KERNEL/postmaster_types.h>
 #include <trace/KERNEL/gen_rgy_types.h>
 
-osi_extern osi_result __osi_trace_gen_rgy_free(void *);
+osi_extern void __osi_trace_gen_rgy_free(osi_trace_generator_registration_t *);
 osi_extern osi_result osi_trace_gen_rgy_mailbox_get(osi_trace_gen_id_t,
 						    osi_trace_mailbox_t **);
 

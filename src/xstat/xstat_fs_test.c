@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
@@ -13,8 +15,7 @@
  *
  *------------------------------------------------------------------------*/
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -854,6 +855,9 @@ main(int argc, char **argv)
     register afs_int32 code;	/*Return code */
     struct cmd_syndesc *ts;	/*Ptr to cmd line syntax desc */
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     /*
      * Set up the commands we understand.
      */
@@ -881,5 +885,6 @@ main(int argc, char **argv)
 		rn, code);
     }
 
+    osi_AssertOK(osi_PkgShutdown());
     exit(code);
 }

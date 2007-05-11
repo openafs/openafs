@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,7 +8,7 @@
  */
 
 #ifndef _OSI_LEGACY_KMEM_H
-#define	_OSI_LEGACY_KMEM_H
+#define _OSI_LEGACY_KMEM_H 1
 
 
 /*
@@ -35,8 +35,8 @@
 #define osi_mem_zero(buf, len) memset((buf), 0, (len))
 
 
-#define osi_mem_PkgInit()        (OSI_OK)
-#define osi_mem_PkgShutdown()    (OSI_OK)
+#define osi_mem_PkgInit       osi_null_init_func
+#define osi_mem_PkgShutdown   osi_null_fini_func
 
 
 /*

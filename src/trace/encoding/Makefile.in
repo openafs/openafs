@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,6 +17,16 @@ CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} ${
 CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 PUBLICHEADERS= \
+	demux.h \
+	demux_impl.h \
+	demux_types.h \
+	encoding.h \
+	handle.h \
+	handle_impl.h \
+	handle_impl_types.h \
+	handle_types.h \
+	init.h \
+	init_impl.h \
 	trap_types.h \
 	$(NULL)
 
@@ -25,24 +35,38 @@ INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/trace/encoding
 DEST_HDR_DIR=${DEST}/include/osi/trace/encoding
 include @TOP_OBJDIR@/src/config/Makefile.public-header
 
+RECURSE_DIRS = \
+	ascii \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
 OBJS=
 
 OBJECTS=${OBJS}
 
 
-all:
+all: \
+	build_recurse \
+	$(NULL)
 
 depinstall: \
-	depinstall_hdrs
+	depinstall_hdrs \
+	depinstall_recurse \
+	$(NULL)
 
 #
 # Installation targets
 #
 install: \
-	install_hdrs
+	install_hdrs \
+	install_recurse \
+	$(NULL)
 
 dest: \
-	dest_hdrs
+	dest_hdrs \
+	dest_recurse \
+	$(NULL)
 
 #
 # Build targets

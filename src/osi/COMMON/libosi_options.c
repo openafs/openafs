@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine and others.
+ * Copyright 2006-2007, Sine Nomine and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -25,7 +25,12 @@ osi_options_val_type_t osi_option_types[OSI_OPTION_MAX_ID+1] =
 	OSI_OPTION_VAL_TYPE_BOOL,       /* trace_start_mail_thread */
 	OSI_OPTION_VAL_TYPE_UINT32,     /* trace_buffer_size */
 	OSI_OPTION_VAL_TYPE_BOOL,       /* traced_listen */
-	OSI_OPTION_VAL_TYPE_UINT16,     /* traced_port */
+	OSI_OPTION_VAL_TYPE_UINT16,     /* rx_port */
+	OSI_OPTION_VAL_TYPE_BOOL,       /* trace_consumer_start_i2n_thread */
+	OSI_OPTION_VAL_TYPE_BOOL,       /* trace_consumer_start_cache_thread */
+	OSI_OPTION_VAL_TYPE_BOOL,       /* rx_bind */
+	OSI_OPTION_VAL_TYPE_UINT32,     /* rx_bind_host */
+	OSI_OPTION_VAL_TYPE_BOOL,       /* trace_consumer_start_encoding_thread */
 	OSI_OPTION_VAL_TYPE_INVALID /*end */
     };
 
@@ -42,7 +47,12 @@ osi_options_t osi_options_default_kernel =
 	OSI_FALSE,   /* trace_start_mail_thread */
 	128,         /* trace_buffer_size */
 	OSI_FALSE,   /* traced_listen */
-	0,           /* traced_port */
+	0,           /* rx_port */
+	OSI_FALSE,   /* trace_consumer_start_i2n_thread */
+	OSI_FALSE,   /* trace_consumer_start_cache_thread */
+	OSI_FALSE,   /* rx_bind */
+	0,           /* rx_bind_host */
+	OSI_FALSE,   /* trace_consumer_start_encoding_thread */
 	0 /* end */
     };
 
@@ -59,7 +69,12 @@ osi_options_t osi_options_default_ukernel =
 	OSI_FALSE,   /* trace_start_mail_thread */
 	128,         /* trace buffer_size */
 	OSI_FALSE,   /* traced_listen */
-	0,           /* traced_port */
+	0,           /* rx_port */
+	OSI_FALSE,   /* trace_consumer_start_i2n_thread */
+	OSI_FALSE,   /* trace_consumer_start_cache_thread */
+	OSI_FALSE,   /* rx_bind */
+	0,           /* rx_bind_host */
+	OSI_FALSE,   /* trace_consumer_start_encoding_thread */
 	0 /* end */
     };
 
@@ -76,7 +91,12 @@ osi_options_t osi_options_default_daemon =
 	OSI_TRUE,    /* trace_start_mail_thread */
 	128,         /* trace buffer_size */
 	OSI_FALSE,   /* traced_listen */
-	0,           /* traced_port */
+	0,           /* rx_port */
+	OSI_TRUE,    /* trace_consumer_start_i2n_thread */
+	OSI_TRUE,    /* trace_consumer_start_cache_thread */
+	OSI_FALSE,   /* rx_bind */
+	0,           /* rx_bind_host */
+	OSI_TRUE,   /* trace_consumer_start_encoding_thread */
 	0 /* end */
     };
 
@@ -93,7 +113,12 @@ osi_options_t osi_options_default_util =
 	OSI_FALSE,   /* trace_start_mail_thread */
 	8,           /* trace buffer_size */
 	OSI_FALSE,   /* traced_listen */
-	0,           /* traced_port */
+	0,           /* rx_port */
+	OSI_FALSE,   /* trace_consumer_start_i2n_thread */
+	OSI_FALSE,   /* trace_consumer_start_cache_thread */
+	OSI_FALSE,   /* rx_bind */
+	0,           /* rx_bind_host */
+	OSI_FALSE,   /* trace_consumer_start_encoding_thread */
 	0 /* end */
     };
 
@@ -110,7 +135,12 @@ osi_options_t osi_options_default_pam =
 	OSI_FALSE,   /* trace_start_mail_thread */
 	8,           /* trace buffer_size */
 	OSI_FALSE,   /* traced_listen */
-	0,           /* traced_port */
+	0,           /* rx_port */
+	OSI_FALSE,   /* trace_consumer_start_i2n_thread */
+	OSI_FALSE,   /* trace_consumer_start_cache_thread */
+	OSI_FALSE,   /* rx_bind */
+	0,           /* rx_bind_host */
+	OSI_FALSE,   /* trace_consumer_start_encoding_thread */
 	0 /* end */
     };
 
@@ -120,7 +150,7 @@ osi_options_t * osi_options_defaults[osi_ProgramType_Max_Id+1] =
     {
 	&osi_options_default_daemon,      /* osi_ProgramType_Library */
 	&osi_options_default_daemon,      /* osi_ProgramType_Bosserver */
-#if defined(OSI_KERNELSPACE_ENV)          /* osi_ProgramType_CacheManager */
+#if defined(OSI_ENV_KERNELSPACE)          /* osi_ProgramType_CacheManager */
 	&osi_options_default_kernel,
 #else
 	&osi_options_default_ukernel,
@@ -141,6 +171,12 @@ osi_options_t * osi_options_defaults[osi_ProgramType_Max_Id+1] =
 	&osi_options_default_kernel,      /* osi_ProgramType_TraceKernel */
 	&osi_options_default_daemon,      /* osi_ProgramType_Backup */
 	&osi_options_default_daemon,      /* osi_ProgramType_BuTC */
+	&osi_options_default_daemon,      /* osi_ProgramType_UpServer */
+	&osi_options_default_util,        /* osi_ProgramType_UpClient */
+	&osi_options_default_util,        /* osi_ProgramType_Bos */
+	&osi_options_default_util,        /* osi_ProgramType_Vos */
+	&osi_options_default_daemon,      /* osi_ProgramType_AFSD */
+	&osi_options_default_daemon,      /* osi_ProgramType_RMTSYSD */
 	&osi_options_default_util         /* osi_ProgramType_Max_Id */
     };
 
@@ -212,7 +248,12 @@ osi_options_val_ptr_setup(osi_options_t * opt,
 	OSI_OPTION_SWITCH_CASE(TRACE_START_MAIL_THREAD);
 	OSI_OPTION_SWITCH_CASE(TRACE_BUFFER_SIZE);
 	OSI_OPTION_SWITCH_CASE(TRACED_LISTEN);
-	OSI_OPTION_SWITCH_CASE(TRACED_PORT);
+	OSI_OPTION_SWITCH_CASE(RX_PORT);
+	OSI_OPTION_SWITCH_CASE(TRACE_CONSUMER_START_I2N_THREAD);
+	OSI_OPTION_SWITCH_CASE(TRACE_CONSUMER_START_CACHE_THREAD);
+	OSI_OPTION_SWITCH_CASE(RX_BIND);
+	OSI_OPTION_SWITCH_CASE(RX_BIND_HOST);
+	OSI_OPTION_SWITCH_CASE(TRACE_CONSUMER_START_ENCODING_THREAD);
     default:
 	res = OSI_FAIL;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -10,6 +10,15 @@
 #ifndef _OSI_LINUX_ATOMIC_H
 #define	_OSI_LINUX_ATOMIC_H
 
+#include <asm/atomic.h>
+
+#define OSI_IMPLEMENTS_ATOMIC_MEMBAR 1
+#define OSI_IMPLEMENTS_ATOMIC_MEMBAR_ORDER_LOADS 1
+#define OSI_IMPLEMENTS_ATOMIC_MEMBAR_ORDER_STORES 1
+
+#define osi_atomic_membar() smp_mb()
+#define osi_atomic_membar_order_loads() smp_rmb()
+#define osi_atomic_membar_order_stores() smp_wmb()
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,3)
 
@@ -31,7 +40,6 @@
  * it is not yet included in osi_atomic.h
  */
 
-#include <asm/atomic.h>
 
 typedef atomic_t osi_atomic32_t;
 typedef osi_int32 osi_atomic32_val_t;
@@ -42,15 +50,6 @@ typedef atomic64_t osi_atomic64_t;
 typedef osi_int64 osi_atomic64_val_t;
 typedef osi_int64 osi_atomic64_delta_t;
 #endif
-
-
-#define OSI_IMPLEMENTS_ATOMIC_MEMBAR 1
-#define OSI_IMPLEMENTS_ATOMIC_MEMBAR_ORDER_LOADS 1
-#define OSI_IMPLEMENTS_ATOMIC_MEMBAR_ORDER_STORES 1
-
-#define osi_atomic_membar() smp_mb()
-#define osi_atomic_membar_order_loads() smp_rmb()
-#define osi_atomic_membar_order_stores() smp_wmb()
 
 #endif /* LINUX_VERSION_CODE > KERNEL_VERSION(2,6,3)
 

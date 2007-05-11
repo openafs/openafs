@@ -98,6 +98,30 @@ AC_ARG_ENABLE(debug-pam,
 AC_ARG_ENABLE(optimize-pam,
 [  --disable-optimize-pam		disable optimization for compilation of the PAM code (defaults to enabled)],, enable_optimize_pam="yes"
 )
+AC_ARG_ENABLE(osi-debug-all,
+[  --enable-osi-debug-all		enable all libosi debugging features (defaults to disabled)],, enable_osi_debug_all="no"
+)
+AC_ARG_ENABLE(osi-debug-assert,
+[  --enable-osi-debug-assert		enable assertions at all osi_AssertDebug() points (defaults to disabled)],, enable_osi_debug_assert="no"
+)
+AC_ARG_ENABLE(osi-debug-inline,
+[  --enable-osi-debug-inline		enable building all osi_inline() symbols as global symbols (defaults to disabled)],, enable_osi_debug_inline="no"
+)
+AC_ARG_ENABLE(osi-debug-mem-object-cache,
+[  --enable-osi-debug-mem-object-cache	enable osi_mem_object_cache leak debugging (defaults to disabled)],, enable_osi_debug_mem_object_cache="no"
+)
+AC_ARG_ENABLE(osi-debug-lib-init,
+[  --enable-osi-debug-lib-init		enable osi_lib_init debug messages (defaults to disabled)],, enable_osi_debug_lib_init="no"
+)
+AC_ARG_ENABLE(osi-debug-lib-fini,
+[  --enable-osi-debug-lib-fini		enable osi_lib_fini debug messages (defaults to disabled)],, enable_osi_debug_lib_fini="no"
+)
+AC_ARG_ENABLE(osi-debug-vector,
+[  --enable-osi-debug-vector		enable osi_vector debugging (defaults to disabled)],, enable_osi_debug_vector="no"
+)
+AC_ARG_ENABLE(osi-debug-heap,
+[  --enable-osi-debug-heap		enable osi_heap debugging (defaults to disabled)],, enable_osi_debug_heap="no"
+)
 
 
 enable_login="no"
@@ -1128,6 +1152,32 @@ AC_SUBST(CTFMERGE)
 AC_SUBST(CTFMERGE_FLAGS)
 AC_SUBST(CTFCONVERT)
 AC_SUBST(CTFCONVERT_FLAGS)
+
+if test "x$enable_osi_debug_all" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_ALL, 1, [define if you want to enable all libosi debugging features])
+fi
+if test "x$enable_osi_debug_assert" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_ASSERT, 1, [define if you want to enable osi_AssertDebug actions])
+fi
+if test "x$enable_osi_debug_inline" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_INLINE, 1, [define if you want to enable building osi_inline interfaces as global symbols])
+fi
+if test "x$enable_osi_debug_mem_object_cache" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_MEM_OBJECT_CACHE, 1, [define if you want to enable osi_mem_object_cache leak debugging])
+fi
+if test "x$enable_osi_debug_lib_init" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_LIB_INIT, 1, [define if you want to enable osi_lib_init debug messages])
+fi
+if test "x$enable_osi_debug_lib_fini" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_LIB_FINI, 1, [define if you want to enable osi_lib_fini debug messages])
+fi
+if test "x$enable_osi_debug_vector" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_VECTOR, 1, [define if you want to enable osi_vector debugging])
+fi
+if test "x$enable_osi_debug_heap" = "xyes"; then
+	AC_DEFINE(OSI_DEBUG_HEAP, 1, [define if you want to enable osi_heap debugging])
+fi
+
 
 if test "$enable_full_vos_listvol_switch" = "yes"; then
 	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])

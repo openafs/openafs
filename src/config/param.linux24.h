@@ -14,6 +14,7 @@
 
 /* global defines */
 
+#define OSI_ENV_UNIX		1
 #define OSI_LINUX_ENV		1
 #define OSI_LINUX20_ENV		1
 #define OSI_LINUX22_ENV		1

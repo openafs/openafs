@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -17,6 +17,7 @@
  */
 
 #include <afs/param.h>
+#include <osi/osi_debug.h>
 #include <osi/osi_macro.h>
 #if !defined(OSI_ENV_COMERR_BUILD)
 #include <osi/osi_err.h>
@@ -27,10 +28,12 @@
 #include <osi/osi_buildenv.h>
 #include <osi/osi_datamodel.h>
 #include <osi/osi_types.h>
+#include <osi/osi_init.h>
 #include <osi/osi_inline.h>
 #include <osi/osi_options.h>
 #include <osi/osi_prototypes.h>
 #include <osi/osi_config.h>
+#include <osi/osi_state.h>
 #include <osi/osi_util.h>
 
 #endif /* _OSI_OSI_INCLUDES_H */

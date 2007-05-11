@@ -85,6 +85,18 @@ typedef osi_list osi_list_element;
 typedef osi_list_volatile osi_list_head_volatile;
 typedef osi_list_volatile osi_list_element_volatile;
 
+#define osi_list_Head_Static_Initializer(x) { &x, &x }
+#define osi_list_Head_Prototype(x) \
+    osi_extern osi_list_head x
+#define osi_list_Head_Decl(x) \
+    osi_list_head x = osi_list_Head_Static_Initializer(x)
+#define osi_list_Head_Volatile_Prototype(x) \
+    osi_extern osi_list_head_volatile x
+#define osi_list_Head_Volatile_Decl(x) \
+    osi_list_head_volatile x = osi_list_Head_Static_Initializer(x)
+#define osi_list_Element_Static_Initializer { osi_NULL, osi_NULL }
+
+
 /* INTERNAL macros */
 
 /* This one coerces the user's structure to a queue element (or queue head) */

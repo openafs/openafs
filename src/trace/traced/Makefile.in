@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -35,10 +35,10 @@ OBJS= \
 objects= ${OBJS}
 
 LIBS= \
+	${TOP_LIBDIR}/libosi_trace_agent.a \
 	${TOP_LIBDIR}/libafsauthent-ni.a \
 	${TOP_LIBDIR}/libafsrpc-ni.a \
 	${TOP_LIBDIR}/libosi-pthread-ni.a \
-	${TOP_LIBDIR}/libosi_trace_agent.a \
 	${TOP_LIBDIR}/libosi_trace_analyzer.a \
 	${TOP_LIBDIR}/libosi_trace_consumer.a \
 	${TOP_LIBDIR}/libosi_trace_common.a \

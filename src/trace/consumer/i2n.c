@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_rwlock.h>
@@ -190,7 +189,7 @@ osi_trace_consumer_i2n_lookup(osi_trace_gen_id_t gen_id,
 
 	/* cache miss */
 	res = osi_trace_directory_I2N(gen_id, probe_id, probe_name, 
-				      probe_name_len);
+				      probe_name_len, OSI_FALSE);
 	if (OSI_RESULT_OK(res)) {
 	    probe_name[probe_name_len-1] = '\0';
 	    probe_name_len = osi_string_len(probe_name);

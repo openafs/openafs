@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,11 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_rwlock.h>
 #include <osi/osi_object_cache.h>
-#include <osi/osi_trace.h>
-#include <trace/common/options.h>
 #include <trace/analyzer/var.h>
 #include <trace/analyzer/var_impl.h>
 #include <trace/analyzer/counter.h>
@@ -26,6 +24,11 @@
 osi_mem_object_cache_t * osi_trace_anly_var_cache = osi_NULL;
 osi_mem_object_cache_t * osi_trace_anly_fan_in_cache = osi_NULL;
 osi_mem_object_cache_t * osi_trace_anly_fan_in_list_cache = osi_NULL;
+
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(__osi_trace_anly_var_ctor);
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_PROTOTYPE(__osi_trace_anly_var_dtor);
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(__osi_trace_anly_fan_in_ctor);
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_PROTOTYPE(__osi_trace_anly_fan_in_list_ctor);
 
 struct osi_trace_anly_var_type_rgy_entry {
     osi_uint32 osi_volatile valid;
@@ -42,12 +45,11 @@ struct {
 /*
  * var object constructor
  */
-osi_static int
-__osi_trace_anly_var_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(__osi_trace_anly_var_ctor)
 {
-    osi_trace_anly_var_t * var = (osi_trace_anly_var_t *) buf;
+    osi_trace_anly_var_t * var = OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
-    osi_mutex_Init(&var->var_lock, &osi_trace_common_options.mutex_opts);
+    osi_mutex_Init(&var->var_lock, osi_trace_impl_mutex_opts());
     osi_refcnt_init(&var->var_refcount, 0);
     osi_list_Init(&var->var_fan_in_list);
 
@@ -57,10 +59,9 @@ __osi_trace_anly_var_ctor(void * buf, void * sdata, int flags)
 /*
  * var object destructor
  */
-osi_static void
-__osi_trace_anly_var_dtor(void * buf, void * sdata)
+OSI_MEM_OBJECT_CACHE_DTOR_STATIC_DECL(__osi_trace_anly_var_dtor)
 {
-    osi_trace_anly_var_t * var = (osi_trace_anly_var_t *) buf;
+    osi_trace_anly_var_t * var = OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
     osi_mutex_Destroy(&var->var_lock);
     osi_refcnt_destroy(&var->var_refcount);
@@ -69,10 +70,9 @@ __osi_trace_anly_var_dtor(void * buf, void * sdata)
 /*
  * fan in object constructor
  */
-osi_static int
-__osi_trace_anly_fan_in_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(__osi_trace_anly_fan_in_ctor)
 {
-    osi_trace_anly_fan_in_t * obj = (osi_trace_anly_fan_in_t *) buf;
+    osi_trace_anly_fan_in_t * obj = OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
 
     obj->var = osi_NULL;
 
@@ -82,10 +82,9 @@ __osi_trace_anly_fan_in_ctor(void * buf, void * sdata, int flags)
 /*
  * fan in list object constructor
  */
-osi_static int
-__osi_trace_anly_fan_in_list_ctor(void * buf, void * sdata, int flags)
+OSI_MEM_OBJECT_CACHE_CTOR_STATIC_DECL(__osi_trace_anly_fan_in_list_ctor)
 {
-    osi_trace_anly_fan_in_list_t * obj = (osi_trace_anly_fan_in_list_t *) buf;
+    osi_trace_anly_fan_in_list_t * obj = OSI_MEM_OBJECT_CACHE_FUNC_ARG_BUF;
     osi_uint32 i;
 
     for (i = 0; i < OSI_TRACE_ANLY_FAN_IN_LIST_RECORD_SIZE; i++) {
@@ -590,8 +589,7 @@ osi_trace_anly_var_update(osi_trace_anly_var_t * var,
 /*
  * initialize the analyzer var package
  */
-osi_result 
-osi_trace_anly_var_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_anly_var_PkgInit)
 {
     osi_result code = OSI_OK;
 
@@ -603,7 +601,7 @@ osi_trace_anly_var_PkgInit(void)
 				    &__osi_trace_anly_var_ctor,
 				    &__osi_trace_anly_var_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_anly_var_cache == osi_NULL) {
 	code = OSI_ERROR_NOMEM;
 	goto error;
@@ -617,7 +615,7 @@ osi_trace_anly_var_PkgInit(void)
 				    &__osi_trace_anly_fan_in_list_ctor,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_anly_fan_in_list_cache == osi_NULL) {
 	code = OSI_ERROR_NOMEM;
 	goto error;
@@ -631,7 +629,7 @@ osi_trace_anly_var_PkgInit(void)
 				    &__osi_trace_anly_fan_in_ctor,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_anly_fan_in_cache == osi_NULL) {
 	code = OSI_ERROR_NOMEM;
 	goto error;
@@ -644,8 +642,7 @@ osi_trace_anly_var_PkgInit(void)
 /*
  * shut down the analyzer var package
  */
-osi_result 
-osi_trace_anly_var_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_anly_var_PkgShutdown)
 {
     osi_result code = OSI_OK;
 

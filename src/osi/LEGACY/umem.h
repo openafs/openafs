@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,7 +8,7 @@
  */
 
 #ifndef _OSI_LEGACY_UMEM_H
-#define	_OSI_LEGACY_UMEM_H
+#define _OSI_LEGACY_UMEM_H 1
 
 
 #include <sys/types.h>
@@ -19,6 +19,10 @@
 /*
  * general purpose userspace memory allocator
  */
+
+#define OSI_MEM_ALLOC_ALIGNMENT 8 /* MOST userspace allocators provide 8-byte 
+				     aligned memory 
+				     (DARWIN ppc being a notable exception) */
 
 #define osi_mem_alloc(size) malloc(size)
 #define osi_mem_alloc_nosleep(size) malloc(size)
@@ -31,9 +35,9 @@
 #define osi_mem_large_alloc_nosleep osi_mem_alloc_nosleep
 #define osi_mem_large_free osi_mem_free
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#if defined(OSI_SUN5_ENV) || defined(OSI_LINUX_ENV) || defined(OSI_AIX_ENV) || defined(OSI_SGI_ENV)
 #define osi_mem_page_size_default(s) (((*(s)) = sysconf(_SC_PAGESIZE)) >= 0 ? OSI_OK : OSI_FAIL)
-#elif defined(AFS_HPUX_ENV)
+#elif defined(OSI_HPUX_ENV)
 #define osi_mem_page_size_default(s) (((*(s)) = sysconf(_SC_PAGE_SIZE)) >= 0 ? OSI_OK : OSI_FAIL)
 #else
 #define osi_mem_page_size_default(s) ((*(s)) = 4096, OSI_MEM_RESULT_FAKED)
@@ -52,7 +56,7 @@
 
 #define OSI_IMPLEMENTS_MEMORY_ALIGNED 1
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_USR_LINUX20_ENV)
+#if defined(OSI_LINUX_ENV)
 #include <malloc.h>
 #endif
 
@@ -61,12 +65,7 @@
 #define osi_mem_aligned_free(buf, size) free(buf)
 
 
-#if defined(OSI_PTHREAD_ENV)
-#define osi_mem_PkgInit()       (osi_mem_local_PkgInit())
-#define osi_mem_PkgShutdown()   (osi_mem_local_PkgShutdown())
-#else
-#define osi_mem_PkgInit()       (OSI_OK)
-#define osi_mem_PkgShutdown()   (OSI_OK)
-#endif
+#define osi_mem_PkgInit       osi_null_init_func
+#define osi_mem_PkgShutdown   osi_null_fini_func
 
 #endif /* _OSI_LEGACY_UMEM_H */

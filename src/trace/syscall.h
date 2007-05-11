@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -76,27 +76,29 @@
 
 
 /*
- * enable a tracepoint by name
+ * enable all tracepoints matching a filter expression
  *
  * osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_ENABLE, p1, 0, 0)
  *
  * returns:
  *   0 on success; nonzero on error
  *
- * [IN] char * p1 -- pointer to probe name buffer
+ * [IN]  char       * p1 -- pointer to probe name filter buffer
+ * [OUT] osi_uint32 * p2 -- address in which to store hit count
  */
 #define OSI_TRACE_SYSCALL_OP_ENABLE 3
 
 
 /*
- * disable a tracepoint by name
+ * disable all tracepoints matching a filter expression
  *
  * osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_DISABLE, p1, 0, 0)
  *
  * returns:
  *   0 on success; nonzero on error
  *
- * [IN] char * p1 -- pointer to probe name buffer
+ * [IN]  char       * p1 -- pointer to probe name filter buffer
+ * [OUT] osi_uint32 * p2 -- address in which to store hit count
  */
 #define OSI_TRACE_SYSCALL_OP_DISABLE 4
 
@@ -461,7 +463,7 @@ typedef struct {
 #define OSI_TRACE_SYSCALL_OP_MAIL_UNTAP 28
 
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #include <trace/KERNEL/syscall.h>
 #else
 #include <trace/USERSPACE/syscall.h>

@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -49,6 +49,7 @@ RECURSE_DIRS= \
 	encoding \
 	event \
 	generator \
+	ltrace \
 	mail \
 	rpc \
 	rtrace \
@@ -56,6 +57,7 @@ RECURSE_DIRS= \
 	snmp \
 	tests \
 	traced \
+	util \
 	$(NULL)
 
 include @TOP_OBJDIR@/src/config/Makefile.recurse

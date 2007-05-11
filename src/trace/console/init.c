@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,9 +13,7 @@
  * initialization/shutdown
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
-#include <trace/common/options.h>
+#include <trace/common/trace_impl.h>
 #include <trace/console/init.h>
 #include <trace/console/trap.h>
 #include <trace/console/trap_queue.h>
@@ -92,10 +90,10 @@ osi_trace_console_PkgInit(void)
     osi_result res;
     osi_options_val_t opt;
 
-    res = osi_config_options_Get(OSI_OPTION_TRACED_PORT,
+    res = osi_config_options_Get(OSI_OPTION_RX_PORT,
 				 &opt);
     if (OSI_RESULT_FAIL(res)) {
-	(osi_Msg "failed to get TRACED_PORT option value\n");
+	(osi_Msg "failed to get RX_PORT option value\n");
 	goto error;
     }
 

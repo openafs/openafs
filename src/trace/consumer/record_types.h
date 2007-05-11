@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -16,6 +16,8 @@
  * tracepoint record queueing mechanism
  * record finite state automata
  */
+
+#include <trace/directory.h>
 
 /*
  * the following enumeration defines the valid FSA states
@@ -43,9 +45,10 @@ typedef struct {
 } osi_trace_consumer_record_fsa_state_t;
 
 typedef struct {
-    osi_volatile osi_list_element record_list;
-    osi_volatile osi_trace_consumer_record_fsa_state_t state;
-    osi_volatile osi_TracePoint_record record;
+    osi_list_element_volatile record_list;
+    osi_trace_consumer_record_fsa_state_t osi_volatile state;
+    /* XXX record versioning */
+    osi_TracePoint_record osi_volatile record;
 } osi_TracePoint_record_queue_t;
 
 

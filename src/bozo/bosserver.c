@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006-2007 Sine Nomine Associates
  */
 
 #include <osi/osi.h>
@@ -158,6 +160,8 @@ bozo_ReBozo()
     for (i = 3; i < 64; i++) {
 	close(i);
     }
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgShutdown()));
 
     execv(argv[0], argv);	/* should not return */
     _exit(1);
@@ -753,10 +757,6 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGABRT, &nsa, NULL);
 #endif
 
-    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Bosserver, osi_NULL)));
-#if defined(OSI_TRACE_ENABLED)
-    osi_Assert(OSI_RESULT_OK(bosserver_TracePointTableInit()));
-#endif
     osi_audit_init();
 
 #ifdef BOS_RESTRICTED_MODE
@@ -905,6 +905,20 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
+    /* go into the background and remove our controlling tty, close open 
+       file desriptors
+     */
+
+#ifndef AFS_NT40_ENV
+    if (!nofork)
+	daemon(1, 0);
+#endif /* ! AFS_NT40_ENV */
+
+    osi_Assert(OSI_RESULT_OK(osi_PkgInit(osi_ProgramType_Bosserver, osi_NULL)));
+#if defined(OSI_TRACE_ENABLED)
+    osi_Assert(OSI_RESULT_OK(bosserver_TracePointTableInit()));
+#endif
+
     code = bnode_Init();
     if (code) {
 	printf("bosserver: could not init bnode package, code %d\n", code);
@@ -926,15 +940,6 @@ main(int argc, char **argv, char **envp)
     fputs(AFS_GOVERNMENT_MESSAGE, stdout);
     fflush(stdout);
 #endif
-
-    /* go into the background and remove our controlling tty, close open 
-       file desriptors
-     */
-
-#ifndef AFS_NT40_ENV
-    if (!nofork)
-	daemon(1, 0);
-#endif /* ! AFS_NT40_ENV */
 
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV

@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -59,6 +60,10 @@ main(int argc, char *argv[])
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     gid = getgid();
     uid = getuid();
     pwe = getpwuid(uid);
@@ -76,6 +81,7 @@ main(int argc, char *argv[])
     (void)setuid(uid);
     (void)setgid(gid);
     argv[0] = shell;
+    osi_AssertOK(osi_PkgShutdown());
     execvp(shell, argv);
     perror(shell);
     fprintf(stderr, "No shell\n");

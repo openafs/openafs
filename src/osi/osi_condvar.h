@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006, Sine Nomine Associates and others.
+ * Copyright 2005-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -56,23 +56,11 @@
  *
  */
 
-typedef struct osi_condvar_options {
-    osi_uint8 preemptive_only;     /* only activate in pre-emptive environments (e.g. no-op for LWP) */
-    osi_uint8 trace_allowed;       /* whether or not lock tracing is allowed */
-    osi_uint8 trace_enabled;       /* enable lock tracing */
-} osi_condvar_options_t;
-/* defaults:  { 0, 1, 0 } */
-
-typedef enum {
-    OSI_CONDVAR_OPTION_PREEMPTIVE_ONLY,
-    OSI_CONDVAR_OPTION_TRACE_ALLOWED,
-    OSI_CONDVAR_OPTION_TRACE_ENABLED,
-    OSI_CONDVAR_OPTION_MAX_ID
-} osi_condvar_options_param_t;
+#include <osi/COMMON/condvar_options.h>
 
 
 /* now include the right back-end implementation header */
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 
 #if defined(OSI_SUN5_ENV)
 #include <osi/SOLARIS/kcondvar.h>
@@ -88,13 +76,11 @@ typedef enum {
 
 #else /* !KERNEL */
 
-#if defined(OSI_PTHREAD_ENV)
+#if defined(OSI_ENV_PTHREAD)
 #include <osi/PTHREAD/condvar.h>
-#else /* !OSI_PTHREAD_ENV */
+#elif defined(OSI_ENV_LWP)
 #include <osi/LWP/condvar.h>
-#endif /* !OSI_PTHREAD_ENV */
+#endif /* OSI_ENV_LWP */
 #endif /* !KERNEL */
-
-#include <osi/COMMON/condvar_options.h>
 
 #endif /* _OSI_OSI_CONDVAR_H */

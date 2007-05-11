@@ -3,7 +3,11 @@
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
+
+#include <osi/osi.h>
 
 #if !defined(lint) && !defined(SABER)
 static char *rcsid = "$Id$";
@@ -17,7 +21,10 @@ static char *rcsid = "$Id$";
 int
 main(int argc, char *argv[])
 {
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
     aklog(argc, argv);
+    osi_AssertOK(osi_PkgShutdown());
     exit(0);
 }
 

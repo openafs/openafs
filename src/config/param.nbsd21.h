@@ -161,6 +161,7 @@ enum vcexcl { NONEXCL, EXCL };
 
 /* global defines */
 
+#define OSI_ENV_UNIX        1
 #define OSI_NBSD_ENV        1
 #define OSI_NBSD15_ENV      1
 #define OSI_NBSD16_ENV      1

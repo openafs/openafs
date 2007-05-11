@@ -288,8 +288,10 @@ VInitPartition_r(char *path, char *devname, Device dev)
     VSetPartitionDiskUsage_r(dp);
 #ifdef AFS_DEMAND_ATTACH_FS
     AddPartitionToTable_r(dp);
-    queue_Init(&dp->vol_list);
+    queue_Init(&dp->vol_list.head);
     assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
+    dp->vol_list.len = 0;
+    dp->vol_list.busy = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 

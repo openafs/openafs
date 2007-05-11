@@ -30,11 +30,26 @@ SYS_OBJDIR=$(TOP_OBJDIR)/src/sys
 TRACE_OBJDIR=$(TOP_OBJDIR)/src/trace
 UTIL_OBJDIR=$(TOP_OBJDIR)/src/util
 
+SFLAGS=-P -I${TOP_INCDIR}
 
 LIBAFSRPC_VERSION_MAJOR = 1
 LIBAFSRPC_VERSION_MINOR = 1
-LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_inst = ${MT_LIBS} ${OSI_LIBS} -L$(TOP_OBJDIR)/lib -losi-pthread-inst
-LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_ni = ${MT_LIBS} ${OSI_LIBS} -L$(TOP_OBJDIR)/lib -losi-pthread-ni
+LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_inst_32 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-inst-32 \
+	$(NULL)
+LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_inst_64 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-inst-64 \
+	$(NULL)
+LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_ni_32 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-ni-32 \
+	$(NULL)
+LIBAFSRPC_DEPS_libafsrpc_shlib_pthread_ni_64 = \
+	${MT_LIBS} ${OSI_LIBS} \
+	-L$(TOP_OBJDIR)/lib -losi-pthread-ni-64 \
+	$(NULL)
 
 # core libafsrpc build objects
 # for all builds, kernel, ukernel, and userspace
@@ -360,9 +375,6 @@ rxkad_fcrypt.o: $(RXKAD_SRCDIR)/domestic/fcrypt.c
 rxkad_crypt_conn.o: $(RXKAD_SRCDIR)/domestic/crypt_conn.c
 	$(CRULE_OPT)
 
-AFS_component_version_number.o: $(RX_OBJDIR)/AFS_component_version_number.c
-	$(CRULE_OPT)
-
 xdr.o: $(RX_SRCDIR)/xdr.c
 	$(CRULE_OPT)
 
@@ -520,22 +532,23 @@ lwp_waitkey.o: $(LWP_SRCDIR)/waitkey.c
 
 sys_syscall.o: $(SYS_SRCDIR)/syscall.s
 	case "$(SYS_NAME)" in \
-	     sun4x_5* | sunx86_5*) \
-		/usr/ccs/lib/cpp  ${SFLAGS} $(SYS_SRCDIR)/syscall.s syscall.ss; \
-		as -o sys_syscall.o syscall.ss;	\
-		$(RM) syscall.ss;; \
+	 sun4x_5* | sunx86_5*) \
+		/usr/ccs/lib/cpp  ${SFLAGS} $(SYS_SRCDIR)/syscall.s syscall.ss ; \
+		as $(LIBAFSRPC_AS_ARCH_FLAGS_$(LIBAFSRPC_BUILDING_BIT)) \
+			-o sys_syscall.o syscall.ss ; \
+		$(RM) syscall.ss ;; \
 	 sgi_* | *_darwin_* ) \
-                ${CC} ${CFLAGS} -o sys_syscall.o -c $(SYS_SRCDIR)/syscall.s;; \
+		${CC} ${CFLAGS} -o sys_syscall.o -c $(SYS_SRCDIR)/syscall.s ;; \
 	 alpha_dux?? ) \
-		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER $(SYS_SRCDIR)/syscall.s; \
-		${AS} -o sys_syscall.o syscall.i; \
-		$(RM) -f syscall.ss syscall.i;; \
+		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER $(SYS_SRCDIR)/syscall.s ; \
+		${AS} -o sys_syscall.o syscall.i ; \
+		$(RM) -f syscall.ss syscall.i ;; \
 	 *bsd* ) \
 		touch sys_syscall.o ;; \
 	 *) \
-		/lib/cpp  ${SFLAGS} $(SYS_SRCDIR)/syscall.s syscall.ss; \
-		as -o sys_syscall.o syscall.ss;		\
-		$(RM) syscall.ss;;				\
+		/lib/cpp  ${SFLAGS} $(SYS_SRCDIR)/syscall.s syscall.ss ; \
+		as -o sys_syscall.o syscall.ss ; \
+		$(RM) syscall.ss ;; \
 	esac
 
 rxstat.o: $(RXSTAT_SRCDIR)/rxstat.c

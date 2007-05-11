@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,12 +8,14 @@
  */
 
 #ifndef _OSI_SOLARIS_UTIME_APPROX_INLINE_H
-#define	_OSI_SOLARIS_UTIME_APPROX_INLINE_H
+#define _OSI_SOLARIS_UTIME_APPROX_INLINE_H 1
 
-#if defined(OSI_PTHREAD_ENV) && (defined(__sparcv8plus) || defined(__sparcv9) || defined(__amd64))
-osi_extern osi_result osi_time_approx_get(osi_time_t * ts_out, 
-					  osi_time_suseconds_t samp_interval);
-#elif defined(OSI_LWP_ENV)
+#if defined(OSI_IMPLEMENTS_NATIVE_TIME_APPROX)
+
+/*
+ * XXX move the following interface to src/osi/LWP
+ */
+#if 0
 /* use the LWP approx time interface */
 osi_inline_define(
 osi_result
@@ -31,23 +33,7 @@ osi_result
 osi_time_approx_get(osi_time_t * ts_out,
 		    osi_time_suseconds_t samp_interval)
 )
-#else
-/* when all else fails, just back time_approx with time() */
-osi_inline_define(
-osi_result
-osi_time_approx_get(osi_time_t * ts_out,
-		    osi_time_suseconds_t samp_interval)
-{
-    (void)time(ts_out);
-    return OSI_OK;
-}
-)
-osi_inline_prototype(
-osi_result
-osi_time_approx_get(osi_time_t * ts_out,
-		    osi_time_suseconds_t samp_interval)
-)
-#endif
+#endif /* 0 */
 
 
 osi_inline_define(
@@ -86,5 +72,6 @@ osi_time_approx_get64(osi_time64_t * ts_out,
 		      osi_time_suseconds_t samp_interval)
 )
 
+#endif /* OSI_IMPLEMENTS_NATIVE_TIME_APPROX */
 
 #endif /* _OSI_SOLARIS_UTIME_APPROX_INLINE_H */

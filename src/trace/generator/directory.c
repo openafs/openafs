@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -14,8 +14,7 @@
  * probe point directory
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/generator/activation.h>
 #include <trace/generator/directory.h>
 #include <trace/generator/directory_impl.h>
@@ -25,6 +24,7 @@
 #include <osi/osi_string.h>
 
 struct osi_trace_directory osi_trace_directory;
+
 
 /*
  * use a combination of xor and bit shifts
@@ -132,6 +132,8 @@ osi_trace_directory_token_stack_build(const char * probe_name,
 	if (!osi_string_cmp(tok, "+")) {
 	    stack->tokens[stack->depth++] = "?";
 	    stack->tokens[stack->depth++] = "*";
+	} else if (!osi_string_cmp(tok, "")) {
+	    stack->tokens[stack->depth++] = "?";
 	} else {
 	    stack->tokens[stack->depth++] = tok;
 	}
@@ -160,6 +162,9 @@ osi_trace_directory_token_stack_swap(struct osi_trace_directory_token_stack * st
     stack->tokens[j] = tmp;
 }
 
+/*
+ * rewrite filter expression token stack to optimize query performance
+ */
 osi_static osi_result
 osi_trace_directory_token_stack_optimize(struct osi_trace_directory_token_stack * stack)
 {
@@ -191,20 +196,40 @@ osi_trace_directory_token_stack_optimize(struct osi_trace_directory_token_stack 
     return res;
 }
 
+/*
+ * validate passed in directory query filter to make sure it meets certain guidelines:
+ *
+ *  - to keep computational complexity in check, we limit to one telescoping wildcard (*,+)
+ *  - filter cannot have more than 16 tokens
+ *
+ * [IN] stack  -- pointer to filter token stack object
+ *
+ * returns:
+ *   OSI_OK if stack validates
+ *   OSI_FAIL if stack does not validate
+ */
 osi_static osi_result
-osi_trace_directory_token_stack_verify(struct osi_trace_directory_token_stack * stack)
+osi_trace_directory_token_stack_validate(struct osi_trace_directory_token_stack * stack)
 {
     osi_result res = OSI_OK;
+    const char * tok;
     int i;
     int wildcards = 0;
     int non_telescoping = 0;
+    int telescoping = 0;
 
     for (i = 0; i < stack->depth; i++) {
-	if (osi_compiler_expect_false(stack->tokens[i] == osi_NULL)) {
+        tok = stack->tokens[i];
+	if (osi_compiler_expect_false(tok == osi_NULL)) {
 	    res = OSI_FAIL;
 	    break;
 	}
-	if (!osi_string_cmp(stack->tokens[i], "*")) {
+	if (!osi_string_cmp(tok, "*")) {
+            telescoping++;
+	    wildcards++;
+	} else if (!osi_string_cmp(tok, "?")) {
+	    wildcards++;
+	    non_telescoping++;
 	} else {
 	    non_telescoping++;
 	}
@@ -214,9 +239,22 @@ osi_trace_directory_token_stack_verify(struct osi_trace_directory_token_stack * 
 	res = OSI_TRACE_DIRECTORY_ERROR_PROBE_FILTER_INVALID;
     }
 
+    if (osi_compiler_expect_false(telescoping > 1)) {
+	res = OSI_TRACE_DIRECTORY_ERROR_PROBE_FILTER_INVALID;
+    }
+
     return res;
 }
 
+/*
+ * evaluate a leaf node against a token stack
+ *
+ * [IN] w  -- pointer to walker state structure
+ *
+ * returns:
+ *   OSI_OK if leaf matches token stack
+ *   OSI_FAIL otherwise
+ */
 osi_static osi_result
 osi_trace_directory_token_stack_eval(struct osi_trace_directory_tree_walker * w)
 {
@@ -232,6 +270,38 @@ osi_trace_directory_token_stack_eval(struct osi_trace_directory_tree_walker * w)
 	goto error;
     }
 
+    if (w->stack[depth].telescoping_wildcard) {
+	while ((n.node != osi_NULL)) {
+	    if (!osi_string_cmp(w->tok.tokens[tok], "*")) {
+		res = OSI_OK;
+		goto done;
+	    }
+	    if (osi_string_cmp(w->tok.tokens[tok], n.node->probe_name) &&
+		osi_string_cmp(w->tok.tokens[tok], "?")) {
+		goto error;
+	    }
+	    if (w->tok.bound[depth]) {
+		goto error;
+	    }
+	    n.node = n.node->parent;
+	    if (osi_compiler_expect_false(!tok || !depth)) {
+		goto error;
+	    }
+	    tok--;
+	    depth--;
+	}
+    } else {
+	/* filter expression contains no telescoping wildcards ; just verify that all tokens are bound */
+	if (w->depth == w->tok.depth) {
+	    res = OSI_OK;
+	} else if (((w->depth + 1) == w->tok.depth) &&
+		   !osi_string_cmp(w->tok.tokens[tok], "*")) {
+	    /* special case where filter is a.b.c.*, and probe name is x.y.z */
+	    res = OSI_OK;
+	}
+    }
+
+#if 0
     while (n.node != osi_NULL) {
 	if (!osi_string_cmp(w->tok.tokens[tok], "*")) {
 	    /* telescoping wildcard */
@@ -261,7 +331,9 @@ osi_trace_directory_token_stack_eval(struct osi_trace_directory_tree_walker * w)
 	    }
 	}
     }
+#endif
 
+ done:
  error:
     return res;
 }
@@ -273,7 +345,7 @@ osi_trace_directory_search_token(osi_trace_directory_node_ptr_t p,
 				 const char * tok,
 				 osi_trace_directory_node_ptr_t * node)
 {
-    osi_result res = OSI_FAIL;
+    osi_result res = OSI_TRACE_DIRECTORY_ERROR_TOKEN_NO_MATCH;
     osi_trace_directory_node_ptr_t n;
     osi_uint32 hash, idx;
 
@@ -327,6 +399,7 @@ osi_trace_directory_walk_first_child(struct osi_trace_directory_tree_walker * w)
 	osi_list_First(&w->stack[w->depth].ptr.intermed->hash_chains[w->stack[w->depth].idx],
 		       struct osi_trace_directory_node,
 		       hash_chain);
+    w->stack[w->depth+1].initialized = 0;
 
  error:
     return res;
@@ -348,6 +421,7 @@ osi_trace_directory_walk_next_child(struct osi_trace_directory_tree_walker * w)
 	    osi_list_Next(w->stack[w->depth+1].ptr.node,
 			  struct osi_trace_directory_node,
 			  hash_chain);
+        w->stack[w->depth+1].initialized = 0;
     }
 
     return res;
@@ -379,7 +453,7 @@ osi_trace_directory_walk_begin(struct osi_trace_directory_tree_walker * w,
 	goto error;
     }
 
-    res = osi_trace_directory_token_stack_verify(&w->tok);
+    res = osi_trace_directory_token_stack_validate(&w->tok);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
 	goto error;
     }
@@ -395,6 +469,7 @@ osi_trace_directory_walk_begin(struct osi_trace_directory_tree_walker * w,
 	w->stack[0].telescoping_wildcard = 1;
     } else if (!osi_string_cmp(tok, "?")) {
 	w->stack[0].traverse_all = 1;
+	w->tok.bound[0] = 1;
     } else {
 	w->tok.bound[0] = 1;
     }
@@ -408,36 +483,48 @@ osi_trace_directory_walk_recurse(struct osi_trace_directory_tree_walker * w)
 {
     osi_result res = OSI_OK;
     const char * tok;
-    int depth;
 
-    depth = w->depth + 1;
-    tok = w->tok.tokens[w->stack[depth-1].min_tok_idx];
+    tok = w->tok.tokens[w->stack[w->depth].min_tok_idx];
     if (osi_compiler_expect_false(tok == osi_NULL)) {
-	res = OSI_FAIL;
-    } else if (!osi_string_cmp(tok, "*") ||
-	       !osi_string_cmp(tok, "+")) {
+        /* we catch this case inside osi_trace_directory_walk() */
+	res = OSI_OK;
+    } else if (!osi_string_cmp(tok, "*")) {
 	/* telescoping wildcard */
-	w->stack[depth].traverse_all = 1;
-	w->stack[depth].idx = 0;
-	w->stack[depth].min_tok_idx = w->stack[depth-1].min_tok_idx;
-	w->stack[depth].telescoping_wildcard = 1;
-	res = osi_trace_directory_walk_first_child(w);
+        if (!w->stack[w->depth].initialized) {
+	    w->stack[w->depth].initialized = 1;
+	    w->stack[w->depth].traverse_all = 1;
+	    w->stack[w->depth].idx = 0;
+	    w->stack[w->depth].telescoping_wildcard = 1;
+	    w->stack[w->depth+1].telescoping_wildcard = 1;
+	    w->stack[w->depth+1].min_tok_idx = w->stack[w->depth].min_tok_idx;
+	    res = osi_trace_directory_walk_first_child(w);
+	    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+		res = OSI_TRACE_DIRECTORY_ERROR_NO_CHILDREN;
+	    }
+	}
     } else if (!osi_string_cmp(tok, "?")) {
 	/* non-telescoping wildcard */
-	w->stack[depth].traverse_all = 1;
-	w->stack[depth].idx = 0;
-	w->stack[depth].min_tok_idx = w->stack[depth-1].min_tok_idx + 1;
-	w->stack[depth].telescoping_wildcard = w->stack[depth-1].telescoping_wildcard;
-	res = osi_trace_directory_walk_first_child(w);
+	if (!w->stack[w->depth].initialized) {
+	    w->tok.bound[w->depth] = 1;
+	    w->stack[w->depth].initialized = 1;
+	    w->stack[w->depth].traverse_all = 1;
+	    w->stack[w->depth].idx = 0;
+	    w->stack[w->depth+1].min_tok_idx = w->stack[w->depth].min_tok_idx + 1;
+	    w->stack[w->depth+1].telescoping_wildcard = w->stack[w->depth].telescoping_wildcard;
+	    res = osi_trace_directory_walk_first_child(w);
+	    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+		res = OSI_TRACE_DIRECTORY_ERROR_NO_CHILDREN;
+	    }
+	}
     } else {
 	/* non-wildcard */
-	w->tok.bound[depth-1] = 1;
-	w->stack[depth].traverse_all = 0;
-	w->stack[depth].min_tok_idx = w->stack[depth-1].min_tok_idx + 1;
-	w->stack[depth].telescoping_wildcard = w->stack[depth-1].telescoping_wildcard;
-	res = osi_trace_directory_search_token(w->stack[depth-1].ptr,
+	w->tok.bound[w->depth] = 1;
+	w->stack[w->depth].traverse_all = 0;
+	w->stack[w->depth+1].min_tok_idx = w->stack[w->depth].min_tok_idx + 1;
+	w->stack[w->depth+1].telescoping_wildcard = w->stack[w->depth].telescoping_wildcard;
+	res = osi_trace_directory_search_token(w->stack[w->depth].ptr,
 					       tok,
-					       &w->stack[depth].ptr);
+					       &w->stack[w->depth+1].ptr);
     }
     w->depth++;
 
@@ -448,6 +535,8 @@ osi_static osi_result
 osi_trace_directory_walk_up(struct osi_trace_directory_tree_walker * w)
 {
     osi_result res = OSI_OK;
+
+    w->stack[w->depth+1].initialized = 0;
 
     if (osi_compiler_expect_true(w->depth > 0)) {
 	w->depth--;
@@ -461,41 +550,61 @@ osi_trace_directory_walk_up(struct osi_trace_directory_tree_walker * w)
 osi_static osi_result
 osi_trace_directory_walk_leaf(struct osi_trace_directory_tree_walker * w)
 {
-    osi_result res = OSI_OK;
+    osi_result res, code = OSI_OK;
     int i;
     const char * tok;
 
-    if (w->stack[w->depth].telescoping_wildcard) {
-	res = osi_trace_directory_token_stack_eval(w);
-	if (OSI_RESULT_OK(res)) {
-	    res = (*w->action.fp)(w->stack[w->depth].ptr.leaf->probe,
-				  w->action.data);
-	}
-    } else {
-	res = (*w->action.fp)(w->stack[w->depth].ptr.leaf->probe,
+    res = osi_trace_directory_token_stack_eval(w);
+    if (OSI_RESULT_OK(res)) {
+	code = (*w->action.fp)(w->stack[w->depth].ptr.leaf->probe,
 			      w->action.data);
     }
 
-    return res;
+    return code;
 }
 
-/* main driver for walking the tree */
+/* 
+ * main driver for walking the forest
+ *
+ * this algorithm still has a few minor flaws:
+ *   - if there are any intermediate nodes with no children, the traversal will abort
+ *   - if tokens[0] is not found, OSI_FAIL will be returned
+ *
+ * returns:
+ *   OSI_OK on traversal success
+ *   OSI_FAIL on a traversal error
+ */
 osi_static osi_result
 osi_trace_directory_walk(struct osi_trace_directory_tree_walker * w)
 {
-    osi_result res = OSI_OK;
+    osi_result res, code = OSI_OK;
 
     while (1) {
-	/* walk down to a leaf */
+	/* walk down to a leaf, or until we run out of tokens to process */
 	while (w->stack[w->depth].ptr.node->node_type != OSI_TRACE_DIRECTORY_NODE_LEAF) {
+	    if (osi_compiler_expect_false(w->tok.tokens[w->stack[w->depth].min_tok_idx] == osi_NULL)) {
+		break;
+	    }
 	    res = osi_trace_directory_walk_recurse(w);
 	    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+		if (res == OSI_TRACE_DIRECTORY_ERROR_NO_CHILDREN) {
+		    /* in this unlikely event, let the sideways traversal code below handle things */
+		    break;
+		}
+		if (res != OSI_TRACE_DIRECTORY_ERROR_TOKEN_NO_MATCH) {
+		    code = res;
+		}
 		goto done;
 	    }
 	}
 
-	/* process the leaf */
-	osi_trace_directory_walk_leaf(w);
+	/* if we made it to a leaf, process it */
+        if (w->stack[w->depth].ptr.node->node_type == OSI_TRACE_DIRECTORY_NODE_LEAF) {
+	    res = osi_trace_directory_walk_leaf(w);
+	    if (OSI_RESULT_FAIL(res)) {
+		code = res;
+	    }
+	}
 
 	/* walk across the tree */
 	do {
@@ -513,11 +622,10 @@ osi_trace_directory_walk(struct osi_trace_directory_tree_walker * w)
 		continue;
 	    }
 	} while (OSI_RESULT_FAIL(res));
-	    
     }
 
  done:
-    return res;
+    return code;
 }
 
 /* add an intermediate node to the tree */
@@ -614,7 +722,7 @@ osi_trace_directory_probe_register_internal(const char * probe_name,
     struct osi_trace_probe_name_extractor * ext;
     const char *tok, *ntok;
     int found;
-#if !defined(OSI_SMALLSTACK_ENV)
+#if !defined(OSI_ENV_SMALLSTACK)
     struct osi_trace_probe_name_extractor ext_l;
 #endif
 
@@ -637,15 +745,15 @@ osi_trace_directory_probe_register_internal(const char * probe_name,
      *  goto next
      */
 
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     ext = (struct osi_trace_probe_name_extractor *)
 	osi_mem_alloc_nosleep(sizeof(struct osi_trace_probe_name_extractor));
     if (osi_compiler_expect_false(ext == osi_NULL)) {
 	goto error;
     }
-#else /* !OSI_SMALLSTACK_ENV */
+#else /* !OSI_ENV_SMALLSTACK */
     ext = &ext_l;
-#endif /* !OSI_SMALLSTACK_ENV */
+#endif /* !OSI_ENV_SMALLSTACK */
 
     osi_trace_probe_name_extract_begin(ext, probe_name);
 
@@ -694,11 +802,11 @@ osi_trace_directory_probe_register_internal(const char * probe_name,
     osi_rwlock_Unlock(&osi_trace_directory.lock);
 
  error:
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     if (osi_compiler_expect_true(ext != osi_NULL)) {
 	osi_mem_free(ext, sizeof(struct osi_trace_probe_name_extractor));
     }
-#endif /* OSI_SMALLSTACK_ENV */
+#endif /* OSI_ENV_SMALLSTACK */
     return res;
 }
 
@@ -720,6 +828,22 @@ osi_trace_directory_probe_id_alloc(osi_trace_probe_id_t * probe_id)
     return OSI_OK;
 }
 
+/*
+ * get the current maximum probe id in use
+ * WARNING: not synchronized; treat answer as approximate
+ *
+ * [OUT] probe_id  -- address in which to store approximate max id
+ *
+ * returns:
+ *   OSI_OK always
+ */
+osi_result
+osi_trace_directory_probe_id_max(osi_trace_probe_id_t * probe_id)
+{
+    *probe_id = osi_trace_directory.id_counter;
+    return OSI_OK;
+}
+
 /* map a probe name to a probe handle */
 osi_result
 osi_trace_directory_N2P(const char * probe_name, osi_trace_probe_t * probe)
@@ -729,19 +853,19 @@ osi_trace_directory_N2P(const char * probe_name, osi_trace_probe_t * probe)
     struct osi_trace_probe_name_extractor * ext;
     char * tok;
     int leaf_found;
-#if !defined(OSI_SMALLSTACK_ENV)
+#if !defined(OSI_ENV_SMALLSTACK)
     struct osi_trace_probe_name_extractor ext_l;
 #endif
 
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     ext = (struct osi_trace_probe_name_extractor *)
 	osi_mem_alloc(sizeof(struct osi_trace_probe_name_extractor));
     if (osi_compiler_expect_false(ext == osi_NULL)) {
 	goto error;
     }
-#else /* !OSI_SMALLSTACK_ENV */
+#else /* !OSI_ENV_SMALLSTACK */
     ext = &ext_l;
-#endif /* !OSI_SMALLSTACK_ENV */
+#endif /* !OSI_ENV_SMALLSTACK */
 
     osi_trace_probe_name_extract_begin(ext, probe_name);
 
@@ -771,11 +895,11 @@ osi_trace_directory_N2P(const char * probe_name, osi_trace_probe_t * probe)
     osi_rwlock_Unlock(&osi_trace_directory.lock);
 
  error:
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     if (osi_compiler_expect_true(ext != osi_NULL)) {
 	osi_mem_free(ext, sizeof(struct osi_trace_probe_name_extractor));
     }
-#endif /* OSI_SMALLSTACK_ENV */
+#endif /* OSI_ENV_SMALLSTACK */
     return res;
 }
 
@@ -786,7 +910,7 @@ osi_trace_directory_I2N(osi_trace_probe_id_t probe_id, char * probe_name, size_t
     osi_result res = OSI_OK;
     osi_trace_directory_node_ptr_t n;
     char ** tokens;
-#if !defined(OSI_SMALLSTACK_ENV)
+#if !defined(OSI_ENV_SMALLSTACK)
     char * tokens_l[OSI_TRACE_MAX_PROBE_TREE_DEPTH];
 #endif
     int depth = OSI_TRACE_MAX_PROBE_TREE_DEPTH;
@@ -794,14 +918,14 @@ osi_trace_directory_I2N(osi_trace_probe_id_t probe_id, char * probe_name, size_t
     probe_name[0] = '\0';
 
 
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     tokens = (char **) osi_mem_alloc(sizeof(char *) * OSI_TRACE_MAX_PROBE_TREE_DEPTH);
     if (osi_compiler_expect_false(tokens == osi_NULL)) {
 	goto error;
     }
-#else /* !OSI_SMALLSTACK_ENV */
+#else /* !OSI_ENV_SMALLSTACK */
     tokens = tokens_l;
-#endif /* !OSI_SMALLSTACK_ENV */
+#endif /* !OSI_ENV_SMALLSTACK */
 
     osi_rwlock_RdLock(&osi_trace_directory.lock);
     if (osi_compiler_expect_true(probe_id <= osi_trace_directory.id_counter)) {
@@ -823,11 +947,11 @@ osi_trace_directory_I2N(osi_trace_probe_id_t probe_id, char * probe_name, size_t
     osi_rwlock_Unlock(&osi_trace_directory.lock);
 
  error:
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     if (osi_compiler_expect_true(tokens != osi_NULL)) {
 	osi_mem_free(tokens, sizeof(char *) * OSI_TRACE_MAX_PROBE_TREE_DEPTH);
     }
-#endif /* OSI_SMALLSTACK_ENV */
+#endif /* OSI_ENV_SMALLSTACK */
     return res;
 }
 
@@ -856,12 +980,12 @@ osi_trace_directory_foreach(const char * filter,
     osi_result res = OSI_OK;
     struct osi_trace_directory_tree_walker * walk;
     struct osi_trace_probe_name_extractor * ext;
-#if !defined(OSI_SMALLSTACK_ENV)
+#if !defined(OSI_ENV_SMALLSTACK)
     struct osi_trace_directory_tree_walker walk_l;
     struct osi_trace_probe_name_extractor ext_l;
 #endif
 
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     walk = osi_mem_alloc(sizeof(struct osi_trace_directory_tree_walker));
     if (osi_compiler_expect_false(walk == osi_NULL)) {
 	res = OSI_FAIL;
@@ -885,7 +1009,7 @@ osi_trace_directory_foreach(const char * filter,
     res = osi_trace_directory_walk(walk);
 
  error:
-#if defined(OSI_SMALLSTACK_ENV)
+#if defined(OSI_ENV_SMALLSTACK)
     if (osi_compiler_expect_true(walk != osi_NULL)) {
 	osi_mem_free(walk, sizeof(struct osi_trace_directory_tree_walker));
     }
@@ -948,7 +1072,7 @@ osi_trace_directory_PkgInit(void)
 	osi_list_Init(&osi_trace_directory.root.hash_chains[i]);
     }
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     code = osi_trace_directory_msg_PkgInit();
 #endif
 
@@ -959,7 +1083,7 @@ osi_result
 osi_trace_directory_PkgShutdown(void)
 {
     osi_result code = OSI_OK;
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
     code = osi_trace_directory_msg_PkgShutdown();
 #endif
     return code;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,10 +8,12 @@
  */
 
 #ifndef _OSI_SOLARIS_KMEM_LOCAL_H
-#define	_OSI_SOLARIS_KMEM_LOCAL_H
+#define _OSI_SOLARIS_KMEM_LOCAL_H 1
 
 /*
+ * osi
  * cpu-local memory support
+ * solaris kernel implementation
  */
 
 
@@ -26,8 +28,8 @@
 #include <osi/COMMON/mem_local.h>
 
 
-#define osi_mem_local_os_PkgInit()       (OSI_OK)
-#define osi_mem_local_os_PkgShutdown()   (OSI_OK)
+#define osi_mem_local_os_PkgInit       osi_null_init_func
+#define osi_mem_local_os_PkgShutdown   osi_null_fini_func
 
 
 #endif /* _OSI_SOLARIS_KMEM_LOCAL_H */

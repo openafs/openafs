@@ -14,8 +14,7 @@
  * kernel support
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_kernel.h>
@@ -23,7 +22,6 @@
 #include <osi/osi_object_cache.h>
 #include <osi/osi_rwlock.h>
 #include <trace/directory.h>
-#include <trace/common/options.h>
 #include <trace/mail.h>
 #include <trace/mail/msg.h>
 #include <trace/KERNEL/gen_rgy.h>
@@ -69,7 +67,17 @@ struct osi_trace_gen_rgy {
     osi_trace_generator_registration_t * osi_volatile gen[OSI_TRACE_GEN_RGY_MAX_ID_KERNEL];
     struct osi_trace_gen_rgy_ptype_list gen_by_ptype[osi_ProgramType_Max_Id];
     osi_fast_uint gen_inuse[OSI_TRACE_GEN_RGY_INUSE_VEC_LEN];
-    osi_list_head_volatile hold_cleanup_list;
+    /*
+     * END sync block
+     */
+
+    /*
+     * BEGIN sync block
+     * the following fields are synchronized by osi_trace_gen_rgy.gc_lock
+     */
+    osi_list_head_volatile hold_gc_list;
+    osi_list_head_volatile gen_gc_list;
+    osi_fast_uint osi_volatile gc_flag;
     /*
      * END sync block
      */
@@ -83,6 +91,7 @@ struct osi_trace_gen_rgy {
      * END sync block
      */
 
+    osi_mutex_t gc_lock;
     osi_rwlock_t lock;
 };
 
@@ -90,8 +99,13 @@ struct osi_trace_gen_rgy osi_trace_gen_rgy;
 
 typedef osi_uint32 osi_trace_gen_rgy_idx_t;
 
+/*
+ * gen_rgy_lookup flags
+ */
 #define OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE 0
 #define OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE 1
+#define OSI_TRACE_GEN_RGY_LOOKUP_DROP_GEN_LOCK 0
+#define OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK 1
 
 
 /* static prototypes */
@@ -122,15 +136,12 @@ osi_static osi_result
 osi_trace_gen_rgy_register_internal(osi_trace_generator_registration_t * gen,
 				    osi_trace_gen_id_t * gen_id_out);
 osi_static osi_result
-osi_trace_gen_rgy_unregister_internal(osi_trace_generator_registration_t * gen);
-osi_static osi_result
 osi_trace_gen_rgy_alloc(osi_trace_generator_registration_t ** gen_out);
-osi_static osi_result
-__osi_trace_gen_rgy_really_free(void * buf);
 osi_static osi_result 
 osi_trace_gen_rgy_register_notify(osi_trace_generator_registration_t * gen);
 osi_static osi_result 
-osi_trace_gen_rgy_unregister_notify(osi_trace_generator_registration_t * gen);
+osi_trace_gen_rgy_unregister_notify(osi_trace_gen_id_t,
+				    osi_trace_generator_address_t *);
 osi_static void
 osi_trace_gen_rgy_pid_hash_add(osi_trace_generator_registration_t * gen);
 osi_static void
@@ -138,29 +149,40 @@ osi_trace_gen_rgy_pid_hash_del(osi_trace_generator_registration_t * gen);
 osi_static osi_result
 osi_trace_gen_rgy_lookup(osi_trace_gen_id_t gen_id,
 			 osi_trace_generator_registration_t ** gen_out,
-			 int allow_offline);
+			 int allow_offline,
+			 int keep_lock);
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_pid(osi_uint32 pid, 
 				osi_trace_generator_registration_t ** gen_out,
-				int allow_offline);
+				int allow_offline,
+				int keep_lock);
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_ptype(osi_uint32 ptype,
 				  osi_trace_generator_registration_t ** gen_out,
-				  int allow_offline);
+				  int allow_offline,
+				  int keep_lock);
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_addr(osi_trace_generator_address_t * gen_addr,
 				 osi_trace_generator_registration_t ** gen_out,
-				 int allow_offline);
+				 int allow_offline,
+				 int keep_lock);
 osi_static osi_result
 osi_trace_gen_rgy_hold_add(osi_trace_generator_registration_t * holder,
 			   osi_trace_generator_registration_t * holdee);
 osi_static osi_result
 osi_trace_gen_rgy_hold_del(osi_trace_generator_registration_t * holder,
 			   osi_trace_generator_registration_t * holdee);
-osi_static osi_result
+osi_static void
 osi_trace_gen_rgy_hold_bulk_free_r(osi_trace_generator_registration_t *);
 osi_static osi_result
-osi_trace_gen_rgy_hold_gc(void);
+osi_trace_gen_rgy_hold_gc(osi_list_head * gc_list);
+
+osi_static osi_result
+osi_trace_gen_rgy_gen_gc(osi_list_head * gc_list);
+
+osi_static osi_result
+osi_trace_gen_rgy_gc(void);
+
 
 /*
  * generator registration mem object constructor
@@ -170,8 +192,8 @@ osi_trace_gen_rgy_ctor(void * buf, void * sdata, int flags)
 {
     osi_trace_generator_registration_t * gen = buf;
 
-    osi_mutex_Init(&gen->lock, &osi_trace_common_options.mutex_opts);
-    osi_refcnt_init(&gen->refcnt, 0);
+    osi_mutex_Init(&gen->lock, 
+		   osi_trace_impl_mutex_opts());
     osi_trace_mailbox_init(&gen->mailbox);
     gen->id = 0;
     gen->state = OSI_TRACE_GEN_STATE_INVALID;
@@ -200,7 +222,6 @@ osi_trace_gen_rgy_dtor(void * buf, void * sdata)
 
     osi_trace_mailbox_unlink(&gen->mailbox);
     osi_trace_mailbox_destroy(&gen->mailbox);
-    osi_refcnt_destroy(&gen->refcnt);
     osi_mutex_Destroy(&gen->lock);
     gen->id = 0;
     gen->state = OSI_TRACE_GEN_STATE_INVALID;
@@ -252,7 +273,7 @@ osi_trace_gen_rgy_idx(osi_trace_gen_id_t gen_id,
     osi_result res = OSI_OK;
 
     *idx_out = gen_id - 1;
-    if (osi_compiler_expect_false((gen_id == OSI_TRACE_GEN_RGY_KERNEL_ID) &&
+    if (osi_compiler_expect_false((gen_id == OSI_TRACE_GEN_RGY_KERNEL_ID) ||
 				  (gen_id > OSI_TRACE_GEN_RGY_MAX_ID_KERNEL))) {
 	res = OSI_FAIL;
     }
@@ -350,7 +371,7 @@ osi_trace_gen_rgy_find_zero_bit(osi_fast_uint bitvec, osi_uint32 * bitnum_out)
 /*
  * allocate an inuse element
  *
- * [OUT] id_out
+ * [OUT] id_out  -- address in which to return gen rgy index
  *
  * returns:
  *   OSI_OK on success
@@ -378,6 +399,7 @@ osi_trace_gen_rgy_inuse_alloc(osi_trace_gen_rgy_idx_t * id_out)
 	    break;
 	}
     }
+    /* bitmap offsets are gen ids; map to an index value */
     *id_out = id;
 
     return res;
@@ -386,7 +408,11 @@ osi_trace_gen_rgy_inuse_alloc(osi_trace_gen_rgy_idx_t * id_out)
 /*
  * mark a gen id in use
  *
- * [IN] id
+ * [IN] id  -- gen rgy index id
+ *
+ * notes:
+ *   please note that this interface is used by osi_trace_gen_rgy_PkgInit()
+ *   to mark invalid gen id's as in-use
  *
  * returns:
  *   see:
@@ -447,6 +473,8 @@ osi_trace_gen_rgy_register_internal(osi_trace_generator_registration_t * gen,
     osi_trace_gen_rgy_idx_t idx;
 
     osi_rwlock_WrLock(&osi_trace_gen_rgy.lock);
+
+    /* allocate a registry index */
     res = osi_trace_gen_rgy_inuse_alloc(&idx);
     if (OSI_RESULT_FAIL(res)) {
 	osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
@@ -454,7 +482,14 @@ osi_trace_gen_rgy_register_internal(osi_trace_generator_registration_t * gen,
     }
     gen_id = idx + 1;
     *gen_id_out = gen->id = gen_id;
-    gen->state = OSI_TRACE_GEN_STATE_ONLINE;
+
+    /*
+     * gen state is set to offline until all
+     * registration steps have been completed 
+     */
+    gen->state = OSI_TRACE_GEN_STATE_OFFLINE;
+
+    /* register with core data structures */
     osi_trace_gen_rgy.gen[idx] = gen;
     osi_trace_gen_rgy_ptype_list_add_r(gen);
     osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
@@ -465,45 +500,6 @@ osi_trace_gen_rgy_register_internal(osi_trace_generator_registration_t * gen,
 
  idx_exhausted:
     return res;
-}
-
-/*
- * unregister a gen from the core data structures
- *
- * [IN] gen          -- gen object pointer
- *
- * preconditions:
- *   gen->state is online
- *
- * postconditions:
- *   gen->state set to offline
- *   mailbox gen id association destroyed
- *
- * returns:
- *   OSI_OK on success
- *   OSI_FAIL if preconditions not met
- */
-osi_static osi_result
-osi_trace_gen_rgy_unregister_internal(osi_trace_generator_registration_t * gen)
-{
-    osi_result res = OSI_OK;
-
-    osi_mutex_Lock(&gen->lock);
-    if (gen->state != OSI_TRACE_GEN_STATE_ONLINE) {
-	goto racing;
-    }
-    gen->state = OSI_TRACE_GEN_STATE_OFFLINE;
-    osi_mutex_Unlock(&gen->lock);
-
-    (void)osi_trace_mailbox_gen_id_set(&gen->mailbox, OSI_TRACE_GEN_RGY_KERNEL_ID);
-
- done:
-    return res;
-
- racing:
-    osi_mutex_Unlock(&gen->lock);
-    res = OSI_FAIL;
-    goto done;
 }
 
 /*
@@ -531,7 +527,7 @@ osi_trace_gen_rgy_alloc(osi_trace_generator_registration_t ** gen_out)
 	goto error;
     }
 
-    osi_refcnt_reset(&gen->refcnt, 1);
+    gen->refcnt = 1;
 
  error:
     return res;
@@ -545,97 +541,61 @@ osi_trace_gen_rgy_alloc(osi_trace_generator_registration_t ** gen_out)
  * gen objects cannot be freed without a great deal of care.
  * we use refcounting to determine whether or not it is safe
  * to free a gen.  refs can be held by the postmaster, internal
- * gen_rgy data structures, and userspace contexts.  whenever
- * a ref is put back, the following loop happens:
+ * gen_rgy data structures, and userspace contexts (by way of
+ * gen hold objects).  whenever a ref is put back, the following 
+ * happens:
  *
- * 1) atomically decrement gen->refcount and compare new value to zero
- *    if the value is NOT zero goto 2, else continue on to 1.1:
- * 1.1)   acquire osi_trace_gen_rgy.lock exclusively
- * 1.2)   atomically increment gen->refcount and compare new value to one
- *        if the value is NOT one goto 1.3, else continue on to 1.2.1:
- * 1.2.1)     mark the corresponding inuse vector bit zero
- * 1.2.2)     free the gen object back to the mem_object_cache
- * 1.2.3)     goto 2
- *
- * 1.3)   release osi_trace_gen_rgy.lock
- * 1.4)   goto 1
- *
- * 2) terminate on success code OSI_OK
- *
+ *  1) acquire gen->lock
+ *  2) decrement refcount
+ *  3) if refcount is nonzero, go to (12)
+ *  4)  set gen->state to OSI_TRACE_GEN_STATE_GC
+ *  5)  acquire osi_trace_gen_rgy.gc_lock
+ *  6)  enqueue gen onto osi_trace_gen_rgy.gen_gc_list
+ *  7)  pivot gen->holds onto osi_trace_gen_rgy.hold_gc_list
+ *  8)  set osi_trace_gen_rgy.gc_flag to 1
+ *  9)  drop gen->lock
+ * 10)  release osi_trace_gen_rgy.gc_lock
+ * 11)  return
+ * 12) drop gen->lock
+ * 13) return
  */
 
 /*
- * internal function to really free a truly zero ref'd gen
+ * internal function to enqueue zero ref'd gens onto the gc list
  *
- * [IN] buf  -- opaque pointer to gen object
+ * [IN] gen  -- pointer to gen object
  *
  * preconditions:
- *   osi_trace_gen_rgy.lock held exclusively
+ *   gen->lock held
  *
  * postconditions:
- *   osi_trace_gen_rgy.lock NOT held
- *
- * returns:
- *   OSI_OK always
+ *   gen->state set to gc
+ *   gen and gen's holds placed on gc lists
+ *   gen->lock dropped
  */
-osi_static osi_result
-__osi_trace_gen_rgy_really_free(void * buf)
+void
+__osi_trace_gen_rgy_free(osi_trace_generator_registration_t * gen)
 {
-    osi_result res = OSI_OK;
-    osi_trace_gen_rgy_idx_t idx;
-    osi_trace_generator_registration_t * gen = buf;
+    gen->state = OSI_TRACE_GEN_STATE_GC;
 
-    if (OSI_RESULT_OK(osi_trace_gen_rgy_idx(gen->id, &idx))) {
-	osi_trace_gen_rgy_inuse_unmark_r(idx);
-	osi_trace_gen_rgy.gen[idx] = osi_NULL;
-    }
-
-    osi_trace_gen_rgy_ptype_list_del_r(gen);
-    osi_trace_gen_rgy_pid_hash_del(gen);
+    osi_mutex_Lock(&osi_trace_gen_rgy.gc_lock);
+    osi_list_Append(&osi_trace_gen_rgy.gen_gc_list,
+		    gen,
+		    osi_trace_generator_registration_t,
+		    gc_list);
     osi_trace_gen_rgy_hold_bulk_free_r(gen);
-
-    osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
-
-    osi_mem_object_cache_free(osi_trace_gen_rgy_cache, gen);
-
-    return res;
-}
-
-/*
- * internal function to attempt freeing a zero ref'd gen
- *
- * [IN] buf  -- opaque pointer to gen object
- *
- * preconditions:
- *   caller MUST NOT hold any gen_rgy locks
- *
- * returns:
- *   OSI_OK if we successfully destroyed the object
- *   OSI_FAIL if we're racing another thread
- */
-osi_result
-__osi_trace_gen_rgy_free(void * buf)
-{
-    osi_result res;
-    int code;
-    osi_trace_generator_registration_t * gen = buf;
-
-    osi_rwlock_WrLock(&osi_trace_gen_rgy.lock);
-    code = osi_refcnt_inc_action(&gen->refcnt,
-				 1,
-				 &__osi_trace_gen_rgy_really_free,
-				 gen,
-				 &res);
-    if (code) {
-	/* really free action fired */
-	res = OSI_OK;
-    } else {
-	/* we raced another thread, and really free didn't fire */
-	osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
-	res = OSI_FAIL;
+    if (!osi_trace_gen_rgy.gc_flag) {
+	osi_trace_gen_rgy.gc_flag = 1;
     }
 
-    return (code) ? OSI_OK : OSI_FAIL;
+    /* 
+     * ordering of the following two lock drops is extremely important;
+     * if the ordering were reversed, it would be possible for another
+     * CPU to race and deallocate the object before we had a chance
+     * to drop gen->lock.
+     */
+    osi_mutex_Unlock(&gen->lock);
+    osi_mutex_Unlock(&osi_trace_gen_rgy.gc_lock);
 }
 
 /*
@@ -707,7 +667,8 @@ osi_trace_gen_rgy_register_notify(osi_trace_generator_registration_t * gen)
  *      osi_trace_mail_send
  */
 osi_static osi_result 
-osi_trace_gen_rgy_unregister_notify(osi_trace_generator_registration_t * gen)
+osi_trace_gen_rgy_unregister_notify(osi_trace_gen_id_t gen_id,
+				    osi_trace_generator_address_t * addr)
 {
     osi_trace_mail_msg_gen_down_t * req;
     osi_trace_mail_message_t * msg = osi_NULL;
@@ -724,9 +685,9 @@ osi_trace_gen_rgy_unregister_notify(osi_trace_generator_registration_t * gen)
     req->spares[1] = 0;
     req->flags = 0;
     req->gen_state = 0;
-    req->gen_id = (osi_uint32) gen->id;
-    req->gen_type = (osi_uint16) gen->addr.programType;
-    req->gen_pid = (osi_uint32) gen->addr.pid;
+    req->gen_id = gen_id;
+    req->gen_type = (osi_uint16) addr->programType;
+    req->gen_pid = (osi_uint32) addr->pid;
 
     code = osi_trace_mail_prepare_send(msg,
 				       OSI_TRACE_GEN_RGY_MCAST_CONSUMER,
@@ -799,6 +760,7 @@ osi_trace_gen_rgy_pid_hash_del(osi_trace_generator_registration_t * gen)
  * [IN] gen_id         -- generator id
  * [OUT] gen_out       -- gen object pointer
  * [IN] allow_offline  -- allow lookup of an offline gen
+ * [IN] keep_lock      -- return with gen->lock held
  *
  * postconditions:
  *   ref held on gen
@@ -810,7 +772,8 @@ osi_trace_gen_rgy_pid_hash_del(osi_trace_generator_registration_t * gen)
 osi_static osi_result
 osi_trace_gen_rgy_lookup(osi_trace_gen_id_t gen_id,
 			 osi_trace_generator_registration_t ** gen_out,
-			 int allow_offline)
+			 int allow_offline,
+			 int keep_lock)
 {
     osi_result res;
     osi_uint32 idx;
@@ -823,14 +786,20 @@ osi_trace_gen_rgy_lookup(osi_trace_gen_id_t gen_id,
 
     res = OSI_FAIL;
     osi_rwlock_RdLock(&osi_trace_gen_rgy.lock);
-    *gen_out = gen = osi_trace_gen_rgy.gen[idx];
+    gen = osi_trace_gen_rgy.gen[idx];
     if (osi_compiler_expect_true(gen != osi_NULL)) {
 	osi_mutex_Lock(&gen->lock);
-	if (allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE)) {
-	    osi_trace_gen_rgy_get(gen);
+	if ((gen->state != OSI_TRACE_GEN_STATE_GC) &&
+	    (allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE))) {
+	    *gen_out = gen;
+	    osi_trace_gen_rgy_get_nl(gen);
 	    res = OSI_OK;
+	    if (!keep_lock) {
+		osi_mutex_Unlock(&gen->lock);
+	    }
+	} else {
+	    osi_mutex_Unlock(&gen->lock);
 	}
-	osi_mutex_Unlock(&gen->lock);
     }
     osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
 
@@ -844,6 +813,7 @@ osi_trace_gen_rgy_lookup(osi_trace_gen_id_t gen_id,
  * [IN] pid            -- pid
  * [OUT] gen_out       -- gen object pointer
  * [IN] allow_offline  -- allow lookup of an offline gen
+ * [IN] keep_lock      -- return with gen->lock held
  *
  * postconditions:
  *   ref held on gen
@@ -855,7 +825,8 @@ osi_trace_gen_rgy_lookup(osi_trace_gen_id_t gen_id,
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_pid(osi_uint32 pid, 
 				osi_trace_generator_registration_t ** gen_out,
-				int allow_offline)
+				int allow_offline,
+				int keep_lock)
 {
     osi_result res = OSI_FAIL;
     osi_trace_generator_registration_t * gen;
@@ -869,12 +840,17 @@ osi_trace_gen_rgy_lookup_by_pid(osi_uint32 pid,
 				 pid_hash)) {
 	if (gen->addr.pid == pid) {
 	    osi_mutex_Lock(&gen->lock);
-	    if (allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE)) {
+	    if ((gen->state != OSI_TRACE_GEN_STATE_GC) &&
+		(allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE))) {
 		*gen_out = gen;
-		osi_trace_gen_rgy_get(gen);
+		osi_trace_gen_rgy_get_nl(gen);
 		res = OSI_OK;
+		if (!keep_lock) {
+		    osi_mutex_Unlock(&gen->lock);
+		}
+	    } else {
+		osi_mutex_Unlock(&gen->lock);
 	    }
-	    osi_mutex_Unlock(&gen->lock);
 	    break;
 	}
     }
@@ -889,6 +865,7 @@ osi_trace_gen_rgy_lookup_by_pid(osi_uint32 pid,
  * [IN] ptype          -- program type
  * [OUT] gen_out       -- gen object pointer
  * [IN] allow_offline  -- allow lookup of an offline gen
+ * [IN] keep_lock      -- return with gen->lock held
  *
  * postconditions:
  *   ref held on gen object
@@ -900,7 +877,8 @@ osi_trace_gen_rgy_lookup_by_pid(osi_uint32 pid,
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_ptype(osi_uint32 ptype,
 				  osi_trace_generator_registration_t ** gen_out,
-				  int allow_offline)
+				  int allow_offline,
+				  int keep_lock)
 {
     osi_result res = OSI_FAIL;
     osi_trace_generator_registration_t * gen;
@@ -911,12 +889,17 @@ osi_trace_gen_rgy_lookup_by_ptype(osi_uint32 ptype,
 			     osi_trace_generator_registration_t, 
 			     ptype_list);
 	osi_mutex_Lock(&gen->lock);
-	if (allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE)) {
+	if ((gen->state != OSI_TRACE_GEN_STATE_GC) &&
+	    (allow_offline || (gen->state == OSI_TRACE_GEN_STATE_ONLINE))) {
 	    *gen_out = gen;
-	    osi_trace_gen_rgy_get(gen);
+	    osi_trace_gen_rgy_get_nl(gen);
 	    res = OSI_OK;
+	    if (!keep_lock) {
+		osi_mutex_Unlock(&gen->lock);
+	    }
+	} else {
+	    osi_mutex_Unlock(&gen->lock);
 	}
-	osi_mutex_Unlock(&gen->lock);
     }
     osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
 
@@ -929,6 +912,7 @@ osi_trace_gen_rgy_lookup_by_ptype(osi_uint32 ptype,
  * [IN] gen_addr       -- generator address
  * [OUT] gen_out       -- gen object pointer
  * [IN] allow_offline  -- allow lookup of an offline gen
+ * [IN] keep_lock      -- return with gen->lock held
  *
  * postconditions:
  *   ref held on gen object
@@ -942,18 +926,21 @@ osi_trace_gen_rgy_lookup_by_ptype(osi_uint32 ptype,
 osi_static osi_result
 osi_trace_gen_rgy_lookup_by_addr(osi_trace_generator_address_t * gen_addr,
 				 osi_trace_generator_registration_t ** gen_out,
-				 int allow_offline)
+				 int allow_offline,
+				 int keep_lock)
 {
     osi_result res;
 
     if (gen_addr->pid) {
 	res = osi_trace_gen_rgy_lookup_by_pid(gen_addr->pid, 
 					      gen_out,
-					      allow_offline);
+					      allow_offline,
+					      keep_lock);
     } else if (gen_addr->programType) {
 	res = osi_trace_gen_rgy_lookup_by_ptype(gen_addr->programType, 
 						gen_out,
-						allow_offline);
+						allow_offline,
+						keep_lock);
     } else {
 	res = OSI_FAIL;
     }
@@ -983,7 +970,8 @@ osi_trace_gen_rgy_mailbox_get(osi_trace_gen_id_t gen_id,
 
     res = osi_trace_gen_rgy_lookup(gen_id, 
 				   &gen,
-				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE);
+				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+				   OSI_TRACE_GEN_RGY_LOOKUP_DROP_GEN_LOCK);
     if (OSI_RESULT_OK_LIKELY(res)) {
 	*mbox_out = &gen->mailbox;
     }
@@ -999,7 +987,6 @@ osi_trace_gen_rgy_mailbox_get(osi_trace_gen_id_t gen_id,
  * returns:
  *   see:
  *      osi_trace_gen_rgy_lookup
- *      osi_trace_gen_rgy_put
  */
 osi_result
 osi_trace_gen_rgy_lookup_I2A(osi_trace_gen_id_t gen_id,
@@ -1008,15 +995,15 @@ osi_trace_gen_rgy_lookup_I2A(osi_trace_gen_id_t gen_id,
     osi_result res;
     osi_trace_generator_registration_t * gen;
 
-    res = osi_trace_gen_rgy_lookup(gen_id, &gen,
-				   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE);
+    res = osi_trace_gen_rgy_lookup(gen_id, 
+				   &gen,
+				   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE,
+				   OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
     if (OSI_RESULT_OK_LIKELY(res)) {
-	osi_mutex_Lock(&gen->lock);
 	osi_mem_copy(gen_addr, 
-		     &gen->addr,
+		     (void *)&gen->addr,
 		     sizeof(osi_trace_generator_address_t));
-	osi_mutex_Unlock(&gen->lock);
-	res = osi_trace_gen_rgy_put(gen);
+	osi_trace_gen_rgy_put_nl(gen);
     }
 
     return res;
@@ -1031,7 +1018,6 @@ osi_trace_gen_rgy_lookup_I2A(osi_trace_gen_id_t gen_id,
  * returns:
  *   see:
  *      osi_trace_gen_rgy_lookup_by_addr
- *      osi_trace_gen_rgy_put
  */
 osi_result
 osi_trace_gen_rgy_lookup_A2I(osi_trace_generator_address_t * gen_addr,
@@ -1041,10 +1027,11 @@ osi_trace_gen_rgy_lookup_A2I(osi_trace_generator_address_t * gen_addr,
     osi_trace_generator_registration_t * gen;
 
     res = osi_trace_gen_rgy_lookup_by_addr(gen_addr, &gen,
-					   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE);
+					   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE,
+					   OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
     if (OSI_RESULT_OK_LIKELY(res)) {
 	*gen_id = gen->id;
-	res = osi_trace_gen_rgy_put(gen);
+	osi_trace_gen_rgy_put_nl(gen);
     }
 
     return res;
@@ -1057,10 +1044,13 @@ osi_trace_gen_rgy_lookup_A2I(osi_trace_generator_address_t * gen_addr,
  * [IN] holdee  -- generator which will be held
  *
  * preconditions:
- *   refs held on holder and holdee
+ *   ref held on holder
+ *   ref held on holdee
+ *   holder->lock is held
  *
  * postconditions:
- *   refcount on holdee incremented
+ *   holdee ref is donated
+ *   hold object on holdee is added to holder's hold list
  *
  * returns:
  *   OSI_OK on success
@@ -1080,15 +1070,11 @@ osi_trace_gen_rgy_hold_add(osi_trace_generator_registration_t * holder,
 	goto error;
     }
 
-    osi_trace_gen_rgy_get(holdee);
     hold->gen = holdee;
-
-    osi_mutex_Lock(&holder->lock);
     osi_list_Append(&holder->holds,
 		    hold,
 		    osi_trace_gen_rgy_hold_t,
 		    hold_list);
-    osi_mutex_Unlock(&holder->lock);
 
  error:
     return res;
@@ -1102,13 +1088,14 @@ osi_trace_gen_rgy_hold_add(osi_trace_generator_registration_t * holder,
  *
  * preconditions:
  *   refs held on holder and holdee
- *   caller MUST NOT hold any gen_rgy locks
+ *   holder->lock is held
  *
  * postconditions:
- *   holdee refcount decremented
+ *   caller inherits a holdee ref
  *
  * returns:
- *   see osi_trace_gen_rgy_put()  [note preconditions]
+ *   OSI_OK on success
+ *   OSI_FAIL if no such hold is found
  */
 osi_static osi_result
 osi_trace_gen_rgy_hold_del(osi_trace_generator_registration_t * holder,
@@ -1117,7 +1104,6 @@ osi_trace_gen_rgy_hold_del(osi_trace_generator_registration_t * holder,
     osi_result res = OSI_FAIL;
     osi_trace_gen_rgy_hold_t * hold, * nhold;
 
-    osi_mutex_Lock(&holder->lock);
     for (osi_list_Scan(&holder->holds,
 		       hold, nhold,
 		       osi_trace_gen_rgy_hold_t,
@@ -1126,17 +1112,15 @@ osi_trace_gen_rgy_hold_del(osi_trace_generator_registration_t * holder,
 	    goto found;
 	}
     }
-    osi_mutex_Unlock(&holder->lock);
     goto done;
 
  found:
     osi_list_Remove(hold,
 		    osi_trace_gen_rgy_hold_t,
 		    hold_list);
-    osi_mutex_Unlock(&holder->lock);
-    res = osi_trace_gen_rgy_put(holdee);
     osi_mem_object_cache_free(osi_trace_gen_rgy_hold_cache,
 			      hold);
+    res = OSI_OK;
 
  done:
     return res;
@@ -1148,30 +1132,27 @@ osi_trace_gen_rgy_hold_del(osi_trace_generator_registration_t * holder,
  * [IN] gen  -- point to gen object from which all holds will be freed
  *
  * preconditions:
- *   osi_trace_gen_rgy.lock held exclusively
- *   gen lock NOT held
+ *   osi_trace_gen_rgy.gc_lock held
  *
  * postconditions:
  *   hold list atomically pivoted onto gc list
- *
- * returns:
- *   see osi_trace_gen_rgy_put()
  */
-osi_static osi_result
+osi_static void
 osi_trace_gen_rgy_hold_bulk_free_r(osi_trace_generator_registration_t * gen)
 {
-    osi_result res = OSI_OK;
-
-    osi_mutex_Lock(&gen->lock);
-    osi_list_SpliceAppend(&osi_trace_gen_rgy.hold_cleanup_list,
+    /* 
+     * we can safely pivot this without holding gen->lock because
+     * this method is only called when refcount has reached zero;
+     * thus implying that no other thread is touching this gen object
+     */
+    osi_list_SpliceAppend(&osi_trace_gen_rgy.hold_gc_list,
 			  &gen->holds);
-    osi_mutex_Unlock(&gen->lock);
-
-    return res;
 }
 
 /*
  * GC previously freed holds
+ *
+ * [IN] gc_list  -- list of holds to garbage collect
  *
  * preconditions:
  *   caller MUST NOT hold any gen_rgy locks
@@ -1180,40 +1161,135 @@ osi_trace_gen_rgy_hold_bulk_free_r(osi_trace_generator_registration_t * gen)
  *   previously freed holds are destroyed and refs decremented
  *
  * returns:
- *   see osi_trace_gen_rgy_put()
+ *   OSI_OK always
  */
 osi_static osi_result
-osi_trace_gen_rgy_hold_gc(void)
+osi_trace_gen_rgy_hold_gc(osi_list_head * gc_list)
 {
-    osi_result res, code = OSI_OK;
+    osi_result code = OSI_OK;
     osi_trace_gen_rgy_hold_t * hold, * nhold;
-    osi_list_head gc_list;
-
-    osi_list_Init_Head(&gc_list);
-
-    /* atomically pivot out the gc list */
-    osi_rwlock_WrLock(&osi_trace_gen_rgy.lock);
-    osi_list_SpliceAppend(&gc_list,
-			  &osi_trace_gen_rgy.hold_cleanup_list);
-    osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
 
     /* drop refs from the gc'd holds, and then free them */
-    for (osi_list_Scan(&gc_list,
+    for (osi_list_Scan(gc_list,
 		       hold, nhold,
 		       osi_trace_gen_rgy_hold_t,
 		       hold_list)) {
 	osi_list_Remove(hold,
 			osi_trace_gen_rgy_hold_t,
 			hold_list);
-	res = osi_trace_gen_rgy_put(hold->gen);
-	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
-	    code = res;
-	}
+	osi_trace_gen_rgy_put(hold->gen);
 	osi_mem_object_cache_free(osi_trace_gen_rgy_hold_cache,
 				  hold);
     }
 
-    return res;
+    return code;
+}
+
+/*
+ * garbage collect unreferenced gens
+ *
+ * [IN] gc_list  -- list head of unreferenced gens
+ *
+ * returns:
+ *   OSI_OK always
+ */
+osi_static osi_result
+osi_trace_gen_rgy_gen_gc(osi_list_head * gc_list)
+{
+    osi_trace_generator_registration_t * gen, * ngen;
+    osi_trace_gen_rgy_idx_t idx;
+
+    /* make two passes.
+     *
+     * in pass one, make all the changes that need to
+     * happen under the gen_rgy rwlock
+     *
+     * in pass two, update the pid hash (pid hash has
+     * its own locking hierarchy), and then deallocate
+     * the gen object
+     */
+
+    osi_rwlock_WrLock(&osi_trace_gen_rgy.lock);
+    for (osi_list_Scan_Immutable(gc_list,
+				 gen,
+				 osi_trace_generator_registration_t,
+				 gc_list)) {
+	if (OSI_RESULT_OK(osi_trace_gen_rgy_idx(gen->id, &idx))) {
+	    osi_trace_gen_rgy_inuse_unmark_r(idx);
+	    osi_trace_gen_rgy.gen[idx] = osi_NULL;
+	}
+
+	osi_trace_gen_rgy_ptype_list_del_r(gen);
+    }
+    osi_rwlock_Unlock(&osi_trace_gen_rgy.lock);
+
+    for (osi_list_Scan(gc_list,
+		       gen, ngen,
+		       osi_trace_generator_registration_t,
+		       gc_list)) {
+	osi_list_Remove(gen,
+			osi_trace_generator_registration_t,
+			gc_list);
+	osi_trace_gen_rgy_pid_hash_del(gen);
+	osi_mem_object_cache_free(osi_trace_gen_rgy_cache, gen);
+    }
+
+    return OSI_OK;
+}
+
+/*
+ * perform gen_rgy gc cycle
+ *
+ * preconditions:
+ *   no gen_rgy locks held
+ *
+ * postconditions:
+ *   holds and unreferenced gens are garbage collected
+ *
+ * returns:
+ *   see osi_trace_gen_rgy_hold_gc()
+ *   see osi_trace_gen_rgy_gen_gc()
+ */
+osi_static osi_result
+osi_trace_gen_rgy_gc(void)
+{
+    osi_result res, code = OSI_OK;
+    osi_list_head hold_gc_list, gen_gc_list;
+
+    if (!osi_trace_gen_rgy.gc_flag) {
+	goto done;
+    }
+
+    osi_list_Init_Head(&hold_gc_list);
+    osi_list_Init_Head(&gen_gc_list);
+
+    /* atomically pivot out the gc lists */
+    osi_mutex_Lock(&osi_trace_gen_rgy.gc_lock);
+    osi_list_SpliceAppend(&hold_gc_list,
+			  &osi_trace_gen_rgy.hold_gc_list);
+    osi_list_SpliceAppend(&gen_gc_list,
+			  &osi_trace_gen_rgy.gen_gc_list);
+    osi_trace_gen_rgy.gc_flag = 0;
+    osi_mutex_Unlock(&osi_trace_gen_rgy.gc_lock);
+
+    /* gc the holds */
+    if (osi_list_IsNotEmpty(&hold_gc_list)) {
+	res = osi_trace_gen_rgy_hold_gc(&hold_gc_list);
+	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	    code = res;
+	}
+    }
+
+    /* gc the gens */
+    if (osi_list_IsNotEmpty(&gen_gc_list)) {
+	res = osi_trace_gen_rgy_gen_gc(&gen_gc_list);
+	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	    code = res;
+	}
+    }
+
+ done:
+    return code;
 }
 
 /*
@@ -1246,7 +1322,7 @@ osi_trace_gen_rgy_register(osi_trace_generator_address_t * gen_addr,
 	goto error;
     }
 
-    osi_mem_copy(&gen->addr, gen_addr, sizeof(osi_trace_generator_address_t));
+    osi_mem_copy((void *)&gen->addr, gen_addr, sizeof(osi_trace_generator_address_t));
 
     res = osi_trace_mailbox_open(&gen->mailbox);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
@@ -1258,16 +1334,24 @@ osi_trace_gen_rgy_register(osi_trace_generator_address_t * gen_addr,
 	goto cleanup;
     }
 
+    /* setup mcast and bcast membership, and pivot gen online */
+    osi_mutex_Lock(&gen->lock);
     (void)osi_trace_mail_bcast_add(&gen->mailbox);
     if (gen->addr.programType == osi_ProgramType_TraceCollector) {
 	(void)osi_trace_mail_mcast_add(OSI_TRACE_GEN_RGY_MCAST_CONSUMER,
-				       &gen->mailbox);
+				       &gen->mailbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_HELD);
     } else {
 	(void)osi_trace_mail_mcast_add(OSI_TRACE_GEN_RGY_MCAST_GENERATOR,
-				       &gen->mailbox);
+				       &gen->mailbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_HELD);
     }
 
+    gen->state = OSI_TRACE_GEN_STATE_ONLINE;
+    osi_mutex_Unlock(&gen->lock);
+
     (void)osi_trace_gen_rgy_register_notify(gen);
+
 
  error:
     return res;
@@ -1275,7 +1359,7 @@ osi_trace_gen_rgy_register(osi_trace_generator_address_t * gen_addr,
  cleanup:
     (void)osi_trace_mailbox_shut(&gen->mailbox);
     (void)osi_trace_mailbox_clear(&gen->mailbox);
-    (void)osi_trace_gen_rgy_put(gen);
+    osi_trace_gen_rgy_put(gen);
     goto error;
 }
 
@@ -1291,16 +1375,16 @@ osi_trace_gen_rgy_register(osi_trace_generator_address_t * gen_addr,
  *   ref on generator released
  *
  * returns:
+ *   OSI_FAIL if gen->state is not ONLINE
  *    see:
  *       osi_trace_gen_rgy_lookup
- *       osi_trace_gen_rgy_unregister_internal
- *       osi_trace_gen_rgy_put
  */
 osi_result
 osi_trace_gen_rgy_unregister(osi_trace_gen_id_t gen_id)
 {
     osi_result res;
     osi_trace_generator_registration_t * gen;
+    osi_trace_generator_address_t gen_addr;
 
     /* 
      * by requiring the gen to be online, we reduce the probability a possible race where
@@ -1309,52 +1393,53 @@ osi_trace_gen_rgy_unregister(osi_trace_gen_id_t gen_id)
      * e.g. say a process unregisters itself during osi_PkgShutdown, and
      * subsequently crashes.  then, bosserver tries to unregister the gen
      * on the crashed proc's behalf.
-     *
-     * XXX bear in mind that because the lookup and the call to unregister_internal
-     * do not happen atomically with respect to osi_trace_gen_rgy.lock, there is
-     * still a race window in this implementation!!!  in the future, we should
-     * add a check to avoid this race as well.
      */
-    res = osi_trace_gen_rgy_lookup(gen_id, &gen,
-				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE);
+    res = osi_trace_gen_rgy_lookup(gen_id, 
+				   &gen,
+				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+				   OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
 	goto error;
     }
 
-    res = osi_trace_gen_rgy_unregister_internal(gen);
-    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+    /* atomically compare and swap gen state from online to offline */
+    if (gen->state != OSI_TRACE_GEN_STATE_ONLINE) {
 	goto cleanup;
     }
+    gen->state = OSI_TRACE_GEN_STATE_OFFLINE;
 
-    osi_mutex_Lock(&gen->lock);
+    osi_mem_copy(&gen_addr, (void *)&gen->addr, sizeof(gen->addr));
+
+    /* disassociate mailbox from this gen id */
+    (void)osi_trace_mailbox_gen_id_set(&gen->mailbox, OSI_TRACE_GEN_RGY_KERNEL_ID);
+
     (void)osi_trace_mail_bcast_del(&gen->mailbox);
     if (gen->addr.programType == osi_ProgramType_TraceCollector) {
 	(void)osi_trace_mail_mcast_del(OSI_TRACE_GEN_RGY_MCAST_CONSUMER,
-				       &gen->mailbox);
+				       &gen->mailbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_HELD);
     } else {
 	(void)osi_trace_mail_mcast_del(OSI_TRACE_GEN_RGY_MCAST_GENERATOR,
-				       &gen->mailbox);
+				       &gen->mailbox,
+				       OSI_TRACE_MAIL_GEN_LOCK_HELD);
     }
     (void)osi_trace_mailbox_shut(&gen->mailbox);
     (void)osi_trace_mailbox_clear(&gen->mailbox);
-    osi_mutex_Unlock(&gen->lock);
-
-    (void)osi_trace_gen_rgy_unregister_notify(gen);
 
     /* release ref held by call to lookup */
-    res = osi_trace_gen_rgy_put(gen);
-    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
-	goto error;
-    }
+    osi_trace_gen_rgy_put_nl_nz(gen);
 
     /* release ref held by initial call to register */
-    res = osi_trace_gen_rgy_put(gen);
+    osi_trace_gen_rgy_put_nl(gen);
+
+    (void)osi_trace_gen_rgy_unregister_notify(gen_id, &gen_addr);
 
  error:
     return res;
 
  cleanup:
-    (void)osi_trace_gen_rgy_put(gen);
+    osi_trace_gen_rgy_put_nl(gen);
+    res = OSI_FAIL;
     goto error;
 }
 
@@ -1367,11 +1452,14 @@ osi_trace_gen_rgy_PkgInit(void)
     osi_size_t align;
 
     osi_rwlock_Init(&osi_trace_gen_rgy.lock, 
-		    &osi_trace_common_options.rwlock_opts);
+		    osi_trace_impl_rwlock_opts());
+
+    osi_mutex_Init(&osi_trace_gen_rgy.gc_lock, 
+		   osi_trace_impl_mutex_opts());
 
     for (i = 0; i < OSI_TRACE_GEN_RGY_PID_HASH_SIZE; i++) {
 	osi_rwlock_Init(&osi_trace_gen_rgy.gen_pid_hash[i].chain_lock,
-			&osi_trace_common_options.rwlock_opts);
+			osi_trace_impl_rwlock_opts());
 	osi_trace_gen_rgy.gen_pid_hash[i].chain_len = 0;
 	osi_list_Init_Head(&osi_trace_gen_rgy.gen_pid_hash[i].chain);
     }
@@ -1384,6 +1472,10 @@ osi_trace_gen_rgy_PkgInit(void)
     for (i = 0; i < OSI_TRACE_GEN_RGY_INUSE_VEC_LEN; i++) {
 	osi_trace_gen_rgy.gen_inuse[i] = 0;
     }
+
+    /* deal with only 31 out of 32 bits being valid due to gen id zero being
+     * the kernel id */
+    (void)osi_trace_gen_rgy_inuse_mark_r(OSI_TRACE_GEN_RGY_MAX_ID_KERNEL);
 
     for (i = 0; i < OSI_TRACE_GEN_RGY_MAX_ID_KERNEL; i++) {
 	osi_trace_gen_rgy.gen[i] = osi_NULL;
@@ -1401,13 +1493,15 @@ osi_trace_gen_rgy_PkgInit(void)
 				    &osi_trace_gen_rgy_ctor,
 				    &osi_trace_gen_rgy_dtor,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_gen_rgy_cache == osi_NULL) {
 	res = OSI_ERROR_NOMEM;
 	goto error;
     }
 
-    osi_list_Init_Head(&osi_trace_gen_rgy.hold_cleanup_list);
+    osi_trace_gen_rgy.gc_flag = 0;
+    osi_list_Init_Head(&osi_trace_gen_rgy.hold_gc_list);
+    osi_list_Init_Head(&osi_trace_gen_rgy.gen_gc_list);
 
     osi_trace_gen_rgy_hold_cache =
 	osi_mem_object_cache_create("osi_trace_gen_rgy_hold",
@@ -1417,7 +1511,7 @@ osi_trace_gen_rgy_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_trace_gen_rgy_hold_cache == osi_NULL) {
 	res = OSI_ERROR_NOMEM;
     }
@@ -1435,6 +1529,7 @@ osi_trace_gen_rgy_PkgShutdown(void)
 	(void)osi_trace_gen_rgy_unregister(gen_id);
     }
 
+    osi_mutex_Destroy(&osi_trace_gen_rgy.gc_lock);
     osi_rwlock_Destroy(&osi_trace_gen_rgy.lock);
 
     osi_mem_object_cache_destroy(osi_trace_gen_rgy_cache);
@@ -1465,7 +1560,7 @@ osi_trace_gen_rgy_sys_register(void * p1,
     osi_trace_generator_address_t addr;
     osi_trace_gen_id_t id;
 
-    osi_trace_gen_rgy_hold_gc();
+    osi_trace_gen_rgy_gc();
 
     osi_kernel_copy_in(p1, &addr, sizeof(osi_trace_generator_address_t), &code);
     if (osi_compiler_expect_true(!code)) {
@@ -1548,29 +1643,34 @@ osi_trace_gen_rgy_sys_get(osi_trace_gen_id_t p1)
 {
     int code = 0;
     osi_result res;
-    osi_trace_generator_registration_t * holder = osi_NULL, * holdee = osi_NULL;
+    osi_trace_generator_registration_t * holder, * holdee;
 
-    osi_trace_gen_rgy_hold_gc();
+    osi_trace_gen_rgy_gc();
 
-    /* get our gen handle */
-    res = osi_trace_gen_rgy_lookup_by_pid(osi_proc_current_id(),
-					  &holder,
-					  OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE);
+    res = osi_trace_gen_rgy_lookup(p1,
+				   &holdee,
+				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+				   OSI_TRACE_GEN_RGY_LOOKUP_DROP_GEN_LOCK);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
 	code = EINVAL;
 	goto error;
     }
 
-    res = osi_trace_gen_rgy_lookup(p1,
-				   &holdee,
-				   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE);
+    /* get our gen handle */
+    res = osi_trace_gen_rgy_lookup_by_pid(osi_proc_current_id(),
+					  &holder,
+					  OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+					  OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	osi_trace_gen_rgy_put(holdee);
 	code = EINVAL;
-	goto cleanup;
+	goto error;
     }
 
     res = osi_trace_gen_rgy_hold_add(holder, holdee);
+    osi_trace_gen_rgy_put_nl(holder);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	osi_trace_gen_rgy_put(holdee);
 	if (res == OSI_ERROR_NOMEM) {
 	    code = EAGAIN;
 	} else {
@@ -1578,23 +1678,75 @@ osi_trace_gen_rgy_sys_get(osi_trace_gen_id_t p1)
 	}
     }
 
-    if (OSI_RESULT_FAIL_UNLIKELY(osi_trace_gen_rgy_put(holdee))) {
-	osi_Msg_console("%s: WARNING: failed to put back ref to holdee\r\n", __osi_func__);
+ error:
+    return code;
+}
+
+/*
+ * get a gen ref given a gen addr
+ *
+ * opcode OSI_TRACE_SYSCALL_OP_GEN_GET_BY_ADDR
+ */
+int
+osi_trace_gen_rgy_sys_get_by_addr(void * p1,
+				  void * p2)
+{
+    int code = 0;
+    osi_result res;
+    osi_trace_generator_registration_t * holder, * holdee;
+    osi_trace_generator_address_t addr;
+
+    osi_kernel_handle_copy_in(p1, 
+			      &addr, 
+			      sizeof(osi_trace_generator_address_t), 
+			      code, 
+			      error);
+
+    osi_trace_gen_rgy_gc();
+
+    res = osi_trace_gen_rgy_lookup_by_addr(&addr, 
+					   &holdee,
+					   OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+					   OSI_TRACE_GEN_RGY_LOOKUP_DROP_GEN_LOCK);
+    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	code = EINVAL;
+	goto error;
     }
-    if (OSI_RESULT_FAIL_UNLIKELY(osi_trace_gen_rgy_put(holder))) {
-	osi_Msg_console("%s: WARNING: failed to put back ref to holder\r\n", __osi_func__);
+
+    /* get our gen handle */
+    res = osi_trace_gen_rgy_lookup_by_pid(osi_proc_current_id(),
+					  &holder,
+					  OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE,
+					  OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
+    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	osi_trace_gen_rgy_put(holdee);
+	code = EINVAL;
+	goto error;
+    }
+
+    osi_kernel_handle_copy_out(&holdee->id,
+			       p2,
+			       sizeof(osi_trace_gen_id_t),
+			       code,
+			       ucopy_fault);
+
+    res = osi_trace_gen_rgy_hold_add(holder, holdee);
+    osi_trace_gen_rgy_put_nl(holder);
+    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	osi_trace_gen_rgy_put(holdee);
+	if (res == OSI_ERROR_NOMEM) {
+	    code = EAGAIN;
+	} else {
+	    code = EINVAL;
+	}
     }
 
  error:
     return code;
 
- cleanup:
-    if (holder != osi_NULL) {
-	osi_trace_gen_rgy_put(holder);
-    }
-    if (holdee != osi_NULL) {
-	osi_trace_gen_rgy_put(holdee);
-    }
+ ucopy_fault:
+    osi_trace_gen_rgy_put_nl(holder);
+    osi_trace_gen_rgy_put(holdee);
     goto error;
 }
 
@@ -1608,72 +1760,41 @@ osi_trace_gen_rgy_sys_put(osi_trace_gen_id_t p1)
 {
     int code = 0;
     osi_result res;
-    osi_trace_generator_registration_t * holder = osi_NULL, * holdee = osi_NULL;
+    osi_trace_generator_registration_t * holder, * holdee;
 
-    /* get our gen handle */
-    res = osi_trace_gen_rgy_lookup_by_pid(osi_proc_current_id(),
-					  &holder,
-					  OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE);
+    res = osi_trace_gen_rgy_lookup(p1,
+				   &holdee,
+				   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE,
+				   OSI_TRACE_GEN_RGY_LOOKUP_DROP_GEN_LOCK);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
 	code = EINVAL;
 	goto error;
     }
 
-    res = osi_trace_gen_rgy_lookup(p1,
-				   &holdee,
-				   OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE);
+    /* get our gen handle */
+    res = osi_trace_gen_rgy_lookup_by_pid(osi_proc_current_id(),
+					  &holder,
+					  OSI_TRACE_GEN_RGY_LOOKUP_ALLOW_OFFLINE,
+					  OSI_TRACE_GEN_RGY_LOOKUP_KEEP_GEN_LOCK);
     if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	osi_trace_gen_rgy_put(holdee);
 	code = EINVAL;
-	goto cleanup;
+	goto error;
     }
-
+    
     res = osi_trace_gen_rgy_hold_del(holder, holdee);
-    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+    osi_trace_gen_rgy_put_nl(holder);
+    
+    if (OSI_RESULT_OK_LIKELY(res)) {
+	/* drop the inherited ref, and our ref from lookup */
+	osi_mutex_Lock(&holdee->lock);
+	osi_trace_gen_rgy_put_nl_nz(holdee);
+	osi_trace_gen_rgy_put_nl(holdee);
+    } else {
+	osi_trace_gen_rgy_put(holdee);
 	code = EINVAL;
-    }
- 
-    if (OSI_RESULT_FAIL_UNLIKELY(osi_trace_gen_rgy_put(holdee))) {
-	osi_Msg_console("%s: WARNING: failed to put back ref to holdee\r\n", __osi_func__);
-    }
-
-    if (OSI_RESULT_FAIL_UNLIKELY(osi_trace_gen_rgy_put(holder))) {
-	osi_Msg_console("%s: WARNING: failed to put back ref to holder\r\n", __osi_func__);
     }
 
 error:
-    return code;
-
- cleanup:
-    if (holder) {
-	(void)osi_trace_gen_rgy_put(holder);
-    }
-    if (holdee) {
-	(void)osi_trace_gen_rgy_put(holdee);
-    }
-    goto error;
-}
-
-/*
- * get a gen ref given a gen addr
- *
- * opcode OSI_TRACE_SYSCALL_OP_GEN_GET_BY_ADDR
- */
-int
-osi_trace_gen_rgy_sys_get_by_addr(void * p1,
-				  void * p2)
-{
-    int code = EINVAL;
-    osi_result res;
-    osi_trace_generator_registration_t * gen;
-    osi_trace_generator_address_t addr;
-
-    osi_kernel_copy_in(p1, &addr, sizeof(osi_trace_generator_address_t), &code);
-    if (osi_compiler_expect_true(!code)) {
-	res = osi_trace_gen_rgy_lookup_by_addr(&addr, &gen,
-					       OSI_TRACE_GEN_RGY_LOOKUP_REQUIRE_ONLINE);
-	if (OSI_RESULT_OK_LIKELY(res)) {
-	    osi_kernel_copy_out(&gen->id, p2, sizeof(osi_trace_gen_id_t), &code);
-	}
-    }
     return code;
 }

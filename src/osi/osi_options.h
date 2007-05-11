@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -118,7 +118,12 @@ typedef struct osi_options {
     osi_options_val_bool_t TRACE_START_MAIL_THREAD;
     osi_options_val_uint32_t TRACE_BUFFER_SIZE;
     osi_options_val_bool_t TRACED_LISTEN;
-    osi_options_val_uint16_t TRACED_PORT;
+    osi_options_val_uint16_t RX_PORT;
+    osi_options_val_bool_t TRACE_CONSUMER_START_I2N_THREAD;
+    osi_options_val_bool_t TRACE_CONSUMER_START_CACHE_THREAD;
+    osi_options_val_bool_t RX_BIND;
+    osi_options_val_uint32_t RX_BIND_HOST;
+    osi_options_val_bool_t TRACE_CONSUMER_START_ENCODING_THREAD;
     int terminal;
 } osi_options_t;
 
@@ -134,7 +139,12 @@ typedef enum {
     OSI_OPTION_TRACE_START_MAIL_THREAD,
     OSI_OPTION_TRACE_BUFFER_SIZE,
     OSI_OPTION_TRACED_LISTEN,
-    OSI_OPTION_TRACED_PORT,
+    OSI_OPTION_RX_PORT,
+    OSI_OPTION_TRACE_CONSUMER_START_I2N_THREAD,
+    OSI_OPTION_TRACE_CONSUMER_START_CACHE_THREAD,
+    OSI_OPTION_RX_BIND,
+    OSI_OPTION_RX_BIND_HOST,
+    OSI_OPTION_TRACE_CONSUMER_START_ENCODING_THREAD,
     OSI_OPTION_MAX_ID
 } osi_options_param_t;
 

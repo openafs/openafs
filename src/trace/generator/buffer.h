@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -16,12 +16,13 @@
  * circular trace buffer implementation
  */
 
-#include <osi/osi_mem.h>
+#include <osi/osi_mem_local.h>
 #include <osi/osi_mutex.h>
 #include <osi/osi_condvar.h>
 
-osi_extern osi_result osi_trace_buffer_PkgInit(void);
-osi_extern osi_result osi_trace_buffer_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_trace_buffer_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_trace_buffer_PkgShutdown);
+
 
 struct osi_TraceBuffer_config {
     osi_size_t buffer_len;
@@ -78,9 +79,18 @@ osi_extern osi_TraceBuffer * _osi_tracebuf;
 /* handle to a trace event that's being recorded */
 typedef struct osi_Trace_EventHandle {
     osi_register_uint idx;
-    osi_TracePoint_record * data;
+    osi_TracePoint_record_ptr_t data;
     osi_TraceBuffer * tracebuf;
 } osi_Trace_EventHandle;
+
+#define osi_Trace_EventHandle_Record(event) \
+    ((event)->data.ptr.cur)
+#define osi_Trace_EventHandle_RecordPtr(event) \
+    (&((event)->data))
+#define osi_Trace_EventHandle_Field_Set(event, field, val) \
+    (event)->data.ptr.cur->field = val
+#define osi_Trace_EventHandle_Field_Get(event, field, val) \
+    val = (event)->data.ptr.cur->field
 
 
 /*
@@ -116,8 +126,8 @@ osi_extern osi_result osi_TraceBuffer_Destroy(osi_TraceBuffer *);
             osi_TraceBuffer_Init(event); \
         } \
         (event)->idx = (event)->tracebuf->last_idx; \
-        (event)->data = &((event)->tracebuf->buf[(event)->idx & (event)->tracebuf->blocks_mask]); \
-        (event)->data->nargs = 0; \
+        (event)->data.ptr.cur = &((event)->tracebuf->buf[(event)->idx & (event)->tracebuf->blocks_mask]); \
+        (event)->data.ptr.cur->nargs = 0; \
     osi_Macro_End
 
 #else /* !OSI_TRACE_BUFFER_CTX_LOCAL */
@@ -127,9 +137,9 @@ osi_extern osi_result osi_TraceBuffer_Destroy(osi_TraceBuffer *);
         (event)->tracebuf = _osi_tracebuf; \
         osi_mutex_Lock(&(event)->tracebuf->lock); \
         (event)->idx = (event)->tracebuf->last_idx++; \
-        (event)->data = &((event)->tracebuf->buf[(event)->idx & (event)->tracebuf->blocks_mask]); \
+        (event)->data.ptr.cur = &((event)->tracebuf->buf[(event)->idx & (event)->tracebuf->blocks_mask]); \
         osi_mutex_Unlock(&(event)->tracebuf->lock); \
-        (event)->data->nargs = 0; \
+        (event)->data.ptr.cur->nargs = 0; \
     osi_Macro_End
 
 #endif /* !OSI_TRACE_BUFFER_CTX_LOCAL */
@@ -179,8 +189,8 @@ osi_extern osi_result osi_TraceBuffer_Destroy(osi_TraceBuffer *);
 #define osi_TraceBuffer_Rollback(event) \
     osi_Macro_Begin \
         osi_mutex_Lock(&(event)->tracebuf->lock); \
-        (event)->data->probe = 0; \
-        (event)->data->tags[0] = (osi_uint8) osi_Trace_Event_AbortedEvent_Id; \
+        (event)->data.ptr.cur->probe = 0; \
+        (event)->data.ptr.cur->tags[0] = (osi_uint8) osi_Trace_Event_AbortedEvent_Id; \
         if ((event)->idx > _osi_tracebuf->last_valid) { \
             _osi_tracebuf->last_valid = (event)->idx; \
             osi_condvar_Broadcast(&(event)->tracebuf->cv); \
@@ -191,9 +201,9 @@ osi_extern osi_result osi_TraceBuffer_Destroy(osi_TraceBuffer *);
 #endif /* !OSI_TRACE_BUFFER_CTX_LOCAL */
 
 /*
- * set the number of records in the local trace buffer
+ * get/set the number of records in the local trace buffer
  */
-osi_extern osi_result osi_TraceBuffer_size_set(size_t);
-osi_extern osi_result osi_TraceBuffer_size_get(size_t *);
+osi_extern osi_result osi_TraceBuffer_size_set(osi_size_t);
+osi_extern osi_result osi_TraceBuffer_size_get(osi_size_t *);
 
 #endif /* _OSI_TRACE_GENERATOR_BUFFER_H */

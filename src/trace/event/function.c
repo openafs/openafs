@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -8,8 +8,7 @@
  */
 
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/gen_rgy.h>
 #include <trace/event/event.h>
 #include <trace/generator/generator.h>
@@ -20,11 +19,11 @@ osi_result
 osi_TraceFunc_FunctionPrologue(osi_trace_probe_id_t id, int nf, ...)
 {
     osi_result res;
-    va_list args;
+    osi_va_list args;
 
-    va_start(args, nf);
+    osi_va_start(args, nf);
     res = osi_TraceFunc_VarEvent(id, osi_Trace_Event_FunctionPrologue_Id, nf, args);
-    va_end(args);
+    osi_va_end(args);
 
     return res;
 }
@@ -38,12 +37,13 @@ osi_TraceFunc_FunctionEpilogue(osi_trace_probe_id_t probe_id,
     osi_TraceFunc_Prologue();
     osi_TraceBuffer_Allocate(&handle);
 
-    handle.data->probe = probe_id;
-    handle.data->tags[0] = (osi_uint8) osi_Trace_Event_FunctionEpilogue_Id;
-    handle.data->tags[1] = (osi_uint8) osi_Trace_Event_Null_Id;
+    osi_Trace_EventHandle_Field_Set(&handle, probe, (osi_uint32) probe_id);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[0], (osi_uint8) osi_Trace_Event_FunctionEpilogue_Id);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[1], (osi_uint8) osi_Trace_Event_Null_Id);
 
     if (ret_present) {
-	osi_TracePoint_record_arg_add(handle.data, ret_value);
+	osi_TracePoint_record_arg_add(osi_Trace_EventHandle_RecordPtr(&handle), 
+				      ret_value);
     }
 
     osi_TraceBuffer_Stamp(&handle);
@@ -55,23 +55,27 @@ osi_TraceFunc_FunctionEpilogue(osi_trace_probe_id_t probe_id,
 #else /* !OSI_ENV_VARIADIC_MACROS */
 
 osi_result
-osi_TraceFunc_FunctionPrologue(osi_trace_probe_id_t id, int nf, va_list args)
+osi_TraceFunc_FunctionPrologue(osi_trace_probe_id_t id, int nf, osi_va_list args)
 {
     return osi_TraceFunc_VarEvent(id, osi_Trace_Event_FunctionPrologue_Id, nf, args);
 }
 
 osi_result
-osi_TraceFunc_FunctionEpilogue(osi_trace_probe_id_t id, int ret_present, va_list args)
+osi_TraceFunc_FunctionEpilogue(osi_trace_probe_id_t probe_id, 
+			       int ret_present, 
+			       osi_va_list args)
 {
     osi_Trace_EventHandle handle;
     osi_TraceFunc_Prologue();
     osi_TraceBuffer_Allocate(&handle);
 
-    handle.data->probe = id;
-    handle.data->tags[0] = (osi_uint8) osi_Trace_Event_FunctionEpilogue_Id;
+    osi_Trace_EventHandle_Field_Set(&handle, probe, (osi_uint32) probe_id);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[0], (osi_uint8) osi_Trace_Event_FunctionEpilogue_Id);
+    osi_Trace_EventHandle_Field_Set(&handle, tags[1], (osi_uint8) osi_Trace_Event_Null_Id);
 
     if (ret_present) {
-	osi_TracePoint_record_arg_add(handle.data, va_arg(args, osi_register_int));
+	osi_TracePoint_record_arg_add(osi_Trace_EventHandle_RecordPtr(&handle),
+				      osi_va_arg(args, osi_register_int));
     }
 
     osi_TraceBuffer_Stamp(&handle);

@@ -1,4 +1,4 @@
-# Copyright 2006, Sine Nomine Associates and others.
+# Copyright 2006-2007, Sine Nomine Associates and others.
 # All Rights Reserved.
 # 
 # This software has been released under the terms of the IBM Public
@@ -31,4 +31,8 @@ error_table OSI2
 	ec OSI_TRACE_ANLY_ERROR_VAR_TYPE_UNKNOWN, "osi_trace_anly_var type not registered"
 	ec OSI_TRACE_ANLY_ERROR_VAR_TYPE_REGISTERED, "osi_trace_anly_var type already registered"
 	ec OSI_TRACE_ANLY_ERROR_INVALID_LOGIC_OP, "osi_trace_anly_var invalid logic operation"
+	ec OSI_TRACE_DIRECTORY_ERROR_TOKEN_NO_MATCH, "directory filter token did not match any records"
+	ec OSI_TRACE_DIRECTORY_ERROR_NO_CHILDREN, "intermediate directory forest node has no children"
+	ec OSI_ERROR_CANCEL_WAITERS, "all waiters on this event are to be cancelled"
+	ec OSI_ERROR_NOT_SUPPORTED, "feature not supported"
 end

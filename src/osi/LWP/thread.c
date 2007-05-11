@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -16,8 +16,7 @@
 
 PROCESS osi_lwp_main_thread;
 
-osi_result
-osi_thread_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_thread_PkgInit)
 {
     osi_result res;
     int code;
@@ -41,12 +40,6 @@ osi_thread_PkgInit(void)
 
  error:
     return res;
-}
-
-osi_result
-osi_thread_PkgShutdown(void)
-{
-    return osi_thread_event_PkgShutdown();
 }
 
 osi_result

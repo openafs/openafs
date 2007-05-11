@@ -17,7 +17,7 @@
  * mail interface
  */
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 osi_extern osi_result osi_trace_probe_rgy_msg_PkgInit(void);
 osi_extern osi_result osi_trace_probe_rgy_msg_PkgShutdown(void);
 #endif

@@ -46,12 +46,15 @@ include Makefile.common
 # override
 <sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
 LIBAFSRPC_OS_CFLAGS_libafsrpc_64 = -xarch=v9
+LIBAFSRPC_AS_ARCH_FLAGS_64 = -xarch=v9
 
 <sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 LIBAFSRPC_OS_CFLAGS_libafsrpc_64 = -xarch=amd64
+LIBAFSRPC_AS_ARCH_FLAGS_64 = -xarch=amd64
 
 <sun4x_510 sun4x_511>
 LIBAFSRPC_OS_CFLAGS_libafsrpc_32 = -xarch=v8plus
+LIBAFSRPC_AS_ARCH_FLAGS_32 = -xarch=v8plus
 
 <sunx86>
 LIBAFSRPC_OS_CFLAGS_libafsrpc_32 = -xarch=pentium_pro

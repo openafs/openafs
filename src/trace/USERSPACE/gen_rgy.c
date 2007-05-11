@@ -14,8 +14,7 @@
  * kernel support
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/directory.h>
 #include <osi/osi_proc.h>
 #include <osi/osi_rwlock.h>
@@ -112,6 +111,31 @@ osi_trace_gen_rgy_put(osi_trace_gen_id_t gen_id)
     res = osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_GEN_PUT, 
 			    (long) gen_id, 
 			    0, 
+			    0,
+			    &rv);
+
+    return res;
+}
+
+/*
+ * get a reference to a gen_id based upon an address structure
+ *
+ * [IN] addr     -- generator address to look up
+ * [OUT] gen_id  -- address in which to store generator address
+ *
+ * returns:
+ *   see osi_Trace_syscall()
+ */
+osi_result
+osi_trace_gen_rgy_get_by_addr(osi_trace_generator_address_t * addr,
+			      osi_trace_gen_id_t * gen_id)
+{
+    int rv;
+    osi_result res;
+
+    res = osi_Trace_syscall(OSI_TRACE_SYSCALL_OP_GEN_GET_BY_ADDR,
+			    (long) addr,
+			    (long) gen_id,
 			    0,
 			    &rv);
 

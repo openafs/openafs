@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,13 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_list.h>
 #include <osi/osi_object_cache.h>
 #include <osi/osi_mutex.h>
 #include <trace/console/trap.h>
 #include <trace/console/trap_impl.h>
-#include <trace/common/options.h>
 
 /*
  * osi tracing framework
@@ -119,7 +118,7 @@ osi_trace_console_trap_handler_PkgInit(void)
     osi_result res = OSI_OK;
 
     osi_mutex_Init(&osi_trace_console_trap_handler_rgy.lock,
-		   &osi_trace_common_options.mutex_opts);
+		   osi_trace_impl_mutex_opts());
     osi_list_Init(&osi_trace_console_trap_handler_rgy.handlers);
 
     osi_trace_console_trap_handler_cache =
@@ -130,7 +129,7 @@ osi_trace_console_trap_handler_PkgInit(void)
 				    osi_NULL,
 				    osi_NULL,
 				    osi_NULL,
-				    &osi_trace_common_options.mem_object_cache_opts);
+				    osi_trace_impl_mem_object_cache_opts());
     if (osi_compiler_expect_false(osi_trace_console_trap_handler_cache == osi_NULL)) {
 	res = OSI_ERROR_NOMEM;
 	goto error;

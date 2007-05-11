@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -65,14 +65,8 @@ osi_cache_probe(void)
 #endif /* !__sparc && !__x86 */
 
 
-osi_result
-osi_cache_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_cache_PkgInit)
 {
     return osi_cache_probe();
 }
 
-osi_result
-osi_cache_PkgShutdown(void)
-{
-    return OSI_OK;
-}

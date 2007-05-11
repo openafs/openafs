@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
-# Portions Copyright (c) 2006 Sine Nomine Associates
+# Portions Copyright (c) 2006-2007 Sine Nomine Associates
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -17,6 +17,10 @@ PUBLICHEADERS = \
 	condvar_options.h \
 	counter.h \
 	counter_inline.h \
+	demux.h \
+	demux_impl.h \
+	demux_options.h \
+	demux_types.h \
 	event.h \
 	event_lock.h \
 	event_types.h \
@@ -31,6 +35,7 @@ PUBLICHEADERS = \
 	mutex_options.h \
 	object_cache.h \
 	object_cache_impl.h \
+	object_cache_impl_types.h \
 	object_cache_types.h \
 	object_cache_options.h \
 	object_init.h \
@@ -46,16 +51,17 @@ PUBLICHEADERS = \
 	stats_impl.h \
 	string.h \
 	syscall.h \
+	thread.h \
+	thread_bind.h \
 	thread_event.h \
 	thread_event_impl.h \
 	thread_event_inline.h \
 	thread_option.h \
+	time.h \
 	time_approx.h \
 	ucopy.h \
 	uproc.h \
 	uproc_inline.h \
-	usignal.h \
-	usignal_inline.h \
 	usyscall.h \
 	usyscall_impl.h \
 	usysincludes.h \
@@ -69,22 +75,36 @@ INSTALL_HDR_DIR=${DESTDIR}${includedir}/osi/COMMON
 DEST_HDR_DIR=${DEST}/include/osi/COMMON
 include @TOP_OBJDIR@/src/config/Makefile.public-header
 
+RECURSE_DIRS= \
+	data \
+	$(NULL)
+
+include @TOP_OBJDIR@/src/config/Makefile.recurse
+
 all:	\
-	depinstall
+	depinstall \
+	build_recurse \
+	$(NULL)
 
 depinstall: \
-	depinstall_hdrs
+	depinstall_hdrs \
+	depinstall_recurse \
+	$(NULL)
 
 #
 # Installation targets
 #
 install: \
-	install_hdrs
+	install_hdrs \
+	install_recurse \
+	$(NULL)
 
 dest: \
-	dest_hdrs
+	dest_hdrs \
+	dest_recurse \
+	$(NULL)
 
 #
 # Misc. targets
 #
-clean:
+clean: clean_recurse

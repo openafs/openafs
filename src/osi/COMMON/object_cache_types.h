@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -12,69 +12,25 @@
 
 /*
  * osi memory object cache
- * type definitions
- */
-
-/* 
- * constructor function prototype
- *
- * [IN] buf -- newly allocated object buffer
- * [IN] sdata -- opaque pointer
- * [IN] flags -- flags (should be ignored for now)
- *
- * return codes:
- *   zero on success
- *   non-zero on failure
- */
-typedef int osi_mem_object_cache_constructor_t(void * buf, void * sdata, int flags);
-
-/* 
- * destructor function prototype
- *
- * [IN] buf -- object about to be returned to main system memory pool
- * [IN] sdata -- opaque pointer
- *
- */
-typedef void osi_mem_object_cache_destructor_t(void * buf, void * sdata);
-
-/* 
- * reclaim function prototype
- * called on low-memory conditions
- *
- * [IN] sdata -- opaque pointer
- *
- */
-typedef void osi_mem_object_cache_reclaim_t(void * sdata);
-
-
-/*
- * now pull in definition of _osi_mem_object_cache_handle_t
- */
-
-#if defined(OSI_KERNELSPACE_ENV)
-
-#if defined(OSI_SUN5_ENV)
-#include <osi/SOLARIS/kmem_object_cache_types.h>
-#endif
-
-#else /* !OSI_KERNELSPACE_ENV */
-
-#if defined(OSI_SUN59_ENV)
-#include <osi/SOLARIS/umem_object_cache_types.h>
-#endif
-
-#endif /* !OSI_KERNELSPACE_ENV */
-
-#include <osi/LEGACY/object_cache_types.h>
-
-
-/*
- * finally, define osi_mem_object_cache_t
+ * common support
+ * public type definitions
  */
 
 typedef struct {
-    _osi_mem_object_cache_handle_t handle;
-    osi_mem_object_cache_options_t options;
-} osi_mem_object_cache_t;
+    osi_uint8 trace_allowed;       /* whether or not cache tracing is allowed */
+    osi_uint8 trace_enabled;       /* enable cache tracing */
+} osi_mem_object_cache_options_t;
+/* defaults:  { 1, 0 } */
+
+typedef enum {
+    OSI_MEM_OBJECT_CACHE_OPTION_TRACE_ALLOWED,
+    OSI_MEM_OBJECT_CACHE_OPTION_TRACE_ENABLED,
+    OSI_MEM_OBJECT_CACHE_OPTION_MAX_ID
+} osi_mem_object_cache_options_param_t;
+
+
+/* forward declare */
+struct osi_mem_object_cache;
+typedef struct osi_mem_object_cache osi_mem_object_cache_t;
 
 #endif /* _OSI_COMMON_OBJECT_CACHE_TYPES_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,10 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
-#include <osi/osi_mem.h>
+#include <osi/osi_mem_local.h>
 #include <osi/osi_kernel.h>
 #include <osi/osi_condvar.h>
 #include <trace/generator/activation.h>
@@ -290,7 +289,7 @@ osi_trace_cursor_readv(osi_trace_cursor_t * cursor,
 
     /* copyout the tracepoint records */
     for (i = 0; i < tot_xfer; i++, idx++) {
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 	AFS_COPYOUT(&tracebuf->buf[idx & tracebuf->blocks_mask],
 		    rv->rvec[i], sizeof(osi_TracePoint_record), copy_res);
 	if (osi_compiler_expect_false(copy_res)) {
@@ -384,7 +383,7 @@ osi_trace_cursor_readv(osi_trace_cursor_t * cursor,
     }
 
     for (i = 0; i < tot_xfer; i++, idx++) {
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 	AFS_COPYOUT(&tracebuf->buf[idx & tracebuf->blocks_mask],
 		    rv->rvec[i], sizeof(osi_TracePoint_record), copy_res);
 	if (osi_compiler_expect_false(copy_res)) {

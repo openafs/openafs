@@ -17,7 +17,7 @@
  * mail handler
  */
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 osi_extern osi_result osi_trace_gen_rgy_msg_PkgInit(void);
 osi_extern osi_result osi_trace_gen_rgy_msg_PkgShutdown(void);
 #endif

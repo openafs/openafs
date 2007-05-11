@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -44,11 +44,15 @@ osi_extern osi_result osi_trace_mail_bcast_del(osi_trace_mailbox_t * mbox);
 /*
  * mcast api
  */
+#define OSI_TRACE_MAIL_GEN_LOCK_NOT_HELD 0
+#define OSI_TRACE_MAIL_GEN_LOCK_HELD 1
 osi_extern osi_result osi_trace_mail_mcast_init(osi_trace_gen_id_t mcast_id);
 osi_extern osi_result osi_trace_mail_mcast_destroy(osi_trace_gen_id_t mcast_id);
 osi_extern osi_result osi_trace_mail_mcast_add(osi_trace_gen_id_t mcast_id, 
-					       osi_trace_mailbox_t * mbox);
+					       osi_trace_mailbox_t * mbox,
+					       int gen_lock_held);
 osi_extern osi_result osi_trace_mail_mcast_del(osi_trace_gen_id_t mcast_id, 
-					       osi_trace_mailbox_t * mbox);
+					       osi_trace_mailbox_t * mbox,
+					       int gen_lock_held);
 
 #endif /* _OSI_TRACE_KERNEL_POSTMASTER_IMPL_H */

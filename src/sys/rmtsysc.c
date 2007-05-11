@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
@@ -12,8 +14,8 @@
  * the rpc version (via rx) of non-standard system calls. Currently only rpc
  * calls of setpag, and pioctl are supported.
  */
-#include <afsconfig.h>
-#include <afs/param.h>
+
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");

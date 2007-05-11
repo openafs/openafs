@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -33,7 +33,7 @@ osi_extern void osi_mutex_Init(osi_mutex_t *, osi_mutex_options_t *);
 #define OSI_IMPLEMENTS_MUTEX 1
 #define OSI_IMPLEMENTS_MUTEX_NBLOCK 1
 
-#include <linux/semaphore.h>
+#include <asm/semaphore.h>
 
 typedef struct {
     struct semaphore lock;

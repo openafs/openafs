@@ -1,6 +1,6 @@
 package osi::trace::console::agent;
 
-use 5.008008;
+use 5.006;
 use strict;
 use warnings;
 
@@ -89,7 +89,7 @@ Tom Keiser, E<lt>tkeiser@sinenomine.netE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 Sine Nomine Associates and others.
+Copyright (C) 2006-2007 Sine Nomine Associates and others.
 All Rights Reserved.
 
 This software has been released under the terms of the IBM Public

@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /* Daemon that implements remote procedure call service for non-vendor system
@@ -13,8 +15,7 @@
  * This is the main routine for rmtsysd, which can be used separately from
  * afsd.
  */
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -62,6 +63,10 @@ main(int argc, char *argv[])
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_RMTSYSD,
+			     osi_NULL));
+
     /* Initialize the rx-based RMTSYS server */
     if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0)
 	rmt_Quit("rx_init");

@@ -5,14 +5,15 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
  * ALL RIGHTS RESERVED
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -469,6 +470,9 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     ts = cmd_CreateSyntax(NULL, cmdproc, 0, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
@@ -479,5 +483,8 @@ main(argc, argv)
 		"display all tokens for remote [host,id]");
 
     code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+
     return code;
 }

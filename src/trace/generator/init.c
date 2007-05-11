@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/common/init.h>
 #include <trace/generator/generator.h>
 #include <trace/generator/init.h>
@@ -20,8 +19,7 @@
  * osi tracing framework
  */
 
-osi_result
-osi_trace_generator_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_trace_generator_PkgInit)
 {
     osi_result res;
 
@@ -53,8 +51,7 @@ osi_trace_generator_PkgInit(void)
     return res;
 }
 
-osi_result
-osi_trace_generator_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_trace_generator_PkgShutdown)
 {
     osi_result res;
 
@@ -82,13 +79,11 @@ osi_trace_generator_PkgShutdown(void)
     return res;
 }
 
-osi_result
-osi_Trace_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_Trace_PkgInit)
 {
     return osi_trace_generator_PkgInit();
 }
-osi_result
-osi_Trace_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_Trace_PkgShutdown)
 {
     return osi_trace_generator_PkgShutdown();
 }

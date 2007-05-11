@@ -5,14 +5,15 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
  * Scout: A quick and (semi-)dirty attempt at the old CMU vopcon.
  *------------------------------------------------------------------------*/
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -2352,6 +2353,10 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Utility,
+			     osi_NULL));
+
     /*
      * Set up the commands we understand.
      */
@@ -2378,6 +2383,9 @@ main(argc, argv)
      * out of here.
      */
     code = cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
+
     if (code) {
 #if 0
 	fprintf(stderr, "[%s:%s] Call to cmd_Dispatch() failed; code is %d\n",

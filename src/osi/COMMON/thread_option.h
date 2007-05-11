@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -11,6 +11,18 @@
 #define _OSI_COMMON_THREAD_OPTION_H 1
 
 #include <osi/osi_mem.h>
+
+typedef struct osi_thread_options {
+    osi_uint8 detached;            /* create thread with detached option enabled */
+    osi_uint8 trace_allowed;       /* whether or not thread tracing is allowed */
+} osi_thread_options_t;
+/* defaults:  { 0, 1 } */
+
+typedef enum {
+    OSI_THREAD_OPTION_DETACHED,
+    OSI_THREAD_OPTION_TRACE_ALLOWED,
+    OSI_THREAD_OPTION_MAX_ID
+} osi_thread_options_param_t;
 
 #define osi_thread_options_Init(opt) \
     osi_Macro_Begin \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -58,7 +58,7 @@
  *     -- set the osi_mem_local_ctx_data struct for this context
  *
  * the following interface is only required if
- * !defined(OSI_MEM_LOCAL_CPU_ARRAY) && defined(OSI_KERNELSPACE_ENV)
+ * !defined(OSI_MEM_LOCAL_CPU_ARRAY) && defined(OSI_ENV_KERNELSPACE)
  *   struct osi_mem_local_ctx_data * osi_mem_local_ctx_get_ctx(osi_mem_local_ctx_id_t);
  *     -- get the osi_mem_local_ctx_data struct for a specific context
  *
@@ -78,7 +78,7 @@
 #include <osi/COMMON/mem_local_types.h>
 
 
-#if defined(OSI_KERNELSPACE_ENV) && defined(OSI_MEM_LOCAL_CPU_ARRAY)
+#if defined(OSI_ENV_KERNELSPACE) && defined(OSI_MEM_LOCAL_CPU_ARRAY)
 /*
  * Many platforms don't provide a mechanism for cpu-local storage
  * for kernel modules, so we have to do it ourselves.  This
@@ -87,16 +87,16 @@
  */
 osi_extern struct osi_mem_local_ctx_data ** osi_mem_local_ctx_data;
 
-#define osi_mem_local_ctx_get()        (osi_mem_local_ctx_data[osi_cpu_current()])
+#define osi_mem_local_ctx_get()        (osi_mem_local_ctx_data[osi_cpu_current_id()])
 #define osi_mem_local_ctx_put()
 #define osi_mem_local_ctx_get_ctx(ctx) (osi_mem_local_ctx_data[ctx])
-#define osi_mem_local_ctx_set(ctx)     (osi_mem_local_ctx_data[osi_cpu_current()] = (ctx))
+#define osi_mem_local_ctx_set(ctx)     (osi_mem_local_ctx_data[osi_cpu_current_id()] = (ctx))
 #endif /* OSI_MEM_LOCAL_CPU_ARRAY */
 
 
+OSI_INIT_FUNC_PROTOTYPE(osi_mem_local_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_mem_local_PkgShutdown);
 
-osi_extern osi_result osi_mem_local_PkgInit(void);
-osi_extern osi_result osi_mem_local_PkgShutdown(void);
 osi_extern osi_result osi_mem_local_ctx_init(osi_mem_local_ctx_id_t ctx, 
 					     struct osi_mem_local_ctx_data ** ret);
 
@@ -107,12 +107,12 @@ osi_extern osi_result osi_mem_local_key_create(osi_mem_local_key_t *,
 osi_extern osi_result osi_mem_local_key_destroy(osi_mem_local_key_t);
 
 osi_extern osi_result osi_mem_local_alloc(osi_mem_local_key_t,
-					  size_t len, size_t align);
+					  osi_size_t len, osi_size_t align);
 
 osi_extern osi_result osi_mem_local_set(osi_mem_local_key_t,
 					void * data);
 
-#if defined(OSI_USERSPACE_ENV)
+#if defined(OSI_ENV_USERSPACE)
 /* get a specific thread's mem local context structure */
 osi_extern struct osi_mem_local_ctx_data * osi_mem_local_ctx_get_ctx(osi_mem_local_ctx_id_t);
 #endif
@@ -122,7 +122,7 @@ osi_extern struct osi_mem_local_ctx_data * osi_mem_local_ctx_get_ctx(osi_mem_loc
  * context-local getters
  */
 
-#if defined(OSI_KERNELSPACE_ENV)
+#if defined(OSI_ENV_KERNELSPACE)
 #if defined(OSI_MEM_LOCAL_PREEMPT_INTERNAL)
 
 #define osi_mem_local_get(key) \
@@ -141,13 +141,13 @@ osi_extern struct osi_mem_local_ctx_data * osi_mem_local_ctx_get_ctx(osi_mem_loc
     osi_Macro_End
 
 #endif /* !OSI_MEM_LOCAL_PREEMPT_INTERNAL */
-#else /* !OSI_KERNELSPACE_ENV */
+#else /* !OSI_ENV_KERNELSPACE */
 
 #define osi_mem_local_get(key) \
     (osi_mem_local_ctx_get()->keys[key])
 #define osi_mem_local_put(key)
 
-#endif /* !OSI_KERNELSPACE_ENV */
+#endif /* !OSI_ENV_KERNELSPACE */
 
 
 #if (OSI_ENV_INLINE_INCLUDE)

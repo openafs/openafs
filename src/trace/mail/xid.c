@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -13,15 +13,13 @@
  * transaction id subsystem
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_atomic.h>
 #include <osi/osi_mutex.h>
 #include <trace/mail.h>
 #include <trace/mail/xid.h>
-#include <trace/common/options.h>
 
 #include <osi/osi_lib_init.h>
 

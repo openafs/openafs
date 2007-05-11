@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -264,8 +264,7 @@ osi_cpu_monitor_unregister(osi_cpu_monitor_t * fp, void * arg)
 }
 
 
-osi_result
-osi_cpu_PkgInit(void)
+OSI_INIT_FUNC_DECL(osi_cpu_PkgInit)
 {
     int i;
 
@@ -288,8 +287,7 @@ osi_cpu_PkgInit(void)
     return OSI_OK;
 }
 
-osi_result
-osi_cpu_PkgShutdown(void)
+OSI_FINI_FUNC_DECL(osi_cpu_PkgShutdown)
 {
     osi_Assert(osi_cpu_monitor_state.initialized == OSI_CPU_INIT_MAGIC);
 

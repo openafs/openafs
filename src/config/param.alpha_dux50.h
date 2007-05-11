@@ -202,6 +202,7 @@ enum vcexcl { NONEXCL, EXCL };
 
 /* global defines */
 
+#define OSI_ENV_UNIX    1
 #define	OSI_OSF_ENV	1
 #define	OSI_OSF20_ENV	1
 #define	OSI_OSF30_ENV	1

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -24,6 +24,8 @@ osi_extern osi_result osi_PkgInit(osi_ProgramType_t, osi_options_t *);
 osi_extern osi_result osi_PkgShutdown(void);
 osi_extern osi_result osi_PkgInitChild(osi_ProgramType_t);
 
+OSI_INIT_FUNC_PROTOTYPE(osi_null_init_func);
+OSI_FINI_FUNC_PROTOTYPE(osi_null_fini_func);
 
 osi_extern osi_result osi_nullfunc();
 osi_extern void osi_Panic();

@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -355,11 +356,17 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe ubik server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
 
     cmd_Dispatch(argc, argv);
+
+    osi_AssertOK(osi_PkgShutdown());
     exit(0);
 }

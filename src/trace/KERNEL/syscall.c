@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <trace/generator/cursor.h>
@@ -22,7 +21,7 @@
 #include <trace/KERNEL/cursor.h>
 #include <trace/KERNEL/gen_rgy.h>
 #include <trace/KERNEL/postmaster.h>
-#include <trace/generator/module.h>
+#include <trace/KERNEL/module.h>
 
 /*
  * osi tracing framework
@@ -64,7 +63,9 @@ osi_Trace_syscall_handler(long opcode,
 
     switch (opcode) {
     case OSI_TRACE_SYSCALL_OP_INSERT:
-	res = osi_TraceFunc_UserTraceTrap((osi_TracePoint_record *)p1);
+	res = osi_TraceFunc_UserTraceTrap((void *)p1,
+					  (osi_uint32)p2,
+					  (osi_size_t)p3);
 	if (OSI_RESULT_FAIL_UNLIKELY(res)) {
 	    code = EAGAIN;
 	}
@@ -105,8 +106,14 @@ osi_Trace_syscall_handler(long opcode,
     case OSI_TRACE_SYSCALL_OP_ENABLE:
 	osi_kernel_copy_in_string(p1, probe_name, sizeof(probe_name), &bufferlen, &code);
 	if (osi_compiler_expect_true(!code)) {
-	    res = osi_trace_probe_enable_by_filter(probe_name);
-	    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	    osi_uint32 nhits;
+	    res = osi_trace_probe_enable_by_filter(probe_name, &nhits);
+	    if (OSI_RESULT_OK_LIKELY(res)) {
+		/* old versions of libosi_trace_consumer don't pass argument p2 */
+		if (p2) {
+		    osi_kernel_copy_out(&nhits, p2, sizeof(nhits), &code);
+		}
+	    } else {
 		code = EINVAL;
 	    }
 	}
@@ -114,8 +121,14 @@ osi_Trace_syscall_handler(long opcode,
     case OSI_TRACE_SYSCALL_OP_DISABLE:
 	osi_kernel_copy_in_string(p1, probe_name, sizeof(probe_name), &bufferlen, &code);
 	if (osi_compiler_expect_true(!code)) {
-	    res = osi_trace_probe_disable_by_filter(probe_name);
-	    if (OSI_RESULT_FAIL_UNLIKELY(res)) {
+	    osi_uint32 nhits;
+	    res = osi_trace_probe_disable_by_filter(probe_name, &nhits);
+	    if (OSI_RESULT_OK_LIKELY(res)) {
+		/* old versions of libosi_trace_consumer don't pass argument p2 */
+		if (p2) {
+		    osi_kernel_copy_out(&nhits, p2, sizeof(nhits), &code);
+		}
+	    } else {
 		code = EINVAL;
 	    }
 	}

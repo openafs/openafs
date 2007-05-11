@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -7,8 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <osi/osi.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <osi/osi_cache.h>
 #include <osi/osi_mem.h>
 #include <osi/osi_kernel.h>
@@ -19,7 +18,6 @@
 #include <trace/gen_rgy.h>
 #include <trace/mail.h>
 #include <trace/mail/msg.h>
-#include <trace/common/options.h>
 #include <trace/KERNEL/gen_rgy.h>
 #include <trace/KERNEL/postmaster.h>
 #include <trace/mail/common.h>
@@ -124,10 +122,10 @@ harness(void)
 	goto error;
     }
 
-    osi_mutex_Init(&checker_lock, &osi_trace_common_options.mutex_opts);
-    osi_condvar_Init(&checker_cv, &osi_trace_common_options.condvar_opts);
+    osi_mutex_Init(&checker_lock, osi_trace_impl_mutex_opts());
+    osi_condvar_Init(&checker_cv, osi_trace_impl_condvar_opts());
     osi_mutex_Lock(&checker_lock);
-    osi_thread_createU(&tid, &check_thread, osi_NULL, &osi_trace_common_options.thread_opts);
+    osi_thread_createU(&tid, &check_thread, osi_NULL, osi_trace_impl_thread_opts());
     while (!checker_online) {
 	(osi_Msg "%s: waiting for checker thread to come online...\n", __osi_func__);
 	osi_condvar_Wait(&checker_cv, &checker_lock);
@@ -145,7 +143,7 @@ harness(void)
     for (i = 1; i <= TEST_GENS; i++) {
 	send_thread_args[i-1].index = i-1;
 	osi_thread_createU(&tid, &send_thread, &send_thread_args[i-1], 
-			   &osi_trace_common_options.thread_opts);
+			   osi_trace_impl_thread_opts());
     }
 
     for (i = 0; i < 5; i++) {

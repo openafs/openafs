@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -112,6 +113,7 @@ main(int argc, char **argv)
     afs_uint32 u_uid, u_gid;	/*Unsigned long versions of the above */
     struct stat tstat;
 
+    int code = 0;
     afs_uint32 mode;
     int error;
     char hostname[MAXSIZE];
@@ -142,6 +144,10 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Utility,
+			     osi_NULL));
+
     whoami = argv[0];
 #ifdef AFS_NT40_ENV
     /* dummy signal call to force afsprocmgmt.dll to load on NT */
@@ -151,7 +157,8 @@ main(int argc, char **argv)
     if (afs_winsockInit() < 0) {
 	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
 	fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
-	exit(1);
+	code = 1;
+	goto error;
     }
 #endif
 
@@ -162,7 +169,8 @@ main(int argc, char **argv)
 #endif
 	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
 		argv[0]);
-	exit(2);
+	code = 2;
+	goto error;
     }
     retrytime = 60;
     dirname = NULL;
@@ -195,7 +203,8 @@ main(int argc, char **argv)
 	      usage:
 		printf
 		    ("Usage: upclient <hostname> [-crypt] [-clear] [-t <retry time>] [-verbose]* <dir>+ [-help]\n");
-		exit(1);
+		code = 1;
+		goto error;
 	    }
 	} else if (strlen(hostname) == 0)
 	    strcpy(hostname, argv[a]);
@@ -219,14 +228,16 @@ main(int argc, char **argv)
     if (errcode) {
 	printf("Rx initialize failed \n");
 	com_err(whoami, errcode, "calling Rx init");
-	exit(1);
+	code = 1;
+	goto error;
     }
 
     cdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (cdir == 0) {
 	fprintf(stderr, "Can't get server configuration info (%s)\n",
 		AFSDIR_SERVER_ETC_DIRPATH);
-	exit(1);
+	code = 1;
+	goto error;
     }
 
     if (level == rxkad_crypt)
@@ -235,11 +246,13 @@ main(int argc, char **argv)
 	errcode = afsconf_ClientAuth(cdir, &sc, &scIndex);
     else {
 	printf("Unsupported security level %d\n", level);
-	exit(1);
+	code = 1;
+	goto error;
     }
     if (errcode) {
 	com_err(whoami, errcode, "Couldn't get security obect for localAuth");
-	exit(1);
+	code = 1;
+	goto error;
     }
 
   again:
@@ -261,7 +274,8 @@ main(int argc, char **argv)
 	    /* construct local path from canonical (wire-format) path */
 	    if ((errcode = ConstructLocalPath(df->name, "/", &curDir))) {
 		com_err(whoami, errcode, "Unable to construct local path");
-		return errcode;
+		code = errcode;
+		goto error;
 	    }
 
 	    if (stat(curDir, &tstat) < 0) {
@@ -273,12 +287,14 @@ main(int argc, char **argv)
 #endif
 		    com_err(whoami, errno, "can't create dir");
 		    printf("upclient: Can't update dir %s\n", curDir);
-		    return -1;
+		    code = -1;
+		    goto error;
 		}
 	    } else {
 		if ((tstat.st_mode & S_IFMT) != S_IFDIR) {
 		    printf(" file %s is not a directory; aborting\n", curDir);
-		    return -1;
+		    code = -1;
+		    goto error;
 		}
 	    }
 	    call = rx_NewCall(conn);
@@ -339,7 +355,8 @@ main(int argc, char **argv)
 		    if (errcode == -1) {	/* time to quit */
 			fclose(stream);
 			unlink(dirbuf);
-			return -1;
+			code = -1;
+			goto error;
 		    }
 		}
 
@@ -365,8 +382,10 @@ main(int argc, char **argv)
 		    strcat(filename, dp->d_name);
 		    /* if the file filename is redundant, delete it */
 		    errcode = NotOnHost(filename, okhostfiles);
-		    if (errcode == -1)
-			return -1;
+		    if (errcode == -1) {
+			code = -1;
+			goto error;
+		    }
 		    if (errcode == 1) {
 			if (verbose >= 2)
 			    printf("  flushing %s\n", filename);
@@ -381,8 +400,10 @@ main(int argc, char **argv)
 		closedir(dirp);
 	    }
 	    /* Now, rename the .NEW files created by FetchFile */
-	    if (RenameNewFiles(ModFiles))
-		return -1;
+	    if (RenameNewFiles(ModFiles)) {
+		code = -1;
+		goto error;
+	    }
 
 	    free(curDir);
 	}			/* end for each dir loop */
@@ -402,6 +423,10 @@ main(int argc, char **argv)
 	/* start the cycle again */
 
     }
+
+ error:
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 }
 
 /* returns 1 if the file is upto date else returns 0*/

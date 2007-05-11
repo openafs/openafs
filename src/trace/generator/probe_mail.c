@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -15,8 +15,7 @@
  * mail handlers
  */
 
-#include <osi/osi_impl.h>
-#include <osi/osi_trace.h>
+#include <trace/common/trace_impl.h>
 #include <trace/generator/activation.h>
 #include <trace/generator/probe_impl.h>
 #include <trace/generator/probe.h>
@@ -41,6 +40,7 @@ osi_trace_probe_msg_activate(osi_trace_mail_message_t * msg)
     osi_trace_mail_msg_probe_activate_request_t * req;
     osi_trace_mail_msg_probe_activate_response_t * res;
     osi_trace_mail_message_t * msg_out = osi_NULL;
+    osi_uint32 nhits = 0;
 
     /* parse incoming message */
     req = (osi_trace_mail_msg_probe_activate_request_t *)
@@ -49,7 +49,8 @@ osi_trace_probe_msg_activate(osi_trace_mail_message_t * msg)
 
 
     /* perform probe activation */
-    rcode = osi_trace_probe_enable_by_filter(req->probe_filter);
+    rcode = osi_trace_probe_enable_by_filter(req->probe_filter,
+					     &nhits);
 
 
     /* send a response message */
@@ -63,7 +64,7 @@ osi_trace_probe_msg_activate(osi_trace_mail_message_t * msg)
     res->spares[0] = 0;
     res->spares[1] = 0;
     res->code = rcode;
-    res->nhits = 0;
+    res->nhits = nhits;
 
     code = osi_trace_mail_prepare_response(msg,
 					   msg_out,
@@ -92,6 +93,7 @@ osi_trace_probe_msg_deactivate(osi_trace_mail_message_t * msg)
     osi_trace_mail_msg_probe_deactivate_request_t * req;
     osi_trace_mail_msg_probe_deactivate_response_t * res;
     osi_trace_mail_message_t * msg_out = osi_NULL;
+    osi_uint32 nhits = 0;
 
     /* parse incoming message */
     req = (osi_trace_mail_msg_probe_deactivate_request_t *)
@@ -100,7 +102,8 @@ osi_trace_probe_msg_deactivate(osi_trace_mail_message_t * msg)
 
 
     /* perform probe activation */
-    rcode = osi_trace_probe_disable_by_filter(req->probe_filter);
+    rcode = osi_trace_probe_disable_by_filter(req->probe_filter,
+					      &nhits);
 
 
     /* send a response message */
@@ -114,7 +117,7 @@ osi_trace_probe_msg_deactivate(osi_trace_mail_message_t * msg)
     res->spares[0] = 0;
     res->spares[1] = 0;
     res->code = rcode;
-    res->nhits = 0;
+    res->nhits = nhits;
 
     code = osi_trace_mail_prepare_response(msg,
 					   msg_out,

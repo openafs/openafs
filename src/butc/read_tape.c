@@ -5,10 +5,11 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -545,8 +546,12 @@ main(argc, argv)
      int argc;
      char **argv;
 {
+    int code;
     struct cmd_syndesc *ts;
     struct cmd_item *ti;
+
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_Utility,
+			     osi_NULL));
 
     setlinebuf(stdout);
 
@@ -565,5 +570,7 @@ main(argc, argv)
 		"Display volume headers");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");
 
-    return cmd_Dispatch(argc, argv);
+    code = cmd_Dispatch(argc, argv);
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 }

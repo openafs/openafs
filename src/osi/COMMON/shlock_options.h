@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -11,6 +11,20 @@
 #define _OSI_COMMON_SHLOCK_OPTIONS_H 1
 
 #include <osi/osi_mem.h>
+
+typedef struct osi_shlock_options {
+    osi_uint8 preemptive_only;     /* only activate in pre-emptive environments (e.g. no-op for LWP) */
+    osi_uint8 trace_allowed;       /* whether or not lock tracing is allowed */
+    osi_uint8 trace_enabled;       /* enable lock tracing */
+} osi_shlock_options_t;
+/* defaults:  { 0, 1, 0 } */
+
+typedef enum {
+    OSI_SHLOCK_OPTION_PREEMPTIVE_ONLY,
+    OSI_SHLOCK_OPTION_TRACE_ALLOWED,
+    OSI_SHLOCK_OPTION_TRACE_ENABLED,
+    OSI_SHLOCK_OPTION_MAX_ID
+} osi_shlock_options_param_t;
 
 #define osi_shlock_options_Init(opt) \
     osi_Macro_Begin \

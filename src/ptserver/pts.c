@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2007 Sine Nomine Associates
  */
 
 /*
@@ -19,8 +21,7 @@
  *
  */
 
-#include <afsconfig.h>
-#include <afs/param.h>
+#include <osi/osi.h>
 
 RCSID
     ("$Header$");
@@ -1052,6 +1053,9 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
+    osi_AssertOK(osi_PkgInit(osi_ProgramType_EphemeralUtility,
+			     osi_NULL));
+
     ts = cmd_CreateSyntax("creategroup", CreateGroup, 0,
 			  "create a new group");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "group name");
@@ -1163,7 +1167,8 @@ main(int argc, char **argv)
     finished = 1;
     if (code = cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
-	exit(1);
+	code = 1;
+	goto error;
     }
     source = stdin;
     while (!finished) {
@@ -1189,7 +1194,8 @@ main(int argc, char **argv)
 			  sizeof(parsev) / sizeof(*parsev));
 	if (code) {
 	    com_err(whoami, code, "parsing line: <%s>", line);
-	    exit(2);
+	    code = 2;
+	    goto error;
 	}
 	savec = parsev[0];
 	parsev[0] = argv[0];
@@ -1198,12 +1204,16 @@ main(int argc, char **argv)
 	cmd_FreeArgv(parsev);
     }
     CleanUp(NULL, NULL);
-    exit(0);
+
+ error:
+    osi_AssertOK(osi_PkgShutdown());
+    return code;
 
 #else /* SUPERGROUPS */
 
     cmd_SetAfterProc(CleanUp, 0);
     code = cmd_Dispatch(argc, argv);
-    exit(code != 0);
+    osi_AssertOK(osi_PkgShutdown());
+    return (code != 0);
 #endif /* SUPERGROUPS */
 }

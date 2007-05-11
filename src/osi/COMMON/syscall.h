@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -10,7 +10,7 @@
 #ifndef _OSI_COMMON_SYSCALL_H
 #define _OSI_COMMON_SYSCALL_H 1
 
-osi_extern osi_result osi_syscall_PkgInit(void);
-osi_extern osi_result osi_syscall_PkgShutdown(void);
+OSI_INIT_FUNC_PROTOTYPE(osi_syscall_PkgInit);
+OSI_FINI_FUNC_PROTOTYPE(osi_syscall_PkgShutdown);
 
 #endif /* _OSI_COMMON_SYSCALL_H */

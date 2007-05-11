@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -95,21 +95,6 @@
 #define osi_sym_global
 #define osi_sym_hidden
 #define osi_sym_internal
-#endif
-
-/*
- * _init/_fini support
- */
-#if defined(__osi_env_gcc)
-#define osi_lib_init_prototype(name) osi_static void name(void) __attribute__((constructor))
-#define osi_lib_fini_prototype(name) osi_static void name(void) __attribute__((destructor))
-#define osi_lib_init_decl(name) osi_static void name(void)
-#define osi_lib_fini_decl(name) osi_static void name(void)
-#else
-#define osi_lib_init_prototype(name) osi_static void __osi_lib_obj_ctor(void)
-#define osi_lib_fini_prototype(name) osi_static void __osi_lib_obj_dtor(void)
-#define osi_lib_init_decl(name) osi_static void __osi_lib_obj_ctor(void)
-#define osi_lib_fini_decl(name) osi_static void __osi_lib_obj_dtor(void)
 #endif
 
 

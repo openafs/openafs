@@ -1,5 +1,5 @@
 /*
- * Copyright 2006, Sine Nomine Associates and others.
+ * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -71,6 +71,18 @@
 #define OSI_ENV_INLINE_INCLUDE 1
 #endif /* !OSI_ENV_INLINE_BUILD */
 
+
+#if defined(OSI_DEBUG_INLINE)
+
+#define osi_inline_prototype(proto) osi_extern proto;
+#if defined(OSI_ENV_INLINE_BUILD)
+#define osi_inline_define(def) def
+#else /* !OSI_ENV_INLINE_BUILD */
+#define osi_inline_define(def)
+#endif
+
+#else /* !OSI_DEBUG_INLINE */
+
 #if defined(OSI_ENV_ISO_C99)
 
 #define osi_inline_define(def) osi_inline def
@@ -99,5 +111,7 @@
 #endif /* !OSI_ENV_INLINE_BUILD */
 
 #endif /* !OSI_ENV_ISO_C99 && ! __osi_env_gcc */
+
+#endif /* !OSI_DEBUG_INLINE */
 
 #endif /* _OSI_OSI_INLINE_H */
