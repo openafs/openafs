@@ -2382,17 +2382,19 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    }
 	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);
-	    ObtainWriteLock(&afs_xcbhash, 454);
-	    afs_DequeueCallback(avc);
-	    avc->states &= ~(CStatd | CUnique);
-	    ReleaseWriteLock(&afs_xcbhash);
-	    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-		osi_dnlc_purgedp(avc);
-	    /*
-	     * Locks held:
-	     * avc->lock(W); assert(!setLocks || slowPass)
-	     */
-	    osi_Assert(!setLocks || slowPass);
+	    if (!afs_IsDynroot(avc)) {
+		ObtainWriteLock(&afs_xcbhash, 454);
+		afs_DequeueCallback(avc);
+		avc->states &= ~(CStatd | CUnique);
+		ReleaseWriteLock(&afs_xcbhash);
+		if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+		    osi_dnlc_purgedp(avc);
+		/*
+		 * Locks held:
+		 * avc->lock(W); assert(!setLocks || slowPass)
+		 */
+		osi_Assert(!setLocks || slowPass);
+	    }
 	    tdc = NULL;
 	    goto done;
 	}
