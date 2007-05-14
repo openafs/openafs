@@ -1100,12 +1100,11 @@ bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
 	    fprintf(bozo_logFile, "%s ", tdate);
 	    fprintf(bozo_logFile, a, b, c, d, e, f);
 	    fflush(bozo_logFile);
+	    /* close so rm BosLog works */
+	    fclose(bozo_logFile);
 	} else {
 	    printf("%s ", tdate);
 	    printf(a, b, c, d, e, f);
 	}
-
-	/* close so rm BosLog works */
-	fclose(bozo_logFile);
     }
 }
