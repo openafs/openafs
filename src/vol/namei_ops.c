@@ -1144,6 +1144,8 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     int ninodes;
     struct afs_stat status;
 
+    *forcep = 0; /* no need to salvage until further notice */
+
     if (resultFile) {
 	fp = afs_fopen(resultFile, "w");
 	if (!fp) {
