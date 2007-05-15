@@ -41,11 +41,6 @@ struct sbstruct {
         int sb_default;
 };
 
-#define CM_IOCTLCACHEPARMS		16
-typedef struct cm_cacheParms {
-        afs_uint64 parms[CM_IOCTLCACHEPARMS];
-} cm_cacheParms_t;
-
 /* set cell flags */
 #define CM_SETCELLFLAG_SUID		2
 

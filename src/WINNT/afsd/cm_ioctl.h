@@ -40,6 +40,11 @@ typedef struct cm_SSetPref {
         struct cm_SPref servers[1];/* we overrun this array intentionally...*/
 } cm_SSetPref_t;
 
+#define CM_IOCTLCACHEPARMS		16
+typedef struct cm_cacheParms {
+        afs_uint64 parms[CM_IOCTLCACHEPARMS];
+} cm_cacheParms_t;
+
 
 #define MAXNUMSYSNAMES    16      /* max that current constants allow */
 #define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
