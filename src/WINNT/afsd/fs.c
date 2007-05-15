@@ -2277,28 +2277,27 @@ SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
-#define MAXGCSIZE	16
 static int
 GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    afs_uint64 parms[MAXGCSIZE];
+    cm_cacheParms_t parms;
 
-    memset(parms, 0, sizeof(parms));
+    memset(&parms, 0, sizeof(parms));
     blob.in = NULL;
     blob.in_size = 0;
     blob.out_size = sizeof(parms);
-    blob.out = (char *) parms;
+    blob.out = (char *) &parms;
     code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
     if (code) {
 	Die(errno, NULL);
         return 1;
     }
      
-    printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
-           parms[1], parms[0]);
-    if (parms[1] > parms[0])
+    printf("AFS using %I64u of the cache's available %I64u 1K byte blocks.\n",
+           parms.parms[1], parms.parms[0]);
+    if (parms.parms[1] > parms.parms[0])
         printf("[Cache guideline temporarily deliberately exceeded; it will be adjusted down but you may wish to increase the cache size.]\n");
     return 0;
 }
