@@ -3649,15 +3649,20 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
     afs_uint32 rights;
+    afs_int32 mustFake = 0;
 
     code = cm_FindACLCache(dscp, userp, &rights);
     if (code == 0 && !(rights & PRSFS_READ))
-        code = CM_ERROR_NOACCESS;
+        mustFake = 1;
     else if (code == -1) {
         lock_ObtainMutex(&dscp->mx);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseMutex(&dscp->mx);
+        if (code == CM_ERROR_NOACCESS) {
+            mustFake = 1;
+            code = 0;
+        }
     }
     if (code)
         return code;
@@ -3669,11 +3674,11 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
             continue;
 
         lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code) { 
+        if (mustFake == 0)
+            code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                             CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (mustFake || code) { 
             lock_ReleaseMutex(&scp->mx);
-            cm_ReleaseSCache(scp);
 
             dptr = patchp->dptr;
 
@@ -3700,9 +3705,20 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
                 *((FILETIME *)dptr) = ft;
                 dptr += 24;
 
+                switch (scp->fileType) {
+                case CM_SCACHETYPE_DIRECTORY:
+                case CM_SCACHETYPE_MOUNTPOINT:
+                case CM_SCACHETYPE_SYMLINK:
+                case CM_SCACHETYPE_INVALID:
+                    *((u_long *)dptr) = SMB_ATTR_DIRECTORY;
+                    break;
+                default:
+                    *((u_long *)dptr) = SMB_ATTR_NORMAL;
+                        
+                }
                 /* merge in hidden attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
-                    *((u_long *)dptr) = SMB_ATTR_HIDDEN;
+                    *((u_long *)dptr) |= SMB_ATTR_HIDDEN;
                 }
                 dptr += 4;
             } else {
@@ -3739,13 +3755,25 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
                 *((u_short *)dptr) = shortTemp;
                 dptr += 10;
 
+                /* set the attribute */
+                switch (scp->fileType) {
+                case CM_SCACHETYPE_DIRECTORY:
+                case CM_SCACHETYPE_MOUNTPOINT:
+                case CM_SCACHETYPE_SYMLINK:
+                case CM_SCACHETYPE_INVALID:
+                    attr = SMB_ATTR_DIRECTORY;
+                default:
+                    attr = SMB_ATTR_NORMAL;
+                }
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
-                    attr = SMB_ATTR_HIDDEN;
-                    *dptr++ = attr & 0xff;
-                    *dptr++ = (attr >> 8) & 0xff;
+                    attr |= SMB_ATTR_HIDDEN;
                 }       
+                *dptr++ = attr & 0xff;
+                *dptr++ = (attr >> 8) & 0xff;
             }
+            
+            cm_ReleaseSCache(scp);
             continue;
         }
         
