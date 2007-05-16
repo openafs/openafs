@@ -3292,8 +3292,8 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     smb_fid_t *fidp;
     unsigned short infoLevel;
     smb_tran2Packet_t *outp;
-    cm_user_t *userp;
-    cm_scache_t *scp;
+    cm_user_t *userp = NULL;
+    cm_scache_t *scp = NULL;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -3320,7 +3320,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     if (infoLevel == SMB_SET_FILE_DISPOSITION_INFO && 
 	!(fidp->flags & SMB_FID_OPENDELETE)) {
 	osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo !SMB_FID_OPENDELETE fidp 0x%p scp 0x%p fidp->flags 0x%x", 
-		  fidp, scp, fidp->flags);
+		  fidp, fidp->scp, fidp->flags);
 	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
@@ -3330,7 +3330,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	 infoLevel == SMB_SET_FILE_END_OF_FILE_INFO)
          && !(fidp->flags & SMB_FID_OPENWRITE)) {
 	osi_Log3(smb_logp,"smb_ReceiveTran2SetFileInfo !SMB_FID_OPENWRITE fidp 0x%p scp 0x%p fidp->flags 0x%x", 
-		  fidp, scp, fidp->flags);
+		  fidp, fidp->scp, fidp->flags);
 	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
