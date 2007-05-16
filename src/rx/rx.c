@@ -3355,9 +3355,11 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 
 	    /* We need to send an ack of the packet is out of sequence, 
 	     * or if an ack was requested by the peer. */
-	    if (seq != prev + 1 || missing || (flags & RX_REQUEST_ACK)) {
+	    if (seq != prev + 1 || missing) {
 		ackNeeded = RX_ACK_OUT_OF_SEQUENCE;
-	    }
+	    } else if (flags & RX_REQUEST_ACK) {
+		ackNeeded = RX_ACK_REQUESTED;
+            }
 
 	    /* Acknowledge the last packet for each call */
 	    if (flags & RX_LAST_PACKET) {
