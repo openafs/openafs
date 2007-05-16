@@ -3648,14 +3648,29 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     unsigned long lattr;
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
-        
+    afs_uint32 rights;
+
+    code = cm_FindACLCache(dscp, userp, &rights);
+    if (code == 0 && !(rights & PRSFS_READ))
+        code = CM_ERROR_NOACCESS;
+    else if (code == -1) {
+        lock_ObtainMutex(&dscp->mx);
+        code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseMutex(&dscp->mx);
+    }
+    if (code)
+        return code;
+
     for(patchp = *dirPatchespp; patchp; patchp =
          (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
-		code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
-        if (code) continue;
+        code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        if (code) 
+            continue;
+
         lock_ObtainMutex(&scp->mx);
         code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (code) { 
             lock_ReleaseMutex(&scp->mx);
             cm_ReleaseSCache(scp);
