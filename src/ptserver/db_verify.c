@@ -314,7 +314,7 @@ WalkHashTable(afs_int32 hashtable[],	/* hash table to walk */
 
 	    id = ntohl(e.id);
 
-	    if (((ntohl(e.flags) & (PRGRP | PRINST)) == 0)
+	    if (((e.flags & htonl((PRGRP | PRINST))) == 0)
 		&& (strchr(e.name, '@'))) {
 		/* Foreign user */
 		if (id > misc->maxForId)
@@ -469,8 +469,8 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		break;
 	}
 #if defined(SUPERGROUPS)
-	sghead = g->nextsg;
-	if ((e->flags & PRGRP)) {
+	sghead = ntohl(g->nextsg);
+	if ((e->flags & htonl(PRGRP))) {
 	    for (i = 0; i < SGSIZE; ++i) {
 		afs_int32 id = ntohl(g->supergroup[i]);
 		if (id == PRBADID)
@@ -502,7 +502,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
     for (na = sghead; na; na = ntohl(c.next)) {
 	code = ConvertDiskAddress(na, &ni);
 	if (code) {
-	    fprintf(stderr, "Bad continuation ptr %d", na);
+	    fprintf(stderr, "Bad SGcontinuation ptr %d", na);
 	    if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
 	    if (na != sghead) {
@@ -689,7 +689,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 #if defined(SUPERGROUPS)
 	noErrors = 0;
     }
-    if (e && (e->flags & PRGRP) && (sgcount != ntohl(g->countsg))) {
+    if (e && (e->flags & htonl(PRGRP)) && (sgcount != ntohl(g->countsg))) {
 	fprintf(stderr, "SGCount was %d should be %d\n", sgcount,
 		ntohl(g->countsg));
 	if (PrintEntryError(misc, ea, e, 2))
@@ -891,7 +891,7 @@ WalkChains(char map[],		/* one byte per db entry */
 	    case PRFOREIGN:
 		fprintf(stderr,
 			"ENTRY IS unexpected type [PRFOREIGN] (flags=0x%x)\n",
-			e.flags);
+			ntohl(e.flags));
 		break;
 	    case PRINST:
 		misc->ninsts++;
@@ -1226,7 +1226,7 @@ DumpRecreate(char map[], struct misc_data *misc)
 		    if (code)
 			return code;
 
-		    if ((id == ntohl(c.id)) && (ntohl(c.flags) & PRCONT)) {
+		    if ((id == ntohl(c.id)) && (c.flags & htonl(PRCONT))) {
 			for (i = 0; i < COSIZE; i++) {
 			    afs_int32 uid = ntohl(c.entries[i]);
 			    if (uid == 0)
@@ -1252,7 +1252,7 @@ DumpRecreate(char map[], struct misc_data *misc)
 		    if (code)
 			return code;
 
-		    if ((id == ntohl(c.id)) && (ntohl(c.flags) & PRCONT)) {
+		    if ((id == ntohl(c.id)) && (c.flags & htonl(PRCONT))) {
 			for (i = 0; i < COSIZE; i++) {
 			    afs_int32 uid = ntohl(c.entries[i]);
 			    if (uid == 0)
