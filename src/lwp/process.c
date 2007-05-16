@@ -142,6 +142,31 @@ static char (*EP) ();
 static int rc;
 static jmp_buf_type *jmpBuffer;
 
+/** Starting with Glibc 2.4 pointers in jmp_buf are mangled (XOR) for "protection".
+  * On Sparc ucontext functions are not implemented.
+  */
+#define ptr_mangle(x) (x)
+#ifdef AFS_LINUX20_ENV
+
+#ifdef __GLIBC__
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
+
+#ifdef AFS_SPARC64_LINUX24_ENV
+#undef ptr_mangle
+static int ptr_mangle(int p)
+{   
+    register char *tls_ptr __asm__("%g7");
+    return p ^ *(int*)(tls_ptr + 0x18);
+}
+#else
+#error need ptr_mangle support or use UCONTEXT
+#endif
+
+#endif
+#endif
+#endif
+
+
 afs_int32
 savecontext(ep, savearea, sp)
      char (*ep) ();
@@ -155,7 +180,7 @@ savecontext(ep, savearea, sp)
 
     code = setjmp(savearea->setjmp_buffer);
     jmpBuffer = (jmp_buf_type *) savearea->setjmp_buffer;
-    savearea->topstack = (char *)jmpBuffer[LWP_SP];
+    savearea->topstack = (char *) ptr_mangle(jmpBuffer[LWP_SP]);
 
 #if	defined(DEBUG)
     {
@@ -178,9 +203,9 @@ savecontext(ep, savearea, sp)
 	    switch (rc) {
 	    case 0:
 		jmpBuffer = (jmp_buf_type *) jmp_tmp;
-		jmpBuffer[LWP_SP] = (jmp_buf_type) sp;
+		jmpBuffer[LWP_SP] = ptr_mangle((jmp_buf_type) sp);
 #if defined(AFS_S390_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || (defined(AFS_SPARC64_LINUX20_ENV) && defined(AFS_32BIT_USR_ENV))
-		jmpBuffer[LWP_FP] = (jmp_buf_type) sp;
+		jmpBuffer[LWP_FP] = ptr_mangle((jmp_buf_type) sp);
 #endif
 		longjmp(jmp_tmp, 1);
 		break;
