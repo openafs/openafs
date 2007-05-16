@@ -2,7 +2,7 @@
  *	map.h - header routines for in-core bitmap routines.
  */
 /*
- * Copyright (c) 1995 Marcus D. Watts  All rights reserved.
+ * Copyright (c) 1995, 2007 Marcus D. Watts  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,10 +12,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Marcus D. Watts.
- * 4. The name of the developer may not be used to endorse or promote
+ * 3. The name of the developer may not be used to endorse or promote
  *    products derived from this software without specific prior written
  *    permission.
  *
@@ -33,18 +30,18 @@
 
 struct map;
 
-int in_map(struct map *, long);
+int in_map(struct map *, int);
 void free_map(struct map *);
-struct map *add_map(struct map *, long);
+struct map *add_map(struct map *, int);
 struct map *and_map(struct map *, struct map *);
 struct map *or_map(struct map *, struct map *);
 struct map *not_map(struct map *);
 struct map *copy_map(struct map *);
-long count_map(struct map *);
-long next_map(struct map *, long);
-long first_map(struct map *);
-long prev_map(struct map *, long);
-long last_map(struct map *);
+int count_map(struct map *);
+int next_map(struct map *, int);
+int first_map(struct map *);
+int prev_map(struct map *, int);
+int last_map(struct map *);
 struct map *negative_map(struct map *);
 struct map *bic_map(struct map *, struct map *);
 int print_map(struct map *);
