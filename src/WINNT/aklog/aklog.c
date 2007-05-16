@@ -255,8 +255,10 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             }
             id = 0;
             strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
+            aclient->name[MAXKTCNAMELEN - 1] = '\0';
             strcpy(aclient->instance, "");
-            strncpy(aclient->cell, c->realm, MAXKTCREALMLEN - 1);
+            strncpy(aclient->cell, cell_to_use, MAXKTCREALMLEN - 1);
+            aclient->cell[MAXKTCREALMLEN - 1] = '\0';
 
             for ( i=0; aclient->cell[i]; i++ ) {
                 if ( islower(aclient->cell[i]) )
