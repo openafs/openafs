@@ -1,9 +1,12 @@
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 
+  * Don't use krb5-config to get a library list.  It runs the risk of
+    encoding unnecessary library dependencies.  Instead, hard-code the
+    flags and libraries we actually need.  (Closes: #424448)
   * When loading a module using the upstream naming convention, don't
     append the .mp to the module name for modprobe.  (Closes: #420597)
 
- --
+ -- Russ Allbery <rra@debian.org>  Wed, 16 May 2007 16:54:57 -0700
 
 openafs (1.4.4.dfsg1-2) unstable; urgency=low
 

@@ -85,20 +85,22 @@ get-orig-source:
 	rm -r openafs_$(DEBVERS).orig
 	gzip -9 openafs_$(DEBVERS).orig.tar
 
+# Manually set --with-krb5 and the environment variables since krb5-config
+# adds a variety of other stuff we don't want.  This may soon be fixed in
+# Debian unstable, but this is the most reliable approach.
 configure: configure-stamp
 configure-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
-	    sh configure \
+	    KRB5CFLAGS=' ' KRB5LIBS='-lkrb5 -lcom_err' sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
 	    --sysconfdir=/etc --libexecdir=/usr/lib \
 	    --localstatedir=/var/lib --enable-supergroups \
 	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
-	    --with-krb5-conf=/usr/bin/krb5-config \
-	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	    --with-krb5 $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	touch configure-stamp
 
