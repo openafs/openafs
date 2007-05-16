@@ -1332,9 +1332,13 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->anyAccess = 0;
 	scp->dataVersion = 0;
 
-	scp->parentVnode = dscp->fid.vnode;
-	scp->parentUnique = dscp->fid.unique;
-
+	if (dscp) {
+            scp->parentVnode = dscp->fid.vnode;
+            scp->parentUnique = dscp->fid.unique;
+	} else {
+            scp->parentVnode = 0;
+            scp->parentUnique = 0;
+	}
 	return;
     } else {
 	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
