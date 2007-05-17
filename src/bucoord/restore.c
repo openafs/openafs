@@ -40,7 +40,6 @@ RCSID
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern char *whoami;
 
-#define	BC_MAXLEVELS	    20
 #define	MAXTAPESATONCE	    10
 
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
@@ -182,9 +181,10 @@ bc_Restorer(aindex)
     statusP statusPtr, newStatusPtr;
 
     struct dumpinfo *dumpinfolist = NULL;
-    struct dumpinfo *pdi, *ndi, *di, dlevels[BC_MAXLEVELS];
+    struct dumpinfo *pdi, *ndi, *di, *dlevels;
     struct volinfo *pvi, *nvi, *vi;
     afs_int32 lvl, lv;
+    int num_dlevels = 20;
 
     afs_int32 serverAll;	/* The server to which all volumes are to be restore to */
     afs_int32 partitionAll;	/* Likewise for partition */
@@ -195,6 +195,8 @@ bc_Restorer(aindex)
 
     extern statusP createStatusNode();
     extern statusP findStatus();
+
+    dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
@@ -314,6 +316,14 @@ bc_Restorer(aindex)
 	memcpy(&dlevels[0], di, sizeof(struct dumpinfo));
 	for (lvl = 1, parent = dlevels[0].parentDumpId; parent;
 	     parent = dlevels[lvl].parentDumpId, lvl++) {
+	    if (lvl >= num_dlevels) {		/* running out of dump levels */
+		struct dumpinfo *tdl = dlevels;
+
+		num_dlevels += num_dlevels;	/* double */
+		dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+		memcpy(dlevels, tdl, (num_dlevels/2) * sizeof(*dlevels));
+		free(tdl);
+	    }
 	    code = bcdb_FindDumpByID(parent, &dumpDescr1);
 	    if (code) {
 		for (vi = di->volinfolist; vi; vi = vi->next) {
@@ -767,6 +777,8 @@ bc_Restorer(aindex)
     /* free local-like things we alloacted to save stack space */
     if (volumeEntries)
 	free(volumeEntries);
+
+    free(dlevels);
 
     return code;
 }
