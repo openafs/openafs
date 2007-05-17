@@ -218,8 +218,14 @@ stop|force-stop)
         umount /afs
         echo -n " afsd"
     fi
-    pidof /usr/sbin/afsd >/dev/null && afsd -shutdown
-    pidof /sbin/afsd >/dev/null && afsd -shutdown
+    if pidof /usr/sbin/afsd >/dev/null || pidof /sbin/afsd >/dev/null ; then
+         afsd -shutdown
+    fi
+
+    # If running with the -rmtsys option, afsd doesn't kill the rmtsys helper
+    # on afsd -shutdown.  Run start-stop-daemon to make sure that everything
+    # is dead.
+    start-stop-daemon --stop --quiet --name afsd
 
     LIBAFS=`/sbin/lsmod | awk 'BEGIN { FS = " " } /openafs/ { print $1 }'`
     if [ -n "$LIBAFS" ] ; then

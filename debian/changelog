@@ -4,13 +4,16 @@ openafs (1.4.4.dfsg1-3) unstable; urgency=low
     don't think we have any network interfaces.  Otherwise, the client
     will use an all-zeroes UUID, which will collide with every other
     client with the same problem.
+  * When afsd is started with -rmtsys, it starts another process that afsd
+    -shutdown doesn't kill.  Update the init script to kill this process
+    on stop.  (Closes: #405982)
   * Don't use krb5-config to get a library list.  It runs the risk of
     encoding unnecessary library dependencies.  Instead, hard-code the
     flags and libraries we actually need.  (Closes: #424448)
   * When loading a module using the upstream naming convention, don't
     append the .mp to the module name for modprobe.  (Closes: #420597)
 
- -- Russ Allbery <rra@debian.org>  Wed, 16 May 2007 16:56:46 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 16 May 2007 18:16:12 -0700
 
 openafs (1.4.4.dfsg1-2) unstable; urgency=low
 
