@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.5.15 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.20 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -122,3 +122,13 @@ List of unfunded projects:
       for a single user
   27. Support the Vista User Account Control (UAC) interface
   
+
+
+
+
+
+
+
+
+
+

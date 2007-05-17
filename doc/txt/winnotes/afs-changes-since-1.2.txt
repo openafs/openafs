@@ -1,3 +1,37 @@
+Since 1.5.19
+ * fix install path of IBM Quick Start Guide when installed by
+   the Wix installer
+
+ * fix the client so that it can write into directories with
+   only 'li' permissions.
+
+ * fix installation of 32-bit Shell Extension for 64-bit systems.
+   Install it under its own HKCR keys.
+
+ * modify the wix installer to remove and upgrade install packages
+   with the same version number.  
+
+ * when flushing volume location data every two hours or in 
+   response to "fs checkvolumes", also flush the mount point 
+   links in order to force their re-evaluation.
+
+ * aklog was copying an uninitialized buffer as part of the 
+   foreign cell automatic pts registration
+
+ * when obtaining directory listings, check for read permission
+   on the directory.  If read permission does not exist, fake the
+   status information for the directory entries.  This improves
+   performance, prevents the client from pounding the file server,
+   and prevents leakage of cached status information.
+
+ * "fs getcacheparms" output was incorrect.
+
+ * NetIdMgr AFS Provider should only automatically add token 
+   acquisition for cell foo.com if the realm of the cell matches
+   the realm of the identity.
+
+ * Fix a null pointer dereference in cm_MergeStatus()
+
 Since 1.5.18
 
  * network identity manager provider:
