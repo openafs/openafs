@@ -488,7 +488,7 @@ else
 			AFS_SYSNAME="s390x_linuxXX"
 			;;
 		sparc-*-linux*)
-			AFS_SYSNAME="sparc_linuxXX"
+			AFS_SYSNAME="`/bin/arch`_linuxXX"
 			;;
 		sparc64-*-linux*)
 			AFS_SYSNAME="sparc64_linuxXX"
