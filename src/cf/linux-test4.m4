@@ -456,6 +456,17 @@ printk("%p\n", _super.alloc_inode);],
   AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
 
 
+AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
+  AC_MSG_CHECKING([for 3rd argument in posix_lock_file found in new kernels])
+  AC_CACHE_VAL([ac_cv_linux_kernel_posix_lock_file_wait_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[posix_lock_file(0,0,0);],
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=yes,
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
+
+
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
   AC_MSG_CHECKING([for 5th argument in sock_create found in some SELinux kernels])
   AC_CACHE_VAL([ac_cv_linux_kernel_sock_create_v], [
