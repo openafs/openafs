@@ -473,11 +473,11 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #ifdef AFS_LINUX24_ENV
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
         (cmd == F_SETLK || cmd == F_SETLKW)) {
-#ifdef AFS_LINUX26_ENV
+#ifdef LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
+	code = posix_lock_file(fp, flp, 0);
+#else
 	flp->fl_flags &=~ FL_SLEEP;
 	code = posix_lock_file(fp, flp);
-#else
-	code = posix_lock_file(fp, flp, 0);
 #endif 
 	if (code && flp->fl_type != F_UNLCK) {
 	    struct AFS_FLOCK flock2;
