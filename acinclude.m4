@@ -770,7 +770,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
 		 fi
 		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
+		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
 		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
