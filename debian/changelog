@@ -1,3 +1,11 @@
+openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
+
+  * Go back to using krb5-config.  The dependency problem has now been
+    fixed on all platforms in the krb5 package and this is the preferred
+    upstream method.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 19 May 2007 22:01:00 -0700
+
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 
   * Always generate a UUID on client startup even if for some reason we
