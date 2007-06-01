@@ -283,29 +283,30 @@ rewrite_log()
 	log_ent_t *first_log;
 	struct sort_ent *cur_entry;
 	struct op_no_ent *cur_nump;
-	int i = 0;
+	int i;
 	int joined, pass;
 
-	while (i < cur_ent) {
+	for (i = 0; i < cur_ent; i++) {
 		joined = 0;
 		cur_entry = &ent[i];
-		cur_nump = cur_entry->se_nump;	
-		new_log =  log_ents[cur_nump->num];
-
-
+		cur_nump = cur_entry->se_nump;
+		new_log = log_ents[cur_nump->num];
+		if (new_log == NULL) {
+		    fprintf(stderr, "rewrite_log: i=%d cur_ent=%d cur_nump->num=%d\n",
+			    i, cur_ent, cur_nump->num);
+		    continue;
+		}
 		cur_nump = cur_nump->next;
 
 		while (cur_nump != NULL) {
 			pass = 0;
 			joined = 1;
-
 			first_log = new_log;
 			second_log = log_ents[cur_nump->num];
-			
+
 			new_log = join_ops(first_log, second_log);
-if (new_log == 0) abort();
 			new_log->log_flags |= LOG_GENERATED;
-		
+
 			/*
 			 * after the first pass we want to free the
 			 * first log because it was generated
@@ -315,10 +316,8 @@ if (new_log == 0) abort();
 
 			cur_nump = cur_nump->next;
 			pass++;
-				
+
 		}
-	
-if (new_log == 0) abort();
 
 		/* XXX lhuston change to fwrite */	
 		cc = write(newfd, new_log, new_log->log_len);
@@ -326,25 +325,22 @@ if (new_log == 0) abort();
 			perror("failed writing new log");
 			exit(-1);
 		}
+		free(new_log);
 
-		/* 
+		/*
 		 * if the new log entry was a joined one, then
 		 * we write the old log entries with the optimzied
 		 * bit set on them.  These need to come after the optimized
-		 * entry, because if it doesnt' get replayed, then its
+		 * entry, because if it doesn't get replayed, then its
 		 * changes will be lost.
 		 */
 
-		
-		if (joined) {	
-			/* free the new log entry */
-			free(new_log);
-
+		if (joined) {
 			cur_nump = cur_entry->se_nump;
 			while (cur_nump != NULL) {
 				new_log = log_ents[cur_nump->num];
 				new_log->log_flags |= LOG_OPTIMIZED;
-				/* XXX lhuston change to fwrite */	
+				/* XXX lhuston change to fwrite */
 				cc = write(newfd, new_log, new_log->log_len);
 				if (cc != new_log->log_len) {
 					perror("failed writing new log");
@@ -358,34 +354,28 @@ if (new_log == 0) abort();
 				cur_nump = cur_nump->next;
 			}
 		} else {
-			/* free the entry and it's spot */
-			free(new_log);
 			log_ents[cur_entry->se_nump->num] = NULL;
 		}
-
-		i++;
 	}
 
-	/* 
+	/*
 	 * we need go write all log entries that haven't been written
-	 * out yet.  These are leftovers for the remove, rename joing
+	 * out yet.  These are leftovers for the remove, rename joining
 	 * conditions.  We just scan through the log_ents list,
 	 * writing all that we find while setting the LOG_OPTIMIZED flag.
 	 */
 
-
 	for (i=0; i < MAX_LOG_ENTS; i++) {
 		if (log_ents[i] != NULL) {
-			new_log =  log_ents[i];
+			new_log = log_ents[i];
 			new_log->log_flags |= LOG_OPTIMIZED;
-			/* XXX lhuston change to fwrite */	
+			/* XXX lhuston change to fwrite */
 			cc = write(newfd, new_log, new_log->log_len);
 			if (cc != new_log->log_len) {
 				perror("failed writing new log");
 				exit(-1);
 			}
 		}
-
 	}
 }
 
