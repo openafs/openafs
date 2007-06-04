@@ -566,11 +566,12 @@ ul
 	mso-bidi-language:#0400;}
 </style>
 <![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext="edit" spidmax="9218"/>
-</xml><![endif]--><!--[if gte mso 9]><xml>
  <o:shapelayout v:ext="edit">
   <o:idmap v:ext="edit" data="1"/>
  </o:shapelayout></xml><![endif]-->
+<!--[if gte mso 9]>
+<xml><o:shapedefaults v:ext="edit" spidmax="1027"/>
+</xml><![endif]-->
 </head>
 
 <body lang=EN-US link=navy vlink=maroon style='tab-interval:36.0pt;line-break:
@@ -902,9 +903,9 @@ href="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</a> version 3.1 or
 above.<span style='mso-spacerun:yes'>  </span>Version 3.2 is required for the
 best user experience.</p>
 
-<p class=MsoNormal align=center style='text-align:center'><!--[if gte vml 1]><v:shapetype
- id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
- path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+<p class=MsoNormal align=center style='text-align:center'><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
+ coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
+ filled="f" stroked="f">
  <v:stroke joinstyle="miter"/>
  <v:formulas>
   <v:f eqn="if lineDrawn pixelLineWidth 0"/>
@@ -922,11 +923,11 @@ best user experience.</p>
  </v:formulas>
  <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
  <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:417pt;
+</v:shapetype><v:shape id="_x0000_s1027" type="#_x0000_t75" style='width:417pt;
  height:509.25pt'>
  <v:imagedata src="relnotes_files/image001.png" o:title="netidmgr_main"/>
 </v:shape><![endif]--><![if !vml]><img border=0 width=556 height=679
-src="relnotes_files/image002.jpg" v:shapes="_x0000_i1025"><![endif]></p>
+src="relnotes_files/image002.jpg" v:shapes="_x0000_s1027"><![endif]></p>
 
 <p class=MsoNormal>The Network Identity Manager replaces the former KFW ticket
 manager, Leash”, and when combined with the OpenAFS Provider, it is intended to
@@ -936,10 +937,10 @@ Tool, Network Identity Manager with the OpenAFS Provider can easily manage AFS
 tokens for multiple cells from one or more Kerberos v5 identities.</p>
 
 <p class=MsoNormal align=center style='text-align:center'><!--[if gte vml 1]><v:shape
- id="_x0000_i1026" type="#_x0000_t75" style='width:406.5pt;height:294.75pt'>
+ id="_x0000_s1026" type="#_x0000_t75" style='width:406.5pt;height:294.75pt'>
  <v:imagedata src="relnotes_files/image003.png" o:title="netidmgr_afs_opt"/>
 </v:shape><![endif]--><![if !vml]><img border=0 width=542 height=393
-src="relnotes_files/image004.jpg" v:shapes="_x0000_i1026"><![endif]></p>
+src="relnotes_files/image004.jpg" v:shapes="_x0000_s1026"><![endif]></p>
 
 <p class=MsoNormal>The AFS configuration panel for each Kerberos v5 identity is
 used to configure which cells credentials should be obtained for and how they
@@ -949,10 +950,10 @@ specified.<span style='mso-spacerun:yes'>  </span>If the cell does not support K
 v5 tickets as tokens, then a krb524 service can be configured.</p>
 
 <p class=MsoNormal align=center style='text-align:center'><!--[if gte vml 1]><v:shape
- id="_x0000_i1027" type="#_x0000_t75" style='width:406.5pt;height:294.75pt'>
+ id="_x0000_s1025" type="#_x0000_t75" style='width:406.5pt;height:294.75pt'>
  <v:imagedata src="relnotes_files/image005.png" o:title="netidmgr_afs_cfg"/>
 </v:shape><![endif]--><![if !vml]><img border=0 width=542 height=393
-src="relnotes_files/image006.jpg" v:shapes="_x0000_i1027"><![endif]></p>
+src="relnotes_files/image006.jpg" v:shapes="_x0000_s1025"><![endif]></p>
 
 <p class=MsoNormal>The OpenAFS Provider configuration panel can be used to
 check the status of the AFS Client Service and its version.<span
@@ -2173,69 +2174,331 @@ installer.&nbsp; If a dump file is available for the problem,
 %WINDIR%\TEMP\afsd.log.&nbsp; The AFS Client startup log is %WINDIR%\TEMP\afsd_init.log.&nbsp;
 Send the last continuous block of&nbsp; log information from this file.</p>
 
+<h1 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993133"></a><a
+name="_Toc126872210"></a><a name="_Toc115417112"></a><a name="_Toc115417081"></a><a
+name="_Toc115416145">4. How to Debug Problems with OpenAFS for Windows:</a></h1>
+
+<p class=MsoNormal>OpenAFS for Windows provides a wide range of tools to assist
+you in debugging problems.  The techniques available to you are varied because
+of the wide range of issues that have been discovered over the years.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993134"></a><a
+name="_Toc126872211"></a><a name="_Toc115417082"></a><a name="_Toc115416146">4.1.
+pioctl debugging (</a><a
+href="#_Value___: IoctlDebug">IoctlDebug</a>
+registry key)</h2>
+
+<p class=MsoNormal>pioctl (path-based ioctl) calls are used by various tools to
+communicate with the AFS Client Service.  Some of the operations performed
+include:</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>setting/querying tokens  (tokens.exe, aklog.exe, afscreds.exe)</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>setting/querying ACLs </p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>setting/querying cache parameters</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>flushing files or volumes</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>setting/querying server preferences</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>querying path location</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>checking the status of servers and volumes</p>
+
+<p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>setting/querying the sysname list</p>
+
+<p class=MsoNormal>pioctl calls are implemented by writing to a special UNC
+path that is processed by the AFS Client Service.   If there is a failure to
+communicate with the AFS Client Service via SMB/CIFS, it will be impossible to
+perform any of the above operations.   </p>
+
+<p class=MsoNormal>To assist in debugging these problems, the registry value:</p>
+
+<p class=PreformattedText>  [HKLM\SOFTWARE\OpenAFS\Client]</p>
+
+<p class=PreformattedText>  REG_DWORD:  IoctlDebug   = 0x01</p>
+
+<p class=MsoNormal>should be set.  Then any of the commands that perform pioctl
+calls should be executed from the command prompt.  With this key set the pioctl
+library will generate debugging output to stderr.  The output will contain the
+Win32 API calls executed along with their most important parameters and their
+return code.   The MSDN Library and the Microsoft KnowledgeBase can be used as
+a reference to help you determine the configuration probem with your system.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993135"></a><a
+name="_Toc126872212"></a><a name="_Toc115417083"></a><a name="_Toc115416147">4.2.
+afsd_service initialization log (%WinDir%\TEMP\afsd_init.log)</a></h2>
+
+<p class=MsoNormal>Every time the AFS Client Service starts it appends data
+about its progress and configuration to a file.  This file provides information
+crucial to determining why the service cannot start when there are problems. 
+When the process terminates due to a panic condition it will write to this file
+the source code file and line number of the error.  In many cases the panic
+condition is due to a misconfiguration of the machine.  In other cases it might
+be due to a programming error in the software.  A quick review of the location
+in the source code will quickly reveal the reason for the termination.</p>
+
+<p class=MsoNormal>The <i><a
+href="#_Value___: MaxLogSize">MaxLogSize</a></i>
+registry value determines the maximum size of the %WINDIR%\TEMP\afsd_init.log
+file.  If the file is larger than this value when OpenAFS Client Service
+starts, the file will be reset to 0 bytes.  If value is set to 0, the file will
+be allowed to grow indefinitely.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993136"></a><a
+name="_Toc126872213"></a><a name="_Toc115417084"></a><a name="_Toc115416148">4.3.
+afsd_service debug logs (fs trace {-on, -off, -dump}
+-&gt;%WinDir%\TEMP\afsd.log)</a></h2>
+
+<p class=MsoNormal>When attempting to debug the behavior of the SMB/CIFS Server
+and the Cache Manager it is often useful to examine a log of the operations
+being performed.  While running the AFS Client Service keeps an in memory log
+of many of its actions.   The default number of actions preserved at any one
+time is 5000.  This can be adjusted with the <a
+href="#_Value_:_TraceBufferSize">registry value</a>:</p>
+
+<p class=PreformattedText> 
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
+
+<p class=PreformattedText>  REG_DWORD  TraceBufferSize </p>
+
+<p class=MsoNormal>A restart of the service is necessary when adjusting this
+value.   Execute &quot;fs trace -on&quot; to clear to the log and &quot;fs
+trace -dump&quot; to output the contents of the log to the file.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993137"></a><a
+name="_Toc126872214"></a><a name="_Toc115417085"></a><a name="_Toc115416149">4.4.
+Using SysInternal’s DbgView and ProcMon or FileMon Tools</a></h2>
+
+<p class=MsoNormal>An alternatve option to the use of &quot;fs trace -dump&quot;
+to capture internal OpenAFS Client Service events is to use a tool such as
+Sysinternal's DbgView to capture real-time debugging output.  When the OpenAFS
+Client Service starts and Bit 2 of the <a
+href="#_Value__:_TraceOption">TraceOption</a>
+value in the registry is set, all trace log events are output using the Windows
+Debug Monitor interface (OutputDebugString).  </p>
+
+<p class=PreformattedText> 
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
+
+<p class=PreformattedText style='text-indent:12.0pt'>REG_DWORD   TraceOption =
+0x04</p>
+
+<p class=MsoNormal>Use “fs trace –on” and “fs trace –off” to toggle the
+generation of log messages. </p>
+
+<p class=MsoNormal><a name="_Toc126872215"></a><a name="_Toc115417086"></a><a
+name="_Toc115416150">Sysinternal’s ProcMon or FileMon utilities can be use to monitor the
+file operations requested by applications and their success or failure.   
+</p>
+
+<p class=MsoNormal>
+In FileMon, use the Volumes menu to restrict monitoring to <i>Network</i> volumes only in
+order to reduce the output to just the CIFS requests.  Turn on the <i>Advanced
+Output</i> option in order to log with finer granularity.</a></p>
+
+<p class=MsoNormal>
+In ProcMon, set a filter to include only events on file paths that refer to the AFS name
+space.  Be sure to include both the UNC path as well as any drive letters mapped to AFS.
+</p>
+
+<p class=MsoNormal>Turn on the <i>Clock Time</i> and <i>Show Milliseconds</i>
+options in both tools to make it easier to synchronize the application requests
+and the resulting OpenAFS Client Service operations.   The captured data can be
+stored to files for inclusion in <a href="../relnotes.htm#_5._Reporting_Bugs:">bug
+reports</a>.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993138">4.5. Microsoft
+MiniDumps <br>
+(fs minidump -&gt; %WinDir%\TEMP\afsd.dmp)</a></h2>
+
+<p class=MsoNormal>If the AFS Client Service become unresponsive to any form of
+communication there may be a serious error that can only be debugged by someone
+with access to the source code and a debugger.   The &quot;fs minidump&quot;
+command can be used to force the generation of a MiniDump file containing the
+state of all of the threads in the AFS Client Service process.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993139"></a><a
+name="_Toc126872216"></a><a name="_Toc115417087"></a><a name="_Toc115416151">4.6.
+Single Sign-on (Integrated Logon) debugging</a></h2>
+
+<p class=MsoNormal>If you are having trouble with the Integrated Logon
+operations it is often useful to be able to obtain a log of what it is
+attempting to do.   Setting Bit 0 of the <a
+href="#_Value__:_TraceOption">TraceOption</a> registry
+value:</p>
+
+<p class=PreformattedText> 
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
+
+<p class=PreformattedText>  REG_DWORD   TraceOption = 0x01</p>
+
+<p class=MsoNormal>will instruct the Integrated Logon Network Provider and
+Event Handlers to log information to the Windows Event Log: Application under
+the name “AFS Logon&quot;.</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993140"></a><a
+name="_Toc126872217"></a><a name="_Toc115417088"></a><a name="_Toc115416152">4.7.
+RX (AFS RPC) debugging (rxdebug)</a></h2>
+
+<p class=MsoNormal>The rxdebug.exe tool can be used to query a variety of
+information about the AFS services installed on a given machine.  The port for
+the AFS Cache Manager is 7001.  </p>
+
+<p class=PreformattedText>Usage: rxdebug -servers &lt;server machine&gt; [-port
+&lt;IP port&gt;] [-nodally] </p>
+
+<p class=PreformattedText style='margin-left:35.45pt;text-indent:35.45pt'>  
+[-allconnections] [-rxstats] [-onlyserver] [-onlyclient] </p>
+
+<p class=PreformattedText style='margin-left:70.9pt'>   [-onlyport &lt;show
+only &lt;port&gt;&gt;] </p>
+
+<p class=PreformattedText style='margin-left:70.9pt'>   [-onlyhost &lt;show
+only &lt;host&gt;&gt;] </p>
+
+<p class=PreformattedText style='margin-left:70.9pt'>   [-onlyauth &lt;show
+only &lt;auth level&gt;&gt;] [-version] </p>
+
+<p class=PreformattedText style='margin-left:70.9pt'>   [-noconns] [-peers]
+[-help]</p>
+
+<p class=PreformattedText>Where: -nodally         don't show dallying conns</p>
+
+<p class=PreformattedText>       -allconnections  don't filter out
+uninteresting connections</p>
+
+<p class=PreformattedText>       -rxstats         show Rx statistics</p>
+
+<p class=PreformattedText>       -onlyserver      only show server conns</p>
+
+<p class=PreformattedText>       -onlyclient      only show client conns</p>
+
+<p class=PreformattedText>       -version         show AFS version id</p>
+
+<p class=PreformattedText>       -noconns         show no connections</p>
+
+<p class=PreformattedText>       -peers           show peers</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993141"></a><a
+name="_Toc126872218"></a><a name="_Toc115417089"></a><a name="_Toc115416153">4.8.
+Cache Manager debugging (cmdebug)</a></h2>
+
+<p class=MsoNormal>The cmdebug.exe tool can be used to query the state of the
+AFS Cache Manager on a given machine.</p>
+
+<p class=PreformattedText>Usage: cmdebug -servers &lt;server machine&gt; [-port
+&lt;IP port&gt;] [-long] </p>
+
+<p class=PreformattedText style='margin-left:70.9pt'>   [-refcounts]
+[-callbacks] [-addrs] [-cache] [-help]</p>
+
+<p class=PreformattedText>Where: -long       print all info</p>
+
+<p class=PreformattedText>       -refcounts  print only cache entries with
+positive reference counts</p>
+
+<p class=PreformattedText>       -callbacks  print only cache entries with
+callbacks</p>
+
+<p class=PreformattedText>       -addrs      print only host interfaces</p>
+
+<p class=PreformattedText>       -cache      print only cache configuration</p>
+
+<h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993142"></a><a
+name="_Toc126872219"></a><a name="_Toc115417090"></a><a name="_Toc115416154">4.9.
+Persistent Cache consistency check</a></h2>
+
+<p class=MsoNormal>The persistent cache is stored in a Hidden System file at
+%WinDir%\TEMP\AFSCache.  If there is a problem with the persistent cache that
+prevent the AFS Client Service from being able to start a validation check on
+the file can be performed.</p>
+
+<p class=PreformattedText>  afsd_service.exe --validate-cache
+&lt;cache-path&gt;</p>
+
+<h1 style='margin-left:0pt;text-indent:0pt'><a name="_Toc139993143"></a><a
+name="_Toc126872220"></a><a name="_Toc115417113"></a><a name="_Toc115417091"></a><a
+name="_Toc115416155"></a><a name="_5._Reporting_Bugs:"></a>5. Reporting Bugs:</h1>
+
+<p class=MsoNormal>Bug reports should be sent to <a
+href="mailto:openafs-bugs@openafs.org?subject=Bug%20Report">openafs-bugs@openafs.org</a>. 
+Please include as much information as possible about the issue.  If you are
+reporting a crash, please install the debugging symbols by re-running the
+installer.  If a dump file is available for the problem,
+%WINDIR%\TEMP\afsd.dmp, include it along with the AFS Client Trace file 
+%WINDIR%\TEMP\afsd.log.  The AFS Client startup log is
+%WINDIR%\TEMP\afsd_init.log.  Send the last continuous block of  log information
+from this file.</p>
+
 <p class=MsoNormal>Configuring DrWatson to generate dump files for crashes:</p>
 
 <p class=MsoNormal style='margin-left:14.15pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Run
-drwtsn32.exe to configure or to identify where the log and the crash dump files
-are created: </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Run drwtsn32.exe to configure or to identify where the log and
+the crash dump files are created: </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>click
-Start &gt; Run...&nbsp; </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>click Start &gt; Run...  </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>type
-drwtsn32 &lt;enter&gt;. </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>type drwtsn32 &lt;enter&gt;. </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Select
-either a Crash Dump Type: Mini or Full. </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Select either a Crash Dump Type: Mini or Full. </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Clear
-Dump Symbol Table</p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Clear Dump Symbol Table</p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Clear
-Append to Existing Log file. </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Clear Append to Existing Log file. </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Check
-Dump All Thread Contexts.</p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Check Dump All Thread Contexts.</p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Check
-Create Crash Dump File</p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Check Create Crash Dump File</p>
 
 <p class=MsoNormal style='margin-left:14.15pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Next
-run the monitoring module of Dr. Watson: </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Next run the monitoring module of Dr. Watson: </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>click
-Start &gt; Run...</p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>click Start &gt; Run...</p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>type
-drwatson &lt;enter&gt;. </p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>type drwatson &lt;enter&gt;. </p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt'><span
-style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Once
-a crash happens, Dr. Watson generates a dump file and a report in the log file,
-including the address of the crash and the stack dump.</p>
+style='font-size:9.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Once a crash happens, Dr. Watson generates a dump file and a
+report in the log file, including the address of the crash and the stack dump.</p>
 
 <p class=MsoNormal>Once you have the Dr. Watson's logfile and minidump, zip
 them and attach them to your e-mail.</p>
