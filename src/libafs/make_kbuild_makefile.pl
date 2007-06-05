@@ -82,7 +82,7 @@ if (! -d $KDIR) {
 foreach (keys %all_objs) {
   die "No source known for $_\n" unless exists $deps{$_};
   if($deps{$_} =~ /\.s$/) {
-     ($src = $_) =~ s/\.o$/.s/;
+     ($src = $_) =~ s/\.o$/.S/;
   } else {
      ($src = $_) =~ s/\.o$/.c/;
   }
