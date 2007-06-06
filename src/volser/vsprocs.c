@@ -4379,9 +4379,10 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		same =
 		    VLDB_IsSameAddrs(toserver, entry.serverNumber[index],
 				     &errcode);
-		EPRINT2(errcode,
-			"Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
-			toserver, errcode);
+		if (errcode)
+		    EPRINT2(errcode,
+			    "Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
+			    toserver, errcode);
 		if ((!errcode && !same)
 		    || (entry.serverPartition[index] != topart)) {
 		    tempconn =
