@@ -33,6 +33,7 @@ RCSID("$Header$");
 #include <sys/pseg.h>
 #include <sys/core.h>
 #pragma alloca
+int setlim(int limcon, uchar_t hard, int limit);
 #endif
 #ifdef AFS_SGI64_ENV
 extern char *getenv();
