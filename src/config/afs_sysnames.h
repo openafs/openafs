@@ -286,4 +286,6 @@
 #ifdef	AFS_KERBREALM_ENV
 #define	AFS_REALM_SZ		64
 #endif
+/* Specifies the number of equivalent local realm names */
+#define AFS_NUM_LREALMS 4
 #endif /* __AFS_SYSNAMES_INCL_ENV_ */
