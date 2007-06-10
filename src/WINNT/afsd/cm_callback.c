@@ -191,7 +191,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
     /* do all in the hash bucket, since we don't know how many we'll find with
      * varying cells.
      */
-    for (scp = cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+    for (scp = cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
         if (scp->fid.volume == tfid.volume &&
              scp->fid.vnode == tfid.vnode &&
              scp->fid.unique == tfid.unique &&
@@ -240,8 +240,8 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
 
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (hash = 0; hash < cm_data.hashTableSize; hash++) {
-        for(scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+    for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
+        for(scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == fidp->Volume &&
                  scp->cbExpires > 0 &&
                  scp->cbServerp != NULL) {
@@ -446,8 +446,8 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	 * are "rare," hopefully this won't be a problem.
 	 */
 	lock_ObtainWrite(&cm_scacheLock);
-	for (hash = 0; hash < cm_data.hashTableSize; hash++) {
-            for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+	for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
+            for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
@@ -689,8 +689,8 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
              ntohl(host), ntohs(port));
 
     lock_ObtainRead(&cm_scacheLock);
-    for (i = 0; i < cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i = 0; i < cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
             if (index == 0)
                 goto searchDone;
             index--;
@@ -795,8 +795,8 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
              ntohl(host), ntohs(port));
 
     lock_ObtainRead(&cm_scacheLock);
-    for (i = 0; i < cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i = 0; i < cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
             if (index == 0)
                 goto searchDone;
             index--;
@@ -1693,7 +1693,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u", 
                  scp, sfid.volume, sfid.vnode, sfid.unique);
         do {
-            code = cm_Conn(&sfid, userp, reqp, &connp);
+            code = cm_ConnFromFID(&sfid, userp, reqp, &connp);
             if (code) 
                 continue;
 
@@ -1751,8 +1751,8 @@ void cm_CheckCBExpiration(void)
 
     now = osi_Time();
     lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp=scp->nextp) {
+    for (i=0; i<cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
             cm_HoldSCacheNoLock(scp);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
                 lock_ReleaseWrite(&cm_scacheLock);

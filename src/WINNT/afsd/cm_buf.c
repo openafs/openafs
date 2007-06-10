@@ -310,7 +310,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
 	    cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cm_data.buf_nbuffers/7 + 1));
  
             /* create hash table */
-            memset((void *)cm_data.buf_hashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
+            memset((void *)cm_data.buf_scacheHashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
             
             /* another hash table */
             memset((void *)cm_data.buf_fileHashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
@@ -506,7 +506,7 @@ cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
     cm_buf_t *bp;
 
     i = BUF_HASH(&scp->fid, offsetp);
-    for(bp = cm_data.buf_hashTablepp[i]; bp; bp=bp->hashp) {
+    for(bp = cm_data.buf_scacheHashTablepp[i]; bp; bp=bp->hashp) {
         if (cm_FidCmp(&scp->fid, &bp->fid) == 0
              && offsetp->LowPart == bp->offset.LowPart
              && offsetp->HighPart == bp->offset.HighPart) {
@@ -645,7 +645,7 @@ void buf_Recycle(cm_buf_t *bp)
         /* Remove from hash */
 
         i = BUF_HASH(&bp->fid, &bp->offset);
-        lbpp = &(cm_data.buf_hashTablepp[i]);
+        lbpp = &(cm_data.buf_scacheHashTablepp[i]);
         for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
             if (tbp == bp) break;
         }
@@ -818,8 +818,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 #endif
                 bp->offset = *offsetp;
                 i = BUF_HASH(&scp->fid, offsetp);
-                bp->hashp = cm_data.buf_hashTablepp[i];
-                cm_data.buf_hashTablepp[i] = bp;
+                bp->hashp = cm_data.buf_scacheHashTablepp[i];
+                cm_data.buf_scacheHashTablepp[i] = bp;
                 i = BUF_FILEHASH(&scp->fid);
                 nextBp = cm_data.buf_fileHashTablepp[i];
                 bp->fileHashp = nextBp;
@@ -1190,7 +1190,7 @@ long buf_CleanAndReset(void)
 
     lock_ObtainWrite(&buf_globalLock);
     for(i=0; i<cm_data.buf_hashSize; i++) {
-        for(bp = cm_data.buf_hashTablepp[i]; bp; bp = bp->hashp) {
+        for(bp = cm_data.buf_scacheHashTablepp[i]; bp; bp = bp->hashp) {
             if ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
                 buf_HoldLocked(bp);
                 lock_ReleaseWrite(&buf_globalLock);
@@ -1550,7 +1550,7 @@ buf_ValidateBufQueues(void)
 }
 #endif /* TESTING */
 
-/* dump the contents of the buf_hashTablepp. */
+/* dump the contents of the buf_scacheHashTablepp. */
 int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 {
     int zilch;
@@ -1558,7 +1558,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     char output[1024];
     afs_uint32 i;
   
-    if (cm_data.buf_hashTablepp == NULL)
+    if (cm_data.buf_scacheHashTablepp == NULL)
         return -1;
 
     if (lock)
@@ -1570,7 +1570,7 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
   
     for (i = 0; i < cm_data.buf_hashSize; i++)
     {
-        for (bp = cm_data.buf_hashTablepp[i]; bp; bp=bp->hashp) 
+        for (bp = cm_data.buf_scacheHashTablepp[i]; bp; bp=bp->hashp) 
         {
 	    StringCbPrintfA(output, sizeof(output), 
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "

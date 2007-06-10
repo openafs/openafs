@@ -147,7 +147,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     /* now we're ready to do the store operation */
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -354,7 +354,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     /* now we're ready to do the store operation */
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -1427,7 +1427,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
 	/* now make the call */
     do {
-        code = cm_Conn(&scp->fid, up, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, up, reqp, &connp);
         if (code) 
             continue;
 

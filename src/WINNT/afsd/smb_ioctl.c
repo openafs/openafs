@@ -110,7 +110,7 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
  * this is the first read call.  This is the function that actually makes the
  * call to the ioctl code.
  */
-smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
+long smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
     long opcode;
     smb_ioctlProc_t *procp = NULL;

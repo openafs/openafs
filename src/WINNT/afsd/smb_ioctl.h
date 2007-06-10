@@ -37,4 +37,6 @@ extern long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, s
 extern long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *outp);
 
+extern long smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 #endif /*  __SMB_IOCTL_H_ENV__ */

@@ -296,4 +296,9 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_TOOFEWBUFS		(CM_ERROR_BASE+50)
 #define CM_ERROR_TOOMANYBUFS		(CM_ERROR_BASE+51)
 #define CM_ERROR_BAD_LEVEL	        (CM_ERROR_BASE+52)
+
+/* Used by cm_FollowMountPoint and cm_GetVolumeByName */
+#define RWVOL	0
+#define ROVOL	1
+#define BACKVOL	2
 #endif /*  __CM_H_ENV__ */

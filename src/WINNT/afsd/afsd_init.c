@@ -1241,7 +1241,7 @@ int afsd_InitDaemons(char **reasonP)
         osi_Log0(afsd_logp, "Loading Root Volume from cell");
 	do {
 	    code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
-				       &req, CM_FLAG_CREATE, &cm_data.rootVolumep);
+				       &req, CM_GETVOL_FLAG_CREATE, &cm_data.rootVolumep);
 	    afsi_log("cm_GetVolumeByName code %x root vol %x", code,
 		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
 	} while (code && --attempts);

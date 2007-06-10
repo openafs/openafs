@@ -44,7 +44,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
-    tsrp = cm_NewServerRef(tsp);
+    tsrp = cm_NewServerRef(tsp, 0);
     cm_InsertServerList(&cellp->vlServersp, tsrp);
     /* drop the allocation reference */
     lock_ObtainWrite(&cm_serverLock);
@@ -77,7 +77,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
             ) {
         /* must empty cp->vlServersp */
         if (cp->vlServersp) {
-            cm_FreeServerList(&cp->vlServersp);
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
             cp->vlServersp = NULL;
         }
 

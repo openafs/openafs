@@ -13,6 +13,13 @@
 #include <winsock2.h>
 #include <osi.h>
 
+/* this value is set to 1022 in order to  */
+#define NUM_SERVER_VOLS         (32 - sizeof(void *) / 4)
+typedef struct cm_server_vols {
+    afs_uint32             ids[NUM_SERVER_VOLS];
+    struct cm_server_vols *nextp;
+} cm_server_vols_t;
+
 /* pointed to by volumes and cells without holds; cm_serverLock is obtained
  * at the appropriate times to change the pointers to these servers.
  */
@@ -28,15 +35,17 @@ typedef struct cm_server {
     unsigned long refCount;		/* locked by cm_serverLock */
     osi_mutex_t mx;
     unsigned short ipRank;		/* server priority */
+    cm_server_vols_t *  vols;           /* by mx */
 } cm_server_t;
 
-enum repstate {not_busy, busy, offline};
+enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
 
 typedef struct cm_serverRef {
     struct cm_serverRef *next;      /* locked by cm_serverLock */
     struct cm_server *server;       /* locked by cm_serverLock */
     enum repstate status;           /* locked by cm_serverLock */
     unsigned long refCount;         /* locked by cm_serverLock */
+    afs_uint32 volID;               /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
@@ -68,7 +77,7 @@ typedef struct cm_serverRef {
 extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
 	struct cm_cell *cellp);
 
-extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
+extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp, afs_uint32 volID);
 
 extern LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp);
 
@@ -100,7 +109,9 @@ extern void cm_RandomizeServer(cm_serverRef_t** list);
 
 extern void cm_FreeServer(cm_server_t* server);
 
-extern void cm_FreeServerList(cm_serverRef_t** list);
+#define CM_FREESERVERLIST_DELETE 1
+
+extern void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags);
 
 extern void cm_ForceNewConnectionsAllServers(void);
 

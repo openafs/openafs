@@ -39,6 +39,14 @@ ComputeSizeOfVolumes(DWORD maxvols)
 }
 
 afs_uint64
+ComputeSizeOfVolumeHT(DWORD maxvols)
+{
+    afs_uint64 size;
+    size = osi_PrimeLessThan((afs_uint32)(maxvols/7 + 1)) * sizeof(cm_volume_t *);
+    return size;
+}
+
+afs_uint64
 ComputeSizeOfCells(DWORD maxcells)
 {
     afs_uint64 size;
@@ -66,7 +74,7 @@ afs_uint64
 ComputeSizeOfSCacheHT(DWORD stats)
 {
     afs_uint64 size;
-    size = (stats + 10) / 2 * sizeof(cm_scache_t *);;
+    size = osi_PrimeLessThan(stats / 2 + 1) * sizeof(cm_scache_t *);;
     return size;
 }
 
@@ -109,6 +117,7 @@ ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunk
     
     size       =  ComputeSizeOfConfigData()
                +  ComputeSizeOfVolumes(maxVols) 
+               +  4 * ComputeSizeOfVolumeHT(maxVols) 
                +  ComputeSizeOfCells(maxCells) 
                +  ComputeSizeOfACLCache(stats)
                +  ComputeSizeOfSCache(stats)
@@ -221,11 +230,12 @@ cm_ShutdownMappedMemory(void)
     afsi_log("  blockSize      = %d", cm_data.blockSize);
     afsi_log("  bufferSize     = %d", cm_data.bufferSize);
     afsi_log("  cacheType      = %d", cm_data.cacheType);
+    afsi_log("  volumeHashTableSize = %d", cm_data.volumeHashTableSize);
     afsi_log("  currentVolumes = %d", cm_data.currentVolumes);
     afsi_log("  maxVolumes     = %d", cm_data.maxVolumes);
     afsi_log("  currentCells   = %d", cm_data.currentCells);
     afsi_log("  maxCells       = %d", cm_data.maxCells);
-    afsi_log("  hashTableSize  = %d", cm_data.hashTableSize);
+    afsi_log("  scacheHashTableSize  = %d", cm_data.scacheHashTableSize);
     afsi_log("  currentSCaches = %d", cm_data.currentSCaches);
     afsi_log("  maxSCaches     = %d", cm_data.maxSCaches);
 
@@ -404,11 +414,12 @@ cm_ValidateMappedMemory(char * cachePath)
     fprintf(stderr,"  blockSize      = %d\n", config_data_p->blockSize);
     fprintf(stderr,"  bufferSize     = %d\n", config_data_p->bufferSize);
     fprintf(stderr,"  cacheType      = %d\n", config_data_p->cacheType);
+    fprintf(stderr,"  volumeHashTableSize = %d", config_data_p->volumeHashTableSize);
     fprintf(stderr,"  currentVolumes = %d\n", config_data_p->currentVolumes);
     fprintf(stderr,"  maxVolumes     = %d\n", config_data_p->maxVolumes);
     fprintf(stderr,"  currentCells   = %d\n", config_data_p->currentCells);
     fprintf(stderr,"  maxCells       = %d\n", config_data_p->maxCells);
-    fprintf(stderr,"  hashTableSize  = %d\n", config_data_p->hashTableSize);
+    fprintf(stderr,"  scacheHashTableSize  = %d\n", config_data_p->scacheHashTableSize);
     fprintf(stderr,"  currentSCaches = %d\n", config_data_p->currentSCaches);
     fprintf(stderr,"  maxSCaches     = %d\n", config_data_p->maxSCaches);
     cm_data = *config_data_p;      
@@ -802,11 +813,12 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
 	afsi_log("  blockSize      = %d", config_data_p->blockSize);
 	afsi_log("  bufferSize     = %d", config_data_p->bufferSize);
 	afsi_log("  cacheType      = %d", config_data_p->cacheType);
+	afsi_log("  volumeHashTableSize  = %d", config_data_p->volumeHashTableSize);
 	afsi_log("  currentVolumes = %d", config_data_p->currentVolumes);
 	afsi_log("  maxVolumes     = %d", config_data_p->maxVolumes);
 	afsi_log("  currentCells   = %d", config_data_p->currentCells);
 	afsi_log("  maxCells       = %d", config_data_p->maxCells);
-	afsi_log("  hashTableSize  = %d", config_data_p->hashTableSize);
+	afsi_log("  scacheHashTableSize  = %d", config_data_p->scacheHashTableSize);
 	afsi_log("  currentSCaches = %d", config_data_p->currentSCaches);
 	afsi_log("  maxSCaches     = %d", config_data_p->maxSCaches);
 
@@ -827,7 +839,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.chunkSize = chunkSize;
         cm_data.blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
         cm_data.bufferSize = mappingSize;
-        cm_data.hashTableSize = osi_PrimeLessThan(stats / 2 + 1);
+        cm_data.scacheHashTableSize = osi_PrimeLessThan(stats / 2 + 1);
+        cm_data.volumeHashTableSize = osi_PrimeLessThan((afs_uint32)(maxVols/7 + 1));
         if (virtualCache) {
             cm_data.cacheType = CM_BUF_CACHETYPE_VIRTUAL;
         } else {
@@ -844,17 +857,25 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         baseAddress += ComputeSizeOfConfigData();
         cm_data.volumeBaseAddress = (cm_volume_t *) baseAddress;
         baseAddress += ComputeSizeOfVolumes(maxVols);
+        cm_data.volumeNameHashTablep = (cm_volume_t **)baseAddress;
+        baseAddress += ComputeSizeOfVolumeHT(maxVols);
+        cm_data.volumeRWIDHashTablep = (cm_volume_t **)baseAddress;
+        baseAddress += ComputeSizeOfVolumeHT(maxVols);
+        cm_data.volumeROIDHashTablep = (cm_volume_t **)baseAddress;
+        baseAddress += ComputeSizeOfVolumeHT(maxVols);
+        cm_data.volumeBKIDHashTablep = (cm_volume_t **)baseAddress;
+        baseAddress += ComputeSizeOfVolumeHT(maxVols);
         cm_data.cellBaseAddress = (cm_cell_t *) baseAddress;
         baseAddress += ComputeSizeOfCells(maxCells);
         cm_data.aclBaseAddress = (cm_aclent_t *) baseAddress;
         baseAddress += ComputeSizeOfACLCache(stats);
         cm_data.scacheBaseAddress = (cm_scache_t *) baseAddress;
         baseAddress += ComputeSizeOfSCache(stats);
-        cm_data.hashTablep = (cm_scache_t **) baseAddress;
+        cm_data.scacheHashTablep = (cm_scache_t **) baseAddress;
         baseAddress += ComputeSizeOfSCacheHT(stats);
         cm_data.dnlcBaseAddress = (cm_nc_t *) baseAddress;
         baseAddress += ComputeSizeOfDNLCache();
-        cm_data.buf_hashTablepp = (cm_buf_t **) baseAddress;
+        cm_data.buf_scacheHashTablepp = (cm_buf_t **) baseAddress;
         baseAddress += ComputeSizeOfDataHT(cacheBlocks);
         cm_data.buf_fileHashTablepp = (cm_buf_t **) baseAddress;
         baseAddress += ComputeSizeOfDataHT(cacheBlocks);

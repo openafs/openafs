@@ -85,6 +85,7 @@ typedef struct cm_scache {
     osi_queue_t q;              	/* lru queue; cm_scacheLock */
     afs_uint32      magic;
     struct cm_scache *nextp;		/* next in hash; cm_scacheLock */
+    struct cm_scache *allNextp;         /* next in all scache list; cm_scacheLock */
     cm_fid_t fid;
     afs_uint32 flags;			/* flags; locked by mx */
 
@@ -298,7 +299,7 @@ typedef struct cm_scache {
 				   ((fidp)->volume +	\
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
-					% cm_data.hashTableSize)
+					% cm_data.scacheHashTableSize)
 
 #include "cm_conn.h"
 #include "cm_buf.h"
