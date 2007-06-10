@@ -137,8 +137,8 @@ long cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint3
 #endif
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i=0; i<cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
             if (scp->fid.volume == volume && scp->fid.cell == cell) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
@@ -165,8 +165,8 @@ void cm_ResetACLCache(cm_user_t *userp)
     int hash;
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (hash=0; hash < cm_data.hashTableSize; hash++) {
-        for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+    for (hash=0; hash < cm_data.scacheHashTableSize; hash++) {
+        for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             lock_ObtainMutex(&scp->mx);
@@ -543,7 +543,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     do {
         acl.AFSOpaque_val = ioctlp->outDatap;
         acl.AFSOpaque_len = 0;
-        code = cm_Conn(&scp->fid, userp, &req, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
         callp = cm_GetRxConn(connp);
@@ -625,7 +625,7 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     do {
         acl.AFSOpaque_val = ioctlp->inDatap;
         acl.AFSOpaque_len = (u_int)strlen(ioctlp->inDatap)+1;
-        code = cm_Conn(&scp->fid, userp, &req, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
         callp = cm_GetRxConn(connp);
@@ -657,8 +657,8 @@ long cm_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_InitReq(&req);
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+    for (i=0; i<cm_data.scacheHashTableSize; i++) {
+        for (scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp) {
 	    cm_HoldSCacheNoLock(scp);
 	    lock_ReleaseWrite(&cm_scacheLock);
 
@@ -741,7 +741,8 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         return CM_ERROR_READONLY;
     }
 
-    code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, &tvp);
+    code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, 
+                            CM_GETVOL_FLAG_CREATE, &tvp);
     if (code) {
         cm_ReleaseSCache(scp);
         return code;
@@ -768,7 +769,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     do {
-        code = cm_Conn(&scp->fid, userp, &req, &tcp);
+        code = cm_ConnFromFID(&scp->fid, userp, &req, &tcp);
         if (code) continue;
 
         callp = cm_GetRxConn(tcp);
@@ -811,7 +812,7 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *scp;
     char offLineMsg[256];
     char motd[256];
-    cm_conn_t *tcp;
+    cm_conn_t *connp;
     register long code;
     AFSFetchVolumeStatus volStat;
     register char *cp;
@@ -830,15 +831,15 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     OfflineMsg = offLineMsg;
     MOTD = motd;
     do {
-        code = cm_Conn(&scp->fid, userp, &req, &tcp);
+        code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
-        callp = cm_GetRxConn(tcp);
+        callp = cm_GetRxConn(connp);
         code = RXAFS_GetVolumeStatus(callp, scp->fid.volume,
                                       &volStat, &Name, &OfflineMsg, &MOTD);
         rx_PutConnection(callp);
 
-    } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
     code = cm_MapRPCError(code, &req);
 
     cm_ReleaseSCache(scp);
@@ -945,7 +946,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (!cellp)
 	return CM_ERROR_NOSUCHCELL;
 
-    code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
+    code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
     if (code) return code;
 	
     cp = ioctlp->outDatap;
@@ -959,7 +960,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cp += sizeof(long);
     }
     lock_ReleaseRead(&cm_serverLock);
-    cm_FreeServerList(tsrpp);
+    cm_FreeServerList(tsrpp, 0);
     lock_ReleaseMutex(&tvp->mx);
 
     /* still room for terminating NULL, add it on */
@@ -1329,7 +1330,7 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         long code;
 	lock_ObtainMutex(&cp->mx);
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
-        cm_FreeServerList(&cp->vlServersp);
+        cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
         cp->vlServersp = NULL;
         code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, cp);
 #ifdef AFS_AFSDB_ENV
@@ -2790,10 +2791,10 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
             lock_ReleaseRead(&cm_serverLock);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
-                if (tsrp->status == busy) {
+                if (tsrp->status == srv_busy) {
                     allOffline = 0;
                     someBusy = 1;
-                } else if (tsrp->status == offline) {
+                } else if (tsrp->status == srv_offline) {
                     allBusy = 0;
                     someOffline = 1;
                 } else {
@@ -2847,14 +2848,14 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (!cellp)
 	return CM_ERROR_NOSUCHCELL;
 
-    code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
+    code = cm_GetVolumeByID(cellp, volume, userp, &req, CM_GETVOL_FLAG_CREATE, &tvp);
     if (code) 
         return code;
 	
     lock_ObtainMutex(&tvp->mx);
     tsrpp = cm_GetVolServers(tvp, volume);
     code = cm_CheckServersStatus(*tsrpp);
-    cm_FreeServerList(tsrpp);
+    cm_FreeServerList(tsrpp, 0);
     lock_ReleaseMutex(&tvp->mx);
     cm_PutVolume(tvp);
     return 0;

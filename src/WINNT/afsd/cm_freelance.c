@@ -157,7 +157,7 @@ void cm_InitFreelance() {
         cm_data.fakeDirVersion = cm_data.rootSCachep->dataVersion;                          
                                                                                       
     // yj: first we make a call to cm_initLocalMountPoints
-    // to read all the local mount points from an ini file
+    // to read all the local mount points from the registry
     cm_InitLocalMountPoints();
 
     // then we make a call to InitFakeRootDir to create
@@ -358,7 +358,7 @@ void cm_InitFakeRootDir() {
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
     fidp->cell = AFS_FAKE_ROOT_CELL_ID;            /* root cell */
-    fidp->volume = AFS_FAKE_ROOT_VOL_ID;   /* root.afs ? */
+    fidp->volume = AFS_FAKE_ROOT_VOL_ID;           /* root.afs ? */
     fidp->vnode = 0x1;
     fidp->unique = 0x1;
     return 0;
@@ -404,7 +404,7 @@ int cm_reInitLocalMountPoints() {
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
     for (i=0; i<cm_noLocalMountPoints; i++) {
         hash = CM_SCACHE_HASH(&aFid);
-        for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
+        for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == aFid.volume &&
                  scp->fid.vnode == aFid.vnode &&
                  scp->fid.unique == aFid.unique 
@@ -421,7 +421,7 @@ int cm_reInitLocalMountPoints() {
                 cm_ReleaseSCacheNoLock(scp);
 
                 // take the scp out of the hash
-                for (lscpp = &cm_data.hashTablep[hash], tscp = cm_data.hashTablep[hash]; 
+                for (lscpp = &cm_data.scacheHashTablep[hash], tscp = cm_data.scacheHashTablep[hash]; 
                      tscp; 
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
@@ -467,7 +467,7 @@ int cm_reInitLocalMountPoints() {
 }
 
 
-// yj: open up the ini file and read all the local mount 
+// yj: open up the registry and read all the local mount 
 // points that are stored there. Part of the initialization
 // process for the freelance client.
 /* to be called while holding freelance lock unless during init. */
@@ -518,7 +518,8 @@ long cm_InitLocalMountPoints() {
             if (code == 0) {
                 cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
                 cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
-                dwMountPoints = 2;
+                cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
+                dwMountPoints = 3;
             }
         }
 
@@ -719,6 +720,7 @@ long cm_InitLocalMountPoints() {
         if (code == 0) {
             cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
             cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
+            cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
         }
         return 0;
     }

@@ -24,11 +24,6 @@
 
 #include "afsd.h"
 
-/* Used by cm_FollowMountPoint */
-#define RWVOL	0
-#define ROVOL	1
-#define BACKVOL	2
-
 #ifdef DEBUG
 extern void afsi_log(char *pattern, ...);
 #endif
@@ -991,6 +986,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
+
 /* called with a locked scp and chases the mount point, yielding outScpp.
  * scp remains locked, just for simplicity of describing the interface.
  */
@@ -1067,7 +1063,13 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     /* now we need to get the volume */
     lock_ReleaseMutex(&scp->mx);
-    code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 0, &volp);
+    if (cm_VolNameIsID(volNamep)) {
+        code = cm_GetVolumeByID(cellp, atoi(volNamep), userp, reqp, 
+                                CM_GETVOL_FLAG_CREATE, &volp);
+    } else {
+        code = cm_GetVolumeByName(cellp, volNamep, userp, reqp, 
+                                  CM_GETVOL_FLAG_CREATE, &volp);
+    }
     lock_ObtainMutex(&scp->mx);
         
     if (code == 0) {
@@ -1088,14 +1090,14 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
          * the read-only, otherwise use the one specified.
          */
         if (mtType == '#' && (scp->flags & CM_SCACHEFLAG_PURERO)
-             && volp->roID != 0 && type == RWVOL)
+             && volp->ro.ID != 0 && type == RWVOL)
             type = ROVOL;
         if (type == ROVOL)
-            scp->mountRootFid.volume = volp->roID;
+            scp->mountRootFid.volume = volp->ro.ID;
         else if (type == BACKVOL)
-            scp->mountRootFid.volume = volp->bkID;
+            scp->mountRootFid.volume = volp->bk.ID;
         else
-            scp->mountRootFid.volume = volp->rwID;
+            scp->mountRootFid.volume = volp->rw.ID;
 
         /* the rest of the fid is a magic number */
         scp->mountRootFid.vnode = 1;
@@ -1385,7 +1387,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 
     osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2026,7 +2028,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
         cm_StartCallbackGrantingCall(NULL, &cbReq);
         osi_Log1(afsd_logp, "CALL BulkStatus, %d entries", filesThisCall);
         do {
-            code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+            code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
             if (code) 
                 continue;
 
@@ -2294,7 +2296,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
     do {
-        code = cm_Conn(&scp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2372,7 +2374,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL CreateFile scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2506,7 +2508,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL MakeDir scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2597,7 +2599,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL Link scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) continue;
 
         dirAFSFid.Volume = dscp->fid.volume;
@@ -2665,7 +2667,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL Symlink scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2747,7 +2749,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     /* try the RPC now */
     osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%p", dscp);
     do {
-        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -2899,7 +2901,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     osi_Log2(afsd_logp, "CALL Rename old scp 0x%p new scp 0x%p", 
               oldDscp, newDscp);
     do {
-        code = cm_Conn(&oldDscp->fid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&oldDscp->fid, userp, reqp, &connp);
         if (code) 
             continue;
 
@@ -3483,7 +3485,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     lock_ReleaseMutex(&scp->mx);
 
     do {
-        code = cm_Conn(&cfid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&cfid, userp, reqp, &connp);
         if (code) 
             break;
 
@@ -3527,7 +3529,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
     do {
-        code = cm_Conn(&cfid, userp, reqp, &connp);
+        code = cm_ConnFromFID(&cfid, userp, reqp, &connp);
         if (code) 
             break;
 
@@ -4527,7 +4529,7 @@ void cm_CheckLocks()
                     lock_ReleaseMutex(&scp->mx);
 
                     do {
-                        code = cm_Conn(&cfid, userp,
+                        code = cm_ConnFromFID(&cfid, userp,
                                        &req, &connp);
                         if (code) 
                             break;
@@ -4967,9 +4969,9 @@ void cm_ReleaseAllLocks(void)
     cm_file_lock_t *fileLock;
     unsigned int i;
 
-    for (i = 0; i < cm_data.hashTableSize; i++)
+    for (i = 0; i < cm_data.scacheHashTableSize; i++)
     {
-	for ( scp = cm_data.hashTablep[i]; scp; scp = scp->nextp ) {
+	for ( scp = cm_data.scacheHashTablep[i]; scp; scp = scp->nextp ) {
 	    while (scp->fileLocksH != NULL) {
 		lock_ObtainMutex(&scp->mx);
 		lock_ObtainWrite(&cm_scacheLock);

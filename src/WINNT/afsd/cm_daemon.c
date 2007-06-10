@@ -36,6 +36,7 @@ long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
 long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
+long cm_daemonCheckBusyVolInterval = 600;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -279,6 +280,12 @@ cm_DaemonCheckInit(void)
     if (code == ERROR_SUCCESS)
 	cm_daemonTokenCheckInterval = dummy;
     
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "BusyVolumeCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckBusyVolInterval = dummy;
+    
     RegCloseKey(parmKey);
 }
 
@@ -292,6 +299,7 @@ void cm_Daemon(long parm)
     time_t lastDownServerCheck;
     time_t lastUpServerCheck;
     time_t lastTokenCacheCheck;
+    time_t lastBusyVolCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -331,6 +339,7 @@ void cm_Daemon(long parm)
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
+    lastBusyVolCheck = now - cm_daemonCheckBusyVolInterval/2 * (rand() % cm_daemonCheckBusyVolInterval);
 
     while (daemon_ShutdownFlag == 0) {
 	/* check to see if the listener threads halted due to network 
@@ -381,6 +390,12 @@ void cm_Daemon(long parm)
         if (now > lastVolCheck + cm_daemonCheckVolInterval) {
             lastVolCheck = now;
             cm_RefreshVolumes();
+	    now = osi_Time();
+        }
+
+        if (now > lastBusyVolCheck + cm_daemonCheckBusyVolInterval) {
+            lastVolCheck = now;
+            cm_CheckBusyVolumes();
 	    now = osi_Time();
         }
 

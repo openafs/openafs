@@ -54,6 +54,7 @@ cm_PingServer(cm_server_t *tsp)
     long usecs;
     Capabilities caps = {0, 0};
     char hoststr[16];
+    cm_req_t req;
 
     lock_ObtainMutex(&tsp->mx);
     if (tsp->flags & CM_SERVERFLAG_PINGING) {
@@ -123,6 +124,28 @@ cm_PingServer(cm_server_t *tsp)
 		  osi_LogSaveString(afsd_logp, hoststr), 
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  tsp->capabilities);
+
+        /* Now update the volume status if necessary */
+        if (wasDown) {
+            cm_server_vols_t * tsrvp;
+            cm_volume_t * volp;
+            int i;
+
+            for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+                for (i=0; i<NUM_SERVER_VOLS; i++) {
+                    if (tsrvp->ids[i] != 0) {
+                        cm_InitReq(&req);
+
+                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                                &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                        if (code == 0) {
+                            cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
+                            cm_PutVolume(volp);
+                        }
+                    }
+                }
+            }
+        }
     } else {
 	/* mark server as down */
 	tsp->flags |= CM_SERVERFLAG_DOWN;
@@ -133,6 +156,28 @@ cm_PingServer(cm_server_t *tsp)
 		  osi_LogSaveString(afsd_logp, hoststr), 
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  tsp->capabilities);
+
+        /* Now update the volume status if necessary */
+        if (!wasDown) {
+            cm_server_vols_t * tsrvp;
+            cm_volume_t * volp;
+            int i;
+
+            for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+                for (i=0; i<NUM_SERVER_VOLS; i++) {
+                    if (tsrvp->ids[i] != 0) {
+                        cm_InitReq(&req);
+
+                        code = cm_GetVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                                &req, CM_GETVOL_FLAG_NO_LRU_UPDATE, &volp);
+                        if (code == 0) {
+                            cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
+                            cm_PutVolume(volp);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (tsp->waitCount == 0)
@@ -311,22 +356,24 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
     osi_assert(socketp->sin_family == AF_INET);
 
     tsp = malloc(sizeof(*tsp));
-    memset(tsp, 0, sizeof(*tsp));
-    tsp->type = type;
-    tsp->cellp = cellp;
-    tsp->refCount = 1;
-    lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
-    tsp->addr = *socketp;
-    tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
+    if (tsp) {
+        memset(tsp, 0, sizeof(*tsp));
+        tsp->type = type;
+        tsp->cellp = cellp;
+        tsp->refCount = 1;
+        lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
+        tsp->addr = *socketp;
+        tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
 
-    cm_SetServerPrefs(tsp); 
+        cm_SetServerPrefs(tsp); 
 
-    lock_ObtainWrite(&cm_serverLock); 	/* get server lock */
-    tsp->allNextp = cm_allServersp;
-    cm_allServersp = tsp;
-    lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
+        lock_ObtainWrite(&cm_serverLock); 	/* get server lock */
+        tsp->allNextp = cm_allServersp;
+        cm_allServersp = tsp;
+        lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
-    cm_PingServer(tsp);			/* Obtain Capabilities and check up/down state */
+        cm_PingServer(tsp);			/* Obtain Capabilities and check up/down state */
+    }
     return tsp;
 }
 
@@ -355,16 +402,72 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
     return tsp;
 }       
 
-cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp)
+cm_server_vols_t *cm_NewServerVols(void) {
+    cm_server_vols_t *tsvp;
+
+    tsvp = malloc(sizeof(*tsvp));
+    if (tsvp)
+        memset(tsvp, 0, sizeof(*tsvp));
+
+    return tsvp;
+}
+
+cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp, afs_uint32 volID)
 {
     cm_serverRef_t *tsrp;
+    cm_server_vols_t **tsrvpp = NULL;
+    afs_uint32 *slotp = NULL;
+    int found = 0;
 
     cm_GetServer(serverp);
     tsrp = malloc(sizeof(*tsrp));
     tsrp->server = serverp;
-    tsrp->status = not_busy;
+    tsrp->status = srv_not_busy;
     tsrp->next = NULL;
+    tsrp->volID = volID;
     tsrp->refCount = 1;
+
+    /* if we have a non-zero volID, we need to add it to the list
+     * of volumes maintained by the server.  There are two phases:
+     * (1) see if the volID is already in the list and (2) insert
+     * it into the first empty slot if it is not.
+     */
+    if (volID) {
+        lock_ObtainMutex(&serverp->mx);
+
+        tsrvpp = &serverp->vols;
+        while (*tsrvpp) {
+            int i;
+
+            for (i=0; i<NUM_SERVER_VOLS; i++) {
+                if ((*tsrvpp)->ids[i] == volID) {
+                    found = 1;
+                    break;
+                } else if (!slotp && (*tsrvpp)->ids[i] == 0) {
+                    slotp = &(*tsrvpp)->ids[i];
+                }
+            }
+
+            if (found)
+                break;
+
+            tsrvpp = &(*tsrvpp)->nextp;
+        }
+
+        if (!found) {
+            if (slotp) {
+                *slotp = volID;
+            } else {
+                /* if we didn't find an empty slot in a current
+                 * page we must need a new page */
+                *tsrvpp = cm_NewServerVols();
+                if (*tsrvpp)
+                    (*tsrvpp)->ids[0] = volID;
+            }
+        }
+
+        lock_ReleaseMutex(&serverp->mx);
+    }
 
     return tsrp;
 }
@@ -515,6 +618,8 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 /* call cm_FreeServer while holding a write lock on cm_serverLock */
 void cm_FreeServer(cm_server_t* serverp)
 {
+    cm_server_vols_t * tsrvp, *nextp;
+
     cm_PutServerNoLock(serverp);
     if (serverp->refCount == 0)
     {
@@ -538,12 +643,37 @@ void cm_FreeServer(cm_server_t* serverp)
 		    }
 		}
             }
+
+            /* free the volid list */
+            for ( tsrvp = serverp->vols; tsrvp; tsrvp = nextp) {
+                nextp = tsrvp->nextp;
+                free(tsrvp);
+            }
+
 	    free(serverp);
         }
     }
 }
 
-void cm_FreeServerList(cm_serverRef_t** list)
+void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID)
+{
+    cm_server_vols_t * tsrvp;
+    int i;
+
+    if (volID == 0)
+        return;
+
+    for (tsrvp = serverp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+        for (i=0; i<NUM_SERVER_VOLS; i++) {
+            if (tsrvp->ids[i] == volID) {
+                tsrvp->ids[i] = 0;;
+                break;
+            }
+        }
+    }
+}
+
+void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
 {
     cm_serverRef_t  **current = list;
     cm_serverRef_t  **nextp = 0;
@@ -556,11 +686,19 @@ void cm_FreeServerList(cm_serverRef_t** list)
         nextp = &(*current)->next;
         if (--((*current)->refCount) == 0) {
             next = *nextp;
+
+            if ((*current)->volID)
+                cm_RemoveVolumeFromServer((*current)->server, (*current)->volID);
             cm_FreeServer((*current)->server);
             free(*current);
             *current = next;
         } else {
-           current = nextp;
+            if (flags & CM_FREESERVERLIST_DELETE) {
+                (*current)->status = srv_deleted;
+                if ((*current)->volID)
+                    cm_RemoveVolumeFromServer((*current)->server, (*current)->volID);
+            }
+            current = nextp;
         }
     }
   

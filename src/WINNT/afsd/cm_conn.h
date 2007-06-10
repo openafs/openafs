@@ -113,8 +113,12 @@ extern long cm_ConnByMServers(struct cm_serverRef *, struct cm_user *,
 
 extern long cm_ConnByServer(struct cm_server *, struct cm_user *, cm_conn_t **);
 
-extern long cm_Conn(struct cm_fid *, struct cm_user *, struct cm_req *,
+extern long cm_ConnFromFID(struct cm_fid *, struct cm_user *, struct cm_req *,
 	cm_conn_t **);
+
+extern long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, 
+                              struct cm_user *userp, cm_req_t *reqp,
+                              cm_conn_t **connpp);
 
 extern void cm_PutConn(cm_conn_t *connp);
 

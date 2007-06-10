@@ -51,13 +51,22 @@ typedef struct cm_config_data {
     cm_aclent_t *       aclLRUp;
     cm_aclent_t	*       aclLRUEndp;
 
-    cm_scache_t	**      hashTablep;
-    afs_uint32		hashTableSize;
+    cm_scache_t	**      scacheHashTablep;
+    afs_uint32		scacheHashTableSize;
 
+    cm_scache_t *       allSCachesp;
     afs_uint32		currentSCaches;
     afs_uint32          maxSCaches;
     cm_scache_t *       scacheLRUFirstp;
     cm_scache_t *       scacheLRULastp;
+
+    cm_volume_t **      volumeNameHashTablep;
+    cm_volume_t **      volumeRWIDHashTablep;
+    cm_volume_t **      volumeROIDHashTablep;
+    cm_volume_t **      volumeBKIDHashTablep;
+    afs_uint32          volumeHashTableSize;
+    cm_volume_t *       volumeLRUFirstp;
+    cm_volume_t *       volumeLRULastp;
 
     cm_nc_t 	*       ncfreelist;
     cm_nc_t 	*       nameCache;
@@ -67,7 +76,7 @@ typedef struct cm_config_data {
     cm_buf_t    *       buf_freeListEndp;
     cm_buf_t	*       buf_dirtyListp;
     cm_buf_t    *       buf_dirtyListEndp;
-    cm_buf_t	**      buf_hashTablepp;
+    cm_buf_t	**      buf_scacheHashTablepp;
     cm_buf_t	**      buf_fileHashTablepp;
     cm_buf_t	*       buf_allp;
     afs_uint64		buf_nbuffers;
