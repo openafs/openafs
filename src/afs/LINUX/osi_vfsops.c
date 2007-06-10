@@ -316,7 +316,8 @@ afs_init_inodecache(void)
 void
 afs_destroy_inodecache(void)
 {
-    (void) kmem_cache_destroy(afs_inode_cachep);
+    if (afs_inode_cachep)
+	(void) kmem_cache_destroy(afs_inode_cachep);
 }
 #else
 int
