@@ -201,18 +201,22 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* leave 5 seconds margin for sleep */
     timeLeft = HardDeadtimeout - timeUsed;
 
+    /* get a pointer to the cell */
+    if (errorCode) {
+        if (cellp == NULL && serverp)
+            cellp = serverp->cellp;
+        if (cellp == NULL && serversp) {
+            struct cm_serverRef * refp;
+            for ( refp=serversp ; cellp == NULL && refp != NULL; refp=refp->next) {
+                if ( refp->server )
+                    cellp = refp->server->cellp;
+            }
+        }
+    }
+
     if (errorCode == CM_ERROR_TIMEDOUT) {
         if (timeLeft > 5 ) {
             thrd_Sleep(3000);
-            if (cellp == NULL && serverp)
-                cellp = serverp->cellp;
-            if (cellp == NULL && serversp) {
-                struct cm_serverRef * refp;
-                for ( refp=serversp ; cellp == NULL && refp != NULL; refp=refp->next) {
-                    if ( refp->server )
-                        cellp = refp->server->cellp;
-                }
-            }
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
         }
@@ -248,80 +252,98 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         /* Volume instances marked offline will be restored by the 
          * background daemon thread as they become available 
          */
-#if 0
-        if (timeLeft > 7) {
+        if (timeLeft > 7 && fidp) {
+            cm_volume_t *volp;
+            cm_vol_state_t *statep;
+
             thrd_Sleep(5000);
 
-	    if (fidp) {	/* Not a VLDB call */
-		if (!serversp) {
-		    code = cm_GetServerList(fidp, userp, reqp, &serverspp);
-		    if (code == 0) {
-			serversp = *serverspp;
-			free_svr_list = 1;
-		    }
-		}
-		if (serversp) {
-		    lock_ObtainWrite(&cm_serverLock);
-		    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                        /* REDIRECT */
-			tsrp->status = srv_not_busy;
-                    }
-		    lock_ReleaseWrite(&cm_serverLock);
-		    if (free_svr_list) {
-			cm_FreeServerList(&serversp, 0);
-			*serverspp = serversp;
-		    }
-		    retry = 1;
-		}
+            code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                    CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                    &volp);
+            if (code == 0) {
+                if (fidp->volume == volp->rw.ID)
+                    statep = &volp->rw;
+                else if (fidp->volume == volp->ro.ID)
+                    statep = &volp->ro;
+                else if (fidp->volume == volp->bk.ID)
+                    statep = &volp->bk;
 
-                cm_ForceUpdateVolume(fidp, userp, reqp);
-	    } else { /* VLDB call */
-		if (serversp) {
-		    lock_ObtainWrite(&cm_serverLock);
-		    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                        /* REDIRECT */
-			tsrp->status = srv_not_busy;
-                    }
-		    lock_ReleaseWrite(&cm_serverLock);
-		    if (free_svr_list) {
-			cm_FreeServerList(&serversp, 0);
-			*serverspp = serversp;
-		    }
-		}
-	    }	
+                if (statep->state != vl_offline) {
+                    retry = 1;
+                } else {
+                    if (cm_CheckOfflineVolume(volp, statep->ID))
+                        retry = 1;
+                }
+            
+                cm_PutVolume(volp);
+            }
         }
-#endif
     }
     else if (errorCode == CM_ERROR_ALLBUSY) {
-        /* Volume instances marked busy will be restored by the 
-         * background daemon thread as they become available.
+        /* Volumes that are busy cannot be determined to be non-busy 
+         * without actually attempting to access them.
          */
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY.");
-#if 0
         if (timeLeft > 7) {
+            cm_volume_t * volp = NULL;
+            cm_vol_state_t *statep;
+
             thrd_Sleep(5000);
-            if (!serversp) {
-                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+
+            if (fidp) { /* File Server query */
+                code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                        CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                        &volp);
                 if (code == 0) {
-                    serversp = *serverspp;
-                    free_svr_list = 1;
+                    if (fidp->volume == volp->rw.ID)
+                        statep = &volp->rw;
+                    else if (fidp->volume == volp->ro.ID)
+                        statep = &volp->ro;
+                    else if (fidp->volume == volp->bk.ID)
+                        statep = &volp->bk;
+
+                    if (statep->state != vl_offline && statep->state != vl_busy) {
+                        retry = 1;
+                    } else {
+                        if (!serversp) {
+                            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                            if (code == 0) {
+                                serversp = *serverspp;
+                                free_svr_list = 1;
+                            }
+                        }
+                        lock_ObtainWrite(&cm_serverLock);
+                        for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                            if (tsrp->status == srv_busy) {
+                                tsrp->status = srv_not_busy;
+                            }
+                        }
+                        lock_ReleaseWrite(&cm_serverLock);
+                        if (free_svr_list) {
+                            cm_FreeServerList(&serversp, 0);
+                            *serverspp = serversp;
+                        }
+
+                        cm_UpdateVolumeStatus(volp, statep->ID);
+                        retry = 1;
+                    }
+            
+                    cm_PutVolume(volp);
+                }
+            } else {    /* VL Server query */
+                if (serversp) {
+                    lock_ObtainWrite(&cm_serverLock);
+                    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                        if (tsrp->status == srv_busy) {
+                            tsrp->status = srv_not_busy;
+                        }
+                    }
+                    lock_ReleaseWrite(&cm_serverLock);
+                    retry = 1;
                 }
             }
-            lock_ObtainWrite(&cm_serverLock);
-            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                if (tsrp->status == srv_busy) {
-                    /* REDIRECT */
-                    tsrp->status = srv_not_busy;
-                }
-            }
-            lock_ReleaseWrite(&cm_serverLock);
-            if (free_svr_list) {
-                cm_FreeServerList(&serversp, 0);
-                *serverspp = serversp;
-            }
-            retry = 1;
         }
-#endif
     }
 
     /* special codes:  VBUSY and VRESTARTING */

@@ -16,13 +16,13 @@
 
 enum volstatus {vl_online, vl_busy, vl_offline, vl_alldown, vl_unknown};
 
-struct cm_vol_state {
+typedef struct cm_vol_state {
     afs_uint32      ID;                 /* by mx */
     struct cm_volume *nextp;            /* volumeIDHashTable; by cm_volumeLock */
     cm_serverRef_t *serversp;           /* by mx */
     enum volstatus  state;              /* by mx */
     afs_uint32      flags;              /* by mx */
-};
+} cm_vol_state_t;
 
 typedef struct cm_volume {
     osi_queue_t q;                      /* LRU queue; cm_volumeLock */
@@ -110,7 +110,9 @@ extern void cm_AdjustVolumeLRU(cm_volume_t *volp);
 
 extern void cm_RemoveVolumeFromLRU(cm_volume_t *volp);
 
-extern void cm_CheckBusyVolumes(void);
+extern void cm_CheckOfflineVolumes(void);
+
+extern long cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID);
 
 extern void cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID);
 
