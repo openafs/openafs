@@ -7,20 +7,28 @@ fileserver - Initializes the File Server component of the fs process
 =for html
 <div class="synopsis">
 
-B<fileserver> S<<< [B<-d> <I<debug level>>] >>> S<<< [B<-p> <I<number of processes>>] >>>
+B<fileserver> S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-d> <I<debug level>>] >>>
+    S<<< [B<-p> <I<number of processes>>] >>>
     S<<< [B<-spare> <I<number of spare blocks>>] >>>
     S<<< [B<-pctspare> <I<percentage spare>>] >>> S<<< [B<-b> <I<buffers>>] >>>
     S<<< [B<-l> <I<large vnodes>>] >>> S<<< [B<-s> <I<small nodes>>] >>>
     S<<< [B<-vc> <I<volume cachesize>>] >>> S<<< [B<-w> <I<call back wait interval>>] >>>
     S<<< [B<-cb> <I<number of call backs>>] >>> [B<-banner>] [B<-novbc>]
-    S<<< [B<-implicit> <I<admin mode bits: rlidwka>>] >>>
+    S<<< [B<-implicit> <I<admin mode bits: rlidwka>>] >>> [B<-readonly>]
     S<<< [B<-hr> <I<number of hours between refreshing the host cps>>] >>>
     [B<-busyat> <I<< redirect clients when queue > n >>>]
-    S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
-    [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-m> <I<min percentage spare in partition>>] >>>
+    [B<-nobusy>] S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
+    [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    S<<< [B<-rxbind> <I<address to bind the Rx socket to>>] >>>
+    S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
+    S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     [B<-lock>] [B<-L>] [B<-S>] S<<< [B<-k> <I<stack size>>] >>>
     S<<< [B<-realm> <I<Kerberos realm name>>] >>>
     S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
+    S<<< [B<-sendsize> <I<size of send buffer in bytes>>] >>>
+    S<<< [B<-abortthreshold> <I<abort threshold>>] >>>
+    S<<< [B<-auditlog> <I<path to log file>>] >>>
     [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
 
 =for html
@@ -188,6 +196,10 @@ option only on the relevant system type.
 =head1 OPTIONS
 
 =over 4
+
+=item B<-auditlog> <I<log path>>
+
+Set and enable auditing.
 
 =item B<-d> <I<debug level>>
 
