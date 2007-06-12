@@ -90,7 +90,7 @@ DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
-
+DECL_PIOCTL(PNewUuid);
 /*
  * A macro that says whether we're going to need HandleClientContext().
  * This is currently used only by the nfs translator.
@@ -192,6 +192,12 @@ static int (*(CpioctlSw[])) () = {
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PNewUuid,                   /* 9 -- generate new uuid */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3828,6 +3834,21 @@ DECL_PIOCTL(PResidencyCmd)
 	*aoutSize = sizeof(struct ResidencyCmdOutputs);
     }
     return code;
+}
+
+DECL_PIOCTL(PNewUuid)
+{
+    /*AFS_STATCNT(PNewUuid); */
+    if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(acred))
+	return EACCES;
+
+    ObtainWriteLock(&afs_xinterface, 555);
+    afs_uuid_create(&afs_cb_interface.uuid);
+    ReleaseWriteLock(&afs_xinterface);
+    ForceAllNewConnections();
 }
 
 DECL_PIOCTL(PCallBackAddr)

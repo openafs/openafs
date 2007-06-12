@@ -69,7 +69,7 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 
 static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd();
+static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), NewUuidCmd();
 
 extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
@@ -1242,6 +1242,24 @@ FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
 	}
     }
     return error;
+}
+
+static int
+NewUuidCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+
+    blob.in_size = 0;
+    blob.out_size = 0;
+    code = pioctl(0, VIOC_NEWUUID, &blob, 1);
+    if (code) {
+	Die(errno, 0);
+	return 1;
+    }
+
+    printf("New uuid generated.\n");
+    return 0;
 }
 
 static int
@@ -3441,6 +3459,9 @@ defect 3069
     ts = cmd_CreateSyntax("getfid", GetFidCmd, 0,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+
+    ts = cmd_CreateSyntax("newuuid", NewUuidCmd, 0,
+			  "force a new uuid");
 
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
