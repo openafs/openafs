@@ -858,3 +858,16 @@ register_sysctl_table (t);],
       ac_cv_linux_register_sysctl_table_noflag=no)])
   AC_MSG_RESULT($ac_cv_linux_register_sysctl_table_noflag)])
 
+AC_DEFUN([LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T], [
+  AC_MSG_CHECKING([whether file_operations.flush takes a fl_owner_t])
+  AC_CACHE_VAL([ac_cv_linux_func_f_flush_takes_fl_owner_t], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+fl_owner_t id;
+(void)_inode.i_fop->flush(&_file, &id);],
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=yes,
+      ac_cv_linux_func_f_flush_takes_fl_owner_t=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_f_flush_takes_fl_owner_t)])
+
