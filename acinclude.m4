@@ -608,6 +608,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
+	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_KERNEL_LINUX_SYSCALL_H
@@ -835,6 +836,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
+		 fi
+		 if test "x$ac_cv_linux_func_f_flush_takes_fl_owner_t" = "xyes" ; then
+		  AC_DEFINE(FOP_FLUSH_TAKES_FL_OWNER_T, 1, [define if your fops.flush takes an fl_owner_t argument])
 		 fi
 		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
