@@ -2,11 +2,14 @@ openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
 
   * Apply upstream patch from Jeffrey Hutzelman to fix kernel module
     builds on ppc64.  (Closes: #427555)
+  * Apply upstream patches for Linux 2.6.22 support.  (Closes: #428401)
+  * Apply upstream patch to fix the AFS /proc structure under Linux
+    2.6.22.1 and later.
   * Go back to using krb5-config.  The dependency problem has now been
     fixed on all platforms in the krb5 package and this is the preferred
     upstream method.
 
- -- Russ Allbery <rra@debian.org>  Mon, 04 Jun 2007 20:59:15 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 12 Jun 2007 11:43:54 -0700
 
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 

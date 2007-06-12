@@ -444,6 +444,18 @@ printk("%d\n", _tsk.exit_state);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO], [
+  AC_MSG_CHECKING([for thread_info in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_thread_info], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.thread_info);],
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=yes,
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_thread_info)])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
   AC_MSG_CHECKING([for alloc_inode in struct super_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_alloc_inode], [
@@ -454,6 +466,17 @@ printk("%p\n", _super.alloc_inode);],
       ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
       ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
+
+
+AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
+  AC_MSG_CHECKING([for 3rd argument in posix_lock_file found in new kernels])
+  AC_CACHE_VAL([ac_cv_linux_kernel_posix_lock_file_wait_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[posix_lock_file(0,0,0);],
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=yes,
+      ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
 
 
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
