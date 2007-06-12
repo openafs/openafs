@@ -122,7 +122,11 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 #if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
 #else
+#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
 	    test_ti_thread_flag(current->thread_info, TIF_FREEZE)
+#else
+	    test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
+#endif
 #endif
 #endif
 	    )

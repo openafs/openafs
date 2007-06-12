@@ -628,6 +628,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
@@ -816,6 +817,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_thread_info" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_THREAD_INFO, 1, [define if your struct task_struct has thread_info])
 		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])

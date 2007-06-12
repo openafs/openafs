@@ -444,6 +444,18 @@ printk("%d\n", _tsk.exit_state);],
   AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)])
 
 
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO], [
+  AC_MSG_CHECKING([for thread_info in struct task_struct])
+  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_thread_info], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printk("%d\n", _tsk.thread_info);],
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=yes,
+      ac_cv_linux_sched_struct_task_struct_has_thread_info=no)])
+  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_thread_info)])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
   AC_MSG_CHECKING([for alloc_inode in struct super_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_alloc_inode], [
