@@ -395,7 +395,7 @@ void cm_Daemon(long parm)
 
         if (now > lastBusyVolCheck + cm_daemonCheckBusyVolInterval) {
             lastVolCheck = now;
-            cm_CheckBusyVolumes();
+            cm_CheckOfflineVolumes();
 	    now = osi_Time();
         }
 

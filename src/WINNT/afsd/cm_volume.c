@@ -971,12 +971,15 @@ void cm_RefreshVolumes(void)
 
 }
 
-/* called from the Daemon thread */
-void cm_CheckBusyVolumes(void)
+
+/* The return code is 0 if the volume is not online and 
+ * 1 if the volume is online
+ */
+long
+cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
 {
-    cm_volume_t *volp;
     cm_conn_t *connp;
-    register long code;
+    long code;
     AFSFetchVolumeStatus volStat;
     char *Name;
     char *OfflineMsg;
@@ -986,84 +989,119 @@ void cm_CheckBusyVolumes(void)
     char volName[32];
     char offLineMsg[256];
     char motd[256];
+    long online = 0;
+    cm_serverRef_t *serversp;
 
     Name = volName;
     OfflineMsg = offLineMsg;
     MOTD = motd;
 
+    lock_ObtainMutex(&volp->mx);
+
+    if (volp->rw.ID != 0 && (!volID || volID == volp->rw.ID) &&
+         (volp->rw.state == vl_busy || volp->rw.state == vl_offline)) {
+        cm_InitReq(&req);
+
+        for (serversp = volp->rw.serversp; serversp; serversp = serversp->next) {
+            if (serversp->status == srv_busy || serversp->status == srv_offline)
+                serversp->status = srv_not_busy;
+        }
+
+        do {
+            code = cm_ConnFromVolume(volp, volp->rw.ID, cm_rootUserp, &req, &connp);
+            if (code) 
+                continue;
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_GetVolumeStatus(callp, volp->rw.ID,
+                                          &volStat, &Name, &OfflineMsg, &MOTD);
+            rx_PutConnection(callp);        
+
+        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
+
+        if (code == 0 && volStat.Online) {
+            cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_online);
+            volp->rw.state = vl_online;
+            online = 1;
+        }
+    }
+
+    if (volp->ro.ID != 0 && (!volID || volID == volp->ro.ID) &&
+         (volp->ro.state == vl_busy || volp->ro.state == vl_offline)) {
+        cm_InitReq(&req);
+
+        for (serversp = volp->ro.serversp; serversp; serversp = serversp->next) {
+            if (serversp->status == srv_busy || serversp->status == srv_offline)
+                serversp->status = srv_not_busy;
+        }
+
+        do {
+            code = cm_ConnFromVolume(volp, volp->ro.ID, cm_rootUserp, &req, &connp);
+            if (code) 
+                continue;
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_GetVolumeStatus(callp, volp->ro.ID,
+                                          &volStat, &Name, &OfflineMsg, &MOTD);
+            rx_PutConnection(callp);        
+
+        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
+
+        if (code == 0 && volStat.Online) {
+            cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_online);
+            volp->ro.state = vl_online;
+            online = 1;
+        }
+    }
+
+    if (volp->bk.ID != 0 && (!volID || volID == volp->bk.ID) &&
+         (volp->bk.state == vl_busy || volp->bk.state == vl_offline)) {
+        cm_InitReq(&req);
+
+        for (serversp = volp->bk.serversp; serversp; serversp = serversp->next) {
+            if (serversp->status == srv_busy || serversp->status == srv_offline)
+                serversp->status = srv_not_busy;
+        }
+
+        do {
+            code = cm_ConnFromVolume(volp, volp->bk.ID, cm_rootUserp, &req, &connp);
+            if (code) 
+                continue;
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_GetVolumeStatus(callp, volp->bk.ID,
+                                          &volStat, &Name, &OfflineMsg, &MOTD);
+            rx_PutConnection(callp);        
+
+        } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, &req);
+
+        if (code == 0 && volStat.Online) {
+            cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_online);
+            volp->bk.state = vl_online;
+            online = 1;
+        }
+    }
+
+    lock_ReleaseMutex(&volp->mx);
+    return online;
+}
+
+
+/* called from the Daemon thread */
+void cm_CheckOfflineVolumes(void)
+{
+    cm_volume_t *volp;
+
     lock_ObtainWrite(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
 	volp->refCount++;
 	lock_ReleaseWrite(&cm_volumeLock);
-	lock_ObtainMutex(&volp->mx);
 
-        if (volp->rw.ID != 0 && (volp->rw.state == vl_busy || volp->rw.state == vl_offline)) {
-            cm_InitReq(&req);
+        cm_CheckOfflineVolume(volp, 0);
 
-            do {
-                code = cm_ConnFromVolume(volp, volp->rw.ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->rw.ID,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->rw.ID, volp->rw.state, vl_online);
-                volp->rw.state = vl_online;
-            }
-        }
-
-        if (volp->ro.ID != 0 && (volp->ro.state == vl_busy || volp->ro.state == vl_offline)) {
-            cm_InitReq(&req);
-
-            do {
-                code = cm_ConnFromVolume(volp, volp->ro.ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->ro.ID,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->ro.ID, volp->ro.state, vl_online);
-                volp->ro.state = vl_online;
-            }
-        }
-
-        if (volp->bk.ID != 0 && (volp->bk.state == vl_busy || volp->bk.state == vl_offline)) {
-            cm_InitReq(&req);
-
-            do {
-                code = cm_ConnFromVolume(volp, volp->bk.ID, cm_rootUserp, &req, &connp);
-                if (code) 
-                    continue;
-
-                callp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(callp, volp->bk.ID,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(callp);
-
-            } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
-
-            if (code == 0 && volStat.Online) {
-                cm_VolumeStatusNotification(volp, volp->bk.ID, volp->bk.state, vl_online);
-                volp->bk.state = vl_online;
-            }
-        }
-
-        lock_ReleaseMutex(&volp->mx);
 	lock_ObtainWrite(&cm_volumeLock);
 	osi_assert(volp->refCount-- > 0);
     }
