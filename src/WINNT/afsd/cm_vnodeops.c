@@ -1294,6 +1294,114 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
     return 1;
 }   
 
+long cm_EvaluateVolumeReference(char * namep, long flags, cm_user_t * userp,
+                                cm_req_t *reqp, cm_scache_t ** outpScpp)
+{
+    long          code = 0;
+    char          cellName[CELL_MAXNAMELEN];
+    char          volumeName[VL_MAXNAMELEN];
+    size_t        len;
+    char *        cp;
+    char *        tp;
+
+    cm_cell_t *   cellp = NULL;
+    cm_volume_t * volp = NULL;
+    cm_fid_t      fid;
+    int           volType;
+    int           mountType = RWVOL;
+
+    osi_Log1(afsd_logp, "cm_EvaluateVolumeReference for string [%s]",
+             osi_LogSaveString(afsd_logp, namep));
+
+    if (strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) != 0) {
+        goto _exit_invalid_path;
+    }
+
+    /* namep is assumed to look like the following:
+
+       @vol:<cellname>%<volume>\0
+       or
+       @vol:<cellname>#<volume>\0
+
+     */
+
+    cp = namep + CM_PREFIX_VOL_CCH; /* cp points to cell name, hopefully */
+    tp = strchr(cp, '%');
+    if (tp == NULL)
+        tp = strchr(cp, '#');
+    if (tp == NULL ||
+        (len = tp - cp) == 0 ||
+        len > CELL_MAXNAMELEN)
+        goto _exit_invalid_path;
+    strncpy(cellName, cp, len);
+    cellName[len] = '\0';
+
+    if (*tp == '#')
+        mountType = ROVOL;
+
+    cp = tp+1;                  /* cp now points to volume, supposedly */
+    strncpy(volumeName, cp, VL_MAXNAMELEN-1);
+    volumeName[VL_MAXNAMELEN - 1] = 0;
+
+    /* OK, now we have the cell and the volume */
+    osi_Log2(afsd_logp, "   Found cell [%s] and volume [%s]",
+             osi_LogSaveString(afsd_logp, cellName),
+             osi_LogSaveString(afsd_logp, volumeName));
+
+    cellp = cm_GetCell(cellName, CM_FLAG_CREATE);
+    if (cellp == NULL) {
+        goto _exit_invalid_path;
+    }
+
+    len = strlen(volumeName);
+    if (len >= 8 && strcmp(volumeName + len - 7, ".backup") == 0)
+        volType = BACKVOL;
+    else if (len >= 10 &&
+             strcmp(volumeName + len - 9, ".readonly") == 0)
+        volType = ROVOL;
+    else
+        volType = RWVOL;
+
+    if (cm_VolNameIsID(volumeName)) {
+        code = cm_GetVolumeByID(cellp, atoi(volumeName), userp, reqp,
+                                CM_GETVOL_FLAG_CREATE, &volp);
+    } else {
+        code = cm_GetVolumeByName(cellp, volumeName, userp, reqp,
+                                  CM_GETVOL_FLAG_CREATE, &volp);
+    }
+
+    if (code != 0)
+        goto _exit_cleanup;
+
+    fid.cell = cellp->cellID;
+
+    if (volType == BACKVOL)
+        fid.volume = volp->bk.ID;
+    else if (volType == ROVOL ||
+             (volType == RWVOL && mountType == ROVOL && volp->ro.ID != 0))
+        fid.volume = volp->ro.ID;
+    else
+        fid.volume = volp->rw.ID;
+
+    fid.vnode = 1;
+    fid.unique = 1;
+
+    code = cm_GetSCache(&fid, outpScpp, userp, reqp);
+
+ _exit_cleanup:
+    if (volp)
+        cm_PutVolume(volp);
+
+    if (code == 0)
+        return code;
+
+ _exit_invalid_path:
+    if (flags & CM_FLAG_CHECKPATH)
+        return CM_ERROR_NOSUCHPATH;
+    else
+        return CM_ERROR_NOSUCHFILE;
+}
+
 #ifdef DEBUG_REFCOUNT
 long cm_LookupDbg(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                cm_req_t *reqp, cm_scache_t **outpScpp, char * file, long line)
@@ -1319,32 +1427,47 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
             return CM_ERROR_NOSUCHFILE;
     }
 
-    for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
-        code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
-        if (code > 0) {
-            code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
+    if (dscp == cm_data.rootSCachep &&
+        strnicmp(namep, CM_PREFIX_VOL, CM_PREFIX_VOL_CCH) == 0) {
+        return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outpScpp);
+    }
+
+    if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
+        for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
+            code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
+            if (code > 0) {
+                code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_LookupInternal (1) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
-	    osi_Log3(afsd_logp, "cm_LookupInternal (1) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+                afsi_log("%s:%d cm_LookupInternal (1) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+                osi_Log3(afsd_logp, "cm_LookupInternal (1) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
 
-            if (code == 0) {
-                *outpScpp = scp;
-                return 0;
-            }
-            if (scp) {
-                cm_ReleaseSCache(scp);
-                scp = NULL;
-            }
-        } else {
-            code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
+                if (code == 0) {
+                    *outpScpp = scp;
+                    return 0;
+                }
+                if (scp) {
+                    cm_ReleaseSCache(scp);
+                    scp = NULL;
+                }
+            } else {
+                code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
-	    afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
-	    osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+                afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+                osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
 #endif
-	    *outpScpp = scp;
-	    return code;
+                *outpScpp = scp;
+                return code;
+            }
         }
+    } else {
+        code = cm_LookupInternal(dscp, namep, flags, userp, reqp, &scp);
+#ifdef DEBUG_REFCOUNT
+        afsi_log("%s:%d cm_LookupInternal (2) code 0x%x dscp 0x%p ref %d scp 0x%p ref %d", file, line, code, dscp, dscp->refCount, scp, scp ? scp->refCount : 0);
+        osi_Log3(afsd_logp, "cm_LookupInternal (2) code 0x%x dscp 0x%p scp 0x%p", code, dscp, scp);
+#endif
+        *outpScpp = scp;
+        return code;
     }
 
     /* None of the possible sysName expansions could be found */
@@ -3912,11 +4035,11 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
             if (code != 0 &&
                 (scp->sharedLocks > 0 || scp->exclusiveLocks > 0) &&
-                    scp->serverLock == -1) {
-                    /* Oops. We lost the lock. */
-                    cm_LockMarkSCacheLost(scp);
-                }
+                scp->serverLock == -1) {
+                /* Oops. We lost the lock. */
+                cm_LockMarkSCacheLost(scp);
             }
+        }
     } else if (code == 0) {     /* server locks not enabled */
         osi_Log0(afsd_logp,
                  "  Skipping server lock for scp");

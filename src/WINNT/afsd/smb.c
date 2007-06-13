@@ -1798,6 +1798,36 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         return 0;
     }
 
+    /* Check for volume references
+
+       They look like <cell>{%,#}<volume>
+    */
+    if (strchr(shareName, '%') != NULL ||
+        strchr(shareName, '#') != NULL) {
+        char pathstr[CELL_MAXNAMELEN + VL_MAXNAMELEN + 1 + CM_PREFIX_VOL_CCH];
+                                /* make room for '/@vol:' + mountchar + NULL terminator*/
+
+        osi_Log1(smb_logp, "smb_FindShare found volume reference [%s]",
+                 osi_LogSaveString(smb_logp, shareName));
+
+        snprintf(pathstr, sizeof(pathstr)/sizeof(char),
+                 "/" CM_PREFIX_VOL "%s", shareName);
+        pathstr[sizeof(pathstr)/sizeof(char) - 1] = '\0';
+        len = strlen(pathstr);
+
+        *pathNamep = malloc(len);
+        if (*pathNamep) {
+            strcpy(*pathNamep, pathstr);
+            strlwr(*pathNamep);
+            osi_Log1(smb_logp, "   returning pathname [%s]",
+                     osi_LogSaveString(smb_logp, *pathNamep));
+
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
 #ifndef DJGPP
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                          0, KEY_QUERY_VALUE, &parmKey);
