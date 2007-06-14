@@ -90,6 +90,7 @@ CMtoUNIXerror(int cm_code)
     case CM_ERROR_NOACCESS:
 	return EACCES;
     case CM_ERROR_NOSUCHFILE:
+    case CM_ERROR_NOSUCHPATH:
 	return ENOENT;
     case CM_ERROR_INVAL:
 	return EINVAL;
@@ -115,6 +116,12 @@ CMtoUNIXerror(int cm_code)
 	return EDOM;		/* hack */
     case CM_ERROR_TOOMANYBUFS:
 	return EFBIG;		/* hack */
+    case CM_ERROR_ALLBUSY:
+        return EBUSY;
+    case CM_ERROR_ALLDOWN:
+        return ENOSYS;          /* hack */
+    case CM_ERROR_ALLOFFLINE:
+        return ENXIO;           /* hack */
     default:
 	if (cm_code > 0 && cm_code < EILSEQ)
 	    return cm_code;
