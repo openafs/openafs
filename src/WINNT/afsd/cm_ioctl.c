@@ -2829,8 +2829,8 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *scp;
     cm_cell_t *cellp;
     cm_volume_t *tvp;
-    cm_serverRef_t **tsrpp;
-    unsigned long volume;
+    cm_vol_state_t *statep;
+    afs_uint32 volume;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -2852,13 +2852,30 @@ long cm_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) 
         return code;
 	
-    lock_ObtainMutex(&tvp->mx);
-    tsrpp = cm_GetVolServers(tvp, volume);
-    code = cm_CheckServersStatus(*tsrpp);
-    cm_FreeServerList(tsrpp, 0);
-    lock_ReleaseMutex(&tvp->mx);
+    if (volume == tvp->rw.ID)
+        statep = &tvp->rw;
+    else if (volume == tvp->ro.ID)
+        statep = &tvp->ro;
+    else
+        statep = &tvp->bk;
+
+    switch (statep->state) {
+    case vl_online:
+    case vl_unknown:
+        code = 0;
+        break;
+    case vl_busy:
+        code = CM_ERROR_ALLBUSY;
+        break;
+    case vl_offline:
+        code = CM_ERROR_ALLOFFLINE;
+        break;
+    case vl_alldown:
+        code = CM_ERROR_ALLDOWN;
+        break;
+    }
     cm_PutVolume(tvp);
-    return 0;
+    return code;
 }       
 
 

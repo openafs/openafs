@@ -4639,10 +4639,10 @@ Die(int code, char *filename)
     else if (code == ENODEV) {
 	fprintf(stderr,"%s: AFS service may not have started.\n", pn);
     }
-    else if (code == ESRCH) {
+    else if (code == ESRCH) {   /* hack */
 	fprintf(stderr,"%s: Cell name not recognized.\n", pn);
     }
-    else if (code == EPIPE) {
+    else if (code == EPIPE) {   /* hack */
 	fprintf(stderr,"%s: Volume name or ID not recognized.\n", pn);
     }
     else if (code == EFBIG) {
@@ -4654,6 +4654,24 @@ Die(int code, char *filename)
 	else
 	    fprintf(stderr,"%s: Connection timed out", pn);
     }
+    else if (code == EBUSY) {
+	if (filename) 
+            fprintf(stderr,"%s: All servers are busy on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All servers are busy\n", pn);
+    } 
+    else if (code == ENXIO) {
+	if (filename) 
+            fprintf(stderr,"%s: All volume instances are offline on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All volume instances are offline\n", pn);
+    } 
+    else if (code == ENOSYS) {
+	if (filename) 
+            fprintf(stderr,"%s: All servers are down on which '%s' resides\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: All servers are down\n", pn);
+    } 
     else {
 	if (filename) 
             fprintf(stderr,"%s:'%s'", pn, filename);
