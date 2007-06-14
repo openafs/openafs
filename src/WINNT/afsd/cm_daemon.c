@@ -59,10 +59,11 @@ void cm_IpAddrDaemon(long parm)
     while (daemon_ShutdownFlag == 0) {
 	DWORD Result = NotifyAddrChange(NULL,NULL);
 	if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
-	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
 	    Sleep(2500);
+	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
+            cm_CheckServers(CM_FLAG_CHECKVLDBSERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    cm_ForceNewConnectionsAllServers();
-            cm_CheckServers(CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
+            cm_CheckServers(CM_FLAG_CHECKFILESERVERS | CM_FLAG_CHECKUPSERVERS | CM_FLAG_CHECKDOWNSERVERS, NULL);
 	    smb_CheckVCs();
 	}	
     }

@@ -67,6 +67,8 @@ typedef struct cm_serverRef {
 /* flags for procedures */
 #define CM_FLAG_CHECKUPSERVERS		1	/* check working servers */
 #define CM_FLAG_CHECKDOWNSERVERS	2	/* check down servers */
+#define CM_FLAG_CHECKVLDBSERVERS        4       /* check only vldb servers */
+#define CM_FLAG_CHECKFILESERVERS        8       /* check only file servers */
 
 /* values for ipRank */
 #define CM_IPRANK_TOP	5000	/* on same machine */

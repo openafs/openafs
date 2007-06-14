@@ -201,6 +201,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
     cm_server_t *tsp;
     int doPing;
     int isDown;
+    int isFS;
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -212,6 +213,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 
         doPing = 0;
         isDown = tsp->flags & CM_SERVERFLAG_DOWN;
+        isFS   = tsp->type == CM_SERVER_FILE;
 
         /* only do the ping if the cell matches the requested cell, or we're
          * matching all cells (cellp == NULL), and if we've requested to ping
@@ -219,7 +221,11 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
          */
         if ((cellp == NULL || cellp == tsp->cellp) &&
              ((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
-               (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
+               (!isDown && (flags & CM_FLAG_CHECKUPSERVERS))) &&
+             ((!(flags & CM_FLAG_CHECKVLDBSERVERS) || 
+               !isFS && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
+              (!(flags & CM_FLAG_CHECKFILESERVERS) || 
+                 isFS && (flags & CM_FLAG_CHECKFILESERVERS)))) {
             doPing = 1;
         }	/* we're supposed to check this up/down server */
         lock_ReleaseMutex(&tsp->mx);
