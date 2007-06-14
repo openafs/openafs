@@ -2216,7 +2216,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	     * code.  So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-		if (call && code == -1 && errno == WSAEHOSTUNREACH)
+		if (call && code == -1 && WSAGetLastError() == WSAEHOSTUNREACH)
 			call->lastReceiveTime = 0;
 #endif
 #if defined(KERNEL) && defined(AFS_LINUX20_ENV)
