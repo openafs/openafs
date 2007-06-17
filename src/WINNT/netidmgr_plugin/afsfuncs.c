@@ -521,7 +521,7 @@ _no_krb5:
                                      &krb4_credtype_id);
             }
 
-            if (krb4_credtype_id > 0 &&
+            if (krb4_credtype_id >= 0 &&
                 KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1,
                                                          afs_filter_krb4_tkt,
                                                          (void *) cell,
