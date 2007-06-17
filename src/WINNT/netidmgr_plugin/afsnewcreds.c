@@ -377,6 +377,7 @@ afs_remove_token_from_identities(wchar_t * cell) {
         khm_size cb;
         wchar_t vbuf[1024];
         wchar_t * tbuf = NULL;
+        khm_int32 enabled = 0;
 
         kcdb_identity_create(t, 0, &h_id);
         if (h_id == NULL) {
@@ -391,6 +392,10 @@ afs_remove_token_from_identities(wchar_t * cell) {
 
         if (KHM_FAILED(khc_open_space(csp_ident, CSNAME_AFSCRED,
                                       0, &csp_afs)))
+            goto _cleanup_loop;
+
+        if (KHM_SUCCEEDED(khc_read_int32(csp_afs, L"AFSEnabled", &enabled)) &&
+            !enabled)
             goto _cleanup_loop;
 
         if (khc_read_multi_string(csp_afs, L"Cells", NULL, &cb)
@@ -472,6 +477,7 @@ afs_check_add_token_to_identity(wchar_t * cell, khm_handle ident,
         khm_size cb;
         wchar_t vbuf[1024];
         wchar_t * tbuf = NULL;
+        khm_int32 enabled = 0;
 
         kcdb_identity_create(t, 0, &h_id);
         if (h_id == NULL) {
@@ -491,6 +497,10 @@ afs_check_add_token_to_identity(wchar_t * cell, khm_handle ident,
 
         if (KHM_FAILED(khc_open_space(csp_ident, CSNAME_AFSCRED,
                                       0, &csp_afs)))
+            goto _cleanup_loop;
+
+        if (KHM_SUCCEEDED(khc_read_int32(csp_afs, L"AFSEnabled", &enabled)) &&
+            !enabled)
             goto _cleanup_loop;
 
         if (khc_read_multi_string(csp_afs, L"Cells", NULL, &cb)
@@ -603,8 +613,8 @@ afs_cred_get_identity_creds(afs_cred_list * l,
         StringCbCopy(r->cell, cb, s);
 
         r->realm = NULL;
-        r->method = 0;
-        r->flags = 0;
+        r->method = AFS_TOKEN_AUTO;
+        r->flags = DLGROW_FLAG_CONFIG;
 
         if(KHM_SUCCEEDED(khc_open_space(h_cells, s, 
                                         0, &h_cell))) {
@@ -852,6 +862,9 @@ nc_dlg_show_tooltip(HWND hwnd,
 
     d = (afs_dlg_data *)(LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
 
+    if (d == NULL)
+        return;
+
     ZeroMemory(&ti, sizeof(ti));
     ti.cbSize = sizeof(ti);
     ti.hwnd = hwnd;
@@ -889,6 +902,9 @@ nc_dlg_hide_tooltip(HWND hwnd, UINT_PTR id)
     afs_dlg_data * d;
 
     d = (afs_dlg_data *)(LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
+
+    if (d == NULL)
+        return;
 
     if(!d->tooltip_visible)
         return;
@@ -972,6 +988,9 @@ nc_dlg_del_token(HWND hwnd) {
     khui_new_creds_by_type * nct;
 
     d = (afs_dlg_data *)(LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
+
+    if (d == NULL)
+        return;
 
     if (d->nc)
         khui_cw_find_type(d->nc, afs_credtype_id, &nct);
@@ -1058,6 +1077,9 @@ nc_dlg_add_token(HWND hwnd) {
     khm_handle ident = NULL;
 
     d = (afs_dlg_data *)(LONG_PTR) GetWindowLongPtr(hwnd, DWLP_USER);
+
+    if (d == NULL)
+        return;
 
     if (d->nc)
         khui_cw_find_type(d->nc, afs_credtype_id, &nct);
@@ -1526,6 +1548,9 @@ afs_dlg_proc(HWND hwnd,
             d = (afs_dlg_data *)(LONG_PTR) 
                 GetWindowLongPtr(hwnd, DWLP_USER);
 
+            if (d == NULL)
+                return TRUE;
+
             EnterCriticalSection(&d->cs);
 
             if (d->nc) {
@@ -1540,6 +1565,8 @@ afs_dlg_proc(HWND hwnd,
             DeleteCriticalSection(&d->cs);
 
             PFREE(d);
+
+            SetWindowLongPtr(hwnd, DWLP_USER, 0);
         }
         return TRUE;
 
@@ -1550,6 +1577,9 @@ afs_dlg_proc(HWND hwnd,
 
             d = (afs_dlg_data *)(LONG_PTR) 
                 GetWindowLongPtr(hwnd, DWLP_USER);
+
+            if (d == NULL)
+                return FALSE;
 
             EnterCriticalSection(&d->cs);
 
@@ -1604,6 +1634,9 @@ afs_dlg_proc(HWND hwnd,
 
             d = (afs_dlg_data *)(LONG_PTR) 
                 GetWindowLongPtr(hwnd, DWLP_USER);
+
+            if (d == NULL)
+                return TRUE;
 
             EnterCriticalSection(&d->cs);
 
@@ -1885,6 +1918,9 @@ afs_dlg_proc(HWND hwnd,
                 d = (afs_dlg_data *)(LONG_PTR) 
                     GetWindowLongPtr(hwnd, DWLP_USER);
 
+                if (d == NULL)
+                    return FALSE;
+
                 EnterCriticalSection(&d->cs);
 
                 hw = GetDlgItem(hwnd, IDC_NCAFS_TOKENLIST);
@@ -1938,6 +1974,9 @@ afs_dlg_proc(HWND hwnd,
 
                 d = (afs_dlg_data *)(LONG_PTR) 
                     GetWindowLongPtr(hwnd, DWLP_USER);
+
+                if (d == NULL)
+                    return FALSE;
 
                 EnterCriticalSection(&d->cs);
 
@@ -2158,13 +2197,13 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
                               lru_cell,
                               &cbt);
     } else {
-        cbcell = MAXCELLCHARS * sizeof(wchar_t) * 
-            l->n_rows;
-        if (cbcell > 0) {
+        cbcell = MAXCELLCHARS * sizeof(wchar_t) * l->n_rows + sizeof(wchar_t);
+        if (l->n_rows > 0) {
             lru_cell = PMALLOC(cbcell);
             ZeroMemory(lru_cell, cbcell);
         } else {
             lru_cell = NULL;
+            cbcell = 0;
         }
     }
 
@@ -2182,21 +2221,23 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
                               lru_realm,
                               &cbt);
     } else {
-        cbrealm = MAXCELLCHARS * sizeof(wchar_t) * l->n_rows;
-        if (cbrealm > 0) {
+        cbrealm = MAXCELLCHARS * sizeof(wchar_t) * l->n_rows + sizeof(wchar_t);
+        if (l->n_rows > 0) {
             lru_realm = PMALLOC(cbrealm);
             ZeroMemory(lru_realm, cbrealm);
         } else {
             lru_cell = NULL;
+            cbrealm = 0;
         }
     }
 
-    cbidcell = MAXCELLCHARS * sizeof(wchar_t) * l->n_rows;
-    if (cbidcell > 0) {
+    cbidcell = MAXCELLCHARS * sizeof(wchar_t) * l->n_rows + sizeof(wchar_t);
+    if (l->n_rows > 0) {
         id_cell = PMALLOC(cbidcell);
         ZeroMemory(id_cell, cbidcell);
     } else {
         id_cell = NULL;
+        cbidcell = 0;
     }
 
     for(i=0; i < l->n_rows; i++)
@@ -2244,10 +2285,12 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
                 khc_close_space(h_acell);
             }
 
-            if (h_cellmap) {
-                khc_write_string(h_cellmap,
-                                 l->rows[i].cell,
-                                 idname);
+            if (l->rows[i].flags & DLGROW_FLAG_DONE) {
+                if (h_cellmap) {
+                    khc_write_string(h_cellmap,
+                                     l->rows[i].cell,
+                                     idname);
+                }
             }
         }
 
@@ -2260,6 +2303,8 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
     if (id_cell)
         khc_write_multi_string(h_afs, L"Cells",
                                id_cell);
+    else
+        khc_write_multi_string(h_afs, L"Cells", L"\0");
 
     if (d->config_dlg) {
         if (d->dirty)
