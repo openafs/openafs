@@ -42,7 +42,8 @@ A. Creating the proper directory structure.
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
-      sun4x_56, sun4x_57, sun4x_58, sun4x_59 (logging UFS not supported 
+      sun4x_56, sun4x_57, sun4x_58, sun4x_59, sun4x_510,
+      sunx86_57, sunx86_58, sunx86_59, sunx86_510 (logging UFS not supported 
          for mixed-use partitions containing client cache)
       ppc_darwin_70
       ppc_linux22, ppc_linux24
@@ -50,7 +51,8 @@ A. Creating the proper directory structure.
       ia64_linux24, ia64_linux26
       sparc_linux22, sparc_linux24
       sparc64_linux22, sparc64_linux24
-      hp_ux110 (See notes below for information on getting missing header)
+      hp_ux11i, hp_ux110 (See notes below for information on getting 
+         missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
 
    2. Using configure in the top level directory, configure for your
