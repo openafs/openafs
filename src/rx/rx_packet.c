@@ -2226,25 +2226,23 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    p->retryTime = p->timeSent;	/* resend it very soon */
 	    clock_Addmsec(&(p->retryTime),
 			  10 + (((afs_uint32) p->backoff) << 8));
-
+	    /* Some systems are nice and tell us right away that we cannot
+	     * reach this recipient by returning an error code. 
+	     * So, when this happens let's "down" the host NOW so
+	     * we don't sit around waiting for this host to timeout later.
+	     */
+	    if (call && 
 #ifdef AFS_NT40_ENV
-	    /* Windows is nice -- it can tell us right away that we cannot
-	     * reach this recipient by returning an WSAEHOSTUNREACH error
-	     * code.  So, when this happens let's "down" the host NOW so
-	     * we don't sit around waiting for this host to timeout later.
-	     */
-		if (call && code == -1 && WSAGetLastError() == WSAEHOSTUNREACH)
-			call->lastReceiveTime = 0;
+		code == -1 && WSAGetLastError() == WSAEHOSTUNREACH
+#elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
+		code == -ENETUNRECH
+#elif defined(AFS_DARWIN_ENV) && defined(KERNEL)
+		code == EHOSTUNREACH
+#else
+		0
 #endif
-#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
-	    /* Linux is nice -- it can tell us right away that we cannot
-	     * reach this recipient by returning an ENETUNREACH error
-	     * code.  So, when this happens let's "down" the host NOW so
-	     * we don't sit around waiting for this host to timeout later.
-	     */
-	    if (call && code == -ENETUNREACH)
+		)
 		call->lastReceiveTime = 0;
-#endif
 	}
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
@@ -2420,24 +2418,23 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 		clock_Addmsec(&(p->retryTime),
 			      10 + (((afs_uint32) p->backoff) << 8));
 	    }
+	    /* Some systems are nice and tell us right away that we cannot
+	     * reach this recipient by returning an error code. 
+	     * So, when this happens let's "down" the host NOW so
+	     * we don't sit around waiting for this host to timeout later.
+	     */
+	    if (call && 
 #ifdef AFS_NT40_ENV
-	    /* Windows is nice -- it can tell us right away that we cannot
-	     * reach this recipient by returning an WSAEHOSTUNREACH error
-	     * code.  So, when this happens let's "down" the host NOW so
-	     * we don't sit around waiting for this host to timeout later.
-	     */
-	    if (call && code == -1 && errno == WSAEHOSTUNREACH)
-		call->lastReceiveTime = 0;
+		code == -1 && WSAGetLastError() == WSAEHOSTUNREACH
+#elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
+		code == -ENETUNRECH
+#elif defined(AFS_DARWIN_ENV) && defined(KERNEL)
+		code == EHOSTUNREACH
+#else
+		0
 #endif
-#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
-	    /* Linux is nice -- it can tell us right away that we cannot
-	     * reach this recipient by returning an ENETUNREACH error
-	     * code.  So, when this happens let's "down" the host NOW so
-	     * we don't sit around waiting for this host to timeout later.
-	     */
-	    if (call && code == -ENETUNREACH)
+		)
 		call->lastReceiveTime = 0;
-#endif
 	}
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	if (!istack && waslocked)
