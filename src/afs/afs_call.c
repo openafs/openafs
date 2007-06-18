@@ -498,26 +498,27 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_SGI61_ENV */
 
     AFS_STATCNT(afs_syscall_call);
+    if (!afs_suser(
 #ifdef	AFS_SUN5_ENV
-    if (!afs_suser(CRED()) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
-	/* only root can run this code */
-	return (EACCES);
+		   CRED()
 #else
-    if (!afs_suser(NULL) && (parm != AFSOP_GETMTU)
-	&& (parm != AFSOP_GETMASK)) {
+		   NULL
+#endif
+		   ) && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
+#if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
 #if defined(KERNEL_HAVE_UERROR)
-	setuerror(EACCES);
-	return (EACCES);
+        setuerror(EACCES);
+#endif
+	code = EACCES;
 #else
-#if defined(AFS_OSF_ENV)
-	return EACCES;
-#else /* AFS_OSF_ENV */
-	return EPERM;
-#endif /* AFS_OSF_ENV */
+	code = EPERM;
 #endif
+	AFS_GLOCK();
+#ifdef AFS_DARWIN80_ENV
+	put_vfs_context();
 #endif
+	goto out;
     }
     AFS_GLOCK();
 #ifdef AFS_DARWIN80_ENV
@@ -792,7 +793,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	get_vfs_context();
 #endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
@@ -800,7 +801,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	put_vfs_context();
 #endif
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
@@ -829,7 +830,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	    get_vfs_context();
 #endif
 	    if (parm == AFSOP_CACHEFILE)
 		code = afs_InitCacheFile(tbuffer, 0);
@@ -840,7 +841,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
 #ifdef AFS_DARWIN80_ENV
-    put_vfs_context();
+	    put_vfs_context();
 #endif
 	}
 	osi_FreeSmallSpace(tbuffer);
@@ -1072,9 +1073,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	code = EINVAL;
 
   out:
-#ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
-    get_vfs_context();
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;
@@ -1658,7 +1656,8 @@ Afs_syscall()
     }
 
 #if defined(AFS_DARWIN80_ENV)
-    put_vfs_context();
+    if (uap->syscall != AFSCALL_CALL)
+	put_vfs_context();
 #endif
 #ifdef AFS_LINUX20_ENV
     code = -code;
