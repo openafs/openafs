@@ -868,6 +868,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
 	int rxbind = 0;
+	int refresh = 0;
+
 	afs_int32 count = parm2;
 	afs_int32 *buffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -876,6 +878,14 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
+
+	/* This is a refresh */
+	if (count & 0x40000000) {
+	    count &= ~0x40000000;
+	    /* Can't bind after we start. Fix? */
+	    count &= ~0x80000000;
+	    refresh = 1;
+	}
 
 	/* Bind, but only if there's only one address configured */ 
 	if ( count & 0x80000000) {
@@ -917,14 +927,21 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
 	}
 	rxi_setaddr(buffer[0]);
-	if (rxbind)
-	    rx_bindhost = buffer[0];
-	else
-	    rx_bindhost = htonl(INADDR_ANY);
+	if (!refresh) {
+	    if (rxbind)
+		rx_bindhost = buffer[0];
+	    else
+		rx_bindhost = htonl(INADDR_ANY);
+	}
 
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+
+	if (refresh) {
+	    afs_CheckServers(1, NULL);     /* check down servers */
+	    afs_CheckServers(0, NULL);     /* check down servers */
+	}
     }
 #ifdef	AFS_SGI53_ENV
     else if (parm == AFSOP_NFSSTATICADDR) {

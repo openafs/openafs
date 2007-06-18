@@ -165,6 +165,36 @@ kern_return_t DiskArbStart(mach_port_t *);
 kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 							 char *);
 #define DISK_ARB_NETWORK_DISK_FLAG 8
+
+#include <mach/mach_port.h>
+#include <mach/mach_interface.h>
+#include <mach/mach_init.h>
+
+#include <CoreFoundation/CoreFoundation.h>
+
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <SystemConfiguration/SCDynamicStore.h>
+
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
+
+#include <dns_sd.h>
+
+typedef struct DNSSDState
+{
+    DNSServiceRef       service;
+    CFRunLoopSourceRef  source;
+    CFSocketRef         socket;
+} DNSSDState;
+
+static io_connect_t root_port;
+static IONotificationPortRef notify;
+static io_object_t iterator;
+static CFRunLoopSourceRef source;
+static DNSSDState dnsstate;
+
+static int event_pid;
+
 #endif /* AFS_DARWIN_ENV */
 
 #ifndef MOUNT_AFS
@@ -311,6 +341,162 @@ int afsd_rmtsys = 0;		/* Default: don't support rmtsys */
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 
 static int HandleMTab();
+
+#ifdef AFS_DARWIN_ENV
+static void
+afsd_sleep_callback(void * refCon, io_service_t service, 
+		    natural_t messageType, void * messageArgument )
+{
+    afs_int32 code;
+    
+    switch (messageType) {
+    case kIOMessageCanSystemSleep:
+	/* Idle sleep is about to kick in; can 
+	   prevent sleep by calling IOCancelPowerChange, otherwise 
+	   if we don't ack in 30s the system sleeps anyway */
+	
+	/* allow it */
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillSleep:
+	/* The system WILL go to sleep. Ack or suffer delay */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillRestart:
+	/* The system WILL restart. Ack or suffer delay */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    case kIOMessageSystemWillPowerOn:
+    case kIOMessageSystemHasPoweredOn:
+	/* coming back from sleep */
+	
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+	
+    default:
+	IOAllowPowerChange(root_port, (long)messageArgument);
+	break;
+    }
+}
+
+static void
+afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
+{
+    /* parse multihomed address files */
+    afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+	mtubuf[MAXIPADDRS];
+    char reason[1024];
+    afs_int32 code;
+
+    code =
+	parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
+		      AFSDIR_CLIENT_NETINFO_FILEPATH,
+		      AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+
+    if (code > 0) {
+	/* Note we're refreshing */
+	code = code | 0x40000000;
+	call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+    } else
+	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
+	       reason);
+}
+
+/* This function is called when the system's ip addresses may have changed. */
+static void
+afsd_ipaddr_callback (SCDynamicStoreRef store, CFArrayRef changed_keys, void *info)
+{
+      CFRunLoopTimerRef timer;
+
+      timer = CFRunLoopTimerCreate (NULL, CFAbsoluteTimeGetCurrent () + 1.0,
+				    0.0, 0, 0, afsd_update_addresses, NULL);
+      CFRunLoopAddTimer (CFRunLoopGetCurrent (), timer,
+			 kCFRunLoopDefaultMode);
+      CFRelease (timer);
+}
+
+static void 
+afsd_event_cleanup(int signo) {
+    DNSSDState *query = &dnsstate;
+
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+    CFRelease (source);
+    IODeregisterForSystemPower(iterator);
+    IOServiceClose(root_port);
+    IONotificationPortDestroy(notify);
+
+    exit(0);
+}
+
+/* Adapted from "Living in a Dynamic TCP/IP Environment" technote. */
+static Boolean
+afsd_install_events(void)
+{
+    SCDynamicStoreContext ctx = {0};
+    SCDynamicStoreRef store;
+
+    root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
+    
+    if (root_port) {
+	CFRunLoopAddSource(CFRunLoopGetCurrent(),
+			   IONotificationPortGetRunLoopSource(notify),
+			   kCFRunLoopDefaultMode);
+    }
+    
+    
+    store = SCDynamicStoreCreate (NULL,
+				  CFSTR ("AddIPAddressListChangeCallbackSCF"),
+				  afsd_ipaddr_callback, &ctx);
+    
+    if (store) {
+	const void *keys[1];
+	
+	/* Request IPV4 address change notification */
+	keys[0] = (SCDynamicStoreKeyCreateNetworkServiceEntity
+		   (NULL, kSCDynamicStoreDomainState,
+		    kSCCompAnyRegex, kSCEntNetIPv4));
+	
+#if 0
+	/* This should tell us when the hostname(s) change. do we care? */
+	keys[N] = SCDynamicStoreKeyCreateHostNames (NULL);
+#endif
+	
+	if (keys[0] != NULL) {
+	    CFArrayRef pattern_array;
+	    
+	    pattern_array = CFArrayCreate (NULL, keys, 1,
+					   &kCFTypeArrayCallBacks);
+	    
+	    if (pattern_array != NULL)
+	    {
+		SCDynamicStoreSetNotificationKeys (store, NULL, pattern_array);
+		source = SCDynamicStoreCreateRunLoopSource (NULL, store, 0);
+		
+		CFRelease (pattern_array);
+	    }
+	    
+	    if (keys[0] != NULL)
+		CFRelease (keys[0]);
+	}
+	
+	CFRelease (store); 
+    }
+    
+    if (source != NULL) {
+	CFRunLoopAddSource (CFRunLoopGetCurrent(),
+			    source, kCFRunLoopDefaultMode);
+    }
+    
+    signal(SIGTERM, afsd_event_cleanup);
+
+    CFRunLoopRun();
+}
+#endif
 
 /* ParseArgs is now obsolete, being handled by cmd */
 
@@ -1247,6 +1433,16 @@ AfsdbLookupHandler()
     kernelMsg[1] = 0;
     acellName[0] = '\0';
 
+#ifdef AFS_DARWIN_ENV
+    /* Fork the event handler also. */
+    code = fork();
+    if (code == 0) {
+	afsd_install_events();
+	exit(1);
+    } else if (code != -1) {
+	event_pid = code;
+    }
+#endif
     while (1) {
 	/* On some platforms you only get 4 args to an AFS call */
 	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
@@ -1276,7 +1472,7 @@ AfsdbLookupHandler()
 	    acellName[sizeof(acellName) - 1] = '\0';
 	}
     }
-
+    kill(event_pid, SIGTERM);
     exit(1);
 }
 #endif
@@ -1737,10 +1933,6 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	exit(1);
 #endif
     }
-#if 0
-    fputs(AFS_GOVERNMENT_MESSAGE, stdout);
-    fflush(stdout);
-#endif
 
     /*
      * Set up all the kernel processes needed for AFS.
