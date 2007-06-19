@@ -1594,13 +1594,10 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        if (scp->refCount != 0)
-        {
-            sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
-                    cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                    scp->refCount);
-            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-        }
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p flags=0x%x refCount=%u\r\n", 
+                cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                scp->volp, scp->flags, scp->refCount);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
   
     sprintf(output, "%s - dumping cm_data.hashTable - cm_data.scacheHashTableSize=%d\r\n", cookie, cm_data.scacheHashTableSize);
@@ -1610,13 +1607,10 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
     {
         for(scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) 
         {
-            if (scp->refCount != 0)
-            {
-                sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\r\n", 
-                         cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                         scp->fid.unique, scp->refCount);
-                WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-            }
+            sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) volp=0x%p flags=0x%x refCount=%u\r\n", 
+                    cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                    scp->fid.unique, scp->volp, scp->flags, scp->refCount);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
 

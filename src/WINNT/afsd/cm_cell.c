@@ -120,24 +120,42 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
 
 cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 {
-    cm_cell_t *cp;
+    cm_cell_t *cp, *cp2;
     long code;
     char fullname[200]="";
 
     if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
         return NULL;
 
-    lock_ObtainWrite(&cm_cellLock);
+    lock_ObtainRead(&cm_cellLock);
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
         if (stricmp(namep, cp->name) == 0) {
             strcpy(fullname, cp->name);
             break;
         }
     }   
+    lock_ReleaseRead(&cm_cellLock);	
 
     if (cp) {
         cp = cm_UpdateCell(cp);
     } else if (flags & CM_FLAG_CREATE) {
+        lock_ObtainWrite(&cm_cellLock);
+
+        /* when we dropped the lock the cell could have been added
+         * to the list so check again while holding the write lock 
+         */
+        for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
+            if (stricmp(namep, cp->name) == 0) {
+                strcpy(fullname, cp->name);
+                break;
+            }
+        }   
+
+        if (cp) {
+            lock_ReleaseWrite(&cm_cellLock);
+            goto done;
+        }
+
         if ( cm_data.currentCells >= cm_data.maxCells )
             osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
 
@@ -179,6 +197,25 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	    cp->timeout = time(0) + 7200;	/* two hour timeout */
 	}
 
+        /* we have now been given the fullname of the cell.  It may
+         * be that we already have a cell with that name.  If so,
+         * we should use it instead of completing the allocation
+         * of a new cm_cell_t 
+         */
+        for (cp2 = cm_data.allCellsp; cp2; cp2=cp2->nextp) {
+            if (stricmp(fullname, cp2->name) == 0) {
+                break;
+            }
+        }   
+
+        if (cp2) {
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
+            cp = cp2;
+            lock_ReleaseWrite(&cm_cellLock);
+            goto done;
+        }
+
+
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
@@ -195,6 +232,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
            
         /* the cellID cannot be 0 */
         cp->cellID = ++cm_data.currentCells;
+        lock_ReleaseWrite(&cm_cellLock);
     }
 
   done:
@@ -202,7 +240,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
     if (cp && newnamep)
         strcpy(newnamep, fullname);
     
-    lock_ReleaseWrite(&cm_cellLock);
     return cp;
 }
 
@@ -210,16 +247,16 @@ cm_cell_t *cm_FindCellByID(afs_int32 cellID)
 {
     cm_cell_t *cp;
 
-    lock_ObtainWrite(&cm_cellLock);
+    lock_ObtainRead(&cm_cellLock);
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
         if (cellID == cp->cellID) 
             break;
     }
+    lock_ReleaseRead(&cm_cellLock);	
 
     if (cp)
         cp = cm_UpdateCell(cp);
 
-    lock_ReleaseWrite(&cm_cellLock);	
     return cp;
 }
 
@@ -328,4 +365,32 @@ void cm_ChangeRankCellVLServer(cm_server_t *tsp)
 	lock_ReleaseMutex(&cp->mx);
     }
 }       
+
+int cm_DumpCells(FILE *outputFile, char *cookie, int lock)
+{
+    cm_cell_t *cellp;
+    int zilch;
+    char output[1024];
+
+    if (lock)
+        lock_ObtainRead(&cm_cellLock);
+
+    sprintf(output, "%s - dumping cells - cm_data.currentCells=%d, cm_data.maxCells=%d\r\n", 
+            cookie, cm_data.currentCells, cm_data.maxCells);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    for (cellp = cm_data.allCellsp; cellp; cellp=cellp->nextp) {
+        sprintf(output, "%s cellp=0x%p,name=%s ID=%d flags=0x%x\r\n", 
+                cookie, cellp, cellp->name, cellp->cellID, cellp->flags);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+
+    sprintf(output, "%s - Done dumping cells.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    if (lock)
+        lock_ReleaseRead(&cm_cellLock);
+
+    return(0);
+}
 

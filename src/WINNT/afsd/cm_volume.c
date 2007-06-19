@@ -592,7 +592,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    assert(volp == volp2);
+    osi_assert(volp == volp2);
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -677,7 +677,7 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    assert(volp2 == volp);
+    osi_assert(volp2 == volp);
 #endif
 
     if (!volp && (flags & CM_GETVOL_FLAG_CREATE)) {
@@ -843,7 +843,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     }
 
 #ifdef SEARCH_ALL_VOLUMES
-    assert(volp == volp2);
+    osi_assert(volp == volp2);
 #endif
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -1217,23 +1217,20 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
-        if (volp->refCount != 0)
+        cm_scache_t *scp;
+        int scprefs = 0;
+
+        for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
         {
-	    cm_scache_t *scp;
-	    int scprefs = 0;
+            if (scp->volp == volp)
+                scprefs++;
+        }   
 
-	    for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
-	    {
-		if (scp->volp == volp)
-		    scprefs++;
-	    }
-
-            sprintf(output, "%s cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u scpRefs=%u\r\n", 
-                    cookie, volp->cellp->name, volp->namep, volp->rw.ID, volp->ro.ID, volp->bk.ID, volp->flags, 
-		    volp->dotdotFid.cell, volp->dotdotFid.volume, volp->dotdotFid.vnode, volp->dotdotFid.unique,
-		    volp->refCount, scprefs);
-            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-        }
+        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u scpRefs=%u\r\n", 
+                 cookie, volp, volp->cellp->name, volp->namep, volp->rw.ID, volp->ro.ID, volp->bk.ID, volp->flags, 
+                 volp->dotdotFid.cell, volp->dotdotFid.volume, volp->dotdotFid.vnode, volp->dotdotFid.unique,
+                 volp->refCount, scprefs);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
     sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
