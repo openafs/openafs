@@ -2,10 +2,10 @@ debian/tmp/usr/sbin/bosserver           usr/sbin
 debian/tmp/usr/sbin/voldump             usr/sbin
 debian/tmp/usr/sbin/volinfo             usr/sbin
 
-debian/tmp/usr/lib/openafs/up*          usr/sbin
-
 debian/tmp/usr/lib/openafs/fileserver   usr/lib/openafs
 debian/tmp/usr/lib/openafs/salvager     usr/lib/openafs
+debian/tmp/usr/lib/openafs/upclient     usr/lib/openafs
+debian/tmp/usr/lib/openafs/upserver     usr/lib/openafs
 debian/tmp/usr/lib/openafs/volserver    usr/lib/openafs
 
 debian/tmp/usr/share/man/man5/BosConfig.5             usr/share/man/man5

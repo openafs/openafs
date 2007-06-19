@@ -31,12 +31,20 @@ configure)
     # Move the contents of the old /etc/openafs/server-local directory into
     # /var/lib/openafs/local.  Most of the files in this directory are
     # automatically generated, so it didn't belong in /etc.
+    #
+    # Change the paths to upserver and upclient in BosConfig from older
+    # versions that had the binaries in /usr/sbin.
     if [ "x$2" != "x" ] && dpkg --compare-versions $2 lt 1.4.4.dfsg1-4 ; then
         for f in sysid sysid.old NetInfo NetRestrict ; do
             if [ -e "/etc/openafs/server-local/$f" ] ; then
                 cp "/etc/openafs/server-local/$f" "/var/lib/openafs/local/$f"
             fi
         done
+        if [ -e /etc/openafs/BosConfig ] ; then
+            sed -i -e 's,/usr/sbin/upserver,/usr/lib/openafs/upserver,' \
+                   -e 's,/usr/sbin/upclient,/usr/lib/openafs/upclient,' \
+                       /etc/openafs/BosConfig
+        fi
     fi
     db_stop
     ;;

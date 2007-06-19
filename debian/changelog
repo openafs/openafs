@@ -10,11 +10,14 @@ openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
     files, and the file server has to write to this directory to start (so
     having it in /etc breaks read-only / file systems).  Thanks, Alexei
     Sheplyakov.  (Closes: #405697)
+  * Move upserver and upclient to /usr/lib/openafs (from /usr/sbin) to
+    match upstream's layout and for consistency with the other servers run
+    via bosserver.
   * Go back to using krb5-config.  The dependency problem has now been
     fixed on all platforms in the krb5 package and this is the preferred
     upstream method.
 
- -- Russ Allbery <rra@debian.org>  Tue, 19 Jun 2007 02:07:20 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 19 Jun 2007 04:03:44 -0700
 
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 
