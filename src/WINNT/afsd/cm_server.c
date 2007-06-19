@@ -715,3 +715,18 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     lock_ReleaseWrite(&cm_serverLock);
 }
 
+cm_server_t *
+cm_FindServerByIP(afs_uint32 ipaddr)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        if (tsp->addr.sin_addr.S_un.S_addr == ipaddr)
+            break;
+    }
+    lock_ReleaseRead(&cm_serverLock);
+
+    return tsp;
+}
+
