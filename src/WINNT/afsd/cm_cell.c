@@ -113,16 +113,17 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 }
 
 /* load up a cell structure from the cell database, afsdcell.ini */
-cm_cell_t *cm_GetCell(char *namep, long flags)
+cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
 {
     return cm_GetCell_Gen(namep, NULL, flags);
 }
 
-cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
+cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 {
     cm_cell_t *cp, *cp2;
     long code;
     char fullname[200]="";
+    int  hasWriteLock = 0;
 
     if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
         return NULL;
@@ -137,9 +138,10 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
     lock_ReleaseRead(&cm_cellLock);	
 
     if (cp) {
-        cp = cm_UpdateCell(cp);
+        cm_UpdateCell(cp);
     } else if (flags & CM_FLAG_CREATE) {
         lock_ObtainWrite(&cm_cellLock);
+        hasWriteLock = 1;
 
         /* when we dropped the lock the cell could have been added
          * to the list so check again while holding the write lock 
@@ -151,10 +153,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
             }
         }   
 
-        if (cp) {
-            lock_ReleaseWrite(&cm_cellLock);
+        if (cp)
             goto done;
-        }
 
         if ( cm_data.currentCells >= cm_data.maxCells )
             osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
@@ -211,7 +211,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
         if (cp2) {
             cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
             cp = cp2;
-            lock_ReleaseWrite(&cm_cellLock);
             goto done;
         }
 
@@ -232,10 +231,12 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
            
         /* the cellID cannot be 0 */
         cp->cellID = ++cm_data.currentCells;
-        lock_ReleaseWrite(&cm_cellLock);
     }
 
   done:
+    if (hasWriteLock)
+        lock_ReleaseWrite(&cm_cellLock);
+    
     /* fullname is not valid if cp == NULL */
     if (cp && newnamep)
         strcpy(newnamep, fullname);
@@ -255,7 +256,7 @@ cm_cell_t *cm_FindCellByID(afs_int32 cellID)
     lock_ReleaseRead(&cm_cellLock);	
 
     if (cp)
-        cp = cm_UpdateCell(cp);
+        cm_UpdateCell(cp);
 
     return cp;
 }
