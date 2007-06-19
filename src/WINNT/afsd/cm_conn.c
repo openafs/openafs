@@ -211,6 +211,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 if ( refp->server )
                     cellp = refp->server->cellp;
             }
+        } 
+        if (cellp == NULL && fidp) {
+            cellp = cm_FindCellByID(fidp->cell);
         }
     }
 
