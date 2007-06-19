@@ -161,7 +161,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
  *
  * The callp parameter is currently unused.
  */
-void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
+void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
 {
     cm_fid_t tfid;
     cm_scache_t *scp;
@@ -195,6 +195,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
         if (scp->fid.volume == tfid.volume &&
              scp->fid.vnode == tfid.vnode &&
              scp->fid.unique == tfid.unique &&
+             (cellp == NULL || scp->fid.cell == cellp->cellID) &&
              scp->cbExpires > 0 && 
              scp->cbServerp != NULL)
         {
@@ -221,7 +222,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
  *
  * Called with no locks held.
  */
-void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
+void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fidp)
 {
     long hash;
     cm_scache_t *scp;
@@ -243,6 +244,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
     for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
         for(scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == fidp->Volume &&
+                (cellp == NULL || scp->fid.cell == cellp->cellID) &&
                  scp->cbExpires > 0 &&
                  scp->cbServerp != NULL) {
                 cm_HoldSCacheNoLock(scp);
@@ -339,12 +341,18 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
     struct rx_peer *peerp;
     unsigned long host = 0;
     unsigned short port = 0;
+    cm_server_t *tsp = NULL;
+    cm_cell_t * cellp = NULL;
 
     MUTEX_ENTER(&callp->lock);
 
     if ((connp = rx_ConnectionOf(callp)) && (peerp = rx_PeerOf(connp))) {
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
+
+        tsp = cm_FindServerByIP(host);
+        if (tsp)
+            cellp = tsp->cellp;
     }
 
     osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
@@ -357,9 +365,9 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         if (tfidp->Volume == 0)
             continue;   /* means don't do anything */
         else if (tfidp->Vnode == 0)
-            cm_RevokeVolumeCallback(callp, tfidp);
+            cm_RevokeVolumeCallback(callp, cellp, tfidp);
         else
-            cm_RevokeCallback(callp, tfidp);
+            cm_RevokeCallback(callp, cellp, tfidp);
     }
 
     MUTEX_EXIT(&callp->lock);

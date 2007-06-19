@@ -121,4 +121,6 @@ extern void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit);
 
 extern void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no);
 
+extern cm_server_t * cm_FindServerByIP(afs_uint32 addr);
+
 #endif /*  __CM_SERVER_H_ENV__ */
