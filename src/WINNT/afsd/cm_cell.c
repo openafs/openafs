@@ -227,9 +227,15 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
 
-        /* thread on global list */
-        cp->nextp = cm_data.allCellsp;
-        cm_data.allCellsp = cp;
+        /* append cell to global list */
+        if (cm_data.allCellsp == NULL) {
+            cm_data.allCellsp = cp;
+        } else {
+            for (cp2 = cm_data.allCellsp; cp2->nextp; cp2=cp2->nextp)
+                ;
+            cp2->nextp = cp;
+        }
+        cp->nextp = NULL;
            
         /* the cellID cannot be 0 */
         cp->cellID = ++cm_data.currentCells;
