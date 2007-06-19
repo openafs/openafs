@@ -164,6 +164,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     cm_serverRef_t *tsrp;
     cm_cell_t  *cellp = NULL;
     cm_ucell_t *ucellp;
+    cm_volume_t * volp = NULL;
+    cm_vol_state_t *statep = NULL;
     int retry = 0;
     int free_svr_list = 0;
     int dead_session;
@@ -300,8 +302,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
          */
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY.");
         if (timeLeft > 7) {
-            cm_volume_t * volp = NULL;
-            cm_vol_state_t *statep;
 
             thrd_Sleep(5000);
 
@@ -372,12 +372,30 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp && tsrp->status == srv_not_busy) {
-                /* REDIRECT */
                 tsrp->status = srv_busy;
+                if (fidp) { /* File Server query */
+                    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, 
+                                             CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                                             &volp);
+                    if (code == 0) {
+                        if (fidp->volume == volp->rw.ID)
+                            statep = &volp->rw;
+                        else if (fidp->volume == volp->ro.ID)
+                            statep = &volp->ro;
+                        else if (fidp->volume == volp->bk.ID)
+                            statep = &volp->bk;
+                    }
+            
+                    cm_PutVolume(volp);
+                }
                 break;
             }
         }
         lock_ReleaseWrite(&cm_serverLock);
+        
+        if (statep)
+            cm_UpdateVolumeStatus(volp, statep->ID);
+        
         if (free_svr_list) {
             cm_FreeServerList(&serversp, 0);
             *serverspp = serversp;
