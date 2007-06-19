@@ -52,4 +52,6 @@ extern osi_rwlock_t cm_cellLock;
 
 extern cm_cell_t *cm_allCellsp;
 
+extern int cm_DumpCells(FILE *, char *, int);
+
 #endif /* __CELL_H_ENV_ */

@@ -439,7 +439,9 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
     } astat;
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     unsigned char kVista_WLA_MAC[6] = { 0x7F, 0x00, 0x00, 0x01, 0x4f, 0x50 };
+#ifdef USE_VMWARE
     unsigned char kVMWare_MAC[5] = { 0x00, 0x50, 0x56, 0xC0, 0x00 };
+#endif
     int status;
     HKEY hkConfig;
     LONG rv;
@@ -491,8 +493,11 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
         return FALSE;
     }
     return (memcmp(astat.status.adapter_address, kWLA_MAC, 6) == 0 ||
-	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0 ||
-	    memcmp(astat.status.adapter_address, kVMWare_MAC, 5) == 0);
+	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0 
+#ifdef USE_VMWARE
+             || memcmp(astat.status.adapter_address, kVMWare_MAC, 5) == 0
+#endif
+             );
 }
 
 // Get the netbios named used/to-be-used by the AFS SMB server.
