@@ -85,6 +85,7 @@ the B<vos listaddrs> command.
 
 =head1 SEE ALSO
 
+L<NetRestrict(5)>,
 L<sysid(5)>,
 L<vldb.DB0(5)>,
 L<fileserver(8)>,
