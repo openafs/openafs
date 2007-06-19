@@ -7,9 +7,9 @@ NetRestrict - Defines interfaces not to register with AFS servers
 There are two F<NetRestrict> files, one for an AFS client and one for an
 AFS File Server or database server.  The AFS client F<NetRestrict> file
 specifies the IP addresses that the client should not register with the
-File Servers it connects to.  The server F<NetInfo> file specifies what
-interfaces should not be registered with AFS Database Servers or used to
-talk to other database servers.
+File Servers it connects to.  The server F<NetRestrict> file specifies
+what interfaces should not be registered with AFS Database Servers or used
+to talk to other database servers.
 
 =head2 Client NetRestrict
 
@@ -79,6 +79,7 @@ the B<vos listaddrs> command.
 
 =head1 SEE ALSO
 
+L<NetInfo(5)>,
 L<sysid(5)>,
 L<vldb.DB0(5)>,
 L<fileserver(8)>,
