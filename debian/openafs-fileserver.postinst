@@ -20,21 +20,23 @@ configure)
     db_get openafs-fileserver/thiscell
     echo $RET >/etc/openafs/server/ThisCell
 
-    if [ -f /etc/openafs/server/CellServDB ] ; then
-        :
-    else
+    if [ ! -f /etc/openafs/server/CellServDB ] ; then
         sed -n "/^>$RET/,/^>/p" /etc/openafs/CellServDB | sed '$d' \
             >/etc/openafs/server/CellServDB
         if [ ! -s /etc/openafs/server/CellServDB ] ; then
             echo ">$RET" >/etc/openafs/server/CellServDB
         fi
     fi
-    if [ "x$2" != "x" ] ; then
-        if dpkg --compare-versions $2 lt 1.2.0-1 ; then
-            mv /etc/openafs/server-local/BosConfig \
-                /etc/openafs/BosConfig || true
-            mv /etc/openafs/server-local/sysid /var/lib/openafs || true
-        fi
+
+    # Move the contents of the old /etc/openafs/server-local directory into
+    # /var/lib/openafs/local.  Most of the files in this directory are
+    # automatically generated, so it didn't belong in /etc.
+    if [ "x$2" != "x" ] && dpkg --compare-versions $2 lt 1.4.4.dfsg1-4 ; then
+        for f in sysid sysid.old NetInfo NetRestrict ; do
+            if [ -e "/etc/openafs/server-local/$f" ] ; then
+                cp "/etc/openafs/server-local/$f" "/var/lib/openafs/local/$f"
+            fi
+        done
     fi
     db_stop
     ;;

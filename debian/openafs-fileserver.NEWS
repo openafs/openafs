@@ -1,0 +1,24 @@
+openafs (1.4.4.dfsg1-4) unstable; urgency=low
+
+  The files previously located in /etc/openafs/server-local have been
+  moved to /var/lib/openafs/local.  The OpenAFS fileserver and bosserver
+  write files to this directory on startup which are not configuration
+  files and therefore, per the File Hierarchy Standard, should not be in
+  /etc.  Any sysid, sysid.old, NetInfo, and NetRestrict files in
+  /etc/openafs/server-local have been copied to /var/lib/openafs/local.
+
+  upserver and upclient have moved to /usr/lib/openafs (from /usr/sbin) to
+  match the other programs intended to be run by the bosserver and to
+  match upstream's layout.  If you're running upserver or upclient from
+  bosserver, BosConfig has been updated with the new path, but the
+  services have not been restarted.
+
+  At your convenience, you should restart your servers with:
+
+      bos restart -all -bosserver
+
+  so that the running servers will look at the new locations.  After doing
+  so, you may remove /etc/openafs/server-local if you wish.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 19 Jun 2007 03:51:58 -0700
+

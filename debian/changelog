@@ -5,11 +5,16 @@ openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
   * Apply upstream patches for Linux 2.6.22 support.  (Closes: #428401)
   * Apply upstream patch to fix the AFS /proc structure under Linux
     2.6.22.1 and later.
+  * Move /etc/openafs/server-local to /var/lib/openafs/local.  Most of the
+    files here are automatically generated and hence not configuration
+    files, and the file server has to write to this directory to start (so
+    having it in /etc breaks read-only / file systems).  Thanks, Alexei
+    Sheplyakov.  (Closes: #405697)
   * Go back to using krb5-config.  The dependency problem has now been
     fixed on all platforms in the krb5 package and this is the preferred
     upstream method.
 
- -- Russ Allbery <rra@debian.org>  Tue, 12 Jun 2007 11:43:54 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 19 Jun 2007 02:07:20 -0700
 
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 

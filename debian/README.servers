@@ -19,7 +19,7 @@ Introduction
   traditional paths, and in the second column, the Debian paths:
 
       /usr/afs/etc        /etc/openafs/server
-      /usr/afs/local      /etc/openafs/server-local
+      /usr/afs/local      /var/lib/openafs/local
       /usr/afs/db         /var/lib/openafs/db
       /usr/afs/logs       /var/log/openafs
       /usr/afs/bin        /usr/lib/openafs

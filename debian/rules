@@ -90,7 +90,7 @@ configure-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
 	sh regen.sh
-	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
+	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
 	    sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
