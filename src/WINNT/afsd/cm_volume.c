@@ -762,15 +762,15 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
-    else if (volp) {
+    else {
         lock_ReleaseRead(&cm_volumeLock);
-        cm_GetVolume(volp);
-        lock_ObtainMutex(&volp->mx);
+        if (volp) {
+            cm_GetVolume(volp);
+            lock_ObtainMutex(&volp->mx);
+        } else {
+            return CM_ERROR_NOSUCHVOLUME;
+        }
     }
-
-    /* if we don't have a volp structure return no such volume */
-    if (!volp)
-        return CM_ERROR_NOSUCHVOLUME;
 
     /* if we get here we are holding the mutex */
     if (volp->flags & CM_VOLUMEFLAG_RESET) {
