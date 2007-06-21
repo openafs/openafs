@@ -42,7 +42,7 @@ case "$1" in
   start)
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON -- $DAEMON_ARGS
+		--name bosserver --startas $DAEMON -- $DAEMON_ARGS
 	echo "$NAME."
 	;;
   stop)
@@ -75,7 +75,7 @@ case "$1" in
             bos restart localhost -localauth -bos
         else
             start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-                --exec $DAEMON -- $DAEMON_ARGS
+                --name bosserver --startas $DAEMON -- $DAEMON_ARGS
         fi
 	sleep 1
 	echo "$NAME."

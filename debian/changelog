@@ -13,11 +13,13 @@ openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
   * Move upserver and upclient to /usr/lib/openafs (from /usr/sbin) to
     match upstream's layout and for consistency with the other servers run
     via bosserver.
+  * Use --name instead of --exec in the openafs-fileserver init script so
+    that we don't start a second bosserver on upgrades.
   * Go back to using krb5-config.  The dependency problem has now been
     fixed on all platforms in the krb5 package and this is the preferred
     upstream method.
 
- -- Russ Allbery <rra@debian.org>  Tue, 19 Jun 2007 04:03:44 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 21 Jun 2007 02:18:44 -0700
 
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 
