@@ -1,3 +1,11 @@
+openafs (1.4.4.dfsg1-5) UNRELEASED; urgency=low
+
+  * Use LSB logging functions for openafs-fileserver and support passing
+    arguments to bosserver in /etc/default/openafs-fileserver by setting
+    DAEMON_ARGS.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 21 Jun 2007 07:16:37 -0700
+
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
   * Apply upstream patch from Jeffrey Hutzelman to fix kernel module

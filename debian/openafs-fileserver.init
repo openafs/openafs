@@ -11,26 +11,19 @@
 #                       OpenAFS file server or database servers depending on
 #                       its configuration.
 ### END INIT INFO
-#
-# skeleton	example file to build /etc/init.d/ scripts.
-#		This file should be used to construct scripts for /etc/init.d.
-#
-#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#		Modified for Debian GNU/Linux
-#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
-#
-# Version:	@(#)skeleton  1.8  03-Mar-1998  miquels@cistron.nl
-#
 
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+# Author: Sam Hartman <hartmans@mit.edu>
+# Author: Russ Allbery <rra@debian.org>
+#
+# Based on the /etc/init.d/skeleton template as found in initscripts version
+# 2.86.ds1-15.
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DESC="OpenAFS BOS server"
+NAME=bosserver
 DAEMON=/usr/sbin/bosserver
 DAEMON_ARGS=""
-NAME=bosserver
-DESC="AFS Server"
-
-# Make sure we don't leave file descriptors open.
-exec 3>/dev/null
-exec </dev/null
+SCRIPTNAME=/etc/init.d/openafs-fileserver
 
 # Exit if the package is not installed.
 [ -x "$DAEMON" ] || exit 0
@@ -38,54 +31,88 @@ exec </dev/null
 # Read configuration if it is present.
 [ -r /etc/default/openafs-fileserver ] && . /etc/default/openafs-fileserver
 
-case "$1" in
+# Get the setting of VERBOSE and other rcS variables.
+[ -f /etc/default/rcS ] && . /etc/default/rcS
+
+# Define LSB log functions (requires lsb-base >= 3.0-6).
+. /lib/lsb/init-functions
+
+# Make sure we don't leave file descriptors open.
+exec 3>/dev/null
+exec </dev/null
+
+# Return
+#   0 if daemon has been started
+#   1 if daemon was already running
+#   2 if daemon could not be started
+do_start()
+{
+    start-stop-daemon --start --quiet --startas $DAEMON --name $NAME --test \
+        > /dev/null || return 1
+    start-stop-daemon --start --quiet --startas $DAEMON --name $NAME \
+        -- $DAEMON_ARGS || return 2
+}
+
+# Return
+#   0 if daemon has been stopped
+#   1 if daemon was already stopped
+#   2 if daemon could not be stopped
+#   other if a failure occurred
+do_stop()
+{
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --name $NAME
+}
+
+case "$1" in 
   start)
-	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --name bosserver \
-		--startas $DAEMON -- $DAEMON_ARGS
-	echo "$NAME."
-	;;
+    [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+    do_start
+    case "$?" in
+      0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+      2)   [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+    esac
+    ;;
+
   stop)
-	echo -n "Stopping $DESC: "
-	bos shutdown localhost -wait -localauth
-	start-stop-daemon --stop --quiet  \
-		--user root --name bosserver
-	echo "$NAME."
-	;;
-  #reload)
-	#
-	#	If the daemon can reload its config files on the fly
-	#	for example by sending it SIGHUP, do it here.
-	#
-	#	If the daemon responds to changes in its config file
-	#	directly anyway, make this a do-nothing entry.
-	#
-	# echo "Reloading $DESC configuration files."
-	# start-stop-daemon --stop --signal 1 --quiet --pidfile \
-	#	/var/run/$NAME.pid --exec $DAEMON
-  #;;
+    [ "$VERBOSE" != no ] && log_action_msg "Stopping OpenAFS services"
+    bos shutdown localhost -wait -localauth
+    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+    do_stop
+    case "$?" in
+      0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+      2)   [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+    esac
+    ;;
+
   restart|force-reload)
-	#
-	#	If the "reload" option is implemented, move the "force-reload"
-	#	option to the "reload" entry above. If not, "force-reload" is
-	#	just the same as "restart".
-	#
-	echo -n "Restarting $DESC: "
-        if pidof $DAEMON > /dev/null ; then
-            bos restart localhost -localauth -bos
-        else
-            start-stop-daemon --start --quiet --name bosserver \
-		--startas $DAEMON -- $DAEMON_ARGS
-        fi
-	sleep 1
-	echo "$NAME."
-	;;
+    [ "$VERBOSE" != no ] && log_daemon_msg "Restarting $DESC" "$NAME"
+    start-stop-daemon --start --quiet --startas $DAEMON --name $NAME --test \
+        > /dev/null
+    case "$?" in
+      0)
+        do_start
+        case "$?" in
+          0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+          *) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+      1)
+        bos restart localhost -all -bosserver -localauth
+        case "$?" in
+          0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+          *) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+      *)
+        log_end_msg 1
+        ;;
+    esac
+    ;;
+
   *)
-	N=/etc/init.d/$NAME
-	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
-	exit 1
-	;;
+    echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+    exit 3
+    ;;
 esac
 
 exit 0
