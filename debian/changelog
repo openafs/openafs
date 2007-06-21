@@ -1,4 +1,4 @@
-openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
+openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
   * Apply upstream patch from Jeffrey Hutzelman to fix kernel module
     builds on ppc64.  (Closes: #427555)
@@ -20,7 +20,7 @@ openafs (1.4.4.dfsg1-4) UNRELEASED; urgency=low
     fixed on all platforms in the krb5 package and this is the preferred
     upstream method.
 
- -- Russ Allbery <rra@debian.org>  Thu, 21 Jun 2007 02:32:57 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 21 Jun 2007 03:02:32 -0700
 
 openafs (1.4.4.dfsg1-3) unstable; urgency=low
 
